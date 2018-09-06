@@ -324,40 +324,18 @@ class ConfigTest(unittest.TestCase):
 
         self._check_against_expected(config_dict, 'expected/weewx36_expected.conf')
 
-    # def test_merge(self):
-    #
-    #     # Start with a typical V2.0 user file:
-    #     config_dict = configobj.ConfigObj('weewx_user.conf')
-    #
-    #     # The current config file becomes the template:
-    #     template = configobj.ConfigObj(current_config_dict_path)
-    #
-    #     # First update, then merge:
-    #     weecfg.update_and_merge(config_dict, template)
-    #
-    #     # Reorder to make the comparisons more predictable:
-    #     weecfg.reorder_to_ref(config_dict)
-    #
-    #     # Write it out to a StringIO, then start checking it against the expected
-    #     out_str = StringIO.StringIO()
-    #     config_dict.write(out_str)
-    #     check_fileend(out_str)
-    #     out_str.seek(0)
-    #
-    #     with open('expected/weewx_user_expected.conf') as fd_expected:
-    #         N = 0
-    #         for expected in fd_expected:
-    #             actual = out_str.readline()
-    #             N += 1
-    #             if actual.startswith('version ='):
-    #                 actual = actual[:10]
-    #                 expected = expected[:10]
-    #             else:
-    #                 self.assertEqual(actual, expected, "[%d] '%s' vs '%s'" % (N, actual, expected))
-    #
-    #         # Make sure there are no extra lines in the updated config:
-    #         more = out_str.readline()
-    #         self.assertEqual(more, '')
+    def test_merge(self):
+
+        # Start with a typical V2.0 user file:
+        config_dict = configobj.ConfigObj('weewx_user.conf')
+
+        # The current config file becomes the template:
+        template = configobj.ConfigObj(current_config_dict_path)
+
+        # First update, then merge:
+        weecfg.update_and_merge(config_dict, template)
+
+        self._check_against_expected(config_dict, 'expected/weewx_user_expected.conf')
 
     def test_driver_info(self):
         """Test the discovery and listing of drivers."""

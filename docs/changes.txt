@@ -23,6 +23,9 @@ Fixed problem where MySQL error 2013 could crash WeeWX. Fixes issue #327.
 Posts to the Weather Underground will be skipped if an observation type is
 listed in the [[[Essentials]]]  subsection is missing. Fixes issue #329.
 
+Upgrade process now explicity upgrades version-to-version, instead of
+doing a merge to the new config file. Fixes issue #217.
+
 
 3.8.2 08/15/2018
 

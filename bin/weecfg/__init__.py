@@ -18,9 +18,7 @@ import tempfile
 import configobj
 
 import weeutil.weeutil
-from weewx import all_service_groups
 
-minor_comment_block = [""]
 major_comment_block = ["", "##############################################################################", ""]
 
 # ==============================================================================
@@ -883,6 +881,7 @@ def update_to_v32(config_dict):
             config_dict['Databases']['archive_mysql'].pop('password', None)
             config_dict['Databases']['archive_mysql'].pop('driver', None)
             config_dict['Databases']['archive_mysql']['database_type'] = 'MySQL'
+            config_dict['Databases'].comments['archive_mysql'] = ['']
         except KeyError:
             pass
 
