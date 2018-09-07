@@ -75,7 +75,7 @@ class ExtendedStatistics(SearchList):
                                           formatter=self.generator.formatter,
                                           converter=self.generator.converter)
         
-                # Now use a similar process to get statistics for last year.
+        # Now use a similar process to get statistics for last year.
         year = datetime.date.today().year
         start_ts = time.mktime((year - 1, 1, 1, 0, 0, 0, 0, 0, 0))
         stop_ts = time.mktime((year, 1, 1, 0, 0, 0, 0, 0, 0))
