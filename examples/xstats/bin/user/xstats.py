@@ -95,7 +95,7 @@ class ExtendedStatistics(SearchList):
                                                 db_lookup,
                                                 context='last_year_todate',
                                                 formatter=self.generator.formatter,
-                                                converter=self.generator.converter
+                                                converter=self.generator.converter)
 
         return [{'alltime': all_stats,
                  'seven_day': seven_day_stats,
