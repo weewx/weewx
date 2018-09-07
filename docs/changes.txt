@@ -1,6 +1,12 @@
 weewx change history
 --------------------
 
+3.X.Y MM/DD/YYYY
+
+Log watch now correctly logs garbage collection events. Thanks to user
+buster-one. PR #340.
+
+
 3.8.2 08/15/2018
 
 Added flag to weewx-multi init script to prevent systemd from breaking it.
