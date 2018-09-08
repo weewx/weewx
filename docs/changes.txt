@@ -26,6 +26,9 @@ listed in the [[[Essentials]]]  subsection is missing. Fixes issue #329.
 Upgrade process now explicity upgrades version-to-version, instead of
 doing a merge to the new config file. Fixes issue #217.
 
+Example xstats now includes tags for last_year and last_year_todate.
+Thanks to user evilbunny2008. PR #325.
+
 
 3.8.2 08/15/2018
 
