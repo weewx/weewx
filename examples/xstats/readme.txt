@@ -16,7 +16,20 @@ This search list extension offers extra tags:
                 thirty days ago.  For example, "what is the maximum wind
                 speed in the last thirty days?"
                 $thirty_day.wind.max
-
+                
+  'last_month': Statistics for last calendar month, this is useful in
+                getting statistics such as the maximum/minimum records.
+                $last_month.outTemp.max at $last_month.outTemp.maxtime
+                $last_month.outTemp.min at $last_month.outTemp.mintime
+    
+  'last_year':  Statistics for last calendar year, this is useful for
+                things like total rainfall for last year.
+                $last_year.rain.sum
+  
+  'last_year_todate': Statistics of last calendar year until this time
+                      last year. This is useful for comprisons of rain
+                      fall up to this time last year.
+                      $last_year_todate.rain.sum
 
 Installation instructions
 
