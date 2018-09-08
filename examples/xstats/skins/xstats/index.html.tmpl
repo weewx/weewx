@@ -52,7 +52,7 @@ body {
     min temp last month: $last_month.outTemp.min at $last_month.outTemp.mintime<br/>
 #else
     <pre>last_month</pre> is not functioning<br/>
-#endif
+#end if
 
 #if $varExists('last_year')
     last_year rain total: $last_year.rain.sum<br/>
@@ -60,13 +60,13 @@ body {
     min temp last year: $last_year.outTemp.min at $last_year.outTemp.mintime<br/>
 #else
     <pre>last_year</pre> is not functioning<br/>
-#endif
+#end if
 
 #if $varExists('last_year_todate')
     last_year_todate rain total: $last_year_todate.rain.sum<br/>
     rain total this year: $year.rain.sum<br/>
 #else
     <pre>last_year_todate</pre> is not functioning<br/>
-#endif
+#end if
   </body>
 </html>
