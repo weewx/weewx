@@ -17,7 +17,7 @@ This search list extension offers extra tags:
                 speed in the last thirty days?"
                 $thirty_day.wind.max
                 
-  'last_month': Statistics for last calendar month, this is useful in the
+  'last_month': Statistics for last calendar month, this is useful in
                 getting statistics such as the maximum/minimum records.
                 $last_month.outTemp.max at $last_month.outTemp.maxtime
                 $last_month.outTemp.min at $last_month.outTemp.mintime
