@@ -73,6 +73,34 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                     plotgen_ts = archive.lastGoodStamp()
                     if not plotgen_ts:
                         plotgen_ts = time.time()
+                        
+                # If previous year or month is set, get the setting and use it to calculate the time span. 
+                year = datetime.date.today().year
+                month = datetime.date.today().month
+                previous_month = 0
+                previous_year = 0
+                try:
+                    previous_year = int(plot_options.get('previous_year', 0))
+                except:
+                    raise ValueError("Invalid field value 'previous_year', previous_year can only be a negative integer")
+
+                if previous_year > 0:
+                    raise ValueError("Invalid field value 'previous_year' in '%s', previous_year can only be a negative integer" % str(previous_year))
+
+                if previous_year < 0:
+                    plotgen_ts = time.mktime((year + previous_year, 12, 31, 23, 59, 59, 999, 999, 999))
+
+                if previous_year == 0:
+                    try:
+                        previous_month = int(plot_options.get('previous_month', 0))
+                    except:
+                        raise ValueError("Invalid field value 'previous_month', previous_month can only be a negative integer")
+
+                    if previous_month > 0:
+                        raise ValueError("Invalid field value 'previous_month' in '%s', previous_month can only be a negative integer" % str(previous_month))
+
+                    if previous_month < 0:
+                        plotgen_ts = time.mktime((year, month + previous_month + 1, 1, 0, 0, 0, 0, 0, 0)) - 1
 
                 image_root = os.path.join(self.config_dict['WEEWX_ROOT'],
                                           plot_options['HTML_ROOT'])
@@ -96,6 +124,15 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                 
                 # Calculate a suitable min, max time for the requested time.
                 (minstamp, maxstamp, timeinc) = weeplot.utilities.scaletime(plotgen_ts - int(plot_options.get('time_length', 86400)), plotgen_ts)
+                
+                # If previous_year is less than 0 generate graph for specified calender year or month
+                if previous_year < 0:
+                    minstamp = time.mktime((year + previous_year, 1, 1, 0, 0, 0, 0, 0, 0))
+                    maxstamp = time.mktime((year + previous_year, 12, 31, 23, 59, 59, 999, 999, 999)) + 1
+                elif previous_year == 0 and previous_month < 0:
+                    minstamp = time.mktime((year, month + previous_month, 1, 0, 0, 0, 0, 0, 0))
+                    maxstamp = time.mktime((year, month + previous_month + 1, 1, 0, 0, 0, 0, 0, 0))
+                
                 # Override the x interval if the user has given an explicit interval:
                 timeinc_user = to_int(plot_options.get('x_interval'))
                 if timeinc_user is not None:
