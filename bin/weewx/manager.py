@@ -1557,6 +1557,10 @@ class DaySummaryManager(Manager):
             self._write_metadata('lastUpdate',  str(int(lastUpdate)), cursor)
 
     def _calc_weight(self, record):
+        if 'interval' not in record:
+            raise ValueError("Missing value for record field 'interval'")
+        elif record['interval'] <= 0:
+            raise ValueError("Non-positive value for record field 'interval': %s" (record['interval'], ))
         weight = 60.0 * record['interval'] if self.version >= '2.0' else 1.0
         return weight
 

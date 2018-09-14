@@ -1,10 +1,12 @@
 weewx change history
 --------------------
 
-3.X.Y MM/DD/YYYY
+3.8.3 MM/DD/YYYY
 
 Log watch now correctly logs garbage collection events. Thanks to user
 buster-one. PR #340.
+
+Check for missing or negative values for the record field 'interval'.
 
 
 3.8.2 08/15/2018
