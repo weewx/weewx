@@ -1943,7 +1943,12 @@ class WMR200(weewx.drivers.AbstractDevice):
                 timestamp_packet_interval = timestamp_packet_current \
                         - timestamp_packet_previous
 
-                if pkt.timestamp_record() > (timestamp_packet_previous
+                if timestamp_packet_interval < 0:
+                    loginf(('genStartup() Discarding received archive record that presented out-of-order; '
+                            'current timestamp:%s; previous timestamp:%s')
+                           % (weeutil.weeutil.timestamp_to_string(timestamp_packet_current),
+                              weeutil.weeutil.timestamp_to_string(timestamp_packet_previous)))
+                elif pkt.timestamp_record() > (timestamp_packet_previous
                                              + self._archive_threshold):
                     loginf(('genStartup() Discarding received archive'
                             ' record exceeding archive interval cnt:%d'
