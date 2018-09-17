@@ -31,6 +31,9 @@ Thanks to user evilbunny2008. PR #325.
 
 Guard against a negative value for 'interval' in WMR200 stations.
 
+Fixed bug that caused older, "type A" Vantage Pro2, to crash.
+Fixes issue #343.
+
 
 3.8.2 08/15/2018
 

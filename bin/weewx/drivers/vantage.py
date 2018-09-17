@@ -1767,7 +1767,7 @@ _loop_map = {'barometer'       : _val1000Zero,
              'forecastRule'    : _null,
              'sunrise'         : _stime,
              'sunset'          : _stime,
-             'trendIcon'       : _null_int}
+             'trendIcon'       : _null}
 
 # This dictionary maps a type key to a function. The function should be able to
 # decode a sensor value held in the archive packet in the internal, Davis form into US
