@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2015 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2018 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -52,13 +52,14 @@ NICKNAME_MAP = {
     "@weekly": "0 0 * * 0",
     "@daily": "0 0 * * *",
     "@hourly": "0 * * * *"
-}
+    }
 # list of valid spans for CRON like fields
 SPANS = (MINUTES, HOURS, DOM, MONTHS, DOW)
 # list of valid names for CRON lik efields
 NAMES = ((), (), (), MONTH_NAMES, DAY_NAMES)
 # list of name maps for CRON like fields
 MAPS = ((), (), (), MONTH_NAME_MAP, DAY_NAME_MAP)
+
 
 # =============================================================================
 #                    Class StdReportEngine
@@ -115,7 +116,7 @@ class StdReportEngine(threading.Thread):
                           weeutil.weeutil.timestamp_to_string(self.gen_ts))
         else:
             syslog.syslog(syslog.LOG_DEBUG, "reportengine: "
-                          "Running reports for latest time in the database.")
+                                            "Running reports for latest time in the database.")
 
         # Iterate over each requested report
         for report in self.config_dict['StdReport'].sections:
@@ -148,15 +149,15 @@ class StdReportEngine(threading.Thread):
             except IOError as e:
                 syslog.syslog(
                     syslog.LOG_ERR, "reportengine: "
-                    "Cannot read skin configuration file %s for report %s: %s"
-                    % (skin_config_path, report, e))
+                                    "Cannot read skin configuration file %s for report %s: %s"
+                                    % (skin_config_path, report, e))
                 syslog.syslog(syslog.LOG_ERR, "        ****  Report ignored")
                 continue
             except SyntaxError as e:
                 syslog.syslog(
                     syslog.LOG_ERR, "reportengine: "
-                    "Failed to read skin configuration file %s for report %s: %s"
-                    % (skin_config_path, report, e))
+                                    "Failed to read skin configuration file %s for report %s: %s"
+                                    % (skin_config_path, report, e))
                 syslog.syslog(syslog.LOG_ERR, "        ****  Report ignored")
                 continue
 
@@ -206,11 +207,13 @@ class StdReportEngine(threading.Thread):
                         if timing.is_triggered(_ts, _ts - _interval) is False:
                             # report timing was valid but not triggered so do
                             # not run the report.
-                            syslog.syslog(syslog.LOG_DEBUG, "reportengine: Report %s skipped due to report_timing setting" %
-                                          (report, ))
+                            syslog.syslog(syslog.LOG_DEBUG,
+                                          "reportengine: Report %s skipped due to report_timing setting" %
+                                          (report,))
                             continue
                     else:
-                        syslog.syslog(syslog.LOG_DEBUG, "reportengine: Invalid report_timing setting for report '%s', running report anyway" % report)
+                        syslog.syslog(syslog.LOG_DEBUG,
+                                      "reportengine: Invalid report_timing setting for report '%s', running report anyway" % report)
                         syslog.syslog(syslog.LOG_DEBUG, "        ****  %s" % timing.validation_error)
 
             for generator in weeutil.weeutil.option_as_list(skin_dict['Generators'].get('generator_list')):
@@ -227,7 +230,7 @@ class StdReportEngine(threading.Thread):
                 except Exception as e:
                     syslog.syslog(
                         syslog.LOG_CRIT, "reportengine: "
-                        "Unable to instantiate generator %s" % generator)
+                                         "Unable to instantiate generator %s" % generator)
                     syslog.syslog(syslog.LOG_CRIT, "        ****  %s" % e)
                     weeutil.weeutil.log_traceback("        ****  ")
                     syslog.syslog(syslog.LOG_CRIT, "        ****  Generator ignored")
@@ -243,8 +246,8 @@ class StdReportEngine(threading.Thread):
                     # next generator.
                     syslog.syslog(
                         syslog.LOG_CRIT, "reportengine: "
-                        "Caught unrecoverable exception in generator %s"
-                        % generator)
+                                         "Caught unrecoverable exception in generator %s"
+                                         % generator)
                     syslog.syslog(syslog.LOG_CRIT, "        ****  %s" % str(e))
                     weeutil.weeutil.log_traceback("        ****  ")
                     syslog.syslog(syslog.LOG_CRIT, "        ****  Generator terminated")
@@ -254,12 +257,14 @@ class StdReportEngine(threading.Thread):
                 finally:
                     obj.finalize()
 
+
 # =============================================================================
 #                    Class ReportGenerator
 # =============================================================================
 
 class ReportGenerator(object):
     """Base class for all report generators."""
+
     def __init__(self, config_dict, skin_dict, gen_ts, first_run, stn_info, record=None):
         self.config_dict = config_dict
         self.skin_dict = skin_dict
@@ -295,14 +300,9 @@ class FtpGenerator(ReportGenerator):
         log_success = to_bool(self.skin_dict.get('log_success', True))
 
         t1 = time.time()
-        if 'HTML_ROOT' in self.skin_dict:
-            local_root = os.path.join(self.config_dict['WEEWX_ROOT'],
-                                      self.skin_dict['HTML_ROOT'])
-        else:
-            local_root = os.path.join(self.config_dict['WEEWX_ROOT'],
-                                      self.config_dict['StdReport']['HTML_ROOT'])
-
         try:
+            local_root = os.path.join(self.config_dict['WEEWX_ROOT'],
+                                      self.skin_dict.get('HTML_ROOT', self.config_dict['StdReport']['HTML_ROOT']))
             ftp_data = weeutil.ftpupload.FtpUpload(
                 server=self.skin_dict['server'],
                 user=self.skin_dict['user'],
@@ -316,7 +316,7 @@ class FtpGenerator(ReportGenerator):
                 secure=to_bool(self.skin_dict.get('secure_ftp', False)),
                 debug=int(self.skin_dict.get('debug', 0)),
                 secure_data=to_bool(self.skin_dict.get('secure_data', True)))
-        except Exception:
+        except KeyError:
             syslog.syslog(syslog.LOG_DEBUG,
                           "ftpgenerator: FTP upload not requested. Skipped.")
             return
@@ -326,12 +326,12 @@ class FtpGenerator(ReportGenerator):
         except (socket.timeout, socket.gaierror, ftplib.all_errors, IOError) as e:
             (cl, unused_ob, unused_tr) = sys.exc_info()
             syslog.syslog(syslog.LOG_ERR, "ftpgenerator: "
-                          "Caught exception %s: %s" % (cl, e))
+                                          "Caught exception %s: %s" % (cl, e))
             weeutil.weeutil.log_traceback("        ****  ")
             return
 
-        t2 = time.time()
         if log_success:
+            t2 = time.time()
             syslog.syslog(syslog.LOG_INFO,
                           "ftpgenerator: ftp'd %d files in %0.2f seconds" %
                           (n, (t2 - t1)))
@@ -351,12 +351,10 @@ class RsyncGenerator(ReportGenerator):
         # We don't try to collect performance statistics about rsync, because
         # rsync will report them for us.  Check the debug log messages.
         try:
-            if 'HTML_ROOT' in self.skin_dict:
-                html_root = self.skin_dict['HTML_ROOT']
-            else:
-                html_root = self.config_dict['StdReport']['HTML_ROOT']
+            local_root = os.path.join(self.config_dict['WEEWX_ROOT'],
+                                      self.skin_dict.get('HTML_ROOT', self.config_dict['StdReport']['HTML_ROOT']))
             rsync_data = weeutil.rsyncupload.RsyncUpload(
-                local_root=os.path.join(self.config_dict['WEEWX_ROOT'], html_root),
+                local_root=local_root,
                 remote_root=self.skin_dict['path'],
                 server=self.skin_dict['server'],
                 user=self.skin_dict.get('user'),
@@ -365,7 +363,7 @@ class RsyncGenerator(ReportGenerator):
                 compress=to_bool(self.skin_dict.get('compress', False)),
                 delete=to_bool(self.skin_dict.get('delete', False)),
                 log_success=to_bool(self.skin_dict.get('log_success', True)))
-        except Exception:
+        except KeyError:
             syslog.syslog(syslog.LOG_DEBUG,
                           "rsyncgenerator: rsync upload not requested. Skipped.")
             return
@@ -375,7 +373,7 @@ class RsyncGenerator(ReportGenerator):
         except IOError as e:
             (cl, unused_ob, unused_tr) = sys.exc_info()
             syslog.syslog(syslog.LOG_ERR, "rsyncgenerator: "
-                          "Caught exception %s: %s" % (cl, e))
+                                          "Caught exception %s: %s" % (cl, e))
 
 
 # =============================================================================
@@ -442,7 +440,8 @@ class CopyGenerator(ReportGenerator):
 
         if log_success:
             syslog.syslog(syslog.LOG_INFO, "copygenerator: "
-                          "copied %d files to %s" % (ncopy, html_dest_dir))
+                                           "copied %d files to %s" % (ncopy, html_dest_dir))
+
 
 # ===============================================================================
 #                    Class ReportTiming
@@ -583,11 +582,11 @@ class ReportTiming(object):
             return set(xrange(span[0], span[1] + 1))
         elif field.isdigit():  # just a number
             # If its a DOW then replace any 7s with 0
-            _field = field.replace('7','0') if span == DOW else field
+            _field = field.replace('7', '0') if span == DOW else field
             # its valid if its within our span
             if span[0] <= int(_field) <= span[1]:
                 # it's valid so return the field itself as a set
-                return set((int(_field), ))
+                return set((int(_field),))
             else:
                 # invalid field value so raise ValueError
                 raise ValueError("Invalid field value '%s' in '%s'" % (field,
@@ -602,7 +601,7 @@ class ReportTiming(object):
                 # its valid if its within our span
                 if span[0] <= int(_field) <= span[1]:
                     # it's valid so return the field itself as a set
-                    return set((int(_field), ))
+                    return set((int(_field),))
                 else:
                     # invalid field value so raise ValueError
                     raise ValueError("Invalid field value '%s' in '%s'" % (field,
@@ -689,10 +688,10 @@ class ReportTiming(object):
                 trigger_dt = datetime.datetime.fromtimestamp(_ts)
                 trigger_tt = trigger_dt.timetuple()
                 month, dow, day, hour, minute = (trigger_tt.tm_mon,
-                                                (trigger_tt.tm_wday + 1) % 7,
-                                                trigger_tt.tm_mday,
-                                                trigger_tt.tm_hour,
-                                                trigger_tt.tm_min)
+                                                 (trigger_tt.tm_wday + 1) % 7,
+                                                 trigger_tt.tm_mday,
+                                                 trigger_tt.tm_hour,
+                                                 trigger_tt.tm_min)
                 # construct a tuple so we can iterate over and process each
                 # field
                 element_tuple = zip((minute, hour, day, month, dow),
@@ -712,7 +711,7 @@ class ReportTiming(object):
                             # was a match on a restricted DOM field
                             dom_match = True
                             dom_restricted_match = self.dom_restrict
-                        elif field_span == DOW and not(dom_restricted_match or self.dow_restrict or dom_match):
+                        elif field_span == DOW and not (dom_restricted_match or self.dow_restrict or dom_match):
                             break
                         continue
                     elif field_span == DOW and dom_restricted_match or field_span == DOM:
