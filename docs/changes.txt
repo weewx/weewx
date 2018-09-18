@@ -1,6 +1,14 @@
 weewx change history
 --------------------
 
+3.8.3 MM/DD/YYYY
+
+Log watch now correctly logs garbage collection events. Thanks to user
+buster-one. PR #340.
+
+Check for missing or negative values for the record field 'interval'.
+
+
 3.9.X YY/YY/YYYY
 
 The image generator now supports the use of a 'stale_age' option. Thanks to
