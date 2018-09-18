@@ -1,14 +1,6 @@
 weewx change history
 --------------------
 
-3.8.3 MM/DD/YYYY
-
-Log watch now correctly logs garbage collection events. Thanks to user
-buster-one. PR #340.
-
-Check for missing or negative values for the record field 'interval'.
-
-
 3.9.X YY/YY/YYYY
 
 The image generator now supports the use of a 'stale_age' option. Thanks to
@@ -45,6 +37,14 @@ Fixes issue #343.
 Changed the formula used to calculate percentage illumination of the moon to
 something more accurate around 2018. This formula is only used if pyephem is not
 installed.
+
+
+3.8.3 MM/DD/YYYY
+
+Log watch now correctly logs garbage collection events. Thanks to user
+buster-one. PR #340.
+
+Check for missing or negative values for the record field 'interval'.
 
 
 3.8.2 08/15/2018
