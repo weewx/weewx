@@ -297,7 +297,7 @@ class ScaledDraw(object):
         scaledraw = ScaledDraw(draw, ((10, 10), (118, 246)), ((0.0, 0.0), (10.0, 1.0)))
         
         would create a scaled drawing where the upper-left image coordinate (10, 10) would
-        correspond to the scaled coordinate( 0.0, 1.0). The lower-left image coordinate
+        correspond to the scaled coordinate( 0.0, 1.0). The lower-right image coordinate
         would correspond to the scaled coordinate (10.0, 0.0).
         
         draw: an instance of ImageDraw
