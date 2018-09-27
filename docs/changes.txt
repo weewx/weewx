@@ -31,12 +31,15 @@ Thanks to user evilbunny2008. PR #325.
 
 Guard against a negative value for 'interval' in WMR200 stations.
 
+Changed the formula used to calculate percentage illumination of the moon to
+something more accurate around 2018. This formula is only used if pyephem is not
+installed. Fixes issue #342.
+
 Fixed bug that caused older, "type A" Vantage Pro2, to crash.
 Fixes issue #343.
 
-Changed the formula used to calculate percentage illumination of the moon to
-something more accurate around 2018. This formula is only used if pyephem is not
-installed.
+Fixed a bug that caused a divide-by-zero error if a plot range was the same as
+a specified min or max scale. Fixes issue #344.
 
 
 3.8.3 MM/DD/YYYY
