@@ -12,6 +12,10 @@ The Felsius unit of temperature (see https://xkcd.com/1923/) is now supported.
 
 The almanac now supports calculating planet separations.
 
+The tag formatting taxonomy has been simplified. Just use suffix ".format()" now.
+Documentation updated to reflect changes. Backwards compatibility with old
+suffixes is supported. Fixes issue #328.
+
 Can now set Rapidfire parameter rtfreq. Thanks to user 'whorfin'. PR #304.
 
 Template names can now include the week number. Thanks to user 'stimpy23'. PR #319.

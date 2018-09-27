@@ -1073,10 +1073,10 @@ $month.outTemp.max</pre>
     </p>
 
     <p class="indent">
-      <span class="code">optional_formatting</span> is an optional
-      formatting tag that controls how the value will appear. See the
+      <span class="code">optional_formatting</span> is a set of optional
+      formatting tags, which control how the value will appear. See the
       section <em><a href="#formatting_options">Formatting
-      Options</a></em>.
+      Options</a></em> below.
     </p>
 
     <h3>
@@ -1165,10 +1165,10 @@ $month.outTemp.max</pre>
     </p>
 
     <p class="indent">
-      <span class="code">optional_formatting</span> is an optional
-      formatting tag that controls how the value will appear. See the
+      <span class="code">optional_formatting</span> is a set of optional
+      formatting tags, which control how the value will appear. See the
       section <em><a href="#formatting_options">Formatting
-      Options</a></em>.
+      Options</a></em> below.
     </p>
 
     <p>
@@ -1310,19 +1310,7 @@ $month.outTemp.max</pre>
 
     <p class="example_output">Today's average pressure=1017.5 mbar
     </p>
-    <h4>Wind ordinals</h4>
 
-    <p>Using this method, you can output compass ordinals for wind
-      direction. For example, the template</p>
-    <pre class="tty">Current wind direction is $current.windDir ($current.windDir.ordinal_compass)</pre>
-    <p>would result in:</p>
-
-    <p class="example_output">Current wind direction is 138° (SW)</p>
-
-    <p>
-      The ordinal abbreviations are set by option <span class="code">directions</span>
-      in the skin configuration file <span class="code">skin.conf</span>.
-    </p>
     <h4>Illegal conversions</h4>
 
     <p>
@@ -1343,75 +1331,25 @@ or in foobar units: $day.barometer.min.foobar
     <h3 id="formatting_options">Formatting options</h3>
 
     <p>
-      The tag <span class="code">optional_formatting</span> can be
-      used with either current observations or aggregations. It can be
-      one of:
+      A variety of tags and arguments are available to you to customize the formatting of the final observation
+      value. This table lists the tags:
     </p>
     <table class="indent" summary="Formatting Options">
-      <caption>Optional formatting tags</caption>
+      <caption>Optional formatting tag</caption>
       <tbody>
       <tr class="first_row">
         <td>Optional formatting tag</td>
         <td>Comment</td>
       </tr>
       <tr>
-        <td class='text_highlight'>(no tag)</td>
-        <td>Value is returned as a string, formatted using an
-          appropriate string format from <span class="code">skin.conf</span>.
-          A unit label (<i>e.g.</i>, <span class='code'>&deg;F</span>) from
-          <span class="code">skin.conf</span> is also attached at
-          the end.
-        </td>
+        <td class="code text_highlight">.format(<em>args</em>)</td>
+        <td>Format the string according to a set of optional <em>args</em> (see below).</td>
       </tr>
       <tr>
-        <td class="code text_highlight">.string(<em>NONE_string</em>)
-        </td>
-        <td>Value is returned as a string, formatted using an
-          appropriate string format from <span class="code">skin.conf</span>.
-          If the value is <span class="code">None</span>, the string
-          <span class="code">NONE_string</span> will be substituted
-          if given, otherwise the value for <span class="code">NONE</span>
-          in <span class="code"> <a
-              href="#Units_StringFormats">[Units][[StringFormats]]</a>
-              </span> will be used. A unit label (<i>e.g.</i>, <span class='code'>&deg;F</span>)
-          from <span class="code">skin.conf</span> will be attached
-          at the end.
-        </td>
-      </tr>
-      <tr>
-        <td class="code text_highlight">.formatted</td>
-        <td>Value is returned as a string, formatted using an
-          appropriate string format and <span class="code">None</span>
-          value from <span class="code">skin.conf</span>. No unit
-          label will be attached.
-        </td>
-      </tr>
-      <tr>
-        <td class="code text_highlight">.format(<em>string_format</em>, <em>NONE_string</em>)
-        </td>
-        <td>Value is returned as a string, using the string
-          format specified with <em>string_format</em>. If the value
-          is <span class="code">None</span>, the string <span
-              class="code">NONE_string</span> will be substituted if
-          given, otherwise the value for <span class="code">NONE</span>
-          in <span class="code"> <a
-              href="#Units_StringFormats">[Units][[StringFormats]]</a>
-            </span> will be used. A unit label (<i>e.g.</i>, <span class='code'>&deg;F</span>)
-          from <span class="code">skin.conf</span> will be attached
-          at the end.
-        </td>
-      </tr>
-      <tr>
-        <td class="code text_highlight">.nolabel(<em>string_format, NONE_string</em>)
-        </td>
-        <td>Value is returned as a string, using the string
-          format specified with <em>string_format</em>. If the value
-          is <span class="code">None</span>, the string <span
-              class="code">NONE_string</span> will be substituted if
-          given, otherwise the value for <span class="code">NONE</span>
-          in <span class="code"> <a
-              href="#Units_StringFormats">[Units][[StringFormats]]</a>
-            </span> will be used. No unit label will be attached at the end.
+        <td class="code text_highlight">.ordinal_compass</td>
+        <td>Output compass ordinals for wind direction (<i>e.g.</i>"SW").
+          The ordinal abbreviations are set by option <span class="code">directions</span>
+          in the skin configuration file <span class="code">skin.conf</span>.
         </td>
       </tr>
       <tr>
@@ -1419,70 +1357,97 @@ or in foobar units: $day.barometer.min.foobar
         <td>Value is returned "as is" without being converted
           to a string and without any formatting applied. This can
           be useful for doing arithmetic directly within the
-          templates. You must be prepared to deal with a <span
-              class="code">None</span> value unless the value is
-          converted directly to a string. In this case, it will be
-          converted to the empty string (<span class="code">''</span>)
+          templates. You must be prepared to deal with a potential <span
+              class="code">None</span> value.
         </td>
       </tr>
       </tbody>
     </table>
-    <p>&nbsp;</p>
-    <table class="indent" summary="Summary of formatting options">
-      <caption>Summary of formatting options</caption>
+
+    <p>The first of these tags has the formal structure:</p>
+    <pre class="tty">.format(format_string=None, NONE_string=None, add_label=True, localize=True)</pre>
+
+    <p>Here is the meaning of each of the optional arguments:</p>
+
+    <table class="indent" summary="Formatting arguments">
+      <caption>Optional arguments for <span class="code">.format()</span></caption>
       <tbody>
       <tr class="first_row">
-        <td>Formatting Tag</td>
-        <td>Format Used</td>
-        <td>Label Used</td>
-        <td>NONE String</td>
-        <td>Returned Value</td>
+        <td>Optional argument</td>
+        <td>Comment</td>
       </tr>
       <tr>
-        <td class="first_col">(no tag)</td>
-        <td>From <span class="code">skin.conf</span></td>
-        <td>From <span class="code">skin.conf</span></td>
-        <td>From <span class="code">skin.conf</span></td>
-        <td>string</td>
+        <td class='code text_highlight'>format_string</td>
+        <td>Use the optional string to format the value. If set to <span class="code">None</span>,
+          then an appropriate string format from <span class="code">skin.conf</span> will be used.
+        </td>
       </tr>
       <tr>
-        <td class="code first_col">.string</td>
-        <td>From <span class="code">skin.conf</span></td>
-        <td>From <span class="code">skin.conf</span></td>
-        <td>Optional user-supplied</td>
-        <td>string</td>
+        <td class="code text_highlight">NONE_string</td>
+        <td>Should the observation value be <span class="code">NONE</span>, then use the supplied
+          string (typically, something like "N/A"). If <span class="code">NONE_string</span> is
+          set to <span class="code">None</span>, then the value for <span class="code">NONE</span>
+          in <span class="code"> <a
+              href="#Units_StringFormats">[Units][[StringFormats]]</a>
+              </span> will be used.
+        </td>
       </tr>
       <tr>
-        <td class="code first_col">.formatted</td>
-        <td>From <span class="code">skin.conf</span></td>
-        <td>No label</td>
-        <td>From <span class="code">skin.conf</span></td>
-        <td>string</td>
+        <td class="code text_highlight">add_label</td>
+        <td>If set to <span class="code">True</span> (the default), then a unit label (<i>e.g.</i>, &deg;F)
+          from <span class="code">skin.conf</span>
+          will be attached to the end. Otherwise, it will be left out.
+        </td>
       </tr>
       <tr>
-        <td class="code first_col">.format</td>
-        <td>User-supplied</td>
-        <td>From <span class="code">skin.conf</span></td>
-        <td>Optional user-supplied</td>
-        <td>string</td>
-      </tr>
-      <tr>
-        <td class="code first_col">.nolabel</td>
-        <td>User-supplied</td>
-        <td>No label</td>
-        <td>Optional user-supplied</td>
-        <td>string</td>
-      </tr>
-      <tr>
-        <td class="code first_col">.raw</td>
-        <td>None</td>
-        <td>No label</td>
-        <td>None</td>
-        <td>native value</td>
+        <td class="code text_highlight">localize</td>
+        <td>If set to <span class="code">True</span> (the default), then localize the results. Otherwise, do not.
+        </td>
       </tr>
       </tbody>
     </table>
-    <p>Here are some examples with the expected results:</p>
+
+    <p>If you're willing to honor the ordering of the arguments, the argument name can be omitted.</p>
+
+    <h3>Formatting examples</h3>
+
+    <p>This section gives a number of example tags, and their expected output. The following values are assumed:</p>
+
+    <table class="indent" style="width:50%" summary="Example values">
+      <caption>Values used in the examples below</caption>
+      <tr class="first_row">
+        <td>Observation</td>
+        <td>Value</td>
+      </tr>
+      <tr>
+        <td class="code first_col">
+          outTemp
+        </td>
+        <td>45.2&deg;F</td>
+      </tr>
+      <tr>
+        <td class="code first_col">
+          UV
+        </td>
+        <td>
+          <span class="code">None</span>
+        </td>
+      </tr>
+      <tr>
+        <td class="code first_col">
+          windDir
+        </td>
+        <td>138&deg;</td>
+      </tr>
+      <tr>
+        <td class="code first_col">
+          dateTime
+        </td>
+        <td>1270250700</td>
+      </tr>
+    </table>
+
+    <p>Here are the examples:</p>
     <table class="indent"
            summary="Formatting options with expected results">
       <caption>Formatting options with expected results</caption>
@@ -1495,144 +1460,107 @@ or in foobar units: $day.barometer.min.foobar
       <tr>
         <td class="code first_col">$current.outTemp</td>
         <td class="code">45.2°F</td>
-        <td>String formatting and label from <span class="code">skin.conf</span></td>
+        <td>String formatting from <span class="code"><a href="#Units_StringFormats">[Units][[StringFormats]]</a></span>.
+          Label from <span class="code"><a href="#Units_Labels">[Units][[Labels]]</a></span> in
+          <span class="code">skin.conf</span></td>
       </tr>
       <tr>
-        <td class="code first_col">$current.outTemp.string</td>
+        <td class="code first_col">$current.outTemp.format</td>
         <td class="code">45.2°F</td>
-        <td>String formatting and label from <span class="code">skin.conf</span></td>
+        <td>Same as the <span class="code">$current.outTemp</span>.</td>
       </tr>
       <tr>
-        <td class="code first_col">$current.UV.string</td>
-        <td class="code">N/A</td>
-        <td>This example assumes that the instrument has no UV
-          sensor, resulting in a <span class="code">None</span>
-          value. The string specified by <span class="code">NONE</span>
-          in <span class="code"> <a
-              href="#Units_StringFormats">[Units][[StringFormats]]</a></span>
-          is substituted.
-        </td>
+        <td class="code first_col">$current.outTemp.format()</td>
+        <td class="code">45.2°F</td>
+        <td>Same as the <span class="code">$current.outTemp</span>.</td>
       </tr>
       <tr>
-        <td class="code first_col">$current.UV.string("No UV")</td>
-        <td class="code">No UV</td>
-        <td>This example assumes that the instrument has no UV
-          sensor, resulting in a <span class="code">None</span>
-          value. The string supplied by the user is substituted.
-        </td>
-      </tr>
-      <tr>
-        <td class="code first_col">$current.outTemp.formatted</td>
-        <td class="code">45.2</td>
-        <td>String formatting from <span class="code">skin.conf</span>;
-          no label
+        <td class="code first_col">$current.outTemp.format(format_string="%.3f")</td>
+        <td class="code">45.200°F</td>
+        <td>Specified string format used;
+          label from <span class="code"><a href="#Units_Labels">[Units][[Labels]]</a></span> in
+          <span class="code">skin.conf</span>.
         </td>
       </tr>
       <tr>
         <td class="code first_col">$current.outTemp.format("%.3f")</td>
         <td class="code">45.200°F</td>
-        <td>Specified string format used; label from <span
-            class="code">skin.conf</span>.
+        <td>As above, except a positional argument, instead of the named argument, is being used.
+        </td>
+      </tr>
+      <tr>
+        <td class="code first_col">$current.outTemp.format(add_label=False)</td>
+        <td class="code">45.2</td>
+        <td>No label. The string formatting is from
+          <span class="code"><a href="#Units_StringFormats">[Units][[StringFormats]]</a></span> in
+          <span class="code">skin.conf</span></td>
+      </tr>
+      <tr>
+        <td class="code first_col">$current.UV</td>
+        <td class="code">N/A</td>
+        <td>The string specified by option <span class="code">NONE</span>
+          in <span class="code"> <a
+              href="#Units_StringFormats">[Units][[StringFormats]]</a></span> in <span class="code">skin.conf</span>
+          is used.
+        </td>
+      </tr>
+      <tr>
+        <td class="code first_col">$current.UV.format(NONE_string="No UV")</td>
+        <td class="code">No UV</td>
+        <td>Specified <span class="code">NONE_string</span> is used.
+        </td>
+      </tr>
+      <tr>
+        <td class="code first_col">$current.windDir</td>
+        <td class="code">138&deg;</td>
+        <td>Formatting is from option <span class="code">degree_compass</span> in
+          <span class="code"> <a
+              href="#Units_StringFormats">[Units][[StringFormats]]</a></span> in <span class="code">skin.conf</span>.
+        </td>
+      </tr>
+      <tr>
+        <td class="code first_col">$current.windDir.ordinal_direction</td>
+        <td class="code">SW</td>
+        <td>Ordinal direction from section
+          <span class="code"><a href="#Units_Ordinates">[Units][[Ordinates]]</a></span> in
+          <span class="code">skin.conf</span> is being substituted.
         </td>
       </tr>
       <tr>
         <td class="code first_col">$current.dateTime</td>
         <td class="code">02-Apr-2010 16:25</td>
-        <td>Time formatting and label from <span class="code">skin.conf</span></td>
+        <td>Time formatting from
+          <span class="code"><a href="#Units_TimeFormats">[Units][[TimeFormats]]</a></span> in
+          <span class="code">skin.conf</span> is being used.</td>
+      </tr>
+      <tr>
+        <td class="code first_col">$current.dateTime.format(format_string="%H:%M")</td>
+        <td class="code">16:25</td>
+        <td>Specified time format used.</td>
       </tr>
       <tr>
         <td class="code first_col">$current.dateTime.format("%H:%M")</td>
         <td class="code">16:25</td>
-        <td>Specified time format used; label from <span
-            class="code">skin.conf</span>.
-        </td>
+        <td>As above, except a positional argument, instead of the named argument, is being used.</td>
       </tr>
       <tr>
         <td class="code first_col">$current.dateTime.raw</td>
         <td class="code">1270250700</td>
-        <td>Unix epoch time, converted to string by template
-          engine.
+        <td>Raw Unix epoch time (which is converted to a string by the template
+          engine).
         </td>
       </tr>
       <tr>
         <td class="code first_col">$current.outTemp.raw</td>
         <td class="code">45.2</td>
-        <td>Float returned, converted to string by template
-          engine.
-        </td>
-      </tr>
-      <tr>
-        <td class="code first_col">$month.dateTime</td>
-        <td class="code">01-Apr-2010 00:00</td>
-        <td>Time formatting and label from <span class="code">skin.conf</span></td>
-      </tr>
-      <tr>
-        <td class="code first_col">$month.outTemp.avg</td>
-        <td class="code">40.8°F</td>
-        <td>String formatting and label from <span class="code">skin.conf</span></td>
-      </tr>
-      <tr>
-        <td class="code first_col">$month.outTemp.avg.string</td>
-        <td class="code">40.8°F</td>
-        <td>Time formatting and label from <span class="code">skin.conf</span></td>
-      </tr>
-      <tr>
-        <td class="code first_col">$month.UV.avg.string</td>
-        <td class="code">N/A</td>
-        <td>This example assumes that the instrument has no UV
-          sensor, resulting in a <span class="code">None</span>
-          value. The string specified by <span class="code">NONE</span>
-          in <span class="code"> <a
-              href="#Units_StringFormats">[Units][[StringFormats]]</a></span>
-          is substituted.
-        </td>
-      </tr>
-      <tr>
-        <td class="code first_col">$month.UV.avg.string("No
-          UV")
-        </td>
-        <td class="code">No UV</td>
-        <td>This example assumes that the instrument has no UV
-          sensor, resulting in a <span class="code">None</span>
-          value. The string supplied by the user is substituted.
-        </td>
-      </tr>
-      <tr>
-        <td class="code first_col">$month.outTemp.avg.formatted</td>
-        <td class="code">40.8</td>
-        <td>String formatting from <span class="code">skin.conf</span>;
-          no label
-        </td>
-      </tr>
-      <tr>
-        <td class="code first_col">$month.outTemp.avg.format("%.3f")</td>
-        <td class="code">40.759°F</td>
-        <td>Specified string format used; no label</td>
-      </tr>
-      <tr>
-        <td class="code first_col">$month.outTemp.avg.raw</td>
-        <td class="code">40.7589690722</td>
-        <td>Float returned, converted to string by template
-          engine
-        </td>
-      </tr>
-      <tr>
-        <td class="code first_col">$month.UV.avg.raw</td>
-        <td class="code"><em>(empty)</em></td>
-        <td><span class="code">None</span> value converted to
-          empty string by template engine.
+        <td>Raw float value (which is converted to a string by the template engine).
         </td>
       </tr>
       </tbody>
     </table>
-    <p>
-      Tags that take an argument, such as <span class="code">.string(NONE_string)</span>,
-      do not require parenthesis if the argument is omitted. Thus, you
-      can specify either <span class="code">$month.outTemp.string()</span>
-      or <span class="code">$month.outTemp.string</span>, if you want
-      the default value of <span class="code">NONE_string</span>. They
-      produce the same results.
-    </p>
+
+    <p>Note that the same formatting conventions can be used for aggregation periods,
+      such as <span class="code">$month</span>, as well as <span class="code">$current</span>.</p>
 
     <h3>
       Start, end, and <span class="code">dateTime</span>
@@ -1899,7 +1827,7 @@ or in foobar units: $day.barometer.min.foobar
       </tbody>
     </table>
     <p>For example, the tag</p>
-    <pre class="tty">$day.outTemp.max.formatted$unit.label.outTemp</pre>
+    <pre class="tty">$day.outTemp.max.format(add_label=False)$unit.label.outTemp</pre>
     <p>would result in</p>
 
     <p class="example_output">21.2°C</p>
@@ -4301,7 +4229,7 @@ second = " second", " seconds"</pre>
       or full moon.
     </p>
 
-    <h3 class="config_section">[[Ordinates]]</h3>
+    <h3 class="config_section" id="Units_Ordinates">[[Ordinates]]</h3>
 
     <p class="config_option">directions</p>
 

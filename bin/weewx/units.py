@@ -927,22 +927,12 @@ class ValueHelper(object):
     def __str__(self):
         """Return as string"""
         return self.toString()
-    
-    def string(self, NONE_string=None):
-        """Return as string with an optional user specified string to be
-        used if None"""
-        return self.toString(NONE_string=NONE_string)
-    
-    def format(self, format_string, NONE_string=None):
-        """Returns a formatted version of the datum, using a user-supplied
-        format."""
-        return self.toString(useThisFormat=format_string, NONE_string=NONE_string)
-    
-    def nolabel(self, format_string, NONE_string=None):
-        """Returns a formatted version of the datum, using a user-supplied
-        format. No label."""
-        return self.toString(addLabel=False, useThisFormat=format_string, NONE_string=NONE_string)
-    
+
+    def format(self, format_string=None, NONE_string=None, add_label=True, localize=True):
+        """Returns a formatted version of the datum, using user-supplied customizations."""
+        return self.toString(useThisFormat=format_string, NONE_string=NONE_string,
+                             addLabel=add_label, localize=localize)
+
     def ordinal_compass(self):
         """Returns an ordinal compass direction (eg, 'NNW')"""
         # Get the raw value tuple, then ask the formatter to look up an
@@ -950,16 +940,29 @@ class ValueHelper(object):
         return self.formatter.to_ordinal_compass(self._raw_value_tuple)
         
     @property
-    def formatted(self):
-        """Return a formatted version of the datum. No label."""
-        return self.toString(addLabel=False)
-        
-    @property
     def raw(self):
         """Returns the raw value without any formatting."""
         return self._raw_value_tuple[0]
 
-    @property    
+    # Backwards compatibility
+    def string(self, NONE_string=None):
+        """Return as string with an optional user specified string to be
+        used if None"""
+        return self.toString(NONE_string=NONE_string)
+
+    # Backwards compatibility
+    def nolabel(self, format_string, NONE_string=None):
+        """Returns a formatted version of the datum, using a user-supplied
+        format. No label."""
+        return self.toString(addLabel=False, useThisFormat=format_string, NONE_string=NONE_string)
+
+    # Backwards compatibility
+    @property
+    def formatted(self):
+        """Return a formatted version of the datum. No label."""
+        return self.toString(addLabel=False)
+
+    @property
     def _raw_value_tuple(self):
         """Return a value tuple in the target units."""
         # ... Do the unit conversion ...
