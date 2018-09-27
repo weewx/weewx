@@ -41,6 +41,9 @@ Fixes issue #343.
 Fixed a bug that caused a divide-by-zero error if a plot range was the same as
 a specified min or max scale. Fixes issue #344.
 
+Fixed bug that prevented an optional data_binding from being used in tags
+when iterating over records. Fixes issue #345.
+
 
 3.8.3 MM/DD/YYYY
 
