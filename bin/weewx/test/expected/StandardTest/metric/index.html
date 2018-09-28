@@ -600,7 +600,71 @@
   </table>
 
   <hr/>
-  
+
+  <h1>Test for formatting examples in the Customizing Guide</h1>
+  <table>
+      <tr>
+        <td align="right">$current.outTemp</td>
+        <td align="left">10.2&#176;C</td>
+      </tr>
+      <tr>
+        <td align="right">$current.outTemp.format</td>
+        <td align="left">10.2&#176;C</td>
+      </tr>
+      <tr>
+        <td align="right">$current.outTemp.format()</td>
+        <td align="left">10.2&#176;C</td>
+      </tr>
+      <tr>
+        <td align="right">$current.outTemp.format(format_string="%.3f")</td>
+        <td align="left">10.158&#176;C</td>
+      </tr>
+      <tr>
+        <td align="right">$current.outTemp.format("%.3f")</td>
+        <td align="left">10.158&#176;C</td>
+      </tr>
+      <tr>
+        <td align="right">$current.outTemp.format(add_label=False)</td>
+        <td align="left">10.2</td>
+      </tr>
+      <tr>
+        <td align="right">$current.UV</td>
+        <td align="left">   N/A</td>
+      </tr>
+      <tr>
+        <td align="right">$current.UV.format(NONE_string="No UV")</td>
+        <td align="left">No UV</td>
+      </tr>
+      <tr>
+        <td align="right">$current.windDir</td>
+        <td align="left">129&#176;</td>
+      </tr>
+      <tr>
+        <td align="right">$current.windDir.ordinal_compass</td>
+        <td align="left">SE</td>
+      </tr>
+      <tr>
+        <td align="right">$current.dateTime</td>
+        <td align="left">03-Sep-2010 11:20</td>
+      </tr>
+      <tr>
+        <td align="right">$current.dateTime.format(format_string="%H:%M")</td>
+        <td align="left">11:20</td>
+      </tr>
+      <tr>
+        <td align="right">$current.dateTime.format("%H:%M")</td>
+        <td align="left">11:20</td>
+      </tr>
+      <tr>
+        <td align="right">$current.dateTime.raw</td>
+        <td align="left">1283538000</td>
+      </tr>
+      <tr>
+        <td align="right">$current.outTemp.raw</td>
+        <td align="left">10.1579243066</td>
+      </tr>
+  </table>
+    
   <h1>Day images</h1>
   <p>
   <img src="daytempdew.png" alt="temperatures" />
