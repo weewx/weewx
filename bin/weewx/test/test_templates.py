@@ -15,6 +15,13 @@ import unittest
 
 import configobj
 
+# To run standalone, PYTHONPATH must be set to not only the WeeWX code, but also the "stats" example.
+# Something like:
+#
+# cd ~/git/weewx/bin
+# PYTHONPATH=".:../examples" python weewx/test/test_templates.py
+#
+
 os.environ['TZ'] = 'America/Los_Angeles'
 
 # This will use the locale specified by the environment variable 'LANG'
