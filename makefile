@@ -152,12 +152,16 @@ upload-readme: readme.txt
 
 # update the version in all relevant places
 VDOCS=readme.htm customizing.htm devnotes.htm hardware.htm usersguide.htm upgrading.htm utilities.htm
+VCONFIGS=weewx.conf bin/weecfg/test/expected/weewx_user_expected.conf
 version:
 	for f in $(VDOCS); do \
   sed -e 's/^Version: [0-9].*/Version: $(MMVERSION)/' docs/$$f > docs/$$f.tmp; \
   mv docs/$$f.tmp docs/$$f; \
 done
-	sed -e 's/version =.*/version = $(VERSION)/' weewx.conf > weewx.conf.tmp; mv weewx.conf.tmp weewx.conf
+	for f in $(VCONFIGS); do \
+  sed -e 's/version = .*/version = $(VERSION)/' $$f > $$f.tmp; \
+  mv $$f.tmp $$f; \
+done
 
 DEBREVISION=1
 DEBVER=$(VERSION)-$(DEBREVISION)
