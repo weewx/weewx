@@ -196,7 +196,7 @@ class BaseWrapper(object):
                 if crc16(_buffer) == 0:
                     return _buffer
                 syslog.syslog(syslog.LOG_DEBUG, "vantage: get_data_with_crc16; try #%d failed. CRC error" % (count + 1,))
-            except weewx.WeeWxIOError, e:
+            except weewx.WeeWxIOError as e:
                 syslog.syslog(syslog.LOG_DEBUG, "vantage: get_data_with_crc16; try #%d failed: %s" % (count + 1, e))
             first_time = False
 
