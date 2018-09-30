@@ -17,7 +17,7 @@ import socket
 import sys
 import syslog
 import time
-import thread
+import threading
 
 # 3rd party imports:
 import configobj
@@ -29,7 +29,6 @@ import weewx.accum
 import weewx.manager
 import weewx.qc
 import weewx.station
-import weewx.reportengine
 import weeutil.weeutil
 from weeutil.weeutil import to_bool, to_int, to_sorted_string
 from weewx import all_service_groups
@@ -708,11 +707,11 @@ class StdPrint(StdService):
         
     def new_loop_packet(self, event):
         """Print out the new LOOP packet"""
-        print "LOOP:  ", weeutil.weeutil.timestamp_to_string(event.packet['dateTime']), to_sorted_string(event.packet)
+        print("LOOP:  ", weeutil.weeutil.timestamp_to_string(event.packet['dateTime']), to_sorted_string(event.packet))
     
     def new_archive_record(self, event):
         """Print out the new archive record."""
-        print "REC:   ", weeutil.weeutil.timestamp_to_string(event.record['dateTime']), to_sorted_string(event.record)
+        print("REC:   ", weeutil.weeutil.timestamp_to_string(event.record['dateTime']), to_sorted_string(event.record))
 
 
 #==============================================================================
@@ -738,6 +737,7 @@ class StdReport(StdService):
     
     def launch_report_thread(self, event):  # @UnusedVariable
         """Called after the packet LOOP. Processes any new data."""
+        import weewx.reportengine
         # Do not launch the reporting thread if an old one is still alive.
         # To guard against a zombie thread (alive, but doing nothing) launch
         # anyway if enough time has passed.
@@ -761,7 +761,7 @@ class StdReport(StdService):
                                                              first_run=not self.launch_time)
             self.thread.start()
             self.launch_time = time.time()
-        except thread.error:
+        except threading.ThreadError:
             syslog.syslog(syslog.LOG_ERR, "Unable to launch report thread.")
             self.thread = None
 

@@ -535,7 +535,7 @@ def rev180(x):
 
 if __name__ == "__main__":
     (sunrise_utc, sunset_utc) = sunRiseSet(2009, 3, 27, -122.65, 45.517)
-    print sunrise_utc, sunset_utc
+    print(sunrise_utc, sunset_utc)
     
     #Assert that the results are within 1 minute of NOAA's 
     # calculator (see http://www.srrb.noaa.gov/highlights/sunrise/sunrise.html)

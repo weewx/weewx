@@ -6,9 +6,8 @@
 #
 """Various handy utilities that don't belong anywhere else."""
 
-from __future__ import with_statement
 
-import StringIO
+
 import calendar
 import datetime
 import math
@@ -1119,12 +1118,19 @@ def latlon_string(ll, hemi, which, format_list=None):
 
 def log_traceback(prefix='', loglevel=syslog.LOG_INFO):
     """Log the stack traceback into syslog."""
-    sfd = StringIO.StringIO()
+    try:
+        # Python 2
+        from StringIO import StringIO
+    except ImportError:
+        # Python 3
+        from io import StringIO
+
+    sfd = StringIO()
     traceback.print_exc(file=sfd)
     sfd.seek(0)
     for line in sfd:
         syslog.syslog(loglevel, prefix + line)
-    del sfd
+    del StringIO
     
 def _get_object(module_class):
     """Given a string with a module class name, it imports and returns the class."""
@@ -1200,6 +1206,9 @@ class GenWithPeek(object):
             self.have_peek = True
         return self.peek_obj
 
+    # For Python 3 compatiblity
+    __next__ = next
+
 def tobool(x):
     """Convert an object to boolean.
     
@@ -1252,7 +1261,7 @@ def to_int(x):
     >>> print to_int(None)
     None
     """
-    if isinstance(x, basestring) and x.lower() == 'none':
+    if isinstance(x, str) and x.lower() == 'none':
         x = None
     return int(x) if x is not None else None
 
@@ -1267,23 +1276,30 @@ def to_float(x):
     >>> print to_float(None)
     None
     """
-    if isinstance(x, basestring) and x.lower() == 'none':
+    if isinstance(x, str) and x.lower() == 'none':
         x = None
     return float(x) if x is not None else None
 
 def to_unicode(string, encoding='utf8'):
-    """Convert to Unicode, unless string is None
+    u"""Convert to Unicode, unless string is None
     
     Example:
-    >>> print to_unicode("degree sign from UTF8: \xc2\xb0")
+    >>> print to_unicode(b"degree sign from UTF8: °")
     degree sign from UTF8: °
-    >>> print to_unicode(u"degree sign from Unicode: \u00b0")
+    >>> print to_unicode(u"degree sign from Unicode: °")
     degree sign from Unicode: °
     >>> print to_unicode(None)
     None
     """
     try:
         return unicode(string, encoding) if string is not None else None
+    except NameError:
+        # No unicode function. Probably running under Python 3
+        try:
+            return str(string, encoding) if string is not None else None
+        except TypeError:
+            # The string is already in Unicode. Just return it.
+            return string
     except TypeError:
         # The string is already in Unicode. Just return it.
         return string
@@ -1307,25 +1323,6 @@ def max_with_none(x_seq):
         elif x is not None:
             xmax = max(x, xmax)
     return xmax
-
-def print_dict(d, margin=0, increment=4):
-    """Pretty print a dictionary.
-    
-    Example:
-    >>> print_dict({'sec1' : {'a':1, 'b':2, 'sec2': {'f':9}}, 'e':3})
-     sec1
-         a = 1
-         b = 2
-         sec2
-             f = 9
-     e = 3
-    """
-    for k in d:
-        if type(d[k]) is dict:
-            print margin * ' ', k
-            print_dict(d[k], margin + increment, increment)
-        else:
-            print margin * ' ', k, '=', d[k]
 
 def move_with_timestamp(filepath):
     """Save a file to a path with a timestamp."""
@@ -1427,9 +1424,6 @@ def to_sorted_string(rec):
 
 
 if __name__ == '__main__':
-    import sys
-    reload(sys)
-    sys.setdefaultencoding("UTF-8")  # @UndefinedVariable
     import doctest
 
     if not doctest.testmod().failed:
