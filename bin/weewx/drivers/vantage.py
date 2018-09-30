@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2016 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2018 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -22,7 +22,7 @@ import weewx.units
 import weewx.engine
 
 DRIVER_NAME = 'Vantage'
-DRIVER_VERSION = '3.0.11'
+DRIVER_VERSION = '3.1.0'
 
 def loader(config_dict, engine):
     return VantageService(engine, config_dict)
@@ -37,6 +37,10 @@ def confeditor_loader():
 # A few handy constants:
 _ack    = b'\x06'
 _resend = b'\x15' # NB: The Davis documentation gives this code as 0x21, but it's actually decimal 21
+
+def int2byte(x):
+    """Convert integer argument to byte string, under both Python 2 and 3"""
+    return struct.pack('>b', x)
 
 #===============================================================================
 #                           class BaseWrapper
@@ -100,7 +104,7 @@ class BaseWrapper(object):
         If the <ACK> is not received, no retry is attempted. Instead, an exception
         of type weewx.WeeWxIOError is raised
     
-        data: The data to send, as a string"""
+        data: The data to send, as a byte string"""
 
         self.write(data)
     
@@ -114,7 +118,7 @@ class BaseWrapper(object):
         """Send data to the Davis console along with a CRC check, waiting for an acknowledging <ack>.
         If none received, resend up to max_tries times.
         
-        data: The data to send, as a string"""
+        data: The data to send, as a byte string"""
         
         # Calculate the crc for the data:
         _crc = crc16(data)
@@ -138,10 +142,10 @@ class BaseWrapper(object):
         raise weewx.CRCError("Unable to pass CRC16 check while sending data to Vantage console")
 
     def send_command(self, command, max_tries=3):
-        """Send a command to the console, then look for the string 'OK' in the response.
+        """Send a command to the console, then look for the byte string 'OK' in the response.
         
         Any response from the console is split on \n\r characters and returned as a list."""
-        
+
         for count in range(max_tries):
             try:
                 self.wakeup_console(max_tries=max_tries)
@@ -154,7 +158,7 @@ class BaseWrapper(object):
                 nc = self.queued_bytes()
                 _buffer = self.read(nc)
                 # Split the buffer on the newlines
-                _buffer_list = _buffer.strip().split('\n\r')
+                _buffer_list = _buffer.strip().split(b'\n\r')
                 # The first member should be the 'OK' in the VP response
                 if _buffer_list[0] == b'OK':
                     # Return the rest:
@@ -182,7 +186,7 @@ class BaseWrapper(object):
         
         max_tries: Number of tries before giving up. Default=3
         
-        returns: the packet data as a string. The last 2 bytes will be the CRC"""
+        returns: the packet data as a byte string. The last 2 bytes will be the CRC"""
         if prompt:
             self.write(prompt)
             
@@ -288,7 +292,7 @@ class SerialWrapper(BaseWrapper):
     def closePort(self):
         try:
             # This will cancel any pending loop:
-            self.write('\n')
+            self.write(b'\n')
         except:
             pass
         self.serial_port.close()
@@ -330,7 +334,7 @@ class EthernetWrapper(BaseWrapper):
         import socket
         try:
             # This will cancel any pending loop:
-            self.write('\n')
+            self.write(b'\n')
         except:
             pass
         self.socket.shutdown(socket.SHUT_RDWR)
@@ -593,7 +597,7 @@ class Vantage(weewx.drivers.AbstractDevice):
         # Get the starting page and index. First, wake up the console...
         self.port.wakeup_console(self.max_tries)
         # ... request a dump...
-        self.port.send_data('DMPAFT\n')
+        self.port.send_data(b'DMPAFT\n')
         # ... from the designated date (allow only one try because that's all the console allows):
         self.port.send_data_with_crc16(_datestr, max_tries=1)
         
@@ -649,7 +653,7 @@ class Vantage(weewx.drivers.AbstractDevice):
         # Wake up the console...
         self.port.wakeup_console(self.max_tries)
         # ... request a dump...
-        self.port.send_data('DMP\n')
+        self.port.send_data(b'DMP\n')
 
         syslog.syslog(syslog.LOG_DEBUG, "vantage: Dumping all records.")
         
@@ -697,7 +701,7 @@ class Vantage(weewx.drivers.AbstractDevice):
         # Wake up the console...
         self.port.wakeup_console(self.max_tries)
         # ... request a dump...
-        self.port.send_data('DMP\n')
+        self.port.send_data(b'DMP\n')
 
         syslog.syslog(syslog.LOG_DEBUG, "vantage: Starting logger summary.")
         
@@ -742,7 +746,7 @@ class Vantage(weewx.drivers.AbstractDevice):
                 # Wake up the console...
                 self.port.wakeup_console(max_tries=self.max_tries)
                 # ... request the time...
-                self.port.send_data('GETTIME\n')
+                self.port.send_data(b'GETTIME\n')
                 # ... get the binary data. No prompt, only one try:
                 _buffer = self.port.get_data_with_crc16(8, max_tries=1)
                 (sec, minute, hr, day, mon, yr, unused_crc) = struct.unpack("<bbbbbbH", _buffer)
@@ -762,7 +766,7 @@ class Vantage(weewx.drivers.AbstractDevice):
             try:
                 # Wake the console and begin the setTime command
                 self.port.wakeup_console(max_tries=self.max_tries)
-                self.port.send_data('SETTIME\n')
+                self.port.send_data(b'SETTIME\n')
 
                 # Unfortunately, clock resolution is only 1 second, and transmission takes a
                 # little while to complete, so round up the clock up. 0.5 for clock resolution
@@ -795,14 +799,13 @@ class Vantage(weewx.drivers.AbstractDevice):
 
         # Set flag whether DST is auto or manual:        
         man_auto = 0 if _dst == 'auto' else 1
-        self.port.send_data("EEBWR 12 01\n")
-        self.port.send_data_with_crc16(chr(man_auto))
-        
+        self.port.send_data(b"EEBWR 12 01\n")
+        self.port.send_data_with_crc16(int2byte(man_auto))
         # If DST is manual, set it on or off:
         if _dst in ['on', 'off']:
             on_off = 0 if _dst == 'off' else 1
-            self.port.send_data("EEBWR 13 01\n")
-            self.port.send_data_with_crc16(chr(on_off))
+            self.port.send_data(b"EEBWR 13 01\n")
+            self.port.send_data_with_crc16(int2byte(on_off))
             
     def setTZcode(self, code):
         """Set the console's time zone code. See the Davis Vantage manual for the table
@@ -810,21 +813,21 @@ class Vantage(weewx.drivers.AbstractDevice):
         if code < 0 or code > 46:
             raise weewx.ViolatedPrecondition("Invalid time zone code %d" % code)
         # Set the GMT_OR_ZONE byte to use TIME_ZONE value
-        self.port.send_data("EEBWR 16 01\n")
-        self.port.send_data_with_crc16(chr(0))
+        self.port.send_data(b"EEBWR 16 01\n")
+        self.port.send_data_with_crc16(int2byte(0))
         # Set the TIME_ZONE value
-        self.port.send_data("EEBWR 11 01\n")
-        self.port.send_data_with_crc16(chr(code))
+        self.port.send_data(b"EEBWR 11 01\n")
+        self.port.send_data_with_crc16(int2byte(code))
         
     def setTZoffset(self, offset):
         """Set the console's time zone to a custom offset.
         
         offset: Offset. This is an integer in hundredths of hours. E.g., -175 would be 1h45m negative offset."""
         # Set the GMT_OR_ZONE byte to use GMT_OFFSET value
-        self.port.send_data("EEBWR 16 01\n")
-        self.port.send_data_with_crc16(chr(1))
+        self.port.send_data(b"EEBWR 16 01\n")
+        self.port.send_data_with_crc16(int2byte(1))
         # Set the GMT_OFFSET value
-        self.port.send_data("EEBWR 14 02\n")
+        self.port.send_data(b"EEBWR 14 02\n")
         self.port.send_data_with_crc16(struct.pack("<h", offset))
 
     def setWindCupType(self, new_wind_cup_code):
@@ -838,11 +841,11 @@ class Vantage(weewx.drivers.AbstractDevice):
         new_setup_bits = (old_setup_bits & 0xF7) | (new_wind_cup_code << 3)
 
         # Tell the console to put one byte in hex location 0x2B
-        self.port.send_data("EEBWR 2B 01\n")
+        self.port.send_data(b"EEBWR 2B 01\n")
         # Follow it up with the data:
-        self.port.send_data_with_crc16(chr(new_setup_bits), max_tries=1)
+        self.port.send_data_with_crc16(int2byte(new_setup_bits), max_tries=1)
         # Then call NEWSETUP to get it to stick:
-        self.port.send_data("NEWSETUP\n")
+        self.port.send_data(b"NEWSETUP\n")
 
         self._setup()
         syslog.syslog(syslog.LOG_NOTICE, "vantage: Wind cup type set to %d (%s)" % (self.wind_cup_type, self.wind_cup_size))
@@ -858,11 +861,11 @@ class Vantage(weewx.drivers.AbstractDevice):
         new_setup_bits = (old_setup_bits & 0xCF) | (new_bucket_code << 4)
         
         # Tell the console to put one byte in hex location 0x2B
-        self.port.send_data("EEBWR 2B 01\n")
+        self.port.send_data(b"EEBWR 2B 01\n")
         # Follow it up with the data:
-        self.port.send_data_with_crc16(chr(new_setup_bits), max_tries=1)
+        self.port.send_data_with_crc16(int2byte(new_setup_bits), max_tries=1)
         # Then call NEWSETUP to get it to stick:
-        self.port.send_data("NEWSETUP\n")
+        self.port.send_data(b"NEWSETUP\n")
         
         self._setup()
         syslog.syslog(syslog.LOG_NOTICE, "vantage: Rain bucket type set to %d (%s)" % (self.rain_bucket_type, self.rain_bucket_size))
@@ -872,13 +875,13 @@ class Vantage(weewx.drivers.AbstractDevice):
         
         new_rain_year_start: Must be in the closed range 1...12
         """
-        if new_rain_year_start not in list(range(1, 13)):
+        if not 1 <= new_rain_year_start <= 12:
             raise weewx.ViolatedPrecondition("Invalid rain season start %d" % (new_rain_year_start,))
         
         # Tell the console to put one byte in hex location 0x2C
-        self.port.send_data("EEBWR 2C 01\n")
+        self.port.send_data(b"EEBWR 2C 01\n")
         # Follow it up with the data:
-        self.port.send_data_with_crc16(chr(new_rain_year_start), max_tries=1)
+        self.port.send_data_with_crc16(int2byte(new_rain_year_start), max_tries=1)
 
         self._setup()
         syslog.syslog(syslog.LOG_NOTICE, "vantage: Rain year start set to %d" % (self.rain_year_start,))
@@ -904,15 +907,15 @@ class Vantage(weewx.drivers.AbstractDevice):
         latitude_dg: Must be in the closed range -90.0...90.0
         """
         latitude = int(round((latitude_dg * 10), 0))
-        if latitude not in list(range(-900, 901)):
+        if not -900 <= latitude <= 900:
             raise weewx.ViolatedPrecondition("vantage: Invalid latitude %.1f degree" % (latitude_dg,))
 
         # Tell the console to put one byte in hex location 0x0B
-        self.port.send_data("EEBWR 0B 02\n")
+        self.port.send_data(b"EEBWR 0B 02\n")
         # Follow it up with the data:
-        self.port.send_data_with_crc16(chr(latitude & 0x00ff) + chr((latitude / 256) & 0x00ff) , max_tries=1)
+        self.port.send_data_with_crc16(struct.pack('<BB', latitude & 0x00ff, (latitude / 256) & 0x00ff), max_tries=1)
         # Then call NEWSETUP to get it to stick:
-        self.port.send_data("NEWSETUP\n")
+        self.port.send_data(b"NEWSETUP\n")
 
         syslog.syslog(syslog.LOG_NOTICE, "vantage: Station latitude set to %.1f degree" % (latitude_dg,))
 
@@ -922,15 +925,15 @@ class Vantage(weewx.drivers.AbstractDevice):
         longitude_dg: Must be in the closed range -180.0...180.0
         """
         longitude = int(round((longitude_dg * 10), 0))
-        if longitude not in list(range(-1800, 1801)):
+        if not -1800 <= longitude <= 1800:
             raise weewx.ViolatedPrecondition("vantage: Invalid longitude %.1f degree" % (longitude_dg,))
 
         # Tell the console to put one byte in hex location 0x0D
-        self.port.send_data("EEBWR 0D 02\n")
+        self.port.send_data(b"EEBWR 0D 02\n")
         # Follow it up with the data:
-        self.port.send_data_with_crc16(chr(longitude & 0x00ff) + chr((longitude / 256) & 0x00ff) , max_tries=1)
+        self.port.send_data_with_crc16(struct.pack('<BB', longitude & 0x00ff, (longitude / 256) & 0x00ff), max_tries = 1)
         # Then call NEWSETUP to get it to stick:
-        self.port.send_data("NEWSETUP\n")
+        self.port.send_data(b"NEWSETUP\n")
 
         syslog.syslog(syslog.LOG_NOTICE, "vantage: Station longitude set to %.1f degree" % (longitude_dg,))
 
@@ -998,15 +1001,15 @@ class Vantage(weewx.drivers.AbstractDevice):
         new_usetx_bits = old_usetx_bits & ~(1 << (new_channel - 1)) | usetx * (1 << new_channel - 1)
         
         # Tell the console to put two bytes in hex location 0x19 or 0x1B or ... depending on channel.
-        self.port.send_data("EEBWR %X 02\n" % (0x19 + (new_channel - 1) * 2))
+        self.port.send_data(b"EEBWR %X 02\n" % (0x19 + (new_channel - 1) * 2))
         # Follow it up with the data:
-        self.port.send_data_with_crc16(chr(new_type_bits) + chr(new_temp_hum_bits), max_tries=1)
+        self.port.send_data_with_crc16(struct.pack('<BB', new_type_bits, new_temp_hum_bits), max_tries=1)
         # Tell the console to put one byte in hex location 0x17
-        self.port.send_data("EEBWR 17 01\n")
+        self.port.send_data(b"EEBWR 17 01\n")
         # Follow it up with the data:
-        self.port.send_data_with_crc16(chr(new_usetx_bits), max_tries=1)
+        self.port.send_data_with_crc16(int2byte(new_usetx_bits), max_tries=1)
         # Then call NEWSETUP to get it to stick:
-        self.port.send_data("NEWSETUP\n")
+        self.port.send_data(b"NEWSETUP\n")
         
         self._setup()
         syslog.syslog(syslog.LOG_NOTICE, "vantage: Transmitter type for channel %d set to %d (%s), repeater: %s, %s" %
@@ -1015,11 +1018,11 @@ class Vantage(weewx.drivers.AbstractDevice):
     def setRetransmit(self, new_channel):
         """Set console retransmit channel."""
         # Tell the console to put one byte in hex location 0x18
-        self.port.send_data("EEBWR 18 01\n")
+        self.port.send_data(b"EEBWR 18 01\n")
         # Follow it up with the data:
-        self.port.send_data_with_crc16(chr(new_channel), max_tries=1)
+        self.port.send_data_with_crc16(int2byte(new_channel), max_tries=1)
         # Then call NEWSETUP to get it to stick:
-        self.port.send_data("NEWSETUP\n")
+        self.port.send_data(b"NEWSETUP\n")
         
         self._setup()
         if new_channel != 0:
@@ -1035,29 +1038,28 @@ class Vantage(weewx.drivers.AbstractDevice):
             raise ValueError("Unknown console temperature logging setting '%s'" % new_tempLogging.upper())
         
         # Tell the console to put one byte in hex location 0x2B
-        self.port.send_data("EEBWR FFC 01\n")
+        self.port.send_data(b"EEBWR FFC 01\n")
         # Follow it up with the data:
-        self.port.send_data_with_crc16(chr(_setting), max_tries=1)
+        self.port.send_data_with_crc16(int2byte(_setting), max_tries=1)
         # Then call NEWSETUP to get it to stick:
-        self.port.send_data("NEWSETUP\n")
+        self.port.send_data(b"NEWSETUP\n")
 
         syslog.syslog(syslog.LOG_NOTICE, "vantage: Console temperature logging set to '%s'" % new_tempLogging.upper())
     
     def setCalibrationWindDir(self, offset):
         """Set the on-board wind direction calibration."""
-        if offset < -359 or offset > 359:
+        if not -359 <= offset <= 359:
             raise weewx.ViolatedPrecondition("Offset %d out of range [-359, 359]." % offset)
-        nbytes = struct.pack("<h", offset)
         # Tell the console to put two bytes in hex location 0x4D
-        self.port.send_data("EEBWR 4D 02\n")
+        self.port.send_data(b"EEBWR 4D 02\n")
         # Follow it up with the data:
-        self.port.send_data_with_crc16(nbytes, max_tries=1)
+        self.port.send_data_with_crc16(struct.pack("<h", offset), max_tries=1)
         syslog.syslog(syslog.LOG_NOTICE, "vantage: Wind calibration set to %d" % (offset))
 
     def setCalibrationTemp(self, variable, offset):
         """Set an on-board temperature calibration."""
         # Offset is in tenths of degree Fahrenheit.
-        if offset < -12.8 or offset > 12.7:
+        if not -12.8 <= offset <= 12.7:
             raise weewx.ViolatedPrecondition("Offset %.1f out of range [-12.8, 12.7]." % offset)
         byte = struct.pack("b", int(round(offset * 10)))
         variable_dict = { 'outTemp': 0x34 }
@@ -1067,11 +1069,11 @@ class Vantage(weewx.drivers.AbstractDevice):
         if variable == "inTemp":
             # Inside temp is special, needs ones' complement in next byte.
             complement_byte = struct.pack("B", ~int(round(offset * 10)) & 0xFF)
-            self.port.send_data("EEBWR 32 02\n")
+            self.port.send_data(b"EEBWR 32 02\n")
             self.port.send_data_with_crc16(byte + complement_byte, max_tries=1)
         elif variable in variable_dict:
             # Other variables are just sent as-is.
-            self.port.send_data("EEBWR %X 01\n" % variable_dict[variable])
+            self.port.send_data(b"EEBWR %X 01\n" % variable_dict[variable])
             self.port.send_data_with_crc16(byte, max_tries=1)
         else:
             raise weewx.ViolatedPrecondition("Variable name %s not known" % variable)
@@ -1080,13 +1082,13 @@ class Vantage(weewx.drivers.AbstractDevice):
     def setCalibrationHumid(self, variable, offset):
         """Set an on-board humidity calibration."""
         # Offset is in percentage points.
-        if offset < -100 or offset > 100:
+        if -100 <= offset <= 100:
             raise weewx.ViolatedPrecondition("Offset %d out of range [-100, 100]." % offset)
         byte = struct.pack("b", offset)
         variable_dict = { 'inHumid': 0x44, 'outHumid': 0x45 }
         for i in range(1, 8): variable_dict['extraHumid%d' % i] = 0x45 + i 
         if variable in variable_dict:
-            self.port.send_data("EEBWR %X 01\n" % variable_dict[variable])
+            self.port.send_data(b"EEBWR %X 01\n" % variable_dict[variable])
             self.port.send_data_with_crc16(byte, max_tries=1)
         else:
             raise weewx.ViolatedPrecondition("Variable name %s not known" % variable)
@@ -1097,7 +1099,7 @@ class Vantage(weewx.drivers.AbstractDevice):
         for unused_count in range(self.max_tries):
             try:
                 self.port.wakeup_console(max_tries=self.max_tries)
-                self.port.send_data("CLRLOG\n")
+                self.port.send_data(b"CLRLOG\n")
                 syslog.syslog(syslog.LOG_NOTICE, "vantage: Archive memory cleared.")
                 return
             except weewx.WeeWxIOError:
@@ -1113,11 +1115,11 @@ class Vantage(weewx.drivers.AbstractDevice):
         # of resynchronizations, the max # of packets received w/o an error,
         the # of CRC errors detected.)"""
 
-        rx_list = self.port.send_command('RXCHECK\n')
+        rx_list = self.port.send_command(b'RXCHECK\n')
         if weewx.debug:
             assert(len(rx_list) == 1)
         
-        # The following is a list of the reception statistics, but the elements are strings
+        # The following is a list of the reception statistics, but the elements are byte strings
         rx_list_str = rx_list[0].split()
         # Convert to numbers and return as a tuple:
         rx_list = tuple(int(x) for x in rx_list_str)
@@ -1125,7 +1127,7 @@ class Vantage(weewx.drivers.AbstractDevice):
 
     def getBarData(self):
         """Gets barometer calibration data. Returns as a 9 element list."""
-        _bardata = self.port.send_command("BARDATA\n")
+        _bardata = self.port.send_command(b"BARDATA\n")
         _barometer = float(_bardata[0].split()[1])/1000.0
         _altitude  = float(_bardata[1].split()[1])
         _dewpoint  = float(_bardata[2].split()[2])
@@ -1141,11 +1143,11 @@ class Vantage(weewx.drivers.AbstractDevice):
     
     def getFirmwareDate(self):
         """Return the firmware date as a string. """
-        return self.port.send_command('VER\n')[0]
+        return self.port.send_command(b'VER\n')[0]
         
     def getFirmwareVersion(self):
         """Return the firmware version as a string."""
-        return self.port.send_command('NVER\n')[0]
+        return self.port.send_command(b'NVER\n')[0]
     
     def getStnInfo(self):
         """Return lat / lon, time zone, etc."""
@@ -1232,10 +1234,10 @@ class Vantage(weewx.drivers.AbstractDevice):
             }
       
     def startLogger(self):
-        self.port.send_command("START\n")
+        self.port.send_command(b"START\n")
         
     def stopLogger(self):
-        self.port.send_command('STOP\n')
+        self.port.send_command(b'STOP\n')
 
     #===========================================================================
     #              Davis Vantage utility functions
