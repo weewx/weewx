@@ -160,9 +160,7 @@ def conditional_merge(a_dict, b_dict):
 def option_as_list(option):
     if option is None:
         return None
-    if hasattr(option, '__iter__'):
-        return option
-    return [option]
+    return [option] if isinstance(option, str) else option
 
 
 def list_as_string(option):
