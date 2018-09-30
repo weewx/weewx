@@ -43,7 +43,7 @@ def parseArgs():
     (options, args) = parser.parse_args()
     
     if options.version:
-        print weewx.__version__
+        print(weewx.__version__)
         sys.exit(0)
         
     if len(args) < 1:

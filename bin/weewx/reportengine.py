@@ -38,12 +38,12 @@ DAY_NAMES = ('sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat')
 MONTH_NAMES = ('jan', 'feb', 'mar', 'apr', 'may', 'jun',
                'jul', 'aug', 'sep', 'oct', 'nov', 'dec')
 # map month names to month number
-MONTH_NAME_MAP = zip(('jan', 'feb', 'mar', 'apr',
+MONTH_NAME_MAP = list(zip(('jan', 'feb', 'mar', 'apr',
                       'may', 'jun', 'jul', 'aug',
-                      'sep', 'oct', 'nov', 'dec'), xrange(1, 13))
+                      'sep', 'oct', 'nov', 'dec'), list(range(1, 13))))
 # map day names to day number
-DAY_NAME_MAP = zip(('sun', 'mon', 'tue', 'wed',
-                    'thu', 'fri', 'sat'), xrange(7))
+DAY_NAME_MAP = list(zip(('sun', 'mon', 'tue', 'wed',
+                    'thu', 'fri', 'sat'), list(range(7))))
 # map CRON like nicknames to equivalent CRON like line
 NICKNAME_MAP = {
     "@yearly": "0 0 1 1 *",
@@ -509,7 +509,7 @@ class ReportTiming(object):
         # the line elements with pre-detemined values. These nicknames start
         # with the @ character. Check for any of these nicknames and substitute
         # the corresponding line.
-        for nickname, nn_line in NICKNAME_MAP.iteritems():
+        for nickname, nn_line in NICKNAME_MAP.items():
             if line == nickname:
                 line = nn_line
                 break
@@ -579,7 +579,7 @@ class ReportTiming(object):
         field = field.strip()
         if field == '*':  # first-last
             # simply return a set of all poss values
-            return set(xrange(span[0], span[1] + 1))
+            return set(range(span[0], span[1] + 1))
         elif field.isdigit():  # just a number
             # If its a DOW then replace any 7s with 0
             _field = field.replace('7', '0') if span == DOW else field
@@ -645,7 +645,7 @@ class ReportTiming(object):
                 # equal to lo then the range is valid
                 if hi.isdigit() and int(hi) >= int(lo) and span[0] <= int(hi) <= span[1]:
                     # valid range so return a set of the range
-                    return set(xrange(int(lo), int(hi) + 1))
+                    return set(range(int(lo), int(hi) + 1))
                 else:
                     # something is wrong, we have an invalid field
                     raise ValueError("Invalid range specification '%s' in '%s'" % (field,
@@ -680,7 +680,7 @@ class ReportTiming(object):
             else:
                 # CRON like line has a 1 min resolution so step backwards every
                 # 60 sec.
-                _range = range(int(ts_hi), int(ts_lo), -60)
+                _range = list(range(int(ts_hi), int(ts_lo), -60))
             # Iterate through each ts in our range. All we need is one ts that
             # triggers the line.
             for _ts in _range:
@@ -694,10 +694,10 @@ class ReportTiming(object):
                                                  trigger_tt.tm_min)
                 # construct a tuple so we can iterate over and process each
                 # field
-                element_tuple = zip((minute, hour, day, month, dow),
+                element_tuple = list(zip((minute, hour, day, month, dow),
                                     self.line,
                                     SPANS,
-                                    self.decode)
+                                    self.decode))
                 # Iterate over each field and check if it will prevent
                 # triggering. Remember, we only need a match on either DOM or
                 # DOW but all other fields must match.

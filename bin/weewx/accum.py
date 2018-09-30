@@ -247,7 +247,7 @@ class Accum(dict):
         
         # Check to see if the record is within my observation timespan 
         if not self.timespan.includesArchiveTime(record['dateTime']):
-            raise OutOfSpan, "Attempt to add out-of-interval record"
+            raise OutOfSpan("Attempt to add out-of-interval record")
 
         for obs_type in record:
             # Get the proper function ...
@@ -512,8 +512,13 @@ defaults_ini = """
     [[windGustDir]]
         extractor = noop
 """
-import StringIO
-defaults = configobj.ConfigObj(StringIO.StringIO(defaults_ini))
+try:
+    # Python 2
+    from StringIO import StringIO
+except ImportError:
+    # Python 3
+    from io import StringIO
+defaults = configobj.ConfigObj(StringIO(defaults_ini))
 del StringIO
 
 accum_type_dict = None

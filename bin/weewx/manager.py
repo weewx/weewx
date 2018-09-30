@@ -4,7 +4,8 @@
 #    See the file LICENSE.txt for your full rights.
 #
 """Classes and functions for interfacing with a weewx archive."""
-from __future__ import with_statement
+
+from __future__ import print_function
 import math
 import syslog
 import sys
@@ -347,7 +348,7 @@ class Manager(object):
         and the value is the observation value"""
         
         for _row in self.genBatchRows(startstamp, stopstamp):
-            yield dict(zip(self.sqlkeys, _row)) if _row else None
+            yield dict(list(zip(self.sqlkeys, _row))) if _row else None
         
     def getRecord(self, timestamp, max_delta=None):
         """Get a single archive record with a given epoch time stamp.
@@ -370,7 +371,7 @@ class Manager(object):
             else:
                 _cursor.execute("SELECT * FROM %s WHERE dateTime=?" % self.table_name, (timestamp,))
             _row = _cursor.fetchone()
-            return dict(zip(self.sqlkeys, _row)) if _row else None
+            return dict(list(zip(self.sqlkeys, _row))) if _row else None
         finally:
             _cursor.close()
 
@@ -840,7 +841,7 @@ class DBBinder(object):
         self.manager_cache = {}
     
     def close(self):
-        for data_binding in self.manager_cache.keys():
+        for data_binding in list(self.manager_cache.keys()):
             try:
                 self.manager_cache[data_binding].close()
                 del self.manager_cache[data_binding]
@@ -1071,8 +1072,8 @@ def drop_database_with_config(config_dict, data_binding,
 
 def show_progress(nrec, last_time):
     """Utility function to show our progress while backfilling"""
-    print >>sys.stdout, "Records processed: %d; Last date: %s\r" % \
-        (nrec, weeutil.weeutil.timestamp_to_string(last_time)),
+    print("Records processed: %d; Last date: %s\r" % \
+        (nrec, weeutil.weeutil.timestamp_to_string(last_time)), end=' ', file=sys.stdout)
     sys.stdout.flush()
         
 class DaySummaryManager(Manager):
@@ -1275,7 +1276,7 @@ class DaySummaryManager(Manager):
 
         # Check to see if this is a valid daily summary type:
         if obs_type not in self.daykeys:
-            raise AttributeError, "Unknown daily summary type %s" % (obs_type,)
+            raise AttributeError("Unknown daily summary type %s" % (obs_type,))
 
         val = option_dict.get('val')
         if val is None:
@@ -1640,7 +1641,7 @@ if __name__ == '__main__':
 #     nrecs, ndays = mgr.backfill_day_summary(start_d, stop_d)
     nrecs, ndays = mgr.backfill_day_summary(None, None)
     t2 = time.time()
-    print nrecs, ndays, t2-t1
+    print(nrecs, ndays, t2-t1)
     
     import doctest
 

@@ -145,7 +145,7 @@ class Common(unittest.TestCase):
             for dirfilename in dirfilenames:
                 expected_filename_abs = os.path.join(dirpath, dirfilename)
                 # Get the file path relative to the directory of expected results
-                filename_rel = weeutil.weeutil.relpath(expected_filename_abs, expected_dir)
+                filename_rel = os.path.relpath(expected_filename_abs, expected_dir)
                 # Use that to figure out where the actual results ended up
                 actual_filename_abs = os.path.join(test_html_dir, filename_rel)
 #                 print "Checking file: ", actual_filename_abs
