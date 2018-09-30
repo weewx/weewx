@@ -1496,6 +1496,13 @@ except AttributeError:
 def to_sorted_string(rec):
     return ", ".join(["%s: %s" % (k, rec.get(k)) for k in sorted(rec, key=str.lower)])
 
+# Define an "input" function that works for both Python 2 and 3:
+try:
+    # An exception will be raised in Python 3
+    input = raw_input
+except NameError:
+    # Python 2
+    pass
 
 if __name__ == '__main__':
     import doctest

@@ -2196,7 +2196,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
             ans = None
             while ans not in ['y', 'n']:
                 print("Proceeding will change the archive interval as well as erase all old archive records.")
-                ans = input("Are you sure you want to proceed (y/n)? ")
+                ans = weeutil.weeutil.input("Are you sure you want to proceed (y/n)? ")
                 if ans == 'y':
                     try:
                         station.setArchiveInterval(new_interval_minutes * 60)
@@ -2219,7 +2219,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
         ans = None
         while ans not in ['y', 'n']:
             print("Proceeding will set the latitude value to %.1f degree." % latitude_dg)
-            ans = input("Are you sure you wish to proceed (y/n)? ")
+            ans = weeutil.weeutil.input("Are you sure you wish to proceed (y/n)? ")
             if ans == 'y':
                 try:
                     station.setLatitude(latitude_dg)
@@ -2237,7 +2237,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
         ans = None
         while ans not in ['y', 'n']:
             print("Proceeding will set the longitude value to %.1f degree." % longitude_dg)
-            ans = input("Are you sure you wish to proceed (y/n)? ")
+            ans = weeutil.weeutil.input("Are you sure you wish to proceed (y/n)? ")
             if ans == 'y':
                 try:
                     station.setLongitude(longitude_dg)
@@ -2254,7 +2254,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
         ans = None
         while ans not in ['y', 'n']:    
             print("Proceeding will set the station altitude to %.0f feet." % altitude_ft)
-            ans = input("Are you sure you wish to proceed (y/n)? ")
+            ans = weeutil.weeutil.input("Are you sure you wish to proceed (y/n)? ")
             if ans == 'y':
                 # Hit the console to get the current barometer calibration data and preserve it:
                 _bardata = station.getBarData()
@@ -2281,7 +2281,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
                 print("Proceeding will set the barometer value to %.3f and the station altitude to %.0f feet." % (barometer_inHg, _bardata[1]))
             else:
                 print("Proceeding will have the console pick a sensible barometer calibration and set the station altitude to %.0f feet," % (_bardata[1],))
-            ans = input("Are you sure you wish to proceed (y/n)? ")
+            ans = weeutil.weeutil.input("Are you sure you wish to proceed (y/n)? ")
             if ans == 'y':
                 station.setBarData(barometer_inHg, _bardata[1])
             elif ans == 'n':
@@ -2294,7 +2294,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
         ans = None
         while ans not in ['y', 'n']:
             print("Proceeding will erase old archive records.")
-            ans = input("Are you sure you wish to proceed (y/n)? ")
+            ans = weeutil.weeutil.input("Are you sure you wish to proceed (y/n)? ")
             if ans == 'y':
                 print("Clearing the archive memory ...")
                 station.clearLog()
@@ -2323,7 +2323,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
             ans = None
             while ans not in ['y', 'n']:
                 print("Proceeding will change the wind cup type.")
-                ans = input("Are you sure you want to proceed (y/n)? ")
+                ans = weeutil.weeutil.input("Are you sure you want to proceed (y/n)? ")
                 if ans == 'y':
                     try:
                         station.setWindCupType(new_wind_cup_type)
@@ -2349,7 +2349,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
             ans = None
             while ans not in ['y', 'n']:
                 print("Proceeding will change the rain bucket type.")
-                ans = input("Are you sure you want to proceed (y/n)? ")
+                ans = weeutil.weeutil.input("Are you sure you want to proceed (y/n)? ")
                 if ans == 'y':
                     try:
                         station.setBucketType(new_bucket_type)
@@ -2371,7 +2371,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
             ans = None
             while ans not in ['y', 'n']:
                 print("Proceeding will change the rain season start.")
-                ans = input("Are you sure you want to proceed (y/n)? ")
+                ans = weeutil.weeutil.input("Are you sure you want to proceed (y/n)? ")
                 if ans == 'y':
                     try:
                         station.setRainYearStart(rain_year_start)
@@ -2404,7 +2404,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
                 ans = None
                 while ans not in ['y', 'n']:
                     print("Proceeding will set offset for wind direction to %+d." % (offset))
-                    ans = input("Are you sure you want to proceed (y/n)? ")
+                    ans = weeutil.weeutil.input("Are you sure you want to proceed (y/n)? ")
                     if ans == 'y':
                         try:
                             station.setCalibrationWindDir(offset)
@@ -2420,7 +2420,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
                 ans = None
                 while ans not in ['y', 'n']:
                     print("Proceeding will set offset for temperature %s to %.1f." % (variable, offset))
-                    ans = input("Are you sure you want to proceed (y/n)? ")
+                    ans = weeutil.weeutil.input("Are you sure you want to proceed (y/n)? ")
                     if ans == 'y':
                         try:
                             station.setCalibrationTemp(variable, offset)
@@ -2436,7 +2436,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
                 ans = None
                 while ans not in ['y', 'n']:
                     print("Proceeding will set offset for humidity %s to %+d." % (variable, offset))
-                    ans = input("Are you sure you want to proceed (y/n)? ")
+                    ans = weeutil.weeutil.input("Are you sure you want to proceed (y/n)? ")
                     if ans == 'y':
                         try:
                             station.setCalibrationHumid(variable, offset)
@@ -2506,7 +2506,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
         while ans not in ['y', 'n']:
             print("Proceeding will set channel %d to type %d (%s), repeater: %s, %s." % (
                 channel, transmitter_type, transmitter_type_name, station.repeater_dict[repeater], station.listen_dict[usetx]))
-            ans = input("Are you sure you want to proceed (y/n)? ")
+            ans = weeutil.weeutil.input("Are you sure you want to proceed (y/n)? ")
             if ans == 'y':
                 try:
                     station.setTransmitterType(channel, transmitter_type, extra_temp, extra_hum, repeater)
@@ -2558,7 +2558,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
                 print("Proceeding will set retransmit to 'ON' at channel: %d." % channel)
             else:
                 print("Proceeding will set retransmit to 'OFF'.")
-            ans = input("Are you sure you want to proceed (y/n)? ")
+            ans = weeutil.weeutil.input("Are you sure you want to proceed (y/n)? ")
             if ans == 'y':
                 try:
                     station.setRetransmit(channel)
@@ -2579,7 +2579,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
         ans = None
         while ans not in ['y', 'n']:
             print("Proceeding will change the console temperature logging to '%s'." % (tempLogging.upper()))
-            ans = input("Are you sure you want to proceed (y/n)? ")
+            ans = weeutil.weeutil.input("Are you sure you want to proceed (y/n)? ")
             if ans == 'y':
                 try:
                     station.setTempLogging(tempLogging)
@@ -2646,7 +2646,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
         ans = None
         while ans not in ['y', 'n']:
             print("Proceeding will dump all data in the logger.")
-            ans = input("Are you sure you want to proceed (y/n)? ")
+            ans = weeutil.weeutil.input("Are you sure you want to proceed (y/n)? ")
             if ans == 'y':
                 with weewx.manager.open_manager_with_config(config_dict, 'wx_binding',
                                                             initialize=True) as archive:
@@ -2779,21 +2779,22 @@ class VantageConfEditor(weewx.drivers.AbstractConfEditor):
 if __name__ == '__main__':
     import optparse
 
-    usage = """%prog [options] [--help]"""
+    usage = """Usage: python -m weewx.drivers.vantage --help
+       python -m weewx.drivers.vantage --version
+       python -m weewx.drivers.vantage [--port]"""
 
     syslog.openlog('vantage', syslog.LOG_PID | syslog.LOG_CONS)
     syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
     parser = optparse.OptionParser(usage=usage)
-    parser.add_option('--version', dest='version', action='store_true',
-                      help='display driver version')
+    parser.add_option('--version', action='store_true', help='Display driver version')
+    parser.add_option('--port', default='/dev/ttyUSB0', help='Serial port to use. Default is "/dev/ttyUSB0"')
     (options, args) = parser.parse_args()
 
     if options.version:
         print("Vantage driver version %s" % DRIVER_VERSION)
         exit(0)
 
-
-    vantage = Vantage(connection_type = 'serial', port='/dev/ttyUSB0')
+    vantage = Vantage(connection_type = 'serial', port=options.port)
 
     for packet in vantage.genLoopPackets():
         print(packet)
