@@ -15,7 +15,7 @@ import syslog
 import time
 
 from weewx.crc16 import crc16
-from weeutil.weeutil import to_int
+from weeutil.weeutil import to_int, int2byte
 import weeutil.weeutil
 import weewx.drivers
 import weewx.units
@@ -37,10 +37,6 @@ def confeditor_loader():
 # A few handy constants:
 _ack    = b'\x06'
 _resend = b'\x15' # NB: The Davis documentation gives this code as 0x21, but it's actually decimal 21
-
-def int2byte(x):
-    """Convert integer argument to byte string, under both Python 2 and 3"""
-    return struct.pack('>b', x)
 
 #===============================================================================
 #                           class BaseWrapper

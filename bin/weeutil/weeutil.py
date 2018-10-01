@@ -26,6 +26,7 @@ import calendar
 import datetime
 import math
 import os
+import struct
 import syslog
 import time
 import traceback
@@ -1468,12 +1469,17 @@ def to_sorted_string(rec):
 
 
 # Define an "input" function that works for both Python 2 and 3:
+# An exception will be raised in Python 3, but not Python 2
 try:
-    # An exception will be raised in Python 3
     input = raw_input
 except NameError:
-    # Python 2
+    # Python 3
     pass
+
+
+def int2byte(x):
+    """Convert integer argument to byte string, under both Python 2 and 3"""
+    return struct.pack('>b', x)
 
 if __name__ == '__main__':
     import doctest
