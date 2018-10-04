@@ -77,30 +77,30 @@ DEFAULT_LOCATIONS = ['../..', '/etc/weewx', '/home/weewx']
 def find_file(file_path=None, args=None, locations=DEFAULT_LOCATIONS,
               file_name='weewx.conf'):
     """Find and return a path to a file, looking in "the usual places."
-    
+
     General strategy:
 
     First, file_path is tried. If not found there, then the first element of
     args is tried.
 
     If those fail, try a path based on where the application is running.
-    
+
     If that fails, then the list of directory locations is searched,
-    looking for a file with file name file_name. 
-    
+    looking for a file with file name file_name.
+
     If after all that, the file still cannot be found, then an IOError
     exception will be raised.
-    
+
     Parameters:
 
     file_path: A candidate path to the file.
 
     args: command-line arguments. If the file cannot be found in file_path,
     then the first element in args will be tried.
-    
+
     locations: A list of directories to be searched. If they do not
     start with a slash ('/'), then they will be treated as relative to
-    this file (bin/weecfg/__init__.py). 
+    this file (bin/weecfg/__init__.py).
     Default is ['../..', '/etc/weewx', '/home/weewx'].
 
     file_name: The name of the file to be found. This is used
@@ -148,11 +148,11 @@ def read_config(config_path, args=None, locations=DEFAULT_LOCATIONS,
     args: command-line arguments
 
     return: path-to-file, instance-of-ConfigObj
-    
+
     Raises:
-    
+
     SyntaxError: If there is a syntax error in the file
-    
+
     IOError: If the file cannot be found
     """
     # Find and open the config file:
@@ -331,9 +331,9 @@ def update_config(config_dict):
 
 def merge_config(config_dict, template_dict):
     """Merge the template (distribution) dictionary into the user's dictionary.
-    
+
     config_dict: An existing, older configuration dictionary.
-    
+
     template_dict: A newer dictionary supplied by the installer.
     """
 
@@ -443,17 +443,17 @@ def update_to_v25(config_dict):
         [[StationRegistry]]
             # Uncomment the following line to register this weather station.
             #register_this_station = True
-    
+
             # Specify a station URL, otherwise the station_url from [Station]
             # will be used.
             #station_url = http://example.com/weather/
-    
+
             # Specify a description of the station, otherwise the location from
             # [Station] will be used.
             #description = The greatest station on earth
-    
+
             driver = weewx.restful.StationRegistry
-    
+
     """))
             config_dict.merge(stnreg_dict)
     except KeyError:
@@ -730,7 +730,7 @@ def update_to_v30(config_dict):
             # This section binds a data store to a database
 
             [[wx_binding]]
-                # The database must match one of the sections in [Databases] 
+                # The database must match one of the sections in [Databases]
                 database = archive_sqlite
                 # The name of the table within the database
                 table_name = archive
@@ -953,7 +953,7 @@ def update_to_v36(config_dict):
     #                      otherwise use value calculated by weewx"""
             # Create a new 'Calculations' section:
             config_dict['StdWXCalculate']['Calculations'] = {}
-            # Now transfer over the options. Make a copy of them first: we will be 
+            # Now transfer over the options. Make a copy of them first: we will be
             # deleting some of them.
             scalars = list(config_dict['StdWXCalculate'].scalars)
             for scalar in scalars:
@@ -1113,7 +1113,7 @@ def get_all_driver_infos():
 def get_driver_infos(driver_pkg_name='weewx.drivers', excludes=['__init__.py']):
     """Scan the drivers folder, extracting information about each available
     driver. Return as a dictionary, keyed by the driver module name.
-    
+
     Valid drivers must be importable, and must have attribute "DRIVER_NAME"
     defined.
     """
@@ -1176,7 +1176,7 @@ def print_drivers():
 
 def load_driver_editor(driver_module_name):
     """Load the configuration editor from the driver file
-    
+
     driver_module_name: A string holding the driver name.
                         E.g., 'weewx.drivers.fousb'
     """
@@ -1283,7 +1283,7 @@ def prompt_for_driver(dflt_driver=None):
     return keys[idx]
 
 
-def prompt_for_driver_settings(driver):
+def prompt_for_driver_settings(driver, config_dict):
     """Let the driver prompt for any required settings.  If the driver does
     not define a method for prompting, return an empty dictionary."""
     settings = dict()
@@ -1292,6 +1292,7 @@ def prompt_for_driver_settings(driver):
         driver_module = sys.modules[driver]
         loader_function = getattr(driver_module, 'confeditor_loader')
         editor = loader_function()
+        editor.existing_options = config_dict.get(driver_module.DRIVER_NAME, {})
         settings[driver_module.DRIVER_NAME] = editor.prompt_for_settings()
     except AttributeError:
         pass
@@ -1300,12 +1301,12 @@ def prompt_for_driver_settings(driver):
 
 def prompt_with_options(prompt, default=None, options=None):
     """Ask the user for an input with an optional default value.
-    
+
     prompt: A string to be used for a prompt.
-    
+
     default: A default value. If the user simply hits <enter>, this
     is the value returned. Optional.
-    
+
     options: A list of possible choices. The returned value must be in
     this list. Optional."""
 
@@ -1325,15 +1326,15 @@ def prompt_with_options(prompt, default=None, options=None):
 def prompt_with_limits(prompt, default=None, low_limit=None, high_limit=None):
     """Ask the user for an input with an optional default value. The
     returned value must lie between optional upper and lower bounds.
-    
+
     prompt: A string to be used for a prompt.
-    
+
     default: A default value. If the user simply hits <enter>, this
     is the value returned. Optional.
-    
+
     low_limit: The value must be equal to or greater than this value.
     Optional.
-    
+
     high_limit: The value must be less than or equal to this value.
     Optional.
     """
@@ -1388,7 +1389,7 @@ def extract_roots(config_path, config_dict, bin_root):
 
 def extract_tar(filename, target_dir, logger=None):
     """Extract files from a tar archive into a given directory
-    
+
     Returns: A list of the extracted files
     """
     logger = logger or Logger()
