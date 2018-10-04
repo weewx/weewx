@@ -106,9 +106,7 @@ class ConfigEngine(object):
             output_path = options.output if options.output else config_path
 
         if output_path is not None:
-            # Save the file. First, pretty it up...
-            weecfg.reorder_to_ref(config_dict)
-            # ... then save
+            # Save the file.
             self.save_config(config_dict, output_path, not options.no_backup)
 
     def modify_config(self, config_dict, options):
