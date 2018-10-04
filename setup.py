@@ -57,18 +57,18 @@ stn_info = {'station_type' : 'Simulator',
 #==============================================================================
 # install
 #==============================================================================
- 
+
 class weewx_install(install):
     """Specialized version of install, which adds a --no-prompt option to
     the 'install' command."""
 
     # Add an option for --no-prompt:
     user_options = install.user_options + [('no-prompt', None, 'Do not prompt for station info')]
-  
+
     def initialize_options(self, *args, **kwargs):
         install.initialize_options(self, *args, **kwargs)
         self.no_prompt = None
-        
+
     def finalize_options(self):
         install.finalize_options(self)
         if self.no_prompt is None:
@@ -79,7 +79,7 @@ class weewx_install(install):
 #==============================================================================
 
 class weewx_install_lib(install_lib):
-    """Specialized version of install_lib, which backs up old bin subdirectories.""" 
+    """Specialized version of install_lib, which backs up old bin subdirectories."""
 
     def run(self):
         # Determine whether the user is still using an old-style schema
@@ -94,7 +94,7 @@ class weewx_install_lib(install_lib):
 
         # Run the superclass's version. This will install all incoming files.
         install_lib.run(self)
-        
+
         # If the bin subdirectory previously existed, and if it included
         # a 'user' subsubdirectory, then restore it
         if bin_savedir:
@@ -117,7 +117,7 @@ class weewx_install_lib(install_lib):
 class weewx_install_data(install_data):
     """Specialized version of install_data. Mostly, it deals with upgrading
     and merging any old weewx.conf configuration files."""
-    
+
     def initialize_options(self):
         # Initialize my superclass's options:
         install_data.initialize_options(self)
@@ -140,7 +140,7 @@ class weewx_install_data(install_data):
         else:
             rv = install_data.copy_file(self, f, install_dir, **kwargs)
         return rv
-    
+
     def run(self):
         # If there is an existing skins subdirectory, do not overwrite it.
         if os.path.exists(os.path.join(self.install_dir, 'skins')):
@@ -149,15 +149,15 @@ class weewx_install_data(install_data):
             self.data_files = filter(lambda dat : not dat[0].startswith('skins/'), self.data_files)
 
         remove_obsolete_files(self.install_dir)
-        
+
         # Run the superclass's run():
         install_data.run(self)
-       
+
     def process_config_file(self, f, install_dir, **kwargs):
         global stn_info
 
         # Open up and parse the distribution config file:
-        try:        
+        try:
             dist_config_dict = configobj.ConfigObj(f, file_error=True)
         except IOError as e:
             sys.exit(str(e))
@@ -187,7 +187,7 @@ class weewx_install_data(install_data):
                 stn_info = weecfg.prompt_for_info()
                 driver = weecfg.prompt_for_driver(stn_info.get('driver'))
                 stn_info['driver'] = driver
-                stn_info.update(weecfg.prompt_for_driver_settings(driver))
+                stn_info.update(weecfg.prompt_for_driver_settings(driver, config_dict))
                 if DEBUG:
                     print "Station info =", stn_info
             weecfg.modify_config(config_dict, stn_info, DEBUG)
@@ -228,10 +228,10 @@ class weewx_install_data(install_data):
         return rv
 
     def massage_start_file(self, f, install_dir, **kwargs):
-    
+
             outname = os.path.join(install_dir, os.path.basename(f))
             sre = re.compile(r"WEEWX_ROOT\s*=")
-    
+
             with open(f, 'r') as infile:
                 with tempfile.NamedTemporaryFile("w") as tmpfile:
                     for line in infile:
@@ -246,7 +246,7 @@ class weewx_install_data(install_data):
             # Set the permission bits unless this is a dry run:
             if not self.dry_run:
                 shutil.copymode(f, outname)
-    
+
             return rv
 
 #==============================================================================
@@ -309,43 +309,43 @@ class weewx_sdist(sdist):
 def remove_obsolete_files(install_dir):
     """Remove no longer needed files from the installation
     directory, nominally /home/weewx."""
-    
+
     # If the file #upstream.last exists, delete it, as it is no longer used.
     try:
         os.remove(os.path.join(install_dir, 'public_html/#upstream.last'))
     except OSError:
         pass
-        
+
     # If the file $WEEWX_INSTALL/readme.htm exists, delete it. It's
     # the old readme (since replaced with README)
     try:
         os.remove(os.path.join(install_dir, 'readme.htm'))
     except OSError:
         pass
-    
+
     # If the file $WEEWX_INSTALL/CHANGES.txt exists, delete it. It's
     # been moved to the docs subdirectory and renamed
     try:
         os.remove(os.path.join(install_dir, 'CHANGES.txt'))
     except OSError:
         pass
-    
+
     # The directory start_scripts is no longer used
     shutil.rmtree(os.path.join(install_dir, 'start_scripts'), True)
-    
+
     # The file docs/README.txt is now gone
     try:
         os.remove(os.path.join(install_dir, 'docs/README.txt'))
     except OSError:
         pass
-    
+
     # If the file docs/CHANGES.txt exists, delete it. It's been renamed
     # to docs/changes.txt
     try:
         os.remove(os.path.join(install_dir, 'docs/CHANGES.txt'))
     except OSError:
         pass
-    
+
     # setup.py is no longer left in WEEWX_ROOT.
     try:
         os.remove(os.path.join(install_dir, 'setup.py'))
@@ -355,9 +355,9 @@ def remove_obsolete_files(install_dir):
 def get_schema_type(bin_dir):
     """Checks whether the schema in user.schemas is a new style or old style
     schema.
-    
+
     bin_dir: The directory to be checked. This is nominally /home/weewx/bin.
-    
+
     Returns:
       'none': There is no schema at all.
       'old' : It is an old-style schema.
@@ -365,7 +365,7 @@ def get_schema_type(bin_dir):
     """
     tmp_path = list(sys.path)
     sys.path.insert(0, bin_dir)
-    
+
     try:
         import user.schemas
     except ImportError:
@@ -378,7 +378,7 @@ def get_schema_type(bin_dir):
             # a new-style schema
             _ = user.schemas.drop_list # @UnusedVariable @UndefinedVariable
         except AttributeError:
-            # New style schema 
+            # New style schema
             result = 'new'
         else:
             # It did not fail. Must be an old-style schema
@@ -386,9 +386,9 @@ def get_schema_type(bin_dir):
         finally:
             del user.schemas
 
-    # Restore the path        
+    # Restore the path
     sys.path = tmp_path
-    
+
     return result
 
 #==============================================================================
