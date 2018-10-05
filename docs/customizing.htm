@@ -5643,11 +5643,11 @@ class AddElectricity(StdService):
       super(AddElectricity, self).__init__(engine, config_dict)
 
       # Bind to any new archive record events:
-      self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_packet)
+      self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
 
       self.last_total = None
 
-    def new_archive_packet(self, event):
+    def new_archive_record(self, event):
 
         total_power = download_total_power()
 
