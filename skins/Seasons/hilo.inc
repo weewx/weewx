@@ -2,7 +2,7 @@
 ## Copyright Tom Keffer, Matthew Wall
 ## See LICENSE.txt for your rights
 
-#set $archive_data = [('day', $day), ('week', $week), ('month', $month), ('year', $year)]
+#set $archive_data = [('day', $day), ('week', $week), ('month', $month), ('year', $year), ('rainyear', $rainyear)]
 
 <div id='hilo_widget' class="widget">
   <div class="widget_title">
@@ -16,10 +16,11 @@
     <tbody>
       <tr>
         <td></td>
-        <th>Today</th>
-        <th class="hilo_week">Week</th>
-        <th class="hilo_month">Month</th>
-        <th class="hilo_year">Year</th>
+        <th>&nbsp;<br/>Today</th>
+        <th class="hilo_week">&nbsp;<br/>Week</th>
+        <th class="hilo_month">&nbsp;<br/>Month</th>
+        <th class="hilo_year">&nbsp;<br/>Year</th>
+        <th class="hilo_rainyear">Rain<br/>year</th>
         <td></td>
       </tr>
       <tr>

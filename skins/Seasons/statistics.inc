@@ -3,7 +3,7 @@
 ## See LICENSE.txt for your rights
 #errorCatcher Echo
 
-#set $archive_data = [$day, $week, $month, $year]
+#set $archive_data = [$day, $week, $month, $year, $rainyear]
 
 <div id="statistics_widget" class="widget">
   <div class="widget_title">
@@ -20,6 +20,7 @@
           <th class="hilo_week">Week</th>
           <th class="hilo_month">Month</th>
           <th class="hilo_year">Year</th>
+          <th class="hilo_rainyear">Rain year</th>
         </tr>
         <tr>
           <td class="label">$obs.label.outTemp</td>
