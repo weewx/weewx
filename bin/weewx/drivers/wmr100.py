@@ -178,7 +178,7 @@ class WMR100(weewx.drivers.AbstractDevice):
             pass
         try:
             self.devh.claimInterface(self.interface)
-        except usb.USBError, e:
+        except usb.USBError as e:
             self.closePort()
             logerr("Unable to claim USB interface: %s" % e)
             raise weewx.WeeWxIOError(e)
@@ -246,7 +246,7 @@ class WMR100(weewx.drivers.AbstractDevice):
                 # Compute its checksum. This can throw an exception if the packet is empty.
                 try:
                     computed_checksum = reduce(operator.iadd, buff[:-2])
-                except TypeError, e:
+                except TypeError as e:
                     logdbg("Exception while calculating checksum: %s" % e)
                 else:
                     actual_checksum = (buff[-1] << 8) + buff[-2]
@@ -288,7 +288,7 @@ class WMR100(weewx.drivers.AbstractDevice):
                                  0x0000200,                                  # value
                                  0x0000000,                                  # index
                                  1000)                                       # timeout
-        except usb.USBError, e:
+        except usb.USBError as e:
             logerr("Unable to send USB control message: %s" % e)
             # Convert to a Weewx error:
             raise weewx.WakeupError(e)
@@ -306,7 +306,7 @@ class WMR100(weewx.drivers.AbstractDevice):
                 for i in range(1, report[0] + 1):
                     yield report[i]
                 nerrors = 0
-            except (IndexError, usb.USBError), e:
+            except (IndexError, usb.USBError) as e:
                 logdbg("Bad USB report received: %s" % e)
                 nerrors += 1
                 if nerrors > self.max_tries:

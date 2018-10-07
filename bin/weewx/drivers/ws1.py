@@ -207,7 +207,7 @@ class StationData(object):
                     v -= (1 << bits)
             if multiplier is not None:
                 v *= multiplier
-        except ValueError, e:
+        except ValueError as e:
             if s != '----':
                 logdbg("decode failed for '%s': %s" % (s, e))
         return v
@@ -261,7 +261,7 @@ class StationSerial(object):
                 buf = self.get_readings()
                 StationData.validate_string(buf)
                 return buf
-            except (serial.serialutil.SerialException, weewx.WeeWxIOError), e:
+            except (serial.serialutil.SerialException, weewx.WeeWxIOError) as e:
                 loginf("Failed attempt %d of %d to get readings: %s" %
                        (ntries + 1, max_tries, e))
                 time.sleep(wait_before_retry)
@@ -304,7 +304,7 @@ class StationSocket(object):
             elif protocol == 'udp':
                 self.net_socket = socket.socket(
                     socket.AF_INET, socket.SOCK_DGRAM)
-        except (socket.error, socket.herror), ex:
+        except (socket.error, socket.herror) as ex:
             logerr("Cannot create socket for some reason: %s" % ex)
             raise weewx.WeeWxIOError(ex)
 
@@ -322,7 +322,7 @@ class StationSocket(object):
                     logdbg("Retrying connection...")
                 self.net_socket.connect(self.conn_info)
                 break
-            except (socket.error, socket.timeout, socket.herror), ex:
+            except (socket.error, socket.timeout, socket.herror) as ex:
                 logerr("Cannot connect to %s:%d for some reason: %s. "
                        "%d tries left." % (
                            self.conn_info[0], self.conn_info[1], ex,
@@ -341,7 +341,7 @@ class StationSocket(object):
                (self.conn_info[0], self.conn_info[1]))
         try:
             self.net_socket.close()
-        except (socket.error, socket.herror, socket.timeout), ex:
+        except (socket.error, socket.herror, socket.timeout) as ex:
             logerr("Cannot close connection to %s:%d. Reason: %s" % (
                 self.conn_info[0], self.conn_info[1], ex))
             raise weewx.WeeWxIOError(ex)
@@ -356,7 +356,7 @@ class StationSocket(object):
             while True:
                 try:
                     buf += self.net_socket.recv(8, socket.MSG_WAITALL)
-                except (socket.error, socket.timeout), ex:
+                except (socket.error, socket.timeout) as ex:
                     raise weewx.WeeWxIOError(ex)
                 if DEBUG_READ >= 1:
                     logdbg("(searching...) buf: %s" % buf)
@@ -373,13 +373,13 @@ class StationSocket(object):
             try:
                 buf += self.net_socket.recv(
                     PACKET_SIZE - len(buf), socket.MSG_WAITALL)
-            except (socket.error, socket.timeout), ex:
+            except (socket.error, socket.timeout) as ex:
                 raise weewx.WeeWxIOError(ex)
         else:
             # Keep receiving data until we find an exclamation point or two
             try:
                 buf = self.net_socket.recv(2, socket.MSG_WAITALL)
-            except (socket.error, socket.timeout), ex:
+            except (socket.error, socket.timeout) as ex:
                 raise weewx.WeeWxIOError(ex)
             while True:
                 if buf == '\r\n':
@@ -398,7 +398,7 @@ class StationSocket(object):
                 else:
                     try:
                         buf = self.net_socket.recv(2, socket.MSG_WAITALL)
-                    except (socket.error, socket.timeout), ex:
+                    except (socket.error, socket.timeout) as ex:
                         raise weewx.WeeWxIOError(ex)
                     if DEBUG_READ >= 2:
                             logdbg("buf: %s" % ' '.join(
@@ -406,7 +406,7 @@ class StationSocket(object):
             try:
                 buf += self.net_socket.recv(
                     PACKET_SIZE - len(buf), socket.MSG_WAITALL)
-            except (socket.error, socket.timeout), ex:
+            except (socket.error, socket.timeout) as ex:
                 raise weewx.WeeWxIOError(ex)
         if DEBUG_READ >= 2:
             logdbg("buf: %s" % buf)
@@ -421,7 +421,7 @@ class StationSocket(object):
                 buf = self.get_readings()
                 StationData.validate_string(buf)
                 return buf
-            except (weewx.WeeWxIOError), e:
+            except (weewx.WeeWxIOError) as e:
                 logdbg("Failed to get data. Reason: %s" % e)
                 self.rec_start = False
 

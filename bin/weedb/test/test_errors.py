@@ -2,6 +2,7 @@
 from __future__ import with_statement
 import os
 import stat
+import sys
 import unittest
 
 import MySQLdb

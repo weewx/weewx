@@ -79,15 +79,17 @@ class Source(object):
         to import records into the weeWX archive.
 
     __init__() must define the following properties:
-        self.dry_run      - Is this a dry run (ie do not save imported records
-                            to archive). [True|False].
-        self.calc_missing - Calculate any missing derived observations.
-                            [True|False].
-        self.tranche      - Number of records to be written to archive in a
-                            single transaction. Integer.
-        self.interval     - Method of determining interval value if interval
-                            field not included in data source.
-                            ['config'|'derive'|x] where x is an integer.
+        dry_run             - Is this a dry run (ie do not save imported records
+                              to archive). [True|False].
+        calc_missing        - Calculate any missing derived observations.
+                              [True|False].
+        ignore_invalid_data - Ignore any ivalid data found in a source field. 
+                              [True|False].
+        tranche             - Number of records to be written to archive in a
+                              single transaction. Integer.
+        interval            - Method of determining interval value if interval
+                              field not included in data source.
+                              ['config'|'derive'|x] where x is an integer.
 
     Child classes are used to interract with a specific source (eg CSV file,
     WU). Any such child classes must define a getRawData() method which:
@@ -126,6 +128,9 @@ class Source(object):
         # get our import config dict settings
         # interval, default to 'derive'
         self.interval = import_config_dict.get('interval', 'derive')
+        # do we ignore invalid data, default to True
+        self.ignore_invalid_data = tobool(import_config_dict.get('ignore_invalid_data', 
+                                                                 True))
         # tranche, default to 250
         self.tranche = to_int(import_config_dict.get('tranche', 250))
         # apply QC, default to True
@@ -166,7 +171,7 @@ class Source(object):
                 altitude_vt = weewx.units.ValueTuple(float(altitude_t[0]),
                                                      altitude_t[1],
                                                      "group_altitude")
-            except KeyError, e:
+            except KeyError as e:
                 raise weewx.ViolatedPrecondition(
                     "Value 'altitude' needs a unit (%s)" % e)
             latitude_f = float(stn_dict['latitude'])
@@ -657,17 +662,26 @@ class Source(object):
                         # can't catch the error
                         try:
                             _temp = float(_row[self.map[_field]['field_name']].strip())
-                        except:
-                            # perhaps we have a None or a blank/empty entry
-                            if _row[self.map[_field]['field_name']] is None or _row[self.map[_field]['field_name']].strip() == '':
-                                # if so we will use None
+                        except TypeError:
+                            # perhaps we have a None, so return None for our field
+                            _temp = None
+                        except ValueError:
+                            # most likely have non-numeric, non-None data, in 
+                            # this case what we do depends on our 
+                            # ignore_invalid_data property
+                            if self.ignore_invalid_data:
+                                # we ignore the invalid data so set our result 
+                                # to None
                                 _temp = None
                             else:
-                                # otherwise we will raise an error
+                                # we raise the error
                                 _msg = "%s: cannot convert '%s' to float at timestamp '%s'." % (_field,
                                                                                                 _row[self.map[_field]['field_name']],
                                                                                                 timestamp_to_string(_rec['dateTime']))
                                 raise ValueError(_msg)
+                        except:
+                            # some other error, raise it    
+                            raise
                         # some fields need some special processing
 
                         # rain - if our imported 'rain' field is cumulative
@@ -785,7 +799,7 @@ class Source(object):
                             print "Import aborted by user. No records saved to archive."
                         _msg = "User chose to abort import. %d records were processed. Exiting." % self.total_rec_proc
                         self.wlog.logonly(syslog.LOG_INFO, _msg)
-                        raise SystemExit('Exiting. Nothing done.')
+                    raise SystemExit('Exiting. Nothing done.')
             self.wlog.verboselog(syslog.LOG_INFO,
                                  "Mapped %d records." % len(_records))
             # the user wants to continue or we have only one unique value for

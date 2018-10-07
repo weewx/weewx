@@ -15,6 +15,13 @@ import unittest
 
 import configobj
 
+# To run standalone, PYTHONPATH must be set to not only the WeeWX code, but also the "stats" example.
+# Something like:
+#
+# cd ~/git/weewx/bin
+# PYTHONPATH=".:../examples" python weewx/test/test_templates.py
+#
+
 os.environ['TZ'] = 'America/Los_Angeles'
 
 # This will use the locale specified by the environment variable 'LANG'
@@ -89,7 +96,7 @@ class Common(unittest.TestCase):
         try:
             test_html_dir = os.path.join(self.config_dict['WEEWX_ROOT'], self.config_dict['StdReport']['HTML_ROOT'])
             shutil.rmtree(test_html_dir)
-        except OSError, e:
+        except OSError as e:
             if os.path.exists(test_html_dir):
                 print >> sys.stderr, "\nUnable to remove old test directory %s", test_html_dir
                 print >> sys.stderr, "Reason:", e
@@ -138,7 +145,7 @@ class Common(unittest.TestCase):
             for dirfilename in dirfilenames:
                 expected_filename_abs = os.path.join(dirpath, dirfilename)
                 # Get the file path relative to the directory of expected results
-                filename_rel = weeutil.weeutil.relpath(expected_filename_abs, expected_dir)
+                filename_rel = os.path.relpath(expected_filename_abs, expected_dir)
                 # Use that to figure out where the actual results ended up
                 actual_filename_abs = os.path.join(test_html_dir, filename_rel)
 #                 print "Checking file: ", actual_filename_abs

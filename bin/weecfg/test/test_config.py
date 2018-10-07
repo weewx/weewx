@@ -22,6 +22,7 @@ import weeutil.weeutil
 try:
     from mock import patch
     import __builtin__  # @UnusedImport
+
     have_mock = True
 except ImportError:
     print "Module 'mock' not installed. Testing will be restricted."
@@ -29,6 +30,7 @@ except ImportError:
 
 # Redirect the import of setup:
 sys.modules['setup'] = weecfg.extension
+
 
 def check_fileend(out_str):
     """Early versions of ConfigObj did not terminate files with a newline.
@@ -38,6 +40,7 @@ def check_fileend(out_str):
         x = out_str.read(1)
         if x != '\n':
             out_str.write('\n')
+
 
 # Change directory so we can find things dependent on the location of
 # this file, such as config files and expected values:
@@ -64,6 +67,7 @@ y_str = """
           c = 15"""
 
 current_config_dict_path = "../../../weewx.conf"
+
 
 class ConfigTest(unittest.TestCase):
 
@@ -116,7 +120,6 @@ class ConfigTest(unittest.TestCase):
         self.assertEqual("{'section_a': {'a': '1'}, 'section_b': {'b': '2'}, 'section_c': {'c': '3'}, "
                          "'section_d': {'d': '4'}, 'section_e': {'c': '15'}}", str(x_dict))
 
-
         xio = StringIO.StringIO(x_str)
         yio = StringIO.StringIO(y_str)
         x_dict = configobj.ConfigObj(xio)
@@ -130,43 +133,43 @@ class ConfigTest(unittest.TestCase):
         data_binding = wx_binding
         [[XtraReport]]
             skin = Foo
-            
+
         [[StandardReport]]
             skin = Standard
-    
+
         [[FTP]]
             skin = Ftp
-    
+
         [[RSYNC]]
             skin = Rsync
 """
-            
+
     report_expected_str = """[StdReport]
         SKIN_ROOT = skins
         HTML_ROOT = public_html
         data_binding = wx_binding
-        
+
         [[StandardReport]]
                 skin = Standard
         [[XtraReport]]
                 skin = Foo
-        
+
         [[FTP]]
                 skin = Ftp
-        
+
         [[RSYNC]]
                 skin = Rsync
-""" 
-     
-    def test_reorder(self):
-        """Test the utility reorder_to_ref"""
-        xio = StringIO.StringIO(ConfigTest.report_start_str)
-        x_dict = configobj.ConfigObj(xio)
-        weecfg.reorder_to_ref(x_dict)
-        x_result = StringIO.StringIO()
-        x_dict.write(x_result)
-        check_fileend(x_result)
-        self.assertEqual(ConfigTest.report_expected_str, x_result.getvalue())
+"""
+
+    # def test_reorder(self):
+    #     """Test the utility reorder_to_ref"""
+    #     xio = StringIO.StringIO(ConfigTest.report_start_str)
+    #     x_dict = configobj.ConfigObj(xio)
+    #     weecfg.reorder_to_ref(x_dict)
+    #     x_result = StringIO.StringIO()
+    #     x_dict.write(x_result)
+    #     check_fileend(x_result)
+    #     self.assertEqual(ConfigTest.report_expected_str, x_result.getvalue())
 
     if have_mock:
 
@@ -271,80 +274,68 @@ class ConfigTest(unittest.TestCase):
                 # Restore stdout:
                 sys.stdout = save_stdout
 
-    def test_upgrade_v27(self):
+    def test_upgrade_v25(self):
 
         # Start with the Version 2.0 weewx.conf file:
         config_dict = configobj.ConfigObj('weewx20.conf')
 
-        # Upgrade the V2.0 configuration dictionary to V2.7:
-        weecfg.update_to_v27(config_dict)
+        # Upgrade the V2.0 configuration dictionary to V2.5:
+        weecfg.update_to_v25(config_dict)
 
-        # Write it out to a StringIO, then start checking it against the expected
-        out_str = StringIO.StringIO()
-        config_dict.write(out_str)
-        check_fileend(out_str)
-        out_str.seek(0)
+        self._check_against_expected(config_dict, 'expected/weewx25_expected.conf')
 
-        fd_expected = open('expected/weewx27_expected.conf')
-        N = 0
-        for expected in fd_expected:
-            actual = out_str.readline()
-            N += 1
-            self.assertEqual(actual, expected, "[%d] '%s' vs '%s'" % (N, actual, expected))
+    def test_upgrade_v26(self):
 
-        # Make sure there are no extra lines in the updated config:
-        more = out_str.readline()
-        self.assertEqual(more, '')
+        # Start with the Version 2.5 weewx.conf file:
+        config_dict = configobj.ConfigObj('weewx25.conf')
 
-    def test_upgrade_30(self):
+        # Upgrade the V2.5 configuration dictionary to V2.6:
+        weecfg.update_to_v26(config_dict)
 
-        # Start with the Version 2.7 weewx.conf file:
+        self._check_against_expected(config_dict, 'expected/weewx26_expected.conf')
+
+    def test_upgrade_v30(self):
+
+        # Start with the Version 2.5 weewx.conf file:
         config_dict = configobj.ConfigObj('weewx27.conf')
 
-        # Upgrade to V3.0
+        # Upgrade the V2.7 configuration dictionary to V3.0:
         weecfg.update_to_v30(config_dict)
 
-        # Write it out to a StringIO, then start checking it against the expected
-        out_str = StringIO.StringIO()
-        config_dict.write(out_str)
-        check_fileend(out_str)
-        out_str.seek(0)
+        self._check_against_expected(config_dict, 'expected/weewx30_expected.conf')
 
-        fd_expected = open('expected/weewx30_expected.conf')
-        N = 0
-        for expected in fd_expected:
-            actual = out_str.readline()
-            N += 1
-            self.assertEqual(actual, expected, "[%d] '%s' vs '%s'" % (N, actual, expected))
+    def test_upgrade_v32(self):
 
-        # Make sure there are no extra lines in the updated config:
-        more = out_str.readline()
-        self.assertEqual(more, '', "Unexpected additional lines")
+        # Start with the Version 3.0 weewx.conf file:
+        config_dict = configobj.ConfigObj('weewx30.conf')
 
-    def test_upgrade_36(self):
+        # Upgrade the V3.0 configuration dictionary to V3.2:
+        weecfg.update_to_v32(config_dict)
 
-        # Start with the Version 3.5 weewx.conf file:
-        config_dict = configobj.ConfigObj('weewx35.conf')
+        self._check_against_expected(config_dict, 'expected/weewx32_expected.conf')
 
-        # Upgrade to V3.6
+    def test_upgrade_v36(self):
+
+        # Start with the Version 3.0 weewx.conf file:
+        config_dict = configobj.ConfigObj('weewx32.conf')
+
+        # Upgrade the V3.2 configuration dictionary to V3.6:
         weecfg.update_to_v36(config_dict)
 
-        # Write it out to a StringIO, then start checking it against the expected
-        out_str = StringIO.StringIO()
-        config_dict.write(out_str)
-        check_fileend(out_str)
-        out_str.seek(0)
+        self._check_against_expected(config_dict, 'expected/weewx36_expected.conf')
 
-        fd_expected = open('expected/weewx36_expected.conf')
-        N = 0
-        for expected in fd_expected:
-            actual = out_str.readline()
-            N += 1
-            self.assertEqual(actual, expected, "[%d] '%s' vs '%s'" % (N, actual, expected))
+    def test_merge(self):
 
-        # Make sure there are no extra lines in the updated config:
-        more = out_str.readline()
-        self.assertEqual(more, '', "Unexpected additional lines")
+        # Start with a typical V2.0 user file:
+        config_dict = configobj.ConfigObj('weewx_user.conf')
+
+        # The current config file becomes the template:
+        template = configobj.ConfigObj(current_config_dict_path)
+
+        # First update, then merge:
+        weecfg.update_and_merge(config_dict, template)
+
+        self._check_against_expected(config_dict, 'expected/weewx_user_expected.conf')
 
     def test_driver_info(self):
         """Test the discovery and listing of drivers."""
@@ -357,50 +348,40 @@ class ConfigTest(unittest.TestCase):
         # ... and see if the version number matches
         self.assertEqual(driver_info_dict['weewx.drivers.wmr100']['version'], weewx.drivers.wmr100.DRIVER_VERSION)
         del weewx.drivers.wmr100
-        
-    def test_merge(self):
 
-        # Start with a typical V2.0 user file:
-        config_dict = configobj.ConfigObj('weewx_user.conf')
+    def _check_against_expected(self, config_dict, expected):
+        """Check a ConfigObj against an expected version
 
-        # The current config file becomes the template:
-        template = configobj.ConfigObj(current_config_dict_path)
+        config_dict: The ConfigObj that is to be checked
 
-        # First update, then merge:
-        weecfg.update_and_merge(config_dict, template)
-        
-        # Reorder to make the comparisons more predictable:
-        weecfg.reorder_to_ref(config_dict)
-        
-        # Write it out to a StringIO, then start checking it against the expected
+        expected: The name of a file holding the expected version
+        """
+        # Write the ConfigObjout to a StringIO, then start checking it against the expected
         out_str = StringIO.StringIO()
         config_dict.write(out_str)
         check_fileend(out_str)
         out_str.seek(0)
 
-        with open('expected/weewx_user_expected.conf') as fd_expected:
-            N = 0
-            for expected in fd_expected:
-                actual = out_str.readline()
-                N += 1
-                if actual.startswith('version ='):
-                    actual = actual[:10]
-                    expected = expected[:10]
-                else:
-                    self.assertEqual(actual, expected, "[%d] '%s' vs '%s'" % (N, actual, expected))
+        fd_expected = open(expected)
+        N = 0
+        for expected in fd_expected:
+            actual = out_str.readline()
+            N += 1
+            self.assertEqual(actual.strip(), expected.strip(), "[%d] '%s' vs '%s'" % (N, actual, expected))
 
-            # Make sure there are no extra lines in the updated config:
-            more = out_str.readline()
-            self.assertEqual(more, '')
+        # Make sure there are no extra lines in the updated config:
+        more = out_str.readline()
+        self.assertEqual(more, '')
+
 
 class ExtensionUtilityTest(unittest.TestCase):
     """Tests of utility functions used by the extension installer."""
 
-    INSTALLED_NAMES = ['/var/tmp/pmon/bin/user/pmon.py', 
-                       '/var/tmp/pmon/changelog', 
-                       '/var/tmp/pmon/install.py', 
-                       '/var/tmp/pmon/readme.txt', 
-                       '/var/tmp/pmon/skins/pmon/index.html.tmpl', 
+    INSTALLED_NAMES = ['/var/tmp/pmon/bin/user/pmon.py',
+                       '/var/tmp/pmon/changelog',
+                       '/var/tmp/pmon/install.py',
+                       '/var/tmp/pmon/readme.txt',
+                       '/var/tmp/pmon/skins/pmon/index.html.tmpl',
                        '/var/tmp/pmon/skins/pmon/skin.conf']
 
     def setUp(self):
@@ -412,16 +393,16 @@ class ExtensionUtilityTest(unittest.TestCase):
     def test_tar_extract(self):
         shutil.rmtree('/var/tmp/pmon', ignore_errors=True)
         member_names = weecfg.extract_tar('./pmon.tar', '/var/tmp')
-        self.assertEqual(member_names, ['pmon', 
-                                        'pmon/readme.txt', 
-                                        'pmon/skins', 
-                                        'pmon/skins/pmon', 
-                                        'pmon/skins/pmon/index.html.tmpl', 
-                                        'pmon/skins/pmon/skin.conf', 
-                                        'pmon/changelog', 
-                                        'pmon/install.py', 
-                                        'pmon/bin', 
-                                        'pmon/bin/user', 
+        self.assertEqual(member_names, ['pmon',
+                                        'pmon/readme.txt',
+                                        'pmon/skins',
+                                        'pmon/skins/pmon',
+                                        'pmon/skins/pmon/index.html.tmpl',
+                                        'pmon/skins/pmon/skin.conf',
+                                        'pmon/changelog',
+                                        'pmon/install.py',
+                                        'pmon/bin',
+                                        'pmon/bin/user',
                                         'pmon/bin/user/pmon.py'])
         actual_files = []
         for direc in os.walk('/var/tmp/pmon'):
@@ -433,8 +414,8 @@ class ExtensionUtilityTest(unittest.TestCase):
         shutil.rmtree('/var/tmp/pmon', ignore_errors=True)
         member_names = weecfg.extract_tar('./pmon.tgz', '/var/tmp')
         self.assertEqual(member_names, ['pmon',
-                                        'pmon/bin', 
-                                        'pmon/bin/user', 
+                                        'pmon/bin',
+                                        'pmon/bin/user',
                                         'pmon/bin/user/pmon.py',
                                         'pmon/changelog',
                                         'pmon/install.py',
@@ -452,16 +433,16 @@ class ExtensionUtilityTest(unittest.TestCase):
     def test_zip_extract(self):
         shutil.rmtree('/var/tmp/pmon', ignore_errors=True)
         member_names = weecfg.extract_zip('./pmon.zip', '/var/tmp')
-        self.assertEqual(member_names, ['pmon/', 
-                                        'pmon/bin/', 
-                                        'pmon/bin/user/', 
+        self.assertEqual(member_names, ['pmon/',
+                                        'pmon/bin/',
+                                        'pmon/bin/user/',
                                         'pmon/bin/user/pmon.py',
-                                        'pmon/changelog', 
-                                        'pmon/install.py', 
-                                        'pmon/readme.txt', 
-                                        'pmon/skins/', 
-                                        'pmon/skins/pmon/', 
-                                        'pmon/skins/pmon/index.html.tmpl', 
+                                        'pmon/changelog',
+                                        'pmon/install.py',
+                                        'pmon/readme.txt',
+                                        'pmon/skins/',
+                                        'pmon/skins/pmon/',
+                                        'pmon/skins/pmon/index.html.tmpl',
                                         'pmon/skins/pmon/skin.conf'])
         actual_files = []
         for direc in os.walk('/var/tmp/pmon'):
@@ -469,10 +450,10 @@ class ExtensionUtilityTest(unittest.TestCase):
                 actual_files.append(os.path.join(direc[0], filename))
         self.assertEqual(sorted(actual_files), self.INSTALLED_NAMES)
 
-        
+
 class ExtensionInstallTest(unittest.TestCase):
     """Tests of the extension installer."""
-    
+
     def setUp(self):
         # We're going to install a "mini-weewx" in this temporary directory:
         self.weewx_root = '/var/tmp/wee_test'
@@ -482,15 +463,15 @@ class ExtensionInstallTest(unittest.TestCase):
             distutils.dir_util.remove_tree(self.weewx_root)
         except OSError:
             pass
-        
+
         # Now build a new configuration
         self.user_dir = os.path.join(self.weewx_root, 'bin', 'user')
         self.skin_dir = os.path.join(self.weewx_root, 'skins')
-        self.bin_dir  = os.path.join(self.weewx_root, 'bin')
+        self.bin_dir = os.path.join(self.weewx_root, 'bin')
         distutils.dir_util.copy_tree('../../../bin/user', self.user_dir)
         distutils.dir_util.copy_tree('../../../skins/Standard', os.path.join(self.skin_dir, 'Standard'))
         shutil.copy(current_config_dict_path, self.weewx_root)
-        
+
     def tearDown(self):
         "Remove any installed test configuration"
         try:
@@ -500,43 +481,43 @@ class ExtensionInstallTest(unittest.TestCase):
 
     def test_install(self):
         # Find and read the test configuration
-        config_path = os.path.join(self.weewx_root,'weewx.conf')
+        config_path = os.path.join(self.weewx_root, 'weewx.conf')
         config_dict = configobj.ConfigObj(config_path)
-        
+
         # Note that the actual location of the "mini-weewx" is over in /var/tmp
         config_dict['WEEWX_ROOT'] = self.weewx_root
 
         # Initialize the install engine. Note that we want the bin root in /var/tmp, not here:
-        engine = weecfg.extension.ExtensionEngine(config_path, config_dict, 
+        engine = weecfg.extension.ExtensionEngine(config_path, config_dict,
                                                   bin_root=self.bin_dir,
-                                                  logger= weecfg.Logger(verbosity=-1)) 
-        
+                                                  logger=weecfg.Logger(verbosity=-1))
+
         # Make sure the root dictionary got calculated correctly:
-        self.assertEqual(engine.root_dict, {'WEEWX_ROOT' : '/var/tmp/wee_test',
-                                            'BIN_ROOT'   : '/var/tmp/wee_test/bin',
-                                            'USER_ROOT'  : '/var/tmp/wee_test/bin/user',
-                                            'EXT_ROOT'   : '/var/tmp/wee_test/bin/user/installer',
-                                            'SKIN_ROOT'  : '/var/tmp/wee_test/skins',
+        self.assertEqual(engine.root_dict, {'WEEWX_ROOT': '/var/tmp/wee_test',
+                                            'BIN_ROOT': '/var/tmp/wee_test/bin',
+                                            'USER_ROOT': '/var/tmp/wee_test/bin/user',
+                                            'EXT_ROOT': '/var/tmp/wee_test/bin/user/installer',
+                                            'SKIN_ROOT': '/var/tmp/wee_test/skins',
                                             'CONFIG_ROOT': '/var/tmp/wee_test'})
-        
+
         # Now install the extension...
         engine.install_extension('./pmon.tgz')
-        
+
         # ... and assert that it got installed correctly
         self.assertTrue(os.path.isfile(os.path.join(self.user_dir, 'pmon.py')))
         self.assertTrue(os.path.isfile(os.path.join(self.user_dir, 'installer', 'pmon', 'install.py')))
         self.assertTrue(os.path.isdir(os.path.join(self.skin_dir, 'pmon')))
-        self.assertTrue(os.path.isfile(os.path.join(self.skin_dir, 'pmon','index.html.tmpl')))
-        self.assertTrue(os.path.isfile(os.path.join(self.skin_dir, 'pmon','skin.conf')))
-        
+        self.assertTrue(os.path.isfile(os.path.join(self.skin_dir, 'pmon', 'index.html.tmpl')))
+        self.assertTrue(os.path.isfile(os.path.join(self.skin_dir, 'pmon', 'skin.conf')))
+
         # Get, then check the new config dict:
         test_dict = configobj.ConfigObj(config_path)
         self.assertEqual(test_dict['StdReport']['pmon'],
                          {'HTML_ROOT': 'public_html/pmon', 'skin': 'pmon'})
-        self.assertEqual(test_dict['Databases']['pmon_sqlite'], 
+        self.assertEqual(test_dict['Databases']['pmon_sqlite'],
                          {'database_name': 'pmon.sdb',
                           'database_type': 'SQLite'})
-        self.assertEqual(test_dict['DataBindings']['pmon_binding'], 
+        self.assertEqual(test_dict['DataBindings']['pmon_binding'],
                          {'manager': 'weewx.manager.DaySummaryManager',
                           'schema': 'user.pmon.schema',
                           'table_name': 'archive',
@@ -544,36 +525,38 @@ class ExtensionInstallTest(unittest.TestCase):
         self.assertEqual(test_dict['ProcessMonitor'],
                          {'data_binding': 'pmon_binding',
                           'process': 'weewxd'})
-        
+
         self.assertTrue('user.pmon.ProcessMonitor' in test_dict['Engine']['Services']['process_services'])
-        
+
     def test_uninstall(self):
         # Find and read the test configuration
-        config_path = os.path.join(self.weewx_root,'weewx.conf')
+        config_path = os.path.join(self.weewx_root, 'weewx.conf')
         config_dict = configobj.ConfigObj(config_path)
-        
+
         # Note that the actual location of the "mini-weewx" is over in /var/tmp
         config_dict['WEEWX_ROOT'] = self.weewx_root
 
         # Initialize the install engine. Note that we want the bin root in /var/tmp, not here:
-        engine = weecfg.extension.ExtensionEngine(config_path, config_dict, 
+        engine = weecfg.extension.ExtensionEngine(config_path, config_dict,
                                                   bin_root=self.bin_dir,
-                                                  logger= weecfg.Logger(verbosity=-1)) 
+                                                  logger=weecfg.Logger(verbosity=-1))
         # First install...
         engine.install_extension('./pmon.tgz')
         # ... then uninstall it:
         engine.uninstall_extension('pmon')
-        
+
         # Assert that everything got removed correctly:
         self.assertTrue(not os.path.exists(os.path.join(self.user_dir, 'pmon.py')))
         self.assertTrue(not os.path.exists(os.path.join(self.user_dir, 'installer', 'pmon', 'install.py')))
         self.assertTrue(not os.path.exists(os.path.join(self.skin_dir, 'pmon')))
-        self.assertTrue(not os.path.exists(os.path.join(self.skin_dir, 'pmon','index.html.tmpl')))
-        self.assertTrue(not os.path.exists(os.path.join(self.skin_dir, 'pmon','skin.conf')))
-        
+        self.assertTrue(not os.path.exists(os.path.join(self.skin_dir, 'pmon', 'index.html.tmpl')))
+        self.assertTrue(not os.path.exists(os.path.join(self.skin_dir, 'pmon', 'skin.conf')))
+
         # Get the modified config dict, which had the extension removed from it
         test_dict = configobj.ConfigObj(config_path)
 
         # It should be the same as our original:
         self.assertEqual(test_dict, config_dict)
+
+
 unittest.main()

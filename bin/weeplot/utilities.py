@@ -35,29 +35,33 @@ def scale(fmn, fmx, prescale = (None, None, None), nsteps = 10):
     The third value is the step (increment) between them.
 
     Examples:
-    >>> print scale(1.1, 12.3, (0, 14, 2))
+    >>> print "(%.1f, %.1f, %.1f)" % scale(1.1, 12.3, (0, 14, 2))
     (0.0, 14.0, 2.0)
-    >>> print scale(1.1, 12.3)
+    >>> print "(%.1f, %.1f, %.1f)" % scale(1.1, 12.3)
     (0.0, 14.0, 2.0)
-    >>> print scale(-1.1, 12.3)
+    >>> print "(%.1f, %.1f, %.1f)" % scale(-1.1, 12.3)
     (-2.0, 14.0, 2.0)
-    >>> print scale(-12.1, -5.3)
+    >>> print "(%.1f, %.1f, %.1f)" % scale(-12.1, -5.3)
     (-13.0, -5.0, 1.0)
-    >>> print scale(10.0, 10.0)
-    (10.0, 10.1, 0.01)
-    >>> print "(%.4f, %.4f, %.5f)" % scale(10.0, 10.001)
-    (10.0000, 10.0010, 0.00010)
-    >>> print scale(10.0, 10.0+1e-8)
-    (10.0, 10.1, 0.01)
-    >>> print scale(0.0, 0.05, (None, None, .1), 10)
-    (0.0, 1.0, 0.1)
-    >>> print scale(16.8, 21.5, (None, None, 2), 10)
-    (16.0, 36.0, 2.0)
-    >>> print scale(16.8, 21.5, (None, None, 2), 4)
-    (16.0, 22.0, 2.0)
-    >>> print scale(0.0, 0.21, (None, None, .02))
-    (0.0, 0.22, 0.02)
-    
+    >>> print "(%.2f, %.2f, %.2f)" % scale(10.0, 10.0)
+    (10.00, 10.10, 0.01)
+    >>> print "(%.2f, %.4f, %.4f)" % scale(10.0, 10.001)
+    (10.00, 10.0010, 0.0001)
+    >>> print "(%.2f, %.2f, %.2f)" % scale(10.0, 10.0+1e-8)
+    (10.00, 10.10, 0.01)
+    >>> print "(%.2f, %.2f, %.2f)" % scale(0.0, 0.05, (None, None, .1), 10)
+    (0.00, 1.00, 0.10)
+    >>> print "(%.2f, %.2f, %.2f)" % scale(16.8, 21.5, (None, None, 2), 10)
+    (16.00, 36.00, 2.00)
+    >>> print "(%.2f, %.2f, %.2f)" % scale(16.8, 21.5, (None, None, 2), 4)
+    (16.00, 22.00, 2.00)
+    >>> print "(%.2f, %.2f, %.2f)" % scale(0.0, 0.21, (None, None, .02))
+    (0.00, 0.22, 0.02)
+    >>> print "(%.2f, %.2f, %.2f)" % scale(100.0, 100.0, (None, 100, None))
+    (99.00, 100.00, 0.20)
+    >>> print "(%.2f, %.2f, %.2f)" % scale(100.0, 100.0, (100, None, None))
+    (100.00, 101.00, 0.20)
+
     """
     
     # If all the values are hard-wired in, then there's nothing to do:
@@ -74,11 +78,29 @@ def scale(fmn, fmx, prescale = (None, None, None), nsteps = 10):
     if fmx < fmn :
         raise weeplot.ViolatedPrecondition("scale() called with max value less than min value")
 
+    # In case minscale and/or maxscale was specified, clip fmn and fmx to make sure they stay within bounds
+    if maxscale is not None:
+        fmx = min(fmx, maxscale)
+    if minscale is not None:
+        fmn = max(fmn, minscale)
+
+    # Check the special case where the min and max values are equal.
     if _rel_approx_equal(fmn, fmx) :
-        if fmn == 0.0 :
-            fmx = 1.0
-        else :
-            fmx = fmn + .01*abs(fmn)
+        # They are equal. We need to move one or the other to create a range, while
+        # being careful that the resultant min/max stay within the interval [minscale, maxscale]
+        if maxscale is not None:
+            # maxscale if fixed. Move fmn.
+            fmn = fmx - 0.01 * abs(fmx)
+        elif minscale is not None:
+            # minscale if fixed. Move fmx.
+            fmx = fmn + 0.01 * abs(fmx)
+        else:
+            # Both can float. Check special case where fmn and fmx are zero
+            if fmn == 0.0 :
+                fmx = 1.0
+            else :
+                # Just arbitrarily move one. Say, fmx.
+                fmx = fmn + .01*abs(fmn)
 
     if minscale is not None and maxscale is not None:
         if maxscale < minscale:
@@ -297,7 +319,7 @@ class ScaledDraw(object):
         scaledraw = ScaledDraw(draw, ((10, 10), (118, 246)), ((0.0, 0.0), (10.0, 1.0)))
         
         would create a scaled drawing where the upper-left image coordinate (10, 10) would
-        correspond to the scaled coordinate( 0.0, 1.0). The lower-left image coordinate
+        correspond to the scaled coordinate( 0.0, 1.0). The lower-right image coordinate
         would correspond to the scaled coordinate (10.0, 0.0).
         
         draw: an instance of ImageDraw

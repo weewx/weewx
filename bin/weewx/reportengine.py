@@ -38,12 +38,12 @@ DAY_NAMES = ('sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat')
 MONTH_NAMES = ('jan', 'feb', 'mar', 'apr', 'may', 'jun',
                'jul', 'aug', 'sep', 'oct', 'nov', 'dec')
 # map month names to month number
-MONTH_NAME_MAP = zip(('jan', 'feb', 'mar', 'apr',
+MONTH_NAME_MAP = list(zip(('jan', 'feb', 'mar', 'apr',
                       'may', 'jun', 'jul', 'aug',
-                      'sep', 'oct', 'nov', 'dec'), xrange(1, 13))
+                      'sep', 'oct', 'nov', 'dec'), list(range(1, 13))))
 # map day names to day number
-DAY_NAME_MAP = zip(('sun', 'mon', 'tue', 'wed',
-                    'thu', 'fri', 'sat'), xrange(7))
+DAY_NAME_MAP = list(zip(('sun', 'mon', 'tue', 'wed',
+                    'thu', 'fri', 'sat'), list(range(7))))
 # map CRON like nicknames to equivalent CRON like line
 NICKNAME_MAP = {
     "@yearly": "0 0 1 1 *",
@@ -52,13 +52,14 @@ NICKNAME_MAP = {
     "@weekly": "0 0 * * 0",
     "@daily": "0 0 * * *",
     "@hourly": "0 * * * *"
-}
+    }
 # list of valid spans for CRON like fields
 SPANS = (MINUTES, HOURS, DOM, MONTHS, DOW)
 # list of valid names for CRON lik efields
 NAMES = ((), (), (), MONTH_NAMES, DAY_NAMES)
 # list of name maps for CRON like fields
 MAPS = ((), (), (), MONTH_NAME_MAP, DAY_NAME_MAP)
+
 
 # =============================================================================
 #                    Class StdReportEngine
@@ -115,7 +116,7 @@ class StdReportEngine(threading.Thread):
                           weeutil.weeutil.timestamp_to_string(self.gen_ts))
         else:
             syslog.syslog(syslog.LOG_DEBUG, "reportengine: "
-                          "Running reports for latest time in the database.")
+                                            "Running reports for latest time in the database.")
 
         # Iterate over each requested report
         for report in self.config_dict['StdReport'].sections:
@@ -151,17 +152,17 @@ class StdReportEngine(threading.Thread):
                     syslog.LOG_DEBUG,
                     "reportengine: Found configuration file %s for report %s" %
                     (skin_config_path, report))
-            except IOError, e:
+            except IOError as e:
                 syslog.syslog(
                     syslog.LOG_DEBUG, "reportengine: "
                     "Cannot read skin configuration file %s for report %s: %s"
                     % (skin_config_path, report, e))
                 skin_dict = configobj.ConfigObj()
-            except SyntaxError, e:
+            except SyntaxError as e:
                 syslog.syslog(
                     syslog.LOG_ERR, "reportengine: "
-                    "Failed to read skin configuration file %s for report %s: %s"
-                    % (skin_config_path, report, e))
+                                    "Failed to read skin configuration file %s for report %s: %s"
+                                    % (skin_config_path, report, e))
                 syslog.syslog(syslog.LOG_ERR, "        ****  Report ignored")
                 continue
 
@@ -194,8 +195,8 @@ class StdReportEngine(threading.Thread):
             # Default action is to run the report. Only reason to not run it is
             # if we have a valid report report_timing and it did not trigger.
             if self.record is not None:
-                # StdReport called us not wee_reports so look for a
-                # report_timing entry if we have one.
+                # StdReport called us not wee_reports so look for a report_timing
+                # entry if we have one.
                 timing_line = skin_dict.get('report_timing', None)
                 # The report_timing entry might have one or more comma separated
                 # values which ConfigObj would interpret as a list. If so then
@@ -216,10 +217,14 @@ class StdReportEngine(threading.Thread):
                         if timing.is_triggered(_ts, _ts - _interval) is False:
                             # report timing was valid but not triggered so do
                             # not run the report.
-                            syslog.syslog(syslog.LOG_DEBUG, "reportengine: Report %s skipped due to report_timing setting" % (report, ))
+                            syslog.syslog(syslog.LOG_DEBUG,
+                                          "reportengine: Report %s skipped due to report_timing setting" %
+                                          (report,))
                             continue
                     else:
-                        syslog.syslog(syslog.LOG_DEBUG, "reportengine: Invalid report_timing setting for report %s (%s), running report anyway" % (report, timing.validation_error))
+                        syslog.syslog(syslog.LOG_DEBUG,
+                                      "reportengine: Invalid report_timing setting for report '%s', running report anyway" % report)
+                        syslog.syslog(syslog.LOG_DEBUG, "        ****  %s" % timing.validation_error)
 
             for generator in weeutil.weeutil.option_as_list(skin_dict['Generators'].get('generator_list')):
 
@@ -235,8 +240,8 @@ class StdReportEngine(threading.Thread):
                 except Exception, e:
                     syslog.syslog(
                         syslog.LOG_CRIT, "reportengine: "
-                        "Unable to instantiate generator %s: %s"
-                        % (generator, e))
+                                         "Unable to instantiate generator %s" % generator)
+                    syslog.syslog(syslog.LOG_CRIT, "        ****  %s" % e)
                     weeutil.weeutil.log_traceback("        ****  ")
                     syslog.syslog(syslog.LOG_CRIT, "        ****  Generator ignored")
                     traceback.print_exc()
@@ -246,13 +251,14 @@ class StdReportEngine(threading.Thread):
                     # Call its start() method
                     obj.start()
 
-                except Exception, e:
+                except Exception as e:
                     # Caught unrecoverable error. Log it, continue on to the
                     # next generator.
                     syslog.syslog(
                         syslog.LOG_CRIT, "reportengine: "
-                        "Caught unrecoverable exception in generator %s: %s"
-                        % (generator, e))
+                                         "Caught unrecoverable exception in generator %s"
+                                         % generator)
+                    syslog.syslog(syslog.LOG_CRIT, "        ****  %s" % str(e))
                     weeutil.weeutil.log_traceback("        ****  ")
                     syslog.syslog(syslog.LOG_CRIT, "        ****  Generator terminated")
                     traceback.print_exc()
@@ -261,12 +267,14 @@ class StdReportEngine(threading.Thread):
                 finally:
                     obj.finalize()
 
+
 # =============================================================================
 #                    Class ReportGenerator
 # =============================================================================
 
 class ReportGenerator(object):
     """Base class for all report generators."""
+
     def __init__(self, config_dict, skin_dict, gen_ts, first_run, stn_info, record=None):
         self.config_dict = config_dict
         self.skin_dict = skin_dict
@@ -302,14 +310,9 @@ class FtpGenerator(ReportGenerator):
         log_success = to_bool(self.skin_dict.get('log_success', True))
 
         t1 = time.time()
-        if 'HTML_ROOT' in self.skin_dict:
-            local_root = os.path.join(self.config_dict['WEEWX_ROOT'],
-                                      self.skin_dict['HTML_ROOT'])
-        else:
-            local_root = os.path.join(self.config_dict['WEEWX_ROOT'],
-                                      self.config_dict['StdReport']['HTML_ROOT'])
-
         try:
+            local_root = os.path.join(self.config_dict['WEEWX_ROOT'],
+                                      self.skin_dict.get('HTML_ROOT', self.config_dict['StdReport']['HTML_ROOT']))
             ftp_data = weeutil.ftpupload.FtpUpload(
                 server=self.skin_dict['server'],
                 user=self.skin_dict['user'],
@@ -323,22 +326,22 @@ class FtpGenerator(ReportGenerator):
                 secure=to_bool(self.skin_dict.get('secure_ftp', False)),
                 debug=int(self.skin_dict.get('debug', 0)),
                 secure_data=to_bool(self.skin_dict.get('secure_data', True)))
-        except Exception:
+        except KeyError:
             syslog.syslog(syslog.LOG_DEBUG,
                           "ftpgenerator: FTP upload not requested. Skipped.")
             return
 
         try:
             n = ftp_data.run()
-        except (socket.timeout, socket.gaierror, ftplib.all_errors, IOError), e:
+        except (socket.timeout, socket.gaierror, ftplib.all_errors, IOError) as e:
             (cl, unused_ob, unused_tr) = sys.exc_info()
             syslog.syslog(syslog.LOG_ERR, "ftpgenerator: "
                           "Caught exception %s: %s" % (cl, e))
             weeutil.weeutil.log_traceback("        ****  ")
             return
 
-        t2 = time.time()
         if log_success:
+            t2 = time.time()
             syslog.syslog(syslog.LOG_INFO,
                           "ftpgenerator: ftp'd %d files in %0.2f seconds" %
                           (n, (t2 - t1)))
@@ -358,12 +361,10 @@ class RsyncGenerator(ReportGenerator):
         # We don't try to collect performance statistics about rsync, because
         # rsync will report them for us.  Check the debug log messages.
         try:
-            if 'HTML_ROOT' in self.skin_dict:
-                html_root = self.skin_dict['HTML_ROOT']
-            else:
-                html_root = self.config_dict['StdReport']['HTML_ROOT']
+            local_root = os.path.join(self.config_dict['WEEWX_ROOT'],
+                                      self.skin_dict.get('HTML_ROOT', self.config_dict['StdReport']['HTML_ROOT']))
             rsync_data = weeutil.rsyncupload.RsyncUpload(
-                local_root=os.path.join(self.config_dict['WEEWX_ROOT'], html_root),
+                local_root=local_root,
                 remote_root=self.skin_dict['path'],
                 server=self.skin_dict['server'],
                 user=self.skin_dict.get('user'),
@@ -372,17 +373,17 @@ class RsyncGenerator(ReportGenerator):
                 compress=to_bool(self.skin_dict.get('compress', False)),
                 delete=to_bool(self.skin_dict.get('delete', False)),
                 log_success=to_bool(self.skin_dict.get('log_success', True)))
-        except Exception:
+        except KeyError:
             syslog.syslog(syslog.LOG_DEBUG,
                           "rsyncgenerator: rsync upload not requested. Skipped.")
             return
 
         try:
             rsync_data.run()
-        except IOError, e:
+        except IOError as e:
             (cl, unused_ob, unused_tr) = sys.exc_info()
             syslog.syslog(syslog.LOG_ERR, "rsyncgenerator: "
-                          "Caught exception %s: %s" % (cl, e))
+                                          "Caught exception %s: %s" % (cl, e))
 
 
 # =============================================================================
@@ -449,7 +450,8 @@ class CopyGenerator(ReportGenerator):
 
         if log_success:
             syslog.syslog(syslog.LOG_INFO, "copygenerator: "
-                          "copied %d files to %s" % (ncopy, html_dest_dir))
+                                           "copied %d files to %s" % (ncopy, html_dest_dir))
+
 
 # ===============================================================================
 #                    Class ReportTiming
@@ -517,7 +519,7 @@ class ReportTiming(object):
         # the line elements with pre-detemined values. These nicknames start
         # with the @ character. Check for any of these nicknames and substitute
         # the corresponding line.
-        for nickname, nn_line in NICKNAME_MAP.iteritems():
+        for nickname, nn_line in NICKNAME_MAP.items():
             if line == nickname:
                 line = nn_line
                 break
@@ -560,7 +562,7 @@ class ReportTiming(object):
             # if we are this far then our line is valid so return True and no
             # error message
             return (True, None)
-        except ValueError, e:
+        except ValueError as e:
             # we picked up a ValueError in self.parse_field() so return False
             # and the error message
             return (False, e)
@@ -587,14 +589,14 @@ class ReportTiming(object):
         field = field.strip()
         if field == '*':  # first-last
             # simply return a set of all poss values
-            return set(xrange(span[0], span[1] + 1))
+            return set(range(span[0], span[1] + 1))
         elif field.isdigit():  # just a number
             # If its a DOW then replace any 7s with 0
-            _field = field.replace('7','0') if span == DOW else field
+            _field = field.replace('7', '0') if span == DOW else field
             # its valid if its within our span
             if span[0] <= int(_field) <= span[1]:
                 # it's valid so return the field itself as a set
-                return set((int(_field), ))
+                return set((int(_field),))
             else:
                 # invalid field value so raise ValueError
                 raise ValueError("Invalid field value '%s' in '%s'" % (field,
@@ -609,7 +611,7 @@ class ReportTiming(object):
                 # its valid if its within our span
                 if span[0] <= int(_field) <= span[1]:
                     # it's valid so return the field itself as a set
-                    return set((int(_field), ))
+                    return set((int(_field),))
                 else:
                     # invalid field value so raise ValueError
                     raise ValueError("Invalid field value '%s' in '%s'" % (field,
@@ -653,7 +655,7 @@ class ReportTiming(object):
                 # equal to lo then the range is valid
                 if hi.isdigit() and int(hi) >= int(lo) and span[0] <= int(hi) <= span[1]:
                     # valid range so return a set of the range
-                    return set(xrange(int(lo), int(hi) + 1))
+                    return set(range(int(lo), int(hi) + 1))
                 else:
                     # something is wrong, we have an invalid field
                     raise ValueError("Invalid range specification '%s' in '%s'" % (field,
@@ -688,7 +690,7 @@ class ReportTiming(object):
             else:
                 # CRON like line has a 1 min resolution so step backwards every
                 # 60 sec.
-                _range = range(int(ts_hi), int(ts_lo), -60)
+                _range = list(range(int(ts_hi), int(ts_lo), -60))
             # Iterate through each ts in our range. All we need is one ts that
             # triggers the line.
             for _ts in _range:
@@ -696,16 +698,16 @@ class ReportTiming(object):
                 trigger_dt = datetime.datetime.fromtimestamp(_ts)
                 trigger_tt = trigger_dt.timetuple()
                 month, dow, day, hour, minute = (trigger_tt.tm_mon,
-                                                (trigger_tt.tm_wday + 1) % 7,
-                                                trigger_tt.tm_mday,
-                                                trigger_tt.tm_hour,
-                                                trigger_tt.tm_min)
+                                                 (trigger_tt.tm_wday + 1) % 7,
+                                                 trigger_tt.tm_mday,
+                                                 trigger_tt.tm_hour,
+                                                 trigger_tt.tm_min)
                 # construct a tuple so we can iterate over and process each
                 # field
-                element_tuple = zip((minute, hour, day, month, dow),
+                element_tuple = list(zip((minute, hour, day, month, dow),
                                     self.line,
                                     SPANS,
-                                    self.decode)
+                                    self.decode))
                 # Iterate over each field and check if it will prevent
                 # triggering. Remember, we only need a match on either DOM or
                 # DOW but all other fields must match.
@@ -719,7 +721,7 @@ class ReportTiming(object):
                             # was a match on a restricted DOM field
                             dom_match = True
                             dom_restricted_match = self.dom_restrict
-                        elif field_span == DOW and not(dom_restricted_match or self.dow_restrict or dom_match):
+                        elif field_span == DOW and not (dom_restricted_match or self.dow_restrict or dom_match):
                             break
                         continue
                     elif field_span == DOW and dom_restricted_match or field_span == DOM:

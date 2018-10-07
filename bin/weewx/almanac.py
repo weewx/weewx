@@ -53,6 +53,7 @@ class Almanac(object):
     These examples are designed to work in the Pacific timezone
     >>> import os
     >>> os.environ['TZ'] = 'America/Los_Angeles'
+    >>> from weeutil.weeutil import timestamp_to_string, timestamp_to_gmtime
     >>> t = 1238180400
     >>> print timestamp_to_string(t)
     2009-03-27 12:00:00 PDT (1238180400)
@@ -69,8 +70,8 @@ class Almanac(object):
     >>> almanac = Almanac(t, 46.0, -122.0)
     
     Test backwards compatibility with attribute 'moon_fullness':
-    >>> print "Fullness of the moon (rounded) is %.2f%% [%s]" % (almanac.moon_fullness, almanac.moon_phase)
-    Fullness of the moon (rounded) is 2.00% [new (totally dark)]
+    >>> print "Fullness of the moon (rounded) is %.2f%% [%s]" % (almanac._moon_fullness, almanac.moon_phase)
+    Fullness of the moon (rounded) is 5.00% [waxing crescent (increasing to full)]
     
     Now get a more precise result for fullness of the moon:
     >>> print "Fullness of the moon (more precise) is %.2f%%" % almanac.moon.moon_fullness
@@ -278,6 +279,9 @@ class Almanac(object):
         
         return almanac
         
+    def separation(self, body1, body2):
+        return ephem.separation(body1, body2)
+    
     def __getattr__(self, attr):
         # This is to get around bugs in the Python version of Cheetah's namemapper:
         if attr.startswith('__') or attr == 'has_key':
@@ -442,26 +446,7 @@ def djd_to_timestamp(djd):
 
 if __name__ == '__main__':
     
-    def dummy_no_ephem():
-        """Final test that does not use ephem.
-        
-        First, get rid of 'ephem':
-        >>> p = sys.modules.pop('ephem')
-        
-        Now do the rest as before:
-        >>> import os
-        >>> os.environ['TZ'] = 'America/Los_Angeles'
-        >>> t = 1238180400
-        >>> print timestamp_to_string(t)
-        2009-03-27 12:00:00 PDT (1238180400)
-        >>> almanac = Almanac(t, 46.0, -122.0)
-        
-        Use "_sunrise" to make sure we're getting the results from weeutil (not ephem):
-        >>> print "Sunrise, sunset:", almanac._sunrise, almanac._sunset
-        Sunrise, sunset: 06:56 19:30"""
-    
     import doctest
-    from weeutil.weeutil import timestamp_to_string, timestamp_to_gmtime  #@UnusedImport
 
     if not doctest.testmod().failed:
         print("PASSED")

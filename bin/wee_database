@@ -201,8 +201,9 @@ def dropDaily(config_dict, db_binding):
                 with weewx.manager.open_manager_with_config(config_dict, db_binding) as dbmanager:
                     try:
                         dbmanager.drop_daily()
-                    except weedb.OperationalError, e:
-                        print "Got error '%s'\nPerhaps there was no daily summary?" % e
+                    except weedb.OperationalError as e:
+                        print "Error '%s'" % e
+                        print "Drop daily summary tables failed for database '%s'" % database_name
                     else:
                         tdiff = time.time() - t1
                         print "Daily summary tables dropped from database '%s' in %.2f seconds" % (database_name, tdiff)
@@ -589,7 +590,7 @@ def _fix_wind(config_dict, db_binding, options):
     # perform the recalculation, wrap in a try..except to catch any db errors
     try:
         wind_obj.run()
-    except weedb.NoTableError, e:
+    except weedb.NoTableError as e:
         msg = "Maximum windSpeed Fix applied: no windSpeed found"
         syslog.syslog(syslog.LOG_INFO, msg)
         print msg

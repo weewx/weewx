@@ -139,8 +139,9 @@ class WUSource(weeimport.Source):
                                                         options.date_from,
                                                         options.date_to)
         self.wlog.verboselog(syslog.LOG_DEBUG, _msg)
-        _msg = "     dry-run=%s, calc-missing=%s" % (self.dry_run,
-                                                     self.calc_missing)
+        _msg = "     dry-run=%s, calc_missing=%s, ignore_invalid_data=%s" % (self.dry_run,
+                                                                             self.calc_missing,
+                                                                             self.ignore_invalid_data)
         self.wlog.verboselog(syslog.LOG_DEBUG, _msg)
         _msg = "     tranche=%s, interval=%s, wind_direction=%s" % (self.tranche,
                                                                     self.interval,
@@ -193,12 +194,12 @@ class WUSource(weeimport.Source):
         # hit the WU site, wrap in a try..except so we can catch any errors
         try:
             _wudata = urllib2.urlopen(_url)
-        except urllib2.URLError, e:
+        except urllib2.URLError as e:
             self.wlog.printlog(syslog.LOG_ERR,
                           "Unable to open Weather Underground station %s" % self.station_id)
             self.wlog.printlog(syslog.LOG_ERR, "   **** %s" % e)
             raise
-        except socket.timeout, e:
+        except socket.timeout as e:
             self.wlog.printlog(syslog.LOG_ERR,
                           "Socket timeout for Weather Underground station %s" % self.station_id)
             raise

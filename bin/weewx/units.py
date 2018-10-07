@@ -32,6 +32,20 @@ def CtoF(x):
 def FtoC(x):
     return (x - 32.0) * 5.0 / 9.0
 
+# Conversions to and from Felsius. 
+# For the definition of Felsius, see https://xkcd.com/1923/
+def FtoE(x):
+    return (7.0 * x - 80.0) / 9.0
+
+def EtoF(x):
+    return (9.0 * x + 80.0) / 7.0
+
+def CtoE(x):
+    return (7.0 / 5.0) * x + 16.0
+    
+def EtoC(x):
+    return (x - 16.0) * 5.0 / 7.0
+
 def mps_to_mph(x):
     return x * 3600.0 / METER_PER_MILE
 
@@ -226,7 +240,10 @@ conversionDict = {
       'inHg'             : {'mbar'             : lambda x : x / INHG_PER_MBAR, 
                             'hPa'              : lambda x : x / INHG_PER_MBAR,
                             'mmHg'             : lambda x : x * 25.4},
-      'degree_F'         : {'degree_C'         : FtoC},
+      'degree_E'         : {'degree_C'         : EtoC,
+                            'degree_F'         : EtoF},
+      'degree_F'         : {'degree_C'         : FtoC,
+                            'degree_E'         : FtoE},
       'degree_F_day'     : {'degree_C_day'     : lambda x : x * (5.0/9.0)},
       'mile_per_hour'    : {'km_per_hour'      : lambda x : x * 1.609344,
                             'knot'             : lambda x : x * 0.868976242,
@@ -254,7 +271,8 @@ conversionDict = {
       'hPa'              : {'inHg'             : lambda x : x * INHG_PER_MBAR,
                             'mmHg'             : lambda x : x * 0.75006168,
                             'mbar'             : lambda x : x * 1.0},
-      'degree_C'         : {'degree_F'         : CtoF},
+      'degree_C'         : {'degree_F'         : CtoF,
+                            'degree_E'         : CtoE},
       'degree_C_day'     : {'degree_F_day'     : lambda x : x * (9.0/5.0)},
       'km_per_hour'      : {'mile_per_hour'    : kph_to_mph,
                             'knot'             : lambda x : x * 0.539956803,
@@ -310,6 +328,7 @@ default_unit_format_dict = {"amp"                : "%.1f",
                             "day"                : "%.1f",
                             "degree_C"           : "%.1f",
                             "degree_C_day"       : "%.1f",
+                            "degree_E"           : "%.1f",
                             "degree_F"           : "%.1f",
                             "degree_F_day"       : "%.1f",
                             "degree_compass"     : "%.0f",
@@ -356,6 +375,7 @@ default_unit_label_dict = { "amp"               : " amp",
                             "day"               : (" day", " days"),
                             "degree_C"          : "\xc2\xb0C",
                             "degree_C_day"      : "\xc2\xb0C-day",
+                            "degree_E"          : "\xc2\xb0E",
                             "degree_F"          : "\xc2\xb0F",
                             "degree_F_day"      : "\xc2\xb0F-day",
                             "degree_compass"    : "\xc2\xb0",
@@ -907,22 +927,12 @@ class ValueHelper(object):
     def __str__(self):
         """Return as string"""
         return self.toString()
-    
-    def string(self, NONE_string=None):
-        """Return as string with an optional user specified string to be
-        used if None"""
-        return self.toString(NONE_string=NONE_string)
-    
-    def format(self, format_string, NONE_string=None):
-        """Returns a formatted version of the datum, using a user-supplied
-        format."""
-        return self.toString(useThisFormat=format_string, NONE_string=NONE_string)
-    
-    def nolabel(self, format_string, NONE_string=None):
-        """Returns a formatted version of the datum, using a user-supplied
-        format. No label."""
-        return self.toString(addLabel=False, useThisFormat=format_string, NONE_string=NONE_string)
-    
+
+    def format(self, format_string=None, NONE_string=None, add_label=True, localize=True):
+        """Returns a formatted version of the datum, using user-supplied customizations."""
+        return self.toString(useThisFormat=format_string, NONE_string=NONE_string,
+                             addLabel=add_label, localize=localize)
+
     def ordinal_compass(self):
         """Returns an ordinal compass direction (eg, 'NNW')"""
         # Get the raw value tuple, then ask the formatter to look up an
@@ -930,16 +940,29 @@ class ValueHelper(object):
         return self.formatter.to_ordinal_compass(self._raw_value_tuple)
         
     @property
-    def formatted(self):
-        """Return a formatted version of the datum. No label."""
-        return self.toString(addLabel=False)
-        
-    @property
     def raw(self):
         """Returns the raw value without any formatting."""
         return self._raw_value_tuple[0]
 
-    @property    
+    # Backwards compatibility
+    def string(self, NONE_string=None):
+        """Return as string with an optional user specified string to be
+        used if None"""
+        return self.toString(NONE_string=NONE_string)
+
+    # Backwards compatibility
+    def nolabel(self, format_string, NONE_string=None):
+        """Returns a formatted version of the datum, using a user-supplied
+        format. No label."""
+        return self.toString(addLabel=False, useThisFormat=format_string, NONE_string=NONE_string)
+
+    # Backwards compatibility
+    @property
+    def formatted(self):
+        """Return a formatted version of the datum. No label."""
+        return self.toString(addLabel=False)
+
+    @property
     def _raw_value_tuple(self):
         """Return a value tuple in the target units."""
         # ... Do the unit conversion ...

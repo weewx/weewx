@@ -1,6 +1,8 @@
 weewx change history
 --------------------
 
+3.9.X YY/YY/YYYY
+
 x.x.x XX/XX/XXXX
 
 New default skin called Seasons.
@@ -12,6 +14,63 @@ customization of units, localization, and internationalization.
 The skin.conf is optional.  It is possible to specify the entire skin
 configuration in the weewx configuration, in which case the skin configuration
 is not necessary.
+
+Dropped support of Python 2.5 and 2.6. You must now use Python 2.7. This is
+in anticipation of porting to Python 3.
+
+The image generator now supports the use of a 'stale_age' option. Thanks to
+user John Smith. Fixes issue #290.
+
+Rose line width can now be specified with option rose_line_width.
+
+The Felsius unit of temperature (see https://xkcd.com/1923/) is now supported.
+
+The almanac now supports calculating planet separations.
+
+The tag formatting taxonomy has been simplified. Just use suffix ".format()" now.
+Documentation updated to reflect changes. Backwards compatibility with old
+suffixes is supported. Fixes issue #328.
+
+Can now set Rapidfire parameter rtfreq. Thanks to user 'whorfin'. PR #304.
+
+Template names can now include the week number. Thanks to user 'stimpy23'. PR #319.
+
+New aggregation type for plots: 'cumulative'. Thanks to user 'henrikost'. PR #302.
+
+Fixed problem where MySQL error 2013 could crash WeeWX. Fixes issue #327.
+
+Posts to the Weather Underground will be skipped if an observation type that
+is listed in the [[[Essentials]]] subsection is missing. Fixes issue #329.
+
+Upgrade process now explicity upgrades version-to-version, instead of
+doing a merge to the new config file. Fixes issue #217.
+
+Example xstats now includes tags for last_year and last_year_todate.
+Thanks to user evilbunny2008. PR #325.
+
+Guard against a negative value for 'interval' in WMR200 stations.
+
+Changed the formula used to calculate percentage illumination of the moon to
+something more accurate around 2018. This formula is only used if pyephem is not
+installed. Fixes issue #342.
+
+Fixed bug that caused older, "type A" Vantage Pro2, to crash.
+Fixes issue #343.
+
+Fixed a bug that caused a divide-by-zero error if a plot range was the same as
+a specified min or max scale. Fixes issue #344.
+
+Fixed bug that prevented an optional data_binding from being used in tags
+when iterating over records. Fixes issue #345.
+
+
+3.8.3 MM/DD/YYYY
+
+Log watch now correctly logs garbage collection events. Thanks to user
+buster-one. PR #340.
+
+Check for missing or negative values for the record field 'interval'.
+
 
 3.8.2 08/15/2018
 

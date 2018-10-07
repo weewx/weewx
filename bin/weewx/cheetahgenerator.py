@@ -15,7 +15,7 @@ Configuration Options
   search_list = a, b, c
   search_list_extensions = d, e, f
 
-The strings YYYY and MM will be replaced if they appear in the filename.
+The strings YYYY, MM, DD and WW will be replaced if they appear in the filename.
 
 search_list will override the default search_list
 
@@ -59,6 +59,7 @@ from __future__ import with_statement
 import os.path
 import syslog
 import time
+import datetime
 
 import configobj
 
@@ -329,7 +330,7 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
                 with open(tmpname, mode='w') as _file:
                     print >> _file, compiled_template
                 os.rename(tmpname, _fullname)
-            except Exception, e:
+            except Exception as e:
                 # We would like to get better feedback when there are cheetah
                 # compiler failures, but there seem to be no hooks for this.
                 # For example, if we could get make cheetah emit the source
@@ -380,16 +381,19 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
 
         _filename = os.path.basename(template).replace('.tmpl', '')
 
-        # If the filename contains YYYY, MM, or DD, then do the replacement
-        if 'YYYY' in _filename or 'MM' in _filename or 'DD' in _filename:
+        # If the filename contains YYYY, MM, DD or WW, then do the replacement
+        if 'YYYY' in _filename or 'MM' in _filename or 'DD' in _filename or 'WW' in _filename:
             # Get strings representing year, month, and day
             _yr_str  = "%4d"  % ref_tt[0]
             _mo_str  = "%02d" % ref_tt[1]
             _day_str = "%02d"  % ref_tt[2]
+            _week_str = "%02d"  % datetime.date( ref_tt[0], ref_tt[1], ref_tt[2] ).isocalendar()[1];
             # Replace any instances of 'YYYY' with the year string
             _filename = _filename.replace('YYYY', _yr_str)
             # Do the same thing with the month...
             _filename = _filename.replace('MM', _mo_str)
+            # ... the week ...
+            _filename = _filename.replace('WW', _week_str)
             # ... and the day
             _filename = _filename.replace('DD', _day_str)
 

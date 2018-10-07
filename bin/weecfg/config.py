@@ -19,15 +19,15 @@ stn_info_defaults = {'station_type': 'Simulator',
                      'driver': 'weewx.drivers.simulator'}
 
 class ConfigEngine(object):
-    
+
     def __init__(self, logger=None):
         self.logger = logger or Logger()
-    
+
     def run(self, args, options):
         if options.version:
             print weewx.__version__
             sys.exit(0)
-    
+
         if options.list_drivers:
             weecfg.print_drivers()
             sys.exit(0)
@@ -52,24 +52,24 @@ class ConfigEngine(object):
         # The install option does not take an old config file
         if options.install and (options.config_path or len(args)):
             sys.exit("The --install command does not require the config option.")
-            
+
         #
         # Error checking done. Now run the commands.
         #
-        
+
         # First, fiddle with option --altitude to convert it into a list:
         if options.altitude:
             options.altitude = options.altitude.split(",")
 
         if options.install or options.upgrade:
-            # These options require a distribution config file. 
+            # These options require a distribution config file.
             # Open it up and parse it:
-            try:        
+            try:
                 dist_config_dict = configobj.ConfigObj(options.dist_config,
                                                        file_error=True)
-            except IOError, e:
+            except IOError as e:
                 sys.exit("Unable to open distribution configuration file: %s" % e)
-            except SyntaxError, e:
+            except SyntaxError as e:
                 sys.exit("Syntax error in distribution configuration file '%s': %s" %
                          (options.dist_config, e))
 
@@ -81,9 +81,9 @@ class ConfigEngine(object):
             try:
                 config_path, config_dict = weecfg.read_config(
                     options.config_path, args)
-            except SyntaxError, e:
+            except SyntaxError as e:
                 sys.exit("Syntax error in configuration file: %s" % e)
-            except IOError, e:
+            except IOError as e:
                 sys.exit("Unable to open configuration file: %s" % e)
             self.logger.log("Using configuration file %s" % config_path)
 
@@ -96,7 +96,7 @@ class ConfigEngine(object):
 
             # Save to the specified output
             output_path = options.output
-            
+
         if options.install or options.reconfigure:
             # Modify the configuration contents
             self.modify_config(config_dict, options)
@@ -106,21 +106,19 @@ class ConfigEngine(object):
             output_path = options.output if options.output else config_path
 
         if output_path is not None:
-            # Save the file. First, pretty it up...
-            weecfg.reorder_to_ref(config_dict)
-            # ... then save
+            # Save the file.
             self.save_config(config_dict, output_path, not options.no_backup)
 
     def modify_config(self, config_dict, options):
         """Modify the configuration dictionary according to any command
         line options. Give the user a chance too.
         """
-        
+
         # Extract stn_info from the config_dict and command-line options:
         stn_info = self.get_stn_info(config_dict, options)
 
         weecfg.modify_config(config_dict, stn_info, self.logger, options.debug)
-    
+
     def get_stn_info(self, config_dict, options):
         """Build the stn_info structure. This generally contains stuff
         that can be injected into the config_dict."""
@@ -148,7 +146,7 @@ class ConfigEngine(object):
             stn_info.update(weecfg.prompt_for_info(**stn_info))
             driver = weecfg.prompt_for_driver(stn_info.get('driver'))
             stn_info['driver'] = driver
-            stn_info.update(weecfg.prompt_for_driver_settings(driver))
+            stn_info.update(weecfg.prompt_for_driver_settings(driver, config_dict))
 
         return stn_info
 
@@ -156,7 +154,7 @@ class ConfigEngine(object):
         """Save the config file, backing up as necessary."""
 
         backup_path = weecfg.save(config_dict, config_path, backup)
-        if backup_path:        
+        if backup_path:
             self.logger.log("Saved backup to %s" % backup_path)
-            
+
         self.logger.log("Saved configuration to %s" % config_path)
