@@ -1478,7 +1478,7 @@ except NameError:
 
 
 def int2byte(x):
-    """Convert integer argument to byte string, under both Python 2 and 3"""
+    """Convert integer argument to signed byte string, under both Python 2 and 3"""
     return struct.pack('>b', x)
 
 if __name__ == '__main__':

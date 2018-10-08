@@ -1003,7 +1003,7 @@ class Vantage(weewx.drivers.AbstractDevice):
         # Tell the console to put one byte in hex location 0x17
         self.port.send_data(b"EEBWR 17 01\n")
         # Follow it up with the data:
-        self.port.send_data_with_crc16(int2byte(new_usetx_bits), max_tries=1)
+        self.port.send_data_with_crc16(struct.pack('>B', new_usetx_bits), max_tries=1)
         # Then call NEWSETUP to get it to stick:
         self.port.send_data(b"NEWSETUP\n")
         
@@ -2475,7 +2475,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
                 if repeater == 0:
                     print("Repeater ID must be between 'A' and 'H'.")
                     return
-        except:
+        except AttributeError:
             # No repeater letter
             pass
         
