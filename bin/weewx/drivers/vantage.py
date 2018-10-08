@@ -1003,7 +1003,7 @@ class Vantage(weewx.drivers.AbstractDevice):
         # Tell the console to put one byte in hex location 0x17
         self.port.send_data(b"EEBWR 17 01\n")
         # Follow it up with the data:
-        self.port.send_data_with_crc16(int2byte(new_usetx_bits), max_tries=1)
+        self.port.send_data_with_crc16(struct.pack('>B', new_usetx_bits), max_tries=1)
         # Then call NEWSETUP to get it to stick:
         self.port.send_data(b"NEWSETUP\n")
         
@@ -2022,11 +2022,11 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
         print("Querying...")
         try:
             _firmware_date = station.getFirmwareDate()
-        except Exception:
+        except weewx.RetriesExceeded:
             _firmware_date = "<Unavailable>"
         try:
             _firmware_version = station.getFirmwareVersion()
-        except Exception:
+        except weewx.RetriesExceeded:
             _firmware_version = '<Unavailable>'
     
         console_time = station.getConsoleTime()
@@ -2084,7 +2084,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
       Retransmit channel:           %s (%d)
         """ % (stnlat, stnlon, man_or_auto, dst, gmt_or_zone, zone_code, gmt_offset_str,
                tempLogging, on_off, retransmit_channel), file=dest)
-        except:
+        except weewx.RetriesExceeded:
             pass
     
         # Add transmitter types for each channel, if we can:
@@ -2109,7 +2109,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
                     transmitter_type = "(N/A)"
                 print("         %d      %-8s    %-4s    %s %s" % (transmitter_id + 1, listen, repeater, transmitter_type, comment), file=dest)
             print("", file=dest)
-        except:
+        except weewx.RetriesExceeded:
             pass
     
         # Add reception statistics if we can:
@@ -2139,46 +2139,43 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
       Gain:                         %.3f
       Offset:                       %.3f
       """ % _bar_list, file=dest)
-        except:
+        except weewx.RetriesExceeded:
             pass
 
         # Add temperature/humidity/wind calibration if we can.
-        try:
-            calibration_dict = station.getStnCalibration()
-            print("""    OFFSETS:
+        calibration_dict = station.getStnCalibration()
+        print("""    OFFSETS:
       Wind direction:               %(wind)+.0f deg
       Inside Temperature:           %(inTemp)+.1f F
       Inside Humidity:              %(inHumid)+.0f %%
       Outside Temperature:          %(outTemp)+.1f F
       Outside Humidity:             %(outHumid)+.0f %%""" % calibration_dict, file=dest)
-            if transmitter_list is not None:
-                # Only print the calibrations for channels that we are
-                # listening to.
-                for extraTemp in range(1, 8):
-                    for t_id in range(0, 8):
-                        t_type = transmitter_list[t_id]["transmitter_type"]
-                        if t_type in ['temp', 'temp_hum'] and \
-                                extraTemp == transmitter_list[t_id]["temp"]:
-                            print("      Extra Temperature %d:          %+.1f F" % (extraTemp, calibration_dict["extraTemp%d" % extraTemp]), file=dest)
-                for extraHumid in range(1, 8):
-                    for t_id in range(0, 8):
-                        t_type = transmitter_list[t_id]["transmitter_type"]
-                        if t_type in ['hum', 'temp_hum'] and \
-                                extraHumid == transmitter_list[t_id]["hum"]:
-                            print("      Extra Humidity %d:             %+.1f F" % (extraHumid, calibration_dict["extraHumid%d" % extraHumid]), file=dest)
+        if transmitter_list is not None:
+            # Only print the calibrations for channels that we are
+            # listening to.
+            for extraTemp in range(1, 8):
                 for t_id in range(0, 8):
                     t_type = transmitter_list[t_id]["transmitter_type"]
-                    if t_type in ['soil', 'leaf_soil']:
-                        for soil in range(1, 5):
-                            print("      Soil Temperature %d:           %+.1f F" % (soil, calibration_dict["soilTemp%d" % soil]), file=dest)
+                    if t_type in ['temp', 'temp_hum'] and \
+                            extraTemp == transmitter_list[t_id]["temp"]:
+                        print("      Extra Temperature %d:          %+.1f F" % (extraTemp, calibration_dict["extraTemp%d" % extraTemp]), file=dest)
+            for extraHumid in range(1, 8):
                 for t_id in range(0, 8):
                     t_type = transmitter_list[t_id]["transmitter_type"]
-                    if t_type in ['leaf', 'leaf_soil']:
-                        for leaf in range(1, 5):
-                            print("      Leaf Temperature %d:           %+.1f F" % (leaf, calibration_dict["leafTemp%d" % leaf]), file=dest)
-            print("", file=dest)
-        except:
-            raise
+                    if t_type in ['hum', 'temp_hum'] and \
+                            extraHumid == transmitter_list[t_id]["hum"]:
+                        print("      Extra Humidity %d:             %+.1f F" % (extraHumid, calibration_dict["extraHumid%d" % extraHumid]), file=dest)
+            for t_id in range(0, 8):
+                t_type = transmitter_list[t_id]["transmitter_type"]
+                if t_type in ['soil', 'leaf_soil']:
+                    for soil in range(1, 5):
+                        print("      Soil Temperature %d:           %+.1f F" % (soil, calibration_dict["soilTemp%d" % soil]), file=dest)
+            for t_id in range(0, 8):
+                t_type = transmitter_list[t_id]["transmitter_type"]
+                if t_type in ['leaf', 'leaf_soil']:
+                    for leaf in range(1, 5):
+                        print("      Leaf Temperature %d:           %+.1f F" % (leaf, calibration_dict["leafTemp%d" % leaf]), file=dest)
+        print("", file=dest)
 
     @staticmethod
     def set_interval(station, new_interval_minutes):
@@ -2475,7 +2472,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
                 if repeater == 0:
                     print("Repeater ID must be between 'A' and 'H'.")
                     return
-        except:
+        except AttributeError:
             # No repeater letter
             pass
         
