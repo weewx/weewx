@@ -3,8 +3,6 @@ weewx change history
 
 3.9.X YY/YY/YYYY
 
-x.x.x XX/XX/XXXX
-
 New default skin called Seasons.
 
 Added 'default_options' section to StdReport.  Any stanzas defined in the
