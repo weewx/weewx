@@ -142,11 +142,19 @@ class weewx_install_data(install_data):
         return rv
 
     def run(self):
-        # If there is an existing skins subdirectory, do not overwrite it.
+        # If there is a skins directory already, just install what the user doesn't already have.
         if os.path.exists(os.path.join(self.install_dir, 'skins')):
-            # Do this by filtering it out of the list of subdirectories to
-            # be installed:
-            self.data_files = filter(lambda dat : not dat[0].startswith('skins/'), self.data_files)
+            # A skins directory already exists. Build a list of skins that are missing and should be added to it.
+            install_files = []
+            for skin_name in ['Ftp', 'Mobile', 'Rsync', 'Seasons', 'Smartphone', 'Standard']:
+                rel_name = 'skins/' + skin_name
+                if not os.path.exists(os.path.join(self.install_dir, rel_name)):
+                    # The skin has not already been installed. Include it.
+                    install_files += filter(lambda dat : dat[0].startswith(rel_name), self.data_files)
+            # Exclude all the skins files...
+            other_files = filter(lambda dat : not dat[0].startswith('skins'), self.data_files)
+            # ... then add the needed skins back in
+            self.data_files = other_files + install_files
 
         remove_obsolete_files(self.install_dir)
 
@@ -621,6 +629,42 @@ if __name__ == "__main__":
               'skins/Mobile/index.html.tmpl',
               'skins/Mobile/skin.conf',
               'skins/Mobile/mobile.css']),
+            ('skins/Standard',
+             ['skins/Standard/favicon.ico',
+              'skins/Standard/index.html.tmpl',
+              'skins/Standard/mobile.css',
+              'skins/Standard/mobile.html.tmpl',
+              'skins/Standard/month.html.tmpl',
+              'skins/Standard/skin.conf',
+              'skins/Standard/week.html.tmpl',
+              'skins/Standard/weewx.css',
+              'skins/Standard/year.html.tmpl']),
+            ('skins/Standard/NOAA',
+             ['skins/Standard/NOAA/NOAA-YYYY-MM.txt.tmpl',
+              'skins/Standard/NOAA/NOAA-YYYY.txt.tmpl']),
+            ('skins/Standard/RSS',
+             ['skins/Standard/RSS/weewx_rss.xml.tmpl']),
+            ('skins/Standard/backgrounds',
+             ['skins/Standard/backgrounds/band.gif',
+              'skins/Standard/backgrounds/butterfly.jpg',
+              'skins/Standard/backgrounds/drops.gif',
+              'skins/Standard/backgrounds/flower.jpg',
+              'skins/Standard/backgrounds/leaf.jpg',
+              'skins/Standard/backgrounds/night.gif']),
+            ('skins/Standard/smartphone',
+             ['skins/Standard/smartphone/barometer.html.tmpl',
+              'skins/Standard/smartphone/custom.js',
+              'skins/Standard/smartphone/humidity.html.tmpl',
+              'skins/Standard/smartphone/index.html.tmpl',
+              'skins/Standard/smartphone/radar.html.tmpl',
+              'skins/Standard/smartphone/rain.html.tmpl',
+              'skins/Standard/smartphone/temp_outside.html.tmpl',
+              'skins/Standard/smartphone/wind.html.tmpl']),
+            ('skins/Standard/smartphone/icons',
+             ['skins/Standard/smartphone/icons/icon_ipad_x1.png',
+              'skins/Standard/smartphone/icons/icon_ipad_x2.png',
+              'skins/Standard/smartphone/icons/icon_iphone_x1.png',
+              'skins/Standard/smartphone/icons/icon_iphone_x2.png']),
             ('util/apache/conf.d',
              ['util/apache/conf.d/weewx.conf']),
             ('util/import',
