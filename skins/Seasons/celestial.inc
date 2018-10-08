@@ -62,7 +62,7 @@
           </tr>
           <tr>
             <td class="label">Rise</td>
-            <td class="data">$almanac.sun.rise.format(NONE__string=$sun_None)</td>
+            <td class="data">$almanac.sun.rise.format(NONE_string=$sun_None)</td>
           </tr>
           <tr>
             <td class="label">Transit</td>
@@ -70,7 +70,7 @@
           </tr>
           <tr>
             <td class="label">Set</td>
-            <td class="data">$almanac.sun.set.format(NONE_STRING=$sun_None)</td>
+            <td class="data">$almanac.sun.set.format(NONE_string=$sun_None)</td>
           </tr>
           <tr>
             <td class="label">End civil twilight</td>
