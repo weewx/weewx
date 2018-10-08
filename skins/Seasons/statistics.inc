@@ -26,9 +26,9 @@
           <td class="label">$obs.label.outTemp</td>
           <td class="units">$unit.label.outTemp</td>
           #for $archive in $archive_data
-          <td class="data new_row">$archive.outTemp.max.formatted<br/>
+          <td class="data new_row">$archive.outTemp.max.format(add_label=False)<br/>
             <span class="timestamp">$archive.outTemp.maxtime</span><br/>
-            $archive.outTemp.min.formatted<br/>
+            $archive.outTemp.min.format(add_label=False)<br/>
             <span class="timestamp">$archive.outTemp.mintime</span>
           </td>
           #end for
@@ -37,7 +37,7 @@
           <td class="label">$obs.label.heatindex</td>
           <td class="units">$unit.label.heatindex</td>
           #for $archive in $archive_data
-          <td class="data new_row">$archive.heatindex.max.formatted<br/>
+          <td class="data new_row">$archive.heatindex.max.format(add_label=False)<br/>
             <span class="timestamp">$archive.heatindex.maxtime</span>
           </td>
           #end for
@@ -46,7 +46,7 @@
           <td class="label">$obs.label.windchill</td>
           <td class="units">$unit.label.windchill</td>
           #for $archive in $archive_data
-          <td class="data new_row">$archive.windchill.min.formatted<br/>
+          <td class="data new_row">$archive.windchill.min.format(add_label=False)<br/>
             <span class="timestamp">$archive.windchill.mintime</span>
           </td>
           #end for
@@ -55,9 +55,9 @@
           <td class="label">$obs.label.dewpoint</td>
           <td class="units">$unit.label.dewpoint</td>
           #for $archive in $archive_data
-          <td class="data new_row">$archive.dewpoint.max.formatted<br/>
+          <td class="data new_row">$archive.dewpoint.max.format(add_label=False)<br/>
             <span class="timestamp">$archive.dewpoint.maxtime</span><br/>
-            $archive.dewpoint.min.formatted<br/>
+            $archive.dewpoint.min.format(add_label=False)<br/>
             <span class="timestamp">$archive.dewpoint.mintime</span>
           </td>
           #end for
@@ -66,9 +66,9 @@
           <td class="label">$obs.label.outHumidity</td>
           <td class="units">$unit.label.outHumidity</td>
           #for $archive in $archive_data
-          <td class="data new_row">$archive.outHumidity.max.formatted<br/>
+          <td class="data new_row">$archive.outHumidity.max.format(add_label=False)<br/>
             <span class="timestamp">$archive.outHumidity.maxtime</span><br/>
-            $archive.outHumidity.min.formatted<br/>
+            $archive.outHumidity.min.format(add_label=False)<br/>
             <span class="timestamp">$archive.outHumidity.mintime</span>
           </td>
           #end for
@@ -77,9 +77,9 @@
           <td class="label">$obs.label.barometer</td>
           <td class="units">$unit.label.barometer</td>
           #for $archive in $archive_data
-          <td class="data new_row">$archive.barometer.max.formatted<br/>
+          <td class="data new_row">$archive.barometer.max.format(add_label=False)<br/>
             <span class="timestamp">$archive.barometer.maxtime</span><br/>
-            $archive.barometer.min.formatted<br/>
+            $archive.barometer.min.format(add_label=False)<br/>
             <span class="timestamp">$archive.barometer.mintime</span>
           </td>
           #end for
@@ -88,7 +88,7 @@
           <td class="label">$obs.label.rain</td>
           <td class="units">$unit.label.rain</td>
           #for $archive in $archive_data
-          <td class="data new_row">$archive.rain.sum.formatted</td>
+          <td class="data new_row">$archive.rain.sum.format(add_label=False)</td>
           #end for
         </tr>
         <tr>
@@ -96,7 +96,7 @@
           <td class="units">$unit.label.rainRate</td>
           #for $archive in $archive_data
           <td class="data new_row">
-            $archive.rainRate.max.formatted<br/>
+            $archive.rainRate.max.format(add_label=False)<br/>
             <span class="timestamp">$archive.rainRate.maxtime</span>
           </td>
           #end for
@@ -106,7 +106,7 @@
 	      <td class="label">$obs.label.ET</td>
           <td class="units">$unit.label.ET</td>
           #for $archive in $archive_data
-          <td class="data new_row">$archive.ET.sum.formatted</td>
+          <td class="data new_row">$archive.ET.sum.format(add_label=False)</td>
           #end for
           </tr>
 		#end if
@@ -118,8 +118,8 @@
           </td>
           #for $archive in $archive_data
           <td class="data new_row">
-            $archive.wind.max.formatted<br/>
-            $archive.wind.gustdir.formatted<br/>
+            $archive.wind.max.format(add_label=False)<br/>
+            $archive.wind.gustdir.format(add_label=False)<br/>
             <span class="timestamp">$archive.wind.maxtime</span>
           </td>
           #end for
@@ -129,14 +129,14 @@
           <td class="units">$unit.label.wind</td>
           #for $archive in $archive_data
           <td class="data new_row">
-            $archive.wind.avg.formatted</td>
+            $archive.wind.avg.format(add_label=False)</td>
           #end for
         </tr>
         <tr>
           <td class="label">$obs.label.wind_rms</td>
           <td class="units">$unit.label.wind</td>
           #for $archive in $archive_data
-          <td class="data new_row">$archive.wind.rms.formatted</td>
+          <td class="data new_row">$archive.wind.rms.format(add_label=False)</td>
           #end for
         </tr>
 
@@ -151,8 +151,8 @@
           </td>
           #for $archive in $archive_data
           <td class="data new_row">
-            $archive.wind.vecavg.formatted<br/>
-            $archive.wind.vecdir.formatted
+            $archive.wind.vecavg.format(add_label=False)<br/>
+            $archive.wind.vecdir.format(add_label=False)
           </td>
           #end for
         </tr>
@@ -163,9 +163,9 @@
           <td class="units">$unit.label.UV</td>
           #for $archive in $archive_data
           <td class="data new_row">
-            $archive.UV.max.formatted<br/>
+            $archive.UV.max.format(add_label=False)<br/>
             <span class="timestamp">$archive.UV.maxtime</span><br/>
-            $archive.UV.min.formatted<br/>
+            $archive.UV.min.format(add_label=False)<br/>
             <span class="timestamp">$archive.UV.mintime</span>
           </td>
           #end for
@@ -178,9 +178,9 @@
           <td class="units">$unit.label.radiation</td>
           #for $archive in $archive_data
           <td class="data new_row">
-            $archive.radiation.max.formatted<br/>
+            $archive.radiation.max.format(add_label=False)<br/>
             <span class="timestamp">$archive.radiation.maxtime</span><br/>
-            $archive.radiation.min.formatted<br/>
+            $archive.radiation.min.format(add_label=False)<br/>
             <span class="timestamp">$archive.radiation.mintime</span>
           </td>
           #end for
@@ -193,9 +193,9 @@
           <td class="units">$unit.label.inTemp</td>
           #for $archive in $archive_data
           <td class="data new_row">
-            $archive.inTemp.max.formatted<br/>
+            $archive.inTemp.max.format(add_label=False)<br/>
             <span class="timestamp">$archive.inTemp.maxtime</span><br/>
-            $archive.inTemp.min.formatted<br/>
+            $archive.inTemp.min.format(add_label=False)<br/>
             <span class="timestamp">$archive.inTemp.mintime</span>
           </td>
           #end for
@@ -208,9 +208,9 @@
           <td class="units">$unit.label.extraTemp1</td>
           #for $archive in $archive_data
           <td class="data new_row">
-            $archive.extraTemp1.max.formatted<br/>
+            $archive.extraTemp1.max.format(add_label=False)<br/>
             <span class="timestamp">$archive.extraTemp1.maxtime</span><br/>
-            $archive.extraTemp1.min.formatted<br/>
+            $archive.extraTemp1.min.format(add_label=False)<br/>
             <span class="timestamp">$archive.extraTemp1.mintime</span>
           </td>
           #end for
@@ -223,9 +223,9 @@
           <td class="units">$unit.label.extraTemp2</td>
           #for $archive in $archive_data
           <td class="data new_row">
-            $archive.extraTemp2.max.formatted<br/>
+            $archive.extraTemp2.max.format(add_label=False)<br/>
             <span class="timestamp">$archive.extraTemp2.maxtime</span><br/>
-            $archive.extraTemp2.min.formatted<br/>
+            $archive.extraTemp2.min.format(add_label=False)<br/>
             <span class="timestamp">$archive.extraTemp2.mintime</span>
           </td>
           #end for
@@ -238,9 +238,9 @@
           <td class="units">$unit.label.extraTemp3</td>
           #for $archive in $archive_data
           <td class="data new_row">
-            $archive.extraTemp3.max.formatted<br/>
+            $archive.extraTemp3.max.format(add_label=False)<br/>
             <span class="timestamp">$archive.extraTemp3.maxtime</span><br/>
-            $archive.extraTemp3.min.formatted<br/>
+            $archive.extraTemp3.min.format(add_label=False)<br/>
             <span class="timestamp">$archive.extraTemp3.mintime</span>
           </td>
           #end for
