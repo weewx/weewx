@@ -1,0 +1,210 @@
+/* CSS for the weewx Standard skin
+ *
+ *  Copyright (c) 2015 Tom Keffer <tkeffer@gmail.com>
+ * 
+ *  See the file LICENSE.txt for your rights.
+ */
+  
+/* Global */
+
+body {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    font-family: Verdana, Arial, Helvetica, sans-serif;
+    font-size: 10pt;
+    background-color: #f2f2f7;
+    background-image: url('backgrounds/band.gif');
+    background-repeat: repeat;
+    background-attachment: scroll;
+}	
+
+#container {
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+/*
+ * This is the big header at the top of the page
+ */
+#masthead {
+    margin: 1% 1% 0 1%;
+    padding: 5px;
+    text-align: center;
+    border-top: 1px solid #dcdcdc;
+    border-right: 1px solid #a9a9a9;
+    border-bottom: 1px solid #808080;
+    border-left: 1px solid #a9a9a9;
+    background-color: #fafaff;
+}
+
+#masthead h1 {
+    color: #3d6c87;
+}
+#masthead h3 {
+    color: #5f8ea9;
+}
+
+/*
+ * This holds the statistics (daily high/low, etc.) on the left: 
+ */
+#stats_group {
+    width: 30%;
+    min-height: 500px;
+    margin: 1%;
+    padding: 5px;
+    float: left;
+    border-top: 1px solid #dcdcdc;
+    border-right: 1px solid #a9a9a9;
+    border-bottom: 1px solid #808080;
+    border-left: 1px solid #a9a9a9;
+    background-color: #fafaff;
+}
+
+.stats table {
+    border: thin solid #000000;
+    width: 100%;
+}
+.stats td {
+    border: thin solid #000000;
+    padding: 2px;
+}
+
+.stats_header  {
+    background-color: #000000;
+    color: #a8b8c8;
+    font-size: 14pt;
+    font-weight: bolder;
+}
+
+.stats_label {
+    color: green;
+}
+
+.stats_data {
+    color: red;
+}
+
+/*
+ * This holds the "About", "Almanac", and plots on the right
+ */
+#content {
+    width: 62%;
+    min-height: 500px;
+    margin: 1%;
+    padding: 5px;
+    float: right;
+    border-top: 1px solid #dcdcdc;
+    border-right: 1px solid #a9a9a9;
+    border-bottom: 1px solid #808080;
+    border-left: 1px solid #a9a9a9;
+    background-color: #fafaff;
+    text-align: center;
+}
+
+#content .header {
+    font-size: 14pt;
+    font-weight: bolder;
+    color: #3d6c87;
+    margin-bottom: 10px;
+}
+
+
+#content .caption {
+    font-weight: bold;
+    color: #3d6c87;
+}
+
+#content table {
+    text-align: center;
+    width: 100%;
+}
+
+#content td {
+    width: 50%;
+}
+
+#content .label {
+    text-align: right;
+    font-style: italic;
+}
+
+#content .data {
+    text-align: left;
+}
+
+#about, #almanac {
+    width: 90%;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 30px;
+}
+
+.celestial_group {
+}
+
+.celestial_body {
+    width: 48%;
+    vertical-align: top;
+    display:inline-block;
+}
+
+#plots {
+    width: 90%;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+    
+#plots img {
+    border: thin solid #3d6c87;
+    margin: 3px;
+    padding: 3px;
+}
+
+#radar_img {
+    width: 100%;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    margin: 3px;
+    padding: 3px;
+}
+
+#radar_img img {
+    margin-left: auto;
+    margin-right: auto;
+    width: 90%;
+    margin: 3px;
+    padding: 3px;
+}
+
+#radar_img p {
+    width: 90%;
+    font-style: italic;
+    font-size: smaller;
+    text-align: center;
+    margin-top: 0;
+}
+
+/*
+ * Navigation bar (week, month, etc.) at the bottom
+ */
+#navbar {
+    margin: 0 1% 1% 1%;
+    padding: 5px;
+    text-align: center;
+    clear: both;
+    border-top: 1px solid #dcdcdc;
+    border-right: 1px solid #a9a9a9;
+    border-bottom: 1px solid #808080;
+    border-left: 1px solid #a9a9a9;
+    background-color: #fafaff;
+}
+
+/*************** Global Styles ***************/
+
+h2, h3, h4, h5, h6 {
+    color: #3d6c87;
+}

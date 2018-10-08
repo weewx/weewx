@@ -1,0 +1,92 @@
+#encoding UTF-8
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+         "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<!--
+
+  This is a phone-formatted summary page based on examples posted
+  to the wview Google Group, and salted to taste for weewx.
+
+  It takes a full screen on my Verizon Fascinate (Samsung Galaxy S)
+  and its predecessor(s) were reportedly developed for a Apple iPhone.
+
+  vince@skahan.net - 1/16/2010
+
+-->
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title> $station.location Weather</title>
+<meta name="viewport" content="width=320; initial-scale=1.0; maximum-scale=1.0; user-scalable=1;"/>
+<script type="application/x-javascript">
+
+    if (navigator.userAgent.indexOf('iPhone') != -1)
+    {
+        addEventListener("load", function()
+        {
+        setTimeout(hideURLbar, 0);
+        }, false);
+    }
+
+    function hideURLbar()
+    {
+        window.scrollTo(0, 1);
+    }
+</script>
+<style type="text/css" media="screen">@import "mobile.css";</style>
+</head>
+
+<body>
+<center>
+<div>
+    <table class="readings"> 
+        <tr>            
+		<td><a href="daytempdew.png">Temp / Dewpoint:</a></td><td class="data"> $current.outTemp / $current.dewpoint </td>
+	</tr>
+        <tr class="alt">
+		<td>High Temp:</td><td class="data"> $day.outTemp.max at $day.outTemp.maxtime </td>
+	</tr>
+        <tr>            
+		<td>Low Temp:</td><td class="data"> $day.outTemp.min at $day.outTemp.mintime </td>
+	</tr>
+        <tr class="alt">
+		<td><a href="daytempchill.png">Heat Index / Wind Chill:</a></td><td class="data"> $current.heatindex / $current.windchill </td>
+	</tr>
+        <tr>
+		<td>Humidity:</td><td class="data"> $current.outHumidity </td></tr>
+	</tr>
+        <tr class="alt">
+		<td><a href="dayrain.png">Rainfall:</a></td><td class="data"> $day.rain.sum </td>
+	</tr>
+        <tr>
+		<td>High Rain Rate:</td><td class="data"> $day.rainRate.max at $day.rainRate.maxtime </td>
+	</tr>
+        <tr class="alt">
+		<td><a href="daywind.png">Wind Speed:</a></td><td class="data"> $current.windSpeed </td>
+	</tr>
+	<tr>            
+		<td>High Wind Speed:</td><td class="data"> $day.wind.max at $day.wind.maxtime </td>
+	</tr>
+    </table>
+</div>
+
+
+#if $Extras.has_key('radar_img')
+<div class="radar">
+  #if $Extras.has_key('radar_url')
+  <a  href="$Extras.radar_url">
+  #end if
+    <img src="$Extras.radar_img" alt="Radar" />
+  #if $Extras.has_key('radar_url')
+  </a>
+  #end if
+<!-- yes I was too lazy to CSS the style below :-) -->
+  <p style="font-size: 12px; color: black; text-align: center;"> $current.dateTime</p>
+</div>
+#end if
+
+</center>
+</body>
+</html>
+
