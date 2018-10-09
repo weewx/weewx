@@ -328,6 +328,7 @@ def update_config(config_dict):
 
     update_to_v36(config_dict)
 
+    update_to_v39(config_dict)
 
 def merge_config(config_dict, template_dict):
     """Merge the template (distribution) dictionary into the user's dictionary.
