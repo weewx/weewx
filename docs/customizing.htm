@@ -17,12 +17,12 @@
 
 <div class="sidebar">
   <div class="doclist">
-    <a href="usersguide.htm">User's Guide</a><br/> <a
-      href="customizing.htm">Customization Guide</a><br/> <a
-      href="hardware.htm">Hardware Guide</a><br/> <a
-      href="utilities.htm">Utilities Guide</a><br/> <a
-      href="upgrading.htm">Upgrade Guide</a><br/> <a
-      href="devnotes.htm">Notes for Developers</a>
+    <a href="usersguide.htm">User's Guide</a><br/>
+    <a href="customizing.htm">Customization Guide</a><br/>
+    <a href="hardware.htm">Hardware Guide</a><br/>
+    <a href="utilities.htm">Utilities Guide</a><br/>
+    <a href="upgrading.htm">Upgrade Guide</a><br/>
+    <a href="devnotes.htm">Notes for Developers</a>
   </div>
   <div id="toc_controls"></div>
   <div id="toc_parent">
@@ -786,7 +786,7 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
       the file is <span class="code">skins/Standard/skin.conf</span>.
       It includes many, many options that can be changed. For a
       complete list, see the section below, <em><a
-        href="#standard_skin">The Standard <span class="code">skin.conf</span></a></em>.
+        href="#standard_skin">The skin configuration file <span class="code">skin.conf</span></a></em>.
     </p>
 
     <p>
@@ -3869,14 +3869,15 @@ class MyStats(SearchList):                                                   # 1
     </p>
 
     <h1 id="standard_skin">
-      The Standard <span class="code">skin.conf</span>
+      The skin configuration file <span class="code">skin.conf</span>
     </h1>
 
     <p>
       This section is a reference to the options appearing in the skin
-      configuration file. The default skin is the Standard skin, with
-      a skin configuration file located at <span class="symcode">SKIN_ROOT</span><span
-        class="code">/Standard/skin.conf</span>.
+      configuration file, <span class="code">skin.conf</span>. For
+      a given skin, it is located in its skin directory. For example, for the skin <em>Seasons</em>,
+      it is located in <span class="symcode">SKIN_ROOT</span><span
+        class="code">/Seasons/skin.conf</span>.
     </p>
 
     <p>
@@ -4505,17 +4506,18 @@ UV      = UV Index</pre>
       template contents.
     </p>
 
-    <h3>The Standard skin templates</h3>
+      <h3>The <em>Seasons</em> skin templates</h3>
 
     <p>
-      Here is the <span class="code">[CheetahGenerator]</span> section
-      from the Standard <span class="code">skin.conf</span>
+      By way of example, here is the <span class="code">[CheetahGenerator]</span> section
+      from the <span class="code">skin.conf</span> for the skin <em>Seasons</em>.
     </p>
 
     <pre class="tty">[CheetahGenerator]
-    # This section is used by the generator CheetahGenerator, and specifies
-    # which files are to be generated from which template.
+    # The CheetahGenerator creates files from templates.  This section
+    # specifies which files will be generated from which template.
 
+    # Possible encodings are 'html_entities', 'utf8', or 'strict_ascii'
     encoding = html_entities
 
     [[SummaryByMonth]]
@@ -4533,46 +4535,42 @@ UV      = UV Index</pre>
     [[ToDate]]
         # Reports that show statistics "to date", such as day-to-date,
         # week-to-date, month-to-date, etc.
-        [[[day]]]
+        [[[index]]]
             template = index.html.tmpl
-
-        [[[week]]]
-            template = week.html.tmpl
-
-        [[[month]]]
-            template = month.html.tmpl
-
-        [[[year]]]
-            template = year.html.tmpl
-
+        [[[statistics]]]
+            template = statistics.html.tmpl
+        [[[telemetry]]]
+            template = telemetry.html.tmpl
+        [[[tabular]]]
+            template = tabular.html.tmpl
+        [[[celestial]]]
+            template = celestial.html.tmpl
+            # Uncomment the following to have WeeWX generate a celestial page only once an hour:
+            # stale_age = 3600
         [[[RSS]]]
-            template = RSS/weewx_rss.xml.tmpl
+            template = rss.xml.tmpl
+    </pre>
 
-        [[[Mobile]]]
-            template = mobile.html.tmpl</pre>
-
-    <p>The Standard skin contains three different kinds of
-      generated output:</p>
+    <p>The skin contains three different kinds of generated output:</p>
     <ol>
-      <li>Summary by Month. The Standard skin uses <span
+      <li>Summary by Month. The <em>Seasons</em> skin uses <span
           class="code">SummaryByMonth</span> to produce NOAA summaries,
         one for each month, as a simple text file.
       </li>
-      <li>Summary by Year. The Standard skin uses <span
+      <li>Summary by Year. The skin uses <span
           class="code">SummaryByYear</span> to produce NOAA summaries,
         one for each year, as a simple text file.
       </li>
-      <li>Summary "To Date". The Standard skin produce reports
-        for the day, week, month, and year-to-date observations. These
-        files are HTML. The first, the daily summary (output filename
-        is <span class="code">index.html</span>), includes a drop-down
-        list that displays the NOAA month and yearly summaries.
+        <li>Summary "To Date". The <em>Seasons</em> skin produces an HTML <span class="code">index.html</span> page,
+            as well as HTML files for detailed statistics, telemetry, and celestial information. It also
+            includes a master page (<span class="code">tabular.html</span>) in which NOAA information is
+            displayed. All these files are HTML.
       </li>
     </ol>
     <p>
       The encoding for text files is <span class="code">strict_ascii</span>,
       whereas the encoding for html files is <span class="code">html_entities</span>.
-      In the Standard skin this is specified by declaring <span
+      This was specified by declaring <span
         class="code">encoding = html_entities</span> at the top level
       of <span class="code">[CheetahGenerator]</span> then <span
         class="code">encoding = strict_ascii</span> for each text
