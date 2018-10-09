@@ -973,6 +973,100 @@ def update_to_v36(config_dict):
     config_dict['version'] = '3.6.0'
 
 
+def update_to_v39(config_dict):
+    """Update a configuration file to V3.9
+
+    - New subsections [[default_options]], [[SeasonsReport]], [[SmartphoneReport]],
+    -   and [[MobileReport]]
+
+    """
+
+    major, minor = get_version_info(config_dict)
+
+    if major > '3' or minor > '09':
+        return
+
+    if 'StdReport' in config_dict:
+
+        #
+        # The logic below will put the subsections in the following order:
+        #
+        #   [[default_options]]
+        #   [[StandardReport]]
+        #   [[SeasonsReport]]
+        #   [[SmartphoneReport]]
+        #   [[MobileReport]]
+        #   [[FTP]]
+        #
+        #  NB: For an upgrade, we want StandardReport first, because that's what the user is already using.
+        #
+
+        if 'default_options' not in config_dict['StdReport']:
+            default_options_dict = configobj.ConfigObj(StringIO.StringIO("""[StdReport]
+
+    # Options in the default_options section apply to every report.
+    [[default_options]]
+        [[[Units]]]
+            [[[[Groups]]]]
+                # If uncommented and modified, these units will apply to every report
+                # group_altitude = foot
+                # group_speed = mile_per_hour
+                # group_speed2 = mile_per_hour
+                # group_pressure = inHg
+                # group_rain = inch
+                # group_rainrate = inch_per_hour
+                # group_temperature = degree_F
+                # group_degree_day = degree_F_day
+                group_time = unix_epoch     # Placeholder. Do not change"""))
+            config_dict.merge(default_options_dict)
+            # Due to a bug in ConfigObj, the section comment gets dropped. Add it back in.
+            config_dict['StdReport'].comments['default_options'] = ['',
+                                                                   '    # Options in the default_options section apply to every report.']
+            # Put the defaults section just before StandardReport
+            reorder_sections(config_dict['StdReport'], 'default_options', 'StandardReport')
+
+        if 'SeasonsReport' not in config_dict['StdReport']:
+            seasons_options_dict = configobj.ConfigObj(StringIO.StringIO("""[StdReport]
+
+    [[SeasonsReport]]
+        # The SeasonsReport uses the 'Seasons' skin, which contains the
+        # images, templates and plots for the report.
+        skin = Seasons
+        enable = false"""))
+            config_dict.merge(seasons_options_dict)
+            # Due to a bug in ConfigObj, the section comment gets dropped. Add it back in.
+            config_dict['StdReport'].comments['SeasonsReport'] = ['']
+            reorder_sections(config_dict['StdReport'], 'SeasonsReport', 'FTP')
+
+        if 'SmartphoneReport' not in config_dict['StdReport']:
+            smartphone_options_dict = configobj.ConfigObj(StringIO.StringIO("""[StdReport]
+    [[SmartphoneReport]]
+        # The SmartphoneReport uses the 'Smartphone' skin, and the images and
+        # files are placed in a dedicated subdirectory.
+        skin = Smartphone
+        enable = false
+        HTML_ROOT = public_html/smartphone"""))
+            config_dict.merge(smartphone_options_dict)
+            # Due to a bug in ConfigObj, the section comment gets dropped. Add it back in.
+            config_dict['StdReport'].comments['SmartphoneReport'] = ['']
+            reorder_sections(config_dict['StdReport'], 'SmartphoneReport', 'FTP')
+
+        if 'MobileReport' not in config_dict['StdReport']:
+            mobile_options_dict = configobj.ConfigObj(StringIO.StringIO("""[StdReport]
+    [[MobileReport]]
+        # The MobileReport uses the 'Mobile' skin, and the images and files
+        # are placed in a dedicated subdirectory.
+        skin = Mobile
+        enable = false
+        HTML_ROOT = public_html/mobile"""))
+            config_dict.merge(mobile_options_dict)
+            # Due to a bug in ConfigObj, the section comment gets dropped. Add it back in.
+            config_dict['StdReport'].comments['MobileReport'] = ['']
+            reorder_sections(config_dict['StdReport'], 'MobileReport', 'FTP')
+
+    config_dict['version'] = '3.9.0'
+
+
 # ==============================================================================
 #              Utilities that extract from ConfigObj objects
 # ==============================================================================

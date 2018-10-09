@@ -296,7 +296,7 @@ class ConfigTest(unittest.TestCase):
 
     def test_upgrade_v30(self):
 
-        # Start with the Version 2.5 weewx.conf file:
+        # Start with the Version 2.7 weewx.conf file:
         config_dict = configobj.ConfigObj('weewx27.conf')
 
         # Upgrade the V2.7 configuration dictionary to V3.0:
@@ -316,13 +316,26 @@ class ConfigTest(unittest.TestCase):
 
     def test_upgrade_v36(self):
 
-        # Start with the Version 3.0 weewx.conf file:
+        # Start with the Version 3.2 weewx.conf file:
         config_dict = configobj.ConfigObj('weewx32.conf')
 
         # Upgrade the V3.2 configuration dictionary to V3.6:
         weecfg.update_to_v36(config_dict)
 
         self._check_against_expected(config_dict, 'expected/weewx36_expected.conf')
+
+    def test_upgrade_v39(self):
+
+        # Start with the Version 3.8 weewx.conf file:
+        config_dict = configobj.ConfigObj('weewx38.conf')
+
+        # Upgrade the V3.8 configuration dictionary to V3.9:
+        weecfg.update_to_v39(config_dict)
+
+        # with open('expected/weewx39_expected.conf', 'wb') as fd:
+        #     config_dict.write(fd)
+
+        self._check_against_expected(config_dict, 'expected/weewx39_expected.conf')
 
     def test_merge(self):
 
