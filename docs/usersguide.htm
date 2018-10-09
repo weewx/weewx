@@ -1086,10 +1086,10 @@ sudo /etc/init.d/weewx start</pre>
             <a href="#dir-layout-table">application layout table</a> in the
             'Installation methods' section.</p>
 
-        <p class='note'>There is another configuration file, <span class="code">skin.conf</span>,
+        <p class='note'>There is another type of configuration file, <span class="code">skin.conf</span>,
             for presentation-specific options. It is described in the
-            <a href="customizing.htm">Customization Guide</a>, under section <em>
-                <a href="customizing.htm#standard_skin">The Standard <span class="code">skin.conf</span></a></em>.</p>
+            <a href="customizing.htm">Customization Guide</a>, under the section <em>
+                <a href="customizing.htm#standard_skin">The StdReport <span class="code">skin.conf</span></a></em>.</p>
 
         <p>The following sections are the definitive guide to the many configuration options
             available in <span class='code'>weewx.conf</span>. <em>They contain many
@@ -2148,10 +2148,58 @@ longitude = -77.0366</pre>
         <p>Each report is represented by a sub-section, marked with double brackets
             (<em>e.g.</em>, <span class="code">[[MyReport]]</span>). Any options for the
             report should be placed under it. The standard report service will go through
-            the sections, running each report in order. Hence, normally the report
-            <span class="code">[[StandardReport]]</span> will be run first, then report
-            <span class="code">[[FTP]]</span> (which actually optionally uploads the results
-            to a remote web server). Details for how to customize reports are in the section
+            the sub-sections, running each report in order.</p>
+        <p>WeeWX ships with the following sub-sections:</p>
+
+        <table class="indent">
+            <tr class="first_row">
+                <td>Sub-section</td>
+                <td>Description</td>
+            </tr>
+            <tr>
+                <td><span class="code">[[default_options]]</span></td>
+                <td>This is not really a "report," but rather a special section that specifies any default options
+                    that are to be applied to <em>all</em> skins. Unlike other sub-sections, it doesn't matter where
+                this one appears under <span class="code">[StdReport]</span>.</td>
+            </tr>
+            <tr>
+                <td><span class="code">[[SeasonsReport]]</span></td>
+                <td>A full-featured single-page skin. Statistics and plots are revealed by button presses.</td>
+            </tr>
+            <tr>
+                <td><span class="code">[[SmartphoneReport]]</span></td>
+                <td>A skin formatted for smaller screens.</td>
+            </tr>
+            <tr>
+                <td><span class="code">[[MobileReport]]</span></td>
+                <td>A static skin formatted for very small screens.</td>
+            </tr>
+            <tr>
+                <td><span class="code">[[StandardReport]]</span></td>
+                <td>An older skin that shipped with WeeWX for many years. Requires little resources
+                to generate and display.</td>
+            </tr>
+            <tr>
+                <td><span class="code">[[FTP</span>]]</span></td>
+                <td>Not a skin, but uses the reporting machinery
+                to FTP results to a remote webserver.</td>
+            </tr>
+            <tr>
+                <td><span class="code">[[RSYNC]]</span></td>
+                <td>Not a skin, but uses the reporting machinery
+                    to Rsync results to a remote webserver.</td>
+            </tr>
+
+        </table>
+
+
+        <p>Order matters. The reports that generate HTML and images, that is, SeasonsReport, SmartphoneReport,
+        MobileReport, and StandardReport, are run <em>first</em>, then the reports that
+        move them to a webserver, FTP and RSYNC, are run. This insures that report generation
+        is done before the results are sent off. By contrast, it does not matter where the special sub-section
+        <span class="code">[[default_options]]</span> is placed.</p>
+        <p>
+            Details for how to customize reports are in the section
             <em><a href="customizing.htm#customizing_reports">Customizing reports</a></em>, in the
             <a href="customizing.htm">Customization Guide</a>.
         </p>
@@ -2161,7 +2209,7 @@ longitude = -77.0366</pre>
         <p>The directory where the skins live. A relative path is relative to
             <span class="symcode">WEEWX_ROOT</span>.</p>
 
-        <p class="config_option">HTML_ROOT </p>
+        <p class="config_option" id="HTML_ROOT">HTML_ROOT </p>
 
         <p>The target directory for the generated files. A relative path is
             relative to <span class="symcode">WEEWX_ROOT</span>. Generated
@@ -2188,15 +2236,49 @@ longitude = -77.0366</pre>
             archive interval.
         </p>
 
-        <h3 class="config_section">[[StandardReport]]</h3>
+        <h3 class="config_section">[[default_options]]</h3>
+        <p>Options that are to be applied to <em>every</em> report are put here. For example,
+        to have all reports in US Customer units you would specify:</p>
+        <pre class="code">
+    [[default_options]]
+        [[[Units]]]
+            [[[[Groups]]]]
+                group_altitude = foot
+                group_speed = mile_per_hour
+                group_speed2 = mile_per_hour
+                group_pressure = inHg
+                group_rain = inch
+                group_rainrate = inch_per_hour
+                group_temperature = degree_F
+                group_degree_day = degree_F_day
+                group_time = unix_epoch    # Placeholder. Do not change
+        </pre>
 
-        <p>This is the standard report that will be run on every archiving interval.
-            It uses the skin &quot;<span class="code">Standard</span>&quot;, which generates
-            four HTML pages (&quot;day&quot;, &quot;week&quot;, &quot;month&quot;, and &quot;year&quot;
-            observations), plot graphs for same, an RSS feed, and NOAA monthly and yearly
-            reports. The default configuration uses US Customary Units and puts the results
-            in <span class="code">public_html</span> and subdirectory <span class="code">
-      public_html/NOAA</span>. </p>
+        <h3 class="config_section">[[SeasonsReport]]<br/>
+            [[SmartphoneReport]]<br/>
+            [[MobileReport]]<br/>
+            [[StandardReport]]</h3>
+
+        <p>These are the four reports that actually generate
+            HTML files and plots. They all ship in the standard WeeWX distribution.
+            They all use US Customer units by default, which can be overridden in
+            sub-section <span class="code">[[default_options]]</span> above. </p>
+        <p>They all have the following options in common.</p>
+
+        <p class="config_option">skin</p>
+        <p>Where to find the specifications for the skin. This should include any templates and
+            the skin configuration file, <span class="code">skin.conf</span>. This should be a subdirectory
+            under <span class="symcode">SKIN_ROOT</span>.</p>
+
+        <p class="config_important">enable</p>
+        <p>Set to <span class="code">true</span> (the default) to enable the processing of this skin.
+        Set to <span class="code">false</span> to disable.</p>
+
+        <p class="config_option">HTML_ROOT</p>
+        <p>Where to put the results. If not specified, the value for
+            <a href="#HTML_ROOT"><span class="symcode">HTML_ROOT</span></a> above will be used.
+        </p>
+
 
         <h3 class="config_section" id="config_FTP">[[FTP]]</h3>
 
@@ -2206,8 +2288,9 @@ longitude = -77.0366</pre>
             that is, it only FTPs any files that have changed, saving the outgoing bandwidth
             of your Internet connection. </p>
 
-        <p>If you do not use such a server, comment out the first four options below.
-        </p>
+        <p class="config_important">enable</p>
+        <p>Set to <span class="code">true</span> (the default) to enable FTP.
+            Set to <span class="code">false</span> to disable.</p>
 
         <p class="config_important">user </p>
 
@@ -2261,22 +2344,32 @@ longitude = -77.0366</pre>
 
         <p>While this &quot;report&quot; does not actually generate anything, it
             uses the report machinery to upload files from directory <span class="symcode">
-        HTML_ROOT</span> to a remote webserver. It does an incremental update,
-            that is, it only synchronizes those files that have changed, saving the outgoing
-            bandwidth of your Internet connection. </p>
+                HTML_ROOT</span> to a remote webserver using <a href="https://rsync.samba.org/">rsync</a>.
+            Fast, efficient, and secure, it does an incremental update, that is, it only synchronizes those parts
+            of a file that have changed, saving the outgoing
+            bandwidth of your Internet connection.
+        </p>
 
-        <p>If you do not use such a server, comment out the options below. </p>
+        <p>
+            If you wish to use rsync, you must configure passwordless ssh using
+            public/private key authentication from the user account that weewx
+            runs, to the user account on the remote machine where the files
+            will be copied.
+
+        </p>
+        <p class="config_important">enable</p>
+        <p>Set to <span class="code">true</span> (the default) to enable rsync.
+            Set to <span class="code">false</span> to disable.</p>
 
         <p class="config_important">server </p>
 
-        <p>Set to the name of your web server (<i>e.g.</i>,
-            <a href="http://www.threefools.org">www.threefools.org</a>, in my case). Required.
-            No default </p>
+        <p>Set to the name of your server. This name should appear in your
+            <span class="code">.ssh/config</span> file. Required.  No default </p>
 
         <p class="config_important">user </p>
 
         <p>Set to the ssh username you use for your rsync connection to your web server.
-           The local user that weeWX runs as must have
+           The local user that WeeWX runs as must have
            <a href='https://www.tecmint.com/ssh-passwordless-login-using-ssh-keygen-in-5-easy-steps/'>
            passwordless ssh</a> configured for <em>user@server</em>.
            Required. No default.
