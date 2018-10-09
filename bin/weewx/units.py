@@ -614,7 +614,7 @@ class Formatter(object):
             return label[1] if plural else label[0]
 
     def toString(self, val_t, context='current', addLabel=True, 
-                 useThisFormat=None, NONE_string=None, 
+                 useThisFormat=None, None_string=None, 
                  localize=True):
         """Format the value as a string.
         
@@ -630,15 +630,15 @@ class Formatter(object):
         [Optional. If not given, the format given in the initializer will
         be used.]
         
-        NONE_string: A string to be used if the value val is None.
+        None_string: A string to be used if the value val is None.
         [Optional. If not given, the string given unit_format_dict['NONE']
         will be used.]
         
         localize: True to localize the results. False otherwise
         """
         if val_t is None or val_t[0] is None:
-            if NONE_string is not None: 
-                return NONE_string
+            if None_string is not None: 
+                return None_string
             else:
                 return self.unit_format_dict.get('NONE', 'N/A')
             
@@ -910,7 +910,7 @@ class ValueHelper(object):
         self.formatter = formatter
         self.converter = converter
             
-    def toString(self, addLabel=True, useThisFormat=None, NONE_string=None, localize=True):
+    def toString(self, addLabel=True, useThisFormat=None, None_string=None, localize=True):
         """Convert my internally held ValueTuple to a string, using the supplied
         converter and formatter."""
         # If the type is unknown, then just return an error string: 
@@ -920,7 +920,7 @@ class ValueHelper(object):
         vtx = self._raw_value_tuple
         # Then do the format conversion:
         s = self.formatter.toString(vtx, self.context, addLabel=addLabel, 
-                                    useThisFormat=useThisFormat, NONE_string=NONE_string, 
+                                    useThisFormat=useThisFormat, None_string=None_string, 
                                     localize=localize)
         return s
         
@@ -928,9 +928,9 @@ class ValueHelper(object):
         """Return as string"""
         return self.toString()
 
-    def format(self, format_string=None, NONE_string=None, add_label=True, localize=True):
+    def format(self, format_string=None, None_string=None, add_label=True, localize=True):
         """Returns a formatted version of the datum, using user-supplied customizations."""
-        return self.toString(useThisFormat=format_string, NONE_string=NONE_string,
+        return self.toString(useThisFormat=format_string, None_string=None_string,
                              addLabel=add_label, localize=localize)
 
     def ordinal_compass(self):
@@ -945,16 +945,16 @@ class ValueHelper(object):
         return self._raw_value_tuple[0]
 
     # Backwards compatibility
-    def string(self, NONE_string=None):
+    def string(self, None_string=None):
         """Return as string with an optional user specified string to be
         used if None"""
-        return self.toString(NONE_string=NONE_string)
+        return self.toString(None_string=None_string)
 
     # Backwards compatibility
-    def nolabel(self, format_string, NONE_string=None):
+    def nolabel(self, format_string, None_string=None):
         """Returns a formatted version of the datum, using a user-supplied
         format. No label."""
-        return self.toString(addLabel=False, useThisFormat=format_string, NONE_string=NONE_string)
+        return self.toString(addLabel=False, useThisFormat=format_string, None_string=None_string)
 
     # Backwards compatibility
     @property

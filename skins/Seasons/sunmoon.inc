@@ -37,14 +37,14 @@
         <tr><th>&#9728;</th><td></td><td></td><th>&#9789;</th><td></td></tr>
         <tr>
           <td class="label">Rise</td>
-          <td class="data">$almanac.sun.rise.format(NONE_string=$sun_None)</td>
+          <td class="data">$almanac.sun.rise.format(None_string=$sun_None)</td>
           <td>&nbsp;</td>
           <td class="label">Rise</td>
           <td class="data">$almanac.moon.rise</td>
         </tr>
         <tr>
           <td class="label">Set</td>
-          <td class="data">$almanac.sun.set.format(NONE_string=$sun_None)</td>
+          <td class="data">$almanac.sun.set.format(None_string=$sun_None)</td>
           <td>&nbsp;</td>
           <td class="label">Set</td>
           <td class="data">$almanac.moon.set</td>
