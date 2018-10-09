@@ -42,13 +42,13 @@
 Version: 3.9
     </span>
     </div>
-    <div class="title">weeWX Customization Guide</div>
+    <div class="title">WeeWX Customization Guide</div>
   </div>
 
   <div id="technical_content" class="content">
 
     <p>
-      This document covers the customization of weeWX.
+      This document covers the customization of WeeWX.
       It assumes that you have read, and are reasonably familiar with,
       the <a href="usersguide.htm">Users Guide</a>.
     </p>
@@ -57,7 +57,7 @@ Version: 3.9
 
     <p>
       This document starts with an overview of the architecture of
-      weeWX. If you are only interested in customizing the generated
+      WeeWX. If you are only interested in customizing the generated
       reports you can probably skip the overview and proceed directly
       to the section <em><a href="#standard_skin">The
       Standard <span class="code">skin.conf</span>
@@ -76,7 +76,7 @@ Version: 3.9
       unusual type you are unlikely to run into trouble.</p>
 
     <p class="warning">
-      <strong>Warning!</strong><br/> weeWX
+      <strong>Warning!</strong><br/> WeeWX
       is still an experimental system and, as such, its internal
       design is subject to change. Future upgrades may break any
       customizations you have done, particularly if they involve the
@@ -86,7 +86,7 @@ Version: 3.9
     <h2>Where to put customizations</h2>
 
     <p>
-      For configuration changes, simply modify the weeWX
+      For configuration changes, simply modify the WeeWX
       configuration file <span class="code">weewx.conf</span>.
       Customization of reports may require changes to a skin
       configuration file <span class="code">skin.conf</span> or
@@ -118,7 +118,7 @@ Version: 3.9
     <h2>Data architecture</h2>
 
     <p>
-      WeeWX is data-driven. When the sensors spit out some data, weeWX
+      WeeWX is data-driven. When the sensors spit out some data, WeeWX
       does something. The 'something'
       might be to print out the data, or to generate an HTML report,
       or to use FTP to copy a report to a web server, or to perform
@@ -131,7 +131,7 @@ Version: 3.9
       driver reads data from a serial port or a device on the USB or a
       network interface. It handles any decoding of raw bits and
       bytes, and puts the resulting data into LOOP packets and archive
-      RECORDs. Whenever possible, weeWX
+      RECORDs. Whenever possible, WeeWX
       should work "out of the box" with minimal configuration.
       However, in some cases the driver may include code to configure
       and test the hardware, typically via the <span class="code">wee_device</span>
@@ -144,10 +144,10 @@ Version: 3.9
       windchill, heatindex, humidex, apptemp, ET are all dependent
       quantities &mdash; they require primary observations such as
       wind speed, temperature, solar radiation. The firmware for some
-      hardware calculates dependent quantities. The weeWX
+      hardware calculates dependent quantities. The WeeWX
       service <span class="code">StdWXCalculate</span> fills in the
       gaps and determines whether to use a value from firmware or a
-      calculation from weeWX. Sometimes the
+      calculation from WeeWX. Sometimes the
       firmware simply does it wrong.
     </p>
 
@@ -156,7 +156,7 @@ Version: 3.9
     </h2>
 
     <p>Generally, there are two types of data that flow through
-      weeWX: LOOP packets, and archive records.</p>
+      WeeWX: LOOP packets, and archive records.</p>
 
     <h3>LOOP packets</h3>
     <p>
@@ -191,26 +191,26 @@ Version: 3.9
 
     <p>Some hardware is capable of generating its own archive
       records (the Davis Vantage and Oregon Scientific WMR200, for
-      example), but for hardware that does not archive data, weeWX
+      example), but for hardware that does not archive data, WeeWX
       generates them.</p>
 
     <p>It is the archive data that is put in the SQL database,
       although, occasionally, the LOOP packets can be useful (such as
       for the Weather Underground's "Rapidfire" mode).</p>
 
-    <h2>The weeWX service architecture</h2>
+    <h2>The WeeWX service architecture</h2>
 
     <p>
-      At a high-level, weeWX consists of an
+      At a high-level, WeeWX consists of an
       engine class called <span class="code">StdEngine</span>. It is
       responsible for loading <em>services</em>, then arranging for
       them to be called when key events occur, such as the arrival of
-      LOOP or archive data. The default install of weeWX
+      LOOP or archive data. The default install of WeeWX
       includes the following services:
     </p>
     <table id='default_services' class="indent"
-           summary="Overview of the weeWX architecture">
-      <caption>The standard weeWX services</caption>
+           summary="Overview of the WeeWX architecture">
+      <caption>The standard WeeWX services</caption>
       <tbody>
       <tr class="first_row">
         <td>Service</td>
@@ -287,7 +287,7 @@ Version: 3.9
         class="code">MyAlarm</span>, which sends an email when an
       arbitrary expression evaluates <span class="code">True</span>.
       These advanced topics are covered later in the section <em><a
-        href="#service_engine">Customizing the weeWX service
+        href="#service_engine">Customizing the WeeWX service
       engine</a></em>.
     </p>
 
@@ -314,9 +314,9 @@ Version: 3.9
     </p>
 
     <p>
-      The default distribution of weeWX includes three reports:
+      The default distribution of WeeWX includes three reports:
     </p>
-    <table class="indent" summary="Standard reports included in weeWX">
+    <table class="indent" summary="Standard reports included in WeeWX">
       <tbody>
       <tr class="first_row">
         <td>Report</td>
@@ -363,7 +363,7 @@ Version: 3.9
       might want to run a report that uses US Customary units, then
       run another report against the same skin, but using metric units
       and put the results in a different place. All this is possible
-      by either overriding configuration options in the weeWX configuration
+      by either overriding configuration options in the WeeWX configuration
       file <span class="code">weewx.conf</span> or the skin configuration
       file <span class="code">skin.conf</span>.
     </p>
@@ -388,7 +388,7 @@ Version: 3.9
           located. It is not to be taken literally. Consult the <a
             href="usersguide.htm#dir-layout-table">directory
           layout table</a> in the User's Guide for its exact location,
-          dependent on how you installed weeWX and what operating
+          dependent on how you installed WeeWX and what operating
           system you are using
         </p>
       </div>
@@ -400,10 +400,10 @@ Version: 3.9
       To create their output, skins rely on one or more <em>generators</em>,
       which are what do the actual work, such as creating HTML files
       or plot images. Generators can also copy files around or
-      FTP/rsync them to remote locations. The default install of weeWX
+      FTP/rsync them to remote locations. The default install of WeeWX
       includes the following generators:
     </p>
-    <table class="indent" summary="Generators included in weeWX">
+    <table class="indent" summary="Generators included in WeeWX">
       <tbody>
       <tr class="first_row">
         <td>Generator</td>
@@ -450,7 +450,7 @@ Version: 3.9
 
     <p>
       A template is a text file that is processed by a <em>template
-      engine</em> to create a new file. weeWX
+      engine</em> to create a new file. WeeWX
       uses the <a href="https://pythonhosted.org/Cheetah/">Cheetah</a>
       template engine. The generator <span class="code">weewx.cheetahgenerator.CheetahGenerator</span>
       is responsible for running Cheetah at appropriate times.
@@ -472,7 +472,7 @@ Version: 3.9
     </h2>
 
     <p>If you make changes, how do you know what the results will
-      look like? You could just run weeWX and wait until the next
+      look like? You could just run WeeWX and wait until the next
       reporting cycle kicks off but, depending on your archive
       interval, that could be a 30 minute wait or more.</p>
 
@@ -625,7 +625,7 @@ Version: 3.9
     </p>
 
     <p>
-      An additional complication is that weeWX
+      An additional complication is that WeeWX
       can use more than one database implementation: SQLite or MySQL.
       Making users specify in the templates not only which database to
       use, but also which implementation, would be unreasonable.
@@ -645,7 +645,7 @@ Version: 3.9
     </p>
 
     <p>
-      The standard weather database binding that weeWX
+      The standard weather database binding that WeeWX
       uses is <span class="code">wx_binding</span>. This is the
       binding that you will be using most of the time and, indeed, it
       is the default. You rarely have to specify it explicitly.
@@ -667,14 +667,14 @@ Version: 3.9
       open, and query a database. These are the canonical forms for
       obtaining a database manager.</p>
 
-    <p>If you are opening a database from within a weeWX service:</p>
+    <p>If you are opening a database from within a WeeWX service:</p>
     <pre class='tty'>db_manager = self.engine.db_binder.get_manager(data_binding='name_of_binding', initialize=True)
 
 # Sample query:
 db_manager.getSql("SELECT SUM(rain) FROM %s "\
     "WHERE dateTime&gt;? AND dateTime&lt;=?" % db_manager.table_name, (start_ts, stop_ts))</pre>
     <p>
-      If you are opening a database from within a weeWX search list
+      If you are opening a database from within a WeeWX search list
       extension, you will be passed in a function <span class="code">db_lookup()</span>
       as a parameter, which can be used to bind to a database. By
       default, it returns a manager bound to <span class="code">wx_binding</span>:
@@ -704,7 +704,7 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
     <h2>Units</h2>
 
     <p>
-      The unit architecture in weeWX is
+      The unit architecture in WeeWX is
       designed to make basic unit conversions and display of units
       easy. It is not designed to provide dimensional analysis,
       arbitrary conversions, and indications of compatibility.
@@ -716,7 +716,7 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
       actual units used by each instrument vary widely; some
       instruments use Metric units, others use US Customary units, and
       many use a mixture. The driver ensures that the units are
-      consistent for storage in the weeWX
+      consistent for storage in the WeeWX
       database. By default, and to maintain compatibility with <span
         class='code'>wview</span>, the default database units are US
       Customary, although this can be changed.
@@ -774,15 +774,15 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
 
     <p>
       With this approach, edit the skin configuration file with a text
-      editor. Changes made in this way will be used by weeWX
+      editor. Changes made in this way will be used by WeeWX
       the next time it generates reports,
       which is typically the next archive interval; there is no need
-      to restart weeWX to see the results of
+      to restart WeeWX to see the results of
       the changes.
     </p>
 
     <p>
-      For the standard skin that comes with weeWX,
+      For the standard skin that comes with WeeWX,
       the file is <span class="code">skins/Standard/skin.conf</span>.
       It includes many, many options that can be changed. For a
       complete list, see the section below, <em><a
@@ -871,7 +871,7 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
     </p>
 
     <p>
-      With this approach, you must restart weeWX
+      With this approach, you must restart WeeWX
       to see the effects of any changes.
     </p>
 
@@ -945,7 +945,7 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
     <p>
       If you cannot achieve the results you need by changing a
       configuration option, you may have to modify the templates that
-      come with weeWX, or write your own.
+      come with WeeWX, or write your own.
     </p>
 
     <p>
@@ -962,7 +962,7 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
       essentially lets you have the full semantics of Python available
       in your templates. As this would make the templates
       incomprehensible to anyone but a Python programmer,
-      weeWX adopts a very small subset of its
+      WeeWX adopts a very small subset of its
       power.
     </p>
 
@@ -1012,7 +1012,7 @@ $month.outTemp.maxtime</pre>
 $month.outTemp.max</pre>
     <p>
       Most of the time, tags will "do the right thing" and are all you
-      will need. However, weeWX offers
+      will need. However, WeeWX offers
       extensive customization of the generated output for specialized
       applications such as XML RSS feeds, or ridgidly formatted
       reports (such as the NOAA reports). This section specifies the
@@ -1035,7 +1035,7 @@ $month.outTemp.max</pre>
     <pre class="tty">$current.barometer</pre>
 
     <p>
-      Formally, weeWX first looks for the observation type in the
+      Formally, WeeWX first looks for the observation type in the
       record emitted by the <span class="code">NEW_ARCHIVE_RECORD</span>
       event. This is generally the data emitted by the station
       console, augmented by any derived variables (<i>e.g.</i>wind
@@ -2059,7 +2059,7 @@ $month.dateTime.format("%B"): Min, max temperatures: $month.outTemp.min $month.o
 
     <p>
       If module <a href="http://rhodesmill.org/pyephem">pyephem</a>
-      has been installed, then weeWX can
+      has been installed, then WeeWX can
       generate extensive almanac information for the Sun, Moon, Venus,
       Mars, Jupiter, and other heavenly bodies, including their rise,
       transit and set times, as well as their azimuth and altitude.
@@ -2170,7 +2170,7 @@ Sunrise, sunset: $almanac.sunrise $almanac.sunset
     <p>or</p>
     <pre class="tty">$almanac.sun.transit</pre>
     <p>
-      To accurately calculate these times, weeWX
+      To accurately calculate these times, WeeWX
       automatically uses the present temperature and pressure to
       calculate refraction effects. However, you can override these
       values, which will be necessary if you wish to match the almanac
@@ -2189,7 +2189,7 @@ Sunrise, sunset: $almanac.sunrise $almanac.sunset
 
     <p>
       If you wish to calculate the start of civil twilight, you can
-      set the horizon to -6 degrees, and also tell weeWX
+      set the horizon to -6 degrees, and also tell WeeWX
       to use the center of the sun (instead of the upper limb, which
       it normally uses) to do the calcuation:
     </p>
@@ -2489,7 +2489,7 @@ Sunrise, sunset: $almanac.sunrise $almanac.sunset
 
     <p>
       Now let's take a look at how the search list interacts with
-      weeWX tags. Let's start by looking at a simple example: station
+      WeeWX tags. Let's start by looking at a simple example: station
       altitude, available as the tag
     </p>
     <pre class="tty">
@@ -2499,7 +2499,7 @@ $station.altitude</pre>
       As we saw in the previous section, Cheetah will run down the
       search list, looking for an object with a key or attribute <span
         class="code">station</span>. In the default search list,
-      weeWX includes one such object, an instance of the class
+      WeeWX includes one such object, an instance of the class
       <span class="code">weewx.cheetahgenerator.Station</span>,
       which has an attribute <span class="code">station</span>, so it
       gets a hit on this object.
@@ -2617,7 +2617,7 @@ $station.altitude</pre>
     <h3 id="extending_the_list">Extending the list</h3>
 
     <p>
-      As mentioned, weeWX comes with a
+      As mentioned, WeeWX comes with a
       number of objects already in the search list, but you can extend
       it. To do so, you should have some familiarity with Python, in
       particular, how to write new classes and member functions for
@@ -2625,7 +2625,7 @@ $station.altitude</pre>
     </p>
 
     <p>
-      Let's look at an example. The regular version of weeWX
+      Let's look at an example. The regular version of WeeWX
       offers statistical summaries by day,
       week, month, and year. Suppose we would like to add two more:
     </p>
@@ -2634,7 +2634,7 @@ $station.altitude</pre>
         statistics such as the all-time high or low temperature seen
         at your station;
       </li>
-      <li>Seven days statistics. While weeWX
+      <li>Seven days statistics. While WeeWX
         offers the tag <span class="code">$week</span>, this is
         statistics <em>since Sunday at midnight</em>. We would like to
         have statistics for a full week, that is since midnight seven
@@ -2867,7 +2867,7 @@ class MyStats(SearchList):                                                   # 1
       this hierarchy by default, so it will find our addition. However, if
       you put it somewhere else, may will have to specify its location with
       the environment variable <a href="https://docs.python.org/2/using/cmdline.html#envvar-PYTHONPATH"><span
-        class="code">PYTHONPATH</span></a> when you start weeWX:
+        class="code">PYTHONPATH</span></a> when you start WeeWX:
     </p>
     <pre class="tty">export PYTHONPATH=/home/me/secret_location</pre>
 
@@ -2875,7 +2875,7 @@ class MyStats(SearchList):                                                   # 1
     <h2>Customizing images</h2>
 
     <p>
-      The installed version of weeWX is
+      The installed version of WeeWX is
       configured to generate a set of useful plots. But, what if you
       don't like how they look, or you want to generate different
       plots, perhaps with different aggregation types? This section
@@ -2980,7 +2980,7 @@ class MyStats(SearchList):                                                   # 1
     </p>
     <pre class="tty">yscale = None, None, 0.02</pre>
     <p>
-      will cause weeWX to pick sensible y
+      will cause WeeWX to pick sensible y
       minimum and maximum values, but require that the tick increment
       (<span class="code">min_interval</span>) be at least 0.02.
     </p>
@@ -3129,7 +3129,7 @@ class MyStats(SearchList):                                                   # 1
       a vector type to produce this kind of plot. There are two: <span
         class="code">windvec</span>, and <span class="code">windgustvec</span>.
       While they do not actually appear in the SQL database,
-      weeWX understands that they represent
+      WeeWX understands that they represent
       special vector-types. The first, <span class="code">windvec</span>,
       represents the average wind in an archive period, the second, <span
         class="code">windgustvec</span> the max wind in an archive
@@ -3174,7 +3174,7 @@ class MyStats(SearchList):                                                   # 1
 
     <p>
       If you use this kind of plot (the out-of-the-box version of
-      weeWX includes daily, weekly, monthly, and
+      WeeWX includes daily, weekly, monthly, and
       yearly progressive wind plots), a small compass rose will be put
       in the lower-left corner of the image to show the orientation of
       North.
@@ -3219,7 +3219,7 @@ class MyStats(SearchList):                                                   # 1
       It's easy to use more than one database in your reports. Here's
       an example. In my office I have two consoles: a VantagePro2
       connected to a Dell Optiplex, and a WMR100N, connected to a
-      Raspberry Pi. Each is running weeWX.
+      Raspberry Pi. Each is running WeeWX.
       The Dell is using SQLite, the RPi, MySQL.
     </p>
 
@@ -3400,7 +3400,7 @@ class MyStats(SearchList):                                                   # 1
       generation time</h2>
 
     <p>
-      Normal weeWX operation is to run each <em><a href="usersguide.htm#Reports">report</a></em>
+      Normal WeeWX operation is to run each <em><a href="usersguide.htm#Reports">report</a></em>
       defined in <span class="code">weewx.conf</span> every archive period. Whilst
       this may suit most situations, there may be occasions when it is desirable
       to run a report less frequently than every archive period. For example, the
@@ -3417,7 +3417,7 @@ class MyStats(SearchList):                                                   # 1
       <strong>Note</strong><br/>Whilst the <span class="code">report_timing</span>
       option allows the user to specify when a given report is generated, it
       should be noted that the generation of reports is still controlled by
-      the weeWX report cycle and as such the <span class="code">report_timing</span>
+      the WeeWX report cycle and as such the <span class="code">report_timing</span>
       option does not allow reports to be generated more frequently than once
       every archive period.
     </p>
@@ -3429,9 +3429,9 @@ class MyStats(SearchList):                                                   # 1
     <p>
       The <span class="code">report_timing</span> option uses a
       CRON-like format to control when a report is to be run. Whilst a
-      CRON-like format is used, the control of weeWX
+      CRON-like format is used, the control of WeeWX
       report generation using the <span class="code">report_timing</span>
-      option is confined completely to weeWX
+      option is confined completely to WeeWX
       and has no interraction with the system CRON service.
     </p>
 
@@ -3561,7 +3561,7 @@ class MyStats(SearchList):                                                   # 1
 
     <p>
       When the <span class="code">report_timing</span> option is in
-      use weeWX will run a report when the
+      use WeeWX will run a report when the
       minute, hour and month of year parameters match the report time,
       and at least one of the two day parameters (day of month or day
       of week) match the report time. This means that non-existent
@@ -3576,7 +3576,7 @@ class MyStats(SearchList):                                                   # 1
       <strong>Note</strong><br/>Report time does not refer to the time at
       which the report is run, but rather the date and time of the
       latest data the report is based upon. If you like, it is the
-      effective date and time of the report. For normal weeWX
+      effective date and time of the report. For normal WeeWX
       operation, the report time aligns
       with the <span class="code">dateTime</span> of the most recent
       archive record. When reports are run using the <span
@@ -3604,17 +3604,17 @@ class MyStats(SearchList):                                                   # 1
     <p>
       A traditional CRON service has a resolution of one minute, meaning that
       the CRON service checks each minute as to whether to execute any
-      commands. On the other hand, the weeWX report system checks which
+      commands. On the other hand, the WeeWX report system checks which
       reports are to be run once per archive period, where the archive period
       may be one minute, five minutes or some other user defined period.
       Consequently, the <span class="code">report_timing</span> option may
       specify a report to be run at some time that does not align with the
-      weeWX archive period. In such cases cases the
+      WeeWX archive period. In such cases cases the
       <span class="code">report_timing</span> option does not cause a report
-      to be run outside of the normal weeWX report cycle, rather it will
+      to be run outside of the normal WeeWX report cycle, rather it will
       cause the report to be run during the next report cycle. At the start
       of each report cycle, and provided a <span class="code">report_timing</span>
-      option is set, weeWX will check each minute boundary from the current
+      option is set, WeeWX will check each minute boundary from the current
       report time back until the report time of the previous report cycle. If
       a match is found on <strong>any</strong> of these one minute boundaries the
       report will be run during the report cycle. This may be best described
@@ -3777,7 +3777,7 @@ class MyStats(SearchList):                                                   # 1
       <tr>
         <td class="code first_col">* * * * *</td>
         <td>Every archive period. This setting is effectively
-          the default weeWX method of operation.
+          the default WeeWX method of operation.
         </td>
       </tr>
       <tr>
@@ -3992,7 +3992,7 @@ class MyStats(SearchList):                                                   # 1
     <p>
       As there are many different observational measurement types
       (such as <span class="code">outTemp</span>, <span class="code">barometer</span>,
-      etc.) used in weeWX (more than 50 at
+      etc.) used in WeeWX (more than 50 at
       last count), it would be tedious, not to say possibly
       inconsistent, to specify a different measurement system for each
       one of them. At the other extreme, requiring all of them to be
@@ -4170,7 +4170,7 @@ second = " second", " seconds"</pre>
 
     <p>
       This is particularly useful when <a href="#l11n_unit_labels">localizing
-      the weeWX and server uptimes</a>.
+      the WeeWX and server uptimes</a>.
     </p>
 
     <h3 class="config_section" id="Units_TimeFormats">[[TimeFormats]]</h3>
@@ -4363,7 +4363,7 @@ UV      = UV Index</pre>
     </p>
 
     <p>The file generator runs on each new archive record. In a
-      default weeWX installation, that would be every 5 minutes.</p>
+      default WeeWX installation, that would be every 5 minutes.</p>
 
     <p>
       Cheetah processes each template to generate a file. Cheetah
@@ -4373,7 +4373,7 @@ UV      = UV Index</pre>
       or <span class="code">$current.outTemp.max</span>.
     </p>
 
-    <p>Variables are defined by objects in weeWX. Some variables
+    <p>Variables are defined by objects in WeeWX. Some variables
       are static, others are linked to data in databases. The list of
       variables can be extended.</p>
 
@@ -4595,9 +4595,9 @@ UV      = UV Index</pre>
 
     <div class="image image-right">
       <img src="images/image_parts.png"
-           alt="Part names in a weeWX image"/>
+           alt="Part names in a WeeWX image"/>
 
-      <div class="image_caption">Part names in a weeWX image</div>
+      <div class="image_caption">Part names in a WeeWX image</div>
     </div>
 
 
@@ -4699,7 +4699,7 @@ UV      = UV Index</pre>
 
     <p>
       The path to the font to be use for the top label. Optional. If
-      not given, or if weeWX cannot find the
+      not given, or if WeeWX cannot find the
       font, then the default PIL font will be used.
     </p>
 
@@ -4714,7 +4714,7 @@ UV      = UV Index</pre>
 
     <p>
       The path to the font to be use for the unit label. Optional. If
-      not given, or if weeWX cannot find the
+      not given, or if WeeWX cannot find the
       font, then the default PIL font will be used.
     </p>
 
@@ -4736,7 +4736,7 @@ UV      = UV Index</pre>
 
     <p>
       The path to the font to be use for the bottom label. Optional.
-      If not given, or if weeWX cannot find
+      If not given, or if WeeWX cannot find
       the font, then the default PIL font will be used.
     </p>
 
@@ -4772,7 +4772,7 @@ UV      = UV Index</pre>
 
     <p>
       The path to the font to be use for the x- and y-axis labels.
-      Optional. If not given, or if weeWX
+      Optional. If not given, or if WeeWX
       cannot find the font, then the default PIL font will be used.
     </p>
 
@@ -4887,7 +4887,7 @@ UV      = UV Index</pre>
 
     <p>
       The path to the font to be use for the rose label (the letter
-      "N," indicating North). Optional. If not given, or if weeWX
+      "N," indicating North). Optional. If not given, or if WeeWX
       cannot find the font, then the default PIL font will be used.
     </p>
 
@@ -5177,7 +5177,7 @@ UV      = UV Index</pre>
       Most of the unit labels either follow ISO conventions, or are
       unlikely to be used outside English speaking countries (an
       example would be &quot;foot&quot;). But, there are a few
-      exceptions, used to label the weeWX and server
+      exceptions, used to label the WeeWX and server
       &quot;uptimes&quot;, which can be found in sub-section <span
         class="code">[Units][[Labels]]</span>
     </p>
@@ -5225,7 +5225,7 @@ UV      = UV Index</pre>
 
     <p>
       For example, if you use <span class='code'>UTF-8</span>
-      (the default used by all the standard weeWX templates), then the top of
+      (the default used by all the standard WeeWX templates), then the top of
       your template should look something like this:
     </p>
     <pre class='tty'>#errorCatcher Echo
@@ -5256,7 +5256,7 @@ UV      = UV Index</pre>
     </p>
     <pre class="tty">$ export LANG=es_ES.UTF-8</pre>
     <p>
-      before running weeWX, then the local
+      before running WeeWX, then the local
       Spanish names for days of the week and months of the year will
       be used. The decimal point for numbers will also be modified
       appropriately.
@@ -5264,11 +5264,11 @@ UV      = UV Index</pre>
 
 
     <h1 id="service_engine">
-      Customizing the weeWX service engine
+      Customizing the WeeWX service engine
     </h1>
 
     <p>This is an advanced topic intended for those who wish to
-      try their hand at extending the internal engine in weeWX. Before
+      try their hand at extending the internal engine in WeeWX. Before
       attempting these examples, you should be reasonably proficient
       with Python.</p>
 
@@ -5276,7 +5276,7 @@ UV      = UV Index</pre>
       engine may change in future versions!</p>
 
     <p>
-      At a high level, weeWX consists of an
+      At a high level, WeeWX consists of an
       <em>engine</em> that is responsible for managing a set of <em>services</em>.
       A service consists of a Python class which binds its member
       functions to various <em>events</em>. The engine arranges to
@@ -5394,7 +5394,7 @@ class MyAlarm(StdService):
             self.smtp_host     = config_dict['Alarm']['smtp_host']
             self.smtp_user     = config_dict['Alarm'].get('smtp_user')
             self.smtp_password = config_dict['Alarm'].get('smtp_password')
-            self.SUBJECT       = config_dict['Alarm'].get('subject', "Alarm message from weeWX")
+            self.SUBJECT       = config_dict['Alarm'].get('subject', "Alarm message from WeeWX")
             self.FROM          = config_dict['Alarm'].get('from', 'alarm@example.com')
             self.TO            = option_as_list(config_dict['Alarm']['mailto'])
             syslog.syslog(syslog.LOG_INFO, "alarm: Alarm set for expression: '%s'" % self.expression)
@@ -5494,7 +5494,7 @@ class MyAlarm(StdService):
     smtp_password = mypassword
     mailto = auser@example.com, anotheruser@example.com
     from   = me@example.com
-    subject = "Alarm message from weeWX!"</pre>
+    subject = "Alarm message from WeeWX!"</pre>
     <p>
       There are three important points to be noted in this example,
       each marked with a <span class="code">NOTE</span> flag in the
@@ -5559,9 +5559,9 @@ class MyAlarm(StdService):
     <p>
       The last two options, <span class="code">from</span> and <span
         class="code">subject</span> are optional. If not supplied,
-      weeWX will supply something sensible.
+      WeeWX will supply something sensible.
       Note, however, that some mailers require a valid "from" email
-      address and the one weeWX supplies may
+      address and the one WeeWX supplies may
       not satisfy its requirements.
     </p>
 
@@ -5596,16 +5596,16 @@ class MyAlarm(StdService):
       your weather station with data from some other device.
       Generally, you have two approaches for how to handle this:</p>
     <ul>
-      <li>Run two instances of weeWX, each using its own
+      <li>Run two instances of WeeWX, each using its own
         database and <span class='code'>weewx.conf</span>
         configuration file. The results are then combined in a final report,
-        using weeWX's ability <a href="#Using_multiple_bindings">to
+        using WeeWX's ability <a href="#Using_multiple_bindings">to
           use more than one database</a>. See the Wiki entry
         <a href="https://github.com/weewx/weewx/wiki/weewx-multi">
-          <em>How to run multiple instances of weewx</em></a> for details
+          <em>How to run multiple instances of WeeWX</em></a> for details
         on how to do this.
       </li>
-      <li>Run one instance, but use a custom weeWX service to
+      <li>Run one instance, but use a custom WeeWX service to
         augment the records coming from your weather station with data
         from the other device.
       </li>
@@ -5667,7 +5667,7 @@ class AddElectricity(StdService):
       As an aside, it is important that the function
       <span class='code'>download_total_power()</span> does not
       delay very long because it will sit right in the main loop of
-      the weeWX engine. If it's
+      the WeeWX engine. If it's
       going to cause a delay of more than a couple seconds you might
       want to put it in a separate thread and feed the results to <span
         class="code">AddElectricity</span> through a queue.
@@ -5721,7 +5721,7 @@ class AddElectricity(StdService):
 
     <p>
       These lists are designed to orchestrate the data as it flows
-      through the weeWX engine. For example, you want to make sure
+      through the WeeWX engine. For example, you want to make sure
       data has been processed by, for example, running it through the
       quality control service, <span class="code">StdQC</span>, before
       putting them in the database. Similarly, the reporting system
@@ -5737,7 +5737,7 @@ class AddElectricity(StdService):
       like this:
     </p>
     <pre class="tty">
-#   This section configures the internal weeWX engine.
+#   This section configures the internal WeeWX engine.
 
 [Engine]
 
@@ -5768,7 +5768,7 @@ class AddElectricity(StdService):
       packets and/or archive records, but are not in the database schema.
       An example is the new observation type <span class="code">electricity</span>,
       from the example above, <a href="#Adding_2nd_source"><em>Adding a second data source</em></a>.
-      If a type is not in the database schema, then it will be a second class citizen in weeWX's world:
+      If a type is not in the database schema, then it will be a second class citizen in WeeWX's world:
       it cannot be used in a plot, nor for most statistics.
       So how would you add such a type to the database schema?
     </p>
@@ -5784,7 +5784,7 @@ class AddElectricity(StdService):
       <strong>Note</strong><br/>It is possible to observe all of the observation types
       included in the loop packets and archive records, whether or not they are stored
       in the database, by
-      <a href="usersguide.htm#Running_directly">running weeWX directly</a>.
+      <a href="usersguide.htm#Running_directly">running WeeWX directly</a>.
     </p>
 
     <p>Here's our general strategy:</p>
@@ -5801,7 +5801,7 @@ class AddElectricity(StdService):
         to create the new database and populate it with data from the
         old database.
       </li>
-      <li>Shuffle databases around so weeWX
+      <li>Shuffle databases around so WeeWX
         will use the new database.
       </li>
     </ol>
@@ -5810,7 +5810,7 @@ class AddElectricity(StdService):
       <li>
         <p>
           <strong>Extend the existing schema with the new type.</strong> The schema
-          that comes with weeWX is the same as what wview uses. It's located
+          that comes with WeeWX is the same as what wview uses. It's located
           in the file <span class="code">schemas/wview.py</span> &mdash; take
           a look at it now. We could just modify it <em>in situ</em>, but that
           would run the risk of confusing the two versions. Alternatively, we
@@ -5834,7 +5834,7 @@ schema_with_electricity = schemas.wview.schema + [('electricity', 'REAL')]</pre>
           are two obvious choices:</p>
         <ol type="a">
           <li>Add it to the bottom of <span class="code">user/extensions.py</span>. This is a
-            special file, provided by weeWX, which is guaranteed to run before the engine's main loop.
+            special file, provided by WeeWX, which is guaranteed to run before the engine's main loop.
             It's a good place to add types that already exist in the
             archive records (an example would be <span class="code">humidex</span>),
             but don't yet exist in the database schema.
@@ -5844,7 +5844,7 @@ schema_with_electricity = schemas.wview.schema + [('electricity', 'REAL')]</pre>
             you already have, <span class="code">user/electricity.py</span>. This way, it will
             run before any use of the new type. It has the added advantage that it keeps all
             "electricity" related modifications in one place, making it easy to package up your changes
-            as a new weeWX extension.
+            as a new WeeWX extension.
           </li>
         </ol>
       <li>
@@ -5912,7 +5912,7 @@ schema_with_electricity = schemas.wview.schema + [('electricity', 'REAL')]</pre>
       <li>
         <p>
           <strong>Shuffle the databases.</strong> Now arrange things
-          so weeWX can find the new
+          so WeeWX can find the new
           database.
         </p>
 
@@ -5942,7 +5942,7 @@ mysql&gt;<span class="cmd"> RENAME TABLE weewx_new.archive TO weewx.archive;</sp
         <p>
           It's worth noting that there's actually a hidden, last step:
           rebuilding the daily summaries inside the new database. This
-          will be done automatically by weeWX
+          will be done automatically by WeeWX
           at the next startup. Alternatively, it can be done manually
           using the <a href="utilities.htm#wee_database_utility"><span
             class="code">wee_database</span></a> utility and the <span
@@ -5972,7 +5972,7 @@ mysql&gt;<span class="cmd"> RENAME TABLE weewx_new.archive TO weewx.archive;</sp
       midstream. You can't start with one unit system then, in the
       middle of the database, switch to another. See the section <span
         class="code"> <a href="usersguide.htm#StdConvert">[StdConvert]</a></span>
-      in the weeWX User's Guide. However, you can reconfigure the
+      in the WeeWX User's Guide. However, you can reconfigure the
       database by copying it to a new database, performing the unit
       conversion along the way. You then use this new database.
     </p>
@@ -5994,7 +5994,7 @@ mysql&gt;<span class="cmd"> RENAME TABLE weewx_new.archive TO weewx.archive;</sp
           class="code">wee_database</span></a> to create the new database
         and populate it with data from the old database.
       </li>
-      <li>Shuffle databases around so weeWX
+      <li>Shuffle databases around so WeeWX
         will use the new database.
       </li>
     </ol>
@@ -6042,7 +6042,7 @@ mysql&gt;<span class="cmd"> RENAME TABLE weewx_new.archive TO weewx.archive;</sp
       <li>
         <p>
           <strong>Shuffle the databases.</strong> Now arrange things
-          so weeWX can find the new database.
+          so WeeWX can find the new database.
         </p>
 
         <p class="warning">
@@ -6071,7 +6071,7 @@ mysql&gt;<span class="cmd"> RENAME TABLE weewx_new.archive TO weewx.archive;</sp
         <p>
           It's worth noting that there's actually a hidden, last step:
           rebuilding the daily summaries inside the new database. This
-          will be done automatically by weeWX
+          will be done automatically by WeeWX
           at the next startup. Alternatively, it can be done manually
           using the <a href="utilities.htm#wee_database_utility"><span
             class="code">wee_database</span></a> utility and the <span
@@ -6098,7 +6098,7 @@ mysql&gt;<span class="cmd"> RENAME TABLE weewx_new.archive TO weewx.archive;</sp
 
     <p>
       The summaries will automatically be rebuilt the next time
-      weeWX starts, or they can be rebuilt with the utility:
+      WeeWX starts, or they can be rebuilt with the utility:
     </p>
 
     <pre class="tty cmd">wee_database weewx.conf --rebuild-daily</pre>
@@ -6108,9 +6108,9 @@ mysql&gt;<span class="cmd"> RENAME TABLE weewx_new.archive TO weewx.archive;</sp
 
     <p class="warning">
       <strong>Warning!</strong><br/>
-      This is an area that is rapidly changing in weeWX.
+      This is an area that is rapidly changing in WeeWX.
       Presently, new units and unit groups are added by manipulating
-      the internal dictionaries in weeWX (as described below). In the future,
+      the internal dictionaries in WeeWX (as described below). In the future,
       they may be specified in <span class='code'>weewx.conf</span>.
     </p>
 
@@ -6309,7 +6309,7 @@ weewx.units.conversionDict['pound']  = {'newton': lambda x : x * 4.44822}
       This file will contain the driver class as well as any
       hardware-specific code. Do not put it in the
       <span class="code">weewx/drivers</span>
-      directory or it will be deleted when you upgrade weeWX.
+      directory or it will be deleted when you upgrade WeeWX.
     </p>
 
     <p>
@@ -6326,7 +6326,7 @@ weewx.units.conversionDict['pound']  = {'newton': lambda x : x * 4.44822}
 
     <p>This is a factory function that returns an instance of your
       driver. It has two arguments: the configuration dictionary, and
-      a reference to the weeWX engine.</p>
+      a reference to the WeeWX engine.</p>
 
     <h3>
       <span class="code">hardware_name</span>
@@ -6383,7 +6383,7 @@ weewx.units.conversionDict['pound']  = {'newton': lambda x : x * 4.44822}
 
     <p>
       A couple of observation types are tricky. In particular, <span
-        class="code">rain</span>. Generally, weeWX
+        class="code">rain</span>. Generally, WeeWX
       expects to see a packet with the amount of rain that fell in
       that packet period included as observation <span class="code">rain</span>.
       It then sums up all the values to get the total rainfall and
@@ -6424,7 +6424,7 @@ weewx.units.conversionDict['pound']  = {'newton': lambda x : x * 4.44822}
           local temperature. This is the pressure reading most
           commonly used by meteorologist to track weather systems at
           the surface, and this is the pressure that is uploaded to
-          weather services by weeWX. It is
+          weather services by WeeWX. It is
           the station pressure reduced to mean sea level using local
           altitude and local temperature.
         </td>
@@ -6449,7 +6449,7 @@ weewx.units.conversionDict['pound']  = {'newton': lambda x : x * 4.44822}
 
     <p>
       If your hardware does not have an archive record logger, then
-      weeWX can do the record generation for
+      WeeWX can do the record generation for
       you. It will automatically collect all the types it sees in your
       loop packets then emit a record with the averages (in some cases
       the sum or max value) of all those types. If it doesn't see a
@@ -6522,7 +6522,7 @@ weewx.units.conversionDict['pound']  = {'newton': lambda x : x * 4.44822}
 
     <p>
       The <span class='code'>fileparse</span> driver is perhaps the
-      simplest example of a weeWX driver.
+      simplest example of a WeeWX driver.
       It reads name-value pairs from a file and uses the values as
       sensor 'readings'. The code is actually packaged as an extension, located in
       <span class="code">examples/fileparse</span>, making it a good example
@@ -6563,7 +6563,7 @@ weewx.units.conversionDict['pound']  = {'newton': lambda x : x * 4.44822}
     <h1 id="extensions">Extensions</h1>
 
     <p>
-      A key feature of weeWX is its ability
+      A key feature of WeeWX is its ability
       to be extended by installing 3rd party <em>extensions</em>.
       Extensions are a way to package one or more customizations so
       they can be installed and distributed as a functional group.
@@ -6581,7 +6581,7 @@ weewx.units.conversionDict['pound']  = {'newton': lambda x : x * 4.44822}
 
     <p>
       Take a look at the <a href="https://github.com/weewx/weewx/wiki">
-      weeWX wiki
+      WeeWX wiki
     </a> for a sampling of some of the extensions that are available.
     </p>
 
@@ -6593,7 +6593,7 @@ weewx.units.conversionDict['pound']  = {'newton': lambda x : x * 4.44822}
 
     <p>
       Now that you have made some customizations, you might want to
-      share those changes with other weeWX
+      share those changes with other WeeWX
       users. Put your customizations into an extension to make
       installation, removal, and distribution easier.
     </p>
@@ -6614,7 +6614,7 @@ weewx.units.conversionDict['pound']  = {'newton': lambda x : x * 4.44822}
     <h2>How to package an extension</h2>
 
     <p>
-      The structure of an extension mirrors that of weeWX
+      The structure of an extension mirrors that of WeeWX
       itself. If the customizations include a skin, the extension will
       have a skins directory. If the customizations include python
       code, the extension will have a <span class='code'>bin/user</span>
@@ -6631,7 +6631,7 @@ weewx.units.conversionDict['pound']  = {'newton': lambda x : x * 4.44822}
         changes in each release
       </li>
       <li><span class='code'>install.py</span> - python code used
-        by the weeWX ExtensionInstaller
+        by the WeeWX ExtensionInstaller
       </li>
     </ul>
     <p>
@@ -6667,7 +6667,7 @@ xstats/bin/user/xstats.py</pre>
 
     <p>
       See the <span class='code'>extensions</span> directory of the
-      weeWX source for examples.
+      WeeWX source for examples.
     </p>
 
     <p>To distribute an extension, simply create a compressed
@@ -7208,7 +7208,7 @@ xstats/bin/user/xstats.py</pre>
     </p>
 
     <table class="indent" style="width: 80%">
-      <caption>The standard unit systems used within weeWX</caption>
+      <caption>The standard unit systems used within WeeWX</caption>
       <tr class="first_row">
         <td>Name</td>
         <td>Encoded value</td>
