@@ -1,5 +1,7 @@
 *~
-.idea
+!/.idea
+/.idea/*
+!/.idea/codeStyles
 .project
 .pydevproject
 .settings
