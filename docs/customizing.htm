@@ -470,8 +470,8 @@ Version: 3.9
                 <td>1</td>
                 <td>5</td>
                 <td>29.938</td>
-                <td><i>null</i></td>
-                <td><i>null</i></td>
+                <td><em>null</em></td>
+                <td><em>null</em></td>
                 <td>71.2</td>
                 <td>56.0</td>
                 <td>...</td>
@@ -481,8 +481,8 @@ Version: 3.9
                 <td>1</td>
                 <td>5</td>
                 <td>29.941</td>
-                <td><i>null</i></td>
-                <td><i>null</i></td>
+                <td><em>null</em></td>
+                <td><em>null</em></td>
                 <td>71.2</td>
                 <td>55.9</td>
                 <td>...</td>
@@ -1078,32 +1078,32 @@ $month.outTemp.max</pre>
                 <td>Meaning</td>
             </tr>
             <tr>
-                <td class="first_col code">$hour($hours_ago=<i>h</i>)
+                <td class="first_col code">$hour($hours_ago=<em>h</em>)
                 </td>
                 <td class="code">$hour($hours_ago=1).outTemp.avg</td>
                 <td>The average temperature last hour (1 hour ago).</td>
             </tr>
             <tr>
-                <td class="first_col code">$day($days_ago=<i>d</i>)
+                <td class="first_col code">$day($days_ago=<em>d</em>)
                 </td>
                 <td class="code">$day($days_ago=2).outTemp.avg</td>
                 <td>The average temperature day before yesterday (2 days ago).
                 </td>
             </tr>
             <tr>
-                <td class="first_col code">$week($weeks_ago=<i>d</i>)
+                <td class="first_col code">$week($weeks_ago=<em>d</em>)
                 </td>
                 <td class="code">$week($weeks_ago=1).outTemp.max</td>
                 <td>The maximum temperature last week.</td>
             </tr>
             <tr>
-                <td class="first_col code">$month($months_ago=<i>m</i>)
+                <td class="first_col code">$month($months_ago=<em>m</em>)
                 </td>
                 <td class="code">$month($months_ago=1).outTemp.max</td>
                 <td>The maximum temperature last month.</td>
             </tr>
             <tr>
-                <td class="first_col code">$year($years_ago=<i>m</i>)
+                <td class="first_col code">$year($years_ago=<em>m</em>)
                 </td>
                 <td class="code">$year($years_ago=1).outTemp.max</td>
                 <td>The maximum temperature last year.</td>
@@ -1535,37 +1535,37 @@ or in foobar units: $day.barometer.min.foobar
                 <td>Meaning</td>
             </tr>
             <tr>
-                <td class="first_col code">$time_delta=<i>seconds</i></td>
+                <td class="first_col code">$time_delta=<em>seconds</em></td>
                 <td class="code">$span($time_delta=1800).outTemp.avg</td>
                 <td>The average temperature over the last immediate 30 minutes (1800 seconds).
                 </td>
             </tr>
             <tr>
-                <td class="first_col code">$hour_delta=<i>hours</i></td>
+                <td class="first_col code">$hour_delta=<em>hours</em></td>
                 <td class="code">$span($hour_delta=6).outTemp.avg</td>
                 <td>The average temperature over the last immediate 6 hours.
                 </td>
             </tr>
             <tr>
-                <td class="first_col code">$day_delta=<i>days</i></td>
+                <td class="first_col code">$day_delta=<em>days</em></td>
                 <td class="code">$span($day_delta=1).rain.sum</td>
                 <td>The total rainfall over the last immediate 24 hours.
                 </td>
             </tr>
             <tr>
-                <td class="first_col code">$week_delta=<i>weeks</i></td>
+                <td class="first_col code">$week_delta=<em>weeks</em></td>
                 <td class="code">$span($week_delta=2).barometer.max</td>
                 <td>The maximum barometric pressure over the last immediate 2 weeks.
                 </td>
             </tr>
             <tr>
-                <td class="first_col code">$month_delta=<i>months</i></td>
+                <td class="first_col code">$month_delta=<em>months</em></td>
                 <td class="code">$span($month_delta=3).outTemp.min</td>
                 <td>The minimum temperture over the last immediate 3 months (90 days).
                 </td>
             </tr>
             <tr>
-                <td class="first_col code">$year_delta=<i>years</i></td>
+                <td class="first_col code">$year_delta=<em>years</em></td>
                 <td class="code">$span($year_delta=1).windchill.min</td>
                 <td>The minimum wind chill over the last immediate 1 year (365 days).
                 </td>
@@ -1677,7 +1677,7 @@ or in foobar units: $day.barometer.min.foobar
                 <td>Iterate by years</td>
             </tr>
             <tr>
-                <td class="code first_col">.spans(interval=<i>seconds</i>)
+                <td class="code first_col">.spans(interval=<em>seconds</em>)
                 </td>
                 <td>Iterate by custom length spans. The default interval is 10800 seconds (3 hours). The spans will
                     align to local time boundaries.
@@ -2079,7 +2079,7 @@ Sunrise, sunset: $almanac.sunrise $almanac.sunset
             </tbody>
         </table>
         <p class="note" style="display: inline-block">
-            <b>Note</b><br/>The vector is only stored in the daily <em>summaries</em>, so unlike the scalar tags such as
+            <strong>Note</strong><br/>The vector is only stored in the daily <em>summaries</em>, so unlike the scalar tags such as
             <span class="code">windSpeed</span> or <span class="code">windGust</span>, the tag <span
             class="code">wind</span> can only be used in aggregations such as <span class="code">$day</span>, <span
             class="code">$month</span>, <i>etc.</i>
@@ -2194,8 +2194,8 @@ Sunrise, sunset: $almanac.sunrise $almanac.sunset
             The Cheetah template engine finds tags by scanning a search list, a Python list of objects. For example, for
             a tag <span class="code">$foo</span>, the engine will scan down the list, trying each object in the list in
             turn. For each object, it will first try using <span class="code">foo</span> as an attribute, that is, it
-            will try evaluating <span class="code"><i>obj</i>.foo</span>. If that raises an <span class="code">AttributeError</span>
-            exception, then it will try <span class="code">foo</span> as a key, that is <span class="code"><i>obj</i>[key]</span>.
+            will try evaluating <span class="code"><em>obj</em>.foo</span>. If that raises an <span class="code">AttributeError</span>
+            exception, then it will try <span class="code">foo</span> as a key, that is <span class="code"><em>obj</em>[key]</span>.
             If that raises a <span class="code">KeyError</span> exception, then it moves on to the next item in the
             list. The first match that does not raise an exception is used. If no match is found, Cheetah raises a <span
             class="code">NameMapper.NotFound</span> exception.
@@ -6573,6 +6573,7 @@ xstats/bin/user/xstats.py</pre>
 <script type="text/javascript" src="js/jquery-ui-1.10.4.custom.min.js"></script>
 <script type="text/javascript" src="js/jquery.tocify-1.9.0.min.js"></script>
 <script type="text/javascript" src="js/weewx.js"></script>
+<!--suppress JSUnresolvedFunction -->
 <script type="text/javascript">
     $(function () {
         var level = get_default_level();
