@@ -55,7 +55,7 @@ Version: 3.9
         <p>
             This document starts with an overview of the architecture of WeeWX. If you are only interested in
             customizing the generated reports you can probably skip the overview and proceed directly to the section
-            <em><a href="#standard_skin">The Standard <span class="code">skin.conf</span> </a></em>. With this approach
+            <em><a href="#standard_skin">The skin configuration file <span class="code">skin.conf</span> </a></em>. With this approach
             you can easily add new plot images, change the titles of images, change the units used in the reports, and
             so on.
         </p>
@@ -252,7 +252,7 @@ Version: 3.9
         </p>
 
         <p>
-            The default distribution of WeeWX includes three reports:
+            The default distribution of WeeWX includes six reports:
         </p>
         <table class="indent" summary="Standard reports included in WeeWX">
             <tbody>
@@ -261,9 +261,32 @@ Version: 3.9
                 <td>Default functionality</td>
             </tr>
             <tr>
+                <td class="code first_col">SeasonsReport</td>
+                <td>Introduced with WeeWX V3.9, this report generates a single HTML file with day,
+                    week, month and year "to-date" summaries,
+                    as well as the plot images to go along with them. Buttons select which time scale the
+                    user wants. It also generates HTML files with more details on celestial bodies and
+                    statistics. Also generates NOAA monthly and yearly summaries.
+                </td>
+            </tr>
+            <tr>
+                <td class="code first_col">SmartphoneReport</td>
+                <td>A simple report that generates an HTML file, which allows "drill down" to show more detail about
+                    observations. Suitable for smaller devices, such as smartphones.
+                </td>
+            </tr>
+            <tr>
+                <td class="code first_col">MobileReport</td>
+                <td>A super simple HTML file that just shows the basics. Suitable for low-powered or
+                    bandwidth-constrained devices.
+                </td>
+            </tr>
+            <tr>
                 <td class="code first_col">StandardReport</td>
-                <td>Generates day, week, month and year "to-date" summaries in HTML, as well as the plot images to go
-                    along with them. Also generates NOAA monthly and yearly summaries.
+                <td>This is an older report that has been used for many years in WeeWX. It generates day, week,
+                    month and year "to-date" summaries in HTML, as well as the plot images to go
+                    along with them. Also generates NOAA monthly and yearly summaries. It loads faster than
+                    the <em>Seasons</em> skin.
                 </td>
             </tr>
             <tr>
