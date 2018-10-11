@@ -885,10 +885,9 @@ Options:
   -h, --help            show this help message and exit
   --list                Show installed extensions.
   --install=FILENAME|DIRECTORY
-                        Install the extension contained in FILENAME or
-                        DIRECTORY. FILENAME must be an archive that contains a
-                        packaged extension such as pmon.tar.gz.  DIRECTORY is
-                        the result of extracting that archive.
+                        Install an extension contained in FILENAME  (such as
+                        pmon.tar.gz), or from a DIRECTORY in which it has been
+                        unpacked.
   --uninstall=EXTENSION
                         Uninstall the extension with name EXTENSION.
   --config=CONFIG_FILE  Use configuration file CONFIG_FILE.
@@ -902,7 +901,8 @@ Options:
 
         <h3>Action <span class="code">--install</span></h3>
         <p>Use this action to install an extension.  You must specify the
-            path to a .zip archive, a .tgz/.tar.gz archive, or a directory.</p>
+            path to a .zip archive, a .tgz/.tar.gz archive, or a directory. If a
+        directory, the extension must have been unpacked into it.</p>
 
         <pre class='tty cmd'>wee_extension --install=examples/basic
 wee_extension --install=basic.tar.gz</pre>
