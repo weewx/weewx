@@ -1,15 +1,11 @@
 weewx change history
 --------------------
 
-3.9.X YY/YY/YYYY
+3.9.0 MM/DD/YYYY
 
 New default skin called Seasons.
 
-The skin.conf is optional.  It is possible to specify the entire skin
-configuration in the weewx configuration, in which case the skin configuration
-is not necessary.
-
-Dropped support of Python 2.5 and 2.6. You must now use Python 2.7. This is
+Dropped support of Python 2.5. You must now use either Python 2.6 or 2.7. This is
 in anticipation of porting to Python 3.
 
 The image generator now supports the use of a 'stale_age' option. Thanks to
@@ -56,6 +52,10 @@ a specified min or max scale. Fixes issue #344.
 
 Fixed bug that prevented an optional data_binding from being used in tags
 when iterating over records. Fixes issue #345.
+
+The skin.conf is optional.  It is possible to specify the entire skin
+configuration in the weewx configuration, in which case the skin configuration
+is not necessary.
 
 
 3.8.3 MM/DD/YYYY
