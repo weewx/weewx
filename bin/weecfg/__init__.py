@@ -977,8 +977,7 @@ def update_to_v36(config_dict):
 def update_to_v39(config_dict):
     """Update a configuration file to V3.9
 
-    - New subsections [[default_options]], [[SeasonsReport]], [[SmartphoneReport]],
-    -   and [[MobileReport]]
+    - New subsections [[SeasonsReport]], [[SmartphoneReport]], and [[MobileReport]]
 
     """
 
@@ -992,7 +991,6 @@ def update_to_v39(config_dict):
         #
         # The logic below will put the subsections in the following order:
         #
-        #   [[default_options]]
         #   [[StandardReport]]
         #   [[SeasonsReport]]
         #   [[SmartphoneReport]]
@@ -1001,30 +999,6 @@ def update_to_v39(config_dict):
         #
         #  NB: For an upgrade, we want StandardReport first, because that's what the user is already using.
         #
-
-        if 'default_options' not in config_dict['StdReport']:
-            default_options_dict = configobj.ConfigObj(StringIO.StringIO("""[StdReport]
-
-    # Options in the default_options section apply to every report.
-    [[default_options]]
-        [[[Units]]]
-            [[[[Groups]]]]
-                # If uncommented and modified, these units will apply to every report
-                # group_altitude = foot
-                # group_speed = mile_per_hour
-                # group_speed2 = mile_per_hour
-                # group_pressure = inHg
-                # group_rain = inch
-                # group_rainrate = inch_per_hour
-                # group_temperature = degree_F
-                # group_degree_day = degree_F_day
-                group_time = unix_epoch     # Placeholder. Do not change"""))
-            config_dict.merge(default_options_dict)
-            # Due to a bug in ConfigObj, the section comment gets dropped. Add it back in.
-            config_dict['StdReport'].comments['default_options'] = ['',
-                                                                   '    # Options in the default_options section apply to every report.']
-            # Put the defaults section just before StandardReport
-            reorder_sections(config_dict['StdReport'], 'default_options', 'StandardReport')
 
         if 'SeasonsReport' not in config_dict['StdReport']:
             seasons_options_dict = configobj.ConfigObj(StringIO.StringIO("""[StdReport]

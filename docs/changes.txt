@@ -5,10 +5,6 @@ weewx change history
 
 New default skin called Seasons.
 
-Added 'default_options' section to StdReport.  Any stanzas defined in the
-default_options will be applied to every report.  This simplifies the
-customization of units, localization, and internationalization.
-
 The skin.conf is optional.  It is possible to specify the entire skin
 configuration in the weewx configuration, in which case the skin configuration
 is not necessary.

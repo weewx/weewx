@@ -348,6 +348,9 @@ class ConfigTest(unittest.TestCase):
         # First update, then merge:
         weecfg.update_and_merge(config_dict, template)
 
+        # with open('expected/weewx_user_expected.conf', 'wb') as fd:
+        #     config_dict.write(fd)
+
         self._check_against_expected(config_dict, 'expected/weewx_user_expected.conf')
 
     def test_driver_info(self):

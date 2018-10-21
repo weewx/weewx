@@ -1977,13 +1977,6 @@ longitude = -77.0366</pre>
                 <td>Description</td>
             </tr>
             <tr>
-                <td><span class="code">[[default_options]]</span></td>
-                <td>This is not really a "report," but rather a special section that specifies any default options that
-                    are to be applied to <em>all</em> skins. Unlike other sub-sections, it doesn't matter where this one
-                    appears under <span class="code">[StdReport]</span>.
-                </td>
-            </tr>
-            <tr>
                 <td><span class="code">[[SeasonsReport]]</span></td>
                 <td>A full-featured single-page skin. Statistics and plots are revealed by button presses.</td>
             </tr>
@@ -2015,9 +2008,7 @@ longitude = -77.0366</pre>
 
         <p>Order matters. The reports that generate HTML and images, that is, SeasonsReport, SmartphoneReport,
             MobileReport, and StandardReport, are run <em>first</em>, then the reports that move them to a webserver,
-            FTP and RSYNC, are run. This insures that report generation is done before the results are sent off. By
-            contrast, it does not matter where the special sub-section <span class="code">[[default_options]]</span> is
-            placed.
+            FTP and RSYNC, are run. This insures that report generation is done before the results are sent off.
         </p>
         <p>
             Details for how to customize reports are in the section <em><a href="customizing.htm#customizing_reports">Customizing
@@ -2052,31 +2043,14 @@ longitude = -77.0366</pre>
             results in each report running on each archive interval.
         </p>
 
-        <h3 class="config_section">[[default_options]]</h3>
-        <p>Options that are to be applied to <em>every</em> report are put here. For example, to have all reports in US
-            Customer units you would specify:
-        </p>
-        <pre class="code">
-    [[default_options]]
-        [[[Units]]]
-            [[[[Groups]]]]
-                group_altitude = foot
-                group_speed = mile_per_hour
-                group_speed2 = mile_per_hour
-                group_pressure = inHg
-                group_rain = inch
-                group_rainrate = inch_per_hour
-                group_temperature = degree_F
-                group_degree_day = degree_F_day
-                group_time = unix_epoch    # Placeholder. Do not change
-        </pre>
-
-        <h3 class="config_section">[[SeasonsReport]]<br/> [[SmartphoneReport]]<br/> [[MobileReport]]<br/>
+        <h3 class="config_section" id="stock_reports">[[SeasonsReport]]<br/> [[SmartphoneReport]]<br/> [[MobileReport]]<br/>
             [[StandardReport]]</h3>
 
         <p>These are the four reports that actually generate HTML files and plots. They all ship in the standard WeeWX
-            distribution. They all use US Customer units by default, which can be overridden in sub-section <span
-                class="code">[[default_options]]</span> above.
+            distribution. They all use US Customer units by default, but this can be changed by either editing their
+            respective <span class="code">skin.conf</span> configuration files, or
+            <a href="customizing.htm#overriding_from_weewx_conf">by overriding from
+            the main configuration file, <span class="code">weewx.conf</span></a>.
         </p>
         <p>They all have the following options in common.</p>
 

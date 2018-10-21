@@ -120,10 +120,6 @@ class StdReportEngine(threading.Thread):
 
         # Iterate over each requested report
         for report in self.config_dict['StdReport'].sections:
-            # The default settings section is not a report, so skip it
-            if report == 'default_options':
-                continue
-
             # See if this report is disabled
             enabled = to_bool(self.config_dict['StdReport'][report].get('enable', True))
             if not enabled:
@@ -180,11 +176,6 @@ class StdReportEngine(threading.Thread):
             # weewx.conf configuration file for all reports:
             for scalar in self.config_dict['StdReport'].scalars:
                 skin_dict[scalar] = self.config_dict['StdReport'][scalar]
-
-            # Inject any overrides from the default_options section.  This
-            # supports non-scalar, possibly nested, stanzas such as Units.
-            if 'default_options' in self.config_dict['StdReport']:
-                skin_dict.merge(self.config_dict['StdReport']['default_options'])
 
             # Now inject any overrides for this specific report:
             skin_dict.merge(self.config_dict['StdReport'][report])
