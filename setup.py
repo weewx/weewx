@@ -282,30 +282,20 @@ class weewx_sdist(sdist):
     def copy_file(self, f, install_dir, **kwargs):
         """Specialized version of copy_file that checks for stray passwords."""
 
-        # If this is the configuration file, then check it for passwords
+        # If this is the configuration file, check for passwords
         if f == 'weewx.conf':
             import configobj
             config = configobj.ConfigObj(f)
 
-            try:
-                password = config['StdReport']['FTP']['password']
-                sys.exit("\n*** FTP password found in configuration file. Aborting ***\n\n")
-            except KeyError:
-                pass
-
-            try:
-                password = config['StdRESTful']['Wunderground']['password']
-                if password != 'replace_me':
-                    sys.exit("\n*** Wunderground password found in configuration file. Aborting ***\n\n")
-            except KeyError:
-                pass
-
-            try:
-                password = config['StdRESTful']['PWSweather']['password']
-                if password != 'replace_me':
-                    sys.exit("\n*** PWSweather password found in configuration file. Aborting ***\n\n")
-            except KeyError:
-                pass
+            for section in ['StdRESTful', 'StdReport']:
+                for subsection in config[section].sections:
+                    try:
+                        password = config[section][subsection]['password']
+                        if password != 'replace_me':
+                            sys.exit("\n*** [%s][[%s]] password found in configuration file. Aborting ***\n\n" \
+                                     % (section, subsection))
+                    except KeyError:
+                        pass
 
         # Pass on to my superclass:
         return sdist.copy_file(self, f, install_dir, **kwargs)
