@@ -1040,6 +1040,18 @@ sudo /etc/init.d/weewx start</pre>
             by the installation process. Required. No default.
         </p>
 
+        <p class="config_option">log_success</p>
+
+        <p>If set to <span class="code">true</span>, the default will be to log a successful operation (for example,
+            the completion of a report, or uploading to the Weather Underground, <i>etc</i>.) to the
+             system log. Default is <span class="code">true</span>.</p>
+
+        <p class="config_option">log_failure</p>
+
+        <p>If set to <span class="code">true</span>, the default will be to log an unsuccessful operation (for example,
+            failure to generate a report, or failure to upload to the Weather Underground, <i>etc</i>.) to the
+            system log. Default is <span class="code">true</span>.</p>
+
         <p class="config_option">socket_timeout</p>
 
         <p>Set to how long to wait before declaring a socket time out. This is used when using FTP to send data to a web
