@@ -53,6 +53,9 @@ a specified min or max scale. Fixes issue #344.
 Fixed bug that prevented an optional data_binding from being used in tags
 when iterating over records. Fixes issue #345.
 
+Examples lowBattery and alarm now try SMTP_SSL connections, then degrade if
+that's not available. Fixes issue #351.
+
 The skin.conf is optional.  It is possible to specify the entire skin
 configuration in the weewx configuration, in which case the skin configuration
 is not necessary.

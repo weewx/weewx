@@ -143,18 +143,24 @@ class MyAlarm(StdService):
         msg['From']    = self.FROM
         msg['To']      = ','.join(self.TO)
         
-        # Create an instance of class SMTP for the given SMTP host:
-        s = smtplib.SMTP(self.smtp_host)
         try:
-            # Some servers (eg, gmail) require encrypted transport.
-            # Be prepared to catch an exception if the server
-            # doesn't support it.
-            s.ehlo()
-            s.starttls()
-            s.ehlo()
-            syslog.syslog(syslog.LOG_DEBUG, "alarm: using encrypted transport")
-        except smtplib.SMTPException:
-            syslog.syslog(syslog.LOG_DEBUG, "alarm: using unencrypted transport")
+            # First try end-to-end encryption
+            s=smtplib.SMTP_SSL(self.smtp_host)
+            syslog.syslog(syslog.LOG_DEBUG, "alarm: using SMTP_SSL")
+        except AttributeError:
+            # If that doesn't work, try creating an insecure host, then upgrading
+            s = smtplib.SMTP(self.smtp_host)
+            try:
+                # Be prepared to catch an exception if the server
+                # does not support encrypted transport.
+                s.ehlo()
+                s.starttls()
+                s.ehlo()
+                syslog.syslog(syslog.LOG_DEBUG,
+                              "alarm: using SMTP encrypted transport")
+            except smtplib.SMTPException:
+                syslog.syslog(syslog.LOG_DEBUG,
+                              "alarm: using SMTP unencrypted transport")
 
         try:
             # If a username has been given, assume that login is required for this host:
