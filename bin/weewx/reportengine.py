@@ -39,11 +39,11 @@ MONTH_NAMES = ('jan', 'feb', 'mar', 'apr', 'may', 'jun',
                'jul', 'aug', 'sep', 'oct', 'nov', 'dec')
 # map month names to month number
 MONTH_NAME_MAP = list(zip(('jan', 'feb', 'mar', 'apr',
-                      'may', 'jun', 'jul', 'aug',
-                      'sep', 'oct', 'nov', 'dec'), list(range(1, 13))))
+                           'may', 'jun', 'jul', 'aug',
+                           'sep', 'oct', 'nov', 'dec'), list(range(1, 13))))
 # map day names to day number
 DAY_NAME_MAP = list(zip(('sun', 'mon', 'tue', 'wed',
-                    'thu', 'fri', 'sat'), list(range(7))))
+                         'thu', 'fri', 'sat'), list(range(7))))
 # map CRON like nicknames to equivalent CRON like line
 NICKNAME_MAP = {
     "@yearly": "0 0 1 1 *",
@@ -52,7 +52,7 @@ NICKNAME_MAP = {
     "@weekly": "0 0 * * 0",
     "@daily": "0 0 * * *",
     "@hourly": "0 * * * *"
-    }
+}
 # list of valid spans for CRON like fields
 SPANS = (MINUTES, HOURS, DOM, MONTHS, DOW)
 # list of valid names for CRON lik efields
@@ -144,21 +144,21 @@ class StdReportEngine(threading.Thread):
             # in the weewx configuration.
             try:
                 skin_dict = configobj.ConfigObj(skin_config_path, file_error=True)
-                syslog.syslog(
-                    syslog.LOG_DEBUG,
-                    "reportengine: Found configuration file %s for report %s" %
-                    (skin_config_path, report))
+                syslog.syslog(syslog.LOG_DEBUG,
+                              "reportengine: "
+                              "Found configuration file %s for report %s"
+                              % (skin_config_path, report))
             except IOError as e:
-                syslog.syslog(
-                    syslog.LOG_DEBUG, "reportengine: "
-                    "Cannot read skin configuration file %s for report %s: %s"
-                    % (skin_config_path, report, e))
+                syslog.syslog(syslog.LOG_DEBUG,
+                              "reportengine: "
+                              "Cannot read skin configuration file %s for report %s: %s"
+                              % (skin_config_path, report, e))
                 skin_dict = configobj.ConfigObj()
             except SyntaxError as e:
-                syslog.syslog(
-                    syslog.LOG_ERR, "reportengine: "
-                                    "Failed to read skin configuration file %s for report %s: %s"
-                                    % (skin_config_path, report, e))
+                syslog.syslog(syslog.LOG_ERR,
+                              "reportengine: "
+                              "Failed to read skin configuration file %s for report %s: %s"
+                              % (skin_config_path, report, e))
                 syslog.syslog(syslog.LOG_ERR, "        ****  Report ignored")
                 continue
 
@@ -214,7 +214,9 @@ class StdReportEngine(threading.Thread):
                             continue
                     else:
                         syslog.syslog(syslog.LOG_DEBUG,
-                                      "reportengine: Invalid report_timing setting for report '%s', running report anyway" % report)
+                                      "reportengine: "
+                                      "Invalid report_timing setting for report '%s', "
+                                      "running report anyway" % report)
                         syslog.syslog(syslog.LOG_DEBUG, "        ****  %s" % timing.validation_error)
 
             for generator in weeutil.weeutil.option_as_list(skin_dict['Generators'].get('generator_list')):
@@ -327,7 +329,7 @@ class FtpGenerator(ReportGenerator):
         except (socket.timeout, socket.gaierror, ftplib.all_errors, IOError) as e:
             (cl, unused_ob, unused_tr) = sys.exc_info()
             syslog.syslog(syslog.LOG_ERR, "ftpgenerator: "
-                          "Caught exception %s: %s" % (cl, e))
+                                          "Caught exception %s: %s" % (cl, e))
             weeutil.weeutil.log_traceback("        ****  ")
             return
 
@@ -696,9 +698,9 @@ class ReportTiming(object):
                 # construct a tuple so we can iterate over and process each
                 # field
                 element_tuple = list(zip((minute, hour, day, month, dow),
-                                    self.line,
-                                    SPANS,
-                                    self.decode))
+                                         self.line,
+                                         SPANS,
+                                         self.decode))
                 # Iterate over each field and check if it will prevent
                 # triggering. Remember, we only need a match on either DOM or
                 # DOW but all other fields must match.
