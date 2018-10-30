@@ -245,7 +245,7 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
         # a predictable result.
         os.chdir(os.path.join(self.config_dict['WEEWX_ROOT'],
                               self.skin_dict['SKIN_ROOT'],
-                              self.skin_dict['skin']))
+                              self.skin_dict.get('skin', '')))
 
         report_dict = weeutil.weeutil.accumulateLeaves(section)
         

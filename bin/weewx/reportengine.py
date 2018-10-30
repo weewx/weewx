@@ -124,7 +124,7 @@ class StdReportEngine(threading.Thread):
             enabled = to_bool(self.config_dict['StdReport'][report].get('enable', True))
             if not enabled:
                 syslog.syslog(syslog.LOG_DEBUG,
-                              "reportengine: Skipping report %s" % report)
+                              "reportengine: Report %s not enabled. Skipping." % report)
                 continue
 
             syslog.syslog(syslog.LOG_DEBUG,
@@ -135,7 +135,7 @@ class StdReportEngine(threading.Thread):
             skin_config_path = os.path.join(
                 self.config_dict['WEEWX_ROOT'],
                 self.config_dict['StdReport']['SKIN_ROOT'],
-                self.config_dict['StdReport'][report].get('skin', 'Standard'),
+                self.config_dict['StdReport'][report].get('skin', ''),
                 'skin.conf')
 
             # Retrieve the configuration dictionary for the skin. Wrap it in
@@ -185,10 +185,10 @@ class StdReportEngine(threading.Thread):
 
             # Default action is to run the report. Only reason to not run it is
             # if we have a valid report report_timing and it did not trigger.
-            if self.record is not None:
+            if self.record:
                 # StdReport called us not wee_reports so look for a report_timing
                 # entry if we have one.
-                timing_line = skin_dict.get('report_timing', None)
+                timing_line = skin_dict.get('report_timing')
                 # The report_timing entry might have one or more comma separated
                 # values which ConfigObj would interpret as a list. If so then
                 # reconstruct our report_timing entry.
