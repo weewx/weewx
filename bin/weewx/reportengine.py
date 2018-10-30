@@ -533,9 +533,9 @@ class ReportTiming(object):
         # Is DOW restricted ie is DOW not '*'
         self.dow_restrict = self.line[4] != '*'
         # Decode the line and generate a set of possible values for each field
-        (self.is_valid, self.validation_error) = self.decode()
+        (self.is_valid, self.validation_error) = self.decode_fields()
 
-    def decode(self):
+    def decode_fields(self):
         """Decode each field and store the sets of valid values.
 
         Set of valid values is stored in self.decode. Self.decode can only be
