@@ -991,20 +991,23 @@ class Vantage(weewx.drivers.AbstractDevice):
         else:
             new_type_bits = ((new_repeater + 7) << 4) | (new_transmitter_type & 0x0F)
         
-        # Transmitter type 10 is "none"; turn off listening too.
+        # A transmitter type of 10 indicates that channel does not have a transmitter.
+        # So, turn off its usetx bit as well. Otherwise, turn it on.
         usetx = 1 if new_transmitter_type != 10 else 0
         old_usetx_bits = self._getEEPROM_value(0x17)[0]
-        new_usetx_bits = old_usetx_bits & ~(1 << (new_channel - 1)) | usetx * (1 << new_channel - 1)
+        new_usetx_bits = old_usetx_bits & ~(1 << (new_channel - 1)) | usetx * (1 << (new_channel - 1))
         
-        # Tell the console to put two bytes in hex location 0x19 or 0x1B or ... depending on channel.
-        self.port.send_data(b"EEBWR %X 02\n" % (0x19 + (new_channel - 1) * 2))
-        # Follow it up with the data:
+        # Each channel uses two bytes. Find the correct starting byte for this channel
+        start_byte = 0x19 + (new_channel - 1) * 2
+        # Tell the console to put two bytes in that location.
+        self.port.send_data(b"EEBWR %X 02\n" % start_byte)
+        # Follow it up with the two bytes of data, little-endian order:
         self.port.send_data_with_crc16(struct.pack('<BB', new_type_bits, new_temp_hum_bits), max_tries=1)
-        # Tell the console to put one byte in hex location 0x17
+        # Now tell the console to put the one byte "usetx" in hex location 0x17
         self.port.send_data(b"EEBWR 17 01\n")
-        # Follow it up with the data:
+        # Follow it up with the usetx data:
         self.port.send_data_with_crc16(struct.pack('>B', new_usetx_bits), max_tries=1)
-        # Then call NEWSETUP to get it to stick:
+        # Then call NEWSETUP to get it all to stick:
         self.port.send_data(b"NEWSETUP\n")
         
         self._setup()
