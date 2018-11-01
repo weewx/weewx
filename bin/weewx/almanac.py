@@ -97,6 +97,10 @@ class Almanac(object):
     >>> print "Rigel rise, transit, set:", almanac.rigel.rise, almanac.rigel.transit, almanac.rigel.set 
     Rigel rise, transit, set: 12:32 18:00 23:28
 
+    Exercise sidereal time
+    >>> print almanac.sidereal_time
+    348.340037436
+
     Exercise equinox, solstice routines
     >>> print almanac.next_vernal_equinox
     20-Mar-2010 10:32
@@ -308,11 +312,12 @@ class Almanac(object):
             djd = getattr(ephem, attr)(self.time_djd)
             return weewx.units.ValueHelper((djd, "dublin_jd", "group_time"), 
                                            context="ephem_year", formatter=self.formatter)
-        # Check to see if it is an observer attribute
-        elif attr in ['sidereal_time']:
-            # These functions require the time of the observation
+        # Check to see if the attribute is sidereal time
+        elif attr == 'sidereal_time':
+            # sidereal time is obtained from an ephem Observer method, first get
+            # an Observer object
             observer = _get_observer(self, self.time_djd)
-            # Call the function
+            # Then call the method returning the result in degrees
             return math.degrees(getattr(observer, attr)())
         else:
             # The attribute must be a heavenly body (such as 'sun', or 'jupiter').
