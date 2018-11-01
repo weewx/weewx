@@ -124,11 +124,11 @@ class StdReportEngine(threading.Thread):
             enabled = to_bool(self.config_dict['StdReport'][report].get('enable', True))
             if not enabled:
                 syslog.syslog(syslog.LOG_DEBUG,
-                              "reportengine: Report %s not enabled. Skipping." % report)
+                              "reportengine: Report '%s' not enabled. Skipping." % report)
                 continue
 
             syslog.syslog(syslog.LOG_DEBUG,
-                          "reportengine: Running report %s" % report)
+                          "reportengine: Running report '%s'" % report)
 
             # Figure out where the configuration file is for the skin used for
             # this report:
@@ -146,18 +146,18 @@ class StdReportEngine(threading.Thread):
                 skin_dict = configobj.ConfigObj(skin_config_path, file_error=True)
                 syslog.syslog(syslog.LOG_DEBUG,
                               "reportengine: "
-                              "Found configuration file %s for report %s"
+                              "Found configuration file %s for report '%s'"
                               % (skin_config_path, report))
             except IOError as e:
                 syslog.syslog(syslog.LOG_DEBUG,
                               "reportengine: "
-                              "Cannot read skin configuration file %s for report %s: %s"
+                              "Cannot read skin configuration file %s for report '%s': %s"
                               % (skin_config_path, report, e))
                 skin_dict = configobj.ConfigObj()
             except SyntaxError as e:
                 syslog.syslog(syslog.LOG_ERR,
                               "reportengine: "
-                              "Failed to read skin configuration file %s for report %s: %s"
+                              "Failed to read skin configuration file %s for report '%s': %s"
                               % (skin_config_path, report, e))
                 syslog.syslog(syslog.LOG_ERR, "        ****  Report ignored")
                 continue
@@ -168,9 +168,9 @@ class StdReportEngine(threading.Thread):
             # Default to logging to whatever is specified at the root level
             # of weewx.conf, or true if nothing specified:
             skin_dict.setdefault('log_success',
-                                 self.config_dict.get('log_success', True))
+                                 to_bool(self.config_dict.get('log_success', True)))
             skin_dict.setdefault('log_failure',
-                                 self.config_dict.get('log_failure', True))
+                                 to_bool(self.config_dict.get('log_failure', True)))
 
             # Inject any overrides the user may have specified in the
             # weewx.conf configuration file for all reports:
@@ -209,7 +209,7 @@ class StdReportEngine(threading.Thread):
                             # report timing was valid but not triggered so do
                             # not run the report.
                             syslog.syslog(syslog.LOG_DEBUG,
-                                          "reportengine: Report %s skipped due to report_timing setting" %
+                                          "reportengine: Report '%s' skipped due to report_timing setting" %
                                           (report,))
                             continue
                     else:
@@ -233,7 +233,7 @@ class StdReportEngine(threading.Thread):
                 except Exception, e:
                     syslog.syslog(
                         syslog.LOG_CRIT, "reportengine: "
-                                         "Unable to instantiate generator %s" % generator)
+                                         "Unable to instantiate generator '%s'" % generator)
                     syslog.syslog(syslog.LOG_CRIT, "        ****  %s" % e)
                     weeutil.weeutil.log_traceback("        ****  ")
                     syslog.syslog(syslog.LOG_CRIT, "        ****  Generator ignored")
@@ -249,7 +249,7 @@ class StdReportEngine(threading.Thread):
                     # next generator.
                     syslog.syslog(
                         syslog.LOG_CRIT, "reportengine: "
-                                         "Caught unrecoverable exception in generator %s"
+                                         "Caught unrecoverable exception in generator '%s'"
                                          % generator)
                     syslog.syslog(syslog.LOG_CRIT, "        ****  %s" % str(e))
                     weeutil.weeutil.log_traceback("        ****  ")
