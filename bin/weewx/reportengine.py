@@ -60,7 +60,6 @@ NAMES = ((), (), (), MONTH_NAMES, DAY_NAMES)
 # list of name maps for CRON like fields
 MAPS = ((), (), (), MONTH_NAME_MAP, DAY_NAME_MAP)
 
-
 # =============================================================================
 #                    Class StdReportEngine
 # =============================================================================
@@ -130,58 +129,12 @@ class StdReportEngine(threading.Thread):
             syslog.syslog(syslog.LOG_DEBUG,
                           "reportengine: Running report '%s'" % report)
 
-            # Figure out where the configuration file is for the skin used for
-            # this report:
-            skin_config_path = os.path.join(
-                self.config_dict['WEEWX_ROOT'],
-                self.config_dict['StdReport']['SKIN_ROOT'],
-                self.config_dict['StdReport'][report].get('skin', ''),
-                'skin.conf')
-
-            # Retrieve the configuration dictionary for the skin. Wrap it in
-            # a try block in case we fail.  It is ok if there is no skin
-            # configuration file - everything for a skin might be defined
-            # in the weewx configuration.
+            # Fetch and build the skin_dict:
             try:
-                skin_dict = configobj.ConfigObj(skin_config_path, file_error=True)
-                syslog.syslog(syslog.LOG_DEBUG,
-                              "reportengine: "
-                              "Found configuration file %s for report '%s'"
-                              % (skin_config_path, report))
-            except IOError as e:
-                syslog.syslog(syslog.LOG_DEBUG,
-                              "reportengine: "
-                              "Cannot read skin configuration file %s for report '%s': %s"
-                              % (skin_config_path, report, e))
-                skin_dict = configobj.ConfigObj()
-            except SyntaxError as e:
-                syslog.syslog(syslog.LOG_ERR,
-                              "reportengine: "
-                              "Failed to read skin configuration file %s for report '%s': %s"
-                              % (skin_config_path, report, e))
+                skin_dict = self._build_skin_dict(report)
+            except SyntaxError:
                 syslog.syslog(syslog.LOG_ERR, "        ****  Report ignored")
                 continue
-
-            # Add the default database binding:
-            skin_dict.setdefault('data_binding', 'wx_binding')
-
-            # Default to logging to whatever is specified at the root level
-            # of weewx.conf, or true if nothing specified:
-            skin_dict.setdefault('log_success',
-                                 to_bool(self.config_dict.get('log_success', True)))
-            skin_dict.setdefault('log_failure',
-                                 to_bool(self.config_dict.get('log_failure', True)))
-
-            # Inject any overrides the user may have specified in the
-            # weewx.conf configuration file for all reports:
-            for scalar in self.config_dict['StdReport'].scalars:
-                skin_dict[scalar] = self.config_dict['StdReport'][scalar]
-
-            # Now inject any overrides for this specific report:
-            skin_dict.merge(self.config_dict['StdReport'][report])
-
-            # Finally, add the report name:
-            skin_dict['REPORT_NAME'] = report
 
             # Default action is to run the report. Only reason to not run it is
             # if we have a valid report report_timing and it did not trigger.
@@ -259,6 +212,63 @@ class StdReportEngine(threading.Thread):
 
                 finally:
                     obj.finalize()
+
+    def _build_skin_dict(self, report):
+        """Find and build the skin_dict for the given report"""
+
+        # Figure out where the configuration file is for the skin used by
+        # this report:
+        skin_config_path = os.path.join(
+            self.config_dict['WEEWX_ROOT'],
+            self.config_dict['StdReport']['SKIN_ROOT'],
+            self.config_dict['StdReport'][report].get('skin', ''),
+            'skin.conf')
+
+        # Retrieve the configuration dictionary for the skin. Wrap it in
+        # a try block in case we fail.  It is ok if there is no skin
+        # configuration file - everything for a skin might be defined
+        # in the weewx configuration.
+        try:
+            skin_dict = configobj.ConfigObj(skin_config_path, file_error=True)
+            syslog.syslog(syslog.LOG_DEBUG,
+                          "reportengine: "
+                          "Found configuration file %s for report '%s'"
+                          % (skin_config_path, report))
+        except IOError as e:
+            syslog.syslog(syslog.LOG_DEBUG,
+                          "reportengine: "
+                          "Cannot read skin configuration file %s for report '%s': %s"
+                          % (skin_config_path, report, e))
+            skin_dict = configobj.ConfigObj()
+        except SyntaxError as e:
+            syslog.syslog(syslog.LOG_ERR,
+                          "reportengine: "
+                          "Failed to read skin configuration file %s for report '%s': %s"
+                          % (skin_config_path, report, e))
+            raise
+
+        # Add the default database binding:
+        skin_dict.setdefault('data_binding', 'wx_binding')
+
+        # Default to logging to whatever is specified at the root level
+        # of weewx.conf, or true if nothing specified:
+        skin_dict.setdefault('log_success',
+                             to_bool(self.config_dict.get('log_success', True)))
+        skin_dict.setdefault('log_failure',
+                             to_bool(self.config_dict.get('log_failure', True)))
+
+        # Inject any overrides the user may have specified in the
+        # weewx.conf configuration file for all reports:
+        for scalar in self.config_dict['StdReport'].scalars:
+            skin_dict[scalar] = self.config_dict['StdReport'][scalar]
+
+        # Now inject any overrides for this specific report:
+        skin_dict.merge(self.config_dict['StdReport'][report])
+
+        # Finally, add the report name:
+        skin_dict['REPORT_NAME'] = report
+
+        return skin_dict
 
 
 # =============================================================================
