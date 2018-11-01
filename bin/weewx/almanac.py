@@ -308,10 +308,16 @@ class Almanac(object):
             djd = getattr(ephem, attr)(self.time_djd)
             return weewx.units.ValueHelper((djd, "dublin_jd", "group_time"), 
                                            context="ephem_year", formatter=self.formatter)
+        # Check to see if it is an observer attribute
+        elif attr in ['sidereal_time']:
+            # These functions require the time of the observation
+            observer = _get_observer(self, self.time_djd)
+            # Call the function
+            return math.degrees(getattr(observer, attr)())
         else:
-            # It's not a calendar event. The attribute must be a heavenly body
-            # (such as 'sun', or 'jupiter'). Bind the almanac and the heavenly body
-            # together and return as an AlmanacBinder
+            # The attribute must be a heavenly body (such as 'sun', or 'jupiter').
+            # Bind the almanac and the heavenly body together and return as an
+            # AlmanacBinder
             return AlmanacBinder(self, attr)
 
 fn_map = {'rise'    : 'next_rising',
@@ -363,7 +369,7 @@ class AlmanacBinder(object):
             # is not necessarily the *next* sunrise.
             attr = fn_map[attr]
             # These functions require the time at the start of day
-            observer = self._get_observer(self.sod_djd)
+            observer = _get_observer(self, self.sod_djd)
             # Call the function. Be prepared to catch an exception if the body is always up.
             try:
                 if attr in ['next_rising', 'next_setting']:
@@ -377,7 +383,7 @@ class AlmanacBinder(object):
         elif attr in ['next_rising', 'next_setting', 'next_transit', 'next_antitransit',
                       'previous_rising', 'previous_setting', 'previous_transit', 'previous_antitransit']:
             # These functions require the time of the observation
-            observer = self._get_observer(self.time_djd)
+            observer = _get_observer(self, self.time_djd)
             # Call the function. Be prepared to catch an exception if the body is always up.
             try:
                 if attr in ['next_rising', 'next_setting', 'previous_rising', 'previous_setting']:
@@ -387,9 +393,10 @@ class AlmanacBinder(object):
             except (ephem.AlwaysUpError, ephem.NeverUpError):
                 time_djd = None
             return weewx.units.ValueHelper((time_djd, "dublin_jd", "group_time"), context="ephem_day", formatter=self.formatter)
+
         else:
             # These functions need the current time in Dublin Julian Days
-            observer = self._get_observer(self.time_djd)
+            observer = _get_observer(self, self.time_djd)
             ephem_body.compute(observer)
             if attr in ['az', 'alt', 'a_ra', 'a_dec', 'g_ra', 'ra', 'g_dec', 'dec', 
                         'elong', 'radius', 'hlong', 'hlat', 'sublat', 'sublong']:
@@ -404,19 +411,19 @@ class AlmanacBinder(object):
                 # Just return the result unchanged. This will raise an AttributeError exception
                 # if the attribute does not exist.
                 return getattr(ephem_body, attr)
-        
-    def _get_observer(self, time_ts):
-        # Build an ephem Observer object
-        observer           = ephem.Observer()
-        observer.lat       = math.radians(self.lat)
-        observer.long      = math.radians(self.lon)
-        observer.elevation = self.altitude
-        observer.horizon   = math.radians(self.horizon)
-        observer.temp      = self.temperature
-        observer.pressure  = self.pressure
-        observer.date      = time_ts
-        return observer
-        
+
+def _get_observer(almanac_obj, time_ts):
+    # Build an ephem Observer object
+    observer           = ephem.Observer()
+    observer.lat       = math.radians(almanac_obj.lat)
+    observer.long      = math.radians(almanac_obj.lon)
+    observer.elevation = almanac_obj.altitude
+    observer.horizon   = math.radians(almanac_obj.horizon)
+    observer.temp      = almanac_obj.temperature
+    observer.pressure  = almanac_obj.pressure
+    observer.date      = time_ts
+    return observer
+
 def _get_ephem_body(heavenly_body):
     # The library 'ephem' refers to heavenly bodies using a capitalized
     # name. For example, the module used for 'mars' is 'ephem.Mars'.
