@@ -1877,11 +1877,14 @@ Sunrise, sunset: $almanac.sunrise $almanac.sunset
 
         <p>
             "Calendar events" do not require a heavenly body. They cover things such as <span
-            class="code">next_solstice</span>, or <span class="code">next_first_quarter_moon</span>. The syntax here is
+            class="code">next_solstice</span>, <span class="code">next_first_quarter_moon</span> 
+            or <span class="code">sidereal_time</span>. The syntax here is:
         </p>
         <pre class="tty">$almanac.next_solstice</pre>
         <p>or</p>
         <pre class="tty">$almanac.next_first_quarter_moon</pre>
+        <p>or</p>
+        <pre class="tty">$almanac.sidereal_time</pre>
         <p>Here is a table of the information that falls into this category:</p>
         <table class="indent" style="width: 60%">
             <caption>Calendar events</caption>
@@ -1916,8 +1919,20 @@ Sunrise, sunset: $almanac.sunrise $almanac.sunset
                 <td>previous_last_quarter_moon</td>
                 <td>next_last_quarter_moon</td>
             </tr>
+            <tr>
+                <td>sidereal_time</td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
             </tbody>
         </table>
+
+        <p class="note" style="display: inline-block">
+            <strong>Note</strong><br/>The tag <span class="code">$almanac.sidereal_time</span> returns a value in
+            decimal degrees rather than a customary value from 0 to 24 hours.
+        </p>
+
         <h4>Heavenly bodies</h4>
 
         <p>The second category does require a heavenly body. This covers queries such as, "When does Jupiter rise?" or,
@@ -2010,6 +2025,12 @@ Sunrise, sunset: $almanac.sunrise $almanac.sunset
             </tbody>
         </table>
 
+        <p class="note" style="display: inline-block">
+            <strong>Note</strong><br/>The tags <span class="code">ra</span>, <span class="code">a_ra</span> and 
+            <span class="code">g_ra</span> return values in decimal degrees rather than customary values from
+            0 to 24 hours.
+        </p>
+        
         <h4>Functions</h4>
         <p>There is actually one one function in this category: <span class="code">separation</span>. It returns the
             angular separation between two heavenly bodies. For example, to calculate the angular separation between
