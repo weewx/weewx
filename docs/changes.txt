@@ -3,6 +3,8 @@ weewx change history
 
 3.9.0 MM/DD/YYYY
 
+New $almanac.sidereal_time tag to provide current sidereal time
+
 New default skin called Seasons.
 
 Dropped support of Python 2.5. You must now use either Python 2.6 or 2.7. This is
