@@ -36,17 +36,13 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
         self.title_dict = self.skin_dict.get('Labels', {}).get('Generic', {})
         self.formatter  = weewx.units.Formatter.fromSkinDict(self.skin_dict)
         self.converter  = weewx.units.Converter.fromSkinDict(self.skin_dict)
-        # determine how much logging is desired
-        self.log_success = to_bool(self.image_dict.get('log_success', True))
         # ensure that the skin_dir is in the image_dict
         self.image_dict['skin_dir'] = os.path.join(
             self.config_dict['WEEWX_ROOT'],
             self.skin_dict['SKIN_ROOT'],
             self.skin_dict['skin'])
         # ensure that we are in a consistent right location
-        os.chdir(os.path.join(self.config_dict['WEEWX_ROOT'],
-                              self.skin_dict['SKIN_ROOT'],
-                              self.skin_dict['skin']))
+        os.chdir(self.image_dict['skin_dir'])
 
     def genImages(self, gen_ts):
         """Generate the images.
@@ -70,9 +66,6 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                 # Accumulate all options from parent nodes:
                 plot_options = weeutil.weeutil.accumulateLeaves(
                     self.image_dict[timespan][plotname])
-
-                # FIXME: is this necessary?  does not accumulateLeaves do it?
-                plot_options['skin_dir'] = self.image_dict['skin_dir']
 
                 plotgen_ts = gen_ts
                 if not plotgen_ts:
@@ -262,7 +255,7 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                     syslog.syslog(syslog.LOG_CRIT, "imagegenerator: Unable to save to file '%s' %s:" % (img_file, e))
         t2 = time.time()
 
-        if self.log_success:
+        if self.skin_dict.get('log_success', True):
             syslog.syslog(syslog.LOG_INFO, "imagegenerator: Generated %d images for %s in %.2f seconds" % (ngen, self.skin_dict['REPORT_NAME'], t2 - t1))
 
 def skipThisPlot(time_ts, aggregate_interval, img_file):
