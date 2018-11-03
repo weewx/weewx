@@ -210,6 +210,7 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                     width = to_int(line_options.get('width'))
 
                     interval_vec = None
+                    gap_fraction = None
 
                     # Some plot types require special treatments:
                     if plot_type == 'vector':
@@ -218,7 +219,6 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                     else:
                         vector_rotate = None
 
-                        gap_fraction = None
                         if plot_type == 'bar':
                             interval_vec = [x[1] - x[0]for x in zip(new_start_vec_t.value, new_stop_vec_t.value)]
                         elif plot_type == 'line':
