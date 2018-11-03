@@ -669,7 +669,7 @@ class CachedValues(object):
                     self.unit_system = packet['usUnits']
                 elif packet['usUnits'] != self.unit_system:
                     raise ValueError("Mixed units encountered in cache. %s vs %s" % \
-                                     (self.unit_sytem, packet['usUnits']))
+                                     (self.unit_system, packet['usUnits']))
             else:
                 # cache each value, associating it with the it was cached
                 self.values[k] = {'value': packet[k], 'ts': ts}
