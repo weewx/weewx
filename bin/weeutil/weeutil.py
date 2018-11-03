@@ -133,6 +133,43 @@ def accumulateLeaves(d, max_level=99):
     return cum_dict
 
 
+def merge(self_dict, indict):
+    """
+    A more useful recursive merge for configobj. The one that comes with configobj does not
+    set parent and comments correctly.
+
+    >>> a = '''[section1]
+    ...     option1 = True
+    ...     [[subsection]]
+    ...     more_options = False
+    ...     # end of file'''.splitlines()
+    >>> b = '''# File is user.ini
+    ...     [section1]
+    ...     option1 = False
+    ...     # end of file'''.splitlines()
+    >>> c1 = ConfigObj(b)
+    >>> c2 = ConfigObj(a)
+    >>> c2.merge(c1)
+    >>> c2
+    ConfigObj({'section1': {'option1': 'False', 'subsection': {'more_options': 'False'}}})
+    """
+    from configobj import ConfigObj, Section
+
+    for key, val in list(indict.items()):
+        if (key in self_dict and isinstance(self_dict[key], dict) and
+                isinstance(val, dict)):
+            self_dict[key].merge(val)
+        else:
+            if isinstance(self_dict, Section) and isinstance(val, Section):
+                self_dict[key] = Section(self_dict,
+                                         self_dict.depth + 1,
+                                         self_dict.main,
+                                         indict=val.dict(),
+                                         name=key)
+            else:
+                self_dict[key] = val
+
+
 def conditional_merge(a_dict, b_dict):
     """Merge fields from b_dict into a_dict, but only if they do not yet
     exist in a_dict"""

@@ -216,6 +216,10 @@ class StdReportEngine(threading.Thread):
     def _build_skin_dict(self, report):
         """Find and build the skin_dict for the given report"""
 
+        # Start with the defaults in weewx.conf (if any). Make a copy as we will
+        # be modifying it
+        skin_dict = configobj.ConfigObj(self.config_dict.get('Defaults',{}))
+
         # Figure out where the configuration file is for the skin used by
         # this report:
         skin_config_path = os.path.join(
@@ -229,17 +233,19 @@ class StdReportEngine(threading.Thread):
         # configuration file - everything for a skin might be defined
         # in the weewx configuration.
         try:
-            skin_dict = configobj.ConfigObj(skin_config_path, file_error=True)
+            merge_dict = configobj.ConfigObj(skin_config_path, file_error=True)
             syslog.syslog(syslog.LOG_DEBUG,
                           "reportengine: "
                           "Found configuration file %s for report '%s'"
                           % (skin_config_path, report))
+            # Merge into the settings from weewx.conf
+            weeutil.weeutil.merge(skin_dict, merge_dict)
+            # skin_dict.merge(merge_dict)
         except IOError as e:
             syslog.syslog(syslog.LOG_DEBUG,
                           "reportengine: "
                           "Cannot read skin configuration file %s for report '%s': %s"
                           % (skin_config_path, report, e))
-            skin_dict = configobj.ConfigObj()
         except SyntaxError as e:
             syslog.syslog(syslog.LOG_ERR,
                           "reportengine: "
