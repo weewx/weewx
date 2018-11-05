@@ -21,6 +21,9 @@ New tag $almanac.separation() for calculating planet separations.
 
 StdQC now includes an entry for rain again (inexplicably removed in v3.1.0).
 
+If software record generation is used, the archive interval is now what is
+specified in weewx.conf, even if the station supports hardware generation.
+
 The tag formatting taxonomy has been simplified. Just use suffix ".format()" now.
 Documentation updated to reflect changes. Backwards compatibility with old
 suffixes is supported. Fixes issue #328.
