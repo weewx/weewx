@@ -8,18 +8,6 @@
    Works under Python 2 and Python 3.
 """
 
-#
-#                       IMPORTANT!
-#
-#  To run the doctest tests, this function must be run as a module. Do this:
-#
-#    python -m weeutil.weeutil
-#
-#  NOT THIS
-#
-#    python weeutil/weeutil.py
-#
-
 from __future__ import print_function
 
 import calendar
@@ -30,8 +18,12 @@ import struct
 import syslog
 import time
 import traceback
-
-from . import Sun
+try:
+    # Python 2
+    from StringIO import StringIO
+except ImportError:
+    # Python 3
+    from io import StringIO
 
 
 def convertToFloat(seq):
@@ -133,42 +125,46 @@ def accumulateLeaves(d, max_level=99):
     return cum_dict
 
 
-def merge(self_dict, indict):
+def merge_config(self_config, indict):
+    """Merge and patch a config file"""
+
+    self_config.merge(indict)
+    patch_config(self_config, indict)
+
+
+def patch_config(self_config, indict):
+    """The ConfigObj merge does not transfer over parentage, nor comments. This function
+    fixes these limitations.
+
+    Example:
+    >>> from configobj import ConfigObj
+    >>> import sys
+    >>> c = ConfigObj(StringIO('''[Section1]
+    ... option1 = bar'''))
+    >>> d = ConfigObj(StringIO('''[Section1]
+    ...     # This is a Section2 comment
+    ...     [[Section2]]
+    ...     option2 = foo
+    ... '''))
+    >>> c.merge(d)
+    >>> # First do accumulateLeaves without a patch
+    >>> print(accumulateLeaves(c['Section1']['Section2']))
+    {'option2': 'foo'}
+    >>> # Now patch and try again
+    >>> patch_config(c, d)
+    >>> print(accumulateLeaves(c['Section1']['Section2']))
+    {'option1': 'bar', 'option2': 'foo'}
+    >>> c.write()
+    ['[Section1]', 'option1 = bar', '# This is a Section2 comment', '[[Section2]]', 'option2 = foo']
     """
-    A more useful recursive merge for configobj. The one that comes with configobj does not
-    set parent and comments correctly.
-
-    >>> a = '''[section1]
-    ...     option1 = True
-    ...     [[subsection]]
-    ...     more_options = False
-    ...     # end of file'''.splitlines()
-    >>> b = '''# File is user.ini
-    ...     [section1]
-    ...     option1 = False
-    ...     # end of file'''.splitlines()
-    >>> c1 = ConfigObj(b)
-    >>> c2 = ConfigObj(a)
-    >>> c2.merge(c1)
-    >>> c2
-    ConfigObj({'section1': {'option1': 'False', 'subsection': {'more_options': 'False'}}})
-    """
-    from configobj import ConfigObj, Section
-
-    for key, val in list(indict.items()):
-        if (key in self_dict and isinstance(self_dict[key], dict) and
-                isinstance(val, dict)):
-            self_dict[key].merge(val)
-        else:
-            if isinstance(self_dict, Section) and isinstance(val, Section):
-                self_dict[key] = Section(self_dict,
-                                         self_dict.depth + 1,
-                                         self_dict.main,
-                                         indict=val.dict(),
-                                         name=key)
-            else:
-                self_dict[key] = val
-
+    from configobj import Section
+    for key in self_config:
+        if isinstance(self_config[key], Section) \
+                and key in indict and isinstance(indict[key], Section):
+            self_config[key].parent = self_config
+            self_config[key].main = self_config.main
+            self_config.comments[key] = indict.comments[key]
+            patch_config(self_config[key], indict[key])
 
 def conditional_merge(a_dict, b_dict):
     """Merge fields from b_dict into a_dict, but only if they do not yet
@@ -1083,6 +1079,8 @@ def getDayNightTransitions(start_ts, end_ts, lat, lon):
     returns: indication of whether the period from start to first transition
     is day or night, plus array of transitions (UTC).
     """
+    import Sun
+
     first = None
     values = []
     for t in range(start_ts - 3600 * 24, end_ts + 3600 * 24 + 1, 3600 * 24):
@@ -1210,19 +1208,11 @@ def latlon_string(ll, hemi, which, format_list=None):
 
 def log_traceback(prefix='', loglevel=syslog.LOG_INFO):
     """Log the stack traceback into syslog."""
-    try:
-        # Python 2
-        from StringIO import StringIO
-    except ImportError:
-        # Python 3
-        from io import StringIO
-
     sfd = StringIO()
     traceback.print_exc(file=sfd)
     sfd.seek(0)
     for line in sfd:
         syslog.syslog(loglevel, prefix + line)
-    del StringIO
 
 
 def _get_object(module_class):
