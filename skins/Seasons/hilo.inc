@@ -110,7 +110,7 @@
         <td class="units">$unit.label.rainRate</td>
       </tr>
       <tr>
-        <td class="label">$obs.label.wind_max</td>
+        <td class="label">Wind Max</td>
         #for $archive in $archive_data
         <td class="data new_row hilo_$archive[0]">
           <span title="$archive[1].wind.maxtime">
@@ -124,7 +124,7 @@
         </td>
       </tr>
       <tr>
-        <td class="label">$obs.label.wind_avg</td>
+        <td class="label">Wind Average</td>
         #for $archive in $archive_data
         <td class="data new_row hilo_$archive[0]">
           $archive[1].wind.avg.format(add_label=False)</td>
@@ -132,7 +132,7 @@
         <td class="units">$unit.label.wind</td>
       </tr>
       <tr>
-        <td class="label">$obs.label.wind_rms</td>
+        <td class="label">Wind RMS</td>
         #for $archive in $archive_data
         <td class="data new_row hilo_$archive[0]">
           $archive[1].wind.rms.format(add_label=False)</td>
@@ -142,8 +142,8 @@
 
       <tr>
         <td class="label">
-          $obs.label.vecavg<br/>
-          $obs.label.vecdir
+          Vector Average<br/>
+          Average Direction
         </td>
         #for $archive in $archive_data
         <td class="data new_row hilo_$archive[0]">

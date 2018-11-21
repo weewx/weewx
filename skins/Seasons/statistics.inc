@@ -111,7 +111,7 @@
           </tr>
 		#end if
         <tr>
-          <td class="label">$obs.label.wind_max</td>
+          <td class="label">Wind Max</td>
           <td class="units">
             $unit.label.wind<br/>
             $unit.label.windDir
@@ -125,7 +125,7 @@
           #end for
         </tr>
         <tr>
-          <td class="label">$obs.label.wind_avg</td>
+          <td class="label">Wind Average</td>
           <td class="units">$unit.label.wind</td>
           #for $archive in $archive_data
           <td class="data new_row">
@@ -133,7 +133,7 @@
           #end for
         </tr>
         <tr>
-          <td class="label">$obs.label.wind_rms</td>
+          <td class="label">Wind RMS</td>
           <td class="units">$unit.label.wind</td>
           #for $archive in $archive_data
           <td class="data new_row">$archive.wind.rms.format(add_label=False)</td>
@@ -142,8 +142,8 @@
 
         <tr>
           <td class="label">
-            $obs.label.vecavg<br/>
-            $obs.label.vecdir
+            Vector Average<br/>
+            Average Direction
           </td>
           <td class="units">
             $unit.label.wind<br/>
