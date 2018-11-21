@@ -220,6 +220,15 @@ class StdReportEngine(threading.Thread):
         # be modifying it
         skin_dict = configobj.ConfigObj(self.config_dict.get('Defaults',{}))
 
+        # Add the default database binding:
+        skin_dict.setdefault('data_binding', 'wx_binding')
+        # Default to logging to whatever is specified at the root level
+        # of weewx.conf, or true if nothing specified:
+        skin_dict.setdefault('log_success',
+                             to_bool(self.config_dict.get('log_success', True)))
+        skin_dict.setdefault('log_failure',
+                             to_bool(self.config_dict.get('log_failure', True)))
+
         # Figure out where the configuration file is for the skin used by
         # this report:
         skin_config_path = os.path.join(
@@ -238,9 +247,8 @@ class StdReportEngine(threading.Thread):
                           "reportengine: "
                           "Found configuration file %s for report '%s'"
                           % (skin_config_path, report))
-            # Merge into the settings from weewx.conf
-            weeutil.weeutil.merge(skin_dict, merge_dict)
-            # skin_dict.merge(merge_dict)
+            # Merge and patch the skin config file into the weewx.conf config file
+            weeutil.weeutil.merge_config(skin_dict, merge_dict)
         except IOError as e:
             syslog.syslog(syslog.LOG_DEBUG,
                           "reportengine: "
@@ -253,23 +261,13 @@ class StdReportEngine(threading.Thread):
                           % (skin_config_path, report, e))
             raise
 
-        # Add the default database binding:
-        skin_dict.setdefault('data_binding', 'wx_binding')
-
-        # Default to logging to whatever is specified at the root level
-        # of weewx.conf, or true if nothing specified:
-        skin_dict.setdefault('log_success',
-                             to_bool(self.config_dict.get('log_success', True)))
-        skin_dict.setdefault('log_failure',
-                             to_bool(self.config_dict.get('log_failure', True)))
-
         # Inject any overrides the user may have specified in the
         # weewx.conf configuration file for all reports:
         for scalar in self.config_dict['StdReport'].scalars:
             skin_dict[scalar] = self.config_dict['StdReport'][scalar]
 
         # Now inject any overrides for this specific report:
-        skin_dict.merge(self.config_dict['StdReport'][report])
+        weeutil.weeutil.merge_config(skin_dict, self.config_dict['StdReport'][report])
 
         # Finally, add the report name:
         skin_dict['REPORT_NAME'] = report
