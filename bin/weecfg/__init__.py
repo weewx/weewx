@@ -12,8 +12,13 @@ import glob
 import os.path
 import shutil
 import sys
-import StringIO
 import tempfile
+try:
+    # Python 2
+    from StringIO import StringIO
+except ImportError:
+    # Python 3
+    from io import StringIO
 
 import configobj
 
@@ -439,7 +444,7 @@ def update_to_v25(config_dict):
     try:
         # V2.5 saw the introduction of the station registry:
         if 'StationRegistry' not in config_dict['StdRESTful']:
-            stnreg_dict = configobj.ConfigObj(StringIO.StringIO("""[StdRESTful]
+            stnreg_dict = configobj.ConfigObj(StringIO("""[StdRESTful]
 
         [[StationRegistry]]
             # Uncomment the following line to register this weather station.
@@ -612,7 +617,7 @@ def update_to_v26(config_dict):
     # Support for the WOW uploader was introduced
     try:
         if 'WOW' not in config_dict['StdRESTful']:
-            config_dict.merge(configobj.ConfigObj(StringIO.StringIO("""[StdRESTful]
+            config_dict.merge(configobj.ConfigObj(StringIO("""[StdRESTful]
 
             [[WOW]]
                 # This section is for configuring posts to WOW
@@ -633,7 +638,7 @@ def update_to_v26(config_dict):
     # Support for the AWEKAS uploader was introduced
     try:
         if 'AWEKAS' not in config_dict['StdRESTful']:
-            config_dict.merge(configobj.ConfigObj(StringIO.StringIO("""[StdRESTful]
+            config_dict.merge(configobj.ConfigObj(StringIO("""[StdRESTful]
 
             [[AWEKAS]]
                 # This section is for configuring posts to AWEKAS
@@ -727,7 +732,7 @@ def update_to_v30(config_dict):
 
     if 'DataBindings' not in config_dict:
         # Insert a [DataBindings] section. First create it
-        c = configobj.ConfigObj(StringIO.StringIO("""[DataBindings]
+        c = configobj.ConfigObj(StringIO("""[DataBindings]
             # This section binds a data store to a database
 
             [[wx_binding]]
@@ -761,7 +766,7 @@ def update_to_v30(config_dict):
 
     # StdWXCalculate is new
     if 'StdWXCalculate' not in config_dict:
-        c = configobj.ConfigObj(StringIO.StringIO("""[StdWXCalculate]
+        c = configobj.ConfigObj(StringIO("""[StdWXCalculate]
     # Derived quantities are calculated by this service.  Possible values are:
     #  hardware        - use the value provided by hardware
     #  software        - use the value calculated by weewx
@@ -997,47 +1002,51 @@ def update_to_v39(config_dict):
         #   [[MobileReport]]
         #   [[FTP]]
         #
-        #  NB: For an upgrade, we want StandardReport first, because that's what the user is already using.
+        #  NB: For an upgrade, we want StandardReport first, because that's
+        #  what the user is already using.
         #
 
+        # Work around a ConfigObj limitation that can cause comments to be dropped.
+        # Save the original comment, then restore it later.
+        std_report_comment = config_dict.comments['StdReport']
+
         if 'SeasonsReport' not in config_dict['StdReport']:
-            seasons_options_dict = configobj.ConfigObj(StringIO.StringIO("""[StdReport]
+            seasons_options_dict = configobj.ConfigObj(StringIO("""[StdReport]
 
     [[SeasonsReport]]
         # The SeasonsReport uses the 'Seasons' skin, which contains the
         # images, templates and plots for the report.
         skin = Seasons
         enable = false"""))
-            config_dict.merge(seasons_options_dict)
-            # Due to a bug in ConfigObj, the section comment gets dropped. Add it back in.
-            config_dict['StdReport'].comments['SeasonsReport'] = ['']
+            weeutil.weeutil.merge_config(config_dict, seasons_options_dict)
             reorder_sections(config_dict['StdReport'], 'SeasonsReport', 'FTP')
 
         if 'SmartphoneReport' not in config_dict['StdReport']:
-            smartphone_options_dict = configobj.ConfigObj(StringIO.StringIO("""[StdReport]
+            smartphone_options_dict = configobj.ConfigObj(StringIO("""[StdReport]
+
     [[SmartphoneReport]]
         # The SmartphoneReport uses the 'Smartphone' skin, and the images and
         # files are placed in a dedicated subdirectory.
         skin = Smartphone
         enable = false
         HTML_ROOT = public_html/smartphone"""))
-            config_dict.merge(smartphone_options_dict)
-            # Due to a bug in ConfigObj, the section comment gets dropped. Add it back in.
-            config_dict['StdReport'].comments['SmartphoneReport'] = ['']
+            weeutil.weeutil.merge_config(config_dict, smartphone_options_dict)
             reorder_sections(config_dict['StdReport'], 'SmartphoneReport', 'FTP')
 
         if 'MobileReport' not in config_dict['StdReport']:
-            mobile_options_dict = configobj.ConfigObj(StringIO.StringIO("""[StdReport]
+            mobile_options_dict = configobj.ConfigObj(StringIO("""[StdReport]
+
     [[MobileReport]]
         # The MobileReport uses the 'Mobile' skin, and the images and files
         # are placed in a dedicated subdirectory.
         skin = Mobile
         enable = false
         HTML_ROOT = public_html/mobile"""))
-            config_dict.merge(mobile_options_dict)
-            # Due to a bug in ConfigObj, the section comment gets dropped. Add it back in.
-            config_dict['StdReport'].comments['MobileReport'] = ['']
+            weeutil.weeutil.merge_config(config_dict, mobile_options_dict)
             reorder_sections(config_dict['StdReport'], 'MobileReport', 'FTP')
+
+    # Put the comment back in
+    config_dict.comments['StdReport'] = std_report_comment
 
     config_dict['version'] = '3.9.0'
 
