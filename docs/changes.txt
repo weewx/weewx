@@ -894,6 +894,10 @@ Guide.
 
 Specific changes follow.
 
+There is no longer a separate "stats" database. Instead, statistics
+are included in the regular database (e.g., 'weewx.sdb') as separate
+tables, one for each observation type.
+
 Total rewrite of how data gets bound to a database. You now specify a
 "data binding" to indicate where data should be going, and where it is
 coming from. The default binding is "wx_binding," the weather binding,
