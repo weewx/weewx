@@ -1052,6 +1052,40 @@ def update_to_v39(config_dict):
     config_dict['version'] = '3.9.0'
 
 
+def update_skin_v39(config_dict):
+    """Update a skin configuration files to V3.9"""
+
+    if 'StdReport' not in config_dict:
+        return
+
+    for report in config_dict['StdReport'].sections:
+        skin_file = os.path.join(
+            config_dict['WEEWX_ROOT'],
+            config_dict['StdReport']['SKIN_ROOT'],
+            config_dict['StdReport'][report].get('skin', ''),
+            'skin.conf')
+        skin_dict = configobj.ConfigObj(skin_file, file_error=True)
+        # If there were no overrides, do nothing. Doing this check avoids creating a new skin configuration
+        # file when none is needed.
+        if len(config_dict['StdReport'][report].sections):
+            # For each override section, fix it.
+            for override in config_dict['StdReport'][report].sections:
+                fix_overrides(config_dict['StdReport'][report][override], skin_dict[override])
+            # Now write the patched skin configuration file, with a backup.
+            save_with_backup(skin_dict, skin_file)
+
+
+def fix_overrides(section_dict, skin_dict_section):
+    """Comment out any scalars in the skin configuration file that have
+    been overridden in weewx.conf."""
+
+    # Recursively fix any overrides in any subsections under me
+    for section in section_dict.sections:
+        fix_overrides(section_dict[section], skin_dict_section[section])
+    # Now comment out any overridden scalars in the skin configuration file
+    for scalar in section_dict.scalars:
+        weeutil.config.comment_scalar(skin_dict_section, scalar)
+
 # ==============================================================================
 #              Utilities that extract from ConfigObj objects
 # ==============================================================================
