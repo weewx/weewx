@@ -23,6 +23,7 @@ except ImportError:
 import configobj
 
 import weeutil.weeutil
+import weeutil.config
 
 major_comment_block = ["", "##############################################################################", ""]
 
@@ -1018,7 +1019,7 @@ def update_to_v39(config_dict):
         # images, templates and plots for the report.
         skin = Seasons
         enable = false"""))
-            weeutil.weeutil.merge_config(config_dict, seasons_options_dict)
+            weeutil.config.merge_config(config_dict, seasons_options_dict)
             reorder_sections(config_dict['StdReport'], 'SeasonsReport', 'FTP')
 
         if 'SmartphoneReport' not in config_dict['StdReport']:
@@ -1030,7 +1031,7 @@ def update_to_v39(config_dict):
         skin = Smartphone
         enable = false
         HTML_ROOT = public_html/smartphone"""))
-            weeutil.weeutil.merge_config(config_dict, smartphone_options_dict)
+            weeutil.config.merge_config(config_dict, smartphone_options_dict)
             reorder_sections(config_dict['StdReport'], 'SmartphoneReport', 'FTP')
 
         if 'MobileReport' not in config_dict['StdReport']:
@@ -1042,7 +1043,7 @@ def update_to_v39(config_dict):
         skin = Mobile
         enable = false
         HTML_ROOT = public_html/mobile"""))
-            weeutil.weeutil.merge_config(config_dict, mobile_options_dict)
+            weeutil.config.merge_config(config_dict, mobile_options_dict)
             reorder_sections(config_dict['StdReport'], 'MobileReport', 'FTP')
 
     # Put the comment back in

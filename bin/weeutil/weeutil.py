@@ -25,6 +25,14 @@ except ImportError:
     # Python 3
     from io import StringIO
 
+# For backwards compatibility:
+import config
+search_up        = config.search_up
+accumulateLeaves = config.accumulateLeaves
+merge_config     = config.merge_config
+patch_config     = config.patch_config
+comment_scalar   = config.comment_scalar
+
 
 def convertToFloat(seq):
     """Convert a sequence with strings to floats, honoring 'Nones'"""
@@ -34,137 +42,6 @@ def convertToFloat(seq):
     res = [None if s in ('None', 'none') else float(s) for s in seq]
     return res
 
-
-def search_up(d, k, *default):
-    """Search a ConfigObj dictionary for a key. If it's not found, try my parent, and so on
-    to the root.
-    
-    d: An instance of configobj.Section
-    
-    k: A key to be searched for. If not found in d, it's parent will be searched
-    
-    default: If the key is not found, then the default is returned. If no default is given,
-    then an AttributeError exception is raised.
-    
-    Example: 
-    
-    >>> import configobj
-    >>> c = configobj.ConfigObj({"color":"blue", "size":10, "robin":{"color":"red", "sound": {"volume": "loud"}}})
-    >>> print(search_up(c['robin'], 'size'))
-    10
-    >>> print(search_up(c, 'color'))
-    blue
-    >>> print(search_up(c['robin'], 'color'))
-    red
-    >>> print(search_up(c['robin'], 'flavor', 'salty'))
-    salty
-    >>> try:
-    ...   print(search_up(c['robin'], 'flavor'))
-    ... except AttributeError:
-    ...   print('not found')
-    not found
-    >>> print(search_up(c['robin'], 'sound'))
-    {'volume': 'loud'}
-    >>> print(search_up(c['robin'], 'smell', {}))
-    {}
-    """
-    if k in d:
-        return d[k]
-    if d.parent is d:
-        if len(default):
-            return default[0]
-        else:
-            raise AttributeError(k)
-    else:
-        return search_up(d.parent, k, *default)
-
-
-def accumulateLeaves(d, max_level=99):
-    """Merges leaf options above a ConfigObj section with itself, accumulating the results.
-    
-    This routine is useful for specifying defaults near the root node, 
-    then having them overridden in the leaf nodes of a ConfigObj.
-    
-    d: instance of a configobj.Section (i.e., a section of a ConfigObj)
-    
-    Returns: a dictionary with all the accumulated scalars, up to max_level deep, 
-    going upwards
-    
-    Example: Supply a default color=blue, size=10. The section "dayimage" overrides the former:
-    
-    >>> import configobj
-    >>> c = configobj.ConfigObj({"color":"blue", "size":10, "dayimage":{"color":"red", "position":{"x":20, "y":30}}})
-    >>> accumulateLeaves(c["dayimage"]) == {"color":"red", "size": 10}
-    True
-    >>> accumulateLeaves(c["dayimage"], max_level=0) == {'color': 'red'}
-    True
-    >>> accumulateLeaves(c["dayimage"]["position"]) == {'color': 'red', 'size': 10, 'y': 30, 'x': 20}
-    True
-    >>> accumulateLeaves(c["dayimage"]["position"], max_level=1) == {'color': 'red', 'y': 30, 'x': 20}
-    True
-    """
-
-    import configobj
-
-    # Use recursion. If I am the root object, then there is nothing above 
-    # me to accumulate. Start with a virgin ConfigObj
-    if d.parent is d:
-        cum_dict = configobj.ConfigObj()
-    else:
-        if max_level:
-            # Otherwise, recursively accumulate scalars above me
-            cum_dict = accumulateLeaves(d.parent, max_level - 1)
-        else:
-            cum_dict = configobj.ConfigObj()
-
-    # Now merge my scalars into the results:
-    merge_dict = {}
-    for k in d.scalars:
-        merge_dict[k] = d[k]
-    cum_dict.merge(merge_dict)
-    return cum_dict
-
-
-def merge_config(self_config, indict):
-    """Merge and patch a config file"""
-
-    self_config.merge(indict)
-    patch_config(self_config, indict)
-
-
-def patch_config(self_config, indict):
-    """The ConfigObj merge does not transfer over parentage, nor comments. This function
-    fixes these limitations.
-
-    Example:
-    >>> from configobj import ConfigObj
-    >>> import sys
-    >>> c = ConfigObj(StringIO('''[Section1]
-    ... option1 = bar'''))
-    >>> d = ConfigObj(StringIO('''[Section1]
-    ...     # This is a Section2 comment
-    ...     [[Section2]]
-    ...     option2 = foo
-    ... '''))
-    >>> c.merge(d)
-    >>> # First do accumulateLeaves without a patch
-    >>> print(accumulateLeaves(c['Section1']['Section2']))
-    {'option2': 'foo'}
-    >>> # Now patch and try again
-    >>> patch_config(c, d)
-    >>> print(accumulateLeaves(c['Section1']['Section2']))
-    {'option1': 'bar', 'option2': 'foo'}
-    >>> c.write()
-    ['[Section1]', 'option1 = bar', '# This is a Section2 comment', '[[Section2]]', 'option2 = foo']
-    """
-    from configobj import Section
-    for key in self_config:
-        if isinstance(self_config[key], Section) \
-                and key in indict and isinstance(indict[key], Section):
-            self_config[key].parent = self_config
-            self_config[key].main = self_config.main
-            self_config.comments[key] = indict.comments[key]
-            patch_config(self_config[key], indict[key])
 
 def conditional_merge(a_dict, b_dict):
     """Merge fields from b_dict into a_dict, but only if they do not yet
