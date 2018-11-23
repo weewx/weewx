@@ -460,22 +460,29 @@ class StdArchive(StdService):
         syslog.syslog(syslog.LOG_INFO, "engine: Record generation will be attempted in '%s'" % 
                       (self.record_generation,))
 
-        # If the station supports a hardware archive interval, use that.
-        # Warn if it is different than what is in config.
-        ival_msg = ''
-        try:
-            if software_interval != self.engine.console.archive_interval:
-                syslog.syslog(syslog.LOG_ERR,
-                              "engine: The archive interval in the"
-                              " configuration file (%d) does not match the"
-                              " station hardware interval (%d)." %
-                              (software_interval,
-                               self.engine.console.archive_interval))
-            self.archive_interval = self.engine.console.archive_interval
-            ival_msg = "(specified by hardware)"
-        except NotImplementedError:
+        if self.record_generation == 'software':
             self.archive_interval = software_interval
-            ival_msg = "(specified in weewx configuration)"
+            ival_msg = "(software record generation)"
+        elif self.record_generation == 'hardware':
+            # If the station supports a hardware archive interval, use that.
+            # Warn if it is different than what is in config.
+            try:
+                if software_interval != self.engine.console.archive_interval:
+                    syslog.syslog(syslog.LOG_ERR,
+                                  "engine: The archive interval in the"
+                                  " configuration file (%d) does not match the"
+                                  " station hardware interval (%d)." %
+                                  (software_interval,
+                                   self.engine.console.archive_interval))
+                self.archive_interval = self.engine.console.archive_interval
+                ival_msg = "(specified by hardware)"
+            except NotImplementedError:
+                self.archive_interval = software_interval
+                ival_msg = "(specified in weewx configuration)"
+        else:
+            syslog.syslog(syslog.LOG_CRITICAL, "Unknown type of record generation: %s" % self.record_generation)
+            raise ValueError(self.record_generation)
+
         syslog.syslog(syslog.LOG_INFO, "engine: Using archive interval of %d seconds %s" %
                       (self.archive_interval, ival_msg))
 

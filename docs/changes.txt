@@ -3,8 +3,6 @@ weewx change history
 
 3.9.0 MM/DD/YYYY
 
-New $almanac.sidereal_time tag to provide current sidereal time
-
 New default skin called Seasons.
 
 Dropped support of Python 2.5. You must now use either Python 2.6 or 2.7. This is
@@ -17,7 +15,14 @@ Rose line width can now be specified with option rose_line_width.
 
 The Felsius unit of temperature (see https://xkcd.com/1923/) is now supported.
 
-The almanac now supports calculating planet separations.
+New tag $almanac.sidereal_time for calculating current sidereal time
+
+New tag $almanac.separation() for calculating planet separations.
+
+StdQC now includes an entry for rain again (inexplicably removed in v3.1.0).
+
+If software record generation is used, the archive interval is now what is
+specified in weewx.conf, even if the station supports hardware generation.
 
 The tag formatting taxonomy has been simplified. Just use suffix ".format()" now.
 Documentation updated to reflect changes. Backwards compatibility with old
@@ -888,6 +893,10 @@ check it over. Not sure we got everything correct. See the Upgrading
 Guide.
 
 Specific changes follow.
+
+There is no longer a separate "stats" database. Instead, statistics
+are included in the regular database (e.g., 'weewx.sdb') as separate
+tables, one for each observation type.
 
 Total rewrite of how data gets bound to a database. You now specify a
 "data binding" to indicate where data should be going, and where it is

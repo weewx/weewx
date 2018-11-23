@@ -933,7 +933,7 @@ def get_database_dict_from_config(config_dict, database):
              driver: weedb.sqlite
     """
     try:
-        database_dict = dict(config_dict['Databases'][database])
+        database_dict = config_dict['Databases'][database].dict()
     except KeyError as e:
         raise weewx.UnknownDatabase("Unknown database '%s'" % e)
     
@@ -971,7 +971,7 @@ def get_manager_dict_from_config(config_dict, data_binding,
     # Start with a copy of the bindings in the config dictionary (we
     # will be adding to it):
     try:
-        manager_dict = dict(config_dict['DataBindings'][data_binding])
+        manager_dict = config_dict['DataBindings'][data_binding].dict()
     except KeyError as e:
         raise weewx.UnknownBinding("Unknown data binding '%s'" % e)
 
