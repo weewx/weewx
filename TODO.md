@@ -1,8 +1,8 @@
 #TO DO for V3.9
 
 Configuration:
- - Need to update any `skin.conf` files to use new scheme for setting defaults
- 
+ -
+  
 User's Guide updates:
  - Change references to Standard skin to Seasons.
  - Mention the Mobile and Smartphone skins.

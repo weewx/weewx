@@ -131,11 +131,15 @@ def patch_config(self_config, indict):
 def comment_scalar(a_dict, key):
     """Comment out a scalar in a ConfigObj object.
 
-    Convert an entry into a comment, sticking it at the beginning of the section."""
+    Convert an entry into a comment, sticking it at the beginning of the section.
+
+    Returns: 0 if nothing was done.
+             1 if the ConfigObj object was changed.
+    """
 
     # If the key is not in the list of scalars there is no need to do anything.
     if key not in a_dict.scalars:
-        return
+        return 0
 
     # Save the old comments
     comment = a_dict.comments[key]
@@ -153,4 +157,4 @@ def comment_scalar(a_dict, key):
         a_dict.comments[first_key] += comment
         a_dict.comments[first_key].append(new_inline_comment)
 
-
+    return 1

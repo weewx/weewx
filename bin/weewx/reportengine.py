@@ -229,6 +229,17 @@ class StdReportEngine(threading.Thread):
         skin_dict.setdefault('log_failure',
                              to_bool(self.config_dict.get('log_failure', True)))
 
+        # Add the report name:
+        skin_dict['REPORT_NAME'] = report
+
+        # Inject any overrides the user may have specified in the
+        # weewx.conf configuration file for all reports:
+        for scalar in self.config_dict['StdReport'].scalars:
+            skin_dict[scalar] = self.config_dict['StdReport'][scalar]
+
+        # Now inject any overrides for this specific report:
+        weeutil.weeutil.merge_config(skin_dict, self.config_dict['StdReport'][report])
+
         # Figure out where the configuration file is for the skin used by
         # this report:
         skin_config_path = os.path.join(
@@ -247,7 +258,8 @@ class StdReportEngine(threading.Thread):
                           "reportengine: "
                           "Found configuration file %s for report '%s'"
                           % (skin_config_path, report))
-            # Merge and patch the skin config file into the weewx.conf config file
+            # Merge and patch the skin config file into the weewx.conf config file.
+            # Because this is the last merge, it will have the final say.
             weeutil.weeutil.merge_config(skin_dict, merge_dict)
         except IOError as e:
             syslog.syslog(syslog.LOG_DEBUG,
@@ -260,17 +272,6 @@ class StdReportEngine(threading.Thread):
                           "Failed to read skin configuration file %s for report '%s': %s"
                           % (skin_config_path, report, e))
             raise
-
-        # Inject any overrides the user may have specified in the
-        # weewx.conf configuration file for all reports:
-        for scalar in self.config_dict['StdReport'].scalars:
-            skin_dict[scalar] = self.config_dict['StdReport'][scalar]
-
-        # Now inject any overrides for this specific report:
-        weeutil.weeutil.merge_config(skin_dict, self.config_dict['StdReport'][report])
-
-        # Finally, add the report name:
-        skin_dict['REPORT_NAME'] = report
 
         return skin_dict
 
