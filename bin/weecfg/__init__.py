@@ -284,21 +284,21 @@ def modify_config(config_dict, stn_info, logger, debug=False):
                     logger.log("Using %s for %s" % (stn_info[p], p), level=2)
                 config_dict['Station'][p] = stn_info[p]
         # Update units display with any stn_info overrides
-        if (stn_info.get('units') is not None and
-                'StdReport' in config_dict and
-                'StandardReport' in config_dict['StdReport']):
+        if stn_info.get('units') is not None:
+            if 'Defaults' not in config_dict:
+                config_dict['Defaults'] = {}
+            if 'Units' not in config_dict['Defaults']:
+                config_dict['Defaults']['Units'] = {}
+            if 'Groups' not in config_dict['Defaults']['Units']:
+                config_dict['Defaults']['Units']['Groups'] = {}
             if stn_info.get('units') in ['metric', 'metricwx']:
                 if debug:
                     logger.log("Using Metric units for display", level=2)
-                config_dict['StdReport']['StandardReport'].update({
-                    'Units': {
-                        'Groups': metricwx_group}})
+                config_dict['Defaults']['Units']['Groups'].update(metricwx_group)
             elif stn_info.get('units') == 'us':
                 if debug:
                     logger.log("Using US units for display", level=2)
-                config_dict['StdReport']['StandardReport'].update({
-                    'Units': {
-                        'Groups': us_group}})
+                config_dict['Defaults']['Units']['Groups'].update(us_group)
 
 
 # ==============================================================================
@@ -1557,7 +1557,7 @@ def load_driver_editor(driver_module_name):
 #                Utilities that seek info from the command line
 # ==============================================================================
 
-def prompt_for_info(location=None, latitude='90.000', longitude='0.000',
+def prompt_for_info(location=None, latitude='0.000', longitude='0.000',
                     altitude=['0', 'meter'], units='metric', **kwargs):
     #
     #  Description
