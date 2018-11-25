@@ -4,7 +4,6 @@ Configuration:
  - Figure out some way to preserve comments when upgrading a skin.conf that has nothing
  left in a section.
  - Extension installer needs to patch old skins on the fly.
- - Installer should now modify `[Defaults]` section to set unit system when doing a fresh install.
    
 User's Guide updates:
  - Change references to Standard skin to Seasons.
