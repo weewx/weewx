@@ -1,3 +1,4 @@
+# coding: utf-8
 #
 #    Copyright (c) 2009-2018 Tom Keffer <tkeffer@gmail.com>
 #
@@ -23,6 +24,7 @@ except ImportError:
 import configobj
 
 import weeutil.weeutil
+from weeutil.weeutil import to_int
 import weeutil.config
 
 major_comment_block = ["", "##############################################################################", ""]
@@ -1049,6 +1051,200 @@ def update_to_v39(config_dict):
     # Put the comment back in
     config_dict.comments['StdReport'] = std_report_comment
 
+    if 'Defaults' not in config_dict:
+        defaults_dict = configobj.ConfigObj(StringIO("""[Defaults]
+
+    # The following section is for managing the selection and formatting of units.
+    [[Units]]
+
+        # The following section sets what unit to use for each unit group.
+        # NB: The unit is always in the singular. I.e., 'mile_per_hour',
+        # NOT 'miles_per_hour'
+        [[[Groups]]]
+            group_altitude     = foot                 # Options are 'foot' or 'meter'
+            group_degree_day   = degree_F_day         # Options are 'degree_F_day' or 'degree_C_day'
+            group_direction    = degree_compass
+            group_moisture     = centibar
+            group_percent      = percent
+            group_pressure     = inHg                 # Options are 'inHg', 'mmHg', 'mbar', or 'hPa'
+            group_radiation    = watt_per_meter_squared
+            group_rain         = inch                 # Options are 'inch', 'cm', or 'mm'
+            group_rainrate     = inch_per_hour        # Options are 'inch_per_hour', 'cm_per_hour', or 'mm_per_hour'
+            group_speed        = mile_per_hour        # Options are 'mile_per_hour', 'km_per_hour', 'knot', or 'meter_per_second'
+            group_speed2       = mile_per_hour2       # Options are 'mile_per_hour2', 'km_per_hour2', 'knot2', or 'meter_per_second2'
+            group_temperature  = degree_F             # Options are 'degree_F' or 'degree_C'
+            group_uv           = uv_index
+            group_volt         = volt
+
+            # The following are used internally and should not be changed:
+            group_count        = count
+            group_interval     = minute
+            group_time         = unix_epoch
+            group_elapsed      = second
+
+        # The following section sets the string formatting for each type of unit.
+        [[[StringFormats]]]
+
+            centibar           = %.0f
+            cm                 = %.2f
+            cm_per_hour        = %.2f
+            degree_C           = %.1f
+            degree_F           = %.1f
+            degree_compass     = %.0f
+            foot               = %.0f
+            hPa                = %.1f
+            hour               = %.1f
+            inHg               = %.3f
+            inch               = %.2f
+            inch_per_hour      = %.2f
+            km_per_hour        = %.0f
+            km_per_hour2       = %.1f
+            knot               = %.0f
+            knot2              = %.1f
+            mbar               = %.1f
+            meter              = %.0f
+            meter_per_second   = %.1f
+            meter_per_second2  = %.1f
+            mile_per_hour      = %.0f
+            mile_per_hour2     = %.1f
+            mm                 = %.1f
+            mmHg               = %.1f
+            mm_per_hour        = %.1f
+            percent            = %.0f
+            second             = %.0f
+            uv_index           = %.1f
+            volt               = %.1f
+            watt_per_meter_squared = %.0f
+            NONE               = "   N/A"
+
+        # The following section sets the label to be used for each type of unit
+        [[[Labels]]]
+
+            centibar          = " cb"
+            cm                = " cm"
+            cm_per_hour       = " cm/hr"
+            degree_C          =   °C
+            degree_F          =   °F
+            degree_compass    =   °
+            foot              = " feet"
+            hPa               = " hPa"
+            inHg              = " inHg"
+            inch              = " in"
+            inch_per_hour     = " in/hr"
+            km_per_hour       = " km/h"
+            km_per_hour2      = " km/h"
+            knot              = " knots"
+            knot2             = " knots"
+            mbar              = " mbar"
+            meter             = " meters"
+            meter_per_second  = " m/s"
+            meter_per_second2 = " m/s"
+            mile_per_hour     = " mph"
+            mile_per_hour2    = " mph"
+            mm                = " mm"
+            mmHg              = " mmHg"
+            mm_per_hour       = " mm/hr"
+            percent           =   %
+            volt              = " V"
+            watt_per_meter_squared = " W/m²"
+            day               = " day",    " days"
+            hour              = " hour",   " hours"
+            minute            = " minute", " minutes"
+            second            = " second", " seconds"
+            NONE              = ""
+
+        # The following section sets the string format to be used for each time scale.
+        # The values below will work in every locale, but they may not look
+        # particularly attractive. See the Customization Guide for alternatives.
+        [[[TimeFormats]]]
+
+            day        = %X
+            week       = %X (%A)
+            month      = %x %X
+            year       = %x %X
+            rainyear   = %x %X
+            current    = %x %X
+            ephem_day  = %X
+            ephem_year = %x %X
+
+        [[[Ordinates]]]
+            # Ordinal directions. The last one should be for no wind direction
+            directions = N, NNE, NE, ENE, E, ESE, SE, SSE, S, SSW, SW, WSW, W, WNW, NW, NNW, N/A
+
+        # The following section sets the base temperatures used for the calculation
+        # of heating and cooling degree-days.
+        [[[DegreeDays]]]
+            # Base temperature for heating days, with unit:
+            heating_base = 65, degree_F
+            # Base temperature for cooling days, with unit:
+            cooling_base = 65, degree_F
+
+        # A trend takes a difference across a time period. The following section sets
+        # the time period, and how big an error is allowed to still be counted
+        # as the start or end of a period.
+        [[[Trend]]]
+            time_delta = 10800  # 3 hours
+            time_grace = 300    # 5 minutes
+
+    # Labels used in this skin
+    [[Labels]]
+
+        # Set to hemisphere abbreviations suitable for your location:
+        hemispheres = N, S, E, W
+        # Formats to be used for latitude whole degrees, longitude whole degrees,
+        # and minutes:
+        latlon_formats = "%02d", "%03d", "%05.2f"
+
+        # Generic labels, keyed by an observation type.
+        [[[Generic]]]
+
+            barometer      = Barometer
+            dewpoint       = Dew Point
+            heatindex      = Heat Index
+            inHumidity     = Inside Humidity
+            inTemp         = Inside Temperature
+            outHumidity    = Humidity
+            outTemp        = Temperature
+            radiation      = Radiation
+            rain           = Rain
+            rainRate       = Rain Rate
+            UV             = UV Index
+            windDir        = Wind Direction
+            windGust       = Gust Speed
+            windGustDir    = Gust Direction
+            windSpeed      = Wind Speed
+            windchill      = Wind Chill
+            windgustvec    = Gust Vector
+            windvec        = Wind Vector
+            extraTemp1     = Temperature1
+            extraTemp2     = Temperature2
+            extraTemp3     = Temperature3
+
+            # Sensor status indicators
+
+            rxCheckPercent       = Signal Quality
+            txBatteryStatus      = Transmitter
+            windBatteryStatus    = Wind
+            rainBatteryStatus    = Rain
+            outTempBatteryStatus = Outside Temperature
+            inTempBatteryStatus  = Inside Temperature
+            consBatteryVoltage   = Console
+            heatingVoltage       = Heating
+            supplyVoltage        = Supply
+            referenceVoltage     = Reference
+
+  [[Almanac]]
+        # The labels to be used for the phases of the moon:
+        moon_phases = New, Waxing crescent, First quarter, Waxing gibbous, Full, Waning gibbous, Last quarter, Waning crescent
+
+"""))
+
+    weeutil.config.merge_config(config_dict, defaults_dict)
+    # Put the comment for the [Defaults] section back in, which the merge process always seems to strip:
+    config_dict.comments['Defaults'] = major_comment_block + ['#   Default values for skins', '']
+    # Move the [Defaults] section to just before the [Engine] section
+    reorder_sections(config_dict, 'Defaults', 'Engine')
+
     config_dict['version'] = '3.9.0'
 
 
@@ -1074,18 +1270,33 @@ def update_skins_v39(config_dict):
         try:
             # Load it
             skin_dict = configobj.ConfigObj(skin_file, file_error=True)
-            n_commented = 0
-            # For each override section in the report, comment out any scalars
-            # in the skin.conf file with matching names.
-            for override in config_dict['StdReport'][report].sections:
-                n_commented += fix_overrides(config_dict['StdReport'][report][override], skin_dict[override])
-            # If no changes were made, there's no reason to save with a backup.
-            if n_commented:
-                # Now write the patched skin configuration file, with a backup.
-                save_with_backup(skin_dict, skin_file)
         except IOError:
             # It's OK for the skin.conf file not to exist.
-            pass
+            continue
+
+        # No need to do anything if this skin has already been upgraded
+        if to_int(skin_dict.get('skin_version', 1)) >= 2:
+            continue
+
+        n_commented = 0
+
+        # For each override section in the report, comment out any scalars
+        # in the skin.conf file with matching names.
+        for section in config_dict['StdReport'][report].sections:
+            if section in skin_dict:
+                n_commented += fix_overrides(config_dict['StdReport'][report][section], skin_dict[section])
+
+        # For each section under [Defaults], delete any scalar in skin.conf
+        # that has the same value as in [Defaults].
+        for section in config_dict['Defaults'].sections:
+            if section in skin_dict:
+                n_commented += fix_defaults(config_dict['Defaults'][section], skin_dict[section])
+
+        print("For report '%s', %d lines were commented out" % (report, n_commented))
+
+        skin_dict['skin_version'] = 2
+        # Now write the patched skin configuration file, with a backup.
+        save_with_backup(skin_dict, skin_file)
 
 
 def fix_overrides(section_dict, skin_dict_section):
@@ -1098,12 +1309,28 @@ def fix_overrides(section_dict, skin_dict_section):
     n_commented = 0
     # Recursively fix any overrides in any subsections under me
     for section in section_dict.sections:
-        n_commented += fix_overrides(section_dict[section], skin_dict_section[section])
+        if section in skin_dict_section:
+            n_commented += fix_overrides(section_dict[section], skin_dict_section[section])
     # Now comment out any overridden scalars in the skin configuration file
     for scalar in section_dict.scalars:
         n_commented += weeutil.config.comment_scalar(skin_dict_section, scalar)
 
     return n_commented
+
+
+def fix_defaults(defaults_dict, skin_dict_section):
+    """Delete any values in the skin.conf that are the same as their corresponding value
+    in [Defaults]"""
+    n_commented = 0
+    for section in defaults_dict.sections:
+        if section in skin_dict_section:
+            n_commented += fix_defaults(defaults_dict[section], skin_dict_section[section])
+    for scalar in defaults_dict.scalars:
+        if scalar in skin_dict_section and defaults_dict[scalar] == skin_dict_section[scalar]:
+            n_commented += weeutil.config.comment_scalar(skin_dict_section, scalar)
+
+    return n_commented
+
 # ==============================================================================
 #              Utilities that extract from ConfigObj objects
 # ==============================================================================

@@ -144,6 +144,8 @@ def comment_scalar(a_dict, key):
     # Save the old comments
     comment = a_dict.comments[key]
     inline_comment = a_dict.inline_comments[key]
+    if inline_comment is None:
+        inline_comment = ''
     # Build a new inline comment holding the key and value, as well as the old inline comment
     new_inline_comment = "%s = %s %s" % (key, a_dict[key], inline_comment)
 
@@ -157,4 +159,18 @@ def comment_scalar(a_dict, key):
         a_dict.comments[first_key] += comment
         a_dict.comments[first_key].append(new_inline_comment)
 
+    return 1
+
+
+def delete_scalar(a_dict, key):
+    """Delete a scalar in a ConfigObj object.
+
+    Returns: 0 if nothing was done.
+             1 if the scalar was deleted
+    """
+
+    if key not in a_dict.scalars:
+        return 0
+
+    del a_dict[key]
     return 1
