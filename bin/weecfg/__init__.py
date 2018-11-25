@@ -1200,6 +1200,7 @@ def update_to_v39(config_dict):
 
             barometer      = Barometer
             dewpoint       = Dew Point
+            ET             = ET
             heatindex      = Heat Index
             inHumidity     = Inside Humidity
             inTemp         = Inside Temperature
