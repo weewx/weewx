@@ -1254,13 +1254,13 @@ def update_to_v39(config_dict):
     config_dict['version'] = '3.9.0'
 
 
-def update_skins(config_dict):
+def patch_skins(config_dict):
     """Update the skins"""
 
-    update_skins_v39(config_dict)
+    patch_skins_v39(config_dict)
 
 
-def update_skins_v39(config_dict):
+def patch_skins_v39(config_dict):
     """Update the skin configuration files to V3.9"""
 
     if 'StdReport' not in config_dict:

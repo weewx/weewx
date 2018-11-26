@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2015 Tom Keffer <tkeffer@gmail.com> and
+#    Copyright (c) 2009-2018 Tom Keffer <tkeffer@gmail.com> and
 #                            Matthew Wall
 #
 #    See the file LICENSE.txt for your full rights.
@@ -17,6 +17,7 @@ from weecfg import Logger
 # The default station information:
 stn_info_defaults = {'station_type': 'Simulator',
                      'driver': 'weewx.drivers.simulator'}
+
 
 class ConfigEngine(object):
 
@@ -40,7 +41,7 @@ class ConfigEngine(object):
         if sum(1 if x is True else 0 for x in [options.install,
                                                options.upgrade,
                                                options.reconfigure]) != 1:
-            sys.exit("No command specified.")
+            sys.exit("Must specify one and only one of --install, --upgrade, or --reconfigure.")
 
         # Check for missing --dist-config
         if (options.install or options.upgrade) and not options.dist_config:
@@ -79,8 +80,7 @@ class ConfigEngine(object):
             config_dict = dist_config_dict
         else:
             try:
-                config_path, config_dict = weecfg.read_config(
-                    options.config_path, args)
+                config_path, config_dict = weecfg.read_config(options.config_path, args)
             except SyntaxError as e:
                 sys.exit("Syntax error in configuration file: %s" % e)
             except IOError as e:
@@ -108,6 +108,9 @@ class ConfigEngine(object):
         if output_path is not None:
             # Save the file.
             self.save_config(config_dict, output_path, not options.no_backup)
+
+        if options.patch_skins:
+            weecfg.patch_skins(config_dict)
 
     def modify_config(self, config_dict, options):
         """Modify the configuration dictionary according to any command

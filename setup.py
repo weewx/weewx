@@ -167,8 +167,7 @@ class weewx_install_data(install_data):
 
         # Now that all the skins have been safely installed, we can run our patch routine
         config_dict = configobj.ConfigObj(os.path.join(self.install_dir, 'weewx.conf'), file_error=True)
-        weecfg.update_skins(config_dict)
-
+        weecfg.patch_skins(config_dict)
 
     def process_config_file(self, f, install_dir, **kwargs):
         global stn_info

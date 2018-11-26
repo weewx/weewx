@@ -106,6 +106,11 @@ Version: 3.9
 Usage: wee_config --help
        wee_config --version
        wee_config --list-drivers
+       wee_config --reconfigure CONFIG_FILE|--config=CONFIG_FILE
+           [--driver=DRIVER]  [--units=(us|metric)]
+           [--latitude=yy.y] [--longitude=xx.x] [--altitude=zz.z,(foot|meter)]
+           [--location="Home Sweet Home"]
+           [--output=OUT_CONFIG] [--no-prompt] [--no-backup]
        wee_config --install --dist-config=DIST_CONFIG --output=OUT_CONFIG
            [--driver=DRIVER]  [--units=(us|metric)]
            [--latitude=yy.y] [--longitude=xx.x] [--altitude=zz.z,(foot|meter)]
@@ -114,23 +119,24 @@ Usage: wee_config --help
        wee_config --upgrade CONFIG_FILE|--config=CONFIG_FILE
            --dist-config=DIST_CONFIG
            [--output=OUT_CONFIG] [--no-prompt] [--no-backup] [--warn-on-error]
-       wee_config --reconfigure CONFIG_FILE|--config=CONFIG_FILE
-           [--driver=DRIVER]  [--units=(us|metric)]
-           [--latitude=yy.y] [--longitude=xx.x] [--altitude=zz.z,(foot|meter)]
-           [--location="Home Sweet Home"]
-           [--output=OUT_CONFIG] [--no-prompt] [--no-backup]
+       wee_config --patch-skins CONFIG_FILE|--config=CONFIG_FILE
 
-Actions:
+User actions:
 
 --list-drivers  List the available weewx device drivers, then exit.
+--reconfigure   Modify an existing configuration file CONFIG_FILE with any
+                specified station parameters.  Use this command with the
+                driver option to change the device driver.
+
+System actions (not normally done by users):
+
 --install       Install a new configuration file starting with the contents of
                 DIST_CONFIG, prompting for station parameters.
 --upgrade       Update the contents of configuration file CONFIG_FILE to the
                 installed version, then merge the result with the contents of
                 configuration file DIST_CONFIG.
---reconfigure   Modify an existing configuration file CONFIG_FILE with any
-                specified station parameters.  Use this command with the
-                driver option to change the device driver.
+--patch-skins   Patch skin.conf files to new default semantics (introduced
+                in V3.9).
 
 Station parameters:
 
@@ -143,10 +149,11 @@ Options:
   -h, --help            show this help message and exit
   --version             Show the weewx version then exit.
   --list-drivers        List the available device drivers.
+  --reconfigure         Reconfigure an existing configuration file.
   --install             Install a new configuration file.
   --upgrade             Update an existing configuration file, then merge with
                         contents of DIST_CONFIG.
-  --reconfigure         Reconfigure an existing configuration file.
+  --patch-skins         Patch skin.conf files to WeeWX V3.9 semantics.
   --config=CONFIG_FILE  Use configuration file CONFIG_FILE.
   --dist-config=DIST_CONFIG
                         Use template configuration file DIST_CONFIG.

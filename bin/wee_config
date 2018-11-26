@@ -16,6 +16,11 @@ from weecfg.config import ConfigEngine
 usage = """Usage: wee_config --help
        wee_config --version
        wee_config --list-drivers
+       wee_config --reconfigure CONFIG_FILE|--config=CONFIG_FILE
+           [--driver=DRIVER]  [--units=(us|metric)]
+           [--latitude=yy.y] [--longitude=xx.x] [--altitude=zz.z,(foot|meter)] 
+           [--location="Home Sweet Home"]
+           [--output=OUT_CONFIG] [--no-prompt] [--no-backup]
        wee_config --install --dist-config=DIST_CONFIG --output=OUT_CONFIG
            [--driver=DRIVER]  [--units=(us|metric)]
            [--latitude=yy.y] [--longitude=xx.x] [--altitude=zz.z,(foot|meter)] 
@@ -24,23 +29,24 @@ usage = """Usage: wee_config --help
        wee_config --upgrade CONFIG_FILE|--config=CONFIG_FILE
            --dist-config=DIST_CONFIG
            [--output=OUT_CONFIG] [--no-prompt] [--no-backup] [--warn-on-error]
-       wee_config --reconfigure CONFIG_FILE|--config=CONFIG_FILE
-           [--driver=DRIVER]  [--units=(us|metric)]
-           [--latitude=yy.y] [--longitude=xx.x] [--altitude=zz.z,(foot|meter)] 
-           [--location="Home Sweet Home"]
-           [--output=OUT_CONFIG] [--no-prompt] [--no-backup]
+       wee_config --patch-skins CONFIG_FILE|--config=CONFIG_FILE
 
-Actions:
+User actions:
 
 --list-drivers  List the available weewx device drivers, then exit.
+--reconfigure   Modify an existing configuration file CONFIG_FILE with any
+                specified station parameters.  Use this command with the
+                driver option to change the device driver.
+                
+System actions (not normally done by users):
+
 --install       Install a new configuration file starting with the contents of
                 DIST_CONFIG, prompting for station parameters.
 --upgrade       Update the contents of configuration file CONFIG_FILE to the
                 installed version, then merge the result with the contents of
-                configuration file DIST_CONFIG. 
---reconfigure   Modify an existing configuration file CONFIG_FILE with any
-                specified station parameters.  Use this command with the
-                driver option to change the device driver.
+                configuration file DIST_CONFIG.
+--patch-skins   Patch skin.conf files to new default semantics (introduced 
+                in V3.9).
 
 Station parameters:
 
@@ -62,13 +68,15 @@ def main():
                       help="Show the weewx version then exit.")
     parser.add_option("--list-drivers", action="store_true",
                       help="List the available device drivers.")
+    parser.add_option("--reconfigure", action="store_true",
+                      help="Reconfigure an existing configuration file.")
     parser.add_option("--install", action="store_true",
                       help="Install a new configuration file.")
     parser.add_option("--upgrade", action="store_true",
                       help="Update an existing configuration file, then merge "
                       "with contents of DIST_CONFIG.")
-    parser.add_option("--reconfigure", action="store_true",
-                      help="Reconfigure an existing configuration file.")
+    parser.add_option("--patch-skins", action="store_true",
+                      help="Patch skin.conf files to WeeWX V3.9 semantics.")
     parser.add_option("--config", dest="config_path", metavar="CONFIG_FILE",
                       help="Use configuration file CONFIG_FILE.")
     parser.add_option("--dist-config",
