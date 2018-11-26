@@ -1367,16 +1367,31 @@ def get_station_info(config_dict):
                 stn_info['station_type'] = config_dict['Station']['station_type']
                 if stn_info['station_type'] in config_dict:
                     stn_info['driver'] = config_dict[stn_info['station_type']]['driver']
-        if 'StdReport' in config_dict:
-            stn_info['units'] = get_unit_info(config_dict)
+
+            # Try to figure out what unit system the user is using. Assume we can't.
+            stn_info['units'] = None
+            try:
+                # First look for a [Defaults] section.
+                stn_info['units'] = get_unit_info(config_dict['Defaults'])
+            except KeyError:
+                pass
+            # If that didn't work, look for an override in the [[StandardReport]] section.
+            if stn_info['units'] is None:
+                try:
+                    stn_info['units'] = get_unit_info(config_dict['StdReport']['StandardReport'])
+                except KeyError:
+                    pass
+            # Keep things simple!
+            if stn_info['units'] == 'metricwx':
+                stn_info['units'] = 'metric'
 
     return stn_info
 
 
-def get_unit_info(config_dict):
+def get_unit_info(test_dict):
     """Intuit what unit system the reports are in."""
     try:
-        group_dict = config_dict['StdReport']['StandardReport']['Units']['Groups']
+        group_dict = test_dict['Units']['Groups']
         # Look for a strict superset of the group settings:
         if all(group_dict[group] == us_group[group] for group in us_group):
             return 'us'
