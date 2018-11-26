@@ -14,6 +14,7 @@ import os.path
 import shutil
 import sys
 import tempfile
+
 try:
     # Python 2
     from StringIO import StringIO
@@ -337,6 +338,7 @@ def update_config(config_dict):
     update_to_v36(config_dict)
 
     update_to_v39(config_dict)
+
 
 def merge_config(config_dict, template_dict):
     """Merge the template (distribution) dictionary into the user's dictionary.
@@ -882,9 +884,12 @@ def update_to_v32(config_dict):
             config_dict['DatabaseTypes']['MySQL']['password'] = \
                 config_dict['Databases']['archive_mysql'].get('password', 'weewx')
             config_dict['DatabaseTypes']['MySQL']['driver'] = 'weedb.mysql'
-            config_dict['DatabaseTypes']['MySQL'].comments['host']=["        # The host where the database is located"]
-            config_dict['DatabaseTypes']['MySQL'].comments['user']=["        # The user name for logging into the host"]
-            config_dict['DatabaseTypes']['MySQL'].comments['password']=["        # The password for the user name"]
+            config_dict['DatabaseTypes']['MySQL'].comments['host'] = [
+                "        # The host where the database is located"]
+            config_dict['DatabaseTypes']['MySQL'].comments['user'] = [
+                "        # The user name for logging into the host"]
+            config_dict['DatabaseTypes']['MySQL'].comments['password'] = [
+                "        # The password for the user name"]
             config_dict['Databases']['archive_mysql'].pop('host', None)
             config_dict['Databases']['archive_mysql'].pop('user', None)
             config_dict['Databases']['archive_mysql'].pop('password', None)
@@ -1276,7 +1281,7 @@ def update_skins_v39(config_dict):
             continue
 
         # No need to do anything if this skin has already been upgraded
-        if to_int(skin_dict.get('skin_version', 1)) >= 2:
+        if to_int(skin_dict.get('skin_semantics', 1)) >= 2:
             continue
 
         n_commented = 0
@@ -1295,7 +1300,9 @@ def update_skins_v39(config_dict):
 
         print("For report '%s', %d lines were commented out" % (report, n_commented))
 
-        skin_dict['skin_version'] = 2
+        # Indicate that this skin.conf file has now been patched to v2 semantics
+        skin_dict['skin_semantics'] = 2
+
         # Now write the patched skin configuration file, with a backup.
         save_with_backup(skin_dict, skin_file)
 
@@ -1331,6 +1338,7 @@ def fix_defaults(defaults_dict, skin_dict_section):
             n_commented += weeutil.config.comment_scalar(skin_dict_section, scalar)
 
     return n_commented
+
 
 # ==============================================================================
 #              Utilities that extract from ConfigObj objects
