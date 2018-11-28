@@ -70,7 +70,7 @@ class Logger(object):
 
     def log(self, msg, level=0):
         if self.verbosity >= level:
-            print "%s%s" % ('  ' * (level - 1), msg)
+            print("%s%s" % ('  ' * (level - 1), msg))
 
     def set_verbosity(self, verbosity):
         self.verbosity = verbosity
@@ -1245,66 +1245,71 @@ def update_to_v39(config_dict):
 
 """))
 
-    weeutil.config.merge_config(config_dict, defaults_dict)
-    # Put the comment for the [Defaults] section back in, which the merge process always seems to strip:
-    config_dict.comments['Defaults'] = major_comment_block + ['#   Default values for skins', '']
-    # Move the [Defaults] section to just before the [Engine] section
-    reorder_sections(config_dict, 'Defaults', 'Engine')
+        weeutil.config.merge_config(config_dict, defaults_dict)
+        # Put the comment for the [Defaults] section back in, which the merge process always seems to strip:
+        config_dict.comments['Defaults'] = major_comment_block + ['#   Default values for skins', '']
+        # Move the [Defaults] section to just before the [Engine] section
+        reorder_sections(config_dict, 'Defaults', 'Engine')
 
     config_dict['version'] = '3.9.0'
 
 
-def patch_skins(config_dict):
-    """Update the skins"""
-
-    patch_skins_v39(config_dict)
-
-
-def patch_skins_v39(config_dict):
+def patch_skins(config_dict, logger=None):
     """Update the skin configuration files to V3.9"""
 
     if 'StdReport' not in config_dict:
         return
 
     for report in config_dict['StdReport'].sections:
-        # Find the skin.conf file for this report
-        skin_file = os.path.join(
-            config_dict['WEEWX_ROOT'],
-            config_dict['StdReport']['SKIN_ROOT'],
-            config_dict['StdReport'][report].get('skin', ''),
-            'skin.conf')
-        try:
-            # Load it
-            skin_dict = configobj.ConfigObj(skin_file, file_error=True)
-        except IOError:
-            # It's OK for the skin.conf file not to exist.
-            continue
+        patch_skin(config_dict, report, logger)
 
-        # No need to do anything if this skin has already been upgraded
-        if to_int(skin_dict.get('skin_semantics', 1)) >= 2:
-            continue
 
-        n_commented = 0
+def patch_skin(config_dict, report, logger=None):
+    """Patch the given skin configuration file (skin.conf) to V3.9"""
 
-        # For each override section in the report, comment out any scalars
-        # in the skin.conf file with matching names.
-        for section in config_dict['StdReport'][report].sections:
-            if section in skin_dict:
-                n_commented += fix_overrides(config_dict['StdReport'][report][section], skin_dict[section])
+    logger = logger or Logger()
 
-        # For each section under [Defaults], delete any scalar in skin.conf
-        # that has the same value as in [Defaults].
-        for section in config_dict['Defaults'].sections:
-            if section in skin_dict:
-                n_commented += fix_defaults(config_dict['Defaults'][section], skin_dict[section])
+    # Find the skin.conf file for this report
+    skin_file = os.path.join(
+        config_dict['WEEWX_ROOT'],
+        config_dict['StdReport']['SKIN_ROOT'],
+        config_dict['StdReport'][report].get('skin', ''),
+        'skin.conf')
+    try:
+        # Load it
+        skin_dict = configobj.ConfigObj(skin_file, file_error=True)
+    except IOError:
+        # It's OK for the skin.conf file not to exist.
+        return
 
-        print("For report '%s', %d lines were commented out" % (report, n_commented))
+    # No need to do anything if this skin has already been upgraded
+    if to_int(skin_dict.get('skin_semantics', 1)) >= 2:
+        logger.log("Report %s already at level 2. Skipping" % report, level=2)
+        return
 
-        # Indicate that this skin.conf file has now been patched to v2 semantics
-        skin_dict['skin_semantics'] = 2
+    logger.log("Patching report %s configuration file %s" % (report, skin_file), level=1)
+    n_commented = 0
 
-        # Now write the patched skin configuration file, with a backup.
-        save_with_backup(skin_dict, skin_file)
+    # For each override section in the report, comment out any scalars
+    # in the skin.conf file with matching names.
+    for section in config_dict['StdReport'][report].sections:
+        if section in skin_dict:
+            n_commented += fix_overrides(config_dict['StdReport'][report][section], skin_dict[section])
+
+    # For each section under [Defaults], delete any scalar in skin.conf
+    # that has the same value as in [Defaults].
+    for section in config_dict['Defaults'].sections:
+        if section in skin_dict:
+            n_commented += fix_defaults(config_dict['Defaults'][section], skin_dict[section])
+
+    logger.log("For report '%s', %d lines were commented out" % (report, n_commented), level=2)
+
+    # Indicate that this skin.conf file has now been patched to v2 semantics
+    skin_dict['skin_semantics'] = 2
+
+    # Now write the patched skin configuration file, with a backup.
+    save_with_backup(skin_dict, skin_file)
+    logger.log("Finished patching report %s" % report, level=1)
 
 
 def fix_overrides(section_dict, skin_dict_section):

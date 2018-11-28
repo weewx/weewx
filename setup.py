@@ -44,6 +44,9 @@ import weewx
 VERSION = weewx.__version__
 import weecfg.extension
 import weeutil.weeutil
+from weecfg import Logger
+
+logger=Logger(verbosity=1)
 
 start_scripts = ['util/init.d/weewx.bsd',
                  'util/init.d/weewx.debian',
@@ -167,7 +170,7 @@ class weewx_install_data(install_data):
 
         # Now that all the skins have been safely installed, we can run our patch routine
         config_dict = configobj.ConfigObj(os.path.join(self.install_dir, 'weewx.conf'), file_error=True)
-        weecfg.patch_skins(config_dict)
+        weecfg.patch_skins(config_dict, logger=logger)
 
     def process_config_file(self, f, install_dir, **kwargs):
         global stn_info

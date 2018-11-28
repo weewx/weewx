@@ -110,16 +110,17 @@ Usage: wee_config --help
            [--driver=DRIVER]  [--units=(us|metric)]
            [--latitude=yy.y] [--longitude=xx.x] [--altitude=zz.z,(foot|meter)]
            [--location="Home Sweet Home"]
-           [--output=OUT_CONFIG] [--no-prompt] [--no-backup]
+           [--output=OUT_CONFIG] [--no-prompt] [--no-backup] [--verbosity=N]
        wee_config --install --dist-config=DIST_CONFIG --output=OUT_CONFIG
            [--driver=DRIVER]  [--units=(us|metric)]
            [--latitude=yy.y] [--longitude=xx.x] [--altitude=zz.z,(foot|meter)]
            [--location="Home Sweet Home"]
-           [--no-prompt] [--no-backup]
+           [--no-prompt] [--no-backup] [--verbosity=N]
        wee_config --upgrade CONFIG_FILE|--config=CONFIG_FILE
            --dist-config=DIST_CONFIG
-           [--output=OUT_CONFIG] [--no-prompt] [--no-backup] [--warn-on-error]
-       wee_config --patch-skins CONFIG_FILE|--config=CONFIG_FILE
+           [--output=OUT_CONFIG] [--no-prompt] [--no-backup]
+           [--warn-on-error] [--verbosity=N]
+       wee_config --patch-skins CONFIG_FILE|--config=CONFIG_FILE [--verbosity=N]
 
 User actions:
 
@@ -175,6 +176,7 @@ Options:
   --warn-on-error       Only warn if an update is not possible.  Default
                         behavior is to warn then exit.
   --debug               Show diagnostic information while running.
+  --verbosity=N         How much status to display, 0-3
 </pre>
 
         <h2><span id='wee_config_details'>Actions and options</span></h2>

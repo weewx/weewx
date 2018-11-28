@@ -37,11 +37,13 @@ class ConfigEngine(object):
         # Check for errors in the options.
         #
 
-        # Must have one, and only one, of install, upgrade, and reconfigure:
-        if sum(1 if x is True else 0 for x in [options.install,
-                                               options.upgrade,
-                                               options.reconfigure]) != 1:
-            sys.exit("Must specify one and only one of --install, --upgrade, or --reconfigure.")
+        # We must be either patching the skins, or doing one of install, upgrade, and reconfigure:
+        if not options.patch_skins \
+                and sum(1 if x is True else 0 for x in [options.install,
+                                                        options.upgrade,
+                                                        options.reconfigure]) != 1:
+            sys.exit("Must specify either --patch-skins or one and "
+                     "only one of --install, --upgrade, or --reconfigure.")
 
         # Check for missing --dist-config
         if (options.install or options.upgrade) and not options.dist_config:
@@ -110,7 +112,7 @@ class ConfigEngine(object):
             self.save_config(config_dict, output_path, not options.no_backup)
 
         if options.patch_skins:
-            weecfg.patch_skins(config_dict)
+            weecfg.patch_skins(config_dict, logger=self.logger)
 
     def modify_config(self, config_dict, options):
         """Modify the configuration dictionary according to any command
