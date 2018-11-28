@@ -1,10 +1,5 @@
 #TO DO for V3.9
 
-Configuration:
- - Figure out some way to preserve comments when upgrading a skin.conf that has nothing
- left in a section.
- - Extension installer needs to patch old skins on the fly.
-   
 User's Guide updates:
  - Change references to Standard skin to Seasons.
  - Mention the Mobile and Smartphone skins.
