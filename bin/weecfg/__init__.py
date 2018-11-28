@@ -1287,7 +1287,7 @@ def patch_skin(config_dict, report, logger=None):
         logger.log("Report %s already at level 2. Skipping" % report, level=2)
         return
 
-    logger.log("Patching report %s configuration file %s" % (report, skin_file), level=1)
+    logger.log("Patching report %s configuration file %s" % (report, skin_file), level=2)
     n_commented = 0
 
     # For each override section in the report, comment out any scalars
@@ -1309,7 +1309,7 @@ def patch_skin(config_dict, report, logger=None):
 
     # Now write the patched skin configuration file, with a backup.
     save_with_backup(skin_dict, skin_file)
-    logger.log("Finished patching report %s" % report, level=1)
+    logger.log("Finished patching report %s" % report, level=2)
 
 
 def fix_overrides(section_dict, skin_dict_section):
