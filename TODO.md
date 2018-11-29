@@ -5,8 +5,5 @@ User's Guide updates:
  - Mention the Mobile and Smartphone skins.
  - Document how new skin defaults work
 
-Upgrade guide
- - Document upgrade process for new skin defaults.
- 
 Root level `log_success` and `log_failure` are now documented. They should work for reports,
 but how about other things, in particular the uploaders?

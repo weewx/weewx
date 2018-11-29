@@ -55,9 +55,9 @@ Version: 3.9
         <p>
             This document starts with an overview of the architecture of WeeWX. If you are only interested in
             customizing the generated reports you can probably skip the overview and proceed directly to the section
-            <em><a href="#standard_skin">The skin configuration file <span class="code">skin.conf</span> </a></em>. With this approach
-            you can easily add new plot images, change the titles of images, change the units used in the reports, and
-            so on.
+            <em><a href="#standard_skin">The skin configuration file <span class="code">skin.conf</span> </a></em>. With
+            this approach you can easily add new plot images, change the titles of images, change the units used in the
+            reports, and so on.
         </p>
 
         <p>However, if your goal is a specialized application, such as adding alarms, RSS feeds, etc., then it would be
@@ -262,10 +262,9 @@ Version: 3.9
             </tr>
             <tr>
                 <td class="code first_col">SeasonsReport</td>
-                <td>Introduced with WeeWX V3.9, this report generates a single HTML file with day,
-                    week, month and year "to-date" summaries,
-                    as well as the plot images to go along with them. Buttons select which time scale the
-                    user wants. It also generates HTML files with more details on celestial bodies and
+                <td>Introduced with WeeWX V3.9, this report generates a single HTML file with day, week, month and year
+                    "to-date" summaries, as well as the plot images to go along with them. Buttons select which time
+                    scale the user wants. It also generates HTML files with more details on celestial bodies and
                     statistics. Also generates NOAA monthly and yearly summaries.
                 </td>
             </tr>
@@ -283,10 +282,9 @@ Version: 3.9
             </tr>
             <tr>
                 <td class="code first_col">StandardReport</td>
-                <td>This is an older report that has been used for many years in WeeWX. It generates day, week,
-                    month and year "to-date" summaries in HTML, as well as the plot images to go
-                    along with them. Also generates NOAA monthly and yearly summaries. It loads faster than
-                    the <em>Seasons</em> skin.
+                <td>This is an older report that has been used for many years in WeeWX. It generates day, week, month
+                    and year "to-date" summaries in HTML, as well as the plot images to go along with them. Also
+                    generates NOAA monthly and yearly summaries. It loads faster than the <em>Seasons</em> skin.
                 </td>
             </tr>
             <tr>
@@ -1877,8 +1875,8 @@ Sunrise, sunset: $almanac.sunrise $almanac.sunset
 
         <p>
             "Calendar events" do not require a heavenly body. They cover things such as <span
-            class="code">next_solstice</span>, <span class="code">next_first_quarter_moon</span> 
-            or <span class="code">sidereal_time</span>. The syntax here is:
+            class="code">next_solstice</span>, <span class="code">next_first_quarter_moon</span> or <span class="code">sidereal_time</span>.
+            The syntax here is:
         </p>
         <pre class="tty">$almanac.next_solstice</pre>
         <p>or</p>
@@ -2026,11 +2024,10 @@ Sunrise, sunset: $almanac.sunrise $almanac.sunset
         </table>
 
         <p class="note" style="display: inline-block">
-            <strong>Note</strong><br/>The tags <span class="code">ra</span>, <span class="code">a_ra</span> and 
-            <span class="code">g_ra</span> return values in decimal degrees rather than customary values from
-            0 to 24 hours.
+            <strong>Note</strong><br/>The tags <span class="code">ra</span>, <span class="code">a_ra</span> and <span
+            class="code">g_ra</span> return values in decimal degrees rather than customary values from 0 to 24 hours.
         </p>
-        
+
         <h4>Functions</h4>
         <p>There is actually one one function in this category: <span class="code">separation</span>. It returns the
             angular separation between two heavenly bodies. For example, to calculate the angular separation between
@@ -2101,8 +2098,8 @@ Sunrise, sunset: $almanac.sunrise $almanac.sunset
             </tbody>
         </table>
         <p class="note" style="display: inline-block">
-            <strong>Note</strong><br/>The vector is only stored in the daily <em>summaries</em>, so unlike the scalar tags such as
-            <span class="code">windSpeed</span> or <span class="code">windGust</span>, the tag <span
+            <strong>Note</strong><br/>The vector is only stored in the daily <em>summaries</em>, so unlike the scalar
+            tags such as <span class="code">windSpeed</span> or <span class="code">windGust</span>, the tag <span
             class="code">wind</span> can only be used in aggregations such as <span class="code">$day</span>, <span
             class="code">$month</span>, <i>etc.</i>
         </p>
@@ -3612,8 +3609,7 @@ inch     = %.2f</pre>
 
         <h3 class="config_section" id="Units_Labels">[[Labels]]</h3>
 
-        <p>This sub-section specifies what label is to be used for each measurement unit type. For example, the
-            options
+        <p>This sub-section specifies what label is to be used for each measurement unit type. For example, the options
         </p>
         <pre class="tty">degree_F = °F
 inch     = ' in'</pre>
