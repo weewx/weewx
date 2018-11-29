@@ -1247,7 +1247,7 @@ def update_to_v39(config_dict):
 
         weeutil.config.merge_config(config_dict, defaults_dict)
         # Put the comment for the [Defaults] section back in, which the merge process always seems to strip:
-        config_dict.comments['Defaults'] = major_comment_block + ['#   Default values for skins', '']
+        config_dict.comments['Defaults'] = major_comment_block + ['#   Default values for reports', '']
         # Move the [Defaults] section to just before the [Engine] section
         reorder_sections(config_dict, 'Defaults', 'Engine')
 
