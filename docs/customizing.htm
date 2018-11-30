@@ -16,12 +16,9 @@
 
 <div class="sidebar">
     <div class="doclist">
-        <a href="usersguide.htm">User's Guide</a><br/>
-        <a href="customizing.htm">Customization Guide</a><br/>
-        <a href="hardware.htm">Hardware Guide</a><br/>
-        <a href="utilities.htm">Utilities Guide</a><br/>
-        <a href="upgrading.htm">Upgrade Guide</a><br/>
-        <a href="devnotes.htm">Notes for Developers</a>
+        <a href="usersguide.htm">User's Guide</a><br/> <a href="customizing.htm">Customization Guide</a><br/> <a
+        href="hardware.htm">Hardware Guide</a><br/> <a href="utilities.htm">Utilities Guide</a><br/> <a
+        href="upgrading.htm">Upgrade Guide</a><br/> <a href="devnotes.htm">Notes for Developers</a>
     </div>
     <div id="toc_controls"></div>
     <div id="toc_parent">
@@ -652,15 +649,231 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
         </p>
 
         <h2>Changing options</h2>
+        <p>WeeWX comes with a myriad of options for controlling every aspect of how a report is generated, such as which
+            unit system to use, what to use for labels and how they should be formatted, which plots to generate, <i>etc.</i>.
+            Generally, these options come in two flavors:
+        </p>
+        <ul>
+            <li><b>Generic options</b>, such as which unit system to use, or how labels are formatted. These options are
+                usually located in <span class="code">weewx.conf</span>.
+            </li>
+            <li><b>"Look and feel" options</b>, such as which plots to generate and the color of their lines. These
+                options are usually located in a report's <span class="code">skin.conf</span> file.
+            </li>
+        </ul>
+
+        <p>While in theory any option can be specified in any of three places, in practice, there is a pattern.
+        </p>
+
+        <table>
+            <tr class="first_row">
+                <td>Section</td>
+                <td>File</td>
+                <td>Scope</td>
+                <td>Most useful for...</td>
+            </tr>
+            <tr>
+                <td class="code">[Defaults]</td>
+                <td class="code">weewx.conf</td>
+                <td>System wide. Affects <em>all</em> reports.</td>
+                <td>Generic options</td>
+            </tr>
+            <tr>
+                <td class="code">[StdReport][[<span class="symcode">report_name</span>]]</td>
+                <td class="code">weewx.conf</td>
+                <td>Affects only a <em>single</em> report.</td>
+                <td>Generic options</td>
+            </tr>
+            <tr>
+                <td><em>all</em></td>
+                <td class="code">skin.conf</td>
+                <td>Affects only a <em>single</em> report.</td>
+                <td>"Look and feel" options</td>
+            </tr>
+        </table>
 
         <p>
-            Changing an option means either modifying the main configuration file <span class="code">weewx.conf</span>,
-            or the skin configuration file <span class="code">skin.conf</span>.
+            The distribution versions of <span class="code">weewx.conf</span> and all <span
+            class="code">skin.conf</span> files follow this pattern.
+        </p>
+        <p>
+            The examples that follow refer to the skin <span class="code">Seasons</span>, which comes with the
+            distribution.
+        </p>
+
+        <h3>
+            Changing an option in <span class="code">[Defaults]</span>
+        </h3>
+        <p>
+            With this approach, you change an option under the <span class="code">[Defaults]</span> section in <span
+            class="code">weewx.conf.</span> Changes here will affect <em>all</em> reports. It is most useful for generic
+            options, such as which unit system to use.
         </p>
 
         <p>
-            Each skin will have a <span class="code">skin.conf</span> that defines its default configuration. The
-            examples in this guide refer to the standard skin that comes with the distribution.
+            For example, suppose you wish to use metric units for all your reports, instead of the default US Customary
+            Units. The section under <span class="code">[Defaults]</span> that controls units is <span class="code">[[Units]][[[Groups]]]</span>.
+            It looks like this:
+        </p>
+        <pre class="tty">
+#   Default values for reports
+
+[Defaults]
+
+    # The following section is for managing the selection and formatting of units.
+    [[Units]]
+
+        # The following section sets what unit to use for each unit group.
+        # NB: The unit is always in the singular. I.e., 'mile_per_hour',
+        # NOT 'miles_per_hour'
+        [[[Groups]]]
+            group_altitude     = foot                 # Options are 'foot' or 'meter'
+            group_degree_day   = degree_F_day         # Options are 'degree_F_day' or 'degree_C_day'
+            group_direction    = degree_compass
+            group_moisture     = centibar
+            group_percent      = percent
+            group_pressure     = inHg                 # Options are 'inHg', 'mmHg', 'mbar', or 'hPa'
+            group_radiation    = watt_per_meter_squared
+            group_rain         = inch                 # Options are 'inch', 'cm', or 'mm'
+            group_rainrate     = inch_per_hour        # Options are 'inch_per_hour', 'cm_per_hour', or 'mm_per_hour'
+            group_speed        = mile_per_hour        # Options are 'mile_per_hour', 'km_per_hour', 'knot', or 'meter_per_second'
+            group_speed2       = mile_per_hour2       # Options are 'mile_per_hour2', 'km_per_hour2', 'knot2', or 'meter_per_second2'
+            group_temperature  = degree_F             # Options are 'degree_F' or 'degree_C'
+            group_uv           = uv_index
+            group_volt         = volt
+
+            # The following are used internally and should not be changed:
+            group_count        = count
+            group_interval     = minute
+            group_time         = unix_epoch
+            group_elapsed      = second
+</pre>
+
+        <p>
+            To use metric units for all your skins, you would edit this section to read:
+        </p>
+        <pre class="tty">
+#   Default values for reports
+
+[Defaults]
+
+    # The following section is for managing the selection and formatting of units.
+    [[Units]]
+
+        # The following section sets what unit to use for each unit group.
+        # NB: The unit is always in the singular. I.e., 'mile_per_hour',
+        # NOT 'miles_per_hour'
+        [[[Groups]]]
+            <span class="highlight">group_altitude     = meter                # Options are 'foot' or 'meter'</span>
+            <span class="highlight">group_degree_day   = degree_C_day         # Options are 'degree_F_day' or 'degree_C_day'</span>
+            group_direction    = degree_compass
+            group_moisture     = centibar
+            group_percent      = percent
+            <span class="highlight">group_pressure     = mbar                 # Options are 'inHg', 'mmHg', 'mbar', or 'hPa'</span>
+            group_radiation    = watt_per_meter_squared
+            <span class="highlight">group_rain         = mm                   # Options are 'inch', 'cm', or 'mm'</span>
+            <span class="highlight">group_rainrate     = mm_per_hour          # Options are 'inch_per_hour', 'cm_per_hour', or 'mm_per_hour'</span>
+            <span class="highlight">group_speed        = meter_per_second     # Options are 'mile_per_hour', 'km_per_hour', 'knot', or 'meter_per_second'</span>
+            <span class="highlight">group_speed2       = meter_per_second2    # Options are 'mile_per_hour2', 'km_per_hour2', 'knot2', or 'meter_per_second2'</span>
+            <span
+                class="highlight">group_temperature  = degree_F             # Options are 'degree_F' or 'degree_C'</span>
+            group_uv           = uv_index
+            group_volt         = volt
+
+            # The following are used internally and should not be changed:
+            group_count        = count
+            group_interval     = minute
+            group_time         = unix_epoch
+            group_elapsed      = second
+</pre>
+        <p>
+            The options that were changed have been <span class="highlight">&nbsp;highlighted&nbsp;</span>. Details of
+            the various unit options are given in the <em><a href="#units">Appendix: Units</a></em>.
+        </p>
+
+        <p>
+            Besides the unit system, other options are available, such as the text label to be used for the various
+            observation types. For example, suppose your weather console is actually located in a barn, not indoors, and
+            you want the plot for the temperature at the console to be labeled "Barn Temperature," rather than the
+            default "Inside Temperature." This can be done by changing the <span class="code">inTemp</span> option
+            located in section <a href="#Labels_Generic"><span class="code">[Labels][[Generic]]</span></a> from the
+            default
+        </p>
+        <pre class="tty">[Units]
+
+    ...
+
+    [[Generic]]
+        inTemp  = Inside Temperature
+        outTemp = Outside Temperature
+        ...</pre>
+        <p>to:</p>
+        <pre class="tty">[Units]
+
+    ...
+
+    [[Generic]]
+        <span class="highlight">inTemp  = Barn Temperature</span>
+        outTemp = Outside Temperature
+        ...</pre>
+
+        <h3 id="overriding_from_weewx_conf">
+            Change an option in <span class="code">[StdReport]</span> in <span class="code">weewx.conf</span>
+        </h3>
+
+        <p>
+            This approach is similar to the above, except that you are changing an option for just a single report. It
+            is most useful for generic options, such as which unit system to use.
+        </p>
+
+        <p>
+            In our previous example, all reports would be in Metric. But, suppose you want two reports, one in Metric,
+            the other in US Customary. The Metric report will go in the regular directory <span class="symcode">HTML_ROOT</span>,
+            but the latter in a subdirectory, <span class="code"><span class="symcode">HTML_ROOT</span>/metric</span>.
+            To accomplish this, the <span class="code">[Defaults]</span> section in <span class="code">weewx.conf</span>
+            would be the same as in the example above, but the <span class="code">[StdReport]</span> section would read:
+        </p>
+        <pre class="tty">
+[StdReport]
+    #
+    # This section specifies what reports, using which skins, are to be generated.
+    #
+
+    # Where the skins reside, relative to WEEWX_ROOT:
+    SKIN_ROOT = skins
+
+    # Where the generated reports should go, relative to WEEWX_ROOT:
+    HTML_ROOT = public_html
+
+    # This report will use Metric units
+    [[SeasonsMetricReport]]
+        # It is based on the Seasons skin
+        skin = Seasons
+
+    # This report will use US Customary units
+    [[SeasonsUSReport]]
+        # It is also based on the Seasons skin:
+        skin = Seasons
+        # However, override where the results will go:
+        HTML_ROOT = public_html/us
+
+        # Override the options, so this report will be in US units
+        [[[Units]]]
+            [[[[Groups]]]]
+                group_altitude    = foot
+                group_pressure    = inHg
+                group_rain        = inch
+                group_rainrate    = inch_per_hour
+                group_speed       = mile_per_hour
+                group_speed2      = mile_per_hour2
+                group_temperature = degree_F
+</pre>
+        <p>
+            We have done two things different from the stock reports. First (1), we have renamed the first report from
+            <span class="code">SeasonsReport</span> to <span class="code">SeasonsMetricReport</span> for clarity; and
+            second (2), we have introduced a new report <span class="code">SeasonsUSReport</span>, which is just like
+            the first, except it puts its results in a different spot and uses different units. Both use the same skin,
+            the <span class="code">Seasons</span> skin.
         </p>
 
         <h3>
@@ -668,13 +881,13 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
         </h3>
 
         <p>
-            With this approach, edit the skin configuration file with a text editor. Changes made in this way will be
-            used by WeeWX the next time it generates reports, which is typically the next archive interval; there is no
-            need to restart WeeWX to see the results of the changes.
+            With this approach, change an option value in a report's <span class="code">skin.conf</span> configuration
+            file. This will affect only the individual report. It is most useful for "look and feel" options, such as
+            which plots to generate, or which templates to process.
         </p>
 
         <p>
-            For the standard skin that comes with WeeWX, the file is <span class="code">skins/Standard/skin.conf</span>.
+            For the standard skin that comes with WeeWX, the file is <span class="code">skins/Seasons/skin.conf</span>.
             It includes many, many options that can be changed. For a complete list, see the section below, <em><a
             href="#standard_skin">The skin configuration file <span class="code">skin.conf</span></a></em>.
         </p>
@@ -722,94 +935,13 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
             the various unit options are given in the <em><a href="#units">Appendix: Units</a></em>.
         </p>
 
+        <h3>Do I need to restart WeeWX?</h3>
         <p>
-            Other options are available, such as changing the text label for various observation types. For example,
-            suppose your weather console is actually located in a barn, not indoors, and you want the plot for the
-            temperature at the console to be labeled "Barn Temperature," rather than the default "Inside Temperature."
-            This can be done by changing the <span class="code">inTemp</span> option located in section <a
-            href="#Labels_Generic"><span class="code">[Labels][[Generic]]</span></a> from the default
+            If you make a change in <span class="code">weewx.conf</span>, you will need to restart WeeWX.
         </p>
-        <pre class="tty">[Units]
-    [[Generic]]
-        inTemp  = Inside Temperature
-        outTemp = Outside Temperature
-        ...</pre>
-        <p>to:</p>
-        <pre class="tty">[Units]
-    [[Generic]]
-        <span class="highlight">inTemp  = Barn Temperature</span>
-        outTemp = Outside Temperature
-        ...</pre>
-
-        <h3 id="overriding_from_weewx_conf">
-            Overriding options in <span class="code">skin.conf</span> from <span class="code">weewx.conf</span>
-        </h3>
-
         <p>
-            This approach is very similar, except that instead of changing the skin configuration file, <span
-            class="code">skin.conf</span>, directly, you override its options by editing the main configuration file,
-            <span class="code">weewx.conf</span>. The advantage of this approach is that you can use the same skin to
-            produce several different output, each with separate options.
-        </p>
-
-        <p>
-            With this approach, you must restart WeeWX to see the effects of any changes.
-        </p>
-
-        <p>
-            Revisiting our example, suppose you want two reports, one in US Customary, the other in Metric. The former
-            will go in the directory <span class="symcode">HTML_ROOT</span>, the latter in a directory, <span
-            class="symcode">HTML_ROOT</span><span class="code">/metric</span>. If you just simply modify <span
-            class="code">skin.conf</span>, you can get one, but not both at the same time. Alternatively, you could
-            create a whole new skin by copying all the files to a new skin directory then editing the new <span
-            class="code">skin.conf</span>. The trouble with this approach is that you would then have <em>two</em> skins
-            you would have to maintain. If you change something, you have to remember to change it in both places.
-        </p>
-
-        <p>
-            But, there's a better approach: reuse the same skin, but override some of its options. Here is what your
-            <span class="code">[StdReport]</span> section in <span class="code">weewx.conf</span> would look like:
-        </p>
-        <pre class="tty">[StdReport]
-    #
-    # This section specifies what reports, using which skins, are to be generated.
-    #
-
-    # Where the skins reside, relative to WEEWX_ROOT:
-    SKIN_ROOT = skins
-
-    # Where the generated reports should go, relative to WEEWX_ROOT:
-    HTML_ROOT = public_html
-
-    # This report will use US Customary Units
-    [[USReport]]
-        # It is based on the Standard skin
-        skin = Standard
-
-    # This report will use metric units:
-    [[MetricReport]]
-        # It is also based on the Standard skin:
-        skin = Standard
-        # However, override where the results will go and put them in a directory:
-        HTML_ROOT = public_html/metric
-
-        # And override the options that were not in metric units
-        [[[Units]]]
-            [[[[Groups]]]]
-                group_altitude    = meter
-                group_pressure    = mbar
-                group_rain        = mm
-                group_rainrate    = mm_per_hour
-                group_speed       = meter_per_second
-                group_speed2      = meter_per_second2
-                group_temperature = degree_C
-</pre>
-        <p>
-            We have done two things different from the stock reports. First (1), we have renamed the first report from
-            <span class="code">StandardReport</span> to <span class="code">USReport</span> for clarity; and second (2),
-            we have introduced a new report <span class="code">MetricReport</span>, just like the first, except it puts
-            its results in a different spot and uses different units. Both use the same skin, the <span class="code">Standard</span>
-            skin.
+            If you make a change in a <span class="code">skin.conf</span> file, you do not need to restart WeeWX. The
+            change will be adopted at the next reporting cycle, typically at the end of an archive interval.
         </p>
 
         <h2 id="customizing_templates">Customizing templates</h2>
