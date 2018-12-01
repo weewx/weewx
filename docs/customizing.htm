@@ -16,9 +16,12 @@
 
 <div class="sidebar">
     <div class="doclist">
-        <a href="usersguide.htm">User's Guide</a><br/> <a href="customizing.htm">Customization Guide</a><br/> <a
-        href="hardware.htm">Hardware Guide</a><br/> <a href="utilities.htm">Utilities Guide</a><br/> <a
-        href="upgrading.htm">Upgrade Guide</a><br/> <a href="devnotes.htm">Notes for Developers</a>
+        <a href="usersguide.htm">User's Guide</a><br/>
+        <a href="customizing.htm">Customization Guide</a><br/>
+        <a href="hardware.htm">Hardware Guide</a><br/>
+        <a href="utilities.htm">Utilities Guide</a><br/>
+        <a href="upgrading.htm">Upgrade Guide</a><br/>
+        <a href="devnotes.htm">Notes for Developers</a>
     </div>
     <div id="toc_controls"></div>
     <div id="toc_parent">
@@ -662,7 +665,9 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
             </li>
         </ul>
 
-        <p>While in theory any option can be specified in any of three places, in practice, there is a pattern.
+        <p>
+            There are three different sections in which to specify an option. Which to use depends on the type of option
+            and the "scope" over which you want it to apply. The table below summarizes:
         </p>
 
         <table>
@@ -673,19 +678,20 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
                 <td>Most useful for...</td>
             </tr>
             <tr>
-                <td class="code">[Defaults]</td>
+                <td class="code"><a href="#change_defaults">[Defaults]</a></td>
                 <td class="code">weewx.conf</td>
                 <td>System wide. Affects <em>all</em> reports.</td>
                 <td>Generic options</td>
             </tr>
             <tr>
-                <td class="code">[StdReport][[<span class="symcode">report_name</span>]]</td>
+                <td class="code"><a href="#overriding_from_weewx_conf">[StdReport][[<span
+                    class="symcode">report_name</span>]]</a></td>
                 <td class="code">weewx.conf</td>
                 <td>Affects only a <em>single</em> report.</td>
                 <td>Generic options</td>
             </tr>
             <tr>
-                <td><em>all</em></td>
+                <td><a href="#change_skin_conf"><em>all</em></a></td>
                 <td class="code">skin.conf</td>
                 <td>Affects only a <em>single</em> report.</td>
                 <td>"Look and feel" options</td>
@@ -693,15 +699,15 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
         </table>
 
         <p>
-            The distribution versions of <span class="code">weewx.conf</span> and all <span
-            class="code">skin.conf</span> files follow this pattern.
+            The versions of <span class="code">weewx.conf</span> and all <span class="code">skin.conf</span> files that
+            come with WeeWX follow this pattern.
         </p>
         <p>
             The examples that follow refer to the skin <span class="code">Seasons</span>, which comes with the
             distribution.
         </p>
 
-        <h3>
+        <h3 id="change_defaults">
             Changing an option in <span class="code">[Defaults]</span>
         </h3>
         <p>
@@ -792,12 +798,11 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
         </p>
 
         <p>
-            Besides the unit system, other options are available, such as the text label to be used for the various
-            observation types. For example, suppose your weather console is actually located in a barn, not indoors, and
-            you want the plot for the temperature at the console to be labeled "Barn Temperature," rather than the
-            default "Inside Temperature." This can be done by changing the <span class="code">inTemp</span> option
-            located in section <a href="#Labels_Generic"><span class="code">[Labels][[Generic]]</span></a> from the
-            default
+            Here's another example. Suppose your weather console is actually located in a barn, not indoors, and you
+            want any labels for the temperature measured by the console to be labeled "<em>Barn Temperature</em>,"
+            rather than the default "<em>Inside Temperature</em>." This can be done by changing the <span class="code">inTemp</span>
+            option, located in section <a href="#Labels_Generic"><span class="code">[Labels][[Generic]]</span></a>, from
+            the default
         </p>
         <pre class="tty">[Units]
 
@@ -816,6 +821,12 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
         <span class="highlight">inTemp  = Barn Temperature</span>
         outTemp = Outside Temperature
         ...</pre>
+
+        <p>
+            With this change, all observations of console temperature, such as in an HTML report, or a plot, will now be
+            labeled <em>"Barn Temperature</em>." Because this is under the <span class="code">[Defaults]</span> section,
+            this change will apply to <em>all</em> reports.
+        </p>
 
         <h3 id="overriding_from_weewx_conf">
             Change an option in <span class="code">[StdReport]</span> in <span class="code">weewx.conf</span>
@@ -869,71 +880,29 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
                 group_temperature = degree_F
 </pre>
         <p>
-            We have done two things different from the stock reports. First (1), we have renamed the first report from
-            <span class="code">SeasonsReport</span> to <span class="code">SeasonsMetricReport</span> for clarity; and
-            second (2), we have introduced a new report <span class="code">SeasonsUSReport</span>, which is just like
-            the first, except it puts its results in a different spot and uses different units. Both use the same skin,
-            the <span class="code">Seasons</span> skin.
+            Two things are different from the stock section <span class="code">[StdReport]</span>. First (1), we have
+            renamed the first report from <span class="code">SeasonsReport</span> to <span class="code">SeasonsMetricReport</span>
+            for clarity; and second (2), we have introduced a new report <span class="code">SeasonsUSReport</span>,
+            which is just like the first, except it puts its results in a different subdirectory and uses different
+            units. Both use the same skin, the <span class="code">Seasons</span> skin.
         </p>
 
-        <h3>
+        <h3 id="change_skin_conf">
             Changing options in <span class="code">skin.conf</span>
         </h3>
 
         <p>
-            With this approach, change an option value in a report's <span class="code">skin.conf</span> configuration
-            file. This will affect only the individual report. It is most useful for "look and feel" options, such as
-            which plots to generate, or which templates to process.
+            With this approach, you change an option value in a report's <span class="code">skin.conf</span>
+            configuration file. This will affect only the individual report. While any option can be specified here, it
+            is most useful for "look and feel" options, such as which plots to generate, or which templates to process.
         </p>
 
         <p>
             For the standard skin that comes with WeeWX, the file is <span class="code">skins/Seasons/skin.conf</span>.
-            It includes many, many options that can be changed. For a complete list, see the section below, <em><a
+            It includes many options, all which can be changed. For a complete list, see the section below, <em><a
             href="#standard_skin">The skin configuration file <span class="code">skin.conf</span></a></em>.
         </p>
 
-        <p>
-            For example, suppose you wish to use metric units in the presentation layer, instead of the default US
-            Customary Units. The section in <span class="code">skin.conf</span> that controls units is <span
-            class="code">[Units][[Groups]]</span>. It looks like this:
-        </p>
-        <pre class="tty">[Units]
-    [[Groups]]
-        group_altitude    = foot
-        group_degree_day  = degree_F_day
-        group_direction   = degree_compass
-        group_moisture    = centibar
-        group_percent     = percent
-        group_pressure    = inHg
-        group_radiation   = watt_per_meter_squared
-        group_rain        = inch
-        group_rainrate    = inch_per_hour
-        group_speed       = mile_per_hour
-        group_speed2      = mile_per_hour2
-        group_temperature = degree_F
-        group_uv          = uv_index
-        group_volt        = volt</pre>
-        <p>To use metric units, you would edit this section to read:</p>
-        <pre class="tty">[Units]
-    [[Groups]]
-        <span class="highlight">group_altitude    = meter</span>
-        <span class="highlight">group_degree_day  = degree_C_day</span>
-        group_direction   = degree_compass
-        group_moisture    = centibar
-        group_percent     = percent
-        <span class="highlight">group_pressure    = mbar</span>
-        group_radiation   = watt_per_meter_squared
-        <span class="highlight">group_rain        = mm</span>
-        <span class="highlight">group_rainrate    = mm_per_hour</span>
-        <span class="highlight">group_speed       = meter_per_second</span>
-        <span class="highlight">group_speed2      = meter_per_second2</span>
-        <span class="highlight">group_temperature = degree_C</span>
-        group_uv          = uv_index
-        group_volt        = volt</pre>
-        <p>
-            The options that were changed have been <span class="highlight">&nbsp;highlighted&nbsp;</span>. Details of
-            the various unit options are given in the <em><a href="#units">Appendix: Units</a></em>.
-        </p>
 
         <h3>Do I need to restart WeeWX?</h3>
         <p>
