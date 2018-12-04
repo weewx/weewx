@@ -644,25 +644,24 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
 
         <h1 id="customizing_reports">Customizing reports</h1>
 
-        <h2>Overview</h2>
-
-        <p>This section discusses the two general strategies for customizing reports: by changing options in one or more
-            configuration file, or by changing the template files. The former is generally easier, but occasionally the
-            latter is necessary.
+        <p>
+            There are two general strategies for customizing reports: by changing options in one or more configuration
+            files, or by changing the template files. The former is generally easier, but occasionally the latter is
+            necessary.
         </p>
 
         <p>
             There are two kinds of options: general options, and "look-and-feel" options. General options control things
-            like which unit system to use, or how an observation type should be labeled and formatted. Look-and-feel
-            options control which templates are to be processed, what plots are to be created and what to put them in.
-            In theory, either type can go in either place, but usually general options are specified in <span
-            class="code">weewx.conf</span>, while look-and-feel options go in a report's <span
-            class="code">skin.conf</span> file.
+            such as which unit system to use, or how an observation type should be labeled and formatted. Look-and-feel
+            options control things such as which templates are to be processed, what plots are to be created and what to
+            put them in. In theory, either type of option can go in either place, but usually general options are
+            specified in <span class="code">weewx.conf</span>, while look-and-feel options go in a report's <span
+            class="code">skin.conf</span> file. Indeed, this is how options are organized in the normal WeeWX
+            distribution.
         </p>
         <p>
             <a href="#general_options">General options</a> are covered in the next section, while look-and-feel options
-            are covered under either the <a href="#customizing_templates">Cheetah generator</a> section, or the <a
-            href="#image_generator">Image generator</a> section.
+            are covered under <a href="#standard_skin">Reference to <span class="code">skin.conf</span> options</a>.
         </p>
 
         <h2>Do I need to restart WeeWX?</h2>
@@ -675,16 +674,18 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
             interval.
         </p>
 
-        <h2 id="general_options">General options</h2>
+        <h1 id="general_options">General options</h1>
+
+        <h2>Overview of general options</h2>
 
         <p>
             This section covers a suite of "general options," which control things like what unit system to use, how an
             observation type should be labelled and formatted, <i>etc.</i> They can be changed in one of two different
-            sections in <span class="code">weewx.conf</span>, depending on the"scope" over which you want the change to
+            sections in <span class="code">weewx.conf</span>, depending on the "scope" over which you want the change to
             apply. The table below summarizes:
         </p>
 
-        <table>
+        <table class="indent" style="width: 60%" summary="Where to change a general option">
             <tr class="first_row">
                 <td>Section</td>
                 <td>Scope</td>
@@ -888,10 +889,10 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
         </p>
 
 
-        <h2>Reference guide for general options</h2>
-
         <p>This section is a reference for all the general options, normally found in <span
             class="code">[Defaults]</span> in <span class="code">weewx.conf</span></p>
+
+        <h2>Reference guide to general options</h2>
 
         <h3 class="config_section">[Units]</h3>
 
@@ -1192,9 +1193,7 @@ UV      = UV Index</pre>
           gibbous, Last quarter, Waning crescent</span>.
         </p>
 
-        <h2 id="customizing_templates">Cheetah generator</h2>
-
-        <h3>Overview of the Cheetah generator</h3>
+        <h1 id="customizing_templates">Overview of the Cheetah Generator</h1>
 
         <p>
             File generation is done using the <a href="https://pythonhosted.org/Cheetah/">Cheetah</a> templating engine,
@@ -1232,7 +1231,7 @@ UV      = UV Index</pre>
             and <span class='code'>ToDate</span>. They are described below.
         </p>
 
-        <h4>Make small changes</h4>
+        <h2>Make small changes</h2>
 
         <p>
             The best way to customize file generation is to make a copy of a working report/skin, then make incremental
@@ -1247,7 +1246,7 @@ UV      = UV Index</pre>
             configuration and/or the template contents.
         </p>
 
-        <h3>The <em>Seasons</em> skin templates</h3>
+        <h2>The <em>Seasons</em> skin templates</h2>
 
         <p>
             By way of example, here is the <span class="code">[CheetahGenerator]</span> section from the <span
@@ -1321,104 +1320,7 @@ UV      = UV Index</pre>
             class="code">tom</span>, <span class="code">dick</span>, and <span class="code">harry</span>.
         </p>
 
-        <h3>Cheetah generator options</h3>
-
-        <p>This section is a reference for all the options for the Cheetah generator.</p>
-
-        <p class="config_option">search_list</p>
-
-        <p>
-            This is the list of search list objects that will be scanned by the template engine, looking for tags. See
-            the section <em><a href="#defining_new_tags">Defining new tags</a></em> and the <a
-            href="http://pythonhosted.org/Cheetah/users_guide">Cheetah documentation</a> for details on search lists. If
-            no <span class="config_option">search_list</span> is specified, a default list will be used. The default
-            list is:
-        </p>
-        <pre class="tty">search_list = weewx.cheetahgenerator.Almanac, weewx.cheetahgenerator.Station, weewx.cheetahgenerator.Stats, weewx.cheetahgenerator.UnitInfo, weewx.cheetahgenerator.Extras</pre>
-        <p class="config_option">search_list_extensions</p>
-
-        <p>
-            This defines one or more search list objects that will be appended to the <span class="config_option">search_list</span>.
-            For example, the following adds alltime and forecast variables to the search list.
-        </p>
-        <pre class="tty">search_list_extensions = user.stats.MyStats, user.forecast.ForecastVariables</pre>
-        <p class="config_option" id='option_encoding'>encoding</p>
-
-        <p>
-            As Cheetah goes through the template, it substitutes strings for all tag values. This option controls which
-            encoding to use for the new strings. The encoding can be chosen on a per file basis. There are 3 possible
-            choices:
-        </p>
-        <table class="indent">
-            <tbody>
-            <tr class="first_row">
-                <td>Encoding</td>
-                <td>Comments</td>
-            </tr>
-            <tr>
-                <td class="code first_col">html_entities</td>
-                <td>Non 7-bit characters will be represented as HTML entities (<i>e.g.</i>, the degree sign will be
-                    represented as <span class="code">&amp;#176;</span>)
-                </td>
-            </tr>
-            <tr>
-                <td class="code first_col">utf8</td>
-                <td>Non 7-bit characters will be represented in UTF-8.</td>
-            </tr>
-            <tr>
-                <td class="code first_col">strict_ascii</td>
-                <td>Non 7-bit characters will be ignored.</td>
-            </tr>
-            </tbody>
-        </table>
-        <p>
-            The encoding <span class="code">html_entities</span> is the default.
-        </p>
-
-        <p class="config_option" id="option_template">template</p>
-
-        <p>
-            The name of a template file. A template filename must end with <span class="code">.tmpl</span>. Filenames
-            are case-sensitive. If the template filename has the letters <span class="code">YYYY</span>, <span
-            class="code">MM</span>, <span class="code">WW</span> or <span class="code">DD</span> in its name, these will
-            be substituted for the year, month, week and day of month, respectively. So, a template with the name <span
-            class="code">summary-YYYY-MM.html.tmpl</span> would have name <span class="code">summary-2010-03.html</span>
-            for the month of March, 2010.
-        </p>
-
-        <p class="config_option" id="stale_age">stale_age</p>
-
-        <p>
-            File staleness age, in seconds. If the file is older than this age it will be generated from the template.
-            If no <span class="code">stale_age</span> is specified, then the file will be generated every time the
-            generator runs.
-        </p>
-
-        <p class="note" style="display: inline-block; width: 70%">
-            <strong>Note</strong><br/>Precise control over when a <em><a href="usersguide.htm#Reports">report</a></em>
-            is run is available through use of the <span class="code">report_timing</span> option in <span class="code">weewx.conf</span>.
-            The <span class="code">report_timing</span> option uses a CRON-like setting to control precisely when a
-            report is run. See the <em><a href="#customizing_gen_time">Customizing the report generation time</a></em>
-            section for details on the <span class="code">report_timing</span> option.
-        </p>
-
-        <p class="config_option">[[SummaryByMonth]]</p>
-
-        <p>
-            The <span class="code">SummaryByMonth</span> section defines some special behavior. Each template in this
-            section will be used multiple times, each time with a different per-month timespan. Be sure to include <span
-            class="code">YYYY</span> and <span class="code">MM</span> in the filename of any template in this section.
-        </p>
-
-        <p class="config_option">[[SummaryByYear]]</p>
-
-        <p>
-            The <span class="code">SummaryByYear</span> section defines some special behavior. Each template in this
-            section will be used multiple times, each time with a different per-year timespan. Be sure to include <span
-            class="code">YYYY</span> in the filename of any template in this section.
-        </p>
-
-        <h3>Tags</h3>
+        <h2>Tags</h2>
 
         <p>
             If you look inside a template, you will see it makes heavy use of <em>tags</em>. As the Cheetah generator
@@ -1472,9 +1374,9 @@ $month.outTemp.max</pre>
             over time. However, both versions are similar.
         </p>
 
-        <h4>
+        <h3>
             Time period <span class="code">$current</span>
-        </h4>
+        </h3>
 
         <p>
             Time period <span class="code">$current</span> represents a <em>current observation</em>. An example would
@@ -1517,9 +1419,9 @@ $month.outTemp.max</pre>
             value will appear. See the section <em><a href="#formatting_options">Formatting Options</a></em> below.
         </p>
 
-        <h4>
+        <h3>
             Time period <span class="code">$latest</span>
-        </h4>
+        </h3>
 
         <p>
             Time period <span class="code">$latest</span> is very similar to <span class="code">$current</span>, except
@@ -1529,7 +1431,7 @@ $month.outTemp.max</pre>
             this happened.
         </p>
 
-        <h4 id="general_aggregation_periods">Aggregation periods</h4>
+        <h3 id="general_aggregation_periods">Aggregation periods</h3>
 
         <p>Aggregation periods is the other kind of tag. For example,</p>
         <pre class="tty">$week.rain.sum</pre>
@@ -1702,7 +1604,7 @@ $month.outTemp.max</pre>
             </tbody>
         </table>
 
-        <h4 id="unit_conversion_options">Unit conversion options</h4>
+        <h3 id="unit_conversion_options">Unit conversion options</h3>
 
         <p>
             The tag <span class="code">optional_unit_conversion</span> can be used with either current observations or
@@ -1725,7 +1627,7 @@ $month.outTemp.max</pre>
         <p class="example_output">Today's average pressure=1017.5 mbar
         </p>
 
-        <h5>Illegal conversions</h5>
+        <h4>Illegal conversions</h4>
 
         <p>
             If an inappropriate or nonsense conversion is asked for, <i>e.g.</i>,
@@ -1741,7 +1643,7 @@ or in foobar units: $day.barometer.min.foobar
             foobar units: $day.barometer.min.foobar
         </p>
 
-        <h4 id="formatting_options">Formatting options</h4>
+        <h3 id="formatting_options">Formatting options</h3>
 
         <p>
             A variety of tags and arguments are available to you to customize the formatting of the final observation
@@ -1818,7 +1720,7 @@ or in foobar units: $day.barometer.min.foobar
 
         <p>If you're willing to honor the ordering of the arguments, the argument name can be omitted.</p>
 
-        <h4>Formatting examples</h4>
+        <h3>Formatting examples</h3>
 
         <p>This section gives a number of example tags, and their expected output. The following values are assumed:</p>
 
@@ -1968,9 +1870,9 @@ or in foobar units: $day.barometer.min.foobar
             as well as <span class="code">$current</span>.
         </p>
 
-        <h4>
+        <h3>
             Start, end, and <span class="code">dateTime</span>
-        </h4>
+        </h3>
 
         <p>
             While not an observation type, in many ways the time of an observation, <span class="code">dateTime</span>,
@@ -2022,9 +1924,9 @@ or in foobar units: $day.barometer.min.foobar
         </p>
 
 
-        <h4>
+        <h3>
             Tag <span class="code">$trend</span>
-        </h4>
+        </h3>
 
         <p>
             The tag <span class="code">$trend</span> is available for time trends, such as changes in barometric
@@ -2071,9 +1973,9 @@ or in foobar units: $day.barometer.min.foobar
 
         <p class="example_output">The barometer trend over 3 hrs is +.03 inHg.</p>
 
-        <h4>
+        <h3>
             Tag <span class="code">$span</span>
-        </h4>
+        </h3>
 
         <p>
             The tag <span class="code">$span</span> allows aggregation over a user defined period up to and including
@@ -2172,9 +2074,9 @@ or in foobar units: $day.barometer.min.foobar
 
         <p class="example_output">The total rainfall over the last 30 hours is 1.24 in</p>
 
-        <h4>
+        <h3>
             Tag <span class="code">$unit</span>
-        </h4>
+        </h3>
 
         <p>The type, label, and string formats for all units are also available, allowing you to do highly customized
             labels:
@@ -2210,16 +2112,16 @@ or in foobar units: $day.barometer.min.foobar
             reproducing the results of the simpler tag <span class="code">$day.outTemp.max</span>.
         </p>
 
-        <h4>
+        <h3>
             Tag <span class="code">$obs</span>
-        </h4>
+        </h3>
 
         <p>
             The labels used for the various observation types are available using tag <span class="code">$obs</span>.
             These are basically the values given in the skin dictionary, section <a href="#Labels_Generic"><span
             class="code">[Labels][[Generic]]</span></a>.
         </p>
-        <table class="indent" style="width: 50%" summary="Example off using observation labels">
+        <table class="indent" style="width: 50%" summary="Example of using observation labels">
             <tbody>
             <tr class="first_row">
                 <td>Tag</td>
@@ -2237,7 +2139,7 @@ or in foobar units: $day.barometer.min.foobar
         </table>
 
 
-        <h4>Iteration</h4>
+        <h3>Iteration</h3>
 
         <p>It is possible to iterate over the following:</p>
 
@@ -2373,7 +2275,7 @@ $month.dateTime.format("%B"): Min, max temperatures: $month.outTemp.min $month.o
             for other examples using iteration, as well as explicit formatting.
         </p>
 
-        <h4>Comprehensive example</h4>
+        <h3>Comprehensive example</h3>
         <p>
             This example is designed to put together a lot of the elements above, including iteration, aggregation
             period starts and ends, formatting, and overriding units.
@@ -2413,7 +2315,7 @@ $month.dateTime.format("%B"): Min, max temperatures: $month.outTemp.min $month.o
 </pre>
         <p><a href="examples/tag.htm">Click here</a> for the results.</p>
 
-        <h3>Almanac</h3>
+        <h2>Almanac</h2>
 
         <p>
             If module <a href="http://rhodesmill.org/pyephem">pyephem</a> has been installed, then WeeWX can generate
@@ -2463,7 +2365,7 @@ Sunrise, sunset: $almanac.sunrise $almanac.sunset
             <li>Functions</li>
         </ul>
         <p>We will cover each of these separately.</p>
-        <h4>Calendar events</h4>
+        <h3>Calendar events</h3>
 
         <p>
             "Calendar events" do not require a heavenly body. They cover things such as <span
@@ -2523,7 +2425,7 @@ Sunrise, sunset: $almanac.sunrise $almanac.sunset
             decimal degrees rather than a customary value from 0 to 24 hours.
         </p>
 
-        <h4>Heavenly bodies</h4>
+        <h3>Heavenly bodies</h3>
 
         <p>The second category does require a heavenly body. This covers queries such as, "When does Jupiter rise?" or,
             "When does the sun transit?" Examples are
@@ -2620,7 +2522,7 @@ Sunrise, sunset: $almanac.sunrise $almanac.sunset
             class="code">g_ra</span> return values in decimal degrees rather than customary values from 0 to 24 hours.
         </p>
 
-        <h4>Functions</h4>
+        <h3>Functions</h3>
         <p>There is actually one one function in this category: <span class="code">separation</span>. It returns the
             angular separation between two heavenly bodies. For example, to calculate the angular separation between
             Venus and Mars you would use:
@@ -2632,7 +2534,7 @@ Sunrise, sunset: $almanac.sunrise $almanac.sunset
         <p>This would result in:</p>
         <p class="example_output">The separation between Venus and Mars is 55:55:31.8</p>
 
-        <h3>Wind</h3>
+        <h2>Wind</h2>
 
         <p>
             Wind deserves a few comments because it is stored in the database in two different ways: as a set of
@@ -2770,7 +2672,7 @@ Sunrise, sunset: $almanac.sunrise $almanac.sunset
         </table>
 
 
-        <h3 id="defining_new_tags">Defining new tags</h3>
+        <h2 id="defining_new_tags">Defining new tags</h2>
 
         <p>
             We have seen how you can change a template and make use of the various tags available such as <span
@@ -2795,7 +2697,7 @@ Sunrise, sunset: $almanac.sunrise $almanac.sunset
             The answer is to write a <em>search list extension</em>.
         </p>
 
-        <h4>How the search list works</h4>
+        <h3>How the search list works</h3>
 
         <p>
             Let's start by taking a look at how the Cheetah <em>search list</em> works.
@@ -2812,7 +2714,7 @@ Sunrise, sunset: $almanac.sunrise $almanac.sunset
             class="code">NameMapper.NotFound</span> exception.
         </p>
 
-        <h4 id="how_tags_work">How tags work</h4>
+        <h3 id="how_tags_work">How tags work</h3>
 
         <p>
             Now let's take a look at how the search list interacts with WeeWX tags. Let's start by looking at a simple
@@ -2908,7 +2810,7 @@ $station.altitude</pre>
             simple expression <span class="code">$day.outTemp.max</span>!
         </p>
 
-        <h4 id="extending_the_list">Extending the list</h4>
+        <h3 id="extending_the_list">Extending the list</h3>
 
         <p>
             As mentioned, WeeWX comes with a number of objects already in the search list, but you can extend it. To do
@@ -3122,7 +3024,7 @@ class MyStats(SearchList):                                                   # 1
         <pre class="tty">export PYTHONPATH=/home/me/secret_location</pre>
 
 
-        <h2 id="image_generator">Image generator</h2>
+        <h1 id="image_generator">Overview of the Image Generator</h1>
 
         <p>
             The installed version of WeeWX is configured to generate a set of useful plots. But, what if you don't like
@@ -3153,7 +3055,7 @@ class MyStats(SearchList):                                                   # 1
             apply to all plots.
         </p>
 
-        <h3>Time periods</h3>
+        <h2>Time periods</h2>
 
         <p>
             After the "global" options at the top of section <span class="code">[ImageGenerator]</span>, comes a set of
@@ -3181,7 +3083,7 @@ class MyStats(SearchList):                                                   # 1
             class="code">false</span>, we are requesting that day-night, shaded bands not be shown.
         </p>
 
-        <h3>Image files</h3>
+        <h2>Image files</h2>
 
         <p>
             Within each time period sub-section is another nesting, one for each image to be generated. The title of
@@ -3227,7 +3129,7 @@ class MyStats(SearchList):                                                   # 1
             <img src="images/sample_monthrain.png" alt="Sample monthly rain plot"/>
         </p>
 
-        <h3 id="line_gaps">Line gaps</h3>
+        <h2 id="line_gaps">Line gaps</h2>
 
         <p id="line_gap_fraction">
             If there is a time gap in the data, the option <span class="code">line_gap_fraction</span> controls how line
@@ -3251,7 +3153,8 @@ class MyStats(SearchList):                                                   # 1
             </div>
         </div>
         <div style="clear: both"></div>
-        <h3>Including more than one SQL type in a plot</h3>
+
+        <h2>Including more than one SQL type in a plot</h2>
 
         <p>More than one SQL type can be included in a plot. For example, here is how to generate a plot with the week's
             outside temperature as well as dewpoint:
@@ -3264,7 +3167,7 @@ class MyStats(SearchList):                                                   # 1
             both outside temperature and dewpoint.
         </p>
 
-        <h3 id="including_same_sql_type_2x">Including the same SQL type more than once in a plot</h3>
+        <h2 id="including_same_sql_type_2x">Including the same SQL type more than once in a plot</h2>
 
         <p>
             Another example. Say you want a plot of the day's temperature, overlaid with hourly averages. Here, you are
@@ -3325,7 +3228,7 @@ class MyStats(SearchList):                                                   # 1
             <img width="300" height="180" alt="Daily highs and lows" src="images/yearhilow.png"/>
         </p>
 
-        <h3>Progressive vector plots</h3>
+        <h2>Progressive vector plots</h2>
 
         <p>
             WeeWX can produce progressive vector plots as well as the more conventional x-y plots. To produce these, use
@@ -3371,7 +3274,7 @@ class MyStats(SearchList):                                                   # 1
             show the orientation of North.
         </p>
 
-        <h3>Overriding values</h3>
+        <h2>Overriding values</h2>
 
         <p>
             Remember that values at any level can override values specified at a higher level. For example, say you want
@@ -3483,7 +3386,7 @@ class MyStats(SearchList):                                                   # 1
             host <span class="code">rpi-bug</span>, the name of my Raspberry Pi.
         </p>
 
-        <h3>Explicit binding in tags</h3>
+        <h2>Explicit binding in tags</h2>
 
         <p>How do we use this new binding? First, let's do a text comparison, using tags. Here's what our template looks
             like:
@@ -3524,7 +3427,7 @@ class MyStats(SearchList):                                                   # 1
             </div>
         </div>
 
-        <h3>Explicit binding in images</h3>
+        <h2>Explicit binding in images</h2>
 
         <p>
             How would we produce a graph of the two different temperatures? Here's what the relevant section of the
@@ -3550,7 +3453,7 @@ class MyStats(SearchList):                                                   # 1
         </p>
         <img src='images/daycompare.png' alt="Comparing temperatures"/>
 
-        <h3 id="stupid_detail">Stupid detail</h3>
+        <h2 id="stupid_detail">Stupid detail</h2>
 
         <p>
             At first, I could not get this example to work. The problem turned out to be that the RPi was processing
@@ -3562,7 +3465,7 @@ class MyStats(SearchList):                                                   # 1
         </p>
 
 
-        <h2 id="customizing_gen_time">Customizing the report generation time</h2>
+        <h1 id="customizing_gen_time">Scheduling report generation</h1>
 
         <p>
             Normal WeeWX operation is to run each <em><a href="usersguide.htm#Reports">report</a></em> defined in <span
@@ -3582,8 +3485,8 @@ class MyStats(SearchList):                                                   # 1
             allow reports to be generated more frequently than once every archive period.
         </p>
 
-        <h3>
-            The <span class="code">report_timing</span> option </h3>
+        <h2>
+            The <span class="code">report_timing</span> option </h2>
 
         <p>
             The <span class="code">report_timing</span> option uses a CRON-like format to control when a report is to be
@@ -3688,8 +3591,8 @@ class MyStats(SearchList):                                                   # 1
             setting (every 10 minutes) which has overriden the <span class="code">[StdReport]</span> setting.
         </p>
 
-        <h4>
-            How <span class="code">report_timing</span> controls reporting </h4>
+        <h3>
+            How <span class="code">report_timing</span> controls reporting </h3>
 
         <p>
             The syntax and interpretation of the <span class="code">report_timing</span> parameters are largely the same
@@ -3783,7 +3686,7 @@ class MyStats(SearchList):                                                   # 1
             </tbody>
         </table>
 
-        <h4>Lists, ranges and steps</h4>
+        <h3>Lists, ranges and steps</h3>
 
         <p>
             The <span class="code">report_timing</span> option supports lists, ranges and steps for all parameters.
@@ -3816,7 +3719,7 @@ class MyStats(SearchList):                                                   # 1
             </li>
         </ul>
 
-        <h4>Nicknames</h4>
+        <h3>Nicknames</h3>
 
         <p>
             The <span class="code">report_timing</span> option supports a number of time specification 'nicknames'.
@@ -3861,8 +3764,8 @@ class MyStats(SearchList):                                                   # 1
             </tbody>
         </table>
 
-        <h4>
-            <span class="code">report_timing</span> option examples </h4>
+        <h3>
+            <span class="code">report_timing</span> option examples</h3>
 
         <p>
             Numeric settings for <span class="code">report_timing</span> can be at times difficult to understand due to
@@ -3952,9 +3855,9 @@ class MyStats(SearchList):                                                   # 1
             </tbody>
         </table>
 
-        <h3>
+        <h2>
             The <span class="code">wee_reports</span> utility and the <span class="code">report_timing</span> option
-        </h3>
+        </h2>
 
         <p>
             The <span class="code">report_timing</span> option is ignored when using the <a href="#wee_reports">wee_reports</a>
@@ -3962,8 +3865,7 @@ class MyStats(SearchList):                                                   # 1
         </p>
 
         <h1 id="standard_skin">
-            The skin configuration file <span class="code">skin.conf</span>
-        </h1>
+            Reference guide to <span class="code">skin.conf</span> options </h1>
 
         <p>
             This section is a reference to the options appearing in the skin configuration file, <span class="code">skin.conf</span>.
@@ -4061,6 +3963,103 @@ class MyStats(SearchList):                                                   # 1
     &lt;img src="$Extras.video.still" alt="Video capture"/&gt;
 &lt;/a&gt;</pre>
 
+
+        <h2>[CheetahGenerator]</h2>
+
+        <p>This section is a reference for all the options for the Cheetah generator.</p>
+
+        <p class="config_option">search_list</p>
+
+        <p>
+            This is the list of search list objects that will be scanned by the template engine, looking for tags. See
+            the section <em><a href="#defining_new_tags">Defining new tags</a></em> and the <a
+            href="http://pythonhosted.org/Cheetah/users_guide">Cheetah documentation</a> for details on search lists. If
+            no <span class="config_option">search_list</span> is specified, a default list will be used. The default
+            list is:
+        </p>
+        <pre class="tty">search_list = weewx.cheetahgenerator.Almanac, weewx.cheetahgenerator.Station, weewx.cheetahgenerator.Stats, weewx.cheetahgenerator.UnitInfo, weewx.cheetahgenerator.Extras</pre>
+        <p class="config_option">search_list_extensions</p>
+
+        <p>
+            This defines one or more search list objects that will be appended to the <span class="config_option">search_list</span>.
+            For example, the following adds alltime and forecast variables to the search list.
+        </p>
+        <pre class="tty">search_list_extensions = user.stats.MyStats, user.forecast.ForecastVariables</pre>
+        <p class="config_option" id='option_encoding'>encoding</p>
+
+        <p>
+            As Cheetah goes through the template, it substitutes strings for all tag values. This option controls which
+            encoding to use for the new strings. The encoding can be chosen on a per file basis. There are 3 possible
+            choices:
+        </p>
+        <table class="indent">
+            <tbody>
+            <tr class="first_row">
+                <td>Encoding</td>
+                <td>Comments</td>
+            </tr>
+            <tr>
+                <td class="code first_col">html_entities</td>
+                <td>Non 7-bit characters will be represented as HTML entities (<i>e.g.</i>, the degree sign will be
+                    represented as <span class="code">&amp;#176;</span>)
+                </td>
+            </tr>
+            <tr>
+                <td class="code first_col">utf8</td>
+                <td>Non 7-bit characters will be represented in UTF-8.</td>
+            </tr>
+            <tr>
+                <td class="code first_col">strict_ascii</td>
+                <td>Non 7-bit characters will be ignored.</td>
+            </tr>
+            </tbody>
+        </table>
+        <p>
+            The encoding <span class="code">html_entities</span> is the default.
+        </p>
+
+        <p class="config_option" id="option_template">template</p>
+
+        <p>
+            The name of a template file. A template filename must end with <span class="code">.tmpl</span>. Filenames
+            are case-sensitive. If the template filename has the letters <span class="code">YYYY</span>, <span
+            class="code">MM</span>, <span class="code">WW</span> or <span class="code">DD</span> in its name, these will
+            be substituted for the year, month, week and day of month, respectively. So, a template with the name <span
+            class="code">summary-YYYY-MM.html.tmpl</span> would have name <span class="code">summary-2010-03.html</span>
+            for the month of March, 2010.
+        </p>
+
+        <p class="config_option" id="stale_age">stale_age</p>
+
+        <p>
+            File staleness age, in seconds. If the file is older than this age it will be generated from the template.
+            If no <span class="code">stale_age</span> is specified, then the file will be generated every time the
+            generator runs.
+        </p>
+
+        <p class="note" style="display: inline-block; width: 70%">
+            <strong>Note</strong><br/>Precise control over when a <em><a href="usersguide.htm#Reports">report</a></em>
+            is run is available through use of the <span class="code">report_timing</span> option in <span class="code">weewx.conf</span>.
+            The <span class="code">report_timing</span> option uses a CRON-like setting to control precisely when a
+            report is run. See the <em><a href="#customizing_gen_time">Scheduling reports</a></em> section for details
+            on the <span class="code">report_timing</span> option.
+        </p>
+
+        <p class="config_option">[[SummaryByMonth]]</p>
+
+        <p>
+            The <span class="code">SummaryByMonth</span> section defines some special behavior. Each template in this
+            section will be used multiple times, each time with a different per-month timespan. Be sure to include <span
+            class="code">YYYY</span> and <span class="code">MM</span> in the filename of any template in this section.
+        </p>
+
+        <p class="config_option">[[SummaryByYear]]</p>
+
+        <p>
+            The <span class="code">SummaryByYear</span> section defines some special behavior. Each template in this
+            section will be used multiple times, each time with a different per-year timespan. Be sure to include <span
+            class="code">YYYY</span> in the filename of any template in this section.
+        </p>
 
         <h2 class="config_section">[ImageGenerator]</h2>
 
@@ -4526,7 +4525,8 @@ class MyStats(SearchList):                                                   # 1
 
         <h1 id="localization">Localization</h1>
 
-        <p>What follows is a guide to localizing to a non-English language and/or locale. There are two parts:
+        <p>
+            What follows is a guide to localizing to a non-English language and/or locale. There are two parts:
             translating to different languages and modifying to reflect local conventions for displaying data.
         </p>
 
@@ -4537,75 +4537,104 @@ class MyStats(SearchList):                                                   # 1
             such as <span class="code">"Current Weather Conditions"</span> will need to be translated.
         </p>
 
-        <h2>Modify the skin configuration</h2>
+        <h2>Modify the general options</h2>
 
         <p>
-            Next, you will need to go through <span class="code">skin.conf</span> to translate labels and modify formats
-            to follow local conventions.
+            Next, you will need to go through the <a href="#general_options">general options</a> in the section <span
+            class="code">[Defaults]</span> in <span class="code">weewx.conf</span>, translating labels and modifying
+            formats to follow local conventions.
         </p>
 
-        <p>You will probably want to change the generic labels used for the observation types:</p>
-        <pre class="tty">[Labels]
-    ...
-    [[Generic]]
-        barometer      = Barometer
-        dewpoint       = Dew Point
-        heatindex      = Heat Index
-        inHumidity     = Inside Humidity
-        inTemp         = Inside Temperature
-        outHumidity    = Outside Humidity
-        outTemp        = Outside Temperature
-        radiation      = Radiation
-        rain           = Rain
-        rainRate       = Rain Rate
-        rxCheckPercent = ISS Signal Quality
-        windDir        = Wind Direction
-        windGust       = Gust Speed
-        windGustDir    = Gust Direction
-        windSpeed      = Wind Speed
-        windchill      = Wind Chill
-        windgustvec    = Gust Vector
-        windvec        = Wind Vector</pre>
-        <p>The hemisphere abbreviations may have to be changed:</p>
-        <pre class="tty">[Labels]
-    hemispheres = N, S, E, W</pre>
-        <p>The wind ordinal directions may have to be changed:</p>
-        <pre class='tty'>[Units]
-    ...
-    [[Ordinates]]
-        # The ordinal directions. The last one should be for no wind direction
-        directions = N, NNE, NE, ENE, E, ESE, SE, SSE, S, SSW, SW, WSW, W, WNW, NW, NNW, N/A </pre>
-        <p>Don't forget the moon phases:</p>
-        <pre class="tty">[Almanac]
-    moon_phases = New, Waxing crescent, First quarter, Waxing gibbous, Full, Waning gibbous, Last quarter, Waning crescent</pre>
-        <p id="l11n_unit_labels">
-            Most of the unit labels either follow ISO conventions, or are unlikely to be used outside English speaking
-            countries (an example would be &quot;foot&quot;). But, there are a few exceptions, used to label the WeeWX
-            and server &quot;uptimes&quot;, which can be found in sub-section <span
-            class="code">[Units][[Labels]]</span>
+        <p>
+            In particular, you will probably need to change the following sections:
         </p>
-        <pre class="tty">[Units]
-    ...
-    [[Labels]]
+        <pre class="tty">
+[Defaults]
+
+    # The following section is for managing the selection and formatting of units.
+    [[Units]]
+
         ...
-        day     = " day",    " days"
-        hour    = " hour",   " hours"
-        minute  = " minute", " minutes"
-        second  = " second", " seconds"</pre>
-        <p>
-            By default, the time formats will use the local convention specified by the LANG environment variable. These
-            can be modified individually in the <span class='code'>[Units][[TimeFormats]]</span> section.
-        </p>
-        <pre class='tty'>[Units]
-    [[TimeFormats]]
-        day        = %X
-        week       = %X (%A)
-        month      = %x %X
-        year       = %x %X
-        rainyear   = %x %X
-        current    = %x %X
-        ephem_day  = %X
-        ephem_year = %x %X</pre>
+
+        # The following section sets the label to be used for each type of unit
+        [[[Labels]]]
+
+            ...
+            <span class="highlight">day               = " day",    " days"</span>
+            <span class="highlight">hour              = " hour",   " hours"</span>
+            <span class="highlight">minute            = " minute", " minutes"</span>
+            <span class="highlight">second            = " second", " seconds"</span>
+
+        # The following section sets the string format to be used for each time scale.
+        # The values below will work in every locale, but they may not look
+        # particularly attractive. See the Customization Guide for alternatives.
+        [[[TimeFormats]]]
+
+            <span class="highlight">day        = %X</span>
+            <span class="highlight">week       = %X (%A)</span>
+            <span class="highlight">month      = %x %X</span>
+            <span class="highlight">year       = %x %X</span>
+            <span class="highlight">rainyear   = %x %X</span>
+            <span class="highlight">current    = %x %X</span>
+            <span class="highlight">ephem_day  = %X</span>
+            <span class="highlight">ephem_year = %x %X</span>
+
+        [[[Ordinates]]]
+            # Ordinal directions. The last one should be for no wind direction
+            <span class="highlight">directions = N, NNE, NE, ENE, E, ESE, SE, SSE, S, SSW, SW, WSW, W, WNW, NW, NNW, N/A</span>
+
+    # Labels to used
+    [[Labels]]
+
+        # Set to hemisphere abbreviations suitable for your location:
+        <span class="highlight">hemispheres = N, S, E, W</span>
+        # Formats to be used for latitude whole degrees, longitude whole degrees,
+        # and minutes:
+        latlon_formats = "%02d", "%03d", "%05.2f"
+
+        # Generic labels, keyed by an observation type.
+        [[[Generic]]]
+
+            <span class="highlight">barometer      = Barometer</span>
+            <span class="highlight">dewpoint       = Dew Point</span>
+            <span class="highlight">ET             = ET</span>
+            <span class="highlight">heatindex      = Heat Index</span>
+            <span class="highlight">inHumidity     = Inside Humidity</span>
+            <span class="highlight">inTemp         = Inside Temperature</span>
+            <span class="highlight">outHumidity    = Humidity</span>
+            <span class="highlight">outTemp        = Temperature</span>
+            <span class="highlight">radiation      = Radiation</span>
+            <span class="highlight">rain           = Rain</span>
+            <span class="highlight">rainRate       = Rain Rate</span>
+            <span class="highlight">UV             = UV Index</span>
+            <span class="highlight">windDir        = Wind Direction</span>
+            <span class="highlight">windGust       = Gust Speed</span>
+            <span class="highlight">windGustDir    = Gust Direction</span>
+            <span class="highlight">windSpeed      = Wind Speed</span>
+            <span class="highlight">windchill      = Wind Chill</span>
+            <span class="highlight">windgustvec    = Gust Vector</span>
+            <span class="highlight">windvec        = Wind Vector</span>
+            <span class="highlight">extraTemp1     = Temperature1</span>
+            <span class="highlight">extraTemp2     = Temperature2</span>
+            <span class="highlight">extraTemp3     = Temperature3</span>
+
+            # Sensor status indicators
+
+            <span class="highlight">rxCheckPercent       = Signal Quality</span>
+            <span class="highlight">txBatteryStatus      = Transmitter Battery</span>
+            <span class="highlight">windBatteryStatus    = Wind Battery</span>
+            <span class="highlight">rainBatteryStatus    = Rain Battery</span>
+            <span class="highlight">outTempBatteryStatus = Outside Temperature Battery</span>
+            <span class="highlight">inTempBatteryStatus  = Inside Temperature Battery</span>
+            <span class="highlight">consBatteryVoltage   = Console Battery</span>
+            <span class="highlight">heatingVoltage       = Heating Voltage</span>
+            <span class="highlight">supplyVoltage        = Supply Voltage</span>
+            <span class="highlight">referenceVoltage     = Reference Voltage</span>
+
+  [[Almanac]]
+        # The labels to be used for the phases of the moon:
+        <span class="highlight">moon_phases = New, Waxing crescent, First quarter, Waxing gibbous, Full, Waning gibbous, Last quarter, Waning crescent</span>
+        </pre>
 
         <h2>Encodings</h2>
         <p>You may have to specify the encoding used</p>
