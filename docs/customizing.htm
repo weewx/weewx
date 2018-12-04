@@ -51,17 +51,18 @@ Version: 3.9
 
         <p>
             This document starts with an overview of the architecture of WeeWX. If you are only interested in
-            customizing the generated reports you can probably skip the overview and proceed directly to the section
-            <em><a href="#standard_skin">The skin configuration file <span class="code">skin.conf</span> </a></em>. With
-            this approach you can easily add new plot images, change the titles of images, change the units used in the
-            reports, and so on.
+            customizing the generated reports you can probably skip the overview and proceed directly to the section <a
+            href="#customizing_reports"><em>Customizing reports</em></a>. With this approach you can easily add new plot
+            images, change the titles of images, change the units used in the reports, and so on.
         </p>
 
-        <p>However, if your goal is a specialized application, such as adding alarms, RSS feeds, etc., then it would be
-            worth your while to read about the internal architecture.
+        <p>
+            However, if your goal is a specialized application, such as adding alarms, RSS feeds, <i>etc.</i>, then it
+            would be worth your while to read about the internal architecture.
         </p>
 
-        <p>Most of the guide applies to any hardware, but the exact data types are hardware-specific. Many examples use
+        <p>
+            Most of the guide applies to any hardware, but the exact data types are hardware-specific. Many examples use
             types specific to the Davis Vantage series. Unless you are using an unusual type you are unlikely to run
             into trouble.
         </p>
@@ -82,18 +83,24 @@ Version: 3.9
             and template files in the <span class='code'>skins</span> directory will be preserved when you upgrade.
         </p>
 
-        <p>Other customizations require new Python code or modifications of example code. Where should you put the code?
-            If you simply modify the examples in place, then your changes will be overwritten the next time you do an
-            upgrade.
+        <p>
+            Other customizations require new Python code or modifications of example code. Where should you put the
+            code? If you simply modify the examples in place, then your changes will be overwritten the next time you do
+            an upgrade.
         </p>
 
         <p>
-            A better idea is to put the code in the <span class="code">user</span>, directory. For example, copy example
-            code from the <span class="code">examples</span> directory to the <span class="code">user</span> directory,
-            then modify it there. If your modification does not contain much code, consider putting it in the file <span
-            class="code">extensions.py</span> in the <span class="code">user</span> directory. Because the <span
-            class="code">user</span> directory is preserved through upgrades, you won't have to redo any changes you
-            might have made.
+            A better idea is to put the code in the <span class="code">user</span>, directory, which is preserved
+            through upgrades &mdash; you won't have to redo any changes you might have made. For example, if you wish to
+            modify one of the examples that comes with WeeWX, copy it from the <span class="code">examples</span>
+            directory to the <span class="code">user</span> directory, then modify it there. This way, your
+            modifications will not be touched if you upgrade.
+        </p>
+        <p>
+            For code that must run before anything else in WeeWX runs (for example, to set up an environment), put it in
+            the file <span class="code">extensions.py</span> in the <span class="code">user</span> directory. It is
+            always run before the WeeWX engine starts up. Because it is in the <span class="code">user</span>
+            subdirectory, it is preserved between upgrades.
         </p>
 
         <h2>Data architecture</h2>
@@ -1324,7 +1331,7 @@ UV      = UV Index</pre>
 
         <p>
             If you look inside a template, you will see it makes heavy use of <em>tags</em>. As the Cheetah generator
-            processes the template, it replaces the tag with an appropriate value and, sometimes, a label. This section
+            processes the template, it replaces each tag with an appropriate value and, sometimes, a label. This section
             discusses the details of how that happens.
         </p>
         <p>Here's an example of some tags:</p>
@@ -1333,7 +1340,7 @@ $month.outTemp.max
 $month.outTemp.maxtime</pre>
         <p>
             These code the current outside temperature, the maximum outside temperature for the month, and the time that
-            maximum temperature occurred, respectively. So a template file that contains:
+            maximum occurred, respectively. So a template file that contains:
         </p>
         <pre class="tty">&lt;html&gt;
     &lt;head&gt;
@@ -1386,9 +1393,9 @@ $month.outTemp.max</pre>
 
         <p>
             Formally, WeeWX first looks for the observation type in the record emitted by the <span class="code">NEW_ARCHIVE_RECORD</span>
-            event. This is generally the data emitted by the station console, augmented by any derived variables (<i>e.g.</i>wind
-            chill) that you might have specified. If the observation type cannot be found there, the most recent record
-            in the database will be searched.
+            event. This is generally the data emitted by the station console, augmented by any derived variables (<i>e.g.</i>
+            wind chill) that you might have specified. If the observation type cannot be found there, the most recent
+            record in the database will be searched.
         </p>
         <p>The most general tag for a "current" observation looks like:</p>
         <pre
@@ -1772,7 +1779,8 @@ or in foobar units: $day.barometer.min.foobar
                 <td class="code">45.2°F</td>
                 <td>String formatting from <span class="code"><a
                     href="#Units_StringFormats">[Units][[StringFormats]]</a></span>. Label from <span class="code"><a
-                    href="#Units_Labels">[Units][[Labels]]</a></span> in <span class="code">skin.conf</span></td>
+                    href="#Units_Labels">[Units][[Labels]]</a></span>.
+                </td>
             </tr>
             <tr>
                 <td class="code first_col">$current.outTemp.format</td>
@@ -1787,8 +1795,7 @@ or in foobar units: $day.barometer.min.foobar
             <tr>
                 <td class="code first_col">$current.outTemp.format(format_string="%.3f")</td>
                 <td class="code">45.200°F</td>
-                <td>Specified string format used; label from <span class="code"><a href="#Units_Labels">[Units][[Labels]]</a></span>
-                    in <span class="code">skin.conf</span>.
+                <td>Specified string format used; label from <span class="code"><a href="#Units_Labels">[Units][[Labels]]</a></span>.
                 </td>
             </tr>
             <tr>
@@ -1800,15 +1807,14 @@ or in foobar units: $day.barometer.min.foobar
             <tr>
                 <td class="code first_col">$current.outTemp.format(add_label=False)</td>
                 <td class="code">45.2</td>
-                <td>No label. The string formatting is from <span class="code"><a href="#Units_StringFormats">[Units][[StringFormats]]</a></span>
-                    in <span class="code">skin.conf</span></td>
+                <td>No label. The string formatting is from <span class="code"><a href="#Units_StringFormats">[Units][[StringFormats]]</a></span>.
+                </td>
             </tr>
             <tr>
                 <td class="code first_col">$current.UV</td>
                 <td class="code">N/A</td>
                 <td>The string specified by option <span class="code">NONE</span> in <span class="code"> <a
-                    href="#Units_StringFormats">[Units][[StringFormats]]</a></span> in <span
-                    class="code">skin.conf</span> is used.
+                    href="#Units_StringFormats">[Units][[StringFormats]]</a></span>.
                 </td>
             </tr>
             <tr>
@@ -1821,24 +1827,21 @@ or in foobar units: $day.barometer.min.foobar
                 <td class="code first_col">$current.windDir</td>
                 <td class="code">138&deg;</td>
                 <td>Formatting is from option <span class="code">degree_compass</span> in <span class="code"> <a
-                    href="#Units_StringFormats">[Units][[StringFormats]]</a></span> in <span
-                    class="code">skin.conf</span>.
+                    href="#Units_StringFormats">[Units][[StringFormats]]</a></span>.
                 </td>
             </tr>
             <tr>
                 <td class="code first_col">$current.windDir.ordinal_compass</td>
                 <td class="code">SW</td>
                 <td>Ordinal direction from section <span class="code"><a
-                    href="#Units_Ordinates">[Units][[Ordinates]]</a></span> in <span class="code">skin.conf</span> is
-                    being substituted.
+                    href="#Units_Ordinates">[Units][[Ordinates]]</a></span> is being substituted.
                 </td>
             </tr>
             <tr>
                 <td class="code first_col">$current.dateTime</td>
                 <td class="code">02-Apr-2010 16:25</td>
                 <td>Time formatting from <span class="code"><a
-                    href="#Units_TimeFormats">[Units][[TimeFormats]]</a></span> in <span class="code">skin.conf</span>
-                    is being used.
+                    href="#Units_TimeFormats">[Units][[TimeFormats]]</a></span> is being used.
                 </td>
             </tr>
             <tr>
@@ -3033,9 +3036,9 @@ class MyStats(SearchList):                                                   # 1
         </p>
 
         <p>
-            Image generation is controlled by the section <span class="code">[ImageGenerator]</span> in the skin
-            configuration file <span class="code">skin.conf</span>. Let's take a look at the beginning part of this
-            section. It looks like this:
+            Image generation is controlled by the section <a href="#ImageGenerator"><span
+            class="code">[ImageGenerator]</span></a> in the skin configuration file <span class="code">skin.conf</span>.
+            Let's take a look at the beginning part of this section. It looks like this:
         </p>
         <pre class="tty">[ImageGenerator]
     ...
@@ -4061,7 +4064,7 @@ class MyStats(SearchList):                                                   # 1
             class="code">YYYY</span> in the filename of any template in this section.
         </p>
 
-        <h2 class="config_section">[ImageGenerator]</h2>
+        <h2 class="config_section" id="ImageGenerator">[ImageGenerator]</h2>
 
         <p>This section describes the various options available to the image generator.</p>
 
@@ -4581,7 +4584,8 @@ class MyStats(SearchList):                                                   # 1
 
         [[[Ordinates]]]
             # Ordinal directions. The last one should be for no wind direction
-            <span class="highlight">directions = N, NNE, NE, ENE, E, ESE, SE, SSE, S, SSW, SW, WSW, W, WNW, NW, NNW, N/A</span>
+            <span
+                class="highlight">directions = N, NNE, NE, ENE, E, ESE, SE, SSE, S, SSW, SW, WSW, W, WNW, NW, NNW, N/A</span>
 
     # Labels to used
     [[Labels]]
