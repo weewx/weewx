@@ -1,10 +1,8 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<!DOCTYPE html>
+<html lang="en">
 <head>
-    <title>weewx: Customization Guide</title>
-    <meta http-equiv="Content-Language" content="en-us"/>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <title>WeeWX: Customization Guide</title>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <link rel="stylesheet" href="css/ui-lightness/jquery-ui-1.10.4.custom.min.css"/>
     <link rel="stylesheet" href="css/jquery.tocify.css"/>
@@ -170,7 +168,7 @@ Version: 3.9
             responsible for loading <em>services</em>, then arranging for them to be called when key events occur, such
             as the arrival of LOOP or archive data. The default install of WeeWX includes the following services:
         </p>
-        <table id='default_services' class="indent" summary="Overview of the WeeWX architecture">
+        <table id='default_services' class="indent">
             <caption>The standard WeeWX services</caption>
             <tbody>
             <tr class="first_row">
@@ -258,7 +256,7 @@ Version: 3.9
         <p>
             The default distribution of WeeWX includes six reports:
         </p>
-        <table class="indent" summary="Standard reports included in WeeWX">
+        <table class="indent">
             <tbody>
             <tr class="first_row">
                 <td>Report</td>
@@ -351,7 +349,7 @@ Version: 3.9
             such as creating HTML files or plot images. Generators can also copy files around or FTP/rsync them to
             remote locations. The default install of WeeWX includes the following generators:
         </p>
-        <table class="indent" summary="Generators included in WeeWX">
+        <table class="indent">
             <tbody>
             <tr class="first_row">
                 <td>Generator</td>
@@ -692,7 +690,7 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
             apply. The table below summarizes:
         </p>
 
-        <table class="indent" style="width: 60%" summary="Where to change a general option">
+        <table class="indent" style="width: 60%">
             <tr class="first_row">
                 <td>Section</td>
                 <td>Scope</td>
@@ -1656,7 +1654,7 @@ or in foobar units: $day.barometer.min.foobar
             A variety of tags and arguments are available to you to customize the formatting of the final observation
             value. This table lists the tags:
         </p>
-        <table class="indent" summary="Formatting Options">
+        <table class="indent">
             <caption>Optional formatting tag</caption>
             <tbody>
             <tr class="first_row">
@@ -1688,7 +1686,7 @@ or in foobar units: $day.barometer.min.foobar
 
         <p>Here is the meaning of each of the optional arguments:</p>
 
-        <table class="indent" summary="Formatting arguments">
+        <table class="indent">
             <caption>Optional arguments for <span class="code">.format()</span></caption>
             <tbody>
             <tr class="first_row">
@@ -1731,7 +1729,7 @@ or in foobar units: $day.barometer.min.foobar
 
         <p>This section gives a number of example tags, and their expected output. The following values are assumed:</p>
 
-        <table class="indent" style="width:50%" summary="Example values">
+        <table class="indent" style="width:50%">
             <caption>Values used in the examples below</caption>
             <tr class="first_row">
                 <td>Observation</td>
@@ -1766,7 +1764,7 @@ or in foobar units: $day.barometer.min.foobar
         </table>
 
         <p>Here are the examples:</p>
-        <table class="indent" summary="Formatting options with expected results">
+        <table class="indent">
             <caption>Formatting options with expected results</caption>
             <tbody>
             <tr class="first_row">
@@ -1935,7 +1933,7 @@ or in foobar units: $day.barometer.min.foobar
             The tag <span class="code">$trend</span> is available for time trends, such as changes in barometric
             pressure. Here are some examples:
         </p>
-        <table class="indent" style="width: 50%" summary="Examples of using unit formats">
+        <table class="indent" style="width: 50%">
             <tbody>
             <tr class="first_row">
                 <td>Tag</td>
@@ -2084,7 +2082,7 @@ or in foobar units: $day.barometer.min.foobar
         <p>The type, label, and string formats for all units are also available, allowing you to do highly customized
             labels:
         </p>
-        <table class="indent" style="width: 50%" summary="Examples of using unit formats">
+        <table class="indent" style="width: 50%">
             <tbody>
             <tr class="first_row">
                 <td>Tag</td>
@@ -2124,7 +2122,7 @@ or in foobar units: $day.barometer.min.foobar
             These are basically the values given in the skin dictionary, section <a href="#Labels_Generic"><span
             class="code">[Labels][[Generic]]</span></a>.
         </p>
-        <table class="indent" style="width: 50%" summary="Example of using observation labels">
+        <table class="indent" style="width: 50%">
             <tbody>
             <tr class="first_row">
                 <td>Tag</td>
@@ -2146,7 +2144,7 @@ or in foobar units: $day.barometer.min.foobar
 
         <p>It is possible to iterate over the following:</p>
 
-        <table class="indent" style="Width: 50%" summary="Iteration periods">
+        <table class="indent" style="Width: 50%">
             <tbody>
             <tr class="first_row">
                 <td>Tag suffix</td>
@@ -3495,7 +3493,7 @@ class MyStats(SearchList):                                                   # 1
         <p>
             As an example, the Standard <span class="code">skin.conf</span> file includes three options:
         </p>
-        <table class="indent" style="width: 50%" summary="Tag Extras">
+        <table class="indent" style="width: 50%">
             <tr class="first_row">
                 <td>Skin option</td>
                 <td>Template tag</td>
@@ -4331,7 +4329,7 @@ class MyStats(SearchList):                                                   # 1
             The <span class="code">report_timing</span> parameters are summarised in the following table:
         </p>
 
-        <table class="indent" summary="report_timing parameters">
+        <table class="indent">
             <tbody>
             <tr class="first_row">
                 <td>Parameter</td>
@@ -4470,7 +4468,7 @@ class MyStats(SearchList):                                                   # 1
             report cycle. This may be best described through some examples:
         </p>
 
-        <table class="indent" summary="archive period relationship">
+        <table class="indent">
             <tbody>
             <tr class="first_row">
                 <td class="code">report_timing</td>
@@ -4554,7 +4552,7 @@ class MyStats(SearchList):                                                   # 1
             option. The nicknames supported are:
         </p>
 
-        <table class="indent" summary="report_timing examples">
+        <table class="indent">
             <tbody>
             <tr class="first_row">
                 <td>Nickname</td>
@@ -4600,7 +4598,7 @@ class MyStats(SearchList):                                                   # 1
             options and the corresponding times when the report would be run.
         </p>
 
-        <table class="indent" summary="report_timing examples">
+        <table class="indent">
             <tbody>
             <tr class="first_row">
                 <td class="code">report_timing</td>
@@ -5062,7 +5060,7 @@ class AddElectricity(StdService):
         </p>
 
 
-        <table id='service_lists' class="indent" style="width: 70%" summary="Service lists">
+        <table id='service_lists' class="indent" style="width: 70%">
             <tbody>
             <tr class="first_row">
                 <td>Service list</td>
@@ -6680,10 +6678,10 @@ xstats/bin/user/xstats.py</pre>
 <!-- end class main -->
 
 <!-- Our scripts load last so the content can load first -->
-<script type="text/javascript" src="js/jquery-1.11.1.min.js"></script>
-<script type="text/javascript" src="js/jquery-ui-1.10.4.custom.min.js"></script>
-<script type="text/javascript" src="js/jquery.tocify-1.9.0.min.js"></script>
-<script type="text/javascript" src="js/weewx.js"></script>
+<script src="js/jquery-1.11.1.min.js"></script>
+<script src="js/jquery-ui-1.10.4.custom.min.js"></script>
+<script src="js/jquery.tocify-1.9.0.min.js"></script>
+<script src="js/weewx.js"></script>
 <!--suppress JSUnresolvedFunction -->
 <script type="text/javascript">
     $(function () {
