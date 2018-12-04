@@ -4138,6 +4138,27 @@ class MyStats(SearchList):                                                   # 1
             such as <span class="code">"Current Weather Conditions"</span> will need to be translated.
         </p>
 
+        <h2>Change the HTML "lang" attribute</h2>
+        <p>
+            For every HTML template (these will have a file suffix of <span class="code">.html.tmpl</span>) change the
+            HTML "lang" attribute to your target language. For example, for Spanish
+        </p>
+        <pre class="tty">
+## Copyright 2009-2018 Tom Keffer, Matthew Wall
+## Distributed under terms of GPLv3.  See LICENSE.txt for your rights.
+#errorCatcher Echo
+##
+## Specifying an encoding of UTF-8 is usually safe:
+#encoding UTF-8
+##
+&lt;!DOCTYPE HTML&gt;
+<span class="highlight">&lt;html lang="es"&gt;</span>
+  &lt;head&gt;
+    ## This choice should match the #encoding directive above
+    &lt;meta charset="UTF-8"&gt;
+    ...
+</pre>
+
         <h2>Modify the general options</h2>
 
         <p>
@@ -4236,43 +4257,7 @@ class MyStats(SearchList):                                                   # 1
   [[Almanac]]
         # The labels to be used for the phases of the moon:
         <span class="highlight">moon_phases = New, Waxing crescent, First quarter, Waxing gibbous, Full, Waning gibbous, Last quarter, Waning crescent</span>
-        </pre>
-
-        <h2>Encodings</h2>
-        <p>You may have to specify the encoding used</p>
-        <ul>
-            <li>by a template;</li>
-            <li>in any strings substituted by Cheetah.</li>
-        </ul>
-
-        <h3>Encoding used in a template</h3>
-        <p>
-            If you use an encoding other than ASCII in a template, then you must include a <span
-            class='code'>#encoding</span> directive at the top of the file, informing Cheetah of your choice. If your
-            template includes other templates (by using the <span class='code'>#include</span> directive), and those
-            templates use an encoding, then they must include their own <span class='code'>#encoding</span> directive as
-            well.
-        </p>
-
-        <p>
-            For example, if you use <span class='code'>UTF-8</span> (the default used by all the standard WeeWX
-            templates), then the top of your template should look something like this:
-        </p>
-        <pre class='tty'>#errorCatcher Echo
-##
-## Specifying an encoding of UTF-8 is usually safe, but if your text is
-## actually in Latin-1, then you should replace the string "UTF-8" with "latin-1"
-<span class='highlight'>#encoding UTF-8</span>
-
-&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"&gt;
 </pre>
-
-        <h3>Encoding used in substituted strings</h3>
-        <p>
-            The other place where encoding matters is in the strings substituted by Cheetah. The encoding for these is
-            specified by the <a href="#option_encoding"><span class='code'>encoding</span></a> option in the skin
-            configuration file, <span class='code'>skin.conf</span>.
-        </p>
 
         <h2 id="environment_variable_LANG">
             Environment variable <span class="code">LANG</span>
@@ -4287,7 +4272,6 @@ class MyStats(SearchList):                                                   # 1
             before running WeeWX, then the local Spanish names for days of the week and months of the year will be used.
             The decimal point for numbers will also be modified appropriately.
         </p>
-
 
 
         <h1 id="customizing_gen_time">Scheduling report generation</h1>
