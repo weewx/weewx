@@ -33,14 +33,12 @@
 
     <div class="header">
         <div class="logoref">
-            <a href='http://weewx.com'> <img src='images/logo-weewx.png' class='logo' align='right' alt="weewx logo"/>
+            <a href='http://weewx.com'> <img src='images/logo-weewx.png' class='logo' style="float:right" alt="weewx logo"/>
             </a><br/> <span class='version'>
 Version: 3.9
-        </span>
+    </span>
         </div>
-        <div class="title">
-            Notes for Developers of the weeWX Weather System
-        </div>
+        <div class="title">Notes for Developers of the WeeWX Weather System</div>
     </div>
 
     <div id="technical_content" class="content">
@@ -451,11 +449,11 @@ now = datetime.datetime()</pre>
 </div>
 
 <!-- Our scripts load last so the content can load first -->
-<script type="text/javascript" src="js/jquery-1.11.1.min.js"></script>
-<script type="text/javascript" src="js/jquery-ui-1.10.4.custom.min.js"></script>
-<script type="text/javascript" src="js/jquery.tocify-1.9.0.min.js"></script>
-<script type="text/javascript" src="js/weewx.js"></script>
-<script type="text/javascript">
+<script src="js/jquery-1.11.1.min.js"></script>
+<script src="js/jquery-ui-1.10.4.custom.min.js"></script>
+<script src="js/jquery.tocify-1.9.0.min.js"></script>
+<script src="js/weewx.js"></script>
+<script>
     $(function () {
         var level = get_default_level();
         create_toc_control(level);
@@ -463,7 +461,7 @@ now = datetime.datetime()</pre>
     });
 </script>
 
-<script type="text/javascript">
+<script>
     function showtab(tab, id) {
         document.getElementById(tab + '-deb').style.display = 'none';
         document.getElementById(tab + '-rpm').style.display = 'none';

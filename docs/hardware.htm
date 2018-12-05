@@ -36,15 +36,12 @@
 
     <div class="header">
         <div class="logoref">
-            <a href='http://weewx.com'>
-                <img src='images/logo-weewx.png' class='logo' align='right' alt="weewx logo"/>
-            </a>
-            <br/>
-            <span class="version">
+            <a href='http://weewx.com'> <img src='images/logo-weewx.png' class='logo' style="float:right" alt="weewx logo"/>
+            </a><br/> <span class='version'>
 Version: 3.9
-            </span>
+    </span>
         </div>
-        <div class="title">weeWX Hardware Guide</div>
+        <div class="title">WeeWX Hardware Guide</div>
     </div>
 
     <div id="technical_content" class="content">
@@ -1405,8 +1402,8 @@ interval: 1</pre>
         <table class='indent'>
             <caption>Polling modes for Fine Offset stations</caption>
             <tr class="first_row">
-                <td width='15%'>Mode</td>
-                <td width='30%'>Configuration</td>
+                <td style="width:15%">Mode</td>
+                <td style="width:15%">Configuration</td>
                 <td>Notes</td>
             </tr>
             <tr>
@@ -5004,11 +5001,11 @@ wind_gust_max_time: None</pre>
 </div>
 
 <!-- Our scripts load last so the content can load first -->
-<script type="text/javascript" src="js/jquery-1.11.1.min.js"></script>
-<script type="text/javascript" src="js/jquery-ui-1.10.4.custom.min.js"></script>
-<script type="text/javascript" src="js/jquery.tocify-1.9.0.min.js"></script>
-<script type="text/javascript" src="js/weewx.js"></script>
-<script type="text/javascript">
+<script src="js/jquery-1.11.1.min.js"></script>
+<script src="js/jquery-ui-1.10.4.custom.min.js"></script>
+<script src="js/jquery.tocify-1.9.0.min.js"></script>
+<script src="js/weewx.js"></script>
+<script>
  $(function () {
      var level = get_default_level();
      create_toc_control(level);

@@ -14,12 +14,9 @@
 
 <div class="sidebar">
     <div class="doclist">
-        <a href="usersguide.htm">User's Guide</a><br/>
-        <a href="customizing.htm">Customization Guide</a><br/>
-        <a href="hardware.htm">Hardware Guide</a><br/>
-        <a href="utilities.htm">Utilities Guide</a><br/>
-        <a href="upgrading.htm">Upgrade Guide</a><br/>
-        <a href="devnotes.htm">Notes for Developers</a>
+        <a href="usersguide.htm">User's Guide</a><br/> <a href="customizing.htm">Customization Guide</a><br/> <a
+        href="hardware.htm">Hardware Guide</a><br/> <a href="utilities.htm">Utilities Guide</a><br/> <a
+        href="upgrading.htm">Upgrade Guide</a><br/> <a href="devnotes.htm">Notes for Developers</a>
     </div>
     <div id="toc_controls"></div>
     <div id="toc_parent">
@@ -33,14 +30,12 @@
 
     <div class="header">
         <div class="logoref">
-            <a href='http://weewx.com'> <img src='images/logo-weewx.png' class='logo' align='right' alt="weewx logo"/>
-            </a><br/> <span class='version'>
+            <a href='http://weewx.com'> <img src='images/logo-weewx.png' class='logo' style="float:right"
+                                             alt="weewx logo"/> </a><br/> <span class='version'>
 Version: 3.9
-        </span>
+    </span>
         </div>
-        <div class="title">
-            User's Guide to the WeeWX Weather System
-        </div>
+        <div class="title">User's Guide to WeeWX</div>
     </div>
 
     <div id="technical_content" class="content">
@@ -190,8 +185,9 @@ Version: 3.9
                 line</a>.
             </li>
             <li>Tune the installation. Typically this is done by changing settings in the <a href="#weewxconf"><span
-                class="code">weewx.conf</span></a> configuration file. For example, you might want to
-                <a href="#station_registry">register your station</a>, so it shows up on a world-wide map of WeeWX installations.
+                class="code">weewx.conf</span></a> configuration file. For example, you might want to <a
+                href="#station_registry">register your station</a>, so it shows up on a world-wide map of WeeWX
+                installations.
             </li>
             <li><a href="customizing.htm">Customize</a> the installation. This is an advanced topic, which allows you to
                 shape WeeWX exactly to your liking!
@@ -1040,15 +1036,17 @@ sudo /etc/init.d/weewx start</pre>
 
         <p class="config_option">log_success</p>
 
-        <p>If set to <span class="code">true</span>, the default will be to log a successful operation (for example,
-            the completion of a report, or uploading to the Weather Underground, <i>etc</i>.) to the
-             system log. Default is <span class="code">true</span>.</p>
+        <p>If set to <span class="code">true</span>, the default will be to log a successful operation (for example, the
+            completion of a report, or uploading to the Weather Underground, <i>etc</i>.) to the system log. Default is
+            <span class="code">true</span>.
+        </p>
 
         <p class="config_option">log_failure</p>
 
         <p>If set to <span class="code">true</span>, the default will be to log an unsuccessful operation (for example,
-            failure to generate a report, or failure to upload to the Weather Underground, <i>etc</i>.) to the
-            system log. Default is <span class="code">true</span>.</p>
+            failure to generate a report, or failure to upload to the Weather Underground, <i>etc</i>.) to the system
+            log. Default is <span class="code">true</span>.
+        </p>
 
         <p class="config_option">socket_timeout</p>
 
@@ -1881,7 +1879,7 @@ longitude = -77.0366</pre>
 
         <p>How long to wait in seconds before retrying a bad login. Default is 3600 seconds (one hour).</p>
 
-        <h3 class="config_section">[[Wunderground]]</h3>
+        <h3 class="config_section" id="Wunderground">[[Wunderground]]</h3>
 
         <p>
             WeeWX can send your current data to the <a href="https://www.wunderground.com/">Weather Underground</a>. If
@@ -2054,14 +2052,14 @@ longitude = -77.0366</pre>
             results in each report running on each archive interval.
         </p>
 
-        <h3 class="config_section" id="stock_reports">[[SeasonsReport]]<br/> [[SmartphoneReport]]<br/> [[MobileReport]]<br/>
-            [[StandardReport]]</h3>
+        <h3 class="config_section" id="stock_reports">[[SeasonsReport]]<br/> [[SmartphoneReport]]<br/>
+            [[MobileReport]]<br/> [[StandardReport]]</h3>
 
         <p>These are the four reports that actually generate HTML files and plots. They all ship in the standard WeeWX
             distribution. They all use US Customer units by default, but this can be changed by either editing their
-            respective <span class="code">skin.conf</span> configuration files, or
-            <a href="customizing.htm#overriding_from_weewx_conf">by overriding from
-            the main configuration file, <span class="code">weewx.conf</span></a>.
+            respective <span class="code">skin.conf</span> configuration files, or <a
+                href="customizing.htm#overriding_from_weewx_conf">by overriding from the main configuration file, <span
+                class="code">weewx.conf</span></a>.
         </p>
         <p>They all have the following options in common.</p>
 
@@ -2757,8 +2755,9 @@ report_services  = weewx.engine.StdPrint, weewx.engine.StdReport
         </p>
 
         <div class='image image-right' style='width:205px'>
-            <a href="images/ferrites.jpg"><img src="images/ferrites.jpg" width='200' border='1' alt="Ferrite coils"
-                                               longdesc="Cable connection looped through a ferrite coil"/></a>
+            <a href="images/ferrites.jpg"><img src="images/ferrites.jpg"
+                                               style="width:200px; border:solid; border-width: 1px;"
+                                               alt="Cable connection looped through a ferrite coil"/></a>
 
             <div class='image_caption'>Ferrite coils on a Davis Envoy. There are two coils, one on the USB connection
                 (top wire) and one on the power supply. Both have loops. Click for larger picture.
@@ -3328,10 +3327,10 @@ Dec 31 17:01:06 arm weewx[18141]: **** Exiting.</pre>
         <pre class="tty cmd">wee_database weewx.conf --check-strings --fix-strings</pre>
 
         <h3 id="python2_6">Python 2.6</h3>
-        <p>Unfortunately, the current version of PySerial, 3.x, does not work with Python 2.6. If your hardware
-            requires PySerial (check the <a href="hardware.htm"><em>Hardware Guide</em></a>), you
-            will have to downgrade to PySerial V2.7, which you can <a
-                href="https://sourceforge.net/projects/pyserial/files/pyserial/2.7/">obtain from SourceForge</a>.
+        <p>Unfortunately, the current version of PySerial, 3.x, does not work with Python 2.6. If your hardware requires
+            PySerial (check the <a href="hardware.htm"><em>Hardware Guide</em></a>), you will have to downgrade to
+            PySerial V2.7, which you can <a href="https://sourceforge.net/projects/pyserial/files/pyserial/2.7/">obtain
+                from SourceForge</a>.
         </p>
 
         <h3>FreeBSD</h3>
@@ -3566,11 +3565,11 @@ May 14 13:35:23 web weewx[5633]:         ****  Generator terminated...</pre>
 </div>
 
 <!-- Our scripts load last so the content can load first -->
-<script type="text/javascript" src="js/jquery-1.11.1.min.js"></script>
-<script type="text/javascript" src="js/jquery-ui-1.10.4.custom.min.js"></script>
-<script type="text/javascript" src="js/jquery.tocify-1.9.0.min.js"></script>
-<script type="text/javascript" src="js/weewx.js"></script>
-<script type="text/javascript">
+<script src="js/jquery-1.11.1.min.js"></script>
+<script src="js/jquery-ui-1.10.4.custom.min.js"></script>
+<script src="js/jquery.tocify-1.9.0.min.js"></script>
+<script src="js/weewx.js"></script>
+<script>
     $(function () {
         var level = get_default_level();
         create_toc_control(level);
@@ -3578,7 +3577,7 @@ May 14 13:35:23 web weewx[5633]:         ****  Generator terminated...</pre>
     });
 </script>
 
-<script type="text/javascript">
+<script>
     function showtab(tab, id) {
         document.getElementById(tab + '-deb').style.display = 'none';
         document.getElementById(tab + '-rpm').style.display = 'none';

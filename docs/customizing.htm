@@ -30,7 +30,7 @@
 
     <div class="header">
         <div class="logoref">
-            <a href='http://weewx.com'> <img src='images/logo-weewx.png' class='logo' align='right' alt="weewx logo"/>
+            <a href='http://weewx.com'> <img src='images/logo-weewx.png' class='logo' style="float:right" alt="weewx logo"/>
             </a><br/> <span class='version'>
 Version: 3.9
     </span>
@@ -3226,7 +3226,7 @@ class MyStats(SearchList):                                                   # 1
         </p>
 
         <p>
-            <img width="300" height="180" alt="Daily highs and lows" src="images/yearhilow.png"/>
+            <img style="width:300px; height:180px" alt="Daily highs and lows" src="images/yearhilow.png"/>
         </p>
 
         <h2>Progressive vector plots</h2>
@@ -4317,7 +4317,7 @@ class MyStats(SearchList):                                                   # 1
             <tbody>
             <tr class="first_row">
                 <td>Parameter</td>
-                <td width='20%'>Function</td>
+                <td style="width:20%">Function</td>
                 <td>Allowable values</td>
             </tr>
             <tr>
@@ -6667,7 +6667,7 @@ xstats/bin/user/xstats.py</pre>
 <script src="js/jquery.tocify-1.9.0.min.js"></script>
 <script src="js/weewx.js"></script>
 <!--suppress JSUnresolvedFunction -->
-<script type="text/javascript">
+<script>
     $(function () {
         var level = get_default_level();
         create_toc_control(level);
