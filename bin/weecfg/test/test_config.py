@@ -127,6 +127,10 @@ class ConfigTest(unittest.TestCase):
         weecfg.remove_and_prune(x_dict, y_dict)
         self.assertEqual("{'section_c': {'c': '3'}, 'section_d': {'d': '4'}}", str(x_dict))
 
+        test_list = ['a', 'b', 'd', 'c']
+        weecfg.reorder_scalars(test_list, 'c', 'd')
+        self.assertEqual(test_list, ['a', 'b', 'c', 'd'])
+
     report_start_str = """[StdReport]
         SKIN_ROOT = skins
         HTML_ROOT = public_html

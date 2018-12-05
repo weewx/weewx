@@ -990,14 +990,25 @@ def update_to_v36(config_dict):
 def update_to_v39(config_dict):
     """Update a configuration file to V3.9
 
+    - New top-level options log_success and log_failure
     - New subsections [[SeasonsReport]], [[SmartphoneReport]], and [[MobileReport]]
-
+    - New section [ObservationDefaults]
     """
 
     major, minor = get_version_info(config_dict)
 
     if major > '3' or minor > '09':
         return
+
+    # Add top-level log_success and log_failure if missing
+    if 'log_success' not in config_dict:
+        config_dict['log_success'] = True
+        config_dict.comments['log_success'] = ['', '# Whether to log successful operations']
+        reorder_scalars(config_dict.scalars, 'log_success', 'socket_timeout')
+    if 'log_failure' not in config_dict:
+        config_dict['log_failure'] = True
+        config_dict.comments['log_failure'] = ['', '# Whether to log unsuccessful operations']
+        reorder_scalars(config_dict.scalars, 'log_failure', 'socket_timeout')
 
     if 'StdReport' in config_dict:
 
@@ -1437,6 +1448,22 @@ def reorder_sections(config_dict, src, dst, after=False):
     # Now reorder the attribute 'sections', putting src just before dst:
     config_dict.sections = config_dict.sections[:dst_idx + bump] + [src] + \
                            config_dict.sections[dst_idx + bump:]
+
+
+def reorder_scalars(scalars, src, dst):
+    """Reorder so the src item is just before the dst item"""
+    try:
+        src_index = scalars.index(src)
+    except ValueError:
+        return
+    scalars.pop(src_index)
+    # If the destination cannot be found, but the src object at the end
+    try:
+        dst_index = scalars.index(dst)
+    except ValueError:
+        dst_index = len(scalars)
+
+    scalars.insert(dst_index, src)
 
 
 def reorder(name_list, ref_list):
