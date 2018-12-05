@@ -2055,22 +2055,23 @@ longitude = -77.0366</pre>
         <h3 class="config_section" id="stock_reports">[[SeasonsReport]]<br/> [[SmartphoneReport]]<br/>
             [[MobileReport]]<br/> [[StandardReport]]</h3>
 
-        <p>These are the four reports that actually generate HTML files and plots. They all ship in the standard WeeWX
-            distribution. They all use US Customer units by default, but this can be changed by either editing their
-            respective <span class="code">skin.conf</span> configuration files, or <a
-                href="customizing.htm#overriding_from_weewx_conf">by overriding from the main configuration file, <span
-                class="code">weewx.conf</span></a>.
+        <p>
+            These are the four reports that actually generate HTML files and plots. They all ship in the standard WeeWX
+            distribution. They all use US Customary units by default, but this can be changed by editing section <a
+            href="#Section_Defaults"><span class="code">[Defaults]</span></a>.
         </p>
         <p>They all have the following options in common.</p>
 
         <p class="config_option">skin</p>
-        <p>Where to find the specifications for the skin. This should include any templates and the skin configuration
-            file, <span class="code">skin.conf</span>. This should be a subdirectory under <span class="symcode">SKIN_ROOT</span>.
+        <p>
+            Where to find the skin. This should be a subdirectory under <span class="symcode">SKIN_ROOT</span>. Inside
+            the directory should be any templates used by the skin and a skin configuration file, <span class="code">skin.conf</span>.
         </p>
 
         <p class="config_important">enable</p>
-        <p>Set to <span class="code">true</span> (the default) to enable the processing of this skin. Set to <span
-            class="code">false</span> to disable.
+        <p>
+            Set to <span class="code">true</span> to enable the processing of this skin. Set to <span
+            class="code">false</span> to disable. If this option is missing, <span class="code">True</span> is assumed.
         </p>
 
         <p class="config_option">HTML_ROOT</p>
@@ -2194,7 +2195,8 @@ longitude = -77.0366</pre>
             databases. You must chose a unit system and then stick with it. This means that users coming from wview
             (which uses US Customary) should not change the default setting. Having said this, there is a way of
             reconfiguring the database to use another unit system. See the section <a
-                href="customizing.htm#Changing_the_unit_system">Changing the unit system</a> in the Customization Guide.
+                href="customizing.htm#Changing_the_unit_system">Changing the unit system</a> in the <a
+                href="customizing.htm">Customization Guide</a>.
         </p>
 
         <p class='note'><strong>Note!</strong><br/> This service only affects the units used in the <em>databases</em>.
@@ -2220,8 +2222,8 @@ longitude = -77.0366</pre>
             class="code">METRIC</span> is that the former uses <span class="code">mm</span> instead of <span
             class="code">cm</span> for rain, and <span class="code">m/s</span> instead of <span
             class="code">km/hr</span> for wind speed. See the Appendix <a href="customizing.htm#units"> Units</a> in the
-            Customization Guide for the exact differences beween these three choices. Default is <span
-                class="code">US</span>.
+            <a href="customizing.htm">Customization Guide</a> for the exact differences beween these three choices.
+            Default is <span class="code">US</span>.
         </p>
 
         <h2 class="config_section" id="StdCalibrate">[StdCalibrate]</h2>
@@ -2341,7 +2343,7 @@ longitude = -77.0366</pre>
             each derived quantity.
         </p>
 
-        <p class="config_option">ignore_zero_wind</p>
+        <p class="config_option" id="ignore_zero_wind">ignore_zero_wind</p>
 
         <p>
             Indicates whether the wind direction should be undefined when the wind speed is zero. The default value is
@@ -2649,6 +2651,14 @@ longitude = -77.0366</pre>
 
         <p>The type of MySQL database storage engine to be used. This should not be changed without a good reason.
             Default is <span class="code">INNODB</span>.
+        </p>
+
+        <h2 class="config_section" id="Section_Defaults">[Defaults]</h2>
+        <p>
+            This section covers a suite of "general options," which control things such as which unit system should be
+            used in reports, what label to be used for an observation type, and how it should be formatted. Details can
+            be found in <a href="customizing.htm#General_options"><em>General options</em></a> in the <a
+            href="customizing.htm">Customization Guide</a>.
         </p>
 
         <h2 class="config_section">[Engine]</h2>
@@ -3545,10 +3555,10 @@ May 14 13:35:23 web weewx[5633]:         ****  Generator terminated...</pre>
         <h3 id="zero_windspeed">There is no wind direction when wind speed is zero</h3>
 
         <p>
-            This is by design - if there is no wind, then the wind direction is undefined. An undefined value is
-            represented by a NULL in the database or a None in Python. This policy is enforced by the <span
-            class='code'>StdWXCalculate</span> service. If necessary, it can be overridden. See the <a
-            href="#StdWXCalculate"><span class='code'>StdWXCalculate</span></a> section for instructions.
+            This is by design &mdash; if there is no wind, then the wind direction is undefined, represented by NULL
+            in the database or None in Python. This policy is enforced by the <span class='code'>StdWXCalculate</span>
+            service. If necessary, it can be overridden. See option <a href="#ignore_zero_wind"><span class="code">ignore_zero_wind</span></a>
+            in the <a href="#StdWXCalculate"><span class='code'>[StdWXCalculate]</span></a> section.
         </p>
         <p>
             WeeWX distinguishes between a value of zero and no value (NULL or None). However, some services do not make

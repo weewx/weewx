@@ -1,9 +1,8 @@
 #TO DO for V3.9
 
-User's Guide updates:
- - Change references to Standard skin to Seasons.
- - Mention the Mobile and Smartphone skins.
+Customizing Guide updates:
  - Document how new skin defaults work
 
-Root level `log_success` and `log_failure` are now documented. They should work for reports,
-but how about other things, in particular the uploaders?
+`log_success` and `log_failure`
+ - Check documentation
+ - They should work for reports, but how about other things, in particular the uploaders?

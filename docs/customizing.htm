@@ -30,8 +30,8 @@
 
     <div class="header">
         <div class="logoref">
-            <a href='http://weewx.com'> <img src='images/logo-weewx.png' class='logo' style="float:right" alt="weewx logo"/>
-            </a><br/> <span class='version'>
+            <a href='http://weewx.com'> <img src='images/logo-weewx.png' class='logo' style="float:right"
+                                             alt="weewx logo"/> </a><br/> <span class='version'>
 Version: 3.9
     </span>
         </div>
@@ -665,7 +665,7 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
             distribution.
         </p>
         <p>
-            <a href="#general_options">General options</a> are covered in the next section, while look-and-feel options
+            <a href="#General_options">General options</a> are covered in the next section, while look-and-feel options
             are covered under <a href="#standard_skin">Reference to <span class="code">skin.conf</span> options</a>.
         </p>
 
@@ -679,15 +679,19 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
             interval.
         </p>
 
-        <h1 id="general_options">General options</h1>
+        <h1 id="General_options">General options</h1>
 
         <h2>Overview of general options</h2>
 
         <p>
-            This section covers a suite of "general options," which control things like what unit system to use, how an
-            observation type should be labelled and formatted, <i>etc.</i> They can be changed in one of two different
-            sections in <span class="code">weewx.conf</span>, depending on the "scope" over which you want the change to
-            apply. The table below summarizes:
+            This section covers a suite of "general options," which control things such as what unit system to use for
+            reports, how an observation type should be labelled and formatted, <i>etc.</i> A detailed reference guide to
+            all the options can be found below in section <a href="#Reference_guide_to_general_options"><span
+            class="code">Reference guide to general options</span></a>.
+        </p>
+        <p>
+            General options can be changed in one of two different sections in <span class="code">weewx.conf</span>,
+            depending on the "scope" over which you want the change to apply. The table below summarizes:
         </p>
 
         <table class="indent" style="width: 60%">
@@ -897,7 +901,7 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
         <p>This section is a reference for all the general options, normally found in <span
             class="code">[Defaults]</span> in <span class="code">weewx.conf</span></p>
 
-        <h2>Reference guide to general options</h2>
+        <h2 id="Reference_guide_to_general_options">Reference guide to general options</h2>
 
         <h3 class="config_section">[Units]</h3>
 
@@ -4162,7 +4166,7 @@ class MyStats(SearchList):                                                   # 1
         <h2>Modify the general options</h2>
 
         <p>
-            Next, you will need to go through the <a href="#general_options">general options</a> in the section <span
+            Next, you will need to go through the <a href="#General_options">general options</a> in the section <span
             class="code">[Defaults]</span> in <span class="code">weewx.conf</span>, translating labels and modifying
             formats to follow local conventions.
         </p>
