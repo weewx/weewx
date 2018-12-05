@@ -1798,11 +1798,10 @@ def get_site_dict(config_dict, service, *args):
                       (service, e))
         return None
 
-    # Get logging preferences from the root level
-    if config_dict.get('log_success') is not None:
-        site_dict.setdefault('log_success', config_dict.get('log_success'))
-    if config_dict.get('log_failure') is not None:
-        site_dict.setdefault('log_failure', config_dict.get('log_failure'))
+    # If the site dictionary does not have a log_success or log_failure, get
+    # them from the root dictionary
+    site_dict.setdefault('log_success', to_bool(config_dict.get('log_success', True)))
+    site_dict.setdefault('log_failure', to_bool(config_dict.get('log_failure', True)))
 
     # Get rid of the no longer needed key 'enable':
     site_dict.pop('enable', None)
