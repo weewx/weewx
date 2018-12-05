@@ -60,9 +60,9 @@ Version: 3.9
         </p>
 
         <p>
-            Most of the guide applies to any hardware, but the exact data types are hardware-specific. Many examples use
-            types specific to the Davis Vantage series. Unless you are using an unusual type you are unlikely to run
-            into trouble.
+            Most of the guide applies to any hardware, but the exact data types are hardware-specific. See the <a
+            href="hardware.htm"><em>WeeWX Hardware Guide</em></a> for details of how different observation types are
+            handled by different types hardware.
         </p>
 
         <p class="warning">
@@ -635,11 +635,10 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
 
         <p>
             Each <em>observation type</em>, such as <span class='code'>outTemp</span> or <span
-            class='code'>pressure</span>, is associated with a <em>unit group</em> such as <span class='code'>group_temperature</span>
+            class='code'>pressure</span>, is associated with a <em>unit group</em>, such as <span class='code'>group_temperature</span>
             or <span class='code'>group_pressure</span>. Each unit group is associated with a <em>unit type</em> such as
-            <span class='code'>degree_F</span> or <span class='code'>mbar</span>. The <a href="#customizing_templates">template
-            system</a> uses this architecture to display the names of units and to convert observations from one unit to
-            another.
+            <span class='code'>degree_F</span> or <span class='code'>mbar</span>. The reporting service uses this
+            architecture to convert observations into a target unit system, to be displayed in your reports.
         </p>
 
         <p>With this architecture one can easily create reports with, say, wind measured in knots, rain measured in mm,
@@ -656,17 +655,19 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
         </p>
 
         <p>
-            There are two kinds of options: general options, and "look-and-feel" options. General options control things
-            such as which unit system to use, or how an observation type should be labeled and formatted. Look-and-feel
-            options control things such as which templates are to be processed, what plots are to be created and what to
-            put them in. In theory, either type of option can go in either place, but usually general options are
-            specified in <span class="code">weewx.conf</span>, while look-and-feel options go in a report's <span
-            class="code">skin.conf</span> file. Indeed, this is how options are organized in the normal WeeWX
-            distribution.
+            There are two kinds of options: "Observation defaults" and <span class="code">skin.conf</span> options.
+            Observation defaults are about how to handle observations, such as which unit system to display them in, or
+            how they should be labeled and formatted. By constrast, <span class="code">skin.conf</span> options are
+            concerned with the "look and feel" of a skin, such as which templates are to be processed, what plots are to
+            be created and what to put in them. In theory, either type of option can go in either place, but usually
+            Observation defaults are specified in <span class="code">weewx.conf</span>, while <span class="code">skin.conf</span>
+            options are (naturally!) in a report's <span class="code">skin.conf</span> file. Indeed, this is how options
+            are organized in the normal WeeWX distribution.
         </p>
         <p>
-            <a href="#General_options">General options</a> are covered in the next section, while look-and-feel options
-            are covered under <a href="#standard_skin">Reference to <span class="code">skin.conf</span> options</a>.
+            <a href="#Observation_defaults">Observation defaults</a> are covered in the next section, while <span
+            class="code">skin.conf</span> options are covered under <a href="#standard_skin">Reference to <span
+            class="code">skin.conf</span> options</a>.
         </p>
 
         <h2>Do I need to restart WeeWX?</h2>
@@ -679,18 +680,18 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
             interval.
         </p>
 
-        <h1 id="General_options">General options</h1>
+        <h1 id="Observation_defaults">Observation defaults</h1>
 
-        <h2>Overview of general options</h2>
+        <h2>Overview of Observation defaults</h2>
 
         <p>
-            This section covers a suite of "general options," which control things such as what unit system to use for
-            reports, how an observation type should be labelled and formatted, <i>etc.</i> A detailed reference guide to
-            all the options can be found below in section <a href="#Reference_guide_to_general_options"><span
-            class="code">Reference guide to general options</span></a>.
+            This section covers a suite of "Observation defaults," which control things such as what unit system to use
+            for reports, how an observation type should be labelled and formatted, <i>etc.</i> A detailed reference
+            guide to all the options can be found below in section <a
+            href="#Reference_guide_to_Observation_defaults"><span class="code"><em>Reference guide to Observation defaults</em></span></a>.
         </p>
         <p>
-            General options can be changed in one of two different sections in <span class="code">weewx.conf</span>,
+            Observation defaults can be changed in one of two different sections in <span class="code">weewx.conf</span>,
             depending on the "scope" over which you want the change to apply. The table below summarizes:
         </p>
 
@@ -700,7 +701,7 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
                 <td>Scope</td>
             </tr>
             <tr>
-                <td class="code"><a href="#change_defaults">[Defaults]</a></td>
+                <td class="code"><a href="#change_defaults">[ObservationDefaults]</a></td>
                 <td>System wide. Affects <em>all</em> reports.</td>
             </tr>
             <tr>
@@ -716,22 +717,22 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
         </p>
 
         <h3 id="change_defaults">
-            Changing an option in <span class="code">[Defaults]</span>
+            Changing an option in <span class="code">[ObservationDefaults]</span>
         </h3>
         <p>
-            With this approach, you change an option under the <span class="code">[Defaults]</span> section in <span
-            class="code">weewx.conf.</span> Changes here will affect <em>all</em> reports.
+            With this approach, you change an option under the <span class="code">[ObservationDefaults]</span> section
+            in <span class="code">weewx.conf.</span> Changes here will affect <em>all</em> reports.
         </p>
 
         <p>
             For example, suppose you wish to use metric units for all your reports, instead of the default US Customary
-            Units. The section under <span class="code">[Defaults]</span> that controls units is <span class="code">[[Units]][[[Groups]]]</span>.
-            It looks like this:
+            Units. The section under <span class="code">[ObservationDefaults]</span> that controls units is <span
+            class="code">[[Units]][[[Groups]]]</span>. It looks like this:
         </p>
         <pre class="tty">
 #   Default values for reports
 
-[Defaults]
+[ObservationDefaults]
 
     # The following section is for managing the selection and formatting of units.
     [[Units]]
@@ -770,7 +771,7 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
         <pre class="tty">
 #   Default values for reports
 
-[Defaults]
+[ObservationDefaults]
 
     # The following section is for managing the selection and formatting of units.
     [[Units]]
@@ -835,8 +836,8 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
 
         <p>
             With this change, all observations of console temperature, such as in an HTML report, or a plot, will now be
-            labeled <em>"Barn Temperature</em>." Because this is under the <span class="code">[Defaults]</span> section,
-            this change will apply to <em>all</em> reports.
+            labeled <em>"Barn Temperature</em>." Because this is under the <span
+            class="code">[ObservationDefaults]</span> section, this change will apply to <em>all</em> reports.
         </p>
 
         <h3 id="overriding_from_weewx_conf">
@@ -851,7 +852,7 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
             In our previous example, all reports would be in Metric, but suppose you want two reports, one in Metric,
             the other in US Customary. The Metric report will go in the regular directory <span class="symcode">HTML_ROOT</span>,
             but the latter in a subdirectory, <span class="code"><span class="symcode">HTML_ROOT</span>/metric</span>.
-            To accomplish this, the <span class="code">[Defaults]</span> section in <span class="code">weewx.conf</span>
+            To accomplish this, the <span class="code">[ObservationDefaults]</span> section in <span class="code">weewx.conf</span>
             would be the same as in the example above, but the <span class="code">[StdReport]</span> section would read:
         </p>
         <pre class="tty">
@@ -898,10 +899,10 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
         </p>
 
 
-        <p>This section is a reference for all the general options, normally found in <span
-            class="code">[Defaults]</span> in <span class="code">weewx.conf</span></p>
+        <h2 id="Reference_guide_to_Observation_defaults">Reference guide to Observation defaults</h2>
 
-        <h2 id="Reference_guide_to_general_options">Reference guide to general options</h2>
+        <p>This section is a reference to all the Observation defaults, normally found in <span class="code">[ObservationDefaults]</span>
+            in <span class="code">weewx.conf</span></p>
 
         <h3 class="config_section">[Units]</h3>
 
@@ -1065,16 +1066,12 @@ hour   = " hour",   " hours"
 minute = " minute", " minutes"
 second = " second", " seconds"</pre>
 
-        <p>
-            This is particularly useful when <a href="#l11n_unit_labels">localizing the WeeWX and server uptimes</a>.
-        </p>
-
         <h4 class="config_section" id="Units_TimeFormats">[[TimeFormats]]</h4>
 
         <p>
             This sub-section is used for time labels. It uses <a
-            href="http://docs.python.org/library/datetime.html#strftime-behavior">strftime()</a> formats. The default
-            looks like this:
+            href="https://docs.python.org/3/library/datetime.html#strftime-strptime-behavior">strftime()</a> formats.
+            The default looks like this:
         </p>
         <pre class='tty'>
     [[TimeFormats]]
@@ -1891,7 +1888,7 @@ or in foobar units: $day.barometer.min.foobar
         <pre class="example_output">01/09/2010 12:30:00</pre>
         <p>
             Like true observation types, explicit formats can be specified, except that they require a <a
-            href="http://docs.python.org/library/datetime.html#strftime-strptime-behavior"> strftime() <em>time
+            href="https://docs.python.org/3/library/datetime.html#strftime-strptime-behavior"> strftime() <em>time
             format</em> </a>, rather than a <em>string format</em>.
         </p>
 
@@ -3044,7 +3041,7 @@ class MyStats(SearchList):                                                   # 1
         </p>
         <pre class="tty">[ImageGenerator]
     ...
-    image_width = 300
+    image_width = 500
     image_height = 180
     image_background_color = 0xf5f5f5
 
@@ -3053,7 +3050,7 @@ class MyStats(SearchList):                                                   # 1
     ...</pre>
         <p>
             The options right under the section name <span class="code">[ImageGenerator]</span> will apply to
-            <em>all</em> plots, unless overridden in subsections. So, unless otherwise changed, all plots will be 300
+            <em>all</em> plots, unless overridden in subsections. So, unless otherwise changed, all plots will be 500
             pixels in width, 180 pixels in height, and will have an RGB background color of 0xf5f5f5, a very light gray
             (HTML color "WhiteSmoke"). The chart itself will have a background color of 0xd8d8d8 (a little darker gray),
             and the gridlines will be 0xa0a0a0 (still darker). The other options farther down (not shown) will also
@@ -3079,10 +3076,10 @@ class MyStats(SearchList):                                                   # 1
 </pre>
         <p>
             The option <span class="code">x_label_format</span> gives a <a
-            href="http://docs.python.org/library/datetime.html#strftime-behavior">strftime()</a> type format for the
-            x-axis. In this example, it will only show days (format option <span class="code">%d</span>). The <span
-            class="code">bottom_label_format</span> is the format used to time stamp the image at the bottom. In this
-            example, it will show the time as something like <span class="code">10/25/09
+            href="https://docs.python.org/3/library/datetime.html#strftime-strptime-behavior">strftime()</a> type format
+            for the x-axis. In this example, it will only show days (format option <span class="code">%d</span>). The
+            <span class="code">bottom_label_format</span> is the format used to time stamp the image at the bottom. In
+            this example, it will show the time as something like <span class="code">10/25/09
           15:35</span>. A plot will cover a nominal 30 days, and all items included in it will use an aggregate type of
             averaging over 3 hours. Finally, by setting option <span class="code">show_daynight</span> to <span
             class="code">false</span>, we are requesting that day-night, shaded bands not be shown.
@@ -3134,31 +3131,6 @@ class MyStats(SearchList):                                                   # 1
             <img src="images/sample_monthrain.png" alt="Sample monthly rain plot"/>
         </p>
 
-        <h2 id="line_gaps">Line gaps</h2>
-
-        <p id="line_gap_fraction">
-            If there is a time gap in the data, the option <span class="code">line_gap_fraction</span> controls how line
-            plots will be drawn. Here's what a plot looks like without and with this option being specified:
-        </p>
-
-        <div class="center" style="margin: 0;">
-            <div style="float: left">
-                <img src="images/day-gap-not-shown.png" alt="Gap not shown"/>
-
-                <div class="image_caption">
-                    No <span class="code">line_gap_fraction</span> specified
-                </div>
-            </div>
-            <div>
-                <img src="images/day-gap-showing.png" alt="Gap showing"/>
-
-                <div class="image_caption">
-                    With <span class="code">line_gap_fraction=0.01</span>
-                </div>
-            </div>
-        </div>
-        <div style="clear: both"></div>
-
         <h2>Including more than one SQL type in a plot</h2>
 
         <p>More than one SQL type can be included in a plot. For example, here is how to generate a plot with the week's
@@ -3169,7 +3141,10 @@ class MyStats(SearchList):                                                   # 1
     [[[[dewpoint]]]]</pre>
         <p>
             This would create an image in file <span class="code">monthtempdew.png</span> that includes a line plot of
-            both outside temperature and dewpoint.
+            both outside temperature and dewpoint:
+        </p>
+        <p>
+            <img src="images/sample_monthtempdew.png" alt="Monthly temperature and dewpoint"/>
         </p>
 
         <h2 id="including_same_sql_type_2x">Including the same SQL type more than once in a plot</h2>
@@ -3232,6 +3207,31 @@ class MyStats(SearchList):                                                   # 1
         <p>
             <img style="width:300px; height:180px" alt="Daily highs and lows" src="images/yearhilow.png"/>
         </p>
+
+        <h2 id="line_gaps">Line gaps</h2>
+
+        <p id="line_gap_fraction">
+            If there is a time gap in the data, the option <span class="code">line_gap_fraction</span> controls how line
+            plots will be drawn. Here's what a plot looks like without and with this option being specified:
+        </p>
+
+        <div class="center" style="margin: 0;">
+            <div style="float: left">
+                <img src="images/day-gap-not-shown.png" alt="Gap not shown"/>
+
+                <div class="image_caption">
+                    No <span class="code">line_gap_fraction</span> specified
+                </div>
+            </div>
+            <div>
+                <img src="images/day-gap-showing.png" alt="Gap showing"/>
+
+                <div class="image_caption">
+                    With <span class="code">line_gap_fraction=0.01</span>
+                </div>
+            </div>
+        </div>
+        <div style="clear: both"></div>
 
         <h2>Progressive vector plots</h2>
 
@@ -3816,7 +3816,7 @@ class MyStats(SearchList):                                                   # 1
 
         <p>
             The format to be used for the bottom label. It should be a <a
-            href="http://docs.python.org/library/datetime.html#strftime-strptime-behavior"> strftime format</a>.
+            href="https://docs.python.org/3/library/datetime.html#strftime-strptime-behavior"> strftime format</a>.
             Optional. Default is <span class="code">'%m/%d/%y
           %H:%M'</span>.
         </p>
@@ -3848,7 +3848,7 @@ class MyStats(SearchList):                                                   # 1
 
         <p>
             The format to be used for the time labels on the x-axis. It should be a <a
-            href="http://docs.python.org/library/datetime.html#strftime-strptime-behavior"> strftime format</a>.
+            href="https://docs.python.org/3/library/datetime.html#strftime-strptime-behavior"> strftime format</a>.
             Optional. If not given, a sensible format will be chosen automatically.
         </p>
 
@@ -4131,8 +4131,7 @@ class MyStats(SearchList):                                                   # 1
         <h1 id="localization">Localization</h1>
 
         <p>
-            What follows is a guide to localizing to a non-English language and/or locale. There are two parts:
-            translating to different languages and modifying to reflect local conventions for displaying data.
+            What follows is a guide to localizing to a non-English language and/or locale.
         </p>
 
         <h2>Translate the templates</h2>
@@ -4163,19 +4162,19 @@ class MyStats(SearchList):                                                   # 1
     ...
 </pre>
 
-        <h2>Modify the general options</h2>
+        <h2>Modify the Observation defaults</h2>
 
         <p>
-            Next, you will need to go through the <a href="#General_options">general options</a> in the section <span
-            class="code">[Defaults]</span> in <span class="code">weewx.conf</span>, translating labels and modifying
-            formats to follow local conventions.
+            Next, you will need to go through the <a href="#Observation_defaults">Observation defaults</a> in the
+            section <span class="code">[ObservationDefaults]</span> in <span class="code">weewx.conf</span>, translating
+            labels and modifying formats to follow local conventions.
         </p>
 
         <p>
             In particular, you will probably need to change the following sections:
         </p>
         <pre class="tty">
-[Defaults]
+[ObservationDefaults]
 
     # The following section is for managing the selection and formatting of units.
     [[Units]]
@@ -5279,19 +5278,19 @@ mysql&gt;<span class="cmd"> RENAME TABLE weewx_new.archive TO weewx.archive;</sp
         </ol>
 
 
-        <h2 id="Changing_the_unit_system">Changing the unit system</h2>
+        <h2 id="Changing_the_unit_system">Changing the database unit system</h2>
 
         <p>
             Normally, data are stored in the databases using US Customary units and, normally, you don't care; it is an
-            "implementation detail". Data can always be displayed using any units you want. The <a
-            href="#customizing_reports">Customizing reports</a> section explains how to do this. Nevertheless, there may
-            be special situations where you wish to store the data in Metric units. For example, you may need to allow
-            direct programmatic access to the databases from another piece of software that expects metric units.
+            "implementation detail". Data can always be displayed using any set of units you want. The section <a
+            href="#Observation_defaults"><em>Observation defaults</em></a> explains how to do this. Nevertheless, there
+            may be special situations where you wish to store the data in Metric units. For example, you may need to
+            allow direct programmatic access to the database from another piece of software that expects metric units.
         </p>
 
         <p>
-            WeeWX does not allow you to change the database unit system midstream. You can't start with one unit system
-            then, in the middle of the database, switch to another. See the section <span class="code"> <a
+            WeeWX does not allow you to change the database unit system midstream. That is, you can't start with one
+            unit system then, in the middle of the database, switch to another. See the section <span class="code"> <a
             href="usersguide.htm#StdConvert">[StdConvert]</a></span> in the WeeWX User's Guide. However, you can
             reconfigure the database by copying it to a new database, performing the unit conversion along the way. You
             then use this new database.
@@ -5609,10 +5608,10 @@ weewx.units.conversionDict['pound']  = {'newton': lambda x : x * 4.44822}
         </h3>
 
         <p>
-            This should be a <a href="https://wiki.python.org/moin/Generators">generator function</a> that yields loop
-            packets, one after another. Don't worry about stopping it: the engine will do this when an archive record is
-            due. A "loop packet" is a dictionary. At the very minimum it must contain keys for the observation time and
-            for the units used within the packet.
+            This should be a Python <a href="https://wiki.python.org/moin/Generators">generator function</a> that yields
+            loop packets, one after another. Don't worry about stopping it: the engine will do this when an archive
+            record is due. A "loop packet" is a dictionary. At the very minimum it must contain keys for the observation
+            time and for the units used within the packet.
         </p>
         <table class="indent" style="width: 60%">
             <caption>Required keys</caption>

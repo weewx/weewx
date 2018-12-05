@@ -2120,7 +2120,7 @@ longitude = -77.0366</pre>
         <p>
             These are the four reports that actually generate HTML files and plots. They all ship in the standard WeeWX
             distribution. They all use US Customary units by default, but this can be changed by editing section <a
-            href="#Section_Defaults"><span class="code">[Defaults]</span></a>.
+            href="#Section_Defaults"><span class="code">[ObservationDefaults]</span></a>.
         </p>
         <p>They all have the following options in common.</p>
 
@@ -2400,7 +2400,7 @@ longitude = -77.0366</pre>
             provides unreliable or antiquated calculations.
         </p>
 
-        <p>The section <span class="code">[StdWXCalculate]</span> consists of a group of general options, followed by a
+        <p>The section <span class="code">[StdWXCalculate]</span> consists of a group of Observation defaults, followed by a
             subsection <span class="code">[[Calculations]]</span> that specifies the calculation strategy to be used for
             each derived quantity.
         </p>
@@ -2715,11 +2715,11 @@ longitude = -77.0366</pre>
             Default is <span class="code">INNODB</span>.
         </p>
 
-        <h2 class="config_section" id="Section_Defaults">[Defaults]</h2>
+        <h2 class="config_section" id="Section_Defaults">[ObservationDefaults]</h2>
         <p>
-            This section covers a suite of "general options," which control things such as which unit system should be
+            This section covers a suite of "Observation defaults," which control things such as which unit system should be
             used in reports, what label to be used for an observation type, and how it should be formatted. Details can
-            be found in <a href="customizing.htm#General_options"><em>General options</em></a> in the <a
+            be found in <a href="customizing.htm#Observation_defaults"><em>Observation defaults</em></a> in the <a
             href="customizing.htm">Customization Guide</a>.
         </p>
 
