@@ -131,40 +131,49 @@ class ConfigTest(unittest.TestCase):
         weecfg.reorder_scalars(test_list, 'c', 'd')
         self.assertEqual(test_list, ['a', 'b', 'c', 'd'])
 
-    report_start_str = """[StdReport]
-        SKIN_ROOT = skins
-        HTML_ROOT = public_html
-        data_binding = wx_binding
-        [[XtraReport]]
-            skin = Foo
+        test_list = ['a', 'b', 'c', 'd']
+        weecfg.reorder_scalars(test_list, 'c', 'e')
+        self.assertEqual(test_list, ['a', 'b', 'd', 'c'])
 
-        [[StandardReport]]
-            skin = Standard
+        test_list = ['a', 'b', 'd']
+        weecfg.reorder_scalars(test_list, 'x', 'd')
+        self.assertEqual(test_list, ['a', 'b', 'd'])
 
-        [[FTP]]
-            skin = Ftp
 
-        [[RSYNC]]
-            skin = Rsync
-"""
-
-    report_expected_str = """[StdReport]
-        SKIN_ROOT = skins
-        HTML_ROOT = public_html
-        data_binding = wx_binding
-
-        [[StandardReport]]
-                skin = Standard
-        [[XtraReport]]
-                skin = Foo
-
-        [[FTP]]
-                skin = Ftp
-
-        [[RSYNC]]
-                skin = Rsync
-"""
-
+#     report_start_str = """[StdReport]
+#         SKIN_ROOT = skins
+#         HTML_ROOT = public_html
+#         data_binding = wx_binding
+#         [[XtraReport]]
+#             skin = Foo
+#
+#         [[StandardReport]]
+#             skin = Standard
+#
+#         [[FTP]]
+#             skin = Ftp
+#
+#         [[RSYNC]]
+#             skin = Rsync
+# """
+#
+#     report_expected_str = """[StdReport]
+#         SKIN_ROOT = skins
+#         HTML_ROOT = public_html
+#         data_binding = wx_binding
+#
+#         [[StandardReport]]
+#                 skin = Standard
+#         [[XtraReport]]
+#                 skin = Foo
+#
+#         [[FTP]]
+#                 skin = Ftp
+#
+#         [[RSYNC]]
+#                 skin = Rsync
+# """
+#
     # def test_reorder(self):
     #     """Test the utility reorder_to_ref"""
     #     xio = StringIO.StringIO(ConfigTest.report_start_str)
