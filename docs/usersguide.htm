@@ -1034,14 +1034,14 @@ sudo /etc/init.d/weewx start</pre>
             by the installation process. Required. No default.
         </p>
 
-        <p class="config_option">log_success</p>
+        <p class="config_option" id="global_log_success">log_success</p>
 
         <p>If set to <span class="code">true</span>, the default will be to log a successful operation (for example, the
             completion of a report, or uploading to the Weather Underground, <i>etc</i>.) to the system log. Default is
             <span class="code">true</span>.
         </p>
 
-        <p class="config_option">log_failure</p>
+        <p class="config_option" id="global_log_failure">log_failure</p>
 
         <p>If set to <span class="code">true</span>, the default will be to log an unsuccessful operation (for example,
             failure to generate a report, or failure to upload to the Weather Underground, <i>etc</i>.) to the system
@@ -1635,6 +1635,22 @@ longitude = -77.0366</pre>
             href="https://en.wikipedia.org/wiki/Representational_State_Transfer">RESTful</a> servers such as the <a
             href="https://www.wunderground.com/">Weather Underground</a>, <a href="https://www.pwsweather.com/">PWSweather.com</a>,
             or <a href="http://www.wxqa.com/">CWOP</a>.
+        </p>
+
+        <p class="config_important">log_success</p>
+        <p>
+            If you set a value for <span class="code">log_success</span> here, it will override the value set at the <a
+            href="#global_log_success">top-level</a> and will apply only to RESTful services. In addition, <span
+            class="code">log_success</span> can be set for individual services by putting them under the appropriate
+            subsection (<i>e.g.,</i> <span class="code">[[CWOP]]</span>).
+        </p>
+
+        <p class="config_important">log_failure</p>
+        <p>
+            If you set a value for <span class="code">log_failure</span> here, it will override the value set at the <a
+            href="#global_log_failure">top-level</a> and will apply only to RESTful services. In addition, <span
+            class="code">log_failure</span> can be set for individual services by putting them under the appropriate
+            subsection (<i>e.g.,</i> <span class="code">[[CWOP]]</span>).
         </p>
 
         <h3 class="config_section" id="station_registry">[[StationRegistry]]</h3>
@@ -3555,8 +3571,8 @@ May 14 13:35:23 web weewx[5633]:         ****  Generator terminated...</pre>
         <h3 id="zero_windspeed">There is no wind direction when wind speed is zero</h3>
 
         <p>
-            This is by design &mdash; if there is no wind, then the wind direction is undefined, represented by NULL
-            in the database or None in Python. This policy is enforced by the <span class='code'>StdWXCalculate</span>
+            This is by design &mdash; if there is no wind, then the wind direction is undefined, represented by NULL in
+            the database or None in Python. This policy is enforced by the <span class='code'>StdWXCalculate</span>
             service. If necessary, it can be overridden. See option <a href="#ignore_zero_wind"><span class="code">ignore_zero_wind</span></a>
             in the <a href="#StdWXCalculate"><span class='code'>[StdWXCalculate]</span></a> section.
         </p>
