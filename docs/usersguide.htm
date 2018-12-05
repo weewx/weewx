@@ -1016,6 +1016,52 @@ sudo /etc/init.d/weewx start</pre>
             this is what it means.
         </p>
 
+        <h3>Option hierarchy</h3>
+        <p>
+            In general, options closer to the "root" of <span class="code">weewx.conf</span> are overridden by options
+            closer to the leaves. Here's an example:
+        </p>
+        <pre class="tty">
+log_success = false
+
+...
+
+[StdRESTful]
+
+    log_success = true
+
+    ...
+
+    [[Wunderground]]
+        log_success = false     # Wunderground will not be logged
+
+        ...
+
+    [[WOW]]
+        log_success = true      # WOW will be logged
+
+        ...
+
+    [[CWOP]]
+                                # CWOP will be logged (inherits from [StdRESTful])
+
+        ...
+</pre>
+
+        <p>
+            In this example, at the top level, <span class="code">log_success</span> is set to <span
+            class="code">false</span>. So, unless set otherwise, successful operations will not be logged. However, for
+            <span class="code">StdRESTful</span> operations, it is set to <span class="code">true</span>, so for these
+            services, successful operations <em>will</em> be logged, unless set otherwise by an individual service.
+            Looking at the individual services, successful operations for
+        </p>
+        <ul>
+            <li><span class="code">Wunderground</span> will not be logged (set explicitly)</li>
+            <li><span class="code">WOW</span> will be logged (set explicitly)</li>
+            <li><span class="code">CWOP</span> will be logged (inherits from <span class="code">[StdRESTful]</span>
+            </li>
+        </ul>
+
         <p>What follows is organized by the different sections of the configuration file.</p>
 
         <h2>General</h2>
