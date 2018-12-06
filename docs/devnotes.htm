@@ -123,13 +123,6 @@ Version: 3.9
             Conditions&quot; page takes just under 2 seconds (compared with 0.4 seconds for <span
                     class="code">wview</span>). </p>
 
-        <p>Unfortunately, the architectural goal of one code base is likely to be broken with the arrival of Python
-            V3.X. It has so many changes that are not backwards compatible with V2.X, that a separate code base will
-            most likely be needed. My intention is to stick with the V2.X versions until V3.X is so widespread it cannot
-            be ignored, then make a permanent switch. Given the slow adoption rate of V3.X this is unlikely to happen
-            anytime soon. In any case, I doubt the transition will affect the average WeeWX
-            user. </p>
-
         <p>All writes to the databases are protected by transactions. You can kill the program at any time (either
             Control-C if run directly or &quot;<span class="code">/etc/init.d/weewx
         stop</span>&quot; if run as a daemon) without fear of corrupting the databases. </p>
@@ -145,6 +138,12 @@ Version: 3.9
             in the report processing thread (much more likely), then only the generation of reports will be
             affected &mdash; the main thread will continue downloading data off the instrument and putting them in the
             database. You can fix the problem at your leisure, without worrying about losing any data. </p>
+
+        <p>
+            For now, WeeWX requires Python v2.6 or v2.7. However, we eventually plan on supporting Python v3.x as well.
+            See the Wiki page <a href="https://github.com/weewx/weewx/wiki/Python-3-strategy"><em>Python 3 strategy</em></a>
+            for details on the transition.
+        </p>
 
         <h1>Units</h1>
 
@@ -171,9 +170,11 @@ Version: 3.9
             because of a failed checksum). If the hardware simply doesn't support it, then the driver should not emit a
             value at all.</p>
             
-        <p>The same rule applies to derived values. If the input data for a derived value are missing, then no derived
+        <p>
+            The same rule applies to derived values. If the input data for a derived value are missing, then no derived
             value should be emitted. However, if the input values are present, but have value 
-            <span class="code">None</span></p>, then the derived value should be set to <span class="code">None</span>.
+            <span class="code">None</span>, then the derived value should be set to <span class="code">None</span>.
+        </p>
 
         <p>However, the time value must never be <span class="code">None</span>. This is because it is used as the
             primary key in the SQL database. </p>
@@ -210,7 +211,7 @@ next_ts = int(time.mktime(next_dt.timetuple()))</pre>
         </p>
 
         <h1>Internationalization</h1>
-        <p>Generally, weewx does not make much use of Unicode. This is because the Python 2.x libraries do not always
+        <p>Generally, WeeWX does not make much use of Unicode. This is because the Python 2.x libraries do not always
             handle it correctly. In particular, the function <span class="code">time.strftime()</span> completely fails
             when handed a Unicode string with a non-ASCII character. As this function is often used by extensions,
             working around this bug is an unfair expectation on extension writers. So, we generally avoid Unicode.</p>
