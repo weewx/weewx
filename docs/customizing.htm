@@ -1261,9 +1261,9 @@ UV      = UV Index</pre>
         template = filename.xml.tmpl</pre>
         <p>
             There can be only one <span class="config_option">template</span> in each block. In most cases, the block
-            name does not matter &mdash; it is used only to isolate each template. However, there are three block names
-            that have special meaning: <span class='code'>SummaryByMonth</span>, <span class='code'>SummaryByYear</span>,
-            and <span class='code'>ToDate</span>.
+            name does not matter &mdash; it is used only to isolate each template. However, there are four block names
+            that have special meaning: <span class="code">SummaryByDay</span>, <span class='code'>SummaryByMonth</span>,
+            <span class='code'>SummaryByYear</span>, and <span class='code'>ToDate</span>.
         </p>
 
         <h3>The <em>Seasons</em> skin templates</h3>
@@ -1338,6 +1338,38 @@ UV      = UV Index</pre>
             class="code">files_to_date</span>, and the sections <span class="code">day</span>, <span
             class="code">week</span>, and <span class="code">month</span> could just as well have been called <span
             class="code">tom</span>, <span class="code">dick</span>, and <span class="code">harry</span>.
+        </p>
+
+        <h3><span class="code" id="SummaryByDay">[[SummaryByDay]]</span></h3>
+        <p>
+            While the <em>Seasons</em> skin does not make use of it, there is also a <span
+            class="code">SummaryByDay</span> capability. As the name suggests, this allows files to be created, one per
+            day. Here's an example:
+        </p>
+        <pre class="tty">
+[CheetahGenerator]
+
+    [[SummaryByDay]]
+        # Reports that summarize "by day"
+        [[[NOAA_day]]]
+            encoding = strict_ascii
+            template = NOAA/NOAA-YYYY-MM-DD.txt.tmpl
+        </pre>
+
+        <p>
+            The template <span class="code">NOAA/NOAA-YYYY-MM-DD.txt.tmpl</span> might look something like this:
+        </p>
+        <pre class="tty">
+           SUMMARY FOR DAY $day.dateTime
+
+HOURLY TEMPERATURES AND HUMIDITIES:
+#for $record in $day.records
+$record.dateTime $record.outTemp $record.outHumidity
+#end for
+        </pre>
+        <p>
+            NB: This can create a <em>lot</em> of files &mdash; one per day. If you have 3 years of records,
+            this would be 1,000+ files!
         </p>
 
         <h2>Tags</h2>
