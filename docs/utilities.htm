@@ -44,7 +44,7 @@ Version: 3.9
     </div>
 
     <div id="technical_content" class="content">
-        <p>This is a reference guide to the executable utilities that come with weeWX:</p>
+        <p>This is a reference guide to the executable utilities that come with WeeWX:</p>
         <ul>
             <li><a href="#wee_config_utility"> <span class="code">wee_config</span></a> for changing the configuration
                 file, and configuring new device drivers;
@@ -64,7 +64,7 @@ Version: 3.9
                 from external sources;
             </li>
             <li><a href="#wee_reports_utility"> <span class="code">wee_reports</span></a> for running reports without
-                running weeWX itself;
+                running WeeWX itself;
             </li>
             <li><a href="#weewxd"> <span class="code">weewxd</span></a> the main weewx program;
             </li>
@@ -79,7 +79,7 @@ Version: 3.9
         <h1 id="wee_config_utility"><span class="code">wee_config</span></h1>
 
         <p>
-            When you install weeWX for the first time, the installation process will prompt you for the most essential
+            When you install WeeWX for the first time, the installation process will prompt you for the most essential
             options, such as the type of hardware you are using, latitude, longitude, or altitude. But, what if you want
             to change these later? In particular, what if you want to change device drivers? You could edit the
             definitive configuration file, <span class="code">weewx.conf</span>, by hand &mdash; described in detail in
@@ -234,7 +234,7 @@ Module name              Driver name    Version  Status
 
         <h2>Example: changing the driver</h2>
 
-        <p>Say that you originally installed weeWX with the Simulator. Now you've bought a Davis Vantage and you want to
+        <p>Say that you originally installed WeeWX with the Simulator. Now you've bought a Davis Vantage and you want to
             switch to that. Here's how you do it. First, use the action <span class="code">--list-drivers</span> to see
             which drivers are installed.
         </p>
@@ -347,13 +347,13 @@ Usage: wee_database --help
 
 Description:
 
-Manipulate the weeWX database. Most of these operations are handled
-automatically by weeWX, but they may be useful in special cases.
+Manipulate the WeeWX database. Most of these operations are handled
+automatically by WeeWX, but they may be useful in special cases.
 
 Options:
   -h, --help            show this help message and exit
   --config=CONFIG_FILE  Use configuration file CONFIG_FILE.
-  --create              Create the weeWX database and initialize it with the
+  --create              Create the WeeWX database and initialize it with the
                         schema.
   --drop-daily          Drop the daily summary tables from a database.
   --rebuild-daily       Rebuild the daily summaries from data in the archive
@@ -367,7 +367,7 @@ Options:
                         [StdConvert][target_unit]. The new database will have
                         the same name as the old database, with a '_new' on
                         the end.
-  --transfer            Transfer the weeWX archive from source database to
+  --transfer            Transfer the WeeWX archive from source database to
                         destination database.
   --check               Check the calculations in the daily summary tables.
   --update              Update the daily summary tables if required and
@@ -388,14 +388,14 @@ Options:
 
         <h3>Action <span class="code">--create</span></h3>
         <p>If the database does not already exist, this action will create it and initialize it with the schema
-            specified in the weeWX configuration file. Because weeWX does this automatically, this action is rarely
+            specified in the WeeWX configuration file. Because WeeWX does this automatically, this action is rarely
             needed.
         </p>
 
         <pre class="tty cmd">wee_database --create</pre>
 
         <h3>Action <span class="code">--drop-daily</span></h3>
-        <p>In addition to the regular archive data, every weeWX database also includes a daily summary table for each
+        <p>In addition to the regular archive data, every WeeWX database also includes a daily summary table for each
             observation type. Because there can be dozens of observation types, there can be dozens of these daily
             summaries. It doesn't happen very often, but there can be occasions when it's necessary to drop them all and
             then rebuild them. Dropping them by hand would be very tedious! This action does them all at once.
@@ -500,8 +500,8 @@ wee_database --transfer --dest-binding=dest_binding</pre>
 
         <h1 id="wee_debug_utility"><span class="code">wee_debug</span></h1>
 
-        <p>Troubleshooting problems when running weeWX often involves analysis of a number of pieces of seemingly
-            disparate system and weeWX related information. The <span class="code">wee_debug</span> utility gathers all
+        <p>Troubleshooting problems when running WeeWX often involves analysis of a number of pieces of seemingly
+            disparate system and WeeWX related information. The <span class="code">wee_debug</span> utility gathers all
             this information together into a single output to make troubleshooting easier. The <span class="code">wee_debug</span>
             utility is particularly useful for new users as the output may be redirected to a file then emailed or
             posted to a forum to assist in remote troubleshooting.
@@ -570,7 +570,7 @@ before posting the information publicly.
         <pre class="tty cmd">wee_debug --info</pre>
 
         <p class="warning"><strong>Warning!</strong><br/> The <span class="code">wee_debug</span> output includes a copy
-            of the in use weeWX config file (usually <span class="code">weewx.conf</span>) and whilst <span
+            of the in use WeeWX config file (usually <span class="code">weewx.conf</span>) and whilst <span
                 class="code">wee_debug</span> attempts to obfuscate any personal or sensitive information in <span
                 class="code">weewx.conf</span>, the user should carefully check the <span class="code">wee_debug</span>
             output for any remaining personal or sensitive information before emailing or posting the output publicly.
@@ -720,29 +720,29 @@ wee_debug report successfully generated
             </tr>
             <tr>
                 <td class="text_highlight" rowspan=8><span class="code">--verbosity 0</span></td>
-                <td>path and name of weeWX config file used (usually <span class="code">weewx.conf</span>)
+                <td>path and name of WeeWX config file used (usually <span class="code">weewx.conf</span>)
                 </td>
             </tr>
             <tr>
-                <td>name of weeWX database binding used</td>
+                <td>name of WeeWX database binding used</td>
             </tr>
             <tr>
                 <td>operating system version</td>
             </tr>
             <tr>
-                <td>weeWX version number</td>
+                <td>WeeWX version number</td>
             </tr>
             <tr>
-                <td>weeWX station type and driver name</td>
+                <td>WeeWX station type and driver name</td>
             </tr>
             <tr>
                 <td>summary of currently installed extensions</td>
             </tr>
             <tr>
-                <td>summary of weeWX archive</td>
+                <td>summary of WeeWX archive</td>
             </tr>
             <tr>
-                <td>parsed and obfuscated weeWX config file (usually <span class="code">weewx.conf</span>)
+                <td>parsed and obfuscated WeeWX config file (usually <span class="code">weewx.conf</span>)
                 </td>
             </tr>
             <tr>
@@ -756,11 +756,11 @@ wee_debug report successfully generated
                 <td>system load averages</td>
             </tr>
             <tr>
-                <td>driver config extract from weeWX config file (usually <span class="code">weewx.conf</span>)
+                <td>driver config extract from WeeWX config file (usually <span class="code">weewx.conf</span>)
                 </td>
             </tr>
             <tr>
-                <td>summary of databases configured in weeWX config file (usually <span class="code">weewx.conf</span>)
+                <td>summary of databases configured in WeeWX config file (usually <span class="code">weewx.conf</span>)
                 </td>
             </tr>
             <tr>
@@ -935,7 +935,7 @@ Finished installing extension '/var/tmp/weewx-cmon-0.7.tgz'</pre>
             <li>It put a new skin, <span class="code">cmon</span>, in the <span class="code">skins</span> subdirectory;
             </li>
             <li>It put a new service, <span class="code">user.cmon.ComputerMonitor</span>, in the list of services to be
-                run by weeWX;
+                run by WeeWX;
             </li>
             <li>It defined a new database, <span class="code">cmon_sqlite</span>, and a binding, <span class="code">cmon_binding</span>,
                 to that database;
@@ -969,8 +969,8 @@ No extensions installed</pre>
         <h1 id="wee_import_utility"><span class="code">wee_import</span></h1>
 
 
-        <p>Some weeWX users will have historical data from another source (e.g., other weather station software or a
-            manually compiled file) which they wish to import into weeWX. Such data can, depending upon the source, be
+        <p>Some WeeWX users will have historical data from another source (e.g., other weather station software or a
+            manually compiled file) which they wish to import into WeeWX. Such data can, depending upon the source, be
             imported using the <span class="code">wee_import</span> utility. This section details the use of the <span
                 class="code">wee_import</span> utility.
         </p>
@@ -1181,9 +1181,9 @@ summaries using the wee_database utility.</pre>
         <h3>Option <span class="code">--log</span></h3>
 
         <p>The <span class="code">--log</span> option controls the <span class="code">wee_import</span> log output.
-            Omitting the option will result in <span class="code">wee_import</span> log output being sent to the weeWX
+            Omitting the option will result in <span class="code">wee_import</span> log output being sent to the WeeWX
             log file (nominally the system log, refer to <em><a href="usersguide.htm#monitoring">Monitoring
-                weeWX</a></em> and <em><a href="usersguide.htm#Where_to_find_things">Where to find things</a></em> to
+                WeeWX</a></em> and <em><a href="usersguide.htm#Where_to_find_things">Where to find things</a></em> to
             find it). <span class="code">wee_import</span> log output can be disabled by using <span class="code">--log=-</span>.
             The <span class="code">--log</span> option is used as follows:
         </p>
@@ -1203,7 +1203,7 @@ summaries using the wee_database utility.</pre>
         <h2 id='import_config'>The import configuration file</h2>
 
         <p><span class="code">wee_import</span> requires a second configuration file, the import configuration file, in
-            addition to the standard weeWX configuration file. The import configuration file specifies the import type
+            addition to the standard WeeWX configuration file. The import configuration file specifies the import type
             and various options associated with each type of import. The import configuration file is specified using
             the mandatory <span class="code">--import-config</span> option. How you construct the import configuration
             file is up to you; however, the recommended method is to copy one of the example import configuration files
@@ -1250,7 +1250,7 @@ summaries using the wee_database utility.</pre>
 
         <h4 class='config_option' id='csv_interval'>interval</h4>
 
-        <p>Determines how the time interval (weeWX archive table field <span class="code">interval</span>) between
+        <p>Determines how the time interval (WeeWX archive table field <span class="code">interval</span>) between
             successive observations is derived. The interval can be derived by one of three methods:
         </p>
 
@@ -1258,7 +1258,7 @@ summaries using the wee_database utility.</pre>
             <li>The interval can be calculated as the time, rounded to the nearest minute, between the date-time of
                 successive records. This method is suitable when the data was recorded at fixed intervals and there are
                 NO missing records in the source data. Use of this method when there are missing records in the source
-                data can compromise the integrity of the weeWX statistical data. Select this method by setting <span
+                data can compromise the integrity of the WeeWX statistical data. Select this method by setting <span
                     class="code">interval = derive</span>.
             </li>
             <li>The interval can be set to the same value as the <span class="code">archive_interval</span> setting
@@ -1283,7 +1283,7 @@ summaries using the wee_database utility.</pre>
         <h4 class='config_option' id='csv_qc'>qc</h4>
 
         <p>Determines whether simple quality control checks are applied to imported data. Setting <span class="code">qc = True</span>
-            will result in <span class="code">wee_import</span> applying the weeWX <span class="code">StdQC</span>
+            will result in <span class="code">wee_import</span> applying the WeeWX <span class="code">StdQC</span>
             minimum and maximum checks to any imported observations. <span class="code">wee_import</span> quality
             control checks use the same configuration settings, and operate in the same manner, as the <a
                 href="usersguide.htm#StdQC"><span class="code">StdQC</span></a> service. For example, for
@@ -1304,9 +1304,9 @@ summaries using the wee_database utility.</pre>
         <h4 class='config_option' id='csv_calc_missing'>calc_missing</h4>
 
         <p>Determines whether any missing derived observations will be calculated from the imported data. Setting <span
-            class="code">calc_missing = True</span> will result in <span class="code">wee_import</span> using the weeWX
+            class="code">calc_missing = True</span> will result in <span class="code">wee_import</span> using the WeeWX
             <span class="code">StdWXCalculate</span> service to calculate any missing derived observations from the
-            imported data. Setting <span class="code">calc_missing = False</span> will result in weeWX leaving any
+            imported data. Setting <span class="code">calc_missing = False</span> will result in WeeWX leaving any
             missing derived observations as <span class="code">None</span>. The observations that <span class="code">StdWXCalculate</span>
             can calculate are listed in the <a href="usersguide.htm#StdWXCalculate">[StdWXCalculate]</a> section of the
             <a href="usersguide.htm">User's Guide</a>. The default is <span class="code">True</span>.
@@ -1316,7 +1316,7 @@ summaries using the wee_database utility.</pre>
 
         <p>Determines whether invalid data in a source field is ignored or the import aborted. If invalid data is found
             in a source field and <span class="code">ignore_invalid_data</span> is <span class="code">True</span> the
-            corresponding weeWX destination field is set to <span class="code">None</span> and the import continues. If
+            corresponding WeeWX destination field is set to <span class="code">None</span> and the import continues. If
             invalid data is found in a source field and <span class="code">ignore_invalid_data</span> is <span
                 class="code">False</span> the import is aborted. The default is <span class="code">True</span>.
         </p>
@@ -1339,10 +1339,10 @@ summaries using the wee_database utility.</pre>
             between the case where a UV sensor is present and the UV index is 0 and the case where no UV sensor is
             present and UV index is 0. <span class="code">UV_sensor = False</span> should be used when no UV sensor was
             used in producing the source data. <span class="code">UV_sensor = False</span> will result in <span
-                class="code">None/null</span> being recorded in the weeWX archive field <span class="code">UV</span>
+                class="code">None/null</span> being recorded in the WeeWX archive field <span class="code">UV</span>
             irrespective of any UV observations in the source data. <span class="code">UV_sensor = True</span> should be
             used when a UV sensor was used in producing the source data. <span class="code">UV_sensor = True</span> will
-            result in UV observations in the source data being stored in the weeWX archive field <span
+            result in UV observations in the source data being stored in the WeeWX archive field <span
                 class="code">UV</span>. The default is <span class="code">True</span>.
         </p>
 
@@ -1354,11 +1354,11 @@ summaries using the wee_database utility.</pre>
             to distinguish between the case where a solar radiation sensor is present and solar radiation is 0 and the
             case where no solar radiation sensor is present and solar radiation is 0. <span class="code">solar_sensor = False</span>
             should be used when no solar radiation sensor was used in producing the source data. <span class="code">solar_sensor = False</span>
-            will result in <span class="code">None/null</span> being recorded in the weeWX archive field <span
+            will result in <span class="code">None/null</span> being recorded in the WeeWX archive field <span
                 class="code">radiation</span> irrespective of any solar radiation observations in the source data. <span
                 class="code">solar_sensor = True</span> should be used when a solar radiation sensor was used in
             producing the source data. <span class="code">solar_sensor = True</span> will result in solar radiation
-            observations in the source data being stored in the weeWX archive field <span class="code">radiation</span>.
+            observations in the source data being stored in the WeeWX archive field <span class="code">radiation</span>.
             The default is <span class="code">True</span>.
         </p>
 
@@ -1382,7 +1382,7 @@ summaries using the wee_database utility.</pre>
         <p>WeeWX records rainfall as the amount of rain in the preceding archive period, so for a 5 minute archive
             period the rain field in each archive record would contain the total rain that fell in the previous 5
             minutes. Many weather station applications provide a daily or yearly total. <span
-                class="code">wee_import</span> can derive the weeWX <span class="code">rain</span> field in one of two
+                class="code">wee_import</span> can derive the WeeWX <span class="code">rain</span> field in one of two
             ways:
         </p>
 
@@ -1524,7 +1524,7 @@ summaries using the wee_database utility.</pre>
 
         <h4 class='config_option' id='csv_fieldmap'>[[FieldMap]]</h4>
 
-        <p>The <span class='code'>[[FieldMap]]</span> stanza defines the mapping from the source data fields to weeWX
+        <p>The <span class='code'>[[FieldMap]]</span> stanza defines the mapping from the source data fields to WeeWX
             archive fields. The map consists of one row per field using the format:
         </p>
 
@@ -1533,18 +1533,18 @@ summaries using the wee_database utility.</pre>
 
         <p>Where <span class="code">weewx_archive_field_name</span> is a database field name in the <span class="code">weewx</span>
             archive table schema, <span class="code">csv_field_name</span> is the name of a field from the CSV file and
-            <span class="code">weewx_unit_name</span> is the weeWX unit name of the units used by <span class="code">csv_field_name</span>.
+            <span class="code">weewx_unit_name</span> is the WeeWX unit name of the units used by <span class="code">csv_field_name</span>.
             This mapping allows <span class="code">wee_import</span> to take a source data field, do the appropriate
-            unit conversion and store the resulting value in the appropriate weeWX archive field. A mapping is not
-            required for every weeWX archive field (e.g., the source may not provide inside temperature so no <span
+            unit conversion and store the resulting value in the appropriate WeeWX archive field. A mapping is not
+            required for every WeeWX archive field (e.g., the source may not provide inside temperature so no <span
                 class="code">inTemp</span> field mapping is required) and neither does every CSV field need to be
             included in a mapping (e.g., the source data field <span class="code">monthrain</span> may have no use if
-            the source data field <span class="code">dayrain</span> provides the data for the weeWX archive <span
+            the source data field <span class="code">dayrain</span> provides the data for the WeeWX archive <span
                 class="code">rain</span> field). Unused field mapping lines will not be used and may be omitted.
         </p>
 
         <p class="note">
-            <strong>Note</strong><br/>Any weeWX archive fields that are derived (e.g., <span
+            <strong>Note</strong><br/>Any WeeWX archive fields that are derived (e.g., <span
             class="code">dewpoint</span>) and for which there is no field mapping may be calculated during import by use
             of the <span class="code">calc_missing</span> option in the <span class="config_section">[CSV]</span>
             section of the import configuration file.
@@ -1564,12 +1564,12 @@ summaries using the wee_database utility.</pre>
 
         <h4 class='config_option' id='wu_interval'>interval</h4>
 
-        <p>Determines how the time interval (weeWX database field <span class="code">interval</span>) between successive
+        <p>Determines how the time interval (WeeWX database field <span class="code">interval</span>) between successive
             observations is determined. This option is identical in operation to the CSV <em><a href="#csv_interval">interval</a></em>
             option but applies to Weather Underground imports only. As Weather Underground often skips observation
             records when responding to a daily history query, the use of <span class="code">interval = derive</span> may
             give incorrect or inconsistent interval values. Better results may be obtained by using <span class="code">interval = conf</span>
-            if the current weeWX installation has the same <span class="code">archive_interval</span> as the Weather
+            if the current WeeWX installation has the same <span class="code">archive_interval</span> as the Weather
             Underground data, or by using <span class="code">interval = x</span> where <span class="code">x</span> is
             the time interval in minutes used to upload the Weather Underground data. The most appropriate setting will
             depend on the completeness and (time) accuracy of the Weather Underground data being imported.
@@ -1583,7 +1583,7 @@ summaries using the wee_database utility.</pre>
             operation to the CSV <em><a href="#csv_qc">qc</a></em> option but applies to Weather Underground imports
             only. As Weather Underground imports at times contain nonsense values, particularly for fields for which no
             data was uploaded to Weather Underground by the PWS, the use of quality control checks on imported data can
-            prevent these nonsense values from being imported and contaminating the weeWX database. The default is <span
+            prevent these nonsense values from being imported and contaminating the WeeWX database. The default is <span
                 class="code">True</span>.
         </p>
 
@@ -1603,7 +1603,7 @@ summaries using the wee_database utility.</pre>
 
         <h4 class='config_option' id='wu_tranche'>tranche</h4>
 
-        <p>The number of records written to the weeWX database in each transaction. This option is identical in
+        <p>The number of records written to the WeeWX database in each transaction. This option is identical in
             operation to the CSV <em><a href="#csv_tranche">tranche</a></em> option but applies to Weather Underground
             imports only. The default is <span class="code">250</span> which should suit most users.
         </p>
@@ -1629,13 +1629,13 @@ summaries using the wee_database utility.</pre>
 
         <h4 class='config_option' id='cumulus_interval'>interval</h4>
 
-        <p>Determines how the time interval (weeWX database field <span class="code">interval</span>) between successive
+        <p>Determines how the time interval (WeeWX database field <span class="code">interval</span>) between successive
             observations is determined. This option is identical in operation to the CSV <em><a href="#csv_interval">interval</a></em>
             option but applies to Cumulus monthly log file imports only. As Cumulus monthly log files can, at times,
             have missing entries, the use of <span class="code">interval = derive</span> may give incorrect or
             inconsistent interval values. Better results may be obtained by using <span
                 class="code">interval = conf</span> if the <span class="code">archive_interval</span> for the current
-            weeWX installation is the same as the Cumulus 'data log interval' setting used to generate the Cumulus
+            WeeWX installation is the same as the Cumulus 'data log interval' setting used to generate the Cumulus
             monthly log files, or by using <span class="code">interval = x</span> where <span class="code">x</span> is
             the time interval in minutes used as the Cumulus 'data log interval' setting. The most appropriate setting
             will depend on the completeness and (time) accuracy of the Cumulus data being imported.
@@ -1688,7 +1688,7 @@ summaries using the wee_database utility.</pre>
 
         <h4 class='config_option' id='cumulus_tranche'>tranche</h4>
 
-        <p>The number of records are written to the weeWX database in each transaction. This option is identical in
+        <p>The number of records are written to the WeeWX database in each transaction. This option is identical in
             operation to the CSV <em><a href="#csv_tranche">tranche</a></em> option but applies to Cumulus monthly log
             file imports only. The default is <span class="code">250</span> which should suit most users.
         </p>
@@ -1722,9 +1722,9 @@ summaries using the wee_database utility.</pre>
 
         <p>Where <span class="code">obs_type</span> is one of <span class="code">temperature</span>, <span class="code">pressure</span>,
             <span class="code">rain</span> or <span class="code">speed</span> and <span
-                class="code">weewx_unit_name</span> is the weeWX unit name of the units used by that particular <span
+                class="code">weewx_unit_name</span> is the WeeWX unit name of the units used by that particular <span
                 class="code">obs_type</span>. As Cumulus supports a different suite of possible units only a subset of
-            the available weeWX unit names can be used for some settings.
+            the available WeeWX unit names can be used for some settings.
         </p>
 
         <h2>Importing from CSV files</h2>
@@ -1737,7 +1737,7 @@ summaries using the wee_database utility.</pre>
             <li>The file must have a header row consisting of a comma separated list of field names. The field names can
                 be any valid string as long as each field name is unique within the list. There is no requirement for
                 the field names to be in any particular order as long as the same order is used for the observations on
-                each row in the file. These field names will be mapped to weeWX field names in the <span class="code">[CSV]</span>
+                each row in the file. These field names will be mapped to WeeWX field names in the <span class="code">[CSV]</span>
                 section of the import configuration file.
             </li>
 
@@ -1771,11 +1771,11 @@ summaries using the wee_database utility.</pre>
 
         <h3>Mapping data to archive fields</h3>
 
-        <p>The weeWX archive fields populated during a CSV import depend on the CSV-to-weeWX field mappings specified in
+        <p>The WeeWX archive fields populated during a CSV import depend on the CSV-to-WeeWX field mappings specified in
             <span class="code">[CSV]</span> section in the import configuration file. If a valid field mapping exists,
-            the weeWX field exists in the weeWX archive table schema and provided the mapped CSV field contains valid
-            data, then the corresponding weeWX field will populated. Note that the CSV import is the only import
-            supported by <span class="code">wee_import</span> that allows any weeWX archive field to be populated.
+            the WeeWX field exists in the WeeWX archive table schema and provided the mapped CSV field contains valid
+            data, then the corresponding WeeWX field will populated. Note that the CSV import is the only import
+            supported by <span class="code">wee_import</span> that allows any WeeWX archive field to be populated.
         </p>
 
         <p class="note">
@@ -1795,7 +1795,7 @@ summaries using the wee_database utility.</pre>
                 in the <span class="code">/var/tmp</span> folder will be used.
             </li>
 
-            <li>Make a backup of the weeWX database in case the import should go awry.
+            <li>Make a backup of the WeeWX database in case the import should go awry.
             </li>
 
             <li>Create an import configuration file. In this case we will make a copy of the example CSV import
@@ -1818,7 +1818,7 @@ summaries using the wee_database utility.</pre>
                         name of the file containing the CSV formatted data to be imported.
                     </li>
                     <li><a href="#csv_interval"><strong><span class="code">interval</span></strong></a>. Determines how
-                        the weeWX interval field is derived.
+                        the WeeWX interval field is derived.
                     </li>
                     <li><a href="#csv_qc"><strong><span class="code">qc</span></strong></a>. Determines whether quality
                         control checks are performed on the imported data.
@@ -1831,7 +1831,7 @@ summaries using the wee_database utility.</pre>
                         source field is ignored or the import aborted.
                     </li>
                     <li><a href="#csv_tranche"><strong><span class="code">tranche</span></strong></a>. The number of
-                        records written to the weeWX database in each transaction.
+                        records written to the WeeWX database in each transaction.
                     </li>
                     <li><a href="#csv_UV"><strong><span class="code">UV_sensor</span></strong></a>. Whether a UV sensor
                         was installed when the source data was produced.
@@ -1844,20 +1844,20 @@ summaries using the wee_database utility.</pre>
                         field.
                     </li>
                     <li><a href="#csv_rain"><strong><span class="code">rain</span></strong></a>. Determines how the
-                        weeWX rain field is derived.
+                        WeeWX rain field is derived.
                     </li>
                     <li><a href="#csv_wind_direction"><strong><span class="code">wind_direction</span></strong></a>.
                         Determines how imported wind direction fields are interpreted.
                     </li>
                     <li><a href="#csv_fieldmap"><strong><span class="code">[[FieldMap]]</span></strong></a>. Defines the
-                        mapping between imported data fields and weeWX archive fields. Also defines the units of measure
+                        mapping between imported data fields and WeeWX archive fields. Also defines the units of measure
                         for each imported field.
                     </li>
                 </ul>
             </li>
 
             <li>When first importing data it is prudent to do a dry run import before any data are actually imported. A
-                dry run import will perform all steps of the import without actually writing imported data to the weeWX
+                dry run import will perform all steps of the import without actually writing imported data to the WeeWX
                 database. In addition, consideration should be given to any additional options such as <span
                     class="code">--date</span>.
 
@@ -1880,12 +1880,12 @@ Finished dry run import. 70685 records were processed and 70685 unique records w
 </pre>
 
                 <p>The output includes details about the data source, its destination and some other details on how the
-                    data will be processed. The import will then be performed but no data will be written to the weeWX
+                    data will be processed. The import will then be performed but no data will be written to the WeeWX
                     database. Upon completion a brief summary of the records processed is provided.
                 </p>
 
                 <p class="note">
-                    <strong>Note</strong><br/>As the weeWX database is not altered when the <span
+                    <strong>Note</strong><br/>As the WeeWX database is not altered when the <span
                     class="code">--dry-run</span> option is used, <span class="code">wee_import</span> log output is
                     suspended during a dry run import. In effect, the use of <span class="code">--dry-run</span> is
                     equivalent to <span class="code">--dry-run --log=-</span>. During a dry run import the only <span
@@ -1915,7 +1915,7 @@ Are you sure you want to proceed (y/n)?
 
             <li>If the import parameters are acceptable enter <span class="code">y</span> to proceed with the import or
                 <span class="code">n</span> to abort the import. If the import is confirmed then the source data will be
-                imported, processed and saved in the weeWX database. Information on the progress of the import will be
+                imported, processed and saved in the WeeWX database. Information on the progress of the import will be
                 displayed similar to the following:
 
                 <pre class="tty">Records processed: 250; Unique records: 250; Last timestamp: 2010-02-09 19:25:00 AEST (1265707500)
@@ -1930,12 +1930,12 @@ Are you sure you want to proceed (y/n)?
                 <pre class="tty">Records processed: 70685; Unique records: 70685; Last timestamp: 2010-09-04 04:20:00 AEST (1283538000)
 Finished import. 70685 raw records resulted in 70685 unique records being processed in 276.63 seconds.
 Those records with a timestamp already in the archive will not have been imported.
-Confirm successful import in the weeWX log file.</pre>
+Confirm successful import in the WeeWX log file.</pre>
 
             </li>
             <li>Whilst <span class="code">wee_import</span> will advise of the number of records processed and the
                 number of unique records found, <span class="code">wee_import</span> does know how many, if any, of the
-                imported records were successfully saved to the database. You should look carefully through the weeWX
+                imported records were successfully saved to the database. You should look carefully through the WeeWX
                 log file covering the <span class="code">wee_import</span> session and take note of any records that
                 were not imported. The most common reason for imported records not being saved to the database is
                 because a record with that timestamp already exists in the database, in such cases something similar to
@@ -1957,7 +1957,7 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
 
         <p><span class="code">wee_import</span> can import data from the daily history of a Weather Undeground PWS. A
             Weather Underground daily history provides weather station observations received by Weather Underground for
-            the PWS concerned on a day by day basis. As such, the data is analogous to the weeWX archive table. When
+            the PWS concerned on a day by day basis. As such, the data is analogous to the WeeWX archive table. When
             <span class="code">wee_import</span> imports data from a Weather Underground daily history each day is
             considered a 'period'. <span class="code">wee_import</span> processes one period at a time in chronological
             order (oldest to newest) and provides import summary data on a per period basis.
@@ -1965,10 +1965,10 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
 
         <h3>Mapping data to archive fields</h3>
 
-        <p>A Weather Underground import will populate weeWX archive fields as follows:</p>
+        <p>A Weather Underground import will populate WeeWX archive fields as follows:</p>
 
         <ul>
-            <li>Provided data exists for each field in the Weather Underground PWS daily history, the following weeWX
+            <li>Provided data exists for each field in the Weather Underground PWS daily history, the following WeeWX
                 archive fields will be directly populated by imported data:
 
                 <ul>
@@ -1986,23 +1986,23 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
 
                 <p class="note">
                     <strong>Note</strong><br/>If an appropriate field does not exist in the Weather Underground daily
-                    history then the corresponding weeWX archive field will be set to <span
+                    history then the corresponding WeeWX archive field will be set to <span
                     class="code">None/null</span>. For example, if there is no solar radiation sensor then <span
                     class="code">radiation</span> will be null, or if <span class="code">outHumidity</span> was never
                     uploaded to Weather Undeground then <span class="code">outHumidity</span> will be null.
                 </p>
             </li>
 
-            <li>The following weeWX archive fields will be populated from other settings or configuration options:
+            <li>The following WeeWX archive fields will be populated from other settings or configuration options:
                 <ul>
                     <li><span class="code">interval</span></li>
                     <li><span class="code">usUnits</span></li>
                 </ul>
             </li>
 
-            <li>The following weeWX archive fields will be populated with values derived from the imported data provided
+            <li>The following WeeWX archive fields will be populated with values derived from the imported data provided
                 <span class="code">calc_missing = True</span> is included in the <span class="code">[WU]</span> section
-                of the import configuration file and the field exists in the in-use weeWX archive table schema.
+                of the import configuration file and the field exists in the in-use WeeWX archive table schema.
 
                 <ul>
                     <li><span class="code">altimeter</span></li>
@@ -2033,7 +2033,7 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
                     class="code">ISTATION123</span> will be used.
             </li>
 
-            <li>Make a backup of the weeWX database in case the import should go awry.
+            <li>Make a backup of the WeeWX database in case the import should go awry.
             </li>
 
             <li>Create an import configuration file. In this case we will make a copy of the example Weather Underground
@@ -2056,7 +2056,7 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
                         imported data.
                     </li>
                     <li><a href="#wu_interval"><strong><span class="code">interval</span></strong></a>. Determines how
-                        the weeWX interval field is derived.
+                        the WeeWX interval field is derived.
                     </li>
                     <li><a href="#wu_qc"><strong><span class="code">qc</span></strong></a>. Determines whether quality
                         control checks are performed on the imported data.
@@ -2065,7 +2065,7 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
                             <strong>Note</strong><br/>As Weather Underground imports at times contain nonsense values,
                             particularly for fields for which no data were uploaded to Weather Underground by the PWS,
                             the use of quality control checks on imported data can prevent these nonsense values from
-                            being imported and contaminating the weeWX database.
+                            being imported and contaminating the WeeWX database.
                         </p>
                     </li>
 
@@ -2076,7 +2076,7 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
                         Determines whether invalid data in a source field is ignored or the import aborted.
                     </li>
                     <li><a href="#wu_tranche"><strong><span class="code">tranche</span></strong></a>. The number of
-                        records written to the weeWX database in each transaction.
+                        records written to the WeeWX database in each transaction.
                     </li>
                     <li><a href="#wu_wind_direction"><strong><span class="code">wind_direction</span></strong></a>.
                         Determines how imported wind direction fields are interpreted.
@@ -2085,7 +2085,7 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
             </li>
 
             <li>When first importing data it is prudent to do a dry run import before any data are actually imported. A
-                dry run import will perform all steps of the import without actually writing imported data to the weeWX
+                dry run import will perform all steps of the import without actually writing imported data to the WeeWX
                 database. In addition, consideration should be given to any additional options to be used such as <span
                     class="code">--date</span>, <span class="code">--from</span> or <span class="code">--to</span>.
                 <p>To perform a dry run enter the following command:</p>
@@ -2109,7 +2109,7 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
                     observations of the previous interval, such an import actually includes one record with observations
                     from the previous day (the <span class="code">00:00</span> record at the start of the day). Whilst
                     this will not present a problem for <span class="code">wee_import</span> as any records being
-                    imported with a timestamp that already exists in the weeWX database are ignored, you may wish to use
+                    imported with a timestamp that already exists in the WeeWX database are ignored, you may wish to use
                     the <span class="code">--from</span> and <span class="code">--to</span> options with a suitable
                     date-time range to precisely control which records are imported.
                 </p>
@@ -2122,7 +2122,7 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
 
                 <p>This will result in a short preamble with details on the data source, its destination and some other
                     details on how the data will be processed. The import will then be performed but no data will
-                    written to the weeWX database.
+                    written to the WeeWX database.
                 </p>
                 <p>The output should be similar to:</p>
 
@@ -2148,7 +2148,7 @@ Finished dry run import. 607 records were processed and 607 unique records would
 </pre>
 
                 <p class="note">
-                    <strong>Note</strong><br/>As the weeWX database is not altered when the <span
+                    <strong>Note</strong><br/>As the WeeWX database is not altered when the <span
                     class="code">--dry-run</span> option is used, <span class="code">wee_import</span> log output is
                     suspended during a dry run import. In effect, the use of <span class="code">--dry-run</span> is
                     equivalent to <span class="code">--dry-run --log=-</span>. During a dry run import the only <span
@@ -2187,7 +2187,7 @@ Are you sure you want to proceed (y/n)?
 
             <li>If the import parameters are acceptable enter <span class="code">y</span> to proceed with the import or
                 <span class="code">n</span> to abort the import. If the import is confirmed, the source data will be
-                imported, processed and saved in the weeWX database. Information on the progress of the import will be
+                imported, processed and saved in the WeeWX database. Information on the progress of the import will be
                 displayed similar to the following:
 
                 <pre class="tty">Period 1 ...
@@ -2205,7 +2205,7 @@ Records processed: 286; Unique records: 286; Last timestamp: 2016-01-21 23:55:00
 
                 <pre class="tty">Finished import. 607 raw records resulted in 607 unique records being processed in 80.94 seconds.
 Those records with a timestamp already in the archive will not have been imported.
-Confirm successful import in the weeWX log file.
+Confirm successful import in the WeeWX log file.
 </pre>
 
                 <p class="note">
@@ -2216,14 +2216,14 @@ Confirm successful import in the weeWX log file.
                     of Weather Underground. The only solution appears to be to repeat the import with the same <span
                     class="code">--date</span> option setting and observe whether the missing records are imported.
                     Repeating the import will not adversely affect any existing data as records with timestamps that are
-                    already in the weeWX archive will be ignored. It may; however, generated many <span class="code">UNIQUE constraint failed: archive.dateTime</span>
-                    messages in the weeWX log.
+                    already in the WeeWX archive will be ignored. It may; however, generated many <span class="code">UNIQUE constraint failed: archive.dateTime</span>
+                    messages in the WeeWX log.
                 </p>
             </li>
 
             <li>Whilst <span class="code">wee_import</span> will advise of the number of records processed and the
                 number of unique records found, <span class="code">wee_import</span> does know how many, if any, of the
-                imported records were successfully saved to the database. You should look carefully through the weeWX
+                imported records were successfully saved to the database. You should look carefully through the WeeWX
                 log file covering the <span class="code">wee_import</span> session and take note of any records that
                 were not imported. The most common reason for imported records not being saved to the database is
                 because a record with that timestamp already exists in the database, in such cases something similar to
@@ -2245,7 +2245,7 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
 
         <p><span class="code">wee_import</span> can import observational data from the one or more Cumulus monthly log
             files. A Cumulus monthly log file records weather station observations for a single month. These files are
-            accumulated over time and can be considered analogous to the weeWX archive table. When <span class="code">wee_import</span>
+            accumulated over time and can be considered analogous to the WeeWX archive table. When <span class="code">wee_import</span>
             imports data from the Cumulus monthly log files each log file is considered a 'period'. <span class="code">wee_import</span>
             processes one period at a time in chronological order (oldest to newest) and provides import summary data on
             a per period basis.
@@ -2253,10 +2253,10 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
 
         <h3>Mapping data to archive fields</h3>
 
-        <p>A Cumulus monthly log file import will populate the weeWX archive fields as follows:</p>
+        <p>A Cumulus monthly log file import will populate the WeeWX archive fields as follows:</p>
 
         <ul>
-            <li>Provided data exists for each field in the Cumulus monthly logs, the following weeWX archive fields will
+            <li>Provided data exists for each field in the Cumulus monthly logs, the following WeeWX archive fields will
                 be directly populated by imported data:
 
                 <ul>
@@ -2280,11 +2280,11 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
 
                 <p class="note">
                     <strong>Note</strong><br/>If a field in the Cumulus monthly log file has no data then the
-                    corresponding weeWX archive field will be set to <span class="code">None/null</span>.
+                    corresponding WeeWX archive field will be set to <span class="code">None/null</span>.
                 </p>
             </li>
 
-            <li>The following weeWX archive fields will be populated from other settings or configuration options:
+            <li>The following WeeWX archive fields will be populated from other settings or configuration options:
 
                 <ul>
                     <li><span class="code">interval</span></li>
@@ -2292,9 +2292,9 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
                 </ul>
             </li>
 
-            <li>The following weeWX archive fields will be populated with values derived from the imported data provided
+            <li>The following WeeWX archive fields will be populated with values derived from the imported data provided
                 <span class="code">calc_missing = True</span> is included in the <span class="code">[Cumulus]</span>
-                section of the import configuration file being used and the field exists in the in-use weeWX archive
+                section of the import configuration file being used and the field exists in the in-use WeeWX archive
                 table schema.
 
                 <ul>
@@ -2323,7 +2323,7 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
                 inclusive, located in the <span class="code">/var/tmp/cumulus</span> folder.
             </li>
 
-            <li>Make a backup of the weeWX database in case the import should go awry.
+            <li>Make a backup of the WeeWX database in case the import should go awry.
             </li>
 
             <li>Create an import configuration file. In this case we will make a copy of the example Cumulus import
@@ -2346,7 +2346,7 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
                         imported data.
                     </li>
                     <li><a href="#cumulus_interval"><strong><span class="code">interval</span></strong></a>. Determines
-                        how the weeWX interval field is derived.
+                        how the WeeWX interval field is derived.
                     </li>
                     <li><a href="#cumulus_qc"><strong><span class="code">qc</span></strong></a>. Determines whether
                         quality control checks are performed on the imported data.
@@ -2368,7 +2368,7 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
                         source field is ignored or the import aborted.
                     </li>
                     <li><a href="#cumulus_tranche"><strong><span class="code">tranche</span></strong></a>. The number of
-                        records written to the weeWX database in each transaction.
+                        records written to the WeeWX database in each transaction.
                     </li>
                     <li><a href="#cumulus_UV"><strong><span class="code">UV_sensor</span></strong></a>. Whether a UV
                         sensor was installed when the source data was produced.
@@ -2383,7 +2383,7 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
             </li>
 
             <li>When first importing data it is prudent to do a dry run import before any data are actually imported. A
-                dry run import will perform all steps of the import without actually writing imported data to the weeWX
+                dry run import will perform all steps of the import without actually writing imported data to the WeeWX
                 database. In addition, consideration should be given to any additional options to be used such as <span
                     class="code">--date</span>.
                 <p>To perform a dry run enter the following command:</p>
@@ -2393,7 +2393,7 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
 
                 <p>This will result in a short preamble with details on the data source, its destination and some other
                     details on how the data will be processed. The import will then be performed but no data will be
-                    written to the weeWX database.
+                    written to the WeeWX database.
                 </p>
                 <p>The output should be similar to:</p>
 
@@ -2477,7 +2477,7 @@ Are you sure you want to proceed (y/n)?
 
             <li>If the import parameters are acceptable enter <span class="code">y</span> to proceed with the import or
                 <span class="code">n</span> to abort the import. If the import is confirmed, the source data will be
-                imported, processed and saved in the weeWX database. Information on the progress of the import will be
+                imported, processed and saved in the WeeWX database. Information on the progress of the import will be
                 displayed similar to the following:
 
                 <pre class="tty">Records processed: 1599; Unique records: 1599; Last timestamp: 2016-02-24 00:00:00 AEST (1456236000)
@@ -2510,7 +2510,7 @@ Confirm successful import in the weewx log file.
 
             <li>Whilst <span class="code">wee_import</span> will advise of the number of records processed and the
                 number of unique records found, <span class="code">wee_import</span> does know how many, if any, of the
-                imported records were successfully saved to the database. You should look carefully through the weeWX
+                imported records were successfully saved to the database. You should look carefully through the WeeWX
                 log file covering the <span class="code">wee_import</span> session and take note of any records that
                 were not imported. The most common reason for imported records not being saved to the database is
                 because a record with that timestamp already exists in the database, in such cases something similar to
@@ -2530,12 +2530,12 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
 
         <p>Sometimes bad things happen during an import.</p>
 
-        <p>If errors were encountered, or if you suspect that the weeWX database has been contaminated with incorrect
+        <p>If errors were encountered, or if you suspect that the WeeWX database has been contaminated with incorrect
             data, here are some things you can try to fix things up.
         </p>
 
         <ul>
-            <li>Manually delete the contaminated data. Use SQL commands to manipulate the data in the weeWX archive
+            <li>Manually delete the contaminated data. Use SQL commands to manipulate the data in the WeeWX archive
                 database. The simplicity of this process will depend on your ability to use SQL, the amount of data
                 imported, and whether the imported data was dispersed amongst existing. Once contaminated data have been
                 removed the daily summary tables will need to be rebuilt using the <span
@@ -2560,8 +2560,8 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
 
 
         <h1 id="wee_reports_utility"><span class="code">wee_reports</span></h1>
-        <p>In normal operation, weeWX generates reports on each archive interval, when new data arrive. The reports
-            utility is used to generate reports on demand. It uses the same configuration file that weeWX uses.
+        <p>In normal operation, WeeWX generates reports on each archive interval, when new data arrive. The reports
+            utility is used to generate reports on demand. It uses the same configuration file that WeeWX uses.
         </p>
 
         <p>Run the utility with the <span class='code'>--help</span> option to see how it is used:</p>
@@ -2586,7 +2586,7 @@ Options:
 
         <h1 id="weewxd"><span class="code">weewxd</span></h1>
 
-        <p>The <span class='code'>weewxd</span> application is the heart of weeWX. It can be run directly, or in the
+        <p>The <span class='code'>weewxd</span> application is the heart of WeeWX. It can be run directly, or in the
             background as a daemon.
         </p>
 
@@ -2752,7 +2752,7 @@ Options:
         <h3>Option <span class="code" id="wunderfixer_epsilon">--epsilon</span></h3>
 
         <p>At times Weather Underground records may have a date-time that is slightly different to the timestamp of the
-            record as recorded by weeWX. The <span class="code">--epsilon</span> option allows timestamps that are
+            record as recorded by WeeWX. The <span class="code">--epsilon</span> option allows timestamps that are
             within the <span class="code">--epsilon</span> value seconds of each other to be considered the same. The
             default value is <span class="code">120</span>. The <span class="code">--epsilon</span> option is used as
             follows:
@@ -2771,7 +2771,7 @@ Options:
 
         <p>Control the <span class="code">wunderfixer</span> log output. The default is no logging. If <span
             class="code">--log=weewx</span> is used then <span class="code">wunderfixer</span> logs to the same log file
-            as used by weeWX. Any other setting will result in <span class="code">wunderfixer</span> logs being written
+            as used by WeeWX. Any other setting will result in <span class="code">wunderfixer</span> logs being written
             to <span class="code">syslog</span>. The <span class="code">--log</span> option is used as follows:
         </p>
 
@@ -2972,7 +2972,7 @@ Missing records:
                 missing records for the current day for the station whose credentials appear in the <a
                     href="usersguide.htm#Wunderground">[StdRESTful][[Wunderground]]</a> section of <span
                     class="code">weewx.conf</span>. <span class="code">wunderfixer</span> log output will be sent to the
-                log file used by weeWX. The <span class="code">&gt; /dev/null 2>&amp;1</span> portion of the command
+                log file used by WeeWX. The <span class="code">&gt; /dev/null 2>&amp;1</span> portion of the command
                 suppresses any <span class="code">wunderfixer</span> screen output by redirecting any screen and error
                 output to the null device.
             </p>
@@ -3008,7 +3008,7 @@ Missing records:
         <h2>Dealing with failures</h2>
 
         <p>Weather Underground is known for a number of quirks in behaviour, this coupled with a misconfigured <span
-            class="code">wunderfixer</span> session or incomplete weeWX archive data can lead to unexpected results when
+            class="code">wunderfixer</span> session or incomplete WeeWX archive data can lead to unexpected results when
             using <span class="code">wunderfixer</span>. Some of the issues and errors that may be encountered and
             possible solutions are detailed below.
         </p>
@@ -3029,7 +3029,7 @@ Missing records:
                 the next hour use <span class="code">wunderfixer</span> to publish the missing record again.
             </li>
 
-            <li>There is no corresponding record in the weeWX archive. Check the weeWX archive to see if the record
+            <li>There is no corresponding record in the WeeWX archive. Check the WeeWX archive to see if the record
                 concerned exists. If the record does not exist then it must be re-created before it can be published by
                 <span class="code">wunderfixer</span>.
             </li>
