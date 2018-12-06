@@ -670,7 +670,7 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
             class="code">skin.conf</span> options</a>.
         </p>
 
-        <h2>Details on how options work</h2>
+        <h2 id="Details_on_how_options_work">Details on how options work</h2>
         <p>
             While WeeWX report options are organized between those that are (typically) in <span
             class="code">weewx.conf</span>, and those that are in <span class="code">skin.conf</span>, they can actually
@@ -915,6 +915,17 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
             units. Both use the same skin, the <span class="code">Seasons</span> skin.
         </p>
 
+        <p>
+            The reason this works is that section <span class="code">[ObservationDefaults]</span> is at the "root" of
+            the option tree, while an option under <span class="code">[StdReport]</span> is one step closer to the
+            leaves, so the latter has a higher priority. If an option was specified in the configuration file <span
+            class="code">skin.conf</span>, it would be even farther out the tree and would have the final say. Indeed,
+            take a look at the <span class="code">skin.conf</span> file for <em>Seasons</em> and you'll see that it uses
+            this property to override some label names to suit its purposes.
+        </p>
+        <p>
+            See the section <a href="#Details_on_how_options_work"><em>Details on how options work</em></a>.
+        </p>
 
         <h2 id="Reference_guide_to_Observation_defaults">Reference guide to Observation defaults</h2>
 
@@ -1368,8 +1379,8 @@ $record.dateTime $record.outTemp $record.outHumidity
 #end for
         </pre>
         <p>
-            NB: This can create a <em>lot</em> of files &mdash; one per day. If you have 3 years of records,
-            this would be 1,000+ files!
+            NB: This can create a <em>lot</em> of files &mdash; one per day. If you have 3 years of records, this would
+            be 1,000+ files!
         </p>
 
         <h2>Tags</h2>
@@ -3531,8 +3542,7 @@ class MyStats(SearchList):                                                   # 1
             class="code">$latest</span> instead of <span class="code">$current</span>.
         </p>
 
-        <h1 id="standard_skin">
-            Reference guide to <span class="code">skin.conf</span> options </h1>
+        <h1 id="standard_skin">Reference guide to <span class="code">skin.conf</span> options</h1>
 
         <p>
             This section is a reference to the options appearing in the skin configuration file, <span class="code">skin.conf</span>.
