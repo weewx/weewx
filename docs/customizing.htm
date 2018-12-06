@@ -1199,7 +1199,13 @@ UV      = UV Index</pre>
           gibbous, Last quarter, Waning crescent</span>.
         </p>
 
-        <h1 id="customizing_templates">Overview of the Cheetah Generator</h1>
+        <h1 id="customizing_templates">The Cheetah generator</h1>
+
+        <p class="note">
+            This section gives an overview of the Cheetah generator. For a complete reference to its various options,
+            see the section <a href="#CheetahGenerator"><em>[CheetahGenerator]</em></a> in the <a href="#standard_skin"><em>Reference
+            guide to <span class="code">skin.conf</span> options</em></a>.
+        </p>
 
         <p>
             File generation is done using the <a href="https://pythonhosted.org/Cheetah/">Cheetah</a> templating engine,
@@ -1210,6 +1216,12 @@ UV      = UV Index</pre>
             The Cheetah engine is very powerful, essentially letting you have the full semantics of Python available in
             your templates. As this would make the templates incomprehensible to anyone but a Python programmer, WeeWX
             adopts a very small subset of its power.
+        </p>
+
+        <h2>Which files get processed?</h2>
+        <p>
+            The Cheetah generator is controlled by the section <a href="#CheetahGenerator"><span class="code">[CheetahGenerator]</span></a>
+            in the skin configuration file <span class="code">skin.conf</span>. Let's take a look at how this works.
         </p>
 
         <p>
@@ -1234,25 +1246,10 @@ UV      = UV Index</pre>
             There can be only one <span class="config_option">template</span> in each block. In most cases, the block
             name does not matter &mdash; it is used only to isolate each template. However, there are three block names
             that have special meaning: <span class='code'>SummaryByMonth</span>, <span class='code'>SummaryByYear</span>,
-            and <span class='code'>ToDate</span>. They are described below.
+            and <span class='code'>ToDate</span>.
         </p>
 
-        <h2>Make small changes</h2>
-
-        <p>
-            The best way to customize file generation is to make a copy of a working report/skin, then make incremental
-            changes.
-        </p>
-
-        <p>
-            When there is an error during template generation, the error will show up in the log file. Many errors are
-            obvious &mdash; Cheetah will display a line number and list the template file in which the error occurred.
-            In some cases the error reporting is rather obscure. So make small changes and test often. Use the utility
-            <span class="code"><a href="#wee_reports">wee_reports</a></span> to test modifications to the generator
-            configuration and/or the template contents.
-        </p>
-
-        <h2>The <em>Seasons</em> skin templates</h2>
+        <h3>The <em>Seasons</em> skin templates</h3>
 
         <p>
             By way of example, here is the <span class="code">[CheetahGenerator]</span> section from the <span
@@ -1327,6 +1324,16 @@ UV      = UV Index</pre>
         </p>
 
         <h2>Tags</h2>
+
+        <div class="note">
+            <p>
+                If there is a tag error during template generation, the error will show up in the log file. Many errors
+                are obvious &mdash; Cheetah will display a line number and list the template file in which the error
+                occurred. Unfortunately, in other cases, the error message can be very cryptic and not very useful. So
+                make small changes and test often. Use the utility <a href="#wee_reports"><span
+                class="code">wee_reports</span></a> to speed up the process.
+            </p>
+        </div>
 
         <p>
             If you look inside a template, you will see it makes heavy use of <em>tags</em>. As the Cheetah generator
@@ -3026,7 +3033,13 @@ class MyStats(SearchList):                                                   # 1
         <pre class="tty">export PYTHONPATH=/home/me/secret_location</pre>
 
 
-        <h1 id="image_generator">Overview of the Image Generator</h1>
+        <h1 id="image_generator">The Image generator</h1>
+
+        <p class="note">
+            This section gives an overview of the Image generator. For a complete reference to its various options, see
+            the section <a href="#ImageGenerator"><em>[ImageGenerator]</em></a> in the <a href="#standard_skin"><em>Reference
+            guide to <span class="code">skin.conf</span> options</em></a>.
+        </p>
 
         <p>
             The installed version of WeeWX is configured to generate a set of useful plots. But, what if you don't like
@@ -3569,7 +3582,7 @@ class MyStats(SearchList):                                                   # 1
 &lt;/a&gt;</pre>
 
 
-        <h2>[CheetahGenerator]</h2>
+        <h2 id="CheetahGenerator">[CheetahGenerator]</h2>
 
         <p>This section is a reference for all the options for the Cheetah generator.</p>
 
