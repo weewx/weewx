@@ -670,6 +670,23 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
             class="code">skin.conf</span> options</a>.
         </p>
 
+        <h2>Details on how options work</h2>
+        <p>
+            While WeeWX report options are organized between those that are (typically) in <span
+            class="code">weewx.conf</span>, and those that are in <span class="code">skin.conf</span>, they can actually
+            be placed anywhere. However, like other options in WeeWX, there is a hierarchy. Those closer to the "root",
+            that is, at top levels in <span class="code">weewx.conf</span>, get overridden by options closer to the
+            leaves, that is in <span class="code">skin.conf</span>. So, options expressed in <span class="code">skin.conf</span>
+            always have the final say.
+        </p>
+        <p>
+            The "<a href="#Observation_defaults">Observation defaults</a>", explained in the next section, are in <span
+            class="code">weewx.conf</span>, in their own high-level section <span
+            class="code">[ObservationDefaults]</span> and, therefore, near the root of the hierarchy. This places them
+            at the lowest priority &mdash; they are expressed only if not overridden under <span class="code">[StdReport]</span>
+            or in <span class="code">skin.conf</span>.
+        </p>
+
         <h2>Do I need to restart WeeWX?</h2>
         <p>
             If you make a change in <span class="code">weewx.conf</span>, you will need to restart WeeWX.
