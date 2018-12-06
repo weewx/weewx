@@ -687,6 +687,14 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
             or in <span class="code">skin.conf</span>.
         </p>
 
+        <p>
+            Options in sections <span class="code">[CheetahGenerator]</span> and <span
+            class="code">[ImageGenerator]</span> work the same way. They normally reside in <span
+            class="code">skin.conf</span> and are, therefore, of high priority. This is appropriate because, after all,
+            they set the "look-and-feel" of the skin, and so they should be associated with its configuration file. But,
+            in theory, they could be moved to <span class="code">weewx.conf</span>.
+        </p>
+
         <h2>Do I need to restart WeeWX?</h2>
         <p>
             If you make a change in <span class="code">weewx.conf</span>, you will need to restart WeeWX.
