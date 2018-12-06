@@ -69,6 +69,9 @@ when iterating over records. Fixes issue #345.
 Examples lowBattery and alarm now try SMTP_SSL connections, then degrade if
 that's not available. Fixes issue #351.
 
+Fixed problem with Brazilian locations at the start of DST. It manifested
+itself with the error "NoColumnError: no such column: wind". Fixes issue #356.
+
 The skin.conf is optional.  It is possible to specify the entire skin
 configuration in the weewx configuration, in which case the skin configuration
 is not necessary.
