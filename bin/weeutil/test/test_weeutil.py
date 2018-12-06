@@ -138,6 +138,17 @@ class WeeutilTest(unittest.TestCase):
         self.assertFalse(isMidnight(time.mktime(time.strptime("2013-07-04 01:57:35", "%Y-%m-%d %H:%M:%S"))))
         self.assertTrue(isMidnight(time.mktime(time.strptime("2013-07-04 00:00:00", "%Y-%m-%d %H:%M:%S"))))
         
+    def test_isStartOfDay(self):
+        os.environ['TZ'] = 'America/Los_Angeles'
+        self.assertFalse(isStartOfDay(time.mktime(time.strptime("2013-07-04 01:57:35", "%Y-%m-%d %H:%M:%S"))))
+        self.assertTrue(isStartOfDay(time.mktime(time.strptime("2013-07-04 00:00:00", "%Y-%m-%d %H:%M:%S"))))
+
+        # Brazilian DST starts at midnight
+        os.environ['TZ'] = 'America/Sao_Paulo'
+        # This time is the start of DST and considered the start of the day: 4-11-2018 0100
+        self.assertTrue(isStartOfDay(1541300400))
+        self.assertFalse(isStartOfDay(1541300400 - 10))
+
     def test_startOfInterval(self):
     
         os.environ['TZ'] = 'America/Los_Angeles'

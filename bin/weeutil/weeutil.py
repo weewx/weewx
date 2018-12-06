@@ -483,6 +483,8 @@ def archiveSpanSpan(time_ts, time_delta=0, hour_delta=0, day_delta=0, week_delta
 
 def isMidnight(time_ts):
     """Is the indicated time on a midnight boundary, local time?
+    NB: This algorithm does not work in countries that switch to DST
+    at midnight, such as Brazil.
     
     Example:
     >>> os.environ['TZ'] = 'America/Los_Angeles'
@@ -496,6 +498,31 @@ def isMidnight(time_ts):
 
     time_tt = time.localtime(time_ts)
     return time_tt.tm_hour == 0 and time_tt.tm_min == 0 and time_tt.tm_sec == 0
+
+
+def isStartOfDay(time_ts):
+    """Is the indicated time at the start of the day, local time?
+    Example:
+    >>> os.environ['TZ'] = 'America/Los_Angeles'
+    >>> time_ts = time.mktime(time.strptime("2013-07-04 01:57:35", "%Y-%m-%d %H:%M:%S"))
+    >>> print(isStartOfDay(time_ts))
+    False
+    >>> time_ts = time.mktime(time.strptime("2013-07-04 00:00:00", "%Y-%m-%d %H:%M:%S"))
+    >>> print(isStartOfDay(time_ts))
+    True
+    >>> os.environ['TZ'] = 'America/Sao_Paulo'
+    >>> time_ts = 1541300400
+    >>> print(isStartOfDay(time_ts))
+    True
+    >>> print(isStartOfDay(time_ts - 1))
+    False
+    """
+
+    # Test the date of the time against the date a tenth of a second before.
+    # If they do not match, the time must have been the start of the day
+    dt1 = datetime.date.fromtimestamp(time_ts)
+    dt2 = datetime.date.fromtimestamp(time_ts - .1)
+    return not dt1 == dt2
 
 
 def archiveDaySpan(time_ts, grace=1, days_ago=0):

@@ -17,7 +17,7 @@ from weewx.units import ValueTuple
 import weewx.units
 import weeutil.weeutil
 import weedb
-from weeutil.weeutil import timestamp_to_string, isMidnight, to_int
+from weeutil.weeutil import timestamp_to_string, isStartOfDay, to_int
 
 #==============================================================================
 #                         class Manager
@@ -1257,9 +1257,9 @@ class DaySummaryManager(Manager):
         # We can use the day summary optimizations if the starting and ending times of
         # the aggregation interval sit on midnight boundaries, or are the first or last
         # records in the database.
-        if aggregate_type in ['last', 'lasttime'] or not (isMidnight(timespan.start) or \
+        if aggregate_type in ['last', 'lasttime'] or not (isStartOfDay(timespan.start) or \
                                                           timespan.start == self.first_timestamp) \
-                                                  or not (isMidnight(timespan.stop)  or \
+                                                  or not (isStartOfDay(timespan.stop)  or \
                                                           timespan.stop  == self.last_timestamp):
             
             # Cannot use the day summaries. We'll have to calculate the aggregate
