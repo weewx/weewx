@@ -6,12 +6,18 @@
 """Test the configuration utilities."""
 from __future__ import with_statement
 
-import StringIO
 import unittest
 import tempfile
 import os.path
 import sys
 import shutil
+try:
+    # Python 2
+    from StringIO import StringIO
+except ImportError:
+    # Python 3
+    from io import StringIO
+
 
 import distutils.dir_util
 import configobj
@@ -100,7 +106,7 @@ class ConfigTest(unittest.TestCase):
     def test_utilities(self):
         global x_str, y_str
 
-        xio = StringIO.StringIO(x_str)
+        xio = StringIO(x_str)
         x_dict = configobj.ConfigObj(xio)
         weecfg.reorder_sections(x_dict, 'section_c', 'section_b')
         self.assertEqual("{'section_a': {'a': '1'}, 'section_c': {'c': '3'}, "
@@ -112,16 +118,16 @@ class ConfigTest(unittest.TestCase):
         self.assertEqual("{'section_a': {'a': '1'}, 'section_b': {'b': '2'}, "
                          "'section_c': {'c': '3'}, 'section_d': {'d': '4'}}", str(x_dict))
 
-        xio = StringIO.StringIO(x_str)
-        yio = StringIO.StringIO(y_str)
+        xio = StringIO(x_str)
+        yio = StringIO(y_str)
         x_dict = configobj.ConfigObj(xio)
         y_dict = configobj.ConfigObj(yio)
         weeutil.weeutil.conditional_merge(x_dict, y_dict)
         self.assertEqual("{'section_a': {'a': '1'}, 'section_b': {'b': '2'}, 'section_c': {'c': '3'}, "
                          "'section_d': {'d': '4'}, 'section_e': {'c': '15'}}", str(x_dict))
 
-        xio = StringIO.StringIO(x_str)
-        yio = StringIO.StringIO(y_str)
+        xio = StringIO(x_str)
+        yio = StringIO(y_str)
         x_dict = configobj.ConfigObj(xio)
         y_dict = configobj.ConfigObj(yio)
         weecfg.remove_and_prune(x_dict, y_dict)
@@ -139,47 +145,46 @@ class ConfigTest(unittest.TestCase):
         weecfg.reorder_scalars(test_list, 'x', 'd')
         self.assertEqual(test_list, ['a', 'b', 'd'])
 
-
-#     report_start_str = """[StdReport]
-#         SKIN_ROOT = skins
-#         HTML_ROOT = public_html
-#         data_binding = wx_binding
-#         [[XtraReport]]
-#             skin = Foo
-#
-#         [[StandardReport]]
-#             skin = Standard
-#
-#         [[FTP]]
-#             skin = Ftp
-#
-#         [[RSYNC]]
-#             skin = Rsync
-# """
-#
-#     report_expected_str = """[StdReport]
-#         SKIN_ROOT = skins
-#         HTML_ROOT = public_html
-#         data_binding = wx_binding
-#
-#         [[StandardReport]]
-#                 skin = Standard
-#         [[XtraReport]]
-#                 skin = Foo
-#
-#         [[FTP]]
-#                 skin = Ftp
-#
-#         [[RSYNC]]
-#                 skin = Rsync
-# """
-#
+    #     report_start_str = """[StdReport]
+    #         SKIN_ROOT = skins
+    #         HTML_ROOT = public_html
+    #         data_binding = wx_binding
+    #         [[XtraReport]]
+    #             skin = Foo
+    #
+    #         [[StandardReport]]
+    #             skin = Standard
+    #
+    #         [[FTP]]
+    #             skin = Ftp
+    #
+    #         [[RSYNC]]
+    #             skin = Rsync
+    # """
+    #
+    #     report_expected_str = """[StdReport]
+    #         SKIN_ROOT = skins
+    #         HTML_ROOT = public_html
+    #         data_binding = wx_binding
+    #
+    #         [[StandardReport]]
+    #                 skin = Standard
+    #         [[XtraReport]]
+    #                 skin = Foo
+    #
+    #         [[FTP]]
+    #                 skin = Ftp
+    #
+    #         [[RSYNC]]
+    #                 skin = Rsync
+    # """
+    #
     # def test_reorder(self):
     #     """Test the utility reorder_to_ref"""
-    #     xio = StringIO.StringIO(ConfigTest.report_start_str)
+    #     xio = StringIO(ConfigTest.report_start_str)
     #     x_dict = configobj.ConfigObj(xio)
     #     weecfg.reorder_to_ref(x_dict)
-    #     x_result = StringIO.StringIO()
+    #     x_result = StringIO()
     #     x_dict.write(x_result)
     #     check_fileend(x_result)
     #     self.assertEqual(ConfigTest.report_expected_str, x_result.getvalue())
@@ -378,6 +383,34 @@ class ConfigTest(unittest.TestCase):
         self.assertEqual(driver_info_dict['weewx.drivers.wmr100']['version'], weewx.drivers.wmr100.DRIVER_VERSION)
         del weewx.drivers.wmr100
 
+    def test_modify_config(self):
+
+        # Use the current weewx.conf
+        config_dict = configobj.ConfigObj(current_config_dict_path)
+
+        stn_info = weecfg.get_station_info(config_dict)
+
+        self.assertEqual(stn_info,
+                         {'station_type': 'unspecified', 'altitude': ['700', 'foot'],
+                          'longitude': '-122.211', 'units': 'us', 'location': 'My Little Town, Oregon',
+                          'latitude': '44.136'})
+
+        # Modify the station info, to reflect a hardware choice
+        stn_info['station_type'] = 'Vantage'
+        stn_info['driver'] = 'weewx.drivers.vantage'
+
+        # Now modify the config_dict.
+        weecfg.modify_config(config_dict, stn_info, None)
+
+        # Make sure the driver stanza got injected correctly
+        import weewx.drivers.vantage
+        vcf = weewx.drivers.vantage.VantageConfEditor()
+        default_config = configobj.ConfigObj(StringIO(vcf.default_stanza))
+
+        self.assertEqual(config_dict['Vantage'], default_config['Vantage'])
+
+
+
     def _check_against_expected(self, config_dict, expected):
         """Check a ConfigObj against an expected version
 
@@ -386,7 +419,7 @@ class ConfigTest(unittest.TestCase):
         expected: The name of a file holding the expected version
         """
         # Write the ConfigObjout to a StringIO, then start checking it against the expected
-        out_str = StringIO.StringIO()
+        out_str = StringIO()
         config_dict.write(out_str)
         check_fileend(out_str)
         out_str.seek(0)
