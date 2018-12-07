@@ -1293,12 +1293,22 @@ def patch_skin(config_dict, report, logger=None):
         # It's OK for the skin.conf file not to exist.
         return
 
+    logger.log("Patching report %s configuration file %s" % (report, skin_file), level=2)
+    patch_skin_dict(config_dict, skin_dict, report, logger)
+
+    # Now write the patched skin configuration file, with a backup.
+    save_with_backup(skin_dict, skin_file)
+    logger.log("Finished patching report %s" % report, level=2)
+
+
+def patch_skin_dict(config_dict, skin_dict, report, logger):
+    """Patch a skin configuration dictionary to V3.9"""
+
     # No need to do anything if this skin has already been upgraded
     if to_int(skin_dict.get('skin_semantics', 1)) >= 2:
         logger.log("Report %s already at level 2. Skipping" % report, level=2)
         return
 
-    logger.log("Patching report %s configuration file %s" % (report, skin_file), level=2)
     n_commented = 0
 
     # For each override section in the report, comment out any scalars
@@ -1318,9 +1328,6 @@ def patch_skin(config_dict, report, logger=None):
     # Indicate that this skin.conf file has now been patched to v2 semantics
     skin_dict['skin_semantics'] = 2
 
-    # Now write the patched skin configuration file, with a backup.
-    save_with_backup(skin_dict, skin_file)
-    logger.log("Finished patching report %s" % report, level=2)
 
 
 def fix_overrides(section_dict, skin_dict_section):
@@ -1466,23 +1473,23 @@ def reorder_scalars(scalars, src, dst):
     scalars.insert(dst_index, src)
 
 
-def reorder(name_list, ref_list):
-    """Reorder the names in name_list, according to a reference list."""
-    result = []
-    # Use the ordering in ref_list, to reassemble the name list:
-    for name in ref_list:
-        # These always come at the end
-        if name in ['FTP', 'RSYNC']:
-            continue
-        if name in name_list:
-            result.append(name)
-    # Finally, add these, so they are at the very end
-    for name in ref_list:
-        if name in name_list and name in ['FTP', 'RSYNC']:
-            result.append(name)
-
-    return result
-
+# def reorder(name_list, ref_list):
+#     """Reorder the names in name_list, according to a reference list."""
+#     result = []
+#     # Use the ordering in ref_list, to reassemble the name list:
+#     for name in ref_list:
+#         # These always come at the end
+#         if name in ['FTP', 'RSYNC']:
+#             continue
+#         if name in name_list:
+#             result.append(name)
+#     # Finally, add these, so they are at the very end
+#     for name in ref_list:
+#         if name in name_list and name in ['FTP', 'RSYNC']:
+#             result.append(name)
+#
+#     return result
+#
 
 def remove_and_prune(a_dict, b_dict):
     """Remove fields from a_dict that are present in b_dict"""

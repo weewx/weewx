@@ -34,6 +34,9 @@ except ImportError:
     print "Module 'mock' not installed. Testing will be restricted."
     have_mock = False
 
+
+TMPDIR = '/var/tmp/weewx_test'
+
 # Redirect the import of setup:
 sys.modules['setup'] = weecfg.extension
 
@@ -74,8 +77,34 @@ y_str = """
 
 current_config_dict_path = "../../../weewx.conf"
 
+class LineTest(unittest.TestCase):
 
-class ConfigTest(unittest.TestCase):
+    def _check_against_expected(self, config_dict, expected):
+        """Check a ConfigObj against an expected version
+
+        config_dict: The ConfigObj that is to be checked
+
+        expected: The name of a file holding the expected version
+        """
+        # Write the ConfigObjout to a StringIO, then start checking it against the expected
+        out_str = StringIO()
+        config_dict.write(out_str)
+        check_fileend(out_str)
+        out_str.seek(0)
+
+        fd_expected = open(expected)
+        N = 0
+        for expected in fd_expected:
+            actual = out_str.readline()
+            N += 1
+            self.assertEqual(actual.strip(), expected.strip(), "[%d] '%s' vs '%s'" % (N, actual, expected))
+
+        # Make sure there are no extra lines in the updated config:
+        more = out_str.readline()
+        self.assertEqual(more, '')
+
+
+class ConfigTest(LineTest):
 
     def test_find_file(self):
         # Test the utility function weecfg.find_file()
@@ -358,7 +387,7 @@ class ConfigTest(unittest.TestCase):
     def test_merge(self):
 
         # Start with a typical V2.0 user file:
-        config_dict = configobj.ConfigObj('weewx_user.conf')
+        config_dict = configobj.ConfigObj('weewx20_user.conf')
 
         # The current config file becomes the template:
         template = configobj.ConfigObj(current_config_dict_path)
@@ -369,7 +398,7 @@ class ConfigTest(unittest.TestCase):
         # with open('expected/weewx_user_expected.conf', 'wb') as fd:
         #     config_dict.write(fd)
 
-        self._check_against_expected(config_dict, 'expected/weewx_user_expected.conf')
+        self._check_against_expected(config_dict, 'expected/weewx20_user_expected.conf')
 
     def test_driver_info(self):
         """Test the discovery and listing of drivers."""
@@ -410,30 +439,40 @@ class ConfigTest(unittest.TestCase):
         self.assertEqual(config_dict['Vantage'], default_config['Vantage'])
 
 
+class SkinPatchTest(LineTest):
 
-    def _check_against_expected(self, config_dict, expected):
-        """Check a ConfigObj against an expected version
+    def setUp(self):
+        self.skin_dir = os.path.join(TMPDIR, 'skins38')
+        shutil.rmtree(self.skin_dir, ignore_errors=True)
+        shutil.copytree('skins38', self.skin_dir)
 
-        config_dict: The ConfigObj that is to be checked
+    def tearDown(self):
+        pass
+        #shutil.rmtree(os.path.join(TMPDIR, 'skin38'), ignore_errors=True)
 
-        expected: The name of a file holding the expected version
-        """
-        # Write the ConfigObjout to a StringIO, then start checking it against the expected
-        out_str = StringIO()
-        config_dict.write(out_str)
-        check_fileend(out_str)
-        out_str.seek(0)
+    def test_patch_skin(self):
 
-        fd_expected = open(expected)
-        N = 0
-        for expected in fd_expected:
-            actual = out_str.readline()
-            N += 1
-            self.assertEqual(actual.strip(), expected.strip(), "[%d] '%s' vs '%s'" % (N, actual, expected))
+        config_dict = configobj.ConfigObj('weewx38_user.conf')
+        config_dict['WEEWX_ROOT'] = TMPDIR
+        # Upgrade the V3.8 configuration dictionary to V3.9:
+        weecfg.update_to_v39(config_dict)
+        weecfg.patch_skins(config_dict)
 
-        # Make sure there are no extra lines in the updated config:
-        more = out_str.readline()
-        self.assertEqual(more, '')
+        # Find the patched skin.conf ...
+        skin_file = os.path.join(
+            config_dict['WEEWX_ROOT'],
+            config_dict['StdReport']['SKIN_ROOT'],
+            config_dict['StdReport']['StandardReport'].get('skin', ''),
+            'skin.conf')
+        # ... retrieve it ...
+        skin_dict = configobj.ConfigObj(skin_file)
+
+        with open('expected/skin39.conf', 'wb') as fd:
+            skin_dict.write(fd)
+
+        # ... and check it against the expected
+        self._check_against_expected(skin_dict, 'expected/skin39.conf')
+
 
 
 class ExtensionUtilityTest(unittest.TestCase):
