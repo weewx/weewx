@@ -78,7 +78,7 @@ is not necessary.
 
 Fixed problem that caused sunrise/sunset to be calculated improperly in Sun.py.
 
-Improved coverage of test suites.
+Improved coverage of test suites. Closes issue #337
 
 
 3.8.3 MM/DD/YYYY

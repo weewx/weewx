@@ -95,8 +95,8 @@ class Almanac(object):
     Moon rise, transit, set: 06:59 14:01 21:20
     
     And Mars
-    >>> print("Mars rise, transit, set:", almanac.mars.rise, almanac.mars.transit, almanac.moon.set)
-    Mars rise, transit, set: 06:08 11:34 21:20
+    >>> print("Mars rise, transit, set:", almanac.mars.rise, almanac.mars.transit, almanac.mars.set)
+    Mars rise, transit, set: 06:08 11:34 17:00
     
     Finally, try a star
     >>> print("Rigel rise, transit, set:", almanac.rigel.rise, almanac.rigel.transit, almanac.rigel.set)
