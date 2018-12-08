@@ -8,6 +8,7 @@
    Works under Python 2 and Python 3.
 """
 
+from __future__ import absolute_import
 from __future__ import print_function
 
 import calendar
@@ -26,7 +27,7 @@ except ImportError:
     from io import StringIO
 
 # For backwards compatibility:
-import config
+from weeutil import config
 search_up        = config.search_up
 accumulateLeaves = config.accumulateLeaves
 merge_config     = config.merge_config
@@ -983,7 +984,7 @@ def getDayNightTransitions(start_ts, end_ts, lat, lon):
     returns: indication of whether the period from start to first transition
     is day or night, plus array of transitions (UTC).
     """
-    import Sun
+    from weeutil import Sun
 
     first = None
     values = []
