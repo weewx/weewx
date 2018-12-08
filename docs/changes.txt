@@ -76,6 +76,8 @@ The skin.conf is optional.  It is possible to specify the entire skin
 configuration in the weewx configuration, in which case the skin configuration
 is not necessary.
 
+Fixed problem that caused sunrise/sunset to be calculated improperly in Sun.py.
+
 Improved coverage of test suites.
 
 
