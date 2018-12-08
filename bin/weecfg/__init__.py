@@ -1064,6 +1064,10 @@ def update_to_v39(config_dict):
             weeutil.config.merge_config(config_dict, mobile_options_dict)
             reorder_sections(config_dict['StdReport'], 'MobileReport', 'FTP')
 
+        if 'StandardReport' in config_dict['StdReport'] \
+                and 'enable' not in config_dict['StdReport']['StandardReport']:
+            config_dict['StdReport']['StandardReport']['enable'] = True
+
     # Put the comment back in
     config_dict.comments['StdReport'] = std_report_comment
 
