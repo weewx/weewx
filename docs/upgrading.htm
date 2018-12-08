@@ -66,8 +66,8 @@
 
     <div class="header">
         <div class="logoref">
-            <a href='http://weewx.com'> <img src='images/logo-weewx.png' class='logo' style="float:right" alt="weewx logo"/>
-            </a><br/> <span class='version'>
+            <a href='http://weewx.com'> <img src='images/logo-weewx.png' class='logo' style="float:right"
+                                             alt="weewx logo"/> </a><br/> <span class='version'>
 Version: 3.9
     </span>
         </div>
@@ -207,9 +207,8 @@ sudo apt-get install weewx</pre>
         <h3>Skin defaults</h3>
         <div class="note">
             <p><b>TL;DR</b></p>
-            <p>A new <span class="code">[ObservationDefaults]</span> section has been introduced to <span
-                class="code">weewx.conf</span>. To change the unit system, and many other things used by your skins,
-                just change <span class="code">[ObservationDefaults].</span>
+            <p>A new <span class="code">[ObservationDefaults]</span> section has been introduced to <span class="code">weewx.conf</span>.
+                To change the unit system, and many other things used by your skins, just change <span class="code">[ObservationDefaults].</span>
             </p>
         </div>
         <p>With version 3.9, the way defaults propogate through skins has changed. Before this version, a value
@@ -217,38 +216,44 @@ sudo apt-get install weewx</pre>
             corresponding value in <span class="code">weewx.conf</span>. There were several problems with this approach:
         </p>
         <ul>
-            <li>This is the opposite to the way most things work in WeeWX. Usually, things near the root of a hierarchy
-                can get overridden by something near a leaf. For example, this the way <span
-                    class="code">StdRESTful</span> services work.
+            <li>
+                This is opposite to the way most things work in WeeWX. Usually, things near the root of a hierarchy
+                (that is, top level sections in <span class="code">weewx.conf</span>) can get overridden by something
+                near a leaf (a subsection, such as <span class="code">[StdReport]</span>, or, even deeper, something in
+                <span class="code">skin.conf</span>). This is the way <span class="code">StdRESTful</span> services
+                work.
             </li>
             <li>There is no way to specify "overall" defaults, such as what unit system to use, that should apply to
-                <em>all</em> skins. Instead, you must override each report on an individual basis.
+                <em>all</em> skins. Instead, you must individually override each report.
             </li>
         </ul>
 
-        <p>Version 3.9 introduces a <span class="code">[ObservationDefaults]</span> section that applies to <em>all</em> skins,
-            unless overridden for individual reports in <span class="code">weewx.conf</span>, or by the report's <span
-                class="code">skin.conf</span>. This means that <span class="code">skin.conf</span> has the final say in
-            what value to use.
+        <p>Version 3.9 introduces a <span class="code">[ObservationDefaults]</span> section that applies to <em>all</em>
+            skins, unless overridden for individual reports in <span class="code">weewx.conf</span>, or by the report's
+            <span class="code">skin.conf</span>. This means that <span class="code">skin.conf</span> has the final say
+            in what value to use.
         </p>
         <p>Because this is different from how the old "override" method worked, skins will display unexpected results
             unless they are patched. In particular, the unit system used by the skin will mysteriously change after an
             upgrade.
         </p>
-        <p>The V3.9 installer will automatically patch older versions to bring them up-to-date. It primarily does four
-            things:
+        <p>The V3.9 installer will automatically patch older versions of <span class="code">weew.conf</span> and <span
+            class="code">skin.conf</span> to bring them up-to-date. It primarily does four things:
         </p>
         <ol>
-            <li>Add a <span class="code">[ObservationDefaults]</span> section to <span class="code">weewx.conf</span></li>
+            <li>Add a <span class="code">[ObservationDefaults]</span> section to <span class="code">weewx.conf</span>
+            </li>
             <li>For each scalar override in <span class="code">[StdReport]</span>, it will comment out or delete the
-                corresponding scalar in <span class="code">skin.conf</span>.
+                corresponding scalar in <span class="code">skin.conf</span>. This allows the <span class="code">[StdReport]</span>
+                override to continue to have an affect.
             </li>
             <li>For each scalar left over in <span class="code">skin.conf</span>, if its value is the same as in <span
-                class="code">[ObservationDefaults]</span>, it will comment out or delete the scalar from <span class="code">skin.conf</span>.
-                This means that changing a value in <span class="code">[ObservationDefaults]</span> will have an affect.
+                class="code">[ObservationDefaults]</span>, it will comment out or delete the scalar from <span
+                class="code">skin.conf</span>. This means that changing a value in <span class="code">[ObservationDefaults]</span>
+                will have an affect.
             </li>
-            <li>As a final step, it adds a scalar, <span class="code">skin_semantics</span>, to <span
-                class="code">skin.conf</span> to indicate that the skin now adheres to the new skin semantics.
+            <li>As a final step, it adds a scalar, <span class="code">skin_semantics</span>, to <span class="code">skin.conf</span>
+                to indicate that the skin now adheres to the new skin semantics.
             </li>
         </ol>
 
@@ -444,6 +449,12 @@ sudo apt-get install weewx</pre>
 
         </table>
 
+        <h3>Skin extensions</h3>
+        <p>
+            Third party skins, which expect the old semantics, could possibly show the wrong units if they were just
+            blindly installed. To get around this, the extension installer <span class="code">wee_extension</span>
+            automatically patches incoming skins in a manner similar to what's described above.
+        </p>
 
         <h2>From V3.6 or earlier</h2>
 
