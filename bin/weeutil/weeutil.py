@@ -1256,7 +1256,11 @@ def to_int(x):
     """
     if isinstance(x, str) and x.lower() == 'none':
         x = None
-    return int(x) if x is not None else None
+    try:
+        return int(x) if x is not None else None
+    except ValueError:
+        # Perhaps it's a string, holding a floating point number?
+        return int(float(x))
 
 
 def to_float(x):
@@ -1312,7 +1316,10 @@ def min_with_none(x_seq):
 
 
 def max_with_none(x_seq):
-    """Find the maximum in a (possibly empty) sequence, ignoring Nones"""
+    """Find the maximum in a (possibly empty) sequence, ignoring Nones.
+
+    While this function is not necessary under Python 2, under Python 3 it is.
+    """
     xmax = None
     for x in x_seq:
         if xmax is None:

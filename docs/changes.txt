@@ -76,6 +76,8 @@ The skin.conf is optional.  It is possible to specify the entire skin
 configuration in the weewx configuration, in which case the skin configuration
 is not necessary.
 
+Improved coverage of test suites.
+
 
 3.8.3 MM/DD/YYYY
 
