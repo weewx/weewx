@@ -4469,6 +4469,10 @@ history time till sample: 5.0
 icon alarm active: 0
 in humidity: 48.0
 ...</pre>
+        <p>
+            The line <span class='code'>history number of records</span> indicates how many records are in memory. The
+            line <span class='code'>history interval</span> indicates the number of minutes between records.
+        </p>
 
         <h3>Action <span class="code">--set-interval</span></h3>
 
@@ -4486,11 +4490,7 @@ in humidity: 48.0
 
         <p>WS23xx stations store records in a circular buffer &mdash; once the
             buffer fills, the oldest records are replaced by newer records.
-            The console stores up to 175 records. The
-            <span class='code'>history number of records</span> indicates how
-            many records are in memory. The <span class='code'>history
-                interval</span> indicates the number of minutes between
-            records.</p>
+            The console stores up to 175 records. </p>
 
         <p>For example, to display the latest 30 records from the console
             memory:</p>
@@ -4701,7 +4701,7 @@ Transceiver is paired to console</pre>
             order to communicate. Synchronization will happen automatically at
             the top of each hour, or you can force synchronization by pressing
             the [SET] button momentarily. Do not press and hold the [SET]
-            button - that modifies the console alarms.</p>
+            button &mdash; that modifies the console alarms.</p>
 
         <p>When the transceiver and console are synchronized, you will see
             lots of '<span class="code">ws28xx: RFComm</span>' messages in the
