@@ -67,11 +67,11 @@
         <template>
             <common_name>
                 <loctext xml:lang="C">
-                    weeWX Weather Server and Publisher
+                    WeeWX Weather Server and Publisher
                 </loctext>
             </common_name>
             <documentation>
-                <doc_link name='weeWX' uri='http://www.weewx.com'/>
+                <doc_link name='WeeWX' uri='http://www.weewx.com'/>
             </documentation>
         </template>
 

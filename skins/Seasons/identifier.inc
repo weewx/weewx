@@ -21,7 +21,7 @@
       <td class="data">$station.altitude</td>
     </tr>
     <tr>
-      <td class="label">weeWX</td>
+      <td class="label">WeeWX</td>
       <td class="data">$station.version</td>
     </tr>
   </table>

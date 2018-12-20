@@ -1,4 +1,4 @@
-basic - a very basic weeWX skin
+basic - a very basic WeeWX skin
 Copyright 2014 Matthew Wall
 
 This example illustrates how to implement a skin and package it so that it
@@ -11,7 +11,7 @@ Installation instructions
 
 wee_extension --install=/home/weewx/examples/basic
 
-2) restart weeWX
+2) restart WeeWX
 
 sudo /etc/init.d/weewx stop
 sudo /etc/init.d/weewx start
@@ -19,11 +19,11 @@ sudo /etc/init.d/weewx start
 
 Manual installation instructions
 
-1) copy files to the weeWX skins directory
+1) copy files to the WeeWX skins directory
 
 cp -rp skins/basic /home/weewx/skins
 
-2) in the weeWX configuration file, add a report
+2) in the WeeWX configuration file, add a report
 
 [StdReport]
     ...
@@ -31,7 +31,7 @@ cp -rp skins/basic /home/weewx/skins
         skin = basic
         HTML_ROOT = public_html/basic
 
-3) restart weeWX
+3) restart WeeWX
 
 sudo /etc/init.d/weewx stop
 sudo /etc/init.d/weewx start

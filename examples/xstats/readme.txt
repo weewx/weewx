@@ -1,4 +1,4 @@
-xstats - weeWX extension that provides extended statistics for reports
+xstats - WeeWX extension that provides extended statistics for reports
 Copyright 2014 Matthew Wall
 
 This search list extension offers extra tags:
@@ -37,7 +37,7 @@ Installation instructions
 
 wee_extension --install=/home/weewx/examples/xstats
 
-2) restart weeWX
+2) restart WeeWX
 
 sudo /etc/init.d/weewx stop
 sudo /etc/init.d/weewx start
@@ -48,11 +48,11 @@ extended statistics.
 
 Manual installation instructions
 
-1) copy files to the weeWX user directory
+1) copy files to the WeeWX user directory
 
 cp bin/user/xstats.py /home/weewx/bin/user
 
-2) in the weeWX configuration file, modify the report section in which you 
+2) in the WeeWX configuration file, modify the report section in which you 
 would like to use the extended statistics. For example, for the StandardReport
 
 [StdReport]
@@ -61,7 +61,7 @@ would like to use the extended statistics. For example, for the StandardReport
         [[[CheetahGenerator]]]
             search_list_extensions = user.xstats.ExtendedStatistics
 
-3) restart weeWX
+3) restart WeeWX
 
 sudo /etc/init.d/weewx stop
 sudo /etc/init.d/weewx start
