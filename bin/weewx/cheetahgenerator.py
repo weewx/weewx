@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2016 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2018 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -328,8 +328,8 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
                     searchList=searchList,
                     filter=encoding,
                     filtersLib=weewx.cheetahgenerator)
-                with open(tmpname, mode='w') as _file:
-                    print >> _file, compiled_template
+                with open(tmpname, mode='w') as fd:
+                    fd.write(str(compiled_template))
                 os.rename(tmpname, _fullname)
             except Exception as e:
                 # We would like to get better feedback when there are cheetah
