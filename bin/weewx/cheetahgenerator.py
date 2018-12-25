@@ -74,6 +74,7 @@ import weewx.station
 import weewx.units
 import weewx.tags
 from weeutil.weeutil import to_bool, to_int, timestamp_to_string
+from weeutil.config import search_up
 
 # The default search list includes standard information sources that should be
 # useful in most templates.
@@ -150,7 +151,7 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
         gen_dict[section_name]['summarize_by'] = 'None'
 
         # determine how much logging is desired
-        log_success = to_bool(gen_dict[section_name].get('log_success', True))
+        log_success = to_bool(search_up(gen_dict[section_name], 'log_success', True))
 
         # configure the search list extensions
         self.initExtensions(gen_dict[section_name])
@@ -320,7 +321,7 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
             searchList = self._getSearchList(encoding, timespan,
                                              default_binding)
             tmpname = _fullname + '.tmp'
-            
+
             try:
                 compiled_template = Cheetah.Template.Template(
                     file=template,
