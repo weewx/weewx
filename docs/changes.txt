@@ -78,7 +78,10 @@ is not necessary.
 
 Fixed problem that caused sunrise/sunset to be calculated improperly in Sun.py.
 
-Improved coverage of test suites. Closes issue #337
+Improved coverage of test suites. Fixes issue #337.
+
+wee_device, when used with the Vantage series, now honors the "no prompt" (-y)
+option. Fixes issue #361.
 
 
 3.8.3 MM/DD/YYYY

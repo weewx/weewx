@@ -50,7 +50,7 @@ class AbstractConfigurator(object):
 
     @property
     def usage(self):
-        return "%prog [config_file] [options] [--debug] [--help]"
+        return "%prog [config_file] [options] [-y] [--debug] [--help]"
 
     @property
     def epilog(self):

@@ -1416,6 +1416,19 @@ except NameError:
     pass
 
 
+def y_or_n(msg, noprompt):
+    """Prompt and look for a 'y' or 'n' response"""
+
+    # If noprompt is truthy, always return 'y'
+    if noprompt:
+        return 'y'
+
+    ans = None
+    while ans not in ['y', 'n']:
+        ans = input(msg)
+    return ans
+
+
 def int2byte(x):
     """Convert integer argument to signed byte string, under both Python 2 and 3"""
     return struct.pack('>b', x)

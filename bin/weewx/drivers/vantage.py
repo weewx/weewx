@@ -1882,7 +1882,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
 
     @property
     def usage(self):
-        return """%prog [config_file] [--help] [--info] [--clear-memory]
+        return """%prog [config_file] [--help] [-y] [--info] [--clear-memory]
     [--set-interval=MINUTES]
     [--set-latitude=DEGREE] [--set-longitude=DEGREE]
     [--set-altitude=FEET] [--set-barometer=inHg]
@@ -1972,32 +1972,32 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
         station = Vantage(**config_dict[DRIVER_NAME])
         if options.info:
             self.show_info(station)
-        if options.clear_memory:
-            self.clear_memory(station)
         if options.set_interval is not None:
-            self.set_interval(station, options.set_interval)
+            self.set_interval(station, options.set_interval, options.noprompt)
         if options.set_latitude is not None:
-            self.set_latitude(station, options.set_latitude)
+            self.set_latitude(station, options.set_latitude, options.noprompt)
         if options.set_longitude is not None:
-            self.set_longitude(station, options.set_longitude)
+            self.set_longitude(station, options.set_longitude, options.noprompt)
         if options.set_altitude is not None:
-            self.set_altitude(station, options.set_altitude)
+            self.set_altitude(station, options.set_altitude, options.noprompt)
         if options.set_barometer is not None:
-            self.set_barometer(station, options.set_barometer)
+            self.set_barometer(station, options.set_barometer, options.noprompt)
+        if options.clear_memory:
+            self.clear_memory(station, options.noprompt)
         if options.set_wind_cup is not None:
-            self.set_wind_cup(station, options.set_wind_cup)
+            self.set_wind_cup(station, options.set_wind_cup, options.noprompt)
         if options.set_bucket is not None:
-            self.set_bucket(station, options.set_bucket)
+            self.set_bucket(station, options.set_bucket, options.noprompt)
         if options.set_rain_year_start is not None:
-            self.set_rain_year_start(station, options.set_rain_year_start)
+            self.set_rain_year_start(station, options.set_rain_year_start, options.noprompt)
         if options.set_offset is not None:
-            self.set_offset(station, options.set_offset)
+            self.set_offset(station, options.set_offset, options.noprompt)
         if options.set_transmitter_type is not None:
-            self.set_transmitter_type(station, options.set_transmitter_type)
+            self.set_transmitter_type(station, options.set_transmitter_type, options.noprompt)
         if options.set_retransmit is not None:
-            self.set_retransmit(station, options.set_retransmit)
+            self.set_retransmit(station, options.set_retransmit, options.noprompt)
         if options.set_temp_logging is not None:
-            self.set_temp_logging(station, options.set_temp_logging)
+            self.set_temp_logging(station, options.set_temp_logging, options.noprompt)
         if options.set_time:
             self.set_time(station)
         if options.set_dst:
@@ -2013,7 +2013,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
         if options.stop:
             self.stop_logger(station)
         if options.dump:
-            self.dump_logger(station, config_dict)
+            self.dump_logger(station, config_dict, options.noprompt)
         if options.logger_summary:
             self.logger_summary(station, options.logger_summary)
 
@@ -2181,7 +2181,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
         print("", file=dest)
 
     @staticmethod
-    def set_interval(station, new_interval_minutes):
+    def set_interval(station, new_interval_minutes, noprompt):
         """Set the console archive interval."""
     
         old_interval_minutes = station.archive_interval/60
@@ -2189,117 +2189,114 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
         if old_interval_minutes == new_interval_minutes:
             print("Old and new archive intervals are the same. Nothing done.")
         else:
-            ans = None
-            while ans not in ['y', 'n']:
-                print("Proceeding will change the archive interval as well as erase all old archive records.")
-                ans = weeutil.weeutil.input("Are you sure you want to proceed (y/n)? ")
-                if ans == 'y':
-                    try:
-                        station.setArchiveInterval(new_interval_minutes * 60)
-                    except Exception as e:
-                        print("Unable to set new archive interval. Reason:\n\t****", e, file=sys.stderr)
-                    else:
-                        print("Archive interval now set to %d seconds." % (station.archive_interval,))
-                        # The Davis documentation implies that the log is
-                        # cleared after changing the archive interval, but that
-                        # doesn't seem to be the case. Clear it explicitly:
-                        station.clearLog()
-                        print("Archive records cleared.")
-                elif ans == 'n':
-                    print("Nothing done.")
+            ans = weeutil.weeutil.y_or_n("Proceeding will change the archive interval "
+                                         "as well as erase all old archive records.\n"
+                                         "Are you sure you want to proceed (y/n)? ",
+                                         noprompt)
+            if ans == 'y':
+                try:
+                    station.setArchiveInterval(new_interval_minutes * 60)
+                except Exception as e:
+                    print("Unable to set new archive interval. Reason:\n\t****", e, file=sys.stderr)
+                else:
+                    print("Archive interval now set to %d seconds." % (station.archive_interval,))
+                    # The Davis documentation implies that the log is
+                    # cleared after changing the archive interval, but that
+                    # doesn't seem to be the case. Clear it explicitly:
+                    station.clearLog()
+                    print("Archive records cleared.")
+            elif ans == 'n':
+                print("Nothing done.")
 
     @staticmethod
-    def set_latitude(station, latitude_dg):
+    def set_latitude(station, latitude_dg, noprompt):
         """Set the console station latitude"""
 
-        ans = None
-        while ans not in ['y', 'n']:
-            print("Proceeding will set the latitude value to %.1f degree." % latitude_dg)
-            ans = weeutil.weeutil.input("Are you sure you wish to proceed (y/n)? ")
-            if ans == 'y':
-                try:
-                    station.setLatitude(latitude_dg)
-                except Exception as e:
-                    print("Unable to set new latitude. Reason:\n\t****", e, file=sys.stderr)
-                else:
-                    print("Station latitude set to %.1f degree." % latitude_dg)
-            elif ans == 'n':
-                print("Nothing done.")
+        ans = weeutil.weeutil.y_or_n("Proceeding will set the latitude value to %.1f degree.\n"
+                                     "Are you sure you wish to proceed (y/n)? " % latitude_dg,
+                                     noprompt)
+        if ans == 'y':
+            try:
+                station.setLatitude(latitude_dg)
+            except Exception as e:
+                print("Unable to set new latitude. Reason:\n\t****", e, file=sys.stderr)
+            else:
+                print("Station latitude set to %.1f degree." % latitude_dg)
+        elif ans == 'n':
+            print("Nothing done.")
 
     @staticmethod
-    def set_longitude(station, longitude_dg):
+    def set_longitude(station, longitude_dg, noprompt):
         """Set the console station longitude"""
 
-        ans = None
-        while ans not in ['y', 'n']:
-            print("Proceeding will set the longitude value to %.1f degree." % longitude_dg)
-            ans = weeutil.weeutil.input("Are you sure you wish to proceed (y/n)? ")
-            if ans == 'y':
-                try:
-                    station.setLongitude(longitude_dg)
-                except Exception as e:
-                    print("Unable to set new longitude. Reason:\n\t****", e, file=sys.stderr)
-                else:
-                    print("Station longitude set to %.1f degree." % longitude_dg)
-            elif ans == 'n':
-                print("Nothing done.")
+        ans = weeutil.weeutil.y_or_n("Proceeding will set the longitude value to %.1f degree.\n"
+                                     "Are you sure you wish to proceed (y/n)? "  % longitude_dg,
+                                     noprompt)
+        if ans == 'y':
+            try:
+                station.setLongitude(longitude_dg)
+            except Exception as e:
+                print("Unable to set new longitude. Reason:\n\t****", e, file=sys.stderr)
+            else:
+                print("Station longitude set to %.1f degree." % longitude_dg)
+        elif ans == 'n':
+            print("Nothing done.")
 
     @staticmethod    
-    def set_altitude(station, altitude_ft):
+    def set_altitude(station, altitude_ft, noprompt):
         """Set the console station altitude"""
-        ans = None
-        while ans not in ['y', 'n']:    
-            print("Proceeding will set the station altitude to %.0f feet." % altitude_ft)
-            ans = weeutil.weeutil.input("Are you sure you wish to proceed (y/n)? ")
-            if ans == 'y':
-                # Hit the console to get the current barometer calibration data and preserve it:
+        ans = weeutil.weeutil.y_or_n("Proceeding will set the station altitude to %.0f feet.\n"
+                                     "Are you sure you wish to proceed (y/n)? " % altitude_ft,
+                                     noprompt)
+        if ans == 'y':
+            # Hit the console to get the current barometer calibration data and preserve it:
+            _bardata = station.getBarData()
+            _barcal = _bardata[6]
+            # Set new altitude to station and clear previous _barcal value
+            station.setBarData(0.0, altitude_ft)
+            if _barcal != 0.0:
+                # Hit the console again to get the new barometer data:
                 _bardata = station.getBarData()
-                _barcal = _bardata[6]
-                # Set new altitude to station and clear previous _barcal value
-                station.setBarData(0.0, altitude_ft)
-                if _barcal != 0.0:
-                    # Hit the console again to get the new barometer data:
-                    _bardata = station.getBarData()
-                    # Set previous _barcal value
-                    station.setBarData(_bardata[0] + _barcal, altitude_ft)
-            elif ans == 'n':
-                print("Nothing done.")
+                # Set previous _barcal value
+                station.setBarData(_bardata[0] + _barcal, altitude_ft)
+        elif ans == 'n':
+            print("Nothing done.")
 
     @staticmethod
-    def set_barometer(station, barometer_inHg):
+    def set_barometer(station, barometer_inHg, noprompt):
         """Set the barometer reading to a known correct value."""
         # Hit the console to get the current barometer calibration data:
         _bardata = station.getBarData()
     
-        ans = None
-        while ans not in ['y', 'n']:
-            if barometer_inHg:
-                print("Proceeding will set the barometer value to %.3f and the station altitude to %.0f feet." % (barometer_inHg, _bardata[1]))
-            else:
-                print("Proceeding will have the console pick a sensible barometer calibration and set the station altitude to %.0f feet," % (_bardata[1],))
-            ans = weeutil.weeutil.input("Are you sure you wish to proceed (y/n)? ")
-            if ans == 'y':
-                station.setBarData(barometer_inHg, _bardata[1])
-            elif ans == 'n':
-                print("Nothing done.")
+        if barometer_inHg:
+            msg = "Proceeding will set the barometer value to %.3f and " \
+                  "the station altitude to %.0f feet.\n" % (barometer_inHg, _bardata[1])
+        else:
+            msg = "Proceeding will have the console pick a sensible barometer " \
+                  "calibration and set the station altitude to %.0f feet.\n" % (_bardata[1],)
+        ans = weeutil.weeutil.y_or_n(msg + "Are you sure you wish to proceed (y/n)? ",
+                                     noprompt)
+        if ans == 'y':
+            station.setBarData(barometer_inHg, _bardata[1])
+        elif ans == 'n':
+            print("Nothing done.")
 
     @staticmethod
-    def clear_memory(station):
+    def clear_memory(station, noprompt):
         """Clear the archive memory of a VantagePro"""
     
-        ans = None
-        while ans not in ['y', 'n']:
-            print("Proceeding will erase old archive records.")
-            ans = weeutil.weeutil.input("Are you sure you wish to proceed (y/n)? ")
-            if ans == 'y':
-                print("Clearing the archive memory ...")
-                station.clearLog()
-                print("Archive records cleared.")
-            elif ans == 'n':
-                print("Nothing done.")
+        ans = weeutil.weeutil.y_or_n("Proceeding will erase old archive records.\n"
+                                     "Are you sure you wish to proceed (y/n)? ",
+                                     noprompt)
+        if ans == 'y':
+            print("Clearing the archive memory ...")
+            station.clearLog()
+            print("Archive records cleared.")
+        elif ans == 'n':
+            print("Nothing done.")
 
     @staticmethod
-    def set_wind_cup(station, new_wind_cup_type):
+    def set_wind_cup(station, new_wind_cup_type, noprompt):
         """Set the wind cup type on the console."""
 
         if station.hardware_type != 16:
@@ -2313,25 +2310,25 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
             station.wind_cup_size,
             new_wind_cup_type,
             Vantage.wind_cup_dict[new_wind_cup_type]))
+
         if station.wind_cup_type == new_wind_cup_type:
             print("Old and new wind cup types are the same. Nothing done.")
         else:
-            ans = None
-            while ans not in ['y', 'n']:
-                print("Proceeding will change the wind cup type.")
-                ans = weeutil.weeutil.input("Are you sure you want to proceed (y/n)? ")
-                if ans == 'y':
-                    try:
-                        station.setWindCupType(new_wind_cup_type)
-                    except Exception as e:
-                        print("Unable to set new wind cup type. Reason:\n\t****", e, file=sys.stderr)
-                    else:
-                        print("Wind cup type set to %d (%s)." % (station.wind_cup_type, station.wind_cup_size))
-                elif ans == 'n':
-                    print("Nothing done.")
+            ans = weeutil.weeutil.y_or_n("Proceeding will change the wind cup type.\n"
+                                         "Are you sure you want to proceed (y/n)? ",
+                                         noprompt)
+            if ans == 'y':
+                try:
+                    station.setWindCupType(new_wind_cup_type)
+                except Exception as e:
+                    print("Unable to set new wind cup type. Reason:\n\t****", e, file=sys.stderr)
+                else:
+                    print("Wind cup type set to %d (%s)." % (station.wind_cup_type, station.wind_cup_size))
+            elif ans == 'n':
+                print("Nothing done.")
 
     @staticmethod
-    def set_bucket(station, new_bucket_type):
+    def set_bucket(station, new_bucket_type, noprompt):
         """Set the bucket type on the console."""
 
         print("Old rain bucket type is %d (%s), new one is %d (%s)." % (
@@ -2339,47 +2336,46 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
             station.rain_bucket_size,
             new_bucket_type,
             Vantage.rain_bucket_dict[new_bucket_type]))
+
         if station.rain_bucket_type == new_bucket_type:
             print("Old and new bucket types are the same. Nothing done.")
         else:
-            ans = None
-            while ans not in ['y', 'n']:
-                print("Proceeding will change the rain bucket type.")
-                ans = weeutil.weeutil.input("Are you sure you want to proceed (y/n)? ")
-                if ans == 'y':
-                    try:
-                        station.setBucketType(new_bucket_type)
-                    except Exception as e:
-                        print("Unable to set new bucket type. Reason:\n\t****", e, file=sys.stderr)
-                    else:
-                        print("Bucket type now set to %d." % (station.rain_bucket_type,))
-                elif ans == 'n':
-                    print("Nothing done.")
+            ans = weeutil.weeutil.y_or_n("Proceeding will change the rain bucket type.\n"
+                                         "Are you sure you want to proceed (y/n)? ",
+                                         noprompt)
+            if ans == 'y':
+                try:
+                    station.setBucketType(new_bucket_type)
+                except Exception as e:
+                    print("Unable to set new bucket type. Reason:\n\t****", e, file=sys.stderr)
+                else:
+                    print("Bucket type now set to %d." % (station.rain_bucket_type,))
+            elif ans == 'n':
+                print("Nothing done.")
 
     @staticmethod
-    def set_rain_year_start(station, rain_year_start):
+    def set_rain_year_start(station, rain_year_start, noprompt):
 
         print("Old rain season start is %d, new one is %d." % (station.rain_year_start, rain_year_start))
 
         if station.rain_year_start == rain_year_start:
             print("Old and new rain season starts are the same. Nothing done.")
         else:
-            ans = None
-            while ans not in ['y', 'n']:
-                print("Proceeding will change the rain season start.")
-                ans = weeutil.weeutil.input("Are you sure you want to proceed (y/n)? ")
-                if ans == 'y':
-                    try:
-                        station.setRainYearStart(rain_year_start)
-                    except Exception as e:
-                        print("Unable to set new rain year start. Reason:\n\t****", e, file=sys.stderr)
-                    else:
-                        print("Rain year start now set to %d." % (station.rain_year_start,))
-                elif ans == 'n':
-                    print("Nothing done.")
+            ans = weeutil.weeutil.y_or_n("Proceeding will change the rain season start.\n"
+                                         "Are you sure you want to proceed (y/n)? ",
+                                         noprompt)
+            if ans == 'y':
+                try:
+                    station.setRainYearStart(rain_year_start)
+                except Exception as e:
+                    print("Unable to set new rain year start. Reason:\n\t****", e, file=sys.stderr)
+                else:
+                    print("Rain year start now set to %d." % (station.rain_year_start,))
+            elif ans == 'n':
+                print("Nothing done.")
 
     @staticmethod
-    def set_offset(station, offset_list):
+    def set_offset(station, offset_list, noprompt):
         """Set the on-board offset for a temperature, humidity or wind direction variable."""
         (variable, offset_str) = offset_list.split(',')
         # These variables may be calibrated.
@@ -2395,56 +2391,55 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
         if variable == "windDir":
             offset = int(offset_str)
             if not -359 <= offset <= 359:
-                print("Wind direction offset %d is out of range." % (offset), file=sys.stderr)
+                print("Wind direction offset %d is out of range." % offset, file=sys.stderr)
             else:
-                ans = None
-                while ans not in ['y', 'n']:
-                    print("Proceeding will set offset for wind direction to %+d." % (offset))
-                    ans = weeutil.weeutil.input("Are you sure you want to proceed (y/n)? ")
-                    if ans == 'y':
-                        try:
-                            station.setCalibrationWindDir(offset)
-                        except Exception as e:
-                            print("Unable to set new wind offset. Reason:\n\t****", e, file=sys.stderr)
-                        else:
-                            print("Wind direction offset now set to %+d." % (offset))
+                ans = weeutil.weeutil.y_or_n("Proceeding will set offset for wind direction to %+d.\n" % offset +
+                                             "Are you sure you want to proceed (y/n)? ",
+                                             noprompt)
+                if ans == 'y':
+                    try:
+                        station.setCalibrationWindDir(offset)
+                    except Exception as e:
+                        print("Unable to set new wind offset. Reason:\n\t****", e, file=sys.stderr)
+                    else:
+                        print("Wind direction offset now set to %+d." % (offset))
         elif variable in temp_variables:
             offset = float(offset_str)
             if not -12.8 <= offset <= 12.7:
                 print("Temperature offset %+.1f is out of range." % (offset), file=sys.stderr)
             else:
-                ans = None
-                while ans not in ['y', 'n']:
-                    print("Proceeding will set offset for temperature %s to %.1f." % (variable, offset))
-                    ans = weeutil.weeutil.input("Are you sure you want to proceed (y/n)? ")
-                    if ans == 'y':
-                        try:
-                            station.setCalibrationTemp(variable, offset)
-                        except Exception as e:
-                            print("Unable to set new temperature offset. Reason:\n\t****", e, file=sys.stderr)
-                        else:
-                            print("Temperature offset %s now set to %+.1f." % (variable, offset))
+                ans = weeutil.weeutil.y_or_n("Proceeding will set offset for "
+                                             "temperature %s to %+.1f.\n" % (variable, offset) +
+                                             "Are you sure you want to proceed (y/n)? ",
+                                             noprompt)
+                if ans == 'y':
+                    try:
+                        station.setCalibrationTemp(variable, offset)
+                    except Exception as e:
+                        print("Unable to set new temperature offset. Reason:\n\t****", e, file=sys.stderr)
+                    else:
+                        print("Temperature offset %s now set to %+.1f." % (variable, offset))
         elif variable in humid_variables:
             offset = int(offset_str)
             if not 0 <= offset <= 100:
                 print("Humidity offset %+d is out of range." % (offset), file=sys.stderr)
             else:
-                ans = None
-                while ans not in ['y', 'n']:
-                    print("Proceeding will set offset for humidity %s to %+d." % (variable, offset))
-                    ans = weeutil.weeutil.input("Are you sure you want to proceed (y/n)? ")
-                    if ans == 'y':
-                        try:
-                            station.setCalibrationHumid(variable, offset)
-                        except Exception as e:
-                            print("Unable to set new humidity offset. Reason:\n\t****", e, file=sys.stderr)
-                        else:
-                            print("Humidity offset %s now set to %+d." % (variable, offset))
+                ans = weeutil.weeutil.y_or_n("Proceeding will set offset for "
+                                             "humidity %s to %+d.\n" % (variable, offset) +
+                                             "Are you sure you want to proceed (y/n)? ",
+                                             noprompt)
+                if ans == 'y':
+                    try:
+                        station.setCalibrationHumid(variable, offset)
+                    except Exception as e:
+                        print("Unable to set new humidity offset. Reason:\n\t****", e, file=sys.stderr)
+                    else:
+                        print("Humidity offset %s now set to %+d." % (variable, offset))
         else:
-            print("Unknown variable %s" % (variable), file=sys.stderr)
+            print("Unknown variable %s" % variable, file=sys.stderr)
 
     @staticmethod
-    def set_transmitter_type(station, transmitter_list):
+    def set_transmitter_type(station, transmitter_list, noprompt):
         """Set the transmitter type for one of the eight channels."""
 
         transmitter_list = list(map((lambda x: int(x) if x.isdigit() else x if x != "" else None), transmitter_list.split(',')))
@@ -2457,7 +2452,8 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
         # Warn and stop if new channel is used as retransmit channel.
         retransmit_channel = station._getEEPROM_value(0x18)[0]
         if retransmit_channel == channel:
-            print("This channel is used as retransmit channel. Please turn off retransmit function or choose another channel.")
+            print("This channel is used as retransmit channel. "
+                  "Please turn off retransmit function or choose another channel.")
             return
         
         # Init repeater to 'no repeater'
@@ -2498,24 +2494,31 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
             print("Transmitter type %s requires extra_hum in range 1-7'" % transmitter_type_name)
             return
         
-        ans = None
-        while ans not in ['y', 'n']:
-            print("Proceeding will set channel %d to type %d (%s), repeater: %s, %s." % (
-                channel, transmitter_type, transmitter_type_name, station.repeater_dict[repeater], station.listen_dict[usetx]))
-            ans = weeutil.weeutil.input("Are you sure you want to proceed (y/n)? ")
-            if ans == 'y':
-                try:
-                    station.setTransmitterType(channel, transmitter_type, extra_temp, extra_hum, repeater)
-                except Exception as e:
-                    print("Unable to set transmitter type. Reason:\n\t****", e, file=sys.stderr)
-                else:
-                    print("Transmitter type for channel %d set to %d (%s), repeater: %s, %s." % (
-                        channel, transmitter_type, transmitter_type_name, station.repeater_dict[repeater], station.listen_dict[usetx]))
+        msg = "Proceeding will set channel %d to type %d (%s), repeater: %s, %s.\n" \
+              % (channel,
+                 transmitter_type,
+                 transmitter_type_name,
+                 station.repeater_dict[repeater],
+                 station.listen_dict[usetx])
+        ans = weeutil.weeutil.y_or_n(msg + "Are you sure you want to proceed (y/n)? ",
+                                     noprompt)
+        if ans == 'y':
+            try:
+                station.setTransmitterType(channel, transmitter_type, extra_temp, extra_hum, repeater)
+            except Exception as e:
+                print("Unable to set transmitter type. Reason:\n\t****", e, file=sys.stderr)
             else:
-                print("Nothing done.")
+                print("Transmitter type for channel %d set to %d (%s), repeater: %s, %s."
+                      % (channel,
+                         transmitter_type,
+                         transmitter_type_name,
+                         station.repeater_dict[repeater],
+                         station.listen_dict[usetx]))
+        else:
+            print("Nothing done.")
 
     @staticmethod
-    def set_retransmit(station, channel_on_off):
+    def set_retransmit(station, channel_on_off, noprompt):
         """Set console retransmit channel."""
 
         channel = 0
@@ -2530,7 +2533,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
                     return
         
             transmitter_list = station.getStnTransmitters()
-            if channel != 0:
+            if channel:
                 if transmitter_list[channel-1]["listen"] == "active":
                     print("Channel %d in use. Please select another channel. Nothing done." % channel)
                     return
@@ -2548,43 +2551,41 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
             print("Old and new retransmit settings are the same. Nothing done.")
             return
         
-        ans = None
-        while ans not in ['y', 'n']:
-            if channel != 0:
-                print("Proceeding will set retransmit to 'ON' at channel: %d." % channel)
+        if channel:
+            msg = "Proceeding will set retransmit to 'ON' at channel: %d.\n" % channel
+        else:
+            msg = "Proceeding will set retransmit to 'OFF'\n."
+        ans = weeutil.weeutil.y_or_n(msg + "Are you sure you want to proceed (y/n)? ",
+                                     noprompt)
+        if ans == 'y':
+            try:
+                station.setRetransmit(channel)
+            except Exception as e:
+                print("Unable to set retransmit. Reason:\n\t****", e, file=sys.stderr)
             else:
-                print("Proceeding will set retransmit to 'OFF'.")
-            ans = weeutil.weeutil.input("Are you sure you want to proceed (y/n)? ")
-            if ans == 'y':
-                try:
-                    station.setRetransmit(channel)
-                except Exception as e:
-                    print("Unable to set retransmit. Reason:\n\t****", e, file=sys.stderr)
+                if channel != 0:
+                    print("Retransmit set to 'ON' at channel: %d." % channel)
                 else:
-                    if channel != 0:
-                        print("Retransmit set to 'ON' at channel: %d." % channel)
-                    else:
-                        print("Retransmit set to 'OFF'.")
-            else:
-                print("Nothing done.")
+                    print("Retransmit set to 'OFF'.")
+        else:
+            print("Nothing done.")
 
     @staticmethod
-    def set_temp_logging(station, tempLogging):
+    def set_temp_logging(station, tempLogging, noprompt):
         """Set console temperature logging to 'LAST' or 'AVERAGE'."""
 
-        ans = None
-        while ans not in ['y', 'n']:
-            print("Proceeding will change the console temperature logging to '%s'." % (tempLogging.upper()))
-            ans = weeutil.weeutil.input("Are you sure you want to proceed (y/n)? ")
-            if ans == 'y':
-                try:
-                    station.setTempLogging(tempLogging)
-                except Exception as e:
-                    print("Unable to set new console temperature logging. Reason:\n\t****", e, file=sys.stderr)
-                else:
-                    print("Console temperature logging set to '%s'." % (tempLogging.upper()))
-            elif ans == 'n':
-                print("Nothing done.")
+        msg = "Proceeding will change the console temperature logging to '%s'.\n" % tempLogging.upper()
+        ans = weeutil.weeutil.y_or_n(msg + "Are you sure you want to proceed (y/n)? ",
+                                     noprompt)
+        if ans == 'y':
+            try:
+                station.setTempLogging(tempLogging)
+            except Exception as e:
+                print("Unable to set new console temperature logging. Reason:\n\t****", e, file=sys.stderr)
+            else:
+                print("Console temperature logging set to '%s'." % (tempLogging.upper()))
+        elif ans == 'n':
+            print("Nothing done.")
 
     @staticmethod
     def set_time(station):
@@ -2637,29 +2638,28 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
         print("Logger stopped")
 
     @staticmethod
-    def dump_logger(station, config_dict):
+    def dump_logger(station, config_dict, noprompt):
         import weewx.manager
-        ans = None
-        while ans not in ['y', 'n']:
-            print("Proceeding will dump all data in the logger.")
-            ans = weeutil.weeutil.input("Are you sure you want to proceed (y/n)? ")
-            if ans == 'y':
-                with weewx.manager.open_manager_with_config(config_dict, 'wx_binding',
-                                                            initialize=True) as archive:
-                    nrecs = 0
-                    # Wrap the Vantage generator function in a converter, which will convert the units to the
-                    # same units used by the database:
-                    converted_generator = weewx.units.GenWithConvert(station.genArchiveDump(), archive.std_unit_system)
-                    print("Starting dump ...")
-                    for record in converted_generator:
-                        archive.addRecord(record)
-                        nrecs += 1
-                        if nrecs % 10 == 0:
-                            print("Records processed: %d; Timestamp: %s\r" % (nrecs, weeutil.weeutil.timestamp_to_string(record['dateTime'])), end=' ', file=sys.stdout)
-                            sys.stdout.flush()
-                    print("\nFinished dump. %d records added" % (nrecs,))
-            elif ans == 'n':
-                print("Nothing done.")
+        ans = weeutil.weeutil.y_or_n("Proceeding will dump all data in the logger.\n"
+                                     "Are you sure you want to proceed (y/n)? ",
+                                     noprompt)
+        if ans == 'y':
+            with weewx.manager.open_manager_with_config(config_dict, 'wx_binding',
+                                                        initialize=True) as archive:
+                nrecs = 0
+                # Wrap the Vantage generator function in a converter, which will convert the units to the
+                # same units used by the database:
+                converted_generator = weewx.units.GenWithConvert(station.genArchiveDump(), archive.std_unit_system)
+                print("Starting dump ...")
+                for record in converted_generator:
+                    archive.addRecord(record)
+                    nrecs += 1
+                    if nrecs % 10 == 0:
+                        print("Records processed: %d; Timestamp: %s\r" % (nrecs, weeutil.weeutil.timestamp_to_string(record['dateTime'])), end=' ', file=sys.stdout)
+                        sys.stdout.flush()
+                print("\nFinished dump. %d records added" % (nrecs,))
+        elif ans == 'n':
+            print("Nothing done.")
 
     @staticmethod
     def logger_summary(station, dest_path):
