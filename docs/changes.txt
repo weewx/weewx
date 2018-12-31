@@ -83,6 +83,9 @@ Improved coverage of test suites. Fixes issue #337.
 wee_device, when used with the Vantage series, now honors the "no prompt" (-y)
 option. Fixes issue #361.
 
+Fixed problem where records were downloaded on startup, even if software
+record generation was specified.
+
 
 3.8.3 MM/DD/YYYY
 

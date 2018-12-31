@@ -509,13 +509,15 @@ class StdArchive(StdService):
     
     def startup(self, event):  # @UnusedVariable
         """Called when the engine is starting up."""
-        # The engine is starting up. The main task is to do a catch up on any
-        # data still on the station, but not yet put in the database. Not
-        # all consoles can do this, so be prepared to catch the exception:
-        try:
-            self._catchup(self.engine.console.genStartupRecords)
-        except NotImplementedError:
-            pass
+        # The engine is starting up. If hardware record generation has been specified,
+        # the main task is to do a catch up on any
+        # data still on the station, but not yet put in the database.
+        if self.record_generation == 'hardware':
+            # Not all consoles can do a hardware catchup, so be prepared to catch the exception:
+            try:
+                self._catchup(self.engine.console.genStartupRecords)
+            except NotImplementedError:
+                pass
                     
     def pre_loop(self, event):  # @UnusedVariable
         """Called before the main packet loop is entered."""
