@@ -266,27 +266,10 @@ sudo apt-get install weewx</pre>
                 <td>
                 <pre class="tty">
 [StdReport]
-    # This section specifies what reports, using which skins, to generate.
-
-    # Where the skins reside, relative to WEEWX_ROOT:
     SKIN_ROOT = skins
-
-    # Where the generated reports should go, relative to WEEWX_ROOT:
     HTML_ROOT = public_html
-
-    # The database binding indicates which data should be used in reports
     data_binding = wx_binding
-
-    # Each subsection represents a report you wish to run.
-
     [[StandardReport]]
-        # See the customizing guide to change the units, plot types and line
-        # colors, modify the fonts, display additional sensor data, and other
-        # customizations.  Many of those changes can be made here by overriding
-        # parameters, or by modifying templates within the skin itself.
-
-        # The StandardReport uses the 'Standard' skin, which contains the
-        # images, templates and plots for the report.
         skin = Standard
         [[[Units]]]
             [[[[Groups]]]]
@@ -303,27 +286,10 @@ sudo apt-get install weewx</pre>
                 <td>
                 <pre class="tty">
 [StdReport]
-    # This section specifies what reports, using which skins, to generate.
-
-    # Where the skins reside, relative to WEEWX_ROOT:
     SKIN_ROOT = skins
-
-    # Where the generated reports should go, relative to WEEWX_ROOT:
     HTML_ROOT = public_html
-
-    # The database binding indicates which data should be used in reports
     data_binding = wx_binding
-
-    # Each subsection represents a report you wish to run.
-
     [[StandardReport]]
-        # See the customizing guide to change the units, plot types and line
-        # colors, modify the fonts, display additional sensor data, and other
-        # customizations.  Many of those changes can be made here by overriding
-        # parameters, or by modifying templates within the skin itself.
-
-        # The StandardReport uses the 'Standard' skin, which contains the
-        # images, templates and plots for the report.
         skin = Standard
         [[[Units]]]
             [[[[Groups]]]]
@@ -336,31 +302,24 @@ sudo apt-get install weewx</pre>
                 group_degree_day = degree_C_day
                 group_speed = meter_per_second
 </pre>
-                    <pre class="tty added"><span class="">[ObservationDefaults]
-
-    # The following section is for managing the selection and formatting of units.
+                <pre class="tty added"><span class="">[ObservationDefaults]
     [[Units]]
-
-        # The following section sets what unit to use for each unit group.
-        # NB: The unit is always in the singular. I.e., 'mile_per_hour',
-        # NOT 'miles_per_hour'
         [[[Groups]]]
-            group_altitude = foot    # Options are 'foot' or 'meter'
-            group_degree_day = degree_F_day    # Options are 'degree_F_day' or 'degree_C_day'
+            group_altitude = foot
+            group_degree_day = degree_F_day
             group_direction = degree_compass
             group_moisture = centibar
             group_percent = percent
-            group_pressure = inHg    # Options are 'inHg', 'mmHg', 'mbar', or 'hPa'
+            group_pressure = inHg
             group_radiation = watt_per_meter_squared
-            group_rain = inch    # Options are 'inch', 'cm', or 'mm'
-            group_rainrate = inch_per_hour    # Options are 'inch_per_hour', 'cm_per_hour', or 'mm_per_hour'
-            group_speed = mile_per_hour    # Options are 'mile_per_hour', 'km_per_hour', 'knot', or 'meter_per_second'
-            group_speed2 = mile_per_hour2    # Options are 'mile_per_hour2', 'km_per_hour2', 'knot2', or 'meter_per_second2'
-            group_temperature = degree_F    # Options are 'degree_F' or 'degree_C'
+            group_rain = inch
+            group_rainrate = inch_per_hour
+            group_speed = mile_per_hour
+            group_speed2 = mile_per_hour2
+            group_temperature = degree_F
             group_uv = uv_index
             group_volt = volt
 
-            # The following are used internally and should not be changed:
             group_count = count
             group_interval = minute
             group_time = unix_epoch
@@ -378,31 +337,25 @@ sudo apt-get install weewx</pre>
             </tr>
             <tr>
                 <td>
-                <pre class='tty'>[Units]
-    # This section is for managing the selection and formatting of units.
+                <pre class='tty'>
 
+[Units]
     [[Groups]]
-        # For each group of measurements, this section sets what units to
-        # use for it.
-        # NB: The unit is always in the singular. I.e., 'mile_per_hour',
-        # NOT 'miles_per_hour'
-
-        group_altitude     = foot                 # Options are 'foot' or 'meter'
-        group_degree_day   = degree_F_day         # Options are 'degree_F_day' or 'degree_C_day'
+        group_altitude     = foot
+        group_degree_day   = degree_F_day
         group_direction    = degree_compass
         group_moisture     = centibar
         group_percent      = percent
-        group_pressure     = inHg                 # Options are 'inHg', 'mmHg', 'mbar', or 'hPa'
+        group_pressure     = inHg
         group_radiation    = watt_per_meter_squared
-        group_rain         = inch                 # Options are 'inch', 'cm', or 'mm'
-        group_rainrate     = inch_per_hour        # Options are 'inch_per_hour', 'cm_per_hour', or 'mm_per_hour'
-        group_speed        = mile_per_hour        # Options are 'mile_per_hour', 'km_per_hour', 'knot', or 'meter_per_second'
-        group_speed2       = mile_per_hour2       # Options are 'mile_per_hour2', 'km_per_hour2', 'knot2', or 'meter_per_second2'
-        group_temperature  = degree_F             # Options are 'degree_F' or 'degree_C'
+        group_rain         = inch
+        group_rainrate     = inch_per_hour
+        group_speed        = mile_per_hour
+        group_speed2       = mile_per_hour2
+        group_temperature  = degree_F
         group_uv           = uv_index
         group_volt         = volt
 
-        # The following are used internally and should not be changed:
         group_count        = count
         group_interval     = minute
         group_time         = unix_epoch
@@ -411,32 +364,23 @@ sudo apt-get install weewx</pre>
                 </td>
                 <td>
                     <pre class="tty"><span class="added">skin_semantics = 2</span>
-
 [Units]
-        # This section is for managing the selection and formatting of units.
-
-        [[Groups]]
-        <span class="removed"># For each group of measurements, this section sets what units to
-        # use for it.
-        # NB: The unit is always in the singular. I.e., 'mile_per_hour',
-        # NOT 'miles_per_hour'
-
-        group_altitude     = foot                 # Options are 'foot' or 'meter'
-        group_degree_day   = degree_F_day         # Options are 'degree_F_day' or 'degree_C_day'
+    [[Groups]]<span class="removed">
+        group_altitude     = foot
+        group_degree_day   = degree_F_day
         group_direction    = degree_compass
         group_moisture     = centibar
         group_percent      = percent
-        group_pressure     = inHg                 # Options are 'inHg', 'mmHg', 'mbar', or 'hPa'
+        group_pressure     = inHg
         group_radiation    = watt_per_meter_squared
-        group_rain         = inch                 # Options are 'inch', 'cm', or 'mm'
-        group_rainrate     = inch_per_hour        # Options are 'inch_per_hour', 'cm_per_hour', or 'mm_per_hour'
-        group_speed        = mile_per_hour        # Options are 'mile_per_hour', 'km_per_hour', 'knot', or 'meter_per_second'
-        group_speed2       = mile_per_hour2       # Options are 'mile_per_hour2', 'km_per_hour2', 'knot2', or 'meter_per_second2'
-        group_temperature  = degree_F             # Options are 'degree_F' or 'degree_C'
+        group_rain         = inch
+        group_rainrate     = inch_per_hour
+        group_speed        = mile_per_hour
+        group_speed2       = mile_per_hour2
+        group_temperature  = degree_F
         group_uv           = uv_index
         group_volt         = volt
 
-        # The following are used internally and should not be changed:
         group_count        = count
         group_interval     = minute
         group_time         = unix_epoch
