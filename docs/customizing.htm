@@ -870,15 +870,15 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
         </h3>
 
         <p>
-            This approach is similar to the above, except that you are changing an option for just a single report.
+          With this approach you can change an option for a single report.
         </p>
 
         <p>
-            In our previous example, all reports would be in Metric, but suppose you want two reports, one in Metric,
+            Suppose you want two reports, one in Metric,
             the other in US Customary. The Metric report will go in the regular directory <span class="symcode">HTML_ROOT</span>,
             but the latter in a subdirectory, <span class="code"><span class="symcode">HTML_ROOT</span>/metric</span>.
             To accomplish this, the <span class="code">[ObservationDefaults]</span> section in <span class="code">weewx.conf</span>
-            would be the same as in the example above, but the <span class="code">[StdReport]</span> section would read:
+            remains untouched, but the <span class="code">[StdReport]</span> section would read:
         </p>
         <pre class="tty">
 [StdReport]
@@ -930,9 +930,6 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
             class="code">skin.conf</span>, it would be even farther out the tree and would have the final say. Indeed,
             take a look at the <span class="code">skin.conf</span> file for <em>Seasons</em> and you'll see that it uses
             this property to override some label names to suit its purposes.
-        </p>
-        <p>
-            See the section <a href="#Details_on_how_options_work"><em>Details on how options work</em></a>.
         </p>
 
         <h2 id="Reference_guide_to_Observation_defaults">Reference guide to Observation defaults</h2>
@@ -1087,7 +1084,7 @@ inch     = %.2f</pre>
 inch     = ' in'</pre>
         <p>
             would cause all temperatures to have unit labels <span class="code">°F</span> and all precipitation to have
-            labels <span class="code">in</span>. If any special symbols are to be used (such as the degree sign above)
+            labels <span class="code">in</span>. If any special symbols are to be used (such as the degree sign)
             they should be encoded in UTF-8. This is generally what most text editors use if you cut-and-paste from a
             character map.
         </p>
@@ -1386,29 +1383,28 @@ HOURLY TEMPERATURES AND HUMIDITIES:
 $record.dateTime $record.outTemp $record.outHumidity
 #end for
         </pre>
-        <p>
-            NB: This can create a <em>lot</em> of files &mdash; one per day. If you have 3 years of records, this would
+        <p class="note">
+          <strong>Note</strong><br/>
+This can create a <em>lot</em> of files &mdash; one per day. If you have 3 years of records, this would
             be 1,000+ files!
         </p>
 
         <h2>Tags</h2>
-
-        <div class="note">
-            <p>
-                If there is a tag error during template generation, the error will show up in the log file. Many errors
-                are obvious &mdash; Cheetah will display a line number and list the template file in which the error
-                occurred. Unfortunately, in other cases, the error message can be very cryptic and not very useful. So
-                make small changes and test often. Use the utility <a href="#wee_reports"><span
-                class="code">wee_reports</span></a> to speed up the process.
-            </p>
-        </div>
 
         <p>
             If you look inside a template, you will see it makes heavy use of <em>tags</em>. As the Cheetah generator
             processes the template, it replaces each tag with an appropriate value and, sometimes, a label. This section
             discusses the details of how that happens.
         </p>
-        <p>Here's an example of some tags:</p>
+
+        <p class="note">
+                If there is a tag error during template generation, the error will show up in the log file. Many errors
+                are obvious &mdash; Cheetah will display a line number and list the template file in which the error
+                occurred. Unfortunately, in other cases, the error message can be very cryptic and not very useful. So
+                make small changes and test often. Use the utility <a href="#wee_reports"><span
+                class="code">wee_reports</span></a> to speed up the process.
+        </p>
+        <p>Here are some examples of tags:</p>
         <pre class="tty">$current.outTemp
 $month.outTemp.max
 $month.outTemp.maxtime</pre>
@@ -2038,10 +2034,10 @@ or in foobar units: $day.barometer.min.foobar
             </tbody>
         </table>
         <p>
-            Note how you can explicitly specify a value in the tag itself (2nd example above). If you do not specify a
+            Note how you can explicitly specify a value in the tag itself (2nd row in the table above). If you do not specify a
             value, then a default time interval, set by option <span class="code"><a href="#trend">time_delta</a></span>
             in the skin configuration file, will be used. This value can be retrieved by using the syntax <span
-            class="code">$trend.time_delta</span> (3rd example above).
+            class="code">$trend.time_delta</span> (3rd row in the table).
         </p>
 
         <p>For example, the template expression</p>
@@ -2354,7 +2350,7 @@ $month.dateTime.format("%B"): Min, max temperatures: $month.outTemp.min $month.o
 
         <h3>Comprehensive example</h3>
         <p>
-            This example is designed to put together a lot of the elements above, including iteration, aggregation
+            This example is designed to put together a lot of the elements described above, including iteration, aggregation
             period starts and ends, formatting, and overriding units.
         </p>
 
@@ -3606,11 +3602,11 @@ class MyStats(SearchList):                                                   # 1
 
         <p class="config_option">radar_url</p>
 
-        <p>If the above radar image is clicked, the browser will go to this URL. This is usually used to show a more
+        <p>If the radar image is clicked, the browser will go to this URL. This is usually used to show a more
             detailed, close-up, radar picture.
         </p>
 
-        <p>For me in Oregon, setting the above two options to:</p>
+        <p>For me in Oregon, setting the two options to:</p>
         <pre class="tty">
 [Extras]
     radar_img = http://radar.weather.gov/ridge/lite/N0R/RTX_loop.gif
@@ -4040,16 +4036,18 @@ class MyStats(SearchList):                                                   # 1
 
         <p>
             Each chart line is drawn in a different color. This option is a list of those colors. If the number of lines
-            exceeds the length of the list, then the colors wrap around to the beginning of the list. NB: individual
-            line color can be overridden by using option <span class="code">color</span>. Optional. In the case of bar
+            exceeds the length of the list, then the colors wrap around to the beginning of the list. Optional. In the case of bar
             charts, this is the color of the outline of the bar. Default is <span class="code">0xff0000, 0x00ff00, 0x0000ff</span>.
+            <br/>
+            <br/>
+            Individual line color can be overridden by using option <span class="code">color</span>. 
         </p>
 
         <p class="config_option">chart_fill_colors</p>
 
         <p>
             A list of the color to be used as the fill of the bar charts. Optional. The default is to use the same color
-            as the outline color (option <span class="code">chart_line_colors</span>) above.
+            as the outline color (option <span class="code">chart_line_colors</span>).
         </p>
 
         <p class="config_option">chart_line_width</p>
@@ -4057,8 +4055,10 @@ class MyStats(SearchList):                                                   # 1
         <p>
             Each chart line can be drawn using a different line width. This option is a list of these widths. If the
             number of lines exceeds the length of the list, then the widths wrap around to the beginning of the list.
-            NB: individual line widths can be overridden by using option <span class="code">width</span>. Optional.
-            Default is <span class="code">1, 1, 1</span>.
+            Optional. Default is <span class="code">1, 1, 1</span>.
+            <br/>
+            <br/>
+            Individual line widths can be overridden by using option <span class="code">width</span>. 
         </p>
 
 
@@ -4237,7 +4237,7 @@ class MyStats(SearchList):                                                   # 1
 &lt;!DOCTYPE HTML&gt;
 <span class="highlight">&lt;html lang="es"&gt;</span>
   &lt;head&gt;
-    ## This choice should match the #encoding directive above
+    ## This choice should match the #encoding directive
     &lt;meta charset="UTF-8"&gt;
     ...
 </pre>
@@ -4477,7 +4477,7 @@ class MyStats(SearchList):                                                   # 1
         report_timing = */10 * * * *</pre>
 
         <p>
-            In the above case, the <span class="code">[[AReport]]</span> report would be run under under control of the
+            In this case, the <span class="code">[[AReport]]</span> report would be run under under control of the
             <span class="code">0 * * * *</span> setting (on the hour) under <span class="code">[StdReport]</span> and
             the <span class="code">[[AnotherReport]]</span> report would be run under control of the <span class="code">*/10 * * * *</span>
             setting (every 10 minutes) which has overriden the <span class="code">[StdReport]</span> setting.
@@ -4778,7 +4778,7 @@ class MyStats(SearchList):                                                   # 1
             <li>Create a new service</li>
         </ul>
         <p>
-            See the table <a href="#default_services">Default services</a> above for a list of the services that are
+            See the table <a href="#default_services">Default services</a> for a list of the services that are
             normally run.
         </p>
 
@@ -5042,7 +5042,7 @@ class MyAlarm(StdService):
         </p>
 
         <p>
-            In addition to the example above, the distribution also includes a low-battery alarm (<span class="code">lowBattery.py</span>),
+            In addition to this example, the distribution also includes a low-battery alarm (<span class="code">lowBattery.py</span>),
             which is similar, except that it intercepts LOOP events (instead of archiving events).
         </p>
 
@@ -5202,7 +5202,7 @@ class AddElectricity(StdService):
         <p>
             It is not unusual to have observation types that exist in the loop packets and/or archive records, but are
             not in the database schema. An example is the new observation type <span class="code">electricity</span>,
-            from the example above, <a href="#Adding_2nd_source"><em>Adding a second data source</em></a>. If a type is
+            from the example, <a href="#Adding_2nd_source"><em>Adding a second data source</em></a>. If a type is
             not in the database schema, then it will be a second class citizen in WeeWX's world: it cannot be used in a
             plot, nor for most statistics. So how would you add such a type to the database schema?
         </p>
@@ -5263,7 +5263,7 @@ schema_with_electricity = schemas.wview.schema + [('electricity', 'REAL')]</pre>
                         to add types that already exist in the archive records (an example would be <span class="code">humidex</span>),
                         but don't yet exist in the database schema.
                     </li>
-                    <li>If you've been following the example above, <a href="#Adding_2nd_source"><em>Adding a second
+                    <li>If you've been following the example, <a href="#Adding_2nd_source"><em>Adding a second
                         data source</em></a>, then you can just simply add the code to the bottom of the file you
                         already have, <span class="code">user/electricity.py</span>. This way, it will run before any
                         use of the new type. It has the added advantage that it keeps all "electricity" related
@@ -5565,7 +5565,7 @@ weewx.units.conversionDict['pound']  = {'newton': lambda x : x * 4.44822}
         <p>As with the previous example of <span class='code'>group_energy</span>, the last step is to extend the <span
             class='code'>
         weewx.units.obs_group_dict</span> dictionary so that these new units can be used by our service. We do this by
-            adding the Python code from steps 1 - 4 above into our new services file <span
+            adding the Python code from steps 1 - 4 into our new services file <span
                 class='code'>user/rocket.py</span>, at the head of that file and just after the last import statement
             (as in the previous example).
         </p>
@@ -5788,7 +5788,7 @@ weewx.units.conversionDict['pound']  = {'newton': lambda x : x * 4.44822}
         </h3>
 
         <p>
-            If you implement function <span class="code">genArchiveRecords()</span> above, then you should also
+            If you implement function <span class="code">genArchiveRecords()</span>, then you should also
             implement <span class='code'>archive_interval</span> as either an attribute, or as a <a
             href="https://docs.python.org/2/library/functions.html#property">property function</a>. It should return the
             archive interval in seconds.
