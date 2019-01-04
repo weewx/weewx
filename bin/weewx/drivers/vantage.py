@@ -2161,23 +2161,27 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
                     t_type = transmitter_list[t_id]["transmitter_type"]
                     if t_type in ['temp', 'temp_hum'] and \
                             extraTemp == transmitter_list[t_id]["temp"]:
-                        print("      Extra Temperature %d:          %+.1f F" % (extraTemp, calibration_dict["extraTemp%d" % extraTemp]), file=dest)
+                        print("      Extra Temperature %d:          %+.1f F"
+                              % (extraTemp, calibration_dict["extraTemp%d" % extraTemp]), file=dest)
             for extraHumid in range(1, 8):
                 for t_id in range(0, 8):
                     t_type = transmitter_list[t_id]["transmitter_type"]
                     if t_type in ['hum', 'temp_hum'] and \
                             extraHumid == transmitter_list[t_id]["hum"]:
-                        print("      Extra Humidity %d:             %+.1f F" % (extraHumid, calibration_dict["extraHumid%d" % extraHumid]), file=dest)
+                        print("      Extra Humidity %d:             %+.1f F"
+                              % (extraHumid, calibration_dict["extraHumid%d" % extraHumid]), file=dest)
             for t_id in range(0, 8):
                 t_type = transmitter_list[t_id]["transmitter_type"]
                 if t_type in ['soil', 'leaf_soil']:
                     for soil in range(1, 5):
-                        print("      Soil Temperature %d:           %+.1f F" % (soil, calibration_dict["soilTemp%d" % soil]), file=dest)
+                        print("      Soil Temperature %d:           %+.1f F"
+                              % (soil, calibration_dict["soilTemp%d" % soil]), file=dest)
             for t_id in range(0, 8):
                 t_type = transmitter_list[t_id]["transmitter_type"]
                 if t_type in ['leaf', 'leaf_soil']:
                     for leaf in range(1, 5):
-                        print("      Leaf Temperature %d:           %+.1f F" % (leaf, calibration_dict["leafTemp%d" % leaf]), file=dest)
+                        print("      Leaf Temperature %d:           %+.1f F"
+                              % (leaf, calibration_dict["leafTemp%d" % leaf]), file=dest)
         print("", file=dest)
 
     @staticmethod
@@ -2185,7 +2189,8 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
         """Set the console archive interval."""
     
         old_interval_minutes = station.archive_interval/60
-        print("Old archive interval is %d minutes, new one will be %d minutes." % (station.archive_interval/60, new_interval_minutes))
+        print("Old archive interval is %d minutes, new one will be %d minutes."
+              % (station.archive_interval/60, new_interval_minutes))
         if old_interval_minutes == new_interval_minutes:
             print("Old and new archive intervals are the same. Nothing done.")
         else:
@@ -2200,8 +2205,8 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
                 # cleared after changing the archive interval, but that
                 # doesn't seem to be the case. Clear it explicitly:
                 station.clearLog()
-                print("Archive records cleared.")
-            elif ans == 'n':
+                print("Archive records erased.")
+            else:
                 print("Nothing done.")
 
     @staticmethod
@@ -2214,7 +2219,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
         if ans == 'y':
             station.setLatitude(latitude_dg)
             print("Station latitude set to %.1f degree." % latitude_dg)
-        elif ans == 'n':
+        else:
             print("Nothing done.")
 
     @staticmethod
@@ -2222,12 +2227,12 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
         """Set the console station longitude"""
 
         ans = weeutil.weeutil.y_or_n("Proceeding will set the longitude value to %.1f degree.\n"
-                                     "Are you sure you wish to proceed (y/n)? "  % longitude_dg,
+                                     "Are you sure you wish to proceed (y/n)? " % longitude_dg,
                                      noprompt)
         if ans == 'y':
             station.setLongitude(longitude_dg)
             print("Station longitude set to %.1f degree." % longitude_dg)
-        elif ans == 'n':
+        else:
             print("Nothing done.")
 
     @staticmethod    
@@ -2247,7 +2252,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
                 _bardata = station.getBarData()
                 # Set previous _barcal value
                 station.setBarData(_bardata[0] + _barcal, altitude_ft)
-        elif ans == 'n':
+        else:
             print("Nothing done.")
 
     @staticmethod
@@ -2266,21 +2271,21 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
                                      noprompt)
         if ans == 'y':
             station.setBarData(barometer_inHg, _bardata[1])
-        elif ans == 'n':
+        else:
             print("Nothing done.")
 
     @staticmethod
     def clear_memory(station, noprompt):
         """Clear the archive memory of a VantagePro"""
     
-        ans = weeutil.weeutil.y_or_n("Proceeding will erase old archive records.\n"
+        ans = weeutil.weeutil.y_or_n("Proceeding will erase all archive records.\n"
                                      "Are you sure you wish to proceed (y/n)? ",
                                      noprompt)
         if ans == 'y':
-            print("Clearing the archive memory ...")
+            print("Erasing all archive records ...")
             station.clearLog()
-            print("Archive records cleared.")
-        elif ans == 'n':
+            print("Archive records erased.")
+        else:
             print("Nothing done.")
 
     @staticmethod
@@ -2288,16 +2293,15 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
         """Set the wind cup type on the console."""
 
         if station.hardware_type != 16:
-            print("""Unable to set new wind cup type. Reason:
-    **** Command only valid with Vantage Pro or Vantage Pro2 station.
-    """, file=sys.stderr)
+            print("Unable to set new wind cup type.")
+            print ("Reason: command only valid with Vantage Pro or Vantage Pro2 station.", file=sys.stderr)
             return
 
-        print("Old rain wind cup type is %d (%s), new one is %d (%s)." % (
-            station.wind_cup_type,
-            station.wind_cup_size,
-            new_wind_cup_type,
-            Vantage.wind_cup_dict[new_wind_cup_type]))
+        print("Old rain wind cup type is %d (%s), new one is %d (%s)."
+              % (station.wind_cup_type,
+                 station.wind_cup_size,
+                 new_wind_cup_type,
+                 Vantage.wind_cup_dict[new_wind_cup_type]))
 
         if station.wind_cup_type == new_wind_cup_type:
             print("Old and new wind cup types are the same. Nothing done.")
@@ -2308,18 +2312,18 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
             if ans == 'y':
                 station.setWindCupType(new_wind_cup_type)
                 print("Wind cup type set to %d (%s)." % (station.wind_cup_type, station.wind_cup_size))
-            elif ans == 'n':
+            else:
                 print("Nothing done.")
 
     @staticmethod
     def set_bucket(station, new_bucket_type, noprompt):
         """Set the bucket type on the console."""
 
-        print("Old rain bucket type is %d (%s), new one is %d (%s)." % (
-            station.rain_bucket_type,
-            station.rain_bucket_size,
-            new_bucket_type,
-            Vantage.rain_bucket_dict[new_bucket_type]))
+        print("Old rain bucket type is %d (%s), new one is %d (%s)."
+              % (station.rain_bucket_type,
+                 station.rain_bucket_size,
+                 new_bucket_type,
+                 Vantage.rain_bucket_dict[new_bucket_type]))
 
         if station.rain_bucket_type == new_bucket_type:
             print("Old and new bucket types are the same. Nothing done.")
@@ -2330,7 +2334,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
             if ans == 'y':
                 station.setBucketType(new_bucket_type)
                 print("Bucket type now set to %d." % (station.rain_bucket_type,))
-            elif ans == 'n':
+            else:
                 print("Nothing done.")
 
     @staticmethod
@@ -2347,7 +2351,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
             if ans == 'y':
                 station.setRainYearStart(rain_year_start)
                 print("Rain year start now set to %d." % (station.rain_year_start,))
-            elif ans == 'n':
+            else:
                 print("Nothing done.")
 
     @staticmethod
@@ -2374,7 +2378,9 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
                                              noprompt)
                 if ans == 'y':
                     station.setCalibrationWindDir(offset)
-                    print("Wind direction offset now set to %+d." % (offset))
+                    print("Wind direction offset now set to %+d." % offset)
+                else:
+                    print("Nothing done.")
         elif variable in temp_variables:
             offset = float(offset_str)
             if not -12.8 <= offset <= 12.7:
@@ -2387,6 +2393,8 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
                 if ans == 'y':
                     station.setCalibrationTemp(variable, offset)
                     print("Temperature offset %s now set to %+.1f." % (variable, offset))
+                else:
+                    print("Nothing done.")
         elif variable in humid_variables:
             offset = int(offset_str)
             if not 0 <= offset <= 100:
@@ -2399,6 +2407,8 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
                 if ans == 'y':
                     station.setCalibrationHumid(variable, offset)
                     print("Humidity offset %s now set to %+d." % (variable, offset))
+                else:
+                    print("Nothing done.")
         else:
             print("Unknown variable %s" % variable, file=sys.stderr)
 
@@ -2536,7 +2546,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
         if ans == 'y':
             station.setTempLogging(tempLogging)
             print("Console temperature logging set to '%s'." % (tempLogging.upper()))
-        elif ans == 'n':
+        else:
             print("Nothing done.")
 
     @staticmethod
@@ -2610,7 +2620,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
                         print("Records processed: %d; Timestamp: %s\r" % (nrecs, weeutil.weeutil.timestamp_to_string(record['dateTime'])), end=' ', file=sys.stdout)
                         sys.stdout.flush()
                 print("\nFinished dump. %d records added" % (nrecs,))
-        elif ans == 'n':
+        else:
             print("Nothing done.")
 
     @staticmethod
@@ -2715,23 +2725,27 @@ class VantageConfEditor(weewx.drivers.AbstractConfEditor):
             settings['host'] = self._prompt('host')
         return settings
 
-# define a main entry point for basic testing of the station without weewx
-# engine and service overhead.  invoke this as follows from the weewx root dir:
+# Define a main entry point for basic testing of the station without weewx
+# engine and service overhead.  Invoke this as follows from the weewx root directory:
 #
-# PYTHONPATH=bin python bin/weewx/drivers/vantage.py
+# PYTHONPATH=bin python -m weewx.drivers.vantage
+
 
 if __name__ == '__main__':
     import optparse
 
     usage = """Usage: python -m weewx.drivers.vantage --help
        python -m weewx.drivers.vantage --version
-       python -m weewx.drivers.vantage [--port]"""
+       python -m weewx.drivers.vantage [--port=PORT]"""
 
     syslog.openlog('vantage', syslog.LOG_PID | syslog.LOG_CONS)
     syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
     parser = optparse.OptionParser(usage=usage)
-    parser.add_option('--version', action='store_true', help='Display driver version')
-    parser.add_option('--port', default='/dev/ttyUSB0', help='Serial port to use. Default is "/dev/ttyUSB0"')
+    parser.add_option('--version', action='store_true',
+                      help='Display driver version')
+    parser.add_option('--port', default='/dev/ttyUSB0',
+                      help='Serial port to use. Default is "/dev/ttyUSB0"',
+                      metavar="PORT")
     (options, args) = parser.parse_args()
 
     if options.version:
