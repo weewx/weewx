@@ -2194,17 +2194,13 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
                                          "Are you sure you want to proceed (y/n)? ",
                                          noprompt)
             if ans == 'y':
-                try:
-                    station.setArchiveInterval(new_interval_minutes * 60)
-                except Exception as e:
-                    print("Unable to set new archive interval. Reason:\n\t****", e, file=sys.stderr)
-                else:
-                    print("Archive interval now set to %d seconds." % (station.archive_interval,))
-                    # The Davis documentation implies that the log is
-                    # cleared after changing the archive interval, but that
-                    # doesn't seem to be the case. Clear it explicitly:
-                    station.clearLog()
-                    print("Archive records cleared.")
+                station.setArchiveInterval(new_interval_minutes * 60)
+                print("Archive interval now set to %d seconds." % (station.archive_interval,))
+                # The Davis documentation implies that the log is
+                # cleared after changing the archive interval, but that
+                # doesn't seem to be the case. Clear it explicitly:
+                station.clearLog()
+                print("Archive records cleared.")
             elif ans == 'n':
                 print("Nothing done.")
 
@@ -2216,12 +2212,8 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
                                      "Are you sure you wish to proceed (y/n)? " % latitude_dg,
                                      noprompt)
         if ans == 'y':
-            try:
-                station.setLatitude(latitude_dg)
-            except Exception as e:
-                print("Unable to set new latitude. Reason:\n\t****", e, file=sys.stderr)
-            else:
-                print("Station latitude set to %.1f degree." % latitude_dg)
+            station.setLatitude(latitude_dg)
+            print("Station latitude set to %.1f degree." % latitude_dg)
         elif ans == 'n':
             print("Nothing done.")
 
@@ -2233,12 +2225,8 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
                                      "Are you sure you wish to proceed (y/n)? "  % longitude_dg,
                                      noprompt)
         if ans == 'y':
-            try:
-                station.setLongitude(longitude_dg)
-            except Exception as e:
-                print("Unable to set new longitude. Reason:\n\t****", e, file=sys.stderr)
-            else:
-                print("Station longitude set to %.1f degree." % longitude_dg)
+            station.setLongitude(longitude_dg)
+            print("Station longitude set to %.1f degree." % longitude_dg)
         elif ans == 'n':
             print("Nothing done.")
 
@@ -2318,12 +2306,8 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
                                          "Are you sure you want to proceed (y/n)? ",
                                          noprompt)
             if ans == 'y':
-                try:
-                    station.setWindCupType(new_wind_cup_type)
-                except Exception as e:
-                    print("Unable to set new wind cup type. Reason:\n\t****", e, file=sys.stderr)
-                else:
-                    print("Wind cup type set to %d (%s)." % (station.wind_cup_type, station.wind_cup_size))
+                station.setWindCupType(new_wind_cup_type)
+                print("Wind cup type set to %d (%s)." % (station.wind_cup_type, station.wind_cup_size))
             elif ans == 'n':
                 print("Nothing done.")
 
@@ -2344,12 +2328,8 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
                                          "Are you sure you want to proceed (y/n)? ",
                                          noprompt)
             if ans == 'y':
-                try:
-                    station.setBucketType(new_bucket_type)
-                except Exception as e:
-                    print("Unable to set new bucket type. Reason:\n\t****", e, file=sys.stderr)
-                else:
-                    print("Bucket type now set to %d." % (station.rain_bucket_type,))
+                station.setBucketType(new_bucket_type)
+                print("Bucket type now set to %d." % (station.rain_bucket_type,))
             elif ans == 'n':
                 print("Nothing done.")
 
@@ -2365,12 +2345,8 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
                                          "Are you sure you want to proceed (y/n)? ",
                                          noprompt)
             if ans == 'y':
-                try:
-                    station.setRainYearStart(rain_year_start)
-                except Exception as e:
-                    print("Unable to set new rain year start. Reason:\n\t****", e, file=sys.stderr)
-                else:
-                    print("Rain year start now set to %d." % (station.rain_year_start,))
+                station.setRainYearStart(rain_year_start)
+                print("Rain year start now set to %d." % (station.rain_year_start,))
             elif ans == 'n':
                 print("Nothing done.")
 
@@ -2397,12 +2373,8 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
                                              "Are you sure you want to proceed (y/n)? ",
                                              noprompt)
                 if ans == 'y':
-                    try:
-                        station.setCalibrationWindDir(offset)
-                    except Exception as e:
-                        print("Unable to set new wind offset. Reason:\n\t****", e, file=sys.stderr)
-                    else:
-                        print("Wind direction offset now set to %+d." % (offset))
+                    station.setCalibrationWindDir(offset)
+                    print("Wind direction offset now set to %+d." % (offset))
         elif variable in temp_variables:
             offset = float(offset_str)
             if not -12.8 <= offset <= 12.7:
@@ -2413,12 +2385,8 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
                                              "Are you sure you want to proceed (y/n)? ",
                                              noprompt)
                 if ans == 'y':
-                    try:
-                        station.setCalibrationTemp(variable, offset)
-                    except Exception as e:
-                        print("Unable to set new temperature offset. Reason:\n\t****", e, file=sys.stderr)
-                    else:
-                        print("Temperature offset %s now set to %+.1f." % (variable, offset))
+                    station.setCalibrationTemp(variable, offset)
+                    print("Temperature offset %s now set to %+.1f." % (variable, offset))
         elif variable in humid_variables:
             offset = int(offset_str)
             if not 0 <= offset <= 100:
@@ -2429,12 +2397,8 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
                                              "Are you sure you want to proceed (y/n)? ",
                                              noprompt)
                 if ans == 'y':
-                    try:
-                        station.setCalibrationHumid(variable, offset)
-                    except Exception as e:
-                        print("Unable to set new humidity offset. Reason:\n\t****", e, file=sys.stderr)
-                    else:
-                        print("Humidity offset %s now set to %+d." % (variable, offset))
+                    station.setCalibrationHumid(variable, offset)
+                    print("Humidity offset %s now set to %+d." % (variable, offset))
         else:
             print("Unknown variable %s" % variable, file=sys.stderr)
 
@@ -2503,17 +2467,13 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
         ans = weeutil.weeutil.y_or_n(msg + "Are you sure you want to proceed (y/n)? ",
                                      noprompt)
         if ans == 'y':
-            try:
-                station.setTransmitterType(channel, transmitter_type, extra_temp, extra_hum, repeater)
-            except Exception as e:
-                print("Unable to set transmitter type. Reason:\n\t****", e, file=sys.stderr)
-            else:
-                print("Transmitter type for channel %d set to %d (%s), repeater: %s, %s."
-                      % (channel,
-                         transmitter_type,
-                         transmitter_type_name,
-                         station.repeater_dict[repeater],
-                         station.listen_dict[usetx]))
+            station.setTransmitterType(channel, transmitter_type, extra_temp, extra_hum, repeater)
+            print("Transmitter type for channel %d set to %d (%s), repeater: %s, %s."
+                  % (channel,
+                     transmitter_type,
+                     transmitter_type_name,
+                     station.repeater_dict[repeater],
+                     station.listen_dict[usetx]))
         else:
             print("Nothing done.")
 
@@ -2558,15 +2518,11 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
         ans = weeutil.weeutil.y_or_n(msg + "Are you sure you want to proceed (y/n)? ",
                                      noprompt)
         if ans == 'y':
-            try:
-                station.setRetransmit(channel)
-            except Exception as e:
-                print("Unable to set retransmit. Reason:\n\t****", e, file=sys.stderr)
+            station.setRetransmit(channel)
+            if channel:
+                print("Retransmit set to 'ON' at channel: %d." % channel)
             else:
-                if channel != 0:
-                    print("Retransmit set to 'ON' at channel: %d." % channel)
-                else:
-                    print("Retransmit set to 'OFF'.")
+                print("Retransmit set to 'OFF'.")
         else:
             print("Nothing done.")
 
@@ -2578,12 +2534,8 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
         ans = weeutil.weeutil.y_or_n(msg + "Are you sure you want to proceed (y/n)? ",
                                      noprompt)
         if ans == 'y':
-            try:
-                station.setTempLogging(tempLogging)
-            except Exception as e:
-                print("Unable to set new console temperature logging. Reason:\n\t****", e, file=sys.stderr)
-            else:
-                print("Console temperature logging set to '%s'." % (tempLogging.upper()))
+            station.setTempLogging(tempLogging)
+            print("Console temperature logging set to '%s'." % (tempLogging.upper()))
         elif ans == 'n':
             print("Nothing done.")
 
@@ -2663,27 +2615,23 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
 
     @staticmethod
     def logger_summary(station, dest_path):
-        try:
-            dest = open(dest_path, mode="w")
-        except IOError as e:
-            print("Unable to open destination '%s' for write" % dest_path, file=sys.stderr)
-            print("Reason: %s" % e, file=sys.stderr)
-            return
 
-        VantageConfigurator.show_info(station, dest)
-    
-        print("Starting download of logger summary...")
-    
-        nrecs = 0
-        for (page, index, y, mo, d, h, mn, time_ts) in station.genLoggerSummary():
-            if time_ts:
-                print("%4d %4d %4d | %4d-%02d-%02d %02d:%02d | %s" % (nrecs, page, index, y + 2000, mo, d, h, mn, weeutil.weeutil.timestamp_to_string(time_ts)), file=dest)
-            else:
-                print("%4d %4d %4d [*** Unused index ***]" % (nrecs, page, index), file=dest)
-            nrecs += 1
-            if nrecs % 10 == 0:
-                print("Records processed: %d; Timestamp: %s\r" % (nrecs, weeutil.weeutil.timestamp_to_string(time_ts)), end=' ', file=sys.stdout)
-                sys.stdout.flush()
+        with open(dest_path, mode="w") as dest:
+
+            VantageConfigurator.show_info(station, dest)
+
+            print("Starting download of logger summary...")
+
+            nrecs = 0
+            for (page, index, y, mo, d, h, mn, time_ts) in station.genLoggerSummary():
+                if time_ts:
+                    print("%4d %4d %4d | %4d-%02d-%02d %02d:%02d | %s" % (nrecs, page, index, y + 2000, mo, d, h, mn, weeutil.weeutil.timestamp_to_string(time_ts)), file=dest)
+                else:
+                    print("%4d %4d %4d [*** Unused index ***]" % (nrecs, page, index), file=dest)
+                nrecs += 1
+                if nrecs % 10 == 0:
+                    print("Records processed: %d; Timestamp: %s\r" % (nrecs, weeutil.weeutil.timestamp_to_string(time_ts)), end=' ', file=sys.stdout)
+                    sys.stdout.flush()
         print("\nFinished download of logger summary to file '%s'. %d records processed." % (dest_path, nrecs))
 
 
