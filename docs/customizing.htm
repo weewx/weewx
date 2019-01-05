@@ -841,23 +841,33 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
             option, located in section <a href="#Labels_Generic"><span class="code">[Labels][[Generic]]</span></a>, from
             the default
         </p>
-        <pre class="tty">[Units]
+        <pre class="tty">[ObservationDefaults]
 
     ...
 
-    [[Generic]]
-        inTemp  = Inside Temperature
-        outTemp = Outside Temperature
-        ...</pre>
+    [[Labels]]
+
+        ...
+
+        [[[Generic]]]
+            ...
+            inTemp  = Inside Temperature
+            outTemp = Outside Temperature
+            ...</pre>
         <p>to:</p>
-        <pre class="tty">[Units]
+        <pre class="tty">[ObservationDefaults]
 
     ...
 
-    [[Generic]]
-        <span class="highlight">inTemp  = Barn Temperature</span>
-        outTemp = Outside Temperature
-        ...</pre>
+    [[Labels]]
+
+        ...
+
+        [[[Generic]]]
+            ...
+            inTemp  = Inside Temperature
+            <span class="highlight">outTemp = Barn Temperature</span>
+            ...</pre>
 
         <p>
             With this change, all observations of console temperature, such as in an HTML report, or a plot, will now be
