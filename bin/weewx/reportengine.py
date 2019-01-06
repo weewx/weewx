@@ -216,11 +216,11 @@ class StdReportEngine(threading.Thread):
     def _build_skin_dict(self, report):
         """Find and build the skin_dict for the given report"""
 
-        if 'ObservationDefaults' in self.config_dict:
-            # Start with the [ObservationDefaults] section in weewx.conf. Because we will be modifying it,
+        if 'Defaults' in self.config_dict:
+            # Start with the [Defaults] section in weewx.conf. Because we will be modifying it,
             # we need to make a deep copy. We can do this by applying the .dict() member function,
             # which returns a copy as a plain old dictionary, then converting that into a ConfigObj
-            skin_dict = configobj.ConfigObj(self.config_dict['ObservationDefaults'].dict())
+            skin_dict = configobj.ConfigObj(self.config_dict['Defaults'].dict())
         else:
             skin_dict = configobj.ConfigObj()
 
