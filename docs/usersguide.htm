@@ -2768,16 +2768,56 @@ longitude = -77.0366</pre>
         </table>
 
         <p>For reference, here is the standard set of services that are run with the default distribution.</p>
-        <pre class="tty">
-prep_services    = weewx.engine.StdTimeSynch
-process_services = weewx.engine.StdConvert, weewx.engine.StdCalibrate,\
-  weewx.engine.StdQC, weewx.wxservices.StdWXCalculate
-archive_services = weewx.engine.StdArchive
-restful_services = weewx.restx.StdStationRegistry, weewx.restx.StdWunderground,\
-  weewx.restx.StdPWSweather, weewx.restx.StdCWOP, weewx.restx.StdWOW,\
-  weewx.restx.StdAWEKAS
-report_services  = weewx.engine.StdPrint, weewx.engine.StdReport
-</pre>
+
+
+        <table id='service_lists' class="indent" style="width: 70%">
+            <tbody>
+            <tr class="first_row">
+                <td>Service list</td>
+                <td>Function</td>
+            </tr>
+            <tr>
+                <td class="code first_col">prep_services</td>
+                <td>weewx.engine.StdTimeSynch</td>
+            </tr>
+            <tr>
+                <td class="code first_col">data_services</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class="code first_col">process_services</td>
+                <td>
+                  weewx.engine.StdConvert<br/>
+                  weewx.engine.StdCalibrate<br/>
+                  weewx.engine.StdQC<br/>
+                  weewx.wxservices.StdWXCalculate
+                </td>
+            </tr>
+            <tr>
+                <td class="code first_col">archive_services</td>
+                <td>weewx.engine.StdArchive</td>
+            </tr>
+            <tr>
+                <td class="code first_col">restful_services</td>
+                <td>
+                  weewx.restx.StdStationRegistry<br/>
+                  weewx.restx.StdWunderground<br/>
+                  weewx.restx.StdPWSweather<br/>
+                  weewx.restx.StdCWOP<br/>
+                  weewx.restx.StdWOW<br/>
+                  weewx.restx.StdAWEKAS
+                </td>
+            </tr>
+            <tr>
+                <td class="code first_col">report_services</td>
+                <td>
+                  weewx.engine.StdPrint<br/>
+                  weewx.engine.StdReport
+                </td>
+            </tr>
+            </tbody>
+        </table>
+
         <p>If you're the type who likes to clean out your car trunk after every use it, then you may also be the type
             who wants to pare this down to the bare minimum. However, this will only make a slight difference in
             execution speed and memory use.
