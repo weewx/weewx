@@ -58,15 +58,16 @@ services to report_services.
 *******************************************************************************
 """
 
-import time
 import smtplib
-from email.mime.text import MIMEText
-import threading
+import socket
 import syslog
+import threading
+import time
+from email.mime.text import MIMEText
 
 import weewx
-from weewx.engine import StdService
 from weeutil.weeutil import timestamp_to_string, option_as_list
+from weewx.engine import StdService
 
 
 # Inherit from the base class StdService:
@@ -92,14 +93,15 @@ class MyAlarm(StdService):
             self.SUBJECT       = config_dict['Alarm'].get('subject', "Alarm message from weewx")
             self.FROM          = config_dict['Alarm'].get('from', 'alarm@example.com')
             self.TO            = option_as_list(config_dict['Alarm']['mailto'])
+            self.timeout       = int(config_dict['Alarm'].get('timeout', 20))
             syslog.syslog(syslog.LOG_INFO, "alarm: Alarm set for expression: '%s'" % self.expression)
             
             # If we got this far, it's ok to start intercepting events:
-            self.bind(weewx.NEW_ARCHIVE_RECORD, self.newArchiveRecord)    # NOTE 1
+            self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)    # NOTE 1
         except KeyError as e:
             syslog.syslog(syslog.LOG_INFO, "alarm: No alarm set.  Missing parameter: %s" % e)
             
-    def newArchiveRecord(self, event):
+    def new_archive_record(self, event):
         """Gets called on a new archive record event."""
         
         # To avoid a flood of nearly identical emails, this will do
@@ -117,21 +119,32 @@ class MyAlarm(StdService):
                 if eval(self.expression, None, record):                       # NOTE 3
                     # Sound the alarm!
                     # Launch in a separate thread so it doesn't block the main LOOP thread:
-                    t  = threading.Thread(target=MyAlarm.soundTheAlarm, args=(self, record))
+                    t = threading.Thread(target=MyAlarm.sound_the_alarm, args=(self, record))
                     t.start()
                     # Record when the message went out:
                     self.last_msg_ts = time.time()
             except NameError as e:
-                # The record was missing a named variable. Write a debug message, then keep going
+                # The record was missing a named variable. Log it.
                 syslog.syslog(syslog.LOG_DEBUG, "alarm: %s" % e)
 
-    def soundTheAlarm(self, rec):
-        """This function is called when the given expression evaluates True."""
-        
+    def sound_the_alarm(self, rec):
+        """Sound the alarm in a 'try' block"""
+
+        # Wrap the attempt in a 'try' block so we can log a failure.
+        try:
+            self.do_alarm(rec)
+        except Exception as e:
+            syslog.syslog(syslog.LOG_CRIT, "alarm: unable to sound alarm. Reason: %s" % e)
+            # Reraise the exception. This will cause the thread to exit.
+            raise
+
+    def do_alarm(self, rec):
+        """Send an email out"""
+
         # Get the time and convert to a string:
         t_str = timestamp_to_string(rec['dateTime'])
 
-        # Log it
+        # Log the alarm
         syslog.syslog(syslog.LOG_INFO, 'alarm: Alarm expression "%s" evaluated True at %s' % (self.expression, t_str))
 
         # Form the message text:
@@ -143,14 +156,15 @@ class MyAlarm(StdService):
         msg['Subject'] = self.SUBJECT
         msg['From']    = self.FROM
         msg['To']      = ','.join(self.TO)
-        
+
         try:
             # First try end-to-end encryption
-            s = smtplib.SMTP_SSL(self.smtp_host)
+            s = smtplib.SMTP_SSL(self.smtp_host, timeout=self.timeout)
             syslog.syslog(syslog.LOG_DEBUG, "alarm: using SMTP_SSL")
-        except AttributeError:
+        except (AttributeError, socket.timeout):
+            syslog.syslog(syslog.LOG_DEBUG, "alarm: unable to use SMTP_SSL connection.")
             # If that doesn't work, try creating an insecure host, then upgrading
-            s = smtplib.SMTP(self.smtp_host)
+            s = smtplib.SMTP(self.smtp_host, timeout=self.timeout)
             try:
                 # Be prepared to catch an exception if the server
                 # does not support encrypted transport.
@@ -167,14 +181,14 @@ class MyAlarm(StdService):
             # If a username has been given, assume that login is required for this host:
             if self.smtp_user:
                 s.login(self.smtp_user, self.smtp_password)
-                syslog.syslog(syslog.LOG_DEBUG, "alarm: logged in with user name %s" % (self.smtp_user,))
+                syslog.syslog(syslog.LOG_DEBUG, "alarm: logged in with user name %s" % self.smtp_user)
             
             # Send the email:
             s.sendmail(msg['From'], self.TO,  msg.as_string())
             # Log out of the server:
             s.quit()
         except Exception as e:
-            syslog.syslog(syslog.LOG_ERR, "alarm: SMTP mailer refused message with error %s" % (e,))
+            syslog.syslog(syslog.LOG_ERR, "alarm: SMTP mailer refused message with error %s" % e)
             raise
         
         # Log sending the email:
@@ -224,4 +238,4 @@ if __name__ == '__main__':
            'dateTime'  : int(time.time())}
 
     event = weewx.Event(weewx.NEW_ARCHIVE_RECORD, record=rec)
-    alarm.newArchiveRecord(event)
+    alarm.new_archive_record(event)
