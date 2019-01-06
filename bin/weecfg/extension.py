@@ -186,9 +186,6 @@ class ExtensionEngine(object):
             save_config |= self._inject_config(installer['config'],
                                                extension_name)
 
-        # If this is an incoming skin, patch it to V3.9
-        self._patch_skins(installer['config'])
-
         # Go through all the possible service groups and see if the extension
         # includes any services that belong in any of them.
         self.logger.log("Adding services to service lists", level=2)
@@ -289,12 +286,6 @@ class ExtensionEngine(object):
         self.logger.log("Merged extension settings into configuration file",
                         level=3)        
         return save_config
-
-    def _patch_skins(self, extension_config):
-
-        if 'StdReport' in extension_config:
-            for report in extension_config['StdReport']:
-                weecfg.patch_skin(self.config_dict, report, logger=self.logger)
 
     def _reorder(self, cfg):
         """Reorder the resultant config_dict"""
