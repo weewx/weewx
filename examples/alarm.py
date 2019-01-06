@@ -1,4 +1,4 @@
-#    Copyright (c) 2009-2015 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2019 Tom Keffer <tkeffer@gmail.com>
 #    See the file LICENSE.txt for your rights.
 
 """Example of how to implement an alarm in weewx. 
@@ -68,6 +68,7 @@ import weewx
 from weewx.engine import StdService
 from weeutil.weeutil import timestamp_to_string, option_as_list
 
+
 # Inherit from the base class StdService:
 class MyAlarm(StdService):
     """Service that sends email if an arbitrary expression evaluates true"""
@@ -104,7 +105,7 @@ class MyAlarm(StdService):
         # To avoid a flood of nearly identical emails, this will do
         # the check only if we have never sent an email, or if we haven't
         # sent one in the last self.time_wait seconds:
-        if not self.last_msg_ts or abs(time.time() - self.last_msg_ts) >= self.time_wait :
+        if not self.last_msg_ts or abs(time.time() - self.last_msg_ts) >= self.time_wait:
             # Get the new archive record:
             record = event.record
             
@@ -116,7 +117,7 @@ class MyAlarm(StdService):
                 if eval(self.expression, None, record):                       # NOTE 3
                     # Sound the alarm!
                     # Launch in a separate thread so it doesn't block the main LOOP thread:
-                    t  = threading.Thread(target = MyAlarm.soundTheAlarm, args=(self, record))
+                    t  = threading.Thread(target=MyAlarm.soundTheAlarm, args=(self, record))
                     t.start()
                     # Record when the message went out:
                     self.last_msg_ts = time.time()
@@ -131,10 +132,10 @@ class MyAlarm(StdService):
         t_str = timestamp_to_string(rec['dateTime'])
 
         # Log it
-        syslog.syslog(syslog.LOG_INFO, "alarm: Alarm expression \"%s\" evaluated True at %s" % (self.expression, t_str))
+        syslog.syslog(syslog.LOG_INFO, 'alarm: Alarm expression "%s" evaluated True at %s' % (self.expression, t_str))
 
         # Form the message text:
-        msg_text = "Alarm expression \"%s\" evaluated True at %s\nRecord:\n%s" % (self.expression, t_str, str(rec))
+        msg_text = 'Alarm expression "%s" evaluated True at %s\nRecord:\n%s' % (self.expression, t_str, str(rec))
         # Convert to MIME:
         msg = MIMEText(msg_text)
         
@@ -145,7 +146,7 @@ class MyAlarm(StdService):
         
         try:
             # First try end-to-end encryption
-            s=smtplib.SMTP_SSL(self.smtp_host)
+            s = smtplib.SMTP_SSL(self.smtp_host)
             syslog.syslog(syslog.LOG_DEBUG, "alarm: using SMTP_SSL")
         except AttributeError:
             # If that doesn't work, try creating an insecure host, then upgrading
@@ -186,7 +187,7 @@ if __name__ == '__main__':
     import configobj
     from optparse import OptionParser
 
-    usage_string ="""Usage: 
+    usage_string = """Usage: 
     
     alarm.py config_path 
     
@@ -205,7 +206,7 @@ if __name__ == '__main__':
     
     weewx.debug = 1
     
-    try :
+    try:
         config_dict = configobj.ConfigObj(config_path, file_error=True)
     except IOError:
         print "Unable to open configuration file ", config_path
