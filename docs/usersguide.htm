@@ -1022,28 +1022,18 @@ sudo /etc/init.d/weewx start</pre>
         </p>
         <pre class="tty">
 log_success = false
-
 ...
-
 [StdRESTful]
-
     log_success = true
-
     ...
-
     [[Wunderground]]
         log_success = false     # Wunderground will not be logged
-
         ...
-
     [[WOW]]
         log_success = true      # WOW will be logged
-
         ...
-
     [[CWOP]]
                                 # CWOP will be logged (inherits from [StdRESTful])
-
         ...
 </pre>
 
@@ -2048,29 +2038,28 @@ longitude = -77.0366</pre>
             </tr>
             <tr>
                 <td><span class="code">[[SeasonsReport]]</span></td>
-                <td>A full-featured single-page skin. Statistics and plots are revealed by button presses.</td>
+                <td>A full-featured single-page skin. Statistics and plots are revealed by touch or button press.</td>
             </tr>
             <tr>
                 <td><span class="code">[[SmartphoneReport]]</span></td>
-                <td>A skin formatted for smaller screens.</td>
+                <td>A skin formatted for smaller screens, with a look-and-feel reminiscent of first-generation Apple iPhone.</td>
             </tr>
             <tr>
                 <td><span class="code">[[MobileReport]]</span></td>
-                <td>A static skin formatted for very small screens.</td>
+                <td>A static skin formatted for very small screens, with a look-and-feel reminiscent of WindowsCE or PalmOS.</td>
             </tr>
             <tr>
                 <td><span class="code">[[StandardReport]]</span></td>
-                <td>An older skin that shipped with WeeWX for many years. Requires little resources to generate and
-                    display.
+                <td>The original skin that shipped for many years as the default report. It uses static HTML and images, and requires few resources to generate and display.
                 </td>
             </tr>
             <tr>
                 <td><span class="code">[[FTP]]</span></td>
-                <td>Not a skin, but uses the reporting machinery to FTP results to a remote webserver.</td>
+                <td>No presentation elements.  Uses the reporting machinery to transfer files to a remote server using FTP.</td>
             </tr>
             <tr>
                 <td><span class="code">[[RSYNC]]</span></td>
-                <td>Not a skin, but uses the reporting machinery to Rsync results to a remote webserver.</td>
+                <td>No presentation elements.  Uses the reporting machinery to transfer files to a remote server using rsync.</td>
             </tr>
 
         </table>
