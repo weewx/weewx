@@ -3844,11 +3844,51 @@ class MyStats(SearchList):                                                   # 1
             LOOP packet arriving.
         </p>
 
-        <p>To customize, you can</p>
-        <ul>
-            <li>Modify an existing service</li>
-            <li>Create a new service</li>
-        </ul>
+        <p>
+          The services are specified in lists in the <span class="code">[Engine][[Services]]</span> stanza of the configuration file.  The <span class="code">[[Services]]</span> section lists all the services to be run, broken up into different <em>service lists</em>. Here's a description of them:
+        </p>
+
+
+        <table id='service_lists' class="indent" style="width: 70%">
+            <tbody>
+            <tr class="first_row">
+                <td>Service list</td>
+                <td>Function</td>
+            </tr>
+            <tr>
+                <td class="code first_col">prep_services</td>
+                <td>Perform any actions before the main loop is run.</td>
+            </tr>
+            <tr>
+                <td class="code first_col">data_services</td>
+                <td>Augment data, before it is processed.</td>
+            </tr>
+            <tr>
+                <td class="code first_col">process_services</td>
+                <td>Process, filter, and massage the data.</td>
+            </tr>
+            <tr>
+                <td class="code first_col">archive_services</td>
+                <td>Record the data in a database.</td>
+            </tr>
+            <tr>
+                <td class="code first_col">restful_services</td>
+                <td>Upload processed data to an external RESTful service.
+                </td>
+            </tr>
+            <tr>
+                <td class="code first_col">report_services</td>
+                <td>Run any reports.</td>
+            </tr>
+            </tbody>
+        </table>
+
+        <p>
+            These lists are designed to orchestrate the data as it flows through the WeeWX engine. For example, you want
+            to make sure data has been processed by, for example, running it through the quality control service, <span
+            class="code">StdQC</span>, before putting them in the database. Similarly, the reporting system must come
+            <em>after</em> the archiving service. These groups insure that things happen in the proper sequence.
+        </p>
         <p>
             See the table <a href="#default_services">Default services</a> for a list of the services that are
             normally run.
@@ -4155,8 +4195,7 @@ class MyAlarm(StdService):
             <li>Run two instances of WeeWX, each using its own database and <span class='code'>weewx.conf</span>
                 configuration file. The results are then combined in a final report, using WeeWX's ability <a
                     href="#Using_multiple_bindings">to use more than one database</a>. See the Wiki entry <a
-                    href="https://github.com/weewx/weewx/wiki/weewx-multi"> <em>How to run multiple instances of
-                    WeeWX</em></a> for details on how to do this.
+                    href="https://github.com/weewx/weewx/wiki/weewx-multi"> <em>How to run multiple instances of WeeWX</em></a> for details on how to do this.
             </li>
             <li>Run one instance, but use a custom WeeWX service to augment the records coming from your weather station
                 with data from the other device.
@@ -4220,53 +4259,8 @@ class AddElectricity(StdService):
 
         <p>
             To make sure your service gets run, you need to add it to one of the service lists in <span class="code">weewx.conf</span>,
-            section <span class="code">[Engine]</span>, subsection <span class="code">[[Services]]</span>. This
-            subsection lists all the services to be run, broken up into different <em>service lists</em>. Here's a
-            description of them:
+            section <span class="code">[Engine]</span>, subsection <span class="code">[[Services]]</span>.
         </p>
-
-
-        <table id='service_lists' class="indent" style="width: 70%">
-            <tbody>
-            <tr class="first_row">
-                <td>Service list</td>
-                <td>Function</td>
-            </tr>
-            <tr>
-                <td class="code first_col">prep_services</td>
-                <td>Perform any actions before the main loop is run.</td>
-            </tr>
-            <tr>
-                <td class="code first_col">data_services</td>
-                <td>Augment data, before it is processed.</td>
-            </tr>
-            <tr>
-                <td class="code first_col">process_services</td>
-                <td>Process, filter, and massage the data.</td>
-            </tr>
-            <tr>
-                <td class="code first_col">archive_services</td>
-                <td>Record the data in a database.</td>
-            </tr>
-            <tr>
-                <td class="code first_col">restful_services</td>
-                <td>Upload processed data to an external RESTful service.
-                </td>
-            </tr>
-            <tr>
-                <td class="code first_col">report_services</td>
-                <td>Run any reports.</td>
-            </tr>
-            </tbody>
-        </table>
-
-        <p>
-            These lists are designed to orchestrate the data as it flows through the WeeWX engine. For example, you want
-            to make sure data has been processed by, for example, running it through the quality control service, <span
-            class="code">StdQC</span>, before putting them in the database. Similarly, the reporting system must come
-            <em>after</em> the archiving service. These groups insure that things happen in the proper sequence.
-        </p>
-
 
         <p>
             In our case, the obvious place for our new service is in <span class="code">data_services</span>. When
