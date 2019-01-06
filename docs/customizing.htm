@@ -712,19 +712,23 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
                 <td>Affects only the report <span class="symcode">report_name</span>.</td>
             </tr>
             <tr>
-                <td class="code">skin.conf</td>
+                <td class="code">skins/<span class="symcode">report_name</span>/skin.conf</td>
                 <td></td>
-                <td>Affects every report that uses <span class="symcode">skin.conf</span></td>
+                <td>Affects only the report <span class="symcode">report_name</span>.</td>
             </tr>
         </table>
 
         <p>
-          So a configuration where <span class="code">skins/report/skin.conf</span> contains this:
+            Let's take the skin <em>Seasons</em> that comes with WeeWX as an example. Its configuration file is at <span
+            class="code">skins/Seasons/skin.conf</span>. If it contains this excerpt:
         </p>
 
         <pre class="tty">
+...
 [Labels]]
+...
     [[Generic]]
+        ...
         outTemp = Outside Temperature
 </pre>
 
@@ -733,23 +737,23 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
         </p>
 
         <pre class="tty">
+[StdReport]
+    [[SeasonsA]]
+        skin = Seasons
+        [[[Labels]]]
+            [[[[Generic]]]]
+                outTemp = Barn Temperature
+    [[SeasonsB]]
+        skin = Seasons
+
 [Defaults]
     [[Labels]]
         [[[Generic]]]
             outTemp = Shed Temperature
-
-[StdReport]
-    [[ReportA]]
-        skin = report
-        [[[Labels]]]
-            [[[[Generic]]]]
-                outTemp = Barn Temperature
-    [[ReportB]]
-        skin = report
 </pre>
 
         <p>
-            will result in reports with the following values:
+            then this will result in reports with the following values:
         </p>
 
         <table class="indent" style="width: 80%">
@@ -758,18 +762,14 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
                 <td>Label for <span class="code">outTemp</span></td>
             </tr>
             <tr>
-                <td>ReportA</td>
+                <td>SeasonsA</td>
                 <td>Barn Temperature</td>
             </tr>
             <tr>
-                <td>ReportB</td>
+                <td>SeasonsB</td>
                 <td>Shed Temperature</td>
             </tr>
         </table>
-
-        <p>
-            Options in sections <span class="code">[CheetahGenerator]</span> and <span class="code">[ImageGenerator]</span> work the same way. They normally reside in <span class="code">skin.conf</span>, but they can also be specified in <span class="code">weewx.conf</span>.
-        </p>
 
         <h2 id="how_to_change_units">How to change units</h2>
 
