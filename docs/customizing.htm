@@ -448,7 +448,7 @@ Version: 3.9
 
         <p>
             Each template file lives in the skin directory of the skin that uses it. By convention, a template file ends
-            with the <span class="code">.tmpl</span> extension.
+            with the <span class="code">.tmpl</span> extension.  There are also template files that end with the <span class="code">.inc</span> extension.  These templates are included in other templates.
         </p>
 
         <h2>The database</h2>
@@ -853,7 +853,7 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
         <p>
             Suppose you want two reports, one in Metric,
             the other in US Customary. The Metric report will go in the regular directory <span class="symcode">HTML_ROOT</span>,
-            but the latter in a subdirectory, <span class="code">HTML_ROOT/metric</span>.
+            but the latter in a subdirectory, <span class="code">HTML_ROOT/us</span>.
             To accomplish this, the <span class="code">[Defaults]</span> section in <span class="code">weewx.conf</span>
             remains untouched, but the <span class="code">[StdReport]</span> section would read:
         </p>
