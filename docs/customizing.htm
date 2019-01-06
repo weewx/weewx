@@ -952,10 +952,8 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
         </p>
 
         <p class="note" style="display: inline-block; width: 70%">
-            <strong>Note</strong><br/>Whilst the <span class="code">report_timing</span> option allows the user to
-            specify when a given report is generated, it should be noted that the generation of reports is still
-            controlled by the WeeWX report cycle and as such the <span class="code">report_timing</span> option does not
-            allow reports to be generated more frequently than once every archive period.
+            <strong>Note</strong><br/>Whilst <span class="code">report_timing</span> specifies when a given report should be generated, the generation of reports is still
+            controlled by the WeeWX report cycle, so reports can never be generated more frequently than once every archive period.
         </p>
 
         <h3>
