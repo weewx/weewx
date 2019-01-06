@@ -682,7 +682,7 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
         <p>
             The "<a href="#Observation_defaults">Observation defaults</a>", explained in the next section, are in <span
             class="code">weewx.conf</span>, in their own high-level section <span
-            class="code">[Defaults]</span> and, therefore, near the root of the hierarchy. This places them
+            class="code">[ObservationDefaults]</span> and, therefore, near the root of the hierarchy. This places them
             at the lowest priority &mdash; they are expressed only if not overridden under <span class="code">[StdReport]</span>
             or in <span class="code">skin.conf</span>.
         </p>
@@ -726,7 +726,7 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
                 <td>Scope</td>
             </tr>
             <tr>
-                <td class="code"><a href="#change_defaults">[Defaults]</a></td>
+                <td class="code"><a href="#change_defaults">[ObservationDefaults]</a></td>
                 <td>System wide. Affects <em>all</em> reports.</td>
             </tr>
             <tr>
@@ -742,22 +742,22 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
         </p>
 
         <h3 id="change_defaults">
-            Changing an option in <span class="code">[Defaults]</span>
+            Changing an option in <span class="code">[ObservationDefaults]</span>
         </h3>
         <p>
-            With this approach, you change an option under the <span class="code">[Defaults]</span> section
+            With this approach, you change an option under the <span class="code">[ObservationDefaults]</span> section
             in <span class="code">weewx.conf.</span> Changes here will affect <em>all</em> reports.
         </p>
 
         <p>
             For example, suppose you wish to use metric units for all your reports, instead of the default US Customary
-            Units. The section under <span class="code">[Defaults]</span> that controls units is <span
+            Units. The section under <span class="code">[ObservationDefaults]</span> that controls units is <span
             class="code">[[Units]][[[Groups]]]</span>. It looks like this:
         </p>
         <pre class="tty">
 #   Default values for reports
 
-[Defaults]
+[ObservationDefaults]
 
     # The following section is for managing the selection and formatting of units.
     [[Units]]
@@ -796,7 +796,7 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
         <pre class="tty">
 #   Default values for reports
 
-[Defaults]
+[ObservationDefaults]
 
     # The following section is for managing the selection and formatting of units.
     [[Units]]
@@ -841,7 +841,7 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
             option, located in section <a href="#Labels_Generic"><span class="code">[Labels][[Generic]]</span></a>, from
             the default
         </p>
-        <pre class="tty">[Defaults]
+        <pre class="tty">[ObservationDefaults]
 
     ...
 
@@ -855,7 +855,7 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
             outTemp = Outside Temperature
             ...</pre>
         <p>to:</p>
-        <pre class="tty">[Defaults]
+        <pre class="tty">[ObservationDefaults]
 
     ...
 
@@ -872,7 +872,7 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
         <p>
             With this change, all observations of console temperature, such as in an HTML report, or a plot, will now be
             labeled <em>"Barn Temperature</em>." Because this is under the <span
-            class="code">[Defaults]</span> section, this change will apply to <em>all</em> reports.
+            class="code">[ObservationDefaults]</span> section, this change will apply to <em>all</em> reports.
         </p>
 
         <h3 id="overriding_from_weewx_conf">
@@ -887,7 +887,7 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
             Suppose you want two reports, one in Metric,
             the other in US Customary. The Metric report will go in the regular directory <span class="symcode">HTML_ROOT</span>,
             but the latter in a subdirectory, <span class="code"><span class="symcode">HTML_ROOT</span>/metric</span>.
-            To accomplish this, the <span class="code">[Defaults]</span> section in <span class="code">weewx.conf</span>
+            To accomplish this, the <span class="code">[ObservationDefaults]</span> section in <span class="code">weewx.conf</span>
             remains untouched, but the <span class="code">[StdReport]</span> section would read:
         </p>
         <pre class="tty">
@@ -934,7 +934,7 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
         </p>
 
         <p>
-            The reason this works is that section <span class="code">[Defaults]</span> is at the "root" of
+            The reason this works is that section <span class="code">[ObservationDefaults]</span> is at the "root" of
             the option tree, while an option under <span class="code">[StdReport]</span> is one step closer to the
             leaves, so the latter has a higher priority. If an option was specified in the configuration file <span
             class="code">skin.conf</span>, it would be even farther out the tree and would have the final say. Indeed,
@@ -944,7 +944,7 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
 
         <h2 id="Reference_guide_to_Observation_defaults">Reference guide to Observation defaults</h2>
 
-        <p>This section is a reference to all the Observation defaults, normally found in <span class="code">[Defaults]</span>
+        <p>This section is a reference to all the Observation defaults, normally found in <span class="code">[ObservationDefaults]</span>
             in <span class="code">weewx.conf</span></p>
 
         <h3 class="config_section">[Units]</h3>
@@ -4256,7 +4256,7 @@ class MyStats(SearchList):                                                   # 1
 
         <p>
             Next, you will need to go through the <a href="#Observation_defaults">Observation defaults</a> in the
-            section <span class="code">[Defaults]</span> in <span class="code">weewx.conf</span>, translating
+            section <span class="code">[ObservationDefaults]</span> in <span class="code">weewx.conf</span>, translating
             labels and modifying formats to follow local conventions.
         </p>
 
@@ -4264,7 +4264,7 @@ class MyStats(SearchList):                                                   # 1
             In particular, you will probably need to change the following sections:
         </p>
         <pre class="tty">
-[Defaults]
+[ObservationDefaults]
 
     # The following section is for managing the selection and formatting of units.
     [[Units]]

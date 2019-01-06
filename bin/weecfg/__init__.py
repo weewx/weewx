@@ -286,20 +286,20 @@ def modify_config(config_dict, stn_info, logger, debug=False):
                 config_dict['Station'][p] = stn_info[p]
         # Update units display with any stn_info overrides
         if stn_info.get('units') is not None:
-            if 'Defaults' not in config_dict:
-                config_dict['Defaults'] = {}
-            if 'Units' not in config_dict['Defaults']:
-                config_dict['Defaults']['Units'] = {}
-            if 'Groups' not in config_dict['Defaults']['Units']:
-                config_dict['Defaults']['Units']['Groups'] = {}
+            if 'ObservationDefaults' not in config_dict:
+                config_dict['ObservationDefaults'] = {}
+            if 'Units' not in config_dict['ObservationDefaults']:
+                config_dict['ObservationDefaults']['Units'] = {}
+            if 'Groups' not in config_dict['ObservationDefaults']['Units']:
+                config_dict['ObservationDefaults']['Units']['Groups'] = {}
             if stn_info.get('units') in ['metric', 'metricwx']:
                 if debug:
                     logger.log("Using Metric units for display", level=2)
-                config_dict['Defaults']['Units']['Groups'].update(metricwx_group)
+                config_dict['ObservationDefaults']['Units']['Groups'].update(metricwx_group)
             elif stn_info.get('units') == 'us':
                 if debug:
                     logger.log("Using US units for display", level=2)
-                config_dict['Defaults']['Units']['Groups'].update(us_group)
+                config_dict['ObservationDefaults']['Units']['Groups'].update(us_group)
 
 
 # ==============================================================================
@@ -992,7 +992,7 @@ def update_to_v39(config_dict):
 
     - New top-level options log_success and log_failure
     - New subsections [[SeasonsReport]], [[SmartphoneReport]], and [[MobileReport]]
-    - New section [Defaults]
+    - New section [ObservationDefaults]
     """
 
     major, minor = get_version_info(config_dict)
@@ -1071,8 +1071,8 @@ def update_to_v39(config_dict):
     # Put the comment back in
     config_dict.comments['StdReport'] = std_report_comment
 
-    if 'Defaults' not in config_dict:
-        defaults_dict = configobj.ConfigObj(StringIO("""[Defaults]
+    if 'ObservationDefaults' not in config_dict:
+        defaults_dict = configobj.ConfigObj(StringIO("""[ObservationDefaults]
 
     # The following section is for managing the selection and formatting of units.
     [[Units]]
@@ -1261,10 +1261,10 @@ def update_to_v39(config_dict):
 """))
 
         weeutil.config.merge_config(config_dict, defaults_dict)
-        # Put the comment for the [Defaults] section back in, which the merge process always seems to strip:
-        config_dict.comments['Defaults'] = major_comment_block + ['#   Various default values used by observations', '']
-        # Move the [Defaults] section to just before the [Engine] section
-        reorder_sections(config_dict, 'Defaults', 'Engine')
+        # Put the comment for the [ObservationDefaults] section back in, which the merge process always seems to strip:
+        config_dict.comments['ObservationDefaults'] = major_comment_block + ['#   Various default values used by observations', '']
+        # Move the [ObservationDefaults] section to just before the [Engine] section
+        reorder_sections(config_dict, 'ObservationDefaults', 'Engine')
 
     config_dict['version'] = '3.9.0'
 
@@ -1321,11 +1321,11 @@ def patch_skin_dict(config_dict, skin_dict, report, logger):
         if section in skin_dict:
             n_commented += fix_overrides(config_dict['StdReport'][report][section], skin_dict[section])
 
-    # For each section under [Defaults], delete any scalar in skin.conf
-    # that has the same value as in [Defaults].
-    for section in config_dict['Defaults'].sections:
+    # For each section under [ObservationDefaults], delete any scalar in skin.conf
+    # that has the same value as in [ObservationDefaults].
+    for section in config_dict['ObservationDefaults'].sections:
         if section in skin_dict:
-            n_commented += fix_defaults(config_dict['Defaults'][section], skin_dict[section])
+            n_commented += fix_defaults(config_dict['ObservationDefaults'][section], skin_dict[section])
 
     logger.log("For report '%s', %d lines were commented out" % (report, n_commented), level=2)
 
@@ -1355,7 +1355,7 @@ def fix_overrides(section_dict, skin_dict_section):
 
 def fix_defaults(defaults_dict, skin_dict_section):
     """Delete any values in the skin.conf that are the same as their corresponding value
-    in [Defaults]"""
+    in [ObservationDefaults]"""
     n_commented = 0
     for section in defaults_dict.sections:
         if section in skin_dict_section:
@@ -1406,8 +1406,8 @@ def get_station_info(config_dict):
             # Try to figure out what unit system the user is using. Assume we can't.
             stn_info['units'] = None
             try:
-                # First look for a [Defaults] section.
-                stn_info['units'] = get_unit_info(config_dict['Defaults'])
+                # First look for a [ObservationDefaults] section.
+                stn_info['units'] = get_unit_info(config_dict['ObservationDefaults'])
             except KeyError:
                 pass
             # If that didn't work, look for an override in the [[StandardReport]] section.

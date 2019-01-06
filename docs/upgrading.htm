@@ -206,8 +206,8 @@ sudo apt-get install weewx</pre>
 
         <h3>Skin defaults</h3>
         <p class="note">
-          A new <span class="code">[Defaults]</span> section has been introduced to <span class="code">weewx.conf</span>.
-                To change the unit system, and many other things used by your skins, just change <span class="code">[Defaults].</span>
+          A new <span class="code">[ObservationDefaults]</span> section has been introduced to <span class="code">weewx.conf</span>.
+                To change the unit system, and many other things used by your skins, just change <span class="code">[ObservationDefaults].</span>
         </p>
         <p>With version 3.9, the way defaults propogate through skins has changed. Before this version, a value
             specified in a skin's configuration file <span class="code">skin.conf</span> could be "overridden" by a
@@ -226,7 +226,7 @@ sudo apt-get install weewx</pre>
             </li>
         </ul>
 
-        <p>Version 3.9 introduces a <span class="code">[Defaults]</span> section that applies to <em>all</em>
+        <p>Version 3.9 introduces a <span class="code">[ObservationDefaults]</span> section that applies to <em>all</em>
             skins, unless overridden for individual reports in <span class="code">weewx.conf</span>, or by the report's
             <span class="code">skin.conf</span>. This means that <span class="code">skin.conf</span> has the final say
             in what value to use.
@@ -239,15 +239,15 @@ sudo apt-get install weewx</pre>
             class="code">skin.conf</span> to bring them up-to-date. It primarily does four things:
         </p>
         <ol>
-            <li>Add a <span class="code">[Defaults]</span> section to <span class="code">weewx.conf</span>
+            <li>Add a <span class="code">[ObservationDefaults]</span> section to <span class="code">weewx.conf</span>
             </li>
             <li>For each scalar override in <span class="code">[StdReport]</span>, it will comment out or delete the
                 corresponding scalar in <span class="code">skin.conf</span>. This allows the <span class="code">[StdReport]</span>
                 override to continue to have an affect.
             </li>
             <li>For each scalar left over in <span class="code">skin.conf</span>, if its value is the same as in <span
-                class="code">[Defaults]</span>, it will comment out or delete the scalar from <span
-                class="code">skin.conf</span>. This means that changing a value in <span class="code">[Defaults]</span>
+                class="code">[ObservationDefaults]</span>, it will comment out or delete the scalar from <span
+                class="code">skin.conf</span>. This means that changing a value in <span class="code">[ObservationDefaults]</span>
                 will have an affect.
             </li>
             <li>As a final step, it adds a scalar, <span class="code">skin_semantics</span>, to <span class="code">skin.conf</span>
@@ -302,7 +302,7 @@ sudo apt-get install weewx</pre>
                 group_degree_day = degree_C_day
                 group_speed = meter_per_second
 </pre>
-                <pre class="tty added"><span class="">[Defaults]
+                <pre class="tty added"><span class="">[ObservationDefaults]
     [[Units]]
         [[[Groups]]]
             group_altitude = foot
