@@ -683,7 +683,7 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
 
         <p class="note">
             For a complete listing of the report options,
-            see the section <a href="#skin_conf_options"><em>Reference: <span class="code">skin.conf</span> options</em></a>.
+            see the section <a href="#report_options"><em>Reference: report options</em></a>.
         </p>
 
         <h2 id="How_options_work">How options work</h2>
@@ -1340,7 +1340,7 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
 
         <p class="note">
             This section gives an overview of the Cheetah generator. For details about each of its various options,
-            see the section <a href="#CheetahGenerator"><em>[CheetahGenerator]</em></a> in the <a href="#skin_conf_options"><em>Reference: <span class="code">skin.conf</span> options</em></a>.
+            see the section <a href="#CheetahGenerator"><em>[CheetahGenerator]</em></a> in the <a href="#report_options"><em>Reference: report options</em></a>.
         </p>
 
         <p>
@@ -3253,7 +3253,7 @@ class MyStats(SearchList):                                                   # 1
 
         <p class="note">
             This section gives an overview of the Image generator. For details about each of its various options, see
-            the section <a href="#ImageGenerator"><em>[ImageGenerator]</em></a> in the <a href="#skin_conf_options"><em>Reference: <span class="code">skin.conf</span> options</em></a>.
+            the section <a href="#ImageGenerator"><em>[ImageGenerator]</em></a> in the <a href="#report_options"><em>Reference: report options</em></a>.
         </p>
 
         <p>
@@ -4356,8 +4356,7 @@ schema_with_electricity = schemas.wview.schema + [('electricity', 'REAL')]</pre>
                         to add types that already exist in the archive records (an example would be <span class="code">humidex</span>),
                         but don't yet exist in the database schema.
                     </li>
-                    <li>If you've been following the example, <a href="#Adding_2nd_source"><em>Adding a second
-                        data source</em></a>, then you can just simply add the code to the bottom of the file you
+                    <li>If you've been following the example, <a href="#Adding_2nd_source"><em>Adding a second data source</em></a>, then you can just simply add the code to the bottom of the file you
                         already have, <span class="code">user/electricity.py</span>. This way, it will run before any
                         use of the new type. It has the added advantage that it keeps all "electricity" related
                         modifications in one place, making it easy to package up your changes as a new WeeWX extension.
@@ -5084,7 +5083,7 @@ xstats/bin/user/xstats.py</pre>
         </p>
 
 
-        <h1 id="skin_conf_options">Reference: <span class="code">skin.conf</span> options</h1>
+        <h1 id="report_options">Reference: report options</h1>
 
         <p>
             This section contains the options available in the skin configuration file, <span class="code">skin.conf</span>.
