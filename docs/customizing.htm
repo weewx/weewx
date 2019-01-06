@@ -725,7 +725,7 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
 
         <pre class="tty">
 ...
-[Labels]]
+[Labels]
 ...
     [[Generic]]
         ...
@@ -3701,41 +3701,26 @@ class MyStats(SearchList):                                                   # 1
         <h1 id="localization">Localization</h1>
 
         <p>
-            What follows is a guide to localizing to a non-English language and/or locale.
+            This section is provides suggestions for localization, including translation to different languages and display of data in formats specific to a locale.
         </p>
 
-        <h2>Translate the templates</h2>
+        <h2>How to localize a single report</h2>
 
         <p>
-            Translate the text in each template file to your target language. Any strings that are not specified using tags will need to be translated.
+            What happens when you come accross a report that you like, but it is written in another language, or uses time formats that are foreign to your customs?  This section explains how to convert the report to local formats and language.
         </p>
 
-        <h2>Set the HTML "lang" attribute</h2>
-        <p>
-            In every HTML template (these typically have a file suffix of <span class="code">.html.tmpl</span>) change the HTML "lang" attribute to your target language. For example, for Spanish
-        </p>
-        <pre class="tty">
-## Copyright 2009-2018 Tom Keffer, Matthew Wall
-## Distributed under terms of GPLv3.  See LICENSE.txt for your rights.
-#errorCatcher Echo
-##
-## Specifying an encoding of UTF-8 is usually safe:
-#encoding UTF-8
-##
-&lt;!DOCTYPE HTML&gt;
-<span class="highlight">&lt;html lang="es"&gt;</span>
-  &lt;head&gt;
-    ## This choice should match the #encoding directive
-    &lt;meta charset="UTF-8"&gt;
-    ...
-</pre>
-
-        <h2>Modify the defaults</h2>
+        <h3>Translate the templates</h3>
 
         <p>
-            Go through the values in the section <span class="code">[Defaults]</span> in <span class="code">weewx.conf</span>, translating labels and modifying formats to follow local conventions.
+            Translate the text in each template file to the target language. Any strings that are not specified using tags will need to be translated.
         </p>
 
+        <h3>Translate labels and modify local options</h3>
+
+        <p>
+            Go through the report options that are used by the skin, translating labels and modifying formats to follow local conventions. You can easily localize all of your reports by doing this in the section <span class="code">[Defaults]</span> in the WeeWX configuration file.
+        </p>
         <p>
             In particular, you will probably need to change the following:
         </p>
@@ -3745,79 +3730,91 @@ class MyStats(SearchList):                                                   # 1
         ...
         [[[Labels]]]
             ...
-            <span class="highlight">day               = " day",    " days"</span>
-            <span class="highlight">hour              = " hour",   " hours"</span>
-            <span class="highlight">minute            = " minute", " minutes"</span>
-            <span class="highlight">second            = " second", " seconds"</span>
+            day               = <span class="highlight">" day",    " days"</span>
+            hour              = <span class="highlight">" hour",   " hours"</span>
+            minute            = <span class="highlight">" minute", " minutes"</span>
+            second            = <span class="highlight">" second", " seconds"</span>
 
         [[[TimeFormats]]]
-            <span class="highlight">day        = %X</span>
-            <span class="highlight">week       = %X (%A)</span>
-            <span class="highlight">month      = %x %X</span>
-            <span class="highlight">year       = %x %X</span>
-            <span class="highlight">rainyear   = %x %X</span>
-            <span class="highlight">current    = %x %X</span>
-            <span class="highlight">ephem_day  = %X</span>
-            <span class="highlight">ephem_year = %x %X</span>
+            day        = <span class="highlight">%X</span>
+            week       = <span class="highlight">%X (%A)</span>
+            month      = <span class="highlight">%x %X</span>
+            year       = <span class="highlight">%x %X</span>
+            rainyear   = <span class="highlight">%x %X</span>
+            current    = <span class="highlight">%x %X</span>
+            ephem_day  = <span class="highlight">%X</span>
+            ephem_year = <span class="highlight">%x %X</span>
 
         [[[Ordinates]]]
-            <span class="highlight">directions = N, NNE, NE, ENE, E, ESE, SE, SSE, S, SSW, SW, WSW, W, WNW, NW, NNW, N/A</span>
+            directions = <span class="highlight">N, NNE, NE, ENE, E, ESE, SE, SSE, S, SSW, SW, WSW, W, WNW, NW, NNW, N/A</span>
 
     [[Labels]]
-
-        # Set to hemisphere abbreviations suitable for your location:
-        <span class="highlight">hemispheres = N, S, E, W</span>
-        # Formats to be used for latitude whole degrees, longitude whole
-        # degrees, and minutes:
+        hemispheres = <span class="highlight">N, S, E, W</span>
         latlon_formats = "%02d", "%03d", "%05.2f"
-
-        # Generic labels, keyed by an observation type.
         [[[Generic]]]
-
-            <span class="highlight">barometer      = Barometer</span>
-            <span class="highlight">dewpoint       = Dew Point</span>
-            <span class="highlight">ET             = ET</span>
-            <span class="highlight">heatindex      = Heat Index</span>
-            <span class="highlight">inHumidity     = Inside Humidity</span>
-            <span class="highlight">inTemp         = Inside Temperature</span>
-            <span class="highlight">outHumidity    = Humidity</span>
-            <span class="highlight">outTemp        = Temperature</span>
-            <span class="highlight">radiation      = Radiation</span>
-            <span class="highlight">rain           = Rain</span>
-            <span class="highlight">rainRate       = Rain Rate</span>
-            <span class="highlight">UV             = UV Index</span>
-            <span class="highlight">windDir        = Wind Direction</span>
-            <span class="highlight">windGust       = Gust Speed</span>
-            <span class="highlight">windGustDir    = Gust Direction</span>
-            <span class="highlight">windSpeed      = Wind Speed</span>
-            <span class="highlight">windchill      = Wind Chill</span>
-            <span class="highlight">windgustvec    = Gust Vector</span>
-            <span class="highlight">windvec        = Wind Vector</span>
-            <span class="highlight">extraTemp1     = Temperature1</span>
-            <span class="highlight">extraTemp2     = Temperature2</span>
-            <span class="highlight">extraTemp3     = Temperature3</span>
+            barometer      = <span class="highlight">Barometer</span>
+            dewpoint       = <span class="highlight">Dew Point</span>
+            ET             = <span class="highlight">ET</span>
+            heatindex      = <span class="highlight">Heat Index</span>
+            inHumidity     = <span class="highlight">Inside Humidity</span>
+            inTemp         = <span class="highlight">Inside Temperature</span>
+            outHumidity    = <span class="highlight">Humidity</span>
+            outTemp        = <span class="highlight">Temperature</span>
+            radiation      = <span class="highlight">Radiation</span>
+            rain           = <span class="highlight">Rain</span>
+            rainRate       = <span class="highlight">Rain Rate</span>
+            UV             = <span class="highlight">UV Index</span>
+            windDir        = <span class="highlight">Wind Direction</span>
+            windGust       = <span class="highlight">Gust Speed</span>
+            windGustDir    = <span class="highlight">Gust Direction</span>
+            windSpeed      = <span class="highlight">Wind Speed</span>
+            windchill      = <span class="highlight">Wind Chill</span>
+            windgustvec    = <span class="highlight">Gust Vector</span>
+            windvec        = <span class="highlight">Wind Vector</span>
+            extraTemp1     = <span class="highlight">Temperature1</span>
+            extraTemp2     = <span class="highlight">Temperature2</span>
+            extraTemp3     = <span class="highlight">Temperature3</span>
 
             # Sensor status indicators
 
-            <span class="highlight">rxCheckPercent       = Signal Quality</span>
-            <span class="highlight">txBatteryStatus      = Transmitter Battery</span>
-            <span class="highlight">windBatteryStatus    = Wind Battery</span>
-            <span class="highlight">rainBatteryStatus    = Rain Battery</span>
-            <span class="highlight">outTempBatteryStatus = Outside Temperature Battery</span>
-            <span class="highlight">inTempBatteryStatus  = Inside Temperature Battery</span>
-            <span class="highlight">consBatteryVoltage   = Console Battery</span>
-            <span class="highlight">heatingVoltage       = Heating Voltage</span>
-            <span class="highlight">supplyVoltage        = Supply Voltage</span>
-            <span class="highlight">referenceVoltage     = Reference Voltage</span>
+            rxCheckPercent       = <span class="highlight">Signal Quality</span>
+            txBatteryStatus      = <span class="highlight">Transmitter Battery</span>
+            windBatteryStatus    = <span class="highlight">Wind Battery</span>
+            rainBatteryStatus    = <span class="highlight">Rain Battery</span>
+            outTempBatteryStatus = <span class="highlight">Outside Temperature Battery</span>
+            inTempBatteryStatus  = <span class="highlight">Inside Temperature Battery</span>
+            consBatteryVoltage   = <span class="highlight">Console Battery</span>
+            heatingVoltage       = <span class="highlight">Heating Voltage</span>
+            supplyVoltage        = <span class="highlight">Supply Voltage</span>
+            referenceVoltage     = <span class="highlight">Reference Voltage</span>
 
-  [[Almanac]]
-        # The labels to be used for the phases of the moon:
-        <span class="highlight">moon_phases = New, Waxing crescent, First quarter, Waxing gibbous, Full, Waning gibbous, Last quarter, Waning crescent</span>
+    [[Almanac]]
+        moon_phases = <span class="highlight">New, Waxing crescent, First quarter, Waxing gibbous, Full, Waning gibbous, Last quarter, Waning crescent</span>
 </pre>
 
-        <h2 id="environment_variable_LANG">
+        <h3>Set the HTML "lang" attribute</h3>
+        <p>
+            In every HTML template (these typically have a file suffix of <span class="code">.html.tmpl</span>) change the HTML "lang" attribute to the target language. For example, for Spanish use <span class="code">es</span>:
+        </p>
+        <pre class="tty">
+&lt;!DOCTYPE html&gt;
+&lt;html lang="<span class="highlight">es</span>"&gt;
+  &lt;head&gt;
+    &lt;meta charset="UTF-8"&gt;
+    ...
+</pre>
+        <p>
+            The <span class="code">lang</span> can be language-only, e.g., <span class="code">en</span>, or it can be a full language-country code, e.g., <span class="code">en-US</span>.
+        </p>
+
+        <p>
+          <a href="https://www.w3schools.com/tags/ref_language_codes.asp">language codes</a><br/>
+          <a href="https://www.w3schools.com/tags/ref_country_codes.asp">country codes</a><br/>
+        </p>
+
+        <h3 id="environment_variable_LANG">
             Set the environment variable <span class="code">LANG</span>
-        </h2>
+        </h3>
 
         <p>
             Finally, you will need to set the environment variable <span class="code">LANG</span> to reflect your locale. For example, assuming you set
@@ -3828,6 +3825,11 @@ class MyStats(SearchList):                                                   # 1
             The decimal point for numbers will also be modified appropriately.
         </p>
 
+        <h2>How to create a skin for multiple locales</h2>
+
+        <p>
+            Now that you have created a report, what do you do to make that report easy to use in other languages and locales?
+        </p>
 
         <h1 id="service_engine">Customizing the WeeWX service engine </h1>
 
