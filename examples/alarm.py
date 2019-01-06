@@ -1,7 +1,7 @@
 #    Copyright (c) 2009-2019 Tom Keffer <tkeffer@gmail.com>
 #    See the file LICENSE.txt for your rights.
 
-"""Example of how to implement an alarm in weewx. 
+"""Example of how to implement an alarm in WeeWX.
 
 *******************************************************************************
 
@@ -87,13 +87,13 @@ class MyAlarm(StdService):
             # the alarm will not be set.
             self.expression    = config_dict['Alarm']['expression']
             self.time_wait     = int(config_dict['Alarm'].get('time_wait', 3600))
+            self.timeout       = int(config_dict['Alarm'].get('timeout', 10))
             self.smtp_host     = config_dict['Alarm']['smtp_host']
             self.smtp_user     = config_dict['Alarm'].get('smtp_user')
             self.smtp_password = config_dict['Alarm'].get('smtp_password')
             self.SUBJECT       = config_dict['Alarm'].get('subject', "Alarm message from weewx")
             self.FROM          = config_dict['Alarm'].get('from', 'alarm@example.com')
             self.TO            = option_as_list(config_dict['Alarm']['mailto'])
-            self.timeout       = int(config_dict['Alarm'].get('timeout', 20))
             syslog.syslog(syslog.LOG_INFO, "alarm: Alarm set for expression: '%s'" % self.expression)
             
             # If we got this far, it's ok to start intercepting events:
@@ -133,6 +133,11 @@ class MyAlarm(StdService):
         # Wrap the attempt in a 'try' block so we can log a failure.
         try:
             self.do_alarm(rec)
+        except socket.gaierror:
+            # A gaierror exception is usually caused by an unknown host
+            syslog.syslog(syslog.LOG_CRIT, "alarm: unknown host %s" % self.smtp_host)
+            # Reraise the exception. This will cause the thread to exit.
+            raise
         except Exception as e:
             syslog.syslog(syslog.LOG_CRIT, "alarm: unable to sound alarm. Reason: %s" % e)
             # Reraise the exception. This will cause the thread to exit.
@@ -161,7 +166,7 @@ class MyAlarm(StdService):
             # First try end-to-end encryption
             s = smtplib.SMTP_SSL(self.smtp_host, timeout=self.timeout)
             syslog.syslog(syslog.LOG_DEBUG, "alarm: using SMTP_SSL")
-        except (AttributeError, socket.timeout):
+        except (AttributeError, socket.timeout, socket.error):
             syslog.syslog(syslog.LOG_DEBUG, "alarm: unable to use SMTP_SSL connection.")
             # If that doesn't work, try creating an insecure host, then upgrading
             s = smtplib.SMTP(self.smtp_host, timeout=self.timeout)
