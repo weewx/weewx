@@ -1236,7 +1236,7 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
         </table>
 
         <h3>
-            <span class="code">report_timing</span> option examples</h3>
+            Examples of <span class="code">report_timing</span></h3>
 
         <p>
             Numeric settings for <span class="code">report_timing</span> can be at times difficult to understand due to
@@ -1431,13 +1431,13 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
 
         <p>The skin contains three different kinds of generated output:</p>
         <ol>
-            <li>Summary by Month. The <em>Seasons</em> skin uses <span class="code">SummaryByMonth</span> to produce
+            <li>Summary by Month. The skin uses <span class="code">SummaryByMonth</span> to produce
                 NOAA summaries, one for each month, as a simple text file.
             </li>
             <li>Summary by Year. The skin uses <span class="code">SummaryByYear</span> to produce NOAA summaries, one
                 for each year, as a simple text file.
             </li>
-            <li>Summary "To Date". The <em>Seasons</em> skin produces an HTML <span class="code">index.html</span> page,
+            <li>Summary "To Date". The skin produces an HTML <span class="code">index.html</span> page,
                 as well as HTML files for detailed statistics, telemetry, and celestial information. It also includes a
                 master page (<span class="code">tabular.html</span>) in which NOAA information is displayed. All these
                 files are HTML.
@@ -1461,7 +1461,7 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
         <h3><span class="code" id="SummaryByYear">[[SummaryByYear]]</span></h3>
 
         <p>
-            Use <span class="code">SummaryByYear</span> to generate a set of files, one file per year.
+            Use <span class="code">SummaryByYear</span> to generate a set of files, one file per year.  The name of the template file should contain <span class="code">YYYY</span>; this will be replaced with the year of the data in the file.
         </p>
         <pre class="tty">
 [CheetahGenerator]
@@ -1487,7 +1487,7 @@ $record.dateTime $record.outTemp $record.outHumidity
         <h3><span class="code" id="SummaryByMonth">[[SummaryByMonth]]</span></h3>
 
         <p>
-            Use <span class="code">SummaryByMonth</span> to generate a set of files, one file per month.
+            Use <span class="code">SummaryByMonth</span> to generate a set of files, one file per month.  The name of the template file should contain <span class="code">YYYY</span> and <span class="code">MM</span>; these will be replaced with the year and month of the data in the file.
         </p>
         <pre class="tty">
 [CheetahGenerator]
@@ -1513,8 +1513,7 @@ $record.dateTime $record.outTemp $record.outHumidity
         <h3><span class="code" id="SummaryByDay">[[SummaryByDay]]</span></h3>
         <p>
             While the <em>Seasons</em> skin does not make use of it, there is also a <span
-            class="code">SummaryByDay</span> capability. As the name suggests, this allows files to be created, one per
-            day. Here's an example:
+            class="code">SummaryByDay</span> capability. As the name suggests, this results in one file per day.   The name of the template file should contain <span class="code">YYYY</span>, <span class="code">MM</span>, and <span class="code">DD</span>; these will be replaced with the year, month, and day of the data in the file.
         </p>
         <pre class="tty">
 [CheetahGenerator]
@@ -4270,7 +4269,7 @@ class AddElectricity(StdService):
             database, or change its unit system. This section shows you how to do this.
         </p>
 
-        <h2 id="add_archive_type">Add a new type to the database</h2>
+        <h2 id="add_archive_type">Adding a new type to the database</h2>
 
         <p>
             It is not unusual to have observation types that exist in the loop packets and/or archive records, but are
@@ -4436,13 +4435,13 @@ mysql&gt;<span class="cmd"> RENAME TABLE weewx_new.archive TO weewx.archive;</sp
         <p>
             Normally, data are stored in the databases using US Customary units and, normally, you don't care; it is an
             "implementation detail". Data can always be displayed using any set of units you want. The section <a
-            href="#Observation_defaults"><em>Observation defaults</em></a> explains how to do this. Nevertheless, there
+            href="#how_to_change_units"><em>How to change units</em></a> explains how to do this. Nevertheless, there
             may be special situations where you wish to store the data in Metric units. For example, you may need to
             allow direct programmatic access to the database from another piece of software that expects metric units.
         </p>
 
         <p>
-            WeeWX does not allow you to change the database unit system midstream. That is, you can't start with one
+            You should not change the database unit system midstream. That is, do not start with one
             unit system then, in the middle of the database, switch to another. See the section <span class="code"> <a
             href="usersguide.htm#StdConvert">[StdConvert]</a></span> in the WeeWX User's Guide. However, you can
             reconfigure the database by copying it to a new database, performing the unit conversion along the way. You
@@ -4643,12 +4642,12 @@ weewx.units.conversionDict['pound']  = {'newton': lambda x : x * 4.44822}
             (as in the previous example).
         </p>
 
-        <h2>Use the new types</h2>
+        <h2>Using the new units</h2>
 
-        <p>Now you've added a new type. How do you use it?</p>
+        <p>Now you've added a new type of units. How do you use it?</p>
 
         <p>
-            Pretty much like any other type. For example, to do a plot of the month's electric consumption, totaled by
+            Pretty much like any other units. For example, to do a plot of the month's electric consumption, totaled by
             day, add this section to the <span class="code">[[month_images]]</span> section of <span class="code">skin.conf</span>:
         </p>
         <pre class="tty">[[[monthelectric]]]
@@ -4704,6 +4703,10 @@ weewx.units.conversionDict['pound']  = {'newton': lambda x : x * 4.44822}
         <p>Naturally, this is an advanced topic but, nevertheless, I'd like to encourage any Python wizards out there to
             give it a try. Of course, I have selfish reasons for this: I don't want to have to buy every weather station
             ever invented, and I don't want my roof to look like a weather station farm!
+        </p>
+
+        <p>
+            A <em>driver</em> communicates with hardware.  Each driver is a single python file that contains the code that is the interface between a device and WeeWX.  A driver may communicate directly with hardware using a MODBus, USB, serial, or other physical interface.  Or it may communicate over a network to a physical device or a web service.
         </p>
 
         <h2>General guidelines</h2>
@@ -4980,7 +4983,11 @@ weewx.units.conversionDict['pound']  = {'newton': lambda x : x * 4.44822}
             </li>
         </ul>
 
-        <h2>How to package an extension</h2>
+        <p>
+            Although one extension might use another extension, take care to write the dependent extension so that it fails gracefully.  For example, a skin might use data the forecast extension, but what happens if the forecast extension is not installed?  Make the skin display a message about "forecast not installed" but otherwise continue to function.
+        </p>
+
+        <h2>Packaging an extension</h2>
 
         <p>
             The structure of an extension mirrors that of WeeWX itself. If the customizations include a skin, the
@@ -5043,11 +5050,23 @@ xstats/bin/user/xstats.py</pre>
             href="utilities.htm#wee_extension_utility">wee_extension</a> utility.
         </p>
 
+        <h2>Default values</h2>
+
+        <p>
+            Whenever possible, an extension should <em>just work</em>, with a minimum of input from the user.  At the same time, parameters for the most frequently requested options should be easily accessible and easy to modify.  For skins, this might mean parameterizing strings into <span class="code">[Labels]</span> for easier customization.  Or it might mean providing parameters in <span class="code">[Extras]</span> to control skin behavior or to parameterize links.
+        </p>
+        <p>
+            Some parameters <em>must</em> be specified, and no default value would be appropriate.  For example, an uploader may require a username and password, or a driver might require a serial number or IP address.  In these cases, use a default value in the configuration that will obviously require modification.  The <em>username</em> might default to <em>REPLACE_ME</em>.  Also be sure to add a log entry that indicates the feature is disabled until the value has been specified.
+        </p>
+        <p>
+            In the case of drivers, use the configuration editor to prompt for this type of required value.
+        </p>
+
 
         <h1 id="skin_conf_options">Reference: <span class="code">skin.conf</span> options</h1>
 
         <p>
-            This section is a reference to the options appearing in the skin configuration file, <span class="code">skin.conf</span>.
+            This section contains the options available in the skin configuration file, <span class="code">skin.conf</span>.
         </p>
 
         <p>
