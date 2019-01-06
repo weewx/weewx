@@ -3828,8 +3828,43 @@ class MyStats(SearchList):                                                   # 1
         <h2>How to create a skin for multiple locales</h2>
 
         <p>
-            Now that you have created a report, what do you do to make that report easy to use in other languages and locales?
+            Now that you have created a report, what do you do to make that report easy to use in other languages and locales?  This example shows how to translate the Seasons skin for multiple languages.  This can be used to generate a single report in a specific language, or it can be used to generate multiple reports, each with a different language.
         </p>
+
+        <p>
+            Translate the text in each template file to the target language. Any strings that are not specified using tags will need to be translated.  Put the templates for each language/locale into a separate directory.  Ensure that each HTML template file has the <span class="code">lang</span> set properly.
+        </p>
+        <p>
+            Translate observation names and other labels, and put them into skin configuration files.  There should be one configuration file for each language.
+        </p>
+        <p>
+            Ensure that any locale-specific formatting is specified explicitly.  For example, a locale that uses 24-hour time formatting should use <span class="code">%H:%M</span> whereas a locale that uses 12-hour time formatting should use <span class="code">%I:%M %p</span>.  Do not use the generic format <span class="code">%X</span>, since that would result in the format used by whatever <span class="code">LANG</span> is set in the environment in which WeeWX is running.
+        </p>
+        <p>
+            The result will be a directory of templates and configurations, with one directory for each language/localization.
+        </p>
+        <pre class="tty">
+skins/Seasons/
+skins/Seasons/en/skin.conf
+skins/Seasons/en/index.html.tmpl
+skins/Seasons/es/skin.conf
+skins/Seasons/es/index.html.tmpl</pre>
+
+        <p>
+            Create a configuration for each report in the WeeWX configuration file.
+        </p>
+        <pre class="tty">
+[StdReport]
+    [[Seasons_en]]
+        skin = Seasons/en
+        HTML_ROOT = public_html/en
+    [[Seasons_es]]
+        skin = Seasons/es
+        HTML_ROOT = public_html/es</pre>
+        <p>
+            Configure the web server to display the language based on the browser preferences.
+        </p>
+
 
         <h1 id="service_engine">Customizing the WeeWX service engine </h1>
 
