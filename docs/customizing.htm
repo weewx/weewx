@@ -3845,43 +3845,8 @@ class MyStats(SearchList):                                                   # 1
         </p>
 
         <p>
-          The services are specified in lists in the <span class="code">[Engine][[Services]]</span> stanza of the configuration file.  The <span class="code">[[Services]]</span> section lists all the services to be run, broken up into different <em>service lists</em>. Here's a description of them:
+          The services are specified in lists in the <a href="usersguide.htm#engine_services"><span class="code">[Engine][[Services]]</span></a> stanza of the configuration file.  The <span class="code">[[Services]]</span> section lists all the services to be run, broken up into different <em>service lists</em>.
         </p>
-
-
-        <table id='service_lists' class="indent" style="width: 70%">
-            <tbody>
-            <tr class="first_row">
-                <td>Service list</td>
-                <td>Function</td>
-            </tr>
-            <tr>
-                <td class="code first_col">prep_services</td>
-                <td>Perform any actions before the main loop is run.</td>
-            </tr>
-            <tr>
-                <td class="code first_col">data_services</td>
-                <td>Augment data, before it is processed.</td>
-            </tr>
-            <tr>
-                <td class="code first_col">process_services</td>
-                <td>Process, filter, and massage the data.</td>
-            </tr>
-            <tr>
-                <td class="code first_col">archive_services</td>
-                <td>Record the data in a database.</td>
-            </tr>
-            <tr>
-                <td class="code first_col">restful_services</td>
-                <td>Upload processed data to an external RESTful service.
-                </td>
-            </tr>
-            <tr>
-                <td class="code first_col">report_services</td>
-                <td>Run any reports.</td>
-            </tr>
-            </tbody>
-        </table>
 
         <p>
             These lists are designed to orchestrate the data as it flows through the WeeWX engine. For example, you want

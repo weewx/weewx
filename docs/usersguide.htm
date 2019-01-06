@@ -2717,7 +2717,7 @@ longitude = -77.0366</pre>
         </p>
 
 
-        <h3 class="config_section">[[Services]]</h3>
+        <h3 id="engine_services" class="config_section">[[Services]]</h3>
 
         <p>
             Internally, WeeWX consists of many <em>services</em>, each responsible for some aspect of the program's
@@ -2726,8 +2726,61 @@ longitude = -77.0366</pre>
             out, store it in a database, etc. This section controls which services are loaded and in what order they get
             their opportunity to do that work. Before WeeWX v2.6, this section held one, looong option called <span
             class="code">service_list</span>, which held the names of all the services that should be run. Since then,
-            this list has been broken down into five, smaller, lists, given below. They are run in the order given
-            below.
+            this list has been broken down into smaller lists.
+        </p>
+
+        <p>
+          Services are run in the order given below.
+        </p>
+
+        <table id='service_lists' class="indent" style="width: 70%">
+            <tbody>
+            <tr class="first_row">
+                <td>Service list</td>
+                <td>Function</td>
+            </tr>
+            <tr>
+                <td class="code first_col">prep_services</td>
+                <td>Perform any actions before the main loop is run.</td>
+            </tr>
+            <tr>
+                <td class="code first_col">data_services</td>
+                <td>Augment data, before it is processed.</td>
+            </tr>
+            <tr>
+                <td class="code first_col">process_services</td>
+                <td>Process, filter, and massage the data.</td>
+            </tr>
+            <tr>
+                <td class="code first_col">archive_services</td>
+                <td>Record the data in a database.</td>
+            </tr>
+            <tr>
+                <td class="code first_col">restful_services</td>
+                <td>Upload processed data to an external RESTful service.
+                </td>
+            </tr>
+            <tr>
+                <td class="code first_col">report_services</td>
+                <td>Run any reports.</td>
+            </tr>
+            </tbody>
+        </table>
+
+        <p>For reference, here is the standard set of services that are run with the default distribution.</p>
+        <pre class="tty">
+prep_services    = weewx.engine.StdTimeSynch
+process_services = weewx.engine.StdConvert, weewx.engine.StdCalibrate,\
+  weewx.engine.StdQC, weewx.wxservices.StdWXCalculate
+archive_services = weewx.engine.StdArchive
+restful_services = weewx.restx.StdStationRegistry, weewx.restx.StdWunderground,\
+  weewx.restx.StdPWSweather, weewx.restx.StdCWOP, weewx.restx.StdWOW,\
+  weewx.restx.StdAWEKAS
+report_services  = weewx.engine.StdPrint, weewx.engine.StdReport
+</pre>
+        <p>If you're the type who likes to clean out your car trunk after every use it, then you may also be the type
+            who wants to pare this down to the bare minimum. However, this will only make a slight difference in
+            execution speed and memory use.
         </p>
 
         <p class="config_option" id="prep_services">prep_services</p>
@@ -2736,6 +2789,12 @@ longitude = -77.0366</pre>
             These services get called before any others. They are typically used to prepare the console. For example,
             the service <span class="code">weewx.wxengine.StdTimeSynch</span>, which is responsible for making sure the
             console's clock is up to date, is a member of this group.
+        </p>
+
+        <p class="config_option" id="data_services">data_services</p>
+
+        <p>
+            Augment data before processing.  Typically this means adding fields to a LOOP packet or ARCHIVE record.
         </p>
 
         <p class="config_option" id="process_services">process_services</p>
@@ -2757,22 +2816,6 @@ longitude = -77.0366</pre>
         <p class="config_option" id="report_services">report_services</p>
 
         <p>The various reporting services run in this group, including the standard reporting engine.</p>
-
-        <p>For reference, here is the standard set of services that are run with the default distribution.</p>
-        <pre class="tty">
-prep_services    = weewx.engine.StdTimeSynch
-process_services = weewx.engine.StdConvert, weewx.engine.StdCalibrate,\
-  weewx.engine.StdQC, weewx.wxservices.StdWXCalculate
-archive_services = weewx.engine.StdArchive
-restful_services = weewx.restx.StdStationRegistry, weewx.restx.StdWunderground,\
-  weewx.restx.StdPWSweather, weewx.restx.StdCWOP, weewx.restx.StdWOW,\
-  weewx.restx.StdAWEKAS
-report_services  = weewx.engine.StdPrint, weewx.engine.StdReport
-</pre>
-        <p>If you're the type who likes to clean out your car trunk after every use it, then you may also be the type
-            who wants to pare this down to the bare minimum. However, this will only make a slight difference in
-            execution speed and memory use.
-        </p>
 
 
         <h1 id="troubleshooting">Troubleshooting</h1>
