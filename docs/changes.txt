@@ -8,7 +8,7 @@ New default skin called Seasons.
 Dropped support of Python 2.5. You must now use either Python 2.6 or 2.7. This is
 in anticipation of porting to Python 3.
 
-Introduced a new section [ObservationDefaults] in weewx.conf that holds much of the
+Introduced a new section [Defaults] in weewx.conf that holds much of the
 information that used to be in the individual skin.conf files. Once set up correctly,
 changing a unit system here will change it everywhere. Of course, overrides for
 individual skins are still allowed. The install program will patch any skin.conf
