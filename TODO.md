@@ -9,6 +9,8 @@ need to ensure that these use cases work properly:
 
 need to revisit precedence order (sorry!:/):
 
+Existing: hard-coded, report_name/skin.conf, [StdReport][[report_name]]
+
 option 1: hard-coded, [Defaults], [StdReport][[report_name]], report_name/skin.conf
 
 option 2: hard-coded, report_name/skin.conf, [Defaults], [StdReport][[report_name]]

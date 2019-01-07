@@ -561,7 +561,7 @@ class Stats(SearchList):
         return [stats]
 
 class UnitInfo(SearchList):
-    """Class that implements the $unit tag."""
+    """Class that implements the $unit and $obs tags."""
 
     def __init__(self, generator):
         SearchList.__init__(self, generator)

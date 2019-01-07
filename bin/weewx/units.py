@@ -1052,9 +1052,9 @@ class ObsInfoHelper(object):
     """Helper class to implement the $obs template tag."""    
     def __init__(self, skin_dict):
         try:
-            self.label = dict(skin_dict['Labels']['Generic'])
+            self.label = weeutil.weeutil.KeyDict(dict(skin_dict['Labels']['Generic']))
         except KeyError:
-            self.label = {}
+            self.label = weeutil.weeutil.KeyDict()
 
 #==============================================================================
 #                             Helper functions

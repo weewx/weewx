@@ -1403,6 +1403,12 @@ class ListOfDicts(dict):
         self.dict_list.append(new_dict)
 
 
+class KeyDict(dict):
+    """A dictionary that returns the key for an unsuccessful lookup."""
+    def __missing__(self, key):
+        return key
+
+
 def to_sorted_string(rec):
     return ", ".join(["%s: %s" % (k, rec.get(k)) for k in sorted(rec, key=str.lower)])
 

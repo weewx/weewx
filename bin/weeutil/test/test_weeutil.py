@@ -796,6 +796,12 @@ class WeeutilTest(unittest.TestCase):
         # Try it:
         self.assertEqual(lod['f'], 6)
 
+    def test_KeyDict(self):
+        a_dict = {'a': 1, 'b': 2}
+        kd = KeyDict(a_dict)
+        self.assertEqual(kd['a'], 1)
+        self.assertEqual(kd['bad_key'], 'bad_key')
+
 
 if __name__ == '__main__':
     unittest.main()
