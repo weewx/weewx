@@ -1047,14 +1047,16 @@ class UnitInfoHelper(object):
     @property
     def unit_type_dict(self):
         return self.group_unit_dict
-    
+
+
 class ObsInfoHelper(object):
     """Helper class to implement the $obs template tag."""    
     def __init__(self, skin_dict):
         try:
-            self.label = weeutil.weeutil.KeyDict(dict(skin_dict['Labels']['Generic']))
+            d = skin_dict['Labels']['Generic']
         except KeyError:
-            self.label = weeutil.weeutil.KeyDict()
+            d = {}
+        self.label = weeutil.weeutil.KeyDict(d)
 
 #==============================================================================
 #                             Helper functions

@@ -32,8 +32,12 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
         self.genImages(self.gen_ts)
 
     def setup(self):
+        try:
+            d = self.skin_dict['Labels']['Generic']
+        except KeyError:
+            d = {}
+        self.title_dict = weeutil.weeutil.KeyDict(d)
         self.image_dict = self.skin_dict['ImageGenerator']
-        self.title_dict = self.skin_dict.get('Labels', {}).get('Generic', {})
         self.formatter  = weewx.units.Formatter.fromSkinDict(self.skin_dict)
         self.converter  = weewx.units.Converter.fromSkinDict(self.skin_dict)
         # ensure that the skin_dir is in the image_dict
@@ -189,9 +193,9 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                     # See if a line label has been explicitly requested:
                     label = line_options.get('label')
                     if not label:
-                        # No explicit label. Is there a generic one?
-                        # If not, then the SQL type will be used instead
-                        label = self.title_dict.get(var_type, var_type)
+                        # No explicit label. Look up a generic one. NB: title_dict is a KeyDict which
+                        # will substitute the key if the value is not in the dictionary.
+                        label = self.title_dict[var_type]
 
                     # See if a color has been explicitly requested.
                     color = line_options.get('color')
