@@ -687,44 +687,77 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
 
         <h2 id="How_options_work">How options work</h2>
 
-        <p class="note">This section needs a better explanation of the options hierarchy!</p>
         <p>
-            Options can be specified either in the skin configuration file <span class="code">skin.conf</span>, or in
-            one of two different sections of <span class="code">weewx.conf</span>, depending on desired
-            <em>scope</em> and <em>precedence</em>. These locations are listed below, in order of increasing precedence.
+            Options are used in WeeWX to specify how your reports will look and what they will contain. For example,
+            they control what units to use, how to format a string, what color to use for a plot line, <em>etc</em>.
+            They all work the same way and obey a hierarchy, allowing skin writers to specify a look and feel of a
+            report, while ensuring that you still have the final say in how it will come out.
+        </p>
+
+        <p>
+            Here are the places where options are specified, including their <em>scope</em> and <em>precedence</em>,
+            listed in order of decreasing precedence.
         </p>
 
         <table class="indent" style="width: 80%">
+            <caption>Option hierarchy, highest to lowest</caption>
             <tr class="first_row">
                 <td>File</td>
                 <td>Section</td>
                 <td>Scope</td>
+                <td>Comments</td>
             </tr>
             <tr>
-                <td class="code">weewx/defaults.py</td>
-                <td class="code">[Defaults]</td>
-                <td>Affects <em>all</em> reports.</td>
-            </tr>
-            <tr>
-                <td class="code">skins/<span class="symcode">report_name</span>/skin.conf</td>
-                <td></td>
+                <td class="code">weewx.conf</td>
+                <td class="code"><a href="#change_stdreport">[StdReport] / [[<span class="symcode">report_name</span>]]</a>
+                </td>
                 <td>Affects only the report <span class="symcode">report_name</span>.</td>
+                <td>Has the final say.</td>
             </tr>
             <tr>
                 <td class="code">weewx.conf</td>
                 <td class="code"><a href="#change_defaults">[StdReport] / [[Defaults]]</a></td>
                 <td>Affects <em>all</em> reports.</td>
+                <td>Allows a user to change common elements in the reports, particularly what units to use.</td>
             </tr>
             <tr>
-                <td class="code">weewx.conf</td>
-                <td class="code"><a href="#change_stdreport">[StdReport] / [[<span class="symcode">report_name</span>]]</a></td>
+                <td class="code">skins/<span class="symcode">report_name</span>/skin.conf</td>
+                <td></td>
                 <td>Affects only the report <span class="symcode">report_name</span>.</td>
+                <td>Generally supplied by the skin writer. It applies a look and feel, which can be overridden
+                    by the user.</td>
+            </tr>
+            <tr>
+                <td class="code">weewx/defaults.py</td>
+                <td class="code"></td>
+                <td>Affects <em>all</em> reports.</td>
+                <td>Acts as a backstop, in the case an option is not specified anywhere else. Not generally modified by
+                    the user, although this could change in the future.
+                </td>
             </tr>
         </table>
 
         <p>
-            Let's take the skin <em>Seasons</em> that comes with WeeWX as an example. Its configuration file is at <span
-            class="code">skins/Seasons/skin.conf</span>. If it contains this excerpt:
+            Let's look at an example. If you take a look inside the file <span class="code">weewx/defaults.py</span>,
+            you'll see it contains what looks like a big configuration file. Among other things, it has an entry
+        </p>
+        <pre class="tty">
+...
+[Labels]
+...
+    [[Generic]]
+        ...
+        outTemp = Outside Temperature
+        </pre>
+
+        <p>
+            This tells the report generators that when it is time to label the observation variable <span class="code">outTemp</span>,
+            use the string <span class="code">Outside Temperature</span>. Because <span class="code">weewx/defaults.py</span>
+            sits at the bottom of the options hierarchy, this string will be used only when nothing else is available.
+        </p>
+        <p>
+            Now suppose we have a skin called <em>Life</em> . Its configuration file will be
+            located at <span class="code">skins/Life/skin.conf</span>. Among other things, it contains an excerpt
         </p>
 
         <pre class="tty">
@@ -733,28 +766,36 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
 ...
     [[Generic]]
         ...
-        outTemp = Outside Temperature
+        outTemp = Exterior Temperature
 </pre>
 
         <p>
-          and <span class="code">weewx.conf</span> contains this:
+            What this says is that the writer of <span class="code">Life</span>, for whatever reasons, decided
+            that s/he wants to use the string <span class="code">Exterior Temperature</span>, instead of
+            <span class="code">Outside Temperature</span>.
+        </p>
+        <p>
+          Finally, for purposes of illustrating the hierarchy, suppose the <span class="code">[StdReport]</span>
+            section of <span class="code">weewx.conf</span> contains this:
         </p>
 
         <pre class="tty">
 [StdReport]
+    ...
     [[Defaults]]
         [[[Labels]]]
             [[[[Generic]]]]
                 outTemp = Shed Temperature
-    [[SeasonsA]]
-        skin = Seasons
+    [[LifeA]]
+        skin = Life
         [[[Labels]]]
             [[[[Generic]]]]
                 outTemp = Barn Temperature
-    [[SeasonsB]]
+    [[LifeB]]
         skin = Seasons
 </pre>
 
+        <p class="note">Need an example that shows the behavior of weewx/defaults.py</p>
         <p>
             then this will result in reports with the following values:
         </p>
@@ -765,11 +806,11 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
                 <td>Label for <span class="code">outTemp</span></td>
             </tr>
             <tr>
-                <td>SeasonsA</td>
+                <td>LifeA</td>
                 <td>Barn Temperature</td>
             </tr>
             <tr>
-                <td>SeasonsB</td>
+                <td>LifeB</td>
                 <td>Shed Temperature</td>
             </tr>
         </table>
