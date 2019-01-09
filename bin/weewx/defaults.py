@@ -139,6 +139,7 @@ log_failure = False
     # particularly attractive. See the Customization Guide for alternatives.
     [[TimeFormats]]
 
+        hour       = %H:%M
         day        = %X
         week       = %X (%A)
         month      = %x %X
@@ -188,7 +189,7 @@ log_failure = False
         inHumidity     = Inside Humidity
         inTemp         = Inside Temperature
         outHumidity    = Humidity
-        outTemp        = Temperature
+        outTemp        = Outside Temperature
         radiation      = Radiation
         rain           = Rain
         rainRate       = Rain Rate

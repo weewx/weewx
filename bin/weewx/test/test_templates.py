@@ -148,22 +148,23 @@ class Common(unittest.TestCase):
                 filename_rel = os.path.relpath(expected_filename_abs, expected_dir)
                 # Use that to figure out where the actual results ended up
                 actual_filename_abs = os.path.join(test_html_dir, filename_rel)
-#                 print "Checking file: ", actual_filename_abs
-#                 print "  against file:", expected_filename_abs
-                actual = open(actual_filename_abs)
-                expected = open(expected_filename_abs)
-    
-                n = 0
-                while True:
-                    actual_line = actual.readline()
-                    expected_line = expected.readline()
-                    if actual_line == '' or expected_line == '':
-                        break
-                    n += 1
-                    self.assertEqual(actual_line, expected_line, msg="%s[%d]:\n%r vs\n%r" % 
-                                     (actual_filename_abs, n, actual_line, expected_line))
-                
-                print "Checked %d lines" % (n,)
+
+                # print "Checking file: ", actual_filename_abs
+                # print "  against file:", expected_filename_abs
+
+                with open(actual_filename_abs) as actual:
+                    with open(expected_filename_abs) as expected:
+                        n = 0
+                        while True:
+                            actual_line = actual.readline()
+                            expected_line = expected.readline()
+                            if actual_line == '' or expected_line == '':
+                                break
+                            n += 1
+                            self.assertEqual(actual_line, expected_line, msg="%s[%d]:\n%r vs\n%r" %
+                                             (actual_filename_abs, n, actual_line, expected_line))
+
+                        print "Checked %d lines" % (n,)
 
 class TestSqlite(Common):
 
