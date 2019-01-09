@@ -2,7 +2,7 @@
 #
 #    weewx --- A simple, high-performance weather station server
 #
-#    Copyright (c) 2009-2018 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2019 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -167,10 +167,6 @@ class weewx_install_data(install_data):
 
         # Run the superclass's run():
         install_data.run(self)
-
-        # Now that all the skins have been safely installed, we can run our patch routine
-        config_dict = configobj.ConfigObj(os.path.join(self.install_dir, 'weewx.conf'), file_error=True)
-        weecfg.patch_skins(config_dict, logger=logger)
 
     def process_config_file(self, f, install_dir, **kwargs):
         global stn_info

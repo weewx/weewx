@@ -1,6 +1,6 @@
 # coding: utf-8
 #
-#    Copyright (c) 2009-2018 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2019 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your rights.
 #
@@ -24,6 +24,7 @@ except ImportError:
 
 import configobj
 
+import weewx.defaults
 import weeutil.weeutil
 from weeutil.weeutil import to_int
 import weeutil.config
@@ -32,32 +33,34 @@ major_comment_block = ["", "####################################################
 
 # ==============================================================================
 
-us_group = {'group_altitude': 'foot',
-            'group_degree_day': 'degree_F_day',
-            'group_pressure': 'inHg',
-            'group_rain': 'inch',
-            'group_rainrate': 'inch_per_hour',
-            'group_speed': 'mile_per_hour',
-            'group_speed2': 'mile_per_hour2',
-            'group_temperature': 'degree_F'}
+unit_systems = {
+    'us': {'group_altitude': 'foot',
+           'group_degree_day': 'degree_F_day',
+           'group_pressure': 'inHg',
+           'group_rain': 'inch',
+           'group_rainrate': 'inch_per_hour',
+           'group_speed': 'mile_per_hour',
+           'group_speed2': 'mile_per_hour2',
+           'group_temperature': 'degree_F'},
 
-metric_group = {'group_altitude': 'meter',
-                'group_degree_day': 'degree_C_day',
-                'group_pressure': 'mbar',
-                'group_rain': 'cm',
-                'group_rainrate': 'cm_per_hour',
-                'group_speed': 'km_per_hour',
-                'group_speed2': 'km_per_hour2',
-                'group_temperature': 'degree_C'}
+    'metric': {'group_altitude': 'meter',
+               'group_degree_day': 'degree_C_day',
+               'group_pressure': 'mbar',
+               'group_rain': 'cm',
+               'group_rainrate': 'cm_per_hour',
+               'group_speed': 'km_per_hour',
+               'group_speed2': 'km_per_hour2',
+               'group_temperature': 'degree_C'},
 
-metricwx_group = {'group_altitude': 'meter',
-                  'group_degree_day': 'degree_C_day',
-                  'group_pressure': 'mbar',
-                  'group_rain': 'mm',
-                  'group_rainrate': 'mm_per_hour',
-                  'group_speed': 'meter_per_second',
-                  'group_speed2': 'meter_per_second2',
-                  'group_temperature': 'degree_C'}
+    'metricwx': {'group_altitude': 'meter',
+                 'group_degree_day': 'degree_C_day',
+                 'group_pressure': 'mbar',
+                 'group_rain': 'mm',
+                 'group_rainrate': 'mm_per_hour',
+                 'group_speed': 'meter_per_second',
+                 'group_speed2': 'meter_per_second2',
+                 'group_temperature': 'degree_C'}
+}
 
 
 class ExtensionError(IOError):
@@ -286,21 +289,8 @@ def modify_config(config_dict, stn_info, logger, debug=False):
                 config_dict['Station'][p] = stn_info[p]
         # Update units display with any stn_info overrides
         if stn_info.get('units') is not None:
-            if 'Defaults' not in config_dict:
-                config_dict['Defaults'] = {}
-            if 'Units' not in config_dict['Defaults']:
-                config_dict['Defaults']['Units'] = {}
-            if 'Groups' not in config_dict['Defaults']['Units']:
-                config_dict['Defaults']['Units']['Groups'] = {}
-            if stn_info.get('units') in ['metric', 'metricwx']:
-                if debug:
-                    logger.log("Using Metric units for display", level=2)
-                config_dict['Defaults']['Units']['Groups'].update(metricwx_group)
-            elif stn_info.get('units') == 'us':
-                if debug:
-                    logger.log("Using US units for display", level=2)
-                config_dict['Defaults']['Units']['Groups'].update(us_group)
-
+            if 'StdReport' in config_dict:
+                update_units(config_dict, stn_info.get('units'), logger, debug)
 
 # ==============================================================================
 #              Utilities that update and merge ConfigObj objects
@@ -992,7 +982,7 @@ def update_to_v39(config_dict):
 
     - New top-level options log_success and log_failure
     - New subsections [[SeasonsReport]], [[SmartphoneReport]], and [[MobileReport]]
-    - New section [Defaults]
+    - New section [StdReport][[Defaults]]
     """
 
     major, minor = get_version_info(config_dict)
@@ -1015,6 +1005,7 @@ def update_to_v39(config_dict):
         #
         # The logic below will put the subsections in the following order:
         #
+        #   [[Defaults]]
         #   [[StandardReport]]
         #   [[SeasonsReport]]
         #   [[SmartphoneReport]]
@@ -1028,6 +1019,13 @@ def update_to_v39(config_dict):
         # Work around a ConfigObj limitation that can cause comments to be dropped.
         # Save the original comment, then restore it later.
         std_report_comment = config_dict.comments['StdReport']
+
+        if 'Defaults' not in config_dict['StdReport']:
+            # Add a [[Defaults]] section, setting it to 'us' unit system
+            update_units(config_dict, 'us')
+            # Reorder, so the new section is at the beginning.
+            index = config_dict['StdReport'].sections.index('Defaults')
+            config_dict['StdReport'].sections.insert(0, config_dict['StdReport'].sections.pop(index))
 
         if 'SeasonsReport' not in config_dict['StdReport']:
             seasons_options_dict = configobj.ConfigObj(StringIO("""[StdReport]
@@ -1071,300 +1069,151 @@ def update_to_v39(config_dict):
     # Put the comment back in
     config_dict.comments['StdReport'] = std_report_comment
 
-    if 'Defaults' not in config_dict:
-        defaults_dict = configobj.ConfigObj(StringIO("""[Defaults]
+    # Special comment for whatever comes after [[Defaults]]
+    index = config_dict['StdReport'].sections.index('Defaults')
+    next_section = config_dict['StdReport'].sections[index + 1]
+    config_dict['StdReport'].comments[next_section] = ['',
+                                                       '####'
+                                                       '',
+                                                       '# Each of the following subsections defines a report that will be run.',
+                                                       '# See the customizing guide to change the units, plot types and line',
+                                                       '# colors, modify the fonts, display additional sensor data, and other',
+                                                       '# customizations. Many of those changes can be made here by overriding',
+                                                       '# parameters, or by modifying templates within the skin itself.'
+                                                       ]
 
-    # The following section is for managing the selection and formatting of units.
-    [[Units]]
-
-        # The following section sets what unit to use for each unit group.
-        # NB: The unit is always in the singular. I.e., 'mile_per_hour',
-        # NOT 'miles_per_hour'
-        [[[Groups]]]
-            group_altitude     = foot                 # Options are 'foot' or 'meter'
-            group_degree_day   = degree_F_day         # Options are 'degree_F_day' or 'degree_C_day'
-            group_direction    = degree_compass
-            group_moisture     = centibar
-            group_percent      = percent
-            group_pressure     = inHg                 # Options are 'inHg', 'mmHg', 'mbar', or 'hPa'
-            group_radiation    = watt_per_meter_squared
-            group_rain         = inch                 # Options are 'inch', 'cm', or 'mm'
-            group_rainrate     = inch_per_hour        # Options are 'inch_per_hour', 'cm_per_hour', or 'mm_per_hour'
-            group_speed        = mile_per_hour        # Options are 'mile_per_hour', 'km_per_hour', 'knot', or 'meter_per_second'
-            group_speed2       = mile_per_hour2       # Options are 'mile_per_hour2', 'km_per_hour2', 'knot2', or 'meter_per_second2'
-            group_temperature  = degree_F             # Options are 'degree_F' or 'degree_C'
-            group_uv           = uv_index
-            group_volt         = volt
-
-            # The following are used internally and should not be changed:
-            group_count        = count
-            group_interval     = minute
-            group_time         = unix_epoch
-            group_elapsed      = second
-
-        # The following section sets the string formatting for each type of unit.
-        [[[StringFormats]]]
-
-            centibar           = %.0f
-            cm                 = %.2f
-            cm_per_hour        = %.2f
-            degree_C           = %.1f
-            degree_F           = %.1f
-            degree_compass     = %.0f
-            foot               = %.0f
-            hPa                = %.1f
-            hour               = %.1f
-            inHg               = %.3f
-            inch               = %.2f
-            inch_per_hour      = %.2f
-            km_per_hour        = %.0f
-            km_per_hour2       = %.1f
-            knot               = %.0f
-            knot2              = %.1f
-            mbar               = %.1f
-            meter              = %.0f
-            meter_per_second   = %.1f
-            meter_per_second2  = %.1f
-            mile_per_hour      = %.0f
-            mile_per_hour2     = %.1f
-            mm                 = %.1f
-            mmHg               = %.1f
-            mm_per_hour        = %.1f
-            percent            = %.0f
-            second             = %.0f
-            uv_index           = %.1f
-            volt               = %.1f
-            watt_per_meter_squared = %.0f
-            NONE               = "   N/A"
-
-        # The following section sets the label to be used for each type of unit
-        [[[Labels]]]
-
-            centibar          = " cb"
-            cm                = " cm"
-            cm_per_hour       = " cm/hr"
-            degree_C          =   °C
-            degree_F          =   °F
-            degree_compass    =   °
-            foot              = " feet"
-            hPa               = " hPa"
-            inHg              = " inHg"
-            inch              = " in"
-            inch_per_hour     = " in/hr"
-            km_per_hour       = " km/h"
-            km_per_hour2      = " km/h"
-            knot              = " knots"
-            knot2             = " knots"
-            mbar              = " mbar"
-            meter             = " meters"
-            meter_per_second  = " m/s"
-            meter_per_second2 = " m/s"
-            mile_per_hour     = " mph"
-            mile_per_hour2    = " mph"
-            mm                = " mm"
-            mmHg              = " mmHg"
-            mm_per_hour       = " mm/hr"
-            percent           =   %
-            volt              = " V"
-            watt_per_meter_squared = " W/m²"
-            day               = " day",    " days"
-            hour              = " hour",   " hours"
-            minute            = " minute", " minutes"
-            second            = " second", " seconds"
-            NONE              = ""
-
-        # The following section sets the string format to be used for each time scale.
-        # The values below will work in every locale, but they may not look
-        # particularly attractive. See the Customization Guide for alternatives.
-        [[[TimeFormats]]]
-
-            day        = %X
-            week       = %X (%A)
-            month      = %x %X
-            year       = %x %X
-            rainyear   = %x %X
-            current    = %x %X
-            ephem_day  = %X
-            ephem_year = %x %X
-
-        [[[Ordinates]]]
-            # Ordinal directions. The last one should be for no wind direction
-            directions = N, NNE, NE, ENE, E, ESE, SE, SSE, S, SSW, SW, WSW, W, WNW, NW, NNW, N/A
-
-        # The following section sets the base temperatures used for the calculation
-        # of heating and cooling degree-days.
-        [[[DegreeDays]]]
-            # Base temperature for heating days, with unit:
-            heating_base = 65, degree_F
-            # Base temperature for cooling days, with unit:
-            cooling_base = 65, degree_F
-
-        # A trend takes a difference across a time period. The following section sets
-        # the time period, and how big an error is allowed to still be counted
-        # as the start or end of a period.
-        [[[Trend]]]
-            time_delta = 10800  # 3 hours
-            time_grace = 300    # 5 minutes
-
-    # Labels used in this skin
-    [[Labels]]
-
-        # Set to hemisphere abbreviations suitable for your location:
-        hemispheres = N, S, E, W
-        # Formats to be used for latitude whole degrees, longitude whole degrees,
-        # and minutes:
-        latlon_formats = "%02d", "%03d", "%05.2f"
-
-        # Generic labels, keyed by an observation type.
-        [[[Generic]]]
-
-            barometer      = Barometer
-            dewpoint       = Dew Point
-            ET             = ET
-            heatindex      = Heat Index
-            inHumidity     = Inside Humidity
-            inTemp         = Inside Temperature
-            outHumidity    = Humidity
-            outTemp        = Temperature
-            radiation      = Radiation
-            rain           = Rain
-            rainRate       = Rain Rate
-            UV             = UV Index
-            windDir        = Wind Direction
-            windGust       = Gust Speed
-            windGustDir    = Gust Direction
-            windSpeed      = Wind Speed
-            windchill      = Wind Chill
-            windgustvec    = Gust Vector
-            windvec        = Wind Vector
-            extraTemp1     = Temperature1
-            extraTemp2     = Temperature2
-            extraTemp3     = Temperature3
-
-            # Sensor status indicators
-
-            rxCheckPercent       = Signal Quality
-            txBatteryStatus      = Transmitter
-            windBatteryStatus    = Wind
-            rainBatteryStatus    = Rain
-            outTempBatteryStatus = Outside Temperature
-            inTempBatteryStatus  = Inside Temperature
-            consBatteryVoltage   = Console
-            heatingVoltage       = Heating
-            supplyVoltage        = Supply
-            referenceVoltage     = Reference
-
-  [[Almanac]]
-        # The labels to be used for the phases of the moon:
-        moon_phases = New, Waxing crescent, First quarter, Waxing gibbous, Full, Waning gibbous, Last quarter, Waning crescent
-
-"""))
-
-        weeutil.config.merge_config(config_dict, defaults_dict)
-        # Put the comment for the [Defaults] section back in, which the merge process always seems to strip:
-        config_dict.comments['Defaults'] = major_comment_block + ['#   Various default values used by observations', '']
-        # Move the [Defaults] section to just before the [Engine] section
-        reorder_sections(config_dict, 'Defaults', 'Engine')
 
     config_dict['version'] = '3.9.0'
 
 
-def patch_skins(config_dict, logger=None):
-    """Update the skin configuration files to V3.9"""
+def update_units(config_dict, unit_system_name, logger=None, debug=False):
+    """Update [StdReport][Defaults] with the desired unit system"""
 
-    if 'StdReport' not in config_dict:
-        return
+    if unit_system_name is not None:
+        try:
+            config_dict['StdReport']['Defaults']['Units']['Groups'].update(unit_systems[unit_system_name])
+        except KeyError:
+            unit_dict = configobj.ConfigObj(StringIO("""[StdReport]
+            
+    # The following section contains defaults that will apply to *all* skins
+    [[Defaults]]
 
-    for report in config_dict['StdReport'].sections:
-        patch_skin(config_dict, report, logger)
+        # The following section determines the selection and formatting of units.
+        [[[Units]]]
 
+            # The following section sets what unit to use for each unit group.
+            # NB: The unit is always in the singular. I.e., 'mile_per_hour',
+            # NOT 'miles_per_hour'
+            [[[[Groups]]]]
 
-def patch_skin(config_dict, report, logger=None):
-    """Patch the given skin configuration file (skin.conf) to V3.9"""
-
-    logger = logger or Logger()
-
-    # Find the skin.conf file for this report
-    skin_file = os.path.join(
-        config_dict['WEEWX_ROOT'],
-        config_dict['StdReport']['SKIN_ROOT'],
-        config_dict['StdReport'][report].get('skin', ''),
-        'skin.conf')
-    try:
-        # Load it
-        skin_dict = configobj.ConfigObj(skin_file, file_error=True)
-    except IOError:
-        # It's OK for the skin.conf file not to exist.
-        return
-
-    logger.log("Patching report %s configuration file %s" % (report, skin_file), level=2)
-    patch_skin_dict(config_dict, skin_dict, report, logger)
-
-    # Now write the patched skin configuration file, with a backup.
-    save_with_backup(skin_dict, skin_file)
-    logger.log("Finished patching report %s" % report, level=2)
+                group_altitude     = foot                 # Options are 'foot' or 'meter'
+                group_degree_day   = degree_F_day         # Options are 'degree_F_day' or 'degree_C_day'
+                group_pressure     = inHg                 # Options are 'inHg', 'mmHg', 'mbar', or 'hPa'
+                group_rain         = inch                 # Options are 'inch', 'cm', or 'mm'
+                group_rainrate     = inch_per_hour        # Options are 'inch_per_hour', 'cm_per_hour', or 'mm_per_hour'
+                group_speed        = mile_per_hour        # Options are 'mile_per_hour', 'km_per_hour', 'knot', or 'meter_per_second'
+                group_speed2       = mile_per_hour2       # Options are 'mile_per_hour2', 'km_per_hour2', 'knot2', or 'meter_per_second2'
+                group_temperature  = degree_F             # Options are 'degree_F' or 'degree_C'
+    """))
+            weeutil.config.merge_config(config_dict, unit_dict)
 
 
-def patch_skin_dict(config_dict, skin_dict, report, logger):
-    """Patch a skin configuration dictionary to V3.9"""
-
-    # No need to do anything if this skin has already been upgraded
-    if to_int(skin_dict.get('skin_semantics', 1)) >= 2:
-        logger.log("Report %s already at level 2. Skipping" % report, level=2)
-        return
-
-    n_commented = 0
-
-    # For each override section in the report, comment out any scalars
-    # in the skin.conf file with matching names.
-    for section in config_dict['StdReport'][report].sections:
-        if section in skin_dict:
-            n_commented += fix_overrides(config_dict['StdReport'][report][section], skin_dict[section])
-
-    # For each section under [Defaults], delete any scalar in skin.conf
-    # that has the same value as in [Defaults].
-    for section in config_dict['Defaults'].sections:
-        if section in skin_dict:
-            n_commented += fix_defaults(config_dict['Defaults'][section], skin_dict[section])
-
-    logger.log("For report '%s', %d lines were commented out" % (report, n_commented), level=2)
-
-    # Indicate that this skin.conf file has now been patched to v2 semantics
-    skin_dict['skin_semantics'] = 2
-
-
-
-def fix_overrides(section_dict, skin_dict_section):
-    """Comment out any scalars in the skin configuration file that have
-    been overridden in weewx.conf.
-
-    Returns: The number of scalars that were commented out.
-    """
-
-    n_commented = 0
-    # Recursively fix any overrides in any subsections under me
-    for section in section_dict.sections:
-        if section in skin_dict_section:
-            n_commented += fix_overrides(section_dict[section], skin_dict_section[section])
-    # Now comment out any overridden scalars in the skin configuration file
-    for scalar in section_dict.scalars:
-        n_commented += weeutil.config.comment_scalar(skin_dict_section, scalar)
-
-    return n_commented
-
-
-def fix_defaults(defaults_dict, skin_dict_section):
-    """Delete any values in the skin.conf that are the same as their corresponding value
-    in [Defaults]"""
-    n_commented = 0
-    for section in defaults_dict.sections:
-        if section in skin_dict_section:
-            n_commented += fix_defaults(defaults_dict[section], skin_dict_section[section])
-    for scalar in defaults_dict.scalars:
-        if scalar in skin_dict_section and defaults_dict[scalar] == skin_dict_section[scalar]:
-            n_commented += weeutil.config.comment_scalar(skin_dict_section, scalar)
-
-    return n_commented
+# def patch_skins(config_dict, logger=None):
+#     """Update the skin configuration files to V3.9"""
+#
+#     if 'StdReport' not in config_dict:
+#         return
+#
+#     for report in config_dict['StdReport'].sections:
+#         patch_skin(config_dict, report, logger)
+#
+#
+# def patch_skin(config_dict, report, logger=None):
+#     """Patch the given skin configuration file (skin.conf) to V3.9"""
+#
+#     logger = logger or Logger()
+#
+#     # Find the skin.conf file for this report
+#     skin_file = os.path.join(
+#         config_dict['WEEWX_ROOT'],
+#         config_dict['StdReport']['SKIN_ROOT'],
+#         config_dict['StdReport'][report].get('skin', ''),
+#         'skin.conf')
+#     try:
+#         # Load it
+#         skin_dict = configobj.ConfigObj(skin_file, file_error=True)
+#     except IOError:
+#         # It's OK for the skin.conf file not to exist.
+#         return
+#
+#     logger.log("Patching report %s configuration file %s" % (report, skin_file), level=2)
+#     patch_skin_dict(config_dict, skin_dict, report, logger)
+#
+#     # Now write the patched skin configuration file, with a backup.
+#     save_with_backup(skin_dict, skin_file)
+#     logger.log("Finished patching report %s" % report, level=2)
+#
+#
+# def patch_skin_dict(config_dict, skin_dict, report, logger):
+#     """Patch a skin configuration dictionary to V3.9"""
+#
+#     # No need to do anything if this skin has already been upgraded
+#     if to_int(skin_dict.get('skin_semantics', 1)) >= 2:
+#         logger.log("Report %s already at level 2. Skipping" % report, level=2)
+#         return
+#
+#     n_commented = 0
+#
+#     # For each override section in the report, comment out any scalars
+#     # in the skin.conf file with matching names.
+#     for section in config_dict['StdReport'][report].sections:
+#         if section in skin_dict:
+#             n_commented += fix_overrides(config_dict['StdReport'][report][section], skin_dict[section])
+#
+#     # For each section under [Defaults], delete any scalar in skin.conf
+#     # that has the same value as in [Defaults].
+#     for section in config_dict['Defaults'].sections:
+#         if section in skin_dict:
+#             n_commented += fix_defaults(config_dict['Defaults'][section], skin_dict[section])
+#
+#     logger.log("For report '%s', %d lines were commented out" % (report, n_commented), level=2)
+#
+#     # Indicate that this skin.conf file has now been patched to v2 semantics
+#     skin_dict['skin_semantics'] = 2
+#
+#
+#
+# def fix_overrides(section_dict, skin_dict_section):
+#     """Comment out any scalars in the skin configuration file that have
+#     been overridden in weewx.conf.
+#
+#     Returns: The number of scalars that were commented out.
+#     """
+#
+#     n_commented = 0
+#     # Recursively fix any overrides in any subsections under me
+#     for section in section_dict.sections:
+#         if section in skin_dict_section:
+#             n_commented += fix_overrides(section_dict[section], skin_dict_section[section])
+#     # Now comment out any overridden scalars in the skin configuration file
+#     for scalar in section_dict.scalars:
+#         n_commented += weeutil.config.comment_scalar(skin_dict_section, scalar)
+#
+#     return n_commented
+#
+#
+# def fix_defaults(defaults_dict, skin_dict_section):
+#     """Delete any values in the skin.conf that are the same as their corresponding value
+#     in [Defaults]"""
+#     n_commented = 0
+#     for section in defaults_dict.sections:
+#         if section in skin_dict_section:
+#             n_commented += fix_defaults(defaults_dict[section], skin_dict_section[section])
+#     for scalar in defaults_dict.scalars:
+#         if scalar in skin_dict_section and defaults_dict[scalar] == skin_dict_section[scalar]:
+#             n_commented += weeutil.config.comment_scalar(skin_dict_section, scalar)
+#
+#     return n_commented
 
 
 # ==============================================================================
@@ -1407,7 +1256,7 @@ def get_station_info(config_dict):
             stn_info['units'] = None
             try:
                 # First look for a [Defaults] section.
-                stn_info['units'] = get_unit_info(config_dict['Defaults'])
+                stn_info['units'] = get_unit_info(config_dict['StdReport']['Defaults'])
             except KeyError:
                 pass
             # If that didn't work, look for an override in the [[StandardReport]] section.
@@ -1416,9 +1265,6 @@ def get_station_info(config_dict):
                     stn_info['units'] = get_unit_info(config_dict['StdReport']['StandardReport'])
                 except KeyError:
                     pass
-            # Keep things simple!
-            if stn_info['units'] == 'metricwx':
-                stn_info['units'] = 'metric'
 
     return stn_info
 
@@ -1427,13 +1273,12 @@ def get_unit_info(test_dict):
     """Intuit what unit system the reports are in."""
     try:
         group_dict = test_dict['Units']['Groups']
-        # Look for a strict superset of the group settings:
-        if all(group_dict[group] == us_group[group] for group in us_group):
-            return 'us'
-        elif all(group_dict[group] == metric_group[group] for group in metric_group):
-            return 'metric'
-        elif all(group_dict[group] == metricwx_group[group] for group in metricwx_group):
-            return 'metricwx'
+
+        # Test all unit systems ('us', 'metric', 'metricwx'):
+        for unit_system in unit_systems:
+            # For this unit system, make sure there is an exact match
+            if all(group_dict[group] == unit_systems[unit_system][group] for group in unit_systems[unit_system]):
+                return unit_system
     except KeyError:
         return None
 
@@ -1669,10 +1514,14 @@ def prompt_for_info(location=None, latitude='0.000', longitude='0.000',
     lon = prompt_with_limits("longitude", longitude, -180, 180)
 
     #
-    # Display units
+    # Display units. Accept only 'us' or 'metric', where 'metric'
+    # is a synonym for 'metricwx'.
     #
     print "Indicate the preferred units for display: 'metric' or 'us'"
-    uni = prompt_with_options("units", units, ['us', 'metric'])
+    default = units if units != 'metricwx' else 'metric'
+    uni = prompt_with_options("units", default, ['us', 'metric'])
+    if uni == 'metric':
+        uni = 'metricwx'
 
     return {'location': loc,
             'altitude': alt,

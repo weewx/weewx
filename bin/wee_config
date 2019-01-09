@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-#    Copyright (c) 2009-2018 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2019 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your rights.
 #
@@ -28,7 +28,6 @@ usage = """Usage: wee_config --help
            --dist-config=DIST_CONFIG
            [--output=OUT_CONFIG] [--no-prompt] [--no-backup]
            [--warn-on-error] [--verbosity=N]
-       wee_config --patch-skins CONFIG_FILE|--config=CONFIG_FILE [--verbosity=N]
 
 User actions:
 
@@ -44,8 +43,6 @@ System actions (not normally done by users):
 --upgrade       Update the contents of configuration file CONFIG_FILE to the
                 installed version, then merge the result with the contents of
                 configuration file DIST_CONFIG.
---patch-skins   Patch skin.conf files to new default semantics (introduced 
-                in V3.9).
 
 Station parameters:
 
@@ -75,8 +72,6 @@ def main():
     parser.add_option("--upgrade", action="store_true",
                       help="Update an existing configuration file, then merge "
                       "with contents of DIST_CONFIG.")
-    parser.add_option("--patch-skins", action="store_true",
-                      help="Patch skin.conf files to WeeWX V3.9 semantics.")
     parser.add_option("--config", dest="config_path", metavar="CONFIG_FILE",
                       help="Use configuration file CONFIG_FILE.")
     parser.add_option("--dist-config",

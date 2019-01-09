@@ -1,10 +1,12 @@
 #
-#    Copyright (c) 2009-2018 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2019 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
 """Engine for generating reports"""
 
+# 3rd party imports:
+import configobj
 # System imports:
 import datetime
 import ftplib
@@ -18,13 +20,11 @@ import threading
 import time
 import traceback
 
-# 3rd party imports:
-import configobj
-
-# Weewx imports:
+# WeeWX imports:
 import weeutil.weeutil
-from weeutil.weeutil import to_bool
+import weewx.defaults
 import weewx.manager
+from weeutil.weeutil import to_bool
 
 # spans of valid values for each CRON like field
 MINUTES = (0, 59)
@@ -119,6 +119,11 @@ class StdReportEngine(threading.Thread):
 
         # Iterate over each requested report
         for report in self.config_dict['StdReport'].sections:
+
+            # Ignore the [[Defaults]] section
+            if report == 'Defaults':
+                continue
+
             # See if this report is disabled
             enabled = to_bool(self.config_dict['StdReport'][report].get('enable', True))
             if not enabled:
@@ -216,54 +221,31 @@ class StdReportEngine(threading.Thread):
     def _build_skin_dict(self, report):
         """Find and build the skin_dict for the given report"""
 
-        if 'Defaults' in self.config_dict:
-            # Start with the [Defaults] section in weewx.conf. Because we will be modifying it,
-            # we need to make a deep copy. We can do this by applying the .dict() member function,
-            # which returns a copy as a plain old dictionary, then converting that into a ConfigObj
-            skin_dict = configobj.ConfigObj(self.config_dict['Defaults'].dict())
-        else:
-            skin_dict = configobj.ConfigObj()
-
-        # Add the default database binding:
-        skin_dict.setdefault('data_binding', 'wx_binding')
-        # Default to logging to whatever is specified at the root level
-        # of weewx.conf, or true if nothing specified:
-        skin_dict.setdefault('log_success',
-                             to_bool(self.config_dict.get('log_success', True)))
-        skin_dict.setdefault('log_failure',
-                             to_bool(self.config_dict.get('log_failure', True)))
+        # Start with the defaults in the defaults module. Because we will be modifying it, we need to make a deep
+        # copy. We can do this by applying the .dict() member function, which returns a copy as a plain old
+        # dictionary, then converting that into a ConfigObj. This will lose the comments, but we don't care about
+        # that now.
+        skin_dict = configobj.ConfigObj(weewx.defaults.defaults.dict())
 
         # Add the report name:
         skin_dict['REPORT_NAME'] = report
 
-        # Inject any overrides the user may have specified in the
-        # weewx.conf configuration file for all reports:
-        for scalar in self.config_dict['StdReport'].scalars:
-            skin_dict[scalar] = self.config_dict['StdReport'][scalar]
-
-        # Now inject any overrides for this specific report:
-        weeutil.weeutil.merge_config(skin_dict, self.config_dict['StdReport'][report])
-
-        # Figure out where the configuration file is for the skin used by
-        # this report:
+        # Now add the options in the report's skin.conf file. Start by figuring where it is located.
         skin_config_path = os.path.join(
             self.config_dict['WEEWX_ROOT'],
             self.config_dict['StdReport']['SKIN_ROOT'],
             self.config_dict['StdReport'][report].get('skin', ''),
             'skin.conf')
 
-        # Retrieve the configuration dictionary for the skin. Wrap it in
-        # a try block in case we fail.  It is ok if there is no skin
-        # configuration file - everything for a skin might be defined
-        # in the weewx configuration.
+        # Now retrieve the configuration dictionary for the skin. Wrap it in a try block in case we fail.  It is ok if
+        # there is no file - everything for a skin might be defined in the weewx configuration.
         try:
             merge_dict = configobj.ConfigObj(skin_config_path, file_error=True)
             syslog.syslog(syslog.LOG_DEBUG,
                           "reportengine: "
                           "Found configuration file %s for report '%s'"
                           % (skin_config_path, report))
-            # Merge and patch the skin config file into the weewx.conf config file.
-            # Because this is the last merge, it will have the final say.
+            # Merge the skin config file in:
             weeutil.weeutil.merge_config(skin_dict, merge_dict)
         except IOError as e:
             syslog.syslog(syslog.LOG_DEBUG,
@@ -276,6 +258,20 @@ class StdReportEngine(threading.Thread):
                           "Failed to read skin configuration file %s for report '%s': %s"
                           % (skin_config_path, report, e))
             raise
+
+        # Now add on the [StdReport][[Defaults]] section, if present:
+        if 'Defaults' in self.config_dict['StdReport']:
+            merge_dict = configobj.ConfigObj(self.config_dict['StdReport']['Defaults'].dict())
+            weeutil.config.merge_config(skin_dict, merge_dict)
+
+        # Inject any scalar overrides. This is for backwards compatibility. These options should now go
+        # under [StdReport][[Defaults]].
+        for scalar in self.config_dict['StdReport'].scalars:
+            skin_dict[scalar] = self.config_dict['StdReport'][scalar]
+
+        # Finally, inject any overrides for this specific report. Because this is the last merge, it will have the
+        # final say.
+        weeutil.config.merge_config(skin_dict, self.config_dict['StdReport'][report])
 
         return skin_dict
 

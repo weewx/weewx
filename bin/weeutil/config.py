@@ -125,6 +125,7 @@ def patch_config(self_config, indict):
             self_config[key].parent = self_config
             self_config[key].main = self_config.main
             self_config.comments[key] = indict.comments[key]
+            self_config.inline_comments[key] = indict.inline_comments[key]
             patch_config(self_config[key], indict[key])
 
 

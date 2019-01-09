@@ -395,7 +395,7 @@ class ConfigTest(LineTest):
         # First update, then merge:
         weecfg.update_and_merge(config_dict, template)
 
-        # with open('expected/weewx_user_expected.conf', 'wb') as fd:
+        # with open('expected/weewx20_user_expected.conf', 'wb') as fd:
         #     config_dict.write(fd)
 
         self._check_against_expected(config_dict, 'expected/weewx20_user_expected.conf')
@@ -439,39 +439,39 @@ class ConfigTest(LineTest):
         self.assertEqual(config_dict['Vantage'], default_config['Vantage'])
 
 
-class SkinPatchTest(LineTest):
-
-    def setUp(self):
-        self.skin_dir = os.path.join(TMPDIR, 'skins38')
-        shutil.rmtree(self.skin_dir, ignore_errors=True)
-        shutil.copytree('skins38', self.skin_dir)
-
-    def tearDown(self):
-        pass
-        #shutil.rmtree(os.path.join(TMPDIR, 'skin38'), ignore_errors=True)
-
-    def test_patch_skin(self):
-
-        config_dict = configobj.ConfigObj('weewx38_user.conf')
-        config_dict['WEEWX_ROOT'] = TMPDIR
-        # Upgrade the V3.8 configuration dictionary to V3.9:
-        weecfg.update_to_v39(config_dict)
-        weecfg.patch_skins(config_dict)
-
-        # Find the patched skin.conf ...
-        skin_file = os.path.join(
-            config_dict['WEEWX_ROOT'],
-            config_dict['StdReport']['SKIN_ROOT'],
-            config_dict['StdReport']['StandardReport'].get('skin', ''),
-            'skin.conf')
-        # ... retrieve it ...
-        skin_dict = configobj.ConfigObj(skin_file)
-
-        with open('expected/skin39.conf', 'wb') as fd:
-            skin_dict.write(fd)
-
-        # ... and check it against the expected
-        self._check_against_expected(skin_dict, 'expected/skin39.conf')
+# class SkinPatchTest(LineTest):
+#
+#     def setUp(self):
+#         self.skin_dir = os.path.join(TMPDIR, 'skins38')
+#         shutil.rmtree(self.skin_dir, ignore_errors=True)
+#         shutil.copytree('skins38', self.skin_dir)
+#
+#     def tearDown(self):
+#         pass
+#         #shutil.rmtree(os.path.join(TMPDIR, 'skin38'), ignore_errors=True)
+#
+#     def test_patch_skin(self):
+#
+#         config_dict = configobj.ConfigObj('weewx38_user.conf')
+#         config_dict['WEEWX_ROOT'] = TMPDIR
+#         # Upgrade the V3.8 configuration dictionary to V3.9:
+#         weecfg.update_to_v39(config_dict)
+#         weecfg.patch_skins(config_dict)
+#
+#         # Find the patched skin.conf ...
+#         skin_file = os.path.join(
+#             config_dict['WEEWX_ROOT'],
+#             config_dict['StdReport']['SKIN_ROOT'],
+#             config_dict['StdReport']['StandardReport'].get('skin', ''),
+#             'skin.conf')
+#         # ... retrieve it ...
+#         skin_dict = configobj.ConfigObj(skin_file)
+#
+#         with open('expected/skin39.conf', 'wb') as fd:
+#             skin_dict.write(fd)
+#
+#         # ... and check it against the expected
+#         self._check_against_expected(skin_dict, 'expected/skin39.conf')
 
 
 
