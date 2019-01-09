@@ -674,11 +674,10 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
         </p>
 
         <p>
-            Some options control behavior, while other options are used for patterns.  For eample, the option <span class="code">stale_age</span> determines how old a file must be in order to be updated.  The option <span class="code">latlog_formats</span> defines how numeric values will be formatted.  And the option <span class="code">SummaryByYear</span> is used to generate many files.
-        </p>
-
-        <p>
-            Options are specified in configuration files and are organized hierarchically into stanzas.  For example, the <span class="code">[Labels]</span> stanza contains the text that should be displayed for each observation.  The <span class="code">[Units]</span> stanza contains other stanzas, each of which contains parameters that control the display of units.
+            Options are specified in configuration files and are organized hierarchically into stanzas. For example, the
+            <span class="code">[Labels]</span> stanza contains the text that should be displayed for each observation.
+            The <span class="code">[Units]</span> stanza contains other stanzas, each of which contains parameters that
+            control the display of units.
         </p>
 
         <p class="note">
@@ -688,11 +687,11 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
 
         <h2 id="How_options_work">How options work</h2>
 
+        <p class="note">This section needs a better explanation of the options hierarchy!</p>
         <p>
-          Options can be specified in one of two different sections in
-          <span class="code">weewx.conf</span>, or in the skin configuration
-          file <span class="code">skin.conf</span>, depending on the <em>scope</em>
-          over which you want the change to apply. The table below summarizes:
+            Options can be specified either in the skin configuration file <span class="code">skin.conf</span>, or in
+            one of two different sections of <span class="code">weewx.conf</span>, depending on desired
+            <em>scope</em> and <em>precedence</em>. These locations are listed below, in order of increasing precedence.
         </p>
 
         <table class="indent" style="width: 80%">
@@ -702,18 +701,23 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
                 <td>Scope</td>
             </tr>
             <tr>
-                <td class="code">weewx.conf</td>
-                <td class="code"><a href="#change_defaults">[Defaults]</a></td>
+                <td class="code">weewx/defaults.py</td>
+                <td class="code">[Defaults]</td>
                 <td>Affects <em>all</em> reports.</td>
-            </tr>
-            <tr>
-                <td class="code">weewx.conf</td>
-                <td class="code"><a href="#change_stdreport">[StdReport][[<span class="symcode">report_name</span>]]</a></td>
-                <td>Affects only the report <span class="symcode">report_name</span>.</td>
             </tr>
             <tr>
                 <td class="code">skins/<span class="symcode">report_name</span>/skin.conf</td>
                 <td></td>
+                <td>Affects only the report <span class="symcode">report_name</span>.</td>
+            </tr>
+            <tr>
+                <td class="code">weewx.conf</td>
+                <td class="code"><a href="#change_defaults">[StdReport] / [[Defaults]]</a></td>
+                <td>Affects <em>all</em> reports.</td>
+            </tr>
+            <tr>
+                <td class="code">weewx.conf</td>
+                <td class="code"><a href="#change_stdreport">[StdReport] / [[<span class="symcode">report_name</span>]]</a></td>
                 <td>Affects only the report <span class="symcode">report_name</span>.</td>
             </tr>
         </table>
@@ -738,6 +742,10 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
 
         <pre class="tty">
 [StdReport]
+    [[Defaults]]
+        [[[Labels]]]
+            [[[[Generic]]]]
+                outTemp = Shed Temperature
     [[SeasonsA]]
         skin = Seasons
         [[[Labels]]]
@@ -745,11 +753,6 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
                 outTemp = Barn Temperature
     [[SeasonsB]]
         skin = Seasons
-
-[Defaults]
-    [[Labels]]
-        [[[Generic]]]
-            outTemp = Shed Temperature
 </pre>
 
         <p>
@@ -784,66 +787,93 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
         </p>
 
         <h3 id="change_defaults">
-            Change an option in <span class="code">[Defaults]</span>
+            Change units for all reports
         </h3>
         <p>
-            With this approach, you change an option under the <span class="code">[Defaults]</span> section
-            in <span class="code">weewx.conf.</span> Changes here will affect <em>all</em> reports.
+            With this approach, you change an option under the <span class="code">[[Defaults]]</span> subsection,
+            located under <span class="code">[StdReport]</span> in <span class="code">weewx.conf.</span> Changes here
+            will affect <em>all</em> reports.
         </p>
 
         <p>
             For example, suppose you wish to use metric units for all your reports, instead of the default US Customary
-            Units. The section under <span class="code">[Defaults]</span> that controls units is <span
-            class="code">[[Units]][[[Groups]]]</span>. It looks like this:
+            Units. The section that controls units is <span class="code">[StdReport] / [[Defaults]] / [[[Units]]] / [[[[Groups]]]]</span>.
+            It looks like this:
         </p>
         <pre class="tty">
-[Defaults]
-    [[Units]]
-        [[[Groups]]]
-            group_altitude     = foot
-            group_degree_day   = degree_F_day
-            group_direction    = degree_compass
-            group_moisture     = centibar
-            group_percent      = percent
-            group_pressure     = inHg
-            group_radiation    = watt_per_meter_squared
-            group_rain         = inch
-            group_rainrate     = inch_per_hour
-            group_speed        = mile_per_hour
-            group_speed2       = mile_per_hour2
-            group_temperature  = degree_F
-            group_uv           = uv_index
-            group_volt         = volt
+[StdReport]
+
+    # Where the skins reside, relative to WEEWX_ROOT
+    SKIN_ROOT = skins
+
+    # Where the generated reports should go, relative to WEEWX_ROOT
+    HTML_ROOT = public_html
+
+    # The database binding indicates which data should be used in reports.
+    data_binding = wx_binding
+
+    # The following section contains defaults that will apply to *all* skins
+    [[Defaults]]
+
+        # The following section determines the selection and formatting of units.
+        [[[Units]]]
+
+            # The following section sets what unit to use for each unit group.
+            # NB: The unit is always in the singular. I.e., 'mile_per_hour',
+            # NOT 'miles_per_hour'
+            [[[[Groups]]]]
+
+                group_altitude     = foot                 # Options are 'foot' or 'meter'
+                group_degree_day   = degree_F_day         # Options are 'degree_F_day' or 'degree_C_day'
+                group_pressure     = inHg                 # Options are 'inHg', 'mmHg', 'mbar', or 'hPa'
+                group_rain         = inch                 # Options are 'inch', 'cm', or 'mm'
+                group_rainrate     = inch_per_hour        # Options are 'inch_per_hour', 'cm_per_hour', or 'mm_per_hour'
+                group_speed        = mile_per_hour        # Options are 'mile_per_hour', 'km_per_hour', 'knot', or 'meter_per_second'
+                group_speed2       = mile_per_hour2       # Options are 'mile_per_hour2', 'km_per_hour2', 'knot2', or 'meter_per_second2'
+                group_temperature  = degree_F             # Options are 'degree_F' or 'degree_C'
 </pre>
 
         <p>
             To use metric units for all your skins, you would edit this section to read:
         </p>
         <pre class="tty">
-[Defaults]
-    [[Units]]
-        [[[Groups]]]
-            group_altitude     = <span class="highlight">meter</span>
-            group_degree_day   = <span class="highlight">degree_C_day</span>
-            group_direction    = degree_compass
-            group_moisture     = centibar
-            group_percent      = percent
-            group_pressure     = <span class="highlight">mbar</span>
-            group_radiation    = watt_per_meter_squared
-            group_rain         = <span class="highlight">mm</span>
-            group_rainrate     = <span class="highlight">mm_per_hour</span>
-            group_speed        = <span class="highlight">meter_per_second</span>
-            group_speed2       = <span class="highlight">meter_per_second2</span>
-            group_temperature  = <span class="highlight">degree_C</span>
-            group_uv           = uv_index
-            group_volt         = volt
+[StdReport]
+
+    # Where the skins reside, relative to WEEWX_ROOT
+    SKIN_ROOT = skins
+
+    # Where the generated reports should go, relative to WEEWX_ROOT
+    HTML_ROOT = public_html
+
+    # The database binding indicates which data should be used in reports.
+    data_binding = wx_binding
+
+    # The following section contains defaults that will apply to *all* skins
+    [[Defaults]]
+
+        # The following section determines the selection and formatting of units.
+        [[[Units]]]
+
+            # The following section sets what unit to use for each unit group.
+            # NB: The unit is always in the singular. I.e., 'mile_per_hour',
+            # NOT 'miles_per_hour'
+            [[[[Groups]]]]
+
+                group_altitude     = <span class="highlight">meter</span>                # Options are 'foot' or 'meter'
+                group_degree_day   = <span class="highlight">degree_C_day</span>         # Options are 'degree_F_day' or 'degree_C_day'
+                group_pressure     = <span class="highlight">mbar</span>                 # Options are 'inHg', 'mmHg', 'mbar', or 'hPa'
+                group_rain         = <span class="highlight">mm</span>                   # Options are 'inch', 'cm', or 'mm'
+                group_rainrate     = <span class="highlight">mm_per_hour</span>          # Options are 'inch_per_hour', 'cm_per_hour', or 'mm_per_hour'
+                group_speed        = <span class="highlight">meter_per_second</span>     # Options are 'mile_per_hour', 'km_per_hour', 'knot', or 'meter_per_second'
+                group_speed2       = <span class="highlight">meter_per_second2</span>    # Options are 'mile_per_hour2', 'km_per_hour2', 'knot2', or 'meter_per_second2'
+                group_temperature  = <span class="highlight">degree_C</span>             # Options are 'degree_F' or 'degree_C'
 </pre>
         <p>
             The options that were changed have been <span class="highlight">&nbsp;highlighted&nbsp;</span>.
         </p>
 
         <h3 id="change_stdreport">
-            Change an option in <span class="code">[StdReport]</span>
+            Change units for a single report</span>
         </h3>
 
         <p>
@@ -851,62 +881,77 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
         </p>
 
         <p>
-            Suppose you want two reports, one in Metric,
-            the other in US Customary. The Metric report will go in the regular directory <span class="symcode">HTML_ROOT</span>,
-            but the latter in a subdirectory, <span class="code">HTML_ROOT/us</span>.
-            To accomplish this, the <span class="code">[Defaults]</span> section in <span class="code">weewx.conf</span>
-            remains untouched, but the <span class="code">[StdReport]</span> section would read:
+            Suppose you want two reports, one in US Customary, the other in Metric. The first, call it <span
+            class="code">SeasonsUSReport</span>, will go in the regular directory <span class="symcode">HTML_ROOT</span>.
+            However, the latter, call it <span class="code">SeasonsMetricReport</span>, will go in a subdirectory,
+            <span class="symcode">HTMLROOT</span><span class="code">/metric</span>.
+        </p>
+        <p>
+            To accomplish this, we will generate two reports, one using the defaults, the other using overrides to
+            change the target unit system and the target directory. The section <span class="code">[StdReport]</span>
+            will look like this:
         </p>
         <pre class="tty">
 [StdReport]
-    #
-    # This section specifies what reports, using which skins, are to be generated.
-    #
 
-    # Where the skins reside, relative to WEEWX_ROOT:
+    # Where the skins reside, relative to WEEWX_ROOT
     SKIN_ROOT = skins
 
-    # Where the generated reports should go, relative to WEEWX_ROOT:
+    # Where the generated reports should go, relative to WEEWX_ROOT
     HTML_ROOT = public_html
 
-    # This report will use Metric units
-    [[SeasonsMetricReport]]
-        # It is based on the Seasons skin
-        skin = Seasons
+    # The database binding indicates which data should be used in reports.
+    data_binding = wx_binding
 
-    # This report will use US Customary units
-    [[SeasonsUSReport]]
-        # It is also based on the Seasons skin:
-        skin = Seasons
-        # However, override where the results will go:
-        HTML_ROOT = public_html/us
-
-        # Override the options, so this report will be in US units
+    # The following section contains defaults that will apply to *all* skins
+    [[Defaults]]
         [[[Units]]]
             [[[[Groups]]]]
-                group_altitude    = foot
-                group_pressure    = inHg
-                group_rain        = inch
-                group_rainrate    = inch_per_hour
-                group_speed       = mile_per_hour
-                group_speed2      = mile_per_hour2
-                group_temperature = degree_F
+                group_altitude     = meter                # Options are 'foot' or 'meter'
+                group_degree_day   = degree_C_day         # Options are 'degree_F_day' or 'degree_C_day'
+                group_pressure     = mbar                 # Options are 'inHg', 'mmHg', 'mbar', or 'hPa'
+                group_rain         = mm                   # Options are 'inch', 'cm', or 'mm'
+                group_rainrate     = mm_per_hour          # Options are 'inch_per_hour', 'cm_per_hour', or 'mm_per_hour'
+                group_speed        = meter_per_second     # Options are 'mile_per_hour', 'km_per_hour', 'knot', or 'meter_per_second'
+                group_speed2       = meter_per_second2    # Options are 'mile_per_hour2', 'km_per_hour2', 'knot2', or 'meter_per_second2'
+                group_temperature  = degree_C             # Options are 'degree_F' or 'degree_C'
+
+    <span class="highlight">[[SeasonsUSReport]]</span>
+        skin = Seasons
+        enable = true
+
+<span class="highlight">    [[SeasonsMetricReport]]
+        skin = Seasons
+        enable = true
+        HTML_ROOT = skins/metric
+        [[[Units]]]
+            [[[[Groups]]]]
+                group_altitude     = foot                 # Options are 'foot' or 'meter'
+                group_degree_day   = degree_F_day         # Options are 'degree_F_day' or 'degree_C_day'
+                group_pressure     = inHg                 # Options are 'inHg', 'mmHg', 'mbar', or 'hPa'
+                group_rain         = inch                 # Options are 'inch', 'cm', or 'mm'
+                group_rainrate     = inch_per_hour        # Options are 'inch_per_hour', 'cm_per_hour', or 'mm_per_hour'
+                group_speed        = mile_per_hour        # Options are 'mile_per_hour', 'km_per_hour', 'knot', or 'meter_per_second'
+                group_speed2       = mile_per_hour2       # Options are 'mile_per_hour2', 'km_per_hour2', 'knot2', or 'meter_per_second2'
+                group_temperature  = degree_F             # Options are 'degree_F' or 'degree_C'</span>
 </pre>
         <p>
             Two things are different from the stock section <span class="code">[StdReport]</span>. First (1), we have
-            renamed the first report from <span class="code">SeasonsReport</span> to <span class="code">SeasonsMetricReport</span>
-            for clarity; and second (2), we have introduced a new report <span class="code">SeasonsUSReport</span>,
+            renamed the first report from <span class="code">SeasonsReport</span> to <span class="code">SeasonsUSReport</span>
+            for clarity; and second (2), we have introduced a new report <span class="code">SeasonsMetricReport</span>,
             which is just like the first, except it puts its results in a different subdirectory and uses different
             units. Both use the same skin, the <span class="code">Seasons</span> skin.
         </p>
 
         <p>
-            The reason this works is that section <span class="code">[Defaults]</span> is at the "root" of
-            the option tree, while an option under <span class="code">[StdReport]</span> is one step closer to the
-            leaves, so the latter has a higher priority. If an option was specified in the configuration file <span
-            class="code">skin.conf</span>, it would be even farther out the tree and would have the final say. Indeed,
-            take a look at the <span class="code">skin.conf</span> file for <em>Seasons</em> and you'll see that it uses
-            this property to override some label names to suit its purposes.
+            The reason this works is that the report <span class="code">SeasonsUSReport</span> uses all of the defaults,
+            which include US Customary units, and the default value for <a href="usersguide.htm#HTML_ROOT"><span
+            class="code">HTML_ROOT</span></a> (which specifies the location for where HTML files are to be put).
+        </p>
+
+        <p>
+            By contrast, <span class="code">SeasonsMetricReport</span> cannot use these defaults, so it
+            overrides the units to be used, and the value of <span class="code">HTML_ROOT</span>.
         </p>
 
 
