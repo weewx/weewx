@@ -689,9 +689,9 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
 
         <p>
             Options are used in WeeWX to specify how your reports will look and what they will contain. For example,
-            they control what units to use, how to format a string, what color to use for a plot line, <em>etc</em>.
-            They all work the same way and obey a hierarchy, allowing skin writers to specify a look and feel of a
-            report, while ensuring that you still have the final say of how it will come out.
+            they control what units to use, how to format a string, which plot lines to include, and what color they
+            should be, <em>etc</em>. They all work the same way and obey a hierarchy, allowing skin writers to specify a
+            look and feel of a report, while ensuring that you still have the final say of how it will come out.
         </p>
 
         <p>
@@ -705,6 +705,7 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
                 <td>File</td>
                 <td>Section</td>
                 <td>Scope</td>
+                <td>Nesting example</td>
                 <td>Comments</td>
             </tr>
             <tr>
@@ -712,18 +713,21 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
                 <td class="code"><a href="#change_stdreport">[StdReport] / [[<span class="symcode">report_name</span>]]</a>
                 </td>
                 <td>Affects only the report <span class="symcode">report_name</span>.</td>
+                <td class="code">[[[Labels]]] / [[[[Generic]]]]</td>
                 <td>Highest precedence. Has the final say.</td>
             </tr>
             <tr>
                 <td class="code">weewx.conf</td>
                 <td class="code"><a href="#change_defaults">[StdReport] / [[Defaults]]</a></td>
                 <td>Affects <em>all</em> reports.</td>
+                <td class="code">[[[Labels]]] / [[[[Generic]]]]</td>
                 <td>Allows a user to change common elements in the reports, particularly what units to use.</td>
             </tr>
             <tr>
                 <td class="code">skins/<span class="symcode">report_name</span>/skin.conf</td>
                 <td></td>
                 <td>Affects only the report <span class="symcode">report_name</span>.</td>
+                <td class="code">[Labels] / [[Generic]]</td>
                 <td>Generally supplied by the skin writer. It applies a look and feel, which can be overridden
                     by the user.</td>
             </tr>
@@ -731,11 +735,20 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
                 <td class="code">weewx/defaults.py</td>
                 <td class="code"></td>
                 <td>Affects <em>all</em> reports.</td>
+                <td class="code">[Labels] / [[Generic]]</td>
                 <td>Acts as a backstop, in the case an option is not specified anywhere else. Not generally modified by
                     the user, although this could change in the future.
                 </td>
             </tr>
         </table>
+
+        <h3>Nesting</h3>
+        <p>
+            Note in the table above, there are two different nesting depths used: one for <span class="code">weewx.conf</span>,
+            and one for <span class="code">weewx/defaults.py</span> and <span class="code">skin.conf</span>. Due to the
+            vagarities of how the configuration utility ConfigObj works, the former requires two extra sets of brackets
+            for an option than the latter. You must pay attention to the number of brackets required.
+        </p>
 
         <h3 id="how_to_change_labels">Changing labels</h3>
         <p>
