@@ -667,7 +667,7 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
         <h1 id="customizing_reports">Customizing reports</h1>
 
         <p>
-            There are two general mechanisms for customizing reports: 
+            There are two general mechanisms for customizing reports:
             change options in one or more configuration files, or change
             the template files. The former is generally easier, but
             occasionally the latter is necessary.
@@ -691,7 +691,7 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
             Options are used in WeeWX to specify how your reports will look and what they will contain. For example,
             they control what units to use, how to format a string, what color to use for a plot line, <em>etc</em>.
             They all work the same way and obey a hierarchy, allowing skin writers to specify a look and feel of a
-            report, while ensuring that you still have the final say in how it will come out.
+            report, while ensuring that you still have the final say of how it will come out.
         </p>
 
         <p>
@@ -712,7 +712,7 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
                 <td class="code"><a href="#change_stdreport">[StdReport] / [[<span class="symcode">report_name</span>]]</a>
                 </td>
                 <td>Affects only the report <span class="symcode">report_name</span>.</td>
-                <td>Has the final say.</td>
+                <td>Highest precedence. Has the final say.</td>
             </tr>
             <tr>
                 <td class="code">weewx.conf</td>
@@ -737,9 +737,11 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
             </tr>
         </table>
 
+        <h3 id="how_to_change_labels">Changing labels</h3>
         <p>
             Let's look at an example. If you take a look inside the file <span class="code">weewx/defaults.py</span>,
-            you'll see it contains what looks like a big configuration file. Among other things, it has an entry
+            you'll see it contains what looks like a big configuration file. Among other things, it has two entries
+            that look like this:
         </p>
         <pre class="tty">
 ...
@@ -747,17 +749,19 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
 ...
     [[Generic]]
         ...
+        inTemp = Inside Temperature
         outTemp = Outside Temperature
         </pre>
 
         <p>
-            This tells the report generators that when it is time to label the observation variable <span class="code">outTemp</span>,
-            use the string <span class="code">Outside Temperature</span>. Because <span class="code">weewx/defaults.py</span>
-            sits at the bottom of the options hierarchy, this string will be used only when nothing else is available.
+            This tells the report generators that when it comes time to label the observation variables <span class="code">inTemp</span>
+            and <span class="code">outTemp</span>, use the strings <span class="code">InsideTemperature</span> and <span
+            class="code">Outside Temperature</span>, respectively. Because <span class="code">weewx/defaults.py</span>
+            sits at the bottom of the options hierarchy, these strings will be used only when nothing else is available.
         </p>
         <p>
             Now suppose we have a skin called <em>Life</em> . Its configuration file will be
-            located at <span class="code">skins/Life/skin.conf</span>. Among other things, it contains an excerpt
+            located at <span class="code">skins/Life/skin.conf</span>. Suppose, among other things, it contains an excerpt
         </p>
 
         <pre class="tty">
@@ -772,7 +776,8 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
         <p>
             What this says is that the writer of <span class="code">Life</span>, for whatever reasons, decided
             that s/he wants to use the string <span class="code">Exterior Temperature</span>, instead of
-            <span class="code">Outside Temperature</span>.
+            <span class="code">Outside Temperature</span> for the label for <span class="code">outTemp</span>.
+            There is no override for <span class="code">inTemp</span>.
         </p>
         <p>
           Finally, for purposes of illustrating the hierarchy, suppose the <span class="code">[StdReport]</span>
@@ -782,49 +787,109 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
         <pre class="tty">
 [StdReport]
     ...
-    [[Defaults]]
-        [[[Labels]]]
-            [[[[Generic]]]]
-                outTemp = Shed Temperature
+
     [[LifeA]]
+        skin = Seasons
+
+    [[LifeB]]
         skin = Life
         [[[Labels]]]
             [[[[Generic]]]]
                 outTemp = Barn Temperature
-    [[LifeB]]
-        skin = Seasons
 </pre>
 
-        <p class="note">Need an example that shows the behavior of weewx/defaults.py</p>
         <p>
-            then this will result in reports with the following values:
+            This will result in reports with the following values:
         </p>
 
         <table class="indent" style="width: 80%">
             <tr class="first_row">
                 <td>Report</td>
+                <td>Label for <span class="code">inTemp</span></td>
                 <td>Label for <span class="code">outTemp</span></td>
             </tr>
             <tr>
                 <td>LifeA</td>
-                <td>Barn Temperature</td>
+                <td>Inside Temperature</td>
+                <td>Exterior Temperature</td>
             </tr>
             <tr>
                 <td>LifeB</td>
+                <td>Inside Temperature</td>
+                <td>Barn Temperature</td>
+            </tr>
+        </table>
+
+        <p>
+            Note how the values specified for <span class="code">inTemp</span> are not overridden anywhere, so the value
+            specified in <span class="code">weewx/defaults.py</span>, that is, <span
+            class="code">Inside Temperature</span>, is used. By contrast, a value for <span class="code">outTemp</span>
+            was specified in the skin so, in the absence of any user override, its value, <span class="code">ExteriorTemperature</span>
+            will be used as the new default. Finally, for the report <span class="code">LifeB</span>, the user
+            <em>has</em> specified an override for <span class="code">outTemp</span>, so that value, <span class="code">Barn Temperature</span>,
+            is used.
+        </p>
+
+        <p>
+            One more example. This time, suppose the <span class="code">[StdReport]</span>
+            section of <span class="code">weewx.conf</span> contains this:
+        </p>
+
+        <pre class="tty">
+[StdReport]
+    ...
+
+<span class="highlight">    [[Defaults]]
+        [[[Labels]]]
+            [[[[Generic]]]]
+                outTemp = Shed Temperature
+</span>
+
+    [[LifeA]]
+        skin = Seasons
+
+    [[LifeB]]
+        skin = Life
+        [[[Labels]]]
+            [[[[Generic]]]]
+                outTemp = Barn Temperature
+</pre>
+        <p>
+            We have added a new section (<span class="highlight">highlighted</span>), where the user has specified
+            a new default for the observation type <span class="code">outTemp</span>, that is, <span class="code">Shed Temperature</span>.
+            Unless overridden, this is the value that will now be used instead of what the skin writer specified.
+            The final tally looks like this:
+        </p>
+
+        <table class="indent" style="width: 80%">
+            <tr class="first_row">
+                <td>Report</td>
+                <td>Label for <span class="code">inTemp</span></td>
+                <td>Label for <span class="code">outTemp</span></td>
+            </tr>
+            <tr>
+                <td>LifeA</td>
+                <td>Inside Temperature</td>
                 <td>Shed Temperature</td>
+            </tr>
+            <tr>
+                <td>LifeB</td>
+                <td>Inside Temperature</td>
+                <td>Barn Temperature</td>
             </tr>
         </table>
 
         <h2 id="how_to_change_units">How to change units</h2>
 
         <p>
-            This section illustrates the use of options by selectively changing the units in reports.
+            Some users prefer to see metric units, others prefer US customary units. And there are other cases where
+            metric/US is not enough; some sites need metric units for most measurements, but wind speeds in <span
+            class="code">knots</span>, or some sites need rainfall in <span class="code">mm</span> whereas others need
+            <span class="code">cm</span>.
         </p>
         <p>
-            Some users prefer to see metric units, others prefer US customary units.  And there are other cases where metric/US is not enough; some sites need metric units for most measurements, but wind speeds in <span class="code">knots</span>, or some sites need rainfall in <span class="code">mm</span> whereas others need <span class="code">cm</span>.
-        </p>
-        <p>
-            The examples that follow refer to the skin <span class="code">Seasons</span>, which comes with the distribution.
+            This section shows how to specify exactly what units you want to use for which reports.
+            The examples use the skin <span class="code">Seasons</span>, which comes with the distribution.
         </p>
 
         <h3 id="change_defaults">
@@ -910,7 +975,9 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
                 group_temperature  = <span class="highlight">degree_C</span>             # Options are 'degree_F' or 'degree_C'
 </pre>
         <p>
-            The options that were changed have been <span class="highlight">&nbsp;highlighted&nbsp;</span>.
+            The options that were changed have been <span class="highlight">&nbsp;highlighted&nbsp;</span>. Note that
+            the changes occurred under the subsection <span class="code">[[Defaults]]</span>, so they
+            will affect <em>all</em> reports.
         </p>
 
         <h3 id="change_stdreport">
@@ -993,34 +1060,6 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
         <p>
             By contrast, <span class="code">SeasonsMetricReport</span> cannot use these defaults, so it
             overrides the units to be used, and the value of <span class="code">HTML_ROOT</span>.
-        </p>
-
-
-        <h2 id="how_to_change_labels">How to change observation labels</h2>
-
-        <p>
-            Here's another example. Suppose your weather console is actually located in a barn, not indoors, and you
-            want any labels for the temperature measured by the console to be labeled "<em>Barn Temperature</em>,"
-            rather than the default "<em>Inside Temperature</em>." This can be done by changing the <span class="code">inTemp</span>,
-            located in section <a href="#Labels_Generic"><span class="code">[Labels][[Generic]]</span></a>, from
-            the default
-        </p>
-        <pre class="tty">[Defaults]
-    [[Labels]]
-        [[[Generic]]]
-            inTemp  = Inside Temperature
-            outTemp = Outside Temperature</pre>
-        <p>to:</p>
-        <pre class="tty">[Defaults]
-    [[Labels]]
-        [[[Generic]]]
-            <span class="highlight">inTemp  = Barn Temperature</span>
-            outTemp = Outside Temperature</pre>
-
-        <p>
-            With this change, all observations of console temperature (database column <span class="code">inTemp</span>), such as in an HTML report, or a plot, will now be
-            labeled <em>"Barn Temperature</em>." Because this is under the <span
-            class="code">[Defaults]</span> section, this change will apply to <em>all</em> reports.
         </p>
 
 
@@ -5964,7 +6003,7 @@ cooling_base = 20.0, degree_C</pre>
             charts, this is the color of the outline of the bar. Default is <span class="code">0xff0000, 0x00ff00, 0x0000ff</span>.
             <br/>
             <br/>
-            Individual line color can be overridden by using option <span class="code">color</span>. 
+            Individual line color can be overridden by using option <span class="code">color</span>.
         </p>
 
         <p class="config_option">chart_fill_colors</p>
@@ -5982,7 +6021,7 @@ cooling_base = 20.0, degree_C</pre>
             Optional. Default is <span class="code">1, 1, 1</span>.
             <br/>
             <br/>
-            Individual line widths can be overridden by using option <span class="code">width</span>. 
+            Individual line widths can be overridden by using option <span class="code">width</span>.
         </p>
 
 
