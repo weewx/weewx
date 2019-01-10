@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2018 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2019 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -22,7 +22,7 @@ import weewx.units
 import weewx.engine
 
 DRIVER_NAME = 'Vantage'
-DRIVER_VERSION = '3.1.0'
+DRIVER_VERSION = '3.1.1'
 
 def loader(config_dict, engine):
     return VantageService(engine, config_dict)
