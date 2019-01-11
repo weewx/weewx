@@ -6,6 +6,7 @@
 #
 """Utilities used by the setup and configure programs"""
 
+from __future__ import print_function
 from __future__ import with_statement
 
 import errno
@@ -1438,10 +1439,9 @@ def print_drivers():
     """Get information about all the available drivers, then print it out."""
     driver_info_dict = get_all_driver_infos()
     keys = sorted(driver_info_dict)
-    print "%-25s%-15s%-9s%-25s" % (
-        "Module name", "Driver name", "Version", "Status")
+    print("%-25s%-15s%-9s%-25s" % ("Module name", "Driver name", "Version", "Status"))
     for d in keys:
-        print "  %(module_name)-25s%(driver_name)-15s%(version)-9s%(status)-25s" % driver_info_dict[d]
+        print("  %(module_name)-25s%(driver_name)-15s%(version)-9s%(status)-25s" % driver_info_dict[d])
 
 
 def load_driver_editor(driver_module_name):
@@ -1474,16 +1474,16 @@ def prompt_for_info(location=None, latitude='0.000', longitude='0.000',
     #
     #  Description
     #
-    print "Enter a brief description of the station, such as its location.  For example:"
-    print "Santa's Workshop, North Pole"
+    print("Enter a brief description of the station, such as its location.  For example:")
+    print("Santa's Workshop, North Pole")
     loc = prompt_with_options("description", location)
 
     #
     #  Altitude
     #
-    print "Specify altitude, with units 'foot' or 'meter'.  For example:"
-    print "35, foot"
-    print "12, meter"
+    print("Specify altitude, with units 'foot' or 'meter'.  For example:")
+    print("35, foot")
+    print("12, meter")
     msg = "altitude [%s]: " % weeutil.weeutil.list_as_string(altitude) if altitude else "altitude: "
     alt = None
     while alt is None:
@@ -1503,21 +1503,21 @@ def prompt_for_info(location=None, latitude='0.000', longitude='0.000',
             alt = altitude
 
         if not alt:
-            print "Unrecognized response. Try again."
+            print("Unrecognized response. Try again.")
 
     #
     # Latitude & Longitude
     #
-    print "Specify latitude in decimal degrees, negative for south."
+    print("Specify latitude in decimal degrees, negative for south.")
     lat = prompt_with_limits("latitude", latitude, -90, 90)
-    print "Specify longitude in decimal degrees, negative for west."
+    print("Specify longitude in decimal degrees, negative for west.")
     lon = prompt_with_limits("longitude", longitude, -180, 180)
 
     #
     # Display units. Accept only 'us' or 'metric', where 'metric'
     # is a synonym for 'metricwx'.
     #
-    print "Indicate the preferred units for display: 'metric' or 'us'"
+    print("Indicate the preferred units for display: 'metric' or 'us'")
     default = units if units != 'metricwx' else 'metric'
     uni = prompt_with_options("units", default, ['us', 'metric'])
     if uni == 'metric':
@@ -1535,10 +1535,10 @@ def prompt_for_driver(dflt_driver=None):
     infos = get_all_driver_infos()
     keys = sorted(infos)
     dflt_idx = None
-    print "Installed drivers include:"
+    print("Installed drivers include:")
     for i, d in enumerate(keys):
-        print " %2d) %-15s %-25s %s" % (i, infos[d].get('driver_name', '?'),
-                                        "(%s)" % d, infos[d].get('status', ''))
+        print(" %2d) %-15s %-25s %s" % (i, infos[d].get('driver_name', '?'),
+                                        "(%s)" % d, infos[d].get('status', '')))
         if dflt_driver == d:
             dflt_idx = i
     msg = "choose a driver [%d]: " % dflt_idx if dflt_idx is not None else "choose a driver: "
