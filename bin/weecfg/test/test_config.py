@@ -379,7 +379,7 @@ class ConfigTest(LineTest):
         # Upgrade the V3.8 configuration dictionary to V3.9:
         weecfg.update_to_v39(config_dict)
 
-        # with open('expected/weewx39_expected.conf', 'wb') as fd:
+        # with open('expected/weewx39_expected.conf', 'w') as fd:
         #     config_dict.write(fd)
 
         self._check_against_expected(config_dict, 'expected/weewx39_expected.conf')
@@ -395,10 +395,10 @@ class ConfigTest(LineTest):
         # First update, then merge:
         weecfg.update_and_merge(config_dict, template)
 
-        # with open('expected/weewx20_user_expected.conf', 'wb') as fd:
+        # with open('expected/weewx39_user_expected.conf', 'w') as fd:
         #     config_dict.write(fd)
 
-        self._check_against_expected(config_dict, 'expected/weewx20_user_expected.conf')
+        self._check_against_expected(config_dict, 'expected/weewx39_user_expected.conf')
 
     def test_driver_info(self):
         """Test the discovery and listing of drivers."""
@@ -467,7 +467,7 @@ class ConfigTest(LineTest):
 #         # ... retrieve it ...
 #         skin_dict = configobj.ConfigObj(skin_file)
 #
-#         with open('expected/skin39.conf', 'wb') as fd:
+#         with open('expected/skin39.conf', 'w') as fd:
 #             skin_dict.write(fd)
 #
 #         # ... and check it against the expected
