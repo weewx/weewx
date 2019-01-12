@@ -3,16 +3,20 @@ weewx change history
 
 3.9.0 MM/DD/YYYY
 
-New default skin called Seasons.
+New skin called Seasons. For new users, it will be installed and enabled.
+For old users, it will be installed, but not enabled.
 
-Dropped support of Python 2.5. You must now use either Python 2.6 or 2.7. This
-is in anticipation of porting to Python 3.
+There are also two new skins for mobile phones: Mobile and Smartphone.
+These are installed, but not enabled, for all users.
 
 Reworked how options get applied for reports. Backstop default values
 are supplied by a new file weewx/defaults.py. These can get overridden
 by skin.conf, or in a new section [StdReports] / [[Defaults]] in weewx.conf.
-See the Customizing Guide, section How options work, for details.
+See the Customizing Guide, section "How options work", for details.
 Fixes issue #248.
+
+Dropped support of Python 2.5. You must now use either Python 2.6 or 2.7. This
+is in anticipation of porting to Python 3.
 
 The image generator now supports the use of a 'stale_age' option. Thanks to
 user John Smith. Fixes issue #290.

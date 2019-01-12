@@ -753,17 +753,18 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
         <h3 id="how_to_change_labels">Changing labels</h3>
         <p>
             Let's look at an example. If you take a look inside the file <span class="code">weewx/defaults.py</span>,
-            you'll see it contains what looks like a big configuration file. Among other things, it has two entries
+            you will see it contains what looks like a big configuration file. Among other things, it has two entries
             that look like this:
         </p>
         <pre class="tty">
 ...
 [Labels]
-...
+    ...
     [[Generic]]
         ...
         inTemp = Inside Temperature
         outTemp = Outside Temperature
+        ...
         </pre>
 
         <p>
@@ -780,7 +781,7 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
         <pre class="tty">
 ...
 [Labels]
-...
+    ...
     [[Generic]]
         ...
         outTemp = Exterior Temperature
@@ -790,7 +791,7 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
             What this says is that the writer of <span class="code">Life</span>, for whatever reasons, decided
             that s/he wants to use the string <span class="code">Exterior Temperature</span>, instead of
             <span class="code">Outside Temperature</span> for the label for <span class="code">outTemp</span>.
-            There is no override for <span class="code">inTemp</span>.
+            The file includes no override for <span class="code">inTemp</span>.
         </p>
         <p>
           Finally, for purposes of illustrating the hierarchy, suppose the <span class="code">[StdReport]</span>
