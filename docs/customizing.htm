@@ -263,7 +263,7 @@ Version: 3.9
             <tr>
                 <td class="code first_col">weewx.engine.StdReport</td>
                 <td>Launch a new thread to do report processing after a new archive record arrives. Reports do things
-                    such as generate HTML or CSV files, generate images, or FTP/rsync files to a web server.
+                    such as generate HTML or CSV files, generate images, or transfer files using FTP/rsync.
                 </td>
             </tr>
             </tbody>
@@ -327,24 +327,23 @@ Version: 3.9
                 <td class="code first_col">StandardReport</td>
                 <td>This is an older report that has been used for many years in WeeWX. It generates day, week, month
                     and year "to-date" summaries in HTML, as well as the plot images to go along with them. Also
-                    generates NOAA monthly and yearly summaries. It loads faster than the <em>Seasons</em> skin.
+                    generates NOAA monthly and yearly summaries. It typically loads faster than the <em>SeasonsReport</em>.
                 </td>
             </tr>
             <tr>
                 <td class="code first_col">FTP</td>
-                <td>Arranges to upload everything in the <span class="symcode">HTML_ROOT</span> directory up to a remote
-                    webserver.
+                <td>Transfer everything in the <span class="symcode">HTML_ROOT</span> directory to a remote server using ftp.
                 </td>
             </tr>
             <tr>
                 <td class="code first_col">RSYNC</td>
-                <td>Like FTP, but uses rsync for transferring files to a remote webserver.
+                <td>Transfer everything in the <span class="symcode">HTML_ROOT</span> directory to a remote server using rsync.
                 </td>
             </tr>
             </tbody>
         </table>
         <p>Note that the FTP and RSYNC "reports" are a funny kind of report in that it they do not actually generate
-            anything. Instead, they use the reporting service engine to arrange for things to be transferred to a remote
+            anything. Instead, they use the reporting service engine to transfer files and folders to a remote
             server.
         </p>
 
@@ -897,7 +896,7 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
         </p>
         <p>
             This section shows how to specify exactly what units you want to use for which reports.
-            The examples use the skin <span class="code">Seasons</span>, which comes with the distribution.
+            The examples use the skin <em>Seasons</em>, which comes with the distribution.
         </p>
 
         <h3 id="change_defaults">
@@ -997,9 +996,8 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
         </p>
 
         <p>
-            Suppose you want two reports, one in US Customary, the other in Metric. The first, call it <span
-            class="code">SeasonsUSReport</span>, will go in the regular directory <span class="symcode">HTML_ROOT</span>.
-            However, the latter, call it <span class="code">SeasonsMetricReport</span>, will go in a subdirectory,
+            Suppose you want two reports, one in US Customary, the other in Metric. The first, call it <em>SeasonsUSReport</em>, will go in the regular directory <span class="symcode">HTML_ROOT</span>.
+            However, the latter, call it <em>SeasonsMetricReport</em>, will go in a subdirectory,
             <span class="symcode">HTMLROOT</span><span class="code">/metric</span>.
         </p>
         <p>
@@ -1053,20 +1051,20 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
 </pre>
         <p>
             Two things are different from the stock section <span class="code">[StdReport]</span>. First (1), we have
-            renamed the first report from <span class="code">SeasonsReport</span> to <span class="code">SeasonsUSReport</span>
-            for clarity; and second (2), we have introduced a new report <span class="code">SeasonsMetricReport</span>,
+            renamed the first report from <em>SeasonsReport</em> to <em>SeasonsUSReport</em>
+            for clarity; and second (2), we have introduced a new report <em>SeasonsMetricReport</em>,
             which is just like the first, except it puts its results in a different subdirectory and uses different
-            units. Both use the same skin, the <span class="code">Seasons</span> skin.
+            units. Both use the same skin, the <em>Seasons</em> skin.
         </p>
 
         <p>
-            The reason this works is that the report <span class="code">SeasonsUSReport</span> uses all of the defaults,
+            The reason this works is that the report <em>SeasonsUSReport</em> uses all of the defaults,
             which include US Customary units, and the default value for <a href="usersguide.htm#HTML_ROOT"><span
             class="code">HTML_ROOT</span></a> (which specifies the location for where HTML files are to be put).
         </p>
 
         <p>
-            By contrast, <span class="code">SeasonsMetricReport</span> cannot use these defaults, so it
+            By contrast, <em>SeasonsMetricReport</em> cannot use these defaults, so it
             overrides the units to be used, and the value of <span class="code">HTML_ROOT</span>.
         </p>
 
@@ -3964,7 +3962,7 @@ class MyStats(SearchList):                                                   # 1
         <h2>How to create a skin for multiple locales</h2>
 
         <p>
-            Let's say that you have created a new skin.  How do you package that skin for use in other languages and locales?  This example shows how to translate the Seasons skin for multiple languages.
+            Let's say that you have created a new skin.  How do you package that skin for use in other languages and locales?  This example shows how to translate the <em>Seasons</em> skin for multiple languages.
         </p>
         <p>
             Create a directory for each language.  Each directory contains template files and a skin configuration file.  Any text in each template file should be in the target language. Ensure that each HTML template file has the <span class="code">lang</span> set properly.
@@ -5252,7 +5250,7 @@ xstats/bin/user/xstats.py</pre>
         <p>This section is available to add any static tags you might want to use in your templates.</p>
 
         <p>
-            As an example, the Seasons <span class="code">skin.conf</span> file includes three options:
+            As an example, the <span class="code">skin.conf</span> file for the <em>Seasons</em> skin includes three options:
         </p>
         <table class="indent" style="width: 50%">
             <tr class="first_row">
