@@ -690,7 +690,7 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
         <p>
             Options are used in WeeWX to specify how your reports will look and what they will contain. For example,
             they control what units to use, how to format a string, which plot lines to include, and what color they
-            should be, <em>etc</em>. They all work the same way and obey a hierarchy, allowing skin writers to specify a
+            should be, <em>etc</em>. They all work the same way and obey a hierarchy, allowing skin authors to specify a
             look and feel of a report, while ensuring that you still have the final say of how it will come out.
         </p>
 
@@ -699,7 +699,7 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
             listed in order of decreasing precedence.
         </p>
 
-        <table class="indent" style="width: 80%">
+        <table class="indent" style="width: 90%">
             <caption>Option hierarchy, highest to lowest</caption>
             <tr class="first_row">
                 <td>File</td>
@@ -721,15 +721,14 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
                 <td class="code"><a href="#change_defaults">[StdReport] / [[Defaults]]</a></td>
                 <td>Affects <em>all</em> reports.</td>
                 <td class="code">[[[Labels]]] / [[[[Generic]]]]</td>
-                <td>Allows a user to change common elements in the reports, particularly what units to use.</td>
+                <td>Normal mechanism for an user to modify the parameters in a report, such as units.</td>
             </tr>
             <tr>
                 <td class="code">skins/<span class="symcode">report_name</span>/skin.conf</td>
                 <td></td>
                 <td>Affects only the report <span class="symcode">report_name</span>.</td>
                 <td class="code">[Labels] / [[Generic]]</td>
-                <td>Generally supplied by the skin writer. It applies a look and feel, which can be overridden
-                    by the user.</td>
+                <td>Generally supplied by the skin author, not the user. Parameters specified here define the baseline behavior.</td>
             </tr>
             <tr>
                 <td class="code">weewx/defaults.py</td>
@@ -744,10 +743,8 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
 
         <h3>Nesting</h3>
         <p>
-            Note in the table above, there are two different nesting depths used: one for <span class="code">weewx.conf</span>,
-            and one for <span class="code">weewx/defaults.py</span> and <span class="code">skin.conf</span>. Due to the
-            vagarities of how the configuration utility ConfigObj works, the former requires two extra sets of brackets
-            for an option than the latter. You must pay attention to the number of brackets required.
+            You must pay attention to the number of brackets! In the table above, there are two different nesting depths used: one for <span class="code">weewx.conf</span>,
+            and one for <span class="code">weewx/defaults.py</span> and <span class="code">skin.conf</span>. This is because the stanzas defined in <span class="code">weewx.conf</span> are nested two levels down, whereas the stanzas defined in <span class="code">skin.conf</span> and <span class="code">defaults.py</span> are at the root level. 
         </p>
 
         <h3 id="how_to_change_labels">Changing labels</h3>
@@ -764,14 +761,13 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
         ...
         inTemp = Inside Temperature
         outTemp = Outside Temperature
-        ...
-        </pre>
+        ...</pre>
 
         <p>
             This tells the report generators that when it comes time to label the observation variables <span class="code">inTemp</span>
             and <span class="code">outTemp</span>, use the strings <span class="code">InsideTemperature</span> and <span
             class="code">Outside Temperature</span>, respectively. Because <span class="code">weewx/defaults.py</span>
-            sits at the bottom of the options hierarchy, these strings will be used only when nothing else is available.
+            lowest precedence, these strings will be used only when nothing else is available.
         </p>
         <p>
             Now suppose we have a skin called <em>Life</em> . Its configuration file will be
@@ -788,13 +784,13 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
 </pre>
 
         <p>
-            What this says is that the writer of <span class="code">Life</span>, for whatever reasons, decided
+            What this says is that the author of <span class="code">Life</span>, for whatever reasons, decided
             that s/he wants to use the string <span class="code">Exterior Temperature</span>, instead of
             <span class="code">Outside Temperature</span> for the label for <span class="code">outTemp</span>.
-            The file includes no override for <span class="code">inTemp</span>.
+            The file includes no definition for <span class="code">inTemp</span>.
         </p>
         <p>
-          Finally, for purposes of illustrating the hierarchy, suppose the <span class="code">[StdReport]</span>
+          Finally, for purposes of illustrating precedence, suppose the <span class="code">[StdReport]</span>
             section of <span class="code">weewx.conf</span> contains this:
         </p>
 
@@ -856,8 +852,7 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
 <span class="highlight">    [[Defaults]]
         [[[Labels]]]
             [[[[Generic]]]]
-                outTemp = Shed Temperature
-</span>
+                outTemp = Shed Temperature</span>
 
     [[LifeA]]
         skin = Seasons
@@ -871,7 +866,7 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
         <p>
             We have added a new section (<span class="highlight">highlighted</span>), where the user has specified
             a new default for the observation type <span class="code">outTemp</span>, that is, <span class="code">Shed Temperature</span>.
-            Unless overridden, this is the value that will now be used instead of what the skin writer specified.
+            Unless overridden, this is the value that will now be used instead of what the skin author specified.
             The final tally looks like this:
         </p>
 
