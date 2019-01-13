@@ -3846,6 +3846,24 @@ class MyStats(SearchList):                                                   # 1
         <p>
             Translate the text in each template file to the target language. Any strings that are not specified using tags will need to be translated.
         </p>
+        <p>
+            In every HTML template (these typically have a file suffix of <span class="code">.html.tmpl</span>) change the HTML "lang" attribute to the target language. For example, for Spanish use <span class="code">es</span>:
+        </p>
+        <pre class="tty">
+&lt;!DOCTYPE html&gt;
+&lt;html lang="<span class="highlight">es</span>"&gt;
+  &lt;head&gt;
+    &lt;meta charset="UTF-8"&gt;
+    ...
+</pre>
+        <p>
+            The <span class="code">lang</span> can be language-only, e.g., <span class="code">en</span>, or it can be a full language-country code, e.g., <span class="code">en-US</span>.
+        </p>
+
+        <p>
+          <a href="https://www.w3schools.com/tags/ref_language_codes.asp">language codes</a><br/>
+          <a href="https://www.w3schools.com/tags/ref_country_codes.asp">country codes</a><br/>
+        </p>
 
         <h3>Translate labels and modify local options</h3>
 
@@ -3928,26 +3946,6 @@ class MyStats(SearchList):                                                   # 1
     [[Almanac]]
         moon_phases = <span class="highlight">New, Waxing crescent, First quarter, Waxing gibbous, Full, Waning gibbous, Last quarter, Waning crescent</span>
 </pre>
-
-        <h3>Set the HTML "lang" attribute</h3>
-        <p>
-            In every HTML template (these typically have a file suffix of <span class="code">.html.tmpl</span>) change the HTML "lang" attribute to the target language. For example, for Spanish use <span class="code">es</span>:
-        </p>
-        <pre class="tty">
-&lt;!DOCTYPE html&gt;
-&lt;html lang="<span class="highlight">es</span>"&gt;
-  &lt;head&gt;
-    &lt;meta charset="UTF-8"&gt;
-    ...
-</pre>
-        <p>
-            The <span class="code">lang</span> can be language-only, e.g., <span class="code">en</span>, or it can be a full language-country code, e.g., <span class="code">en-US</span>.
-        </p>
-
-        <p>
-          <a href="https://www.w3schools.com/tags/ref_language_codes.asp">language codes</a><br/>
-          <a href="https://www.w3schools.com/tags/ref_country_codes.asp">country codes</a><br/>
-        </p>
 
         <h3 id="environment_variable_LANG">
             Set the environment variable <span class="code">LANG</span>
