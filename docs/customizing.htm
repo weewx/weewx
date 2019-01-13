@@ -709,7 +709,7 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
             </tr>
             <tr>
                 <td class="code">weewx.conf</td>
-                <td class="code"><a href="#change_stdreport">[StdReport] / [[<span class="symcode">report_name</span>]]</a>
+                <td class="code">[StdReport] / [[<span class="symcode">report_name</span>]]
                 </td>
                 <td>Affects only the report <span class="symcode">report_name</span>.</td>
                 <td class="code">[[[Labels]]] / [[[[Generic]]]]</td>
@@ -987,8 +987,8 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
             will affect <em>all</em> reports.
         </p>
 
-        <h3 id="change_stdreport">
-            Change units for a single report</span>
+        <h3 id="change_units">
+            Change units for a single report
         </h3>
 
         <p>
@@ -3853,7 +3853,10 @@ class MyStats(SearchList):                                                   # 1
             Go through the report options that are used by the skin, translating labels and modifying formats to follow local conventions. You can easily localize all of your reports by doing this in the section <span class="code">[Defaults]</span> in the WeeWX configuration file.
         </p>
         <p>
-            Many time formats are defined to use whatever locale is defined on the computer running WeeWX.  For example, the format for current time, <span class="code">current = %x %X</span>, results in <span class="code">01/13/19 10:01:01</span> when the locale is United States english (<span class="code">en_US</span>), but results in <span class="code">13.01.2019 10:01:01</span> when the locale is German (<span class="code">de_DE</span>).
+            The default time formats should use whatever locale is defined on the computer running WeeWX.  For example, the format for current time, <span class="code">current = %x %X</span>, results in <span class="code">01/13/19 10:01:01</span> when the locale is United States english (<span class="code">en_US</span>), but results in <span class="code">13.01.2019 10:01:01</span> when the locale is German (<span class="code">de_DE</span>).
+        </p>
+        <p>
+  First try the generic date (<span class="code">%x</span>), time (<span class="code">%X</span>), and day (<span class="code">%A</span>) formats - these will use the locale of your computer.  If you still find those foreign, you can customize using the <a href="https://docs.python.org/2/library/datetime.html#strftime-and-strptime-behavior">specific directives</a>.
         </p>
         <p>
             In particular, you will probably need to change the following:
