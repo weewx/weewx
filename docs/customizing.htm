@@ -741,13 +741,12 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
             </tr>
         </table>
 
-        <h3>Nesting</h3>
         <p>
             You must pay attention to the number of brackets! In the table above, there are two different nesting depths used: one for <span class="code">weewx.conf</span>,
-            and one for <span class="code">weewx/defaults.py</span> and <span class="code">skin.conf</span>. This is because the stanzas defined in <span class="code">weewx.conf</span> are nested two levels down, whereas the stanzas defined in <span class="code">skin.conf</span> and <span class="code">defaults.py</span> are at the root level. 
+            and one for <span class="code">weewx/defaults.py</span> and <span class="code">skin.conf</span>. This is because the stanzas defined in <span class="code">weewx.conf</span> start two levels down in the hierarchy <span class="code">[StdReport]</span>, whereas the stanzas defined in <span class="code">skin.conf</span> and <span class="code">defaults.py</span> are at the root level. 
         </p>
 
-        <h3 id="how_to_change_labels">Changing labels</h3>
+        <h2 id="how_to_change_labels">Changing labels</h2>
         <p>
             Let's look at an example. If you take a look inside the file <span class="code">weewx/defaults.py</span>,
             you will see it contains what looks like a big configuration file. Among other things, it has two entries
@@ -3856,6 +3855,9 @@ class MyStats(SearchList):                                                   # 1
             Go through the report options that are used by the skin, translating labels and modifying formats to follow local conventions. You can easily localize all of your reports by doing this in the section <span class="code">[Defaults]</span> in the WeeWX configuration file.
         </p>
         <p>
+            Many time formats are defined to use whatever locale is defined on the computer running WeeWX.  For example, the format for current time, <span class="code">current = %x %X</span>, results in <span class="code">01/13/19 10:01:01</span> when the locale is United States english (<span class="code">en_US</span>), but results in <span class="code">13.01.2019 10:01:01</span> when the locale is German (<span class="code">de_DE</span>).
+        </p>
+        <p>
             In particular, you will probably need to change the following:
         </p>
         <pre class="tty">
@@ -3962,17 +3964,16 @@ class MyStats(SearchList):                                                   # 1
         <h2>How to create a skin for multiple locales</h2>
 
         <p>
-            Now that you have created a report, what do you do to make that report easy to use in other languages and locales?  This example shows how to translate the Seasons skin for multiple languages.  This can be used to generate a single report in a specific language, or it can be used to generate multiple reports, each with a different language.
-        </p>
-
-        <p>
-            Translate the text in each template file to the target language. Any strings that are not specified using tags will need to be translated.  Put the templates for each language/locale into a separate directory.  Ensure that each HTML template file has the <span class="code">lang</span> set properly.
+            Let's say that you have created a new skin.  How do you package that skin for use in other languages and locales?  This example shows how to translate the Seasons skin for multiple languages.
         </p>
         <p>
-            Translate observation names and other labels, and put them into skin configuration files.  There should be one configuration file for each language.
+            Create a directory for each language.  Each directory contains template files and a skin configuration file.  Any text in each template file should be in the target language. Ensure that each HTML template file has the <span class="code">lang</span> set properly.
         </p>
         <p>
-            Ensure that any locale-specific formatting is specified explicitly.  For example, a locale that uses 24-hour time formatting should use <span class="code">%H:%M</span> whereas a locale that uses 12-hour time formatting should use <span class="code">%I:%M %p</span>.  Do not use the generic format <span class="code">%X</span>, since that would result in the format used by whatever <span class="code">LANG</span> is set in the environment in which WeeWX is running.
+            Translate observation names and other labels, and put them into the skin configuration files.  There should be one configuration file for each language.
+        </p>
+        <p>
+            Ensure that any locale-specific formatting is specified properly.  For example, consider the <span class="code">current</span> time, which is parameterized in <span class="code">[Units][[TimeFormats]]</span>.  Users in a locale that uses 24-hour time expect the format <span class="code">%H:%M</span> whereas users in a locale that uses 12-hour time expect <span class="code">%I:%M %p</span>.  To make each translation independent of the computer on which the reports will be generated, you must use the specific localization; if you specify the generic format <span class="code">%X</span>, that will result in the format used by whatever locale is set in the environment in which WeeWX is running.
         </p>
         <p>
             The result will be a directory of templates and configurations, with one directory for each language/localization.
@@ -3982,10 +3983,14 @@ skins/Seasons/
 skins/Seasons/en/skin.conf
 skins/Seasons/en/index.html.tmpl
 skins/Seasons/es/skin.conf
-skins/Seasons/es/index.html.tmpl</pre>
+skins/Seasons/es/index.html.tmpl
+skins/Seasons/de/skin.conf
+skins/Seasons/de/index.html.tmpl
+skins/Seasons/fr/skin.conf
+skins/Seasons/fr/index.html.tmpl</pre>
 
         <p>
-            Create a configuration for each report in the WeeWX configuration file.
+            Users will then create each report in the WeeWX configuration file.
         </p>
         <pre class="tty">
 [StdReport]
@@ -3994,9 +3999,15 @@ skins/Seasons/es/index.html.tmpl</pre>
         HTML_ROOT = public_html/en
     [[Seasons_es]]
         skin = Seasons/es
-        HTML_ROOT = public_html/es</pre>
+        HTML_ROOT = public_html/es
+    [[Seasons_de]]
+        skin = Seasons/de
+        HTML_ROOT = public_html/de
+    [[Seasons_fr]]
+        skin = Seasons/fr
+        HTML_ROOT = public_html/fr</pre>
         <p>
-            Configure the web server to display the language based on the browser preferences.
+            The result is multiple reports, each in a different language and localization, independent of the locale of the computer on which they were generated.
         </p>
 
 
