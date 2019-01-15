@@ -198,3 +198,68 @@ class MyAlarm(StdService):
         
         # Log sending the email:
         syslog.syslog(syslog.LOG_INFO, "alarm: email sent to: %s" % self.TO)
+
+
+if __name__ == '__main__':
+    """This section is used to test alarm.py. It uses a record and alarm
+     expression that are guaranteed to trigger an alert.
+     
+     You will need a valid weewx.conf configuration file with an [Alarm]
+     section that has been set up as illustrated at the top of this file.     
+     """
+    from optparse import OptionParser
+    import weecfg
+
+    weewx.debug = 1
+
+    usage = """Usage: python alarm.py --help    
+       python alarm.py [CONFIG_FILE|--config=CONFIG_FILE]
+    
+Arguments:
+    
+      CONFIG_PATH: Path to weewx.conf """
+
+    epilog = """You must be sure the WeeWX modules are in your PYTHONPATH. For example:
+    
+    PYTHONPATH=/home/weewx/bin python alarm.py --help"""
+
+    # Set defaults for the system logger:
+    syslog.openlog('alarm.py', syslog.LOG_PID|syslog.LOG_CONS)
+
+    # Create a command line parser:
+    parser = OptionParser(usage=usage,
+                          epilog=epilog)
+    parser.add_option("--config", dest="config_path", metavar="CONFIG_FILE",
+                      help="Use configuration file CONFIG_FILE.")
+    # Parse the arguments and options
+    (options, args) = parser.parse_args()
+
+    try:
+        config_path, config_dict = weecfg.read_config(options.config_path, args)
+    except IOError as e:
+        exit("Unable to open configuration file: %s" % e)
+
+    if 'Alarm' not in config_dict:
+        exit("No [Alarm] section in the configuration file %s" % config_path)
+
+    # This is a fake record that we'll use
+    rec = {'extraTemp1': 1.0,
+           'outTemp': 38.2,
+           'dateTime': int(time.time())}
+
+    # Use an expression, which will be triggered by our fake record.
+    config_dict['Alarm']['expression'] = "outTemp<40.0"
+
+    # We need the main WeeWX engine in order to bind to the event, but we don't need
+    # for it to completely start up. So get rid of all services:
+    config_dict['Engine']['Services'] = {}
+    # Now we can instantiate our slim engine...
+    engine = weewx.engine.StdEngine(config_dict)
+    # ... and set the alarm using it.
+    alarm = MyAlarm(engine, config_dict)
+
+    # Create a NEW_ARCHIVE_RECORD event
+    event = weewx.Event(weewx.NEW_ARCHIVE_RECORD, record=rec)
+
+    # Use it to trigger the alarm:
+    alarm.new_archive_record(event)
