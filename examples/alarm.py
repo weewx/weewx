@@ -205,12 +205,10 @@ if __name__ == '__main__':
      expression that are guaranteed to trigger an alert.
      
      You will need a valid weewx.conf configuration file with an [Alarm]
-     section that has been set up as illustrated at the top of this file.     
-     """
+     section that has been set up as illustrated at the top of this file."""
+
     from optparse import OptionParser
     import weecfg
-
-    weewx.debug = 1
 
     usage = """Usage: python alarm.py --help    
        python alarm.py [CONFIG_FILE|--config=CONFIG_FILE]
@@ -223,8 +221,11 @@ Arguments:
     
     PYTHONPATH=/home/weewx/bin python alarm.py --help"""
 
+    weewx.debug = 1
+
     # Set defaults for the system logger:
-    syslog.openlog('alarm.py', syslog.LOG_PID|syslog.LOG_CONS)
+    syslog.openlog('alarm.py', syslog.LOG_PID | syslog.LOG_CONS)
+    syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
 
     # Create a command line parser:
     parser = OptionParser(usage=usage,
@@ -239,6 +240,8 @@ Arguments:
     except IOError as e:
         exit("Unable to open configuration file: %s" % e)
 
+    print("Using configuration file %s" % config_path)
+
     if 'Alarm' not in config_dict:
         exit("No [Alarm] section in the configuration file %s" % config_path)
 
@@ -247,7 +250,7 @@ Arguments:
            'outTemp': 38.2,
            'dateTime': int(time.time())}
 
-    # Use an expression, which will be triggered by our fake record.
+    # Use an expression that will evaluate to True by our fake record.
     config_dict['Alarm']['expression'] = "outTemp<40.0"
 
     # We need the main WeeWX engine in order to bind to the event, but we don't need
