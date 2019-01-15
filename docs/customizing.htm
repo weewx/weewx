@@ -3868,83 +3868,95 @@ class MyStats(SearchList):                                                   # 1
         <h3>Translate labels and modify local options</h3>
 
         <p>
-            Go through the report options that are used by the skin, translating labels and modifying formats to follow local conventions. You can easily localize all of your reports by doing this in the section <span class="code">[Defaults]</span> in the WeeWX configuration file.
+            Go through the report options that are used by the skin, translating labels and modifying formats to follow
+            local conventions. You can easily localize all of your reports by doing this in the section <span
+            class="code">[StdReport] / [[Defaults]]</span> in the WeeWX configuration file
+            <span class="code">weewx.conf</span>.
         </p>
         <p>
-            The default time formats should use whatever locale is defined on the computer running WeeWX.  For example, the format for current time, <span class="code">current = %x %X</span>, results in <span class="code">01/13/19 10:01:01</span> when the locale is United States english (<span class="code">en_US</span>), but results in <span class="code">13.01.2019 10:01:01</span> when the locale is German (<span class="code">de_DE</span>).
+            The default time formats should use whatever locale is defined on the computer running WeeWX. For example,
+            the format for current time, <span class="code">current = %x %X</span>, results in <span class="code">01/13/19 10:01:01</span>
+            when the locale is United States english (<span class="code">en_US</span>), but results in <span
+            class="code">13.01.2019 10:01:01</span> when the locale is German (<span class="code">de_DE</span>).
         </p>
         <p>
-  First try the generic date (<span class="code">%x</span>), time (<span class="code">%X</span>), and day (<span class="code">%A</span>) formats - these will use the locale of your computer.  If you still find those foreign, you can customize using the <a href="https://docs.python.org/2/library/datetime.html#strftime-and-strptime-behavior">specific directives</a>.
+            First try the generic date (<span class="code">%x</span>), time (<span class="code">%X</span>), and day
+            (<span class="code">%A</span>) formats &mdash; these will use the locale of your computer. If you still find those
+            foreign, you can customize using the <a
+            href="https://docs.python.org/2/library/datetime.html#strftime-and-strptime-behavior">specific
+            directives</a>.
         </p>
         <p>
-            In particular, you will probably need to change the following:
+            Here is a list of the options in <span class="code">[StdReport] / [[Defaults]]</span>, with the
+            options you may need to change <span class="highlight">highlighted.</span>:
         </p>
         <pre class="tty">
-[Defaults]
-    [[Units]]
-        ...
-        [[[Labels]]]
+[StdReport]
+    [[Defaults]]
+        [[[Units]]]
             ...
-            day               = <span class="highlight">" day",    " days"</span>
-            hour              = <span class="highlight">" hour",   " hours"</span>
-            minute            = <span class="highlight">" minute", " minutes"</span>
-            second            = <span class="highlight">" second", " seconds"</span>
+            [[[[Labels]]]]
+                ...
+                day               = <span class="highlight">" day",    " days"</span>
+                hour              = <span class="highlight">" hour",   " hours"</span>
+                minute            = <span class="highlight">" minute", " minutes"</span>
+                second            = <span class="highlight">" second", " seconds"</span>
 
-        [[[TimeFormats]]]
-            day        = <span class="highlight">%X</span>
-            week       = <span class="highlight">%X (%A)</span>
-            month      = <span class="highlight">%x %X</span>
-            year       = <span class="highlight">%x %X</span>
-            rainyear   = <span class="highlight">%x %X</span>
-            current    = <span class="highlight">%x %X</span>
-            ephem_day  = <span class="highlight">%X</span>
-            ephem_year = <span class="highlight">%x %X</span>
+            [[[[TimeFormats]]]]
+                day        = <span class="highlight">%X</span>
+                week       = <span class="highlight">%X (%A)</span>
+                month      = <span class="highlight">%x %X</span>
+                year       = <span class="highlight">%x %X</span>
+                rainyear   = <span class="highlight">%x %X</span>
+                current    = <span class="highlight">%x %X</span>
+                ephem_day  = <span class="highlight">%X</span>
+                ephem_year = <span class="highlight">%x %X</span>
 
-        [[[Ordinates]]]
-            directions = <span class="highlight">N, NNE, NE, ENE, E, ESE, SE, SSE, S, SSW, SW, WSW, W, WNW, NW, NNW, N/A</span>
+            [[[[Ordinates]]]]
+                directions = <span class="highlight">N, NNE, NE, ENE, E, ESE, SE, SSE, S, SSW, SW, WSW, W, WNW, NW, NNW, N/A</span>
 
-    [[Labels]]
-        hemispheres = <span class="highlight">N, S, E, W</span>
-        latlon_formats = "%02d", "%03d", "%05.2f"
-        [[[Generic]]]
-            barometer      = <span class="highlight">Barometer</span>
-            dewpoint       = <span class="highlight">Dew Point</span>
-            ET             = <span class="highlight">ET</span>
-            heatindex      = <span class="highlight">Heat Index</span>
-            inHumidity     = <span class="highlight">Inside Humidity</span>
-            inTemp         = <span class="highlight">Inside Temperature</span>
-            outHumidity    = <span class="highlight">Humidity</span>
-            outTemp        = <span class="highlight">Temperature</span>
-            radiation      = <span class="highlight">Radiation</span>
-            rain           = <span class="highlight">Rain</span>
-            rainRate       = <span class="highlight">Rain Rate</span>
-            UV             = <span class="highlight">UV Index</span>
-            windDir        = <span class="highlight">Wind Direction</span>
-            windGust       = <span class="highlight">Gust Speed</span>
-            windGustDir    = <span class="highlight">Gust Direction</span>
-            windSpeed      = <span class="highlight">Wind Speed</span>
-            windchill      = <span class="highlight">Wind Chill</span>
-            windgustvec    = <span class="highlight">Gust Vector</span>
-            windvec        = <span class="highlight">Wind Vector</span>
-            extraTemp1     = <span class="highlight">Temperature1</span>
-            extraTemp2     = <span class="highlight">Temperature2</span>
-            extraTemp3     = <span class="highlight">Temperature3</span>
+        [[[Labels]]]
+            hemispheres = <span class="highlight">N, S, E, W</span>
+            latlon_formats = "%02d", "%03d", "%05.2f"
+            [[[[Generic]]]]
+                barometer      = <span class="highlight">Barometer</span>
+                dewpoint       = <span class="highlight">Dew Point</span>
+                ET             = <span class="highlight">ET</span>
+                heatindex      = <span class="highlight">Heat Index</span>
+                inHumidity     = <span class="highlight">Inside Humidity</span>
+                inTemp         = <span class="highlight">Inside Temperature</span>
+                outHumidity    = <span class="highlight">Humidity</span>
+                outTemp        = <span class="highlight">Temperature</span>
+                radiation      = <span class="highlight">Radiation</span>
+                rain           = <span class="highlight">Rain</span>
+                rainRate       = <span class="highlight">Rain Rate</span>
+                UV             = <span class="highlight">UV Index</span>
+                windDir        = <span class="highlight">Wind Direction</span>
+                windGust       = <span class="highlight">Gust Speed</span>
+                windGustDir    = <span class="highlight">Gust Direction</span>
+                windSpeed      = <span class="highlight">Wind Speed</span>
+                windchill      = <span class="highlight">Wind Chill</span>
+                windgustvec    = <span class="highlight">Gust Vector</span>
+                windvec        = <span class="highlight">Wind Vector</span>
+                extraTemp1     = <span class="highlight">Temperature1</span>
+                extraTemp2     = <span class="highlight">Temperature2</span>
+                extraTemp3     = <span class="highlight">Temperature3</span>
 
-            # Sensor status indicators
+                # Sensor status indicators
 
-            rxCheckPercent       = <span class="highlight">Signal Quality</span>
-            txBatteryStatus      = <span class="highlight">Transmitter Battery</span>
-            windBatteryStatus    = <span class="highlight">Wind Battery</span>
-            rainBatteryStatus    = <span class="highlight">Rain Battery</span>
-            outTempBatteryStatus = <span class="highlight">Outside Temperature Battery</span>
-            inTempBatteryStatus  = <span class="highlight">Inside Temperature Battery</span>
-            consBatteryVoltage   = <span class="highlight">Console Battery</span>
-            heatingVoltage       = <span class="highlight">Heating Voltage</span>
-            supplyVoltage        = <span class="highlight">Supply Voltage</span>
-            referenceVoltage     = <span class="highlight">Reference Voltage</span>
+                rxCheckPercent       = <span class="highlight">Signal Quality</span>
+                txBatteryStatus      = <span class="highlight">Transmitter Battery</span>
+                windBatteryStatus    = <span class="highlight">Wind Battery</span>
+                rainBatteryStatus    = <span class="highlight">Rain Battery</span>
+                outTempBatteryStatus = <span class="highlight">Outside Temperature Battery</span>
+                inTempBatteryStatus  = <span class="highlight">Inside Temperature Battery</span>
+                consBatteryVoltage   = <span class="highlight">Console Battery</span>
+                heatingVoltage       = <span class="highlight">Heating Voltage</span>
+                supplyVoltage        = <span class="highlight">Supply Voltage</span>
+                referenceVoltage     = <span class="highlight">Reference Voltage</span>
 
-    [[Almanac]]
-        moon_phases = <span class="highlight">New, Waxing crescent, First quarter, Waxing gibbous, Full, Waning gibbous, Last quarter, Waning crescent</span>
+        [[[Almanac]]]
+            moon_phases = <span class="highlight">New, Waxing crescent, First quarter, Waxing gibbous, Full, Waning gibbous, Last quarter, Waning crescent</span>
 </pre>
 
         <h3 id="environment_variable_LANG">
