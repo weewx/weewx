@@ -15,6 +15,9 @@ by skin.conf, or in a new section [StdReports] / [[Defaults]] in weewx.conf.
 See the Customizing Guide, section "How options work", for details.
 Fixes issue #248.
 
+The skin.conf is optional.  It is possible to specify the entire skin
+configuration in the configuration file weewx.conf.
+
 Dropped support of Python 2.5. You must now use either Python 2.6 or 2.7. This
 is in anticipation of porting to Python 3.
 
@@ -77,10 +80,6 @@ that's not available. Fixes issue #351.
 Fixed problem with Brazilian locations at the start of DST. It manifested
 itself with the error "NoColumnError: no such column: wind". Fixes issue #356.
 
-The skin.conf is optional.  It is possible to specify the entire skin
-configuration in the weewx configuration, in which case the skin configuration
-is not necessary.
-
 Fixed problem that caused sunrise/sunset to be calculated improperly in Sun.py.
 
 Improved coverage of test suites. Fixes issue #337.
@@ -90,9 +89,6 @@ option. Fixes issue #361.
 
 Fixed problem where records were downloaded on startup, even if software
 record generation was specified.
-
-
-3.8.3 MM/DD/YYYY
 
 Log watch now correctly logs garbage collection events. Thanks to user
 buster-one. PR #340.
