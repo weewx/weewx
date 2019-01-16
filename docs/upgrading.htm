@@ -106,8 +106,7 @@ Version: 3.9
         <pre class="tty cmd">./setup.py build </pre>
 
         <p>
-            After checking <span class='code'>setup.cfg</span>, install your new version of <span
-            class='code'>weewx</span>:
+            After checking <span class='code'>setup.cfg</span>, install your new version of WeeWX:
         </p>
         <p class='warning'><strong>Warning!</strong><br/> Before doing the next step, be sure that <span class="code">home</span>
             in the file <span class="code">setup.cfg</span> is set to the location of the previous WeeWX installation.
@@ -736,11 +735,11 @@ extraHumid8 = humidity_8</pre>
             With Version 3, there is no longer a separate "stats" database. Instead, "daily summaries" have been
             included in the same database as the archive data &mdash; everything is under one name. For example, if you
             are using sqlite, both the archive data and the daily summaries will be inside file <span class="code">weewx.sdb</span>.
-            With MySQL, everything is inside the database WeeWX. This makes it easier to keep all data together when
-            working with multiple databases.
+            With MySQL, everything is inside the database <span class="code">weewx</span>.
+            This makes it easier to keep all data together when working with multiple databases.
         </p>
 
-        <p>This change in database structure should be transparent to you. On startup, weewx will automatically backfill
+        <p>This change in database structure should be transparent to you. On startup, WeeWX will automatically backfill
             the new internal daily summaries from the archive data. Your old "stats" database will no longer be used and
             may safely set aside or even deleted.
         </p>
@@ -1284,7 +1283,7 @@ setup.py install --extension basic.tar.gz --dry-run</pre>
         <p>Version 2.7 is backwards compatible with earlier versions with one minor exception.</p>
 
         <p>
-            It now includes the ability to localize the weewx and server uptimes. Previously, the labels <span
+            It now includes the ability to localize the WeeWX and server uptimes. Previously, the labels <span
             class="code">days</span>, <span class="code">hours</span>, and <span class="code">minutes</span> were
             hardcoded in a Python utility. There was no way of changing them. Now, like any other labels, they are taken
             from the skin configuration file, <span class="code">skin.conf</span>, section <span
@@ -1294,7 +1293,7 @@ setup.py install --extension basic.tar.gz --dry-run</pre>
             class="code">hrs</span> instead of <span class="code">hours</span>.
         </p>
 
-        <p>If you do nothing, your weewx and station uptimes will look like:</p>
+        <p>If you do nothing, your WeeWX and station uptimes will look like:</p>
         <pre class="tty">Weewx uptime:  1 day, 1 hrs, 41 minutes
 Server uptime: 2 days, 10 hrs, 22 minutes</pre>
         <p>
