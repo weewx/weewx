@@ -206,15 +206,50 @@ sudo apt-get install weewx</pre>
 
         <h3>New skins</h3>
         <p>
-          Version 3.9 introduces a new skin, <em>Seasons</em>, and separates <em>Mobile</em> and <em>Smartphone</em> from the old <em>StandardReport</em>.  When upgrading to 3.9, the <em>Seasons</em>, <em>Mobile</em>, and <em>Smartphone</em> skins will be installed, but not enabled.
+            Version 3.9 introduces a new skin, <em>Seasons</em>, and separates <em>Mobile</em> and <em>Smartphone</em>
+            from the old <em>StandardReport</em>. When upgrading, all three (<em>Seasons</em>, <em>Mobile</em>, and <em>Smartphone</em>)
+            will be installed, but not enabled.
         </p>
 
         <h3>Skin defaults</h3>
         <p>
-            Version 3.9 introduces a new section, <span class="code">[StdReport][[Defaults]]</span>.  Parameters in this section apply to <em>all</em> reports.  This makes it easy to set the units across all reports, or to ensure that the labels for observations are the same in every report.
+            Version 3.9 introduces a new section, <span class="code">[StdReport]/[[Defaults]]</span> in <span
+            class="code">weewx.conf</span>. Options in this section apply to <em>all</em> reports. For example, if you
+            set a unit group here, it will be applied everywhere. This makes it easy to set the units across all
+            reports, or to ensure that the labels for observations are the same in every report.
         </p>
         <p>
-          It also adds a file <span class="code">defaults.py</span> in which the fallback values for every report parameter are specified.  Although the defaults file is currently only useful to developers, it may be extended to facilitate translations and localization.
+            It also adds a file <span class="code">defaults.py</span> in which the fallback values for every report
+            parameter are specified. Although the defaults file is currently useful only to developers, it may be
+            extended to facilitate translations and localization.
+        </p>
+
+        <p>
+            The ordering that options of the same name are considered to decide which to apply has changed. See the
+            section <a href="customizing.htm#How_options_work"><em>How options work</em></a> for details about the new
+            ordering.
+        </p>
+
+        <h3>Do you need to change anything?</h3>
+        <p>Most users will be unaffected by these changes. There is, however, one exception:</p>
+
+        <p class="note">
+            If your installation does not use overrides, and you changed to metric units in your <span class="code">skin.conf</span>
+            file, you will be affected.
+        </p>
+        <p>
+            Your reports will start appearing in U.S. Customary units. The reason is that the new section, <span
+            class="code">[StdReport]/[[Defaults]]</span> has higher priority than options in <span class="code">skin.conf</span>,
+            and thus will start asserting themselves.
+        </p>
+        <p>
+            The fix is simple: modify the <span class="code">[StdReport]/[[Defaults]]</span> to suit your preferences.
+        </p>
+
+        <p>
+            However, users who specified what unit system to use as part of the automated install using a
+            package installer or <span class="code">setup.py</span>, will have an override section, and therefore
+            will be unaffected. This is because the override section has the highest priority.
         </p>
 
         <h2>From V3.6 or earlier</h2>
