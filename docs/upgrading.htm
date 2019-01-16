@@ -219,19 +219,24 @@ sudo apt-get install weewx</pre>
             reports, or to ensure that the labels for observations are the same in every report.
         </p>
         <p>
-            It also adds a file <span class="code">defaults.py</span> in which the fallback values for every report
-            parameter are specified. Although the defaults file is currently useful only to developers, it may be
-            extended to facilitate translations and localization.
-        </p>
-
-        <p>
-            The ordering that options of the same name are considered to decide which to apply has changed. See the
-            section <a href="customizing.htm#How_options_work"><em>How options work</em></a> for details about the new
-            ordering.
+            It also adds a file <span class="code">defaults.py</span>, in which the fallback values for every report
+            parameter are specified. Although the defaults file is currently useful only to developers, in
+            the future it may be extended to facilitate translations and localization.
         </p>
 
         <h3>Do you need to change anything?</h3>
-        <p>Most users will be unaffected by these changes. There is, however, one exception:</p>
+        <p>
+            The introduction of the new section, <span class="code">[StdReport]/[[Defaults]]</span> in <span
+            class="code">weewx.conf</span>, can change which units are applied to reports because it has a higher
+            precedence than what is in <span class="code">skin.conf</span>. See the section <a
+            href="customizing.htm#How_options_work"><em>How options work</em></a> for details of the ordering
+            in which an option is considered.
+        </p>
+
+        <p>
+            Most users will be unaffected by these changes because they depend on specific report overrides. There is,
+            however, one exception:
+        </p>
 
         <p class="note">
             If your installation does not use overrides, and you changed to metric units in your <span class="code">skin.conf</span>
