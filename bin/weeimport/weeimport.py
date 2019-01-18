@@ -146,7 +146,10 @@ class Source(object):
         # solar, default to True
         self.solar_sensor = tobool(import_config_dict.get('solar_sensor', True))
 
-        # get some WeeWX database info
+        # initialise ignore extreme > 255.0 values for temperature and
+        # humidity fields for WD imports
+        self.ignore_extreme_temp_hum = False
+
         self.db_binding_wx = get_binding(config_dict)
         self.dbm = open_manager_with_config(config_dict, self.db_binding_wx,
                                             initialize=True,
@@ -402,7 +405,7 @@ class Source(object):
         Input parameters:
 
             source_type: String holding name of the section in
-                         import_config_dict the holds config details for the
+                         import_config_dict that holds config details for the
                          source being used.
 
             source: Iterable holding the source data. Used if import field
@@ -435,7 +438,19 @@ class Source(object):
             # Our static map may have entries for fields that don't exist in our
             # source data so step through each field name in our source data and
             # only add those that exist to our resulting map.
-            for _key in source.fieldnames:
+
+            # first get a list of fields, source could be a DictReader object
+            # or a list of dicts, a DictReader will have a fieldnames property
+            try:
+                _field_names = source.fieldnames
+            except AttributeError:
+                # Not a DictReader so need to obtain the dict keys, could just
+                # pick a record and extract its keys but some records may have
+                # different keys to others. Use sets and a generator
+                # comprehension.
+                _field_names = set().union(*(d.keys() for d in source))
+            # now iterate over the field names
+            for _key in _field_names:
                 # if we know about the field name add it to our map
                 if _key in self._header_map:
                     _map[self._header_map[_key]['map_to']] = {'field_name': _key,
@@ -657,7 +672,6 @@ class Source(object):
                 else:
                     # is our mapped field in the record
                     if self.map[_field]['field_name'] in _row:
-
                         # Yes it is. Try to get a value for the obs but if we
                         # can't catch the error
                         try:
@@ -714,6 +728,13 @@ class Source(object):
                         if _field == 'radiation' and not self.solar_sensor:
                             _temp = None
 
+                        # check and ignore if required temperature and humidity
+                        # values of 255.0 and greater
+                        if self.ignore_extreme_temp_hum \
+                                and self.map[_field]['units'] in ['degree_C', 'degree_F', 'percent'] \
+                                and _temp >= 255.0:
+                            _temp = None
+
                         # if no mapped field for a unit system we have to do
                         # field by field unit conversions
                         if _units is None:
@@ -736,7 +757,7 @@ class Source(object):
                             _msg = "Warning: Import field '%s' is mapped to WeeWX field '%s'" % (self.map[_field]['field_name'],
                                                                                                  _field)
                             self.wlog.printlog(syslog.LOG_INFO, _msg)
-                            _msg = "         but the import field could not be found."
+                            _msg = "         but the import field '%s' could not be found." % self.map[_field]['field_name']
                             self.wlog.printlog(syslog.LOG_INFO, _msg)
                             _msg = "         WeeWX field '%s' will be set to 'None'." % _field
                             self.wlog.printlog(syslog.LOG_INFO, _msg)
