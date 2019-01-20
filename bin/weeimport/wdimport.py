@@ -104,7 +104,7 @@ class WDSource(weeimport.Source):
                                                       'hum1', 'hum2', 'hum3',
                                                       'hum4', 'hum5', 'hum6',
                                                       'hum7']
-                                          },
+                                           },
             'vantagelog.txt': {'fields': ['day', 'month', 'year', 'hour',
                                           'minute', 'radiation', 'UV',
                                           'dailyet', 'soilmoist',
@@ -260,11 +260,12 @@ class WDSource(weeimport.Source):
                         self._header_map['temp6']['units'] = temp_u
                         self._header_map['temp7']['units'] = temp_u
                     else:
-                        _msg = "Unknown units '%s' specified for Weather Display temperature fields in %s." % (temp_u,
-                                                                                                               self.import_config_path)
+                        _msg = "Unknown units '%s' specified for Weather Display " \
+                               "temperature fields in %s." % (temp_u, self.import_config_path)
                         raise weewx.UnitError(_msg)
                 else:
-                    _msg = "No units specified for Weather Display temperature fields in %s." % (self.import_config_path,)
+                    _msg = "No units specified for Weather Display temperature " \
+                           "fields in %s." % (self.import_config_path,)
                     raise weewx.UnitError(_msg)
 
                 # pressure
@@ -273,11 +274,12 @@ class WDSource(weeimport.Source):
                     if press_u in ['inHg', 'hPa']:
                         self._header_map['barometer']['units'] = press_u
                     else:
-                        _msg = "Unknown units '%s' specified for Weather Display pressure fields in %s." % (press_u,
-                                                                                                            self.import_config_path)
+                        _msg = "Unknown units '%s' specified for Weather Display " \
+                               "pressure fields in %s." % (press_u, self.import_config_path)
                         raise weewx.UnitError(_msg)
                 else:
-                    _msg = "No units specified for Weather Display pressure fields in %s." % (self.import_config_path,)
+                    _msg = "No units specified for Weather Display pressure " \
+                           "fields in %s." % (self.import_config_path,)
                     raise weewx.UnitError(_msg)
 
                 # rain
@@ -290,11 +292,12 @@ class WDSource(weeimport.Source):
                         self._header_map['yearlyrain']['units'] = rain_u
                         self._header_map['dailyet']['units'] = rain_u
                     else:
-                        _msg = "Unknown units '%s' specified for Weather Display rain fields in %s." % (rain_u,
-                                                                                                        self.import_config_path)
+                        _msg = "Unknown units '%s' specified for Weather Display " \
+                               "rain fields in %s." % (rain_u, self.import_config_path)
                         raise weewx.UnitError(_msg)
                 else:
-                    _msg = "No units specified for Weather Display rain fields in %s." % (self.import_config_path,)
+                    _msg = "No units specified for Weather Display rain fields " \
+                           "in %s." % (self.import_config_path,)
                     raise weewx.UnitError(_msg)
 
                 # speed
@@ -304,11 +307,12 @@ class WDSource(weeimport.Source):
                         self._header_map['windspeed']['units'] = speed_u
                         self._header_map['gustspeed']['units'] = speed_u
                     else:
-                        _msg = "Unknown units '%s' specified for Weather Display speed fields in %s." % (speed_u,
-                                                                                                         self.import_config_path)
+                        _msg = "Unknown units '%s' specified for Weather Display " \
+                               "speed fields in %s." % (speed_u, self.import_config_path)
                         raise weewx.UnitError(_msg)
                 else:
-                    _msg = "No units specified for Weather Display speed fields in %s." % (self.import_config_path,)
+                    _msg = "No units specified for Weather Display speed fields " \
+                           "in %s." % (self.import_config_path,)
                     raise weewx.UnitError(_msg)
 
             else:
@@ -540,9 +544,32 @@ class WDSource(weeimport.Source):
                         _data.append(e_rec)
                 # now update our extras and remove any records we added
                 self.extras[:] = [x for x in self.extras if not (x['year'] == _year and x['month'] == _month)]
-            # add the data (list of dicts) from the log file to our list of
-            # processed log file data
-            _data_list.append(_data)
+
+            # There may be duplicate timestamped records in the data. We will
+            # keep the first encountered duplicate and discard the latter ones
+            # but we also need to keep track of the duplicate timestamps for
+            # later reporting.
+
+            # initialise a set to hold the timestamps we have seen
+            _timestamps = set()
+            # initialise a list to hold the unique timestamped records
+            unique_data = []
+            # iterate over each record in the list of records
+            for item in _data:
+                # has this timestamp been seen before
+                if item['datetime'] not in _timestamps:
+                    # no it hasn't, so keep the record and add the timestamp
+                    # to the list of timestamps seen
+                    unique_data.append(item)
+                    _timestamps.add(item['datetime'])
+                else:
+                    # yes it has been seen, so add the timestamp to the list of
+                    # duplicates for later reporting
+                    self.period_duplicates.add(int(item['datetime']))
+
+            # add the data (list of dicts) to the list of processed log file
+            # data
+            _data_list.append(unique_data)
 
         # we have all our data so now combine the data for each timestamp into
         # a common record, this gives us a single list of dicts
