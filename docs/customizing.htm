@@ -2890,6 +2890,33 @@ Sunrise, sunset: $almanac.sunrise $almanac.sunset
         <p>This would result in:</p>
         <p class="example_output">The separation between Venus and Mars is 55:55:31.8</p>
 
+        <h3>Adding new bodies to the almanac</h3>
+        <p>
+            It is possible to extend the WeeWX almanac, adding new bodies that it was not previously aware of. For
+            example, say we wanted to add <a href="https://en.wikipedia.org/wiki/433_Eros"><em>433 Eros</em></a>, the
+            first asteroid visited by a spacecraft. Here is the process:
+        </p>
+        <ol>
+
+            <li>
+                Put the following in the file <span class="code">user/extensions.py</span>:
+                <pre class="tty">import ephem
+eros = ephem.readdb("433 Eros,e,10.8276,304.3222,178.8165,1.457940,0.5598795,0.22258902,71.2803,09/04.0/2017,2000,H11.16,0.46")
+ephem.Eros = eros</pre>
+                This does two things: it adds orbital information about <em>433 Eros</em> to the internal pyephem
+                database, and it makes that data available under the name <span class="code">Eros</span> (note the
+                capital letter).
+            </li>
+
+            <li>
+                You can then use <em>433 Eros</em> like any other body in your templates. For example, to display when
+                it will rise above the horizon:
+
+                <pre class="tty">$almanac.eros.rise</pre>
+
+            </li>
+        </ol>
+
         <h2>Wind</h2>
 
         <p>

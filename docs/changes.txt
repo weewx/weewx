@@ -32,6 +32,8 @@ New tag $almanac.sidereal_time for calculating current sidereal time
 
 New tag $almanac.separation() for calculating planet separations.
 
+Can now use ephem.readdb() to load arbitrary bodies into the almanac.
+
 StdQC now includes an entry for rain again (inexplicably removed in v3.1.0).
 
 If software record generation is used, the archive interval is now what is
