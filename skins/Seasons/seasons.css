@@ -1,19 +1,24 @@
 /* CSS for the weewx Seasons skin
- * Copyright (c) 2015 Tom Keffer <tkeffer@gmail.com>
- * See the file LICENSE.txt for your rights.
+ * Copyright (c) Tom Keffer, Matthew Wall
+ * Distributed under terms of GPLv3.  See LICENSE.txt for your rights.
  */
 
-/* these are the elements in the color scheme
-
-                             grey   blue orange
-          highlight color: 222222 4282b4 b44842
- element background color: dddddd d2e8ef ffe8d2
-     section border color: aaaaaa
-        cell border color: dddddd
-                     link:        4282b4 ff8800
-                  visited:        4282b4 ff8800
-                    hover:        4282b4 ff8800
-*/
+:root {
+    --background-color:#ffffff;
+    --title-background-color:#dddddd;
+    --button-background-color:#bbbbbb;
+    --element-background-color:#d2e8e8;
+    --section-border-color:#aaaaaa;
+    --cell-border-color:#dddddd;
+    --highlight-color:#4282b4;
+    --link-color:#4282b4;
+    --visited-color:#4282b4;
+    --hover-color:#4282b4;
+    --hival-color:#aa4444;
+    --loval-color:#4444aa;
+    --ok-color:#44aa44;
+    --low-color:#aa4444;
+}
 
 /* use the fonts from google */
 /* @import url('https://fonts.googleapis.com/css?family=Open+Sans'); */
@@ -30,7 +35,7 @@ body {
     padding: 0;
     border: 0;
     font-family: 'Open Sans', arial, sans-serif;
-    background-color: #ffffff;
+    background-color: var(--background-color);
 }
 
 a {
@@ -38,13 +43,13 @@ a {
 }
 
 a:link {
-    color: #4282b4;
+    color: var(--link-color);
 }
 a:visited {
-    color: #4282b4;
+    color: var(--visited-color);
 }
 a:hover {
-    color: #4282b4;
+    color: var(--hover-color);
 }
 
 #widget_group {
@@ -59,8 +64,8 @@ a:hover {
 #title_bar {
     overflow: auto;
     margin-bottom: 5px;
-    background-color: #b2d8e8;
-    border: 1px solid #aaaaaa;
+    background-color: var(--element-background-color);
+    border: 1px solid var(--section-border-color);
 }
 
 #contents {
@@ -79,8 +84,8 @@ a:hover {
     margin-right: 20px;
     padding-left: 8px;
     padding-right: 8px;
-    background-color: #ffffff;
-    border: 1px solid #aaaaaa;
+    background-color: var(--background-color);
+    border: 1px solid var(--section-border-color);
     webkit-radius: 5px;
     moz-radius: 5px;
     border-radius: 5px;
@@ -120,11 +125,11 @@ a:hover {
     font-weight: bold;
     padding: 2px 10px 2px 10px;
     /* underlined titles */
-    border-bottom: 2px solid #aaaaaa;
+    border-bottom: 2px solid var(--section-border-color);
     /* outlined titles */
 /*
-    background-color: #dddddd;
-    border: 1px solid #aaaaaa;
+    background-color: var(--title-background-color);
+    border: 1px solid var(--section-border-color);
 */
 }
 
@@ -156,19 +161,19 @@ a:hover {
 }
 
 .hival {
-    color: #aa4444;
+    color: var(--hival-color);
 }
 
 .loval {
-    color: #4444aa;
+    color: var(--loval-color);
 }
 
 .status_ok {
-    color: #44aa44;
+    color: var(--ok-color);
 }
 
 .status_low {
-    color: #aa4444;
+    color: var(--low-color);
 }
 
 .button {
@@ -179,7 +184,7 @@ a:hover {
     padding-bottom: 0px;
     /* rounded box buttons */
 /*
-    border: 1px solid #aaaaaa;
+    border: 1px solid var(--section-border-color);
     webkit-radius: 3px;
     moz-radius: 3px;
     border-radius: 3px;
@@ -193,11 +198,11 @@ a:hover {
     padding-top: 0px;
     padding-bottom: 0px;
     /* underlined buttons */
-    border-bottom: 5px solid #4282b4;
+    border-bottom: 5px solid var(--highlight-color);
     /* rounded box buttons */
 /*
-    background-color: #bbbbbb;
-    border: 1px solid #aaaaaa;
+    background-color: var(--button-background-color);
+    border: 1px solid var(--section-border-color);
     webkit-radius: 3px;
     moz-radius: 3px;
     border-radius: 3px;
@@ -213,12 +218,12 @@ a:hover {
 
 .widget img {
     width: 350px;
-    border: 1px solid #aaaaaa;
+    border: 1px solid var(--section-border-color);
     margin-top: 4px;
 }
 
 .new_row {
-    border-top: 1px solid #dddddd;
+    border-top: 1px solid var(--cell-border-color);
 }
 
 .celestial_body {
@@ -229,7 +234,7 @@ a:hover {
 .widget table th {
     font-weight: normal;
     text-align: right;
-    border-bottom: 1px solid #dddddd;
+    border-bottom: 1px solid var(--cell-border-color);
 }
 
 #hilo_widget table th {

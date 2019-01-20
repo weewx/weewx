@@ -1,4 +1,7 @@
-/* javascript for weewx Seasons report */
+/* javascript for the weewx Seasons skin
+ * Copyright (c) Tom Keffer, Matthew Wall
+ * Distributed under terms of GPLv3.  See LICENSE.txt for your rights.
+ */
 
 var cookie_prefix = "weewx.seasons.";
 
