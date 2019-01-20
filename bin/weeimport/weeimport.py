@@ -998,7 +998,7 @@ class Source(object):
 
         if the import config file qc option was set quality checks on the
         imported record are performed using the WeeWX StdQC configuration from
-        weewx.conf . Any missing derived observations are then added to the
+        weewx.conf. Any missing derived observations are then added to the
         archive record using the WeeWX WXCalculate class if the import config
         file calc_missing option was set. WeeWX API addRecord() method is used
         to add archive records.

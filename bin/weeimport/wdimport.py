@@ -20,7 +20,7 @@ import os
 import syslog
 import time
 
-# weeWX imports
+# WeeWX imports
 import weeimport
 import weeutil.weeutil
 import weewx
@@ -195,13 +195,13 @@ class WDSource(weeimport.Source):
         # wind dir bounds
         self.wind_dir = [0, 360]
 
-        # How the weeWX field 'rain' is populated depends on the source rain
-        # data. If the only data available is cumulative then the weeWX rain
+        # How the WeeWX field 'rain' is populated depends on the source rain
+        # data. If the only data available is cumulative then the WeeWX rain
         # field is calculated as the difference between successive cumulative
         # values. WD provides a rain per interval field so that data can be
-        # used to map directly to the weeWX rain field. If rain is to be
+        # used to map directly to the WeeWX rain field. If rain is to be
         # calculated from a cumulative value then self.rain must be set to
-        # 'cumulative', to map directly to the weeWX rain field self.rain must
+        # 'cumulative', to map directly to the WeeWX rain field self.rain must
         # be set to None.
         self.rain = None
 
