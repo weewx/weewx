@@ -403,14 +403,14 @@ class ConfigTest(LineTest):
     def test_driver_info(self):
         """Test the discovery and listing of drivers."""
         driver_info_dict = weecfg.get_driver_infos()
-        self.assertEqual(driver_info_dict['weewx.drivers.wmr100']['module_name'], 'weewx.drivers.wmr100')
+        self.assertEqual(driver_info_dict['weewx.drivers.ws1']['module_name'], 'weewx.drivers.ws1')
         # Test for the driver name
-        self.assertEqual(driver_info_dict['weewx.drivers.wmr100']['driver_name'], 'WMR100')
+        self.assertEqual(driver_info_dict['weewx.drivers.ws1']['driver_name'], 'WS1')
         # Cannot really test for version numbers of all drivers. Pick one. Import it...
-        import weewx.drivers.wmr100
+        import weewx.drivers.ws1
         # ... and see if the version number matches
-        self.assertEqual(driver_info_dict['weewx.drivers.wmr100']['version'], weewx.drivers.wmr100.DRIVER_VERSION)
-        del weewx.drivers.wmr100
+        self.assertEqual(driver_info_dict['weewx.drivers.ws1']['version'], weewx.drivers.ws1.DRIVER_VERSION)
+        del weewx.drivers.ws1
 
     def test_modify_config(self):
 
