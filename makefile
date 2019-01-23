@@ -89,7 +89,8 @@ test:
   echo >> $(BLDDIR)/test-results; \
 done
 	@grep "ERROR:\|FAIL:" $(BLDDIR)/test-results || echo "no failures"
-	@echo "see $(BLDDIR)/test-results"
+	@grep "skipped=" $(BLDDIR)/test-results || echo "no tests were skipped"
+	@echo "see $(BLDDIR)/test-results for output from the tests"
 
 test-setup:
 	bin/weedb/test/setup_mysql
