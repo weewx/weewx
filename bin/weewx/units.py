@@ -909,13 +909,35 @@ class ValueHelper(object):
         self.context   = context
         self.formatter = formatter
         self.converter = converter
-            
-    def toString(self, addLabel=True, useThisFormat=None, None_string=None, localize=True):
+
+    def toString(self,
+                 addLabel=True,
+                 useThisFormat=None,
+                 None_string=None,
+                 localize=True,
+                 NONE_string=None):
         """Convert my internally held ValueTuple to a string, using the supplied
-        converter and formatter."""
+        converter and formatter.
+
+        Parameters:
+            addLabel: If True, add a unit label
+
+            useThisFormat: String with a format to be used when formatting the value. If None,
+            then a format will be supplied. Default is None.
+
+            None_string: If the value is None, then this string will be used. If None, then a default string
+            from skin.conf will be used. Default is None.
+
+            localize: If True, localize the results. Default is True
+
+            NONE_string: Supplied for backwards compatibility. Identical semantics to None_string.
+        """
         # If the type is unknown, then just return an error string: 
         if isinstance(self.value_t, UnknownType):
-            return "?'%s'?" % self.value_t.obs_type 
+            return "?'%s'?" % self.value_t.obs_type
+        # Check NONE_string for backwards compatibility:
+        if None_string is None and NONE_string is not None:
+            None_string = NONE_string
         # Get the value tuple in the target units:
         vtx = self._raw_value_tuple
         # Then do the format conversion:
