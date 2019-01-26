@@ -1,3 +1,6 @@
+weewx (3.9.0b2-1) unstable; urgency=low
+  * new upstream release
+ -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Sat, 26 Jan 2019 10:02:14 -0500
 weewx (3.9.0b1-1) unstable; urgency=low
   * new upstream release
  -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Tue, 22 Jan 2019 12:40:02 -0500
