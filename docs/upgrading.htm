@@ -207,9 +207,29 @@ sudo apt-get install weewx</pre>
 
         <h3>New skins</h3>
         <p>
-            Version 3.9 introduces a new skin, <em>Seasons</em>, and separates <em>Mobile</em> and <em>Smartphone</em>
-            from the old <em>StandardReport</em>. When upgrading, all three (<em>Seasons</em>, <em>Mobile</em>, and <em>Smartphone</em>)
-            will be installed, but not enabled.
+            Version 3.9 introduces and installs a new skin, <em>Seasons</em>, and promotes two old skins,
+            <em>Mobile</em> and <em>Smartphone</em>, previously part of <em>Standard</em>, to first-class,
+            independent, skins.
+        </p>
+
+        <ul>
+            <li>
+                If you are installing fresh (not an upgrade), then all four skins, <em>Seasons</em>, <em>Standard</em>,
+                <em>Mobile</em>, and <em>Smartphone</em> will be installed, but only <em>Seasons</em> will be activated.
+            </li>
+            <li>
+                If you are upgrading, then the three new skins, <em>Seasons</em>, <em>Mobile</em>, and
+                <em>Smartphone</em> will be installed, but none will be activated. Your existing <em>Standard</em> will
+                be left untouched and activated. For most people, your website will continue to look as expected (the
+                exception is explained below in section
+                <a href="#v39_effects"><em>Do you need to change anything?</em></a>).
+            </li>
+        </ul>
+
+        <p class="note">
+            If you are upgrading, and you wish to try the new skin <em>Seasons</em>, then activate it, but <em>be sure
+            to deactivate Standard</em>. Otherwise, both will get generated, and they will compete with each other for
+            placement in your HTML directory.
         </p>
 
         <h3>Skin defaults</h3>
@@ -225,7 +245,7 @@ sudo apt-get install weewx</pre>
             the future it may be extended to facilitate translations and localization.
         </p>
 
-        <h3>Do you need to change anything?</h3>
+        <h3 id="v39_effects">Do you need to change anything?</h3>
         <p>
             The introduction of the new section, <span class="code">[StdReport]/[[Defaults]]</span> in <span
             class="code">weewx.conf</span>, can change which units are applied to reports because it has a higher
