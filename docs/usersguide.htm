@@ -2930,7 +2930,7 @@ longitude = -77.0366</pre>
 
         <h3>Establishing connectivity</h3>
 
-        <p>If you are unable to get anything out of WeeWX first check that you have connectivity to your weather
+        <p>If you are unable to get anything out of WeeWX, first check that you have connectivity to your weather
             station. For the Davis stations, you can use a terminal emulator to run a simple test. Set it up to
             communicate using the appropriate port and baudrate. I like <span class="code">minicom</span> because it can
             be run from through a simple TTY connection. The utility <span class="code">screen</span> also works well.
@@ -2939,8 +2939,10 @@ longitude = -77.0366</pre>
         <pre class="tty cmd">minicom -b 19200 -D /dev/ttyUSB0</pre>
         <p>or, using <span class='code'>screen</span>:</p>
         <pre class="tty cmd">screen /dev/ttyUSB0 19200</pre>
-        <p>Then type in <span class="code">TEST</span>, all in capital letters. It will not echo the characters. Then
-            hit the <span class="code">&lt;enter&gt;</span> key. It should echo back <span class="code">TEST</span>.
+        <p>
+            First, press <span class="code">&lt;enter&gt;</span> a few times, in order to wake up the console. Then type
+            <span class="code">TEST</span>, all in capital letters. The characters will not be echoed back. Then press
+            <span class="code">&lt;enter&gt;</span> once more. The Davis should echo back <span class="code">TEST</span>.
         </p>
 
         <p>If this works, then you have established connectivity with the Davis and the problem must lie elsewhere.</p>
@@ -2965,7 +2967,7 @@ Nov 29 10:40:22 hummingbird kernel: [6661625.735497] usb 2-3: cp2101 converter n
             to <span class="code">/dev/ttyUSB1</span>.
         </p>
 
-        <p>If you put ferrite coils on the USB connection, you will eliminate 90% of this problem. I did this about 3
+        <p>If you put ferrite coils on the USB connection, you will eliminate 90% of this problem. I did this about 8
             years ago, and have not had a problem since.
         </p>
 
