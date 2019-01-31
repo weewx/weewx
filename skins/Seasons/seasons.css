@@ -251,6 +251,10 @@ a:hover {
     padding-left: 10px;
 }
 
+#hilo_widget a {
+    cursor: pointer;
+}
+
 #sensors_widget table th {
     padding-top: 10px;
 }

@@ -20,12 +20,10 @@
         <th class="hilo_week">&nbsp;<br/>Week</th>
         <th class="hilo_month">&nbsp;<br/>Month</th>
         <th class="hilo_year">
-            <a class="widget_control"
-            onclick="toggle_rainyear()">&diams;</a><br/>Year
+            <a onclick="toggle_rainyear()">&diams;</a><br/>Year
         </th>
         <th class="hilo_rainyear">
-            <a class="widget_control"
-            onclick="toggle_rainyear()">Rain</a><br/>Year
+            <a onclick="toggle_rainyear()">Rain</a><br/>Year
         </th>
         <td></td>
       </tr>
