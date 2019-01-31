@@ -42,8 +42,6 @@
                onclick="choose_history('month')">Month</a>
             <a class="button" id="button_history_year"
                onclick="choose_history('year')">Year</a>
-            <a class="button" id="button_history_rainyear"
-               onclick="choose_history('rainyear')">Rain year</a>
           </div>
           <div id="history_day" class="plot_container">
             <img src="daybarometer.png" alt="$obs.label.barometer"/>
@@ -121,31 +119,6 @@
             #end if
           </div>
           <div id="history_year" class="plot_container" style="display:none">
-            <img src="yearbarometer.png" alt="$obs.label.barometer"/>
-            <img src="yeartempdew.png"   alt="$obs.label.outTemp" />
-            <img src="yeartempfeel.png"  alt="$obs.label.feel" />
-            <img src="yearhum.png"       alt="$obs.label.outHumidity" />
-            <img src="yearwind.png"      alt="$obs.label.windSpeed" />
-            <img src="yearwinddir.png"   alt="$obs.label.windDir" />
-            <img src="yearwindvec.png"   alt="$obs.label.windvec" />
-            <img src="yearrain.png"      alt="$obs.label.rain" />
-            #if $year.UV.has_data
-            <img src="yearuv.png"        alt="$obs.label.UV" />
-            #end if
-            #if $year.radiation.has_data
-            <img src="yearradiation.png" alt="$obs.label.radiation" />
-            #end if
-            #if $year.inTemp.has_data
-            <img src="yeartempin.png"    alt="$obs.label.inTemp" />
-            #end if
-            #if $year.extraTemp1.has_data or $year.extraTemp2.has_data or $year.extraTemp3.has_data
-            <img src="yeartemp.png"      alt="$obs.label.extraTemp1" />
-            #end if
-            #if $year.rxCheckPercent.has_data
-            <img src="yearrx.png"        alt="$obs.label.rxCheckPercent"/>
-            #end if
-          </div>
-          <div id="history_rainyear" class="plot_container" style="display:none">
             <img src="yearbarometer.png" alt="$obs.label.barometer"/>
             <img src="yeartempdew.png"   alt="$obs.label.outTemp" />
             <img src="yeartempfeel.png"  alt="$obs.label.feel" />

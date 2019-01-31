@@ -4,6 +4,7 @@
  */
 
 var cookie_prefix = "weewx.seasons.";
+var year_type = 'year';
 
 function setup(widgets) {
     // set the state of the history widget
@@ -33,8 +34,20 @@ function setup(widgets) {
 }
 
 function choose_history(id) {
-    choose_div('history', id, ['day', 'week', 'month', 'year', 'rainyear']);
+    choose_div('history', id, ['day', 'week', 'month', 'year']);
     choose_col('hilo', id, ['week', 'month', 'year', 'rainyear']);
+}
+
+function toggle_rainyear() {
+    if (year_type == 'year') {
+        year_type = 'rainyear';
+    } else {
+        year_type = 'year';
+    }
+    var id = get_cookie('history', 'day');
+    if (id == 'year') {
+        choose_col('hilo', year_type, ['year', 'rainyear']);
+    }
 }
 
 function toggle_widget(id, state) {
