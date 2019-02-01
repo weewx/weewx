@@ -20,7 +20,7 @@
         <th class="hilo_week">&nbsp;<br/>Week</th>
         <th class="hilo_month">&nbsp;<br/>Month</th>
         <th class="hilo_year">
-            <a onclick="toggle_rainyear()">&nbsp<br/>Year</a>
+            <a onclick="toggle_rainyear()">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br/>Year</a>
         </th>
         <th class="hilo_rainyear">
             <a onclick="toggle_rainyear()">Rain<br/>Year</a>
