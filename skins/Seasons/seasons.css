@@ -41,6 +41,8 @@ body {
 
 a {
     text-decoration: none;
+    cursor: pointer;
+    color: var(--link-color);
 }
 
 a:link {
@@ -249,11 +251,6 @@ a:hover {
     font-size: 80%;
     text-align: right;
     padding-left: 10px;
-}
-
-#hilo_widget a {
-    cursor: pointer;
-    color: var(--link-color);
 }
 
 #sensors_widget table th {
