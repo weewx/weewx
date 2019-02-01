@@ -253,6 +253,7 @@ a:hover {
 
 #hilo_widget a {
     cursor: pointer;
+    color: var(--link-color);
 }
 
 #sensors_widget table th {

@@ -52,7 +52,7 @@ function toggle_rainyear() {
         year_type = 'year';
     }
     set_cookie('year_type', year_type);
-    var id = get_cookie('history', 'day');
+    var id = get_active_div('history', ['day', 'week', 'month', 'year'], 'day');
     choose_rainyear(id);
 }
 
@@ -74,11 +74,11 @@ function toggle_widget(id, state) {
 
 function choose_col(group, selected_id, all_ids) {
     for (var i = 0; i < all_ids.length; i++) {
-        var class_elements = document.getElementsByClassName(group + '_' + all_ids[i]);
-        if (class_elements) {
+        var elements = document.getElementsByClassName(group + '_' + all_ids[i]);
+        if (elements) {
             var display = selected_id === all_ids[i] ? '' : 'none';
-            for (var j = 0; j < class_elements.length; j++) {
-                class_elements[j].style.display = display;
+            for (var j = 0; j < elements.length; j++) {
+                elements[j].style.display = display;
             }
         }
     }
@@ -86,16 +86,28 @@ function choose_col(group, selected_id, all_ids) {
 
 function choose_div(group, selected_id, all_ids) {
     for (var i = 0; i < all_ids.length; i++) {
-        var button_elements = document.getElementById('button_' + group + '_' + all_ids[i]);
-        if (button_elements) {
-            button_elements.className = (all_ids[i] === selected_id) ? 'button_selected' : 'button';
+        var button = document.getElementById('button_' + group + '_' + all_ids[i]);
+        if (button) {
+            button.className = (all_ids[i] === selected_id) ? 'button_selected' : 'button';
         }
-        var group_elements = document.getElementById(group + '_' + all_ids[i]);
-        if (group_elements) {
-            group_elements.style.display = (all_ids[i] === selected_id) ? 'block' : 'none';
+        var element = document.getElementById(group + '_' + all_ids[i]);
+        if (element) {
+            element.style.display = (all_ids[i] === selected_id) ? 'block' : 'none';
         }
     }
     set_cookie(group, selected_id);
+}
+
+/* if cookies are disabled, then we must look at page to get state */
+function get_active_div(group, all_ids, default_value) {
+    var id = default_value;
+    for (var i = 0; i < all_ids.length; i++) {
+        var button = document.getElementById('button_' + group + '_' + all_ids[i]);
+        if (button && button.className == 'button_selected') {
+            id = all_ids[i];
+        }
+    }
+    return id;
 }
 
 function set_cookie(name, value, dur) {
