@@ -184,10 +184,6 @@ def syslog_no_pri(message):
 def syslog_with_pri(priority, message):
     if not _syslog.isOpen():
         _syslog.openlog()
-<<<<<<< HEAD
-=======
-
->>>>>>> bada582d38e30d9a6874de5c3f736ba5b011bed1
     _syslog.syslog(priority, message)
 
 def openlog(ident=sys.argv[0], logoptions=0, facility=LOG_USER):
