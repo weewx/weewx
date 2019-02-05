@@ -512,12 +512,7 @@ defaults_ini = """
     [[windGustDir]]
         extractor = noop
 """
-try:
-    # Python 2
-    from StringIO import StringIO
-except ImportError:
-    # Python 3
-    from io import StringIO
+from six import StringIO
 defaults = configobj.ConfigObj(StringIO(defaults_ini))
 del StringIO
 

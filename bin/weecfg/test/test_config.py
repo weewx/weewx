@@ -11,13 +11,7 @@ import tempfile
 import os.path
 import sys
 import shutil
-try:
-    # Python 2
-    from StringIO import StringIO
-except ImportError:
-    # Python 3
-    from io import StringIO
-
+from six import StringIO
 
 import distutils.dir_util
 import configobj

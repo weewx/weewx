@@ -7,13 +7,7 @@
 
 """Backstop defaults used in the absence of any other values."""
 
-try:
-    # Python 2
-    from StringIO import StringIO
-except ImportError:
-    # Python 3
-    from io import StringIO
-
+from six import StringIO
 import configobj
 
 default_str = """# Copyright (c) 2009-2019 Tom Keffer <tkeffer@gmail.com>

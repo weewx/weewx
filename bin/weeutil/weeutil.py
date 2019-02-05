@@ -19,12 +19,7 @@ import struct
 import syslog
 import time
 import traceback
-try:
-    # Python 2
-    from StringIO import StringIO
-except ImportError:
-    # Python 3
-    from io import StringIO
+from six import StringIO
 
 # For backwards compatibility:
 from weeutil import config
