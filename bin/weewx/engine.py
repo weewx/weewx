@@ -203,7 +203,7 @@ class StdEngine(object):
 
         finally:
             # The main loop has exited. Shut the engine down.
-            syslog.syslog(syslog.LOG_DEBUG, "engine: Main loop exiting. Shutting engine down.")
+            syslog.syslog(syslog.LOG_INFO, "engine: Main loop exiting. Shutting engine down.")
             self.shutDown()
 
     def bind(self, event_type, callback):
