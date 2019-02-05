@@ -1,10 +1,10 @@
 weewx change history
 --------------------
 
-3.9.0 MM/DD/YYYY
+3.9.0 02/05/2019
 
 New skin called Seasons. For new users, it will be installed and enabled.
-For old users, it will be installed, but not enabled.
+For old users, it will be installed, but not enabled. Fixes issue #75.
 
 There are also two new skins for mobile phones: Mobile and Smartphone.
 These are installed, but not enabled, for all users.
@@ -39,6 +39,9 @@ StdQC now includes an entry for rain again (inexplicably removed in v3.1.0).
 If software record generation is used, the archive interval is now what is
 specified in weewx.conf, even if the station supports hardware generation.
 
+Fixed problem where records were downloaded on startup, even if software
+record generation was specified.
+
 The tag formatting taxonomy has been simplified. Just use suffix ".format()"
 now. Documentation updated to reflect changes. Backwards compatibility with old
 suffixes is supported. Fixes issue #328.
@@ -63,6 +66,8 @@ Example xstats now includes tags for last_year and last_year_todate.
 Thanks to user evilbunny2008. PR #325.
 
 Guard against a negative value for 'interval' in WMR200 stations.
+
+Check for missing or negative values for the record field 'interval'.
 
 Changed the formula used to calculate percentage illumination of the moon to
 something more accurate around 2018. This formula is only used if pyephem is
@@ -89,13 +94,8 @@ Improved coverage of test suites. Fixes issue #337.
 wee_device, when used with the Vantage series, now honors the "no prompt" (-y)
 option. Fixes issue #361.
 
-Fixed problem where records were downloaded on startup, even if software
-record generation was specified.
-
 Log watch now correctly logs garbage collection events. Thanks to user
 buster-one. PR #340.
-
-Check for missing or negative values for the record field 'interval'.
 
 
 3.8.2 08/15/2018
