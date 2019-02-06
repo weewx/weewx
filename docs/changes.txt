@@ -1,6 +1,12 @@
 weewx change history
 --------------------
 
+3.9.1 MM/DD/YYYY
+
+Introduced option no_catchup. If set to true, a catchup will not be
+attempted. Fixes issue #368.
+
+
 3.9.0 02/05/2019
 
 New skin called Seasons. For new users, it will be installed and enabled.
