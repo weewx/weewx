@@ -3,6 +3,8 @@ weewx change history
 
 3.9.1 MM/DD/YYYY
 
+In genplot, do not attempt to normalize unspecified paths.
+
 Introduced option no_catchup. If set to true, a catchup will not be
 attempted. Fixes issue #368.
 
