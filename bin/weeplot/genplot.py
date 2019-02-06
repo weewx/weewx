@@ -131,7 +131,7 @@ class GeneralPlot(object):
 
     @staticmethod
     def normalize_path(skin_dir, path):
-        if os.path.isabs(path):
+        if path is None or os.path.isabs(path):
             return path
         return os.path.join(skin_dir, path)
 
