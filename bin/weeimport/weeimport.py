@@ -8,7 +8,7 @@
 from __future__ import with_statement
 
 """Module providing the base classes and API for importing observational data
-into weeWX.
+into WeeWX.
 """
 
 # Python imports
@@ -21,7 +21,7 @@ import time
 
 from datetime import datetime as dt
 
-# weeWX imports
+# WeeWX imports
 import weecfg
 import weewx
 import weewx.qc
@@ -34,7 +34,7 @@ from weeutil.weeutil import timestamp_to_string, option_as_list, to_int, tobool,
 # List of sources we support
 SUPPORTED_SOURCES = ['CSV', 'WU', 'Cumulus']
 
-# Minimum requirements in any explicit or implicit weeWX field-to-import field
+# Minimum requirements in any explicit or implicit WeeWX field-to-import field
 # map
 MINIMUM_MAP = {'dateTime': {'units': 'unix_epoch'},
                'usUnits': {'units': None},
@@ -53,7 +53,7 @@ class WeeImportOptionError(Exception):
 
 class WeeImportMapError(Exception):
     """Base class of exceptions thrown when encountering an error with an
-       external source-to-weeWX field map.
+       external source-to-WeeWX field map.
     """
 
 
@@ -76,24 +76,26 @@ class WeeImportFieldError(Exception):
 
 class Source(object):
     """ Abstract base class used for interacting with an external data source
-        to import records into the weeWX archive.
+        to import records into the WeeWX archive.
 
     __init__() must define the following properties:
-        self.dry_run      - Is this a dry run (ie do not save imported records
-                            to archive). [True|False].
-        self.calc_missing - Calculate any missing derived observations.
-                            [True|False].
-        self.tranche      - Number of records to be written to archive in a
-                            single transaction. Integer.
-        self.interval     - Method of determining interval value if interval
-                            field not included in data source.
-                            ['config'|'derive'|x] where x is an integer.
+        dry_run             - Is this a dry run (ie do not save imported records
+                              to archive). [True|False].
+        calc_missing        - Calculate any missing derived observations.
+                              [True|False].
+        ignore_invalid_data - Ignore any ivalid data found in a source field. 
+                              [True|False].
+        tranche             - Number of records to be written to archive in a
+                              single transaction. Integer.
+        interval            - Method of determining interval value if interval
+                              field not included in data source.
+                              ['config'|'derive'|x] where x is an integer.
 
     Child classes are used to interract with a specific source (eg CSV file,
     WU). Any such child classes must define a getRawData() method which:
         -   gets the raw observation data and returns an iterable yielding data
-            dicts whose fields can be mapped to a weeWX archive field
-        -   defines an import data field-to-weeWX archive field map (self.map)
+            dicts whose fields can be mapped to a WeeWX archive field
+        -   defines an import data field-to-WeeWX archive field map (self.map)
 
         self.raw_datetime_format - Format of date time data field from which
                                    observation timestamp is to be derived. A
@@ -120,12 +122,15 @@ class Source(object):
         # give our source object some logging abilities
         self.wlog = log
 
-        # save our weeWX config dict
+        # save our WeeWX config dict
         self.config_dict = config_dict
 
         # get our import config dict settings
         # interval, default to 'derive'
         self.interval = import_config_dict.get('interval', 'derive')
+        # do we ignore invalid data, default to True
+        self.ignore_invalid_data = tobool(import_config_dict.get('ignore_invalid_data', 
+                                                                 True))
         # tranche, default to 250
         self.tranche = to_int(import_config_dict.get('tranche', 250))
         # apply QC, default to True
@@ -133,7 +138,7 @@ class Source(object):
         # calc-missing, default to True
         self.calc_missing = tobool(import_config_dict.get('calc_missing', True))
         # Some sources include UV index and solar radiation values even if no
-        # sensor was present. The weeWX convention is to store the None value
+        # sensor was present. The WeeWX convention is to store the None value
         # when a sensor or observation does not exist. Record whether UV and/or
         # solar radiation sensor was present.
         # UV, default to True
@@ -141,7 +146,7 @@ class Source(object):
         # solar, default to True
         self.solar_sensor = tobool(import_config_dict.get('solar_sensor', True))
 
-        # get some weeWX database info
+        # get some WeeWX database info
         self.db_binding_wx = get_binding(config_dict)
         self.dbm = open_manager_with_config(config_dict, self.db_binding_wx,
                                             initialize=True,
@@ -166,7 +171,7 @@ class Source(object):
                 altitude_vt = weewx.units.ValueTuple(float(altitude_t[0]),
                                                      altitude_t[1],
                                                      "group_altitude")
-            except KeyError, e:
+            except KeyError as e:
                 raise weewx.ViolatedPrecondition(
                     "Value 'altitude' needs a unit (%s)" % e)
             latitude_f = float(stn_dict['latitude'])
@@ -278,7 +283,7 @@ class Source(object):
         weewx.UnsupportedFeature error if an object could not be created.
         """
 
-        # get some key weeWX parameters
+        # get some key WeeWX parameters
         # first the config dict to use
         config_path, config_dict = weecfg.read_config(None,
                                                       args,
@@ -339,7 +344,7 @@ class Source(object):
                 _msg = 'Raw import data read successfully for period %d.' % self.period_no
                 self.wlog.verboselog(syslog.LOG_INFO, _msg)
 
-                # map the raw data to a weeWX archive compatible dictionary
+                # map the raw data to a WeeWX archive compatible dictionary
                 _msg = 'Mapping raw import data for period %d...' % self.period_no
                 self.wlog.verboselog(syslog.LOG_INFO, _msg)
                 _mapped_data = self.mapRawData(_raw_data, self.archive_unit_sys)
@@ -376,12 +381,12 @@ class Source(object):
                                                                                                                                self.tdiff)
                     self.wlog.printlog(syslog.LOG_INFO, _msg)
                     print "Those records with a timestamp already in the archive will not have been"
-                    print "imported. Confirm successful import in the weeWX log file."
+                    print "imported. Confirm successful import in the WeeWX log file."
 
     def parseMap(self, source_type, source, import_config_dict):
-        """Produce a source field-to-weeWX archive field map.
+        """Produce a source field-to-WeeWX archive field map.
 
-        Data from an external source can be mapped to the weeWX archive using:
+        Data from an external source can be mapped to the WeeWX archive using:
         - a fixed field map (WU),
         - a fixed field map with user specified source units (Cumulus), or
         - a user defined field/units map.
@@ -413,11 +418,11 @@ class Source(object):
 
             where:
 
-                - archive_field_name is an observation name in the weeWX
+                - archive_field_name is an observation name in the WeeWX
                   database schema
                 - source_field_name is the name of a field from the external
                   source
-                - unit_name is the weeWX unit name of the units used by
+                - unit_name is the WeeWX unit name of the units used by
                   source_field_name
         """
 
@@ -426,7 +431,7 @@ class Source(object):
 
         # Do the easy one first, do we have a fixed mapping, if so validate it
         if self._header_map:
-            # We have a static map that maps header fields to weeWX (eg WU).
+            # We have a static map that maps header fields to WeeWX (eg WU).
             # Our static map may have entries for fields that don't exist in our
             # source data so step through each field name in our source data and
             # only add those that exist to our resulting map.
@@ -498,7 +503,7 @@ class Source(object):
 
             # if we got this far we have a usable map, advise the user what we
             # will use
-            _msg = "The following imported field-to-weeWX field map will be used:"
+            _msg = "The following imported field-to-WeeWX field map will be used:"
             if self.verbose:
                 self.wlog.verboselog(syslog.LOG_INFO, _msg)
             else:
@@ -508,7 +513,7 @@ class Source(object):
                     _units_msg = ""
                     if 'units' in _val:
                         _units_msg = " in units '%s'" % _val['units']
-                    _msg = "     source field '%s'%s --> weeWX field '%s'" % (_val['field_name'],
+                    _msg = "     source field '%s'%s --> WeeWX field '%s'" % (_val['field_name'],
                                                                               _units_msg,
                                                                               _key)
                     if self.verbose:
@@ -524,21 +529,21 @@ class Source(object):
         return _map
 
     def mapRawData(self, data, unit_sys=weewx.US):
-        """Maps raw data to weeWX archive record compatible dictionaries.
+        """Maps raw data to WeeWX archive record compatible dictionaries.
 
         Takes an iterable source of raw data observations, maps the fields of
-        each row to a list of weeWX compatible archive records and performs any
+        each row to a list of WeeWX compatible archive records and performs any
         necessary unit conversion.
 
         Input parameters:
 
             data: iterable that yields the data records to be processed.
 
-            unit_sys: weeWX unit system in which the generated records will be
+            unit_sys: WeeWX unit system in which the generated records will be
                       provided. Omission will result in US customary (weewx.US)
                       being used.
 
-        Returns a list of dicts of weeWX compatible archive records.
+        Returns a list of dicts of WeeWX compatible archive records.
         """
 
         # initialise our list of mapped records
@@ -594,7 +599,7 @@ class Source(object):
                     continue
             else:
                 # there is no mapped field for dateTime so raise an error
-                raise ValueError("No mapping for weeWX field 'dateTime'.")
+                raise ValueError("No mapping for WeeWX field 'dateTime'.")
             # usUnits
             _units = None
             if 'field_name' in self.map['usUnits']:
@@ -657,17 +662,26 @@ class Source(object):
                         # can't catch the error
                         try:
                             _temp = float(_row[self.map[_field]['field_name']].strip())
-                        except:
-                            # perhaps we have a None or a blank/empty entry
-                            if _row[self.map[_field]['field_name']] is None or _row[self.map[_field]['field_name']].strip() == '':
-                                # if so we will use None
+                        except TypeError:
+                            # perhaps we have a None, so return None for our field
+                            _temp = None
+                        except ValueError:
+                            # most likely have non-numeric, non-None data, in 
+                            # this case what we do depends on our 
+                            # ignore_invalid_data property
+                            if self.ignore_invalid_data:
+                                # we ignore the invalid data so set our result 
+                                # to None
                                 _temp = None
                             else:
-                                # otherwise we will raise an error
+                                # we raise the error
                                 _msg = "%s: cannot convert '%s' to float at timestamp '%s'." % (_field,
                                                                                                 _row[self.map[_field]['field_name']],
                                                                                                 timestamp_to_string(_rec['dateTime']))
                                 raise ValueError(_msg)
+                        except:
+                            # some other error, raise it    
+                            raise
                         # some fields need some special processing
 
                         # rain - if our imported 'rain' field is cumulative
@@ -719,12 +733,12 @@ class Source(object):
                         # now warn the user about this field if we have not
                         # already done so
                         if self.map[_field]['field_name'] not in _warned:
-                            _msg = "Warning: Import field '%s' is mapped to weeWX field '%s'" % (self.map[_field]['field_name'],
+                            _msg = "Warning: Import field '%s' is mapped to WeeWX field '%s'" % (self.map[_field]['field_name'],
                                                                                                  _field)
                             self.wlog.printlog(syslog.LOG_INFO, _msg)
                             _msg = "         but the import field could not be found."
                             self.wlog.printlog(syslog.LOG_INFO, _msg)
-                            _msg = "         weeWX field '%s' will be set to 'None'." % _field
+                            _msg = "         WeeWX field '%s' will be set to 'None'." % _field
                             self.wlog.printlog(syslog.LOG_INFO, _msg)
                             # make sure we do this warning once only
                             _warned.append(self.map[_field]['field_name'])
@@ -778,14 +792,14 @@ class Source(object):
                     else:
                         if self.total_rec_proc > 0:
                             print "Those records with a timestamp already in the archive will not have been"
-                            print "imported. As the import was aborted before completion refer to the weeWX log"
+                            print "imported. As the import was aborted before completion refer to the WeeWX log"
                             print "file to confirm which records were imported."
                             raise SystemExit('Exiting.')
                         else:
                             print "Import aborted by user. No records saved to archive."
                         _msg = "User chose to abort import. %d records were processed. Exiting." % self.total_rec_proc
                         self.wlog.logonly(syslog.LOG_INFO, _msg)
-                        raise SystemExit('Exiting. Nothing done.')
+                    raise SystemExit('Exiting. Nothing done.')
             self.wlog.verboselog(syslog.LOG_INFO,
                                  "Mapped %d records." % len(_records))
             # the user wants to continue or we have only one unique value for
@@ -897,7 +911,7 @@ class Source(object):
 
         Input parameters:
 
-            data_dict: A weeWX compatible archive record.
+            data_dict: A WeeWX compatible archive record.
 
         Returns nothing. data_dict is modified directly with obs outside of QC
         limits set to None.
@@ -911,14 +925,14 @@ class Source(object):
 
         If calc_missing option is True in the import config file then add any
         missing derived observations (ie observation is missing or None) to the
-        imported record. The weeWX WxCalculate class is used to add any missing
+        imported record. The WeeWX WxCalculate class is used to add any missing
         observations.
 
         Input parameters:
 
-            record: A weeWX compatible archive record.
+            record: A WeeWX compatible archive record.
 
-        Returns a weeWX compatible archive record that includes any derived
+        Returns a WeeWX compatible archive record that includes any derived
         observations that were previously missing/None.
         """
 
@@ -927,17 +941,17 @@ class Source(object):
         return record
 
     def saveToArchive(self, archive, records):
-        """ Save records to the weeWX archive.
+        """ Save records to the WeeWX archive.
 
         Supports saving one or more records to archive. Each collection of
         records is processed and saved to archive in transactions of
         self.tranche records at a time.
 
         if the import config file qc option was set quality checks on the
-        imported record are performed using the weeWX StdQC configuration from
+        imported record are performed using the WeeWX StdQC configuration from
         weewx.conf . Any missing derived observations are then added to the
-        archive record using the weeWX WXCalculate class if the import config
-        file calc_missing option was set. weeWX API addRecord() method is used
+        archive record using the WeeWX WXCalculate class if the import config
+        file calc_missing option was set. WeeWX API addRecord() method is used
         to add archive records.
 
         If --dry-run was set then every aspect of the import is carried out but
@@ -946,9 +960,9 @@ class Source(object):
 
         Input parameters:
 
-            archive: database manager object for the weeWX archive.
+            archive: database manager object for the WeeWX archive.
 
-            records: iterable that provides weeWX compatible archive records
+            records: iterable that provides WeeWX compatible archive records
                      (in dict form) to be written to archive
         """
 
@@ -973,7 +987,7 @@ class Source(object):
                     print "Records covering multiple periods have been identified for import."
             # we do, confirm the user actually wants to save them
             while self.ans not in ['y', 'n'] and not self.dry_run:
-                print "Proceeding will save all imported records in the weeWX archive."
+                print "Proceeding will save all imported records in the WeeWX archive."
                 self.ans = raw_input("Are you sure you want to proceed (y/n)? ")
             if self.ans == 'y' or self.dry_run:
                 # we are going to save them
@@ -1069,7 +1083,7 @@ class WeeImportLog(object):
 
     This class provides a wrapper around the python syslog module to handle
     wee_import logging requirements. The --log=- command line option disables
-    log output otherwise log output is sent to the same log used by weeWX.
+    log output otherwise log output is sent to the same log used by WeeWX.
     """
 
     def __init__(self, opt_logging, opt_verbose, opt_dry_run):
@@ -1130,7 +1144,7 @@ class WeeImportLog(object):
 
 
 def get_binding(config_dict):
-    """Get the binding for the weeWX database."""
+    """Get the binding for the WeeWX database."""
 
     # Extract our binding from the StdArchive section of the config file. If
     # it's missing, return None.

@@ -1,0 +1,286 @@
+/* CSS for the weewx Seasons skin
+ * Copyright (c) Tom Keffer, Matthew Wall
+ * Distributed under terms of GPLv3.  See LICENSE.txt for your rights.
+ */
+
+:root {
+    --background-color:#ffffff;
+    --title-background-color:#dddddd;
+    --button-background-color:#bbbbbb;
+    --element-background-color:#d2e8e8;
+    --section-border-color:#aaaaaa;
+    --cell-border-color:#dddddd;
+    --highlight-color:#4282b4;
+    --link-color:#4282b4;
+    --visited-color:#4282b4;
+    --hover-color:#4282b4;
+    --timestamp-color:#aaaaaa;
+    --hival-color:#aa4444;
+    --loval-color:#4444aa;
+    --ok-color:#44aa44;
+    --low-color:#aa4444;
+}
+
+/* use the fonts from google */
+/* @import url('https://fonts.googleapis.com/css?family=Open+Sans'); */
+
+/* use the local fonts */
+@font-face {
+    font-family: 'Open Sans';
+    src: url('font/OpenSans.woff') format('woff'),
+    url('font/OpenSans.woff2') format('woff2');
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    font-family: 'Open Sans', arial, sans-serif;
+    background-color: var(--background-color);
+}
+
+a {
+    text-decoration: none;
+    cursor: pointer;
+    color: var(--link-color);
+}
+
+a:link {
+    color: var(--link-color);
+}
+a:visited {
+    color: var(--visited-color);
+}
+a:hover {
+    color: var(--hover-color);
+}
+
+#widget_group {
+    float: left;
+    margin-right: 40px;
+}
+
+#plot_group {
+    overflow: hidden;
+}
+
+#title_bar {
+    overflow: auto;
+    margin-bottom: 5px;
+    background-color: var(--element-background-color);
+    border: 1px solid var(--section-border-color);
+}
+
+#contents {
+    clear: both;
+    margin: 20px;
+}
+
+#title {
+    float: left;
+    margin-left: 10px;
+}
+
+#rss_link {
+    float: right;
+    margin-top: 6px;
+    margin-right: 20px;
+    padding-left: 8px;
+    padding-right: 8px;
+    background-color: var(--background-color);
+    border: 1px solid var(--section-border-color);
+    webkit-radius: 5px;
+    moz-radius: 5px;
+    border-radius: 5px;
+}
+
+#reports {
+    float: right;
+    margin-top: 5px;
+    margin-right: 10px;
+    margin-bottom: 5px;
+    text-align: right;
+}
+
+.footnote {
+    font-size: 80%;
+    font-style: italic;
+    clear: both;
+    padding-left: 20px;
+}
+
+.page_title {
+    font-size: 140%;
+    line-height: 50%;
+}
+
+.lastupdate {
+    font-size: 80%;
+    line-height: 50%;
+}
+
+.widget {
+    margin-bottom: 30px;
+    clear: both;
+}
+
+.widget_title {
+    font-weight: bold;
+    padding: 2px 10px 2px 10px;
+    /* underlined titles */
+    border-bottom: 2px solid var(--section-border-color);
+    /* outlined titles */
+/*
+    background-color: var(--title-background-color);
+    border: 1px solid var(--section-border-color);
+*/
+}
+
+.label {
+    font-size: 80%;
+    vertical-align: top;
+    text-align: right;
+    padding-top: 4px;
+    padding-right: 5px;
+}
+
+.data {
+    font-weight: bold;
+    font-size: 80%;
+    vertical-align: top;
+    text-align: left;
+    padding-top: 4px;
+}
+
+.units {
+    font-size: 80%;
+    vertical-align: top;
+    padding-top: 4px;
+}
+
+.timestamp {
+    font-size: 80%;
+    font-weight: normal;
+}
+
+.hival {
+    color: var(--hival-color);
+}
+
+.loval {
+    color: var(--loval-color);
+}
+
+.status_ok {
+    color: var(--ok-color);
+}
+
+.status_low {
+    color: var(--low-color);
+}
+
+.button {
+    cursor: pointer;
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-top: 0px;
+    padding-bottom: 0px;
+    /* rounded box buttons */
+/*
+    border: 1px solid var(--section-border-color);
+    webkit-radius: 3px;
+    moz-radius: 3px;
+    border-radius: 3px;
+*/
+}
+
+.button_selected {
+    cursor: pointer;
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-top: 0px;
+    padding-bottom: 0px;
+    /* underlined buttons */
+    border-bottom: 5px solid var(--highlight-color);
+    /* rounded box buttons */
+/*
+    background-color: var(--button-background-color);
+    border: 1px solid var(--section-border-color);
+    webkit-radius: 3px;
+    moz-radius: 3px;
+    border-radius: 3px;
+*/
+}
+
+.widget_control {
+    float: right;
+    cursor: pointer;
+    margin-left: 20px;
+    margin-right: 5px;
+}
+
+.widget img {
+    width: 350px;
+    border: 1px solid var(--section-border-color);
+    margin-top: 4px;
+}
+
+.new_row {
+    border-top: 1px solid var(--cell-border-color);
+}
+
+.celestial_body {
+    margin-bottom: 30px;
+    float: left;
+}
+
+.widget table th {
+    font-weight: normal;
+    text-align: right;
+    border-bottom: 1px solid var(--cell-border-color);
+}
+
+#hilo_widget table th {
+    font-size: 80%;
+    text-align: right;
+    border-bottom: none;
+}
+
+#hilo_widget .data {
+    font-weight: bold;
+    font-size: 80%;
+    text-align: right;
+    padding-left: 10px;
+}
+
+#sensors_widget table th {
+    padding-top: 10px;
+}
+
+#history_widget img {
+    border: none;
+    margin-bottom: 10px;
+    width: 500px; /* should match the image width in skin.conf */
+}
+
+#history_widget.widget_title {
+    min-width: 500px;
+}
+
+.plot_container {
+    margin-top: 4px;
+}
+
+#map_canvas {
+    width: 350px;
+    height: 350px;
+    margin-top: 4px;
+}
+
+
+@media (max-width:800px) {
+    #plot_group { overflow: visible; float: left; }
+}
+@media (min-width:801px) {
+    #plot_group { overflow: hidden; float: none; }
+}

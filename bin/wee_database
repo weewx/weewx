@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 #
-#    Copyright (c) 2009-2015 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2019 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
-"""Configure databases used by weeWX"""
+"""Configure databases used by WeeWX"""
 from __future__ import with_statement
 
 # python imports
@@ -37,8 +37,8 @@ usage = """wee_database --help
 
 Description:
 
-Manipulate the weeWX database. Most of these operations are handled
-automatically by weeWX, but they may be useful in special cases."""
+Manipulate the WeeWX database. Most of these operations are handled
+automatically by WeeWX, but they may be useful in special cases."""
 
 # List of 'dest' settings used by our 'verbs', note 'dest' may be explicit or
 # implicit. If adding more 'verbs' need to add corresponding 'dest' here.
@@ -58,7 +58,7 @@ def main():
                       metavar="CONFIG_FILE",
                       help="Use configuration file CONFIG_FILE.")
     parser.add_option("--create", dest="create_database", action='store_true',
-                      help="Create the weeWX database and initialize it with the"
+                      help="Create the WeeWX database and initialize it with the"
                       " schema.")
     parser.add_option("--drop-daily", dest="drop_daily", action='store_true',
                       help="Drop the daily summary tables from a database.")
@@ -80,7 +80,7 @@ def main():
                       " The new database will have the same name as the old"
                       " database, with a '_new' on the end.")
     parser.add_option("--transfer", dest="transfer", action='store_true',
-                      help="Transfer the weeWX archive from source database to"
+                      help="Transfer the WeeWX archive from source database to"
                       " destination database.")
     parser.add_option("--check", dest="check", action="store_true",
                       help="Check the calculations in the daily summary tables.")
@@ -171,7 +171,7 @@ def main():
         check_strings(config_dict, db_binding, options, fix=True)
 
 def createMainDatabase(config_dict, db_binding):
-    """Create the weeWX database"""
+    """Create the WeeWX database"""
 
     # Try a simple open. If it succeeds, that means the database
     # exists and is initialized. Otherwise, an exception will be thrown.
@@ -184,7 +184,7 @@ def createMainDatabase(config_dict, db_binding):
             print "Created database '%s'" % (dbmanager.database_name,)
 
 def dropDaily(config_dict, db_binding):
-    """Drop the daily summaries from a weeWX database"""
+    """Drop the daily summaries from a WeeWX database"""
 
     manager_dict = weewx.manager.get_manager_dict_from_config(config_dict,
                                                               db_binding)
@@ -201,8 +201,9 @@ def dropDaily(config_dict, db_binding):
                 with weewx.manager.open_manager_with_config(config_dict, db_binding) as dbmanager:
                     try:
                         dbmanager.drop_daily()
-                    except weedb.OperationalError, e:
-                        print "Got error '%s'\nPerhaps there was no daily summary?" % e
+                    except weedb.OperationalError as e:
+                        print "Error '%s'" % e
+                        print "Drop daily summary tables failed for database '%s'" % database_name
                     else:
                         tdiff = time.time() - t1
                         print "Daily summary tables dropped from database '%s' in %.2f seconds" % (database_name, tdiff)
@@ -589,7 +590,7 @@ def _fix_wind(config_dict, db_binding, options):
     # perform the recalculation, wrap in a try..except to catch any db errors
     try:
         wind_obj.run()
-    except weedb.NoTableError, e:
+    except weedb.NoTableError as e:
         msg = "Maximum windSpeed Fix applied: no windSpeed found"
         syslog.syslog(syslog.LOG_INFO, msg)
         print msg

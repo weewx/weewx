@@ -193,7 +193,7 @@ class Station(object):
             logdbg("station time: day:%s min:%s (%s)" %
                    (d, m, timestamp_to_string(ts)))
             return ts
-        except (serial.serialutil.SerialException, weewx.WeeWxIOError), e:
+        except (serial.serialutil.SerialException, weewx.WeeWxIOError) as e:
             logerr("get_time failed: %s" % e)
         return int(time.time())
 
@@ -248,7 +248,7 @@ class Station(object):
                 buf = self.get_readings()
                 self.validate_string(buf)
                 return buf
-            except (serial.serialutil.SerialException, weewx.WeeWxIOError), e:
+            except (serial.serialutil.SerialException, weewx.WeeWxIOError) as e:
                 loginf("Failed attempt %d of %d to get readings: %s" %
                        (ntries + 1, max_tries, e))
                 time.sleep(retry_wait)
@@ -323,7 +323,7 @@ class Station(object):
                     v -= (1 << bits)
             if multiplier is not None:
                 v *= multiplier
-        except ValueError, e:
+        except ValueError as e:
             if s != '----':
                 logdbg("decode failed for '%s': %s" % (s, e))
         return v

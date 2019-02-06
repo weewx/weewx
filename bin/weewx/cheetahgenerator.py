@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2016 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2018 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -15,7 +15,7 @@ Configuration Options
   search_list = a, b, c
   search_list_extensions = d, e, f
 
-The strings YYYY and MM will be replaced if they appear in the filename.
+The strings YYYY, MM, DD and WW will be replaced if they appear in the filename.
 
 search_list will override the default search_list
 
@@ -59,6 +59,7 @@ from __future__ import with_statement
 import os.path
 import syslog
 import time
+import datetime
 
 import configobj
 
@@ -73,6 +74,7 @@ import weewx.station
 import weewx.units
 import weewx.tags
 from weeutil.weeutil import to_bool, to_int, timestamp_to_string
+from weeutil.config import search_up
 
 # The default search list includes standard information sources that should be
 # useful in most templates.
@@ -149,7 +151,7 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
         gen_dict[section_name]['summarize_by'] = 'None'
 
         # determine how much logging is desired
-        log_success = to_bool(gen_dict[section_name].get('log_success', True))
+        log_success = to_bool(search_up(gen_dict[section_name], 'log_success', True))
 
         # configure the search list extensions
         self.initExtensions(gen_dict[section_name])
@@ -244,7 +246,7 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
         # a predictable result.
         os.chdir(os.path.join(self.config_dict['WEEWX_ROOT'],
                               self.skin_dict['SKIN_ROOT'],
-                              self.skin_dict['skin']))
+                              self.skin_dict.get('skin', '')))
 
         report_dict = weeutil.weeutil.accumulateLeaves(section)
         
@@ -319,17 +321,17 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
             searchList = self._getSearchList(encoding, timespan,
                                              default_binding)
             tmpname = _fullname + '.tmp'
-            
+
             try:
                 compiled_template = Cheetah.Template.Template(
                     file=template,
                     searchList=searchList,
                     filter=encoding,
                     filtersLib=weewx.cheetahgenerator)
-                with open(tmpname, mode='w') as _file:
-                    print >> _file, compiled_template
+                with open(tmpname, mode='w') as fd:
+                    fd.write(str(compiled_template))
                 os.rename(tmpname, _fullname)
-            except Exception, e:
+            except Exception as e:
                 # We would like to get better feedback when there are cheetah
                 # compiler failures, but there seem to be no hooks for this.
                 # For example, if we could get make cheetah emit the source
@@ -380,16 +382,19 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
 
         _filename = os.path.basename(template).replace('.tmpl', '')
 
-        # If the filename contains YYYY, MM, or DD, then do the replacement
-        if 'YYYY' in _filename or 'MM' in _filename or 'DD' in _filename:
+        # If the filename contains YYYY, MM, DD or WW, then do the replacement
+        if 'YYYY' in _filename or 'MM' in _filename or 'DD' in _filename or 'WW' in _filename:
             # Get strings representing year, month, and day
             _yr_str  = "%4d"  % ref_tt[0]
             _mo_str  = "%02d" % ref_tt[1]
             _day_str = "%02d"  % ref_tt[2]
+            _week_str = "%02d"  % datetime.date( ref_tt[0], ref_tt[1], ref_tt[2] ).isocalendar()[1];
             # Replace any instances of 'YYYY' with the year string
             _filename = _filename.replace('YYYY', _yr_str)
             # Do the same thing with the month...
             _filename = _filename.replace('MM', _mo_str)
+            # ... the week ...
+            _filename = _filename.replace('WW', _week_str)
             # ... and the day
             _filename = _filename.replace('DD', _day_str)
 
@@ -556,7 +561,7 @@ class Stats(SearchList):
         return [stats]
 
 class UnitInfo(SearchList):
-    """Class that implements the $unit tag."""
+    """Class that implements the $unit and $obs tags."""
 
     def __init__(self, generator):
         SearchList.__init__(self, generator)

@@ -476,7 +476,7 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
 
                 if self.polling_interval:
                     time.sleep(self.polling_interval)
-            except (serial.serialutil.SerialException, weewx.WeeWxIOError), e:
+            except (serial.serialutil.SerialException, weewx.WeeWxIOError) as e:
                 logerr("Failed attempt %d of %d to get data: %s" %
                        (ntries, self.max_tries, e))
                 logdbg("Waiting %d seconds before retry" % self.retry_wait)
@@ -537,7 +537,7 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
         try:
             v = self.station.get_time()
             return _to_ts(v)
-        except ValueError, e:
+        except ValueError as e:
             logerr("getTime failed: %s" % e)
         return 0
 
@@ -549,7 +549,7 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
         for cnt in xrange(max_tries):
             try:
                 return CC3000Driver._init_station(station)
-            except (serial.serialutil.SerialException, weewx.WeeWxIOError), e:
+            except (serial.serialutil.SerialException, weewx.WeeWxIOError) as e:
                 logerr("Failed attempt %d of %d to initialize station: %s" %
                        (cnt + 1, max_tries, e))
                 logdbg("Waiting %d seconds before retry" % retry_wait)
@@ -619,7 +619,7 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
                     pkt[label] = _to_ts(v, fmt)
                 else:
                     pkt[label] = float(v)
-            except ValueError, e:
+            except ValueError as e:
                 logerr("parse failed for '%s' '%s': %s (idx=%s values=%s)" %
                        (header[i], v, e, i, values))
                 return dict()
@@ -681,7 +681,7 @@ def _check_crc(buf):
         b = int(cs, 16) # checksum provided in data
         if a != b:
             raise ChecksumMismatch(a, b, buf)
-    except ValueError, e:
+    except ValueError as e:
         raise BadCRC(a, cs, buf)
 
 # for some reason we sometimes get null characters randomly mixed in with the
@@ -1012,7 +1012,7 @@ class CC3000(object):
                 else:
                     logerr("unexpected response to DOWNLOAD: '%s'" % data)
                     need_cmd = True
-            except ChecksumError, e:
+            except ChecksumError as e:
                 logerr("download failed for record %s: %s" % (n, e))
 
 

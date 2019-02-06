@@ -112,7 +112,7 @@ class FtpUpload(object):
                     else:
                         syslog.syslog(syslog.LOG_DEBUG, "ftpupload: Connected to %s" % self.server)
                     break
-                except ftplib.all_errors, e:
+                except ftplib.all_errors as e:
                     syslog.syslog(syslog.LOG_NOTICE, "ftpupload: Unable to connect or log into server : %s" % e)
             else:
                 # This is executed only if the loop terminates naturally (without a break statement),
@@ -153,7 +153,7 @@ class FtpUpload(object):
                             # Hence, the open is in the inner loop:
                             fd = open(full_local_path, "r")
                             ftp_server.storbinary(STOR_cmd, fd)
-                        except ftplib.all_errors, e:
+                        except ftplib.all_errors as e:
                             # Unsuccessful. Log it and go around again.
                             syslog.syslog(syslog.LOG_ERR, "ftpupload: Attempt #%d. Failed uploading %s to %s. Reason: %s" %
                                                           (count+1, full_remote_path, self.server, e))
@@ -221,7 +221,7 @@ class FtpUpload(object):
         for unused_count in range(self.max_tries):
             try:
                 ftp_server.mkd(remote_dir_path)
-            except ftplib.all_errors, e:
+            except ftplib.all_errors as e:
                 # Got an exception. It might be because the remote directory already exists:
                 if sys.exc_info()[0] is ftplib.error_perm:
                     msg =str(e).strip()

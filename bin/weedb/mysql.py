@@ -28,7 +28,8 @@ exception_map = {
     2002: weedb.CannotConnectError,
     2003: weedb.CannotConnectError,
     2005: weedb.CannotConnectError,
-    2006: weedb.CannotConnectError,
+    2006: weedb.DisconnectError,
+    2013: weedb.DisconnectError,
     None: weedb.DatabaseError
     }
 
@@ -38,7 +39,7 @@ def guard(fn):
     def guarded_fn(*args, **kwargs):
         try:
             return fn(*args, **kwargs)
-        except DatabaseError, e:
+        except DatabaseError as e:
             # Default exception is weedb.DatabaseError
             try:
                 errno = e[0]

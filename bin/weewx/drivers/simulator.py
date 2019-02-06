@@ -7,6 +7,7 @@
 
 from __future__ import with_statement
 import math
+import random
 import time
 
 import weedb
@@ -14,7 +15,7 @@ import weewx.drivers
 import weeutil.weeutil
 
 DRIVER_NAME = 'Simulator'
-DRIVER_VERSION = "3.0"
+DRIVER_VERSION = "3.1"
 
 def loader(config_dict, engine):
 
@@ -111,7 +112,16 @@ class Simulator(weewx.drivers.AbstractDevice):
             'radiation'  : Solar(magnitude=1000, solar_start=6, solar_length=12),
             'UV'         : Solar(magnitude=14,   solar_start=6, solar_length=12),
             'rain'       : Rain(rain_start=0, rain_length=3, total_rain=0.2, loop_interval=self.loop_interval),
-            }
+            'txBatteryStatus': BatteryStatus(),
+            'windBatteryStatus': BatteryStatus(),
+            'rainBatteryStatus': BatteryStatus(),
+            'outTempBatteryStatus': BatteryStatus(),
+            'inTempBatteryStatus': BatteryStatus(),
+            'consBatteryVoltage': BatteryVoltage(),
+            'heatingVoltage': BatteryVoltage(),
+            'supplyVoltage': BatteryVoltage(),
+            'referenceVoltage': BatteryVoltage(),
+            'rxCheckPercent': SignalStrength()}
 
         # calculate only the specified observations, or all if none specified
         if 'observations' in stn_dict and stn_dict['observations'] is not None:
@@ -159,7 +169,8 @@ class Simulator(weewx.drivers.AbstractDevice):
     @property
     def hardware_name(self):
         return "Simulator"
-        
+
+
 class Observation(object):
     
     def __init__(self, magnitude=1.0, average=0.0, period=96.0, phase_lag=0.0, start=None):
@@ -187,10 +198,10 @@ class Observation(object):
 
         phase = 2.0 * math.pi * (time_ts - self.start - self.phase_lag) / self.period
         return self.magnitude * math.cos(phase) + self.average
-        
+
 
 class Rain(object):
-    
+
     bucket_tip = 0.01
 
     def __init__(self, rain_start=0, rain_length=1, total_rain=0.1, loop_interval=None):
@@ -201,7 +212,7 @@ class Rain(object):
         self.rain_start = 3600* rain_start
         self.rain_end = self.rain_start + 3600 * rain_length
         self.packet_number = 0
-        
+
     def value_at(self, time_ts):
         time_tt = time.localtime(time_ts)
         secs_since_midnight = time_tt.tm_hour * 3600 + time_tt.tm_min * 60.0 + time_tt.tm_sec
@@ -212,10 +223,10 @@ class Rain(object):
             self.packet_number = 0
             amt = 0
         return amt
-        
+
 
 class Solar(object):
-    
+
     def __init__(self, magnitude=10, solar_start=6, solar_length=12):
         """Initialize a solar simulator
             Simulated ob will follow a single wave sine function starting at 0
@@ -229,12 +240,12 @@ class Solar(object):
             solar_length:   length of day in decimal hours
                               (10.75=10hr 45min, 10:10=10hr 6min)
         """
-        
+
         self.magnitude = magnitude
         self.solar_start = 3600 * solar_start
         self.solar_end = self.solar_start + 3600 * solar_length
         self.solar_length = 3600 * solar_length
-        
+
     def value_at(self, time_ts):
         time_tt = time.localtime(time_ts)
         secs_since_midnight = time_tt.tm_hour * 3600 + time_tt.tm_min * 60.0 + time_tt.tm_sec
@@ -245,8 +256,71 @@ class Solar(object):
         return amt
 
 
+class BatteryStatus(object):
+    
+    def __init__(self, chance_of_failure=None, min_recovery_time=None):
+        """Initialize a battery status.
+        
+        chance_of_failure - likeliehood that the battery should fail [0,1]
+        min_recovery_time - minimum time until the battery recovers, seconds
+        """
+        if chance_of_failure is None:
+            chance_of_failure = 0.0005 # about once every 30 minutes
+        if min_recovery_time is None:
+            min_recovery_time = random.randint(300, 1800) # 5 to 15 minutes
+        self.chance_of_failure = chance_of_failure
+        self.min_recovery_time = min_recovery_time
+        self.state = 0
+        self.fail_ts = 0
+        
+    def value_at(self, time_ts):
+        if self.state == 1:
+            # recover if sufficient time has passed
+            if time_ts - self.fail_ts > self.min_recovery_time:
+                self.state = 0
+        else:
+            # see if we need a failure
+            if random.random() < self.chance_of_failure:
+                self.state = 1
+                self.fail_ts = time_ts
+        return self.state
+
+
+class BatteryVoltage(object):
+
+    def __init__(self, nominal_value=None, max_variance=None):
+        """Initialize a battery voltage."""
+        if nominal_value is None:
+            nominal_value = 12.0
+        if max_variance is None:
+            max_variance = 0.1 * nominal_value
+        self.nominal = nominal_value
+        self.variance = max_variance
+
+    def value_at(self, time_ts):
+        return self.nominal + self.variance * random.random() * random.randint(-1, 1)
+
+
+class SignalStrength(object):
+
+    def __init__(self, minval=0.0, maxval=100.0):
+        """Initialize a signal strength simulator."""
+        self.minval = minval
+        self.maxval = maxval
+        self.max_variance = 0.1 * (self.maxval - self.minval)
+        self.value = self.minval + random.random() * (self.maxval - self.minval)
+
+    def value_at(self, time_ts):
+        newval = self.value + self.max_variance * random.random() * random.randint(-1, 1)
+        newval = max(self.minval, newval)
+        newval = min(self.maxval, newval)
+        self.value = newval
+        return self.value
+
+
 def confeditor_loader():
     return SimulatorConfEditor()
+
 
 class SimulatorConfEditor(weewx.drivers.AbstractConfEditor):
     @property

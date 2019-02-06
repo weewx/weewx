@@ -67,7 +67,7 @@ class Common(unittest.TestCase):
         try:
             test_html_dir = os.path.join(self.config_dict['WEEWX_ROOT'], self.config_dict['StdReport']['HTML_ROOT'])
             shutil.rmtree(test_html_dir)
-        except OSError, e:
+        except OSError as e:
             if os.path.exists(test_html_dir):
                 print >>sys.stderr, "\nUnable to remove old test directory %s", test_html_dir
                 print >>sys.stderr, "Reason:", e
@@ -349,6 +349,13 @@ class TestMySQL(Common):
     def __init__(self, *args, **kwargs):
         self.database_type = "mysql"
         super(TestMySQL, self).__init__(*args, **kwargs)
+
+    def setUp(self):
+        try:
+            import MySQLdb
+        except ImportError as e:
+            raise unittest.case.SkipTest(e.message)
+        super(TestMySQL, self).setUp()
         
     
 def suite():

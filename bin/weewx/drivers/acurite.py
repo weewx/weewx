@@ -505,7 +505,7 @@ class AcuRiteDriver(weewx.drivers.AbstractDevice):
                             self.polling_interval)
                 logdbg("next read in %s seconds" % delay)
                 time.sleep(delay)
-            except (usb.USBError, weewx.WeeWxIOError), e:
+            except (usb.USBError, weewx.WeeWxIOError) as e:
                 logerr("Failed attempt %d of %d to get LOOP data: %s" %
                        (ntries, self.max_tries, e))
                 time.sleep(self.retry_wait)
@@ -561,7 +561,7 @@ class AcuRiteDriver(weewx.drivers.AbstractDevice):
                 for i in range(17):
                     r3.append(station.read_R3())
                 self.last_r3 = time.time()
-            except usb.USBError, e:
+            except usb.USBError as e:
                 self.r3_fail_count += 1
                 logdbg("R3: read failed %d of %d: %s" %
                        (self.r3_fail_count, self.r3_max_fail, e))
@@ -627,13 +627,13 @@ class Station(object):
         # FIXME: is it necessary to set the configuration?
         try:
             self.handle.setConfiguration(dev.configurations[0])
-        except (AttributeError, usb.USBError), e:
+        except (AttributeError, usb.USBError) as e:
             pass
 
         # attempt to claim the interface
         try:
             self.handle.claimInterface(interface)
-        except usb.USBError, e:
+        except usb.USBError as e:
             self.close()
             logcrt("Unable to claim USB interface %s: %s" % (interface, e))
             raise weewx.WeeWxIOError(e)
@@ -641,14 +641,14 @@ class Station(object):
         # FIXME: is it necessary to set the alt interface?
         try:
             self.handle.setAltInterface(interface)
-        except (AttributeError, usb.USBError), e:
+        except (AttributeError, usb.USBError) as e:
             pass
 
     def close(self):
         if self.handle is not None:
             try:
                 self.handle.releaseInterface()
-            except (ValueError, usb.USBError), e:
+            except (ValueError, usb.USBError) as e:
                 logerr("release interface failed: %s" % e)
             self.handle = None
 
@@ -754,7 +754,7 @@ class Station(object):
                 try:
                     for b in r:
                         buf.append(int(b, 16))
-                except ValueError, e:
+                except ValueError as e:
                     logerr("R3: bad value in row %d: %s" % (i, _fmt_bytes(r)))
                     fail = True
             elif len(r) != 33:
@@ -1005,7 +1005,7 @@ if __name__ == '__main__':
                     for i in range(0, 17):
                         r3 = s.read_R3()
                         print tstr, _fmt_bytes(r3)
-                except usb.USBError, e:
+                except usb.USBError as e:
                     print tstr, e
                 delay = min(delay, 12*60)
             time.sleep(delay)

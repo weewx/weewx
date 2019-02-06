@@ -1,10 +1,8 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<!DOCTYPE html>
+<html lang="en">
 <head>
     <title>weewx: Developer's Notes</title>
-    <meta http-equiv="Content-Language" content="en-us"/>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <link rel="stylesheet" href="css/ui-lightness/jquery-ui-1.10.4.custom.min.css"/>
     <link rel="stylesheet" href="css/jquery.tocify.css"/>
@@ -35,25 +33,23 @@
 
     <div class="header">
         <div class="logoref">
-            <a href='http://weewx.com'> <img src='images/logo-weewx.png' class='logo' align='right' alt="weewx logo"/>
+            <a href='http://weewx.com'> <img src='images/logo-weewx.png' class='logo' style="float:right" alt="weewx logo"/>
             </a><br/> <span class='version'>
-Version: 3.8
-        </span>
+Version: 3.9
+    </span>
         </div>
-        <div class="title">
-            Notes for Developers of the weeWX Weather System
-        </div>
+        <div class="title">Notes for Developers of the WeeWX Weather System</div>
     </div>
 
     <div id="technical_content" class="content">
 
-        <p>This guide is intended for developers contributing to the open source project weeWX.
+        <p>This guide is intended for developers contributing to the open source project WeeWX.
         </p>
 
 
         <h1>Goals</h1>
 
-        <p>The primary design goals of weeWX are:</p>
+        <p>The primary design goals of WeeWX are:</p>
         <ul>
             <li>Architectural simplicity. No semaphores, no named pipes, no
                 inter-process communications, no complex multi-threading to
@@ -84,7 +80,7 @@ Version: 3.8
 
         <p>To meet these goals, the following strategies were used: </p>
         <ul>
-            <li>A &quot;micro-kernel&quot; design. The weeWX engine actually does very little.
+            <li>A &quot;micro-kernel&quot; design. The WeeWX engine actually does very little.
                 Its primary job is to load and run <em> services</em> at runtime, making it easy for users to add or
                 subtract features.
             </li>
@@ -111,28 +107,21 @@ Version: 3.8
                 <a href="http://pythonhosted.org/Cheetah/">Cheetah</a> module
                 was chosen for generating html and other types of files from
                 templates. Cheetah
-                allows <em>search list extensions</em> to be defined, making it easy to extend weeWX with new template
+                allows <em>search list extensions</em> to be defined, making it easy to extend WeeWX with new template
                 tags. Unfortunately, as of 2016, Cheetah has not been updated in many years (indeed, the Cheetah website
                 seems to be dead). Fortunately, Cheetah seems to be very robust, with only a few well-known bugs that
                 are easiy worked around, so we will likely continue to use it for the foreseeable future.
             </li>
             <li>Pure Python. The code base is 100% Python &mdash; no underlying C libraries need be built to install
-                weeWX. This also means no Makefiles are needed.
+                WeeWX. This also means no Makefiles are needed.
             </li>
         </ul>
-        <p>While weeWX is nowhere near as fast at generating images and HTML as its
-            predecessor, <span class="code">wview</span> (this is partially because weeWX uses
+        <p>While WeeWX is nowhere near as fast at generating images and HTML as its
+            predecessor, <span class="code">wview</span> (this is partially because WeeWX uses
             fancier fonts and a much more powerful templating engine), it is fast enough for all platforms but the
             slowest. I run it regularly on a 500 MHz machine where generating the 9 images used in the &quot;Current
             Conditions&quot; page takes just under 2 seconds (compared with 0.4 seconds for <span
                     class="code">wview</span>). </p>
-
-        <p>Unfortunately, the architectural goal of one code base is likely to be broken with the arrival of Python
-            V3.X. It has so many changes that are not backwards compatible with V2.X, that a separate code base will
-            most likely be needed. My intention is to stick with the V2.X versions until V3.X is so widespread it cannot
-            be ignored, then make a permanent switch. Given the slow adoption rate of V3.X this is unlikely to happen
-            anytime soon. In any case, I doubt the transition will affect the average weeWX
-            user. </p>
 
         <p>All writes to the databases are protected by transactions. You can kill the program at any time (either
             Control-C if run directly or &quot;<span class="code">/etc/init.d/weewx
@@ -149,6 +138,12 @@ Version: 3.8
             in the report processing thread (much more likely), then only the generation of reports will be
             affected &mdash; the main thread will continue downloading data off the instrument and putting them in the
             database. You can fix the problem at your leisure, without worrying about losing any data. </p>
+
+        <p>
+            For now, WeeWX requires Python v2.6 or v2.7. However, we eventually plan on supporting Python v3.x as well.
+            See the Wiki page <a href="https://github.com/weewx/weewx/wiki/Python-3-strategy"><em>Python 3 strategy</em></a>
+            for details on the transition.
+        </p>
 
         <h1>Units</h1>
 
@@ -175,9 +170,11 @@ Version: 3.8
             because of a failed checksum). If the hardware simply doesn't support it, then the driver should not emit a
             value at all.</p>
             
-        <p>The same rule applies to derived values. If the input data for a derived value are missing, then no derived
+        <p>
+            The same rule applies to derived values. If the input data for a derived value are missing, then no derived
             value should be emitted. However, if the input values are present, but have value 
-            <span class="code">None</span></p>, then the derived value should be set to <span class="code">None</span>.
+            <span class="code">None</span>, then the derived value should be set to <span class="code">None</span>.
+        </p>
 
         <p>However, the time value must never be <span class="code">None</span>. This is because it is used as the
             primary key in the SQL database. </p>
@@ -188,7 +185,7 @@ Version: 3.8
             time. However, usually one is interested in weather events in local time and want image and HTML generation
             to reflect that. Furthermore, most weather stations are configured in local time. This requires that many
             data times be converted back and forth between UTC and local time. To avoid tripping up over time zones and
-            daylight savings time, weeWX generally uses Python routines to do this conversion.
+            daylight savings time, WeeWX generally uses Python routines to do this conversion.
             Nowhere in the code base is there any explicit recognition of DST. Instead, its presence is implicit in the
             conversions. At times, this can cause the code to be relatively inefficient. </p>
 
@@ -207,18 +204,18 @@ delta = datetime.timedelta(seconds=10800)
 next_dt = time_dt + delta
 next_ts = int(time.mktime(next_dt.timetuple()))</pre>
         <p>Other time conversion problems are handled in a similar manner. </p>
-        <p>For astronomical calculations, weeWX uses the latitude and longitude
+        <p>For astronomical calculations, WeeWX uses the latitude and longitude
           specified in the configuration file.  If that location does not
           correspond to the computer's local time, reports with astronomical
           times will probably be incorrect.
         </p>
 
         <h1>Internationalization</h1>
-        <p>Generally, weewx does not make much use of Unicode. This is because the Python 2.x libraries do not always
+        <p>Generally, WeeWX does not make much use of Unicode. This is because the Python 2.x libraries do not always
             handle it correctly. In particular, the function <span class="code">time.strftime()</span> completely fails
             when handed a Unicode string with a non-ASCII character. As this function is often used by extensions,
             working around this bug is an unfair expectation on extension writers. So, we generally avoid Unicode.</p>
-        <p>Instead, weeWX mostly uses regular strings, with any non-ASCII characters encoded as UTF-8. </p>
+        <p>Instead, WeeWX mostly uses regular strings, with any non-ASCII characters encoded as UTF-8. </p>
         <p>An exception to this general rule is the image generator, which holds labels internally in Unicode, because
             that is the encoding expected by most fonts.</p>
         <p>The document <i><a
@@ -251,7 +248,7 @@ next_ts = int(time.mktime(next_dt.timetuple()))</pre>
 
         <h1>Code style</h1>
         <p>Generally, we try to follow the <a href="https://www.python.org/dev/peps/pep-0008/">PEP 8 style guide</a>,
-            but there are <em>many</em> exceptions. In particular, many older weeWX function names use camelCase, but
+            but there are <em>many</em> exceptions. In particular, many older WeeWX function names use camelCase, but
             PEP 8 calls for snake_case. Please use snake_case for new code.</p>
         <p>Most modern code editors, such as Eclipse, or PyCharm, have the ability to automatically format code.
             Resist the temptation and <em>don't use this feature!</em> Two reasons:</p>
@@ -312,8 +309,8 @@ now = datetime.datetime()</pre>
         It's free, easy to customize and extremely powerful. </p>
         <p><a href="http://www.jetbrains.com/pycharm/">JetBrain's PyCharm</a> is also good, 
         and now there's a free Community Edition. Where it really shines is if you use a framework
-        such as Django, or Backbone, but weeWX does not use any of these, so there is no real need
-        for PyCharm's extra functionality when working with weeWX.</p>
+        such as Django, or Backbone, but WeeWX does not use any of these, so there is no real need
+        for PyCharm's extra functionality when working with WeeWX.</p>
 
         <h2>HTML and Javascript</h2>
         <p>For HTML, <a href="http://www.jetbrains.com/webstorm/?fromMenu">JetBrain's WebStorm</a>
@@ -328,7 +325,7 @@ now = datetime.datetime()</pre>
 
         <p>This is a glossary of terminology used throughout the code. </p>
         <table style="width: 95%" class='indent'>
-            <caption>Terminology used in weeWX</caption>
+            <caption>Terminology used in WeeWX</caption>
             <tr class="first_row">
                 <td>Name</td>
                 <td>Description</td>
@@ -348,7 +345,7 @@ now = datetime.datetime()</pre>
             </tr>
             <tr>
                 <td class="text_highlight code">config_dict</td>
-                <td>All configuration information used by weeWX is stored in the <em>configuration file</em>, usually
+                <td>All configuration information used by WeeWX is stored in the <em>configuration file</em>, usually
                     with the name <span class="code">weewx.conf</span>. By convention, when this file is read into the
                     program, it is called <span class="code">config_dict</span>, an instance of the class <span
                             class="code">configobj.ConfigObj</span>.
@@ -453,11 +450,11 @@ now = datetime.datetime()</pre>
 </div>
 
 <!-- Our scripts load last so the content can load first -->
-<script type="text/javascript" src="js/jquery-1.11.1.min.js"></script>
-<script type="text/javascript" src="js/jquery-ui-1.10.4.custom.min.js"></script>
-<script type="text/javascript" src="js/jquery.tocify-1.9.0.min.js"></script>
-<script type="text/javascript" src="js/weewx.js"></script>
-<script type="text/javascript">
+<script src="js/jquery-1.11.1.min.js"></script>
+<script src="js/jquery-ui-1.10.4.custom.min.js"></script>
+<script src="js/jquery.tocify-1.9.0.min.js"></script>
+<script src="js/weewx.js"></script>
+<script>
     $(function () {
         var level = get_default_level();
         create_toc_control(level);
@@ -465,7 +462,7 @@ now = datetime.datetime()</pre>
     });
 </script>
 
-<script type="text/javascript">
+<script>
     function showtab(tab, id) {
         document.getElementById(tab + '-deb').style.display = 'none';
         document.getElementById(tab + '-rpm').style.display = 'none';

@@ -19,7 +19,7 @@ Weedb generally follows the MySQL exception model. Specifically:
 import sys
 
 # The exceptions that the weedb package can raise:
-class DatabaseError(StandardError):
+class DatabaseError(Exception):
     """Base class of all weedb exceptions."""
 
 class IntegrityError(DatabaseError):
@@ -45,6 +45,9 @@ class NoDatabaseError(OperationalError):
 
 class CannotConnectError(OperationalError):
     """Unable to connect to the database server."""
+
+class DisconnectError(OperationalError):
+    """Database went away."""
 
 class NoColumnError(OperationalError):
     """Attempt to operate on a column that does not exist."""

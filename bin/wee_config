@@ -1,46 +1,48 @@
 #!/usr/bin/env python
 #
-#    Copyright (c) 2009-2015 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2019 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your rights.
 #
 """Configure the configuration file."""
-from __future__ import with_statement
-
 import sys
 import syslog
 import optparse
 
-from weecfg.config import ConfigEngine
+from weecfg.config import ConfigEngine, Logger
 
 usage = """Usage: wee_config --help
        wee_config --version
        wee_config --list-drivers
-       wee_config --install --dist-config=DIST_CONFIG --output=OUT_CONFIG
-           [--driver=DRIVER]  [--units=(us|metric)]
-           [--latitude=yy.y] [--longitude=xx.x] [--altitude=zz.z,(foot|meter)] 
-           [--location="Home Sweet Home"]
-           [--no-prompt] [--no-backup]
-       wee_config --upgrade CONFIG_FILE|--config=CONFIG_FILE
-           --dist-config=DIST_CONFIG
-           [--output=OUT_CONFIG] [--no-prompt] [--no-backup] [--warn-on-error]
        wee_config --reconfigure CONFIG_FILE|--config=CONFIG_FILE
            [--driver=DRIVER]  [--units=(us|metric)]
            [--latitude=yy.y] [--longitude=xx.x] [--altitude=zz.z,(foot|meter)] 
            [--location="Home Sweet Home"]
+           [--output=OUT_CONFIG] [--no-prompt] [--no-backup] [--verbosity=N]
+       wee_config --install --dist-config=DIST_CONFIG --output=OUT_CONFIG
+           [--driver=DRIVER]  [--units=(us|metric)]
+           [--latitude=yy.y] [--longitude=xx.x] [--altitude=zz.z,(foot|meter)] 
+           [--location="Home Sweet Home"]
+           [--no-prompt] [--no-backup] [--verbosity=N]
+       wee_config --upgrade CONFIG_FILE|--config=CONFIG_FILE
+           --dist-config=DIST_CONFIG
            [--output=OUT_CONFIG] [--no-prompt] [--no-backup]
+           [--warn-on-error] [--verbosity=N]
 
-Actions:
+User actions:
 
 --list-drivers  List the available weewx device drivers, then exit.
+--reconfigure   Modify an existing configuration file CONFIG_FILE with any
+                specified station parameters.  Use this command with the
+                driver option to change the device driver.
+                
+System actions (not normally done by users):
+
 --install       Install a new configuration file starting with the contents of
                 DIST_CONFIG, prompting for station parameters.
 --upgrade       Update the contents of configuration file CONFIG_FILE to the
                 installed version, then merge the result with the contents of
-                configuration file DIST_CONFIG. 
---reconfigure   Modify an existing configuration file CONFIG_FILE with any
-                specified station parameters.  Use this command with the
-                driver option to change the device driver.
+                configuration file DIST_CONFIG.
 
 Station parameters:
 
@@ -48,6 +50,7 @@ Station parameters:
   --latitude    --longitude
   --altitude    --location
 """
+
 
 def main():
 
@@ -62,13 +65,13 @@ def main():
                       help="Show the weewx version then exit.")
     parser.add_option("--list-drivers", action="store_true",
                       help="List the available device drivers.")
+    parser.add_option("--reconfigure", action="store_true",
+                      help="Reconfigure an existing configuration file.")
     parser.add_option("--install", action="store_true",
                       help="Install a new configuration file.")
     parser.add_option("--upgrade", action="store_true",
                       help="Update an existing configuration file, then merge "
                       "with contents of DIST_CONFIG.")
-    parser.add_option("--reconfigure", action="store_true",
-                      help="Reconfigure an existing configuration file.")
     parser.add_option("--config", dest="config_path", metavar="CONFIG_FILE",
                       help="Use configuration file CONFIG_FILE.")
     parser.add_option("--dist-config",
@@ -101,16 +104,18 @@ def main():
                       "behavior is to warn then exit.")
     parser.add_option("--debug", action="store_true",
                       help="Show diagnostic information while running.")
+    parser.add_option('--verbosity', type=int, default=1,
+                      metavar="N", help='How much status to display, 0-3')
 
     # Now we are ready to parse the command line:
     (options, args) = parser.parse_args()
     
-    config_mgr = ConfigEngine()
+    config_mgr = ConfigEngine(logger=Logger(verbosity=options.verbosity))
 
     config_mgr.run(args, options)
 
     sys.exit(0)
 
-if __name__=="__main__" :
+
+if __name__ == "__main__" :
     main()
-    

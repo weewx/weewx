@@ -1,10 +1,12 @@
 # installer for the fileparse driver
 # Copyright 2014 Matthew Wall
 
-from setup import ExtensionInstaller
+from weecfg.extension import ExtensionInstaller
+
 
 def loader():
     return FileParseInstaller()
+
 
 class FileParseInstaller(ExtensionInstaller):
     def __init__(self):
@@ -22,4 +24,4 @@ class FileParseInstaller(ExtensionInstaller):
                     'path': '/var/tmp/datafile',
                     'driver': 'user.fileparse'}},
             files=[('bin/user', ['bin/user/fileparse.py'])]
-            )
+        )
