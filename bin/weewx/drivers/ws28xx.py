@@ -925,7 +925,7 @@ Step 8. Go to step 1 to wait for state 0xde16 again.
 
 from datetime import datetime
 
-from six import StringIO
+from six.moves import StringIO
 import sys
 import syslog
 import threading

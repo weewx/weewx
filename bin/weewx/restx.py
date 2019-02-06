@@ -14,7 +14,7 @@ Each protocol uses two classes:
  o A separate "threading" class that runs in its own thread. Call this the
     "posting object".
  
-Communication between the two is via an instance of Queue.Queue. New loop
+Communication between the two is via an instance of queue.Queue. New loop
 packets or archive records are put into the queue by the controlling object
 and received by the posting object. Details below.
  
@@ -67,10 +67,10 @@ In unusual cases, you might also have to implement the following:
    uses sockets. 
 """
 from __future__ import with_statement
-import Queue
+from six.moves import queue
 import datetime
 import hashlib
-import httplib
+from six.moves import http_client
 import platform
 import re
 import socket
@@ -163,7 +163,7 @@ class RESTThread(threading.Thread):
         """Initializer for the class RESTThread
         Required parameters:
 
-          queue: An instance of Queue.Queue where the records will appear.
+          queue: An instance of queue.Queue where the records will appear.
 
           protocol_name: A string holding the name of the protocol.
           
@@ -451,7 +451,7 @@ class RESTThread(threading.Thread):
                 # Provide method for derived classes to behave otherwise if
                 # necessary.
                 self.handle_code(_response.code, _count + 1)
-            except (urllib2.URLError, socket.error, httplib.HTTPException) as e:
+            except (urllib2.URLError, socket.error, http_client.HTTPException) as e:
                 # An exception was thrown. By default, log it and try again.
                 # Provide method for derived classes to behave otherwise if
                 # necessary.
@@ -595,7 +595,7 @@ class StdWunderground(StdRESTful):
 
         if do_archive_post:
             _ambient_dict.setdefault('server_url', StdWunderground.pws_url)
-            self.archive_queue = Queue.Queue()
+            self.archive_queue = queue.Queue()
             self.archive_thread = AmbientThread(
                 self.archive_queue,
                 _manager_dict,
@@ -616,7 +616,7 @@ class StdWunderground(StdRESTful):
             _ambient_dict.setdefault('max_tries', 1)
             _ambient_dict.setdefault('rtfreq',  2.5)
             self.cached_values = CachedValues()
-            self.loop_queue = Queue.Queue()
+            self.loop_queue = queue.Queue()
             self.loop_thread = AmbientLoopThread(
                 self.loop_queue,
                 _manager_dict,
@@ -709,7 +709,7 @@ class StdPWSWeather(StdRESTful):
             config_dict, 'wx_binding')
 
         _ambient_dict.setdefault('server_url', StdPWSWeather.archive_url)
-        self.archive_queue = Queue.Queue()
+        self.archive_queue = queue.Queue()
         self.archive_thread = AmbientThread(self.archive_queue, _manager_dict,
                                             protocol_name="PWSWeather",
                                             **_ambient_dict)
@@ -751,7 +751,7 @@ class StdWOW(StdRESTful):
 
         _ambient_dict.setdefault('server_url', StdWOW.archive_url)
         _ambient_dict.setdefault('post_interval', 900)
-        self.archive_queue = Queue.Queue()
+        self.archive_queue = queue.Queue()
         self.archive_thread = WOWThread(self.archive_queue, _manager_dict,
                                         protocol_name="WOW",
                                         **_ambient_dict)
@@ -1058,7 +1058,7 @@ class StdCWOP(StdRESTful):
         _cwop_dict.setdefault('longitude', self.engine.stn_info.longitude_f)
         _cwop_dict.setdefault('station_type', config_dict['Station'].get(
             'station_type', 'Unknown'))
-        self.archive_queue = Queue.Queue()
+        self.archive_queue = queue.Queue()
         self.archive_thread = CWOPThread(self.archive_queue, _manager_dict,
                                          **_cwop_dict)
         self.archive_thread.start()
@@ -1366,7 +1366,7 @@ class StdStationRegistry(StdRESTful):
         _registry_dict.setdefault('longitude', self.engine.stn_info.longitude_f)
         _registry_dict.setdefault('station_model', self.engine.stn_info.hardware)
 
-        self.archive_queue = Queue.Queue()
+        self.archive_queue = queue.Queue()
         self.archive_thread = StationRegistryThread(self.archive_queue,
                                                     **_registry_dict)
         self.archive_thread.start()
@@ -1581,7 +1581,7 @@ class StdAWEKAS(StdRESTful):
         site_dict['manager_dict'] = weewx.manager.get_manager_dict_from_config(
             config_dict, 'wx_binding')
 
-        self.archive_queue = Queue.Queue()
+        self.archive_queue = queue.Queue()
         self.archive_thread = AWEKASThread(self.archive_queue, **site_dict)
         self.archive_thread.start()
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)

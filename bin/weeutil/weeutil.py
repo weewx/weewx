@@ -19,7 +19,7 @@ import struct
 import syslog
 import time
 import traceback
-from six import StringIO
+from six.moves import StringIO
 
 # For backwards compatibility:
 from weeutil import config

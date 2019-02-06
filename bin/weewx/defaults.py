@@ -7,7 +7,7 @@
 
 """Backstop defaults used in the absence of any other values."""
 
-from six import StringIO
+from six.moves import StringIO
 import configobj
 
 default_str = """# Copyright (c) 2009-2019 Tom Keffer <tkeffer@gmail.com>

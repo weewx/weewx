@@ -512,7 +512,7 @@ defaults_ini = """
     [[windGustDir]]
         extractor = noop
 """
-from six import StringIO
+from six.moves import StringIO
 defaults = configobj.ConfigObj(StringIO(defaults_ini))
 del StringIO
 

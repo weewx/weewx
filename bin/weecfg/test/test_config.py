@@ -11,7 +11,7 @@ import tempfile
 import os.path
 import sys
 import shutil
-from six import StringIO
+from six.moves import StringIO
 
 import distutils.dir_util
 import configobj
