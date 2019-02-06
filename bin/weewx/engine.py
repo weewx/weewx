@@ -443,6 +443,7 @@ class StdArchive(StdService):
         if 'StdArchive' in config_dict:
             self.data_binding = config_dict['StdArchive'].get('data_binding', 'wx_binding')
             self.record_generation = config_dict['StdArchive'].get('record_generation', 'hardware').lower()
+            self.no_catchup = to_bool(config_dict['StdArchive'].get('no_catchup', False))
             self.archive_delay = to_int(config_dict['StdArchive'].get('archive_delay', 15))
             software_interval = to_int(config_dict['StdArchive'].get('archive_interval', 300))
             self.loop_hilo = to_bool(config_dict['StdArchive'].get('loop_hilo', True))
@@ -509,10 +510,11 @@ class StdArchive(StdService):
     
     def startup(self, event):  # @UnusedVariable
         """Called when the engine is starting up."""
-        # The engine is starting up. If hardware record generation has been specified,
-        # the main task is to do a catch up on any
-        # data still on the station, but not yet put in the database.
-        if self.record_generation == 'hardware':
+        # The engine is starting up. Unless the user has specified otherwise, the main task
+        # is to do a catch up on any data still on the station, but not yet put in the database.
+        if self.no_catchup:
+            syslog.syslog(syslog.LOG_DEBUG, "engine: No catchup specified.")
+        else:
             # Not all consoles can do a hardware catchup, so be prepared to catch the exception:
             try:
                 self._catchup(self.engine.console.genStartupRecords)
