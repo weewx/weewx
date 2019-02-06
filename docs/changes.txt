@@ -1,7 +1,7 @@
 weewx change history
 --------------------
 
-3.9.1 MM/DD/YYYY
+3.9.1 02/06/2019
 
 In genplot, do not attempt to normalize unspecified paths.
 
