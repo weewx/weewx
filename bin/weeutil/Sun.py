@@ -76,8 +76,7 @@ def atan2d(y, x):
 def daysSince2000Jan0(y, m, d):
     """A macro to compute the number of days elapsed since 2000 Jan 0.0
     (which is equal to 1999 Dec 31, 0h UT)"""
-    return (367*(y)-((7*((y)+(((m)+9)/12)))/4)+((275*(m))/9)+(d)-730530)
-
+    return 367.0 * y - ((7.0 * (y + ((m + 9.0) / 12.0))) / 4.0) + (275.0 * m / 9.0) + d - 730530.0
 
 # Following are some macros around the "workhorse" function __daylen__ 
 # They mainly fill in the desired values for the reference altitude    
@@ -190,11 +189,11 @@ def __sunriset__(year, month, day, lon, lat, altit, upper_limb):
     """
     # Compute d of 12h local mean solar time
     d = daysSince2000Jan0(year,month,day) + 0.5 - (lon/360.0)
-    
-    # Compute local sidereal time of this moment 
+
+    # Compute local sidereal time of this moment
     sidtime = revolution(GMST0(d) + 180.0 + lon)
-    
-    # Compute Sun's RA + Decl at this moment 
+
+    # Compute Sun's RA + Decl at this moment
     res = sunRADec(d)
     sRA = res[0]
     sdec = res[1]
@@ -225,7 +224,7 @@ def __sunriset__(year, month, day, lon, lat, altit, upper_limb):
     else:
         t = acosd(cost)/15.0   # The diurnal arc, hours
     
-    
+
     # Store rise and set times - in hours UT 
     return (tsouth-t, tsouth+t)
 
@@ -535,7 +534,7 @@ def rev180(x):
 
 if __name__ == "__main__":
     (sunrise_utc, sunset_utc) = sunRiseSet(2009, 3, 27, -122.65, 45.517)
-    print sunrise_utc, sunset_utc
+    print(sunrise_utc, sunset_utc)
     
     #Assert that the results are within 1 minute of NOAA's 
     # calculator (see http://www.srrb.noaa.gov/highlights/sunrise/sunrise.html)

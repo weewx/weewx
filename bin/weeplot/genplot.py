@@ -7,6 +7,7 @@
 """
 import colorsys
 import locale
+import os
 import time
 try:
     from PIL import Image, ImageDraw
@@ -99,6 +100,7 @@ class GeneralPlot(object):
         self.rose_label_font_path   = config_dict.get('rose_label_font_path', self.bottom_label_font_path)
         self.rose_label_font_size   = int(config_dict.get('rose_label_font_size', 10))  
         self.rose_label_font_color  = weeplot.utilities.tobgr(config_dict.get('rose_label_font_color', '0x000000'))
+        self.rose_line_width        = int(config_dict.get('rose_line_width', 1))
         self.rose_color             = config_dict.get('rose_color')
         if self.rose_color is not None:
             self.rose_color = weeplot.utilities.tobgr(self.rose_color)
@@ -110,8 +112,28 @@ class GeneralPlot(object):
         self.daynight_edge_color    = weeplot.utilities.tobgr(config_dict.get('daynight_edge_color', '0xefefef'))
         self.daynight_gradient      = int(config_dict.get('daynight_gradient', 20))
 
+        # initialize the location
         self.latitude               = None
         self.longitude              = None
+
+        # normalize the font paths relative to the skin directory
+        skin_dir = config_dict.get('skin_dir', '')
+        self.top_label_font_path = self.normalize_path(
+            skin_dir, self.top_label_font_path)
+        self.bottom_label_font_path = self.normalize_path(
+            skin_dir, self.bottom_label_font_path)
+        self.unit_label_font_path = self.normalize_path(
+            skin_dir, self.unit_label_font_path)
+        self.axis_label_font_path = self.normalize_path(
+            skin_dir, self.axis_label_font_path)
+        self.rose_label_font_path = self.normalize_path(
+            skin_dir, self.rose_label_font_path)
+
+    @staticmethod
+    def normalize_path(skin_dir, path):
+        if path is None:
+            return None
+        return os.path.join(skin_dir, path)
 
     def setBottomLabel(self, bottom_label):
         """Set the label to be put at the bottom of the plot.
@@ -425,11 +447,11 @@ class GeneralPlot(object):
  
         fill_color = add_alpha(self.rose_color)
         # Draw the arrow straight up (North). First the shaft:
-        rose_draw.line( ((rose_center_x, 0), (rose_center_x, self.rose_height)), width = 1, fill = fill_color)
+        rose_draw.line( ((rose_center_x, 0), (rose_center_x, self.rose_height)), width = self.rose_line_width, fill = fill_color)
         # Now the left barb:
-        rose_draw.line( ((rose_center_x - barb_width, barb_height), (rose_center_x, 0)), width = 1, fill = fill_color)
+        rose_draw.line( ((rose_center_x - barb_width, barb_height), (rose_center_x, 0)), width = self.rose_line_width, fill = fill_color)
         # And the right barb:
-        rose_draw.line( ((rose_center_x, 0), (rose_center_x + barb_width, barb_height)), width = 1, fill = fill_color)
+        rose_draw.line( ((rose_center_x, 0), (rose_center_x + barb_width, barb_height)), width = self.rose_line_width, fill = fill_color)
         
         rose_draw.ellipse(((rose_center_x - self.rose_diameter/2,
                             rose_center_y - self.rose_diameter/2),

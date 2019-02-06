@@ -1,23 +1,21 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<!DOCTYPE html>
+<html lang="en">
 <head>
     <title>weewx: Installation on macOS systems</title>
-    <meta http-equiv="Content-Language" content="en-us"/>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <link rel="stylesheet" href="css/weewx_docs.css"/>
     <link rel="icon" href="images/favicon.png" type="image/png"/>
 </head>
 <body>
 
-<h1 class="title">weeWX: Installation on macOS systems
+<h1 class="title">WeeWX: Installation on macOS systems
     <span class='os-icons'>
         <img class='logo' src='images/logo-apple.png' alt=""/>
     </span>
 </h1>
 
-<p>This is a guide to installing weeWX on macOS.</p>
+<p>This is a guide to installing WeeWX on macOS.</p>
 
 <h2>Download</h2>
 
@@ -45,7 +43,7 @@ sudo pip install pyephem</pre>
 <pre class='tty cmd'>xcode-select --install</pre>
 <p>then try the pip install again.</p>
 
-<h2>Install weeWX</h2>
+<h2>Install WeeWX</h2>
 <p>Expand the source archive:</p>
 <pre class="tty cmd">tar xvfz weewx-X.Y.Z.tar.gz</pre>
 <p>Change directory:</p>
@@ -68,7 +66,7 @@ sudo pip install pyephem</pre>
 sudo launchctl load /Library/LaunchDaemons/com.weewx.weewxd.plist</pre>
 
 <h2>Status</h2>
-<p>To make sure things are running properly, look in the system log for messages from weeWX.  Run the <span class="code">Console</span> application and select <span class="code">All Messages</span>.
+<p>To make sure things are running properly, look in the system log for messages from WeeWX.  Run the <span class="code">Console</span> application and select <span class="code">All Messages</span>.
 </p>
 
 <h2>Verify</h2>
@@ -85,12 +83,12 @@ If your hardware supports hardware archiving, then how long you wait will depend
 </p>
 
 <h2>Start/Stop</h2>
-<p>To start/stop weeWX:</p>
+<p>To start/stop WeeWX:</p>
 <pre class='tty cmd'>sudo launchctl load /Library/LaunchDaemons/com.weewx.weewxd.plist
 sudo launchctl unload /Library/LaunchDaemons/com.weewx.weewxd.plist</pre>
 
 <h2>Uninstall</h2>
-<p>To uninstall, simply delete the directory <span class='code'>/Users/Shared/weewx</span>.  This will delete weeWX, configuration files, and data.</p>
+<p>To uninstall, simply delete the directory <span class='code'>/Users/Shared/weewx</span>.  This will delete WeeWX, configuration files, and data.</p>
 <pre class='tty cmd'>rm -r /Users/Shared/weewx
 sudo rm /Library/LaunchDaemons/com.weewx.weewxd.plist</pre>
 

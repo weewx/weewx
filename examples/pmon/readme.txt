@@ -4,7 +4,7 @@ Copyright 2014 Matthew Wall
 This example illustrates how to implement a service and package it so that it
 can be installed by the extension installer.  The pmon service collects memory
 usage information about a single process then saves it in its own database.
-Data are then displayed using standard weeWX reporting and plotting utilities.
+Data are then displayed using standard WeeWX reporting and plotting utilities.
 
 
 Installation instructions
@@ -13,7 +13,7 @@ Installation instructions
 
 wee_extension --install=/home/weewx/examples/pmon
 
-2) restart weeWX
+2) restart WeeWX
 
 sudo /etc/init.d/weewx stop
 sudo /etc/init.d/weewx start
@@ -26,21 +26,21 @@ options.
 
 Manual installation instructions
 
-1) copy the pmon service file to the weeWX user directory
+1) copy the pmon service file to the WeeWX user directory
 
 cp /home/weewx/examples/pmon/bin/pmon.py /home/weewx/bin/user
 
-2) copy files to the weeWX skins directory
+2) copy files to the WeeWX skins directory
 
 cp -rp skins/pmon /home/weewx/skins
 
-3) in the weeWX configuration file, add a new [ProcessMonitor] stanza
+3) in the WeeWX configuration file, add a new [ProcessMonitor] stanza
 
 [ProcessMonitor]
     data_binding = pmon_binding
     process = weewxd
 
-4) in the weeWX configuration file, add a data binding
+4) in the WeeWX configuration file, add a data binding
 
 [DataBindings]
     ...
@@ -50,7 +50,7 @@ cp -rp skins/pmon /home/weewx/skins
         manager = weewx.manager.DaySummaryManager
         schema = user.pmon.schema
 
-5) in the weeWX configuration file, add a database
+5) in the WeeWX configuration file, add a database
 
 [Databases]
     ...
@@ -58,7 +58,7 @@ cp -rp skins/pmon /home/weewx/skins
         database_name = pmon.sdb
         driver = weedb.sqlite
 
-6) in the weeWX configuration file, add a report
+6) in the WeeWX configuration file, add a report
 
 [StdReport]
     ...
@@ -66,13 +66,13 @@ cp -rp skins/pmon /home/weewx/skins
         skin = pmon
         HTML_ROOT = pmon
 
-7) in the weeWX configuration file, add the pmon service
+7) in the WeeWX configuration file, add the pmon service
 
 [Engine]
     [[Services]]
         process_services = ..., user.pmon.ProcessMonitor
 
-8) restart weeWX
+8) restart WeeWX
 
 sudo /etc/init.d/weewx stop
 sudo /etc/init.d/weewx start

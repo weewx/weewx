@@ -1,10 +1,8 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<!DOCTYPE html>
+<html lang="en">
 <head>
     <title>weewx: Hardware Guide</title>
-    <meta http-equiv="Content-Language" content="en-us"/>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <link rel="stylesheet" href="css/ui-lightness/jquery-ui-1.10.4.custom.min.css"/>
     <link rel="stylesheet" href="css/jquery.tocify.css"/>
@@ -38,15 +36,12 @@
 
     <div class="header">
         <div class="logoref">
-            <a href='http://weewx.com'>
-                <img src='images/logo-weewx.png' class='logo' align='right' alt="weewx logo"/>
-            </a>
-            <br/>
-            <span class="version">
-Version: 3.8
-            </span>
+            <a href='http://weewx.com'> <img src='images/logo-weewx.png' class='logo' style="float:right" alt="weewx logo"/>
+            </a><br/> <span class='version'>
+Version: 3.9
+    </span>
         </div>
-        <div class="title">weeWX Hardware Guide</div>
+        <div class="title">WeeWX Hardware Guide</div>
     </div>
 
     <div id="technical_content" class="content">
@@ -55,7 +50,7 @@ Version: 3.8
         <h1 id="driver_status">Driver status</h1>
 
         <p>The following table enumerates many of the weather stations that
-            are known to work with weeWX. If your
+            are known to work with WeeWX. If your
             station is not in the table, check the pictures at the
             <a href="http://weewx.com/hardware.html">supported hardware page</a> &mdash;
             it could be a variation of one of the supported models. You can also
@@ -75,7 +70,7 @@ Version: 3.8
         </p>
 
         <table class="indent">
-            <caption>Weather hardware supported by weeWX</caption>
+            <caption>Weather hardware supported by WeeWX</caption>
             <tr class="first_row">
                 <td>Vendor</td>
                 <td>Model</td>
@@ -904,7 +899,7 @@ Version: 3.8
         <p>The console has a sensor for inside humidity, but the values from
             that sensor are available only by reading from the console logger.
             Due to instability of the console firmware, the
-            weeWX driver does not read the console
+            WeeWX driver does not read the console
             logger.</p>
 
         <h2 id="acurite_usb_mode">USB Mode</h2>
@@ -929,7 +924,7 @@ Version: 3.8
         </table>
 
         <p>If the AcuRite console has multiple USB modes, it must be set to
-            USB mode 3 or 4 in order to work with the weeWX driver.</p>
+            USB mode 3 or 4 in order to work with the WeeWX driver.</p>
 
         <p>Communication
             via USB is disabled in modes 1 and 2. Mode 4 is more reliable than
@@ -939,7 +934,7 @@ Version: 3.8
 
         <p>The default mode is 2, so after a power failure one must use the
             console controls to change the mode before
-            weeWX can resume data collection.</p>
+            WeeWX can resume data collection.</p>
 
         <p>The 01025, 01035, 01036, 01525, and 02032 consoles have a USB mode
             setting.</p>
@@ -955,7 +950,7 @@ Version: 3.8
         <h2 id="acurite_data">Station data</h2>
 
         <p>The following table shows which data are provided by the station
-            hardware and which are calculated by weeWX.
+            hardware and which are calculated by WeeWX.
         </p>
 
         <table class='station_data'>
@@ -1094,14 +1089,14 @@ Version: 3.8
 
         <p>When the logger fills up, it stops recording.</p>
 
-        <p>When weeWX starts up it will attempt to
+        <p>When WeeWX starts up it will attempt to
             download all records from the logger since the last record in the
             archive database.</p>
 
         <p>The driver does not support hardware record generation.</p>
 
         <p>The CC3000 data logger may be configured to return data in METRIC
-            or ENGLISH units. These are then mapped to the weeWX unit groups
+            or ENGLISH units. These are then mapped to the WeeWX unit groups
             METRICWX or US, respectively.</p>
 
         <h2 id='cc3000_configuration'>Configuring with <span class="code">wee_device</span></h2>
@@ -1190,7 +1185,7 @@ interval: 1</pre>
             one or the other.</p>
 
         <p>The CC3000 driver automatically converts the units to maintain
-            consistency with the units in weeWX.
+            consistency with the units in WeeWX.
             </p>
 
         <h3>Action <span class="code">--set-channel</span></h3>
@@ -1218,7 +1213,7 @@ interval: 1</pre>
         <h2 id="cc3000_data">Station data</h2>
 
         <p>The following table shows which data are provided by the station
-            hardware and which are calculated by weeWX.
+            hardware and which are calculated by WeeWX.
         </p>
 
         <table class='station_data'>
@@ -1392,14 +1387,14 @@ interval: 1</pre>
             default recording interval of 30 minutes, or about 14 days with a recording interval of 5 minutes. The 30xx
             stations can save up to 3264 historical readings.</p>
 
-        <p>When weeWX starts up it will attempt to
+        <p>When WeeWX starts up it will attempt to
             download all records from the console since
             the last record in the archive database.</p>
 
         <h2 id="polling_mode_and_the_polling_interval">Polling mode and
             interval</h2>
 
-        <p>When reading 'live' data, weeWX can read
+        <p>When reading 'live' data, WeeWX can read
             as fast as possible, or at a user-defined
             period. This is controlled by the option
             <span class='code'>polling_mode</span> in
@@ -1407,8 +1402,8 @@ interval: 1</pre>
         <table class='indent'>
             <caption>Polling modes for Fine Offset stations</caption>
             <tr class="first_row">
-                <td width='15%'>Mode</td>
-                <td width='30%'>Configuration</td>
+                <td style="width:15%">Mode</td>
+                <td style="width:15%">Configuration</td>
                 <td>Notes</td>
             </tr>
             <tr>
@@ -1418,7 +1413,7 @@ interval: 1</pre>
     polling_mode = ADAPTIVE</pre>
                 </td>
                 <td>
-                    <p>In this mode, weeWX reads data from the station as often as possible,
+                    <p>In this mode, WeeWX reads data from the station as often as possible,
                         but at intervals that avoid communication between the console and the sensors. Nominally this
                         results in reading data every 48 seconds.</p>
                 </td>
@@ -1431,7 +1426,7 @@ interval: 1</pre>
     polling_interval = 60</pre>
                 </td>
                 <td>
-                    <p>In this mode, weeWX reads data from the station every <span
+                    <p>In this mode, WeeWX reads data from the station every <span
                             class='code'>polling_interval</span> seconds.</p>
 
                     <p>The console reads the sensors every 48 seconds (60 seconds for UV), so setting the <span
@@ -1452,7 +1447,7 @@ interval: 1</pre>
             from these sensors.  As a consequence, the 30xx consoles also have
             a different data format.
         </p>
-        <p>Since weeWX cannot reliably determine
+        <p>Since WeeWX cannot reliably determine
             the data format by communicating with the station, the
             <span class='code'>data_format</span> configuration option
             indicates the station type.  Possible values are
@@ -1581,7 +1576,7 @@ Mutating actions will request confirmation before proceeding.</pre>
         <h2 id="fousb_data">Station data</h2>
 
         <p>The following table shows which data are provided by the station
-            hardware and which are calculated by weeWX.
+            hardware and which are calculated by WeeWX.
         </p>
 
         <table class='station_data'>
@@ -1745,7 +1740,7 @@ Mutating actions will request confirmation before proceeding.</pre>
             (3442 records) with an archive interval of 5 minutes.</p>
 
         <p>The TE923 driver will read history records from the station when
-            weeWX starts up, but it does not support hardware record
+            WeeWX starts up, but it does not support hardware record
             generation.</p>
 
         <h2 id="te923_configuration">Configuring with <span class="code">wee_device</span></h2>
@@ -1903,7 +1898,7 @@ confirmation before proceeding.
         <h2 id="te923_data">Station data</h2>
 
         <p>The following table shows which data are provided by the station
-            hardware and which are calculated by weeWX.
+            hardware and which are calculated by WeeWX.
         </p>
 
         <table class='station_data'>
@@ -2196,7 +2191,7 @@ confirmation before proceeding.
         <h2 id="ultimeter_data">Station data</h2>
 
         <p>The following table shows which data are provided by the station
-            hardware and which are calculated by weeWX.
+            hardware and which are calculated by WeeWX.
         </p>
 
         <table class='station_data'>
@@ -2324,7 +2319,7 @@ confirmation before proceeding.
         <h1 id='vantage_notes'>Vantage</h1>
 
         <p>The Davis Vantage stations include a variety of models and
-            configurations.  The weeWX driver
+            configurations.  The WeeWX driver
             can communicate with a console or envoy using serial, USB,
             or TCP/IP interface.</p>
 
@@ -2653,13 +2648,13 @@ confirmation before proceeding.</pre>
         <h3 id="vantage_dumping_the_logger_memory">
             Action <span class="code">--dump</span></h3>
 
-        <p>Generally, weeWX downloads only new archive records from the on-board logger in the
+        <p>Generally, WeeWX downloads only new archive records from the on-board logger in the
             Vantage. However, occasionally the memory in the Vantage will get corrupted, making this impossible. See the
             troubleshooting section <em><a href="usersguide.htm#html_generated_but_not_updated">WeeWX generates HTML
                 pages, but it does not update them</a></em>. The fix involves clearing the memory but, unfortunately,
             this means you may lose any data which might have accumulated in the logger memory, but not yet downloaded.
             By using the <span class="code">--dump</span> command before clearing the memory, you might be able to save
-            these data. Stop weeWX first, then</p>
+            these data. Stop WeeWX first, then</p>
         <pre class="tty cmd">wee_device --dump</pre>
         <p>This will dump all data archived in the Vantage memory directly to the database, without regard to whether or
             not they have been seen before. Because the command dumps <em>all</em> data, it may result in many duplicate
@@ -2674,7 +2669,7 @@ confirmation before proceeding.</pre>
         <h2 id="vantage_data">Station data</h2>
 
         <p>The following table shows which data are provided by the station
-            hardware and which are calculated by weeWX.
+            hardware and which are calculated by WeeWX.
         </p>
 
         <table class='station_data'>
@@ -3018,7 +3013,7 @@ confirmation before proceeding.</pre>
         <h2 id="wmr100_data">Station data</h2>
 
         <p>The following table shows which data are provided by the station
-            hardware and which are calculated by weeWX.
+            hardware and which are calculated by WeeWX.
         </p>
 
         <table class='station_data'>
@@ -3314,7 +3309,7 @@ confirmation before proceeding.</pre>
         <p>The station emits partial packets, which may confuse some online
             services.</p>
 
-        <p>When weeWX starts up it will attempt to
+        <p>When WeeWX starts up it will attempt to
             download all records from the console since
             the last record in the archive database. </p>
 
@@ -3326,7 +3321,7 @@ confirmation before proceeding.</pre>
         <h2 id="wmr200_data">Station data</h2>
 
         <p>The following table shows which data are provided by the station
-            hardware and which are calculated by weeWX.
+            hardware and which are calculated by WeeWX.
         </p>
 
         <table class='station_data'>
@@ -3600,7 +3595,7 @@ confirmation before proceeding.</pre>
         <p>The logger stores about 50,000 records.  When the logger fills
             up, it stops recording data.</p>
 
-        <p>When weeWX starts up it will attempt to
+        <p>When WeeWX starts up it will attempt to
             download all records from the console since the last record in the
             archive database. This can take as much as couple of hours,
             depending on the number of records in the logger and the speed of
@@ -3614,7 +3609,7 @@ confirmation before proceeding.</pre>
         <h2 id="wmr300_data">Station data</h2>
 
         <p>The following table shows which data are provided by the station
-            hardware and which are calculated by weeWX.
+            hardware and which are calculated by WeeWX.
         </p>
 
         <table class='station_data'>
@@ -3928,7 +3923,7 @@ confirmation before proceeding.</pre>
         <h2 id="wmr9x8_data">Station data</h2>
 
         <p>The following table shows which data are provided by the station
-            hardware and which are calculated by weeWX.
+            hardware and which are calculated by WeeWX.
         </p>
 
         <table class='station_data'>
@@ -4255,7 +4250,7 @@ confirmation before proceeding.</pre>
         <h2 id="ws1_data">Station data</h2>
 
         <p>The following table shows which data are provided by the station
-            hardware and which are calculated by weeWX.
+            hardware and which are calculated by WeeWX.
         </p>
 
         <table class='station_data'>
@@ -4409,7 +4404,7 @@ confirmation before proceeding.</pre>
             minutes, or about 14 hours with a recording interval of 5
             minutes.</p>
 
-        <p>When weeWX starts up it will attempt to
+        <p>When WeeWX starts up it will attempt to
             download all records from the console since the last record in the
             archive database.</p>
 
@@ -4474,6 +4469,10 @@ history time till sample: 5.0
 icon alarm active: 0
 in humidity: 48.0
 ...</pre>
+        <p>
+            The line <span class='code'>history number of records</span> indicates how many records are in memory. The
+            line <span class='code'>history interval</span> indicates the number of minutes between records.
+        </p>
 
         <h3>Action <span class="code">--set-interval</span></h3>
 
@@ -4491,11 +4490,7 @@ in humidity: 48.0
 
         <p>WS23xx stations store records in a circular buffer &mdash; once the
             buffer fills, the oldest records are replaced by newer records.
-            The console stores up to 175 records. The
-            <span class='code'>history number of records</span> indicates how
-            many records are in memory. The <span class='code'>history
-                interval</span> indicates the number of minutes between
-            records.</p>
+            The console stores up to 175 records. </p>
 
         <p>For example, to display the latest 30 records from the console
             memory:</p>
@@ -4509,7 +4504,7 @@ in humidity: 48.0
         <h2 id="ws23xx_data">Station data</h2>
 
         <p>The following table shows which data are provided by the station
-            hardware and which are calculated by weeWX.
+            hardware and which are calculated by WeeWX.
         </p>
 
         <table class='station_data'>
@@ -4653,7 +4648,7 @@ in humidity: 48.0
         <p>The station has 1797 history records. That is just over 6 days of
             data with an archive interval of 5 minutes.</p>
 
-        <p>When weeWX starts up it will attempt to
+        <p>When WeeWX starts up it will attempt to
             download all records from the console since
             the last record in the archive database. </p>
 
@@ -4673,8 +4668,8 @@ in humidity: 48.0
 
         <p>There are two ways to pair the console and the transceiver:</p>
         <ol>
-            <li><strong>The weeWX way.</strong> Be sure that
-                weeWX is not running. Run the
+            <li><strong>The WeeWX way.</strong> Be sure that
+                WeeWX is not running. Run the
                 configuration utility, press and hold the [v] button on the
                 console until you see 'PC' in the display, then release the
                 button. If the console pairs with the transceiver, 'PC' will
@@ -4689,8 +4684,8 @@ Transceiver is paired to console</pre>
                 instructions that came with the station. You will have to run
                 HeavyWeather on a windows computer with the USB transceiver.
                 After HeavyWeather indicates the devices are paired, put the
-                USB transceiver in your weeWX
-                computer and start weeWX. Do not power cycle the station
+                USB transceiver in your WeeWX
+                computer and start WeeWX. Do not power cycle the station
                 console or you will have to start over.
             </li>
         </ol>
@@ -4706,7 +4701,7 @@ Transceiver is paired to console</pre>
             order to communicate. Synchronization will happen automatically at
             the top of each hour, or you can force synchronization by pressing
             the [SET] button momentarily. Do not press and hold the [SET]
-            button - that modifies the console alarms.</p>
+            button &mdash; that modifies the console alarms.</p>
 
         <p>When the transceiver and console are synchronized, you will see
             lots of '<span class="code">ws28xx: RFComm</span>' messages in the
@@ -4715,7 +4710,7 @@ Transceiver is paired to console</pre>
             minutes:</p>
         <pre class='tty'>Nov  7 19:12:17 raspi weewx[2335]: ws28xx: MainThread: no contact with console</pre>
         <p>If you see this, or if you see an extended gap in the weather data
-            in the weeWX plots, press momentarily
+            in the WeeWX plots, press momentarily
             the [SET] button, or wait until the top of the hour.</p>
 
         <p>When the transceiver has not received new data for awhile, you will
@@ -4732,7 +4727,7 @@ Transceiver is paired to console</pre>
 
         <p>When an alarm goes off, communication with the transceiver stops.
             The WS28xx driver clears all alarms in the station. It is better
-            to create alarms in weeWX, and the weeWX
+            to create alarms in WeeWX, and the WeeWX
             alarms can do much more than the console alarms anyway.</p>
 
         <h2 id="ws28xx_configuration">Configuring with <span class="code">wee_device</span></h2>
@@ -4773,7 +4768,7 @@ Mutating actions will request confirmation before proceeding.</pre>
             by using this command, or by running the program HeavyWeather on a
             Windows PC.</p>
 
-        <p>Be sure that weeWX is not running. Run
+        <p>Be sure that WeeWX is not running. Run
             the command:</p>
             <pre class='tty'><span class="cmd">wee_device --pair</span>
 
@@ -4842,7 +4837,7 @@ wind_gust_max_time: None</pre>
         <h2 id="ws28xx_data">Station data</h2>
 
         <p>The following table shows which data are provided by the station
-            hardware and which are calculated by weeWX.
+            hardware and which are calculated by WeeWX.
         </p>
 
         <table class='station_data'>
@@ -5006,11 +5001,11 @@ wind_gust_max_time: None</pre>
 </div>
 
 <!-- Our scripts load last so the content can load first -->
-<script type="text/javascript" src="js/jquery-1.11.1.min.js"></script>
-<script type="text/javascript" src="js/jquery-ui-1.10.4.custom.min.js"></script>
-<script type="text/javascript" src="js/jquery.tocify-1.9.0.min.js"></script>
-<script type="text/javascript" src="js/weewx.js"></script>
-<script type="text/javascript">
+<script src="js/jquery-1.11.1.min.js"></script>
+<script src="js/jquery-ui-1.10.4.custom.min.js"></script>
+<script src="js/jquery.tocify-1.9.0.min.js"></script>
+<script src="js/weewx.js"></script>
+<script>
  $(function () {
      var level = get_default_level();
      create_toc_control(level);

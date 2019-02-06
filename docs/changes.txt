@@ -1,6 +1,111 @@
 weewx change history
 --------------------
 
+3.9.1 02/06/2019
+
+In genplot, do not attempt to normalize unspecified paths.
+
+Introduced option no_catchup. If set to true, a catchup will not be
+attempted. Fixes issue #368.
+
+
+3.9.0 02/05/2019
+
+New skin called Seasons. For new users, it will be installed and enabled.
+For old users, it will be installed, but not enabled. Fixes issue #75.
+
+There are also two new skins for mobile phones: Mobile and Smartphone.
+These are installed, but not enabled, for all users.
+
+Reworked how options get applied for reports. Backstop default values
+are supplied by a new file weewx/defaults.py. These can get overridden
+by skin.conf, or in a new section [StdReports] / [[Defaults]] in weewx.conf.
+See the Customizing Guide, section "How options work", for details.
+Fixes issue #248.
+
+The skin.conf is optional.  It is possible to specify the entire skin
+configuration in the configuration file weewx.conf.
+
+Dropped support of Python 2.5. You must now use either Python 2.6 or 2.7. This
+is in anticipation of porting to Python 3.
+
+The image generator now supports the use of a 'stale_age' option. Thanks to
+user John Smith. Fixes issue #290.
+
+Rose line width can now be specified with option rose_line_width.
+
+The Felsius unit of temperature (see https://xkcd.com/1923/) is now supported.
+
+New tag $almanac.sidereal_time for calculating current sidereal time
+
+New tag $almanac.separation() for calculating planet separations.
+
+Can now use ephem.readdb() to load arbitrary bodies into the almanac.
+
+StdQC now includes an entry for rain again (inexplicably removed in v3.1.0).
+
+If software record generation is used, the archive interval is now what is
+specified in weewx.conf, even if the station supports hardware generation.
+
+Fixed problem where records were downloaded on startup, even if software
+record generation was specified.
+
+The tag formatting taxonomy has been simplified. Just use suffix ".format()"
+now. Documentation updated to reflect changes. Backwards compatibility with old
+suffixes is supported. Fixes issue #328.
+
+Can now set Rapidfire parameter rtfreq. Thanks to user 'whorfin'. PR #304.
+
+Template names can now include the week number. Thanks to user 'stimpy23'.
+PR #319.
+
+New aggregation type for plots: 'cumulative'. Thanks to user 'henrikost'.
+PR #302.
+
+Fixed problem where MySQL error 2013 could crash WeeWX. Fixes issue #327.
+
+Posts to the Weather Underground will be skipped if an observation type that
+is listed in the [[[Essentials]]] subsection is missing. Fixes issue #329.
+
+Upgrade process now explicity upgrades version-to-version, instead of
+doing a merge to the new config file. Fixes issue #217.
+
+Example xstats now includes tags for last_year and last_year_todate.
+Thanks to user evilbunny2008. PR #325.
+
+Guard against a negative value for 'interval' in WMR200 stations.
+
+Check for missing or negative values for the record field 'interval'.
+
+Changed the formula used to calculate percentage illumination of the moon to
+something more accurate around 2018. This formula is only used if pyephem is
+not installed. Fixes issue #342.
+
+Fixed bug that caused older, "type A" Vantage Pro2, to crash. Fixes issue #343.
+
+Fixed a bug that caused a divide-by-zero error if a plot range was the same as
+a specified min or max scale. Fixes issue #344.
+
+Fixed bug that prevented an optional data_binding from being used in tags
+when iterating over records. Fixes issue #345.
+
+Examples lowBattery and alarm now try SMTP_SSL connections, then degrade if
+that's not available. Fixes issue #351.
+
+Fixed problem with Brazilian locations at the start of DST. It manifested
+itself with the error "NoColumnError: no such column: wind". Fixes issue #356.
+
+Fixed problem that caused sunrise/sunset to be calculated improperly in Sun.py.
+
+Improved coverage of test suites. Fixes issue #337.
+
+wee_device, when used with the Vantage series, now honors the "no prompt" (-y)
+option. Fixes issue #361.
+
+Log watch now correctly logs garbage collection events. Thanks to user
+buster-one. PR #340.
+
+
 3.8.2 08/15/2018
 
 Added flag to weewx-multi init script to prevent systemd from breaking it.
@@ -818,6 +923,10 @@ check it over. Not sure we got everything correct. See the Upgrading
 Guide.
 
 Specific changes follow.
+
+There is no longer a separate "stats" database. Instead, statistics
+are included in the regular database (e.g., 'weewx.sdb') as separate
+tables, one for each observation type.
 
 Total rewrite of how data gets bound to a database. You now specify a
 "data binding" to indicate where data should be going, and where it is

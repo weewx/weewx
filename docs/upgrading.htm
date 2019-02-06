@@ -1,10 +1,8 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<!DOCTYPE html>
+<html lang="en">
 <head>
     <title>weewx: Upgrade Guide</title>
-    <meta http-equiv="Content-Language" content="en-us"/>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <link rel="stylesheet" href="css/ui-lightness/jquery-ui-1.10.4.custom.min.css"/>
     <link rel="stylesheet" href="css/jquery.tocify.css"/>
@@ -47,12 +45,9 @@
 
 <div class="sidebar">
     <div class="doclist">
-        <a href="usersguide.htm">User's Guide</a><br/>
-        <a href="customizing.htm">Customization Guide</a><br/>
-        <a href="hardware.htm">Hardware Guide</a><br/>
-        <a href="utilities.htm">Utilities Guide</a><br/>
-        <a href="upgrading.htm">Upgrade Guide</a><br/>
-        <a href="devnotes.htm">Notes for Developers</a>
+        <a href="usersguide.htm">User's Guide</a><br/> <a href="customizing.htm">Customization Guide</a><br/> <a
+        href="hardware.htm">Hardware Guide</a><br/> <a href="utilities.htm">Utilities Guide</a><br/> <a
+        href="upgrading.htm">Upgrade Guide</a><br/> <a href="devnotes.htm">Notes for Developers</a>
     </div>
     <div id="toc_controls"></div>
     <div id="toc_parent">
@@ -71,14 +66,12 @@
 
     <div class="header">
         <div class="logoref">
-            <a href='http://weewx.com'>
-                <img src='images/logo-weewx.png' class='logo' align='right' alt="weewx logo"/>
-            </a><br/>
-            <span class='version'>
-Version: 3.8
-        </span>
+            <a href='http://weewx.com'> <img src='images/logo-weewx.png' class='logo' style="float:right"
+                                             alt="weewx logo"/> </a><br/> <span class='version'>
+Version: 3.9
+    </span>
         </div>
-        <div class="title">weeWX Upgrade Guide</div>
+        <div class="title">WeeWX Upgrade Guide</div>
     </div>
 
     <div id="technical_content" class="content">
@@ -90,25 +83,21 @@ Version: 3.8
             <li><a href="#Upgrading_using_RPM_package">Upgrading using RPM package</a></li>
         </ul>
         <p>The section <em><a href="#Instructions_for_specific_versions">Instructions for Specific Versions</a></em>
-            describes changes required from one version to the next. These changes
-            apply to every upgrade method.</p>
-
-        <p class="warning"><strong>Warning!</strong><br/>
-            You must use the same upgrade technique as your initial install!
-            For example, if you used <span class="code">setup.py</span> to install
-            weeWX, then you should use
-            <span class="code">setup.py</span> to upgrade.
-            If you used a DEB or RPM package to install, then you should upgrade
-            using the same package type.
+            describes changes required from one version to the next. These changes apply to every upgrade method.
         </p>
 
-        <h1><a name="Upgrading_using_setup.py">Upgrading using <span class='code'>setup.py</span></a></h1>
+        <p class="warning"><strong>Warning!</strong><br/> You must use the same upgrade technique as your initial
+            install! For example, if you used <span class="code">setup.py</span> to install WeeWX, then you should use
+            <span class="code">setup.py</span> to upgrade. If you used a DEB or RPM package to install, then you should
+            upgrade using the same package type.
+        </p>
 
-        <p>Before upgrading weeWX, check the section <em>
-            <a href="#Instructions_for_specific_versions">Instructions for
-                Specific Versions</a></em> to see if any specific
-            actions are
-            required. Then follow the standard installation procedure:</p>
+        <h1><a id="Upgrading_using_setup.py">Upgrading using <span class='code'>setup.py</span></a></h1>
+
+        <p>Before upgrading WeeWX, check the section <em> <a href="#Instructions_for_specific_versions">Instructions for
+            Specific Versions</a></em> to see if any specific actions are required. Then follow the standard
+            installation procedure:
+        </p>
         <p>Unpack the archive:</p>
         <pre class="tty cmd">tar xvfz weewx-X.Y.Z.tar.gz</pre>
         <p>Change directory into it:</p>
@@ -117,64 +106,59 @@ Version: 3.8
         <pre class="tty cmd">./setup.py build </pre>
 
         <p>
-          After checking <span class='code'>setup.cfg</span>, install your new
-          version of <span class='code'>weewx</span>:</p>
-        <p class='warning'><strong>Warning!</strong><br/>
-            Before doing the next step, be sure that <span class="code">home</span>
-            in the file <span class="code">setup.cfg</span> is set to the location
-            of the previous weeWX installation.
+            After checking <span class='code'>setup.cfg</span>, install your new version of WeeWX:
+        </p>
+        <p class='warning'><strong>Warning!</strong><br/> Before doing the next step, be sure that <span class="code">home</span>
+            in the file <span class="code">setup.cfg</span> is set to the location of the previous WeeWX installation.
         </p>
 
         <pre class="tty cmd">sudo ./setup.py install </pre>
 
-        <p>The install process will do the following: </p>
+        <p>The install process will do the following:</p>
         <ul>
-            <li>Save the old <span class="code">bin</span> directory as
-                <span class='code'>bin.YYYYMMDDHHMMSS</span>
+            <li>Save the old <span class="code">bin</span> directory as <span class='code'>bin.YYYYMMDDHHMMSS</span>
                 where YYYYMMDDHHMMSS is a timestamp
             </li>
-            <li>Install the new version in the <span class="code">bin</span>
-                directory, while preserving any user extensions in the
-                <span class="code">bin/user</span> directory
+            <li>Install the new version in the <span class="code">bin</span> directory, while preserving any user
+                extensions in the <span class="code">bin/user</span> directory
             </li>
-            <li>Save a copy of the old <span class="code">weewx.conf</span> as
-                <span class='code'>weewx.conf.YYYYMMDDHHMMSS</span>
+            <li>Save a copy of the old <span class="code">weewx.conf</span> as <span class='code'>weewx.conf.YYYYMMDDHHMMSS</span>
             </li>
-            <li>Merge any changes made to the old configuration file
-                <span class="code">weewx.conf</span> into the new configuration
-                file, then install the merged copy. This effectively causes any
-                changes to override the values in the new version of
-                <span class="code">weewx.conf</span>
+            <li>Merge any changes made to the old configuration file <span class="code">weewx.conf</span> into the new
+                configuration file, then install the merged copy. This effectively causes any changes to override the
+                values in the new version of <span class="code">weewx.conf</span>
             </li>
-            <li>Install a <span class="code">skins</span> directory if
-                one does not already exist.
+            <li>Install a <span class="code">skins</span> directory if one does not already exist.
             </li>
         </ul>
 
-        <h1><a name="Upgrading_using_DEB_package">Upgrading using DEB package</a></h1>
+        <p>Finally, restart WeeWX.</p>
 
-        <p>If you have specified the weeWX apt repository in
-            <span class="code">/etc/apt/sources.list.d/weewx.list</span>, then
-            upgrade to the latest version like this:</p>
+        <h1><a id="Upgrading_using_DEB_package">Upgrading using DEB package</a></h1>
+
+        <p>If you have specified the WeeWX apt repository in <span
+            class="code">/etc/apt/sources.list.d/weewx.list</span>, then upgrade to the latest version like this:
+        </p>
 
         <pre class='tty cmd'>sudo apt-get update
 sudo apt-get install weewx</pre>
 
-        <p>Otherwise, download the latest X.Y.Z DEB package from the 
-        <a href="http://weewx.com/downloads/">Download page</a> on weewx.com,
-        then upgrade like this:</p>
+        <p>Otherwise, download the latest X.Y.Z DEB package from the <a href="http://weewx.com/downloads/">Download
+            page</a> on weewx.com, then upgrade like this:
+        </p>
 
         <pre class='tty cmd'>sudo dpkg -i weewx_X.Y.Z-R.deb</pre>
 
-        <p>The upgrade process will not modify the weeWX databases.</p>
+        <p>The upgrade process will not modify the WeeWX databases.</p>
 
-        <p>Unmodified files will be upgraded. If modifications have been made to
-            the weeWX configuration, you will be prompted as to whether you want to
-            keep the existing configuration or accept the new configuration. Either
-            way, a copy of the option you did not choose will be saved.</p>
+        <p>Unmodified files will be upgraded. If modifications have been made to the WeeWX configuration, you will be
+            prompted as to whether you want to keep the existing configuration or accept the new configuration. Either
+            way, a copy of the option you did not choose will be saved.
+        </p>
 
-        <p>For example, if <span class='code'>/etc/weewx/weewx.conf</span> was
-            modified, you will see a message something like this:</p>
+        <p>For example, if <span class='code'>/etc/weewx/weewx.conf</span> was modified, you will see a message
+            something like this:
+        </p>
 
         <pre class='tty'>Configuration file `/etc/weewx/weewx.conf'
   ==&gt; Modified (by you or by a script) since installation.
@@ -186,154 +170,211 @@ sudo apt-get install weewx</pre>
               Z     : start a shell to examine the situation
          The default action is to keep your current version.
   *** weewx.conf (Y/I/N/O/D/Z) [default=N] ?</pre>
-        <p>Choosing <span class='code'>I</span> (install the new version) will
-            place the previous configuration in
-            <span class='code'>/etc/weewx/weewx.conf.dpkg-old</span> where it can
-            be compared with the new version
-            <span class='code'>/etc/weewx/weewx.conf</span>
+        <p>Choosing <span class='code'>I</span> (install the new version) will place the previous configuration in <span
+            class='code'>/etc/weewx/weewx.conf.dpkg-old</span> where it can be compared with the new version <span
+            class='code'>/etc/weewx/weewx.conf</span>
         </p>
 
-        <p>Choosing <span class='code'>O</span> (keep the current version) will
-            place the new configuration in
-            <span class='code'>/etc/weewx/weewx.conf.dpkg-new</span> where it
-            can be compared with the old version
-            <span class='code'>/etc/weewx/weewx.conf</span>
+        <p>Choosing <span class='code'>O</span> (keep the current version) will place the new configuration in <span
+            class='code'>/etc/weewx/weewx.conf.dpkg-new</span> where it can be compared with the old version <span
+            class='code'>/etc/weewx/weewx.conf</span>
         </p>
 
 
-        <h1><a name="Upgrading_using_RPM_package">Upgrading using RPM package</a></h1>
+        <h1><a id="Upgrading_using_RPM_package">Upgrading using RPM package</a></h1>
 
         <p>Upgrade to X.Y.Z like this:</p>
 
         <pre class='tty cmd'>sudo rpm -U weewx-X.Y.Z-R.rpm</pre>
 
-        <p>The upgrade process will not modify the weeWX
-            databases.</p>
+        <p>The upgrade process will not modify the WeeWX databases.</p>
 
-        <p>Unmodified files will be upgraded. If modifications have been made to
-            the configuration, <span class='code'>rpm</span> will display a message
-            about any differences between the changes and the new configuration.
-            Any new changes from the upgrade will be noted as files with a
-            <span class='code'>.rpmnew</span> extension and the modified files will
-            be left untouched.</p>
+        <p>Unmodified files will be upgraded. If modifications have been made to the configuration, <span class='code'>rpm</span>
+            will display a message about any differences between the changes and the new configuration. Any new changes
+            from the upgrade will be noted as files with a <span class='code'>.rpmnew</span> extension and the modified
+            files will be left untouched.
+        </p>
 
-        <p>For example, if <span class='code'>/etc/weewx/weewx.conf</span> was
-            modified, <span class='code'>rpm</span> will present a message
-            something like this:</p>
+        <p>For example, if <span class='code'>/etc/weewx/weewx.conf</span> was modified, <span class='code'>rpm</span>
+            will present a message something like this:
+        </p>
 
         <pre class='tty'>warning: /etc/weewx/weewx.conf created as /etc/weewx/weewx.conf.rpmnew</pre>
 
-        <h1><a name="Instructions_for_specific_versions">Instructions for specific versions</a></h1>
+        <h1><a id="Instructions_for_specific_versions">Instructions for specific versions</a></h1>
+
+        <h2>From V3.8 or earlier</h2>
+
+        <h3>New skins</h3>
+        <p>
+            Version 3.9 introduces and installs a new skin, <em>Seasons</em>, and promotes two old skins,
+            <em>Mobile</em> and <em>Smartphone</em>, previously part of <em>Standard</em>, to first-class,
+            independent, skins.
+        </p>
+
+        <ul>
+            <li>
+                If you are installing fresh (not an upgrade), then all four skins, <em>Seasons</em>, <em>Standard</em>,
+                <em>Mobile</em>, and <em>Smartphone</em> will be installed, but only <em>Seasons</em> will be activated.
+            </li>
+            <li>
+                If you are upgrading, then the three new skins, <em>Seasons</em>, <em>Mobile</em>, and
+                <em>Smartphone</em> will be installed, but none will be activated. Your existing <em>Standard</em> will
+                be left untouched and activated. For most people, your website will continue to look as expected (the
+                exception is explained below in section
+                <a href="#v39_effects"><em>Do you need to change anything?</em></a>).
+            </li>
+        </ul>
+
+        <p class="note">
+            If you are upgrading, and you wish to try the new skin <em>Seasons</em>, then activate it, but <em>be sure
+            to deactivate Standard</em>. Otherwise, both will get generated, and they will compete with each other for
+            placement in your HTML directory.
+        </p>
+
+        <h3>Skin defaults</h3>
+        <p>
+            Version 3.9 introduces a new section, <span class="code">[StdReport]/[[Defaults]]</span> in <span
+            class="code">weewx.conf</span>. Options in this section apply to <em>all</em> reports. For example, if you
+            set a unit group here, it will be applied everywhere. This makes it easy to set the units across all
+            reports, or to ensure that the labels for observations are the same in every report.
+        </p>
+        <p>
+            It also adds a file <span class="code">defaults.py</span>, in which the fallback values for every report
+            parameter are specified. Although the defaults file is currently useful only to developers, in
+            the future it may be extended to facilitate translations and localization.
+        </p>
+
+        <h3 id="v39_effects">Do you need to change anything?</h3>
+        <p>
+            The introduction of the new section, <span class="code">[StdReport]/[[Defaults]]</span> in <span
+            class="code">weewx.conf</span>, can change which units are applied to reports because it has a higher
+            precedence than what is in <span class="code">skin.conf</span>. See the section <a
+            href="customizing.htm#How_options_work"><em>How options work</em></a> for details of the ordering
+            in which an option is considered.
+        </p>
+
+        <p>
+            Most users will be unaffected by these changes because they depend on specific report overrides. There is,
+            however, one exception:
+        </p>
+
+        <p class="note">
+            If your installation does not use overrides, and you changed to metric units in your <span class="code">skin.conf</span>
+            file, you will be affected.
+        </p>
+        <p>
+            Your reports will start appearing in U.S. Customary units. The reason is that the new section, <span
+            class="code">[StdReport]/[[Defaults]]</span> has higher priority than options in <span class="code">skin.conf</span>,
+            and thus will start asserting themselves.
+        </p>
+        <p>
+            The fix is simple: modify the <span class="code">[StdReport]/[[Defaults]]</span> to suit your preferences.
+        </p>
+
+        <p>
+            However, users who specified what unit system to use as part of the automated install using a
+            package installer or <span class="code">setup.py</span>, will have an override section, and therefore
+            will be unaffected. This is because the override section has the highest priority.
+        </p>
 
         <h2>From V3.6 or earlier</h2>
 
 
         <h3 id="change_to_daily_summaries">Changes to daily summaries</h3>
-        <p>Perhaps the most significant change in V3.7 is a fix for how daily summary values are calculated
-            and stored.</p>
-        
-        <p>Daily summaries were introduced in V3.0 (December, 2014), to speed up 
-            certain kinds of aggregation calculations. They were designed to "weight" values
-            depending on the time length of the archive record that contributed them. For example,
-            shorter intervals contributed less than longer intervals. This was intended to enable
-            changes to the length of the archive interval.</p>
-        
-        <p>Unfortunately, a bug caused the weightings to all be one (1), regardless of what the actual
-            archive interval length
-            might be. This means all archive records, long and short, contribute the same amount,
-            instead of being weighted by their length. So, if the archive interval were to change,
-            averages would be calculated incorrectly.</p>
-        
+        <p>Perhaps the most significant change in V3.7 is a fix for how daily summary values are calculated and stored.
+        </p>
+
+        <p>Daily summaries were introduced in V3.0 (December, 2014), to speed up certain kinds of aggregation
+            calculations. They were designed to "weight" values depending on the time length of the archive record that
+            contributed them. For example, shorter intervals contributed less than longer intervals. This was intended
+            to enable changes to the length of the archive interval.
+        </p>
+
+        <p>Unfortunately, a bug caused the weightings to all be one (1), regardless of what the actual archive interval
+            length might be. This means all archive records, long and short, contribute the same amount, instead of
+            being weighted by their length. So, if the archive interval were to change, averages would be calculated
+            incorrectly.
+        </p>
+
         <p>
-            This bug will only affect you if you have changed the length of
-            your archive interval, or if you plan to.  If you have not changed
-            your archive interval length, and have no plans to do so, then 
-            there is nothing you need to do.
+            This bug will only affect you if you have changed the length of your archive interval, or if you plan to. If
+            you have not changed your archive interval length, and have no plans to do so, then there is nothing you
+            need to do.
         </p>
 
         <p class="note">
-            Your archive may have interval values of different sizes if...<br/>
-            <br/>
-            ... you have imported data using <span class="code">wee_import</span>.<br/>
-            <br/>
-            ... your hardware has a data logger, your configuration uses
-            <span class="code">record_generation=software</span>,
-            and the <span class="code">archive_interval</span> is
-            different from that in the hardware.<br/>
-            <br/>
-            ... your archive contains data from more than one type of
-            hardware.
+            Your archive may have interval values of different sizes if...<br/> <br/> ... you have imported data using
+            <span class="code">wee_import</span>.<br/> <br/> ... your hardware has a data logger, your configuration
+            uses <span class="code">record_generation=software</span>, and the <span
+            class="code">archive_interval</span> is different from that in the hardware.<br/> <br/> ... your archive
+            contains data from more than one type of hardware.
         </p>
 
         <p>The <a href="utilities.htm#wee_database_utility"><span class="code">wee_database</span></a> utility, with
-            option <a href="utilities.htm#wee_database_utility_update"><span class="code">--update</span></a>, can
-            fix this problem by recalculating the weights in the daily summary, on the basis
-            of the actual archive interval lengths. On a Raspberry Pi 1, model B, it takes about 10
-            minutes to fix a database with 10 years of data. On faster machines, it takes much less time.
+            option <a href="utilities.htm#wee_database_utility_update"><span class="code">--update</span></a>, can fix
+            this problem by recalculating the weights in the daily summary, on the basis of the actual archive interval
+            lengths. On a Raspberry Pi 1, model B, it takes about 10 minutes to fix a database with 10 years of data. On
+            faster machines, it takes much less time.
         </p>
 
         <pre class="tty cmd">wee_database /etc/weewx/weewx.conf --update</pre>
 
         <p>
-            If you have multiple databases, consider recalculating the weights
-            in each database. Interval weighting will only need to be applied
-            to databases that have daily summaries, i.e., the binding uses
+            If you have multiple databases, consider recalculating the weights in each database. Interval weighting will
+            only need to be applied to databases that have daily summaries, i.e., the binding uses
         </p>
         <pre class="tty">manager = weewx.wxmanager.WXDaySummaryManager</pre>
         <p>
-            To apply interval weighting to a database other than the default
-            <span class="code">wx_binding</span>, use the
-            <span class="code">--binding=BINDING_NAME</span> option in
-            conjunction with the <span class="code">--update</span> action.
+            To apply interval weighting to a database other than the default <span class="code">wx_binding</span>, use
+            the <span class="code">--binding=BINDING_NAME</span> option in conjunction with the <span class="code">--update</span>
+            action.
         </p>
         <pre class="tty cmd">wee_database /etc/weewx/weewx.conf --update --binding=cmon_binding</pre>
-        
+
         <h3 id="recalculation_of_windspeed">Recalculation of <span class="code">windSpeed</span> maximum values</h3>
 
-        <p>Version 3.7 changes how maximum <span class="code">windSpeed</span> is calculated for aggregations
-            of a day or more. Previously, if option <span class="code">use_hilo</span> was set
-            to <span class="code">True</span> (the usual case), maximum <span class="code">windSpeed</span>
-            for a day was set to the maximum value seen in the LOOP packets for
-            the day. In practice this is the same value as <span class="code">windGust</span>. That is, these
-            two tags would supply the same value:</p>
-        
+        <p>Version 3.7 changes how maximum <span class="code">windSpeed</span> is calculated for aggregations of a day
+            or more. Previously, if option <span class="code">use_hilo</span> was set to <span class="code">True</span>
+            (the usual case), maximum <span class="code">windSpeed</span> for a day was set to the maximum value seen in
+            the LOOP packets for the day. In practice this is the same value as <span class="code">windGust</span>. That
+            is, these two tags would supply the same value:
+        </p>
+
         <pre class="tty">$day.windSpeed.max
 $day.windGust.max</pre>
-        
-        <p>In Version 3.7, this has been changed so the maximum <span class="code">windSpeed</span> is now
-            set to the maximum <em>archive</em> value seen during
-            the day &mdash; usually a slightly smaller number. However, older daily max values will still
-            contain the max LOOP packet values. If you wish to update your older values and have them use the max
-            archive record value, use the utility
-            <a href="utilities.htm#wee_database_utility"><span class="code">wee_database</span></a>, with
-            option <a href="utilities.htm#wee_database_utility_update"><span class="code">--update</span></a>.
+
+        <p>In Version 3.7, this has been changed so the maximum <span class="code">windSpeed</span> is now set to the
+            maximum <em>archive</em> value seen during the day &mdash; usually a slightly smaller number. However, older
+            daily max values will still contain the max LOOP packet values. If you wish to update your older values and
+            have them use the max archive record value, use the utility <a
+                href="utilities.htm#wee_database_utility"><span class="code">wee_database</span></a>, with option <a
+                href="utilities.htm#wee_database_utility_update"><span class="code">--update</span></a>.
         </p>
 
         <h3>Changes to <span class="code">wee_database</span></h3>
         <p>
-            The <span class="code">wee_database</span> utility has been revised. Whilst
-            the v3.6 functionality has been retained, a number of
-            the <span class="code">wee_database</span> actions have been renamed and
-            new options have been added to support the weighting of daily summaries
-            and the recalculation of portions of the windSpeed daily summary table.
-            The rebuilding of the daily summaries (formerly backfilling the daily
-            summaries) now supports selective rebuilding. Full details on the
-            revised <span class="code">wee_database</span> utility can be found in
-            the <a href="utilities.htm#wee_database_utility"><i><span class="code">wee_database</span></i></a>
-            section in the <i>Utilities Guide</i>.
+            The <span class="code">wee_database</span> utility has been revised. Whilst the v3.6 functionality has been
+            retained, a number of the <span class="code">wee_database</span> actions have been renamed and new options
+            have been added to support the weighting of daily summaries and the recalculation of portions of the
+            windSpeed daily summary table. The rebuilding of the daily summaries (formerly backfilling the daily
+            summaries) now supports selective rebuilding. Full details on the revised <span
+            class="code">wee_database</span> utility can be found in the <a
+            href="utilities.htm#wee_database_utility"><i><span class="code">wee_database</span></i></a> section in the
+            <i>Utilities Guide</i>.
         </p>
 
 
         <h3>Change in the name and locations of examples</h3>
         <p>
-            In earlier versions, examples were located with the weeWX code base, and packaged as a Python
-            module. This is categorically and semantically incorrect.
+            In earlier versions, examples were located with the WeeWX code base, and packaged as a Python module. This
+            is categorically and semantically incorrect.
         </p>
         <p>
             The examples now live in their own directory, <a href="usersguide.htm#Where_to_find_things">whose location
-            is dependent on the installation method</a>. If you use
-            an example, you should copy it to the <span class="code">user</span> subdirectory, modify it if necessary,
-            then use it there. Your copy will be retained across version upgrades.
+            is dependent on the installation method</a>. If you use an example, you should copy it to the <span
+            class="code">user</span> subdirectory, modify it if necessary, then use it there. Your copy will be retained
+            across version upgrades.
         </p>
 
         <table>
@@ -375,24 +416,16 @@ user.stats.MyStats</span></pre>
 
         <h3>Changes to sensor mapping</h3>
         <p>
-            The mapping of sensors to database fields was formalized in Version
-            3.7, resulting in changes to the configuration for some of the
-            drivers, including
-            <span class="code">cc3000</span>,
-            <span class="code">te923</span>,
-            <span class="code">wmr100</span>,
-            <span class="code">wmr200</span>,
-            <span class="code">wmr300</span>, and
-            <span class="code">wmr9x8</span>.
+            The mapping of sensors to database fields was formalized in Version 3.7, resulting in changes to the
+            configuration for some of the drivers, including <span class="code">cc3000</span>, <span
+            class="code">te923</span>, <span class="code">wmr100</span>, <span class="code">wmr200</span>, <span
+            class="code">wmr300</span>, and <span class="code">wmr9x8</span>.
         </p>
         <p>
-            For the <span class="code">wmr200</span> driver, until Version 3.6,
-            the fields extraTemp1 and extraHumid1 were not usable.
-            Version 3.6.1 shifted the extraTemp and extraHumid mappings down
-            one channel, so that extraTemp1 corresponded to channel 2,
-            extraTemp2 corresponded to channel 3, and so on.  The mappings can
-            now be modified by a change to the configuration file, and the
-            default mappings are as follows:
+            For the <span class="code">wmr200</span> driver, until Version 3.6, the fields extraTemp1 and extraHumid1
+            were not usable. Version 3.6.1 shifted the extraTemp and extraHumid mappings down one channel, so that
+            extraTemp1 corresponded to channel 2, extraTemp2 corresponded to channel 3, and so on. The mappings can now
+            be modified by a change to the configuration file, and the default mappings are as follows:
         </p>
         <table>
             <tr class="first_row">
@@ -554,9 +587,9 @@ extraHumid8 = humidity_8</pre>
 
         <h3>Changes to <span class="code">weewx.conf</span></h3>
         <p>
-            In Version 3.6, the list of options that describe how derived variables are to
-            be calculated have been moved to a new subsection called <span class="code">[[Calculations]]</span>.
-            The upgrade process will automatically make this change for you.
+            In Version 3.6, the list of options that describe how derived variables are to be calculated have been moved
+            to a new subsection called <span class="code">[[Calculations]]</span>. The upgrade process will
+            automatically make this change for you.
         </p>
 
         <table>
@@ -636,14 +669,11 @@ extraHumid8 = humidity_8</pre>
 
         <h3>Changes to weewx.conf</h3>
 
-        <p>Release 3.2 introduces a new section
-            <span class='code'>[DatabaseTypes]</span>. This section defines the
-            default settings for each type of database. For example, the host,
-            user, and password for MySQL databases can be specified once in the
-            <span class='code'>DatabaseTypes</span> section instead of repeating
-            in each <span class='code'>Database</span> section. The defaults in
-            <span class='code'>DatabaseTypes</span> can be overridden in each
-            <span class='code'>Database</span> section as needed.
+        <p>Release 3.2 introduces a new section <span class='code'>[DatabaseTypes]</span>. This section defines the
+            default settings for each type of database. For example, the host, user, and password for MySQL databases
+            can be specified once in the <span class='code'>DatabaseTypes</span> section instead of repeating in each
+            <span class='code'>Database</span> section. The defaults in <span class='code'>DatabaseTypes</span> can be
+            overridden in each <span class='code'>Database</span> section as needed.
         </p>
 
         <table>
@@ -716,53 +746,42 @@ extraHumid8 = humidity_8</pre>
 
         <h3>Overview</h3>
 
-        <p>While a lot has changed with Version 3, the upgrade process should
-            take care of most changes for most users. However, if you have
-            installed an extension or, especially, if you have written a custom
-            service, search list extension, or uploader, you will have to make
-            some changes.</p>
+        <p>While a lot has changed with Version 3, the upgrade process should take care of most changes for most users.
+            However, if you have installed an extension or, especially, if you have written a custom service, search
+            list extension, or uploader, you will have to make some changes.
+        </p>
 
         <h3>Database contents</h3>
 
         <p>
-            With Version 3, there is no longer a separate "stats" database.
-            Instead, "daily summaries" have been included in the same database as
-            the archive data &mdash; everything is under one name. For example,
-            if you are using sqlite, both the archive data and the daily summaries
-            will be inside file <span class="code">weewx.sdb</span>. With MySQL,
-            everything is inside the database weeWX. This
-            makes it easier to keep all data together when working with multiple
-            databases.
+            With Version 3, there is no longer a separate "stats" database. Instead, "daily summaries" have been
+            included in the same database as the archive data &mdash; everything is under one name. For example, if you
+            are using sqlite, both the archive data and the daily summaries will be inside file <span class="code">weewx.sdb</span>.
+            With MySQL, everything is inside the database <span class="code">weewx</span>.
+            This makes it easier to keep all data together when working with multiple databases.
         </p>
 
-        <p>This change in database structure should be transparent to you. On
-            startup, weewx will automatically backfill the new internal daily
-            summaries from the archive data. Your old "stats" database will no
-            longer be used and may safely set aside or even deleted.
+        <p>This change in database structure should be transparent to you. On startup, WeeWX will automatically backfill
+            the new internal daily summaries from the archive data. Your old "stats" database will no longer be used and
+            may safely set aside or even deleted.
         </p>
 
         <h3>Pressure calibration</h3>
 
         <p>
-            Since the new <span class="code">StdWXCalculate</span> service is
-            applied after the <span class="code">StdCalibrate</span> services, the
-            <span class='code'>pressure_offset</span> parameter is no longer
-            necessary; pressure calibration can be applied just like any other
-            calibration. If your pressure was calibrated using the
-            <span class='code'>pressure_offset</span>
-            parameter, move the calibration to the
-            <span class="code">[StdCalibrate]</span>
-            section. This applies only to CC3000, FineOffsetUSB, Ultimeter, WS1,
+            Since the new <span class="code">StdWXCalculate</span> service is applied after the <span class="code">StdCalibrate</span>
+            services, the <span class='code'>pressure_offset</span> parameter is no longer necessary; pressure
+            calibration can be applied just like any other calibration. If your pressure was calibrated using the <span
+            class='code'>pressure_offset</span> parameter, move the calibration to the <span
+            class="code">[StdCalibrate]</span> section. This applies only to CC3000, FineOffsetUSB, Ultimeter, WS1,
             WS23xx, and WS28xx hardware.
         </p>
 
         <h3><span class="code">weewx.conf</span></h3>
 
         <p>
-            A version 2.X <span class="code">weewx.conf</span> file is not
-            compatible with Version 3.X. However, the upgrade process should
-            automatically update the file. Nevertheless, the changes are
-            documented below:
+            A version 2.X <span class="code">weewx.conf</span> file is not compatible with Version 3.X. However, the
+            upgrade process should automatically update the file. Nevertheless, the changes are documented below:
         </p>
         <table>
             <tr class="first_row">
@@ -770,8 +789,7 @@ extraHumid8 = humidity_8</pre>
                 <td>3.0</td>
             </tr>
             <tr>
-                <td>
-                </td>
+                <td></td>
                 <td>
                 <pre class='tty'>[StdReport]
 <span class='added'>    data_binding = wx_binding</span></pre>
@@ -902,10 +920,10 @@ extraHumid8 = humidity_8</pre>
 
         <h3>Custom data sources in skins</h3>
 
-        <p>The mechanism for specifying non-default data sources in skins has
-            changed. If you modified the Standard skin, or created or used other
-            skins that draw data from a database other than the weather database,
-            you must change how the other sources are specified.</p>
+        <p>The mechanism for specifying non-default data sources in skins has changed. If you modified the Standard
+            skin, or created or used other skins that draw data from a database other than the weather database, you
+            must change how the other sources are specified.
+        </p>
 
         <p>For example, in the <span class='code'>cmon</span> extension:</p>
         <table>
@@ -942,24 +960,21 @@ extraHumid8 = humidity_8</pre>
         <h3>Extensions</h3>
 
         <p>
-            Many skins will work in v3 with no modification required. However,
-            every search list extension will have to be upgraded, every restful
-            extension must be upgraded, and some other services must be upgraded.
+            Many skins will work in v3 with no modification required. However, every search list extension will have to
+            be upgraded, every restful extension must be upgraded, and some other services must be upgraded.
         </p>
 
         <p>
-            There is no automated upgrade system for extensions; if an extension
-            must be upgraded, you must do it manually. If the extension has any
-            python code, this will mean replacing any v2-compatible code with
-            v3-compatible code. In some cases parts of the configuration file
-            <span class='code'>weewx.conf</span> must be modified.
+            There is no automated upgrade system for extensions; if an extension must be upgraded, you must do it
+            manually. If the extension has any python code, this will mean replacing any v2-compatible code with
+            v3-compatible code. In some cases parts of the configuration file <span class='code'>weewx.conf</span> must
+            be modified.
         </p>
 
         <p>
-            For example, to update the <span class='code'>pmon</span> extension,
-            replace <span class='code'>bin/user/pmon.py</span> with the
-            v3-compatible <span class='code'>pmon.py</span> and modify
-            <span class='code'>weewx.conf</span> as shown in this table:
+            For example, to update the <span class='code'>pmon</span> extension, replace <span class='code'>bin/user/pmon.py</span>
+            with the v3-compatible <span class='code'>pmon.py</span> and modify <span class='code'>weewx.conf</span> as
+            shown in this table:
         </p>
         <table>
             <tr class="first_row">
@@ -1005,19 +1020,16 @@ extraHumid8 = humidity_8</pre>
             </tr>
         </table>
         <p>
-            For other extensions, see the extension's documentation or contact
-            the author of the extension.
+            For other extensions, see the extension's documentation or contact the author of the extension.
         </p>
 
         <h3>Search list extensions</h3>
 
         <p>
-            The introduction of <em>data bindings</em> has meant a change in the
-            calling signature of <em>search list extensions.</em> By way of
-            example, here's the example from the section
-            <a href="customizing.htm#extending_the_list"><i>Extending the list</i></a>
-            in the <i>Customizing Guide</i>, with the
-            differences highlighted.
+            The introduction of <em>data bindings</em> has meant a change in the calling signature of <em>search list
+            extensions.</em> By way of example, here's the example from the section <a
+            href="customizing.htm#extending_the_list"><i>Extending the list</i></a> in the <i>Customizing Guide</i>,
+            with the differences highlighted.
         </p>
         <table>
             <tbody>
@@ -1027,7 +1039,7 @@ extraHumid8 = humidity_8</pre>
             </tr>
             <tr>
                 <td><pre class="tty">def <span class="changed">get_extension</span>(self, timespan, <span
-                        class="changed">archivedb, statsdb</span>):
+                    class="changed">archivedb, statsdb</span>):
 
     all_stats = <span class="changed">TimeSpanStats</span>(
         timespan,
@@ -1049,7 +1061,7 @@ extraHumid8 = humidity_8</pre>
     return search_list_extension</pre>
                 </td>
                 <td><pre class="tty">def <span class="changed">get_extension_list</span>(self, timespan, <span
-                        class="changed">db_lookup</span>):
+                    class="changed">db_lookup</span>):
     
     all_stats = <span class="changed">TimespanBinder</span>(
         timespan, 
@@ -1075,35 +1087,33 @@ extraHumid8 = humidity_8</pre>
         </table>
         <p>A few things to note:</p>
         <ul>
-            <li>The name of the extension function has changed from
-                <span class="code">get_extension</span> to <span class="code">get_extension_list</span>.
+            <li>The name of the extension function has changed from <span class="code">get_extension</span> to <span
+                class="code">get_extension_list</span>.
             </li>
-            <li>The calling signature has changed. Instead of an archive database
-                and a stats database being passed in, a single <em>database lookup
-                    function</em> is passed in.
+            <li>The calling signature has changed. Instead of an archive database and a stats database being passed in,
+                a single <em>database lookup function</em> is passed in.
             </li>
-            <li>The name of the top-level class in the tag chain has changed from
-                <span class="code">TimeSpanStats</span> to <span class="code">TimespanBinder</span>.
-                See the <i>Customizing Guide</i> for details.
+            <li>The name of the top-level class in the tag chain has changed from <span
+                class="code">TimeSpanStats</span> to <span class="code">TimespanBinder</span>. See the <i>Customizing
+                Guide</i> for details.
             </li>
-            <li>Instead of returning a single search list extension, the function
-                should now return a Python <span class="code">list</span> of
-                extensions. The list will be searched in order.
+            <li>Instead of returning a single search list extension, the function should now return a Python <span
+                class="code">list</span> of extensions. The list will be searched in order.
             </li>
         </ul>
 
         <h3>Derived quantities</h3>
 
-        <p>Some calculations that were done in drivers or in hardware are now
-            done consistently by the new StdWXCalculate service. Drivers should no
-            longer calculate derived quantities such as windchill, heatindex,
-            dewpoint, or rain rate.</p>
+        <p>Some calculations that were done in drivers or in hardware are now done consistently by the new
+            StdWXCalculate service. Drivers should no longer calculate derived quantities such as windchill, heatindex,
+            dewpoint, or rain rate.
+        </p>
 
         <h3>Driver APIs</h3>
 
-        <p>The base class for drivers has been renamed, and new, optional,
-            methods have been defined to provide hooks for configuring hardware
-            and producing default and upgraded configuration stanzas.</p>
+        <p>The base class for drivers has been renamed, and new, optional, methods have been defined to provide hooks
+            for configuring hardware and producing default and upgraded configuration stanzas.
+        </p>
 
         <p>These changes affect only those who have written custom drivers.</p>
         <table>
@@ -1155,15 +1165,13 @@ class BetterMousetrapService(weewx.<span class="changed">engine</span>.StdServic
 
         <h3>RESTful APIs</h3>
 
-        <p>Some of the methods internal to RESTful services have changed,
-            specifically those that relate to getting configuration options
-            from <span class='code'>weewx.conf</span> and configuring databases.
+        <p>Some of the methods internal to RESTful services have changed, specifically those that relate to getting
+            configuration options from <span class='code'>weewx.conf</span> and configuring databases.
         </p>
 
         <p>This affects only those who have written custom RESTful services.</p>
 
-        <p>Here is an example of obtaining the database dictionary for use in
-            the RESTful service thread.</p>
+        <p>Here is an example of obtaining the database dictionary for use in the RESTful service thread.</p>
         <table>
             <tr class="first_row">
                 <td style='width:50%'>2.7</td>
@@ -1185,29 +1193,23 @@ manager_dict = weewx.manager.open_manager_with_config(
 
         <h3>Database APIs</h3>
 
-        <p>The methods for obtaining, opening, and querying databases have
-            changed. This affects only those who have written code that accesses
-            databases.</p>
-
-        <p>
-            The class <span class="code">Manager</span> and its subclasses have
-            replaced the old <span class="code">Archive</span> class. The table
-            name is no longer hard-coded, so developers should use the table name
-            from the database binding. There is no longer a separate
-            <span class="code">StatsDb</span>
-            class, its functions having been subsumed into the
-            <span class="code">Manager</span>
-            class and its subclasses.
+        <p>The methods for obtaining, opening, and querying databases have changed. This affects only those who have
+            written code that accesses databases.
         </p>
 
         <p>
-            A new class <span class="code">DBBinder</span> is the preferred way of
-            getting a <span class="code">Manager</span> class, as it will
-            automatically take care of instantiating the right class, as well as
-            caching instances of <span class="code">Manager</span>. An instance of
-            <span class="code">DBBinder</span> is held by the engine as attribute
-            <span class="code">db_binder</span>. Here's an example of making a
-            simple query.
+            The class <span class="code">Manager</span> and its subclasses have replaced the old <span class="code">Archive</span>
+            class. The table name is no longer hard-coded, so developers should use the table name from the database
+            binding. There is no longer a separate <span class="code">StatsDb</span> class, its functions having been
+            subsumed into the <span class="code">Manager</span> class and its subclasses.
+        </p>
+
+        <p>
+            A new class <span class="code">DBBinder</span> is the preferred way of getting a <span
+            class="code">Manager</span> class, as it will automatically take care of instantiating the right class, as
+            well as caching instances of <span class="code">Manager</span>. An instance of <span
+            class="code">DBBinder</span> is held by the engine as attribute <span class="code">db_binder</span>. Here's
+            an example of making a simple query.
         </p>
         <table>
             <tr class="first_row">
@@ -1233,12 +1235,10 @@ with weewx.archive.Archive.open(self.database_dict) as archive:
         <h3>Generator APIs</h3>
 
         <p>
-            The base class for report generators has changed. The old class
-            <span class="code">CachedReportGenerator</span> no longer exists; its
-            functionality has been replaced by an instance of
-            <span class="code">DBBinder</span>,
-            held by the generator superclass. This affects only those who have
-            written customer generators.
+            The base class for report generators has changed. The old class <span
+            class="code">CachedReportGenerator</span> no longer exists; its functionality has been replaced by an
+            instance of <span class="code">DBBinder</span>, held by the generator superclass. This affects only those
+            who have written customer generators.
         </p>
 
         <p>Here's an example:</p>
@@ -1249,14 +1249,14 @@ with weewx.archive.Archive.open(self.database_dict) as archive:
             </tr>
             <tr>
                 <td><pre class="tty">class GaugeGenerator(weewx.reportengine.<span
-                        class='changed'>CachedReportGenerator</span>)
+                    class='changed'>CachedReportGenerator</span>)
     def run(self):
         archive_name = self.config_dict['GaugeGenerator']['archive_name']
         archive = self._getArchive(archive_name)
         results = archive.getSql(...)</pre>
                 </td>
                 <td><pre class="tty">class GaugeGenerator(weewx.reportengine.<span
-                        class='changed'>ReportGenerator</span>)
+                    class='changed'>ReportGenerator</span>)
     def run(self):
         mgr = self.generator.db_binder.get_manager()
         results = mgr.getSql(...)</pre>
@@ -1266,18 +1266,17 @@ with weewx.archive.Archive.open(self.database_dict) as archive:
 
         <h3>Extension installer</h3>
 
-        <p>The <span class='code'>setup.py</span> utility is now included in the
-            installation; it is no longer necessary to keep a copy of the
-            weeWX source tree just for the
-            <span class='code'>setup.py</span> utility.</p>
+        <p>The <span class='code'>setup.py</span> utility is now included in the installation; it is no longer necessary
+            to keep a copy of the WeeWX source tree just for the <span class='code'>setup.py</span> utility.
+        </p>
 
-        <p>For .deb and .rpm installations, the command
-            <span class='code'>wee_setup</span> is a symlink to
-            <span class='code'>setup.py</span>.</p>
+        <p>For .deb and .rpm installations, the command <span class='code'>wee_setup</span> is a symlink to <span
+            class='code'>setup.py</span>.
+        </p>
 
-        <p>The options for installing extensions changed slightly to be more
-            consistent with the rest of the options to
-            <span class='code'>setup.py</span>.</p>
+        <p>The options for installing extensions changed slightly to be more consistent with the rest of the options to
+            <span class='code'>setup.py</span>.
+        </p>
         <table>
             <tr class="first_row">
                 <td style='width:50%'>2.7</td>
@@ -1303,89 +1302,67 @@ setup.py install --extension basic.tar.gz --dry-run</pre>
 
         <h2>From V2.6 or earlier</h2>
 
-        <p>Version 2.7 is backwards compatible with earlier versions with
-            one minor exception.</p>
+        <p>Version 2.7 is backwards compatible with earlier versions with one minor exception.</p>
 
         <p>
-            It now includes the ability to localize the weewx and server
-            uptimes. Previously, the labels <span class="code">days</span>,
-            <span class="code">hours</span>, and <span class="code">minutes</span>
-            were hardcoded in a Python utility. There was no way of changing
-            them. Now, like any other labels, they are taken from the skin
-            configuration file, <span class="code">skin.conf</span>, section
-            <span class="code">[[Labels]]</span>. Older configuration files had a
-            definition for <span class="code">hour</span>, but none for
-            <span class="code">day</span>, and <span class="code">minute</span>.
-            Also, the old definition for <span class="code">hour</span> used an
-            abbreviation <span class="code">hrs</span> instead of
-            <span class="code">hours</span>.
+            It now includes the ability to localize the WeeWX and server uptimes. Previously, the labels <span
+            class="code">days</span>, <span class="code">hours</span>, and <span class="code">minutes</span> were
+            hardcoded in a Python utility. There was no way of changing them. Now, like any other labels, they are taken
+            from the skin configuration file, <span class="code">skin.conf</span>, section <span
+            class="code">[[Labels]]</span>. Older configuration files had a definition for <span
+            class="code">hour</span>, but none for <span class="code">day</span>, and <span class="code">minute</span>.
+            Also, the old definition for <span class="code">hour</span> used an abbreviation <span
+            class="code">hrs</span> instead of <span class="code">hours</span>.
         </p>
 
-        <p>If you do nothing, your weewx and station uptimes will look
-            like:</p>
+        <p>If you do nothing, your WeeWX and station uptimes will look like:</p>
         <pre class="tty">Weewx uptime:  1 day, 1 hrs, 41 minutes
 Server uptime: 2 days, 10 hrs, 22 minutes</pre>
         <p>
-            Note how the label for hours is abbreviated and always uses the
-            plural. If you want the previous behavior, or if you want to
-            localize the labels, you should update your skin configuration file.
-            Remove the old entries for <span class="code">hour</span> and
-            <span class="code">second</span> and replace them with:
+            Note how the label for hours is abbreviated and always uses the plural. If you want the previous behavior,
+            or if you want to localize the labels, you should update your skin configuration file. Remove the old
+            entries for <span class="code">hour</span> and <span class="code">second</span> and replace them with:
         </p>
         <pre class="tty">day               = " day",    " days"
 hour              = " hour",   " hours"
 minute            = " minute", " minutes"
 second            = " second", " seconds"</pre>
 
-        <p>The first item is the singular spelling, the second the plural. This
-            will result in the desired</p>
+        <p>The first item is the singular spelling, the second the plural. This will result in the desired</p>
         <pre class="tty">Weewx uptime:  1 day, 1 hour, 41 minutes
 Server uptime: 2 days, 10 hours, 22 minutes</pre>
 
         <h2>From V2.5 or earlier</h2>
 
-        <p>Version 2.6 is backwards compatible with earlier versions, with a couple
-            of small exceptions.</p>
+        <p>Version 2.6 is backwards compatible with earlier versions, with a couple of small exceptions.</p>
         <ul>
-            <li>If you have written a custom weeWX
-                service, the install routine will try to insert its name into
-                an appropriate place in one of the five new lists of services
-                to be run. You should check
-                section <span class="code">[Engines][[WxEngine]]</span> to
-                make sure it made a reasonable guess.
+            <li>If you have written a custom WeeWX service, the install routine will try to insert its name into an
+                appropriate place in one of the five new lists of services to be run. You should check section <span
+                    class="code">[Engines][[WxEngine]]</span> to make sure it made a reasonable guess.
             </li>
-            <li>If you have written a custom RESTful service, the
-                architecture for these services has completely changed. They
-                are now first class services, and are treated like any other
-                weeWX service. There are some guides
-                to writing RESTful services using the new architecture at the
-                top of the file <span class='code'>bin/weewx/restx.py</span>.
+            <li>If you have written a custom RESTful service, the architecture for these services has completely
+                changed. They are now first class services, and are treated like any other WeeWX service. There are some
+                guides to writing RESTful services using the new architecture at the top of the file <span class='code'>bin/weewx/restx.py</span>.
                 I can also help you with the transition.
             </li>
-            <li>Option <span class='code'>interval</span> in the CWOP
-                configuration section has become option
-                <span class='code'>post_interval</span>. This change
-                should be done automatically by the install routine.
+            <li>Option <span class='code'>interval</span> in the CWOP configuration section has become option <span
+                class='code'>post_interval</span>. This change should be done automatically by the install routine.
             </li>
-            <li>The mechanism for specifying RESTful services has changed.
-                To activate a RESTful service, put the driver in the
-                <span class="code">restful_services</span> list in
-                <span class="code">[Engines][[WxEngine]]</span>. The
-                <span class="code">driver</span> parameter is no longer
-                necessary in the RESTful service's configuration stanza.
-                These changes should be done automatically by the
-                install routine.
+            <li>The mechanism for specifying RESTful services has changed. To activate a RESTful service, put the driver
+                in the <span class="code">restful_services</span> list in <span
+                    class="code">[Engines][[WxEngine]]</span>. The <span class="code">driver</span> parameter is no
+                longer necessary in the RESTful service's configuration stanza. These changes should be done
+                automatically by the install routine.
             </li>
         </ul>
 
         <h2>From V2.3 or earlier</h2>
 
-        <p>The option <span class="code">time_length</span> will now be the exact
-            length of the resultant plot. Before, a plot with
-            <span class="code">time_length</span> equal to 24 hours would result
-            in a plot of 27 hours, now it's 24 hours. If you want the old behavior,
-            set it equal to 27 hours. To do this, change your section
-            in <span class="code">skin.conf</span> from</p>
+        <p>The option <span class="code">time_length</span> will now be the exact length of the resultant plot. Before,
+            a plot with <span class="code">time_length</span> equal to 24 hours would result in a plot of 27 hours, now
+            it's 24 hours. If you want the old behavior, set it equal to 27 hours. To do this, change your section in
+            <span class="code">skin.conf</span> from
+        </p>
 
         <pre class="tty">[[day_images]]
     x_label_format = %H:%M
@@ -1399,13 +1376,11 @@ Server uptime: 2 days, 10 hours, 22 minutes</pre>
     bottom_label_format = %m/%d/%y %H:%M
     <span class="highlight">time_length = 97200 # == 27 hours</span></pre>
 
-        <p>The service <span class="code">StdTimeSync</span> now synchronizes the
-            console's onboard clock on startup. This is nice because if the clock
-            failed, perhaps because the battery was taken out, the time is
-            corrected first <em>before</em> data is downloaded from the logger's
-            memory. To take advantage of this, you can move service
-            <span class="code">StdTimeSync</span> to the front of the list of
-            services to be run. For example:</p>
+        <p>The service <span class="code">StdTimeSync</span> now synchronizes the console's onboard clock on startup.
+            This is nice because if the clock failed, perhaps because the battery was taken out, the time is corrected
+            first <em>before</em> data is downloaded from the logger's memory. To take advantage of this, you can move
+            service <span class="code">StdTimeSync</span> to the front of the list of services to be run. For example:
+        </p>
 
         <pre class="tty">[[WxEngine]]
     # The list of services the main weewx engine should run:
@@ -1415,9 +1390,9 @@ Server uptime: 2 days, 10 hours, 22 minutes</pre>
 
         <h2>From V2.2 or earlier</h2>
 
-        <p>The signature of the function "<span class="code">loader</span>", used
-            to return an instance of the station device driver, has changed
-            slightly. It has changed from</p>
+        <p>The signature of the function "<span class="code">loader</span>", used to return an instance of the station
+            device driver, has changed slightly. It has changed from
+        </p>
 
         <pre class="tty">loader(config_dict)</pre>
 
@@ -1425,72 +1400,63 @@ Server uptime: 2 days, 10 hours, 22 minutes</pre>
 
         <pre class="tty">loader(config_dict, engine)</pre>
 
-        <p>That is, a second parameter, <span class="code">engine</span>, has been
-            added. This is a reference to the
-            weeWX engine.</p>
+        <p>That is, a second parameter, <span class="code">engine</span>, has been added. This is a reference to the
+            WeeWX engine.
+        </p>
 
-        <p>This change will affect only those who have written their own device
-            driver. </p>
+        <p>This change will affect only those who have written their own device driver.</p>
 
         <h2>From V2.1 or earlier</h2>
 
         <p>Version 2.2 introduces a schema, found in <span class="code">
-        bin/user/schemas.py</span>, for the stats database. This schema is used
-            only when initially creating the database. If you have a specialized
-            stats database, that is, one that saves types other than the default
-            that comes with weeWX, you should edit this
-            file to reflect your changes before attempting to rebuild the database.
+        bin/user/schemas.py</span>, for the stats database. This schema is used only when initially creating the
+            database. If you have a specialized stats database, that is, one that saves types other than the default
+            that comes with WeeWX, you should edit this file to reflect your changes before attempting to rebuild the
+            database.
         </p>
 
         <h2>From V1.14 or earlier</h2>
 
-        <p>Version 2.0 introduces many new features, including a revamped internal
-            engine. There are two changes that are not backwards compatible:</p>
+        <p>Version 2.0 introduces many new features, including a revamped internal engine. There are two changes that
+            are not backwards compatible:
+        </p>
         <ul>
-            <li>The configuration file, <span class="code">weewx.conf</span>. When
-                upgrading from V1.X, the setup utility will
-                install a new, fresh copy of <span class="code">weewx.conf</span>,
-                which you will then have to edit by hand. Thereafter, V2.X upgrades
-                should be automatic.
+            <li>The configuration file, <span class="code">weewx.conf</span>. When upgrading from V1.X, the setup
+                utility will install a new, fresh copy of <span class="code">weewx.conf</span>, which you will then have
+                to edit by hand. Thereafter, V2.X upgrades should be automatic.
             </li>
-            <li>Custom services. If you have written a custom service, it will have
-                to be updated to use the new engine. The overall architecture is
-                very similar, except that functions must be <em>bound</em> to
-                events, rather than get called implicitly. See the sections
-                <a href="customizing.htm#Customizing_a_service">Customizing a Service</a> and <a
-                        href="customizing.htm#Adding_a_service">Adding a Service</a>
-                in the <a href="customizing.htm">Customizing Guide</a> for details
-                on how to do this.
+            <li>Custom services. If you have written a custom service, it will have to be updated to use the new engine.
+                The overall architecture is very similar, except that functions must be <em>bound</em> to events, rather
+                than get called implicitly. See the sections <a href="customizing.htm#Customizing_a_service">Customizing
+                    a Service</a> and <a href="customizing.htm#Adding_a_service">Adding a Service</a> in the <a
+                    href="customizing.htm">Customizing Guide</a> for details on how to do this.
             </li>
         </ul>
-        <p>All skins should be completely backwards compatible, so you should not
-            have to change your templates or skin configuration file,
-            <span class="code">skin.conf</span>. </p>
+        <p>All skins should be completely backwards compatible, so you should not have to change your templates or skin
+            configuration file, <span class="code">skin.conf</span>.
+        </p>
 
-        <p>If you have written a custom report generator it should also be
-            backwards compatible.</p>
+        <p>If you have written a custom report generator it should also be backwards compatible.</p>
 
         <h2>From V1.13 or earlier</h2>
 
-        <p>Version 1.14 introduces some new webpages that have been expressly
-            formatted for the smartphone by using
-            <a href="http://jquery.com/">jQuery</a>.</p>
+        <p>Version 1.14 introduces some new webpages that have been expressly formatted for the smartphone by using <a
+            href="http://jquery.com/">jQuery</a>.
+        </p>
 
-        <p>The skins shipped with the distribution take advantage of these
-            features. If you do nothing, your old skins will continue to work, but
-            you will not be taking advantage of these new webpages.</p>
+        <p>The skins shipped with the distribution take advantage of these features. If you do nothing, your old skins
+            will continue to work, but you will not be taking advantage of these new webpages.
+        </p>
 
         <p>If you want them, then you have two choices:</p>
         <ol>
-            <li>Rename your old skin directory (call it &quot;<span class="code">skins.old</span>&quot;)
-                then do the install. This will install the new skin distribution. You can
-                then modify it to reflect any changes you have made, referring to <span class="code">
-            skins.old</span> for guidance. If you have not changed many things, this
-                approach will be the easiest.
+            <li>Rename your old skin directory (call it &quot;<span class="code">skins.old</span>&quot;) then do the
+                install. This will install the new skin distribution. You can then modify it to reflect any changes you
+                have made, referring to <span class="code">
+            skins.old</span> for guidance. If you have not changed many things, this approach will be the easiest.
             </li>
-            <li>Alternatively, change the contents of your existing skin directory to
-                include the new webpages. If you take this approach, you will need to copy
-                over the contents of the subdirectory <span class="code">
+            <li>Alternatively, change the contents of your existing skin directory to include the new webpages. If you
+                take this approach, you will need to copy over the contents of the subdirectory <span class="code">
             skins/Standard/smartphone</span> from the distribution into your <span class="code">skins/Standard</span>
                 directory. You will then need to modify your <span class="code">skin.conf</span>.
                 <p>After the section that looks like</p>
@@ -1513,8 +1479,9 @@ Server uptime: 2 days, 10 hours, 22 minutes</pre>
 [[[MobileRadar]]]
     template = smartphone/radar.html.tmpl</pre>
 
-                <p>Then modify section <span class="code">[CopyGenerator]</span>
-                    to add the <span class="highlight">highlighted</span> files:</p>
+                <p>Then modify section <span class="code">[CopyGenerator]</span> to add the <span class="highlight">highlighted</span>
+                    files:
+                </p>
 
                 <pre class='tty'>[CopyGenerator]
     #
@@ -1525,54 +1492,48 @@ Server uptime: 2 days, 10 hours, 22 minutes</pre>
     copy_once = backgrounds/*, weewx.css, mobile.css, favicon.ico, <span class="highlight">smartphone/icons/*, smartphone/custom.js</span></pre>
             </li>
         </ol>
-        <p>Whichever approach you chose, the generated files will appear in
-            <span class="code">public_html/smartphone</span>. The start of the document root
-            will be at <span class="code">public_html/smartphone/index.html</span>. You may want
-            to add a link to this in the template for your main index page
-            <span class="code">skins/Standard/index.html.tmpl</span>.</p>
+        <p>Whichever approach you chose, the generated files will appear in <span
+            class="code">public_html/smartphone</span>. The start of the document root will be at <span class="code">public_html/smartphone/index.html</span>.
+            You may want to add a link to this in the template for your main index page <span class="code">skins/Standard/index.html.tmpl</span>.
+        </p>
 
         <h2>From V1.12 or earlier</h2>
 
-        <p>Version 1.13 changed the way binding happens to the databases used in reports
-            so that it happens much later. The upshot is that the signature of a few
-            functions changed. Most you are unlikely to encounter. The exception is if you
-            have written custom template <em>search lists</em>, as described in the
-            <a href="customizing.htm">Customizing weewx guide</a>. This section has been
-            updated to reflect the new function signatures. As a side effect, the
-            illustrated example actually has become much simpler!</p>
+        <p>Version 1.13 changed the way binding happens to the databases used in reports so that it happens much later.
+            The upshot is that the signature of a few functions changed. Most you are unlikely to encounter. The
+            exception is if you have written custom template <em>search lists</em>, as described in the <a
+                href="customizing.htm">Customizing weewx guide</a>. This section has been updated to reflect the new
+            function signatures. As a side effect, the illustrated example actually has become much simpler!
+        </p>
 
         <p>No changes to skins.</p>
 
         <h2>From V1.9 or earlier</h2>
 
-        <p>Version 1.10 introduced several new features. </p>
+        <p>Version 1.10 introduced several new features.</p>
 
         <h3>New almanac features, icon, and mobile template</h3>
 
-        <p>Version 1.10 introduces some extra almanac features, such as the azimuth and
-            elevation of the sun and moon, or when the next solstice will be. It also
-            includes a template formatted for smartphones, as well as an icon (&quot;<span
-                    class="code">favicon.ico</span>&quot;)
-            that displays in your browser toolbar. The skins shipped with the distribution
-            take advantage of these features. If you do nothing, your old skins will
-            continue to work, but you will not take advantage of these new features. </p>
+        <p>Version 1.10 introduces some extra almanac features, such as the azimuth and elevation of the sun and moon,
+            or when the next solstice will be. It also includes a template formatted for smartphones, as well as an icon
+            (&quot;<span class="code">favicon.ico</span>&quot;) that displays in your browser toolbar. The skins shipped
+            with the distribution take advantage of these features. If you do nothing, your old skins will continue to
+            work, but you will not take advantage of these new features.
+        </p>
 
         <p>If you want these new features then you have two choices:</p>
         <ol>
-            <li>Rename your old skin directory (call it &quot;<span class="code">skin.old</span>&quot;)
-                then do the install. This will install the new skin distribution. You can
-                modify it to reflect any changes you have made, referring to <span class="code">
+            <li>Rename your old skin directory (call it &quot;<span class="code">skin.old</span>&quot;) then do the
+                install. This will install the new skin distribution. You can modify it to reflect any changes you have
+                made, referring to <span class="code">
             skin.old</span> for guidance.
             </li>
-            <li>Alternatively, change the contents of your existing skin directory to take
-                advantage of the new features. If you take this approach, you will need to
-                copy over files <span class="code">favicon.ico, mobile.css</span>, and
-                <span class="code">mobile.html.tmpl</span> from the distribution into your <span
-                        class="code">skin/Standard</span>
-                directory. Modify <span class="code">skins/Standard/index.html.tmpl</span>
-                to take advantage of the new almanac features, using the version shipped
-                with the distribution for guidance. You will then need to modify your <span
-                        class="code">skin.conf</span>.
+            <li>Alternatively, change the contents of your existing skin directory to take advantage of the new
+                features. If you take this approach, you will need to copy over files <span class="code">favicon.ico, mobile.css</span>,
+                and <span class="code">mobile.html.tmpl</span> from the distribution into your <span class="code">skin/Standard</span>
+                directory. Modify <span class="code">skins/Standard/index.html.tmpl</span> to take advantage of the new
+                almanac features, using the version shipped with the distribution for guidance. You will then need to
+                modify your <span class="code">skin.conf</span>.
                 <p>Add a new <span class="code">[[[Mobile]]]</span> section:</p>
 
                 <pre class="tty">[FileGenerator]
@@ -1583,20 +1544,20 @@ Server uptime: 2 days, 10 hours, 22 minutes</pre>
         template = mobile.html.tmpl</pre>
 
                 <p>Then add <span class="code">mobile.css</span> and <span class="code">
-                favicon.ico</span> to the list of files to be copied on report generation:</p>
+                favicon.ico</span> to the list of files to be copied on report generation:
+                </p>
 
                 <pre class="tty">[CopyGenerator]
     copy_once = backgrounds/*, weewx.css, mobile.css, favicon.ico</pre>
             </li>
         </ol>
-        <p>Which approach you should take will depend on how extensively you have
-            modified the stock skin distribution. If the modifications are slight,
-            approach #1 will be easier, otherwise use approach #2.</p>
+        <p>Which approach you should take will depend on how extensively you have modified the stock skin distribution.
+            If the modifications are slight, approach #1 will be easier, otherwise use approach #2.
+        </p>
 
         <h3>Backwards compatibility</h3>
 
-        <p>With the introduction of explicit control of output units in the
-            templates such as</p>
+        <p>With the introduction of explicit control of output units in the templates such as</p>
 
         <pre class="tty">$day.outTemp.max.degree_C</pre>
 
@@ -1605,113 +1566,101 @@ Server uptime: 2 days, 10 hours, 22 minutes</pre>
             <li><span class="code">weewx.stats.TaggedStats</span></li>
             <li><span class="code">weewx.stats.TimeSpanStats</span></li>
         </ul>
-        <p>The example of writing a custom generator <span class="code">MyFileGenerator</span>
-            (which produced &quot;all time&quot; statistics) has been changed to reflect the new
-            signatures.</p>
+        <p>The example of writing a custom generator <span class="code">MyFileGenerator</span> (which produced &quot;all
+            time&quot; statistics) has been changed to reflect the new signatures.
+        </p>
 
         <p>This will only affect you if you have written a custom generator.</p>
 
         <h2>From V1.7.0 or earlier</h2>
 
         <p>With the introduction of a standard archiving service, <span class="code">
-        StdArchive</span>, the names of some events have changed. This will not affect
-            you unless you have written a custom service.</p>
+        StdArchive</span>, the names of some events have changed. This will not affect you unless you have written a
+            custom service.
+        </p>
 
         <h2>From V.1.5.0 or earlier</h2>
 
-        <p>V1.7 introduces <em>skins</em>. The skins live in subdirectory
-            <span class="code">skins</span>. They are <em>not</em> compatible with the old
-            <span class="code">template</span> subdirectory --- you can&#39;t simply rename
-            <span class="code">templates</span> to <span class="code">skins</span>. </p>
+        <p>V1.7 introduces <em>skins</em>. The skins live in subdirectory <span class="code">skins</span>. They are <em>not</em>
+            compatible with the old <span class="code">template</span> subdirectory --- you can&#39;t simply rename
+            <span class="code">templates</span> to <span class="code">skins</span>.
+        </p>
 
-        <p>The part of the configuration file dealing with the presentation layer has
-            been split off into a separate file <span class="code">skin.conf</span>. Hence,
-            once again, the installation script
-            <span class="code">setup.py</span> will NOT merge your old <span class="code">
-            weewx.conf</span> configuration file
-            into the new one. You will have to re-edit <span class="code">weewx.conf</span>
+        <p>The part of the configuration file dealing with the presentation layer has been split off into a separate
+            file <span class="code">skin.conf</span>. Hence, once again, the installation script <span class="code">setup.py</span>
+            will NOT merge your old <span class="code">
+            weewx.conf</span> configuration file into the new one. You will have to re-edit <span class="code">weewx.conf</span>
             to put in your customizations. You may also have to edit <span class="code">
-            skin.conf</span> for whatever skin you choose (right now, only one skin, <em>Standard</em>,
-            comes with the distribution).</p>
+            skin.conf</span> for whatever skin you choose (right now, only one skin, <em>Standard</em>, comes with the
+            distribution).
+        </p>
 
-        <p>However, a reinstall of V1.7 <em>will</em> merge your changes for
-            <span class="code">weewx.conf</span>. It will also merge any changes you have made to <span class="code">skin.conf</span>
-            as well.</p>
+        <p>However, a reinstall of V1.7 <em>will</em> merge your changes for <span class="code">weewx.conf</span>. It
+            will also merge any changes you have made to <span class="code">skin.conf</span> as well.
+        </p>
 
         <p>Please check the following:</p>
         <ul>
-            <li>Option &quot;<span class="code">altitude</span>&quot; in section
-                <span class="code">[Station]</span> now takes a unit. Hence, it
-                should look something like:
+            <li>Option &quot;<span class="code">altitude</span>&quot; in section <span class="code">[Station]</span> now
+                takes a unit. Hence, it should look something like:
                 <pre class='tty'>altitude = 120, meter</pre>
 
             </li>
-            <li>In a similar manner, options <span class="code">heating_base</span>
-                and <span class="code">cooling_base</span> in
-                <span class="code">skin.conf</span>
-                also take units:
+            <li>In a similar manner, options <span class="code">heating_base</span> and <span
+                class="code">cooling_base</span> in <span class="code">skin.conf</span> also take units:
                 <pre class='tty'>heating_base = 65, degree_F
 cooling_base = 65, degree_F</pre>
             </li>
         </ul>
-        <p>The directory &#39;<span class="code">templates</span>&#39; is no
-            longer used; it has been replaced with directory
-            &#39;<span class="code">skins</span>&#39;. You
-            may delete it if you wish:</p>
+        <p>The directory &#39;<span class="code">templates</span>&#39; is no longer used; it has been replaced with
+            directory &#39;<span class="code">skins</span>&#39;. You may delete it if you wish:
+        </p>
 
         <pre class="tty cmd">rm -r templates</pre>
 
         <h2>From V1.4.0 or earlier</h2>
 
-        <p>Because the configuration file <span class="code">weewx.conf</span>
-            changed significantly going from V1.4 to V1.5, the installation script
-            <span class="code">setup.py</span> will NOT merge your old
-            configuration file into the new one. You will have to re-edit
-            <span class="code">weewx.conf</span>
-            to put in your customizations.</p>
+        <p>Because the configuration file <span class="code">weewx.conf</span> changed significantly going from V1.4 to
+            V1.5, the installation script <span class="code">setup.py</span> will NOT merge your old configuration file
+            into the new one. You will have to re-edit <span class="code">weewx.conf</span> to put in your
+            customizations.
+        </p>
 
         <h2>From V1.2.0 or earlier</h2>
 
-        <p>Option <span class="code">clock_check</span>, previously found in the
-            <span class="code">[VantagePro]</span>
-            section, is now found in the
-            <span class="code">[Station]</span> section. The install program will
-            put a default value in the new place, but it will not delete nor move
-            your old value over. If you have changed this value or if you
-            cannot stand the thought of
-            <span class="code">clock_check</span> appearing in two different
-            places, you should delete the old one found under
-            <span class="code">[VantagePro]</span> and
-            make sure the new value, found under
-            <span class="code">[Station]</span> is
-            correct.</p>
+        <p>Option <span class="code">clock_check</span>, previously found in the <span class="code">[VantagePro]</span>
+            section, is now found in the <span class="code">[Station]</span> section. The install program will put a
+            default value in the new place, but it will not delete nor move your old value over. If you have changed
+            this value or if you cannot stand the thought of <span class="code">clock_check</span> appearing in two
+            different places, you should delete the old one found under <span class="code">[VantagePro]</span> and make
+            sure the new value, found under <span class="code">[Station]</span> is correct.
+        </p>
 
-        <p>Two Python files are no longer used, so they may be deleted from your
-            installation if you wish:</p>
+        <p>Two Python files are no longer used, so they may be deleted from your installation if you wish:</p>
 
         <pre class="tty cmd">rm bin/weewx/processdata.py
 rm bin/weewx/mainloop.py</pre>
 
-        <p>In addition, file <span class="code">readme.htm</span> has been moved to
-            subdirectory <span class='code'>docs</span>, so the old one
-            can be deleted:</p>
+        <p>In addition, file <span class="code">readme.htm</span> has been moved to subdirectory <span
+            class='code'>docs</span>, so the old one can be deleted:
+        </p>
 
         <pre class="tty cmd">rm readme.htm</pre>
 
     </div>
 
     <div class="footer">
-        <p class="copyright"> &copy; <a href="copyright.htm">Copyright</a> Tom Keffer </p>
+        <p class="copyright"> &copy; <a href="copyright.htm">Copyright</a> Tom Keffer</p>
     </div>
 
 </div>
 
 <!-- Our scripts load last so the content can load first -->
-<script type="text/javascript" src="js/jquery-1.11.1.min.js"></script>
-<script type="text/javascript" src="js/jquery-ui-1.10.4.custom.min.js"></script>
-<script type="text/javascript" src="js/jquery.tocify-1.9.0.min.js"></script>
-<script type="text/javascript" src="js/weewx.js"></script>
-<script type="text/javascript">
+<script src="js/jquery-1.11.1.min.js"></script>
+<script src="js/jquery-ui-1.10.4.custom.min.js"></script>
+<script src="js/jquery.tocify-1.9.0.min.js"></script>
+<script src="js/weewx.js"></script>
+<script>
     $(function () {
         var level = get_default_level();
         create_toc_control(level);

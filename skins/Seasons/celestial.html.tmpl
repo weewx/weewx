@@ -1,0 +1,44 @@
+## Copyright 2017 Tom Keffer, Matthew Wall
+## Distributed under terms of GPLv3.  See LICENSE.txt for your rights.
+#errorCatcher Echo
+#encoding UTF-8
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>$station.location Celestial Details</title>
+    <link rel="icon" type="image/png" href="favicon.ico" />
+    <link rel="stylesheet" type="text/css" href="seasons.css"/>
+    <script src="seasons.js"></script>
+    <style>
+#celestial_widget th {
+  font-weight: normal;
+  text-align: right;
+}
+#celestial_widget .widget_title {
+  margin-bottom: 25px;
+}
+#celestial_widget .label {
+  font-size: 100%;
+}
+#celestial_widget .data {
+  font-size: 100%;
+}
+    </style>
+  </head>
+
+  <body>
+    #include "titlebar.inc"
+    
+    <div id="contents">
+      <p><a href="index.html">&#10096; Current Conditions</a></p>
+
+      <div id="widget_group">
+        #include "celestial.inc"
+      </div>
+
+      #include "identifier.inc"
+    </div>
+
+  </body>
+</html>

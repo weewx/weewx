@@ -15,6 +15,13 @@ import unittest
 
 import configobj
 
+# To run standalone, PYTHONPATH must be set to not only the WeeWX code, but also the "stats" example.
+# Something like:
+#
+# cd ~/git/weewx
+# PYTHONPATH="./examples:./bin" python bin/weewx/test/test_templates.py
+#
+
 os.environ['TZ'] = 'America/Los_Angeles'
 
 # This will use the locale specified by the environment variable 'LANG'
@@ -89,7 +96,7 @@ class Common(unittest.TestCase):
         try:
             test_html_dir = os.path.join(self.config_dict['WEEWX_ROOT'], self.config_dict['StdReport']['HTML_ROOT'])
             shutil.rmtree(test_html_dir)
-        except OSError, e:
+        except OSError as e:
             if os.path.exists(test_html_dir):
                 print >> sys.stderr, "\nUnable to remove old test directory %s", test_html_dir
                 print >> sys.stderr, "Reason:", e
@@ -138,25 +145,26 @@ class Common(unittest.TestCase):
             for dirfilename in dirfilenames:
                 expected_filename_abs = os.path.join(dirpath, dirfilename)
                 # Get the file path relative to the directory of expected results
-                filename_rel = weeutil.weeutil.relpath(expected_filename_abs, expected_dir)
+                filename_rel = os.path.relpath(expected_filename_abs, expected_dir)
                 # Use that to figure out where the actual results ended up
                 actual_filename_abs = os.path.join(test_html_dir, filename_rel)
-#                 print "Checking file: ", actual_filename_abs
-#                 print "  against file:", expected_filename_abs
-                actual = open(actual_filename_abs)
-                expected = open(expected_filename_abs)
-    
-                n = 0
-                while True:
-                    actual_line = actual.readline()
-                    expected_line = expected.readline()
-                    if actual_line == '' or expected_line == '':
-                        break
-                    n += 1
-                    self.assertEqual(actual_line, expected_line, msg="%s[%d]:\n%r vs\n%r" % 
-                                     (actual_filename_abs, n, actual_line, expected_line))
-                
-                print "Checked %d lines" % (n,)
+
+                # print "Checking file: ", actual_filename_abs
+                # print "  against file:", expected_filename_abs
+
+                with open(actual_filename_abs) as actual:
+                    with open(expected_filename_abs) as expected:
+                        n = 0
+                        while True:
+                            actual_line = actual.readline()
+                            expected_line = expected.readline()
+                            if actual_line == '' or expected_line == '':
+                                break
+                            n += 1
+                            self.assertEqual(actual_line, expected_line, msg="%s[%d]:\n%r vs\n%r" %
+                                             (actual_filename_abs, n, actual_line, expected_line))
+
+                        print "Checked %d lines" % (n,)
 
 class TestSqlite(Common):
 
@@ -169,7 +177,13 @@ class TestMySQL(Common):
     def __init__(self, *args, **kwargs):
         self.database_type = "mysql"
         super(TestMySQL, self).__init__(*args, **kwargs)
-        
+
+    def setUp(self):
+        try:
+            import MySQLdb
+        except ImportError as e:
+            raise unittest.case.SkipTest(e.message)
+        super(TestMySQL, self).setUp()        
         
     
 def suite():

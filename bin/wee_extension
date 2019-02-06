@@ -39,10 +39,9 @@ def main():
     parser.add_option('--list', action="store_true", dest="list_extensions", 
                       help="Show installed extensions.")
     parser.add_option('--install', metavar="FILENAME|DIRECTORY",
-                      help="Install the extension contained in FILENAME or"
-                      " DIRECTORY. FILENAME must be an archive that contains"
-                      " a packaged extension such as pmon.tar.gz.  DIRECTORY"
-                      " is the result of extracting that archive.")
+                      help="Install an extension contained in FILENAME "
+                      " (such as pmon.tar.gz), or from a DIRECTORY in which "
+                      "it has been unpacked.")
     parser.add_option('--uninstall', metavar="EXTENSION",
                       help="Uninstall the extension with name EXTENSION.")
     parser.add_option("--config", metavar="CONFIG_FILE",

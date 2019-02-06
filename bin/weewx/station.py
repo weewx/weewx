@@ -33,7 +33,7 @@ class StationInfo(object):
             altitude_t = weeutil.weeutil.option_as_list(stn_dict.get('altitude', (None, None)))
             try:
                 self.altitude_vt = weewx.units.ValueTuple(float(altitude_t[0]), altitude_t[1], "group_altitude")
-            except KeyError, e:
+            except KeyError as e:
                 raise weewx.ViolatedPrecondition("Value 'altitude' needs a unit (%s)" % e)
 
         if console and hasattr(console, 'hardware_name'):

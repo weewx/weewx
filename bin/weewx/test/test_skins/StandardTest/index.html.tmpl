@@ -590,6 +590,11 @@
     </tr>
     <tr>
       <td align="right">Example from customizing guide<br/>
+      (&quot;\$day.outTemp.max.format(add_label=False)\$unit.label.outTemp&quot;)</td>
+      <td align="left">$day.outTemp.max.format(add_label=False)$unit.label.outTemp</td>
+    </tr>
+    <tr>
+      <td align="right">Test the above with backwards compatibility<br/>
       (&quot;\$day.outTemp.max.formatted\$unit.label.outTemp&quot;)</td>
       <td align="left">$day.outTemp.max.formatted$unit.label.outTemp</td>
     </tr>
@@ -628,7 +633,71 @@
   </table>
 
   <hr/>
-  
+
+  <h1>Test for formatting examples in the Customizing Guide</h1>
+  <table>
+      <tr>
+        <td align="right">\$current.outTemp</td>
+        <td align="left">$current.outTemp</td>
+      </tr>
+      <tr>
+        <td align="right">\$current.outTemp.format</td>
+        <td align="left">$current.outTemp.format</td>
+      </tr>
+      <tr>
+        <td align="right">\$current.outTemp.format()</td>
+        <td align="left">$current.outTemp.format()</td>
+      </tr>
+      <tr>
+        <td align="right">\$current.outTemp.format(format_string="%.3f")</td>
+        <td align="left">$current.outTemp.format(format_string="%.3f")</td>
+      </tr>
+      <tr>
+        <td align="right">\$current.outTemp.format("%.3f")</td>
+        <td align="left">$current.outTemp.format("%.3f")</td>
+      </tr>
+      <tr>
+        <td align="right">\$current.outTemp.format(add_label=False)</td>
+        <td align="left">$current.outTemp.format(add_label=False)</td>
+      </tr>
+      <tr>
+        <td align="right">\$current.UV</td>
+        <td align="left">$current.UV</td>
+      </tr>
+      <tr>
+        <td align="right">\$current.UV.format(None_string="No UV")</td>
+        <td align="left">$current.UV.format(None_string="No UV")</td>
+      </tr>
+      <tr>
+        <td align="right">\$current.windDir</td>
+        <td align="left">$current.windDir</td>
+      </tr>
+      <tr>
+        <td align="right">\$current.windDir.ordinal_compass</td>
+        <td align="left">$current.windDir.ordinal_compass</td>
+      </tr>
+      <tr>
+        <td align="right">\$current.dateTime</td>
+        <td align="left">$current.dateTime</td>
+      </tr>
+      <tr>
+        <td align="right">\$current.dateTime.format(format_string="%H:%M")</td>
+        <td align="left">$current.dateTime.format(format_string="%H:%M")</td>
+      </tr>
+      <tr>
+        <td align="right">\$current.dateTime.format("%H:%M")</td>
+        <td align="left">$current.dateTime.format("%H:%M")</td>
+      </tr>
+      <tr>
+        <td align="right">\$current.dateTime.raw</td>
+        <td align="left">$current.dateTime.raw</td>
+      </tr>
+      <tr>
+        <td align="right">\$current.outTemp.raw</td>
+        <td align="left">$current.outTemp.raw</td>
+      </tr>
+  </table>
+    
   <h1>Day images</h1>
   <p>
   <img src="daytempdew.png" alt="temperatures" />

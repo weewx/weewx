@@ -1,0 +1,159 @@
+## Copyright 2009-2018 Tom Keffer, Matthew Wall
+## Distributed under terms of GPLv3.  See LICENSE.txt for your rights.
+#errorCatcher Echo
+##
+## Specifying an encoding of UTF-8 is usually safe:
+#encoding UTF-8
+##
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    ## This choice should match the #encoding directive above
+    <meta charset="UTF-8">
+    <title>$station.location</title>
+    <link rel="icon" type="image/png" href="favicon.ico" />
+    <link rel="stylesheet" type="text/css" href="seasons.css"/>
+    <script src="seasons.js"></script>
+  </head>
+
+  <body onload="setup();">
+    #include "titlebar.inc"
+    
+    <div id="contents">
+      <div id="widget_group">
+        #include "current.inc"
+        #include "sunmoon.inc"
+        #include "hilo.inc"
+        #include "sensors.inc"
+        #include "about.inc"
+        #include "radar.inc"
+        #include "satellite.inc"
+        #include "map.inc"
+      </div>
+
+      <div id="plot_group">
+        <div id="history_widget" class="widget">
+          <div id="plot_title" class="widget_title">History:&nbsp;&nbsp;
+            <a class="button_selected" id="button_history_day"
+               onclick="choose_history('day')">Day</a>
+            <a class="button" id="button_history_week"
+               onclick="choose_history('week')">Week</a>
+            <a class="button" id="button_history_month"
+               onclick="choose_history('month')">Month</a>
+            <a class="button" id="button_history_year"
+               onclick="choose_history('year')">Year</a>
+          </div>
+          <div id="history_day" class="plot_container">
+            <img src="daybarometer.png" alt="$obs.label.barometer"/>
+            <img src="daytempdew.png"   alt="$obs.label.outTemp" />
+            <img src="daytempfeel.png"  alt="$obs.label.feel" />
+            <img src="dayhum.png"       alt="$obs.label.outHumidity" />
+            <img src="daywind.png"      alt="$obs.label.windSpeed" />
+            <img src="daywinddir.png"   alt="$obs.label.windDir" />
+            <img src="daywindvec.png"   alt="$obs.label.windvec" />
+            <img src="dayrain.png"      alt="$obs.label.rain" />
+            #if $day.UV.has_data
+            <img src="dayuv.png"        alt="$obs.label.UV" />
+            #end if
+            #if $day.radiation.has_data
+            <img src="dayradiation.png" alt="$obs.label.radiation" />
+            #end if
+            #if $day.inTemp.has_data
+            <img src="daytempin.png"    alt="$obs.label.inTemp" />
+            #end if
+            #if $day.extraTemp1.has_data or $day.extraTemp2.has_data or $day.extraTemp3.has_data
+            <img src="daytemp.png"      alt="$obs.label.extraTemp1" />
+            #end if
+            #if $day.rxCheckPercent.has_data
+            <img src="dayrx.png"        alt="$obs.label.rxCheckPercent"/>
+            #end if
+          </div>
+          <div id="history_week" class="plot_container" style="display:none">
+            <img src="weekbarometer.png" alt="$obs.label.barometer"/>
+            <img src="weektempdew.png"   alt="$obs.label.outTemp" />
+            <img src="weektempfeel.png"  alt="$obs.label.feel" />
+            <img src="weekhum.png"       alt="$obs.label.outHumidity" />
+            <img src="weekwind.png"      alt="$obs.label.windSpeed" />
+            <img src="weekwinddir.png"   alt="$obs.label.windDir" />
+            <img src="weekwindvec.png"   alt="$obs.label.windvec" />
+            <img src="weekrain.png"      alt="$obs.label.rain" />
+            #if $week.UV.has_data
+            <img src="weekuv.png"        alt="$obs.label.UV" />
+            #end if
+            #if $week.radiation.has_data
+            <img src="weekradiation.png" alt="$obs.label.radiation" />
+            #end if
+            #if $week.inTemp.has_data
+            <img src="weektempin.png"    alt="$obs.label.inTemp" />
+            #end if
+            #if $week.extraTemp1.has_data or $week.extraTemp2.has_data or $week.extraTemp3.has_data
+            <img src="weektemp.png"      alt="$obs.label.extraTemp1" />
+            #end if
+            #if $week.rxCheckPercent.has_data
+            <img src="weekrx.png"        alt="$obs.label.rxCheckPercent"/>
+            #end if
+          </div>
+          <div id="history_month" class="plot_container" style="display:none">
+            <img src="monthbarometer.png" alt="$obs.label.barometer"/>
+            <img src="monthtempdew.png"   alt="$obs.label.outTemp" />
+            <img src="monthtempfeel.png"  alt="$obs.label.feel" />
+            <img src="monthhum.png"       alt="$obs.label.outHumidity" />
+            <img src="monthwind.png"      alt="$obs.label.windSpeed" />
+            <img src="monthwinddir.png"   alt="$obs.label.windDir" />
+            <img src="monthwindvec.png"   alt="$obs.label.windvec" />
+            <img src="monthrain.png"      alt="$obs.label.rain" />
+            #if $month.UV.has_data
+            <img src="monthuv.png"        alt="$obs.label.UV" />
+            #end if
+            #if $month.radiation.has_data
+            <img src="monthradiation.png" alt="$obs.label.radiation" />
+            #end if
+            #if $month.inTemp.has_data
+            <img src="monthtempin.png"    alt="$obs.label.inTemp" />
+            #end if
+            #if $month.extraTemp1.has_data or $month.extraTemp2.has_data or $month.extraTemp3.has_data
+            <img src="monthtemp.png"      alt="$obs.label.extraTemp1" />
+            #end if
+            #if $month.rxCheckPercent.has_data
+            <img src="monthrx.png"        alt="$obs.label.rxCheckPercent"/>
+            #end if
+          </div>
+          <div id="history_year" class="plot_container" style="display:none">
+            <img src="yearbarometer.png" alt="$obs.label.barometer"/>
+            <img src="yeartempdew.png"   alt="$obs.label.outTemp" />
+            <img src="yeartempfeel.png"  alt="$obs.label.feel" />
+            <img src="yearhum.png"       alt="$obs.label.outHumidity" />
+            <img src="yearwind.png"      alt="$obs.label.windSpeed" />
+            <img src="yearwinddir.png"   alt="$obs.label.windDir" />
+            <img src="yearwindvec.png"   alt="$obs.label.windvec" />
+            <img src="yearrain.png"      alt="$obs.label.rain" />
+            #if $year.UV.has_data
+            <img src="yearuv.png"        alt="$obs.label.UV" />
+            #end if
+            #if $year.radiation.has_data
+            <img src="yearradiation.png" alt="$obs.label.radiation" />
+            #end if
+            #if $year.inTemp.has_data
+            <img src="yeartempin.png"    alt="$obs.label.inTemp" />
+            #end if
+            #if $year.extraTemp1.has_data or $year.extraTemp2.has_data or $year.extraTemp3.has_data
+            <img src="yeartemp.png"      alt="$obs.label.extraTemp1" />
+            #end if
+            #if $year.rxCheckPercent.has_data
+            <img src="yearrx.png"        alt="$obs.label.rxCheckPercent"/>
+            #end if
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <p class="footnote">
+      This station is controlled by <a href="http://weewx.com/">WeeWX</a>, an
+      experimental weather software system written in Python.
+    </p>
+
+    #include "analytics.inc"
+
+</body>
+
+</html>

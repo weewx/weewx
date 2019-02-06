@@ -1,0 +1,66 @@
+## Copyright 2017 Tom Keffer, Matthew Wall
+## Distributed under terms of GPLv3.  See LICENSE.txt for your rights.
+#errorCatcher Echo
+#encoding UTF-8
+
+#def period_plots($period, $label)
+<div id="history_${label}" class="plot_containter" style="display:none">
+#for $x in [
+{'data': $period.rxCheckPercent, 'img': 'rx', 'alt': 'signal'},
+{'data': $period.consBatteryVoltage, 'img': 'volt', 'alt': 'voltage'}
+]
+#if $x['data'].has_data
+#set $img = "%s%s.png" % ($label, $x['img'])
+<img src="$img" alt="$x['alt']" />
+#end if
+#end for
+</div>
+#end def
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>$station.location Telemetry</title>
+    <link rel="icon" type="image/png" href="favicon.ico" />
+    <link rel="stylesheet" type="text/css" href="seasons.css"/>
+    <script src="seasons.js"></script>
+  </head>
+
+  <body onload="setup();">
+    #include "titlebar.inc"
+    
+    <div id="contents">
+      <p><a href="index.html">&#10096; Current Conditions</a></p>
+
+      <div id="widget_group">
+        #include "sensors.inc"
+      </div>
+
+      <div id="plot_group">
+        <div id="history_widget" class="widget">
+          <div id="plot_title" class="widget_title">Telemetry:&nbsp;&nbsp;
+            <a class="button_selected" id="button_history_day"
+               onclick="choose_history('day')">Day</a>
+            <a class="button" id="button_history_week"
+               onclick="choose_history('week')">Week</a>
+            <a class="button" id="button_history_month"
+               onclick="choose_history('month')">Month</a>
+            <a class="button" id="button_history_year"
+               onclick="choose_history('year')">Year</a>
+          </div>
+          $period_plots($day, 'day')
+          
+          $period_plots($week, 'week')
+
+          $period_plots($month, 'month')
+
+          $period_plots($year, 'year')
+        </div>
+      </div>
+
+      #include "identifier.inc"
+    </div>
+
+  </body>
+</html>

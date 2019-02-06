@@ -9,31 +9,31 @@ import syslog
 import weewx
 
 class AbstractDevice(object):
-    """Device drivers should inherit from this class."""    
+    """Device drivers should inherit from this class."""
 
     @property
     def hardware_name(self):
         raise NotImplementedError("Property 'hardware_name' not implemented")
-    
+
     @property
     def archive_interval(self):
         raise NotImplementedError("Property 'archive_interval' not implemented")
 
     def genStartupRecords(self, last_ts):
         return self.genArchiveRecords(last_ts)
-    
+
     def genLoopPackets(self):
         raise NotImplementedError("Method 'genLoopPackets' not implemented")
-    
+
     def genArchiveRecords(self, lastgood_ts):
         raise NotImplementedError("Method 'genArchiveRecords' not implemented")
-        
+
     def getTime(self):
         raise NotImplementedError("Method 'getTime' not implemented")
-    
+
     def setTime(self):
         raise NotImplementedError("Method 'setTime' not implemented")
-    
+
     def closePort(self):
         pass
 
@@ -50,13 +50,13 @@ class AbstractConfigurator(object):
 
     @property
     def usage(self):
-        return "%prog [config_file] [options] [--debug] [--help]"
+        return "%prog [config_file] [options] [-y] [--debug] [--help]"
 
     @property
     def epilog(self):
         return "Be sure to stop weewx first before using. Mutating actions will"\
             " request confirmation before proceeding.\n"
-                
+
 
     def configure(self, config_dict):
         parser = self.get_parser()
@@ -97,9 +97,9 @@ class AbstractConfEditor(object):
     @property
     def default_stanza(self):
         """Return a plain text stanza. This will look something like:
-        
+
 [Acme]
-    # This section is for the Acme weather station 
+    # This section is for the Acme weather station
 
     # The station model
     model = acme100
@@ -117,10 +117,10 @@ class AbstractConfEditor(object):
         that will work with the current version of the device driver.
 
         The default behavior is to return the original stanza, unmodified.
-        
+
         Derived classes should override this if they need to modify previous
         configuration options or warn about deprecated or harmful options.
-        
+
         The return value should be a long string. See default_stanza above
         for an example string stanza."""
         return self.default_stanza if orig_stanza is None else orig_stanza
@@ -131,6 +131,8 @@ class AbstractConfEditor(object):
         return dict()
 
     def _prompt(self, label, dflt=None, opts=None):
+        if label in self.existing_options:
+            dflt = self.existing_options[label]
         import weecfg
         val = weecfg.prompt_with_options(label, dflt, opts)
         del weecfg

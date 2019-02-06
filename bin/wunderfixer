@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #===============================================================================
-# Copyright (c) 2009, 2010, 2011, 2012, 2016 Tom Keffer <tkeffer@gmail.com>
+# Copyright (c) 2009, 2010, 2011, 2012, 2016, 2018 Tom Keffer <tkeffer@gmail.com>
 # 
 # This software may be used and redistributed under the
 # terms of the GNU General Public License version 3.0
@@ -17,6 +17,9 @@ Weather Underground with the missing data.
 
 CHANGE HISTORY
 --------------------------------
+1.2.0 11/12/18
+Now honors an [[[Essentials]]] section in the configuration file.
+
 1.1.0 10/11/16
 Now uses restx API to publish the requests.
 Standardised option syntax.
@@ -59,7 +62,7 @@ import time
 import urllib2
 
 import weecfg
-from weeutil.weeutil import timestamp_to_string
+from weeutil.weeutil import timestamp_to_string, search_up
 import weewx.manager
 import weewx.restx
 
@@ -78,7 +81,7 @@ a new record on the Weather Underground with the missing data.
 Be sure to use the --test switch first to see whether you like what it 
 proposes!"""
 
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 
 # The number of seconds difference in the timestamp between two records
 # and still have them considered to be the same: 
@@ -166,7 +169,7 @@ def main() :
         _ans = 'n'
 
     if options.query:
-        options.verbose = True;
+        options.verbose = True
 
     if options.date:
         date_tt = time.strptime(options.date, "%Y-%m-%d")
@@ -177,11 +180,13 @@ def main() :
 
     epsilon = options.epsilon
     
+    _essentials_dict = search_up(config_dict['StdRESTful']['Wunderground'], 'Essentials', {})
+    wlog.slog(syslog.LOG_DEBUG, "wunderground: WU essentials: %s" % _essentials_dict)
+
     if options.verbose:
         print "Weather Underground Station:  ", options.station
         print "Date to check:                ", date_date
         wlog.slog(syslog.LOG_INFO, "Checking Weather Underground station '%s' data for date %s" % (options.station, date_date))
-
 
     # Get all the time stamps in the archive for the given day:
     archive_results = getArchiveDayTimeStamps(dbmanager_t, date_date)
@@ -196,6 +201,7 @@ def main() :
                            password=options.password,
                            server_url=weewx.restx.StdWunderground.pws_url,
                            protocol_name = "wunderfixer",
+                           essentials=_essentials_dict,
                            softwaretype = "wunderfixer-%s" % __version__)
 
     try:
@@ -261,16 +267,16 @@ def main() :
                 no_published += 1
                 print >>sys.stdout, " ...published."
                 wlog.slog(syslog.LOG_DEBUG, "%s ...published" % timestamp_to_string(record['dateTime']))
-            except weewx.restx.BadLogin, e:
+            except weewx.restx.BadLogin as e:
                 print >>sys.stderr, "Bad login"
                 print >>sys.stderr, e
                 exit("Bad login")                
-            except weewx.restx.FailedPost, e:
+            except weewx.restx.FailedPost as e:
                 print >>sys.stderr, e
                 print >>sys.stderr, "Aborted."
                 wlog.slog(syslog.LOG_ERR, "%s ...error %s. Aborting." % (timestamp_to_string(record['dateTime']), e))
                 exit("Failed post")
-            except IOError, e:
+            except IOError as e:
                 print >>sys.stderr, " ... not published."
                 print "Reason: ", e
                 wlog.slog(syslog.LOG_ERR, "%s ...not published. Reason '%s'" % (timestamp_to_string(record['dateTime']), e))
@@ -314,11 +320,11 @@ class WunderStation(weewx.restx.AmbientThread):
         try :
             # Hit the weather underground site:
             _wudata = urllib2.urlopen(_url)
-        except urllib2.URLError, e :
+        except urllib2.URLError as e :
             print >>sys.stderr, "Unable to open Weather Underground station " + self.station, " or ", e
             wlog.slog(syslog.LOG_ERR, "Unable to open Weather Underground station %s or %s" % (self.station, e))
             raise
-        except socket.timeout, e:
+        except socket.timeout as e:
             print >>sys.stderr, "Socket timeout for Weather Underground station " + self.station
             wlog.slog(syslog.LOG_ERR, "Socket timeout for Weather Underground station %s" % self.station)
             raise

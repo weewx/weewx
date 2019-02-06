@@ -47,13 +47,6 @@ install: build
 	cp -r $(SRC)/util/rsyslog.d $(DST_CFGDIR)
 	cp -r $(SRC)/util/udev $(DST_CFGDIR)
 
-# remove stuff that should not go out
-	rm $(DST_CFGDIR)/skins/Standard/backgrounds/butterfly.jpg
-	rm $(DST_CFGDIR)/skins/Standard/backgrounds/drops.gif
-	rm $(DST_CFGDIR)/skins/Standard/backgrounds/flower.jpg
-	rm $(DST_CFGDIR)/skins/Standard/backgrounds/leaf.jpg
-	rm $(DST_CFGDIR)/skins/Standard/backgrounds/night.gif
-
 # patch paths in files we care about
 	cat $(SRC)/weewx.conf | sed \
  -e 's%^WEEWX_ROOT =.*%WEEWX_ROOT = /%' \

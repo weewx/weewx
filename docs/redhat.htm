@@ -1,17 +1,15 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<!DOCTYPE html>
+<html lang="en">
 <head>
     <title>weewx: Installation on Redhat systems</title>
-    <meta http-equiv="Content-Language" content="en-us"/>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <link rel="stylesheet" href="css/weewx_docs.css"/>
     <link rel="icon" href="images/favicon.png" type="image/png"/>
 </head>
 <body>
 
-<h1 class="title">weeWX: Installation on Redhat-based systems
+<h1 class="title">WeeWX: Installation on Redhat-based systems
     <span class='os-icons'>      
         <img class='logo' src='images/logo-redhat.png' alt=""/>
         <img class='logo' src='images/logo-centos.png' alt=""/>
@@ -20,7 +18,7 @@
 </h1>
 
 <p>
-    This is a guide to installing weeWX from an RPM package on systems such as Redhat, CentOS or Fedora.
+    This is a guide to installing WeeWX from an RPM package on systems such as Redhat, CentOS or Fedora.
 </p>
 
 <h2>Download</h2>
@@ -55,7 +53,7 @@ sudo easy_install pyusb</pre>
 
 <h2>Status</h2>
 <p>
-    Look in the system log for messages from weeWX.
+    Look in the system log for messages from WeeWX.
 </p>
 <pre class='tty cmd'>sudo tail -f /var/log/messages</pre>
 
@@ -68,14 +66,14 @@ If your hardware supports hardware archiving, then how long you wait will depend
 
 <h2>Configure</h2>
 <p>
-    The default installation uses Simulator as the <span class='code'>station_type</span>.  To use real hardware, stop weeWX, change to the actual station type and station parameters, delete the simulation data, then restart weeWX:</p>
+    The default installation uses Simulator as the <span class='code'>station_type</span>.  To use real hardware, stop WeeWX, change to the actual station type and station parameters, delete the simulation data, then restart WeeWX:</p>
 <pre class='tty cmd'>sudo /etc/init.d/weewx stop
 sudo wee_config --reconfigure
 sudo rm /var/lib/weewx/weewx.sdb
 sudo /etc/init.d/weewx start</pre>
 
 <h2>Start/Stop</h2>
-<p>To start/stop weeWX:</p>
+<p>To start/stop WeeWX:</p>
 <pre class='tty cmd'>sudo /etc/init.d/weewx start
 sudo /etc/init.d/weewx stop</pre>
 
@@ -88,7 +86,7 @@ sudo /etc/init.d/weewx stop</pre>
 </p>
 
 <h2>Uninstall</h2>
-<p>To uninstall weeWX, removing configuration files but retaining data:</p>
+<p>To uninstall WeeWX, removing configuration files but retaining data:</p>
 <pre class='tty cmd'>sudo rpm -e weewx</pre>
 <p>To remove data:</p>
 <pre class='tty cmd'>sudo rm -r /var/lib/weewx

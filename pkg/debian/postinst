@@ -1,6 +1,6 @@
 #!/bin/sh
 # postinst script for weewx debian package
-# Copyright 2013 Matthew Wall
+# Copyright 2013-2019 Matthew Wall
 #
 # ways this script might be invoked:
 #

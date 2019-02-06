@@ -1,4 +1,4 @@
-xstats - weeWX extension that provides extended statistics for reports
+xstats - WeeWX extension that provides extended statistics for reports
 Copyright 2014 Matthew Wall
 
 This search list extension offers extra tags:
@@ -16,7 +16,20 @@ This search list extension offers extra tags:
                 thirty days ago.  For example, "what is the maximum wind
                 speed in the last thirty days?"
                 $thirty_day.wind.max
-
+                
+  'last_month': Statistics for last calendar month, this is useful in
+                getting statistics such as the maximum/minimum records.
+                $last_month.outTemp.max at $last_month.outTemp.maxtime
+                $last_month.outTemp.min at $last_month.outTemp.mintime
+    
+  'last_year':  Statistics for last calendar year, this is useful for
+                things like total rainfall for last year.
+                $last_year.rain.sum
+  
+  'last_year_todate': Statistics of last calendar year until this time
+                      last year. This is useful for comprisons of rain
+                      fall up to this time last year.
+                      $last_year_todate.rain.sum
 
 Installation instructions
 
@@ -24,7 +37,7 @@ Installation instructions
 
 wee_extension --install=/home/weewx/examples/xstats
 
-2) restart weeWX
+2) restart WeeWX
 
 sudo /etc/init.d/weewx stop
 sudo /etc/init.d/weewx start
@@ -35,11 +48,11 @@ extended statistics.
 
 Manual installation instructions
 
-1) copy files to the weeWX user directory
+1) copy files to the WeeWX user directory
 
 cp bin/user/xstats.py /home/weewx/bin/user
 
-2) in the weeWX configuration file, modify the report section in which you 
+2) in the WeeWX configuration file, modify the report section in which you 
 would like to use the extended statistics. For example, for the StandardReport
 
 [StdReport]
@@ -48,7 +61,7 @@ would like to use the extended statistics. For example, for the StandardReport
         [[[CheetahGenerator]]]
             search_list_extensions = user.xstats.ExtendedStatistics
 
-3) restart weeWX
+3) restart WeeWX
 
 sudo /etc/init.d/weewx stop
 sudo /etc/init.d/weewx start

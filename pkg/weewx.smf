@@ -64,7 +64,7 @@
     <template>
       <common_name>
         <loctext xml:lang="C">
-          weeWX Weather Server and Publisher
+          WeeWX Weather Server and Publisher
         </loctext>
       </common_name>
     </template>

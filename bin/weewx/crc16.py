@@ -5,6 +5,8 @@
 #
 """Routines for calculating a 16 bit CRC check. """
 
+from functools import reduce
+
 _table=[
 0x0000,  0x1021,  0x2042,  0x3063,  0x4084,  0x50a5,  0x60c6,  0x70e7,  # 0x00
 0x8108,  0x9129,  0xa14a,  0xb16b,  0xc18c,  0xd1ad,  0xe1ce,  0xf1ef,  # 0x08  
@@ -40,16 +42,26 @@ _table=[
 0x6e17,  0x7e36,  0x4e55,  0x5e74,  0x2e93,  0x3eb2,  0x0ed1,  0x1ef0   # 0xF8
 ]
 
-def crc16(string, crc_start=0):
+
+def crc16(bytes, crc_start=0):
     """ Calculate CRC16 sum"""
 
-    crc_sum = reduce(lambda crc, ch : (_table[(crc >> 8) ^ ord(ch)] ^ (crc << 8)) & 0xffff, string, crc_start)
+    # We need something that returns integers when iterated over.
+    try:
+        # Python 2
+        byte_iter = [ord(x) for x in bytes]
+    except TypeError:
+        # Python 3
+        byte_iter = bytes
+
+    crc_sum = reduce(lambda crc, ch : (_table[(crc >> 8) ^ ch] ^ (crc << 8)) & 0xffff, byte_iter, crc_start)
 
     return crc_sum
+
 
 if __name__ == '__main__' :
     import struct
     # This is the example given in the Davis documentation:
-    test_str = struct.pack("<HH", 0xCEC6, 0x03A2)
-    crc = crc16(test_str)
+    test_bytes = struct.pack("<HH", 0xCEC6, 0x03A2)
+    crc = crc16(test_bytes)
     assert(crc==0xe2b4)

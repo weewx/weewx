@@ -1555,7 +1555,7 @@ class TE923Station(object):
         try:
             self.devh.claimInterface(interface)
             self.devh.setAltInterface(interface)
-        except usb.USBError, e:
+        except usb.USBError as e:
             self.close()
             logcrt("Unable to claim USB interface %s: %s" % (interface, e))
             raise weewx.WeeWxIOError(e)
@@ -1569,7 +1569,7 @@ class TE923Station(object):
     def close(self):
         try:
             self.devh.releaseInterface()
-        except (ValueError, usb.USBError), e:
+        except (ValueError, usb.USBError) as e:
             logerr("release interface failed: %s" % e)
         self.devh = None
 
@@ -1614,7 +1614,7 @@ class TE923Station(object):
                     rbuf.extend(buf[1:1 + nbytes])
                 if len(rbuf) >= 34:
                     break
-            except usb.USBError, e:
+            except usb.USBError as e:
                 errmsg = repr(e)
                 if not ('No data available' in errmsg or 'No error' in errmsg):
                     raise
@@ -1704,7 +1704,7 @@ class TE923Station(object):
                     rbuf.extend(tmpbuf[1:1 + nbytes])
                 if len(rbuf) >= 1:
                     break
-            except usb.USBError, e:
+            except usb.USBError as e:
                 errmsg = repr(e)
                 if not ('No data available' in errmsg or 'No error' in errmsg):
                     raise
@@ -1733,7 +1733,7 @@ class TE923Station(object):
                 if DEBUG_READ:
                     logdbg("read: %s" % _fmt(buf))
                 return buf
-            except (BadRead, BadHeader, usb.USBError), e:
+            except (BadRead, BadHeader, usb.USBError) as e:
                 logerr("Failed attempt %d of %d to read data: %s" %
                        (cnt + 1, self.max_tries, e))
                 logdbg("Waiting %d seconds before retry" % self.retry_wait)
@@ -1749,7 +1749,7 @@ class TE923Station(object):
             try:
                 self._raw_write(addr, buf)
                 return
-            except (BadWrite, BadHeader, usb.USBError), e:
+            except (BadWrite, BadHeader, usb.USBError) as e:
                 logerr("Failed attempt %d of %d to write data: %s" %
                        (cnt + 1, self.max_tries, e))
                 logdbg("Waiting %d seconds before retry" % self.retry_wait)

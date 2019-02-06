@@ -1,17 +1,15 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<!DOCTYPE html>
+<html lang="en">
 <head>
     <title>weewx: Installation on Debian systems</title>
-    <meta http-equiv="Content-Language" content="en-us"/>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <link rel="stylesheet" href="css/weewx_docs.css"/>
     <link rel="icon" href="images/favicon.png" type="image/png"/>
 </head>
 <body>
 
-<h1 class="title">weeWX: Installation on Debian-based systems
+<h1 class="title">WeeWX: Installation on Debian-based systems
     <span class='os-icons'>
         <img class='logo' src='images/logo-debian.png' alt=""/>
         <img class='logo' src='images/logo-ubuntu.png' alt=""/>
@@ -20,27 +18,27 @@
     </span>
 </h1>
 
-<p>This is a guide to installing weeWX from a DEB package on Debian-based systems, including Ubuntu, Mint, and Raspbian.
+<p>This is a guide to installing WeeWX from a DEB package on Debian-based systems, including Ubuntu, Mint, and Raspbian.
 </p>
 
 <h2>Configure apt</h2>
-<p>Tell <span class="code">apt</span> where to find the weeWX releases.  This only has to be done once - the first time you install weeWX.</p>
+<p>Tell <span class="code">apt</span> where to find the WeeWX releases.  This only has to be done once - the first time you install WeeWX.</p>
 
 <pre class='tty cmd'>wget -qO - http://weewx.com/keys.html | sudo apt-key add -
 wget -qO - http://weewx.com/apt/weewx.list | sudo tee /etc/apt/sources.list.d/weewx.list</pre>
 
 <h2>Install</h2>
-<p>Use <span class="code">apt-get</span> to install weeWX. The installer will prompt for a location, latitude/longitude, altitude, station type, and parameters specific to your station hardware.
+<p>Use <span class="code">apt-get</span> to install WeeWX. The installer will prompt for a location, latitude/longitude, altitude, station type, and parameters specific to your station hardware.
 </p>
 
 <pre class='tty cmd'>sudo apt-get update
 sudo apt-get install weewx</pre>
 
-<p>When you are done, weeWX will be running in the background as a daemon.
+<p>When you are done, WeeWX will be running in the background as a daemon.
 </p>
 
 <h2>Status</h2>
-<p>To make sure things are running properly look in the system log for messages from weeWX.
+<p>To make sure things are running properly look in the system log for messages from WeeWX.
 </p>
 <pre class='tty cmd'>sudo tail -f /var/log/syslog</pre>
 
@@ -58,15 +56,15 @@ If your hardware supports hardware archiving, then how long you wait will depend
 </p>
 
 <h2>Start/Stop</h2>
-<p>To start/stop weeWX:</p>
+<p>To start/stop WeeWX:</p>
 <pre class='tty cmd'>sudo /etc/init.d/weewx start
 sudo /etc/init.d/weewx stop</pre>
 
 <h2>Uninstall</h2>
-<p>To uninstall weeWX but retain configuration files and data:
+<p>To uninstall WeeWX but retain configuration files and data:
 </p>
 <pre class='tty cmd'>sudo apt-get remove weewx</pre>
-<p>To uninstall weeWX, removing configuration files but retaining data:
+<p>To uninstall WeeWX, removing configuration files but retaining data:
 </p>
 <pre class='tty cmd'>sudo apt-get purge weewx</pre>
 <p>To remove data:</p>

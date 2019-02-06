@@ -14,7 +14,7 @@ my $STARTUPS = 'engine: startups';
 my $HUP_RESTARTS = 'engine: restart from HUP';
 my $KBD_INTERRUPTS = 'engine: keyboard interrupts';
 my $RESTARTS = 'engine: restarts';
-my $GARBAGE = 'engine: garbage collected';
+my $GARBAGE = 'engine: Garbage collected';
 my $ARCHIVE_RECORDS_ADDED = 'archive: records added';
 my $IMAGES_GENERATED = 'imagegenerator: images generated';
 my $FILES_GENERATED = 'filegenerator: files generated';
@@ -128,7 +128,7 @@ while(defined($_ = <STDIN>)) {
         $counts{$KBD_INTERRUPTS} += 1;
     } elsif (/engine: retrying/) {
         $counts{$RESTARTS} += 1;
-    } elsif (/engine: garbage collected (\d+) objects/) {
+    } elsif (/engine: Garbage collected (\d+) objects/) {
         $counts{$GARBAGE} += $1;
     } elsif (/engine: Clock error is ([0-9,.-]+)/) {
         $clocksum += $1;
