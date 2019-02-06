@@ -46,13 +46,13 @@ should only have to implement a few functions. In particular,
    often than 'post_interval'. Both of these can be set in the constructor of
    RESTThread.
    
- - post_request(self, request). This function takes a urllib2.Request object
+ - post_request(self, request, data). This function takes a urllib.request.Request object
    and is responsible for performing the HTTP GET or POST. The default version
-   simply uses urllib2.urlopen(request) and returns the result. If the post
+   simply uses urllib.request.urlopen(request) and returns the result. If the post
    could raise an unusual exception, override this function and catch the
    exception. See the WOWThread implementation for an example.
    
- - check_response(). After an HTTP request gets posted, the webserver sends
+ - check_response(self, response). After an HTTP request gets posted, the webserver sends
    back a "response." This response may contain clues as to whether the post
    worked.  By overriding check_response() you can look for these clues. For
    example, the station registry checks all lines in the response, looking for
@@ -66,20 +66,20 @@ In unusual cases, you might also have to implement the following:
    See the CWOP version, CWOPThread.process_record(), for an example that
    uses sockets. 
 """
-from __future__ import with_statement
-from six.moves import queue
 import datetime
 import hashlib
-from six.moves import http_client
 import platform
 import re
 import socket
-import sys
+import six
 import syslog
 import threading
 import time
-import urllib
-import urllib2
+
+#Python 2/3 compatiblity shims
+from six.moves import queue
+from six.moves import http_client
+from six.moves import urllib
 
 import weedb
 import weeutil.weeutil
@@ -95,11 +95,11 @@ class FailedPost(IOError):
     """Raised when a post fails after trying the max number of allowed times"""
 
 
-class AbortedPost(StandardError):
+class AbortedPost(Exception):
     """Raised when a post is aborted by the client."""
 
 
-class BadLogin(StandardError):
+class BadLogin(Exception):
     """Raised when login information is bad or missing."""
 
 
@@ -155,7 +155,7 @@ class RESTThread(threading.Thread):
     def __init__(self, queue, protocol_name,
                  essentials={},
                  manager_dict=None,
-                 post_interval=None, max_backlog=sys.maxint, stale=None,
+                 post_interval=None, max_backlog=six.MAXSIZE, stale=None,
                  log_success=True, log_failure=True,
                  timeout=10, max_tries=3, retry_wait=5, retry_login=3600,
                  softwaretype="weewx-%s" % weewx.__version__,
@@ -180,7 +180,7 @@ class RESTThread(threading.Thread):
           
           max_backlog: How many records are allowed to accumulate in the queue
           before the queue is trimmed.
-          Default is sys.maxint (essentially, allow any number).
+          Default is six.MAXSIZE (essentially, allow any number).
           
           stale: How old a record can be and still considered useful.
           Default is None (never becomes too old).
@@ -414,7 +414,7 @@ class RESTThread(threading.Thread):
         
     def get_request(self, url):
         """Get a request object. This can be overridden to add any special headers."""
-        _request = urllib2.Request(url)
+        _request = urllib.request.Request(url)
         _request.add_header("User-Agent", "weewx/%s" % weewx.__version__)
         return _request
 
@@ -424,7 +424,7 @@ class RESTThread(threading.Thread):
         Attempts to post the request object up to max_tries times. 
         Catches a set of generic exceptions.
         
-        request: An instance of urllib2.Request
+        request: An instance of urllib.request.Request
         
         data: The body of the POST. If not given, the request will be done as a GET.
         """
@@ -451,7 +451,7 @@ class RESTThread(threading.Thread):
                 # Provide method for derived classes to behave otherwise if
                 # necessary.
                 self.handle_code(_response.code, _count + 1)
-            except (urllib2.URLError, socket.error, http_client.HTTPException) as e:
+            except (urllib.error.URLError, socket.error, http_client.HTTPException) as e:
                 # An exception was thrown. By default, log it and try again.
                 # Provide method for derived classes to behave otherwise if
                 # necessary.
@@ -493,19 +493,12 @@ class RESTThread(threading.Thread):
         Specializing versions can can catch any unusual exceptions that might
         get raised by their protocol.
         
-        request: An instance of urllib2.Request
+        request: An instance of urllib.request.Request
         
         data: If given, the request will be done as a POST. Otherwise, 
         as a GET. [optional]
         """
-        try:
-            # Python 2.5 and earlier do not have a "timeout" parameter.
-            # Including one could cause a TypeError exception. Be prepared
-            # to catch it.
-            _response = urllib2.urlopen(request, data=data, timeout=self.timeout)
-        except TypeError:
-            # Must be Python 2.5 or early. Use a simple, unadorned request
-            _response = urllib2.urlopen(request, data=data)
+        _response = urllib.request.urlopen(request, data=data, timeout=self.timeout)
         return _response
 
     def skip_this_post(self, time_ts):
@@ -776,7 +769,7 @@ class AmbientThread(RESTThread):
                  post_indoor_observations=False,
                  protocol_name="Unknown-Ambient",
                  essentials={},
-                 post_interval=None, max_backlog=sys.maxint, stale=None,
+                 post_interval=None, max_backlog=six.MAXSIZE, stale=None,
                  log_success=True, log_failure=True,
                  timeout=10, max_tries=3, retry_wait=5, retry_login=3600,
                  softwaretype="weewx-%s" % weewx.__version__,
@@ -859,7 +852,7 @@ class AmbientThread(RESTThread):
 
         _liststr = ["action=updateraw",
                     "ID=%s" % self.station,
-                    "PASSWORD=%s" % urllib.quote(self.password),
+                    "PASSWORD=%s" % urllib.parse.quote(self.password),
                     "softwaretype=%s" % self.softwaretype]
 
         # Go through each of the supported types, formatting it, then adding
@@ -874,7 +867,7 @@ class AmbientThread(RESTThread):
                     # fiddled with formatting, and it seems that escaping the
                     # colons helps its reliability. But, I could be imagining
                     # things.
-                    _v = urllib.quote(str(datetime.datetime.utcfromtimestamp(_v)))
+                    _v = urllib.parse.quote(str(datetime.datetime.utcfromtimestamp(_v)))
                 # Format the value, and accumulate in _liststr:
                 _liststr.append(self.formats[_key] % _v)
         # Now stick all the pieces together with an ampersand between them:
@@ -903,7 +896,7 @@ class AmbientLoopThread(AmbientThread):
                  station, password, server_url,
                  protocol_name="Unknown-Ambient",
                  essentials={},
-                 post_interval=None, max_backlog=sys.maxint, stale=None, 
+                 post_interval=None, max_backlog=six.MAXSIZE, stale=None,
                  log_success=True, log_failure=True,
                  timeout=10, max_tries=3, retry_wait=5, rtfreq=2.5):
         """
@@ -982,7 +975,7 @@ class WOWThread(AmbientThread):
             # Check to make sure the type is not null
             if _v is not None:
                 if _key == 'dateTime':
-                    _v = urllib.quote_plus(datetime.datetime.utcfromtimestamp(_v).isoformat(' '))
+                    _v = urllib.parse.quote_plus(datetime.datetime.utcfromtimestamp(_v).isoformat(' '))
                 # Format the value, and accumulate in _liststr:
                 _liststr.append(WOWThread._FORMATS[_key] % _v)
         # Now stick all the pieces together with an ampersand between them:
@@ -1000,11 +993,8 @@ class WOWThread(AmbientThread):
         """Version of post_request() for the WOW protocol, which
         uses a response error code to signal a bad login."""
         try:
-            try:
-                _response = urllib2.urlopen(request, timeout=self.timeout)
-            except TypeError:
-                _response = urllib2.urlopen(request)
-        except urllib2.HTTPError as e:
+            _response = urllib.request.urlopen(request, timeout=self.timeout)
+        except urllib.error.HTTPError as e:
             # WOW signals a bad login with a HTML Error 400 or 403 code:
             if e.code == 400 or e.code == 403:
                 raise BadLogin(e)
@@ -1078,7 +1068,7 @@ class CWOPThread(RESTThread):
     def __init__(self, queue, manager_dict,
                  station, passcode, latitude, longitude, station_type,
                  server_list=StdCWOP.default_servers,
-                 post_interval=600, max_backlog=sys.maxint, stale=600,
+                 post_interval=600, max_backlog=six.MAXSIZE, stale=600,
                  log_success=True, log_failure=True,
                  timeout=10, max_tries=3, retry_wait=5, skip_upload=False):
 
@@ -1469,8 +1459,7 @@ class StationRegistryThread(RESTThread):
         for _key in StationRegistryThread._FORMATS:
             v = record[_key]
             if v is not None:
-                _liststr.append(urllib.quote_plus(
-                    StationRegistryThread._FORMATS[_key] % v, '='))
+                _liststr.append(urllib.parse.quote_plus(StationRegistryThread._FORMATS[_key] % v, '='))
         _urlquery = '&'.join(_liststr)
         _url = "%s?%s" % (self.server_url, _urlquery)
         return _url
@@ -1615,7 +1604,7 @@ class AWEKASThread(RESTThread):
     def __init__(self, queue, username, password, latitude, longitude,
                  manager_dict,
                  language='de', server_url=_SERVER_URL,
-                 post_interval=300, max_backlog=sys.maxint, stale=None,
+                 post_interval=300, max_backlog=six.MAXSIZE, stale=None,
                  log_success=True, log_failure=True,
                  timeout=60, max_tries=3, retry_wait=5, retry_login=3600, skip_upload=False):
         """Initialize an instances of AWEKASThread.
@@ -1694,7 +1683,7 @@ class AWEKASThread(RESTThread):
         url = self.get_url(r)
         if self.skip_upload:
             raise AbortedPost("Skip post")
-        req = urllib2.Request(url)
+        req = urllib.request.Request(url)
         req.add_header("User-Agent", "weewx/%s" % weewx.__version__)
         self.post_with_retries(req)
 
