@@ -15,10 +15,12 @@ import calendar
 import datetime
 import math
 import os
-import struct
 import syslog
 import time
 import traceback
+
+# Compatibility shims
+import six
 from six.moves import StringIO
 
 # For backwards compatibility:
@@ -1408,15 +1410,6 @@ def to_sorted_string(rec):
     return ", ".join(["%s: %s" % (k, rec.get(k)) for k in sorted(rec, key=str.lower)])
 
 
-# Define an "input" function that works for both Python 2 and 3:
-# An exception will be raised in Python 3, but not Python 2
-try:
-    input = raw_input
-except NameError:
-    # Python 3
-    pass
-
-
 def y_or_n(msg, noprompt):
     """Prompt and look for a 'y' or 'n' response"""
 
@@ -1426,13 +1419,9 @@ def y_or_n(msg, noprompt):
 
     ans = None
     while ans not in ['y', 'n']:
-        ans = input(msg)
+        ans = six.input(msg)
     return ans
 
-
-def int2byte(x):
-    """Convert integer argument to signed byte string, under both Python 2 and 3"""
-    return struct.pack('>b', x)
 
 if __name__ == '__main__':
     import doctest

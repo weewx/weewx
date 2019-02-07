@@ -14,8 +14,10 @@ import sys
 import syslog
 import time
 
+from six import int2byte
+
 from weewx.crc16 import crc16
-from weeutil.weeutil import to_int, int2byte
+from weeutil.weeutil import to_int
 import weeutil.weeutil
 import weewx.drivers
 import weewx.units
