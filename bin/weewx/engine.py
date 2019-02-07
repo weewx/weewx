@@ -7,7 +7,6 @@
 """Main engine for the weewx weather system."""
 
 # Python imports
-from __future__ import print_function
 import gc
 import locale
 import os
@@ -720,11 +719,13 @@ class StdPrint(StdService):
         
     def new_loop_packet(self, event):
         """Print out the new LOOP packet"""
-        print("LOOP:  ", weeutil.weeutil.timestamp_to_string(event.packet['dateTime']), to_sorted_string(event.packet))
+        s = "LOOP:  %s %s" % (weeutil.weeutil.timestamp_to_string(event.packet['dateTime']), to_sorted_string(event.packet))
+        print(s)
     
     def new_archive_record(self, event):
         """Print out the new archive record."""
-        print("REC:   ", weeutil.weeutil.timestamp_to_string(event.record['dateTime']), to_sorted_string(event.record))
+        s = "REC:   %s %s" % (weeutil.weeutil.timestamp_to_string(event.record['dateTime']), to_sorted_string(event.record))
+        print(s)
 
 
 #==============================================================================
