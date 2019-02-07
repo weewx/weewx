@@ -276,6 +276,11 @@ def main() :
                 print >>sys.stderr, "Aborted."
                 wlog.slog(syslog.LOG_ERR, "%s ...error %s. Aborting." % (timestamp_to_string(record['dateTime']), e))
                 exit("Failed post")
+            except weewx.restx.AbortedPost as e:
+                print >>sys.stderr, " ... not published."
+                print "Reason: ", e
+                wlog.slog(syslog.LOG_ERR, "%s ...not published. Reason '%s'" %
+                          (timestamp_to_string(record['dateTime']), e))
             except IOError as e:
                 print >>sys.stderr, " ... not published."
                 print "Reason: ", e
