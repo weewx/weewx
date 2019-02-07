@@ -1277,11 +1277,11 @@ def to_float(x):
     return float(x) if x is not None else None
 
 
-def to_unicode(string, encoding='utf8'):
+def to_unicode(string, encoding='utf-8'):
     u"""Convert to Unicode, unless string is None
     
     Example:
-    >>> print(to_unicode(u"degree sign from UTF8: °".encode('utf8')))
+    >>> print(to_unicode(u"degree sign from UTF8: °".encode('utf-8')))
     degree sign from UTF8: °
     >>> print(to_unicode(u"degree sign from Unicode: °"))
     degree sign from Unicode: °

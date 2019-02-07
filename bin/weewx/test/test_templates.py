@@ -83,7 +83,7 @@ class Common(unittest.TestCase):
             os.chdir(cwd)
 
         try :
-            self.config_dict = configobj.ConfigObj(config_path, file_error=True)
+            self.config_dict = configobj.ConfigObj(config_path, file_error=True, encoding='utf-8')
         except IOError:
             sys.stderr.write("Unable to open configuration file %s" % config_path)
             # Reraise the exception (this will eventually cause the program to exit)

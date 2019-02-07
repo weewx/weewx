@@ -218,4 +218,4 @@ log_failure = False
     moon_phases = New, Waxing crescent, First quarter, Waxing gibbous, Full, Waning gibbous, Last quarter, Waning crescent
 """
 
-defaults = configobj.ConfigObj(StringIO(default_str))
+defaults = configobj.ConfigObj(StringIO(default_str), encoding='utf-8')

@@ -274,7 +274,7 @@ if __name__ == '__main__':
         sys.exit(weewx.CMD_ERROR)
         
     try :
-        config_dict = configobj.ConfigObj(sys.argv[1], file_error=True)
+        config_dict = configobj.ConfigObj(sys.argv[1], file_error=True, encoding='utf-8')
     except IOError:
         print "Unable to open configuration file ", sys.argv[1]
         raise

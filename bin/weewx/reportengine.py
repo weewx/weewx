@@ -244,7 +244,7 @@ class StdReportEngine(threading.Thread):
         # Now retrieve the configuration dictionary for the skin. Wrap it in a try block in case we fail.  It is ok if
         # there is no file - everything for a skin might be defined in the weewx configuration.
         try:
-            merge_dict = configobj.ConfigObj(skin_config_path, file_error=True)
+            merge_dict = configobj.ConfigObj(skin_config_path, file_error=True, encoding='utf-8')
             syslog.syslog(syslog.LOG_DEBUG,
                           "reportengine: "
                           "Found configuration file %s for report '%s'"

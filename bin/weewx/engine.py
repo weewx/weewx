@@ -975,7 +975,7 @@ def getConfiguration(config_path):
     # Try to open up the given configuration file. Declare an error if
     # unable to.
     try:
-        config_dict = configobj.ConfigObj(config_path, file_error=True)
+        config_dict = configobj.ConfigObj(config_path, file_error=True, encoding='utf-8')
     except IOError:
         sys.stderr.write("Unable to open configuration file %s" % config_path)
         syslog.syslog(syslog.LOG_CRIT, "engine: Unable to open configuration file %s" % config_path)

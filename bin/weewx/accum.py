@@ -513,7 +513,7 @@ defaults_ini = """
         extractor = noop
 """
 from six.moves import StringIO
-defaults = configobj.ConfigObj(StringIO(defaults_ini))
+defaults = configobj.ConfigObj(StringIO(defaults_ini), encoding='utf-8')
 del StringIO
 
 accum_type_dict = None

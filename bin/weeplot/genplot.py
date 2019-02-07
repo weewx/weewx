@@ -574,7 +574,7 @@ class TimePlot(GeneralPlot) :
         time_tuple = time.localtime(x)
         # The function time.strftime() still does not support Unicode, so we have to explicitly
         # convert it to UTF8, then back again:
-        xlabel = to_unicode(time.strftime(self.x_label_format.encode('utf8'), time_tuple))
+        xlabel = to_unicode(time.strftime(self.x_label_format.encode('utf-8'), time_tuple))
         return xlabel
     
 class PlotLine(object):
@@ -609,13 +609,13 @@ class UniDraw(ImageDraw.ImageDraw):
         try:
             return ImageDraw.ImageDraw.text(self, position, string, **options)
         except UnicodeEncodeError:
-            return ImageDraw.ImageDraw.text(self, position, string.encode('utf8'), **options)
+            return ImageDraw.ImageDraw.text(self, position, string.encode('utf-8'), **options)
         
     def textsize(self, string, **options):
         try:
             return ImageDraw.ImageDraw.textsize(self, string, **options)
         except UnicodeEncodeError:
-            return ImageDraw.ImageDraw.textsize(self, string.encode('utf8'), **options)
+            return ImageDraw.ImageDraw.textsize(self, string.encode('utf-8'), **options)
             
             
 def blend_hls(c, bg, alpha):

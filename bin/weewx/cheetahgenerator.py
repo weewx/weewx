@@ -425,6 +425,7 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
 
         # ------ Encoding ------
         encoding = report_dict.get('encoding', 'html_entities').strip().lower()
+        # Convert to 'utf8'. This is because 'utf-8' cannot be a class name
         if encoding == 'utf-8':
             encoding = 'utf8'
 
@@ -612,5 +613,5 @@ class utf8(Cheetah.Filters.Filter):
         if val is None:
             filtered = ''
         else:
-            filtered = val.encode('utf8')
+            filtered = val.encode('utf-8')
         return filtered

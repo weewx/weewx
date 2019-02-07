@@ -130,29 +130,29 @@ class ConfigTest(LineTest):
         global x_str, y_str
 
         xio = StringIO(x_str)
-        x_dict = configobj.ConfigObj(xio)
+        x_dict = configobj.ConfigObj(xio, encoding='utf-8')
         weecfg.reorder_sections(x_dict, 'section_c', 'section_b')
         self.assertEqual("{'section_a': {'a': '1'}, 'section_c': {'c': '3'}, "
                          "'section_b': {'b': '2'}, 'section_d': {'d': '4'}}", str(x_dict))
 
         xio.seek(0)
-        x_dict = configobj.ConfigObj(xio)
+        x_dict = configobj.ConfigObj(xio, encoding='utf-8')
         weecfg.reorder_sections(x_dict, 'section_c', 'section_b', after=True)
         self.assertEqual("{'section_a': {'a': '1'}, 'section_b': {'b': '2'}, "
                          "'section_c': {'c': '3'}, 'section_d': {'d': '4'}}", str(x_dict))
 
         xio = StringIO(x_str)
         yio = StringIO(y_str)
-        x_dict = configobj.ConfigObj(xio)
-        y_dict = configobj.ConfigObj(yio)
+        x_dict = configobj.ConfigObj(xio, encoding='utf-8')
+        y_dict = configobj.ConfigObj(yio, encoding='utf-8')
         weeutil.weeutil.conditional_merge(x_dict, y_dict)
         self.assertEqual("{'section_a': {'a': '1'}, 'section_b': {'b': '2'}, 'section_c': {'c': '3'}, "
                          "'section_d': {'d': '4'}, 'section_e': {'c': '15'}}", str(x_dict))
 
         xio = StringIO(x_str)
         yio = StringIO(y_str)
-        x_dict = configobj.ConfigObj(xio)
-        y_dict = configobj.ConfigObj(yio)
+        x_dict = configobj.ConfigObj(xio, encoding='utf-8')
+        y_dict = configobj.ConfigObj(yio, encoding='utf-8')
         weecfg.remove_and_prune(x_dict, y_dict)
         self.assertEqual("{'section_c': {'c': '3'}, 'section_d': {'d': '4'}}", str(x_dict))
 
@@ -318,7 +318,7 @@ class ConfigTest(LineTest):
     def test_upgrade_v25(self):
 
         # Start with the Version 2.0 weewx.conf file:
-        config_dict = configobj.ConfigObj('weewx20.conf')
+        config_dict = configobj.ConfigObj('weewx20.conf', encoding='utf-8')
 
         # Upgrade the V2.0 configuration dictionary to V2.5:
         weecfg.update_to_v25(config_dict)
@@ -328,7 +328,7 @@ class ConfigTest(LineTest):
     def test_upgrade_v26(self):
 
         # Start with the Version 2.5 weewx.conf file:
-        config_dict = configobj.ConfigObj('weewx25.conf')
+        config_dict = configobj.ConfigObj('weewx25.conf', encoding='utf-8')
 
         # Upgrade the V2.5 configuration dictionary to V2.6:
         weecfg.update_to_v26(config_dict)
@@ -338,7 +338,7 @@ class ConfigTest(LineTest):
     def test_upgrade_v30(self):
 
         # Start with the Version 2.7 weewx.conf file:
-        config_dict = configobj.ConfigObj('weewx27.conf')
+        config_dict = configobj.ConfigObj('weewx27.conf', encoding='utf-8')
 
         # Upgrade the V2.7 configuration dictionary to V3.0:
         weecfg.update_to_v30(config_dict)
@@ -348,7 +348,7 @@ class ConfigTest(LineTest):
     def test_upgrade_v32(self):
 
         # Start with the Version 3.0 weewx.conf file:
-        config_dict = configobj.ConfigObj('weewx30.conf')
+        config_dict = configobj.ConfigObj('weewx30.conf', encoding='utf-8')
 
         # Upgrade the V3.0 configuration dictionary to V3.2:
         weecfg.update_to_v32(config_dict)
@@ -358,7 +358,7 @@ class ConfigTest(LineTest):
     def test_upgrade_v36(self):
 
         # Start with the Version 3.2 weewx.conf file:
-        config_dict = configobj.ConfigObj('weewx32.conf')
+        config_dict = configobj.ConfigObj('weewx32.conf', encoding='utf-8')
 
         # Upgrade the V3.2 configuration dictionary to V3.6:
         weecfg.update_to_v36(config_dict)
@@ -368,7 +368,7 @@ class ConfigTest(LineTest):
     def test_upgrade_v39(self):
 
         # Start with the Version 3.8 weewx.conf file:
-        config_dict = configobj.ConfigObj('weewx38.conf')
+        config_dict = configobj.ConfigObj('weewx38.conf', encoding='utf-8')
 
         # Upgrade the V3.8 configuration dictionary to V3.9:
         weecfg.update_to_v39(config_dict)
@@ -381,10 +381,10 @@ class ConfigTest(LineTest):
     def test_merge(self):
 
         # Start with a typical V2.0 user file:
-        config_dict = configobj.ConfigObj('weewx20_user.conf')
+        config_dict = configobj.ConfigObj('weewx20_user.conf', encoding='utf-8')
 
         # The current config file becomes the template:
-        template = configobj.ConfigObj(current_config_dict_path)
+        template = configobj.ConfigObj(current_config_dict_path, encoding='utf-8')
 
         # First update, then merge:
         weecfg.update_and_merge(config_dict, template)
@@ -409,7 +409,7 @@ class ConfigTest(LineTest):
     def test_modify_config(self):
 
         # Use the current weewx.conf
-        config_dict = configobj.ConfigObj(current_config_dict_path)
+        config_dict = configobj.ConfigObj(current_config_dict_path, encoding='utf-8')
 
         stn_info = weecfg.get_station_info(config_dict)
 
@@ -428,7 +428,7 @@ class ConfigTest(LineTest):
         # Make sure the driver stanza got injected correctly
         import weewx.drivers.vantage
         vcf = weewx.drivers.vantage.VantageConfEditor()
-        default_config = configobj.ConfigObj(StringIO(vcf.default_stanza))
+        default_config = configobj.ConfigObj(StringIO(vcf.default_stanza), encoding='utf-8')
 
         self.assertEqual(config_dict['Vantage'], default_config['Vantage'])
 
@@ -577,7 +577,7 @@ class ExtensionInstallTest(unittest.TestCase):
     def test_install(self):
         # Find and read the test configuration
         config_path = os.path.join(self.weewx_root, 'weewx.conf')
-        config_dict = configobj.ConfigObj(config_path)
+        config_dict = configobj.ConfigObj(config_path, encoding='utf-8')
 
         # Note that the actual location of the "mini-weewx" is over in /var/tmp
         config_dict['WEEWX_ROOT'] = self.weewx_root
@@ -606,7 +606,7 @@ class ExtensionInstallTest(unittest.TestCase):
         self.assertTrue(os.path.isfile(os.path.join(self.skin_dir, 'pmon', 'skin.conf')))
 
         # Get, then check the new config dict:
-        test_dict = configobj.ConfigObj(config_path)
+        test_dict = configobj.ConfigObj(config_path, encoding='utf-8')
         self.assertEqual(test_dict['StdReport']['pmon'],
                          {'HTML_ROOT': 'public_html/pmon', 'skin': 'pmon'})
         self.assertEqual(test_dict['Databases']['pmon_sqlite'],
@@ -626,7 +626,7 @@ class ExtensionInstallTest(unittest.TestCase):
     def test_uninstall(self):
         # Find and read the test configuration
         config_path = os.path.join(self.weewx_root, 'weewx.conf')
-        config_dict = configobj.ConfigObj(config_path)
+        config_dict = configobj.ConfigObj(config_path, encoding='utf-8')
 
         # Note that the actual location of the "mini-weewx" is over in /var/tmp
         config_dict['WEEWX_ROOT'] = self.weewx_root
@@ -648,7 +648,7 @@ class ExtensionInstallTest(unittest.TestCase):
         self.assertTrue(not os.path.exists(os.path.join(self.skin_dir, 'pmon', 'skin.conf')))
 
         # Get the modified config dict, which had the extension removed from it
-        test_dict = configobj.ConfigObj(config_path)
+        test_dict = configobj.ConfigObj(config_path, encoding='utf-8')
 
         # It should be the same as our original:
         self.assertEqual(test_dict, config_dict)

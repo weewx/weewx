@@ -173,7 +173,7 @@ class weewx_install_data(install_data):
 
         # Open up and parse the distribution config file:
         try:
-            dist_config_dict = configobj.ConfigObj(f, file_error=True)
+            dist_config_dict = configobj.ConfigObj(f, file_error=True, encoding='utf-8')
         except IOError as e:
             sys.exit(str(e))
         except SyntaxError as e:
@@ -294,7 +294,7 @@ class weewx_sdist(sdist):
         # If this is the configuration file, check for passwords
         if f == 'weewx.conf':
             import configobj
-            config = configobj.ConfigObj(f)
+            config = configobj.ConfigObj(f, encoding='utf-8')
 
             for section in ['StdRESTful', 'StdReport']:
                 for subsection in config[section].sections:

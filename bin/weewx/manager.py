@@ -1633,7 +1633,7 @@ class DaySummaryManager(Manager):
 
 if __name__ == '__main__':
     import configobj
-    config_dict = configobj.ConfigObj('/home/weewx/weewx.conf')
+    config_dict = configobj.ConfigObj('/home/weewx/weewx.conf', encoding='utf-8')
     mgr = open_manager_with_config(config_dict, 'wx_binding', initialize=True)
     start_d = datetime.date(2016,10,1)
     stop_d = datetime.date(2016,10,8)
