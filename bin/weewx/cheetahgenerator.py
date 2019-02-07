@@ -55,7 +55,6 @@ Example:
 
 """
 
-from __future__ import with_statement
 import os.path
 import syslog
 import time
@@ -223,7 +222,7 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
         for subsection in section.sections:
             # Sections 'SummaryByMonth' and 'SummaryByYear' imply summarize_by
             # certain time spans
-            if not section[subsection].has_key('summarize_by'):
+            if 'summarize_by' not in section[subsection]:
                 if subsection == 'SummaryByDay':
                     section[subsection]['summarize_by'] = 'SummaryByDay'
                 elif subsection == 'SummaryByMonth':
@@ -236,7 +235,7 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
         # We have finished recursively processing any subsections in this
         # section. Time to do the section itself. If there is no option
         # 'template', then there isn't anything to do. Return.
-        if not section.has_key('template'):
+        if 'template' not in section:
             return ngen
         
         # Change directory to the skin subdirectory.  We use absolute paths
@@ -580,7 +579,7 @@ class Extras(SearchList):
         # If the user has supplied an '[Extras]' section in the skin
         # dictionary, include it in the search list. Otherwise, just include
         # an empty dictionary.
-        self.Extras = generator.skin_dict['Extras'] if generator.skin_dict.has_key('Extras') else {}
+        self.Extras = generator.skin_dict['Extras'] if 'Extras' in generator.skin_dict else {}
     
 # =============================================================================
 # Filters used for encoding
@@ -590,38 +589,28 @@ class html_entities(Cheetah.Filters.Filter):
 
     def filter(self, val, **dummy_kw): #@ReservedAssignment
         """Filter incoming strings so they use HTML entity characters"""
-        if isinstance(val, unicode):
-            filtered = val.encode('ascii', 'xmlcharrefreplace')
-        elif val is None:
+        if val is None:
             filtered = ''
-        elif isinstance(val, str):
-            filtered = val.decode('utf-8').encode('ascii', 'xmlcharrefreplace')
         else:
-            filtered = self.filter(str(val))
+            filtered = val.encode('ascii', 'xmlcharrefreplace')
         return filtered
 
 class strict_ascii(Cheetah.Filters.Filter):
 
     def filter(self, val, **dummy_kw): #@ReservedAssignment
         """Filter incoming strings to strip out any non-ascii characters"""
-        if isinstance(val, unicode):
-            filtered = val.encode('ascii', 'ignore')
-        elif val is None:
+        if val is None:
             filtered = ''
-        elif isinstance(val, str):
-            filtered = val.decode('utf-8').encode('ascii', 'ignore')
         else:
-            filtered = self.filter(str(val))
+            filtered = val.encode('ascii', 'ignore')
         return filtered
     
 class utf8(Cheetah.Filters.Filter):
 
     def filter(self, val, **dummy_kw): #@ReservedAssignment
         """Filter incoming strings, converting to UTF-8"""
-        if isinstance(val, unicode):
-            filtered = val.encode('utf8')
-        elif val is None:
+        if val is None:
             filtered = ''
         else:
-            filtered = str(val)
+            filtered = val.encode('utf8')
         return filtered
