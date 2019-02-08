@@ -14,16 +14,9 @@ Pre-requisites:
 supported hardware
   http://weewx.com/hardware.htm
 
-python 2.5, 2.6, or 2.7
+python 2.6 or 2.7
   modules: ConfigObj Imaging Cheetah
            possibly serial or usb, depending on hardware
-
-===============================================================================
-Installation (the pip approach, on any platform):
-
-pip install -i http://weewx.com/pypi weewx
-cd /home/weewx
-./bin/weewxd weewx.conf
 
 ===============================================================================
 Installation (the setup.py approach, on any platform)
@@ -65,12 +58,26 @@ cd /Users/Shared/weewx
 ===============================================================================
 Installation (windows):
 
-python -m pip install configobj Image Cheetah uptime pyephem
+# in a windows cmd shell with admin rights:
 mkdir c:\users\weewx
 cacls c:\users\weewx /t /e /g Everyone:f
+
+# everything else can be done in a normal cmd shell:
+python -m pip install configobj Image Cheetah uptime pyephem pyusb
+
+# either get weewx from source zipfile:
 unzip weewx-x.y.z.zip
 cd weewx-x.y.z
+
+# OR get weewx directly from git:
+git clone https://github.com/weewx/weewx.git
+cd weewx
+git checkout windows
+
+# install weewx
 copy util/windows/setup.cfg .
 python setup.py install
+
+# run weewx
 cd c:\users\weewx
 python bin\weewxd weewx.conf
