@@ -113,7 +113,7 @@ def genFakeRecords(start_ts=start_ts, stop_ts=stop_ts, interval=interval,
                    weather_phase_offset=0.0):
     count = 0
     
-    for ts in xrange(start_ts, stop_ts+interval, interval):
+    for ts in range(start_ts, stop_ts+interval, interval):
         daily_phase  = ((ts - start_ts) * 2.0 * math.pi + day_phase_offset)/ (3600*24.0)
         annual_phase = ((ts - start_ts) * 2.0 * math.pi + annual_phase_offset)/ (3600*24.0*365.0)
         weather_phase= ((ts - start_ts) * 2.0 * math.pi + weather_phase_offset)/ weather_cycle

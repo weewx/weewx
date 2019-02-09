@@ -706,7 +706,7 @@ class PacketArchiveData(PacketArchive):
             # Number of sensors starting at zero inclusive.
             num_sensors = self._pkt_data[32]
 
-            for i in xrange(0, num_sensors + 1):
+            for i in range(0, num_sensors + 1):
                 base = 33 + i * 7
                 self._record.update(decode_temp(self,
                                                 self._pkt_data[base:base + 7]))

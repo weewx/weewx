@@ -546,7 +546,7 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
 
     @staticmethod
     def _init_station_with_retries(station, max_tries, retry_wait):
-        for cnt in xrange(max_tries):
+        for cnt in range(max_tries):
             try:
                 return CC3000Driver._init_station(station)
             except (serial.serialutil.SerialException, weewx.WeeWxIOError) as e:

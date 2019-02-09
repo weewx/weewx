@@ -413,7 +413,7 @@ def formatListCols(the_list, cols):
     max_width = max(map(lambda x: len(x), the_list))
     justifyList = map(lambda x: x.ljust(max_width), the_list)
     lines = (' '.join(justifyList[i:i + cols])
-             for i in xrange(0, len(justifyList), cols))
+             for i in range(0, len(justifyList), cols))
     print "\n".join(lines)
 
 if __name__=="__main__" :

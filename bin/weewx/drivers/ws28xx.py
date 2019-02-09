@@ -985,7 +985,7 @@ def log_traceback(dst=syslog.LOG_INFO, prefix='**** '):
 def log_frame(n, buf):
     logdbg('frame length is %d' % n)
     strbuf = ''
-    for i in xrange(0,n):
+    for i in range(0,n):
         strbuf += str('%02x ' % buf[i])
         if (i + 1) % 16 == 0:
             logdbg(strbuf)
@@ -1007,7 +1007,7 @@ def calc_checksum(buf, start, end=None):
     if end is None:
         end = len(buf[0]) - start
     cs = 0
-    for i in xrange(0, end):
+    for i in range(0, end):
         cs += buf[0][i+start]
     return cs
 
@@ -1981,7 +1981,7 @@ class USBHardware(object):
     @staticmethod
     def reverseByteOrder(buf, start, Count):
         nbuf=buf[0]
-        for i in xrange(0, Count >> 1):
+        for i in range(0, Count >> 1):
             tmp = nbuf[start + i]
             nbuf[start + i] = nbuf[start + Count - i - 1]
             nbuf[start + Count - i - 1 ] = tmp
@@ -2415,7 +2415,7 @@ class CCurrentWeatherData(object):
 
         if DEBUG_WEATHER_DATA > 2:
             unknownbuf = [0]*9
-            for i in xrange(0,9):
+            for i in range(0,9):
                 unknownbuf[i] = nbuf[163+i]
             strbuf = ""
             for i in unknownbuf:
@@ -2616,7 +2616,7 @@ class CWeatherStationConfig(object):
         '''Parse 7-digit number with 3 decimals'''
         num = int(number*1000)
         parsebuf=[0]*7
-        for i in xrange(7-numbytes,7):
+        for i in range(7-numbytes,7):
             parsebuf[i] = num%10
             num = num//10
         if StartOnHiNibble:
@@ -2634,7 +2634,7 @@ class CWeatherStationConfig(object):
         '''Parse float number to 6 bytes'''
         num = int(number*100*256)
         parsebuf=[0]*6
-        for i in xrange(0,6):
+        for i in range(0,6):
             parsebuf[i] = num%16
             num = num//16
         buf[0][0+start] = parsebuf[5]*16 + parsebuf[4]
@@ -2645,7 +2645,7 @@ class CWeatherStationConfig(object):
         '''Parse 5-digit number with 0 decimals'''
         num = int(number)
         nbuf=[0]*5
-        for i in xrange(5-numbytes,5):
+        for i in range(5-numbytes,5):
             nbuf[i] = num%10
             num = num//10
         if StartOnHiNibble:
@@ -3235,11 +3235,11 @@ class sHID(object):
                 timeout=self.timeout)
             data=[0]*0x15
             if numBytes < 16:
-                for i in xrange(0, numBytes):
+                for i in range(0, numBytes):
                     data[i] = buf[i+4]
                 numBytes = 0
             else:
-                for i in xrange(0, 16):
+                for i in range(0, 16):
                     data[i] = buf[i+4]
                 numBytes -= 16
                 addr += 16
@@ -3266,7 +3266,7 @@ class sHID(object):
         buf[0] = 0xd5
         buf[1] = numBytes >> 8
         buf[2] = numBytes
-        for i in xrange(0, numBytes):
+        for i in range(0, numBytes):
             buf[i+3] = data[i]
         if DEBUG_COMM == 1:
             self.dump('setFrame', buf, 'short')
@@ -3290,7 +3290,7 @@ class sHID(object):
             timeout=self.timeout)
         new_data=[0]*0x131
         new_numBytes=(buf[1] << 8 | buf[2])& 0x1ff
-        for i in xrange(0, new_numBytes):
+        for i in range(0, new_numBytes):
             new_data[i] = buf[i+3]
         if DEBUG_COMM == 1:
             self.dump('getFrame', buf, 'short')
@@ -3403,11 +3403,11 @@ class sHID(object):
                 timeout=1000)
             new_data=[0]*0x15
             if numBytes < 16:
-                for i in xrange(0, numBytes):
+                for i in range(0, numBytes):
                     new_data[i] = buf[i+4]
                 numBytes = 0
             else:
-                for i in xrange(0, 16):
+                for i in range(0, 16):
                     new_data[i] = buf[i+4]
                 numBytes -= 16
                 addr += 16
@@ -3535,7 +3535,7 @@ class CCommunicationService(object):
             newBuffer[0][1] = Buffer[0][1]
             newBuffer[0][2] = EAction.aSendConfig # 0x40 # change this value if we won't store config
             newBuffer[0][3] = Buffer[0][3]
-            for i in xrange(0,44):
+            for i in range(0,44):
                 newBuffer[0][i+4] = cfgBuffer[0][i]
             Buffer[0] = newBuffer[0]
             Length = 48 # 0x30
@@ -3576,7 +3576,7 @@ class CCommunicationService(object):
                    (action, cs, hidx))
         newBuffer = [0]
         newBuffer[0] = [0]*9
-        for i in xrange(0,2):
+        for i in range(0,2):
             newBuffer[0][i] = Buffer[0][i]
 
         comInt = self.DataStore.getCommModeInterval()

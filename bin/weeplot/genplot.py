@@ -330,7 +330,7 @@ class GeneralPlot(object):
                                                                 self.axis_label_font_size)
         
         # Draw the (constant y) grid lines 
-        for i in xrange(nygridlines) :
+        for i in range(nygridlines) :
             y = self.yscale[0] + i * self.yscale[2]
             sdraw.line((self.xscale[0], self.xscale[1]), (y, y), fill=self.chart_gridline_color,
                        width=self.anti_alias)
