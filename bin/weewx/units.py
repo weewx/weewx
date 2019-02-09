@@ -11,6 +11,8 @@ import locale
 import time
 import syslog
 
+import six
+
 import weewx
 import weeutil.weeutil
 from weeutil.weeutil import ListOfDicts
@@ -606,7 +608,7 @@ class Formatter(object):
             return ''
 
         # Is the label a simple string? If so, return it
-        if isinstance(label, basestring):
+        if isinstance(label, six.string_types):
             return label
         else:
             # It is not a simple string. Assume it is a tuple or list

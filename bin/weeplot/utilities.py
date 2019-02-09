@@ -14,6 +14,8 @@ import datetime
 import time
 import math
 
+import six
+
 import weeplot
     
 def scale(fmn, fmx, prescale = (None, None, None), nsteps = 10):
@@ -221,7 +223,7 @@ def scaletime(tmin_ts, tmax_ts) :
     2013-05-16 17:00:00 PDT (1368748800) 2013-05-17 08:00:00 PDT (1368802800) 7200
     """
     if tmax_ts <= tmin_ts :
-        raise weeplot.ViolatedPrecondition, "scaletime called with tmax <= tmin"
+        raise weeplot.ViolatedPrecondition("scaletime called with tmax <= tmin")
     
     tdelta = tmax_ts - tmin_ts
     
@@ -574,7 +576,7 @@ def tobgr(x):
     by ImageColor for example #RGB, #RRGGBB, hslHSL as well as standard color
     names from X11 and CSS3.  See ImageColor for complete set of colors.
     """
-    if isinstance(x, basestring):
+    if isinstance(x, six.string_types):
         if x.startswith('0x'):
             return int(x, 0)
         try:
@@ -593,5 +595,5 @@ if __name__ == "__main__":
     import doctest
 
     if not doctest.testmod().failed:
-        print "PASSED"
+        print("PASSED")
     

@@ -62,6 +62,7 @@ import datetime
 
 import configobj
 
+import six
 import Cheetah.Template
 import Cheetah.Filters
 
@@ -322,14 +323,37 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
             tmpname = _fullname + '.tmp'
 
             try:
-                compiled_template = Cheetah.Template.Template(
-                    file=template,
-                    searchList=searchList,
-                    filter=encoding,
-                    filtersLib=weewx.cheetahgenerator)
-                with open(tmpname, mode='w') as fd:
-                    fd.write(str(compiled_template))
+                # Cheetah V2 will crash if given a template file name in Unicode. So,
+                # be prepared to catch the exception and convert to ascii:
+                try:
+                    # TODO: Look into cacheing the compiled template.
+                    compiled_template = Cheetah.Template.Template(
+                        file=template,
+                        searchList=searchList,
+                        filter='assure_unicode',
+                        filtersLib=weewx.cheetahgenerator)
+                except TypeError:
+                    compiled_template = Cheetah.Template.Template(
+                        file=template.encode('ascii', 'ignore'),
+                        searchList=searchList,
+                        filter='assure_unicode',
+                        filtersLib=weewx.cheetahgenerator)
+
+
+                unicode_string = compiled_template.respond()
+
+                if encoding == 'html_entities':
+                    byte_string = unicode_string.encode('ascii', 'xmlcharrefreplace')
+                elif encoding == 'strict_ascii':
+                    byte_string = unicode_string.encode('ascii', 'ignore')
+                else:
+                    byte_string = unicode_string.encode('utf8')
+
+                # Open in binary mode. We are writing a byte-string, not a string
+                with open(tmpname, mode='wb') as fd:
+                    fd.write(byte_string)
                 os.rename(tmpname, _fullname)
+
             except Exception as e:
                 # We would like to get better feedback when there are cheetah
                 # compiler failures, but there seem to be no hooks for this.
@@ -404,13 +428,11 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
         binding."""
 
         # -------- Template ---------
-        # Cheetah will crash if given a template file name in Unicode. So,
-        # convert to ascii, ignoring all characters that cannot be converted:
         template = os.path.join(self.config_dict['WEEWX_ROOT'],
                                 self.config_dict['StdReport']['SKIN_ROOT'],
                                 report_dict['skin'],
-                                report_dict['template']).encode('ascii', 'ignore')
-        
+                                report_dict['template'])
+
         # ------ Destination directory --------
         destination_dir = os.path.join(self.config_dict['WEEWX_ROOT'],
                                        report_dict['HTML_ROOT'],
@@ -583,35 +605,27 @@ class Extras(SearchList):
         self.Extras = generator.skin_dict['Extras'] if 'Extras' in generator.skin_dict else {}
     
 # =============================================================================
-# Filters used for encoding
+# Filter
 # =============================================================================
 
-class html_entities(Cheetah.Filters.Filter):
 
-    def filter(self, val, **dummy_kw): #@ReservedAssignment
-        """Filter incoming strings so they use HTML entity characters"""
+class assure_unicode(Cheetah.Filters.Filter):
+    """Assures that whatever a search list extension might return, it will be converted into
+    Unicode. """
+
+    def filter(self, val, **dummy_kw):
         if val is None:
-            filtered = ''
+            filtered = u''
+        elif isinstance(val, six.text_type):
+            # It's already Unicode. Just return it.
+            filtered = val
+        elif isinstance(val, six.binary_type):
+            # It's a byte-sequence. Decode into Unicode.
+            filtered = val.decode('utf-8')
         else:
-            filtered = val.encode('ascii', 'xmlcharrefreplace')
-        return filtered
-
-class strict_ascii(Cheetah.Filters.Filter):
-
-    def filter(self, val, **dummy_kw): #@ReservedAssignment
-        """Filter incoming strings to strip out any non-ascii characters"""
-        if val is None:
-            filtered = ''
-        else:
-            filtered = val.encode('ascii', 'ignore')
-        return filtered
-    
-class utf8(Cheetah.Filters.Filter):
-
-    def filter(self, val, **dummy_kw): #@ReservedAssignment
-        """Filter incoming strings, converting to UTF-8"""
-        if val is None:
-            filtered = ''
-        else:
-            filtered = val.encode('utf-8')
+            # It's not Unicode and it's not a byte-string. Must be a primitive.
+            #   Under Python 2, six.text_type is equivalent to calling unicode(val).
+            #   Under Python 3, it is equivalent to calling str(val).
+            # So, the results always end up as Unicode.
+            filtered = six.text_type(val)
         return filtered

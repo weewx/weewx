@@ -168,7 +168,7 @@ class GeneralPlot(object):
         
         """
         if None in line.x:
-            raise weeplot.ViolatedPrecondition, "X vector cannot have any values 'None' "
+            raise weeplot.ViolatedPrecondition("X vector cannot have any values 'None' ")
         self.line_list.append(line)
 
     def setLocation(self, lat, lon):
