@@ -593,6 +593,18 @@ class UnitInfo(SearchList):
         # This implements the $obs tag:
         self.obs = weewx.units.ObsInfoHelper(generator.skin_dict)
 
+
+if six.PY3:
+    # Dictionaries in Python 3 no longer have the "has_key()" function.
+    # This will break a lot of skins. Use a wrapper to provide it
+    class ExtraDict(dict):
+
+        def has_key(self, key):
+            return key in self
+else:
+    # Not necessary in Python 2
+    ExtraDict = dict
+
 class Extras(SearchList):
     """Class for exposing the [Extras] section in the skin config dictionary
     as tag $Extras."""
@@ -602,7 +614,7 @@ class Extras(SearchList):
         # If the user has supplied an '[Extras]' section in the skin
         # dictionary, include it in the search list. Otherwise, just include
         # an empty dictionary.
-        self.Extras = generator.skin_dict['Extras'] if 'Extras' in generator.skin_dict else {}
+        self.Extras = ExtraDict(generator.skin_dict['Extras'] if 'Extras' in generator.skin_dict else {})
     
 # =============================================================================
 # Filter
