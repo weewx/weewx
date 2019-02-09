@@ -756,17 +756,17 @@ class WeeutilTest(unittest.TestCase):
         self.assertIsNone(to_int(None))
         self.assertIsNone(to_int('NONE'))
 
-    def test_to_unicode(self):
-
-        # To get a utf-8 byte string that we can convert, start with a unicode
-        # string, then encode it.
-        unicode_string = u"degree sign: °"
-        byte_string = unicode_string.encode('utf-8')
-        # Now use the byte string to test:
-        self.assertEqual(to_unicode(byte_string), unicode_string)
-        # Identity test
-        self.assertEqual(unicode_string, unicode_string)
-        self.assertIsNone(to_unicode(None))
+    # def test_to_unicode(self):
+    #
+    #     # To get a utf-8 byte string that we can convert, start with a unicode
+    #     # string, then encode it.
+    #     unicode_string = u"degree sign: °"
+    #     byte_string = unicode_string.encode('utf-8')
+    #     # Now use the byte string to test:
+    #     self.assertEqual(to_unicode(byte_string), unicode_string)
+    #     # Identity test
+    #     self.assertEqual(unicode_string, unicode_string)
+    #     self.assertIsNone(to_unicode(None))
 
     def test_min_with_none(self):
 

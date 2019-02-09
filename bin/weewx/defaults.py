@@ -10,7 +10,7 @@
 from six.moves import StringIO
 import configobj
 
-default_str = """# Copyright (c) 2009-2019 Tom Keffer <tkeffer@gmail.com>
+default_str = u"""# Copyright (c) 2009-2019 Tom Keffer <tkeffer@gmail.com>
 # See the file LICENSE.txt for your rights.
 
 # Where the skins reside, relative to WEEWX_ROOT
@@ -218,4 +218,6 @@ log_failure = False
     moon_phases = New, Waxing crescent, First quarter, Waxing gibbous, Full, Waning gibbous, Last quarter, Waning crescent
 """
 
+# Even though default_str is in Unicode, specify an encoding in
+# case someone wants to write the ConfigObj out.
 defaults = configobj.ConfigObj(StringIO(default_str), encoding='utf-8')

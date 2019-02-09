@@ -1010,8 +1010,8 @@ def secs_to_string(secs):
     str_list = []
     for (label, interval) in (('day', 86400), ('hour', 3600), ('minute', 60)):
         amt = int(secs / interval)
-        plural = '' if amt == 1 else 's'
-        str_list.append("%d %s%s" % (amt, label, plural))
+        plural = u'' if amt == 1 else u's'
+        str_list.append(u"%d %s%s" % (amt, label, plural))
         secs %= interval
     ans = ', '.join(str_list)
     return ans
@@ -1275,31 +1275,6 @@ def to_float(x):
     if isinstance(x, str) and x.lower() == 'none':
         x = None
     return float(x) if x is not None else None
-
-
-def to_unicode(string, encoding='utf-8'):
-    u"""Convert to Unicode, unless string is None
-    
-    Example:
-    >>> print(to_unicode(u"degree sign from UTF8: °".encode('utf-8')))
-    degree sign from UTF8: °
-    >>> print(to_unicode(u"degree sign from Unicode: °"))
-    degree sign from Unicode: °
-    >>> print(to_unicode(None))
-    None
-    """
-    try:
-        return unicode(string, encoding) if string is not None else None
-    except NameError:
-        # No unicode function. Probably running under Python 3
-        try:
-            return str(string, encoding) if string is not None else None
-        except TypeError:
-            # The string is already in Unicode. Just return it.
-            return string
-    except TypeError:
-        # The string is already in Unicode. Just return it.
-        return string
 
 
 def min_with_none(x_seq):

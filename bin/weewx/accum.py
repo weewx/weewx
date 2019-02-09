@@ -468,7 +468,7 @@ extract_functions = {'avg'  : Accum.extract_avg,
 # Default mappings from observation types to accumulator classes and functions
 #
 
-defaults_ini = """
+defaults_ini = u"""
 [Accumulator]
     [[dateTime]]
         adder = noop

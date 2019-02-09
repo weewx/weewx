@@ -582,13 +582,12 @@ def tobgr(x):
         try:
             (r,g,b) = ImageColor.getrgb(x)
             return r + g*256 + b*256*256
-        except :
-            pass
-        try:
-            return int(x)
         except ValueError:
-            pass
-        raise ValueError("Unknown color specifier: '%s'.  Colors must be specified as 0xBBGGRR, #RRGGBB, or standard color names." % x)
+            try:
+                return int(x)
+            except ValueError:
+                raise ValueError("Unknown color specifier: '%s'.  "
+                                 "Colors must be specified as 0xBBGGRR, #RRGGBB, or standard color names." % x)
     return x
 
 if __name__ == "__main__":
