@@ -255,7 +255,7 @@ class Manager(object):
 
         # Update the cached timestamps. This has to sit outside the
         # transaction context, in case an exception occurs.
-        self.first_timestamp = min(min_ts, self.first_timestamp)
+        self.first_timestamp = min(min_ts, self.first_timestamp) if min_ts is not None else None
         self.last_timestamp  = max(max_ts, self.last_timestamp)
         
     def _addSingleRecord(self, record, cursor, log_level):
