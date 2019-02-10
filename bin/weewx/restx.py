@@ -884,7 +884,7 @@ class AmbientThread(RESTThread):
         """Check the HTTP response code for an Ambient related error."""
         for line in response:
             # PWSweather signals with 'ERROR', WU with 'INVALID':
-            if line.startswith('ERROR') or line.startswith('INVALID'):
+            if line.startswith(b'ERROR') or line.startswith(b'INVALID'):
                 # Bad login. No reason to retry. Raise an exception.
                 raise BadLogin(line)
 
@@ -1468,7 +1468,7 @@ class StationRegistryThread(RESTThread):
         """Check the response from a Station Registry post."""
         for line in response:
             # the server replies to a bad post with a line starting with "FAIL"
-            if line.startswith('FAIL'):
+            if line.startswith(b'FAIL'):
                 raise FailedPost(line)
 
 
@@ -1689,9 +1689,9 @@ class AWEKASThread(RESTThread):
 
     def check_response(self, response):
         for line in response:
-            if line.startswith("Benutzer/Passwort Fehler"):
+            if line.startswith(b"Benutzer/Passwort Fehler"):
                 raise BadLogin(line)
-            elif not line.startswith('OK'):
+            elif not line.startswith(b'OK'):
                 raise FailedPost("server returned '%s'" % line)
 
     def get_url(self, in_record):

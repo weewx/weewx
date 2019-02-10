@@ -17,6 +17,9 @@ Weather Underground with the missing data.
 
 CHANGE HISTORY
 --------------------------------
+1.3.0 02/09/2019
+Ported to Python 3
+
 1.2.1 02/07/19
 Keep going even if an observation does not satisfy [[Essentials]].
 
@@ -53,7 +56,7 @@ considered the same. Epsilon can be specified on the command line.
 0.4.0   04/10/10
 Now tries up to max_tries times to publish to the WU before giving up.
 """
-
+from __future__ import print_function
 import csv
 import datetime
 import optparse
@@ -62,7 +65,10 @@ import socket
 import sys
 import syslog
 import time
-import urllib2
+
+# Python 2/3 compatiblity shims
+import six
+from six.moves import urllib, input
 
 import weecfg
 from weeutil.weeutil import timestamp_to_string, search_up
@@ -94,6 +100,7 @@ epsilon = None
 wlog = None
 
 socket.setdefaulttimeout(10.0)
+
 
 def main() :
     global epsilon, wlog
@@ -137,7 +144,7 @@ def main() :
     
     # get our config file
     config_fn, config_dict = weecfg.read_config(options.config, args)
-    print "Using configuration file %s." % config_fn
+    print("Using configuration file %s." % config_fn)
     wlog.slog(syslog.LOG_INFO, "Using weewx configuration file %s." % config_fn)
 
     # Retrieve the station ID and password from the config file
@@ -152,15 +159,15 @@ def main() :
     
     # exit if any essential arguments are not present
     if not options.station or (not options.password and not options.simulate):
-        print "Missing argument(s).\n"
-        print parser.parse_args(["--help"])
+        print("Missing argument(s).\n")
+        print(parser.parse_args(["--help"]))
         wlog.slog(syslog.LOG_ERR, "Missing argument(s). Wunderfixer exiting.")
         exit()
 
     # get our binding and database and say what we are using
     db_binding = options.binding
     database = config_dict['DataBindings'][db_binding]['database']
-    print "Using database binding '%s', which is bound to database '%s'" % (db_binding, database)
+    print("Using database binding '%s', which is bound to database '%s'" % (db_binding, database))
     wlog.slog(syslog.LOG_INFO, "Using database binding '%s', which is bound to database '%s'" % (db_binding, database))
 
     # get the manager object for our db_binding
@@ -187,15 +194,15 @@ def main() :
     wlog.slog(syslog.LOG_DEBUG, "wunderground: WU essentials: %s" % _essentials_dict)
 
     if options.verbose:
-        print "Weather Underground Station:  ", options.station
-        print "Date to check:                ", date_date
+        print("Weather Underground Station:  ", options.station)
+        print("Date to check:                ", date_date)
         wlog.slog(syslog.LOG_INFO, "Checking Weather Underground station '%s' data for date %s" % (options.station, date_date))
 
     # Get all the time stamps in the archive for the given day:
     archive_results = getArchiveDayTimeStamps(dbmanager_t, date_date)
 
     if options.verbose :
-        print "Number of archive records:    ", len(archive_results)
+        print("Number of archive records:    ", len(archive_results))
 
     # Get a WunderStation object so we can interact with Weather Underground
     wunder = WunderStation(queue=None,  # Bogus queue. We will not be using it.
@@ -210,12 +217,14 @@ def main() :
     try:
         # Get all the time stamps on the Weather Underground for the given day:
         wunder_results = wunder.getDayTimeStamps(date_date)
-    except Exception:
+    except Exception as e:
+        print("Could not get Weather Underground data.")
+        print("Reason: %s" % e)
         wlog.slog(syslog.LOG_ERR, "Could not get Weather Underground data. Exiting.")
         exit("Could not get Weather Underground data. Exiting.")
         
     if options.verbose :
-        print "Number of WU records:         ", len(wunder_results)
+        print("Number of WU records:         ", len(wunder_results))
     wlog.slog(syslog.LOG_DEBUG, "Found %d archive records and %d WU records" % (len(archive_results), len(wunder_results)))
 
     #===========================================================================
@@ -227,8 +236,8 @@ def main() :
     #===========================================================================
     if len(wunder_results) == 0 :
         sys.stdout.flush()
-        print >>sys.stderr, "\nNo results returned from Weather Underground (perhaps a bad station name??)."
-        print >>sys.stderr, "Publishing anyway."
+        print("\nNo results returned from Weather Underground (perhaps a bad station name??).", file=sys.stderr)
+        print("Publishing anyway.", file=sys.stderr)
         wlog.slog(syslog.LOG_ERR, "No results returned from Weather Underground for station '%s'"
                   "(perhaps a bad station name??). Publishing anyway." % options.station)
 
@@ -236,9 +245,9 @@ def main() :
     missing_records = sorted([x for x in archive_results if not x in wunder_results])
     
     if options.verbose :
-        print "Number of missing records:    ", len(missing_records)
+        print("Number of missing records:    ", len(missing_records))
         if missing_records:
-            print "\nMissing records:"
+            print("\nMissing records:")
     wlog.slog(syslog.LOG_INFO, "%d Weather Underground records missing." % len(missing_records))
     
     no_published = 0
@@ -248,57 +257,57 @@ def main() :
         # Get the archive record for this timestamp:
         record = dbmanager_t.getRecord(ts)
         # Print it out:
-        print >>sys.stdout, print_record(record),
+        print(print_record(record), end=' ', file=sys.stdout)
         sys.stdout.flush()
 
         # If this is an interactive session (option "-q") see if the
         # user wants to change it:
         if options.query :
-            _ans=raw_input("...fix? (y/n/a/q):")
+            _ans = input("...fix? (y/n/a/q):")
             if _ans == "q" :
-                print "Quitting."
+                print("Quitting.")
                 wlog.slog(syslog.LOG_DEBUG, "... exiting")
                 exit()
             if _ans == "a" :
                 _ans = "y"
                 options.query=False
             
-        if _ans=='y' :
+        if _ans == 'y' :
             try:
                 # Post the data to the WU:
                 wunder.process_record(record, dbmanager_t)
                 no_published += 1
-                print >>sys.stdout, " ...published."
+                print(" ...published.", file=sys.stdout)
                 wlog.slog(syslog.LOG_DEBUG, "%s ...published" % timestamp_to_string(record['dateTime']))
             except weewx.restx.BadLogin as e:
-                print >>sys.stderr, "Bad login"
-                print >>sys.stderr, e
+                print("Bad login", file=sys.stderr)
+                print(e, file=sys.stderr)
                 exit("Bad login")                
             except weewx.restx.FailedPost as e:
-                print >>sys.stderr, e
-                print >>sys.stderr, "Aborted."
+                print(e, file=sys.stderr)
+                print("Aborted.", file=sys.stderr)
                 wlog.slog(syslog.LOG_ERR, "%s ...error %s. Aborting." % (timestamp_to_string(record['dateTime']), e))
                 exit("Failed post")
             except weewx.restx.AbortedPost as e:
-                print >>sys.stderr, " ... not published."
-                print "Reason: ", e
+                print(" ... not published.", file=sys.stderr)
+                print("Reason: ", e)
                 wlog.slog(syslog.LOG_ERR, "%s ...not published. Reason '%s'" %
                           (timestamp_to_string(record['dateTime']), e))
             except IOError as e:
-                print >>sys.stderr, " ... not published."
-                print "Reason: ", e
+                print(" ... not published.", file=sys.stderr)
+                print("Reason: ", e)
                 wlog.slog(syslog.LOG_ERR, "%s ...not published. Reason '%s'" % (timestamp_to_string(record['dateTime']), e))
                 if hasattr(e, 'reason'):
-                    print >>sys.stderr, "Failed to reach server. Reason: %s" % e.reason
+                    print("Failed to reach server. Reason: %s" % e.reason, file=sys.stderr)
                     wlog.slog(syslog.LOG_ERR, "%s ...not published. Failed to reach server. Reason '%s'" % 
                               (timestamp_to_string(record['dateTime']), e.reason))
                 if hasattr(e, 'code'):
-                    print >>sys.stderr, "Failed to reach server. Error code: %s" % e.code
+                    print("Failed to reach server. Error code: %s" % e.code, file=sys.stderr)
                     wlog.slog(syslog.LOG_ERR, "%s ...not published. Failed to reach server. Error code '%s'" % 
                               (timestamp_to_string(record['dateTime']), e.code))
 
         else :
-            print " ... skipped."
+            print(" ... skipped.")
             wlog.slog(syslog.LOG_DEBUG, "%s ...skipped" % timestamp_to_string(record['dateTime']))
     wlog.slog(syslog.LOG_INFO, "%s out of %s missing records published to '%s' for date %s."
               " Wunderfixer exiting." % (no_published, len(missing_records), options.station, date_date))
@@ -306,6 +315,7 @@ def main() :
 #===============================================================================
 #                             class WunderStation
 #===============================================================================
+
 
 class WunderStation(weewx.restx.AmbientThread):
     """Class to interact with the Weather Underground."""
@@ -322,18 +332,19 @@ class WunderStation(weewx.restx.AmbientThread):
         """
         dayRequested_tt = dayRequested.timetuple()
         
-        _url = "http://www.wunderground.com/weatherstation/WXDailyHistory.asp?ID=%s&"\
-        "month=%d&day=%d&year=%d&format=1" % (self.station, dayRequested_tt[1], dayRequested_tt[2], dayRequested_tt[0]) 
+        _url = "http://www.wunderground.com/weatherstation/WXDailyHistory.asp?ID=%s" \
+               "&month=%d&day=%d&year=%d&format=1" % (self.station, dayRequested_tt[1],
+                                                      dayRequested_tt[2], dayRequested_tt[0])
         
         try :
             # Hit the weather underground site:
-            _wudata = urllib2.urlopen(_url)
-        except urllib2.URLError as e :
-            print >>sys.stderr, "Unable to open Weather Underground station " + self.station, " or ", e
+            _wudata = urllib.request.urlopen(_url)
+        except urllib.error.URLError as e :
+            print("Unable to open Weather Underground station " + self.station, " or ", e, file=sys.stderr)
             wlog.slog(syslog.LOG_ERR, "Unable to open Weather Underground station %s or %s" % (self.station, e))
             raise
         except socket.timeout as e:
-            print >>sys.stderr, "Socket timeout for Weather Underground station " + self.station
+            print("Socket timeout for Weather Underground station " + self.station, file=sys.stderr)
             wlog.slog(syslog.LOG_ERR, "Socket timeout for Weather Underground station %s" % self.station)
             raise
 
@@ -341,9 +352,10 @@ class WunderStation(weewx.restx.AmbientThread):
         # we need a bit of logic to clean it up.
         _cleanWUdata = []
         for _row in _wudata :
-            _line = ''.join(WunderStation._tags.split(_row))  # Get rid of any HTML tags
-            if _line != "\n" :                                # Get rid of any blank lines
-                _cleanWUdata.append(_line)                    # Save what's left
+            _urow = _row.decode('utf-8')
+            _line = ''.join(WunderStation._tags.split(_urow))  # Get rid of any HTML tags
+            if _line != "\n" :                                 # Get rid of any blank lines
+                _cleanWUdata.append(_line)                     # Save what's left
     
         # Now form a dictionary CSV reader, using the first line as the set of keys
         _csvreader = csv.DictReader(_cleanWUdata)
@@ -363,6 +375,7 @@ class WunderStation(weewx.restx.AmbientThread):
 #                             class TimeStamp
 #===============================================================================
 
+
 class TimeStamp(object):
     """This class represents a timestamp. It uses a 'fuzzy' compare.
     That is, if the times are within epsilon seconds of each other, they compare true."""
@@ -381,12 +394,16 @@ class TimeStamp(object):
     def __eq__(self, other_ts):
         return abs(self.ts - other_ts.ts) <= epsilon
 
+    def __lt__(self, other_ts):
+        return self.ts < other_ts.ts
+
     def __str__(self):
         return timestamp_to_string(self.ts)
 
 #===============================================================================
 #                              class WunderLog
 #===============================================================================
+
 
 class WunderLog(object):
     """ This class provides a wrapper around the python syslog module to handle
@@ -435,7 +452,8 @@ _formats = (    ('barometer'    , ('%7.3f"',            '    N/A ')),
                 ('windGust'     , ('%4.1f mph gust',    ' N/A mph gust')),
                 ('dewpoint'     , ('%6.1fF',            '   N/A ')),
                 ('rain'         , ('%5.2f" rain',       '  N/A  rain')))
-    
+
+
 def print_record(record):
     # Start with a formatted version of the time:
     _strlist = [timestamp_to_string(record['dateTime'])]
@@ -447,6 +465,7 @@ def print_record(record):
     # _strlist is a list of strings. Convert it into one long string:
     _string_result = ';'.join(_strlist)
     return _string_result
+
 
 def getArchiveDayTimeStamps(dbmanager, dayRequested):
     """Returns all time stamps in a weewx archive file for a given day
@@ -479,6 +498,7 @@ def getArchiveDayTimeStamps(dbmanager, dayRequested):
 #===============================================================================
 #                           Call main program body
 #===============================================================================
+
 
 if __name__=="__main__" :
     main()
