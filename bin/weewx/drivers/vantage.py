@@ -1606,13 +1606,13 @@ def _archive_datetime(datestamp, timestamp):
         # off the Vantage logger, there is no way of telling whether or not DST is
         # in effect. So, have the operating system guess by using a '-1' in the last
         # position of the time tuple. It's the best we can do...
-        time_tuple = ((0xfe00 & datestamp) >> 9,    # year
-                      (0x01e0 & datestamp) >> 5,    # month
-                      (0x001f & datestamp),         # day
-                      timestamp // 100,             # hour
-                      timestamp % 100,              # minute
-                      0,                            # second
-                      0, 0, -1)                     # have OS guess DST
+        time_tuple = (((0xfe00 & datestamp) >> 9) + 2000, # year
+                      (0x01e0 & datestamp) >> 5,          # month
+                      (0x001f & datestamp),               # day
+                      timestamp // 100,                   # hour
+                      timestamp % 100,                    # minute
+                      0,                                  # second
+                      0, 0, -1)                           # have OS guess DST
         # Convert to epoch time:
         ts = int(time.mktime(time_tuple))
     except (OverflowError, ValueError, TypeError):
@@ -2641,9 +2641,12 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
             nrecs = 0
             for (page, index, y, mo, d, h, mn, time_ts) in station.genLoggerSummary():
                 if time_ts:
-                    print("%4d %4d %4d | %4d-%02d-%02d %02d:%02d | %s" % (nrecs, page, index, y + 2000, mo, d, h, mn, weeutil.weeutil.timestamp_to_string(time_ts)), file=dest)
+                    print("%4d %4d %4d | %4d-%02d-%02d %02d:%02d | %s"
+                          % (nrecs, page, index, y + 2000, mo, d, h, mn,
+                             weeutil.weeutil.timestamp_to_string(time_ts)), file=dest)
                 else:
-                    print("%4d %4d %4d [*** Unused index ***]" % (nrecs, page, index), file=dest)
+                    print("%4d %4d %4d [*** Unused index ***]"
+                          % (nrecs, page, index), file=dest)
                 nrecs += 1
                 if nrecs % 10 == 0:
                     print("Records processed: %d; Timestamp: %s\r" % (nrecs, weeutil.weeutil.timestamp_to_string(time_ts)), end=' ', file=sys.stdout)
