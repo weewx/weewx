@@ -1,9 +1,9 @@
 #
-#    Copyright (c) 2009-2017 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2019 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
-"""Classes and functions for interfacing with a weewx archive."""
+"""Classes and functions for interfacing with a weewx database archive."""
 
 from __future__ import print_function
 import math
@@ -255,8 +255,10 @@ class Manager(object):
 
         # Update the cached timestamps. This has to sit outside the
         # transaction context, in case an exception occurs.
-        self.first_timestamp = min(min_ts, self.first_timestamp) if min_ts is not None else None
-        self.last_timestamp  = max(max_ts, self.last_timestamp)
+        if self.first_timestamp is not None and min_ts is not None:
+            self.first_timestamp = min(min_ts, self.first_timestamp)
+        if self.last_timestamp is not None:
+            self.last_timestamp  = max(max_ts, self.last_timestamp)
         
     def _addSingleRecord(self, record, cursor, log_level):
         """Internal function for adding a single record to the database."""
@@ -912,7 +914,8 @@ def get_database_dict_from_config(config_dict, database):
     
     Example. Given a configuration file snippet that looks like:
     
-    >>> import configobj, StringIO
+    >>> import configobj
+    >>> from six.moves import StringIO
     >>> config_snippet = '''
     ... WEEWX_ROOT = /home/weewx
     ... [DatabaseTypes]
@@ -923,11 +926,11 @@ def get_database_dict_from_config(config_dict, database):
     ...     [[archive_sqlite]]
     ...        database_name = weewx.sdb
     ...        database_type = SQLite'''
-    >>> config_dict = configobj.ConfigObj(StringIO.StringIO(config_snippet))
+    >>> config_dict = configobj.ConfigObj(StringIO(config_snippet))
     >>> database_dict = get_database_dict_from_config(config_dict, 'archive_sqlite')
     >>> keys = sorted(database_dict.keys())
     >>> for k in keys:
-    ...     print "%15s: %12s" % (k, database_dict[k])
+    ...     print("%15s: %12s" % (k, database_dict[k]))
         SQLITE_ROOT: /home/weewx/archive
       database_name:    weewx.sdb
              driver: weedb.sqlite
@@ -1434,7 +1437,7 @@ class DaySummaryManager(Manager):
         elif lastUpdate == lastRecord:
             # This is the normal state of affairs. If a value for start_d or stop_d
             # has been passed in, a rebuild has been requested.
-            if start_d == stop_d == None:
+            if start_d is None and stop_d is None:
                 # Nothing to do
                 return (0, 0)
             if start_d is None:
