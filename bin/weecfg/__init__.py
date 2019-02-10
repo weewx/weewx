@@ -166,7 +166,9 @@ def read_config(config_path, args=None, locations=DEFAULT_LOCATIONS,
     config_path = find_file(config_path, args,
                             locations=locations, file_name=file_name)
     # Now open it up and parse it.
-    config_dict = configobj.ConfigObj(config_path, file_error=True, encoding='utf-8')
+    config_dict = configobj.ConfigObj(config_path, file_error=True,
+                                      encoding='utf-8',
+                                      default_encoding='utf-8')
     return config_path, config_dict
 
 
