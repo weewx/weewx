@@ -1,6 +1,10 @@
 weewx change history
 --------------------
 
+Wunderfixer now keeps going if a post does not satisfy [[Essentials]].
+Fixes issue #329 (again).
+
+
 3.9.1 02/06/2019
 
 In genplot, do not attempt to normalize unspecified paths.
