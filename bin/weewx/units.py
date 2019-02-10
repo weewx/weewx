@@ -485,6 +485,7 @@ class Formatter(object):
     Examples (using the default formatters):
     >>> import os
     >>> os.environ['TZ'] = 'America/Los_Angeles'
+    >>> time.tzset()
     >>> f = Formatter()
     >>> print f.toString((20.0, "degree_C", "group_temperature"))
     20.0°C
@@ -1135,7 +1136,7 @@ def convert(val_t, target_unit_type):
     # Try converting a sequence first. A TypeError exception will occur if
     # the value is actually a scalar:
     try:
-        new_val = map(lambda x : conversion_func(x) if x is not None else None, val_t[0])
+        new_val = list(map(lambda x : conversion_func(x) if x is not None else None, val_t[0]))
     except TypeError:
         new_val = conversion_func(val_t[0]) if val_t[0] is not None else None
     # Add on the unit type and the group type and return the results:
@@ -1245,13 +1246,16 @@ class GenWithConvert(object):
     def __iter__(self):
         return self
     
-    def next(self): 
-        _record = self.input_generator.next()
-        if self.target_unit_system is None or _record['usUnits'] == self.target_unit_system:
+    def __next__(self):
+        _record = next(self.input_generator)
+        if self.target_unit_system is None:
             return _record
-        _record_c = StdUnitConverters[self.target_unit_system].convertDict(_record)
-        _record_c['usUnits'] = self.target_unit_system
-        return _record_c
+        else:
+            return to_std_system(_record, self.target_unit_system)
+
+    # For Python 2:
+    next = __next__
+
 
 def to_US(datadict):
     """Convert the units used in a dictionary to US Customary."""

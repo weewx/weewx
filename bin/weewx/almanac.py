@@ -57,6 +57,7 @@ class Almanac(object):
     These examples are designed to work in the Pacific timezone
     >>> import os
     >>> os.environ['TZ'] = 'America/Los_Angeles'
+    >>> time.tzset()
     >>> from weeutil.weeutil import timestamp_to_string, timestamp_to_gmtime
     >>> t = 1238180400
     >>> print(timestamp_to_string(t))

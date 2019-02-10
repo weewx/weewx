@@ -19,6 +19,7 @@ import unittest
 import configobj
 
 os.environ['TZ'] = 'America/Los_Angeles'
+time.tzset()
 
 import weeutil.weeutil
 import weewx.tags

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-#    Copyright (c) 2009-2015 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2019 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -8,6 +8,8 @@
 
 import unittest
 import operator
+
+import six
 
 import weewx.units
 from weewx.units import ValueTuple
@@ -77,14 +79,14 @@ class ConverterTest(unittest.TestCase):
         d_test = c.convertDict(d_m)
         self.assertEqual(d_test['outTemp'],   d_us['outTemp'])
         self.assertEqual(d_test['barometer'], d_us['barometer'])
-        self.assertFalse(d_test.has_key('usUnits'))
+        self.assertFalse('usUnits' in d_test)
 
         # Go the other way:
         cm = weewx.units.Converter(weewx.units.MetricUnits)
         d_test = cm.convertDict(d_us)
         self.assertEqual(d_test['outTemp'],   d_m['outTemp'])
         self.assertEqual(d_test['barometer'], d_m['barometer'])
-        self.assertFalse(d_test.has_key('usUnits'))
+        self.assertFalse('usUnits' in d_test)
         
         # Test impossible conversions:
         d_m['outTemp'] = (20.01, 'foo', 'group_temperature')
@@ -107,42 +109,43 @@ class ValueHelperTest(unittest.TestCase):
     def testFormatting(self):
         value_t = (68.01, "degree_F", "group_temperature")
         vh = weewx.units.ValueHelper(value_t)
-        self.assertEqual(vh.string(), "68.0°F")
-        self.assertEqual(vh.nolabel("T=%.3f"), "T=68.010")
-        self.assertEqual(vh.formatted, "68.0")
+        self.assertEqual(vh.string(), u"68.0°F")
+        self.assertEqual(vh.nolabel("T=%.3f"), u"T=68.010")
+        self.assertEqual(vh.formatted, u"68.0")
         self.assertEqual(vh.raw, 68.01)
-        self.assertEqual(str(vh), "68.0°F")
-        self.assertEqual(str(vh.degree_F), "68.0°F")
-        self.assertEqual(str(vh.degree_C), "20.0°C")
+        self.assertEqual(six.text_type(vh), u"68.0°F")
+        self.assertEqual(six.text_type(vh.degree_F), u"68.0°F")
+        self.assertEqual(six.text_type(vh.degree_C), u"20.0°C")
         
     def testFormattingWithConversion(self):
         value_t = (68.01, "degree_F", "group_temperature")
         c_m = weewx.units.Converter(weewx.units.MetricUnits)
         vh = weewx.units.ValueHelper(value_t, converter=c_m)
-        self.assertEqual(str(vh), "20.0°C")
-        self.assertEqual(str(vh.degree_F), "68.0°F")
-        self.assertEqual(str(vh.degree_C), "20.0°C")
+        self.assertEqual(six.text_type(vh), u"20.0°C")
+        self.assertEqual(six.text_type(vh.degree_F), u"68.0°F")
+        self.assertEqual(six.text_type(vh.degree_C), u"20.0°C")
         # Try an impossible conversion:
         self.assertRaises(AttributeError, getattr, vh, 'meter')
 
     def testExplicitConversion(self):
         value_t = (10.0, "meter_per_second", "group_speed")
         vh = weewx.units.ValueHelper(value_t)
-        self.assertEqual(str(vh), "22 mph")
-        self.assertEqual(str(vh.knot), "19 knots")
+        self.assertEqual(six.text_type(vh), "22 mph")
+        self.assertEqual(six.text_type(vh.knot), "19 knots")
 
     def testNoneValue(self):
         value_t = (None, "degree_C", "group_temperature")
         converter = weewx.units.Converter()
         vh = weewx.units.ValueHelper(value_t, converter=converter)
-        self.assertEqual(str(vh), "   N/A")
-        self.assertEqual(str(vh.degree_C), "   N/A")
+        self.assertEqual(six.text_type(vh), "   N/A")
+        self.assertEqual(six.text_type(vh.degree_C), "   N/A")
         
     def testElapsedTime(self):
         value_t = (2*86400 + 1*3600 + 5*60 + 12, "second", "group_deltatime")
         vh = weewx.units.ValueHelper(value_t)
         self.assertEqual(vh.string(), "2 days, 1 hour, 5 minutes")
-        format_label = "%(day)d%(day_label)s, %(hour)d%(hour_label)s, %(minute)d%(minute_label)s, %(second)d%(second_label)s"
+        format_label = "%(day)d%(day_label)s, %(hour)d%(hour_label)s, " \
+                       "%(minute)d%(minute_label)s, %(second)d%(second_label)s"
         self.assertEqual(vh.format(format_label), "2 days, 1 hour, 5 minutes, 12 seconds")
         # Now try a 'None' value:
         vh = weewx.units.ValueHelper((None, "second", "group_deltatime"))

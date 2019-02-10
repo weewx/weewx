@@ -13,7 +13,7 @@ import unittest
 from weeutil.weeutil import *  # @UnusedWildImport
 
 os.environ['TZ'] = 'America/Los_Angeles'
-
+time.tzset()
 
 def timestamp_to_local(ts):
     """Return a string in local time"""
@@ -43,6 +43,7 @@ class WeeutilTest(unittest.TestCase):
     def test_stampgen(self):
 
         os.environ['TZ'] = 'America/Los_Angeles'
+        time.tzset()
 
         # Test the start of DST using a 30 minute increment:
         start = time.mktime((2013, 3, 10, 0, 0, 0, 0, 0, -1))
@@ -86,6 +87,7 @@ class WeeutilTest(unittest.TestCase):
     def test_intervalgen(self):
 
         os.environ['TZ'] = 'America/Los_Angeles'
+        time.tzset()
 
         # Test the start of DST using a 30 minute increment:
         start = time.mktime((2013, 3, 10, 0, 0, 0, 0, 0, -1))
@@ -178,6 +180,7 @@ class WeeutilTest(unittest.TestCase):
 
     def test_archiveHoursAgoSpan(self):
         os.environ['TZ'] = 'America/Los_Angeles'
+        time.tzset()
         time_ts = time.mktime(time.strptime("2013-07-04 01:57:35", "%Y-%m-%d %H:%M:%S"))
         self.assertEqual(str(archiveHoursAgoSpan(time_ts, hours_ago=0)),
                          "[2013-07-04 01:00:00 PDT (1372924800) -> 2013-07-04 02:00:00 PDT (1372928400)]")
@@ -192,6 +195,7 @@ class WeeutilTest(unittest.TestCase):
 
     def test_archiveSpanSpan(self):
         os.environ['TZ'] = 'Australia/Brisbane'
+        time.tzset()
         time_ts = time.mktime(time.strptime("2015-07-21 09:05:35", "%Y-%m-%d %H:%M:%S"))
         self.assertEqual(time_ts, 1437433535)
         self.assertEqual(archiveSpanSpan(time_ts, time_delta=3600), TimeSpan(1437429935, 1437433535))
@@ -206,6 +210,7 @@ class WeeutilTest(unittest.TestCase):
         # Test over a DST boundary. Because Brisbane does not observe DST, we need to
         # switch timezones.
         os.environ['TZ'] = 'America/Los_Angeles'
+        time.tzset()
         time_ts = time.mktime(time.strptime("2016-03-13 10:00:00", "%Y-%m-%d %H:%M:%S"))
         self.assertEqual(time_ts, 1457888400)
         span = archiveSpanSpan(time_ts, day_delta=1)
@@ -216,16 +221,19 @@ class WeeutilTest(unittest.TestCase):
 
     def test_isMidnight(self):
         os.environ['TZ'] = 'America/Los_Angeles'
+        time.tzset()
         self.assertFalse(isMidnight(time.mktime(time.strptime("2013-07-04 01:57:35", "%Y-%m-%d %H:%M:%S"))))
         self.assertTrue(isMidnight(time.mktime(time.strptime("2013-07-04 00:00:00", "%Y-%m-%d %H:%M:%S"))))
 
     def test_isStartOfDay(self):
         os.environ['TZ'] = 'America/Los_Angeles'
+        time.tzset()
         self.assertFalse(isStartOfDay(time.mktime(time.strptime("2013-07-04 01:57:35", "%Y-%m-%d %H:%M:%S"))))
         self.assertTrue(isStartOfDay(time.mktime(time.strptime("2013-07-04 00:00:00", "%Y-%m-%d %H:%M:%S"))))
 
         # Brazilian DST starts at midnight
         os.environ['TZ'] = 'America/Sao_Paulo'
+        time.tzset()
         # This time is the start of DST and considered the start of the day: 4-11-2018 0100
         self.assertTrue(isStartOfDay(1541300400))
         self.assertFalse(isStartOfDay(1541300400 - 10))
@@ -233,6 +241,7 @@ class WeeutilTest(unittest.TestCase):
     def test_startOfInterval(self):
 
         os.environ['TZ'] = 'America/Los_Angeles'
+        time.tzset()
 
         t_length = 1 * 60
         t_test = time.mktime((2009, 3, 4, 1, 57, 17, 0, 0, 0))
@@ -385,6 +394,7 @@ class WeeutilTest(unittest.TestCase):
     def test_genYearSpans(self):
 
         os.environ['TZ'] = 'America/Los_Angeles'
+        time.tzset()
 
         # Should generate years 2007 through 2008:"
         start_ts = time.mktime((2007, 12, 3, 10, 15, 0, 0, 0, -1))
@@ -401,6 +411,7 @@ class WeeutilTest(unittest.TestCase):
     def test_genMonthSpans(self):
 
         os.environ['TZ'] = 'America/Los_Angeles'
+        time.tzset()
 
         # Should generate months 2007-12 through 2008-02:
         start_ts = time.mktime((2007, 12, 3, 10, 15, 0, 0, 0, -1))
@@ -432,6 +443,7 @@ class WeeutilTest(unittest.TestCase):
     def test_genDaySpans(self):
 
         os.environ['TZ'] = 'America/Los_Angeles'
+        time.tzset()
 
         # Should generate 2007-12-23 through 2008-1-5:"
         start_ts = time.mktime((2007, 12, 23, 10, 15, 0, 0, 0, -1))
@@ -468,6 +480,7 @@ class WeeutilTest(unittest.TestCase):
     def test_genHourSpans(self):
 
         os.environ['TZ'] = 'America/Los_Angeles'
+        time.tzset()
 
         # Should generate throught 2007-12-23 20:00:00 throught 2007-12-24 4:00:00
         start_ts = time.mktime((2007, 12, 23, 20, 15, 0, 0, 0, -1))
@@ -499,6 +512,7 @@ class WeeutilTest(unittest.TestCase):
     def test_archiveDaySpan(self):
 
         os.environ['TZ'] = 'America/Los_Angeles'
+        time.tzset()
 
         self.assertEqual(archiveDaySpan(time.mktime((2007, 12, 13, 10, 15, 0, 0, 0, -1))),
                          TimeSpan(time.mktime((2007, 12, 13, 0, 0, 0, 0, 0, -1)),
@@ -519,6 +533,7 @@ class WeeutilTest(unittest.TestCase):
     def test_archiveWeekSpan(self):
 
         os.environ['TZ'] = 'America/Los_Angeles'
+        time.tzset()
 
         self.assertEqual(archiveWeekSpan(time.mktime((2007, 12, 13, 10, 15, 0, 0, 0, -1))),
                          TimeSpan(time.mktime((2007, 12, 9, 0, 0, 0, 0, 0, -1)),
@@ -535,6 +550,7 @@ class WeeutilTest(unittest.TestCase):
     def test_archiveMonthSpan(self):
 
         os.environ['TZ'] = 'America/Los_Angeles'
+        time.tzset()
 
         self.assertEqual(archiveMonthSpan(time.mktime((2007, 12, 13, 10, 15, 0, 0, 0, -1))),
                          TimeSpan(time.mktime((2007, 12, 1, 0, 0, 0, 0, 0, -1)),
@@ -554,6 +570,7 @@ class WeeutilTest(unittest.TestCase):
     def test_archiveYearSpan(self):
 
         os.environ['TZ'] = 'America/Los_Angeles'
+        time.tzset()
 
         self.assertEqual(archiveYearSpan(time.mktime((2007, 12, 13, 10, 15, 0, 0, 0, -1))),
                          TimeSpan(time.mktime((2007, 1, 1, 0, 0, 0, 0, 0, -1)),
@@ -570,6 +587,7 @@ class WeeutilTest(unittest.TestCase):
     def test_archiveRainYearSpan(self):
 
         os.environ['TZ'] = 'America/Los_Angeles'
+        time.tzset()
 
         self.assertEqual(archiveRainYearSpan(time.mktime((2007, 2, 13, 10, 15, 0, 0, 0, -1)), 10),
                          TimeSpan(time.mktime((2006, 10, 1, 0, 0, 0, 0, 0, -1)),
@@ -583,6 +601,7 @@ class WeeutilTest(unittest.TestCase):
     def test_DST(self):
 
         os.environ['TZ'] = 'America/Los_Angeles'
+        time.tzset()
 
         # Test start-of-day routines around a DST boundary:
         start_ts = time.mktime((2007, 3, 11, 1, 0, 0, 0, 0, -1))
@@ -690,6 +709,7 @@ class WeeutilTest(unittest.TestCase):
         for i, t in enumerate(times):
             for j, l in enumerate(locs):
                 os.environ['TZ'] = l[3]
+                time.tzset()
                 first, values = getDayNightTransitions(t[0], t[1], l[0], l[1])
 
                 self.assertEqual("lat: %s lon: %s %s first: %s" % (l[0], l[1], l[2], first),
@@ -711,6 +731,7 @@ class WeeutilTest(unittest.TestCase):
     def test_utc_conversions(self):
         self.assertEqual(utc_to_ts(2009, 3, 27, 14.5), 1238164200)
         os.environ['TZ'] = 'America/Los_Angeles'
+        time.tzset()
         tt = utc_to_local_tt(2009, 3, 27, 14.5)
         self.assertEqual(tt[0:5], (2009, 3, 27, 7, 30))
 

@@ -15,6 +15,7 @@ import os.path
 import configobj
 
 os.environ['TZ'] = 'America/Los_Angeles'
+time.tzset()
 
 import weedb
 import weeutil.weeutil

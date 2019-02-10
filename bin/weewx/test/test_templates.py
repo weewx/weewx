@@ -23,6 +23,7 @@ import configobj
 #
 
 os.environ['TZ'] = 'America/Los_Angeles'
+time.tzset()
 
 # This will use the locale specified by the environment variable 'LANG'
 # Other options are possible. See:

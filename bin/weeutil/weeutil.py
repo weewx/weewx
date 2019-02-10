@@ -21,7 +21,7 @@ import traceback
 
 # Compatibility shims
 import six
-from six.moves import StringIO
+from six.moves import StringIO, input
 
 # For backwards compatibility:
 from weeutil import config
@@ -100,6 +100,7 @@ def stampgen(startstamp, stopstamp, interval):
     Example:
     
     >>> os.environ['TZ'] = 'America/Los_Angeles'
+    >>> time.tzset()
     >>> startstamp = 1236560400
     >>> print(timestamp_to_string(startstamp))
     2009-03-08 18:00:00 PDT (1236560400)
@@ -178,6 +179,7 @@ def startOfInterval(time_ts, interval):
     Examples:
     
     >>> os.environ['TZ'] = 'America/Los_Angeles'
+    >>> time.tzset()
     >>> start_ts = time.mktime(time.strptime("2013-07-04 01:57:35", "%Y-%m-%d %H:%M:%S"))
     >>> time.ctime(startOfInterval(start_ts,  300))
     'Thu Jul  4 01:55:00 2013'
@@ -304,6 +306,7 @@ def intervalgen(start_ts, stop_ts, interval):
     Example:
     
     >>> os.environ['TZ'] = 'America/Los_Angeles'
+    >>> time.tzset()
     >>> startstamp = 1236477600
     >>> print(timestamp_to_string(startstamp))
     2009-03-07 18:00:00 PST (1236477600)
@@ -391,6 +394,7 @@ def archiveHoursAgoSpan(time_ts, hours_ago=0, grace=1):
     
     Example:
     >>> os.environ['TZ'] = 'America/Los_Angeles'
+    >>> time.tzset()
     >>> time_ts = time.mktime(time.strptime("2013-07-04 01:57:35", "%Y-%m-%d %H:%M:%S"))
     >>> print(archiveHoursAgoSpan(time_ts, hours_ago=0))
     [2013-07-04 01:00:00 PDT (1372924800) -> 2013-07-04 02:00:00 PDT (1372928400)]
@@ -421,6 +425,7 @@ def archiveSpanSpan(time_ts, time_delta=0, hour_delta=0, day_delta=0, week_delta
     
     Example:
     >>> os.environ['TZ'] = 'Australia/Brisbane'
+    >>> time.tzset()
     >>> time_ts = time.mktime(time.strptime("2015-07-21 09:05:35", "%Y-%m-%d %H:%M:%S"))
     >>> print(archiveSpanSpan(time_ts, time_delta=3600))
     [2015-07-21 08:05:35 AEST (1437429935) -> 2015-07-21 09:05:35 AEST (1437433535)]
@@ -442,6 +447,7 @@ def archiveSpanSpan(time_ts, time_delta=0, hour_delta=0, day_delta=0, week_delta
     Example over a DST boundary. Because Brisbane does not observe DST, we need to
     switch timezones.
     >>> os.environ['TZ'] = 'America/Los_Angeles'
+    >>> time.tzset()
     >>> time_ts = 1457888400
     >>> print(timestamp_to_string(time_ts))
     2016-03-13 10:00:00 PDT (1457888400)
@@ -486,6 +492,7 @@ def isMidnight(time_ts):
     
     Example:
     >>> os.environ['TZ'] = 'America/Los_Angeles'
+    >>> time.tzset()
     >>> time_ts = time.mktime(time.strptime("2013-07-04 01:57:35", "%Y-%m-%d %H:%M:%S"))
     >>> print(isMidnight(time_ts))
     False
@@ -502,6 +509,7 @@ def isStartOfDay(time_ts):
     """Is the indicated time at the start of the day, local time?
     Example:
     >>> os.environ['TZ'] = 'America/Los_Angeles'
+    >>> time.tzset()
     >>> time_ts = time.mktime(time.strptime("2013-07-04 01:57:35", "%Y-%m-%d %H:%M:%S"))
     >>> print(isStartOfDay(time_ts))
     False
@@ -509,6 +517,7 @@ def isStartOfDay(time_ts):
     >>> print(isStartOfDay(time_ts))
     True
     >>> os.environ['TZ'] = 'America/Sao_Paulo'
+    >>> time.tzset()
     >>> time_ts = 1541300400
     >>> print(isStartOfDay(time_ts))
     True
@@ -541,6 +550,7 @@ def archiveDaySpan(time_ts, grace=1, days_ago=0):
     
     Example, which spans the end-of-year boundary
     >>> os.environ['TZ'] = 'America/Los_Angeles'
+    >>> time.tzset()
     >>> time_ts = time.mktime(time.strptime("2014-01-01 01:57:35", "%Y-%m-%d %H:%M:%S"))
     
     As for today:
@@ -589,6 +599,7 @@ def archiveWeekSpan(time_ts, startOfWeek=6, grace=1, weeks_ago=0):
     
     Example:
     >>> os.environ['TZ'] = 'America/Los_Angeles'
+    >>> time.tzset()
     >>> time_ts = 1483429962
     >>> print(timestamp_to_string(time_ts))
     2017-01-02 23:52:42 PST (1483429962)
@@ -631,6 +642,7 @@ def archiveMonthSpan(time_ts, grace=1, months_ago=0):
     
     Example:
     >>> os.environ['TZ'] = 'America/Los_Angeles'
+    >>> time.tzset()
     >>> time_ts = 1483429962
     >>> print(timestamp_to_string(time_ts))
     2017-01-02 23:52:42 PST (1483429962)
@@ -725,6 +737,7 @@ def genHourSpans(start_ts, stop_ts):
     Example:
 
     >>> os.environ['TZ'] = 'America/Los_Angeles'
+    >>> time.tzset()
     >>> start_ts = 1204796460
     >>> stop_ts  = 1204818360
 
@@ -768,6 +781,7 @@ def genDaySpans(start_ts, stop_ts):
     Example:
     
     >>> os.environ['TZ'] = 'America/Los_Angeles'
+    >>> time.tzset()
     >>> start_ts = 1204796460
     >>> stop_ts  = 1205265720
     
@@ -815,6 +829,7 @@ def genMonthSpans(start_ts, stop_ts):
     Example:
     
     >>> os.environ['TZ'] = 'America/Los_Angeles'
+    >>> time.tzset()
     >>> start_ts = 1196705700
     >>> stop_ts  = 1206101100
     >>> print("start time is %s" % timestamp_to_string(start_ts))
@@ -902,6 +917,7 @@ def startOfGregorianDay(date_greg):
     Example:
     
     >>> os.environ['TZ'] = 'America/Los_Angeles'
+    >>> time.tzset()
     >>> date_greg = 735973  # 10-Jan-2016
     >>> print(startOfGregorianDay(date_greg))
     1452412800
@@ -921,6 +937,7 @@ def toGregorianDay(time_ts):
     
     Example:
     >>> os.environ['TZ'] = 'America/Los_Angeles'
+    >>> time.tzset()
     >>> time_ts = 1452412800  # Midnight, 10-Jan-2016
     >>> print(toGregorianDay(time_ts))
     735972
@@ -1023,6 +1040,7 @@ def timestamp_to_string(ts, format_str="%Y-%m-%d %H:%M:%S %Z"):
     Example:
 
     >>> os.environ['TZ'] = 'America/Los_Angeles'
+    >>> time.tzset()
     >>> print(timestamp_to_string(1196705700))
     2007-12-03 10:15:00 PST (1196705700)
     >>> print(timestamp_to_string(None))
@@ -1077,6 +1095,7 @@ def utc_to_local_tt(y, m, d, hrs_utc):
     Returns: A timetuple with the local time.
     
     >>> os.environ['TZ'] = 'America/Los_Angeles'
+    >>> time.tzset()
     >>> tt=utc_to_local_tt(2009, 3, 27, 14.5)
     >>> print(tt.tm_year, tt.tm_mon, tt.tm_mday, tt.tm_hour, tt.tm_min)
     2009 3 27 7 30
@@ -1179,13 +1198,16 @@ class GenWithPeek(object):
     def __iter__(self):
         return self
 
-    def next(self):
+    def __next__(self):
         """Advance to the next object"""
         if self.have_peek:
             self.have_peek = False
             return self.peek_obj
         else:
             return next(self.generator)
+
+    # For Python 2:
+    next = __next__
 
     def peek(self):
         """Take a peek at the next object"""
@@ -1394,7 +1416,7 @@ def y_or_n(msg, noprompt):
 
     ans = None
     while ans not in ['y', 'n']:
-        ans = six.input(msg)
+        ans = input(msg)
     return ans
 
 
