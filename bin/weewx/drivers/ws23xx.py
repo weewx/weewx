@@ -250,6 +250,7 @@ import select
 import struct
 import termios
 import tty
+from functools import reduce
 
 import weeutil.weeutil
 import weewx.drivers

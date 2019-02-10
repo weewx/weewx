@@ -22,6 +22,7 @@ for sample (java) code.
 import time
 import operator
 import syslog
+from functools import reduce
 
 import serial
 

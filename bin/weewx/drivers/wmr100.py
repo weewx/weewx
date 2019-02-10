@@ -40,6 +40,7 @@ it out of the source code, available at:
 import time
 import operator
 import syslog
+from functools import reduce
 
 import usb
 
