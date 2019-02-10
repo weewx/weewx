@@ -2082,8 +2082,8 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
                 zone_code = 'N/A'
             on_off = "ON" if retransmit_channel else "OFF"
             print(u"""    CONSOLE STATION INFO:
-      Latitude (onboard):           %+0.1f°
-      Longitude (onboard):          %+0.1f°
+      Latitude (onboard):           %+0.1f
+      Longitude (onboard):          %+0.1f
       Use manual or auto DST?       %s
       DST setting:                  %s
       Use GMT offset or zone code?  %s
