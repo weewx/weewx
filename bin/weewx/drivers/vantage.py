@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 #
 #    Copyright (c) 2009-2019 Tom Keffer <tkeffer@gmail.com>
 #
@@ -2029,18 +2030,18 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
 
         print("Querying...")
         try:
-            _firmware_date = station.getFirmwareDate()
+            _firmware_date = station.getFirmwareDate().decode('ascii')
         except weewx.RetriesExceeded:
-            _firmware_date = "<Unavailable>"
+            _firmware_date = u"<Unavailable>"
         try:
-            _firmware_version = station.getFirmwareVersion()
+            _firmware_version = station.getFirmwareVersion().decode('ascii')
         except weewx.RetriesExceeded:
-            _firmware_version = '<Unavailable>'
+            _firmware_version = u'<Unavailable>'
     
         console_time = station.getConsoleTime()
         altitude_converted = weewx.units.convert(station.altitude_vt, station.altitude_unit)[0]
     
-        print("""Davis Vantage EEPROM settings:
+        print(u"""Davis Vantage EEPROM settings:
     
     CONSOLE TYPE:                   %s
     
@@ -2080,9 +2081,9 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
                 gmt_offset_str = "%+.1f hours" % gmt_offset
                 zone_code = 'N/A'
             on_off = "ON" if retransmit_channel else "OFF"
-            print("""    CONSOLE STATION INFO:
-      Latitude (onboard):           %+0.1f\xc2\xb0
-      Longitude (onboard):          %+0.1f\xc2\xb0
+            print(u"""    CONSOLE STATION INFO:
+      Latitude (onboard):           %+0.1f°
+      Longitude (onboard):          %+0.1f°
       Use manual or auto DST?       %s
       DST setting:                  %s
       Use GMT offset or zone code?  %s
