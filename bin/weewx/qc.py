@@ -55,7 +55,7 @@ class QC(object):
         """Apply quality checks to the data in a record"""
 
         for obs_type in self.min_max_dict:
-            if data_dict.has_key(obs_type) and data_dict[obs_type] is not None:
+            if obs_type in data_dict and data_dict[obs_type] is not None:
                 if not self.min_max_dict[obs_type][0] <= data_dict[obs_type] <= self.min_max_dict[obs_type][1]:
                     syslog.syslog(syslog.LOG_NOTICE, "%s: %s %s value '%s' %s outside limits (%s, %s)" %
                                   (self.parent,

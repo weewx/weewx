@@ -69,7 +69,7 @@ def conditional_merge(a_dict, b_dict):
 def option_as_list(option):
     if option is None:
         return None
-    return [option] if isinstance(option, str) else option
+    return [option] if not isinstance(option, list) else option
 
 
 def list_as_string(option):

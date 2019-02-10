@@ -95,6 +95,8 @@ import string
 import syslog
 import time
 
+from six import byte2int
+
 import weeutil.weeutil
 import weewx.drivers
 
@@ -642,7 +644,7 @@ def _to_ts(tstr, fmt="%Y/%m/%d %H:%M:%S"):
     return time.mktime(time.strptime(tstr, fmt))
 
 def _format_bytes(buf):
-    return ' '.join(["%0.2X" % ord(c) for c in buf])
+    return ' '.join(["%0.2X" % byte2int(c) for c in buf])
 
 def _fmt(buf):
     return filter(lambda x: x in string.printable, buf)
@@ -656,7 +658,7 @@ def _crc16(data):
         mask = 0x80
         while mask > 0:
             reg <<= 1
-            if ord(byte) & mask:
+            if byte2int(byte) & mask:
                 reg += 1
             mask >>= 1
             if reg > 0xffff:

@@ -14,7 +14,7 @@ import sys
 import syslog
 import time
 
-from six import int2byte
+from six import int2byte, indexbytes, byte2int
 
 from weewx.crc16 import crc16
 from weeutil.weeutil import to_int
@@ -1265,7 +1265,7 @@ class Vantage(weewx.drivers.AbstractDevice):
         for count in range(self.max_tries):
             try:
                 self.port.send_data(b"WRD\x12\x4d\n")
-                self.hardware_type = ord(self.port.read())
+                self.hardware_type = byte2int(self.port.read())
                 syslog.syslog(syslog.LOG_DEBUG, "vantage: Hardware type is %d" % self.hardware_type)
                 # 16 = Pro, Pro2, 17 = Vue
                 return self.hardware_type
@@ -1419,7 +1419,7 @@ class Vantage(weewx.drivers.AbstractDevice):
     
         # Detect the kind of LOOP packet. Type 'A' has the character 'P' in this
         # position. Type 'B' contains the 3-hour barometer trend in this position.
-        if raw_loop_packet['loop_type'] == ord(b'P'):
+        if raw_loop_packet['loop_type'] == byte2int(b'P'):
             raw_loop_packet['trendIcon'] = None
             raw_loop_packet['loop_type'] = 'A'
         else:
@@ -1466,7 +1466,7 @@ class Vantage(weewx.drivers.AbstractDevice):
         the results placed a dictionary"""
     
         # Figure out the packet type:
-        packet_type = ord(raw_archive_string[42])
+        packet_type = indexbytes(raw_archive_string, 42)
         
         if packet_type == 0xff:
             # Rev A packet type:
@@ -1829,6 +1829,9 @@ class VantageService(Vantage, weewx.engine.StdService):
     def __init__(self, engine, config_dict):
         Vantage.__init__(self, **config_dict[DRIVER_NAME])
         weewx.engine.StdService.__init__(self, engine, config_dict)
+
+        self.max_loop_gust = 0.0
+        self.max_loop_gustdir = None
 
         self.bind(weewx.STARTUP, self.startup)        
         self.bind(weewx.NEW_LOOP_PACKET,    self.new_loop_packet)

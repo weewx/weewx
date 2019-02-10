@@ -661,8 +661,8 @@ def pywws2weewx(p, ts, last_rain, last_rain_ts, max_rain_rate):
             packet[k] = None
 
     # track the pointer used to obtain the data
-    packet['ptr'] = int(p['ptr']) if p.has_key('ptr') else None
-    packet['delay'] = int(p['delay']) if p.has_key('delay') else None
+    packet['ptr'] = int(p['ptr']) if 'ptr' in p else None
+    packet['delay'] = int(p['delay']) if 'delay' in p else None
 
     # station status is an integer
     if packet['status'] is not None:

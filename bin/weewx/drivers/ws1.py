@@ -17,6 +17,8 @@ from __future__ import with_statement
 import syslog
 import time
 
+from six import byte2int
+
 from weewx.units import INHG_PER_MBAR, MILE_PER_KM
 import weewx.drivers
 
@@ -250,7 +252,7 @@ class StationSerial(object):
     def get_readings(self):
         buf = self.serial_port.readline()
         if DEBUG_READ >= 2:
-            logdbg("bytes: '%s'" % ' '.join(["%0.2X" % ord(c) for c in buf]))
+            logdbg("bytes: '%s'" % ' '.join(["%0.2X" % byte2int(c) for c in buf]))
         buf = buf.strip()
         return buf
 
@@ -402,7 +404,7 @@ class StationSocket(object):
                         raise weewx.WeeWxIOError(ex)
                     if DEBUG_READ >= 2:
                             logdbg("buf: %s" % ' '.join(
-                                   ['%02X' % ord(bc) for bc in buf]))
+                                   ['%02X' % byte2int(bc) for bc in buf]))
             try:
                 buf += self.net_socket.recv(
                     PACKET_SIZE - len(buf), socket.MSG_WAITALL)
