@@ -87,7 +87,7 @@ def list_as_string(option):
     Reno, NV
     """
     # Check if it's already a string.
-    if option is not None and not isinstance(option, str):
+    if option is not None and not isinstance(option, six.string_types):
         return ', '.join(option)
     return option
 
