@@ -7,8 +7,8 @@
 
 import decimal
 
+import six
 import MySQLdb
-from _mysql_exceptions import DatabaseError, IntegrityError, ProgrammingError, OperationalError
 
 from weeutil.weeutil import to_bool
 import weedb
@@ -39,12 +39,19 @@ def guard(fn):
     def guarded_fn(*args, **kwargs):
         try:
             return fn(*args, **kwargs)
-        except DatabaseError as e:
-            # Default exception is weedb.DatabaseError
+        except MySQLdb.DatabaseError as e:
+            # Get the MySQL exception number out of e:
             try:
                 errno = e[0]
+            except TypeError:
+                try:
+                    # The package mysqlclient uses an attribute 'args':
+                    errno = e.args[0]
+                except (IndexError, AttributeError):
+                    errno = None
             except IndexError:
                 errno = None
+            # Default exception is weedb.DatabaseError
             klass = exception_map.get(errno, weedb.DatabaseError)
             raise klass(e)
 
@@ -269,11 +276,14 @@ class Cursor(object):
     def __iter__(self):
         return self
 
-    def next(self):
+    def __next__(self):
         result = self.fetchone()
         if result is None:
             raise StopIteration
         return result
+
+    # For Python 2 compatibility:
+    next = __next__
 
     def __enter__(self):
         return self
@@ -288,7 +298,7 @@ class Cursor(object):
 def _massage(seq):
     # Return the _massaged sequence if it exists, otherwise, return None
     if seq is not None:
-        return [int(i) if isinstance(i, long) or isinstance(i, decimal.Decimal) else i for i in seq]
+        return [int(i) if isinstance(i, six.integer_types) or isinstance(i, decimal.Decimal) else i for i in seq]
 
 def set_engine(connect, engine):
     """Set the default MySQL storage engine."""

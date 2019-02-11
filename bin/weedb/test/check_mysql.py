@@ -10,7 +10,11 @@ from __future__ import with_statement
 import unittest
 
 import MySQLdb
-from _mysql_exceptions import IntegrityError, ProgrammingError, OperationalError
+try:
+    from _mysql_exceptions import IntegrityError, ProgrammingError, OperationalError
+except ImportError:
+    from MySQLdb import IntegrityError, ProgrammingError, OperationalError
+
 
 class Cursor(object):
     """Class to be used to wrap a cursor in a 'with' clause."""

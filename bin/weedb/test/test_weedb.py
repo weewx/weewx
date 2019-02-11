@@ -39,7 +39,8 @@ class Common(unittest.TestCase):
 
     def tearDown(self):
         try:
-            weedb.drop(self.db_dict)
+            # weedb.drop(self.db_dict)
+            pass
         except:
             pass
 
@@ -220,7 +221,7 @@ def suite():
     tests = ['test_drop', 'test_double_create', 'test_no_db', 'test_no_tables', 
              'test_create', 'test_bad_table', 'test_select', 'test_bad_select',
              'test_rollback', 'test_transaction', 'test_variable']
-    return unittest.TestSuite(map(TestSqlite, tests) + map(TestMySQL, tests))
+    return unittest.TestSuite(list(map(TestSqlite, tests)) + list(map(TestMySQL, tests)))
 
 if __name__ == '__main__':
     unittest.TextTestRunner(verbosity=2).run(suite())

@@ -184,7 +184,7 @@ class TestMySQL(Common):
         try:
             import MySQLdb
         except ImportError as e:
-            raise unittest.case.SkipTest(e.message)
+            raise unittest.case.SkipTest(e)
         super(TestMySQL, self).setUp()        
         
     
