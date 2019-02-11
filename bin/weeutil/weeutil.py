@@ -1407,7 +1407,7 @@ def to_sorted_string(rec):
     return ", ".join(["%s: %s" % (k, rec.get(k)) for k in sorted(rec, key=str.lower)])
 
 
-def y_or_n(msg, noprompt):
+def y_or_n(msg, noprompt=False):
     """Prompt and look for a 'y' or 'n' response"""
 
     # If noprompt is truthy, always return 'y'
