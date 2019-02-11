@@ -17,6 +17,7 @@ import time
 import unittest
 
 import configobj
+import six
 
 os.environ['TZ'] = 'America/Los_Angeles'
 time.tzset()
@@ -189,10 +190,10 @@ class Common(unittest.TestCase):
                                                        time.mktime((2010,3,16,0,0,0,0,0,-1))),
                      'week' : weeutil.weeutil.TimeSpan(time.mktime((2010,3,14,0,0,0,0,0,-1)),
                                                        time.mktime((2010,3,21,0,0,0,0,0,-1))),
-                     'month': weeutil.weeutil.TimeSpan(time.mktime((2010,3,01,0,0,0,0,0,-1)),
-                                                       time.mktime((2010,4,01,0,0,0,0,0,-1))),
-                     'year' : weeutil.weeutil.TimeSpan(time.mktime((2010,1,01,0,0,0,0,0,-1)),
-                                                       time.mktime((2011,1,01,0,0,0,0,0,-1)))}
+                     'month': weeutil.weeutil.TimeSpan(time.mktime((2010,3, 1,0,0,0,0,0,-1)),
+                                                       time.mktime((2010,4, 1,0,0,0,0,0,-1))),
+                     'year' : weeutil.weeutil.TimeSpan(time.mktime((2010,1, 1,0,0,0,0,0,-1)),
+                                                       time.mktime((2011,1, 1,0,0,0,0,0,-1)))}
     
             # This may not necessarily execute in the order specified above:
             for span in spans:
@@ -224,46 +225,46 @@ class Common(unittest.TestCase):
             tagStats = weewx.tags.TimeBinder(db_lookup, spans['month'].stop,
                                              rain_year_start=1,
                                              skin_dict=skin_dict)
-            self.assertEqual(str(tagStats.day().barometer.avg), "30.675 inHg")
-            self.assertEqual(str(tagStats.day().barometer.min), "30.065 inHg")
-            self.assertEqual(str(tagStats.day().barometer.max), "31.000 inHg")
-            self.assertEqual(str(tagStats.day().barometer.mintime), "00:00")
-            self.assertEqual(str(tagStats.day().barometer.maxtime), "01:00")
-            self.assertEqual(str(tagStats.week().barometer.avg), "29.904 inHg")
-            self.assertEqual(str(tagStats.week().barometer.min), "29.000 inHg")
-            self.assertEqual(str(tagStats.week().barometer.max), "31.000 inHg")
-            self.assertEqual(str(tagStats.week().barometer.mintime), "01:00 on Monday")
-            self.assertEqual(str(tagStats.week().barometer.maxtime), "01:00 on Wednesday")
-            self.assertEqual(str(tagStats.month().barometer.avg), "30.021 inHg")
-            self.assertEqual(str(tagStats.month().barometer.min), "29.000 inHg")
-            self.assertEqual(str(tagStats.month().barometer.max), "31.000 inHg")
-            self.assertEqual(str(tagStats.month().barometer.mintime), "05-Mar-2010 00:00")
-            self.assertEqual(str(tagStats.month().barometer.maxtime), "03-Mar-2010 00:00")
-            self.assertEqual(str(tagStats.year().barometer.avg), "30.004 inHg")
-            self.assertEqual(str(tagStats.year().barometer.min), "29.000 inHg")
-            self.assertEqual(str(tagStats.year().barometer.max), "31.000 inHg")
-            self.assertEqual(str(tagStats.year().barometer.mintime), "04-Jan-2010 00:00")
-            self.assertEqual(str(tagStats.year().barometer.maxtime), "02-Jan-2010 00:00")
-            self.assertEqual(str(tagStats.day().outTemp.avg), "38.8°F")
-            self.assertEqual(str(tagStats.day().outTemp.min), "18.6°F")
-            self.assertEqual(str(tagStats.day().outTemp.max), "59.0°F")
-            self.assertEqual(str(tagStats.day().outTemp.mintime), "07:00")
-            self.assertEqual(str(tagStats.day().outTemp.maxtime), "19:00")
-            self.assertEqual(str(tagStats.week().outTemp.avg), "38.8°F")
-            self.assertEqual(str(tagStats.week().outTemp.min), "16.6°F")
-            self.assertEqual(str(tagStats.week().outTemp.max), "61.0°F")
-            self.assertEqual(str(tagStats.week().outTemp.mintime), "07:00 on Sunday")
-            self.assertEqual(str(tagStats.week().outTemp.maxtime), "19:00 on Saturday")
-            self.assertEqual(str(tagStats.month().outTemp.avg), "28.7°F")
-            self.assertEqual(str(tagStats.month().outTemp.min), "-0.9°F")
-            self.assertEqual(str(tagStats.month().outTemp.max), "59.0°F")
-            self.assertEqual(str(tagStats.month().outTemp.mintime), "01-Mar-2010 06:00")
-            self.assertEqual(str(tagStats.month().outTemp.maxtime), "31-Mar-2010 19:00")
-            self.assertEqual(str(tagStats.year().outTemp.avg), "48.3°F")
-            self.assertEqual(str(tagStats.year().outTemp.min), "-20.0°F")
-            self.assertEqual(str(tagStats.year().outTemp.max), "100.0°F")
-            self.assertEqual(str(tagStats.year().outTemp.mintime), "01-Jan-2010 06:00")
-            self.assertEqual(str(tagStats.year().outTemp.maxtime), "02-Jul-2010 19:00")
+            self.assertEqual(six.text_type(tagStats.day().barometer.avg), "30.675 inHg")
+            self.assertEqual(six.text_type(tagStats.day().barometer.min), "30.065 inHg")
+            self.assertEqual(six.text_type(tagStats.day().barometer.max), "31.000 inHg")
+            self.assertEqual(six.text_type(tagStats.day().barometer.mintime), "00:00")
+            self.assertEqual(six.text_type(tagStats.day().barometer.maxtime), "01:00")
+            self.assertEqual(six.text_type(tagStats.week().barometer.avg), "29.904 inHg")
+            self.assertEqual(six.text_type(tagStats.week().barometer.min), "29.000 inHg")
+            self.assertEqual(six.text_type(tagStats.week().barometer.max), "31.000 inHg")
+            self.assertEqual(six.text_type(tagStats.week().barometer.mintime), "01:00 on Monday")
+            self.assertEqual(six.text_type(tagStats.week().barometer.maxtime), "01:00 on Wednesday")
+            self.assertEqual(six.text_type(tagStats.month().barometer.avg), "30.021 inHg")
+            self.assertEqual(six.text_type(tagStats.month().barometer.min), "29.000 inHg")
+            self.assertEqual(six.text_type(tagStats.month().barometer.max), "31.000 inHg")
+            self.assertEqual(six.text_type(tagStats.month().barometer.mintime), "05-Mar-2010 00:00")
+            self.assertEqual(six.text_type(tagStats.month().barometer.maxtime), "03-Mar-2010 00:00")
+            self.assertEqual(six.text_type(tagStats.year().barometer.avg), "30.004 inHg")
+            self.assertEqual(six.text_type(tagStats.year().barometer.min), "29.000 inHg")
+            self.assertEqual(six.text_type(tagStats.year().barometer.max), "31.000 inHg")
+            self.assertEqual(six.text_type(tagStats.year().barometer.mintime), "04-Jan-2010 00:00")
+            self.assertEqual(six.text_type(tagStats.year().barometer.maxtime), "02-Jan-2010 00:00")
+            self.assertEqual(six.text_type(tagStats.day().outTemp.avg), u"38.8°F")
+            self.assertEqual(six.text_type(tagStats.day().outTemp.min), u"18.6°F")
+            self.assertEqual(six.text_type(tagStats.day().outTemp.max), u"59.0°F")
+            self.assertEqual(six.text_type(tagStats.day().outTemp.mintime), "07:00")
+            self.assertEqual(six.text_type(tagStats.day().outTemp.maxtime), "19:00")
+            self.assertEqual(six.text_type(tagStats.week().outTemp.avg), u"38.8°F")
+            self.assertEqual(six.text_type(tagStats.week().outTemp.min), u"16.6°F")
+            self.assertEqual(six.text_type(tagStats.week().outTemp.max), u"61.0°F")
+            self.assertEqual(six.text_type(tagStats.week().outTemp.mintime), "07:00 on Sunday")
+            self.assertEqual(six.text_type(tagStats.week().outTemp.maxtime), "19:00 on Saturday")
+            self.assertEqual(six.text_type(tagStats.month().outTemp.avg), u"28.7°F")
+            self.assertEqual(six.text_type(tagStats.month().outTemp.min), u"-0.9°F")
+            self.assertEqual(six.text_type(tagStats.month().outTemp.max), u"59.0°F")
+            self.assertEqual(six.text_type(tagStats.month().outTemp.mintime), "01-Mar-2010 06:00")
+            self.assertEqual(six.text_type(tagStats.month().outTemp.maxtime), "31-Mar-2010 19:00")
+            self.assertEqual(six.text_type(tagStats.year().outTemp.avg), u"48.3°F")
+            self.assertEqual(six.text_type(tagStats.year().outTemp.min), u"-20.0°F")
+            self.assertEqual(six.text_type(tagStats.year().outTemp.max), u"100.0°F")
+            self.assertEqual(six.text_type(tagStats.year().outTemp.mintime), "01-Jan-2010 06:00")
+            self.assertEqual(six.text_type(tagStats.year().outTemp.maxtime), "02-Jul-2010 19:00")
             
             # Check the special aggregate types "exists" and "has_data":
             self.assertTrue(tagStats.year().barometer.exists)
@@ -283,16 +284,16 @@ class Common(unittest.TestCase):
                                                   time.mktime((2010,3,14,8,0,0,0,0,-1)))
  
         tsb = weewx.tags.TimespanBinder(six_hour_span, db_lookup)
-        self.assertEqual(str(tsb.outTemp.max), "21.0°F")
-        self.assertEqual(str(tsb.outTemp.maxtime), "14-Mar-2010 01:10")
-        self.assertEqual(str(tsb.outTemp.min), "7.1°F")
-        self.assertEqual(str(tsb.outTemp.mintime), "14-Mar-2010 07:00")
-        self.assertEqual(str(tsb.outTemp.avg), "11.4°F")
+        self.assertEqual(six.text_type(tsb.outTemp.max), u"21.0°F")
+        self.assertEqual(six.text_type(tsb.outTemp.maxtime), "14-Mar-2010 01:10")
+        self.assertEqual(six.text_type(tsb.outTemp.min), u"7.1°F")
+        self.assertEqual(six.text_type(tsb.outTemp.mintime), "14-Mar-2010 07:00")
+        self.assertEqual(six.text_type(tsb.outTemp.avg), u"11.4°F")
         
         rain_span = weeutil.weeutil.TimeSpan(time.mktime((2010,3,14,20,10,0,0,0,-1)),
                                              time.mktime((2010,3,14,23,10,0,0,0,-1)))
         tsb = weewx.tags.TimespanBinder(rain_span, db_lookup)
-        self.assertEqual(str(tsb.rain.sum), "0.26 in")
+        self.assertEqual(six.text_type(tsb.rain.sum), "0.26 in")
         
     def test_agg(self):
         """Test aggregation in the archive table against aggregation in the daily summary"""
@@ -306,37 +307,37 @@ class Common(unittest.TestCase):
                     # Get the answer using the raw archive  table:
                     table_answer = ValueHelper(weewx.manager.Manager.getAggregate(manager, day_span, 'outTemp', aggregation))
                     daily_answer = ValueHelper(weewx.manager.DaySummaryManager.getAggregate(manager, day_span, 'outTemp', aggregation))
-                    self.assertEqual(str(table_answer), str(daily_answer), 
+                    self.assertEqual(six.text_type(table_answer), six.text_type(daily_answer),
                                      msg="aggregation=%s; %s vs %s" % (aggregation, table_answer, daily_answer))
             
     def test_rainYear(self):
         db_binder = weewx.manager.DBBinder(self.config_dict)
         db_lookup = db_binder.bind_default()
 
-        stop_ts = time.mktime((2011,1,01,0,0,0,0,0,-1))
+        stop_ts = time.mktime((2011,1, 1,0,0,0,0,0,-1))
         # Check for a rain year starting 1-Jan
         tagStats = weewx.tags.TimeBinder(db_lookup, stop_ts,
                                            rain_year_start=1)
             
-        self.assertEqual(str(tagStats.rainyear().rain.sum), "58.68 in")
+        self.assertEqual(six.text_type(tagStats.rainyear().rain.sum), "58.68 in")
 
         # Do it again, for starting 1-Oct:
         tagStats = weewx.tags.TimeBinder(db_lookup, stop_ts,
                                            rain_year_start=6)
-        self.assertEqual(str(tagStats.rainyear().rain.sum), "22.72 in")
+        self.assertEqual(six.text_type(tagStats.rainyear().rain.sum), "22.72 in")
 
 
     def test_heatcool(self):
         db_binder = weewx.manager.DBBinder(self.config_dict)
         db_lookup = db_binder.bind_default()
         #Test heating and cooling degree days:
-        stop_ts = time.mktime((2011,1,01,0,0,0,0,0,-1))
+        stop_ts = time.mktime((2011,1, 1,0,0,0,0,0,-1))
 
         tagStats = weewx.tags.TimeBinder(db_lookup, stop_ts,
                                              skin_dict=skin_dict)
             
-        self.assertEqual(str(tagStats.year().heatdeg.sum), "5126.3°F-day")
-        self.assertEqual(str(tagStats.year().cooldeg.sum), "1026.2°F-day")
+        self.assertEqual(six.text_type(tagStats.year().heatdeg.sum), u"5126.3°F-day")
+        self.assertEqual(six.text_type(tagStats.year().cooldeg.sum), u"1026.2°F-day")
     
 
 class TestSqlite(Common):

@@ -608,13 +608,13 @@ class Formatter(object):
             # Can't find a label. Just return an empty string:
             return u''
 
-        # Is the label a simple string? If so, return it
-        if isinstance(label, six.text_type):
-            return label
-        else:
-            # It is not a simple string. Assume it is a tuple or list
-            # Return the singular, or plural, version as requested.
+        # Is the label a tuple or list?
+        if isinstance(label, (tuple, list)):
+            # Yes. Return the singular or plural version as requested
             return label[1] if plural else label[0]
+        else:
+            # No singular/plural version. It's just a string. Return it.
+            return label
 
     def toString(self, val_t, context='current', addLabel=True, 
                  useThisFormat=None, None_string=None, 

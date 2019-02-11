@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-#    Copyright (c) 2009-2015 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2019 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -11,6 +11,7 @@ import os.path
 import shutil
 import sys
 import syslog
+import time
 import unittest
 
 import configobj
@@ -114,7 +115,7 @@ class Common(unittest.TestCase):
         
         # The generation time should be the same as the last record in the test database:
         testtime_ts = gen_fake_data.stop_ts
-        print "\ntest time is ", weeutil.weeutil.timestamp_to_string(testtime_ts)
+        print("\ntest time is %s" % weeutil.weeutil.timestamp_to_string(testtime_ts))
 
         stn_info = weewx.station.StationInfo(**self.config_dict['Station'])
         
@@ -133,9 +134,9 @@ class Common(unittest.TestCase):
         t.config_dict['StdReport']['SKIN_ROOT'] = os.path.join(test_dir, 'test_skins')
         
         # Although the report engine inherits from Thread, we can just run it in the main thread:
-        print "Starting report engine test"
+        print("Starting report engine test")
         t.run()
-        print "Done."
+        print("Done.")
         
         test_html_dir = os.path.join(t.config_dict['WEEWX_ROOT'], t.config_dict['StdReport']['HTML_ROOT'])
         expected_dir  = os.path.join(test_dir, 'expected')
@@ -165,7 +166,7 @@ class Common(unittest.TestCase):
                             self.assertEqual(actual_line, expected_line, msg="%s[%d]:\n%r vs\n%r" %
                                              (actual_filename_abs, n, actual_line, expected_line))
 
-                        print "Checked %d lines" % (n,)
+                        print("Checked %d lines" % n)
 
 class TestSqlite(Common):
 
@@ -189,7 +190,7 @@ class TestMySQL(Common):
     
 def suite():
     tests = ['test_report_engine']
-    return unittest.TestSuite(map(TestSqlite, tests) + map(TestMySQL, tests))
+    return unittest.TestSuite(list(map(TestSqlite, tests)) + list(map(TestMySQL, tests)))
 
 if __name__ == '__main__':
     unittest.TextTestRunner(verbosity=2).run(suite())
