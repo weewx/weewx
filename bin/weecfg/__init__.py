@@ -241,7 +241,7 @@ def modify_config(config_dict, stn_info, logger, debug=False):
 
             # if a previous stanza exists for this driver, grab it
             if driver_name in config_dict:
-                orig_stanza = configobj.ConfigObj(interpolation=False, encoding='utf-8')
+                orig_stanza = configobj.ConfigObj(interpolation=False)
                 orig_stanza[driver_name] = config_dict[driver_name]
                 orig_stanza_text = '\n'.join(orig_stanza.write())
 
@@ -252,7 +252,7 @@ def modify_config(config_dict, stn_info, logger, debug=False):
             # let the driver modify other parts of the configuration
             driver_editor.modify_config(config_dict)
         else:
-            stanza = configobj.ConfigObj(interpolation=False, encoding='utf-8')
+            stanza = configobj.ConfigObj(interpolation=False)
             if driver_name in config_dict:
                 stanza[driver_name] = config_dict[driver_name]
             else:
@@ -436,7 +436,7 @@ def update_to_v25(config_dict):
     try:
         # V2.5 saw the introduction of the station registry:
         if 'StationRegistry' not in config_dict['StdRESTful']:
-            stnreg_dict = configobj.ConfigObj(StringIO("""[StdRESTful]
+            stnreg_dict = configobj.ConfigObj(StringIO(u"""[StdRESTful]
 
         [[StationRegistry]]
             # Uncomment the following line to register this weather station.
@@ -452,7 +452,7 @@ def update_to_v25(config_dict):
 
             driver = weewx.restful.StationRegistry
 
-    """), encoding='utf-8')
+    """))
             config_dict.merge(stnreg_dict)
     except KeyError:
         pass
@@ -609,7 +609,7 @@ def update_to_v26(config_dict):
     # Support for the WOW uploader was introduced
     try:
         if 'WOW' not in config_dict['StdRESTful']:
-            config_dict.merge(configobj.ConfigObj(StringIO("""[StdRESTful]
+            config_dict.merge(configobj.ConfigObj(StringIO(u"""[StdRESTful]
 
             [[WOW]]
                 # This section is for configuring posts to WOW
@@ -622,7 +622,7 @@ def update_to_v26(config_dict):
                 log_success = True
                 log_failure = True
 
-        """)), encoding='utf-8')
+        """)))
             config_dict['StdRESTful'].comments['WOW'] = ['']
     except KeyError:
         pass
@@ -630,7 +630,7 @@ def update_to_v26(config_dict):
     # Support for the AWEKAS uploader was introduced
     try:
         if 'AWEKAS' not in config_dict['StdRESTful']:
-            config_dict.merge(configobj.ConfigObj(StringIO("""[StdRESTful]
+            config_dict.merge(configobj.ConfigObj(StringIO(u"""[StdRESTful]
 
             [[AWEKAS]]
                 # This section is for configuring posts to AWEKAS
@@ -643,7 +643,7 @@ def update_to_v26(config_dict):
                 log_success = True
                 log_failure = True
 
-        """)), encoding='utf-8')
+        """)))
             config_dict['StdRESTful'].comments['AWEKAS'] = ['']
     except KeyError:
         pass
@@ -724,7 +724,7 @@ def update_to_v30(config_dict):
 
     if 'DataBindings' not in config_dict:
         # Insert a [DataBindings] section. First create it
-        c = configobj.ConfigObj(StringIO("""[DataBindings]
+        c = configobj.ConfigObj(StringIO(u"""[DataBindings]
             # This section binds a data store to a database
 
             [[wx_binding]]
@@ -738,7 +738,7 @@ def update_to_v30(config_dict):
                 # It is *only* used when the database is created.
                 schema = schemas.wview.schema
 
-        """), encoding='utf-8')
+        """))
         # Now merge it in:
         config_dict.merge(c)
         # For some reason, ConfigObj strips any leading comments. Put them back:
@@ -758,7 +758,7 @@ def update_to_v30(config_dict):
 
     # StdWXCalculate is new
     if 'StdWXCalculate' not in config_dict:
-        c = configobj.ConfigObj(StringIO("""[StdWXCalculate]
+        c = configobj.ConfigObj(StringIO(u"""[StdWXCalculate]
     # Derived quantities are calculated by this service.  Possible values are:
     #  hardware        - use the value provided by hardware
     #  software        - use the value calculated by weewx
@@ -772,7 +772,7 @@ def update_to_v30(config_dict):
     heatindex = prefer_hardware
     dewpoint = prefer_hardware
     inDewpoint = prefer_hardware
-    rainRate = prefer_hardware"""), encoding='utf-8')
+    rainRate = prefer_hardware"""))
         # Now merge it in:
         config_dict.merge(c)
         # For some reason, ConfigObj strips any leading comments. Put them back:
@@ -1019,22 +1019,22 @@ def update_to_v39(config_dict):
         std_report_comment = config_dict.comments['StdReport']
 
         if 'Defaults' not in config_dict['StdReport']:
-            defaults_dict = configobj.ConfigObj(StringIO(Defaults), encoding='utf-8')
+            defaults_dict = configobj.ConfigObj(StringIO(Defaults))
             weeutil.config.merge_config(config_dict, defaults_dict)
             reorder_sections(config_dict['StdReport'], 'Defaults', 'RSYNC', after=True)
 
         if 'SeasonsReport' not in config_dict['StdReport']:
-            seasons_options_dict = configobj.ConfigObj(StringIO(SeasonsReport), encoding='utf-8')
+            seasons_options_dict = configobj.ConfigObj(StringIO(SeasonsReport))
             weeutil.config.merge_config(config_dict, seasons_options_dict)
             reorder_sections(config_dict['StdReport'], 'SeasonsReport', 'FTP')
 
         if 'SmartphoneReport' not in config_dict['StdReport']:
-            smartphone_options_dict = configobj.ConfigObj(StringIO(SmartphoneReport), encoding='utf-8')
+            smartphone_options_dict = configobj.ConfigObj(StringIO(SmartphoneReport))
             weeutil.config.merge_config(config_dict, smartphone_options_dict)
             reorder_sections(config_dict['StdReport'], 'SmartphoneReport', 'FTP')
 
         if 'MobileReport' not in config_dict['StdReport']:
-            mobile_options_dict = configobj.ConfigObj(StringIO(MobileReport), encoding='utf-8')
+            mobile_options_dict = configobj.ConfigObj(StringIO(MobileReport))
             weeutil.config.merge_config(config_dict, mobile_options_dict)
             reorder_sections(config_dict['StdReport'], 'MobileReport', 'FTP')
 
@@ -1077,7 +1077,7 @@ def update_units(config_dict, unit_system_name, logger=None, debug=False):
         except KeyError:
             # We are missing the [StdReport] / [[Defaults]] / [[[Units]]] / [[[[Groups]]]] section.
             # Create a section, then merge it into the ConfigObj.
-            unit_dict = configobj.ConfigObj(StringIO(UnitDefaults, encoding='utf-8'))
+            unit_dict = configobj.ConfigObj(StringIO(UnitDefaults))
             weeutil.config.merge_config(config_dict, unit_dict)
 
 
@@ -1709,7 +1709,7 @@ def get_extension_installer(extension_installer_dir):
 # ==============================================================================
 
 
-SeasonsReport = """[StdReport]
+SeasonsReport = u"""[StdReport]
 
     [[SeasonsReport]]
         # The SeasonsReport uses the 'Seasons' skin, which contains the
@@ -1717,7 +1717,7 @@ SeasonsReport = """[StdReport]
         skin = Seasons
         enable = false"""
 
-SmartphoneReport = """[StdReport]
+SmartphoneReport = u"""[StdReport]
 
     [[SmartphoneReport]]
         # The SmartphoneReport uses the 'Smartphone' skin, and the images and
@@ -1727,7 +1727,7 @@ SmartphoneReport = """[StdReport]
         HTML_ROOT = public_html/smartphone"""
 
 
-MobileReport = """[StdReport]
+MobileReport = u"""[StdReport]
 
     [[MobileReport]]
         # The MobileReport uses the 'Mobile' skin, and the images and files
@@ -1737,7 +1737,7 @@ MobileReport = """[StdReport]
         HTML_ROOT = public_html/mobile"""
 
 
-UnitDefaults = """[StdReport]
+UnitDefaults = u"""[StdReport]
 
     ####
 
@@ -1764,7 +1764,7 @@ UnitDefaults = """[StdReport]
 """
 
 
-Defaults = UnitDefaults + """
+Defaults = UnitDefaults + u"""
 
             # The following section sets the formatting for each type of unit.
             [[[[StringFormats]]]]

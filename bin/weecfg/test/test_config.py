@@ -13,6 +13,7 @@ import sys
 import shutil
 from six.moves import StringIO
 
+import six
 import distutils.dir_util
 import configobj
 
@@ -21,11 +22,15 @@ import weeutil.weeutil
 
 try:
     from mock import patch
-    import __builtin__  # @UnusedImport
+    from six.moves import builtins
+    if six.PY2:
+        __input_str__ = '__builtin__.raw_input'
+    else:
+        __input_str__ = 'builtin.input'
 
     have_mock = True
 except ImportError:
-    print "Module 'mock' not installed. Testing will be restricted."
+    print("Module 'mock' not installed. Testing will be restricted.")
     have_mock = False
 
 
@@ -222,7 +227,7 @@ class ConfigTest(LineTest):
             try:
 
                 # Test a normal input
-                with patch('__builtin__.raw_input',
+                with patch(__input_str__,
                            side_effect=['Anytown', '100, meter', '45.0', '180.0', 'us']):
                     stn_info = weecfg.prompt_for_info()
                     self.assertEqual(stn_info, {'altitude': ['100', 'meter'],
@@ -232,7 +237,7 @@ class ConfigTest(LineTest):
                                                 'units': 'us'})
 
                 # Test for a default input
-                with patch('__builtin__.raw_input',
+                with patch(__input_str__,
                            side_effect=['Anytown', '', '45.0', '180.0', 'us']):
                     stn_info = weecfg.prompt_for_info()
                     self.assertEqual(stn_info, {'altitude': ['0', 'meter'],
@@ -242,7 +247,7 @@ class ConfigTest(LineTest):
                                                 'units': 'us'})
 
                 # Test for an out-of-bounds latitude
-                with patch('__builtin__.raw_input',
+                with patch(__input_str__,
                            side_effect=['Anytown', '100, meter', '95.0', '45.0', '180.0', 'us']):
                     stn_info = weecfg.prompt_for_info()
                     self.assertEqual(stn_info, {'altitude': ['100', 'meter'],
@@ -252,7 +257,7 @@ class ConfigTest(LineTest):
                                                 'units': 'us'})
 
                 # Test for a bad length unit type
-                with patch('__builtin__.raw_input',
+                with patch(__input_str__,
                            side_effect=['Anytown', '100, foo', '100,meter', '45.0', '180.0', 'us']):
                     stn_info = weecfg.prompt_for_info()
                     self.assertEqual(stn_info, {'altitude': ['100', 'meter'],
@@ -262,7 +267,7 @@ class ConfigTest(LineTest):
                                                 'units': 'us'})
 
                 # Test for a bad display unit
-                with patch('__builtin__.raw_input',
+                with patch(__input_str__,
                            side_effect=['Anytown', '100, meter', '45.0', '180.0', 'foo', 'us']):
                     stn_info = weecfg.prompt_for_info()
                     self.assertEqual(stn_info, {'altitude': ['100', 'meter'],
@@ -280,16 +285,16 @@ class ConfigTest(LineTest):
             save_stdout = sys.stdout
             sys.stdout = open(os.devnull, 'w')
             try:
-                with patch('__builtin__.raw_input', return_value="yes"):
+                with patch(__input_str__, return_value="yes"):
                     response = weecfg.prompt_with_options("Say yes or no", "yes", ["yes", "no"])
                     self.assertEqual(response, "yes")
-                with patch('__builtin__.raw_input', return_value="no"):
+                with patch(__input_str__, return_value="no"):
                     response = weecfg.prompt_with_options("Say yes or no", "yes", ["yes", "no"])
                     self.assertEqual(response, "no")
-                with patch('__builtin__.raw_input', return_value=""):
+                with patch(__input_str__, return_value=""):
                     response = weecfg.prompt_with_options("Say yes or no", "yes", ["yes", "no"])
                     self.assertEqual(response, "yes")
-                with patch('__builtin__.raw_input', side_effect=["make me", "no"]):
+                with patch(__input_str__, side_effect=["make me", "no"]):
                     response = weecfg.prompt_with_options("Say yes or no", "yes", ["yes", "no"])
                     self.assertEqual(response, "no")
             finally:
@@ -302,13 +307,13 @@ class ConfigTest(LineTest):
             save_stdout = sys.stdout
             sys.stdout = open(os.devnull, 'w')
             try:
-                with patch('__builtin__.raw_input', return_value="45"):
+                with patch(__input_str__, return_value="45"):
                     response = weecfg.prompt_with_limits("latitude", "0.0", -90, 90)
                     self.assertEqual(response, "45")
-                with patch('__builtin__.raw_input', return_value=""):
+                with patch(__input_str__, return_value=""):
                     response = weecfg.prompt_with_limits("latitude", "0.0", -90, 90)
                     self.assertEqual(response, "0.0")
-                with patch('__builtin__.raw_input', side_effect=["-120", "-45"]):
+                with patch(__input_str__, side_effect=["-120", "-45"]):
                     response = weecfg.prompt_with_limits("latitude", "0.0", -90, 90)
                     self.assertEqual(response, "-45")
             finally:

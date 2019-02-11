@@ -1,6 +1,15 @@
 weewx change history
 --------------------
 
+Python 3 port:
+
+The package MySQL-python, which we used previously, is not available
+for Python 3. Ported  the MySQL code to use the package mysqlclient
+as an alternative.
+
+
+3.10.0 MM/DD/YYYY
+
 Wunderfixer now keeps going if a post does not satisfy [[Essentials]].
 Fixes issue #329 (again).
 
