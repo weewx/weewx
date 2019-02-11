@@ -13,6 +13,9 @@ as an alternative.
 Wunderfixer now keeps going if a post does not satisfy [[Essentials]].
 Fixes issue #329 (again).
 
+Fixed problem that prevented the wee_device --history option from
+working with the CC3000 driver.
+
 
 3.9.1 02/06/2019
 
