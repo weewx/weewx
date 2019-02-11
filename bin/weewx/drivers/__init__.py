@@ -5,6 +5,7 @@
 #
 """Device drivers for the weewx weather system."""
 
+from __future__ import absolute_import
 import syslog
 import weewx
 

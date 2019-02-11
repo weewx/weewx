@@ -14,6 +14,8 @@ Thanks to Jay Nugent (WB8TKL) and KRK6 for weather-2.kr6k-V2.1
 """
 
 from __future__ import with_statement
+from __future__ import absolute_import
+from __future__ import print_function
 import syslog
 import time
 
@@ -21,9 +23,10 @@ from six import byte2int
 
 from weewx.units import INHG_PER_MBAR, MILE_PER_KM
 import weewx.drivers
+from six.moves import range
 
 DRIVER_NAME = 'WS1'
-DRIVER_VERSION = '0.25'
+DRIVER_VERSION = '0.30'
 
 
 def loader(config_dict, _):
@@ -466,20 +469,20 @@ class WS1ConfEditor(weewx.drivers.AbstractConfEditor):
 """
 
     def prompt_for_settings(self):
-        print "How is the station connected? tcp, udp, or serial."
+        print("How is the station connected? tcp, udp, or serial.")
         con_mode = self._prompt('mode', 'serial')
         con_mode = con_mode.lower()
 
         if con_mode == 'serial':
-            print "Specify the serial port on which the station is connected, "
+            print("Specify the serial port on which the station is connected, ")
             "for example: /dev/ttyUSB0 or /dev/ttyS0."
             port = self._prompt('port', '/dev/ttyUSB0')
         elif con_mode == 'tcp' or con_mode == 'udp':
-            print "Specify the IP address and port of the station. For "
+            print("Specify the IP address and port of the station. For ")
             "example: 192.168.36.40:3000."
             port = self._prompt('port', '192.168.36.40:3000')
 
-        print "Specify how long to wait for a response, in seconds."
+        print("Specify how long to wait for a response, in seconds.")
         timeout = self._prompt('timeout', 3)
 
         return {'mode': con_mode, 'port': port, 'timeout': timeout}
@@ -506,9 +509,9 @@ if __name__ == '__main__':
     (options, args) = parser.parse_args()
 
     if options.version:
-        print "ADS WS1 driver version %s" % DRIVER_VERSION
+        print("ADS WS1 driver version %s" % DRIVER_VERSION)
         exit(0)
 
     with StationSerial(options.port) as s:
         while True:
-            print time.time(), s.get_readings()
+            print(time.time(), s.get_readings())

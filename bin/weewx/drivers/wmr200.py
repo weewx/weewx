@@ -37,6 +37,8 @@ Bronberg Weather Station
 The WMR200 does not report wind gust direction. 
 """
 
+from __future__ import absolute_import
+from __future__ import print_function
 import select
 import socket
 import syslog
@@ -46,9 +48,10 @@ import usb
 
 import weewx.drivers
 import weeutil.weeutil
+from six.moves import range
 
 DRIVER_NAME = 'WMR200'
-DRIVER_VERSION = "3.3.5"
+DRIVER_VERSION = "3.4.0"
 
 
 def loader(config_dict, engine):  # @UnusedVariable
@@ -2080,8 +2083,8 @@ class WMR200ConfEditor(weewx.drivers.AbstractConfEditor):
 """
 
     def modify_config(self, config_dict):
-        print """
-Setting rainRate and windchill calculations to hardware."""
+        print("""
+Setting rainRate and windchill calculations to hardware.""")
         config_dict.setdefault('StdWXCalculate', {})
         config_dict['StdWXCalculate'].setdefault('Calculations', {})
         config_dict['StdWXCalculate']['Calculations']['rainRate'] = 'hardware'

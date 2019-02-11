@@ -9,6 +9,7 @@ or VantageVue weather station"""
 
 
 from __future__ import print_function
+from __future__ import absolute_import
 import datetime
 import struct
 import sys
@@ -23,9 +24,12 @@ import weeutil.weeutil
 import weewx.drivers
 import weewx.units
 import weewx.engine
+from six.moves import map
+from six.moves import range
+from six.moves import zip
 
 DRIVER_NAME = 'Vantage'
-DRIVER_VERSION = '3.1.1'
+DRIVER_VERSION = '3.1.2'
 
 def loader(config_dict, engine):
     return VantageService(engine, config_dict)

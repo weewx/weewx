@@ -19,6 +19,8 @@ for documentation on the WMR9x8 serial protocol, and
 for sample (java) code.
 """
 
+from __future__ import absolute_import
+from __future__ import print_function
 import time
 import operator
 import syslog
@@ -29,9 +31,10 @@ import serial
 import weewx.drivers
 
 from math import exp
+from six.moves import map
 
 DRIVER_NAME = 'WMR9x8'
-DRIVER_VERSION = "3.2.2"
+DRIVER_VERSION = "3.3.0"
 DEFAULT_PORT = '/dev/ttyS0'
 
 def loader(config_dict, engine):  # @UnusedVariable
@@ -244,11 +247,11 @@ class WMR9x8(weewx.drivers.AbstractDevice):
         """Generator function that continuously returns loop packets"""
         buf = []
         # We keep a buffer the size of the largest supported packet
-        wmr9x8max = max(wmr9x8_packet_type_size_map.items(), key=operator.itemgetter(1))[1]
-        wm918max = max(wm918_packet_type_size_map.items(), key=operator.itemgetter(1))[1]
+        wmr9x8max = max(list(wmr9x8_packet_type_size_map.items()), key=operator.itemgetter(1))[1]
+        wm918max = max(list(wm918_packet_type_size_map.items()), key=operator.itemgetter(1))[1]
         preBufferSize = max(wmr9x8max, wm918max)
         while True:
-            buf.extend(map(ord, self.port.read(preBufferSize - len(buf))))
+            buf.extend(list(map(ord, self.port.read(preBufferSize - len(buf)))))
             # WMR-9x8/968 packets are framed by 0xFF characters
             if buf[0] == 0xFF and buf[1] == 0xFF and buf[2] in wmr9x8_packet_type_size_map:
                 # Look up packet type, the expected size of this packet type
@@ -340,7 +343,7 @@ class WMR9x8(weewx.drivers.AbstractDevice):
 
     def log_packet(self, packet):
         packet_str = ','.join(["x%x" % v for v in packet])
-        print "%d, %s, %s" % (int(time.time() + 0.5), time.asctime(), packet_str)
+        print("%d, %s, %s" % (int(time.time() + 0.5), time.asctime(), packet_str))
 
     @wmr9x8_registerpackettype(typecode=0x00, size=11)
     def _wmr9x8_wind_packet(self, packet):
@@ -709,14 +712,14 @@ class WMR9x8ConfEditor(weewx.drivers.AbstractConfEditor):
 """
 
     def prompt_for_settings(self):
-        print "Specify the serial port on which the station is connected, for"
-        print "example /dev/ttyUSB0 or /dev/ttyS0."
+        print("Specify the serial port on which the station is connected, for")
+        print("example /dev/ttyUSB0 or /dev/ttyS0.")
         port = self._prompt('port', '/dev/ttyUSB0')
         return {'port': port}
 
     def modify_config(self, config_dict):
-        print """
-Setting rainRate, windchill, and dewpoint calculations to hardware."""
+        print("""
+Setting rainRate, windchill, and dewpoint calculations to hardware.""")
         config_dict.setdefault('StdWXCalculate', {})
         config_dict['StdWXCalculate'].setdefault('Calculations', {})
         config_dict['StdWXCalculate']['Calculations']['rainRate'] = 'hardware'
@@ -751,7 +754,7 @@ if __name__ == '__main__':
     (options, args) = parser.parse_args()
 
     if options.version:
-        print "WMR9x8 driver version %s" % DRIVER_VERSION
+        print("WMR9x8 driver version %s" % DRIVER_VERSION)
         exit(0)
 
     if options.gen_packets:
@@ -760,4 +763,4 @@ if __name__ == '__main__':
         stn = WMR9x8(**stn_dict)
         
         for packet in stn.genLoopPackets():
-            print packet
+            print(packet)

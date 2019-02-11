@@ -50,6 +50,8 @@ Modem Mode commands used by the driver
 """
 
 from __future__ import with_statement
+from __future__ import absolute_import
+from __future__ import print_function
 import serial
 import syslog
 import time
@@ -58,9 +60,10 @@ import weewx.drivers
 import weewx.wxformulas
 from weewx.units import INHG_PER_MBAR, MILE_PER_KM
 from weeutil.weeutil import timestamp_to_string
+from six.moves import range
 
 DRIVER_NAME = 'Ultimeter'
-DRIVER_VERSION = '0.18'
+DRIVER_VERSION = '0.20'
 
 
 def loader(config_dict, _):
@@ -347,8 +350,8 @@ class UltimeterConfEditor(weewx.drivers.AbstractConfEditor):
 """ % Station.DEFAULT_PORT
 
     def prompt_for_settings(self):
-        print "Specify the serial port on which the station is connected, for"
-        print "example: /dev/ttyUSB0 or /dev/ttyS0 or /dev/cua0."
+        print("Specify the serial port on which the station is connected, for")
+        print("example: /dev/ttyUSB0 or /dev/ttyS0 or /dev/cua0.")
         port = self._prompt('port', Station.DEFAULT_PORT)
         return {'port': port}
 
@@ -376,10 +379,10 @@ if __name__ == '__main__':
     (options, args) = parser.parse_args()
 
     if options.version:
-        print "ultimeter driver version %s" % DRIVER_VERSION
+        print("ultimeter driver version %s" % DRIVER_VERSION)
         exit(0)
 
     with Station(options.port, debug_serial=options.debug) as station:
         station.set_logger_mode()
         while True:
-            print time.time(), _fmt(station.get_readings())
+            print(time.time(), _fmt(station.get_readings()))

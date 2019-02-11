@@ -777,6 +777,8 @@ examples:
 """
 
 from __future__ import with_statement
+from __future__ import absolute_import
+from __future__ import print_function
 import syslog
 import time
 import usb
@@ -784,9 +786,10 @@ import usb
 import weewx.drivers
 import weewx.wxformulas
 from weeutil.weeutil import timestamp_to_string
+from six.moves import range
 
 DRIVER_NAME = 'WMR300'
-DRIVER_VERSION = '0.19rc6'
+DRIVER_VERSION = '0.20'
 
 DEBUG_COMM = 0
 DEBUG_PACKET = 0
@@ -1804,9 +1807,9 @@ class WMR300ConfEditor(weewx.drivers.AbstractConfEditor):
 """
 
     def modify_config(self, config_dict):
-        print """
+        print("""
 Setting rainRate, windchill, heatindex calculations to hardware. 
-Dewpoint from hardware is truncated to integer so use software"""
+Dewpoint from hardware is truncated to integer so use software""")
         config_dict.setdefault('StdWXCalculate', {})
         config_dict['StdWXCalculate'].setdefault('Calculations', {})
         config_dict['StdWXCalculate']['Calculations']['rainRate'] = 'hardware'
@@ -1838,7 +1841,7 @@ if __name__ == '__main__':
     (options, args) = parser.parse_args()
 
     if options.version:
-        print "%s driver version %s" % (DRIVER_NAME, DRIVER_VERSION)
+        print("%s driver version %s" % (DRIVER_NAME, DRIVER_VERSION))
         exit(0)
 
     driver_dict = {
@@ -1853,8 +1856,8 @@ if __name__ == '__main__':
     if options.get_history:
         ts = time.time() - 3600 # get last hour of data
         for pkt in stn.genStartupRecords(ts):
-            print to_sorted_string(pkt)
+            print(to_sorted_string(pkt))
 
     if options.get_current:
         for packet in stn.genLoopPackets():
-            print to_sorted_string(packet)
+            print(to_sorted_string(packet))
