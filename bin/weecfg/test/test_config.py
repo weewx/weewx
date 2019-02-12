@@ -6,17 +6,17 @@
 """Test the configuration utilities."""
 from __future__ import with_statement
 
-import unittest
-import tempfile
-import os.path
-import sys
-import shutil
-from six.moves import StringIO
-
-import six
 import distutils.dir_util
+import io
+import os.path
+import shutil
+import sys
+import tempfile
+import unittest
+
 import configobj
 
+import six
 import weecfg.extension
 import weeutil.weeutil
 
@@ -85,22 +85,22 @@ class LineTest(unittest.TestCase):
 
         expected: The name of a file holding the expected version
         """
-        # Write the ConfigObjout to a StringIO, then start checking it against the expected
-        out_str = StringIO()
-        config_dict.write(out_str)
-        check_fileend(out_str)
-        out_str.seek(0)
+        # Write the ConfigObj out to a io.BytesIO, then start checking it against the expected
+        with io.BytesIO() as out_str:
+            config_dict.write(out_str)
+            check_fileend(out_str)
+            out_str.seek(0)
 
-        fd_expected = open(expected)
-        N = 0
-        for expected in fd_expected:
-            actual = out_str.readline()
-            N += 1
-            self.assertEqual(actual.strip(), expected.strip(), "[%d] '%s' vs '%s'" % (N, actual, expected))
+            fd_expected = open(expected)
+            N = 0
+            for expected in fd_expected:
+                actual = out_str.readline()
+                N += 1
+                self.assertEqual(actual.strip(), expected.strip(), "[%d] '%s' vs '%s'" % (N, actual, expected))
 
-        # Make sure there are no extra lines in the updated config:
-        more = out_str.readline()
-        self.assertEqual(more, '')
+            # Make sure there are no extra lines in the updated config:
+            more = out_str.readline()
+            self.assertEqual(more, '')
 
 
 class ConfigTest(LineTest):
@@ -134,30 +134,30 @@ class ConfigTest(LineTest):
     def test_utilities(self):
         global x_str, y_str
 
-        xio = StringIO(x_str)
-        x_dict = configobj.ConfigObj(xio, encoding='utf-8')
+        xio = io.BytesIO(x_str)
+        x_dict = configobj.ConfigObj(xio, encoding='utf-8', default_encoding='utf-8')
         weecfg.reorder_sections(x_dict, 'section_c', 'section_b')
         self.assertEqual("{'section_a': {'a': '1'}, 'section_c': {'c': '3'}, "
                          "'section_b': {'b': '2'}, 'section_d': {'d': '4'}}", str(x_dict))
 
         xio.seek(0)
-        x_dict = configobj.ConfigObj(xio, encoding='utf-8')
+        x_dict = configobj.ConfigObj(xio, encoding='utf-8', default_encoding='utf-8')
         weecfg.reorder_sections(x_dict, 'section_c', 'section_b', after=True)
         self.assertEqual("{'section_a': {'a': '1'}, 'section_b': {'b': '2'}, "
                          "'section_c': {'c': '3'}, 'section_d': {'d': '4'}}", str(x_dict))
 
-        xio = StringIO(x_str)
-        yio = StringIO(y_str)
-        x_dict = configobj.ConfigObj(xio, encoding='utf-8')
-        y_dict = configobj.ConfigObj(yio, encoding='utf-8')
+        xio = io.BytesIO(x_str)
+        yio = io.BytesIO(y_str)
+        x_dict = configobj.ConfigObj(xio, encoding='utf-8', default_encoding='utf-8')
+        y_dict = configobj.ConfigObj(yio, encoding='utf-8', default_encoding='utf-8')
         weeutil.weeutil.conditional_merge(x_dict, y_dict)
         self.assertEqual("{'section_a': {'a': '1'}, 'section_b': {'b': '2'}, 'section_c': {'c': '3'}, "
                          "'section_d': {'d': '4'}, 'section_e': {'c': '15'}}", str(x_dict))
 
-        xio = StringIO(x_str)
-        yio = StringIO(y_str)
-        x_dict = configobj.ConfigObj(xio, encoding='utf-8')
-        y_dict = configobj.ConfigObj(yio, encoding='utf-8')
+        xio = io.BytesIO(x_str)
+        yio = io.BytesIO(y_str)
+        x_dict = configobj.ConfigObj(xio, encoding='utf-8', default_encoding='utf-8')
+        y_dict = configobj.ConfigObj(yio, encoding='utf-8', default_encoding='utf-8')
         weecfg.remove_and_prune(x_dict, y_dict)
         self.assertEqual("{'section_c': {'c': '3'}, 'section_d': {'d': '4'}}", str(x_dict))
 
@@ -209,10 +209,10 @@ class ConfigTest(LineTest):
     #
     # def test_reorder(self):
     #     """Test the utility reorder_to_ref"""
-    #     xio = StringIO(ConfigTest.report_start_str)
+    #     xio = io.BytesIO(ConfigTest.report_start_str)
     #     x_dict = configobj.ConfigObj(xio)
     #     weecfg.reorder_to_ref(x_dict)
-    #     x_result = StringIO()
+    #     x_result = io.BytesIO()
     #     x_dict.write(x_result)
     #     check_fileend(x_result)
     #     self.assertEqual(ConfigTest.report_expected_str, x_result.getvalue())
@@ -323,7 +323,7 @@ class ConfigTest(LineTest):
     def test_upgrade_v25(self):
 
         # Start with the Version 2.0 weewx.conf file:
-        config_dict = configobj.ConfigObj('weewx20.conf', encoding='utf-8')
+        config_dict = configobj.ConfigObj('weewx20.conf', encoding='utf-8', default_encoding='utf-8')
 
         # Upgrade the V2.0 configuration dictionary to V2.5:
         weecfg.update_to_v25(config_dict)
@@ -333,7 +333,7 @@ class ConfigTest(LineTest):
     def test_upgrade_v26(self):
 
         # Start with the Version 2.5 weewx.conf file:
-        config_dict = configobj.ConfigObj('weewx25.conf', encoding='utf-8')
+        config_dict = configobj.ConfigObj('weewx25.conf', encoding='utf-8', default_encoding='utf-8')
 
         # Upgrade the V2.5 configuration dictionary to V2.6:
         weecfg.update_to_v26(config_dict)
@@ -343,7 +343,7 @@ class ConfigTest(LineTest):
     def test_upgrade_v30(self):
 
         # Start with the Version 2.7 weewx.conf file:
-        config_dict = configobj.ConfigObj('weewx27.conf', encoding='utf-8')
+        config_dict = configobj.ConfigObj('weewx27.conf', encoding='utf-8', default_encoding='utf-8')
 
         # Upgrade the V2.7 configuration dictionary to V3.0:
         weecfg.update_to_v30(config_dict)
@@ -353,7 +353,7 @@ class ConfigTest(LineTest):
     def test_upgrade_v32(self):
 
         # Start with the Version 3.0 weewx.conf file:
-        config_dict = configobj.ConfigObj('weewx30.conf', encoding='utf-8')
+        config_dict = configobj.ConfigObj('weewx30.conf', encoding='utf-8', default_encoding='utf-8')
 
         # Upgrade the V3.0 configuration dictionary to V3.2:
         weecfg.update_to_v32(config_dict)
@@ -363,7 +363,7 @@ class ConfigTest(LineTest):
     def test_upgrade_v36(self):
 
         # Start with the Version 3.2 weewx.conf file:
-        config_dict = configobj.ConfigObj('weewx32.conf', encoding='utf-8')
+        config_dict = configobj.ConfigObj('weewx32.conf', encoding='utf-8', default_encoding='utf-8')
 
         # Upgrade the V3.2 configuration dictionary to V3.6:
         weecfg.update_to_v36(config_dict)
@@ -373,7 +373,7 @@ class ConfigTest(LineTest):
     def test_upgrade_v39(self):
 
         # Start with the Version 3.8 weewx.conf file:
-        config_dict = configobj.ConfigObj('weewx38.conf', encoding='utf-8')
+        config_dict = configobj.ConfigObj('weewx38.conf', encoding='utf-8', default_encoding='utf-8')
 
         # Upgrade the V3.8 configuration dictionary to V3.9:
         weecfg.update_to_v39(config_dict)
@@ -386,10 +386,10 @@ class ConfigTest(LineTest):
     def test_merge(self):
 
         # Start with a typical V2.0 user file:
-        config_dict = configobj.ConfigObj('weewx20_user.conf', encoding='utf-8')
+        config_dict = configobj.ConfigObj('weewx20_user.conf', encoding='utf-8', default_encoding='utf-8')
 
         # The current config file becomes the template:
-        template = configobj.ConfigObj(current_config_dict_path, encoding='utf-8')
+        template = configobj.ConfigObj(current_config_dict_path, encoding='utf-8', default_encoding='utf-8')
 
         # First update, then merge:
         weecfg.update_and_merge(config_dict, template)
@@ -414,7 +414,7 @@ class ConfigTest(LineTest):
     def test_modify_config(self):
 
         # Use the current weewx.conf
-        config_dict = configobj.ConfigObj(current_config_dict_path, encoding='utf-8')
+        config_dict = configobj.ConfigObj(current_config_dict_path, encoding='utf-8', default_encoding='utf-8')
 
         stn_info = weecfg.get_station_info(config_dict)
 
@@ -433,7 +433,7 @@ class ConfigTest(LineTest):
         # Make sure the driver stanza got injected correctly
         import weewx.drivers.vantage
         vcf = weewx.drivers.vantage.VantageConfEditor()
-        default_config = configobj.ConfigObj(StringIO(vcf.default_stanza), encoding='utf-8')
+        default_config = configobj.ConfigObj(io.BytesIO(vcf.default_stanza), encoding='utf-8', default_encoding='utf-8')
 
         self.assertEqual(config_dict['Vantage'], default_config['Vantage'])
 
@@ -582,7 +582,7 @@ class ExtensionInstallTest(unittest.TestCase):
     def test_install(self):
         # Find and read the test configuration
         config_path = os.path.join(self.weewx_root, 'weewx.conf')
-        config_dict = configobj.ConfigObj(config_path, encoding='utf-8')
+        config_dict = configobj.ConfigObj(config_path, encoding='utf-8', default_encoding='utf-8')
 
         # Note that the actual location of the "mini-weewx" is over in /var/tmp
         config_dict['WEEWX_ROOT'] = self.weewx_root
@@ -611,7 +611,7 @@ class ExtensionInstallTest(unittest.TestCase):
         self.assertTrue(os.path.isfile(os.path.join(self.skin_dir, 'pmon', 'skin.conf')))
 
         # Get, then check the new config dict:
-        test_dict = configobj.ConfigObj(config_path, encoding='utf-8')
+        test_dict = configobj.ConfigObj(config_path, encoding='utf-8', default_encoding='utf-8')
         self.assertEqual(test_dict['StdReport']['pmon'],
                          {'HTML_ROOT': 'public_html/pmon', 'skin': 'pmon'})
         self.assertEqual(test_dict['Databases']['pmon_sqlite'],
@@ -631,7 +631,7 @@ class ExtensionInstallTest(unittest.TestCase):
     def test_uninstall(self):
         # Find and read the test configuration
         config_path = os.path.join(self.weewx_root, 'weewx.conf')
-        config_dict = configobj.ConfigObj(config_path, encoding='utf-8')
+        config_dict = configobj.ConfigObj(config_path, encoding='utf-8', default_encoding='utf-8')
 
         # Note that the actual location of the "mini-weewx" is over in /var/tmp
         config_dict['WEEWX_ROOT'] = self.weewx_root
@@ -653,7 +653,7 @@ class ExtensionInstallTest(unittest.TestCase):
         self.assertTrue(not os.path.exists(os.path.join(self.skin_dir, 'pmon', 'skin.conf')))
 
         # Get the modified config dict, which had the extension removed from it
-        test_dict = configobj.ConfigObj(config_path, encoding='utf-8')
+        test_dict = configobj.ConfigObj(config_path, encoding='utf-8', default_encoding='utf-8')
 
         # It should be the same as our original:
         self.assertEqual(test_dict, config_dict)
