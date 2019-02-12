@@ -28,7 +28,8 @@ exception_map = {
     2002: weedb.CannotConnectError,
     2003: weedb.CannotConnectError,
     2005: weedb.CannotConnectError,
-    2006: weedb.CannotConnectError,
+    2006: weedb.DisconnectError,
+    2013: weedb.DisconnectError,
     None: weedb.DatabaseError
     }
 
@@ -38,7 +39,7 @@ def guard(fn):
     def guarded_fn(*args, **kwargs):
         try:
             return fn(*args, **kwargs)
-        except DatabaseError, e:
+        except DatabaseError as e:
             # Default exception is weedb.DatabaseError
             try:
                 errno = e[0]
@@ -95,10 +96,11 @@ def drop(host='localhost', user='', password='', database_name='',
         cursor.close()
         connect.close()
 
-@guard
+
 class Connection(weedb.Connection):
     """A wrapper around a MySQL connection object."""
 
+    @guard
     def __init__(self, host='localhost', user='', password='', database_name='',
                  port=3306, engine=DEFAULT_ENGINE, autocommit=True, **kwargs):
         """Initialize an instance of Connection.
@@ -216,6 +218,7 @@ class Connection(weedb.Connection):
     @guard
     def rollback(self):
         self.connection.rollback()
+
 
 class Cursor(object):
     """A wrapper around the MySQLdb cursor object"""

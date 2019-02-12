@@ -10,10 +10,12 @@
 #set $NONE="   N/A"
 #if $unit.unit_type_dict.group_temperature == "degree_F"
 #set $Hot     =(90.0,"degree_F")
+#set $Mild    =(59.0,"degree_F")
 #set $Cold    =(32.0,"degree_F")
 #set $VeryCold=(0.0, "degree_F")
 #else
 #set $Hot     =(30.0,"degree_C")
+#set $Mild    =(15.0,"degree_C")
 #set $Cold    =(0.0,"degree_C")
 #set $VeryCold=(-20.0,"degree_C")
 #end if
@@ -48,19 +50,19 @@ ELEV: $station.altitude    LAT: $station.latitude[0]-$station.latitude[1] $stati
 
                                        TEMPERATURE ($unit.label.outTemp.strip())
 
-                              HEAT    COOL                              MAX    MAX    MIN    MIN
-          MEAN   MEAN         DEG     DEG                                >=     <=     <=     <=
- YR  MO   MAX    MIN    MEAN  DAYS    DAYS      HI  DAY     LOW  DAY $ShowInt($Hot) $ShowInt($Cold) $ShowInt($Cold) $ShowInt($VeryCold)
-------------------------------------------------------------------------------------------------
+                              HEAT    COOL                              MAX    MAX    MIN    MIN    MIN
+          MEAN   MEAN         DEG     DEG                                >=     <=     <=     <=     >=
+ YR  MO   MAX    MIN    MEAN  DAYS    DAYS      HI  DAY     LOW  DAY $ShowInt($Hot) $ShowInt($Cold) $ShowInt($Cold) $ShowInt($VeryCold) $ShowInt($Mild)
+-------------------------------------------------------------------------------------------------------
 #for $month in $year.months
 #if $month.barometer.count.raw
-$month.dateTime.format($YM) $month.outTemp.meanmax.nolabel($Temp,$NONE) $month.outTemp.meanmin.nolabel($Temp,$NONE) $month.outTemp.avg.nolabel($Temp,$NONE) $month.heatdeg.sum.nolabel($Temp,$NONE) $month.cooldeg.sum.nolabel($Temp,$NONE)  $month.outTemp.max.nolabel($Temp,$NONE) $month.outTemp.maxtime.format($D,$NODAY)  $month.outTemp.min.nolabel($Temp,$NONE) $month.outTemp.mintime.format($D,$NODAY) $month.outTemp.max_ge($Hot).nolabel($Count,$NONE) $month.outTemp.max_le($Cold).nolabel($Count,$NONE) $month.outTemp.min_le($Cold).nolabel($Count,$NONE) $month.outTemp.min_le($VeryCold).nolabel($Count,$NONE)
+$month.dateTime.format($YM) $month.outTemp.meanmax.nolabel($Temp,$NONE) $month.outTemp.meanmin.nolabel($Temp,$NONE) $month.outTemp.avg.nolabel($Temp,$NONE) $month.heatdeg.sum.nolabel($Temp,$NONE) $month.cooldeg.sum.nolabel($Temp,$NONE)  $month.outTemp.max.nolabel($Temp,$NONE) $month.outTemp.maxtime.format($D,$NODAY)  $month.outTemp.min.nolabel($Temp,$NONE) $month.outTemp.mintime.format($D,$NODAY) $month.outTemp.max_ge($Hot).nolabel($Count,$NONE) $month.outTemp.max_le($Cold).nolabel($Count,$NONE) $month.outTemp.min_le($Cold).nolabel($Count,$NONE) $month.outTemp.min_le($VeryCold).nolabel($Count,$NONE) $month.outTemp.min_ge($Mild).nolabel($Count,$NONE)
 #else
 $month.dateTime.format($YM)
 #end if
 #end for
-------------------------------------------------------------------------------------------------
-        $year.outTemp.meanmax.nolabel($Temp,$NONE) $year.outTemp.meanmin.nolabel($Temp,$NONE) $year.outTemp.avg.nolabel($Temp,$NONE) $year.heatdeg.sum.nolabel($Temp,$NONE) $year.cooldeg.sum.nolabel($Temp,$NONE)  $year.outTemp.max.nolabel($Temp,$NONE) $year.outTemp.maxtime.format($M,$NODAY)  $year.outTemp.min.nolabel($Temp,$NONE) $year.outTemp.mintime.format($M,$NODAY) $year.outTemp.max_ge($Hot).nolabel($Count,$NONE) $year.outTemp.max_le($Cold).nolabel($Count,$NONE) $year.outTemp.min_le($Cold).nolabel($Count,$NONE) $year.outTemp.min_le($VeryCold).nolabel($Count,$NONE)
+-------------------------------------------------------------------------------------------------------
+        $year.outTemp.meanmax.nolabel($Temp,$NONE) $year.outTemp.meanmin.nolabel($Temp,$NONE) $year.outTemp.avg.nolabel($Temp,$NONE) $year.heatdeg.sum.nolabel($Temp,$NONE) $year.cooldeg.sum.nolabel($Temp,$NONE)  $year.outTemp.max.nolabel($Temp,$NONE) $year.outTemp.maxtime.format($M,$NODAY)  $year.outTemp.min.nolabel($Temp,$NONE) $year.outTemp.mintime.format($M,$NODAY) $year.outTemp.max_ge($Hot).nolabel($Count,$NONE) $year.outTemp.max_le($Cold).nolabel($Count,$NONE) $year.outTemp.min_le($Cold).nolabel($Count,$NONE) $year.outTemp.min_le($VeryCold).nolabel($Count,$NONE) $year.outTemp.min_ge($Mild).nolabel($Count,$NONE)
 
 
                   PRECIPITATION ($unit.label.rain.strip())

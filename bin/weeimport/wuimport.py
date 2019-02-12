@@ -19,7 +19,7 @@ import urllib2
 
 from datetime import datetime as dt
 
-# weeWX imports
+# WeeWX imports
 import weeimport
 import weewx
 
@@ -44,10 +44,10 @@ class WUSource(weeimport.Source):
     return different results to the same request being made from another
     location. This requires a mechanism to both determine the units in use from
     returned data as well as mapping a number of different possible field names
-    to a given weeWX archive field name.
+    to a given WeeWX archive field name.
     """
 
-    # Dict to map all possible WU field names to weeWX archive field names and
+    # Dict to map all possible WU field names to WeeWX archive field names and
     # units
     _header_map = {'Time': {'units': 'unix_epoch', 'map_to': 'dateTime'},
                    'TemperatureC': {'units': 'degree_C', 'map_to': 'outTemp'},
@@ -111,7 +111,7 @@ class WUSource(weeimport.Source):
         # We use the latter so force 'cumulative' for rain.
         self.rain = 'cumulative'
 
-        # initialise our import field-to-weeWX archive field map
+        # initialise our import field-to-WeeWX archive field map
         self.map = None
         # For a WU import we might have to import multiple days but we can only
         # get one day at a time from WU. So our start and end properties
@@ -139,8 +139,9 @@ class WUSource(weeimport.Source):
                                                         options.date_from,
                                                         options.date_to)
         self.wlog.verboselog(syslog.LOG_DEBUG, _msg)
-        _msg = "     dry-run=%s, calc-missing=%s" % (self.dry_run,
-                                                     self.calc_missing)
+        _msg = "     dry-run=%s, calc_missing=%s, ignore_invalid_data=%s" % (self.dry_run,
+                                                                             self.calc_missing,
+                                                                             self.ignore_invalid_data)
         self.wlog.verboselog(syslog.LOG_DEBUG, _msg)
         _msg = "     tranche=%s, interval=%s, wind_direction=%s" % (self.tranche,
                                                                     self.interval,
@@ -162,7 +163,7 @@ class WUSource(weeimport.Source):
             print "This is a dry run, imported data will not be saved to archive."
 
     def getRawData(self, period):
-        """Get raw observation data and construct a map from WU to weeWX
+        """Get raw observation data and construct a map from WU to WeeWX
             archive fields.
 
         Obtain raw observational data from WU using a http WXDailyHistory
@@ -174,7 +175,7 @@ class WUSource(weeimport.Source):
         complication is that WU appends the unit abbreviation to the end of the
         returned field name for fields that can have different units. So once
         we have the data have received the response we need to determine the
-        units and create a dict to map the WU fields to weeWX archive fields.
+        units and create a dict to map the WU fields to WeeWX archive fields.
 
         Input parameters:
 
@@ -193,12 +194,12 @@ class WUSource(weeimport.Source):
         # hit the WU site, wrap in a try..except so we can catch any errors
         try:
             _wudata = urllib2.urlopen(_url)
-        except urllib2.URLError, e:
+        except urllib2.URLError as e:
             self.wlog.printlog(syslog.LOG_ERR,
                           "Unable to open Weather Underground station %s" % self.station_id)
             self.wlog.printlog(syslog.LOG_ERR, "   **** %s" % e)
             raise
-        except socket.timeout, e:
+        except socket.timeout as e:
             self.wlog.printlog(syslog.LOG_ERR,
                           "Socket timeout for Weather Underground station %s" % self.station_id)
             raise

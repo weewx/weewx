@@ -16,44 +16,56 @@ function wee_gen_id(text, element) {
     return hv
 }
 
-function set_cookie(name, value, dur) {
-    if(dur===null || dur===0) dur=30;
-    var today = new Date();
-    var expire = new Date();
-    expire.setTime(today.getTime() + 24*3600000*dur);
-    document.cookie = name+"="+encodeURIComponent(value)+";expires="+expire.toUTCString();
+function set_cookie(name, value, days) {
+    // Default duration of 30 days
+    if (!days) days = 30;
+    var expire = new Date(Date.now() + 24 * 3600000 * days);
+    document.cookie = name + "=" + value + ";path=/;expires=" + expire.toUTCString();
 }
 
 function get_cookie(name) {
-    if(name==="") return "";
-    var cookie = " "+document.cookie;
-    var i = cookie.indexOf(" "+name+"=");
-    if(i<0) i = cookie.indexOf(";"+name+"=");
-    if(i<0) return "";
-    var j = cookie.indexOf(";", i+1);
-    if(j<0) j = cookie.length;
-    return decodeURIComponent(cookie.substring(i + name.length + 2, j));
+    if (!name) return "";
+    var v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
+    return v ? v[2] : null;
 }
 
 function get_default_level() {
     var level = get_cookie("toc_level");
-    if (level === "") { level = 2; }
+    if (!level) {
+        level = 3;
+    }
     return level;
 }
 
 function create_toc_control(level) {
     var c = document.getElementById('toc_controls');
-    if(c) {
+    if (c) {
         var txt = "<select id='toc_level' onChange='change_toc_level()'>";
+
         txt += "<option value='1'";
-        if (level === 1) { txt += " selected"; }
-        txt += ">Less Detail</option>";
+        if (level == 1) {
+            txt += " selected";
+        }
+        txt += ">Less detail</option>";
+
         txt += "<option value='2'";
-        if (level === 2) { txt += " selected"; }
-        txt += ">Some Detail</option>";
+        if (level == 2) {
+            txt += " selected";
+        }
+        txt += ">Some detail</option>";
+
         txt += "<option value='3'";
-        if (level === 3) { txt += " selected"; }
-        txt += ">More Detail</option>";
+        if (level == 3) {
+            txt += " selected";
+        }
+        txt += ">More detail</option>";
+
+        txt += "<option value='4'";
+        if (level == 4) {
+            txt += " selected";
+        }
+        txt += ">Very detailed</option>";
+
         txt += "</select>";
         c.innerHTML = txt;
     }

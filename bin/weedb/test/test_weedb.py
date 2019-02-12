@@ -63,7 +63,7 @@ class Common(unittest.TestCase):
         self.assertRaises(weedb.DatabaseExists, weedb.create, self.db_dict)
         
     def test_no_db(self):        
-        self.assertRaises(weedb.OperationalError, weedb.connect, self.db_dict)
+        self.assertRaises(weedb.NoDatabaseError, weedb.connect, self.db_dict)
         
     def test_no_tables(self):
         weedb.create(self.db_dict)
@@ -196,6 +196,13 @@ class TestSqlite(Common):
         _connect.close()
         
 class TestMySQL(Common):
+
+    def setUp(self):
+        try:
+            import MySQLdb
+        except ImportError as e:
+            raise unittest.case.SkipTest(e.message)
+        super(TestMySQL, self).setUp()
     
     def __init__(self, *args, **kwargs):
         self.db_dict = mysql_db_dict

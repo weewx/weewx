@@ -11,20 +11,21 @@ import syslog
 
 import weecfg
 
+
 def main():
     syslog.openlog('wee_device', syslog.LOG_PID | syslog.LOG_CONS)
     syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_INFO))
 
     # Load the configuration file
     config_fn, config_dict = weecfg.read_config(None, sys.argv[1:])
-    print 'Using configuration file %s' % config_fn
+    print('Using configuration file %s' % config_fn)
 
     try:
         # Find the device type
         device_type = config_dict['Station']['station_type']
         driver = config_dict[device_type]['driver']
-    except KeyError, e:
-        sys.exit("No configuration for device %s" % e)
+    except KeyError as e:
+        sys.exit("Unable to determine driver: %s" % e)
 
     # Try to load the driver
     device = None
@@ -32,23 +33,34 @@ def main():
         __import__(driver)
         driver_module = sys.modules[driver]
         loader_function = getattr(driver_module, 'configurator_loader')
-        device = loader_function(config_dict)
-        driver_name = driver_module.DRIVER_NAME
-        driver_vers = driver_module.DRIVER_VERSION \
-            if hasattr(driver_module, 'DRIVER_VERSION') else '?'
-        print 'Using %s driver version %s (%s)' % (
-            driver_name, driver_vers, driver)
-    except AttributeError, e:
+    except ImportError as e:
+        msg = "Unable to import driver %s: %s" % (driver, e)
+        syslog.syslog(syslog.LOG_ERR, msg)
+        sys.exit(msg)
+    except AttributeError as e:
         msg = "The driver %s does not include a configuration tool" % driver
         syslog.syslog(syslog.LOG_INFO, "%s: %s" % (msg, e))
-        exit(0)
-    except Exception, e:
+        sys.exit(0)
+    except Exception as e:
         msg = "Cannot load configurator for %s" % device_type
         syslog.syslog(syslog.LOG_ERR, "%s: %s" % (msg, e))
-        print msg
-        exit(1)
+        sys.exit(msg)
+
+    device = loader_function(config_dict)
+
+    # Try to determine driver name and version.
+    try:
+        driver_name = driver_module.DRIVER_NAME
+    except AttributeError:
+        driver_name = '?'
+    try:
+        driver_vers = driver_module.DRIVER_VERSION
+    except AttributeError:
+        driver_vers = '?'
+    print('Using %s driver version %s (%s)' % (driver_name, driver_vers, driver))
 
     device.configure(config_dict)
+
 
 if __name__ == "__main__":
     main()

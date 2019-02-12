@@ -72,6 +72,9 @@ class ScalarStats(object):
         ts:  The timestamp.
         """
         if val is not None:
+            # Check for non-numbers and for NaN
+            if not isinstance(val, (float, int)) or val != val:
+                raise ValueError("accum: ScalarStats.addHiLo expected float or int, got %s" % val)
             if self.min is None or val < self.min:
                 self.min     = val
                 self.mintime = ts
@@ -85,6 +88,9 @@ class ScalarStats(object):
     def addSum(self, val, weight=1):
         """Add a scalar value to my running sum and count."""
         if val is not None:
+            # Check for non-numbers and for NaN
+            if not isinstance(val, (float, int)) or val != val:
+                raise ValueError("accum: ScalarStats.addSum expected float or int, got %s" % val)
             self.sum     += val
             self.count   += 1
             self.wsum    += val * weight
@@ -161,6 +167,9 @@ class VecStats(object):
         """
         speed, dirN = val
         if speed is not None:
+            # Check for non-numbers and for NaN
+            if not isinstance(speed, (float, int)) or speed != speed:
+                raise ValueError("accum: VecStats.addHiLo expected float or int, got %s" % speed)
             if self.min is None or speed < self.min:
                 self.min = speed
                 self.mintime = ts
@@ -178,6 +187,9 @@ class VecStats(object):
         """
         speed, dirN = val
         if speed is not None:
+            # Check for non-numbers and for NaN
+            if not isinstance(speed, (float, int)) or speed != speed:
+                raise ValueError("accum: VecStats.addSum expected float or int, got %s" % speed)
             self.sum         += speed
             self.count       += 1
             self.wsum        += weight * speed
@@ -204,11 +216,13 @@ class VecStats(object):
  
     @property
     def vec_dir(self):
-        if self.dirsumtime:
+        if self.dirsumtime and (self.ysum or self.xsum):
             _result = 90.0 - math.degrees(math.atan2(self.ysum, self.xsum))
             if _result < 0.0:
                 _result += 360.0
             return _result
+        # Return the last known direction when our vector sum is 0
+        return self.last[1]
 
 #===============================================================================
 #                             Class Accum
@@ -233,7 +247,7 @@ class Accum(dict):
         
         # Check to see if the record is within my observation timespan 
         if not self.timespan.includesArchiveTime(record['dateTime']):
-            raise OutOfSpan, "Attempt to add out-of-interval record"
+            raise OutOfSpan("Attempt to add out-of-interval record")
 
         for obs_type in record:
             # Get the proper function ...
@@ -312,12 +326,17 @@ class Accum(dict):
         # treat it like a vector.
         self.add_value(record, obs_type, add_hilo, weight)
         
-        # If the type has not been seen before, initialize it
+        # If the type has not been seen before, initialize it.
         self._init_type('wind')
-        # Then add to highs/lows, and to the running sum:
+        # Then add to highs/lows.
         if add_hilo:
-            self['wind'].addHiLo((record.get('windGust'), record.get('windGustDir')), record['dateTime'])
-            self['wind'].addHiLo((record.get('windSpeed'), record.get('windDir')), record['dateTime'])
+            self['wind'].addHiLo((record.get('windSpeed'), record.get('windDir')),
+                                 record['dateTime'])
+            # If the station does not provide windGustDir, then substitute windDir.
+            # See issue #320, https://bit.ly/2HSo0ju
+            self['wind'].addHiLo((record.get('windGust'), record.get('windGustDir', record.get('windDir'))),
+                                 record['dateTime'])
+        # Add to the running sum.
         self['wind'].addSum((record['windSpeed'], record.get('windDir')), weight=weight)
         
     def check_units(self, record, obs_type, add_hilo, weight):  # @UnusedVariable
@@ -360,10 +379,14 @@ class Accum(dict):
     def extract_wind(self, record, obs_type):
         """Extract wind values from myself, and put in a record."""
         # Wind records must be flattened into the separate categories:
-        record['windSpeed']   = self[obs_type].avg
-        record['windDir']     = self[obs_type].vec_dir
-        record['windGust']    = self[obs_type].max
-        record['windGustDir'] = self[obs_type].max_dir
+        if 'windSpeed' not in record:
+            record['windSpeed']   = self[obs_type].avg
+        if 'windDir' not in record:
+            record['windDir']     = self[obs_type].vec_dir
+        if 'windGust' not in record:
+            record['windGust']    = self[obs_type].max
+        if 'windGustDir' not in record:
+            record['windGustDir'] = self[obs_type].max_dir
         
     def extract_sum(self, record, obs_type):
         record[obs_type] = self[obs_type].sum
@@ -373,6 +396,16 @@ class Accum(dict):
         
     def extract_avg(self, record, obs_type):
         record[obs_type] = self[obs_type].avg
+        
+    def extract_min(self, record, obs_type):
+        record[obs_type] = self[obs_type].min
+        
+    def extract_max(self, record, obs_type):
+        record[obs_type] = self[obs_type].max
+        
+    def extract_count(self, record, obs_type):
+        record[obs_type] = self[obs_type].count
+        
 
     #
     # Miscellaneous, utility functions
@@ -424,6 +457,9 @@ merge_functions = {'minmax' : Accum.merge_minmax,
 
 extract_functions = {'avg'  : Accum.extract_avg,
                      'sum'  : Accum.extract_sum,
+                     'min'  : Accum.extract_min,
+                     'max'  : Accum.extract_max,
+                     'count': Accum.extract_count,
                      'last' : Accum.extract_last,
                      'wind' : Accum.extract_wind,
                      'noop' : Accum.noop}
@@ -460,6 +496,8 @@ defaults_ini = """
         extractor = last
     [[totalRain]]
         extractor = last
+    [[stormRain]]
+        extractor = last
     [[wind]]
         accumulator = vector
         extractor = wind
@@ -474,8 +512,13 @@ defaults_ini = """
     [[windGustDir]]
         extractor = noop
 """
-import StringIO
-defaults = configobj.ConfigObj(StringIO.StringIO(defaults_ini))
+try:
+    # Python 2
+    from StringIO import StringIO
+except ImportError:
+    # Python 3
+    from io import StringIO
+defaults = configobj.ConfigObj(StringIO(defaults_ini))
 del StringIO
 
 accum_type_dict = None

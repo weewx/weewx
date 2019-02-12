@@ -3140,7 +3140,7 @@ class sHID(object):
             logdbg('claiming USB interface %d' % interface)
             self.devh.claimInterface(interface)
             self.devh.setAltInterface(interface)
-        except usb.USBError, e:
+        except usb.USBError as e:
             self._close_device()
             logcrt('Unable to claim USB interface %s: %s' % (interface, e))
             raise weewx.WeeWxIOError(e)
@@ -4110,7 +4110,7 @@ class CCommunicationService(object):
             logdbg('starting rf communication')
             while self.running:
                 self.doRFCommunication()
-        except Exception, e:
+        except Exception as e:
             logerr('exception in doRF: %s' % e)
             log_traceback(dst=syslog.LOG_INFO)
             self.running = False
@@ -4155,9 +4155,9 @@ class CCommunicationService(object):
         try:
             self.generateResponse(FrameBuffer, DataLength)
             self.shid.setFrame(FrameBuffer[0], DataLength[0])
-        except BadResponse, e:
+        except BadResponse as e:
             logerr('generateResponse failed: %s' % e)
-        except DataWritten, e:
+        except DataWritten as e:
             logdbg('SetTime/SetConfig data written')
         self.shid.setTX()
 

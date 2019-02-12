@@ -12,6 +12,14 @@ This search list extension offers extra tags:
   'seven_day':  Statistics for the last seven days. 
 
   'thirty_day': Statistics for the last thirty days.
+  
+  'last_month': Statistics for last calendar month.
+  
+  'last_year': Statistics for last calendar year.
+  
+  'last_year_todate': Statistics of last calendar year until this
+                      time last year. This especially useful for
+                      comprisons of rain fall up to this time last year.
 
 You can then use tags such as $alltime.outTemp.max for the all-time max
 temperature, or $seven_day.rain.sum for the total rainfall in the last seven
@@ -69,10 +77,44 @@ class ExtendedStatistics(SearchList):
                                           context='thirty_day',
                                           formatter=self.generator.formatter,
                                           converter=self.generator.converter)
+        
+        # Now use a similar process to get statistics for last year.
+        year = datetime.date.today().year
+        start_ts = time.mktime((year - 1, 1, 1, 0, 0, 0, 0, 0, 0))
+        stop_ts = time.mktime((year, 1, 1, 0, 0, 0, 0, 0, 0))
+        last_year_stats = TimespanBinder(TimeSpan(start_ts, stop_ts),
+                                          db_lookup,
+                                          context='last_year',
+                                          formatter=self.generator.formatter,
+                                          converter=self.generator.converter)
+
+        # Now use a similar process to get statistics for last year to date.
+        year = datetime.date.today().year
+        month = datetime.date.today().month
+        day = datetime.date.today().day
+        start_ts = time.mktime((year - 1, 1, 1, 0, 0, 0, 0, 0, 0))
+        stop_ts = time.mktime((year - 1, month, day, 0, 0, 0, 0, 0, 0))
+        last_year_todate_stats = TimespanBinder(TimeSpan(start_ts, stop_ts),
+                                                db_lookup,
+                                                context='last_year_todate',
+                                                formatter=self.generator.formatter,
+                                                converter=self.generator.converter)
+        
+        # Now use a similar process to get statistics for last calendar month.
+        start_ts = time.mktime((year, month - 1, 1, 0, 0, 0, 0, 0, 0))
+        stop_ts = time.mktime((year, month, 1, 0, 0, 0, 0, 0, 0)) - 1
+        last_month_stats = TimespanBinder(TimeSpan(start_ts, stop_ts),
+                                          db_lookup,
+                                          context='last_year_todate',
+                                          formatter=self.generator.formatter,
+                                          converter=self.generator.converter)
 
         return [{'alltime': all_stats,
                  'seven_day': seven_day_stats,
-                 'thirty_day': thirty_day_stats}]
+                 'thirty_day': thirty_day_stats,
+                 'last_month': last_month_stats,
+                 'last_year': last_year_stats,
+                 'last_year_todate': last_year_todate_stats}]
 
 # For backwards compatibility:
 ExtStats = ExtendedStatistics

@@ -17,7 +17,7 @@ import os
 import syslog
 import time
 
-# weeWX imports
+# WeeWX imports
 import weeimport
 import weewx
 
@@ -64,7 +64,7 @@ class CumulusSource(weeimport.Source):
                    'cur_uv', 'cur_solar', 'cur_et', 'annual_et',
                    'cur_app_temp', 'cur_tmax_solar', 'day_sunshine_hours',
                    'cur_wind_bearing', 'day_rain_rg11', 'midnight_rain']
-    # Dict to map all possible Cumulus field names (refer _field_list) to weeWX
+    # Dict to map all possible Cumulus field names (refer _field_list) to WeeWX
     # archive field names and units.
     _header_map = {'datetime': {'units': 'unix_epoch', 'map_to': 'dateTime'},
                    'cur_out_temp': {'map_to': 'outTemp'},
@@ -116,15 +116,15 @@ class CumulusSource(weeimport.Source):
 
         # Cumulus log files provide a number of cumulative rainfall fields. We
         # cannot use the daily rainfall as this may reset at some time of day
-        # other than midnight (as required by weeWX). So we use field 26, total
+        # other than midnight (as required by WeeWX). So we use field 26, total
         # rainfall since midnight and treat it as a cumulative value.
         self.rain = 'cumulative'
 
-        # initialise our import field-to-weeWX archive field map
+        # initialise our import field-to-WeeWX archive field map
         self.map = None
 
         # Cumulus log files have a number of 'rain' fields that can be used to
-        # derive the weeWX rain field. Which one is available depends on the
+        # derive the WeeWX rain field. Which one is available depends on the
         # Cumulus version that created the logs. The preferred field is field
         # 26(AA) - total rainfall since midnight but it is only available in
         # Cumulus v1.9.4 or later. If that field is not available then the
@@ -230,8 +230,9 @@ class CumulusSource(weeimport.Source):
             # we must have --from and --to
             _msg = "     from=%s, to=%s" % (options.date_from, options.date_to)
         self.wlog.verboselog(syslog.LOG_DEBUG, _msg)
-        _msg = "     dry-run=%s, calc-missing=%s" % (self.dry_run,
-                                                     self.calc_missing)
+        _msg = "     dry-run=%s, calc_missing=%s, ignore_invalid_data=%s" % (self.dry_run,
+                                                                             self.calc_missing,
+                                                                             self.ignore_invalid_data)
         self.wlog.verboselog(syslog.LOG_DEBUG, _msg)
         _msg = "     tranche=%s, interval=%s" % (self.tranche,
                                                  self.interval)
@@ -248,9 +249,9 @@ class CumulusSource(weeimport.Source):
         if self.calc_missing:
             print "Missing derived observations will be calculated."
         if not self.UV_sensor:
-            print "All weeWX UV fields will be set to None."
+            print "All WeeWX UV fields will be set to None."
         if not self.solar_sensor:
-            print "All weeWX radiation fields will be set to None."
+            print "All WeeWX radiation fields will be set to None."
         if options.date or options.date_from:
             print "Observations timestamped after %s and up to and" % (timestamp_to_string(self.first_ts), )
             print "including %s will be imported." % (timestamp_to_string(self.last_ts), )
@@ -259,7 +260,7 @@ class CumulusSource(weeimport.Source):
 
     def getRawData(self, period):
         """Get raw observation data and construct a map from Cumulus monthly
-            log fields to weeWX archive fields.
+            log fields to WeeWX archive fields.
 
         Obtain raw observational data from Cumulus monthly logs. This raw data
         needs to be cleaned of unnecessary characters/codes, a date-time field
@@ -296,7 +297,7 @@ class CumulusSource(weeimport.Source):
                 # Save what's left
                 _clean_data.append(_datetime_line)
 
-        # if we haven't confirmed our source for the weeWX rain field we need
+        # if we haven't confirmed our source for the WeeWX rain field we need
         # to do so now
         if self.rain_source_confirmed is None:
             # The Cumulus source field depends on the Cumulus version that
@@ -336,7 +337,7 @@ class CumulusSource(weeimport.Source):
             yield month
 
     def set_rain_source(self, _data):
-        """Set the Cumulus field to be used as the weeWX rain field source."""
+        """Set the Cumulus field to be used as the WeeWX rain field source."""
 
         _row = _data.next()
         if _row['midnight_rain'] is not None:

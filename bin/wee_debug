@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-#    Copyright (c) 2009-2015 Tom Keffer <tkeffer@gmail.com> and
+#    Copyright (c) 2009-2015 Gary Roderick, Tom Keffer <tkeffer@gmail.com> and
 #                            Matthew Wall
 #
 #    See the file LICENSE.txt for your rights.
@@ -28,7 +28,7 @@ from weeutil.weeutil import TimeSpan, timestamp_to_string
 from weewx.manager import DaySummaryManager
 
 VERSION = weewx.__version__
-WEE_DEBUG_VERSION = '0.6'
+WEE_DEBUG_VERSION = '0.8'
 
 # keys/setting names to obfuscate in weewx.conf, key value will be obfuscated
 # if the key starts any element in the list. Can add additional string elements
@@ -198,18 +198,10 @@ def generateDebugInfo(config_dict, config_path, db_binding_wx, verbosity):
     """ Generate system/weewx debug info """
 
     # system/OS info
-    print "System info"
-    _system = platform.system()
-    if _system == 'Linux':
-        generateLinuxSysInfo(verbosity)
-    elif _system == 'BSD':
-        print "System info could not be provided, unsupported operating system(BSD)."
-    else:
-        print "System info could not be provided, unsupported operating system(%s)." % _system
-    print
+    generateSysInfo(verbosity)
 
     # weewx version info
-    print "General weewx info"
+    print "General Weewx info"
     print "  Weewx version %s detected." % VERSION
     print
 
@@ -238,21 +230,19 @@ def generateDebugInfo(config_dict, config_path, db_binding_wx, verbosity):
     # weewx archive info
     try:
         manager_info_dict = getManagerInfo(config_dict, db_binding_wx)
-    except weedb.CannotConnect, e:
+    except weedb.CannotConnect as e:
         print "Unable to connect to database:", e
         print
-    except weedb.OperationalError, e:
+    except weedb.OperationalError as e:
         print "Error hitting database. It may not be properly initialized:"
         print e
         print
     else:
-        if manager_info_dict['units'] in weewx.units.unit_nicknames:
-            units_nickname = weewx.units.unit_nicknames[manager_info_dict['units']]
-        else:
-            units_nickname = "Unknown unit constant"
+        units_nickname = weewx.units.unit_nicknames.get(manager_info_dict['units'], "Unknown unit constant")
         print "Archive info"
         print "  Database name:        %s" % manager_info_dict['db_name']
         print "  Table name:           %s" % manager_info_dict['table_name']
+        print "  Version               %s" % manager_info_dict['version']
         print "  Unit system:          %s (%s)" % (manager_info_dict['units'],
                                                   units_nickname)
         print "  First good timestamp: %s" % timestamp_to_string(manager_info_dict['first_ts'])
@@ -307,27 +297,32 @@ def generateDebugConf(config_dict):
     # put obfuscated config_dict into weewx.conf form
     _obs_config_dict.write(sys.stdout)
 
-def generateLinuxSysInfo(verbosity):
-    """ Generate system info for a Linux system """
+def generateSysInfo(verbosity):
+    # % string operator deprecated Python 3.1 and up.
+    print "System info"
 
-    # get cpu info
-    cpuinfo = _readproc_dict('/proc/cpuinfo')
     if verbosity > 0:
-        for key in cpuinfo:
-            print "  {0: <23}".format(key + ":"), cpuinfo[key]
+        print "  Platform:       " + platform.platform()
+        print "  Python Version: " + platform.python_version()
+        
+        # environment 
+        if verbosity > 1:
+            print "\nEnvironment"
+            for n in os.environ:
+                print "  %s=%s" % (n, os.environ[n])
+        
+        # load info
+        try:
+            loadavg =  '%.2f %.2f %.2f' % os.getloadavg()
+            (load1, load5, load15) = loadavg.split(" ")
+        
+            print "\nLoad Information\n  1 minute load average:  " + load1
+            print "  5 minute load average:  " + load5
+            print "  15 minute load average: " + load15
+        except OSError:
+            print "Sorry, the load average not available on this platform"
 
-    # os info
     print
-    print "  Operating system:       %s" % ' '.join(platform.linux_distribution())
-    print "                          %s" % ' '.join(os.uname())
-
-    # load info
-    if verbosity > 0:
-        loadstr = _readproc_line('/proc/loadavg')
-        (load1, load5, load15, nproc) = loadstr.split()[0:4]  # @UnusedVariable
-        print "  1 minute load average:  %s" % load1
-        print "  5 minute load average:  %s" % load5
-        print "  15 minute load average: %s" % load15
 
 def obfuscateKey(src_dict, obfuscate_list, retain_list):
     """ Obfuscate any dictionary items whose key is contained in passed list.
@@ -368,34 +363,29 @@ def getManagerInfo(config_dict, db_binding_wx):
     """
 
     with weewx.manager.open_manager_with_config(config_dict, db_binding_wx) as dbmanager_wx:
-        db_name = dbmanager_wx.database_name
-        table_name = dbmanager_wx.table_name
-        units = dbmanager_wx.std_unit_system
-        first_ts = dbmanager_wx.first_timestamp
-        last_ts = dbmanager_wx.last_timestamp
+        info = {
+        'db_name'    : dbmanager_wx.database_name,
+        'table_name' : dbmanager_wx.table_name,
+        'version'    : getattr(dbmanager_wx, 'version', 'unknown'),
+        'units'      : dbmanager_wx.std_unit_system,
+        'first_ts'   : dbmanager_wx.first_timestamp,
+        'last_ts'    : dbmanager_wx.last_timestamp,
+        'sqlkeys'    : dbmanager_wx.sqlkeys,
+        'obskeys'    : dbmanager_wx.obskeys
+        }
         # do we have any records in our archive?
-        if first_ts and last_ts:
+        if info['first_ts'] and info['last_ts']:
             # We have some records so proceed to count them.
             # Since we are (more than likely) using archive field 'dateTime' for
             # our record count we need to call the getAggregate() method from our
             # parent class. Note that if we change to some other field the 'count'
             # might take a while longer depending on the archive size.
-            ts_count = super(DaySummaryManager, dbmanager_wx).getAggregate(TimeSpan(first_ts, last_ts),
+            info['ts_count'] = super(DaySummaryManager, dbmanager_wx).getAggregate(TimeSpan(info['first_ts'], info['last_ts']),
                                                               COUNT_FIELD,
                                                               'count')
         else:
-            ts_count = None
-        sqlkeys = dbmanager_wx.sqlkeys
-        obskeys = dbmanager_wx.obskeys
-    return {'db_name': db_name,
-            'table_name': table_name,
-            'units': units,
-            'first_ts': first_ts,
-            'last_ts': last_ts,
-            'ts_count': ts_count,
-            'sqlkeys': sqlkeys,
-            'obskeys': obskeys
-           }
+            info['ts_count'] = None
+    return info
 
 def _readproc_dict(filename):
     """ Read proc file that has 'name:value' format for each line """

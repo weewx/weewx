@@ -27,7 +27,8 @@ class FtpUpload(object):
                  passive   = True, 
                  max_tries = 3,
                  secure    = False,
-                 debug     = 0):
+                 debug     = 0,
+                 secure_data = True):
         """Initialize an instance of FtpUpload.
         
         After initializing, call method run() to perform the upload.
@@ -50,6 +51,11 @@ class FtpUpload(object):
         secure: Set to True to attempt an FTP over TLS (FTPS) session.
         
         debug: Set to 1 for extra debug information, 0 otherwise.
+        
+        secure_data: If a secure session is requested (option secure=True),
+        should we attempt a secure data connection as well? This option is useful
+        due to a bug in the Python FTP client library. See Issue #284. 
+        [Optional. Default is True]
         """
         self.server      = server
         self.user        = user
@@ -62,6 +68,7 @@ class FtpUpload(object):
         self.max_tries   = max_tries
         self.secure      = secure
         self.debug       = debug
+        self.secure_data = secure_data
 
     def run(self):
         """Perform the actual upload.
@@ -99,13 +106,13 @@ class FtpUpload(object):
         
                     ftp_server.login(self.user, self.password)
                     ftp_server.set_pasv(self.passive)
-                    if self.secure:
+                    if self.secure and self.secure_data:
                         ftp_server.prot_p()
-                        syslog.syslog(syslog.LOG_DEBUG, "ftpupload: Secure connection to %s" % self.server)
+                        syslog.syslog(syslog.LOG_DEBUG, "ftpupload: Secure data connection to %s" % self.server)
                     else:
                         syslog.syslog(syslog.LOG_DEBUG, "ftpupload: Connected to %s" % self.server)
                     break
-                except ftplib.all_errors, e:
+                except ftplib.all_errors as e:
                     syslog.syslog(syslog.LOG_NOTICE, "ftpupload: Unable to connect or log into server : %s" % e)
             else:
                 # This is executed only if the loop terminates naturally (without a break statement),
@@ -146,7 +153,7 @@ class FtpUpload(object):
                             # Hence, the open is in the inner loop:
                             fd = open(full_local_path, "r")
                             ftp_server.storbinary(STOR_cmd, fd)
-                        except ftplib.all_errors, e:
+                        except ftplib.all_errors as e:
                             # Unsuccessful. Log it and go around again.
                             syslog.syslog(syslog.LOG_ERR, "ftpupload: Attempt #%d. Failed uploading %s to %s. Reason: %s" %
                                                           (count+1, full_remote_path, self.server, e))
@@ -214,7 +221,7 @@ class FtpUpload(object):
         for unused_count in range(self.max_tries):
             try:
                 ftp_server.mkd(remote_dir_path)
-            except ftplib.all_errors, e:
+            except ftplib.all_errors as e:
                 # Got an exception. It might be because the remote directory already exists:
                 if sys.exc_info()[0] is ftplib.error_perm:
                     msg =str(e).strip()

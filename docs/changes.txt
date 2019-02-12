@@ -1,13 +1,249 @@
 weewx change history
 --------------------
 
-3.7.2 MM/DD/YYYY
+Wunderfixer now keeps going if a post does not satisfy [[Essentials]].
+Fixes issue #329 (again).
+
+Fixed problem that prevented the wee_device --history option from
+working with the CC3000 driver.
+
+
+3.9.1 02/06/2019
+
+In genplot, do not attempt to normalize unspecified paths.
+
+Introduced option no_catchup. If set to true, a catchup will not be
+attempted. Fixes issue #368.
+
+
+3.9.0 02/05/2019
+
+New skin called Seasons. For new users, it will be installed and enabled.
+For old users, it will be installed, but not enabled. Fixes issue #75.
+
+There are also two new skins for mobile phones: Mobile and Smartphone.
+These are installed, but not enabled, for all users.
+
+Reworked how options get applied for reports. Backstop default values
+are supplied by a new file weewx/defaults.py. These can get overridden
+by skin.conf, or in a new section [StdReports] / [[Defaults]] in weewx.conf.
+See the Customizing Guide, section "How options work", for details.
+Fixes issue #248.
+
+The skin.conf is optional.  It is possible to specify the entire skin
+configuration in the configuration file weewx.conf.
+
+Dropped support of Python 2.5. You must now use either Python 2.6 or 2.7. This
+is in anticipation of porting to Python 3.
+
+The image generator now supports the use of a 'stale_age' option. Thanks to
+user John Smith. Fixes issue #290.
+
+Rose line width can now be specified with option rose_line_width.
+
+The Felsius unit of temperature (see https://xkcd.com/1923/) is now supported.
+
+New tag $almanac.sidereal_time for calculating current sidereal time
+
+New tag $almanac.separation() for calculating planet separations.
+
+Can now use ephem.readdb() to load arbitrary bodies into the almanac.
+
+StdQC now includes an entry for rain again (inexplicably removed in v3.1.0).
+
+If software record generation is used, the archive interval is now what is
+specified in weewx.conf, even if the station supports hardware generation.
+
+Fixed problem where records were downloaded on startup, even if software
+record generation was specified.
+
+The tag formatting taxonomy has been simplified. Just use suffix ".format()"
+now. Documentation updated to reflect changes. Backwards compatibility with old
+suffixes is supported. Fixes issue #328.
+
+Can now set Rapidfire parameter rtfreq. Thanks to user 'whorfin'. PR #304.
+
+Template names can now include the week number. Thanks to user 'stimpy23'.
+PR #319.
+
+New aggregation type for plots: 'cumulative'. Thanks to user 'henrikost'.
+PR #302.
+
+Fixed problem where MySQL error 2013 could crash WeeWX. Fixes issue #327.
+
+Posts to the Weather Underground will be skipped if an observation type that
+is listed in the [[[Essentials]]] subsection is missing. Fixes issue #329.
+
+Upgrade process now explicity upgrades version-to-version, instead of
+doing a merge to the new config file. Fixes issue #217.
+
+Example xstats now includes tags for last_year and last_year_todate.
+Thanks to user evilbunny2008. PR #325.
+
+Guard against a negative value for 'interval' in WMR200 stations.
+
+Check for missing or negative values for the record field 'interval'.
+
+Changed the formula used to calculate percentage illumination of the moon to
+something more accurate around 2018. This formula is only used if pyephem is
+not installed. Fixes issue #342.
+
+Fixed bug that caused older, "type A" Vantage Pro2, to crash. Fixes issue #343.
+
+Fixed a bug that caused a divide-by-zero error if a plot range was the same as
+a specified min or max scale. Fixes issue #344.
+
+Fixed bug that prevented an optional data_binding from being used in tags
+when iterating over records. Fixes issue #345.
+
+Examples lowBattery and alarm now try SMTP_SSL connections, then degrade if
+that's not available. Fixes issue #351.
+
+Fixed problem with Brazilian locations at the start of DST. It manifested
+itself with the error "NoColumnError: no such column: wind". Fixes issue #356.
+
+Fixed problem that caused sunrise/sunset to be calculated improperly in Sun.py.
+
+Improved coverage of test suites. Fixes issue #337.
+
+wee_device, when used with the Vantage series, now honors the "no prompt" (-y)
+option. Fixes issue #361.
+
+Log watch now correctly logs garbage collection events. Thanks to user
+buster-one. PR #340.
+
+
+3.8.2 08/15/2018
+
+Added flag to weewx-multi init script to prevent systemd from breaking it.
+Thanks to users Timo, Glenn McKechnie, and Paul Oversmith.
+
+Fixed problem that caused wind direction in archive records to always be
+calculated in software, even with stations that provide it in hardware.
+Fixes issue #336.
+
+3.8.1 06/27/2018
+
+Map cc3000 backup battery to consBatteryVoltage and station battery to
+supplyVoltage to more accurately reflect the battery functions.
+
+Update the syntax in the rsyslog configuration sample
+
+Significant overhaul to the WMR300 driver.  The driver should now work reliably
+on any version of pyusb and libusb.  The driver will now delete history records
+from the logger before the logger fills up (the WMR300 logger is not a circular
+buffer).  Thanks to users Markus Biewer and Cameron.  Fixes issue #288.
+
+Added automatic clearing of logger for CC3000 driver to prevent logger
+overflow (the CC3000 logger is not a circular buffer).  The default is to
+not clear the history, but it is highly recommended that you add a logging
+threshold once you are confident that all logger data have been captured to
+the weewx database.
+
+Improved the robustness of reading from the CC3000 logger.
+
+Better CRC error message in Vantage driver.
+
+Parameterize the configuration directory in weewx-multi init script.
+
+In StdWXCalculate, use None for an observation only if the variables on which
+the derived depends are available and None.  Fixes issue #291.
+
+Fixed bug that prevented specifying an explicit alamanac time from working.
+
+Fixed bug that prevented historical records from being downloaded from ws23xx
+stations. Thanks to user Matt Brown! Fixes issue #295
+
+Fixed bug that crashed program if a sqlite permission error occurred.
+
+If wind speed is zero, accumulators now return last known wind direction
+(instead of None). Thanks to user DigitalDan05. PR #303.
+
+Windrun calculations now include the "current" record. Fixes issue #294.
+
+Fixed bug involving stations that report windGust, but not windGustDir, in
+their LOOP data (e.g., Fine Offset), which prevented the direction of max
+wind from appearing in statistics. Fixes issue #320.
+
+The engine now waits until the system time is greater than the creation time
+of the weewx.conf file before starting up. Fixes issue #330.
+
+
+3.8.0 11/22/2017
+
+The `stats.py` example now works with heating and cooling degree days.
+Fixes issue #224.
+
+The ordinal increment between x- and y-axis labels can now be chosen.
+The increment between x-axis tick marks can now be chosen. Thanks
+to user paolobenve! PR #226.
+
+Bar chart fill colors can now be specified for individual observation
+types. Fixes issue #227.
+
+For aggregation types of `avg`, `min` and `max`, plots now locate the x-
+coordinate in the middle of the aggregation interval (instead of the end).
+Thanks again to user paolobenve! PR #232.
+
+The nominal number of ticks on the y-axis can now be specified using
+option `y_nticks`.
+
+Fixed bug that could cause tick crowding when hardwiring y-axis min and
+max values.
+
+The uploader framework in restx.py now allows POSTS with a JSON payload,
+and allows additional headers to be added to the HTTP request object.
 
 MySQL error 2006 ("MySQL server has gone away") now gets mapped to
 `weedb.CannotConnectError`. PR #246
 
+Whether to use a FTP secure data connection is now set separately
+from whether to authenticate using TLS. Fixes issue #284.
+
 Corrected formatting used to report indoor temp and humidity to the
 Weather Underground.
+
+Added inDewpoint to the observation group dictionary.
+
+Added missing aggregation type 'min_ge'. Thanks to user Christopher McAvaney!
+
+Plots can now use an `aggregate_type` of `last`. Fixes issue #261.
+
+When extracting observation type stormRain (Davis Vantage only), the
+accumulators now extract the last (instead of average) value.
+
+Added additional accumulator extractors.
+
+Allow reports to be run against a binding other than `wx_binding`.
+
+Do chdir at start of ImageGenerator so that skin.conf paths are treated the
+same as those of other generators.
+
+Changed default value of `stale` for CWOP from 60 to 600 seconds. PR #277.
+
+Vantage driver:
+Allow user to specify the Vantage Pro model type in weewx.conf. 
+Repeater support added to '-—set-transmitter-type' command.
+New commands: '—-set-retransmit',
+              '--set-latitude', '--set-longitude'
+              '--set-wind-cup',
+              '--set-temperature-logging'
+Details explained in hardware.htm. Thanks to user dl1rf! PR #270, #272.
+
+Using the `set-altitude` command in `wee_device` no longer changes the
+barometer calibration constant in Vantage devices. See PR #263.
+Thanks to user dl1rf!
+
+Fixed bug in wmr200 driver that resulted in archive records with no
+interval field and 'NOT NULL constraint failed: archive.interval' errors.
+
+Fixed bug in wmr200 driver that caused `windDir` to always be `None` when 
+`windSpeed` is zero.
+
+Include rain count in cc3000 status.
+
+In the restx posting, catch all types of httplib.HTTPException, not just
+BadStatusLine and IncompleteRead.
 
 
 3.7.1 03/22/2017
@@ -694,6 +930,10 @@ check it over. Not sure we got everything correct. See the Upgrading
 Guide.
 
 Specific changes follow.
+
+There is no longer a separate "stats" database. Instead, statistics
+are included in the regular database (e.g., 'weewx.sdb') as separate
+tables, one for each observation type.
 
 Total rewrite of how data gets bound to a database. You now specify a
 "data binding" to indicate where data should be going, and where it is

@@ -13,6 +13,7 @@
 #  -user/installer/pmon/           # The extension's installer subdirectory
 #  -user/installer/pmon/install.py # The copy of the installer for the extension
 
+import glob
 import os
 import shutil
 import sys
@@ -376,15 +377,15 @@ class ExtensionEngine(object):
                     # Now go through all the files of the source tuple
                     for install_file in source_tuple[1]:
                         dst_file = ExtensionEngine._strip_leading_dir(
-                            install_file)                     
+                            install_file)
                         destination_path = os.path.abspath(
                             os.path.join(self.root_dict[root_type], dst_file))
+                        file_name = os.path.basename(destination_path)
+                        # There may be a versioned skin.conf. Delete it by adding a wild card.
+                        # Similarly, be sure to delete Python files with .pyc or .pyo extensions.
+                        if file_name == 'skin.conf' or file_name.endswith('py'):
+                            destination_path += "*"
                         N += self.delete_file(destination_path)
-                        if destination_path.endswith('.py'):
-                            N += self.delete_file(
-                                destination_path.replace('.py', '.pyc'), False)
-                            N += self.delete_file(
-                                destination_path.replace('.py', '.pyo'), False)
                     # Accumulate all directories under 'skins'
                     if root_type == 'SKIN_ROOT':
                         dst_dir = ExtensionEngine._strip_leading_dir(
@@ -407,22 +408,27 @@ class ExtensionEngine(object):
                 self.delete_directory(dirpath)
          
     def delete_file(self, filename, report_errors=True):
-        """Delete the given file from the file system.
+        """Delete files from the file system.
 
-        filename: The path to the file to be deleted.
+        filename: The path to the file(s) to be deleted. Can include wildcards.
         
         report_errors: If true, report an error if the file is
         missing or cannot be deleted. Otherwise don't. In
-        neither case will an exception be raised. """
-        try:
-            self.logger.log("Deleting file %s" % filename, level=2)
+        neither case will an exception be raised.
+
+        Returns: The number of files deleted
+        """
+        n_deleted = 0
+        for fn in glob.glob(filename):
+            self.logger.log("Deleting file %s" % fn, level=2)
             if not self.dry_run:
-                os.remove(filename)
-                return 1
-        except OSError, e:
-            if report_errors:
-                self.logger.log("Delete failed: %s" % e, level=4)
-        return 0
+                try:
+                    os.remove(fn)
+                    n_deleted += 1
+                except OSError as e:
+                    if report_errors:
+                        self.logger.log("Delete failed: %s" % e, level=4)
+        return n_deleted
 
     def delete_directory(self, directory, report_errors=True):
         """Delete the given directory from the file system.
@@ -439,7 +445,7 @@ class ExtensionEngine(object):
                 self.logger.log("Deleting directory %s" % directory, level=2)
                 if not self.dry_run:
                     shutil.rmtree(directory)
-        except OSError, e:
+        except OSError as e:
             if report_errors:
                 self.logger.log("Delete failed on directory '%s': %s" %
                                 (directory, e), level=2)

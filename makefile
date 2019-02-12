@@ -5,25 +5,24 @@
 # if you do not want to sign the packages, set SIGN to 0
 SIGN=1
 
-# destination for uploading releases
-UPLOADDIR=weewx.com:/downloads/development_versions/
+# WWW server
+WEEWX_COM=weewx.com
 
-# destination for uploading docs
-DOCDST=weewx.com:/
-
-# home directory at weewx.com
-WEEWX_COM_HOME=/home/content/t/o/m/tomkeffer
-WEEWX_DOWNLOADS=$(WEEWX_COM_HOME)/html/downloads
+# location of the html documentation
+WEEWX_HTMLDIR=/var/www/html
+# location of weewx downloads
+WEEWX_DOWNLOADS=$(WEEWX_HTMLDIR)/downloads
+# location for staging weewx package uploads
+WEEWX_STAGING=$(WEEWX_HTMLDIR)/downloads/development_versions
 
 # extract version to be used in package controls and labels
 VERSION=$(shell grep "__version__.*=" bin/weewx/__init__.py | sed -e 's/__version__=//' | sed -e 's/"//g')
 # just the major.minor part of the version
-MMVERSION:=$(shell echo "$(VERSION)" | sed -E 's%.[0-9a-z]+$$%%')
+MMVERSION:=$(shell echo "$(VERSION)" | sed -e 's%.[0-9a-z]*$$%%')
 
 CWD = $(shell pwd)
 BLDDIR=build
 DSTDIR=dist
-DOCSRC=docs
 
 PYTHON=python
 
@@ -35,7 +34,7 @@ help: info
 	@echo "       install  run the generic python install"
 	@echo "       version  get version from __init__ and insert elsewhere"
 	@echo ""
-	@echo "        readme  create README.txt suitable for distribution"
+	@echo "    readme.txt  create README.txt suitable for distribution"
 	@echo " deb-changelog  prepend stub changelog entry for deb"
 	@echo " rpm-changelog  prepend stub changelog entry for rpm"
 	@echo ""
@@ -49,7 +48,8 @@ help: info
 	@echo ""
 	@echo "    upload-src  upload the src package"
 	@echo "    upload-deb  upload the deb package"
-	@echo "    upload-rpm  upload the rpm package"
+	@echo "   upload-rhel  upload the redhat rpm package"
+	@echo "   upload-suse  upload the suse rpm package"
 	@echo " upload-readme  upload the README.txt"
 	@echo ""
 	@echo "   upload-docs  upload docs to weewx.com"
@@ -64,8 +64,8 @@ info:
 	@echo "   MMVERSION: $(MMVERSION)"
 	@echo "         CWD: $(CWD)"
 	@echo "   UPLOADDIR: $(UPLOADDIR)"
-	@echo "      DOCDST: $(DOCDST)"
 	@echo "        USER: $(USER)"
+	@echo "  WWW SERVER: $(WEEWX_COM)"
 
 realclean:
 	rm -f MANIFEST
@@ -89,20 +89,20 @@ test:
   echo >> $(BLDDIR)/test-results; \
 done
 	@grep "ERROR:\|FAIL:" $(BLDDIR)/test-results || echo "no failures"
-	@echo "see $(BLDDIR)/test-results"
+	@grep "skipped=" $(BLDDIR)/test-results || echo "no tests were skipped"
+	@echo "see $(BLDDIR)/test-results for output from the tests"
 
-MYSQLSETUP="create user 'weewx'@'localhost' identified by 'weewx';\n\
-grant all on *.* to 'weewx'@'localhost';\n"
 test-setup:
-	echo $(MYSQLSETUP) | mysql --user=root -p
+	bin/weedb/test/setup_mysql
 
 TESTDIR=/var/tmp/weewx_test
 MYSQLCLEAN="drop database test_weewx;\n\
 drop database test_alt_weewx;\n\
 drop database test_sim;\n"
 test-clean:
-	rm -f $(TESTDIR)
+	rm -rf $(TESTDIR)
 	echo $(MYSQLCLEAN) | mysql --user=weewx --password=weewx --force >/dev/null 2>&1
+	rm /var/tmp/sqdb1.sdb >/dev/null 2>&1
 
 install:
 	./setup.py --install
@@ -112,12 +112,13 @@ src-package $(DSTDIR)/$(SRCPKG): MANIFEST.in
 	rm -f MANIFEST
 	./setup.py sdist
 
+# upload the source tarball to the web site
 upload-src:
-	(cd $(DSTDIR); ftp -u $(USER)@$(UPLOADDIR) $(SRCPKG))
+	scp $(DSTDIR)/$(SRCPKG) $(USER)@$(WEEWX_COM):$(WEEWX_STAGING)
 
-# upload docs to the weewx web site
+# upload docs to the web site
 upload-docs:
-	ftp -u $(USER)@$(DOCDST) $(DOCSRC)/*.htm $(DOCSRC)/changes.txt $(DOCSRC)/images/*.png $(DOCSRC)/images/*.jpg $(DOCSRC)/images/*.gif $(DOCSRC)/js/*.js $(DOCSRC)/css/weewx_$(DOCSRC).css $(DOCSRC)/css/jquery.tocify.css $(DOCSRC)/css/ui-lightness/*.css $(DOCSRC)/css/ui-lightness/images/*.png $(DOCSRC)/css/ui-lightness/images/*.gif
+	rsync -arv docs $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)
 
 # create the README.txt for uploading
 README_HEADER="\
@@ -141,23 +142,27 @@ $(SRCPKG)\n\
 --------------------\n\
 weewx change history\n\
 --------------------\n"
-readme: docs/changes.txt
+readme.txt: docs/changes.txt
 	mkdir -p $(DSTDIR)
 	rm -f $(DSTDIR)/README.txt
 	echo $(README_HEADER) > $(DSTDIR)/README.txt
 	pkg/mkchangelog.pl --ifile docs/changes.txt >> $(DSTDIR)/README.txt
 
-upload-readme: readme
-	(cd $(DSTDIR); ftp -u $(USER)@$(UPLOADDIR) README.txt)
+upload-readme: readme.txt
+	scp $(DSTDIR)/README.txt $(USER)@$(WEEWX_COM):$(WEEWX_STAGING)
 
 # update the version in all relevant places
 VDOCS=readme.htm customizing.htm devnotes.htm hardware.htm usersguide.htm upgrading.htm utilities.htm
+VCONFIGS=weewx.conf bin/weecfg/test/expected/weewx39_user_expected.conf
 version:
 	for f in $(VDOCS); do \
   sed -e 's/^Version: [0-9].*/Version: $(MMVERSION)/' docs/$$f > docs/$$f.tmp; \
   mv docs/$$f.tmp docs/$$f; \
 done
-	sed -e 's/version =.*/version = $(VERSION)/' weewx.conf > weewx.conf.tmp; mv weewx.conf.tmp weewx.conf
+	for f in $(VCONFIGS); do \
+  sed -e 's/version = .*/version = $(VERSION)/' $$f > $$f.tmp; \
+  mv $$f.tmp $$f; \
+done
 
 DEBREVISION=1
 DEBVER=$(VERSION)-$(DEBREVISION)
@@ -208,13 +213,13 @@ check-deb:
 	lintian -Ivi $(DSTDIR)/$(DEBPKG)
 
 upload-deb:
-	(cd $(DSTDIR); ftp -u $(USER)@$(UPLOADDIR) $(DEBPKG))
+	scp $(DSTDIR)/$(DEBPKG) $(USER)@$(WEEWX_COM):$(WEEWX_STAGING)
 
 RPMREVISION=1
 RPMVER=$(VERSION)-$(RPMREVISION)
 # add a skeleton entry to rpm changelog
 rpm-changelog:
-	if [ "`grep $(RPMVER)1 pkg/changelog.rpm`" = "" ]; then \
+	if [ "`grep $(RPMVER) pkg/changelog.rpm`" = "" ]; then \
   pkg/mkchangelog.pl --action stub --format redhat --release-version $(RPMVER) > pkg/changelog.rpm.new; \
   cat pkg/changelog.rpm >> pkg/changelog.rpm.new; \
   mv pkg/changelog.rpm.new pkg/changelog.rpm; \
@@ -235,6 +240,7 @@ rpm-package: $(DSTDIR)/$(SRCPKG)
 	mkdir -p -m 0755 $(RPMBLDDIR)/SPECS
 	mkdir -p -m 0755 $(RPMBLDDIR)/SRPMS
 	sed -e 's%Version:.*%Version: $(VERSION)%' \
+            -e 's%RPMREVISION%$(RPMREVISION)%' \
             pkg/weewx.spec.in > $(RPMBLDDIR)/SPECS/weewx.spec
 	cat pkg/changelog.rpm >> $(RPMBLDDIR)/SPECS/weewx.spec
 	cp dist/weewx-$(VERSION).tar.gz $(RPMBLDDIR)/SOURCES
@@ -252,14 +258,20 @@ check-rpm:
 	rpmlint $(DSTDIR)/$(RPMPKG)
 
 upload-rpm:
-	(cd $(DSTDIR); ftp -u $(USER)@$(UPLOADDIR) $(RPMPKG))
+	scp $(DSTDIR)/$(RPMPKG) $(USER)@$(WEEWX_COM):$(WEEWX_STAGING)
+
+upload-rhel:
+	make upload-rpm RPMOS=.rhel
+
+upload-suse:
+	make upload-rpm RPMOS=.suse
 
 # shortcut to upload all packages from a single machine
 DEB_PKG=weewx_$(DEBVER)_$(DEBARCH).deb
 RHEL_PKG=weewx-$(RPMVER).rhel.$(RPMARCH).rpm
 SUSE_PKG=weewx-$(RPMVER).suse.$(RPMARCH).rpm
 upload-pkgs:
-	(cd $(DSTDIR); ftp -u $(USER)@$(UPLOADDIR) $(DEB_PKG) $(RHEL_PKG) $(SUSE_PKG))
+	scp $(DSTDIR)/$(DEB_PKG) $(DSTDIR)/$(RHEL_PKG) $(DSTDIR)/$(SUSE_PKG) $(USER)@$(WEEWX_COM):$(WEEWX_STAGING)
 
 # move files from the upload directory to the release directory and set up the
 # symlinks to them from the download root directory
@@ -267,15 +279,16 @@ DEVDIR=$(WEEWX_DOWNLOADS)/development_versions
 RELDIR=$(WEEWX_DOWNLOADS)/released_versions
 ARTIFACTS=$(DEB_PKG) $(RHEL_PKG) $(SUSE_PKG) $(SRCPKG)
 release:
-	ssh $(USER)@weewx.com "for f in $(ARTIFACTS); do if [ -f $(DEVDIR)/\$$f ]; then mv $(DEVDIR)/\$$f $(RELDIR); fi; done"
-	ssh $(USER)@weewx.com "rm -f $(WEEWX_DOWNLOADS)/weewx*"
-	ssh $(USER)@weewx.com "for f in $(ARTIFACTS); do if [ -f $(RELDIR)/\$$f ]; then ln -s released_versions/\$$f $(WEEWX_DOWNLOADS); fi; done"
-	ssh $(USER)@weewx.com "if [ -f $(DEVDIR)/README.txt ]; then mv $(DEVDIR)/README.txt $(WEEWX_DOWNLOADS); fi"
+	ssh $(USER)@$(WEEWX_COM) "for f in $(ARTIFACTS); do if [ -f $(DEVDIR)/\$$f ]; then mv $(DEVDIR)/\$$f $(RELDIR); fi; done"
+	ssh $(USER)@$(WEEWX_COM) "rm -f $(WEEWX_DOWNLOADS)/weewx*"
+	ssh $(USER)@$(WEEWX_COM) "for f in $(ARTIFACTS); do if [ -f $(RELDIR)/\$$f ]; then ln -s released_versions/\$$f $(WEEWX_DOWNLOADS); fi; done"
+	ssh $(USER)@$(WEEWX_COM) "if [ -f $(DEVDIR)/README.txt ]; then mv $(DEVDIR)/README.txt $(WEEWX_DOWNLOADS); fi"
+	ssh $(USER)@$(WEEWX_COM) "chmod 664 $(WEEWX_DOWNLOADS)/released_versions/weewx?$(VERSION)*"
 
 # make local copy of the published apt repository
 pull-apt-repo:
 	mkdir -p ~/.aptly
-	rsync -arv --rsync-path $(WEEWX_COM_HOME)/bin/rsync -e ssh $(USER)@weewx.com:$(WEEWX_COM_HOME)/html/aptly-test/ ~/.aptly
+	rsync -arv $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/aptly-test/ ~/.aptly
 
 # add the latest version to the local apt repo using aptly
 update-apt-repo:
@@ -285,8 +298,7 @@ update-apt-repo:
 
 # publish apt repo changes to the public weewx apt repo
 push-apt-repo:
-	rsync -arv --rsync-path $(WEEWX_COM_HOME)/bin/rsync -e ssh ~/.aptly/ $(USER)@weewx.com:$(WEEWX_COM_HOME)/html/aptly-test
-
+	rsync -arv ~/.aptly/ $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/aptly-test
 
 # run perlcritic to ensure clean perl code.  put these in ~/.perlcriticrc:
 # [-CodeLayout::RequireTidyCode]
@@ -294,3 +306,9 @@ push-apt-repo:
 # [-Modules::RequireVersionVar]
 critic:
 	perlcritic -1 --verbose 8 pkg/mkchangelog.pl
+
+cloc:
+	cloc bin
+	@for d in weecfg weedb weeutil weewx; do \
+  cloc bin/$$d/test; \
+done

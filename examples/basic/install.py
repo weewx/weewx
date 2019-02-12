@@ -1,10 +1,12 @@
 # installer for the 'basic' skin
 # Copyright 2014 Matthew Wall
 
-from setup import ExtensionInstaller
+from weecfg.extension import ExtensionInstaller
+
 
 def loader():
     return BasicInstaller()
+
 
 class BasicInstaller(ExtensionInstaller):
     def __init__(self):
@@ -17,11 +19,11 @@ class BasicInstaller(ExtensionInstaller):
             config={
                 'StdReport': {
                     'basic': {
-                        'skin':'basic',
-                        'HTML_ROOT':'basic',
+                        'skin': 'basic',
+                        'HTML_ROOT': 'basic',
                         'Extras': {
-                            'current':'INST_SKIN_ROOT/basic/current.inc',
-                            'hilo':'INST_SKIN_ROOT/basic/hilo.inc'}}}},
+                            'current': 'INST_SKIN_ROOT/basic/current.inc',
+                            'hilo': 'INST_SKIN_ROOT/basic/hilo.inc'}}}},
             files=[('skins/basic',
                     ['skins/basic/basic.css',
                      'skins/basic/current.inc',
@@ -30,4 +32,4 @@ class BasicInstaller(ExtensionInstaller):
                      'skins/basic/index.html.tmpl',
                      'skins/basic/skin.conf']),
                    ]
-            )
+        )

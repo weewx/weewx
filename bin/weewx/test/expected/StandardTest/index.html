@@ -535,7 +535,7 @@
     </tr>
     <tr>
        <td align="right">Moon:</td>
-       <td align="left">Last quarter (29%full)</td>
+       <td align="left">Waning crescent (29%full)</td>
     </tr>
   </table>
   
@@ -557,6 +557,11 @@
     </tr>
     <tr>
       <td align="right">Example from customizing guide<br/>
+      (&quot;$day.outTemp.max.format(add_label=False)$unit.label.outTemp&quot;)</td>
+      <td align="left">63.3&#176;F</td>
+    </tr>
+    <tr>
+      <td align="right">Test the above with backwards compatibility<br/>
       (&quot;$day.outTemp.max.formatted$unit.label.outTemp&quot;)</td>
       <td align="left">63.3&#176;F</td>
     </tr>
@@ -595,7 +600,71 @@
   </table>
 
   <hr/>
-  
+
+  <h1>Test for formatting examples in the Customizing Guide</h1>
+  <table>
+      <tr>
+        <td align="right">$current.outTemp</td>
+        <td align="left">50.3&#176;F</td>
+      </tr>
+      <tr>
+        <td align="right">$current.outTemp.format</td>
+        <td align="left">50.3&#176;F</td>
+      </tr>
+      <tr>
+        <td align="right">$current.outTemp.format()</td>
+        <td align="left">50.3&#176;F</td>
+      </tr>
+      <tr>
+        <td align="right">$current.outTemp.format(format_string="%.3f")</td>
+        <td align="left">50.284&#176;F</td>
+      </tr>
+      <tr>
+        <td align="right">$current.outTemp.format("%.3f")</td>
+        <td align="left">50.284&#176;F</td>
+      </tr>
+      <tr>
+        <td align="right">$current.outTemp.format(add_label=False)</td>
+        <td align="left">50.3</td>
+      </tr>
+      <tr>
+        <td align="right">$current.UV</td>
+        <td align="left">   N/A</td>
+      </tr>
+      <tr>
+        <td align="right">$current.UV.format(None_string="No UV")</td>
+        <td align="left">No UV</td>
+      </tr>
+      <tr>
+        <td align="right">$current.windDir</td>
+        <td align="left">129&#176;</td>
+      </tr>
+      <tr>
+        <td align="right">$current.windDir.ordinal_compass</td>
+        <td align="left">SE</td>
+      </tr>
+      <tr>
+        <td align="right">$current.dateTime</td>
+        <td align="left">03-Sep-2010 11:20</td>
+      </tr>
+      <tr>
+        <td align="right">$current.dateTime.format(format_string="%H:%M")</td>
+        <td align="left">11:20</td>
+      </tr>
+      <tr>
+        <td align="right">$current.dateTime.format("%H:%M")</td>
+        <td align="left">11:20</td>
+      </tr>
+      <tr>
+        <td align="right">$current.dateTime.raw</td>
+        <td align="left">1283538000</td>
+      </tr>
+      <tr>
+        <td align="right">$current.outTemp.raw</td>
+        <td align="left">50.2842637519</td>
+      </tr>
+  </table>
+    
   <h1>Day images</h1>
   <p>
   <img src="daytempdew.png" alt="temperatures" />
@@ -614,3 +683,4 @@
 </body>
 
 </html>
+

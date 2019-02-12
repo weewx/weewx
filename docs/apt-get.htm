@@ -1,9 +1,7 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<!DOCTYPE html>
+<html lang="en">
 <head>
-    <meta http-equiv="Content-Language" content="en-us"/>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>weewx: Installation using apt-get</title>
     <style> 
@@ -61,7 +59,7 @@ h2 {
 
 <body>
 
-<h1 class="title">weeWX: Installation using apt-get
+<h1 class="title">WeeWX: Installation using apt-get
     <div class='os-icons'>
         <img class='logo' src='images/logo-debian.png' alt=""/>
         <img class='logo' src='images/logo-ubuntu.png' alt=""/>
@@ -70,17 +68,17 @@ h2 {
     </div>
 </h1>
 
-<p>This is the fastest way to install weeWX on Debian-based systems, including Ubuntu, Mint, and Raspbian.
+<p>This is the fastest way to install WeeWX on Debian-based systems, including Ubuntu, Mint, and Raspbian.
 </p>
 
 <h2>Configure apt</h2>
-<p>Tell <span class="code">apt</span> where to find the weeWX releases.  This only has to be done once - the first time you install.</p>
+<p>Tell <span class="code">apt</span> where to find the WeeWX releases.  This only has to be done once - the first time you install.</p>
 
 <pre class='tty cmd'>wget -qO - http://weewx.com/keys.html | sudo apt-key add -
 wget -qO - http://weewx.com/apt/weewx.list | sudo tee /etc/apt/sources.list.d/weewx.list</pre>
 
 <h2>Install</h2>
-<p>Use <span class="code">apt-get</span> to install weeWX. When you are done, weeWX will be running in the background as a daemon.</p>
+<p>Use <span class="code">apt-get</span> to install WeeWX. When you are done, WeeWX will be running in the background as a daemon.</p>
 <pre class='tty cmd'>sudo apt-get update
 sudo apt-get install weewx</pre>
 
@@ -89,7 +87,7 @@ sudo apt-get install weewx</pre>
 <pre class='tty'><a href="file:///var/www/html/weewx/index.html">file:///var/www/html/weewx/index.html</a></pre>
 
 <h2>Uninstall</h2>
-<p>This will remove weeWX, leaving any data intact.</p>
+<p>This will remove WeeWX, leaving any data intact.</p>
 <pre class='tty cmd'>sudo apt-get remove weewx</pre>
 
 <h2>Where to go from here...</h2>

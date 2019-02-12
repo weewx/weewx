@@ -256,7 +256,7 @@ import weewx.drivers
 import weewx.wxformulas
 
 DRIVER_NAME = 'WS23xx'
-DRIVER_VERSION = '0.26rc1'
+DRIVER_VERSION = '0.27'
 
 
 def loader(config_dict, _):
@@ -343,7 +343,7 @@ class WS23xxConfigurator(weewx.drivers.AbstractConfigurator):
     def show_history(self, ts=None, count=0):
         """Show the indicated number of records or records since timestamp"""
         print "Querying the station for historical records..."
-        for i, r in enumerate(self.station.genStartupRecords(since_ts=ts,
+        for i, r in enumerate(self.station.genArchiveRecords(since_ts=ts,
                                                              count=count)):
             print r
             if count and i > count:
@@ -491,7 +491,7 @@ class WS23xxDriver(weewx.drivers.AbstractDevice):
                                (conn_info[1], conn_info[0]))
                         self._poll_wait = conn_info[1]
                 time.sleep(self._poll_wait)
-            except Ws2300.Ws2300Exception, e:
+            except Ws2300.Ws2300Exception as e:
                 logerr("Failed attempt %d of %d to get LOOP data: %s" %
                        (ntries, self.max_tries, e))
                 logdbg("Waiting %d seconds before retry" % self.retry_wait)
@@ -901,7 +901,7 @@ class LinuxSerialPort(SerialPort):
         #
         try:
             self.serial_port = os.open(self.device, os.O_RDWR)
-        except EnvironmentError, e:
+        except EnvironmentError as e:
             raise FatalError(self.device, "can't open tty device - %s." % str(e))
         try:
             fcntl.flock(self.serial_port, fcntl.LOCK_EX)

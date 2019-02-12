@@ -2,9 +2,8 @@
 from __future__ import with_statement
 import os
 import stat
+import sys
 import unittest
-
-import MySQLdb
 
 import weedb
 
@@ -50,6 +49,10 @@ class Common(unittest.TestCase):
  
     def setUp(self):
         """Drop the old databases, in preparation for running a test."""
+        try:
+            import MySQLdb
+        except ImportError as e:
+            raise unittest.case.SkipTest(e.message)
         try:
             weedb.drop(mysql1_dict)
         except weedb.NoDatabase:

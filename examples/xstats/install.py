@@ -1,10 +1,12 @@
 # installer for xstats
 # Copyright 2014 Matthew Wall
 
-from setup import ExtensionInstaller
+from weecfg.extension import ExtensionInstaller
+
 
 def loader():
     return XStatsInstaller()
+
 
 class XStatsInstaller(ExtensionInstaller):
     def __init__(self):
@@ -22,4 +24,4 @@ class XStatsInstaller(ExtensionInstaller):
             files=[('bin/user', ['bin/user/xstats.py']),
                    ('skins/xstats', ['skins/xstats/skin.conf',
                                      'skins/xstats/index.html.tmpl'])]
-            )
+        )

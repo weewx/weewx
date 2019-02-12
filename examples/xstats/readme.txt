@@ -1,4 +1,4 @@
-xstats - weewx extension that provides extended statistics for reports
+xstats - WeeWX extension that provides extended statistics for reports
 Copyright 2014 Matthew Wall
 
 This search list extension offers extra tags:
@@ -16,15 +16,28 @@ This search list extension offers extra tags:
                 thirty days ago.  For example, "what is the maximum wind
                 speed in the last thirty days?"
                 $thirty_day.wind.max
+                
+  'last_month': Statistics for last calendar month, this is useful in
+                getting statistics such as the maximum/minimum records.
+                $last_month.outTemp.max at $last_month.outTemp.maxtime
+                $last_month.outTemp.min at $last_month.outTemp.mintime
+    
+  'last_year':  Statistics for last calendar year, this is useful for
+                things like total rainfall for last year.
+                $last_year.rain.sum
+  
+  'last_year_todate': Statistics of last calendar year until this time
+                      last year. This is useful for comprisons of rain
+                      fall up to this time last year.
+                      $last_year_todate.rain.sum
 
+Installation instructions
 
-Installation instructions:
+1) install the extension
 
-1) run the installer:
+wee_extension --install=/home/weewx/examples/xstats
 
-setup.py install --extension extensions/xstats
-
-2) restart weewx:
+2) restart WeeWX
 
 sudo /etc/init.d/weewx stop
 sudo /etc/init.d/weewx start
@@ -33,14 +46,14 @@ This will result in a report called xstats that illustrates the use of the
 extended statistics.
 
 
-Manual installation instructions:
+Manual installation instructions
 
-1) copy files to the weewx user directory:
+1) copy files to the WeeWX user directory
 
 cp bin/user/xstats.py /home/weewx/bin/user
 
-2) in weewx.conf, modify the report section in which you would like to use the
-   extended statistics.  for example, for the StandardReport:
+2) in the WeeWX configuration file, modify the report section in which you 
+would like to use the extended statistics. For example, for the StandardReport
 
 [StdReport]
     [[StandardReport]]
@@ -48,7 +61,7 @@ cp bin/user/xstats.py /home/weewx/bin/user
         [[[CheetahGenerator]]]
             search_list_extensions = user.xstats.ExtendedStatistics
 
-3) restart weewx
+3) restart WeeWX
 
 sudo /etc/init.d/weewx stop
 sudo /etc/init.d/weewx start

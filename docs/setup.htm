@@ -1,10 +1,8 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<!DOCTYPE html>
+<html lang="en">
 <head>
     <title>weewx: Installation using setup.py</title>
-    <meta http-equiv="Content-Language" content="en-us"/>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <link rel="stylesheet" href="css/weewx_docs.css"/>
     <link rel="icon" href="images/favicon.png" type="image/png"/>
@@ -12,8 +10,8 @@
 
 <body>
 
-<h1 class="title">weeWX: Installation using setup.py
-    <div class='os-icons'>
+<h1 class="title">WeeWX: Installation using setup.py
+    <span class='os-icons'>
         <img class='logo' src='images/logo-linux.png' alt=""/>
         <img class='logo' src='images/logo-debian.png' alt=""/>
         <img class='logo' src='images/logo-ubuntu.png' alt=""/>
@@ -22,12 +20,11 @@
         <img class='logo' src='images/logo-redhat.png' alt=""/>
         <img class='logo' src='images/logo-centos.png' alt=""/>
         <img class='logo' src='images/logo-fedora.png' alt=""/>
-        <img class='logo' src='images/logo-suse.png' alt=""/>
-    </div>
-    <div style="clear: both"></div>
+        <img class='logo' src='images/logo-opensuse.png' alt=""/>
+    </span>
 </h1>
 
-<p>These are generic instructions for installing weeWX using the Python utility
+<p>These are generic instructions for installing WeeWX using the Python utility
     <span class="code">setup.py</span>.
 </p>
 
@@ -39,10 +36,18 @@
 
 <h2 id="setup_prerequisites">Install Prerequisites</h2>
 
-<p>Ensure that Python2 is installed. Python 2.6 or 2.7 will work,
+<p>Ensure that Python 2 is installed. Python 2.6 or 2.7 will work,
     but Python 3 will not.</p>
 <pre class='tty cmd'>python -V</pre>
-<p>Then install required python packages using the package management software for your system (<em>e.g.</em>, <span class='code'>apt-get</span>, <span class='code'>yum</span>, <span class='code'>yast</span>) or the Python Package Management System (<span class='code'>pip</span>). Select the appropriate tab for specific instructions.</p>
+
+<p>If this does not work, then you may have to install Python 2. Instructions below.</p>
+
+<p>Install the required python packages using the package management software for your system
+   (<i>e.g.</i>,
+    <span class='code'>apt-get</span>,
+    <span class='code'>yum</span>,
+    <span class='code'>yast</span>) or the Python Package Management System
+   (<span class='code'>pip</span>). Select the appropriate tab for specific instructions.</p>
 
 <div class='tabs'>
     <div id='prereq-tab-debian' class='tab selected' onclick="showprereq('debian')">Debian <img src='images/logo-debian.png' class='thumbnail' alt=""/> <img src='images/logo-ubuntu.png' class='thumbnail' alt=""/> <img src='images/logo-mint.png' class='thumbnail' alt=""/></div>
@@ -54,11 +59,18 @@
     <div id='prereq-debian'>
         <pre class='tty'># debian, ubuntu, mint, raspbian
 
-# required packages:
+# for systems that do not have python 2 installed (for example, ubuntu 18.04 and later):
+<span class='cmd'>sudo apt-get install python</span>
+
+# for all systems, you may have to install the python imaging library. try this first:
+<span class='cmd'>sudo apt-get install python-pil</span>
+# if that doesn't work, try this:
+<span class='cmd'>sudo apt-get install python-imaging</span>
+
+# other required packages:
 <span class="cmd">sudo apt-get install python-configobj
-sudo apt-get install python-cheetah
-sudo apt-get install python-imaging</span>
-          
+sudo apt-get install python-cheetah</span>
+
 # required if hardware is serial or USB:
 <span class="cmd">sudo apt-get install python-serial
 sudo apt-get install python-usb</span>
@@ -134,7 +146,7 @@ sudo pip install pyusb</span>
     </div>
 </div>
 
-<h2>Install weeWX</h2>
+<h2>Install WeeWX</h2>
 
 <p>Expand the source archive:</p>
 <pre class="tty cmd">tar xvfz weewx-X.Y.Z.tar.gz</pre>
@@ -191,7 +203,7 @@ sudo /etc/init.d/weewx start</pre>
 <h2>Status</h2>
 
 <p>
-    Look in the system log for messages from weeWX.
+    Look in the system log for messages from WeeWX.
     For example, on Debian systems:
 </p>
 <pre class='tty cmd'>sudo tail -f /var/log/syslog</pre>
@@ -201,13 +213,12 @@ sudo /etc/init.d/weewx start</pre>
 <p>
     After about 5 minutes, open the station web page in a web browser. You
     should see your station information and data.
-</p>
-<pre class='tty'><a href="file:///home/weewx/public_html/index.html">file:///home/weewx/public_html/index.html</a></pre>
-<p>If your hardware supports hardware archiving, then how long you wait
+    If your hardware supports hardware archiving, then how long you wait
     will depend on the
     <a href="usersguide.htm#archive_interval">archive interval</a>
     set in your hardware.
 </p>
+<pre class='tty'><a href="file:///home/weewx/public_html/index.html">file:///home/weewx/public_html/index.html</a></pre>
 
 <h2>Customize</h2>
 
@@ -227,7 +238,7 @@ sudo /etc/init.d/weewx start</pre>
 
 <p>
     To uninstall, simply delete the directory
-    <span class='code'>/home/weewx</span>. This will delete weeWX,
+    <span class='code'>/home/weewx</span>. This will delete WeeWX,
     configuration files, and data.
 </p>
 <pre class='tty cmd'>sudo rm -r /home/weewx
@@ -235,7 +246,7 @@ sudo rm /etc/init.d/weewx</pre>
 
 <h2>Layout</h2>
 
-<p>The installation will place weeWX in the
+<p>The installation will place WeeWX in the
     <span class="code">/home/weewx</span> directory with the following
     layout: </p>
 <table class='locations' style="width: auto;">
