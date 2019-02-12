@@ -32,7 +32,7 @@ from weewx.units import unit_constants, unit_nicknames, convertStd, to_std_syste
 from weeutil.weeutil import timestamp_to_string, option_as_list, to_int, tobool, _get_object
 
 # List of sources we support
-SUPPORTED_SOURCES = ['CSV', 'WU', 'Cumulus', 'WeatherCat']
+SUPPORTED_SOURCES = ['CSV', 'WU', 'Cumulus']
 
 # Minimum requirements in any explicit or implicit WeeWX field-to-import field
 # map
@@ -334,7 +334,7 @@ class Source(object):
         with self.dbm as archive:
             # step through our periods of records until we reach the end. A
             # 'period' of records may comprise the contents of a file, a day
-            # of WU obs or a month of Cumulus or WeatherCat obs
+            # of WU obs or a month of Cumulus obs
             for period in self.period_generator():
 
                 # get the raw data
@@ -907,7 +907,7 @@ class Source(object):
         """ Apply weewx.conf QC to a record.
 
         If qc option is set in the import config file then apply any StdQC
-        min/max checks specfied in weewx.conf.
+        min/max checks specified in weewx.conf.
 
         Input parameters:
 

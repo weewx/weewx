@@ -5,7 +5,7 @@
 #
 #    See the file LICENSE.txt for your rights.
 #
-"""Import weeWX observation data from an external source.
+"""Import WeeWX observation data from an external source.
 
 Compatibility:
 
@@ -34,18 +34,18 @@ Design
    (eg monthly log files). This way wee_import can be extended to support other
    sources by defining a new child class, its specific properties as well as
    getData() and period_generator() methods. The child class for a given import
-   type are definined in the bin/weeimport/xxximport.py files.
+   type are defined in the bin/weeimport/xxximport.py files.
 
-   As with other weeWX utilities, wee_import advises the user of basic
+   As with other WeeWX utilities, wee_import advises the user of basic
    configuration, action taken and results via stdout. However, since
-   wee_import can make substantial changes to the weeWX archive, wee_import also
+   wee_import can make substantial changes to the WeeWX archive, wee_import also
    logs to file by default. This functionality is controlled via a command
    line option.
 
 Prerequisites
 
-   wee_import uses a number of weeWX API calls and therefore must have a
-   functional weeWX installation. wee_import requires weeWX 3.6.0 or later.
+   wee_import uses a number of WeeWX API calls and therefore must have a
+   functional WeeWX installation. wee_import requires WeeWX 3.6.0 or later.
 
 Configuration
 
@@ -82,7 +82,7 @@ source = CSV
     #            are equally spaced in time and there are no missing records.
     #   conf   - Use the interval setting from weewx.conf. This setting is
     #            best used if the records to be imported have been produced by
-    #            weeWX using the same archive interval as set in weewx.conf on
+    #            WeeWX using the same archive interval as set in weewx.conf on
     #            this machine.
     #   x      - Use a fixed interval of x minutes for every record. This
     #            setting is best used if the records to be imported are
@@ -142,7 +142,7 @@ source = CSV
     #   solar_sensor = (True | False)
     solar_sensor = True
 
-    # Date-time format of CSV field from which the weeWX archive record
+    # Date-time format of CSV field from which the WeeWX archive record
     # dateTime field is to be extracted. wee_import first attempts to interpret
     # date/time info in this format, if this fails it then attempts to
     # interpret it as a timestamp and if this fails it then raises an error.
@@ -160,7 +160,7 @@ source = CSV
 
     # Lower and upper bounds for imported wind direction. It is possible,
     # particularly for a calculated direction, to have a value (eg -45) outside
-    # of the weeWX limits (0 to 360 inclusive). Format is:
+    # of the WeeWX limits (0 to 360 inclusive). Format is:
     #
     # wind_direction = lower,upper
     #
@@ -174,30 +174,30 @@ source = CSV
     # is -360,360.
     wind_direction = -360,360
 
-    # Map CSV record fields to weeWX archive fields. Format is:
+    # Map CSV record fields to WeeWX archive fields. Format is:
     #
     #   weewx_archive_field_name = csv_field_name, weewx_unit_name
     #
     # where:
-    #   weewx_archive_field_name - An observation name in the weeWX database
+    #   weewx_archive_field_name - An observation name in the WeeWX database
     #                              schema.
     #   csv_field_name           - The name of a field from the CSV file.
-    #   weewx_unit_name          - The name of the units, as defined in weeWX,
+    #   weewx_unit_name          - The name of the units, as defined in WeeWX,
     #                              used by csv_field_name. This value represents
     #                              the units used for this field in the CSV
     #                              file, wee_import will do the necessary
     #                              conversions to the unit system used by the
-    #                              weeWX archive.
+    #                              WeeWX archive.
     # For example,
     #   outTemp = Temp, degree_C
     # would map the CSV field Temp, in degrees C, to the archive field outTemp.
     #
-    # If a field mapping exists for the weewx usUnits archive field then the
+    # If a field mapping exists for the WeeWX usUnits archive field then the
     # units option may be omitted for each mapped field.
     #
     # WeeWX archive fields that do not exist in the CSV data may be omitted. Any
     # omitted fields that are derived (eg dewpoint) may be calculated during
-    # import using the equivalent of the weeWX StdWXCalculate service through
+    # import using the equivalent of the WeeWX StdWXCalculate service through
     # setting the calc-missing parameter above.
     [[FieldMap]]
         dateTime    = timestamp, unix_epoch
@@ -232,7 +232,7 @@ source = CSV
     station_id = XXXXXXXX123
 
     #
-    # When importing WU data the following weeWX database fields will be
+    # When importing WU data the following WeeWX database fields will be
     # populated directly by the imported data (provided the corresponding data
     # exists on WU):
     #   barometer
@@ -246,12 +246,12 @@ source = CSV
     #   windGust
     #   windSpeed
     #
-    # The following weeWX database fields will be populated from other
+    # The following WeeWX database fields will be populated from other
     # settings/config files:
     #   interval
     #   usUnits
     #
-    # The following weeWX database fields will be populated with values derived
+    # The following WeeWX database fields will be populated with values derived
     # from the imported data provided the --calc-missing command line option is
     # used during import:
     #   altimeter
@@ -261,11 +261,11 @@ source = CSV
     #   rainRate
     #   windchill
     #
-    # The following weeWX fields will be populated with derived values from the
+    # The following WeeWX fields will be populated with derived values from the
     # imported data provided the --calc-missing command line option is used
-    # during import. These fields will only be saved to the weeWX database if
-    # the weeWX schema has been modified to accept them. Note that the pyephem
-    # module is required in order to calculate maxSolarRad - refer weeWX Users
+    # during import. These fields will only be saved to the WeeWX database if
+    # the WeeWX schema has been modified to accept them. Note that the pyephem
+    # module is required in order to calculate maxSolarRad - refer WeeWX Users
     # Guide.
     #   appTemp
     #   cloudbase
@@ -280,7 +280,7 @@ source = CSV
     #            are equally spaced in time and there are no missing records.
     #   conf   - Use the interval setting from weewx.conf. This setting is
     #            best used if the records to be imported have been produced by
-    #            weeWX using the same archive interval as set in weewx.conf on
+    #            WeeWX using the same archive interval as set in weewx.conf on
     #            this machine.
     #   x      - Use a fixed interval of x minutes for every record. This
     #            setting is best used if the records to be imported are
@@ -288,8 +288,8 @@ source = CSV
     #            This setting is recommended for WU imports.
     # Due to WU frequently missing uploaded records, use of 'derive' may give
     # incorrect or inconsistent interval values. Better results may be
-    # achieved by using the 'conf' setting (if weeWX has been doing the WU
-    # uploading and the weeWX archive_interval matches the WU observation
+    # achieved by using the 'conf' setting (if WeeWX has been doing the WU
+    # uploading and the WeeWX archive_interval matches the WU observation
     # spacing in time) or setting the interval to a fixed value (eg 5). The
     # most appropriate setting will depend on the completeness and (time)
     # accuracy of the WU data being imported.
@@ -299,7 +299,7 @@ source = CSV
 
     # Should the [StdQC] max/min limits in weewx.conf be applied to the
     # imported data. This may be useful if the source has extreme values that
-    # are clearly incorrect for some observations. This is particulalrly useful
+    # are clearly incorrect for some observations. This is particularly useful
     # for WU imports where WU often records clearly erroneous values against
     # obs that are not reported. Available options are:
     #   True  - weewx.conf [StdQC] max/min limits are applied.
@@ -325,7 +325,7 @@ source = CSV
 
     # Lower and upper bounds for imported wind direction. It is possible,
     # particularly for a calculated direction, to have a value (eg -45) outside
-    # of the weeWX limits (0 to 360 inclusive). Format is:
+    # of the WeeWX limits (0 to 360 inclusive). Format is:
     #
     # wind_direction = lower,upper
     #
@@ -350,7 +350,7 @@ source = CSV
     #   directory = full path without trailing /
     directory = /var/tmp/cumulus
 
-    # When importing Cumulus monthly log file data the following weeWX database
+    # When importing Cumulus monthly log file data the following WeeWX database
     # fields will be populated directly by the imported data:
     #   barometer
     #   dateTime
@@ -369,23 +369,23 @@ source = CSV
     #   windSpeed
     #   windchill
     #
-    # The following weeWX database fields will be populated from other
+    # The following WeeWX database fields will be populated from other
     # settings/config files:
     #   interval
     #   usUnits
     #
-    # The following weeWX database fields will be populated with values derived
+    # The following WeeWX database fields will be populated with values derived
     # from the imported data provided the --calc-missing command line option is
     # used during import:
     #   altimeter
     #   ET
     #   pressure
     #
-    # The following weeWX fields will be populated with derived values from the
+    # The following WeeWX fields will be populated with derived values from the
     # imported data provided the --calc-missing command line option is used
-    # during import. These fields will only be saved to the weeWX database if
-    # the weeWX schema has been modified to accept them. Note that the pyephem
-    # module is required in order to calculate maxSolarRad - refer weeWX Users
+    # during import. These fields will only be saved to the WeeWX database if
+    # the WeeWX schema has been modified to accept them. Note that the pyephem
+    # module is required in order to calculate maxSolarRad - refer WeeWX Users
     # Guide.
     #   appTemp
     #   cloudbase
@@ -400,7 +400,7 @@ source = CSV
     #            are equally spaced in time and there are no missing records.
     #   conf   - Use the interval setting from weewx.conf. This setting is
     #            best used if the records to be imported have been produced by
-    #            weeWX using the same archive interval as set in weewx.conf on
+    #            WeeWX using the same archive interval as set in weewx.conf on
     #            this machine.
     #   x      - Use a fixed interval of x minutes for every record. This
     #            setting is best used if the records to be imported are
@@ -478,10 +478,10 @@ source = CSV
     # units are used in the imported data. The units used for temperature,
     # pressure, rain and windspeed related observations in the Cumulus monthly
     # logs are set at the Cumulus Station Configuration Screen.  The
-    # [[Units]] settings below should be set to the weeWX equivalent of the
+    # [[Units]] settings below should be set to the WeeWX equivalent of the
     # units of measure used by Cumulus (eg if Cumulus used 'C' for temperature,
     # temperature should be set to 'degree_C'). Note that Cumulus does not
-    # support all units used by weeWX (eg 'mmHg') so not all weeWX unit are
+    # support all units used by WeeWX (eg 'mmHg') so not all WeeWX unit are
     # available options.
     [[Units]]
         temperature = degree_C      # options are 'degree_F' or 'degree_C'
@@ -501,7 +501,7 @@ source = CSV
     #   directory = full path without trailing /
     directory = /var/tmp
 
-    # When importing WeatherCat monthly .cat file data the following weeWX
+    # When importing WeatherCat monthly .cat file data the following WeeWX
     # database fields will be populated directly by the imported data:
     #   barometer
     #   dateTime
@@ -519,16 +519,16 @@ source = CSV
     #   windSpeed
     #   windchill
     #
-    # The following weeWX database fields will be populated from other
+    # The following WeeWX database fields will be populated from other
     # settings/config files:
     #   interval
     #   usUnits
     #
-    # The following weeWX fields will be populated directly by the imported
-    # data provided the weeWX schema has been modified to accept them.
+    # The following WeeWX fields will be populated directly by the imported
+    # data provided the WeeWX schema has been modified to accept them.
     #   windrun
     #
-    # The following weeWX database fields will be populated with values derived
+    # The following WeeWX database fields will be populated with values derived
     # from the imported data provided the --calc-missing command line option is
     # used during import:
     #   altimeter
@@ -536,11 +536,11 @@ source = CSV
     #   heatindex
     #   pressure
     #
-    # The following weeWX fields will be populated with derived values from the
+    # The following WeeWX fields will be populated with derived values from the
     # imported data provided the --calc-missing command line option is used
-    # during import. These fields will only be saved to the weeWX database if
-    # the weeWX schema has been modified to accept them. Note that the pyephem
-    # module is required in order to calculate maxSolarRad - refer weeWX Users
+    # during import. These fields will only be saved to the WeeWX database if
+    # the WeeWX schema has been modified to accept them. Note that the pyephem
+    # module is required in order to calculate maxSolarRad - refer WeeWX Users
     # Guide.
     #   appTemp
     #   cloudbase
@@ -554,7 +554,7 @@ source = CSV
     #            are equally spaced in time and there are no missing records.
     #   conf   - Use the interval setting from weewx.conf. This setting is
     #            best used if the records to be imported have been produced by
-    #            weeWX using the same archive interval as set in weewx.conf on
+    #            WeeWX using the same archive interval as set in weewx.conf on
     #            this machine.
     #   x      - Use a fixed interval of x minutes for every record. This
     #            setting is best used if the records to be imported are
@@ -562,7 +562,7 @@ source = CSV
     #            This setting is recommended for WU imports.
     # To import WeatherCat records it is recommended that the interval setting
     # be set to the Sampling Rate setting used by WeatherCat as set on the
-    # Misc2 tab under WeatherCat Preferences unless the Adapative Sampling Rate
+    # Misc2 tab under WeatherCat Preferences unless the Adaptive Sampling Rate
     # was used in which case interval = derive should be used.
     # Format is:
     #   interval = (derive | conf | x)
@@ -659,7 +659,7 @@ Adding a New Import Source
 
             -   Returns an iterable of raw source data records.
 
-            -   Creates the source data field-to-weewx archive field map and
+            -   Creates the source data field-to-WeeWX archive field map and
                 saves the map to the class object map property (the map may be
                 created using the Source.parseMap() method). Refer to
                 getRawData() methods in csvimport.py and wuimport.py.
@@ -687,17 +687,17 @@ import syslog
 
 from distutils.version import StrictVersion
 
-# weewx imports
+# WeeWX imports
 import weewx
 import weeimport
 import weeimport.weeimport
 
 # wee_import version number
 WEE_IMPORT_VERSION = '0.3'
-# minimum weewx version required for this version of wee_import
+# minimum WeeWX version required for this version of wee_import
 REQUIRED_WEEWX = "3.6.0"
 
-description = """Import observation data into a weewx archive."""
+description = """Import observation data into a WeeWX archive."""
 
 usage = """wee_import --help
        wee_import --version
@@ -709,7 +709,7 @@ usage = """wee_import --help
             [--log=-]
 """
 
-epilog = """wee_import will import data from an external source into a weewx
+epilog = """wee_import will import data from an external source into a WeeWX
             archive. Daily summaries are updated as each archive record is
             imported so there should be no need to separately rebuild the daily
             summaries using the wee_database utility."""
@@ -726,7 +726,7 @@ def main():
     # Add the various options:
     parser.add_option("--config", dest="config_path", type=str,
                       metavar="CONFIG_FILE", default="weewx.conf",
-                      help="Use weewx configuration file CONFIG_FILE.")
+                      help="Use WeeWX configuration file CONFIG_FILE.")
     parser.add_option("--import-config", dest="import_config_path", type=str,
                       metavar="IMPORT_CONFIG_FILE",
                       help="Use import configuration file IMPORT_CONFIG_FILE.")
@@ -742,8 +742,8 @@ def main():
                            "is YYYY-mm-dd[THH:MM].")
     parser.add_option("--log", dest="logging", type=str, metavar="-",
                       help="Control wee_import log output. By default log output "
-                           "is sent to the weewx log file. Log output may be "
-                           "disabled by using '--log=-'. Some weewx API log "
+                           "is sent to the WeeWX log file. Log output may be "
+                           "disabled by using '--log=-'. Some WeeWX API log "
                            "output cannot be controlled by wee_import and will "
                            "be sent to the default log file irrespective of the "
                            "'--log' option.")
@@ -755,9 +755,9 @@ def main():
     # Now we are ready to parse the command line:
     (options, args) = parser.parse_args()
 
-    # check weewx version number for compatibility
+    # check WeeWX version number for compatibility
     if StrictVersion(weewx.__version__) < StrictVersion(REQUIRED_WEEWX):
-        print "weewx %s or greater is required, found %s. Nothing done, exiting." % (REQUIRED_WEEWX,
+        print "WeeWX %s or greater is required, found %s. Nothing done, exiting." % (REQUIRED_WEEWX,
                                                                                      weewx.__version__)
         exit(1)
 
@@ -802,7 +802,7 @@ def main():
         exit(1)
     except weeimport.weeimport.WeeImportMapError as e:
         wlog.printlog(syslog.LOG_INFO,
-                      "**** Unable to parse source-to-weewx field map.")
+                      "**** Unable to parse source-to-WeeWX field map.")
         wlog.printlog(syslog.LOG_INFO, "**** %s" % e)
         print "**** Nothing done, exiting."
         wlog.logonly(syslog.LOG_INFO, "**** Nothing done.")
