@@ -17,6 +17,7 @@ import weeplot.utilities
 import weeutil.weeutil
 import weewx.reportengine
 import weewx.units
+from weeutil.config import search_up
 from weeutil.weeutil import to_bool, to_int, to_float
 from weewx.units import ValueTuple
 
@@ -60,6 +61,9 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
         """
         t1 = time.time()
         ngen = 0
+
+        # determine how much logging is desired
+        log_success = to_bool(search_up(self.image_dict, 'log_success', True))
 
         # Loop over each time span class (day, week, month, etc.):
         for timespan in self.image_dict.sections:
@@ -259,7 +263,7 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                     syslog.syslog(syslog.LOG_CRIT, "imagegenerator: Unable to save to file '%s' %s:" % (img_file, e))
         t2 = time.time()
 
-        if self.skin_dict.get('log_success', True):
+        if log_success:
             syslog.syslog(syslog.LOG_INFO, "imagegenerator: Generated %d images for %s in %.2f seconds" % (ngen, self.skin_dict['REPORT_NAME'], t2 - t1))
 
 def skipThisPlot(time_ts, aggregate_interval, img_file):
