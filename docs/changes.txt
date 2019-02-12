@@ -7,6 +7,9 @@ Fixes issue #329 (again).
 Fixed problem that prevented the wee_device --history option from
 working with the CC3000 driver.
 
+Fix incorrect `log_success` operation in ftp, rsync, copy
+and image generators. PR #373. Partial fix of issue #370.
+
 
 3.9.1 02/06/2019
 
