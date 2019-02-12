@@ -9,12 +9,15 @@
 from __future__ import print_function
 from __future__ import with_statement
 
+import collections
 import errno
 import glob
 import os.path
 import shutil
 import sys
 import tempfile
+
+import six
 from six.moves import StringIO
 
 import configobj
@@ -287,6 +290,7 @@ def modify_config(config_dict, stn_info, logger, debug=False):
         if stn_info.get('units') is not None:
             if 'StdReport' in config_dict:
                 update_units(config_dict, stn_info.get('units'), logger, debug)
+
 
 # ==============================================================================
 #              Utilities that update and merge ConfigObj objects
@@ -792,7 +796,7 @@ def update_to_v30(config_dict):
                 service_list = config_dict['Engine']['Services'][list_name]
                 # If service_list is not already a list (it could be just a
                 # single name), then make it a list:
-                if not hasattr(service_list, '__iter__'):
+                if not isinstance(service_list, (tuple, list)):
                     service_list = [service_list]
                 config_dict['Engine']['Services'][list_name] = \
                     [this_item.replace('wxengine', 'engine') for this_item in service_list]
@@ -833,8 +837,9 @@ def update_to_v32(config_dict):
         # symbol for WEEWX_ROOT does not get lost.
         save, config_dict.interpolation = config_dict.interpolation, False
         config_dict['DatabaseTypes'] = {
-            'SQLite': {'driver': 'weedb.sqlite',
-                       'SQLITE_ROOT': '%(WEEWX_ROOT)s/archive'}}
+            'SQLite': {'SQLITE_ROOT': '%(WEEWX_ROOT)s/archive',
+                       'driver': 'weedb.sqlite'}
+        }
         config_dict['DatabaseTypes'].comments['SQLite'] = ['', '    # Defaults for SQLite databases']
         config_dict.interpolation = save
         try:
@@ -1606,6 +1611,7 @@ def get_extension_installer(extension_installer_dir):
 
     return (install_module.__file__, installer)
 
+
 # ==============================================================================
 #            Various config sections
 # ==============================================================================
@@ -1628,7 +1634,6 @@ SmartphoneReport = u"""[StdReport]
         enable = false
         HTML_ROOT = public_html/smartphone"""
 
-
 MobileReport = u"""[StdReport]
 
     [[MobileReport]]
@@ -1637,7 +1642,6 @@ MobileReport = u"""[StdReport]
         skin = Mobile
         enable = false
         HTML_ROOT = public_html/mobile"""
-
 
 UnitDefaults = u"""[StdReport]
 
@@ -1664,7 +1668,6 @@ UnitDefaults = u"""[StdReport]
                 group_speed2       = mile_per_hour2       # Options are 'mile_per_hour2', 'km_per_hour2', 'knot2', or 'meter_per_second2'
                 group_temperature  = degree_F             # Options are 'degree_F' or 'degree_C'
 """
-
 
 Defaults = UnitDefaults + u"""
 
@@ -1802,4 +1805,3 @@ Defaults = UnitDefaults + u"""
             # The labels to be used for the phases of the moon:
             moon_phases = New, Waxing crescent, First quarter, Waxing gibbous, Full, Waning gibbous, Last quarter, Waning crescent
 """
-

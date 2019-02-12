@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2015 Tom Keffer <tkeffer@gmail.com> and
+#    Copyright (c) 2009-2019 Tom Keffer <tkeffer@gmail.com> and
 #                            Matthew Wall
 #
 #    See the file LICENSE.txt for your full rights.
@@ -13,6 +13,7 @@
 #  -user/installer/pmon/           # The extension's installer subdirectory
 #  -user/installer/pmon/install.py # The copy of the installer for the extension
 
+from __future__ import absolute_import
 import glob
 import os
 import shutil
@@ -23,11 +24,14 @@ from weecfg import Logger
 from weewx import all_service_groups
 import weeutil.weeutil
 
+
 class InstallError(Exception):
     """Exception thrown when installing an extension."""
 
+
 class ExtensionInstaller(dict):
     """Base class for extension installers."""
+
 
 class ExtensionEngine(object):
     """Engine that manages extensions."""
@@ -36,7 +40,7 @@ class ExtensionEngine(object):
         'bin': 'BIN_ROOT',
         'skins': 'SKIN_ROOT'}
 
-    def __init__(self, config_path, config_dict, tmpdir=None, bin_root=None, 
+    def __init__(self, config_path, config_dict, tmpdir=None, bin_root=None,
                  dry_run=False, logger=None):
         """Initializer for ExtensionEngine. 
         
@@ -68,7 +72,7 @@ class ExtensionEngine(object):
         self.root_dict = weecfg.extract_roots(self.config_path,
                                               self.config_dict, bin_root)
         self.logger.log("root dictionary: %s" % self.root_dict, 4)
-        
+
     def enumerate_extensions(self):
         """Print info about all installed extensions to the logger."""
         ext_root = self.root_dict['EXT_ROOT']
@@ -111,7 +115,9 @@ class ExtensionEngine(object):
                                                       self.tmpdir, self.logger)
                 extension_reldir = os.path.commonprefix(member_names)
                 if extension_reldir == '':
-                    raise InstallError("Unable to install from '%s': no common path (the extension archive contains more than a single root directory)" % extension_path)
+                    raise InstallError("Unable to install from '%s': no common path "
+                                       "(the extension archive contains more than a "
+                                       "single root directory)" % extension_path)
                 extension_dir = os.path.join(self.tmpdir, extension_reldir)
                 self.install_from_dir(extension_dir)
             finally:
@@ -123,7 +129,7 @@ class ExtensionEngine(object):
             self.install_from_dir(extension_path)
         else:
             raise InstallError("Extension '%s' not found." % extension_path)
-    
+
         self.logger.log("Finished installing extension '%s'" % extension_path)
 
     def install_from_dir(self, extension_dir):
@@ -178,7 +184,7 @@ class ExtensionEngine(object):
                 sys.exit("Skipped file %s: Unknown destination directory %s" %
                          (source_tuple[1], source_tuple[0]))
         self.logger.log("Copied %d files" % N, level=2)
-        
+
         save_config = False
 
         # Look for options that have to be injected into the configuration file
@@ -217,13 +223,13 @@ class ExtensionEngine(object):
             except OSError:
                 pass
             shutil.copy2(installer_path, extension_installer_dir)
-                                
+
         if save_config:
             backup_path = weecfg.save_with_backup(self.config_dict,
                                                   self.config_path)
             self.logger.log("Saved configuration dictionary. Backup copy at %s"
                             % backup_path)
-            
+
     def _inject_config(self, extension_config, extension_name):
         """Injects any additions to the configuration file that
         the extension might have.
@@ -261,7 +267,6 @@ class ExtensionEngine(object):
                         db_dict['database_type'] = 'MySQL'
                         db_dict.pop('driver')
 
-
         new_top_level = []
         # Remember any new top-level sections so we can inject a major
         # comment block
@@ -273,18 +278,18 @@ class ExtensionEngine(object):
         if not self.dry_run:
             # Inject any new config data into the configuration file
             weeutil.weeutil.conditional_merge(self.config_dict, cfg)
-            
+
             # Include the major comment block for any new top level sections
             for new_section in new_top_level:
                 self.config_dict.comments[new_section] = \
                     weecfg.major_comment_block + \
                     ["# Options for extension '%s'" % extension_name]
-                
+
             self._reorder(cfg)
             save_config = True
-            
+
         self.logger.log("Merged extension settings into configuration file",
-                        level=3)        
+                        level=3)
         return save_config
 
     def _reorder(self, cfg):
@@ -314,12 +319,12 @@ class ExtensionEngine(object):
                                         report, target_name)
         except KeyError:
             pass
-            
+
     def uninstall_extension(self, extension_name):
         """Uninstall the extension with name extension_name"""
-        
+
         self.logger.log("Request to remove extension '%s'" % extension_name)
-        
+
         # Find the subdirectory containing this extension's installer
         extension_installer_dir = os.path.join(self.root_dict['EXT_ROOT'],
                                                extension_name)
@@ -331,37 +336,37 @@ class ExtensionEngine(object):
 
         # Remove any files that were added:
         self.uninstall_files(installer)
-                
+
         save_config = False
 
         # Remove any services we added
         for service_group in all_service_groups:
             if service_group in installer:
-                new_list = filter(lambda x : x not in installer[service_group], 
-                                  self.config_dict['Engine']['Services'][service_group])
+                new_list = [x for x in self.config_dict['Engine']['Services'][service_group] \
+                            if x not in installer[service_group]]
                 if not self.dry_run:
                     self.config_dict['Engine']['Services'][service_group] = new_list
                     save_config = True
-        
+
         # Remove any sections we added
         if 'config' in installer and not self.dry_run:
             weecfg.remove_and_prune(self.config_dict, installer['config'])
             save_config = True
-        
+
         if not self.dry_run:
             # Finally, remove the extension's installer subdirectory:
             shutil.rmtree(extension_installer_dir)
-        
+
         if save_config:
             weecfg.save_with_backup(self.config_dict, self.config_path)
-            
+
         self.logger.log("Finished removing extension '%s'" % extension_name)
 
     def uninstall_files(self, installer):
         """Delete files that were installed for this extension"""
-         
+
         directory_list = []
- 
+
         self.logger.log("Removing files.", level=2)
         N = 0
         for source_tuple in installer['files']:
@@ -391,14 +396,14 @@ class ExtensionEngine(object):
                         dst_dir = ExtensionEngine._strip_leading_dir(
                             source_tuple[0])
                         directory = os.path.abspath(os.path.join(
-                                self. root_dict[root_type], dst_dir))
+                            self.root_dict[root_type], dst_dir))
                         directory_list.append(directory)
                     break
             else:
                 sys.exit("Skipped file %s: Unknown destination directory %s" %
                          (source_tuple[1], source_tuple[0]))
         self.logger.log("Removed %d files" % N, level=2)
-         
+
         # Now delete all the empty skin directories. 
         # Start by finding the directory closest to root
         most_root = os.path.commonprefix(directory_list)
@@ -406,7 +411,7 @@ class ExtensionEngine(object):
         for dirpath, _, _ in os.walk(most_root, topdown=False):
             if dirpath in directory_list:
                 self.delete_directory(dirpath)
-         
+
     def delete_file(self, filename, report_errors=True):
         """Delete files from the file system.
 

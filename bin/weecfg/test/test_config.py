@@ -90,21 +90,24 @@ class LineTest(unittest.TestCase):
         # Writing a ConfigObj to a file-like object always writes in bytes,
         # so we cannot write to a StringIO (which accepts only Unicode under Python 3).
         # Use a BytesIO object instead, which accepts byte strings.
-        with io.BytesIO() as out_str:
-            config_dict.write(out_str)
-            check_fileend(out_str)
-            out_str.seek(0)
+        with io.BytesIO() as fd_actual:
+            config_dict.write(fd_actual)
+            check_fileend(fd_actual)
+            fd_actual.seek(0)
 
-            with open(expected, 'r') as fd_expected:
+            # When we read the BytesIO object back in, the results will be in byte strings.
+            # To compare apples-to-apples, we need to open the file with expected
+            # strings in binary, so when we read it, we get byte-strings:
+            with open(expected, 'rb') as fd_expected:
                 N = 0
                 for expected in fd_expected:
-                    actual = out_str.readline()
+                    actual = fd_actual.readline()
                     N += 1
                     self.assertEqual(actual.strip(), expected.strip(), "[%d] '%s' vs '%s'" % (N, actual, expected))
 
                 # Make sure there are no extra lines in the updated config:
-                more = out_str.readline()
-                self.assertEqual(more, '')
+                more = fd_actual.readline()
+                self.assertEqual(more, b'')
 
 
 class ConfigTest(LineTest):
@@ -338,7 +341,7 @@ class ConfigTest(LineTest):
         # Upgrade the V3.8 configuration dictionary to V3.9:
         weecfg.update_to_v39(config_dict)
 
-        # with open('expected/weewx39_expected.conf', 'w') as fd:
+        # with open('expected/weewx39_expected.conf', 'wb') as fd:
         #     config_dict.write(fd)
 
         self._check_against_expected(config_dict, 'expected/weewx39_expected.conf')
@@ -354,7 +357,7 @@ class ConfigTest(LineTest):
         # First update, then merge:
         weecfg.update_and_merge(config_dict, template)
 
-        # with open('expected/weewx39_user_expected.conf', 'w') as fd:
+        # with open('expected/weewx39_user_expected.conf', 'wb') as fd:
         #     config_dict.write(fd)
 
         self._check_against_expected(config_dict, 'expected/weewx39_user_expected.conf')
