@@ -907,7 +907,7 @@ class Source(object):
         """ Apply weewx.conf QC to a record.
 
         If qc option is set in the import config file then apply any StdQC
-        min/max checks specfied in weewx.conf.
+        min/max checks specified in weewx.conf.
 
         Input parameters:
 
