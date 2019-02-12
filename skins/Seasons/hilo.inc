@@ -19,8 +19,12 @@
         <th>&nbsp;<br/>Today</th>
         <th class="hilo_week">&nbsp;<br/>Week</th>
         <th class="hilo_month">&nbsp;<br/>Month</th>
-        <th class="hilo_year">&nbsp;<br/>Year</th>
-        <th class="hilo_rainyear">Rain<br/>year</th>
+        <th class="hilo_year">
+            <a onclick="toggle_rainyear()">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br/>Year</a>
+        </th>
+        <th class="hilo_rainyear">
+            <a onclick="toggle_rainyear()">Rain<br/>Year</a>
+        </th>
         <td></td>
       </tr>
       <tr>

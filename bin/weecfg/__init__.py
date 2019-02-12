@@ -944,7 +944,7 @@ def update_to_v36(config_dict):
     # Perform the following only if the dictionary has a StdWXCalculate section
     if 'StdWXCalculate' in config_dict:
         # No need to update if it already has a 'Calculations' section:
-        if 'Calculations' not in config_dict:
+        if 'Calculations' not in config_dict['StdWXCalculate']:
             # Save the comment attached to the first scalar
             try:
                 first = config_dict['StdWXCalculate'].scalars[0]
@@ -1435,7 +1435,7 @@ def load_driver_editor(driver_module_name):
 #                Utilities that seek info from the command line
 # ==============================================================================
 
-def prompt_for_info(location=None, latitude='0.000', longitude='0.000',
+def prompt_for_info(location=None, latitude='90.000', longitude='0.000',
                     altitude=['0', 'meter'], units='metric', **kwargs):
     #
     #  Description

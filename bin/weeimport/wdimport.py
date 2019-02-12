@@ -192,6 +192,11 @@ class WDSource(weeimport.Source):
         # save the import config dict
         self.wd_config_dict = wd_config_dict
 
+        # our parent uses 'derive' as the default interval setting, for WD the
+        # default should be 1 (minute) so redo the interval setting with our
+        # default
+        self.interval = wd_config_dict.get('interval', 1)
+
         # wind dir bounds
         self.wind_dir = [0, 360]
 

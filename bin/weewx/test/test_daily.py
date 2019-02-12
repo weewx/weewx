@@ -349,6 +349,13 @@ class TestMySQL(Common):
     def __init__(self, *args, **kwargs):
         self.database_type = "mysql"
         super(TestMySQL, self).__init__(*args, **kwargs)
+
+    def setUp(self):
+        try:
+            import MySQLdb
+        except ImportError as e:
+            raise unittest.case.SkipTest(e.message)
+        super(TestMySQL, self).setUp()
         
     
 def suite():

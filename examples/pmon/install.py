@@ -1,10 +1,12 @@
 # installer for pmon
 # Copyright 2014 Matthew Wall
 
-from setup import ExtensionInstaller
+from weecfg.extension import ExtensionInstaller
+
 
 def loader():
     return ProcessMonitorInstaller()
+
 
 class ProcessMonitorInstaller(ExtensionInstaller):
     def __init__(self):
@@ -36,4 +38,4 @@ class ProcessMonitorInstaller(ExtensionInstaller):
             files=[('bin/user', ['bin/user/pmon.py']),
                    ('skins/pmon', ['skins/pmon/skin.conf',
                                    'skins/pmon/index.html.tmpl'])]
-            )
+        )

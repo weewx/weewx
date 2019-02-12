@@ -131,8 +131,8 @@ class GeneralPlot(object):
 
     @staticmethod
     def normalize_path(skin_dir, path):
-        if os.path.isabs(path):
-            return path
+        if path is None:
+            return None
         return os.path.join(skin_dir, path)
 
     def setBottomLabel(self, bottom_label):

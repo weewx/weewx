@@ -367,9 +367,11 @@ class AlmanacBinder(object):
     def __getattr__(self, attr):
         """Get the requested observation, such as when the body will rise."""
 
-        if attr.startswith('__'):
+        # Don't try any attributes that start with a double underscore, or any of these
+        # special names: they are used by the Python language:
+        if attr.startswith('__') or attr in ['mro', 'im_func', 'func_code']:
             raise AttributeError(attr)
-        
+
         # Many of these functions have the unfortunate side effect of changing the state of the body
         # being examined. So, create a temporary body and then throw it away
         ephem_body = _get_ephem_body(self.heavenly_body)
@@ -434,10 +436,11 @@ def _get_observer(almanac_obj, time_ts):
     observer.date      = time_ts
     return observer
 
+
 def _get_ephem_body(heavenly_body):
     # The library 'ephem' refers to heavenly bodies using a capitalized
     # name. For example, the module used for 'mars' is 'ephem.Mars'.
-    cap_name = heavenly_body.capitalize() 
+    cap_name = heavenly_body.capitalize()
     
     # If the heavenly body is a star, or if the body does not exist, then an
     # exception will be raised. Be prepared to catch it.
@@ -447,6 +450,10 @@ def _get_ephem_body(heavenly_body):
         # That didn't work. Try a star. If this doesn't work either,
         # then a KeyError exception will be raised.
         ephem_body = ephem.star(cap_name)
+    except TypeError:
+        # Heavenly bodies added by a ephem.readdb() statement are not functions.
+        # So, just return the attribute, without calling it:
+        ephem_body = getattr(ephem, cap_name)
 
     return ephem_body
 

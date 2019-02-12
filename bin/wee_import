@@ -30,17 +30,17 @@ Design
     line. Details of the wee_import config file settings can be found in example
     import config files distributed in the WeeWX util/import directory.
 
-    wee_import utilises an abstract base class Source that defines the majority
-    of the wee_import functionality. The abstract base class and other supporting
-    structures are in bin/weeimport/weeimport.py. Child classes are created from
-    the base class for each different import type supported by wee_import. The
-    child classes set a number of import type specific properties as well as
-    defining a getData() method that reads the raw data to be imported and a
-    period_generator() method that generates a sequence of objects to be imported
-    (eg monthly log files). This way wee_import can be extended to support other
-    sources by defining a new child class, its specific properties as well as
-    getData() and period_generator() methods. The child class for a given import
-    type are definined in the bin/weeimport/xxximport.py files.
+   wee_import utilises an abstract base class Source that defines the majority
+   of the wee_import functionality. The abstract base class and other supporting
+   structures are in bin/weeimport/weeimport.py. Child classes are created from
+   the base class for each different import type supported by wee_import. The
+   child classes set a number of import type specific properties as well as
+   defining a getData() method that reads the raw data to be imported and a
+   period_generator() method that generates a sequence of objects to be imported
+   (eg monthly log files). This way wee_import can be extended to support other
+   sources by defining a new child class, its specific properties as well as
+   getData() and period_generator() methods. The child class for a given import
+   type are defined in the bin/weeimport/xxximport.py files.
 
     As with other WeeWX utilities, wee_import advises the user of basic
     configuration, action taken and results via stdout. However, since
@@ -305,7 +305,7 @@ source = CSV
 
     # Should the [StdQC] max/min limits in weewx.conf be applied to the
     # imported data. This may be useful if the source has extreme values that
-    # are clearly incorrect for some observations. This is particulalrly useful
+    # are clearly incorrect for some observations. This is particularly useful
     # for WU imports where WU often records clearly erroneous values against
     # obs that are not reported. Available options are:
     #   True  - weewx.conf [StdQC] max/min limits are applied.
@@ -714,7 +714,7 @@ import syslog
 
 from distutils.version import StrictVersion
 
-# weewx imports
+# WeeWX imports
 import weewx
 import weeimport
 import weeimport.weeimport

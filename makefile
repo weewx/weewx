@@ -89,7 +89,8 @@ test:
   echo >> $(BLDDIR)/test-results; \
 done
 	@grep "ERROR:\|FAIL:" $(BLDDIR)/test-results || echo "no failures"
-	@echo "see $(BLDDIR)/test-results"
+	@grep "skipped=" $(BLDDIR)/test-results || echo "no tests were skipped"
+	@echo "see $(BLDDIR)/test-results for output from the tests"
 
 test-setup:
 	bin/weedb/test/setup_mysql
@@ -281,7 +282,7 @@ release:
 	ssh $(USER)@$(WEEWX_COM) "rm -f $(WEEWX_DOWNLOADS)/weewx*"
 	ssh $(USER)@$(WEEWX_COM) "for f in $(ARTIFACTS); do if [ -f $(RELDIR)/\$$f ]; then ln -s released_versions/\$$f $(WEEWX_DOWNLOADS); fi; done"
 	ssh $(USER)@$(WEEWX_COM) "if [ -f $(DEVDIR)/README.txt ]; then mv $(DEVDIR)/README.txt $(WEEWX_DOWNLOADS); fi"
-	ssh $(USER)@$(WEEWX_COM) "chmod 644 $(WEEWX_DOWNLOADS)/released_versions/*"
+	ssh $(USER)@$(WEEWX_COM) "chmod 664 $(WEEWX_DOWNLOADS)/released_versions/*"
 
 # make local copy of the published apt repository
 pull-apt-repo:

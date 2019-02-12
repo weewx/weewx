@@ -177,46 +177,50 @@ class StdReportEngine(threading.Thread):
                                       "running report anyway" % report)
                         syslog.syslog(syslog.LOG_DEBUG, "        ****  %s" % timing.validation_error)
 
-            for generator in weeutil.weeutil.option_as_list(skin_dict['Generators'].get('generator_list')):
+            if 'Generators' in skin_dict and 'generator_list' in skin_dict['Generators']:
+                for generator in weeutil.weeutil.option_as_list(skin_dict['Generators']['generator_list']):
 
-                try:
-                    # Instantiate an instance of the class.
-                    obj = weeutil.weeutil._get_object(generator)(
-                        self.config_dict,
-                        skin_dict,
-                        self.gen_ts,
-                        self.first_run,
-                        self.stn_info,
-                        self.record)
-                except Exception, e:
-                    syslog.syslog(
-                        syslog.LOG_CRIT, "reportengine: "
-                                         "Unable to instantiate generator '%s'" % generator)
-                    syslog.syslog(syslog.LOG_CRIT, "        ****  %s" % e)
-                    weeutil.weeutil.log_traceback("        ****  ")
-                    syslog.syslog(syslog.LOG_CRIT, "        ****  Generator ignored")
-                    traceback.print_exc()
-                    continue
+                    try:
+                        # Instantiate an instance of the class.
+                        obj = weeutil.weeutil._get_object(generator)(
+                            self.config_dict,
+                            skin_dict,
+                            self.gen_ts,
+                            self.first_run,
+                            self.stn_info,
+                            self.record)
+                    except Exception as e:
+                        syslog.syslog(
+                            syslog.LOG_CRIT, "reportengine: "
+                                             "Unable to instantiate generator '%s'" % generator)
+                        syslog.syslog(syslog.LOG_CRIT, "        ****  %s" % e)
+                        weeutil.weeutil.log_traceback("        ****  ")
+                        syslog.syslog(syslog.LOG_CRIT, "        ****  Generator ignored")
+                        traceback.print_exc()
+                        continue
 
-                try:
-                    # Call its start() method
-                    obj.start()
+                    try:
+                        # Call its start() method
+                        obj.start()
 
-                except Exception as e:
-                    # Caught unrecoverable error. Log it, continue on to the
-                    # next generator.
-                    syslog.syslog(
-                        syslog.LOG_CRIT, "reportengine: "
-                                         "Caught unrecoverable exception in generator '%s'"
-                                         % generator)
-                    syslog.syslog(syslog.LOG_CRIT, "        ****  %s" % str(e))
-                    weeutil.weeutil.log_traceback("        ****  ")
-                    syslog.syslog(syslog.LOG_CRIT, "        ****  Generator terminated")
-                    traceback.print_exc()
-                    continue
+                    except Exception as e:
+                        # Caught unrecoverable error. Log it, continue on to the
+                        # next generator.
+                        syslog.syslog(
+                            syslog.LOG_CRIT, "reportengine: "
+                                             "Caught unrecoverable exception in generator '%s'"
+                                             % generator)
+                        syslog.syslog(syslog.LOG_CRIT, "        ****  %s" % e)
+                        weeutil.weeutil.log_traceback("        ****  ")
+                        syslog.syslog(syslog.LOG_CRIT, "        ****  Generator terminated")
+                        traceback.print_exc()
+                        continue
 
-                finally:
-                    obj.finalize()
+                    finally:
+                        obj.finalize()
+            else:
+                syslog.syslog(syslog.LOG_DEBUG, "reportengine: "
+                                                "No generators specified for report '%s'" % report)
 
     def _build_skin_dict(self, report):
         """Find and build the skin_dict for the given report"""
