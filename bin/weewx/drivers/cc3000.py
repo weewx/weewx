@@ -189,7 +189,7 @@ class CC3000Configurator(weewx.drivers.AbstractConfigurator):
         if options.current:
             print self.driver.get_current()
         elif options.nrecords is not None:
-            for r in self.driver.station.gen_records(nrecords):
+            for r in self.driver.station.gen_records(options.nrecords):
                 print r
         elif options.clear:
             self.clear_memory(prompt)

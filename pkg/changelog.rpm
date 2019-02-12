@@ -1,3 +1,5 @@
+* Wed Feb 06 2019 Matthew Wall (weewx) <mwall@users.sourceforge.net> - 3.9.1-2
+- fix html_root location for suse
 * Wed Feb 06 2019 Matthew Wall (weewx) <mwall@users.sourceforge.net> - 3.9.1-1
 - new upstream release
 * Tue Feb 05 2019 Matthew Wall (weewx) <mwall@users.sourceforge.net> - 3.9.0-1
