@@ -186,14 +186,13 @@ def save(config_dict, config_path, backup=False):
         backup_path = weeutil.weeutil.move_with_timestamp(config_path)
 
         # Now we can save the file. Get a temporary file:
-        tmpfile = tempfile.NamedTemporaryFile("w")
+        with tempfile.NamedTemporaryFile() as tmpfile:
+            # Write the configuration dictionary to it:
+            config_dict.write(tmpfile)
+            tmpfile.flush()
 
-        # Write the configuration dictionary to it:
-        config_dict.write(tmpfile)
-        tmpfile.flush()
-
-        # Now move the temporary file into the proper place:
-        shutil.copyfile(tmpfile.name, config_path)
+            # Now move the temporary file into the proper place:
+            shutil.copyfile(tmpfile.name, config_path)
 
     else:
 
@@ -1552,10 +1551,12 @@ def extract_zip(filename, target_dir, logger=None):
     logger = logger or Logger()
     import zipfile
     logger.log("Extracting from zip archive %s" % filename, level=1)
-    zip_archive = None
+
+    zip_archive = zipfile.ZipFile(filename)
+
     try:
-        zip_archive = zipfile.ZipFile(open(filename, mode='r'))
         member_names = zip_archive.namelist()
+
         # manually extract files since extractall is only in python 2.6+
         #        zip_archive.extractall(target_dir)
         for f in member_names:
@@ -1569,8 +1570,7 @@ def extract_zip(filename, target_dir, logger=None):
                     dest_file.write(zip_archive.read(f))
         return member_names
     finally:
-        if zip_archive is not None:
-            zip_archive.close()
+        zip_archive.close()
 
 
 def mkdir_p(path):
