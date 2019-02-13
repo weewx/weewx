@@ -5,10 +5,13 @@
 #
 """Routines for generating image plots.
 """
+from __future__ import absolute_import
 import colorsys
 import locale
 import os
 import time
+from six.moves import range
+from six.moves import zip
 try:
     from PIL import Image, ImageDraw
 except ImportError:
@@ -510,7 +513,7 @@ class GeneralPlot(object):
             if line.plot_type == 'vector':
                 try:
                     # For progressive vector plots, we want the magnitude of the complex vector
-                    yline_max = max(abs(c) for c in filter(lambda v : v is not None, line.y))
+                    yline_max = max(abs(c) for c in [v for v in line.y if v is not None])
                 except ValueError:
                     yline_max = None
                 yline_min = - yline_max if yline_max is not None else None

@@ -1,11 +1,14 @@
 #
-#    Copyright (c) 2009-2015 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2019 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
 """Various utilities used by the plot package.
 
 """
+from __future__ import absolute_import
+from __future__ import print_function
+from six.moves import zip
 try:
     from PIL import ImageFont, ImageColor
 except ImportError:
