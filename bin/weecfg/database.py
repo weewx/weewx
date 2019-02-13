@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2017 Tom Keffer <tkeffer@gmail.com> and
+#    Copyright (c) 2009-2019 Tom Keffer <tkeffer@gmail.com> and
 #                            Gary Roderick <gjroderick@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
@@ -9,6 +9,8 @@
 from __future__ import with_statement
 
 # standard python imports
+from __future__ import absolute_import
+from __future__ import print_function
 import datetime
 import sys
 import syslog
@@ -19,7 +21,7 @@ import weedb
 import weeutil.weeutil
 import weewx.manager
 
-from weeutil.weeutil import timestamp_to_string, startOfDay, tobool
+from weeutil.weeutil import timestamp_to_string, startOfDay, to_bool
 
 
 # ============================================================================
@@ -50,7 +52,7 @@ class DatabaseFix(object):
         # get our name
         self.name = fix_config_dict['name']
         # is this a dry run
-        self.dry_run = tobool(fix_config_dict.get('dry_run', True))
+        self.dry_run = to_bool(fix_config_dict.get('dry_run', True))
 
     def run(self):
         raise NotImplementedError("Method 'run' not implemented")
@@ -110,8 +112,8 @@ class DatabaseFix(object):
             To do nothing override with a pass statement.
         """
 
-        print >>sys.stdout, "Fixing database record: %d; Timestamp: %s\r" % \
-            (record, timestamp_to_string(ts)),
+        print("Fixing database record: %d; Timestamp: %s\r" % \
+            (record, timestamp_to_string(ts)), end=' ', file=sys.stdout)
         sys.stdout.flush()
 
 
@@ -249,7 +251,7 @@ class WindSpeedRecalculation(DatabaseFix):
         # we have finished, give the user some final information on progress,
         # mainly so the total tallies with the log
         self._progress(n_days, last_start)
-        print >>sys.stdout
+        print(file=sys.stdout)
         tdiff = time.time() - t1
         # We are done so log and inform the user
         syslog.syslog(syslog.LOG_INFO,
@@ -336,8 +338,9 @@ class WindSpeedRecalculation(DatabaseFix):
     def _progress(ndays, last_time):
         """Utility function to show our progress while processing the fix."""
 
-        print >>sys.stdout, "Updating 'windSpeed' daily summary: %d; Timestamp: %s\r" % \
+        print("Updating 'windSpeed' daily summary: %d; Timestamp: %s\r" % \
             (ndays, timestamp_to_string(last_time, format_str="%Y-%m-%d")),
+              end=' ', file=sys.stdout)
         sys.stdout.flush()
 
 
@@ -560,7 +563,7 @@ class IntervalWeighting(DatabaseFix):
             # Give the user some final information on progress,
             # mainly so the total tallies with the log
             self._progress(_days, last_start)
-            print >>sys.stdout
+            print(file=sys.stdout)
             tdiff = time.time() - t1
             # We are done so log and inform the user
             syslog.syslog(syslog.LOG_INFO,
@@ -677,6 +680,6 @@ class IntervalWeighting(DatabaseFix):
     def _progress(ndays, last_time):
         """Utility function to show our progress while processing the fix."""
 
-        print >>sys.stdout, "Weighting daily summary: %d; Timestamp: %s\r" % \
-            (ndays, timestamp_to_string(last_time, format_str="%Y-%m-%d")),
+        print("Weighting daily summary: %d; Timestamp: %s\r" % \
+            (ndays, timestamp_to_string(last_time, format_str="%Y-%m-%d")), end=' ', file=sys.stdout)
         sys.stdout.flush()
