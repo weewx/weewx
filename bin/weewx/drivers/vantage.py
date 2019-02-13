@@ -622,7 +622,7 @@ class Vantage(weewx.drivers.AbstractDevice):
                 # If the console has been recently initialized, there will
                 # be unused records, which are filled with 0xff. Detect this
                 # by looking at the first 4 bytes (the date and time):
-                if _record_string[0:4] == 4 * chr(0xff) or _record_string[0:4] == 4 * chr(0x00):
+                if _record_string[0:4] == 4 * b'\xff' or _record_string[0:4] == 4 * b'\x00':
                     # This record has never been used. We're done.
                     syslog.syslog(syslog.LOG_DEBUG, "vantage: Empty record page %d; index %d" \
                                   % (ipage, _index))
@@ -672,7 +672,7 @@ class Vantage(weewx.drivers.AbstractDevice):
                 # If the console has been recently initialized, there will
                 # be unused records, which are filled with 0xff. Detect this
                 # by looking at the first 4 bytes (the date and time):
-                if _record_string[0:4] == 4 * chr(0xff) or _record_string[0:4] == 4 * chr(0x00):
+                if _record_string[0:4] == 4 * b'\xff' or _record_string[0:4] == 4 * b'\x00':
                     # This record has never been used. Skip it
                     syslog.syslog(syslog.LOG_DEBUG, "vantage: Empty record page %d; index %d" \
                                   % (ipage, _index))
@@ -720,7 +720,7 @@ class Vantage(weewx.drivers.AbstractDevice):
                 # If the console has been recently initialized, there will
                 # be unused records, which are filled with 0xff. Detect this
                 # by looking at the first 4 bytes (the date and time):
-                if _record_string[0:4] == 4 * chr(0xff) or _record_string[0:4] == 4 * chr(0x00):
+                if _record_string[0:4] == 4 * b'\xff' or _record_string[0:4] == 4 * b'\x00':
                     # This record has never been used.
                     y = mo = d = h = mn = time_ts = None
                 else:
