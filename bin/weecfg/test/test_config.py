@@ -15,21 +15,18 @@ import tempfile
 import unittest
 
 import configobj
-import six
 from six.moves import StringIO
 
 import weecfg.extension
 import weeutil.weeutil
 
 try:
-    from mock import patch
-    from six.moves import builtins
-
-    if six.PY2:
-        __input_str__ = '__builtin__.raw_input'
-    else:
-        __input_str__ = 'builtin.input'
-
+    try:
+        # Python 2 requires PyPi module mock
+        from mock import patch
+    except ImportError:
+        # Python 3 comes with it:
+        from unittest.mock import patch
     have_mock = True
 except ImportError:
     print("Module 'mock' not installed. Testing will be restricted.")
@@ -141,32 +138,32 @@ class ConfigTest(LineTest):
     def test_utilities(self):
         global x_str, y_str
 
-        with StringIO(x_str) as xio:
-            x_dict = configobj.ConfigObj(xio, encoding='utf-8')
-            weecfg.reorder_sections(x_dict, 'section_c', 'section_b')
-            self.assertEqual(str(x_dict), "{'section_a': {'a': '1'}, 'section_c': {'c': '3'}, "
-                                          "'section_b': {'b': '2'}, 'section_d': {'d': '4'}}")
+        xio = StringIO(x_str)
+        x_dict = configobj.ConfigObj(xio, encoding='utf-8')
+        weecfg.reorder_sections(x_dict, 'section_c', 'section_b')
+        self.assertEqual(str(x_dict), "{'section_a': {'a': '1'}, 'section_c': {'c': '3'}, "
+                                      "'section_b': {'b': '2'}, 'section_d': {'d': '4'}}")
 
-            xio.seek(0)
-            x_dict = configobj.ConfigObj(xio, encoding='utf-8')
-            weecfg.reorder_sections(x_dict, 'section_c', 'section_b', after=True)
-            self.assertEqual(str(x_dict), "{'section_a': {'a': '1'}, 'section_b': {'b': '2'}, "
-                                          "'section_c': {'c': '3'}, 'section_d': {'d': '4'}}")
+        xio.seek(0)
+        x_dict = configobj.ConfigObj(xio, encoding='utf-8')
+        weecfg.reorder_sections(x_dict, 'section_c', 'section_b', after=True)
+        self.assertEqual(str(x_dict), "{'section_a': {'a': '1'}, 'section_b': {'b': '2'}, "
+                                      "'section_c': {'c': '3'}, 'section_d': {'d': '4'}}")
 
-        with StringIO(x_str) as xio:
-            with StringIO(y_str) as yio:
-                x_dict = configobj.ConfigObj(xio, encoding='utf-8')
-                y_dict = configobj.ConfigObj(yio, encoding='utf-8')
-                weeutil.weeutil.conditional_merge(x_dict, y_dict)
-                self.assertEqual(str(x_dict), "{'section_a': {'a': '1'}, 'section_b': {'b': '2'}, 'section_c': {'c': '3'}, "
-                                              "'section_d': {'d': '4'}, 'section_e': {'c': '15'}}")
+        xio = StringIO(x_str)
+        yio = StringIO(y_str)
+        x_dict = configobj.ConfigObj(xio, encoding='utf-8')
+        y_dict = configobj.ConfigObj(yio, encoding='utf-8')
+        weeutil.weeutil.conditional_merge(x_dict, y_dict)
+        self.assertEqual(str(x_dict), "{'section_a': {'a': '1'}, 'section_b': {'b': '2'}, 'section_c': {'c': '3'}, "
+                                      "'section_d': {'d': '4'}, 'section_e': {'c': '15'}}")
 
-        with StringIO(x_str) as xio:
-            with StringIO(y_str) as yio:
-                x_dict = configobj.ConfigObj(xio, encoding='utf-8')
-                y_dict = configobj.ConfigObj(yio, encoding='utf-8')
-                weecfg.remove_and_prune(x_dict, y_dict)
-                self.assertEqual(str(x_dict), "{'section_c': {'c': '3'}, 'section_d': {'d': '4'}}")
+        xio = StringIO(x_str)
+        yio = StringIO(y_str)
+        x_dict = configobj.ConfigObj(xio, encoding='utf-8')
+        y_dict = configobj.ConfigObj(yio, encoding='utf-8')
+        weecfg.remove_and_prune(x_dict, y_dict)
+        self.assertEqual(str(x_dict), "{'section_c': {'c': '3'}, 'section_d': {'d': '4'}}")
 
         test_list = ['a', 'b', 'd', 'c']
         weecfg.reorder_scalars(test_list, 'c', 'd')
@@ -186,11 +183,9 @@ class ConfigTest(LineTest):
 
             # Suppress stdout by temporarily assigning it to /dev/null
             save_stdout = sys.stdout
-            sys.stdout = open(os.devnull, 'w')
-            try:
-
+            with open(os.devnull, 'w') as sys.stdout:
                 # Test a normal input
-                with patch(__input_str__,
+                with patch('weecfg.input',
                            side_effect=['Anytown', '100, meter', '45.0', '180.0', 'us']):
                     stn_info = weecfg.prompt_for_info()
                     self.assertEqual(stn_info, {'altitude': ['100', 'meter'],
@@ -200,7 +195,7 @@ class ConfigTest(LineTest):
                                                 'units': 'us'})
 
                 # Test for a default input
-                with patch(__input_str__,
+                with patch('weecfg.input',
                            side_effect=['Anytown', '', '45.0', '180.0', 'us']):
                     stn_info = weecfg.prompt_for_info()
                     self.assertEqual(stn_info, {'altitude': ['0', 'meter'],
@@ -210,7 +205,7 @@ class ConfigTest(LineTest):
                                                 'units': 'us'})
 
                 # Test for an out-of-bounds latitude
-                with patch(__input_str__,
+                with patch('weecfg.input',
                            side_effect=['Anytown', '100, meter', '95.0', '45.0', '180.0', 'us']):
                     stn_info = weecfg.prompt_for_info()
                     self.assertEqual(stn_info, {'altitude': ['100', 'meter'],
@@ -220,7 +215,7 @@ class ConfigTest(LineTest):
                                                 'units': 'us'})
 
                 # Test for a bad length unit type
-                with patch(__input_str__,
+                with patch('weecfg.input',
                            side_effect=['Anytown', '100, foo', '100,meter', '45.0', '180.0', 'us']):
                     stn_info = weecfg.prompt_for_info()
                     self.assertEqual(stn_info, {'altitude': ['100', 'meter'],
@@ -230,7 +225,7 @@ class ConfigTest(LineTest):
                                                 'units': 'us'})
 
                 # Test for a bad display unit
-                with patch(__input_str__,
+                with patch('weecfg.input',
                            side_effect=['Anytown', '100, meter', '45.0', '180.0', 'foo', 'us']):
                     stn_info = weecfg.prompt_for_info()
                     self.assertEqual(stn_info, {'altitude': ['100', 'meter'],
@@ -238,50 +233,45 @@ class ConfigTest(LineTest):
                                                 'location': 'Anytown',
                                                 'longitude': '180.0',
                                                 'units': 'us'})
-            finally:
-                # Restore stdout:
-                sys.stdout = save_stdout
+            # Restore stdout:
+            sys.stdout = save_stdout
 
     if have_mock:
         def test_prompt_with_options(self):
             # Suppress stdout by temporarily assigning it to /dev/null
             save_stdout = sys.stdout
-            sys.stdout = open(os.devnull, 'w')
-            try:
-                with patch(__input_str__, return_value="yes"):
+            with open(os.devnull, 'w') as sys.stdout:
+                with patch('weecfg.input', return_value="yes"):
                     response = weecfg.prompt_with_options("Say yes or no", "yes", ["yes", "no"])
                     self.assertEqual(response, "yes")
-                with patch(__input_str__, return_value="no"):
+                with patch('weecfg.input', return_value="no"):
                     response = weecfg.prompt_with_options("Say yes or no", "yes", ["yes", "no"])
                     self.assertEqual(response, "no")
-                with patch(__input_str__, return_value=""):
+                with patch('weecfg.input', return_value=""):
                     response = weecfg.prompt_with_options("Say yes or no", "yes", ["yes", "no"])
                     self.assertEqual(response, "yes")
-                with patch(__input_str__, side_effect=["make me", "no"]):
+                with patch('weecfg.input', side_effect=["make me", "no"]):
                     response = weecfg.prompt_with_options("Say yes or no", "yes", ["yes", "no"])
                     self.assertEqual(response, "no")
-            finally:
-                # Restore stdout:
-                sys.stdout = save_stdout
+            # Restore stdout:
+            sys.stdout = save_stdout
 
     if have_mock:
         def test_prompt_with_limits(self):
             # Suppress stdout by temporarily assigning it to /dev/null
             save_stdout = sys.stdout
-            sys.stdout = open(os.devnull, 'w')
-            try:
-                with patch(__input_str__, return_value="45"):
+            with open(os.devnull, 'w') as sys.stdout:
+                with patch('weecfg.input', return_value="45"):
                     response = weecfg.prompt_with_limits("latitude", "0.0", -90, 90)
                     self.assertEqual(response, "45")
-                with patch(__input_str__, return_value=""):
+                with patch('weecfg.input', return_value=""):
                     response = weecfg.prompt_with_limits("latitude", "0.0", -90, 90)
                     self.assertEqual(response, "0.0")
-                with patch(__input_str__, side_effect=["-120", "-45"]):
+                with patch('weecfg.input', side_effect=["-120", "-45"]):
                     response = weecfg.prompt_with_limits("latitude", "0.0", -90, 90)
                     self.assertEqual(response, "-45")
-            finally:
-                # Restore stdout:
-                sys.stdout = save_stdout
+            # Restore stdout:
+            sys.stdout = save_stdout
 
     def test_upgrade_v25(self):
 

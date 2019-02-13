@@ -8,8 +8,8 @@
 
 from __future__ import print_function
 from __future__ import with_statement
+from __future__ import absolute_import
 
-import collections
 import errno
 import glob
 import os.path
@@ -17,14 +17,11 @@ import shutil
 import sys
 import tempfile
 
-import six
-from six.moves import StringIO
+from six.moves import StringIO, input
 
 import configobj
 
-import weewx.defaults
 import weeutil.weeutil
-from weeutil.weeutil import to_int
 import weeutil.config
 
 major_comment_block = ["", "##############################################################################", ""]
@@ -665,7 +662,7 @@ def update_to_v26(config_dict):
     try:
         if 'server' in config_dict['StdRESTful']['CWOP']:
             # Save the old comments, as they are useful for setting up CWOP
-            comments = filter(lambda c: 'Comma' not in c, config_dict['StdRESTful']['CWOP'].comments.get('server'))
+            comments = [c for c in config_dict['StdRESTful']['CWOP'].comments.get('server') if 'Comma' not in c]
             # Option "server" has become "server_list". It is also no longer
             # included in the default weewx.conf, so just pop it.
             config_dict['StdRESTful']['CWOP'].pop('server', None)
@@ -1355,7 +1352,7 @@ def prompt_for_info(location=None, latitude='90.000', longitude='0.000',
     msg = "altitude [%s]: " % weeutil.weeutil.list_as_string(altitude) if altitude else "altitude: "
     alt = None
     while alt is None:
-        ans = raw_input(msg).strip()
+        ans = input(msg).strip()
         if ans:
             parts = ans.split(',')
             if len(parts) == 2:
@@ -1413,7 +1410,7 @@ def prompt_for_driver(dflt_driver=None):
     idx = 0
     ans = None
     while ans is None:
-        ans = raw_input(msg).strip()
+        ans = input(msg).strip()
         if not ans:
             ans = dflt_idx
         try:
@@ -1455,7 +1452,7 @@ def prompt_with_options(prompt, default=None, options=None):
     msg = "%s [%s]: " % (prompt, default) if default is not None else "%s: " % prompt
     value = None
     while value is None:
-        value = raw_input(msg).strip()
+        value = input(msg).strip()
         if value:
             if options and value not in options:
                 value = None
@@ -1483,7 +1480,7 @@ def prompt_with_limits(prompt, default=None, low_limit=None, high_limit=None):
     msg = "%s [%s]: " % (prompt, default) if default is not None else "%s: " % prompt
     value = None
     while value is None:
-        value = raw_input(msg).strip()
+        value = input(msg).strip()
         if value:
             try:
                 v = float(value)
