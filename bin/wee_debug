@@ -8,6 +8,7 @@
 """ Generate weewx debug info """
 
 from __future__ import print_function
+from __future__ import absolute_import
 import copy
 import optparse
 import os
@@ -27,6 +28,7 @@ import weewx.units
 from weecfg.extension import ExtensionEngine
 from weeutil.weeutil import TimeSpan, timestamp_to_string
 from weewx.manager import DaySummaryManager
+from six.moves import range
 
 VERSION = weewx.__version__
 WEE_DEBUG_VERSION = '0.8'

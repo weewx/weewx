@@ -9,6 +9,7 @@ from __future__ import with_statement
 from __future__ import print_function
 
 # python imports
+from __future__ import absolute_import
 import datetime
 import optparse
 import syslog
@@ -26,6 +27,7 @@ import weewx.manager
 import weewx.units
 
 from weeutil.weeutil import TimeSpan, timestamp_to_string, y_or_n
+from six.moves import range
 
 usage = """wee_database --help
        wee_database --create

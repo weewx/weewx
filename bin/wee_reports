@@ -6,6 +6,8 @@
 #
 """Executable that can run all reports."""
 
+from __future__ import absolute_import
+from __future__ import print_function
 import socket
 import syslog
 

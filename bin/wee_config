@@ -5,6 +5,7 @@
 #    See the file LICENSE.txt for your rights.
 #
 """Configure the configuration file."""
+from __future__ import absolute_import
 import sys
 import syslog
 import optparse
