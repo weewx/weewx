@@ -7,10 +7,10 @@
 """Classes to support fixes or other bulk corrections of weewx data."""
 
 from __future__ import with_statement
-
-# standard python imports
 from __future__ import absolute_import
 from __future__ import print_function
+
+# standard python imports
 import datetime
 import sys
 import syslog
@@ -75,8 +75,8 @@ class DatabaseFix(object):
             A sequence of day TimeSpan objects
         """
 
-        _sql = "SELECT dateTime FROM %s_day_%s "\
-            " WHERE dateTime >= ? AND dateTime <= ?" % (self.dbm.table_name, obs)
+        _sql = "SELECT dateTime FROM %s_day_%s " \
+               " WHERE dateTime >= ? AND dateTime <= ?" % (self.dbm.table_name, obs)
 
         _cursor = self.dbm.connection.cursor()
         try:
@@ -113,7 +113,7 @@ class DatabaseFix(object):
         """
 
         print("Fixing database record: %d; Timestamp: %s\r" % \
-            (record, timestamp_to_string(ts)), end=' ', file=sys.stdout)
+              (record, timestamp_to_string(ts)), end=' ', file=sys.stdout)
         sys.stdout.flush()
 
 
@@ -158,7 +158,8 @@ class WindSpeedRecalculation(DatabaseFix):
         # log if a dry run
         if self.dry_run:
             syslog.syslog(syslog.LOG_INFO,
-                          "maxwindspeed: This is a dry run. Maximum windSpeed will be recalculated but not saved.")
+                          "maxwindspeed: This is a dry run. "
+                          "Maximum windSpeed will be recalculated but not saved.")
 
         # Get the binding for the archive we are to use. If we received an
         # explicit binding then use that otherwise use the binding that
@@ -255,7 +256,8 @@ class WindSpeedRecalculation(DatabaseFix):
         tdiff = time.time() - t1
         # We are done so log and inform the user
         syslog.syslog(syslog.LOG_INFO,
-                      "maxwindspeed: Maximum windSpeed calculated for %s days in %0.2f seconds." % (n_days, tdiff))
+                      "maxwindspeed: Maximum windSpeed calculated "
+                      "for %s days in %0.2f seconds." % (n_days, tdiff))
         if self.dry_run:
             syslog.syslog(syslog.LOG_INFO,
                           "maxwindspeed: This was a dry run. %s was not applied." % self.name)
@@ -287,11 +289,11 @@ class WindSpeedRecalculation(DatabaseFix):
             weewx.ViolatedPrecondition error is raised.
         """
 
-        select_str = "SELECT dateTime, %(obs_type)s FROM %(table_name)s "\
-            "WHERE dateTime > %(start)s AND dateTime <= %(stop)s AND "\
-            "%(obs_type)s = (SELECT MAX(%(obs_type)s) FROM %(table_name)s "\
-            "WHERE dateTime > %(start)s and dateTime <= %(stop)s) AND "\
-            "%(obs_type)s IS NOT NULL"
+        select_str = "SELECT dateTime, %(obs_type)s FROM %(table_name)s " \
+                     "WHERE dateTime > %(start)s AND dateTime <= %(stop)s AND " \
+                     "%(obs_type)s = (SELECT MAX(%(obs_type)s) FROM %(table_name)s " \
+                     "WHERE dateTime > %(start)s and dateTime <= %(stop)s) AND " \
+                     "%(obs_type)s IS NOT NULL"
         interpolate_dict = {'obs_type': obs,
                             'table_name': self.dbm.table_name,
                             'start': span.start,
@@ -326,10 +328,8 @@ class WindSpeedRecalculation(DatabaseFix):
 
         _cursor = cursor or self.dbm.connection.cursor()
 
-        max_update_str = "UPDATE %s_day_%s SET %s=?,%s=? WHERE datetime=?" % (self.dbm.table_name,
-                                                                              obs,
-                                                                              'max',
-                                                                              'maxtime')
+        max_update_str = "UPDATE %s_day_%s SET %s=?,%s=? " \
+                         "WHERE datetime=?" % (self.dbm.table_name, obs, 'max', 'maxtime')
         _cursor.execute(max_update_str, (value, when_ts, row_ts))
         if cursor is None:
             _cursor.close()
@@ -339,7 +339,7 @@ class WindSpeedRecalculation(DatabaseFix):
         """Utility function to show our progress while processing the fix."""
 
         print("Updating 'windSpeed' daily summary: %d; Timestamp: %s\r" % \
-            (ndays, timestamp_to_string(last_time, format_str="%Y-%m-%d")),
+              (ndays, timestamp_to_string(last_time, format_str="%Y-%m-%d")),
               end=' ', file=sys.stdout)
         sys.stdout.flush()
 
@@ -414,14 +414,16 @@ class IntervalWeighting(DatabaseFix):
         # first do some logging about what we will do
         if self.dry_run:
             syslog.syslog(syslog.LOG_INFO,
-                          "intervalweighting: This is a dry run. Interval weighting will be applied but not saved.")
+                          "intervalweighting: This is a dry run. "
+                          "Interval weighting will be applied but not saved.")
 
         syslog.syslog(syslog.LOG_INFO,
                       "intervalweighting: Using database binding '%s', "
                       "which is bound to database '%s'." %
                       (self.binding, self.dbm.database_name))
         syslog.syslog(syslog.LOG_DEBUG,
-                      "intervalweighting: Database transactions will use %s days of data." % self.trans_days)
+                      "intervalweighting: Database transactions "
+                      "will use %s days of data." % self.trans_days)
         # Check metadata 'Version' value, if its greater than 1.0 we are
         # already weighted
         _daily_summary_version = self.dbm._read_metadata('Version')
@@ -430,7 +432,8 @@ class IntervalWeighting(DatabaseFix):
             # after the ts of the last successfully weighted daily summary
             _last_patched_ts = self.dbm._read_metadata('lastWeightPatch')
             if _last_patched_ts:
-                _next_day_to_patch_dt = datetime.datetime.fromtimestamp(int(_last_patched_ts)) + datetime.timedelta(days=1)
+                _next_day_to_patch_dt = datetime.datetime.fromtimestamp(int(_last_patched_ts)) \
+                                        + datetime.timedelta(days=1)
                 _next_day_to_patch_ts = time.mktime(_next_day_to_patch_dt.timetuple())
             else:
                 _next_day_to_patch_ts = None
@@ -464,9 +467,11 @@ class IntervalWeighting(DatabaseFix):
                 # only do it if this is not a dry run
                 if not self.dry_run:
                     syslog.syslog(syslog.LOG_DEBUG,
-                                  "intervalweighting: Multiple distinct 'interval' values found for at least one archive day.")
+                                  "intervalweighting: Multiple distinct 'interval' "
+                                  "values found for at least one archive day.")
                     syslog.syslog(syslog.LOG_INFO,
-                                  "intervalweighting: %s will be applied by dropping and rebuilding daily summaries." % self.name)
+                                  "intervalweighting: %s will be applied by dropping "
+                                  "and rebuilding daily summaries." % self.name)
                     self.dbm.drop_daily()
                     self.dbm.close()
                     # Reopen to force rebuilding of the schema
@@ -493,7 +498,8 @@ class IntervalWeighting(DatabaseFix):
             first_ts, obs = self.first_summary()
             # Get the start and stop ts for our first transaction days
             _tr_start_ts = np_ts if np_ts is not None else first_ts
-            _tr_stop_dt = datetime.datetime.fromtimestamp(_tr_start_ts) + datetime.timedelta(days=self.trans_days)
+            _tr_stop_dt = datetime.datetime.fromtimestamp(_tr_start_ts) \
+                          + datetime.timedelta(days=self.trans_days)
             _tr_stop_ts = time.mktime(_tr_stop_dt.timetuple())
             _tr_stop_ts = min(startOfDay(self.dbm.last_timestamp), _tr_stop_ts)
             last_start = None
@@ -526,7 +532,8 @@ class IntervalWeighting(DatabaseFix):
                             syslog.syslog(syslog.LOG_INFO,
                                           "intervalweighting: Interval weighting of '%s' daily summary "
                                           "for %s failed: %s" %
-                                          (last_key, timestamp_to_string(_day_span.start, format="%Y-%m-%d"), e))
+                                          (last_key, timestamp_to_string(_day_span.start,
+                                                                         format="%Y-%m-%d"), e))
                             raise
                         # Update the daily summary with the weighted accumulator
                         if not self.dry_run:
@@ -550,15 +557,19 @@ class IntervalWeighting(DatabaseFix):
                         break
                     # More to process so set our start and stop for the next
                     # transaction
-                    _tr_start_dt = datetime.datetime.fromtimestamp(_tr_stop_ts) + datetime.timedelta(days=1)
+                    _tr_start_dt = datetime.datetime.fromtimestamp(_tr_stop_ts) \
+                                   + datetime.timedelta(days=1)
                     _tr_start_ts = time.mktime(_tr_start_dt.timetuple())
-                    _tr_stop_dt = datetime.datetime.fromtimestamp(_tr_start_ts) + datetime.timedelta(days=self.trans_days)
+                    _tr_stop_dt = datetime.datetime.fromtimestamp(_tr_start_ts) \
+                                  + datetime.timedelta(
+                        days=self.trans_days)
                     _tr_stop_ts = time.mktime(_tr_stop_dt.timetuple())
                     _tr_stop_ts = min(self.dbm.last_timestamp, _tr_stop_ts)
 
             # We have finished. Get rid of the no longer needed lastWeightPatch
             with weedb.Transaction(self.dbm.connection) as _cursor:
-                _cursor.execute("DELETE FROM %s_day__metadata WHERE name=?" % self.dbm.table_name, ('lastWeightPatch',))
+                _cursor.execute("DELETE FROM %s_day__metadata WHERE name=?"
+                                % self.dbm.table_name, ('lastWeightPatch',))
 
             # Give the user some final information on progress,
             # mainly so the total tallies with the log
@@ -567,9 +578,11 @@ class IntervalWeighting(DatabaseFix):
             tdiff = time.time() - t1
             # We are done so log and inform the user
             syslog.syslog(syslog.LOG_INFO,
-                          "intervalweighting: calculated weighting for %s days in %0.2f seconds." % (_days, tdiff))
+                          "intervalweighting: calculated weighting "
+                          "for %s days in %0.2f seconds." % (_days, tdiff))
             if self.dry_run:
-                syslog.syslog(syslog.LOG_INFO, "intervalweighting: This was a dry run. %s was not applied." % self.name)
+                syslog.syslog(syslog.LOG_INFO, "intervalweighting: "
+                                               "This was a dry run. %s was not applied." % self.name)
         else:
             # we didn't need to weight so inform the user
             syslog.syslog(syslog.LOG_INFO,
@@ -598,7 +611,7 @@ class IntervalWeighting(DatabaseFix):
         try:
             return _row[0]
         except IndexError:
-            _msg = "'interval' field not found in archive day %s." % (span, )
+            _msg = "'interval' field not found in archive day %s." % span
             raise weewx.ViolatedPrecondition(_msg)
 
     def unique_day_interval(self, timestamp):
@@ -629,7 +642,8 @@ class IntervalWeighting(DatabaseFix):
         for _day_span in weeutil.weeutil.genDaySpans(start_ts,
                                                      self.dbm.last_timestamp):
             _row = self.dbm.getSql("SELECT MIN(`interval`),MAX(`interval`) FROM %s "
-                                   "WHERE dateTime > ? AND dateTime <= ?;" % self.dbm.table_name, _day_span)
+                                   "WHERE dateTime > ? AND dateTime <= ?;"
+                                   % self.dbm.table_name, _day_span)
             try:
                 # If MIN and MAX are the same then we only have 1 distinct
                 # value. If the query returns nothing then that is fine too,
@@ -637,14 +651,16 @@ class IntervalWeighting(DatabaseFix):
                 _result = _row[0] == _row[1] if _row else True
             except IndexError:
                 # Something is seriously amiss, raise an error
-                raise weewx.ViolatedPrecondition("Invalid 'interval' data detected in archive day %s." % (_day_span, ))
+                raise weewx.ViolatedPrecondition("Invalid 'interval' data "
+                                                 "detected in archive day %s." % _day_span)
             _days += 1
             if not _result:
                 break
         if _result:
             syslog.syslog(syslog.LOG_DEBUG,
                           "intervalweighting: Successfully checked %s days "
-                          "for multiple 'interval' values in %0.2f seconds." % (_days, (time.time() - t1)))
+                          "for multiple 'interval' values in %0.2f seconds."
+                          % (_days, (time.time() - t1)))
         return _result
 
     def first_summary(self):
@@ -680,6 +696,7 @@ class IntervalWeighting(DatabaseFix):
     def _progress(ndays, last_time):
         """Utility function to show our progress while processing the fix."""
 
-        print("Weighting daily summary: %d; Timestamp: %s\r" % \
-            (ndays, timestamp_to_string(last_time, format_str="%Y-%m-%d")), end=' ', file=sys.stdout)
+        print("Weighting daily summary: %d; Timestamp: %s\r"
+              % (ndays, timestamp_to_string(last_time, format_str="%Y-%m-%d")),
+              end=' ', file=sys.stdout)
         sys.stdout.flush()
