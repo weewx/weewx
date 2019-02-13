@@ -7,6 +7,7 @@
 Needs to be refactored into smaller functions."""
 
 from __future__ import with_statement
+from __future__ import absolute_import
 import time
 import datetime
 import syslog
@@ -20,6 +21,7 @@ import weewx.units
 from weeutil.config import search_up
 from weeutil.weeutil import to_bool, to_int, to_float
 from weewx.units import ValueTuple
+from six.moves import zip
 
 # =============================================================================
 #                    Class ImageGenerator

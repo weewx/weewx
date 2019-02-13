@@ -66,6 +66,7 @@ In unusual cases, you might also have to implement the following:
    See the CWOP version, CWOPThread.process_record(), for an example that
    uses sockets. 
 """
+from __future__ import absolute_import
 import datetime
 import hashlib
 import platform
@@ -89,6 +90,7 @@ from weeutil.weeutil import to_int, to_float, to_bool, timestamp_to_string, sear
 
 import weewx.manager
 import weewx.units
+from six.moves import range
 
 
 class FailedPost(IOError):

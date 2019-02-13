@@ -7,6 +7,7 @@
 
 """Backstop defaults used in the absence of any other values."""
 
+from __future__ import absolute_import
 from six.moves import StringIO
 import configobj
 

@@ -7,6 +7,8 @@
 
 """Data structures and functions for dealing with units."""
 
+from __future__ import absolute_import
+from __future__ import print_function
 import locale
 import time
 import syslog
@@ -1136,7 +1138,7 @@ def convert(val_t, target_unit_type):
     # Try converting a sequence first. A TypeError exception will occur if
     # the value is actually a scalar:
     try:
-        new_val = list(map(lambda x : conversion_func(x) if x is not None else None, val_t[0]))
+        new_val = list([conversion_func(x) if x is not None else None for x in val_t[0]])
     except TypeError:
         new_val = conversion_func(val_t[0]) if val_t[0] is not None else None
     # Add on the unit type and the group type and return the results:

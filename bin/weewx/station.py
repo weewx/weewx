@@ -4,6 +4,7 @@
 #    See the file LICENSE.txt for your full rights.
 #
 """Defines (mostly static) information about a station."""
+from __future__ import absolute_import
 import time
 
 import weeutil.weeutil

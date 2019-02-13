@@ -5,6 +5,7 @@
 #
 """Weather-specific database manager."""
 
+from __future__ import absolute_import
 import weeutil.weeutil
 import weewx.wxformulas
 import weewx.manager

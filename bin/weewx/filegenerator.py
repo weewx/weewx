@@ -4,6 +4,7 @@
 #    See the file LICENSE.txt for your full rights.
 #
 
+from __future__ import absolute_import
 import weewx.cheetahgenerator
 
 # For backwards compatibility:

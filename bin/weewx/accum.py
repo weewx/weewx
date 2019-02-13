@@ -6,6 +6,7 @@
 """Statistical accumulators. They accumulate the highs, lows, averages,
 etc., of a sequence of records."""
 
+from __future__ import absolute_import
 import math
 
 import configobj

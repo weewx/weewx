@@ -7,6 +7,8 @@
 """Main engine for the weewx weather system."""
 
 # Python imports
+from __future__ import absolute_import
+from __future__ import print_function
 import gc
 import locale
 import os

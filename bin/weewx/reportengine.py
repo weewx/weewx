@@ -6,6 +6,7 @@
 """Engine for generating reports"""
 
 # 3rd party imports:
+from __future__ import absolute_import
 import configobj
 # System imports:
 import datetime
@@ -26,6 +27,8 @@ import weewx.defaults
 import weewx.manager
 from weeutil.config import search_up
 from weeutil.weeutil import to_bool
+from six.moves import range
+from six.moves import zip
 
 # spans of valid values for each CRON like field
 MINUTES = (0, 59)

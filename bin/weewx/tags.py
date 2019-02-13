@@ -5,6 +5,7 @@
 #
 """Classes for implementing the weewx tag 'code' codes."""
 
+from __future__ import absolute_import
 import weeutil.weeutil
 from weeutil.weeutil import to_int
 import weewx.units

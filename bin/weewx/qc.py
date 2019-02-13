@@ -6,6 +6,7 @@
 """Classes and functions related to Quality Control of incoming data."""
 
 # Python imports
+from __future__ import absolute_import
 import syslog
 
 # weewx imports

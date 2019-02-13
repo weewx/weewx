@@ -6,6 +6,7 @@
 """Classes and functions for interfacing with a weewx database archive."""
 
 from __future__ import print_function
+from __future__ import absolute_import
 import math
 import syslog
 import sys
@@ -18,6 +19,7 @@ import weewx.units
 import weeutil.weeutil
 import weedb
 from weeutil.weeutil import timestamp_to_string, isStartOfDay, to_int
+from six.moves import zip
 
 #==============================================================================
 #                         class Manager

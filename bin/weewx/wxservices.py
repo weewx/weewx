@@ -6,6 +6,7 @@
 
 """Services specific to weather."""
 
+from __future__ import absolute_import
 import syslog
 
 import weedb

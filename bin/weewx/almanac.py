@@ -8,6 +8,8 @@
 This module can optionally use PyEphem, which offers high quality
 astronomical calculations. See http://rhodesmill.org/pyephem. """
 
+from __future__ import absolute_import
+from __future__ import print_function
 import time
 import sys
 import math
