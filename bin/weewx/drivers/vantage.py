@@ -10,6 +10,7 @@ or VantageVue weather station"""
 
 from __future__ import print_function
 from __future__ import absolute_import
+from __future__ import division
 import datetime
 import struct
 import sys
@@ -916,7 +917,7 @@ class Vantage(weewx.drivers.AbstractDevice):
         # Tell the console to put one byte in hex location 0x0B
         self.port.send_data(b"EEBWR 0B 02\n")
         # Follow it up with the data:
-        self.port.send_data_with_crc16(struct.pack('<BB', latitude & 0x00ff, (latitude / 256) & 0x00ff), max_tries=1)
+        self.port.send_data_with_crc16(struct.pack('<BB', latitude & 0x00ff, (latitude // 256) & 0x00ff), max_tries=1)
         # Then call NEWSETUP to get it to stick:
         self.port.send_data(b"NEWSETUP\n")
 
@@ -934,7 +935,7 @@ class Vantage(weewx.drivers.AbstractDevice):
         # Tell the console to put one byte in hex location 0x0D
         self.port.send_data(b"EEBWR 0D 02\n")
         # Follow it up with the data:
-        self.port.send_data_with_crc16(struct.pack('<BB', longitude & 0x00ff, (longitude / 256) & 0x00ff), max_tries = 1)
+        self.port.send_data_with_crc16(struct.pack('<BB', longitude & 0x00ff, (longitude // 256) & 0x00ff), max_tries = 1)
         # Then call NEWSETUP to get it to stick:
         self.port.send_data(b"NEWSETUP\n")
 
@@ -950,7 +951,7 @@ class Vantage(weewx.drivers.AbstractDevice):
             raise weewx.ViolatedPrecondition("vantage: Invalid archive interval (%d)" % (archive_interval_seconds,))
 
         # The console expects the interval in minutes. Divide by 60.
-        command = b'SETPER %d\n' % (archive_interval_seconds / 60)
+        command = b'SETPER %d\n' % int(archive_interval_seconds // 60)
         
         self.port.send_command(command, max_tries=self.max_tries)
 
@@ -960,7 +961,7 @@ class Vantage(weewx.drivers.AbstractDevice):
     def setLamp(self, onoff='OFF'):
         """Set the lamp on or off"""
         try:        
-            _setting = {'off': '0', 'on': '1'}[onoff.lower()]
+            _setting = {'off': b'0', 'on': b'1'}[onoff.lower()]
         except KeyError:
             raise ValueError("Unknown lamp setting '%s'" % onoff)
 
@@ -1210,23 +1211,23 @@ class Vantage(weewx.drivers.AbstractDevice):
             return None
         # Temperatures are in tenths of a degree F; Humidity in 1 percent.
         return {
-            "inTemp": inTemp / 10,
-            "outTemp": outTemp / 10,
-            "extraTemp1": extraTemp1 / 10,
-            "extraTemp2": extraTemp2 / 10,
-            "extraTemp3": extraTemp3 / 10,
-            "extraTemp4": extraTemp4 / 10,
-            "extraTemp5": extraTemp5 / 10,
-            "extraTemp6": extraTemp6 / 10,
-            "extraTemp7": extraTemp7 / 10,
-            "soilTemp1": soilTemp1 / 10,
-            "soilTemp2": soilTemp2 / 10,
-            "soilTemp3": soilTemp3 / 10,
-            "soilTemp4": soilTemp4 / 10,
-            "leafTemp1": leafTemp1 / 10,
-            "leafTemp2": leafTemp2 / 10,
-            "leafTemp3": leafTemp3 / 10,
-            "leafTemp4": leafTemp4 / 10,
+            "inTemp": inTemp / 10.0,
+            "outTemp": outTemp / 10.0,
+            "extraTemp1": extraTemp1 / 10.0,
+            "extraTemp2": extraTemp2 / 10.0,
+            "extraTemp3": extraTemp3 / 10.0,
+            "extraTemp4": extraTemp4 / 10.0,
+            "extraTemp5": extraTemp5 / 10.0,
+            "extraTemp6": extraTemp6 / 10.0,
+            "extraTemp7": extraTemp7 / 10.0,
+            "soilTemp1": soilTemp1 / 10.0,
+            "soilTemp2": soilTemp2 / 10.0,
+            "soilTemp3": soilTemp3 / 10.0,
+            "soilTemp4": soilTemp4 / 10.0,
+            "leafTemp1": leafTemp1 / 10.0,
+            "leafTemp2": leafTemp2 / 10.0,
+            "leafTemp3": leafTemp3 / 10.0,
+            "leafTemp4": leafTemp4 / 10.0,
             "inHumid": inHumid,
             "outHumid": outHumid,
             "extraHumid1": extraHumid1,
@@ -1503,7 +1504,7 @@ class Vantage(weewx.drivers.AbstractDevice):
                     archive_packet[_type] = val
         
         # Divide archive interval by 60 to keep consistent with wview
-        archive_packet['interval']   = int(self.archive_interval / 60) 
+        archive_packet['interval']   = int(self.archive_interval // 60)
         archive_packet['rxCheckPercent'] = _rxcheck(self.model_type, archive_packet['interval'], 
                                                     self.iss_id, raw_archive_packet['number_of_wind_samples'])
         return archive_packet
@@ -2198,9 +2199,9 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
     def set_interval(station, new_interval_minutes, noprompt):
         """Set the console archive interval."""
     
-        old_interval_minutes = station.archive_interval/60
+        old_interval_minutes = station.archive_interval // 60
         print("Old archive interval is %d minutes, new one will be %d minutes."
-              % (station.archive_interval/60, new_interval_minutes))
+              % (station.archive_interval // 60, new_interval_minutes))
         if old_interval_minutes == new_interval_minutes:
             print("Old and new archive intervals are the same. Nothing done.")
         else:
@@ -2585,7 +2586,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
         m = abs(offset_int) % 100
         if h > 12 or m >= 60:
             raise ValueError("Invalid time zone offset: %s" % tz_offset)
-        offset = h * 100 + (100 * m / 60)
+        offset = h * 100 + (100 * m // 60)
         if offset_int < 0:
             offset = -offset
         station.setTZoffset(offset)
