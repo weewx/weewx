@@ -1,3 +1,2 @@
-Test suite for weeplot
 
 

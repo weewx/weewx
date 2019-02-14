@@ -90,7 +90,7 @@ def scale(fmn, fmx, prescale = (None, None, None), nsteps = 10):
         fmn = max(fmn, minscale)
 
     # Check the special case where the min and max values are equal.
-    if rel_approx_equal(fmn, fmx) :
+    if _rel_approx_equal(fmn, fmx) :
         # They are equal. We need to move one or the other to create a range, while
         # being careful that the resultant min/max stay within the interval [minscale, maxscale]
         if maxscale is not None:
@@ -551,7 +551,7 @@ def get_font_handle(fontpath, *args):
     return font 
 get_font_handle.fontCache={}
 
-def rel_approx_equal(x, y, rel=1e-7):
+def _rel_approx_equal(x, y, rel=1e-7):
     """Relative test for equality.
     
     Example 
@@ -571,6 +571,7 @@ def rel_approx_equal(x, y, rel=1e-7):
     True
     """
     return abs(x-y) <= rel*max(abs(x), abs(y))
+
 
 def tobgr(x):
     """Convert a color to little-endian integer.  The PIL wants either
