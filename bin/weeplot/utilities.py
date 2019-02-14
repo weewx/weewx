@@ -90,7 +90,7 @@ def scale(fmn, fmx, prescale = (None, None, None), nsteps = 10):
         fmn = max(fmn, minscale)
 
     # Check the special case where the min and max values are equal.
-    if _rel_approx_equal(fmn, fmx) :
+    if rel_approx_equal(fmn, fmx) :
         # They are equal. We need to move one or the other to create a range, while
         # being careful that the resultant min/max stay within the interval [minscale, maxscale]
         if maxscale is not None:
@@ -551,23 +551,23 @@ def get_font_handle(fontpath, *args):
     return font 
 get_font_handle.fontCache={}
 
-def _rel_approx_equal(x, y, rel=1e-7):
+def rel_approx_equal(x, y, rel=1e-7):
     """Relative test for equality.
     
     Example 
-    >>> _rel_approx_equal(1.23456, 1.23457)
+    >>> rel_approx_equal(1.23456, 1.23457)
     False
-    >>> _rel_approx_equal(1.2345678, 1.2345679)
+    >>> rel_approx_equal(1.2345678, 1.2345679)
     True
-    >>> _rel_approx_equal(0.0, 0.0)
+    >>> rel_approx_equal(0.0, 0.0)
     True
-    >>> _rel_approx_equal(0.0, 0.1)
+    >>> rel_approx_equal(0.0, 0.1)
     False
-    >>> _rel_approx_equal(0.0, 1e-9)
+    >>> rel_approx_equal(0.0, 1e-9)
     False
-    >>> _rel_approx_equal(1.0, 1.0+1e-9)
+    >>> rel_approx_equal(1.0, 1.0+1e-9)
     True
-    >>> _rel_approx_equal(1e8, 1e8+1e-3)
+    >>> rel_approx_equal(1e8, 1e8+1e-3)
     True
     """
     return abs(x-y) <= rel*max(abs(x), abs(y))
