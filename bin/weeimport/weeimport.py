@@ -778,14 +778,20 @@ class Source(object):
                         # already done so
                         if self.map[_field]['field_name'] not in _warned:
                             _msg = "Warning: Import field '%s' is mapped to WeeWX " \
-                                   "field '%s'" % (self.map[_field]['field_name'],
+                                   "field '%s' but the" % (self.map[_field]['field_name'],
                                                    _field)
-                            self.wlog.printlog(syslog.LOG_INFO, _msg)
-                            _msg = "         but the import field '%s' could not be " \
-                                   "found." % self.map[_field]['field_name']
-                            self.wlog.printlog(syslog.LOG_INFO, _msg)
-                            _msg = "         WeeWX field '%s' will be set to 'None'." % _field
-                            self.wlog.printlog(syslog.LOG_INFO, _msg)
+                            self.wlog.printlog(syslog.LOG_INFO,
+                                               _msg,
+                                               can_suppress=True)
+                            _msg = "         import field '%s' could not be found " \
+                                   "in one or more records." % self.map[_field]['field_name']
+                            self.wlog.printlog(syslog.LOG_INFO,
+                                               _msg,
+                                               can_suppress=True)
+                            _msg = "         WeeWX field '%s' will be set to 'None' in these records." % _field
+                            self.wlog.printlog(syslog.LOG_INFO,
+                                               _msg,
+                                               can_suppress=True)
                             # make sure we do this warning once only
                             _warned.append(self.map[_field]['field_name'])
             # if we have a mapped field for a unit system with a valid value,
@@ -1150,7 +1156,7 @@ class WeeImportLog(object):
     log output otherwise log output is sent to the same log used by WeeWX.
     """
 
-    def __init__(self, opt_logging, opt_verbose, opt_dry_run):
+    def __init__(self, opt_logging, opt_verbose, opt_suppress, opt_dry_run):
         """Initialise our log environment."""
 
         # first check if we are turning off log to file or not
@@ -1178,6 +1184,7 @@ class WeeImportLog(object):
             syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_CRIT))
         # keep opt_verbose for later
         self.verbose = opt_verbose
+        self.suppress = opt_suppress
 
     def logonly(self, level, message):
         """Log to file only."""
@@ -1188,10 +1195,11 @@ class WeeImportLog(object):
             _message = 'wee_import: ' + message
             syslog.syslog(level, _message)
 
-    def printlog(self, level, message):
+    def printlog(self, level, message, can_suppress=False):
         """Print to screen and log to file."""
 
-        print message
+        if not(can_suppress and self.suppress):
+            print message
         self.logonly(level, message)
 
     def verboselog(self, level, message):

@@ -382,7 +382,9 @@ class WDSource(weeimport.Source):
         # Some log files have entries that belong in a different month.
         # Initialise a list to hold these extra records for processing during
         # the appropriate month
-        self.extras = []
+        self.extras = {}
+        for l in self.logs_to_process:
+            self.extras[l] = []
 
         # tell the user/log what we intend to do
         _msg = "Weather Display monthly log files in the '%s' directory will be imported" % self.source
@@ -541,14 +543,14 @@ class WDSource(weeimport.Source):
                     _data.append(_ts_rec)
                 else:
                     # add the record to the list for later processing
-                    self.extras.append(_ts_rec)
+                    self.extras[lg].append(_ts_rec)
                 # now add any extras that may belong in this month
-                for e_rec in self.extras:
+                for e_rec in self.extras[lg]:
                     if e_rec['year'] == _year and e_rec['month'] == _month:
                         # add the record
                         _data.append(e_rec)
                 # now update our extras and remove any records we added
-                self.extras[:] = [x for x in self.extras if not (x['year'] == _year and x['month'] == _month)]
+                self.extras[lg][:] = [x for x in self.extras[lg] if not (x['year'] == _year and x['month'] == _month)]
 
             # There may be duplicate timestamped records in the data. We will
             # keep the first encountered duplicate and discard the latter ones
