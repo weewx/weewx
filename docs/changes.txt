@@ -10,6 +10,9 @@ working with the CC3000 driver.
 Fix incorrect `log_success` operation in ftp, rsync, copy
 and image generators. PR #373. Partial fix of issue #370.
 
+Fixed problem that could cause the WMR200 to crash WeeWX if the
+record interval is zero. Fixes issue #375.
+
 
 3.9.1 02/06/2019
 
