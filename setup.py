@@ -9,6 +9,8 @@
 """Customized distutils setup file for weewx."""
 
 from __future__ import with_statement
+from __future__ import absolute_import
+from __future__ import print_function
 
 import os.path
 import sys
@@ -46,7 +48,7 @@ import weecfg.extension
 import weeutil.weeutil
 from weecfg import Logger
 
-logger=Logger(verbosity=1)
+logger = Logger(verbosity=1)
 
 start_scripts = ['util/init.d/weewx.bsd',
                  'util/init.d/weewx.debian',
@@ -94,7 +96,7 @@ class weewx_install_lib(install_lib):
         # Save any existing 'bin' subdirectory:
         if os.path.exists(self.install_dir):
             bin_savedir = weeutil.weeutil.move_with_timestamp(self.install_dir)
-            print "Saved bin subdirectory as %s" % bin_savedir
+            print("Saved bin subdirectory as %s" % bin_savedir)
         else:
             bin_savedir = None
 
@@ -157,9 +159,9 @@ class weewx_install_data(install_data):
                 rel_name = 'skins/' + skin_name
                 if not os.path.exists(os.path.join(self.install_dir, rel_name)):
                     # The skin has not already been installed. Include it.
-                    install_files += filter(lambda dat: dat[0].startswith(rel_name), self.data_files)
+                    install_files += [dat for dat in self.data_files if dat[0].startswith(rel_name)]
             # Exclude all the skins files...
-            other_files = filter(lambda dat: not dat[0].startswith('skins'), self.data_files)
+            other_files = [dat for dat in self.data_files if not dat[0].startswith('skins')]
             # ... then add the needed skins back in
             self.data_files = other_files + install_files
 
@@ -188,7 +190,7 @@ class weewx_install_data(install_data):
             # Yes. Read it
             config_path, config_dict = weecfg.read_config(install_path, None)
             if DEBUG:
-                print "Old configuration file found at", config_path
+                print("Old configuration file found at", config_path)
 
             # Update the old configuration file to the current version,
             # then merge it into the distribution file
@@ -204,7 +206,7 @@ class weewx_install_data(install_data):
                 stn_info['driver'] = driver
                 stn_info.update(weecfg.prompt_for_driver_settings(driver, config_dict))
                 if DEBUG:
-                    print "Station info =", stn_info
+                    print("Station info =", stn_info)
             weecfg.modify_config(config_dict, stn_info, DEBUG)
 
         # Set the WEEWX_ROOT
@@ -227,7 +229,7 @@ class weewx_install_data(install_data):
         # Save the old config file if it exists:
         if not self.dry_run and os.path.exists(install_path):
             backup_path = weeutil.weeutil.move_with_timestamp(install_path)
-            print "Saved old configuration file as %s" % backup_path
+            print("Saved old configuration file as %s" % backup_path)
 
         # Now install the temporary file (holding the merged config data)
         # into the proper place:
@@ -406,12 +408,15 @@ def get_schema_type(bin_dir):
 # ==============================================================================
 
 if __name__ == "__main__":
+    # Use the README for the long description:
+    with open(os.path.join(this_dir, "README.md"), "r") as fd:
+        long_description = fd.read()
+
     setup(name='weewx',
           version=VERSION,
-          description='weather software',
-          long_description="weewx interacts with a weather station to produce graphs, "
-                           "reports, and HTML pages.  weewx can upload data to services such as the "
-                           "WeatherUnderground, PWSweather.com, or CWOP.",
+          description='The WeeWX weather software system',
+          long_description=long_description,
+          long_description_content_type="text/markdown",
           author='Tom Keffer',
           author_email='tkeffer@gmail.com',
           url='http://www.weewx.com',
@@ -421,23 +426,21 @@ if __name__ == "__main__":
                        'License :: GPLv3',
                        'Operating System :: OS Independent',
                        'Programming Language :: Python',
-                       'Programming Language :: Python :: 2'],
-          requires=['configobj(>=4.5)',
-                    'serial(>=2.3)',
-                    'Cheetah(>=2.0)',
-                    'sqlite3(>=2.5)',
-                    'PIL(>=1.1.6)'],
-          provides=['weedb',
-                    'weeplot',
-                    'weeutil',
-                    'weewx'],
-          cmdclass={"sdist": weewx_sdist,
-                    "install": weewx_install,
-                    "install_scripts": weewx_install_scripts,
-                    "install_data": weewx_install_data,
-                    "install_lib": weewx_install_lib},
-          platforms=['any'],
-          package_dir={'': 'bin'},
+                       'Programming Language :: Python :: 2.6',
+                       'Programming Language :: Python :: 2.7',
+                       'Programming Language :: Python :: 3.5',
+                       'Programming Language :: Python :: 3.6',
+                       'Programming Language :: Python :: 3.7',
+                       'Programming Language :: Python :: 3.8',
+                       'Topic:: Scientific / Engineering:: Physics'
+                       ],
+          requires=['cheetah3(>=3.0)',
+                    'configobj(>=4.5)',
+                    'pillow(>=5.4)',
+                    'pyephem(>=3.7',
+                    'pyserial(>=2.3)',
+                    'pyusb(>=1.0)'
+                    ],
           packages=['schemas',
                     'user',
                     'weecfg',
@@ -446,8 +449,16 @@ if __name__ == "__main__":
                     'weeplot',
                     'weeutil',
                     'weewx',
-                    'weewx.drivers'],
-          py_modules=['daemon'],
+                    'weewx.drivers'
+                    ],
+          cmdclass={"sdist": weewx_sdist,
+                    "install": weewx_install,
+                    "install_scripts": weewx_install_scripts,
+                    "install_data": weewx_install_data,
+                    "install_lib": weewx_install_lib},
+          platforms=['any'],
+          package_dir={'': 'bin'},
+          py_modules=['daemon', 'six'],
           scripts=['bin/wee_config',
                    'bin/wee_database',
                    'bin/wee_debug',
