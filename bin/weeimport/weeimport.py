@@ -491,8 +491,8 @@ class Source(object):
                                 # we have an invalid unit string so tell the
                                 # user and exit
                                 raise weewx.UnitError(
-                                    "Unknown units '%s' specified for field '%s' in %s." % (_map[_field]['units'],
-                                                                                            _field,
+                                    "Unknown units '%s' specified for field '%s' in %s." % (_val['units'],
+                                                                                            _key,
                                                                                             self.import_config_path))
                         else:
                             # we don't have a units field, that's not allowed
