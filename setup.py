@@ -437,7 +437,7 @@ if __name__ == "__main__":
           requires=['cheetah3(>=3.0)',
                     'configobj(>=4.5)',
                     'pillow(>=5.4)',
-                    'pyephem(>=3.7',
+                    'pyephem(>=3.7)',
                     'pyserial(>=2.3)',
                     'pyusb(>=1.0)'
                     ],
