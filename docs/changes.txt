@@ -13,6 +13,9 @@ and image generators. PR #373. Partial fix of issue #370.
 Fixed problem that could cause the WMR200 to crash WeeWX if the
 record interval is zero. Fixes issue #375.
 
+Posts to the Weather Underground now use https, instead of http.
+Thanks to user mljenkins! PR #378.
+
 
 3.9.1 02/06/2019
 
