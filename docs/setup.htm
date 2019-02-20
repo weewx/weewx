@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>weewx: Installation using setup.py</title>
+    <title>WeeWX: Installation using setup.py</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <link rel="stylesheet" href="css/weewx_docs.css"/>
@@ -64,74 +64,84 @@
 </div>
 <div id='prereq' style='clear:both'>
     <div id='prereq-debian'>
-        <pre class='tty'># debian, ubuntu, mint, raspbian
+        <pre class='tty'># Debian, Ubuntu, Mint, Raspbian
 
-# for systems that do not have python 2 installed (for example, ubuntu 18.04 and later):
+#  --- Python 2 ---
+
+# For systems that do not have Python 2 pre-installed (for example,
+# Ubuntu 18.04 and later):
 <span class='cmd'>sudo apt-get install python</span>
 
-# for all systems, you may have to install the python imaging library. try this first:
+# For all systems, you may have to install the Python Imaging Library.
+# Try this first:
 <span class='cmd'>sudo apt-get install python-pil</span>
-# if that doesn't work, try this:
+# If that doesn't work, try this:
 <span class='cmd'>sudo apt-get install python-imaging</span>
 
-# other required packages:
+# Other required packages:
 <span class="cmd">sudo apt-get install python-configobj
 sudo apt-get install python-cheetah</span>
 
-# required if hardware is serial or USB:
+# Required if hardware is serial or USB, respectively:
 <span class="cmd">sudo apt-get install python-serial
 sudo apt-get install python-usb</span>
 
-# required if using MySQL:
+# Required if using MySQL:
 <span class="cmd">sudo apt-get install mysql-client
 sudo apt-get install python-mysqldb</span>
 
-# required if using FTP on Raspbian systems:
+# Required if using FTP on Raspbian systems:
 <span class="cmd">sudo apt-get install ftp</span>
 
-# optional for extended almanac information:
+# Optional for extended almanac information:
 <span class="cmd">sudo apt-get install python-dev
 sudo apt-get install python-pip
-sudo pip install pyephem</span></pre>
+sudo pip install pyephem</span>
+
+
+#  --- Python 3 ---
+
+# Use pip
+</pre>
     </div>
     <div id='prereq-redhat' style='display:none'>
-        <pre class='tty'># redhat, centos, fedora
+        <pre class='tty'># Redhat, Centos, Fedora
 
-# required packages:
+# Required packages:
 <span class="cmd">sudo yum install python-configobj
 sudo yum install python-cheetah
 sudo yum install python-imaging</span>
 
-# required if hardware is serial or USB:
+# Required if hardware is serial or USB:
 <span class="cmd">sudo yum install python-setuptools
 sudo easy_install pyserial
 sudo easy_install pyusb</span>
 
-# required if using MySQL:
+# Required if using MySQL:
 <span class="cmd">sudo yum install mysql-client
 sudo yum install python-mysqldb</span>
 
-# optional for extended almanac information:
+# Optional for extended almanac information:
 <span class="cmd">sudo yum install pyephem</span></pre>
     </div>
     <div id='prereq-suse' style='display:none'>
-        <pre class='tty'># suse
-# on some SuSE systems, use 'yast -i' instead of 'zypper install'
+        <pre class='tty'># SUSE
+# On some SUSE systems, use 'yast -i' instead of 'zypper install'
 
-# required packages:
+# Required packages:
 <span class="cmd">sudo zypper install python-configobj
 sudo zypper install python-imaging
 sudo zypper install python-Cheetah</span>
 
-# required if hardware is serial or USB:
+# Required if hardware is serial or USB:
 <span class="cmd">sudo zypper install python-pyserial
 sudo zypper install pyton-usb</span>
 
-# required if using MySQL:
+# Required if using MySQL:
 <span class="cmd">sudo zypper install mysql-community-server-client
 sudo zypper install python-mysql</span>
 
-# optional for extended almanac information:
+# Optional for extended almanac information:
 <span class="cmd">sudo zypper install python-devel
 sudo zypper install setuptools
 sudo pip install pyephem</span></pre>
@@ -139,32 +149,38 @@ sudo pip install pyephem</span></pre>
 
     <div id='prereq-pip' style='display:none'>
         <pre class='tty'>
+# pip
 
-#    --- For Python 2 ---
+#  --- Python 2 ---
 
 <span class="cmd">sudo pip install configobj
 sudo pip install cheetah
-sudo pip install pillow</span>
+sudo pip install pillow
+sudo pip install MySQL-python</span>
 
-# required if hardware is serial or USB:
+# Required if hardware is serial or USB, respectively:
 <span class="cmd">sudo pip install pyserial
 sudo pip install pyusb</span>
 
-# optional for extended almanac information:
+# Optional for extended almanac information:
 <span class="cmd">sudo pip install pyephem</span>
 
 
-#    --- For Python 3 ---
+#  --- Python 3 ---
 <span class="cmd">
 sudo python3 -m pip install configobj
 sudo python3 -m pip install cheetah3
 sudo python3 -m pip install Pillow-PIL</span>
 
-# required if hardware is serial or USB:
+# Required if you are planning on using MySQL. It this does not
+# install cleanly, then see <a href="https://pypi.org/project/mysqlclient/">https://pypi.org/project/mysqlclient/</a>
+<span class="cmd">sudo python3 -m pip install mysqlclient</span>
+
+# Required if hardware is serial or USB, respectively:
 <span class="cmd">sudo python3 -m pip install pyserial
 sudo python3 -m pip install pyusb</span>
 
-# optional for extended almanac information:
+# Optional for extended almanac information:
 <span class="cmd">sudo python3 -m pip install pyephem</span></pre>
 
     </div>
