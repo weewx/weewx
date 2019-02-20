@@ -1,7 +1,10 @@
 weewx change history
 --------------------
 
-Python 3 port:
+4.0.0 MM/DD/YYYY
+
+Ported to Python 3. WeeWX should now run under Python 2.7 and 3.3 and
+greater.
 
 The package MySQL-python, which we used previously, is not available
 for Python 3. Ported  the MySQL code to use the package mysqlclient
