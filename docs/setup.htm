@@ -36,11 +36,11 @@
 
 <h2 id="setup_prerequisites">Install Prerequisites</h2>
 
-<p>Ensure that Python 2 is installed. Python 2.6 or 2.7 will work,
-    but Python 3 will not.</p>
+<p>
+    WeeWX will work with either Python 2 or Python 3, but you must have the correct version. Only Python 2.6, 2.7,
+    or 3.3 or greater will work. You can check your version by using:
+</p>
 <pre class='tty cmd'>python -V</pre>
-
-<p>If this does not work, then you may have to install Python 2. Instructions below.</p>
 
 <p>Install the required python packages using the package management software for your system
    (<i>e.g.</i>,
@@ -49,11 +49,18 @@
     <span class='code'>yast</span>) or the Python Package Management System
    (<span class='code'>pip</span>). Select the appropriate tab for specific instructions.</p>
 
+<p class="note"><span style="font-weight: bold">Note!</span><br/> As of this writing (Feb 2019), some of the packages
+    that are required for WeeWX, which are normally available through your package management system, have not been
+    ported to Python 3. In particular, <span class="code">python-cheetah</span> and <span
+        class="code">python-mysqldb</span> will not work under Python 3. If you plan on using Python 3, you should
+    install using <span class="code">pip</span>.
+</p>
+
 <div class='tabs'>
     <div id='prereq-tab-debian' class='tab selected' onclick="showprereq('debian')">Debian <img src='images/logo-debian.png' class='thumbnail' alt=""/> <img src='images/logo-ubuntu.png' class='thumbnail' alt=""/> <img src='images/logo-mint.png' class='thumbnail' alt=""/></div>
     <div id='prereq-tab-redhat' class='tab' onclick="showprereq('redhat')">Redhat <img src='images/logo-redhat.png' class='thumbnail' alt=""/> <img src='images/logo-centos.png' class='thumbnail' alt=""/> <img src='images/logo-fedora.png' class='thumbnail' alt=""/></div>
     <div id='prereq-tab-suse' class='tab' onclick="showprereq('suse')">SuSE <img src='images/logo-suse.png' class='thumbnail' alt=""/></div>
-    <div id='prereq-tab-pip' class='tab' onclick="showprereq('pip')">pip</div>
+    <div id='prereq-tab-pip' class='tab' onclick="showprereq('pip')">pip <img src='images/logo-pypi.svg' class='thumbnail' alt=""/></div>
 </div>
 <div id='prereq' style='clear:both'>
     <div id='prereq-debian'>
@@ -129,12 +136,14 @@ sudo zypper install python-mysql</span>
 sudo zypper install setuptools
 sudo pip install pyephem</span></pre>
     </div>
-    <div id='prereq-pip' style='display:none'>
-        <pre class='tty'># python setup tool (pip)
 
-# required packages:
+    <div id='prereq-pip' style='display:none'>
+        <pre class='tty'>
+
+#    --- For Python 2 ---
+
 <span class="cmd">sudo pip install configobj
-sudo pip install Cheetah
+sudo pip install cheetah
 sudo pip install pillow</span>
 
 # required if hardware is serial or USB:
@@ -142,7 +151,22 @@ sudo pip install pillow</span>
 sudo pip install pyusb</span>
 
 # optional for extended almanac information:
-<span class="cmd">sudo pip install pyephem</span></pre>
+<span class="cmd">sudo pip install pyephem</span>
+
+
+#    --- For Python 3 ---
+<span class="cmd">
+sudo python3 -m pip install configobj
+sudo python3 -m pip install cheetah3
+sudo python3 -m pip install Pillow-PIL</span>
+
+# required if hardware is serial or USB:
+<span class="cmd">sudo python3 -m pip install pyserial
+sudo python3 -m pip install pyusb</span>
+
+# optional for extended almanac information:
+<span class="cmd">sudo python3 -m pip install pyephem</span></pre>
+
     </div>
 </div>
 

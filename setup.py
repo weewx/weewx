@@ -218,12 +218,9 @@ class weewx_install_data(install_data):
 
         # Time to write it out. Get a temporary file:
         tmpfd, tmpfn = tempfile.mkstemp()
-        tmpfile = open(tmpfn, 'w')
-
-        # Write the finished configuration file to it:
-        config_dict.write(tmpfile)
-        tmpfile.flush()
-        tmpfile.close()
+        with open(tmpfn, 'wb') as tmpfile:
+            # Write the finished configuration file to it:
+            config_dict.write(tmpfile)
         os.close(tmpfd)
 
         # Save the old config file if it exists:
@@ -327,7 +324,7 @@ def remove_obsolete_files(install_dir):
         pass
 
     # If the file $WEEWX_INSTALL/readme.htm exists, delete it. It's
-    # the old readme (since replaced with README)
+    # the old readme (since replaced with README.md)
     try:
         os.remove(os.path.join(install_dir, 'readme.htm'))
     except OSError:
@@ -408,7 +405,7 @@ def get_schema_type(bin_dir):
 # ==============================================================================
 
 if __name__ == "__main__":
-    # Use the README for the long description:
+    # Use the README.md for the long description:
     with open(os.path.join(this_dir, "README.md"), "r") as fd:
         long_description = fd.read()
 
@@ -421,57 +418,67 @@ if __name__ == "__main__":
           author_email='tkeffer@gmail.com',
           url='http://www.weewx.com',
           license='GPLv3',
-          classifiers=['Development Status :: 5 - Production/Stable',
-                       'Intended Audience :: End Users/Desktop',
-                       'License :: GPLv3',
-                       'Operating System :: OS Independent',
-                       'Programming Language :: Python',
-                       'Programming Language :: Python :: 2.6',
-                       'Programming Language :: Python :: 2.7',
-                       'Programming Language :: Python :: 3.5',
-                       'Programming Language :: Python :: 3.6',
-                       'Programming Language :: Python :: 3.7',
-                       'Programming Language :: Python :: 3.8',
-                       'Topic:: Scientific / Engineering:: Physics'
-                       ],
-          requires=['cheetah3(>=3.0)',
-                    'configobj(>=4.5)',
-                    'pillow(>=5.4)',
-                    'pyephem(>=3.7)',
-                    'pyserial(>=2.3)',
-                    'pyusb(>=1.0)'
-                    ],
-          packages=['schemas',
-                    'user',
-                    'weecfg',
-                    'weedb',
-                    'weeimport',
-                    'weeplot',
-                    'weeutil',
-                    'weewx',
-                    'weewx.drivers'
-                    ],
-          cmdclass={"sdist": weewx_sdist,
-                    "install": weewx_install,
-                    "install_scripts": weewx_install_scripts,
-                    "install_data": weewx_install_data,
-                    "install_lib": weewx_install_lib},
+          classifiers=[
+              'Development Status :: 5 - Production/Stable',
+              'Intended Audience :: End Users/Desktop',
+              'Intended Audience :: Science/Research',
+              'License :: GPLv3',
+              'Operating System :: POSIX :: LINUX',
+              'Operating System :: Unix',
+              'Operating System :: MacOS',
+              'Programming Language :: Python',
+              'Programming Language :: Python :: 2.6',
+              'Programming Language :: Python :: 2.7',
+              'Programming Language :: Python :: 3.5',
+              'Programming Language :: Python :: 3.6',
+              'Programming Language :: Python :: 3.7',
+              'Programming Language :: Python :: 3.8',
+              'Topic:: Scientific / Engineering:: Physics'
+          ],
+          requires=[
+              'cheetah3(>=3.0)',
+              'configobj(>=4.5)',
+              'pillow(>=5.4)',
+              'pyephem(>=3.7)',
+              'pyserial(>=2.3)',
+              'pyusb(>=1.0)'
+          ],
+          packages=[
+              'schemas',
+              'user',
+              'weecfg',
+              'weedb',
+              'weeimport',
+              'weeplot',
+              'weeutil',
+              'weewx',
+              'weewx.drivers'
+          ],
+          cmdclass={
+              "sdist": weewx_sdist,
+              "install": weewx_install,
+              "install_scripts": weewx_install_scripts,
+              "install_data": weewx_install_data,
+              "install_lib": weewx_install_lib
+          },
           platforms=['any'],
           package_dir={'': 'bin'},
           py_modules=['daemon', 'six'],
-          scripts=['bin/wee_config',
-                   'bin/wee_database',
-                   'bin/wee_debug',
-                   'bin/wee_device',
-                   'bin/wee_extension',
-                   'bin/wee_import',
-                   'bin/wee_reports',
-                   'bin/weewxd',
-                   'bin/wunderfixer'],
+          scripts=[
+              'bin/wee_config',
+              'bin/wee_database',
+              'bin/wee_debug',
+              'bin/wee_device',
+              'bin/wee_extension',
+              'bin/wee_import',
+              'bin/wee_reports',
+              'bin/weewxd',
+              'bin/wunderfixer'
+          ],
           data_files=[
               ('',
                ['LICENSE.txt',
-                'README',
+                'README.md',
                 'weewx.conf']),
               ('docs',
                ['docs/changes.txt',
