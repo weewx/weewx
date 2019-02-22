@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2015 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2019 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -77,7 +77,7 @@ import syslog
 import threading
 import time
 
-#Python 2/3 compatiblity shims
+# Python 2/3 compatiblity shims
 from six.moves import queue
 from six.moves import http_client
 from six.moves import urllib
@@ -413,7 +413,7 @@ class RESTThread(threading.Thread):
 
         # ... then, finally, post it
         self.post_with_retries(_request, data)
-        
+
     def get_request(self, url):
         """Get a request object. This can be overridden to add any special headers."""
         _request = urllib.request.Request(url)
@@ -430,7 +430,7 @@ class RESTThread(threading.Thread):
         
         data: The body of the POST. If not given, the request will be done as a GET.
         """
-        
+
         # Retry up to max_tries times:
         for _count in range(self.max_tries):
             try:
@@ -530,7 +530,7 @@ class RESTThread(threading.Thread):
         self.lastpost = time_ts
         return False
 
-    def get_post_body(self, record):      # @UnusedVariable
+    def get_post_body(self, record):  # @UnusedVariable
         """Return any POST payload.
         
         The returned value should be a 2-way tuple. First element is the Python
@@ -542,15 +542,16 @@ class RESTThread(threading.Thread):
         # Maintain backwards compatibility with the old format_data() function.
         body = self.format_data(record)
         if body:
-            return (body, 'application/x-www-form-urlencoded')
+            return body, 'application/x-www-form-urlencoded'
         return None
 
-    def format_data(self, record):  # @UnusedVariable
+    def format_data(self, _):
         """Return a POST payload as an urlencoded object.
         
         DEPRECATED. Use get_post_body() instead.
         """
         return None
+
 
 # ==============================================================================
 #                    Ambient protocols
@@ -578,7 +579,7 @@ class StdWunderground(StdRESTful):
 
         syslog.syslog(syslog.LOG_DEBUG, "restx: WU essentials: %s" % _essentials_dict)
 
-            # Get the manager dictionary:
+        # Get the manager dictionary:
         _manager_dict = weewx.manager.get_manager_dict_from_config(
             config_dict, 'wx_binding')
 
@@ -609,7 +610,7 @@ class StdWunderground(StdRESTful):
             _ambient_dict.setdefault('log_failure', False)
             _ambient_dict.setdefault('max_backlog', 0)
             _ambient_dict.setdefault('max_tries', 1)
-            _ambient_dict.setdefault('rtfreq',  2.5)
+            _ambient_dict.setdefault('rtfreq', 2.5)
             self.cached_values = CachedValues()
             self.loop_queue = queue.Queue()
             self.loop_thread = AmbientLoopThread(
@@ -663,8 +664,8 @@ class CachedValues(object):
                 if self.unit_system is None:
                     self.unit_system = packet['usUnits']
                 elif packet['usUnits'] != self.unit_system:
-                    raise ValueError("Mixed units encountered in cache. %s vs %s" % \
-                                     (self.unit_system, packet['usUnits']))
+                    raise ValueError("Mixed units encountered in cache. %s vs %s"
+                                     % (self.unit_system, packet['usUnits']))
             else:
                 # cache each value, associating it with the it was cached
                 self.values[k] = {'value': packet[k], 'ts': ts}
@@ -909,27 +910,29 @@ class AmbientLoopThread(AmbientThread):
           rtfreq: Frequency of update in seconds for RapidFire
         """
         super(AmbientLoopThread, self).__init__(queue,
-                                            station=station,
-                                            password=password,
-                                            server_url=server_url,
-                                            protocol_name=protocol_name,
-                                            essentials=essentials,
-                                            manager_dict=manager_dict,
-                                            post_interval=post_interval,
-                                            max_backlog=max_backlog,
-                                            stale=stale,
-                                            log_success=log_success,
-                                            log_failure=log_failure,
-                                            timeout=timeout,
-                                            max_tries=max_tries,
-                                            retry_wait=retry_wait)
+                                                station=station,
+                                                password=password,
+                                                server_url=server_url,
+                                                protocol_name=protocol_name,
+                                                essentials=essentials,
+                                                manager_dict=manager_dict,
+                                                post_interval=post_interval,
+                                                max_backlog=max_backlog,
+                                                stale=stale,
+                                                log_success=log_success,
+                                                log_failure=log_failure,
+                                                timeout=timeout,
+                                                max_tries=max_tries,
+                                                retry_wait=retry_wait)
 
         self.rtfreq = float(rtfreq)
         self.formats.update(AmbientLoopThread.WUONLY_FORMATS)
 
-    # may also be used by non-rapidfire; this is the least invasive way to just fix rapidfire, which i know supports windGustDir, while the Ambient class is used elsewhere
+    # may also be used by non-rapidfire; this is the least invasive way to just fix rapidfire,
+    # which i know supports windGustDir, while the Ambient class is used elsewhere
     WUONLY_FORMATS = {
-        'windGustDir'   : 'windgustdir=%03.0f'}
+        'windGustDir': 'windgustdir=%03.0f'
+    }
 
     def get_record(self, record, dbmanager):
         """Prepare a record for the Rapidfire protocol."""
@@ -1145,7 +1148,7 @@ class CWOPThread(RESTThread):
         """Form the TNC2 packet used by CWOP."""
 
         # Preamble to the TNC packet:
-        _prefix = "%s>APRS,TCPIP*:" % (self.station,)
+        _prefix = "%s>APRS,TCPIP*:" % self.station
 
         # Time:
         _time_tt = time.gmtime(record['dateTime'])
@@ -1156,6 +1159,7 @@ class CWOPThread(RESTThread):
                                                  ('N', 'S'), 'lat')
         _lon_str = weeutil.weeutil.latlon_string(self.longitude,
                                                  ('E', 'W'), 'lon')
+        # noinspection PyStringFormat
         _latlon_str = '%s%s%s/%s%s%s' % (_lat_str + _lon_str)
 
         # Wind and temperature
@@ -1240,9 +1244,9 @@ class CWOPThread(RESTThread):
                                   (self.protocol_name, _server, _port))
                     try:
                         # Send the login ...
-                        self._send(_sock, login, 'login')
+                        self._send(_sock, login, dbg_msg='login')
                         # ... and then the packet
-                        self._send(_sock, tnc_packet, 'packet')
+                        self._send(_sock, tnc_packet, dbg_msg='packet')
                         return
                     finally:
                         _sock.close()
@@ -1282,21 +1286,22 @@ class CWOPThread(RESTThread):
     def _send(self, sock, msg, dbg_msg):
         """Send a message to a specific socket."""
 
+        # Convert from string to byte string
+        msg_bytes = msg.encode('ascii')
         try:
-            sock.send(msg)
+            sock.send(msg_bytes)
         except IOError as e:
             # Unsuccessful. Log it and go around again for another try
             raise SendError("Packet %s; Error %s" % (dbg_msg, e))
         else:
             # Success. Look for response from the server.
             try:
-                _resp = sock.recv(1024)
+                _resp = sock.recv(1024).decode('ascii')
                 return _resp
             except IOError as e:
-                syslog.syslog(
-                    syslog.LOG_DEBUG,
-                    "restx: %s: Exception %s (%s) when looking for response to %s packet" %
-                    (self.protocol_name, type(e), e, dbg_msg))
+                syslog.syslog(syslog.LOG_DEBUG,
+                              "restx: %s: Exception %s (%s) when looking for response to %s packet" %
+                              (self.protocol_name, type(e), e, dbg_msg))
                 return
 
 
