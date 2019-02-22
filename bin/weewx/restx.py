@@ -67,30 +67,29 @@ In unusual cases, you might also have to implement the following:
    uses sockets. 
 """
 from __future__ import absolute_import
+
 import datetime
 import hashlib
 import platform
 import re
 import socket
-import six
 import syslog
 import threading
 import time
 
 # Python 2/3 compatiblity shims
-from six.moves import queue
+import six
 from six.moves import http_client
+from six.moves import queue
 from six.moves import urllib
 
 import weedb
 import weeutil.weeutil
 import weewx.engine
-from weeutil.weeutil import to_int, to_float, to_bool, timestamp_to_string, search_up, \
-    accumulateLeaves, to_sorted_string
-
 import weewx.manager
 import weewx.units
-from six.moves import range
+from weeutil.weeutil import to_int, to_float, to_bool, timestamp_to_string, search_up, \
+    accumulateLeaves, to_sorted_string
 
 
 class FailedPost(IOError):
@@ -500,7 +499,9 @@ class RESTThread(threading.Thread):
         data: If given, the request will be done as a POST. Otherwise, 
         as a GET. [optional]
         """
-        _response = urllib.request.urlopen(request, data=data, timeout=self.timeout)
+        # Data might be a unicode string. Encode it first.
+        data_bytes = data.encode()
+        _response = urllib.request.urlopen(request, data=data_bytes, timeout=self.timeout)
         return _response
 
     def skip_this_post(self, time_ts):
