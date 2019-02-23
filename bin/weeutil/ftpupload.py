@@ -6,12 +6,17 @@
 """For uploading files to a remove server via FTP"""
 
 from __future__ import with_statement
+from __future__ import absolute_import
+from __future__ import print_function
 import os
 import sys
 import ftplib
-import cPickle
 import time
 import syslog
+
+from six.moves import cPickle
+from six.moves import range
+
 
 class FtpUpload(object):
     """Uploads a directory and all its descendants to a remote server.
@@ -195,7 +200,7 @@ class FtpUpload(object):
         try:
             with open(timeStampFile, "r") as f:
                 timestamp = cPickle.load(f)
-                fileset   = cPickle.load(f) 
+                fileset   = cPickle.load(f)
         except (IOError, EOFError, cPickle.PickleError, AttributeError):
             timestamp = 0
             fileset = set()
@@ -237,7 +242,7 @@ class FtpUpload(object):
                 return
         else:
             syslog.syslog(syslog.LOG_ERR, "ftpupload: Unable to create remote directory %s" % remote_dir_path)
-            raise IOError, "Unable to create remote directory %s" % remote_dir_path
+            raise IOError("Unable to create remote directory %s" % remote_dir_path)
             
     def _skipThisDir(self, local_dir):
         
@@ -270,13 +275,13 @@ if __name__ == '__main__':
     syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
 
     if len(sys.argv) < 2 :
-        print """Usage: ftpupload.py path-to-configuration-file [path-to-be-ftp'd]"""
+        print("""Usage: ftpupload.py path-to-configuration-file [path-to-be-ftp'd]""")
         sys.exit(weewx.CMD_ERROR)
         
     try :
         config_dict = configobj.ConfigObj(sys.argv[1], file_error=True, encoding='utf-8')
     except IOError:
-        print "Unable to open configuration file ", sys.argv[1]
+        print("Unable to open configuration file %s" % sys.argv[1])
         raise
 
     if len(sys.argv) == 2:
@@ -284,7 +289,7 @@ if __name__ == '__main__':
             ftp_dir = os.path.join(config_dict['WEEWX_ROOT'],
                                    config_dict['StdReport']['HTML_ROOT'])
         except KeyError:
-            print "No HTML_ROOT in configuration dictionary."
+            print("No HTML_ROOT in configuration dictionary.")
             sys.exit(1)
     else:
         ftp_dir = sys.argv[2]

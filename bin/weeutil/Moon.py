@@ -5,6 +5,7 @@
 #
 """Determine the phase of the moon phase given a date."""
 
+from __future__ import absolute_import
 import time
 import math
 

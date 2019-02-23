@@ -8,6 +8,8 @@
 #
 """For uploading files to a remove server via Rsync"""
 
+from __future__ import absolute_import
+from __future__ import print_function
 import os
 import errno
 import sys
@@ -145,13 +147,13 @@ if __name__ == '__main__':
     syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
 
     if len(sys.argv) < 2 :
-        print """Usage: rsyncupload.py path-to-configuration-file [path-to-be-rsync'd]"""
+        print("""Usage: rsyncupload.py path-to-configuration-file [path-to-be-rsync'd]""")
         sys.exit(weewx.CMD_ERROR)
         
     try :
         config_dict = configobj.ConfigObj(sys.argv[1], file_error=True, encoding='utf-8')
     except IOError:
-        print "Unable to open configuration file ", sys.argv[1]
+        print("Unable to open configuration file %s" % sys.argv[1])
         raise
 
     if len(sys.argv) == 2:
@@ -159,7 +161,7 @@ if __name__ == '__main__':
             rsync_dir = os.path.join(config_dict['WEEWX_ROOT'],
                                    config_dict['StdReport']['HTML_ROOT'])
         except KeyError:
-            print "No HTML_ROOT in configuration dictionary."
+            print("No HTML_ROOT in configuration dictionary.")
             sys.exit(1)
     else:
         rsync_dir = sys.argv[2]

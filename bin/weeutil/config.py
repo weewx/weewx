@@ -1,3 +1,13 @@
+#
+#    Copyright (c) 2018-2019 Tom Keffer <tkeffer@gmail.com>
+#
+#    See the file LICENSE.txt for your full rights.
+#
+
+"""Convenience functions for ConfigObj"""
+
+from __future__ import absolute_import
+
 import configobj
 from configobj import Section
 
