@@ -33,6 +33,7 @@ accumulateLeaves = config.accumulateLeaves
 merge_config     = config.merge_config
 patch_config     = config.patch_config
 comment_scalar   = config.comment_scalar
+conditional_merge= config.conditional_merge
 
 
 def convertToFloat(seq):
@@ -42,31 +43,6 @@ def convertToFloat(seq):
         return None
     res = [None if s in ('None', 'none') else float(s) for s in seq]
     return res
-
-
-def conditional_merge(a_dict, b_dict):
-    """Merge fields from b_dict into a_dict, but only if they do not yet
-    exist in a_dict"""
-    # Go through each key in b_dict
-    for k in b_dict:
-        if isinstance(b_dict[k], dict):
-            if k not in a_dict:
-                # It's a new section. Initialize it...
-                a_dict[k] = {}
-                # ... and transfer over the section comments, if available
-                try:
-                    a_dict.comments[k] = b_dict.comments[k]
-                except AttributeError:
-                    pass
-            conditional_merge(a_dict[k], b_dict[k])
-        elif k not in a_dict:
-            # It's a scalar. Transfer over the value...
-            a_dict[k] = b_dict[k]
-            # ... then its comments, if available:
-            try:
-                a_dict.comments[k] = b_dict.comments[k]
-            except AttributeError:
-                pass
 
 
 def option_as_list(option):
