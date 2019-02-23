@@ -16,6 +16,7 @@ import datetime
 import math
 import os
 import struct
+import shutil
 import syslog
 import time
 import traceback
@@ -1414,6 +1415,38 @@ def y_or_n(msg, noprompt):
 def int2byte(x):
     """Convert integer argument to signed byte string, under both Python 2 and 3"""
     return struct.pack('>b', x)
+
+
+def deep_copy_path(path, dest_dir):
+    """Copy a path to a destination, making any subdirectories along the way.
+    The source path is relative to the current directory.
+
+    Returns the number of files copied
+    """
+
+    ncopy = 0
+    # Are we copying a directory?
+    if os.path.isdir(path):
+        # Yes. Walk it
+        for dirpath, _, filenames in os.walk(path):
+            for f in filenames:
+                # For each source file found, call myself recursively:
+                ncopy += deep_copy_path(os.path.join(dirpath, f), dest_dir)
+    else:
+        # path is a file. Get the directory it's in.
+        d = os.path.dirname(os.path.join(dest_dir, path))
+        # Make the destination directory, wrapping it in a try block in
+        # case it already exists:
+        try:
+            os.makedirs(d)
+        except OSError:
+            pass
+        # This version of copy does not copy over modification time,
+        # so it will look like a new file, causing it to be (for
+        # example) ftp'd to the server:
+        shutil.copy(path, d)
+        ncopy += 1
+    return ncopy
 
 if __name__ == '__main__':
     import doctest

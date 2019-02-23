@@ -12,7 +12,6 @@ import datetime
 import ftplib
 import glob
 import os.path
-import shutil
 import socket
 import sys
 import syslog
@@ -444,23 +443,9 @@ class CopyGenerator(ReportGenerator):
         # list globbing any character expansions
         ncopy = 0
         for pattern in copy_list:
-            # Glob this pattern; then go through each resultant filename:
-            for _file in glob.glob(pattern):
-                # Final destination is the join of the html destination
-                # directory and any relative subdirectory on the filename:
-                dest_dir = os.path.join(html_dest_dir, os.path.dirname(_file))
-                # Make the destination directory, wrapping it in a try block in
-                # case it already exists:
-                try:
-                    os.makedirs(dest_dir)
-                except OSError:
-                    pass
-                # This version of copy does not copy over modification time,
-                # so it will look like a new file, causing it to be (for
-                # example) ftp'd to the server:
-                shutil.copy(_file, dest_dir)
-                ncopy += 1
-
+            # Glob this pattern; then go through each resultant path:
+            for path in glob.glob(pattern):
+                ncopy += weeutil.weeutil.deep_copy_path(path, html_dest_dir)
         if log_success:
             syslog.syslog(syslog.LOG_INFO, "copygenerator: "
                                            "copied %d files to %s" % (ncopy, html_dest_dir))
