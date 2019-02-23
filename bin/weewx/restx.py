@@ -500,7 +500,7 @@ class RESTThread(threading.Thread):
         as a GET. [optional]
         """
         # Data might be a unicode string. Encode it first.
-        data_bytes = data.encode()
+        data_bytes = data.encode() if data else None
         _response = urllib.request.urlopen(request, data=data_bytes, timeout=self.timeout)
         return _response
 
