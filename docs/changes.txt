@@ -28,7 +28,10 @@ record interval is zero. Fixes issue #375.
 Posts to the Weather Underground now use https, instead of http.
 Thanks to user mljenkins! PR #378.
 
-Fixed problem with handling CWOP connection errors.
+Fixed problem with handling CWOP connection errors. Commit 0a21a72
+
+Fixed problem that prevented to CopyGenerator from handling nested
+directories. Fixes issue #379.
 
 
 3.9.1 02/06/2019
