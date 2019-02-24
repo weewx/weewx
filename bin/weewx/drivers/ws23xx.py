@@ -242,10 +242,10 @@ bcd2num([a,b,c]) -> c*100+b*10+a
 from __future__ import with_statement
 from __future__ import absolute_import
 from __future__ import print_function
+
 import syslog
 import time
 import string
-
 import fcntl
 import os
 import select
@@ -254,12 +254,12 @@ import termios
 import tty
 from functools import reduce
 
+from six.moves import zip
+from six.moves import input
+
 import weeutil.weeutil
 import weewx.drivers
 import weewx.wxformulas
-from six.moves import range
-from six.moves import zip
-from six.moves import input
 
 DRIVER_NAME = 'WS23xx'
 DRIVER_VERSION = '0.30'

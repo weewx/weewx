@@ -28,7 +28,6 @@ import weewx.units
 from weecfg.extension import ExtensionEngine
 from weeutil.weeutil import TimeSpan, timestamp_to_string
 from weewx.manager import DaySummaryManager
-from six.moves import range
 
 VERSION = weewx.__version__
 WEE_DEBUG_VERSION = '0.8'

@@ -15,7 +15,6 @@ import time
 import syslog
 
 from six.moves import cPickle
-from six.moves import range
 
 
 class FtpUpload(object):

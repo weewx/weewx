@@ -60,7 +60,6 @@ import weewx.drivers
 import weewx.wxformulas
 from weewx.units import INHG_PER_MBAR, MILE_PER_KM
 from weeutil.weeutil import timestamp_to_string
-from six.moves import range
 
 DRIVER_NAME = 'Ultimeter'
 DRIVER_VERSION = '0.20'
@@ -246,7 +245,7 @@ class Station(object):
         return buf
 
     def get_readings_with_retry(self, max_tries=5, retry_wait=3):
-        for ntries in range(0, max_tries):
+        for ntries in range(max_tries):
             try:
                 buf = self.get_readings()
                 self.validate_string(buf)

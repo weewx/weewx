@@ -372,7 +372,6 @@ import usb
 import weewx.drivers
 import weewx.wxformulas
 from weeutil.weeutil import to_bool
-from six.moves import range
 
 DRIVER_NAME = 'AcuRite'
 DRIVER_VERSION = '0.30'
@@ -1005,7 +1004,7 @@ if __name__ == '__main__':
                 try:
                     x = s.read_x()
                     print(tstr, _fmt_bytes(x))
-                    for i in range(0, 17):
+                    for i in range(17):
                         r3 = s.read_R3()
                         print(tstr, _fmt_bytes(r3))
                 except usb.USBError as e:

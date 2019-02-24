@@ -98,11 +98,10 @@ import syslog
 import time
 
 from six import byte2int
+from six.moves import input
 
 import weeutil.weeutil
 import weewx.drivers
-from six.moves import range
-from six.moves import input
 
 DRIVER_NAME = 'CC3000'
 DRIVER_VERSION = '0.20'

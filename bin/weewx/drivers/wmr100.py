@@ -49,7 +49,6 @@ import usb
 import weewx.drivers
 import weewx.wxformulas
 import weeutil.weeutil
-from six.moves import range
 
 DRIVER_NAME = 'WMR100'
 DRIVER_VERSION = "3.4.0"

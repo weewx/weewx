@@ -218,11 +218,11 @@ import syslog
 import time
 import usb
 
-import weewx.drivers
-import weewx.wxformulas
-from six.moves import range
 from six.moves import zip
 from six.moves import input
+
+import weewx.drivers
+import weewx.wxformulas
 
 DRIVER_NAME = 'FineOffsetUSB'
 DRIVER_VERSION = '1.10'

@@ -17,6 +17,8 @@ import sys
 import syslog
 import time
 
+from six.moves import map
+from six.moves import zip
 from six import int2byte, indexbytes, byte2int
 
 from weewx.crc16 import crc16
@@ -25,9 +27,6 @@ import weeutil.weeutil
 import weewx.drivers
 import weewx.units
 import weewx.engine
-from six.moves import map
-from six.moves import range
-from six.moves import zip
 
 DRIVER_NAME = 'Vantage'
 DRIVER_VERSION = '3.1.2'

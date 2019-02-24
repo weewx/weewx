@@ -10,14 +10,14 @@ import colorsys
 import locale
 import os
 import time
-from six.moves import range
+
+import six
 from six.moves import zip
+
 try:
     from PIL import Image, ImageDraw
 except ImportError:
     import Image, ImageDraw
-
-import six
 
 import weeplot.utilities
 import weeutil.weeutil

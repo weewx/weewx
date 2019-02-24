@@ -23,7 +23,6 @@ from six import byte2int
 
 from weewx.units import INHG_PER_MBAR, MILE_PER_KM
 import weewx.drivers
-from six.moves import range
 
 DRIVER_NAME = 'WS1'
 DRIVER_VERSION = '0.30'
@@ -261,7 +260,7 @@ class StationSerial(object):
 
     def get_readings_with_retry(self, max_tries=5, wait_before_retry=10):
         import serial
-        for ntries in range(0, max_tries):
+        for ntries in range(max_tries):
             try:
                 buf = self.get_readings()
                 StationData.validate_string(buf)
@@ -420,7 +419,7 @@ class StationSocket(object):
         return buf
 
     def get_readings_with_retry(self, max_tries=5, wait_before_retry=10):
-        for _ in range(0, max_tries):
+        for _ in range(max_tries):
             buf = ''
             try:
                 buf = self.get_readings()

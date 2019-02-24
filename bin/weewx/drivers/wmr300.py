@@ -786,7 +786,6 @@ import usb
 import weewx.drivers
 import weewx.wxformulas
 from weeutil.weeutil import timestamp_to_string
-from six.moves import range
 
 DRIVER_NAME = 'WMR300'
 DRIVER_VERSION = '0.20'
@@ -1683,7 +1682,7 @@ class Station(object):
         pkt['packet_type'] = 0xd2
         pkt['index'] = Station.get_record_index(buf)
         pkt['ts'] = Station._extract_ts(buf[4:9])
-        for i in range(0, 9):
+        for i in range(9):
             pkt['temperature_%d' % i] = Station._extract_signed(
                 buf[9 + 2 * i], buf[10 + 2 * i], 0.1) # C
             pkt['humidity_%d' % i] = Station._extract_value(

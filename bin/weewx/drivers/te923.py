@@ -445,7 +445,6 @@ import usb
 import weewx.drivers
 import weewx.wxformulas
 from weeutil.weeutil import timestamp_to_string
-from six.moves import range
 
 DRIVER_NAME = 'TE923'
 DRIVER_VERSION = '0.30'
