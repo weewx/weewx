@@ -276,6 +276,8 @@ class Source(object):
         self.total_rec_proc = 0
         # total unique records identified
         self.total_unique_rec = 0
+        # total duplicate records identified
+        self.total_duplicate_rec = 0
         # time we started to first save
         self.t1 = None
         # time taken to process
@@ -345,10 +347,32 @@ class Source(object):
         # setup a counter to count the periods of records
         self.period_no = 1
         with self.dbm as archive:
+            if self.first_period:
+                # collect the time for some stats reporting later
+                self.t1 = time.time()
+                # it's convenient to give this message now
+                if self.dry_run:
+                    print 'Starting dry run import ...'
+                else:
+                    print 'Starting import ...'
+
+            if self.first_period:
+                if self.last_period:
+                    # there is only 1 period, so we can count them
+                    print "%s records identified for import." % len(records)
+                else:
+                    # there are more periods so say so
+                    print "Records covering multiple periods have been identified for import."
+
             # step through our periods of records until we reach the end. A
             # 'period' of records may comprise the contents of a file, a day
             # of WU obs or a month of Cumulus obs
             for period in self.period_generator():
+
+                # if we are importing multiple periods of data then tell the
+                # user what period we are up to
+                if not (self.first_period and self.last_period):
+                    print "Period %d ..." % self.period_no
 
                 # get the raw data
                 _msg = 'Obtaining raw import data for period %d...' % self.period_no
@@ -382,19 +406,34 @@ class Source(object):
                 self.wlog.printlog(syslog.LOG_INFO, _msg)
             else:
                 # we imported something
+                total_rec = self.total_rec_proc + self.total_duplicate_rec
                 if self.dry_run:
                     # but it was a dry run
-                    _msg = "Finished dry run import. %d records were processed " \
-                           "and %d unique records would have been imported." % (self.total_rec_proc,
-                                                                                self.total_unique_rec)
+                    self.wlog.printlog(syslog.LOG_INFO, "Finished dry run import")
+                    _msg = "%d records were processed and %d unique records would "\
+                           "have been imported." % (total_rec,
+                                                    self.total_rec_proc)
                     self.wlog.printlog(syslog.LOG_INFO, _msg)
+                    if self.total_duplicate_rec > 1:
+                        _msg = "%d duplicate records were ignored." % self.total_duplicate_rec
+                        self.wlog.printlog(syslog.LOG_INFO, _msg)
+                    elif self.total_duplicate_rec == 1:
+                        self.wlog.printlog(syslog.LOG_INFO,
+                                           "1 duplicate record was ignored.")
                 else:
                     # something should have been saved to database
-                    _msg = "Finished import. %d raw records resulted in %d unique " \
-                           "records being processed in %.2f seconds." % (self.total_rec_proc,
-                                                                         self.total_unique_rec,
-                                                                         self.tdiff)
+                    self.wlog.printlog(syslog.LOG_INFO, "Finished import")
+                    _msg = "%d records were processed and %d unique records " \
+                           "imported in %.2f seconds." % (total_rec,
+                                                          self.total_rec_proc,
+                                                          self.tdiff)
                     self.wlog.printlog(syslog.LOG_INFO, _msg)
+                    if self.total_duplicate_rec > 1:
+                        _msg = "%d duplicate records were ignored." % self.total_duplicate_rec
+                        self.wlog.printlog(syslog.LOG_INFO, _msg)
+                    elif self.total_duplicate_rec == 1:
+                        self.wlog.printlog(syslog.LOG_INFO,
+                                           "1 duplicate record was ignored.")
                     print "Those records with a timestamp already in the archive will not have been"
                     print "imported. Confirm successful import in the WeeWX log file."
 
@@ -1021,25 +1060,14 @@ class Source(object):
                      (in dict form) to be written to archive
         """
 
-        if self.first_period:
-            # collect the time for some stats reporting later
-            self.t1 = time.time()
-            # it's convenient to give this message now
-            if self.dry_run:
-                print 'Starting dry run import ...'
-            else:
-                print 'Starting import ...'
         # do we have any records?
         if records and len(records) > 0:
             # if this is the first period then give a little summary about what
             # records we have
-            if self.first_period:
-                if self.last_period:
-                    # there is only 1 period, so we can count them
-                    print "%s records identified for import." % len(records)
-                else:
-                    # there are more periods so say so
-                    print "Records covering multiple periods have been identified for import."
+            # TODO. Check that a single period shows correct and consistent console output
+            if self.first_period and self.last_period:
+                # there is only 1 period, so we can count them
+                print "%s records identified for import." % len(records)
             # we do, confirm the user actually wants to save them
             while self.ans not in ['y', 'n'] and not self.dry_run:
                 print "Proceeding will save all imported records in the WeeWX archive."
@@ -1053,10 +1081,6 @@ class Source(object):
                 # initialise a set for use in our dry run, this lets us
                 # give some better stats on records imported
                 unique_set = set()
-                # if we are importing multiple periods of data then tell the
-                # user what period we are up to
-                if not (self.first_period and self.last_period):
-                    print "Period %d ..." % self.period_no
                 # step through each record in this period
                 for _rec in records:
                     # convert our record
@@ -1080,9 +1104,8 @@ class Source(object):
                         for _trec in _tranche:
                             unique_set.add(_trec['dateTime'])
                         # tell the user what we have done
-                        _msg = "Records processed: %d; Unique records: %d; Last timestamp: %s\r" % (nrecs,
-                                                                                                    len(unique_set),
-                                                                                                    timestamp_to_string(_final_rec['dateTime']))
+                        _msg = "Unique records processed: %d; Last timestamp: %s\r" % (nrecs,
+                                                                                       timestamp_to_string(_final_rec['dateTime']))
                         print >> sys.stdout, _msg,
                         sys.stdout.flush()
                         _tranche = []
@@ -1098,9 +1121,8 @@ class Source(object):
                     for _trec in _tranche:
                         unique_set.add(_trec['dateTime'])
                     # tell the user what we have done
-                    _msg = "Records processed: %d; Unique records: %d; Last timestamp: %s\r" % (nrecs,
-                                                                                                len(unique_set),
-                                                                                                timestamp_to_string(_final_rec['dateTime']))
+                    _msg = "Unique records processed: %d; Last timestamp: %s\r" % (nrecs,
+                                                                                   timestamp_to_string(_final_rec['dateTime']))
                     print >> sys.stdout, _msg,
                 print
                 sys.stdout.flush()
@@ -1109,15 +1131,22 @@ class Source(object):
                 self.total_unique_rec += len(unique_set)
                 # mention any duplicates we encountered
                 num_duplicates = len(self.period_duplicates)
+                self.total_duplicate_rec += num_duplicates
                 if num_duplicates > 0:
                     if num_duplicates == 1:
                         _msg = "    1 duplicate record was identified in period %d:" % self.period_no
                     else:
                         _msg = "    %d duplicate records were identified in period %d:" % (num_duplicates,
                                                                                            self.period_no)
-                    print _msg
+                    self.wlog.printlog(syslog.LOG_INFO, _msg, can_suppress=True)
+                    # TODO. Remove following line before release
+                    # print _msg
                     for ts in sorted(self.period_duplicates):
-                        print "        %s" % timestamp_to_string(ts)
+                        _msg = "        %s" % timestamp_to_string(ts)
+                        self.wlog.printlog(syslog.LOG_INFO, _msg,
+                                           can_suppress=True)
+                        # TODO. Remove following line before release
+                        # print "        %s" % timestamp_to_string(ts)
                     # add the period duplicates to the overall duplicates
                     self.duplicates |= self.period_duplicates
                     # reset the period duplicates
@@ -1125,8 +1154,8 @@ class Source(object):
             elif self.ans == 'n':
                 # user does not want to import so display a message and then
                 # ask to exit
-                self.wlog.logonly(syslog.LOG_INFO,
-                                  'User chose not to import records. Exiting. Nothing done.')
+                self.wlog.printlog(syslog.LOG_INFO,
+                                   'User chose not to import records. Exiting. Nothing done.')
                 raise SystemExit('Exiting. Nothing done.')
         else:
             # we have no records to import, advise the user but what we say

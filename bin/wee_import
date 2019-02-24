@@ -727,7 +727,7 @@ usage = """wee_import --help
             [--date=YYYY-mm-dd | --from=YYYY-mm-dd[THH:MM] --to=YYYY-mm-dd[THH:MM]]
             [--dry-run]
             [--verbose]
-            [--suppress]
+            [--suppress-warnings]
             [--log=-]
 """
 
@@ -771,7 +771,7 @@ def main():
                            "'--log' option.")
     parser.add_option("--verbose", action="store_true", dest="verbose",
                       help="Print useful extra output.")
-    parser.add_option("--suppress", action="store_true", dest="suppress",
+    parser.add_option("--suppress-warnings", action="store_true", dest="suppress",
                       help="Suppress warnings to stdout. Warnings are still logged.")
     parser.add_option("--version", dest="version", action="store_true",
                       help="Display wee_import version number.")
