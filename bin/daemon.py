@@ -68,13 +68,13 @@ def daemonize(stdout='/dev/null', stderr=None, stdin='/dev/null',
 
     # Open file descriptors and print start message
     if not stderr: stderr = stdout
-    si = file(stdin, 'r')
-    so = file(stdout, 'a+')
-    se = file(stderr, 'a+', 0)
+    si = open(stdin, 'r')
+    so = open(stdout, 'a+')
+    se = open(stderr, 'a+')
     pid = str(os.getpid())
 #    sys.stderr.write("\n%s\n" % startmsg % pid)
 #    sys.stderr.flush()
-    if pidfile: file(pidfile,'w+').write("%s\n" % pid)
+    if pidfile: open(pidfile,'w+').write("%s\n" % pid)
     # Redirect standard file descriptors.
     os.dup2(si.fileno(), sys.stdin.fileno())
     os.dup2(so.fileno(), sys.stdout.fileno())
