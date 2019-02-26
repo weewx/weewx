@@ -243,7 +243,6 @@ from __future__ import with_statement
 from __future__ import absolute_import
 from __future__ import print_function
 
-import syslog
 import time
 import string
 import fcntl
@@ -260,6 +259,7 @@ from six.moves import input
 import weeutil.weeutil
 import weewx.drivers
 import weewx.wxformulas
+from weeutil.log import logdbg, loginf, logcrt, logerr
 
 DRIVER_NAME = 'WS23xx'
 DRIVER_VERSION = '0.30'
@@ -276,21 +276,6 @@ def confeditor_loader():
 
 
 DEFAULT_PORT = '/dev/ttyUSB0'
-
-def logmsg(dst, msg):
-    syslog.syslog(dst, 'ws23xx: %s' % msg)
-
-def logdbg(msg):
-    logmsg(syslog.LOG_DEBUG, msg)
-
-def loginf(msg):
-    logmsg(syslog.LOG_INFO, msg)
-
-def logcrt(msg):
-    logmsg(syslog.LOG_CRIT, msg)
-
-def logerr(msg):
-    logmsg(syslog.LOG_ERR, msg)
 
 
 class WS23xxConfigurator(weewx.drivers.AbstractConfigurator):
@@ -2087,6 +2072,7 @@ Setting record_generation to software.""")
 # PYTHONPATH=bin python bin/weewx/drivers/ws23xx.py
 
 if __name__ == '__main__':
+    import syslog
     import optparse
 
     usage = """%prog [options] [--debug] [--help]"""

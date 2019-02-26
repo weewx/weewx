@@ -57,7 +57,6 @@ Example:
 
 from __future__ import absolute_import
 import os.path
-import syslog
 import time
 import datetime
 
@@ -76,6 +75,7 @@ import weewx.units
 import weewx.tags
 from weeutil.weeutil import to_bool, to_int, timestamp_to_string
 from weeutil.config import search_up
+from weeutil.log import logdbg, loginf, logerr, logcrt
 
 # The default search list includes standard information sources that should be
 # useful in most templates.
@@ -86,26 +86,6 @@ default_search_list = [
     "weewx.cheetahgenerator.Stats",
     "weewx.cheetahgenerator.UnitInfo",
     "weewx.cheetahgenerator.Extras"]
-
-
-def logmsg(lvl, msg):
-    syslog.syslog(lvl, 'cheetahgenerator: %s' % msg)
-
-
-def logdbg(msg):
-    logmsg(syslog.LOG_DEBUG, msg)
-
-
-def loginf(msg):
-    logmsg(syslog.LOG_INFO, msg)
-
-
-def logerr(msg):
-    logmsg(syslog.LOG_ERR, msg)
-
-
-def logcrt(msg):
-    logmsg(syslog.LOG_CRIT, msg)
 
 
 # =============================================================================

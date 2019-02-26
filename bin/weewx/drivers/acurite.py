@@ -365,13 +365,14 @@ X1 - 2 bytes
 from __future__ import with_statement
 from __future__ import absolute_import
 from __future__ import print_function
-import syslog
+
 import time
 import usb
 
 import weewx.drivers
 import weewx.wxformulas
 from weeutil.weeutil import to_bool
+from weeutil.log import logdbg, loginf, logerr, logcrt
 
 DRIVER_NAME = 'AcuRite'
 DRIVER_VERSION = '0.30'
@@ -388,22 +389,6 @@ def loader(config_dict, engine):
 
 def confeditor_loader():
     return AcuRiteConfEditor()
-
-
-def logmsg(level, msg):
-    syslog.syslog(level, 'acurite: %s' % msg)
-
-def logdbg(msg):
-    logmsg(syslog.LOG_DEBUG, msg)
-
-def loginf(msg):
-    logmsg(syslog.LOG_INFO, msg)
-
-def logerr(msg):
-    logmsg(syslog.LOG_ERR, msg)
-
-def logcrt(msg):
-    logmsg(syslog.LOG_CRIT, msg)
 
 def _fmt_bytes(data):
     return ' '.join(['%02x' % x for x in data])
@@ -968,6 +953,7 @@ class AcuRiteConfEditor(weewx.drivers.AbstractConfEditor):
 # PYTHONPATH=bin python bin/weewx/drivers/acurite.py
 
 if __name__ == '__main__':
+    import syslog
     import optparse
 
     usage = """%prog [options] [--help]"""

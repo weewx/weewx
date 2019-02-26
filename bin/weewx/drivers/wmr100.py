@@ -41,7 +41,6 @@ from __future__ import absolute_import
 from __future__ import print_function
 import time
 import operator
-import syslog
 from functools import reduce
 
 import usb
@@ -49,6 +48,7 @@ import usb
 import weewx.drivers
 import weewx.wxformulas
 import weeutil.weeutil
+from weeutil.log import logdbg, loginf, logerr
 
 DRIVER_NAME = 'WMR100'
 DRIVER_VERSION = "3.4.0"
@@ -58,18 +58,6 @@ def loader(config_dict, engine):  # @UnusedVariable
 
 def confeditor_loader():
     return WMR100ConfEditor()
-
-def logmsg(level, msg):
-    syslog.syslog(level, 'wmr100: %s' % msg)
-
-def logdbg(msg):
-    logmsg(syslog.LOG_DEBUG, msg)
-
-def loginf(msg):
-    logmsg(syslog.LOG_INFO, msg)
-
-def logerr(msg):
-    logmsg(syslog.LOG_ERR, msg)
 
 
 class WMR100(weewx.drivers.AbstractDevice):

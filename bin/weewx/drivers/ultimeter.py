@@ -52,14 +52,15 @@ Modem Mode commands used by the driver
 from __future__ import with_statement
 from __future__ import absolute_import
 from __future__ import print_function
+
 import serial
-import syslog
 import time
 
 import weewx.drivers
 import weewx.wxformulas
 from weewx.units import INHG_PER_MBAR, MILE_PER_KM
 from weeutil.weeutil import timestamp_to_string
+from weeutil.log import logdbg, loginf, logerr
 
 DRIVER_NAME = 'Ultimeter'
 DRIVER_VERSION = '0.20'
@@ -70,19 +71,6 @@ def loader(config_dict, _):
 
 def confeditor_loader():
     return UltimeterConfEditor()
-
-
-def logmsg(level, msg):
-    syslog.syslog(level, 'ultimeter: %s' % msg)
-
-def logdbg(msg):
-    logmsg(syslog.LOG_DEBUG, msg)
-
-def loginf(msg):
-    logmsg(syslog.LOG_INFO, msg)
-
-def logerr(msg):
-    logmsg(syslog.LOG_ERR, msg)
 
 
 def _fmt(x):
@@ -361,6 +349,7 @@ class UltimeterConfEditor(weewx.drivers.AbstractConfEditor):
 # PYTHONPATH=bin python bin/weewx/drivers/ultimeter.py
 
 if __name__ == '__main__':
+    import syslog
     import optparse
 
     usage = """%prog [options] [--help]"""

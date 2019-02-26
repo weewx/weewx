@@ -94,7 +94,6 @@ from __future__ import print_function
 import datetime
 import serial
 import string
-import syslog
 import time
 
 from six import byte2int
@@ -102,6 +101,7 @@ from six.moves import input
 
 import weeutil.weeutil
 import weewx.drivers
+from weeutil.log import logdbg, loginf, logerr
 
 DRIVER_NAME = 'CC3000'
 DRIVER_VERSION = '0.20'
@@ -119,17 +119,6 @@ DEBUG_SERIAL = 0
 DEBUG_CHECKSUM = 0
 DEBUG_OPENCLOSE = 0
 
-def logmsg(level, msg):
-    syslog.syslog(level, 'cc3000: %s' % msg)
-
-def logdbg(msg):
-    logmsg(syslog.LOG_DEBUG, msg)
-
-def loginf(msg):
-    logmsg(syslog.LOG_INFO, msg)
-
-def logerr(msg):
-    logmsg(syslog.LOG_ERR, msg)
 
 class ChecksumError(weewx.WeeWxIOError):
     def __init__(self, msg):
@@ -1050,6 +1039,7 @@ class CC3000ConfEditor(weewx.drivers.AbstractConfEditor):
 # PYTHONPATH=bin python bin/weewx/drivers/cc3000.py
 
 if __name__ == '__main__':
+    import syslog
     import optparse
 
     usage = """%prog [options] [--help]"""

@@ -779,13 +779,13 @@ examples:
 from __future__ import with_statement
 from __future__ import absolute_import
 from __future__ import print_function
-import syslog
 import time
 import usb
 
 import weewx.drivers
 import weewx.wxformulas
 from weeutil.weeutil import timestamp_to_string
+from weeutil.log import logdbg, loginf, logerr, logcrt
 
 DRIVER_NAME = 'WMR300'
 DRIVER_VERSION = '0.20'
@@ -804,21 +804,6 @@ def loader(config_dict, _):
 def confeditor_loader():
     return WMR300ConfEditor()
 
-
-def logmsg(level, msg):
-    syslog.syslog(level, 'wmr300: %s' % msg)
-
-def logdbg(msg):
-    logmsg(syslog.LOG_DEBUG, msg)
-
-def loginf(msg):
-    logmsg(syslog.LOG_INFO, msg)
-
-def logerr(msg):
-    logmsg(syslog.LOG_ERR, msg)
-
-def logcrt(msg):
-    logmsg(syslog.LOG_CRIT, msg)
 
 def _fmt_bytes(data):
     return ' '.join(['%02x' % x for x in data])
@@ -1823,6 +1808,7 @@ Dewpoint from hardware is truncated to integer so use software""")
 # PYTHONPATH=bin python bin/user/wmr300.py
 
 if __name__ == '__main__':
+    import syslog
     import optparse
     from weeutil.weeutil import to_sorted_string
 

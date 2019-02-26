@@ -214,7 +214,6 @@ from __future__ import absolute_import
 from __future__ import print_function
 import datetime
 import sys
-import syslog
 import time
 import usb
 
@@ -223,6 +222,7 @@ from six.moves import input
 
 import weewx.drivers
 import weewx.wxformulas
+from weeutil.log import logdbg, loginf, logerr, logcrt
 
 DRIVER_NAME = 'FineOffsetUSB'
 DRIVER_VERSION = '1.10'
@@ -456,9 +456,9 @@ class FOUSBConfigurator(weewx.drivers.AbstractConfigurator):
             result_1 = self.station._read_block(ptr, retry=False)
             result_2 = self.station._read_block(ptr, retry=False)
             if result_1 != result_2:
-                syslog.syslog(syslog.LOG_INFO, 'read_block change %06x' % ptr)
-                syslog.syslog(syslog.LOG_INFO, '  %s' % str(result_1))
-                syslog.syslog(syslog.LOG_INFO, '  %s' % str(result_2))
+                loginf('read_block change %06x' % ptr)
+                loginf('  %s' % str(result_1))
+                loginf('  %s' % str(result_2))
                 bad_count += 1
             total_count += 1
             print("\rbad/total: %d/%d " % (bad_count, total_count), end=' ')
@@ -852,24 +852,6 @@ def _bcd_encode(value):
     lo = value % 10
     return (hi * 16) + lo
 
-#def logmsg(level, msg):
-#    syslog.syslog(level, 'fousb: %s: %s' %
-#                  (threading.currentThread().getName(), msg))
-
-def logmsg(level, msg):
-    syslog.syslog(level, 'fousb: %s' % msg)
-
-def logdbg(msg):
-    logmsg(syslog.LOG_DEBUG, msg)
-
-def loginf(msg):
-    logmsg(syslog.LOG_INFO, msg)
-
-def logerr(msg):
-    logmsg(syslog.LOG_ERR, msg)
-
-def logcrt(msg):
-    logmsg(syslog.LOG_CRIT, msg)
 
 class ObservationError(Exception):
     pass

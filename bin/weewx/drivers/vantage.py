@@ -14,7 +14,6 @@ from __future__ import division
 import datetime
 import struct
 import sys
-import syslog
 import time
 
 from six.moves import map
@@ -23,6 +22,7 @@ from six import int2byte, indexbytes, byte2int
 
 from weewx.crc16 import crc16
 from weeutil.weeutil import to_int
+from weeutil.log import logdbg, logerr, loginf
 import weeutil.weeutil
 import weewx.drivers
 import weewx.units
@@ -81,7 +81,7 @@ class BaseWrapper(object):
                 _resp = self.read(2)
                 if _resp == b'\n\r':  # LF, CR = 0x0a, 0x0d
                     # We're done; the console accepted our cancel LOOP command; nothing to flush
-                    syslog.syslog(syslog.LOG_DEBUG, "vantage: Gentle wake up of console successful")
+                    logdbg("vantage: Gentle wake up of console successful")
                     return
                 # That didn't work. Try a rude wake up.
                 # Flush any pending LOOP packets
@@ -89,16 +89,16 @@ class BaseWrapper(object):
                 # Look for the acknowledgment of the sent '\n'
                 _resp = self.read(2)
                 if _resp == b'\n\r':
-                    syslog.syslog(syslog.LOG_DEBUG, "vantage: Rude wake up of console successful")
+                    logdbg("vantage: Rude wake up of console successful")
                     return
                 print("Unable to wake up console... sleeping")
                 time.sleep(self.wait_before_retry)
                 print("Unable to wake up console... retrying")
             except weewx.WeeWxIOError:
                 pass
-            syslog.syslog(syslog.LOG_DEBUG, "vantage: Retry  #%d failed" % count)
+            logdbg("vantage: Retry  #%d failed" % count)
 
-        syslog.syslog(syslog.LOG_ERR, "vantage: Unable to wake up console")
+        logerr("vantage: Unable to wake up console")
         raise weewx.WakeupError("Unable to wake up Vantage console")
 
     def send_data(self, data):
@@ -114,7 +114,7 @@ class BaseWrapper(object):
         # Look for the acknowledging ACK character
         _resp = self.read()
         if _resp != _ack: 
-            syslog.syslog(syslog.LOG_ERR, "vantage: No <ACK> received from console")
+            logerr("vantage: No <ACK> received from console")
             raise weewx.WeeWxIOError("No <ACK> received from Vantage console")
     
     def send_data_with_crc16(self, data, max_tries=3):
@@ -139,9 +139,9 @@ class BaseWrapper(object):
                     return
             except weewx.WeeWxIOError:
                 pass
-            syslog.syslog(syslog.LOG_DEBUG, "vantage: send_data_with_crc16; try #%d" % (count + 1,))
+            logdbg("vantage: send_data_with_crc16; try #%d" % (count + 1,))
 
-        syslog.syslog(syslog.LOG_ERR, "vantage: Unable to pass CRC16 check while sending data")
+        logerr("vantage: Unable to pass CRC16 check while sending data")
         raise weewx.CRCError("Unable to pass CRC16 check while sending data to Vantage console")
 
     def send_command(self, command, max_tries=3):
@@ -170,9 +170,9 @@ class BaseWrapper(object):
             except weewx.WeeWxIOError:
                 # Caught an error. Keep trying...
                 pass
-            syslog.syslog(syslog.LOG_DEBUG, "vantage: send_command; try #%d failed" % (count + 1,))
+            logdbg("vantage: send_command; try #%d failed" % (count + 1,))
         
-        syslog.syslog(syslog.LOG_ERR, "vantage: Max retries exceeded while sending command %s" % command)
+        logerr("vantage: Max retries exceeded while sending command %s" % command)
         raise weewx.RetriesExceeded("Max retries exceeded while sending command %s" % command)
     
         
@@ -203,16 +203,16 @@ class BaseWrapper(object):
                 _buffer = self.read(nbytes)
                 if crc16(_buffer) == 0:
                     return _buffer
-                syslog.syslog(syslog.LOG_DEBUG, "vantage: get_data_with_crc16; try #%d failed. CRC error" % (count + 1,))
+                logdbg("vantage: get_data_with_crc16; try #%d failed. CRC error" % (count + 1,))
             except weewx.WeeWxIOError as e:
-                syslog.syslog(syslog.LOG_DEBUG, "vantage: get_data_with_crc16; try #%d failed: %s" % (count + 1, e))
+                logdbg("vantage: get_data_with_crc16; try #%d failed: %s" % (count + 1, e))
             first_time = False
 
         if _buffer:
-            syslog.syslog(syslog.LOG_ERR, "vantage: Unable to pass CRC16 check while getting data")
+            logerr("vantage: Unable to pass CRC16 check while getting data")
             raise weewx.CRCError("Unable to pass CRC16 check while getting data")
         else:
-            syslog.syslog(syslog.LOG_DEBUG, "vantage: Timeout in get_data_with_crc16")
+            logdbg("vantage: Timeout in get_data_with_crc16")
             raise weewx.WeeWxIOError("Timeout in get_data_with_crc16")
 
 #===============================================================================
@@ -262,9 +262,9 @@ class SerialWrapper(BaseWrapper):
         try:
             _buffer = self.serial_port.read(chars)
         except serial.serialutil.SerialException as e:
-            syslog.syslog(syslog.LOG_ERR, "vantage: SerialException on read.")
-            syslog.syslog(syslog.LOG_ERR, "   ****  %s" % e)
-            syslog.syslog(syslog.LOG_ERR, "   ****  Is there a competing process running??")
+            logerr("vantage: SerialException on read.")
+            logerr("   ****  %s" % e)
+            logerr("   ****  Is there a competing process running??")
             # Reraise as a Weewx error I/O error:
             raise weewx.WeeWxIOError(e)
         N = len(_buffer)
@@ -277,8 +277,8 @@ class SerialWrapper(BaseWrapper):
         try:
             N = self.serial_port.write(data)
         except serial.serialutil.SerialException as e:
-            syslog.syslog(syslog.LOG_ERR, "vantage: SerialException on write.")
-            syslog.syslog(syslog.LOG_ERR, "   ****  %s" % e)
+            logerr("vantage: SerialException on write.")
+            logerr("   ****  %s" % e)
             # Reraise as a Weewx error I/O error:
             raise weewx.WeeWxIOError(e)
         # Python version 2.5 and earlier returns 'None', so it cannot be used to test for completion.
@@ -289,7 +289,7 @@ class SerialWrapper(BaseWrapper):
         import serial
         # Open up the port and store it
         self.serial_port = serial.Serial(self.port, self.baudrate, timeout=self.timeout)
-        syslog.syslog(syslog.LOG_DEBUG, "vantage: Opened up serial port %s; baud %d; timeout %.2f" % 
+        logdbg("vantage: Opened up serial port %s; baud %d; timeout %.2f" % 
                       (self.port, self.baudrate, self.timeout))
 
     def closePort(self):
@@ -324,13 +324,13 @@ class EthernetWrapper(BaseWrapper):
             self.socket.settimeout(self.timeout)
             self.socket.connect((self.host, self.port))
         except (socket.error, socket.timeout, socket.herror) as ex:
-            syslog.syslog(syslog.LOG_ERR, "vantage: Socket error while opening port %d to ethernet host %s." % (self.port, self.host))
+            logerr("vantage: Socket error while opening port %d to ethernet host %s." % (self.port, self.host))
             # Reraise as a weewx I/O error:
             raise weewx.WeeWxIOError(ex)
         except:
-            syslog.syslog(syslog.LOG_ERR, "vantage: Unable to connect to ethernet host %s on port %d." % (self.host, self.port))
+            logerr("vantage: Unable to connect to ethernet host %s on port %d." % (self.host, self.port))
             raise
-        syslog.syslog(syslog.LOG_DEBUG, "vantage: Opened up ethernet host %s on port %d. timeout=%s, tcp_send_delay=%s" %
+        logdbg("vantage: Opened up ethernet host %s on port %d. timeout=%s, tcp_send_delay=%s" %
                       (self.host, self.port, self.timeout, self.tcp_send_delay))
 
     def closePort(self):
@@ -387,7 +387,7 @@ class EthernetWrapper(BaseWrapper):
             try:
                 _recv = self.socket.recv(_N)
             except (socket.timeout, socket.error) as ex:
-                syslog.syslog(syslog.LOG_ERR, "vantage: ip-read error: %s" % ex)
+                logerr("vantage: ip-read error: %s" % ex)
                 # Reraise as a weewx I/O error:
                 raise weewx.WeeWxIOError(ex)
             _nread = len(_recv)
@@ -406,7 +406,7 @@ class EthernetWrapper(BaseWrapper):
             # Note: a delay of 0.5 s is required for wee_device --logger=logger_info
             time.sleep(self.tcp_send_delay)
         except (socket.timeout, socket.error) as ex:
-            syslog.syslog(syslog.LOG_ERR, "vantage: ip-write error: %s" % ex)
+            logerr("vantage: ip-write error: %s" % ex)
             # Reraise as a weewx I/O error:
             raise weewx.WeeWxIOError(ex)
 
@@ -471,7 +471,7 @@ class Vantage(weewx.drivers.AbstractDevice):
         [Optional. Default is 2]
         """
 
-        syslog.syslog(syslog.LOG_DEBUG, 'vantage: Driver version is %s' % DRIVER_VERSION)
+        logdbg('vantage: Driver version is %s' % DRIVER_VERSION)
 
         self.hardware_type = None
 
@@ -493,7 +493,7 @@ class Vantage(weewx.drivers.AbstractDevice):
 
         # Read the EEPROM and fill in properties in this instance
         self._setup()
-        syslog.syslog(syslog.LOG_DEBUG, "vantage: Hardware name: %s" % self.hardware_name)
+        logdbg("vantage: Hardware name: %s" % self.hardware_name)
         
     def openPort(self):
         """Open up the connection to the console"""
@@ -515,10 +515,10 @@ class Vantage(weewx.drivers.AbstractDevice):
                     for _loop_packet in self.genDavisLoopPackets(200):
                         yield _loop_packet
                 except weewx.WeeWxIOError as e:
-                    syslog.syslog(syslog.LOG_ERR, "vantage: LOOP try #%d; error: %s" % (count + 1, e))
+                    logerr("vantage: LOOP try #%d; error: %s" % (count + 1, e))
                     break
 
-        syslog.syslog(syslog.LOG_ERR, "vantage: LOOP max tries (%d) exceeded." % self.max_tries)
+        logerr("vantage: LOOP max tries (%d) exceeded." % self.max_tries)
         raise weewx.RetriesExceeded("Max tries exceeded while getting LOOP data.")
 
     def genDavisLoopPackets(self, N=1):
@@ -530,7 +530,7 @@ class Vantage(weewx.drivers.AbstractDevice):
         read or CRC error).
         """
 
-        syslog.syslog(syslog.LOG_DEBUG, "vantage: Requesting %d LOOP packets." % N)
+        logdbg("vantage: Requesting %d LOOP packets." % N)
         
         self.port.wakeup_console(self.max_tries)
         
@@ -570,9 +570,9 @@ class Vantage(weewx.drivers.AbstractDevice):
             except weewx.WeeWxIOError as e:
                 # Problem. Increment retry count
                 count += 1
-                syslog.syslog(syslog.LOG_ERR, "vantage: DMPAFT try #%d; error: %s" % (count, e))
+                logerr("vantage: DMPAFT try #%d; error: %s" % (count, e))
 
-        syslog.syslog(syslog.LOG_ERR, "vantage: DMPAFT max tries (%d) exceeded." % self.max_tries)
+        logerr("vantage: DMPAFT max tries (%d) exceeded." % self.max_tries)
         raise weewx.RetriesExceeded("Max tries exceeded while getting archive data.")
 
     def genDavisArchiveRecords(self, since_ts):
@@ -586,10 +586,10 @@ class Vantage(weewx.drivers.AbstractDevice):
             # From experimentation, 2000 seems to be right, at least for the newer models:
             _vantageDateStamp = since_tt[2] + (since_tt[1] << 5) + ((since_tt[0] - 2000) << 9)
             _vantageTimeStamp = since_tt[3] * 100 + since_tt[4]
-            syslog.syslog(syslog.LOG_DEBUG, 'vantage: Getting archive packets since %s' % weeutil.weeutil.timestamp_to_string(since_ts))
+            logdbg('vantage: Getting archive packets since %s' % weeutil.weeutil.timestamp_to_string(since_ts))
         else:
             _vantageDateStamp = _vantageTimeStamp = 0
-            syslog.syslog(syslog.LOG_DEBUG, 'vantage: Getting all archive packets')
+            logdbg('vantage: Getting all archive packets')
      
         # Pack the date and time into a string, little-endian order
         _datestr = struct.pack("<HH", _vantageDateStamp, _vantageTimeStamp)
@@ -608,7 +608,7 @@ class Vantage(weewx.drivers.AbstractDevice):
         _buffer = self.port.get_data_with_crc16(6, max_tries=1)
       
         (_npages, _start_index) = struct.unpack("<HH", _buffer[:4])
-        syslog.syslog(syslog.LOG_DEBUG, "vantage: Retrieving %d page(s); starting index= %d" % (_npages, _start_index))
+        logdbg("vantage: Retrieving %d page(s); starting index= %d" % (_npages, _start_index))
 
         # Cycle through the pages...
         for ipage in range(_npages):
@@ -623,7 +623,7 @@ class Vantage(weewx.drivers.AbstractDevice):
                 # by looking at the first 4 bytes (the date and time):
                 if _record_string[0:4] == 4 * b'\xff' or _record_string[0:4] == 4 * b'\x00':
                     # This record has never been used. We're done.
-                    syslog.syslog(syslog.LOG_DEBUG, "vantage: Empty record page %d; index %d" \
+                    logdbg("vantage: Empty record page %d; index %d" \
                                   % (ipage, _index))
                     return
                 
@@ -634,10 +634,10 @@ class Vantage(weewx.drivers.AbstractDevice):
                 # signal that we are done. 
                 if _record['dateTime'] is None or _record['dateTime'] <= _last_good_ts - self.max_dst_jump:
                     # The time stamp is declining. We're done.
-                    syslog.syslog(syslog.LOG_DEBUG, "vantage: DMPAFT complete: page timestamp %s less than final timestamp %s"\
+                    logdbg("vantage: DMPAFT complete: page timestamp %s less than final timestamp %s"\
                                   % (weeutil.weeutil.timestamp_to_string(_record['dateTime']),
                                      weeutil.weeutil.timestamp_to_string(_last_good_ts)))
-                    syslog.syslog(syslog.LOG_DEBUG, "vantage: Catch up complete.")
+                    logdbg("vantage: Catch up complete.")
                     return
                 # Set the last time to the current time, and yield the packet
                 _last_good_ts = _record['dateTime']
@@ -658,7 +658,7 @@ class Vantage(weewx.drivers.AbstractDevice):
         # ... request a dump...
         self.port.send_data(b'DMP\n')
 
-        syslog.syslog(syslog.LOG_DEBUG, "vantage: Dumping all records.")
+        logdbg("vantage: Dumping all records.")
         
         # Cycle through the pages...
         for ipage in range(512):
@@ -673,7 +673,7 @@ class Vantage(weewx.drivers.AbstractDevice):
                 # by looking at the first 4 bytes (the date and time):
                 if _record_string[0:4] == 4 * b'\xff' or _record_string[0:4] == 4 * b'\x00':
                     # This record has never been used. Skip it
-                    syslog.syslog(syslog.LOG_DEBUG, "vantage: Empty record page %d; index %d" \
+                    logdbg("vantage: Empty record page %d; index %d" \
                                   % (ipage, _index))
                     continue
                 # Unpack the raw archive packet:
@@ -706,7 +706,7 @@ class Vantage(weewx.drivers.AbstractDevice):
         # ... request a dump...
         self.port.send_data(b'DMP\n')
 
-        syslog.syslog(syslog.LOG_DEBUG, "vantage: Starting logger summary.")
+        logdbg("vantage: Starting logger summary.")
         
         # Cycle through the pages...
         for _ipage in range(512):
@@ -732,7 +732,7 @@ class Vantage(weewx.drivers.AbstractDevice):
                     h  = timestamp // 100             # hour
                     mn = timestamp % 100              # minute
                 yield (_ipage, _index, y, mo, d, h, mn, time_ts)
-        syslog.syslog(syslog.LOG_DEBUG, "Vantage: Finished logger summary.")
+        logdbg("Vantage: Finished logger summary.")
 
     def getTime(self):
         """Get the current time from the console, returning it as timestamp"""
@@ -759,7 +759,7 @@ class Vantage(weewx.drivers.AbstractDevice):
             except weewx.WeeWxIOError:
                 # Caught an error. Keep retrying...
                 continue
-        syslog.syslog(syslog.LOG_ERR, "vantage: Max retries exceeded while getting time")
+        logerr("vantage: Max retries exceeded while getting time")
         raise weewx.RetriesExceeded("While getting console time")
             
     def setTime(self):
@@ -782,13 +782,12 @@ class Vantage(weewx.drivers.AbstractDevice):
 
                 # Complete the setTime command
                 self.port.send_data_with_crc16(_buffer, max_tries=1)
-                syslog.syslog(syslog.LOG_NOTICE,
-                              "vantage: Clock set to %s" % weeutil.weeutil.timestamp_to_string(time.mktime(newtime_tt)))
+                loginf("vantage: Clock set to %s" % weeutil.weeutil.timestamp_to_string(time.mktime(newtime_tt)))
                 return
             except weewx.WeeWxIOError:
                 # Caught an error. Keep retrying...
                 continue
-        syslog.syslog(syslog.LOG_ERR, "vantage: Max retries exceeded while setting time")
+        logerr("vantage: Max retries exceeded while setting time")
         raise weewx.RetriesExceeded("While setting console time")
     
     def setDST(self, dst='auto'):
@@ -851,7 +850,7 @@ class Vantage(weewx.drivers.AbstractDevice):
         self.port.send_data(b"NEWSETUP\n")
 
         self._setup()
-        syslog.syslog(syslog.LOG_NOTICE, "vantage: Wind cup type set to %d (%s)" % (self.wind_cup_type, self.wind_cup_size))
+        loginf("vantage: Wind cup type set to %d (%s)" % (self.wind_cup_type, self.wind_cup_size))
 
     def setBucketType(self, new_bucket_code):
         """Set the rain bucket type.
@@ -871,7 +870,7 @@ class Vantage(weewx.drivers.AbstractDevice):
         self.port.send_data(b"NEWSETUP\n")
         
         self._setup()
-        syslog.syslog(syslog.LOG_NOTICE, "vantage: Rain bucket type set to %d (%s)" % (self.rain_bucket_type, self.rain_bucket_size))
+        loginf("vantage: Rain bucket type set to %d (%s)" % (self.rain_bucket_type, self.rain_bucket_size))
 
     def setRainYearStart(self, new_rain_year_start):
         """Set the start of the rain season.
@@ -887,7 +886,7 @@ class Vantage(weewx.drivers.AbstractDevice):
         self.port.send_data_with_crc16(int2byte(new_rain_year_start), max_tries=1)
 
         self._setup()
-        syslog.syslog(syslog.LOG_NOTICE, "vantage: Rain year start set to %d" % (self.rain_year_start,))
+        loginf("vantage: Rain year start set to %d" % (self.rain_year_start,))
 
     def setBarData(self, new_barometer_inHg, new_altitude_foot):
         """Set the internal barometer calibration and altitude settings in the console.
@@ -902,7 +901,7 @@ class Vantage(weewx.drivers.AbstractDevice):
         command = b"BAR=%d %d\n" % (new_barometer, new_altitude)
         self.port.send_command(command)
         self._setup()
-        syslog.syslog(syslog.LOG_NOTICE, "vantage: Set barometer calibration.")
+        loginf("vantage: Set barometer calibration.")
         
     def setLatitude(self, latitude_dg):
         """Set the stations latitude.
@@ -920,7 +919,7 @@ class Vantage(weewx.drivers.AbstractDevice):
         # Then call NEWSETUP to get it to stick:
         self.port.send_data(b"NEWSETUP\n")
 
-        syslog.syslog(syslog.LOG_NOTICE, "vantage: Station latitude set to %.1f degree" % (latitude_dg,))
+        loginf("vantage: Station latitude set to %.1f degree" % (latitude_dg,))
 
     def setLongitude(self, longitude_dg):
         """Set the stations longitude.
@@ -938,7 +937,7 @@ class Vantage(weewx.drivers.AbstractDevice):
         # Then call NEWSETUP to get it to stick:
         self.port.send_data(b"NEWSETUP\n")
 
-        syslog.syslog(syslog.LOG_NOTICE, "vantage: Station longitude set to %.1f degree" % (longitude_dg,))
+        loginf("vantage: Station longitude set to %.1f degree" % (longitude_dg,))
 
     def setArchiveInterval(self, archive_interval_seconds):
         """Set the archive interval of the Vantage.
@@ -955,7 +954,7 @@ class Vantage(weewx.drivers.AbstractDevice):
         self.port.send_command(command, max_tries=self.max_tries)
 
         self._setup()
-        syslog.syslog(syslog.LOG_NOTICE, "vantage: Archive interval set to %d seconds" % (archive_interval_seconds,))
+        loginf("vantage: Archive interval set to %d seconds" % (archive_interval_seconds,))
     
     def setLamp(self, onoff='OFF'):
         """Set the lamp on or off"""
@@ -967,7 +966,7 @@ class Vantage(weewx.drivers.AbstractDevice):
         _command = b"LAMPS %s\n" % _setting
         self.port.send_command(_command, max_tries=self.max_tries)
 
-        syslog.syslog(syslog.LOG_NOTICE, "vantage: Lamp set to '%s'" % onoff)
+        loginf("vantage: Lamp set to '%s'" % onoff)
         
     def setTransmitterType(self, new_channel, new_transmitter_type, new_extra_temp, new_extra_hum, new_repeater):
         """Set the transmitter type for one of the eight channels."""
@@ -1018,7 +1017,7 @@ class Vantage(weewx.drivers.AbstractDevice):
         self.port.send_data(b"NEWSETUP\n")
         
         self._setup()
-        syslog.syslog(syslog.LOG_NOTICE, "vantage: Transmitter type for channel %d set to %d (%s), repeater: %s, %s" %
+        loginf("vantage: Transmitter type for channel %d set to %d (%s), repeater: %s, %s" %
                       (new_channel, new_transmitter_type, self.transmitter_type_dict[new_transmitter_type], self.repeater_dict[new_repeater], self.listen_dict[usetx]))
 
     def setRetransmit(self, new_channel):
@@ -1032,9 +1031,9 @@ class Vantage(weewx.drivers.AbstractDevice):
         
         self._setup()
         if new_channel != 0:
-            syslog.syslog(syslog.LOG_NOTICE, "vantage: Retransmit set to 'ON' at channel: %d" % new_channel)
+            loginf("vantage: Retransmit set to 'ON' at channel: %d" % new_channel)
         else:
-            syslog.syslog(syslog.LOG_NOTICE, "vantage: Retransmit set to 'OFF'")
+            loginf("vantage: Retransmit set to 'OFF'")
     
     def setTempLogging(self, new_tempLogging='AVERAGE'):
         """Set console temperature logging to 'AVERAGE' or 'LAST'."""
@@ -1050,7 +1049,7 @@ class Vantage(weewx.drivers.AbstractDevice):
         # Then call NEWSETUP to get it to stick:
         self.port.send_data(b"NEWSETUP\n")
 
-        syslog.syslog(syslog.LOG_NOTICE, "vantage: Console temperature logging set to '%s'" % new_tempLogging.upper())
+        loginf("vantage: Console temperature logging set to '%s'" % new_tempLogging.upper())
     
     def setCalibrationWindDir(self, offset):
         """Set the on-board wind direction calibration."""
@@ -1060,7 +1059,7 @@ class Vantage(weewx.drivers.AbstractDevice):
         self.port.send_data(b"EEBWR 4D 02\n")
         # Follow it up with the data:
         self.port.send_data_with_crc16(struct.pack("<h", offset), max_tries=1)
-        syslog.syslog(syslog.LOG_NOTICE, "vantage: Wind calibration set to %d" % (offset))
+        loginf("vantage: Wind calibration set to %d" % (offset))
 
     def setCalibrationTemp(self, variable, offset):
         """Set an on-board temperature calibration."""
@@ -1083,7 +1082,7 @@ class Vantage(weewx.drivers.AbstractDevice):
             self.port.send_data_with_crc16(byte, max_tries=1)
         else:
             raise weewx.ViolatedPrecondition("Variable name %s not known" % variable)
-        syslog.syslog(syslog.LOG_NOTICE, "vantage: Temperature calibration %s set to %.1f" % (variable, offset))
+        loginf("vantage: Temperature calibration %s set to %.1f" % (variable, offset))
 
     def setCalibrationHumid(self, variable, offset):
         """Set an on-board humidity calibration."""
@@ -1098,7 +1097,7 @@ class Vantage(weewx.drivers.AbstractDevice):
             self.port.send_data_with_crc16(byte, max_tries=1)
         else:
             raise weewx.ViolatedPrecondition("Variable name %s not known" % variable)
-        syslog.syslog(syslog.LOG_NOTICE, "vantage: Humidity calibration %s set to %d" % (variable, offset))
+        loginf("vantage: Humidity calibration %s set to %d" % (variable, offset))
 
     def clearLog(self):
         """Clear the internal archive memory in the Vantage."""
@@ -1106,12 +1105,12 @@ class Vantage(weewx.drivers.AbstractDevice):
             try:
                 self.port.wakeup_console(max_tries=self.max_tries)
                 self.port.send_data(b"CLRLOG\n")
-                syslog.syslog(syslog.LOG_NOTICE, "vantage: Archive memory cleared.")
+                loginf("vantage: Archive memory cleared.")
                 return
             except weewx.WeeWxIOError:
                 # Caught an error. Keey trying...
                 continue
-        syslog.syslog(syslog.LOG_ERR, "vantage: Max retries exceeded while clearing log")
+        logerr("vantage: Max retries exceeded while clearing log")
         raise weewx.RetriesExceeded("While clearing log")
     
     def getRX(self):
@@ -1206,7 +1205,7 @@ class Vantage(weewx.drivers.AbstractDevice):
             wind) = self._getEEPROM_value(0x32, "<27bh")
         # inTempComp is 1's complement of inTemp.
         if inTemp + inTempComp != -1:
-            syslog.syslog(syslog.LOG_ERR, "vantage: Inconsistent EEPROM calibration values")
+            logerr("vantage: Inconsistent EEPROM calibration values")
             return None
         # Temperatures are in tenths of a degree F; Humidity in 1 percent.
         return {
@@ -1271,14 +1270,14 @@ class Vantage(weewx.drivers.AbstractDevice):
             try:
                 self.port.send_data(b"WRD\x12\x4d\n")
                 self.hardware_type = byte2int(self.port.read())
-                syslog.syslog(syslog.LOG_DEBUG, "vantage: Hardware type is %d" % self.hardware_type)
+                logdbg("vantage: Hardware type is %d" % self.hardware_type)
                 # 16 = Pro, Pro2, 17 = Vue
                 return self.hardware_type
             except weewx.WeeWxIOError:
                 pass
-            syslog.syslog(syslog.LOG_DEBUG, "vantage: _determine_hardware; retry #%d" % (count,))
+            logdbg("vantage: _determine_hardware; retry #%d" % (count,))
 
-        syslog.syslog(syslog.LOG_ERR, "vantage: Unable to read hardware type; raise WeeWxIOError")
+        logerr("vantage: Unable to read hardware type; raise WeeWxIOError")
         raise weewx.WeeWxIOError("Unable to read hardware type")
 
     def _setup(self):
@@ -1354,7 +1353,7 @@ class Vantage(weewx.drivers.AbstractDevice):
                     else:
                         self.iss_id = 1  # Pick a reasonable default.
 
-        syslog.syslog(syslog.LOG_DEBUG, "vantage: ISS ID is %s" % self.iss_id)
+        logdbg("vantage: ISS ID is %s" % self.iss_id)
 
     def _getEEPROM_value(self, offset, v_format="B"):
         """Return a list of values from the EEPROM starting at a specified offset, using a specified format"""
@@ -1378,7 +1377,7 @@ class Vantage(weewx.drivers.AbstractDevice):
             except weewx.WeeWxIOError:
                 continue
         
-        syslog.syslog(syslog.LOG_ERR, "vantage: Max retries exceeded while getting EEPROM data at address 0x%X" % offset)
+        logerr("vantage: Max retries exceeded while getting EEPROM data at address 0x%X" % offset)
         raise weewx.RetriesExceeded("While getting EEPROM data value at address 0x%X" % offset)
         
     @staticmethod
@@ -2745,6 +2744,7 @@ class VantageConfEditor(weewx.drivers.AbstractConfEditor):
 
 
 if __name__ == '__main__':
+    import syslog
     import optparse
 
     usage = """Usage: python -m weewx.drivers.vantage --help

@@ -41,13 +41,13 @@ from __future__ import absolute_import
 from __future__ import print_function
 import select
 import socket
-import syslog
 import threading
 import time
 import usb
 
 import weewx.drivers
 import weeutil.weeutil
+from weeutil.log import logdbg, loginf, logwar, logerr, logcrt
 
 DRIVER_NAME = 'WMR200'
 DRIVER_VERSION = "3.4.0"
@@ -118,32 +118,6 @@ DEBUG_READS = 0
 DEBUG_CHECKSUM = 0
 # Print mapping from sensors to database fields
 DEBUG_MAPPING = 0
-
-def logmsg(dst, msg):
-    """Base syslog helper"""
-    syslog.syslog(dst, ('%s: %s: %s' %
-                        (_WMR200_DRIVER_NAME,
-                         threading.currentThread().getName(), msg)))
-
-def logdbg(msg):
-    """Debug syslog helper"""
-    logmsg(syslog.LOG_DEBUG, 'D ' + msg)
-
-def loginf(msg):
-    """Info syslog helper"""
-    logmsg(syslog.LOG_INFO, 'I ' + msg)
-
-def logwar(msg):
-    """Warning syslog helper"""
-    logmsg(syslog.LOG_WARNING, 'W ' + msg)
-
-def logerr(msg):
-    """Error syslog helper"""
-    logmsg(syslog.LOG_ERR, 'E ' + msg)
-
-def logcrt(msg):
-    """Critical syslog helper"""
-    logmsg(syslog.LOG_CRIT, 'C ' + msg)
 
 
 class WMR200PacketParsingError(Exception):

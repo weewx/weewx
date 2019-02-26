@@ -928,17 +928,14 @@ from __future__ import print_function
 
 from datetime import datetime
 import sys
-import syslog
 import threading
 import time
-import traceback
 import usb
-
-from six.moves import StringIO
 
 import weewx.drivers
 import weewx.wxformulas
 import weeutil.weeutil
+from weeutil.log import logdbg, loginf, logcrt, logerr, log_traceback
 
 DRIVER_NAME = 'WS28xx'
 DRIVER_VERSION = '0.40'
@@ -960,30 +957,6 @@ DEBUG_CONFIG_DATA = 0
 DEBUG_WEATHER_DATA = 0
 DEBUG_HISTORY_DATA = 0
 DEBUG_DUMP_FORMAT = 'auto'
-
-def logmsg(dst, msg):
-    syslog.syslog(dst, 'ws28xx: %s: %s' %
-                  (threading.currentThread().getName(), msg))
-
-def logdbg(msg):
-    logmsg(syslog.LOG_DEBUG, msg)
-
-def loginf(msg):
-    logmsg(syslog.LOG_INFO, msg)
-
-def logcrt(msg):
-    logmsg(syslog.LOG_CRIT, msg)
-
-def logerr(msg):
-    logmsg(syslog.LOG_ERR, msg)
-
-def log_traceback(dst=syslog.LOG_INFO, prefix='**** '):
-    sfd = StringIO.StringIO()
-    traceback.print_exc(file=sfd)
-    sfd.seek(0)
-    for line in sfd:
-        logmsg(dst, prefix + line)
-    del sfd
 
 def log_frame(n, buf):
     logdbg('frame length is %d' % n)
@@ -4115,7 +4088,7 @@ class CCommunicationService(object):
                 self.doRFCommunication()
         except Exception as e:
             logerr('exception in doRF: %s' % e)
-            log_traceback(dst=syslog.LOG_INFO)
+            log_traceback()
             self.running = False
 #            raise
         finally:

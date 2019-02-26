@@ -21,17 +21,16 @@ for sample (java) code.
 
 from __future__ import absolute_import
 from __future__ import print_function
+
 import time
 import operator
-import syslog
 from functools import reduce
 
 import serial
+from six.moves import map
 
 import weewx.drivers
-
-from math import exp
-from six.moves import map
+from weeutil.log import logdbg, loginf
 
 DRIVER_NAME = 'WMR9x8'
 DRIVER_VERSION = "3.3.0"
@@ -42,18 +41,6 @@ def loader(config_dict, engine):  # @UnusedVariable
 
 def confeditor_loader():
     return WMR9x8ConfEditor()
-
-def logmsg(level, msg):
-    syslog.syslog(level, 'wmr9x8: %s' % msg)
-
-def logdbg(msg):
-    logmsg(syslog.LOG_DEBUG, msg)
-
-def loginf(msg):
-    logmsg(syslog.LOG_INFO, msg)
-
-def logerr(msg):
-    logmsg(syslog.LOG_ERR, msg)
 
 
 class WMR9x8ProtocolError(weewx.WeeWxIOError):
@@ -732,6 +719,7 @@ Setting rainRate, windchill, and dewpoint calculations to hardware.""")
 # PYTHONPATH=bin python bin/weewx/drivers/wmr9x8.py
 
 if __name__ == '__main__':
+    import syslog
     import optparse
 
     usage = """Usage: %prog --help

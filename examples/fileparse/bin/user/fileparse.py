@@ -48,25 +48,14 @@
 #         in_humid = inHumidity
 
 from __future__ import with_statement
-import syslog
 import time
 
 import weewx.drivers
+from weeutil.log import logdbg, loginf, logerr
 
 DRIVER_NAME = 'FileParse'
 DRIVER_VERSION = "0.6"
 
-def logmsg(dst, msg):
-    syslog.syslog(dst, 'fileparse: %s' % msg)
-
-def logdbg(msg):
-    logmsg(syslog.LOG_DEBUG, msg)
-
-def loginf(msg):
-    logmsg(syslog.LOG_INFO, msg)
-
-def logerr(msg):
-    logmsg(syslog.LOG_ERR, msg)
 
 def _get_as_float(d, s):
     v = None

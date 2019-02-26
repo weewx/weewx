@@ -16,13 +16,14 @@ Thanks to Jay Nugent (WB8TKL) and KRK6 for weather-2.kr6k-V2.1
 from __future__ import with_statement
 from __future__ import absolute_import
 from __future__ import print_function
-import syslog
+
 import time
 
 from six import byte2int
 
-from weewx.units import INHG_PER_MBAR, MILE_PER_KM
 import weewx.drivers
+from weewx.units import INHG_PER_MBAR, MILE_PER_KM
+from weeutil.log import logdbg, loginf, logerr
 
 DRIVER_NAME = 'WS1'
 DRIVER_VERSION = '0.30'
@@ -41,18 +42,6 @@ DEFAULT_TCP_PORT = 3000
 PACKET_SIZE = 50
 DEBUG_READ = 0
 
-
-def logmsg(level, msg):
-    syslog.syslog(level, 'ws1: %s' % msg)
-
-def logdbg(msg):
-    logmsg(syslog.LOG_DEBUG, msg)
-
-def loginf(msg):
-    logmsg(syslog.LOG_INFO, msg)
-
-def logerr(msg):
-    logmsg(syslog.LOG_ERR, msg)
 
 class WS1Driver(weewx.drivers.AbstractDevice):
     """weewx driver that communicates with an ADS-WS1 station
@@ -493,6 +482,7 @@ class WS1ConfEditor(weewx.drivers.AbstractConfEditor):
 # PYTHONPATH=bin python bin/weewx/drivers/ws1.py
 
 if __name__ == '__main__':
+    import syslog
     import optparse
 
     usage = """%prog [options] [--help]"""

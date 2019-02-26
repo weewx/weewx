@@ -438,13 +438,14 @@ schema, these are the additional fields that must be added to the schema:
 from __future__ import with_statement
 from __future__ import absolute_import
 from __future__ import print_function
-import syslog
+
 import time
 import usb
 
 import weewx.drivers
 import weewx.wxformulas
 from weeutil.weeutil import timestamp_to_string
+from weeutil.log import logdbg, loginf, logcrt, logerr
 
 DRIVER_NAME = 'TE923'
 DRIVER_VERSION = '0.30'
@@ -493,21 +494,6 @@ DEFAULT_MAP = {
     'extraBatteryStatus4': 'bat_5',
     'extraLinkStatus4': 'link_5'
 }
-
-def logmsg(dst, msg):
-    syslog.syslog(dst, 'te923: %s' % msg)
-
-def logdbg(msg):
-    logmsg(syslog.LOG_DEBUG, msg)
-
-def loginf(msg):
-    logmsg(syslog.LOG_INFO, msg)
-
-def logcrt(msg):
-    logmsg(syslog.LOG_CRIT, msg)
-
-def logerr(msg):
-    logmsg(syslog.LOG_ERR, msg)
 
 
 class TE923ConfEditor(weewx.drivers.AbstractConfEditor):
@@ -2312,6 +2298,7 @@ class TE923Station(object):
 # Tue Nov 26 10:47:45 EST 2013
 
 if __name__ == '__main__':
+    import syslog
     import optparse
 
     FMT_TE923TOOL = 'te923tool'

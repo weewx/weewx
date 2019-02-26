@@ -10,6 +10,8 @@ The package MySQL-python, which we used previously, is not available
 for Python 3. Ported  the MySQL code to use the package mysqlclient
 as an alternative.
 
+Introduce a uniform logging shim. Fixes issue #353,
+
 
 3.10.0 MM/DD/YYYY
 

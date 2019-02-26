@@ -6,7 +6,6 @@
 """WeeWX logging facility"""
 
 from __future__ import absolute_import
-from __future__ import print_function
 
 import os
 import syslog
@@ -47,13 +46,10 @@ def logerr(msg, prefix=None):
     syslog.syslog(syslog.LOG_ERR, "%s: %s" % (prefix, msg))
 
 
-def logcrit(msg, prefix=None):
+def logcrt(msg, prefix=None):
     if prefix is None:
         prefix = _get_file_root()
     syslog.syslog(syslog.LOG_CRIT, "%s: %s" % (prefix, msg))
-
-
-logcrt = logcrit
 
 
 def log_traceback(prefix='', loglevel=None, logname='info'):
