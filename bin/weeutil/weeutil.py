@@ -16,6 +16,7 @@ import datetime
 import math
 import os
 import struct
+import shutil
 import syslog
 import time
 import traceback
@@ -33,6 +34,7 @@ accumulateLeaves = config.accumulateLeaves
 merge_config     = config.merge_config
 patch_config     = config.patch_config
 comment_scalar   = config.comment_scalar
+conditional_merge= config.conditional_merge
 
 
 def convertToFloat(seq):
@@ -42,31 +44,6 @@ def convertToFloat(seq):
         return None
     res = [None if s in ('None', 'none') else float(s) for s in seq]
     return res
-
-
-def conditional_merge(a_dict, b_dict):
-    """Merge fields from b_dict into a_dict, but only if they do not yet
-    exist in a_dict"""
-    # Go through each key in b_dict
-    for k in b_dict:
-        if isinstance(b_dict[k], dict):
-            if k not in a_dict:
-                # It's a new section. Initialize it...
-                a_dict[k] = {}
-                # ... and transfer over the section comments, if available
-                try:
-                    a_dict.comments[k] = b_dict.comments[k]
-                except AttributeError:
-                    pass
-            conditional_merge(a_dict[k], b_dict[k])
-        elif k not in a_dict:
-            # It's a scalar. Transfer over the value...
-            a_dict[k] = b_dict[k]
-            # ... then its comments, if available:
-            try:
-                a_dict.comments[k] = b_dict.comments[k]
-            except AttributeError:
-                pass
 
 
 def option_as_list(option):
@@ -1438,6 +1415,38 @@ def y_or_n(msg, noprompt):
 def int2byte(x):
     """Convert integer argument to signed byte string, under both Python 2 and 3"""
     return struct.pack('>b', x)
+
+
+def deep_copy_path(path, dest_dir):
+    """Copy a path to a destination, making any subdirectories along the way.
+    The source path is relative to the current directory.
+
+    Returns the number of files copied
+    """
+
+    ncopy = 0
+    # Are we copying a directory?
+    if os.path.isdir(path):
+        # Yes. Walk it
+        for dirpath, _, filenames in os.walk(path):
+            for f in filenames:
+                # For each source file found, call myself recursively:
+                ncopy += deep_copy_path(os.path.join(dirpath, f), dest_dir)
+    else:
+        # path is a file. Get the directory it's in.
+        d = os.path.dirname(os.path.join(dest_dir, path))
+        # Make the destination directory, wrapping it in a try block in
+        # case it already exists:
+        try:
+            os.makedirs(d)
+        except OSError:
+            pass
+        # This version of copy does not copy over modification time,
+        # so it will look like a new file, causing it to be (for
+        # example) ftp'd to the server:
+        shutil.copy(path, d)
+        ncopy += 1
+    return ncopy
 
 if __name__ == '__main__':
     import doctest
