@@ -16,22 +16,21 @@ import datetime
 import math
 import os
 import shutil
-import syslog
 import time
-import traceback
 
 # Compatibility shims
 import six
-from six.moves import StringIO, input
+from six.moves import input
 
 # For backwards compatibility:
-from weeutil import config
+from weeutil import config, log
 search_up        = config.search_up
 accumulateLeaves = config.accumulateLeaves
 merge_config     = config.merge_config
 patch_config     = config.patch_config
 comment_scalar   = config.comment_scalar
 conditional_merge= config.conditional_merge
+log_traceback    = log.log_traceback
 
 
 def convertToFloat(seq):
@@ -1102,15 +1101,6 @@ def latlon_string(ll, hemi, which, format_list=None):
         format_list = ["%02d", "%03d", "%05.2f"]
     return ((format_list[0] if which == 'lat' else format_list[1]) % (deg,), format_list[2] % (minutes,),
             hemi[0] if ll >= 0 else hemi[1])
-
-
-def log_traceback(prefix='', loglevel=syslog.LOG_INFO):
-    """Log the stack traceback into syslog."""
-    sfd = StringIO()
-    traceback.print_exc(file=sfd)
-    sfd.seek(0)
-    for line in sfd:
-        syslog.syslog(loglevel, prefix + line)
 
 
 def _get_object(module_class):
