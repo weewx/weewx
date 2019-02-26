@@ -221,4 +221,4 @@ log_failure = False
 
 # Even though default_str is in Unicode, specify an encoding in
 # case someone wants to write the ConfigObj out.
-defaults = configobj.ConfigObj(StringIO(default_str), encoding='utf-8')
+defaults = configobj.ConfigObj(StringIO(default_str), encoding='utf-8', default_encoding='utf-8')
