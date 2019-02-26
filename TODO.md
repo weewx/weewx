@@ -7,5 +7,7 @@ wmr100.py
 Move `weecfg.Logger` to `weeutil.log`
 Encapsulate `syslog.openlog` and `syslog.setlogmask` in the logging shim.
 
-
-
+Need a way to specify logdbg, logerr, etc., by using a name. Something like
+```
+logmsg('crt', 'my message')
+```

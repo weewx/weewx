@@ -8,10 +8,12 @@
 from __future__ import print_function
 from __future__ import absolute_import
 import math
-import syslog
 import sys
 import datetime
+import syslog
 import time
+
+from six.moves import zip
 
 import weewx.accum
 from weewx.units import ValueTuple
@@ -19,11 +21,12 @@ import weewx.units
 import weeutil.weeutil
 import weedb
 from weeutil.weeutil import timestamp_to_string, isStartOfDay, to_int
-from six.moves import zip
+from weeutil.log import logdbg, logerr, loginf
 
-#==============================================================================
+
+# ==============================================================================
 #                         class Manager
-#==============================================================================
+# ==============================================================================
 
 class Manager(object):
     """Manages a database table. Offers a number of convenient member
@@ -52,7 +55,7 @@ class Manager(object):
     first_timestamp: The timestamp of the earliest record in the table.
     
     last_timestamp: The timestamp of the last record in the table."""
-    
+
     def __init__(self, connection, table_name='archive', schema=None):
         """Initialize an object of type Manager.
         
@@ -78,7 +81,7 @@ class Manager(object):
             # a schema?
             if schema is None:
                 # No. Nothing to be done.
-                syslog.syslog(syslog.LOG_ERR, "manager: Cannot get columns of table %s, and no schema specified" % self.table_name)
+                logerr("Cannot get columns of table %s, and no schema specified" % self.table_name)
                 raise
             # Database exists, but has not been initialized. Initialize it.
             self._initialize_database(schema)
@@ -87,7 +90,7 @@ class Manager(object):
 
         # Set up cached data:
         self._sync()
-        
+
     @classmethod
     def open(cls, database_dict, table_name='archive'):
         """Open and return a Manager or a subclass of Manager.  
@@ -106,7 +109,7 @@ class Manager(object):
         # Create an instance of the right class and return it:
         dbmanager = cls(connection, table_name)
         return dbmanager
-    
+
     @classmethod
     def open_with_create(cls, database_dict, table_name='archive', schema=None):
         """Open and return a Manager or a subclass of Manager, initializing
@@ -123,7 +126,7 @@ class Manager(object):
         does not exist, and of type weedb.UnitializedDatabase if it exists, but
         has not been initialized.
         """
-    
+
         # This will raise a weedb.OperationalError if the database does
         # not exist. 
         try:
@@ -132,7 +135,7 @@ class Manager(object):
             # Database does not exist. Did the caller supply a schema?
             if schema is None:
                 # No. Nothing to be done.
-                syslog.syslog(syslog.LOG_ERR, "manager: Cannot open database, and no schema specified")
+                logerr("Cannot open database, and no schema specified")
                 raise
             # Yes. Create the database:
             weedb.create(database_dict)
@@ -142,16 +145,16 @@ class Manager(object):
         # Create an instance of the right class and return it:
         dbmanager = cls(connection, table_name=table_name, schema=schema)
         return dbmanager
-    
+
     @property
     def database_name(self):
         return self.connection.database_name
-    
+
     @property
     def obskeys(self):
         """The list of observation types"""
         return [obs_type for obs_type in self.sqlkeys if obs_type not in ['dateTime', 'usUnits', 'interval']]
-    
+
     def close(self):
         self.connection.close()
         del self.sqlkeys
@@ -161,16 +164,16 @@ class Manager(object):
 
     def __enter__(self):
         return self
-    
+
     def __exit__(self, etyp, einst, etb):  # @UnusedVariable
-        self.close()    
-    
+        self.close()
+
     def _initialize_database(self, schema):
         """Initialize the tables needed for the archive.
         
         schema: The schema to be used
         """
-    
+
         # List comprehension of the types, joined together with commas. Put
         # the SQL type in backquotes, because at least one of them ('interval')
         # is a MySQL reserved word
@@ -178,16 +181,14 @@ class Manager(object):
 
         try:
             with weedb.Transaction(self.connection) as _cursor:
-                _cursor.execute("CREATE TABLE %s (%s);" % (self.table_name, _sqltypestr, ))
+                _cursor.execute("CREATE TABLE %s (%s);" % (self.table_name, _sqltypestr))
         except weedb.DatabaseError as e:
-            syslog.syslog(syslog.LOG_ERR, "manager: "
-                          "Unable to create table '%s' in database '%s': %s" % 
-                          (self.table_name, self.database_name, e))
+            logerr("Unable to create table '%s' in database '%s': %s"
+                   % (self.table_name, self.database_name, e))
             raise
-    
-        syslog.syslog(syslog.LOG_NOTICE, "manager: "
-                      "Created and initialized table '%s' in database '%s'" % 
-                      (self.table_name, self.database_name))
+
+        loginf("Created and initialized table '%s' in database '%s'"
+               % (self.table_name, self.database_name))
 
     def _sync(self):
         """Resynch the internal caches."""
@@ -196,10 +197,10 @@ class Manager(object):
         # still indeterminate --- set it to 'None'.
         _row = self.getSql("SELECT usUnits FROM %s LIMIT 1;" % self.table_name)
         self.std_unit_system = _row[0] if _row is not None else None
-        
+
         # Cache the first and last timestamps
         self.first_timestamp = self.firstGoodStamp()
-        self.last_timestamp  = self.lastGoodStamp()
+        self.last_timestamp = self.lastGoodStamp()
 
     def lastGoodStamp(self):
         """Retrieves the epoch time of the last good archive record.
@@ -208,7 +209,7 @@ class Manager(object):
         None if there are no records."""
         _row = self.getSql("SELECT MAX(dateTime) FROM %s" % self.table_name)
         return _row[0] if _row else None
-    
+
     def firstGoodStamp(self):
         """Retrieves earliest timestamp in the archive.
         
@@ -227,12 +228,12 @@ class Manager(object):
         
         log_level: What syslog level to use for any logging. Default is syslog.LOG_NOTICE.
         """
-        
+
         # Determine if record_obj is just a single dictionary instance
         # (in which case it will have method 'keys'). If so, wrap it in
         # something iterable (a list):
         record_list = [record_obj] if hasattr(record_obj, 'keys') else record_obj
-        
+
         min_ts = None
         max_ts = 0
         with weedb.Transaction(self.connection) as cursor:
@@ -250,24 +251,22 @@ class Manager(object):
                     min_ts = min(min_ts, record['dateTime']) if min_ts is not None else record['dateTime']
                     max_ts = max(max_ts, record['dateTime'])
                 except (weedb.IntegrityError, weedb.OperationalError) as e:
-                    syslog.syslog(syslog.LOG_ERR, "manager: "
-                                  "Unable to add record %s to database '%s': %s" %
-                                  (weeutil.weeutil.timestamp_to_string(record['dateTime']), 
-                                   self.database_name, e))
+                    logerr("Unable to add record %s to database '%s': %s" %
+                           (weeutil.weeutil.timestamp_to_string(record['dateTime']),
+                            self.database_name, e))
 
         # Update the cached timestamps. This has to sit outside the
         # transaction context, in case an exception occurs.
         if self.first_timestamp is not None and min_ts is not None:
             self.first_timestamp = min(min_ts, self.first_timestamp)
         if self.last_timestamp is not None:
-            self.last_timestamp  = max(max_ts, self.last_timestamp)
-        
+            self.last_timestamp = max(max_ts, self.last_timestamp)
+
     def _addSingleRecord(self, record, cursor, log_level):
         """Internal function for adding a single record to the database."""
-        
+
         if record['dateTime'] is None:
-            syslog.syslog(syslog.LOG_ERR,
-                          "manager: Archive record with null time encountered")
+            logerr("Archive record with null time encountered")
             raise weewx.ViolatedPrecondition("Manager record with null time encountered.")
 
         # Check to make sure the incoming record is in the same unit
@@ -283,7 +282,7 @@ class Manager(object):
         key_list = list(insert_key_set)
         # Get the values in the same order:
         value_list = [record[k] for k in key_list]
-        
+
         # This will a string of sql types, separated by commas. Because
         # some of the weewx sql keys (notably 'interval') are reserved
         # words in MySQL, put them in backquotes.
@@ -292,9 +291,9 @@ class Manager(object):
         # question marks:
         q_str = ','.join('?' * len(key_list))
         # Form the SQL insert statement:
-        sql_insert_stmt = "INSERT INTO %s (%s) VALUES (%s)" % (self.table_name, k_str, q_str) 
+        sql_insert_stmt = "INSERT INTO %s (%s) VALUES (%s)" % (self.table_name, k_str, q_str)
         cursor.execute(sql_insert_stmt, value_list)
-        syslog.syslog(log_level, "manager: Added record %s to database '%s'" % 
+        syslog.syslog(log_level, "manager: Added record %s to database '%s'" %
                       (weeutil.weeutil.timestamp_to_string(record['dateTime']),
                        self.database_name))
 
@@ -319,14 +318,17 @@ class Manager(object):
                 if stopstamp is None:
                     _gen = _cursor.execute("SELECT * FROM %s ORDER BY dateTime ASC" % self.table_name)
                 else:
-                    _gen = _cursor.execute("SELECT * FROM %s WHERE dateTime <= ? ORDER BY dateTime ASC" % self.table_name, (stopstamp,))
+                    _gen = _cursor.execute("SELECT * FROM %s WHERE "
+                                           "dateTime <= ? ORDER BY dateTime ASC" % self.table_name, (stopstamp,))
             else:
                 if stopstamp is None:
-                    _gen = _cursor.execute("SELECT * FROM %s WHERE dateTime > ? ORDER BY dateTime ASC" % self.table_name, (startstamp,))
+                    _gen = _cursor.execute("SELECT * FROM %s WHERE "
+                                           "dateTime > ? ORDER BY dateTime ASC" % self.table_name, (startstamp,))
                 else:
-                    _gen = _cursor.execute("SELECT * FROM %s WHERE dateTime > ? AND dateTime <= ? ORDER BY dateTime ASC" % self.table_name,
-                                            (startstamp, stopstamp))
-               
+                    _gen = _cursor.execute("SELECT * FROM %s WHERE "
+                                           "dateTime > ? AND dateTime <= ? ORDER BY dateTime ASC" % self.table_name,
+                                           (startstamp, stopstamp))
+
             _last_time = 0
             for _row in _gen:
                 # The following is to get around a bug in sqlite when all the
@@ -350,10 +352,10 @@ class Manager(object):
         
         yields: A dictionary where key is the observation type (eg, 'outTemp')
         and the value is the observation value"""
-        
+
         for _row in self.genBatchRows(startstamp, stopstamp):
             yield dict(list(zip(self.sqlkeys, _row))) if _row else None
-        
+
     def getRecord(self, timestamp, max_delta=None):
         """Get a single archive record with a given epoch time stamp.
         
@@ -368,8 +370,8 @@ class Manager(object):
         try:
             if max_delta:
                 time_start_ts = timestamp - max_delta
-                time_stop_ts  = timestamp + max_delta
-                _cursor.execute("SELECT * FROM %s WHERE dateTime>=? AND dateTime<=? "\
+                time_stop_ts = timestamp + max_delta
+                _cursor.execute("SELECT * FROM %s WHERE dateTime>=? AND dateTime<=? " \
                                 "ORDER BY ABS(dateTime-?) ASC LIMIT 1" % self.table_name,
                                 (time_start_ts, time_stop_ts, timestamp))
             else:
@@ -381,8 +383,8 @@ class Manager(object):
 
     def updateValue(self, timestamp, obs_type, new_value):
         """Update (replace) a single value in the database."""
-        
-        self.connection.execute("UPDATE %s SET %s=? WHERE dateTime=?" % 
+
+        self.connection.execute("UPDATE %s SET %s=? WHERE dateTime=?" %
                                 (self.table_name, obs_type), (new_value, timestamp))
 
     def getSql(self, sql, sqlargs=(), cursor=None):
@@ -405,31 +407,31 @@ class Manager(object):
     def genSql(self, sql, sqlargs=()):
         """Generator function that executes an arbitrary SQL statement on
         the database."""
-        
+
         _cursor = self.connection.cursor()
         try:
             for _row in _cursor.execute(sql, sqlargs):
                 yield _row
         finally:
             _cursor.close()
-            
-    sql_dict = {'mintime' : "SELECT dateTime FROM %(table_name)s "\
-                              "WHERE dateTime > %(start)s AND dateTime <= %(stop)s AND "\
-                              "%(obs_type)s = (SELECT MIN(%(obs_type)s) FROM %(table_name)s "\
-                              "WHERE dateTime > %(start)s and dateTime <= %(stop)s) AND %(obs_type)s IS NOT NULL",
-                'maxtime' : "SELECT dateTime FROM %(table_name)s "\
-                              "WHERE dateTime > %(start)s AND dateTime <= %(stop)s AND "\
-                              "%(obs_type)s = (SELECT MAX(%(obs_type)s) FROM %(table_name)s "\
-                              "WHERE dateTime > %(start)s and dateTime <= %(stop)s) AND %(obs_type)s IS NOT NULL",
-                'last'    : "SELECT %(obs_type)s FROM %(table_name)s "\
-                              "WHERE dateTime = (SELECT MAX(dateTime) FROM %(table_name)s "\
-                              "WHERE dateTime > %(start)s AND dateTime <= %(stop)s  AND %(obs_type)s IS NOT NULL)",
-                'lasttime': "SELECT MAX(dateTime) FROM %(table_name)s "\
-                              "WHERE dateTime > %(start)s AND dateTime <= %(stop)s  AND %(obs_type)s IS NOT NULL"}
-                            
-    simple_sql = "SELECT %(aggregate_type)s(%(obs_type)s) FROM %(table_name)s "\
-                   "WHERE dateTime > %(start)s AND dateTime <= %(stop)s AND %(obs_type)s IS NOT NULL"
-                   
+
+    sql_dict = {'mintime': "SELECT dateTime FROM %(table_name)s " \
+                           "WHERE dateTime > %(start)s AND dateTime <= %(stop)s AND " \
+                           "%(obs_type)s = (SELECT MIN(%(obs_type)s) FROM %(table_name)s " \
+                           "WHERE dateTime > %(start)s and dateTime <= %(stop)s) AND %(obs_type)s IS NOT NULL",
+                'maxtime': "SELECT dateTime FROM %(table_name)s " \
+                           "WHERE dateTime > %(start)s AND dateTime <= %(stop)s AND " \
+                           "%(obs_type)s = (SELECT MAX(%(obs_type)s) FROM %(table_name)s " \
+                           "WHERE dateTime > %(start)s and dateTime <= %(stop)s) AND %(obs_type)s IS NOT NULL",
+                'last': "SELECT %(obs_type)s FROM %(table_name)s " \
+                        "WHERE dateTime = (SELECT MAX(dateTime) FROM %(table_name)s " \
+                        "WHERE dateTime > %(start)s AND dateTime <= %(stop)s  AND %(obs_type)s IS NOT NULL)",
+                'lasttime': "SELECT MAX(dateTime) FROM %(table_name)s " \
+                            "WHERE dateTime > %(start)s AND dateTime <= %(stop)s  AND %(obs_type)s IS NOT NULL"}
+
+    simple_sql = "SELECT %(aggregate_type)s(%(obs_type)s) FROM %(table_name)s " \
+                 "WHERE dateTime > %(start)s AND dateTime <= %(stop)s AND %(obs_type)s IS NOT NULL"
+
     def getAggregate(self, timespan, obs_type,
                      aggregate_type, **option_dict):  # @UnusedVariable
         """Returns an aggregation of a statistical type for a given time period.
@@ -448,30 +450,30 @@ class Manager(object):
         or None if not enough data was available to calculate it, or if the aggregation
         type is unknown. The second element is the unit type (eg, 'degree_F').
         The third element is the unit group (eg, "group_temperature") """
-        
-        if aggregate_type not in ['sum', 'count', 'avg', 'max', 'min', 
+
+        if aggregate_type not in ['sum', 'count', 'avg', 'max', 'min',
                                   'mintime', 'maxtime', 'last', 'lasttime']:
             raise weewx.ViolatedPrecondition("Invalid aggregation type '%s'" % aggregate_type)
-        
-        interpolate_dict = {'aggregate_type' : aggregate_type,
-                            'obs_type'       : obs_type,
-                            'table_name'     : self.table_name,
-                            'start'          : timespan.start,
-                            'stop'           : timespan.stop}
-        
+
+        interpolate_dict = {'aggregate_type': aggregate_type,
+                            'obs_type': obs_type,
+                            'table_name': self.table_name,
+                            'start': timespan.start,
+                            'stop': timespan.stop}
+
         select_stmt = Manager.sql_dict.get(aggregate_type, Manager.simple_sql)
         _row = self.getSql(select_stmt % interpolate_dict)
 
         _result = _row[0] if _row else None
-        
+
         # Look up the unit type and group of this combination of observation type and aggregation:
         (t, g) = weewx.units.getStandardUnitType(self.std_unit_system, obs_type, aggregate_type)
         # Form the value tuple and return it:
         return weewx.units.ValueTuple(_result, t, g)
-    
-    def getSqlVectors(self, timespan, obs_type, 
+
+    def getSqlVectors(self, timespan, obs_type,
                       aggregate_type=None,
-                      aggregate_interval=None): 
+                      aggregate_interval=None):
         """Get time and (possibly aggregated) data vectors within a time
         interval.
         
@@ -506,29 +508,29 @@ class Manager(object):
         See the file weewx.units for the definition of a ValueTuple.
         """
 
-        windvec_types = {'windvec'     : ('windSpeed, windDir'),
-                         'windgustvec' : ('windGust,  windGustDir')}
-        
+        windvec_types = {'windvec': ('windSpeed, windDir'),
+                         'windgustvec': ('windGust,  windGustDir')}
+
         # Check to see if the requested type is not 'windvec' or 'windgustvec'
         if obs_type not in windvec_types:
             # The type is not one of the extended wind types. Use the regular
             # version:
-            return self._getSqlVectors(timespan, obs_type, 
-                                      aggregate_type, aggregate_interval)
+            return self._getSqlVectors(timespan, obs_type,
+                                       aggregate_type, aggregate_interval)
 
         # It is an extended wind type. Prepare the lists that will hold the
         # final results.
         start_vec = list()
-        stop_vec  = list()
-        data_vec  = list()
+        stop_vec = list()
+        data_vec = list()
         std_unit_system = None
-        
-        _cursor=self.connection.cursor()
+
+        _cursor = self.connection.cursor()
         try:
-    
+
             # Is aggregation requested?
             if aggregate_type:
-                
+
                 aggregate_type = aggregate_type.lower()
 
                 # Check to make sure we have everything:
@@ -543,40 +545,39 @@ class Manager(object):
                 # Do we know how to do it?
                 if aggregate_type not in ['sum', 'count', 'avg', 'max', 'min', 'last']:
                     raise weewx.ViolatedPrecondition("Invalid aggregation type '%s'" % aggregate_type)
-                
+
                 # Special select statement for 'last'
                 if aggregate_type == 'last':
-                    sql_str = "SELECT dateTime, %s, usUnits FROM %s WHERE dateTime = "\
-                        "(SELECT MAX(dateTime) FROM %s WHERE "\
-                        "dateTime > ? AND dateTime <= ?)" % (windvec_types[obs_type], self.table_name, 
-                                                             self.table_name)
+                    sql_str = "SELECT dateTime, %s, usUnits FROM %s WHERE dateTime = "
+                    "(SELECT MAX(dateTime) FROM %s WHERE dateTime > ? AND dateTime <= ?)" \
+                    % (windvec_types[obs_type], self.table_name, self.table_name)
                 else:
                     sql_str = 'SELECT dateTime, %s, usUnits FROM %s WHERE dateTime > ? AND dateTime <= ?' % \
-                        (windvec_types[obs_type], self.table_name)
+                              (windvec_types[obs_type], self.table_name)
 
                 # Go through each aggregation interval, calculating the aggregation.
                 for stamp in weeutil.weeutil.intervalgen(timespan[0], timespan[1], aggregate_interval):
-    
+
                     _mag_extreme = _dir_at_extreme = None
                     _xsum = _ysum = 0.0
                     _count = 0
-    
+
                     for _rec in _cursor.execute(sql_str, stamp):
                         (_mag, _dir) = _rec[1:3]
-    
+
                         if _mag is None:
                             continue
-    
+
                         # A good direction is necessary unless the mag is zero:
-                        if _mag == 0.0  or _dir is not None:
+                        if _mag == 0.0 or _dir is not None:
                             _count += 1
                             if std_unit_system:
                                 if std_unit_system != _rec[3]:
-                                    raise weewx.UnsupportedFeature("Unit type cannot change "\
+                                    raise weewx.UnsupportedFeature("Unit type cannot change " \
                                                                    "within a time interval.")
                             else:
                                 std_unit_system = _rec[3]
-                            
+
                             # Pick the kind of aggregation:
                             if aggregate_type == 'min':
                                 if _mag_extreme is None or _mag < _mag_extreme:
@@ -592,7 +593,7 @@ class Manager(object):
                                 if _dir is None:
                                     # Sanity check
                                     if weewx.debug:
-                                        assert(_mag == 0.0)
+                                        assert (_mag == 0.0)
                                     _xvec = _yvec = 0.0
                                 else:
                                     _xvec = _mag * math.cos(math.radians(90.0 - _dir))
@@ -612,7 +613,7 @@ class Manager(object):
                                 # non-zero count is if all wind velocities
                                 # were zero
                                 if weewx.debug:
-                                    assert(_mag_extreme <= 1.0e-6)
+                                    assert (_mag_extreme <= 1.0e-6)
                                 x_extreme = y_extreme = 0.0
                             else:
                                 x_extreme = _mag_extreme * math.cos(math.radians(90.0 - _dir_at_extreme))
@@ -626,20 +627,20 @@ class Manager(object):
                             data_vec.append(complex(_xvec, _yvec))
                         else:
                             # Must be 'avg'
-                            data_vec.append(complex(_xsum/_count, _ysum/_count))
+                            data_vec.append(complex(_xsum / _count, _ysum / _count))
             else:
                 # No aggregation desired. It's a lot simpler. Go get the
                 # data in the requested time period
                 # This SQL select string will select the proper wind types
                 sql_str = 'SELECT dateTime, %s, usUnits, `interval` FROM %s WHERE dateTime >= ? AND dateTime <= ?' % \
-                        (windvec_types[obs_type], self.table_name)
-                
+                          (windvec_types[obs_type], self.table_name)
+
                 for _rec in _cursor.execute(sql_str, timespan):
                     start_vec.append(_rec[0] - _rec[4])
                     stop_vec.append(_rec[0])
                     if std_unit_system:
                         if std_unit_system != _rec[3]:
-                            raise weewx.UnsupportedFeature("Unit type cannot change "\
+                            raise weewx.UnsupportedFeature("Unit type cannot change " \
                                                            "within a time interval.")
                     else:
                         std_unit_system = _rec[3]
@@ -653,9 +654,9 @@ class Manager(object):
                         if weewx.debug:
                             # There seem to be some little rounding errors that
                             # are driving my debugging crazy. Zero them out
-                            if abs(x) < 1.0e-6 : x = 0.0
-                            if abs(y) < 1.0e-6 : y = 0.0
-                        data_vec.append(complex(x,y))
+                            if abs(x) < 1.0e-6: x = 0.0
+                            if abs(y) < 1.0e-6: y = 0.0
+                        data_vec.append(complex(x, y))
         finally:
             _cursor.close()
 
@@ -670,8 +671,8 @@ class Manager(object):
 
         if self.std_unit_system is not None:
             if unit_system != self.std_unit_system:
-                raise weewx.UnitError("Unit system of incoming record (0x%02x) "\
-                                      "differs from '%s' table in '%s' database (0x%02x)" % 
+                raise weewx.UnitError("Unit system of incoming record (0x%02x) " \
+                                      "differs from '%s' table in '%s' database (0x%02x)" %
                                       (unit_system, self.table_name, self.database_name,
                                        self.std_unit_system))
         else:
@@ -679,9 +680,9 @@ class Manager(object):
             # check against subsequent records:
             self.std_unit_system = unit_system
 
-    def _getSqlVectors(self, timespan, sql_type, 
-                      aggregate_type=None,
-                      aggregate_interval=None): 
+    def _getSqlVectors(self, timespan, sql_type,
+                       aggregate_type=None,
+                       aggregate_interval=None):
         """Get time and (possibly aggregated) data vectors within a time
         interval. 
         
@@ -733,15 +734,15 @@ class Manager(object):
 
         startstamp, stopstamp = timespan
         start_vec = list()
-        stop_vec  = list()
-        data_vec  = list()
+        stop_vec = list()
+        data_vec = list()
         std_unit_system = None
 
-        _cursor=self.connection.cursor()
+        _cursor = self.connection.cursor()
         try:
-    
-            if aggregate_type :
-                
+
+            if aggregate_type:
+
                 aggregate_type = aggregate_type.lower()
 
                 # Check to make sure we have everything:
@@ -749,17 +750,17 @@ class Manager(object):
                     raise weewx.ViolatedPrecondition("Aggregation interval missing")
 
                 if aggregate_type == 'last':
-                    sql_str = "SELECT %s, usUnits, usUnits FROM %s WHERE dateTime = "\
-                        "(SELECT MAX(dateTime) FROM %s WHERE "\
-                        "dateTime > ? AND dateTime <= ?)" % (sql_type, self.table_name, 
-                                                             self.table_name)
+                    sql_str = "SELECT %s, usUnits, usUnits FROM %s WHERE dateTime = " \
+                              "(SELECT MAX(dateTime) FROM %s WHERE " \
+                              "dateTime > ? AND dateTime <= ?)" % (sql_type, self.table_name,
+                                                                   self.table_name)
                 elif aggregate_type == 'cumulative':
-                    sql_str = "SELECT sum(%s), MIN(usUnits), MAX(usUnits) FROM %s "\
-                        "WHERE dateTime > ? AND dateTime <= ?" % (sql_type, self.table_name)
+                    sql_str = "SELECT sum(%s), MIN(usUnits), MAX(usUnits) FROM %s " \
+                              "WHERE dateTime > ? AND dateTime <= ?" % (sql_type, self.table_name)
                     accumulated = 0
                 else:
-                    sql_str = "SELECT %s(%s), MIN(usUnits), MAX(usUnits) FROM %s "\
-                        "WHERE dateTime > ? AND dateTime <= ?" % (aggregate_type, sql_type, self.table_name)
+                    sql_str = "SELECT %s(%s), MIN(usUnits), MAX(usUnits) FROM %s " \
+                              "WHERE dateTime > ? AND dateTime <= ?" % (aggregate_type, sql_type, self.table_name)
 
                 for stamp in weeutil.weeutil.intervalgen(startstamp, stopstamp, aggregate_interval):
                     _cursor.execute(sql_str, stamp)
@@ -769,7 +770,7 @@ class Manager(object):
                     if _rec and _rec[0] is not None:
                         if std_unit_system:
                             if not (std_unit_system == _rec[1] == _rec[2]):
-                                raise weewx.UnsupportedFeature("Unit type cannot change "\
+                                raise weewx.UnsupportedFeature("Unit type cannot change " \
                                                                "within a time interval (%s vs %s vs %s)." %
                                                                (std_unit_system, _rec[1], _rec[2]))
                         else:
@@ -781,22 +782,22 @@ class Manager(object):
                             data_vec.append(accumulated)
                         else:
                             data_vec.append(_rec[0])
-                            
-                    elif aggregate_type.lower() == 'cumulative': # unless it is accumulated
+
+                    elif aggregate_type.lower() == 'cumulative':  # unless it is accumulated
                         start_vec.append(stamp.start)
                         stop_vec.append(stamp.stop)
                         data_vec.append(accumulated)
 
             else:
                 # No aggregation
-                sql_str = "SELECT dateTime, %s, usUnits, `interval` FROM %s "\
-                            "WHERE dateTime >= ? AND dateTime <= ?" % (sql_type, self.table_name)
+                sql_str = "SELECT dateTime, %s, usUnits, `interval` FROM %s " \
+                          "WHERE dateTime >= ? AND dateTime <= ?" % (sql_type, self.table_name)
                 for _rec in _cursor.execute(sql_str, (startstamp, stopstamp)):
                     start_vec.append(_rec[0] - _rec[3])
                     stop_vec.append(_rec[0])
                     if std_unit_system:
                         if std_unit_system != _rec[2]:
-                            raise weewx.UnsupportedFeature("Unit type cannot change "\
+                            raise weewx.UnsupportedFeature("Unit type cannot change " \
                                                            "within a time interval.")
                     else:
                         std_unit_system = _rec[2]
@@ -807,29 +808,29 @@ class Manager(object):
         (time_type, time_group) = weewx.units.getStandardUnitType(std_unit_system, 'dateTime')
         (data_type, data_group) = weewx.units.getStandardUnitType(std_unit_system, sql_type, aggregate_type)
         return (ValueTuple(start_vec, time_type, time_group),
-                ValueTuple(stop_vec, time_type, time_group), 
+                ValueTuple(stop_vec, time_type, time_group),
                 ValueTuple(data_vec, data_type, data_group))
 
 
 def reconfig(old_db_dict, new_db_dict, new_unit_system=None, new_schema=None):
     """Copy over an old archive to a new one, using a provided schema."""
-    
+
     with Manager.open(old_db_dict) as old_archive:
         if new_schema is None:
             import schemas.wview
             new_schema = schemas.wview.schema
         with Manager.open_with_create(new_db_dict, schema=new_schema) as new_archive:
-
             # Wrap the input generator in a unit converter.
             record_generator = weewx.units.GenWithConvert(old_archive.genBatchRecords(), new_unit_system)
-        
+
             # This is very fast because it is done in a single transaction
             # context:
             new_archive.addRecord(record_generator)
 
-#===============================================================================
+
+# ===============================================================================
 #                    Class DBBinder
-#===============================================================================
+# ===============================================================================
 
 class DBBinder(object):
     """Given a binding name, it returns the matching database as a managed object. Caches
@@ -840,10 +841,10 @@ class DBBinder(object):
 
         config_dict: The configuration dictionary. """
 
-        self.config_dict = config_dict           
+        self.config_dict = config_dict
         self.default_binding_dict = {}
         self.manager_cache = {}
-    
+
     def close(self):
         for data_binding in list(self.manager_cache.keys()):
             try:
@@ -851,17 +852,17 @@ class DBBinder(object):
                 del self.manager_cache[data_binding]
             except Exception:
                 pass
-            
+
     def __enter__(self):
         return self
-    
+
     def __exit__(self, etyp, einst, etb):  # @UnusedVariable
         self.close()
-    
+
     def set_binding_defaults(self, binding_name, default_binding_dict):
         """Set the defaults for the binding binding_name."""
         self.default_binding_dict[binding_name] = default_binding_dict
-        
+
     def get_manager(self, data_binding='wx_binding', initialize=False):
         """Given a binding name, returns the managed object"""
         global default_binding_dict
@@ -871,18 +872,18 @@ class DBBinder(object):
             # defaults
             defaults = self.default_binding_dict.get(data_binding, default_binding_dict)
             manager_dict = get_manager_dict_from_config(self.config_dict,
-                                                        data_binding, 
+                                                        data_binding,
                                                         default_binding_dict=defaults)
             self.manager_cache[data_binding] = open_manager(manager_dict, initialize)
 
         return self.manager_cache[data_binding]
-    
+
     # For backwards compatibility with early V3.1 alphas:
     get_database = get_manager
-    
+
     def bind_default(self, default_binding='wx_binding'):
         """Returns a function that holds a default database binding."""
-        
+
         def db_lookup(data_binding=None):
             if data_binding is None:
                 data_binding = default_binding
@@ -890,16 +891,18 @@ class DBBinder(object):
 
         return db_lookup
 
-#===============================================================================
+
+# ===============================================================================
 #                                 Utilities
-#===============================================================================
+# ===============================================================================
 
 # If the [DataBindings] section is missing or incomplete, this is the set
 # of defaults that will be used.
-default_binding_dict = {'database'   : 'archive_sqlite',
-                        'table_name' : 'archive',
-                        'manager'    : 'weewx.wxmanager.WXDaySummaryManager',
-                        'schema'     : 'schemas.wview.schema'}
+default_binding_dict = {'database': 'archive_sqlite',
+                        'table_name': 'archive',
+                        'manager': 'weewx.wxmanager.WXDaySummaryManager',
+                        'schema': 'schemas.wview.schema'}
+
 
 def get_database_dict_from_config(config_dict, database):
     """Return a database dictionary holding the information necessary
@@ -941,21 +944,22 @@ def get_database_dict_from_config(config_dict, database):
         database_dict = dict(config_dict['Databases'][database])
     except KeyError as e:
         raise weewx.UnknownDatabase("Unknown database '%s'" % e)
-    
+
     # See if a 'database_type' is specified. This is something
     # like 'SQLite' or 'MySQL'. If it is, use it to augment any
     # missing information in the database_dict:
     if 'database_type' in database_dict:
         database_type = database_dict.pop('database_type')
-    
+
         # Augment any missing information in the database dictionary with
         # the top-level stanza
         if database_type in config_dict['DatabaseTypes']:
             weeutil.weeutil.conditional_merge(database_dict, config_dict['DatabaseTypes'][database_type])
         else:
             raise weewx.UnknownDatabaseType('database_type')
-    
+
     return database_dict
+
 
 #
 # A "manager dict" is everything needed to open up a manager. It is basically
@@ -972,7 +976,6 @@ def get_database_dict_from_config(config_dict, database):
 #
 def get_manager_dict_from_config(config_dict, data_binding,
                                  default_binding_dict=default_binding_dict):
-    
     # Start with a copy of the bindings in the config dictionary (we
     # will be adding to it):
     try:
@@ -982,7 +985,7 @@ def get_manager_dict_from_config(config_dict, data_binding,
 
     # If anything is missing, substitute from the default dictionary:
     weeutil.weeutil.conditional_merge(manager_dict, default_binding_dict)
-    
+
     # Now get the database dictionary if it's missing:
     if 'database_dict' not in manager_dict:
         try:
@@ -991,7 +994,7 @@ def get_manager_dict_from_config(config_dict, data_binding,
                                                                           database)
         except KeyError as e:
             raise weewx.UnknownDatabase("Unknown database '%s'" % e)
-        
+
     # The schema may be specified as a string, in which case we resolve the
     # python object to which it refers. Or it may be specified as a dict with
     # field_name=sql_type pairs.
@@ -1005,20 +1008,21 @@ def get_manager_dict_from_config(config_dict, data_binding,
     else:
         # Schema is a string, with the name of the schema object
         manager_dict['schema'] = weeutil.weeutil._get_object(schema_name)
-    
+
     return manager_dict
 
-# The following is for backwards compatibility:        
+
+# The following is for backwards compatibility:
 def get_manager_dict(bindings_dict, databases_dict, data_binding,
                      default_binding_dict=default_binding_dict):
     if bindings_dict.parent != databases_dict.parent:
         raise weewx.UnsupportedFeature("Database and binding dictionaries"
                                        " require common parent")
-    return get_manager_dict_from_config(bindings_dict.parent, data_binding, 
+    return get_manager_dict_from_config(bindings_dict.parent, data_binding,
                                         default_binding_dict)
-    
+
+
 def open_manager(manager_dict, initialize=False):
-    
     manager_cls = weeutil.weeutil._get_object(manager_dict['manager'])
     if initialize:
         return manager_cls.open_with_create(manager_dict['database_dict'],
@@ -1027,31 +1031,34 @@ def open_manager(manager_dict, initialize=False):
     else:
         return manager_cls.open(manager_dict['database_dict'],
                                 manager_dict['table_name'])
-    
+
+
 def open_manager_with_config(config_dict, data_binding,
                              initialize=False, default_binding_dict=default_binding_dict):
     """Given a binding name, returns an open manager object."""
-    manager_dict = get_manager_dict_from_config(config_dict, 
+    manager_dict = get_manager_dict_from_config(config_dict,
                                                 data_binding=data_binding,
                                                 default_binding_dict=default_binding_dict)
     return open_manager(manager_dict, initialize)
 
+
 def drop_database(manager_dict):
     """Drop (delete) a database, given a manager dict"""
-    
+
     weedb.drop(manager_dict['database_dict'])
+
 
 def drop_database_with_config(config_dict, data_binding,
                               default_binding_dict=default_binding_dict):
     """Drop (delete) the database associated with a binding name"""
 
     manager_dict = get_manager_dict_from_config(config_dict,
-                                    data_binding=data_binding, 
-                                    default_binding_dict=default_binding_dict)
-    drop_database(manager_dict)    
+                                                data_binding=data_binding,
+                                                default_binding_dict=default_binding_dict)
+    drop_database(manager_dict)
 
 
-#===============================================================================
+# ===============================================================================
 #                        Class DaySummaryManager
 #
 #     Adds daily summaries to the database.
@@ -1073,14 +1080,15 @@ def drop_database_with_config(config_dict, data_binding,
 #       5-Oct-2008 23:55:00
 #       6-Oct-2008 00:00:00
 #
-#===============================================================================
+# ===============================================================================
 
 def show_progress(nrec, last_time):
     """Utility function to show our progress while backfilling"""
     print("Records processed: %d; Last date: %s\r" % \
-        (nrec, weeutil.weeutil.timestamp_to_string(last_time)), end=' ', file=sys.stdout)
+          (nrec, weeutil.weeutil.timestamp_to_string(last_time)), end=' ', file=sys.stdout)
     sys.stdout.flush()
-        
+
+
 class DaySummaryManager(Manager):
     """Manage a daily statistical summary. 
     
@@ -1099,52 +1107,53 @@ class DaySummaryManager(Manager):
         
     In addition to all the tables for each type, there is one additional table called
     'archive_day__metadata', which currently holds the time of the last update. """
-    
+
     version = "2.0"
 
     # The SQL statements used in the daily summary parts of the database
-    
-    sql_create_str = "CREATE TABLE %s_day_%s (dateTime INTEGER NOT NULL UNIQUE PRIMARY KEY, "\
-      "min REAL, mintime INTEGER, max REAL, maxtime INTEGER, sum REAL, count INTEGER, "\
-      "wsum REAL, sumtime INTEGER);"
-                                 
-    meta_create_str   = """CREATE TABLE %s_day__metadata (name CHAR(20) NOT NULL UNIQUE PRIMARY KEY, value TEXT);"""
-    meta_replace_str  = """REPLACE INTO %s_day__metadata VALUES(?, ?)"""
-    meta_select_str   = """SELECT value FROM %s_day__metadata WHERE name=?"""
-    
+
+    sql_create_str = "CREATE TABLE %s_day_%s (dateTime INTEGER NOT NULL UNIQUE PRIMARY KEY, " \
+                     "min REAL, mintime INTEGER, max REAL, maxtime INTEGER, sum REAL, count INTEGER, " \
+                     "wsum REAL, sumtime INTEGER);"
+
+    meta_create_str = """CREATE TABLE %s_day__metadata (name CHAR(20) NOT NULL UNIQUE PRIMARY KEY, value TEXT);"""
+    meta_replace_str = """REPLACE INTO %s_day__metadata VALUES(?, ?)"""
+    meta_select_str = """SELECT value FROM %s_day__metadata WHERE name=?"""
+
     # Set of SQL statements to be used for calculating aggregate statistics. Key is the aggregation type.
-    sqlDict = {'min'        : "SELECT MIN(min) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-               'minmax'     : "SELECT MIN(max) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-               'max'        : "SELECT MAX(max) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-               'maxmin'     : "SELECT MAX(min) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-               'meanmin'    : "SELECT AVG(min) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-               'meanmax'    : "SELECT AVG(max) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-               'maxsum'     : "SELECT MAX(sum) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-               'mintime'    : "SELECT mintime FROM %(table_name)s_day_%(obs_key)s  WHERE dateTime >= %(start)s AND dateTime < %(stop)s AND " \
-                              "min = (SELECT MIN(min) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime <%(stop)s)",
-               'maxmintime' : "SELECT mintime FROM %(table_name)s_day_%(obs_key)s  WHERE dateTime >= %(start)s AND dateTime < %(stop)s AND " \
-                              "min = (SELECT MAX(min) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime <%(stop)s)",
-               'maxtime'    : "SELECT maxtime FROM %(table_name)s_day_%(obs_key)s  WHERE dateTime >= %(start)s AND dateTime < %(stop)s AND " \
-                              "max = (SELECT MAX(max) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime <%(stop)s)",
-               'minmaxtime' : "SELECT maxtime FROM %(table_name)s_day_%(obs_key)s  WHERE dateTime >= %(start)s AND dateTime < %(stop)s AND " \
-                              "max = (SELECT MIN(max) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime <%(stop)s)",
-               'maxsumtime' : "SELECT maxtime FROM %(table_name)s_day_%(obs_key)s  WHERE dateTime >= %(start)s AND dateTime < %(stop)s AND " \
-                              "sum = (SELECT MAX(sum) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime <%(stop)s)",
-               'gustdir'    : "SELECT max_dir FROM %(table_name)s_day_%(obs_key)s  WHERE dateTime >= %(start)s AND dateTime < %(stop)s AND " \
-                              "max = (SELECT MAX(max) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s)",
-               'sum'        : "SELECT SUM(sum) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-               'cumulative' : "SELECT SUM(sum) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-               'count'      : "SELECT SUM(count) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-               'avg'        : "SELECT SUM(wsum),SUM(sumtime) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-               'rms'        : "SELECT SUM(wsquaresum),SUM(sumtime) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-               'vecavg'     : "SELECT SUM(xsum),SUM(ysum),SUM(dirsumtime)  FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-               'vecdir'     : "SELECT SUM(xsum),SUM(ysum) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-               'max_ge'     : "SELECT SUM(max >= %(val)s) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-               'max_le'     : "SELECT SUM(max <= %(val)s) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-               'min_ge'     : "SELECT SUM(min >= %(val)s) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-               'min_le'     : "SELECT SUM(min <= %(val)s) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-               'sum_ge'     : "SELECT SUM(sum >= %(val)s) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s"}
-    
+    sqlDict = {
+        'min': "SELECT MIN(min) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+        'minmax': "SELECT MIN(max) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+        'max': "SELECT MAX(max) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+        'maxmin': "SELECT MAX(min) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+        'meanmin': "SELECT AVG(min) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+        'meanmax': "SELECT AVG(max) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+        'maxsum': "SELECT MAX(sum) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+        'mintime': "SELECT mintime FROM %(table_name)s_day_%(obs_key)s  WHERE dateTime >= %(start)s AND dateTime < %(stop)s AND " \
+                   "min = (SELECT MIN(min) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime <%(stop)s)",
+        'maxmintime': "SELECT mintime FROM %(table_name)s_day_%(obs_key)s  WHERE dateTime >= %(start)s AND dateTime < %(stop)s AND " \
+                      "min = (SELECT MAX(min) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime <%(stop)s)",
+        'maxtime': "SELECT maxtime FROM %(table_name)s_day_%(obs_key)s  WHERE dateTime >= %(start)s AND dateTime < %(stop)s AND " \
+                   "max = (SELECT MAX(max) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime <%(stop)s)",
+        'minmaxtime': "SELECT maxtime FROM %(table_name)s_day_%(obs_key)s  WHERE dateTime >= %(start)s AND dateTime < %(stop)s AND " \
+                      "max = (SELECT MIN(max) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime <%(stop)s)",
+        'maxsumtime': "SELECT maxtime FROM %(table_name)s_day_%(obs_key)s  WHERE dateTime >= %(start)s AND dateTime < %(stop)s AND " \
+                      "sum = (SELECT MAX(sum) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime <%(stop)s)",
+        'gustdir': "SELECT max_dir FROM %(table_name)s_day_%(obs_key)s  WHERE dateTime >= %(start)s AND dateTime < %(stop)s AND " \
+                   "max = (SELECT MAX(max) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s)",
+        'sum': "SELECT SUM(sum) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+        'cumulative': "SELECT SUM(sum) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+        'count': "SELECT SUM(count) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+        'avg': "SELECT SUM(wsum),SUM(sumtime) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+        'rms': "SELECT SUM(wsquaresum),SUM(sumtime) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+        'vecavg': "SELECT SUM(xsum),SUM(ysum),SUM(dirsumtime)  FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+        'vecdir': "SELECT SUM(xsum),SUM(ysum) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+        'max_ge': "SELECT SUM(max >= %(val)s) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+        'max_le': "SELECT SUM(max <= %(val)s) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+        'min_ge': "SELECT SUM(min >= %(val)s) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+        'min_le': "SELECT SUM(min <= %(val)s) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+        'sum_ge': "SELECT SUM(sum >= %(val)s) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s"}
+
     def __init__(self, connection, table_name='archive', schema=None):
         """Initialize an instance of DaySummaryManager
         
@@ -1160,20 +1169,20 @@ class DaySummaryManager(Manager):
         """
         # Initialize my superclass:
         super(DaySummaryManager, self).__init__(connection, table_name, schema)
-        
+
         # If the database has not been initialized with the daily summaries, then create the
         # necessary tables, but only if a schema has been given.
         if '%s_day__metadata' % self.table_name not in self.connection.tables():
             # Database has not been initialized with the summaries. Is there a schema?
             if schema is None:
                 # Uninitialized, but no schema was supplied. Raise an exception
-                raise weedb.OperationalError("No day summary schema for table '%s' in database '%s'" % (self.table_name, connection.database_name))
+                raise weedb.OperationalError("No day summary schema for table '%s' in database '%s'" % (
+                    self.table_name, connection.database_name))
             # There is a schema. Create all the daily summary tables as one transaction:
             with weedb.Transaction(self.connection) as _cursor:
                 self._initialize_day_tables(schema, _cursor)
-            syslog.syslog(syslog.LOG_NOTICE,
-                          "manager: Created daily summary tables")
-        
+            loginf("Created daily summary tables")
+
         # Get a list of all the observation types which have daily summaries
         all_tables = self.connection.tables()
         prefix = "%s_day_" % self.table_name
@@ -1181,9 +1190,8 @@ class DaySummaryManager(Manager):
         meta_name = '%s_day__metadata' % self.table_name
         self.daykeys = [x[Nprefix:] for x in all_tables if (x.startswith(prefix) and x != meta_name)]
         self.version = self._read_metadata('Version')
-        syslog.syslog(syslog.LOG_DEBUG,
-                      'manager: Daily summary version is %s' % self.version)
-    
+        logdbg('Daily summary version is %s' % self.version)
+
     def close(self):
         del self.version
         # There will be no daykeys if the daily summaries have been dropped.
@@ -1206,13 +1214,13 @@ class DaySummaryManager(Manager):
     def _addSingleRecord(self, record, cursor, log_level):
         """Specialized version that updates the daily summaries, as well as the 
         main archive table."""
-        
+
         # First let my superclass handle adding the record to the main archive table:
         super(DaySummaryManager, self)._addSingleRecord(record, cursor, log_level=log_level)
 
         # Get the start of day for the record:        
         _sod_ts = weeutil.weeutil.startOfArchiveDay(record['dateTime'])
-        
+
         # Get the weight
         _weight = self._calc_weight(record)
 
@@ -1220,13 +1228,13 @@ class DaySummaryManager(Manager):
         _day_summary = self._get_day_summary(_sod_ts, cursor)
         _day_summary.addRecord(record, weight=_weight)
         self._set_day_summary(_day_summary, record['dateTime'], cursor)
-        syslog.syslog(log_level, "manager: Added record %s to daily summary in '%s'" % 
-                      (weeutil.weeutil.timestamp_to_string(record['dateTime']), 
+        syslog.syslog(log_level, "Added record %s to daily summary in '%s'" %
+                      (weeutil.weeutil.timestamp_to_string(record['dateTime']),
                        self.database_name))
-        
+
     def _updateHiLo(self, accumulator, cursor):
         """Use the contents of an accumulator to update the daily hi/lows."""
-        
+
         # Get the start-of-day for the timespan in the accumulator
         _sod_ts = weeutil.weeutil.startOfArchiveDay(accumulator.timespan.stop)
 
@@ -1236,7 +1244,7 @@ class DaySummaryManager(Manager):
         _stats_dict.updateHiLo(accumulator)
         # Then save the results:
         self._set_day_summary(_stats_dict, accumulator.timespan.stop, cursor)
-        
+
     def getAggregate(self, timespan, obs_type, aggregate_type, **option_dict):
         """Returns an aggregation of a statistical type for a given time period.
         It will use the daily summaries if possible, otherwise the archive table.
@@ -1255,7 +1263,7 @@ class DaySummaryManager(Manager):
         or None if not enough data was available to calculate it, or if the aggregation
         type is unknown. The second element is the unit type (eg, 'degree_F').
         The third element is the unit group (eg, "group_temperature") """
-        
+
         if aggregate_type.lower() == 'cumulative':
             aggregate_type = 'sum'
 
@@ -1264,20 +1272,19 @@ class DaySummaryManager(Manager):
         # records in the database.
         if aggregate_type in ['last', 'lasttime'] or not (isStartOfDay(timespan.start) or \
                                                           timespan.start == self.first_timestamp) \
-                                                  or not (isStartOfDay(timespan.stop)  or \
-                                                          timespan.stop  == self.last_timestamp):
-            
+                or not (isStartOfDay(timespan.stop) or \
+                        timespan.stop == self.last_timestamp):
             # Cannot use the day summaries. We'll have to calculate the aggregate
             # using the regular archive table:
-            return Manager.getAggregate(self, timespan, obs_type, aggregate_type, 
-                                          **option_dict)
+            return Manager.getAggregate(self, timespan, obs_type, aggregate_type,
+                                        **option_dict)
 
         # We can use the daily summaries. Proceed.
-                
+
         # This entry point won't work for heating or cooling degree days:
         if weewx.debug:
-            assert(obs_type not in ['heatdeg', 'cooldeg'])
-            assert(timespan is not None)
+            assert (obs_type not in ['heatdeg', 'cooldeg'])
+            assert (timespan is not None)
 
         # Check to see if this is a valid daily summary type:
         if obs_type not in self.daykeys:
@@ -1300,46 +1307,46 @@ class DaySummaryManager(Manager):
         aggregate_type = aggregate_type.lower()
 
         # Form the interpolation dictionary        
-        interDict = {'start'         : weeutil.weeutil.startOfDay(timespan.start),
-                     'stop'          : timespan.stop,
-                     'obs_key'       : obs_type,
+        interDict = {'start': weeutil.weeutil.startOfDay(timespan.start),
+                     'stop': timespan.stop,
+                     'obs_key': obs_type,
                      'aggregate_type': aggregate_type,
-                     'val'           : target_val,
-                     'table_name'    : self.table_name}
-            
+                     'val': target_val,
+                     'table_name': self.table_name}
+
         # Run the query against the database:
         _row = self.getSql(DaySummaryManager.sqlDict[aggregate_type] % interDict)
 
-        #=======================================================================
+        # =======================================================================
         # Each aggregation type requires a slightly different calculation.
-        #=======================================================================
-        
-        if not _row or None in _row: 
+        # =======================================================================
+
+        if not _row or None in _row:
             # If no row was returned, or if it contains any nulls (meaning that not
             # all required data was available to calculate the requested aggregate),
             # then set the results to None.
             _result = None
-        
+
         # Do the required calculation for this aggregat type
-        elif aggregate_type in ['min', 'maxmin', 'max', 'minmax', 'meanmin', 'meanmax', 
-                               'maxsum', 'sum', 'gustdir']:
+        elif aggregate_type in ['min', 'maxmin', 'max', 'minmax', 'meanmin', 'meanmax',
+                                'maxsum', 'sum', 'gustdir']:
             # These aggregates are passed through 'as is'.
             _result = _row[0]
-        
+
         elif aggregate_type in ['mintime', 'maxmintime', 'maxtime', 'minmaxtime', 'maxsumtime',
-                               'count', 'max_ge', 'max_le', 'min_ge', 'min_le', 'sum_ge']:
+                                'count', 'max_ge', 'max_le', 'min_ge', 'min_le', 'sum_ge']:
             # These aggregates are always integers:
             _result = int(_row[0])
 
         elif aggregate_type == 'avg':
-            _result = _row[0]/_row[1] if _row[1] else None
+            _result = _row[0] / _row[1] if _row[1] else None
 
         elif aggregate_type == 'rms':
-            _result = math.sqrt(_row[0]/_row[1]) if _row[1] else None
-        
+            _result = math.sqrt(_row[0] / _row[1]) if _row[1] else None
+
         elif aggregate_type == 'vecavg':
-            _result = math.sqrt((_row[0]**2 + _row[1]**2) / _row[2]**2) if _row[2] else None
-        
+            _result = math.sqrt((_row[0] ** 2 + _row[1] ** 2) / _row[2] ** 2) if _row[2] else None
+
         elif aggregate_type == 'vecdir':
             if _row == (0.0, 0.0):
                 _result = None
@@ -1353,7 +1360,7 @@ class DaySummaryManager(Manager):
         (t, g) = weewx.units.getStandardUnitType(self.std_unit_system, obs_type, aggregate_type)
         # Form the value tuple and return it:
         return weewx.units.ValueTuple(_result, t, g)
-        
+
     def exists(self, obs_type):
         """Checks whether the observation type exists in the database."""
 
@@ -1367,7 +1374,7 @@ class DaySummaryManager(Manager):
 
     def backfill_day_summary(self, start_d=None, stop_d=None,
                              progress_fn=show_progress, trans_days=5):
-        
+
         """Fill the daily summaries from an archive database.
           
         Normally, the daily summaries get filled by LOOP packets (to get maximum time
@@ -1414,9 +1421,9 @@ class DaySummaryManager(Manager):
         #   Y:          A stop  time that falls on a day boundary
         #
 
-        syslog.syslog(syslog.LOG_INFO, "manager: Starting backfill of daily summaries")
+        loginf("Starting backfill of daily summaries")
 
-        firstRecord= self.firstGoodStamp()
+        firstRecord = self.firstGoodStamp()
         if firstRecord is None:
             # Nothing in the archive database, so there's nothing to do.
             return (0, 0)
@@ -1425,7 +1432,7 @@ class DaySummaryManager(Manager):
 
         lastUpdate = to_int(self._read_metadata('lastUpdate'))
         lastRecord = self.last_timestamp
-        
+
         if lastUpdate is None or lastUpdate < lastRecord:
             # We are either building the daily summary from scratch, or restarting from
             # an aborted build. Must finish the rebuild first.
@@ -1435,7 +1442,7 @@ class DaySummaryManager(Manager):
             start_ts = lastUpdate or firstRecord
             start_d = datetime.date.fromtimestamp(start_ts)
             stop_d = datetime.date.fromtimestamp(lastRecord)
-                
+
         elif lastUpdate == lastRecord:
             # This is the normal state of affairs. If a value for start_d or stop_d
             # has been passed in, a rebuild has been requested.
@@ -1448,22 +1455,22 @@ class DaySummaryManager(Manager):
                 stop_d = datetime.date.fromtimestamp(lastRecord)
         else:
             raise weewx.ViolatedPrecondition("lastUpdate(%s) > lastRecord(%s)" %
-                                             (timestamp_to_string(lastUpdate), 
+                                             (timestamp_to_string(lastUpdate),
                                               timestamp_to_string(lastRecord)))
-    
+
         nrecs = 0
         ndays = 0
-         
+
         while start_d <= stop_d:
             # Calculate the last date included in this transaction
-            stop_transaction = min(stop_d, start_d + datetime.timedelta(days=(trans_days-1)))
+            stop_transaction = min(stop_d, start_d + datetime.timedelta(days=(trans_days - 1)))
             day_accum = None
 
             with weedb.Transaction(self.connection) as cursor:
                 # Go through all the archive records in the time span, adding them to the
                 # daily summaries
                 start_batch = time.mktime(start_d.timetuple())
-                stop_batch  = time.mktime((stop_transaction + datetime.timedelta(days=1)).timetuple())
+                stop_batch = time.mktime((stop_transaction + datetime.timedelta(days=1)).timetuple())
                 for rec in self.genBatchRecords(start_batch, stop_batch):
                     # If this is the very first record, fetch a new accumulator
                     if not day_accum:
@@ -1486,12 +1493,12 @@ class DaySummaryManager(Manager):
                         day_accum = weewx.accum.Accum(timespan)
                         # try again
                         day_accum.addRecord(rec, weight=weight)
-                      
+
                     lastUpdate = max(lastUpdate, rec['dateTime']) if lastUpdate else rec['dateTime']
                     nrecs += 1
                     if progress_fn and nrecs % 1000 == 0:
                         progress_fn(nrecs, rec['dateTime'])
-         
+
                 # We're done with this transaction. Record the daily summary for the last day unless it is empty
                 if day_accum and not day_accum.isEmpty:
                     self._set_day_summary(day_accum, None, cursor)
@@ -1499,45 +1506,44 @@ class DaySummaryManager(Manager):
                 # Patch lastUpdate:
                 if lastUpdate:
                     self._write_metadata('lastUpdate', str(int(lastUpdate)), cursor)
-                
+
             # Advance
             start_d += datetime.timedelta(days=trans_days)
 
-        tdiff = time.time() - t1             
+        tdiff = time.time() - t1
         if nrecs:
-            syslog.syslog(syslog.LOG_INFO, 
-                          "manager: Processed %d records to backfill %d day summaries in %.2f seconds" % (nrecs, ndays, tdiff))
+            loginf("Processed %d records to backfill %d day summaries in %.2f seconds" % (nrecs, ndays, tdiff))
         else:
-            syslog.syslog(syslog.LOG_INFO,
-                          "manager: Daily summaries up to date")
-        
+            loginf("Daily summaries up to date")
+
         return (nrecs, ndays)
 
-    #--------------------------- UTILITY FUNCTIONS -----------------------------------
+    # --------------------------- UTILITY FUNCTIONS -----------------------------------
 
     def _get_day_summary(self, sod_ts, cursor=None):
         """Return an instance of an appropriate accumulator, initialized to a given day's statistics.
 
         sod_ts: The timestamp of the start-of-day of the desired day."""
-                
+
         # Get the TimeSpan for the day starting with sod_ts:
-        _timespan = weeutil.weeutil.archiveDaySpan(sod_ts,0)
+        _timespan = weeutil.weeutil.archiveDaySpan(sod_ts, 0)
 
         # Get an empty day accumulator:
         _day_accum = weewx.accum.Accum(_timespan)
-        
+
         _cursor = cursor or self.connection.cursor()
 
         try:
             # For each observation type, execute the SQL query and hand the results on
             # to the accumulator.
             for _day_key in self.daykeys:
-                _cursor.execute("SELECT * FROM %s_day_%s WHERE dateTime = ?" % (self.table_name, _day_key), (_day_accum.timespan.start,))
+                _cursor.execute("SELECT * FROM %s_day_%s WHERE dateTime = ?" % (self.table_name, _day_key),
+                                (_day_accum.timespan.start,))
                 _row = _cursor.fetchone()
                 # If the date does not exist in the database yet then _row will be None.
                 _stats_tuple = _row[1:] if _row is not None else None
                 _day_accum.set_stats(_day_key, _stats_tuple)
-            
+
             return _day_accum
         finally:
             if not cursor:
@@ -1565,26 +1571,25 @@ class DaySummaryManager(Manager):
             # ... get the stats tuple to be written to the database...
             _write_tuple = (_sod,) + day_accum[_summary_type].getStatsTuple()
             # ... and an appropriate SQL command with the correct number of question marks ...
-            _qmarks = ','.join(len(_write_tuple)*'?')
+            _qmarks = ','.join(len(_write_tuple) * '?')
             _sql_replace_str = "REPLACE INTO %s_day_%s VALUES(%s)" % (self.table_name, _summary_type, _qmarks)
             # ... and write to the database. In case the type doesn't appear in the database,
             # be prepared to catch an exception:
             try:
                 cursor.execute(_sql_replace_str, _write_tuple)
             except weedb.OperationalError as e:
-                syslog.syslog(syslog.LOG_ERR, "manager: "
-                              "Replace failed for database %s: %s"
-                              % (self.database_name, e))
+                logerr("Replace failed for database %s: %s"
+                       % (self.database_name, e))
 
         # If requested, update the time of the last daily summary update:
         if lastUpdate is not None:
-            self._write_metadata('lastUpdate',  str(int(lastUpdate)), cursor)
+            self._write_metadata('lastUpdate', str(int(lastUpdate)), cursor)
 
     def _calc_weight(self, record):
         if 'interval' not in record:
             raise ValueError("Missing value for record field 'interval'")
         elif record['interval'] <= 0:
-            raise ValueError("Non-positive value for record field 'interval': %s" % (record['interval'], ))
+            raise ValueError("Non-positive value for record field 'interval': %s" % (record['interval'],))
         weight = 60.0 * record['interval'] if self.version >= '2.0' else 1.0
         return weight
 
@@ -1615,9 +1620,8 @@ class DaySummaryManager(Manager):
 
     def drop_daily(self):
         """Drop the daily summaries."""
-        
-        syslog.syslog(syslog.LOG_INFO, 
-                      "manager: Dropping daily summary tables from '%s' ..." % self.connection.database_name)
+
+        loginf("Dropping daily summary tables from '%s' ..." % self.connection.database_name)
         try:
             _all_tables = self.connection.tables()
             with weedb.Transaction(self.connection) as _cursor:
@@ -1627,27 +1631,27 @@ class DaySummaryManager(Manager):
 
             del self.daykeys
         except weedb.OperationalError as e:
-            syslog.syslog(syslog.LOG_ERR, "manager: "
-                          "Drop daily summary tables failed for database '%s': %s"
-                          % (self.connection.database_name, e))
+            logerr("Drop daily summary tables failed for database '%s': %s"
+                   % (self.connection.database_name, e))
             raise
         else:
-            syslog.syslog(syslog.LOG_INFO, "manager: "
-                          "Dropped daily summary tables from database '%s'"
-                          % (self.connection.database_name,))
+            loginf("Dropped daily summary tables from database '%s'"
+                   % (self.connection.database_name,))
+
 
 if __name__ == '__main__':
     import configobj
+
     config_dict = configobj.ConfigObj('/home/weewx/weewx.conf', encoding='utf-8')
     mgr = open_manager_with_config(config_dict, 'wx_binding', initialize=True)
-    start_d = datetime.date(2016,10,1)
-    stop_d = datetime.date(2016,10,8)
+    start_d = datetime.date(2016, 10, 1)
+    stop_d = datetime.date(2016, 10, 8)
     t1 = time.time()
-#     nrecs, ndays = mgr.backfill_day_summary(start_d, stop_d)
+    #     nrecs, ndays = mgr.backfill_day_summary(start_d, stop_d)
     nrecs, ndays = mgr.backfill_day_summary(None, None)
     t2 = time.time()
-    print(nrecs, ndays, t2-t1)
-    
+    print(nrecs, ndays, t2 - t1)
+
     import doctest
 
     if not doctest.testmod().failed:
