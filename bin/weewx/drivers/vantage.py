@@ -1081,11 +1081,12 @@ class Vantage(weewx.drivers.AbstractDevice):
     def setCalibrationHumid(self, variable, offset):
         """Set an on-board humidity calibration."""
         # Offset is in percentage points.
-        if -100 <= offset <= 100:
+        if not -100 <= offset <= 100:
             raise weewx.ViolatedPrecondition("Offset %d out of range [-100, 100]." % offset)
         byte = struct.pack("b", offset)
         variable_dict = { 'inHumid': 0x44, 'outHumid': 0x45 }
-        for i in range(1, 8): variable_dict['extraHumid%d' % i] = 0x45 + i 
+        for i in range(1, 8):
+            variable_dict['extraHumid%d' % i] = 0x45 + i
         if variable in variable_dict:
             self.port.send_data(b"EEBWR %X 01\n" % variable_dict[variable])
             self.port.send_data_with_crc16(byte, max_tries=1)

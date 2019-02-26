@@ -21,6 +21,9 @@ Fixed problem with handling CWOP connection errors. Commit 0a21a72
 Fixed problem that prevented to CopyGenerator from handling nested
 directories. Fixes issue #379.
 
+Fixed problem that prevented humidity calibration from being set
+on Vantage stations.
+
 
 3.9.1 02/06/2019
 
