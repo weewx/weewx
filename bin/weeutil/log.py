@@ -11,6 +11,7 @@ import os
 import syslog
 import traceback
 
+import six
 from six.moves import StringIO
 
 log_levels = {
@@ -52,14 +53,18 @@ def logcrt(msg, prefix=None):
     syslog.syslog(syslog.LOG_CRIT, "%s: %s" % (prefix, msg))
 
 
-def log_traceback(prefix='', loglevel=None, logname='info'):
+def log_traceback(prefix='', loglevel=None):
     """Log the stack traceback into syslog.
 
-    The parameter "loglevel" is there for backwards compatibility. Generally, one should use
-    "logname" instead.
+    prefix: A string, which will be put in front of each log entry. Default is no string.
+
+    loglevel: Either a syslog level (e.g., syslog.LOG_INFO), or a string. Valid strings
+    are given by the keys of log_levels.
     """
     if loglevel is None:
-        loglevel = log_levels.get(logname, syslog.LOG_INFO)
+        loglevel = syslog.LOG_INFO
+    elif isinstance(six.string_types):
+        loglevel = log_levels.get(loglevel, syslog.LOG_INFO)
     sfd = StringIO()
     traceback.print_exc(file=sfd)
     sfd.seek(0)
