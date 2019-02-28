@@ -92,7 +92,8 @@ class WUSource(weeimport.Source):
         try:
             self.station_id = wu_config_dict['station_id']
         except KeyError:
-            raise weewx.ViolatedPrecondition("Weather Underground station ID not specified in '%s'." % import_config_path)
+            raise weewx.ViolatedPrecondition("Weather Underground station ID not specified in '%s'."
+                                             % import_config_path)
 
         # wind dir bounds
         _wind_direction = option_as_list(wu_config_dict.get('wind_direction', '0,360'))
