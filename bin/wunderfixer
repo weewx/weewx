@@ -352,7 +352,7 @@ class WunderStation(weewx.restx.AmbientThread):
         # we need a bit of logic to clean it up.
         _cleanWUdata = []
         for _row in _wudata :
-            _urow = _row.decode('utf-8')
+            _urow = _row.decode('ascii')
             _line = ''.join(WunderStation._tags.split(_urow))  # Get rid of any HTML tags
             if _line != "\n" :                                 # Get rid of any blank lines
                 _cleanWUdata.append(_line)                     # Save what's left

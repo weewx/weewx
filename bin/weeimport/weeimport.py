@@ -682,9 +682,7 @@ class Source(object):
                                                                                                 _row[self.map[_field]['field_name']],
                                                                                                 timestamp_to_string(_rec['dateTime']))
                                 raise ValueError(_msg)
-                        except:
-                            # some other error, raise it    
-                            raise
+
                         # some fields need some special processing
 
                         # rain - if our imported 'rain' field is cumulative
@@ -698,7 +696,7 @@ class Source(object):
                         # wind - check any wind direction fields are within our
                         # bounds and convert to 0 to 360 range
                         if _field == "windDir" or _field == "windGustDir":
-                            if self.wind_dir[0] <= _temp <= self.wind_dir[1]:
+                            if _temp is not None and (self.wind_dir[0] <= _temp <= self.wind_dir[1]):
                                 # normalise to 0 to 360
                                 _temp %= 360
                             else:

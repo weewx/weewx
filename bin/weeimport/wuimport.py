@@ -95,15 +95,14 @@ class WUSource(weeimport.Source):
             raise weewx.ViolatedPrecondition("Weather Underground station ID not specified in '%s'." % import_config_path)
 
         # wind dir bounds
-        _wind_direction = option_as_list(wu_config_dict.get('wind_direction',
-                                                                '0,360'))
+        _wind_direction = option_as_list(wu_config_dict.get('wind_direction', '0,360'))
         try:
             if float(_wind_direction[0]) <= float(_wind_direction[1]):
                 self.wind_dir = [float(_wind_direction[0]),
                                  float(_wind_direction[1])]
             else:
                 self.wind_dir = [0, 360]
-        except:
+        except (IndexError, TypeError):
             self.wind_dir = [0, 360]
 
         # some properties we know because of the format of the returned WU data
@@ -198,20 +197,22 @@ class WUSource(weeimport.Source):
             _wudata = urllib.request.urlopen(_url)
         except urllib.error.URLError as e:
             self.wlog.printlog(syslog.LOG_ERR,
-                          "Unable to open Weather Underground station %s" % self.station_id)
+                               "Unable to open Weather Underground station %s" % self.station_id)
             self.wlog.printlog(syslog.LOG_ERR, "   **** %s" % e)
             raise
         except socket.timeout as e:
             self.wlog.printlog(syslog.LOG_ERR,
-                          "Socket timeout for Weather Underground station %s" % self.station_id)
+                               "Socket timeout for Weather Underground station %s" % self.station_id)
             raise
 
         # because the data comes back with lots of HTML tags and whitespace we
         # need a bit of logic to clean it up.
         _cleanWUdata = []
         for _row in _wudata:
+            # Convert from byte-string to string
+            _urow = _row.decode('ascii')
             # get rid of any HTML tags
-            _line = ''.join(WUSource._tags.split(_row))
+            _line = ''.join(WUSource._tags.split(_urow))
             # get rid of any blank lines
             if _line != "\n":
                 # save what's left
