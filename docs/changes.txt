@@ -15,6 +15,11 @@ Introduce a uniform logging shim. Fixes issue #353,
 
 3.10.0 MM/DD/YYYY
 
+Added new aggregate types minsum, minsumtime, sum_le. PR #382.
+
+
+3.9.2 MM/DD/YYYY
+
 Wunderfixer now keeps going if a post does not satisfy [[Essentials]].
 Fixes issue #329 (again).
 
@@ -34,6 +39,12 @@ Fixed problem with handling CWOP connection errors. Commit 0a21a72
 
 Fixed problem that prevented to CopyGenerator from handling nested
 directories. Fixes issue #379.
+
+Fixed problem that prevented humidity calibration from being set
+on Vantage stations.
+
+Improved accuracy of the calculation of Moon phases.
+Revisits issue #342.
 
 
 3.9.1 02/06/2019

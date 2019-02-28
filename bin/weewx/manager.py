@@ -1129,6 +1129,7 @@ class DaySummaryManager(Manager):
         'meanmin': "SELECT AVG(min) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
         'meanmax': "SELECT AVG(max) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
         'maxsum': "SELECT MAX(sum) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+        'minsum': "SELECT MIN(sum) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
         'mintime': "SELECT mintime FROM %(table_name)s_day_%(obs_key)s  WHERE dateTime >= %(start)s AND dateTime < %(stop)s AND " \
                    "min = (SELECT MIN(min) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime <%(stop)s)",
         'maxmintime': "SELECT mintime FROM %(table_name)s_day_%(obs_key)s  WHERE dateTime >= %(start)s AND dateTime < %(stop)s AND " \
@@ -1139,6 +1140,8 @@ class DaySummaryManager(Manager):
                       "max = (SELECT MIN(max) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime <%(stop)s)",
         'maxsumtime': "SELECT maxtime FROM %(table_name)s_day_%(obs_key)s  WHERE dateTime >= %(start)s AND dateTime < %(stop)s AND " \
                       "sum = (SELECT MAX(sum) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime <%(stop)s)",
+        'minsumtime': "SELECT mintime FROM %(table_name)s_day_%(obs_key)s  WHERE dateTime >= %(start)s AND dateTime < %(stop)s AND " \
+                      "sum = (SELECT MIN(sum) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime <%(stop)s)",
         'gustdir': "SELECT max_dir FROM %(table_name)s_day_%(obs_key)s  WHERE dateTime >= %(start)s AND dateTime < %(stop)s AND " \
                    "max = (SELECT MAX(max) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s)",
         'sum': "SELECT SUM(sum) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
@@ -1152,7 +1155,8 @@ class DaySummaryManager(Manager):
         'max_le': "SELECT SUM(max <= %(val)s) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
         'min_ge': "SELECT SUM(min >= %(val)s) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
         'min_le': "SELECT SUM(min <= %(val)s) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-        'sum_ge': "SELECT SUM(sum >= %(val)s) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s"}
+        'sum_ge': "SELECT SUM(sum >= %(val)s) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+        'sum_le': "SELECT SUM(sum <= %(val)s) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s"}
 
     def __init__(self, connection, table_name='archive', schema=None):
         """Initialize an instance of DaySummaryManager
@@ -1329,12 +1333,13 @@ class DaySummaryManager(Manager):
 
         # Do the required calculation for this aggregat type
         elif aggregate_type in ['min', 'maxmin', 'max', 'minmax', 'meanmin', 'meanmax',
-                                'maxsum', 'sum', 'gustdir']:
+                                'maxsum', 'minsum', 'sum', 'gustdir']:
             # These aggregates are passed through 'as is'.
             _result = _row[0]
 
         elif aggregate_type in ['mintime', 'maxmintime', 'maxtime', 'minmaxtime', 'maxsumtime',
-                                'count', 'max_ge', 'max_le', 'min_ge', 'min_le', 'sum_ge']:
+                                'minsumtime', 'count', 'max_ge', 'max_le', 'min_ge', 'min_le',
+                                'sum_ge', 'sum_le']:
             # These aggregates are always integers:
             _result = int(_row[0])
 
