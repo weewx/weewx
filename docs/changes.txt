@@ -1,6 +1,8 @@
 weewx change history
 --------------------
 
+3.9.2 MM/DD/YYYY
+
 Wunderfixer now keeps going if a post does not satisfy [[Essentials]].
 Fixes issue #329 (again).
 
