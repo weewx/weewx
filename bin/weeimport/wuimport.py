@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2016 Tom Keffer <tkeffer@gmail.com> and
+#    Copyright (c) 2009-2019 Tom Keffer <tkeffer@gmail.com> and
 #                            Gary Roderick
 #
 #    See the file LICENSE.txt for your full rights.
@@ -9,18 +9,20 @@
 observational data for use with weeimport.
 """
 
-from __future__ import with_statement
-
 # Python imports
+from __future__ import with_statement
+from __future__ import absolute_import
+from __future__ import print_function
 import csv
 import datetime
+import socket
 import syslog
-import urllib2
-
 from datetime import datetime as dt
 
+from six.moves import urllib
+
 # WeeWX imports
-import weeimport
+from . import weeimport
 import weewx
 
 from weeutil.weeutil import timestamp_to_string, option_as_list, startOfDay
@@ -155,12 +157,12 @@ class WUSource(weeimport.Source):
                                                                         unit_nicknames[self.archive_unit_sys])
         self.wlog.printlog(syslog.LOG_INFO, _msg)
         if self.calc_missing:
-            print "Missing derived observations will be calculated."
+            print("Missing derived observations will be calculated.")
         if options.date or options.date_from:
-            print "Observations timestamped after %s and up to and" % (timestamp_to_string(self.first_ts), )
-            print "including %s will be imported." % (timestamp_to_string(self.last_ts), )
+            print("Observations timestamped after %s and up to and" % timestamp_to_string(self.first_ts))
+            print("including %s will be imported." % timestamp_to_string(self.last_ts))
         if self.dry_run:
-            print "This is a dry run, imported data will not be saved to archive."
+            print("This is a dry run, imported data will not be saved to archive.")
 
     def getRawData(self, period):
         """Get raw observation data and construct a map from WU to WeeWX
@@ -193,8 +195,8 @@ class WUSource(weeimport.Source):
                                                      date_tt[0])
         # hit the WU site, wrap in a try..except so we can catch any errors
         try:
-            _wudata = urllib2.urlopen(_url)
-        except urllib2.URLError as e:
+            _wudata = urllib.request.urlopen(_url)
+        except urllib.error.URLError as e:
             self.wlog.printlog(syslog.LOG_ERR,
                           "Unable to open Weather Underground station %s" % self.station_id)
             self.wlog.printlog(syslog.LOG_ERR, "   **** %s" % e)

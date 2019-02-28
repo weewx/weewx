@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2016 Tom Keffer <tkeffer@gmail.com> and
+#    Copyright (c) 2009-2019 Tom Keffer <tkeffer@gmail.com> and
 #                            Gary Roderick
 #
 #    See the file LICENSE.txt for your full rights.
@@ -11,6 +11,8 @@ observational data for use with weeimport.
 from __future__ import with_statement
 
 # Python imports
+from __future__ import absolute_import
+from __future__ import print_function
 import csv
 import glob
 import os
@@ -18,7 +20,7 @@ import syslog
 import time
 
 # WeeWX imports
-import weeimport
+from . import weeimport
 import weewx
 
 from weeutil.weeutil import timestamp_to_string
@@ -247,16 +249,16 @@ class CumulusSource(weeimport.Source):
                                                                         unit_nicknames[self.archive_unit_sys])
         self.wlog.printlog(syslog.LOG_INFO, _msg)
         if self.calc_missing:
-            print "Missing derived observations will be calculated."
+            print("Missing derived observations will be calculated.")
         if not self.UV_sensor:
-            print "All WeeWX UV fields will be set to None."
+            print("All WeeWX UV fields will be set to None.")
         if not self.solar_sensor:
-            print "All WeeWX radiation fields will be set to None."
+            print("All WeeWX radiation fields will be set to None.")
         if options.date or options.date_from:
-            print "Observations timestamped after %s and up to and" % (timestamp_to_string(self.first_ts), )
-            print "including %s will be imported." % (timestamp_to_string(self.last_ts), )
+            print("Observations timestamped after %s and up to and" % timestamp_to_string(self.first_ts))
+            print("including %s will be imported." % timestamp_to_string(self.last_ts))
         if self.dry_run:
-            print "This is a dry run, imported data will not be saved to archive."
+            print("This is a dry run, imported data will not be saved to archive.")
 
     def getRawData(self, period):
         """Get raw observation data and construct a map from Cumulus monthly
@@ -339,7 +341,7 @@ class CumulusSource(weeimport.Source):
     def set_rain_source(self, _data):
         """Set the Cumulus field to be used as the WeeWX rain field source."""
 
-        _row = _data.next()
+        _row = next(_data)
         if _row['midnight_rain'] is not None:
             # we have data in midnight_rain, our default source, so leave
             # things as they are and return
