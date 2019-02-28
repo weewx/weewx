@@ -310,6 +310,9 @@ class ObservationBinder(object):
     def sum_ge(self, val):
         return self._do_query('sum_ge', val=val)
 
+    def sum_le(self, val):
+        return self._do_query('sum_le', val=val)
+
     def __getattr__(self, aggregate_type):
         """Return statistical summary using a given aggregate type.
 
