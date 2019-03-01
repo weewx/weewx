@@ -47,6 +47,12 @@ def logerr(msg, prefix=None):
     syslog.syslog(syslog.LOG_ERR, "%s: %s" % (prefix, msg))
 
 
+def logalt(msg, prefix=None):
+    if prefix is None:
+        prefix = _get_file_root()
+    syslog.syslog(syslog.LOG_ALERT, "%s: %s" % (prefix, msg))
+
+
 def logcrt(msg, prefix=None):
     if prefix is None:
         prefix = _get_file_root()
@@ -63,7 +69,7 @@ def log_traceback(prefix='', loglevel=None):
     """
     if loglevel is None:
         loglevel = syslog.LOG_INFO
-    elif isinstance(six.string_types):
+    elif isinstance(loglevel, six.string_types):
         loglevel = log_levels.get(loglevel, syslog.LOG_INFO)
     sfd = StringIO()
     traceback.print_exc(file=sfd)

@@ -90,7 +90,7 @@ import weewx.manager
 import weewx.units
 from weeutil.weeutil import to_int, to_float, to_bool, timestamp_to_string, search_up, \
     accumulateLeaves, to_sorted_string
-
+from weeutil.log import logdbg, logerr, loginf, logcrt, logalt
 
 class FailedPost(IOError):
     """Raised when a post fails after trying the max number of allowed times"""
@@ -137,11 +137,9 @@ class StdRESTful(weewx.engine.StdService):
             # Wait up to 20 seconds for the thread to exit:
             t.join(20.0)
             if t.isAlive():
-                syslog.syslog(syslog.LOG_ERR,
-                              "restx: Unable to shut down %s thread" % t.name)
+                logerr("Unable to shut down %s thread" % t.name)
             else:
-                syslog.syslog(syslog.LOG_DEBUG,
-                              "restx: Shut down %s thread." % t.name)
+                logdbg("Shut down %s thread." % t.name)
 
 
 # For backwards compatibility with early v2.6 alphas. In particular, the WeatherCloud uploader depends on it.
@@ -306,9 +304,7 @@ class RESTThread(threading.Thread):
                     _datadict['dayRain'] = None
 
         except weedb.OperationalError as e:
-            syslog.syslog(syslog.LOG_DEBUG,
-                          "restx: %s: Database OperationalError '%s'" %
-                          (self.protocol_name, e))
+            logdbg("%s: Database OperationalError '%s'" % (self.protocol_name, e))
 
         return _datadict
 
@@ -352,37 +348,27 @@ class RESTThread(threading.Thread):
             except AbortedPost as e:
                 if self.log_success:
                     _time_str = timestamp_to_string(_record['dateTime'])
-                    syslog.syslog(syslog.LOG_INFO,
-                                  "restx: %s: Skipped record %s: %s" %
-                                  (self.protocol_name, _time_str, e))
+                    loginf("%s: Skipped record %s: %s" %  (self.protocol_name, _time_str, e))
             except BadLogin:
-                syslog.syslog(syslog.LOG_ERR, "restx: %s: Bad login; "
-                                              "waiting %s minutes then retrying" %
-                              (self.protocol_name, self.retry_login / 60.0))
+                logerr("%s: Bad login; waiting %s minutes then retrying"
+                       % (self.protocol_name, self.retry_login / 60.0))
                 time.sleep(self.retry_login)
             except FailedPost as e:
                 if self.log_failure:
                     _time_str = timestamp_to_string(_record['dateTime'])
-                    syslog.syslog(syslog.LOG_ERR,
-                                  "restx: %s: Failed to publish record %s: %s"
-                                  % (self.protocol_name, _time_str, e))
+                    logerr("%s: Failed to publish record %s: %s"
+                           % (self.protocol_name, _time_str, e))
             except Exception as e:
                 # Some unknown exception occurred. This is probably a serious
                 # problem. Exit.
-                syslog.syslog(syslog.LOG_CRIT,
-                              "restx: %s: Unexpected exception of type %s" %
-                              (self.protocol_name, type(e)))
+                logcrt("%s: Unexpected exception of type %s" % (self.protocol_name, type(e)))
                 weeutil.weeutil.log_traceback('*** ', syslog.LOG_DEBUG)
-                syslog.syslog(syslog.LOG_CRIT,
-                              "restx: %s: Thread exiting. Reason: %s" %
-                              (self.protocol_name, e))
+                logcrt("%s: Thread exiting. Reason: %s" % (self.protocol_name, e))
                 return
             else:
                 if self.log_success:
                     _time_str = timestamp_to_string(_record['dateTime'])
-                    syslog.syslog(syslog.LOG_INFO,
-                                  "restx: %s: Published record %s" %
-                                  (self.protocol_name, _time_str))
+                    loginf("%s: Published record %s" % (self.protocol_name, _time_str))
 
     def process_record(self, record, dbmanager):
         """Default version of process_record.
@@ -477,15 +463,11 @@ class RESTThread(threading.Thread):
 
     def handle_code(self, code, count):
         """Check code from HTTP post.  This simply logs the response."""
-        syslog.syslog(syslog.LOG_DEBUG,
-                      "restx: %s: Failed upload attempt %d: Code %s" %
-                      (self.protocol_name, count, code))
+        logdbg("%s: Failed upload attempt %d: Code %s" % (self.protocol_name, count, code))
 
     def handle_exception(self, e, count):
         """Check exception from HTTP post.  This simply logs the exception."""
-        syslog.syslog(syslog.LOG_DEBUG,
-                      "restx: %s: Failed upload attempt %d: %s" %
-                      (self.protocol_name, count, e))
+        logdbg("%s: Failed upload attempt %d: %s" % (self.protocol_name, count, e))
 
     def post_request(self, request, data=None):
         """Post a request object. This version does not catch any HTTP
@@ -510,22 +492,17 @@ class RESTThread(threading.Thread):
         if self.stale is not None:
             _how_old = time.time() - time_ts
             if _how_old > self.stale:
-                syslog.syslog(
-                    syslog.LOG_DEBUG,
-                    "restx: %s: record %s is stale (%d > %d)." %
-                    (self.protocol_name, timestamp_to_string(time_ts),
-                     _how_old, self.stale))
+                logdbg("%s: record %s is stale (%d > %d)."
+                       % (self.protocol_name, timestamp_to_string(time_ts), _how_old, self.stale))
                 return True
 
         if self.post_interval is not None:
             # We don't want to post more often than the post interval
             _how_long = time_ts - self.lastpost
             if _how_long < self.post_interval:
-                syslog.syslog(
-                    syslog.LOG_DEBUG,
-                    "restx: %s: wait interval (%d < %d) has not passed for record %s" %
-                    (self.protocol_name, _how_long, self.post_interval,
-                     timestamp_to_string(time_ts)))
+                logdbg("%s: wait interval (%d < %d) has not passed for record %s"
+                       % (self.protocol_name, _how_long,
+                          self.post_interval, timestamp_to_string(time_ts)))
                 return True
 
         self.lastpost = time_ts
@@ -578,7 +555,7 @@ class StdWunderground(StdRESTful):
 
         _essentials_dict = search_up(config_dict['StdRESTful']['Wunderground'], 'Essentials', {})
 
-        syslog.syslog(syslog.LOG_DEBUG, "restx: WU essentials: %s" % _essentials_dict)
+        logdbg("WU essentials: %s" % _essentials_dict)
 
         # Get the manager dictionary:
         _manager_dict = weewx.manager.get_manager_dict_from_config(
@@ -601,9 +578,7 @@ class StdWunderground(StdRESTful):
                 **_ambient_dict)
             self.archive_thread.start()
             self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
-            syslog.syslog(syslog.LOG_INFO, "restx: Wunderground-PWS: "
-                                           "Data for station %s will be posted" %
-                          _ambient_dict['station'])
+            loginf("Wunderground-PWS: Data for station %s will be posted" % _ambient_dict['station'])
 
         if do_rapidfire_post:
             _ambient_dict.setdefault('server_url', StdWunderground.rf_url)
@@ -622,18 +597,16 @@ class StdWunderground(StdRESTful):
                 **_ambient_dict)
             self.loop_thread.start()
             self.bind(weewx.NEW_LOOP_PACKET, self.new_loop_packet)
-            syslog.syslog(syslog.LOG_INFO, "restx: Wunderground-RF: "
-                                           "Data for station %s will be posted" %
-                          _ambient_dict['station'])
+            loginf("Wunderground-RF: Data for station %s will be posted" % _ambient_dict['station'])
 
     def new_loop_packet(self, event):
         """Puts new LOOP packets in the loop queue"""
         if weewx.debug >= 3:
-            syslog.syslog(syslog.LOG_DEBUG, "restx: raw packet: %s" % to_sorted_string(event.packet))
+            logdbg("raw packet: %s" % to_sorted_string(event.packet))
         self.cached_values.update(event.packet, event.packet['dateTime'])
         if weewx.debug >= 3:
-            syslog.syslog(syslog.LOG_DEBUG, "restx: cached packet: %s" %
-                          to_sorted_string(self.cached_values.get_packet(event.packet['dateTime'])))
+            logdbg("cached packet: %s"
+                   % to_sorted_string(self.cached_values.get_packet(event.packet['dateTime'])))
         self.loop_queue.put(
             self.cached_values.get_packet(event.packet['dateTime']))
 
@@ -712,9 +685,7 @@ class StdPWSWeather(StdRESTful):
                                             **_ambient_dict)
         self.archive_thread.start()
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
-        syslog.syslog(syslog.LOG_INFO, "restx: PWSWeather: "
-                                       "Data for station %s will be posted" %
-                      _ambient_dict['station'])
+        loginf("PWSWeather: Data for station %s will be posted" %_ambient_dict['station'])
 
     def new_archive_record(self, event):
         self.archive_queue.put(event.record)
@@ -754,9 +725,7 @@ class StdWOW(StdRESTful):
                                         **_ambient_dict)
         self.archive_thread.start()
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
-        syslog.syslog(syslog.LOG_INFO, "restx: WOW: "
-                                       "Data for station %s will be posted" %
-                      _ambient_dict['station'])
+        loginf("WOW: Data for station %s will be posted" % _ambient_dict['station'])
 
     def new_archive_record(self, event):
         self.archive_queue.put(event.record)
@@ -880,8 +849,7 @@ class AmbientThread(RESTThread):
         _url = "%s?%s" % (self.server_url, _urlquery)
         # show the url in the logs for debug, but mask any password
         if weewx.debug >= 2:
-            syslog.syslog(syslog.LOG_DEBUG, "restx: Ambient: url: %s" %
-                          re.sub(r"PASSWORD=[^\&]*", "PASSWORD=XXX", _url))
+            logdbg("Ambient: url: %s" % re.sub(r"PASSWORD=[^\&]*", "PASSWORD=XXX", _url))
         return _url
 
     def check_response(self, response):
@@ -990,9 +958,7 @@ class WOWThread(AmbientThread):
         _url = "%s?%s" % (self.server_url, _urlquery)
         # show the url in the logs for debug, but mask any password
         if weewx.debug >= 2:
-            syslog.syslog(syslog.LOG_DEBUG, "restx: WOW: url: %s" %
-                          re.sub(r"siteAuthenticationKey=[^\&]*",
-                                 "siteAuthenticationKey=XXX", _url))
+            logdbg("WOW: url: %s" % re.sub(r"siteAuthenticationKey=[^\&]*", "siteAuthenticationKey=XXX", _url))
         return _url
 
     def post_request(self, request, data=None):  # @UnusedVariable
@@ -1041,9 +1007,7 @@ class StdCWOP(StdRESTful):
             # It does not. 
             _cwop_dict.setdefault('passcode', '-1')
         elif 'passcode' not in _cwop_dict:
-            syslog.syslog(syslog.LOG_NOTICE,
-                          "APRS station %s requires passcode" %
-                          _cwop_dict['station'])
+            loginf("APRS station %s requires passcode" % _cwop_dict['station'])
             return
 
         # Get the database manager dictionary:
@@ -1059,9 +1023,7 @@ class StdCWOP(StdRESTful):
                                          **_cwop_dict)
         self.archive_thread.start()
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
-        syslog.syslog(syslog.LOG_INFO, "restx: CWOP: "
-                                       "Data for station %s will be posted" %
-                      _cwop_dict['station'])
+        loginf("CWOP: Data for station %s will be posted" % _cwop_dict['station'])
 
     def new_archive_record(self, event):
         self.archive_queue.put(event.record)
@@ -1215,8 +1177,7 @@ class CWOPThread(RESTThread):
 
         # show the packet in the logs for debug
         if weewx.debug >= 2:
-            syslog.syslog(syslog.LOG_DEBUG, 'restx: CWOP: packet: %s' %
-                          _tnc_packet)
+            logdbg('CWOP: packet: %s' % _tnc_packet)
 
         return _tnc_packet
 
@@ -1230,9 +1191,7 @@ class CWOPThread(RESTThread):
                 _server, _port_str = _serv_addr_str.split(":")
                 _port = int(_port_str)
             except ValueError:
-                syslog.syslog(syslog.LOG_ALERT,
-                              "restx: %s: Bad server address: '%s'; ignored" %
-                              (self.protocol_name, _serv_addr_str))
+                logalt("%s: Bad server address: '%s'; ignored" % (self.protocol_name, _serv_addr_str))
                 continue
 
             # Try each combination up to max_tries times:
@@ -1240,9 +1199,7 @@ class CWOPThread(RESTThread):
                 try:
                     # Get a socket connection:
                     _sock = self._get_connect(_server, _port)
-                    syslog.syslog(syslog.LOG_DEBUG,
-                                  "restx: %s: Connected to server %s:%d" %
-                                  (self.protocol_name, _server, _port))
+                    logdbg("%s: Connected to server %s:%d" % (self.protocol_name, _server, _port))
                     try:
                         # Send the login ...
                         self._send(_sock, login, dbg_msg='login')
@@ -1252,15 +1209,11 @@ class CWOPThread(RESTThread):
                     finally:
                         _sock.close()
                 except ConnectError as e:
-                    syslog.syslog(
-                        syslog.LOG_DEBUG,
-                        "restx: %s: Attempt %d to %s:%d. Connection error: %s"
-                        % (self.protocol_name, _count + 1, _server, _port, e))
+                    logdbg("%s: Attempt %d to %s:%d. Connection error: %s"
+                           % (self.protocol_name, _count + 1, _server, _port, e))
                 except SendError as e:
-                    syslog.syslog(
-                        syslog.LOG_DEBUG,
-                        "restx: %s: Attempt %d to %s:%d. Socket send error: %s"
-                        % (self.protocol_name, _count + 1, _server, _port, e))
+                    logdbg("%s: Attempt %d to %s:%d. Socket send error: %s"
+                           % (self.protocol_name, _count + 1, _server, _port, e))
 
         # If we get here, the loop terminated normally, meaning we failed
         # all tries
@@ -1300,9 +1253,8 @@ class CWOPThread(RESTThread):
                 _resp = sock.recv(1024).decode('ascii')
                 return _resp
             except IOError as e:
-                syslog.syslog(syslog.LOG_DEBUG,
-                              "restx: %s: Exception %s (%s) when looking for response to %s packet" %
-                              (self.protocol_name, type(e), e, dbg_msg))
+                logdbg("%s: Exception %s (%s) when looking for response to %s packet"
+                       % (self.protocol_name, type(e), e, dbg_msg))
                 return
 
 
@@ -1345,16 +1297,14 @@ class StdStationRegistry(StdRESTful):
 
         # Should the service be run?
         if not to_bool(_registry_dict.pop('register_this_station', False)):
-            syslog.syslog(syslog.LOG_INFO, "restx: StationRegistry: "
-                                           "Registration not requested.")
+            loginf("StationRegistry: Registration not requested.")
             return
 
         # Registry requires a valid station url
         _registry_dict.setdefault('station_url',
                                   self.engine.stn_info.station_url)
         if _registry_dict['station_url'] is None:
-            syslog.syslog(syslog.LOG_INFO, "restx: StationRegistry: "
-                                           "Station will not be registered: no station_url specified.")
+            loginf("StationRegistry: Station will not be registered: no station_url specified.")
             return
 
         _registry_dict.setdefault('station_type', config_dict['Station'].get('station_type', 'Unknown'))
@@ -1368,8 +1318,7 @@ class StdStationRegistry(StdRESTful):
                                                     **_registry_dict)
         self.archive_thread.start()
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
-        syslog.syslog(syslog.LOG_INFO, "restx: StationRegistry: "
-                                       "Station will be registered.")
+        loginf("StationRegistry: Station will be registered.")
 
     def new_archive_record(self, event):
         self.archive_queue.put(event.record)
@@ -1581,9 +1530,7 @@ class StdAWEKAS(StdRESTful):
         self.archive_thread = AWEKASThread(self.archive_queue, **site_dict)
         self.archive_thread.start()
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
-        syslog.syslog(syslog.LOG_INFO, "restx: AWEKAS: "
-                                       "Data will be uploaded for user %s" %
-                      site_dict['username'])
+        loginf("AWEKAS: Data will be uploaded for user %s" % site_dict['username'])
 
     def new_archive_record(self, event):
         self.archive_queue.put(event.record)
@@ -1744,8 +1691,7 @@ class AWEKASThread(RESTThread):
         url = self.server_url + '?val=' + valstr
         # show the url in the logs for debug, but mask any credentials
         if weewx.debug >= 2:
-            syslog.syslog(syslog.LOG_DEBUG, 'restx: AWEKAS: url: %s' %
-                          re.sub(m.hexdigest(), "XXX", url))
+            logdbg('AWEKAS: url: %s' % re.sub(m.hexdigest(), "XXX", url))
         return url
 
     def _format(self, record, label):
@@ -1767,16 +1713,14 @@ def get_site_dict(config_dict, service, *args):
         site_dict = accumulateLeaves(config_dict['StdRESTful'][service],
                                      max_level=1)
     except KeyError:
-        syslog.syslog(syslog.LOG_INFO, "restx: %s: "
-                                       "No config info. Skipped." % service)
+        loginf("%s: No config info. Skipped." % service)
         return None
 
     # If site_dict has the key 'enable' and it is False, then
     # the service is not enabled.
     try:
         if not to_bool(site_dict['enable']):
-            syslog.syslog(syslog.LOG_INFO, "restx: %s: "
-                                           "Posting not enabled." % service)
+            loginf("%s: Posting not enabled." % service)
             return None
     except KeyError:
         pass
@@ -1789,9 +1733,7 @@ def get_site_dict(config_dict, service, *args):
             if site_dict[option] == 'replace_me':
                 raise KeyError(option)
     except KeyError as e:
-        syslog.syslog(syslog.LOG_DEBUG, "restx: %s: "
-                                        "Data will not be posted: Missing option %s" %
-                      (service, e))
+        logdbg("%s: Data will not be posted: Missing option %s" % (service, e))
         return None
 
     # If the site dictionary does not have a log_success or log_failure, get
