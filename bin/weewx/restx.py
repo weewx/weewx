@@ -243,6 +243,12 @@ class RESTThread(threading.Thread):
 
         returns: A dictionary of weather values"""
 
+        if dbmanager is None:
+            # If we don't have a database, we can't do anything
+            if self.log_failure:
+                loginf("No database specified. Augmentation from database skipped")
+            return record
+
         _time_ts = record['dateTime']
         _sod_ts = weeutil.weeutil.startOfDay(_time_ts)
 
@@ -1615,6 +1621,12 @@ class AWEKASThread(RESTThread):
         """Ensure that rainRate is in the record."""
         # Get the record from my superclass
         r = super(AWEKASThread, self).get_record(record, dbmanager)
+
+        if dbmanager is None:
+            # If we don't have a database, we can't do anything
+            if self.log_failure:
+                loginf("AWEKAS: No database specified. Augmentation from database skipped")
+            return r
 
         # If rain rate is already available, return the record
         if 'rainRate' in r:
