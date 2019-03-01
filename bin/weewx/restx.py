@@ -369,8 +369,8 @@ class RESTThread(threading.Thread):
                 # problem. Exit.
                 logcrt("%s: Unexpected exception of type %s" % (self.protocol_name, type(e)))
                 weeutil.weeutil.log_traceback('*** ', syslog.LOG_DEBUG)
-                logcrt("%s: Thread exiting. Reason: %s" % (self.protocol_name, e))
-                return
+                logcrt("%s: Thread terminating. Reason: %s" % (self.protocol_name, e))
+                raise
             else:
                 if self.log_success:
                     _time_str = timestamp_to_string(_record['dateTime'])

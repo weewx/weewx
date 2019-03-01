@@ -7,7 +7,10 @@
 
 import time
 import unittest
-from unittest.mock import patch
+try:
+    import mock
+except ImportError:
+    from unittest import mock
 
 from six.moves import queue
 
@@ -40,9 +43,12 @@ class TestAmbient(unittest.TestCase):
     password = 'somepassword'
     server_url = 'http://www.testserver.com/testapi'
 
-    @patch('weewx.restx.urllib.request.urlopen')
+    @mock.patch('weewx.restx.urllib.request.urlopen')
     def test_request(self, mock_urlopen):
         """Test that we are forming the right Request object"""
+        mock_urlopen.return_value = mock.Mock()
+        mock_urlopen.return_value.code = 200
+
         q = queue.Queue()
         obj = weewx.restx.AmbientThread(q,
                                         manager_dict=None,
