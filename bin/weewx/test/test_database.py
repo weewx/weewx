@@ -6,8 +6,13 @@
 #
 """Test archive and stats database modules"""
 from __future__ import with_statement
+from __future__ import absolute_import
+
 import unittest
 import time
+
+from six.moves import map
+from six.moves import range
 
 import weewx.manager
 import weedb
@@ -27,7 +32,7 @@ archive_schema = [('dateTime',             'INTEGER NOT NULL UNIQUE PRIMARY KEY'
 std_unit_system = 1
 interval = 3600     # One hour
 nrecs = 48          # Two days
-start_ts = int(time.mktime((2012, 07, 01, 00, 00, 0, 0, 0, -1))) # 1 July 2012
+start_ts = int(time.mktime((2012, 7, 1, 00, 00, 0, 0, 0, -1))) # 1 July 2012
 stop_ts = start_ts + interval * (nrecs-1)
 timevec = [start_ts+i*interval for i in range(nrecs)]
 
@@ -122,7 +127,7 @@ class Common(unittest.TestCase):
             expected_iterator = genRecords()
             for _rec in archive.genBatchRecords():
                 try:
-                    _expected_rec = expected_iterator.next()
+                    _expected_rec = next(expected_iterator)
                 except StopIteration:
                     break
                 # Check that the missing windSpeed is None, then remove it in order to do the compare:
@@ -210,7 +215,7 @@ class Common(unittest.TestCase):
             self.assertEqual(n_expected, len(barvec[0][0]))
             for irec in range(n_expected):
                 # Get the set of records to be included in this aggregation:
-                recs = gen.next()
+                recs = next(gen)
                 # Make sure the timestamp of the aggregation interval is the same as the last
                 # record to be included in the aggregation:
                 self.assertEqual(timevec[max(recs)], barvec[1][0][irec])
@@ -254,7 +259,7 @@ class TestMySQL(Common):
 def suite():
     tests = ['test_no_archive', 'test_create_archive', 
              'test_empty_archive', 'test_add_archive_records', 'test_get_records', 'test_update']
-    return unittest.TestSuite(map(TestSqlite, tests) + map(TestMySQL, tests))
+    return unittest.TestSuite(list(map(TestSqlite, tests)) + list(map(TestMySQL, tests)))
             
 if __name__ == '__main__':
     unittest.TextTestRunner(verbosity=2).run(suite())
