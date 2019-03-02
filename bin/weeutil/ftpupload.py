@@ -152,28 +152,23 @@ class FtpUpload(object):
                     STOR_cmd = "STOR %s" % full_remote_path
                     # Retry up to max_tries times:
                     for count in range(self.max_tries):
-                        try:
-                            # If we have to retry, we should probably reopen the file as well.
-                            # Hence, the open is in the inner loop:
-                            fd = open(full_local_path, "r")
-                            ftp_server.storbinary(STOR_cmd, fd)
-                        except ftplib.all_errors as e:
-                            # Unsuccessful. Log it and go around again.
-                            syslog.syslog(syslog.LOG_ERR, "ftpupload: Attempt #%d. Failed uploading %s to %s. Reason: %s" %
-                                                          (count+1, full_remote_path, self.server, e))
-                            ftp_server.set_pasv(self.passive)
-                        else:
-                            # Success. Log it, break out of the loop
-                            n_uploaded += 1
-                            fileset.add(full_local_path)
-                            syslog.syslog(syslog.LOG_DEBUG, "ftpupload: Uploaded file %s" % full_remote_path)
-                            break
-                        finally:
-                            # This is always executed on every loop. Close the file.
+                        # If we have to retry, we should probably reopen the file as well.
+                        # Hence, the open is in the inner loop:
+                        with open(full_local_path, 'rb') as fd:
                             try:
-                                fd.close()
-                            except:
-                                pass
+                                ftp_server.storbinary(STOR_cmd, fd)
+                            except ftplib.all_errors as e:
+                                # Unsuccessful. Log it and go around again.
+                                syslog.syslog(syslog.LOG_ERR,
+                                              "ftpupload: Attempt #%d. Failed uploading %s to %s. Reason: %s"
+                                              % (count+1, full_remote_path, self.server, e))
+                                ftp_server.set_pasv(self.passive)
+                            else:
+                                # Success. Log it, break out of the loop
+                                n_uploaded += 1
+                                fileset.add(full_local_path)
+                                syslog.syslog(syslog.LOG_DEBUG, "ftpupload: Uploaded file %s" % full_remote_path)
+                                break
                     else:
                         # This is executed only if the loop terminates naturally (without a break statement),
                         # meaning the upload failed max_tries times. Log it, move on to the next file.
