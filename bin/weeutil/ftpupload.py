@@ -192,7 +192,7 @@ class FtpUpload(object):
         # If the file exists, but is truncated, an EOFError will be raised.
         # Either way, be prepared to catch it.
         try:
-            with open(timeStampFile, "r") as f:
+            with open(timeStampFile, "rb") as f:
                 timestamp = cPickle.load(f)
                 fileset   = cPickle.load(f)
         except (IOError, EOFError, cPickle.PickleError, AttributeError):
@@ -210,7 +210,7 @@ class FtpUpload(object):
     def saveLastUpload(self, timestamp, fileset):
         """Saves the time and members of the last upload in the local root."""
         timeStampFile = os.path.join(self.local_root, "#%s.last" % self.name )
-        with open(timeStampFile, "w") as f:
+        with open(timeStampFile, "wb") as f:
             cPickle.dump(timestamp, f)
             cPickle.dump(fileset,   f)
                 
