@@ -197,7 +197,7 @@ merge_weewxconf() {
 
 # get the version number from the specified file, without the debian revisions
 get_conf_version() {
-    echo `grep version $1 | sed -e 's/\s*version\s*=\s*//' | sed -e 's/-.*//'`
+    echo `grep '^version.*=' $1 | sed -e 's/\s*version\s*=\s*//' | sed -e 's/-.*//'`
 }
 
 case "$1" in

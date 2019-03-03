@@ -240,6 +240,7 @@ rpm-package: $(DSTDIR)/$(SRCPKG)
 	mkdir -p -m 0755 $(RPMBLDDIR)/SPECS
 	mkdir -p -m 0755 $(RPMBLDDIR)/SRPMS
 	sed -e 's%Version:.*%Version: $(VERSION)%' \
+            -e 's%RPMREVISION%$(RPMREVISION)%' \
             pkg/weewx.spec.in > $(RPMBLDDIR)/SPECS/weewx.spec
 	cat pkg/changelog.rpm >> $(RPMBLDDIR)/SPECS/weewx.spec
 	cp dist/weewx-$(VERSION).tar.gz $(RPMBLDDIR)/SOURCES
@@ -282,7 +283,7 @@ release:
 	ssh $(USER)@$(WEEWX_COM) "rm -f $(WEEWX_DOWNLOADS)/weewx*"
 	ssh $(USER)@$(WEEWX_COM) "for f in $(ARTIFACTS); do if [ -f $(RELDIR)/\$$f ]; then ln -s released_versions/\$$f $(WEEWX_DOWNLOADS); fi; done"
 	ssh $(USER)@$(WEEWX_COM) "if [ -f $(DEVDIR)/README.txt ]; then mv $(DEVDIR)/README.txt $(WEEWX_DOWNLOADS); fi"
-	ssh $(USER)@$(WEEWX_COM) "chmod 664 $(WEEWX_DOWNLOADS)/released_versions/*"
+	ssh $(USER)@$(WEEWX_COM) "chmod 664 $(WEEWX_DOWNLOADS)/released_versions/weewx?$(VERSION)*"
 
 # make local copy of the published apt repository
 pull-apt-repo:

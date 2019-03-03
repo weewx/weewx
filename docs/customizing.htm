@@ -6651,6 +6651,15 @@ cooling_base = 20.0, degree_C</pre>
                 <td>The time of the maximum daily sum.</td>
             </tr>
             <tr>
+                <td class="first_col code">minsum</td>
+                <td>The minimum daily sum in the aggregation period. Aggregation period must be one day or longer.
+                </td>
+            </tr>
+            <tr>
+                <td class="first_col code">minsumtime</td>
+                <td>The time of the minimum daily sum.</td>
+            </tr>
+            <tr>
                 <td class="first_col code">meanmin</td>
                 <td>The average daily minimum in the aggregation period. Aggregation period must be one day or longer.
                 </td>
@@ -6701,6 +6710,12 @@ cooling_base = 20.0, degree_C</pre>
             <tr>
                 <td class="first_col code">sum_ge(val)</td>
                 <td>The number of days where the sum of value is greater than or equal to <em>val</em>. Aggregation
+                    period must be one day or longer.
+                </td>
+            </tr>
+            <tr>
+                <td class="first_col code">sum_le(val)</td>
+                <td>The number of days where the sum of value is less than or equal to <em>val</em>. Aggregation
                     period must be one day or longer.
                 </td>
             </tr>

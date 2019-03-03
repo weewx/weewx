@@ -29,8 +29,8 @@ class AlmanacTest(unittest.TestCase):
 
     def test_moon(self):
         # Test backwards compatiblity with the attribute _moon_fullness
-        self.assertAlmostEqual(self.almanac._moon_fullness, 5, 2)
-        self.assertEqual(self.almanac.moon_phase, 'waxing crescent (increasing to full)')
+        self.assertAlmostEqual(self.almanac._moon_fullness, 3, 2)
+        self.assertEqual(self.almanac.moon_phase, 'new (totally dark)')
 
         # Now test a more precise result for fullness of the moon:
         self.assertAlmostEqual(self.almanac.moon.moon_fullness, 1.70, 2)

@@ -1,6 +1,40 @@
 weewx change history
 --------------------
 
+3.10.0 MM/DD/YYYY
+
+Added new aggregate types minsum, minsumtime, sum_le. PR #382.
+
+
+3.9.2 MM/DD/YYYY
+
+Wunderfixer now keeps going if a post does not satisfy [[Essentials]].
+Fixes issue #329 (again).
+
+Fixed problem that prevented the wee_device --history option from
+working with the CC3000 driver.
+
+Fix incorrect `log_success` operation in ftp, rsync, copy
+and image generators. PR #373. Partial fix of issue #370.
+
+Fixed problem that could cause the WMR200 to crash WeeWX if the
+record interval is zero. Fixes issue #375.
+
+Posts to the Weather Underground now use https, instead of http.
+Thanks to user mljenkins! PR #378.
+
+Fixed problem with handling CWOP connection errors. Commit 0a21a72
+
+Fixed problem that prevented to CopyGenerator from handling nested
+directories. Fixes issue #379.
+
+Fixed problem that prevented humidity calibration from being set
+on Vantage stations.
+
+Improved accuracy of the calculation of Moon phases.
+Revisits issue #342.
+
+
 3.9.1 02/06/2019
 
 In genplot, do not attempt to normalize unspecified paths.

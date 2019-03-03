@@ -51,7 +51,7 @@ install: build
 	cat $(SRC)/weewx.conf | sed \
  -e 's%^WEEWX_ROOT =.*%WEEWX_ROOT = /%' \
  -e 's%SKIN_ROOT =.*%SKIN_ROOT = /etc/weewx/skins%' \
- -e 's%HTML_ROOT =.*%HTML_ROOT = /var/www/html/weewx%' \
+ -e 's%HTML_ROOT = public_html%HTML_ROOT = /var/www/html/weewx%' \
  -e 's%SQLITE_ROOT = .*%SQLITE_ROOT = /var/lib/weewx%' \
  > $(DST_CFGDIR)/weewx.conf
 	cat $(SRC)/util/init.d/weewx.debian | sed \
