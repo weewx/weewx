@@ -2201,7 +2201,7 @@ summaries using the wee_database utility.</pre>
 
         <ol>
             <li>Ensure the source data file is in a directory accessible by the machine that will run
-                <span class="code">wee_import</span>. For the purposes of these instructions the source data file
+                <span class="code">wee_import</span>. For the purposes of the following examples the source data file
                 <span class="code">data.csv</span> located in the <span class="code">/var/tmp</span> directory will be
                 used.
             </li>
@@ -2353,7 +2353,7 @@ Confirm successful import in the WeeWX log file.</pre>
                 the following will be found in the log:
 
                 <pre class="tty">
-Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:20:00 AEST (1283538000) to database 'weewx.sdb': UNIQUE constraint failed: archive.dateTime
+Aug 22 14:38:28 stretch12 weewx[863]: manager: unable to add record 2018-09-04 04:20:00 AEST (1535998800) to database 'weewx.sdb': UNIQUE constraint failed: archive.dateTime
 </pre>
 
                 <p>In such cases you should take note of the timestamp of the record(s) concerned and make a decision
@@ -2440,8 +2440,8 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
         <ol>
             <li>Obtain the weather station ID of the Weather Underground PWS from which data is to be imported. The
                 station ID will be a sequence of numbers and upper case letters that is usually 11 or 12 characters in
-                length. For the purposes of these instructions a weather station ID of <span
-                    class="code">ISTATION123</span> will be used.
+                length. For the purposes of the following examples a weather station ID
+                of <span class="code">ISTATION123</span> will be used.
             </li>
 
             <li>Make a backup of the WeeWX database in case the import should go awry.
@@ -2641,7 +2641,7 @@ Confirm successful import in the WeeWX log file.
                 the following will be found in the log:
 
                 <pre class="tty">
-Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:20:00 AEST (1283538000) to database 'weewx.sdb': UNIQUE constraint failed: archive.dateTime
+Aug 22 14:38:28 stretch12 weewx[863]: manager: unable to add record 2018-09-04 04:20:00 AEST (1535998800) to database 'weewx.sdb': UNIQUE constraint failed: archive.dateTime
 </pre>
 
                 <p>In such cases you should take note of the timestamp of the record(s) concerned and make a decision
@@ -2729,9 +2729,9 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
 
         <ol>
             <li>Ensure the Cumulus monthly log file(s) to be used for the import are located in a directory accessible
-                by the machine that will run <span class="code">wee_import</span>. For the purposes of these
-                instructions, there are nine monthly logs files covering the period November 2015 to July 2016,
-                inclusive, located in the <span class="code">/var/tmp/cumulus</span> directory.
+                by the machine that will run <span class="code">wee_import</span>. For the purposes of the following
+                examples, there are nine monthly logs files covering the period November 2015 to July 2016, inclusive,
+                located in the <span class="code">/var/tmp/cumulus</span> directory.
             </li>
 
             <li>Make a backup of the WeeWX database in case the import should go awry.
@@ -2928,7 +2928,7 @@ Confirm successful import in the weewx log file.
                 the following will be found in the log:
 
                 <pre class="tty">
-Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:20:00 AEST (1283538000) to database 'weewx.sdb': UNIQUE constraint failed: archive.dateTime
+Aug 22 14:38:28 stretch12 weewx[863]: manager: unable to add record 2018-09-04 04:20:00 AEST (1535998800) to database 'weewx.sdb': UNIQUE constraint failed: archive.dateTime
 </pre>
 
                 <p>In such cases take note of the timestamp of the record(s) concerned and make a decision about whether
@@ -2941,8 +2941,8 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
 
         <p><span class="code">wee_import</span> can import observational data from the one or more Weather Display monthly
             log files. Weather Display records observational data on a monthly basis in a number of either space delimited
-            and/or comma separated text files. <span class="code">wee_import</span> can import observational data from the
-            following Weather Display log files:
+            (.txt) and/or comma separated (.csv) text files. <span class="code">wee_import</span> can import observational
+            data from the following Weather Display log files:
         </p>
 
         <ul>
@@ -2957,12 +2957,12 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
         </ul>
 
         <p>The Weather Display monthly log files record observational data using a nominal 1 minute interval with each
-            file for a given month and year recording various observations for that month and year. These files are
-            accumulated over time and can be considered analogous to the WeeWX archive table. When
-            <span class="code">wee_import</span> imports data from the Weather Display monthly log files each set of log
-            files for a given month and year is considered a 'period'. <span class="code">wee_import</span> processes
-            one period at a time in chronological order (oldest to newest) and provides import summary data on a per
-            period basis.
+            file recording various observations for the month and year designated by the MM and YYYY components of the
+            file name. These files are accumulated over time and can be considered analogous to the WeeWX archive table.
+            When <span class="code">wee_import</span> imports data from the Weather Display monthly log files each set
+            of log files for a given month and year is considered a 'period'. <span class="code">wee_import</span>
+            processes one period at a time in chronological order (oldest to newest) and provides import summary data on
+            a per period basis.
         </p>
 
         <h3>Mapping data to archive fields</h3>
@@ -3014,8 +3014,8 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
 
         <ol>
             <li>Ensure the Weather Display monthly log file(s) to be used for the import are located in a directory
-                accessible by the machine that will run <span class="code">wee_import</span>. For the purposes of these
-                instructions, there are five months of logs files covering the period September 2018 to January 2019
+                accessible by the machine that will run <span class="code">wee_import</span>. For the purposes of the
+                following examples, there are five months of logs files covering the period September 2018 to January 2019
                 inclusive located in the <span class="code">/var/tmp/wd</span> directory.
             </li>
 
@@ -3091,10 +3091,14 @@ Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:
 
             <li>When first importing data it is prudent to do a dry run import before any data is actually imported. A
                 dry run import will perform all steps of the import without actually writing imported data to the WeeWX
-                database. When doing a dry run it may be prudent to first use
-                the <span class="code">--suppress--warnings</span> option so the overall progress of the import can be
-                observed. In addition, consideration should be given to any additional options to be used such
+                database. In addition, consideration should be given to any additional options to be used such
                 as <span class="code">--date</span>.
+
+                <p class="note">
+                    <strong>Note</strong><br/>Due to some peculiarities of the Weather Display log structure it may be
+                    prudent to use the <span class="code">--suppress--warnings</span> option during the initial dry run
+                    so the overall progress of the import can be observed.
+                </p>
 
                 <p>To perform a dry run enter the following command:</p>
 
@@ -3324,7 +3328,7 @@ imported. Confirm successful import in the WeeWX log file.
 </pre>
             </li>
 
-            <li>Whilst <span class="code">wee_import</span> will advise of the number of unique records processed ,
+            <li>Whilst <span class="code">wee_import</span> will advise of the number of unique records imported,
                 <span class="code">wee_import</span> does know how many, if any, of the imported records were successfully
                 saved to the database. You should look carefully through the WeeWX log file covering the
                 <span class="code">wee_import</span> session and take note of any records that were not imported. The most
@@ -3332,7 +3336,7 @@ imported. Confirm successful import in the WeeWX log file.
                 already exists in the database, in such cases something similar to the following will be found in the log:
 
                 <pre class="tty">
-Aug 22 14:38:28 jessie2 weewx[863]: manager: unable to add record 2010-09-04 04:20:00 AEST (1283538000) to database 'weewx.sdb': UNIQUE constraint failed: archive.dateTime
+Aug 22 14:38:28 stretch12 weewx[863]: manager: unable to add record 2018-09-04 04:20:00 AEST (1535998800) to database 'weewx.sdb': UNIQUE constraint failed: archive.dateTime
 </pre>
 
                 <p>In such cases take note of the timestamp of the record(s) concerned and make a decision about whether
