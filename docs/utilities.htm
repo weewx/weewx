@@ -2167,17 +2167,14 @@ summaries using the wee_database utility.</pre>
 
         <p>A CSV file suitable for import by <span class="code">wee_import</span> may look like this:</p>
 
-        <pre class="tty">Time,Temp,Dewpoint,Press,WindDir,WindSpeed,WindGust,Hum,dailyrain,SolarRad
-2016-02-01 00:00:00,13.5,9.2,1005.6,359,0.0,0.0,75,12.0,0.00
-2016-02-01 00:05:00,13.4,9.3,1005.6,355,0.0,0.0,76,12.0,0.00
-2016-02-01 00:10:00,13.3,9.4,1005.6,259,0.0,1.6,77,14.0,0.00
-2016-02-01 00:20:00,13.2,9.4,1005.6,10,0.0,1.6,78,16.0,0.00
-2016-02-01 00:25:00,13.2,9.6,1005.6,15,0.0,1.6,79,20.0,0.00
-2016-02-01 00:30:00,13.1,9.6,1005.3,13,0.0,0.0,79,20.0,0.00
-2016-02-01 00:35:00,13.1,9.7,1005.3,22,1.6,3.2,80,20.0,0.00
-2016-02-01 00:40:00,13.0,9.6,1005.3,25,0.0,1.6,80,22.0,0.00
-2016-02-01 00:45:00,12.9,9.8,1005.3,22,1.6,3.2,81,23.0,0.00
-2016-02-01 00:50:00,12.9,9.7,1005.3,22,1.6,1.6,81,23.0,0.00</pre>
+        <pre class="tty">Time,Barometer,Temp,Humidity,Windspeed,Dir,Gust,Dayrain,Radiation,Uv
+28/11/2017 08:00:00,1016.9,24.6,84,1.8,113,8,0,359,3.8
+28/11/2017 08:05:00,1016.9,25.1,82,4.8,135,11.3,0,775,4.7
+28/11/2017 08:10:00,1016.9,25.4,80,4.4,127,11.3,0,787,5.1
+28/11/2017 08:15:00,1017,25.7,79,3.5,74,11.3,0,800,5.4
+28/11/2017 08:20:00,1016.9,25.9,79,1.6,95,9.7,0,774,5.5
+28/11/2017 08:25:00,1017,25.5,78,2.9,48,9.7,0,303,3.4
+28/11/2017 08:30:00,1017.1,25.1,80,3.1,54,9.7,0,190,3.6</pre>
 
         <h3>Mapping data to archive fields</h3>
 
@@ -2278,16 +2275,17 @@ summaries using the wee_database utility.</pre>
 </pre>
                 <p>The output should be something like this:</p>
 
-                <pre class="tty">Starting wee_import...
+                <pre class="tty">SStarting wee_import...
 A CSV import from source file '/var/tmp/data.csv' has been requested.
 Using database binding 'wx_binding', which is bound to database 'weewx.sdb'
 Destination table 'archive' unit system is '0x01' (US).
 Missing derived observations will be calculated.
 This is a dry run, imported data will not be saved to archive.
 Starting dry run import ...
-70685 records identified for import.
-Records processed: 70685; Unique records: 70685; Last timestamp: 2010-09-04 04:20:00 AEST (1283538000)
-Finished dry run import. 70685 records were processed and 70685 unique records would have been imported.
+27337 records identified for import.
+Unique records processed: 27337; Last timestamp: 2018-03-03 06:00:00 AEST (1520020800)
+Finished dry run import
+27337 records were processed and 27337 unique records would have been imported.
 </pre>
 
                 <p>The output includes details about the data source, its destination and some other details on how the
@@ -2318,8 +2316,8 @@ Using database binding 'wx_binding', which is bound to database 'weewx.sdb'
 Destination table 'archive' unit system is '0x01' (US).
 Missing derived observations will be calculated.
 Starting import ...
-70685 records identified for import.
-Proceeding will save all imported records in the weewx archive.
+27337 records identified for import.
+Proceeding will save all imported records in the WeeWX archive.
 Are you sure you want to proceed (y/n)?
 </pre>
             </li>
@@ -2329,7 +2327,7 @@ Are you sure you want to proceed (y/n)?
                 imported, processed and saved in the WeeWX database. Information on the progress of the import will be
                 displayed similar to the following:
 
-                <pre class="tty">Records processed: 250; Unique records: 250; Last timestamp: 2010-02-09 19:25:00 AEST (1265707500)
+                <pre class="tty">Unique records processed: 3250; Last timestamp: 2017-12-09 14:45:00 AEST (1512794700)
 </pre>
 
                 <p>The line commencing with <span class="code">Unique records processed</span> should update as records are
@@ -2338,10 +2336,11 @@ Are you sure you want to proceed (y/n)?
                     displayed similar to the following:
                 </p>
 
-                <pre class="tty">Records processed: 70685; Unique records: 70685; Last timestamp: 2010-09-04 04:20:00 AEST (1283538000)
-Finished import. 70685 raw records resulted in 70685 unique records being processed in 276.63 seconds.
-Those records with a timestamp already in the archive will not have been imported.
-Confirm successful import in the WeeWX log file.</pre>
+                <pre class="tty">Finished import
+27337 records were processed and 27337 unique records imported in 102.84 seconds.
+Those records with a timestamp already in the archive will not have been
+imported. Confirm successful import in the WeeWX log file.
+</pre>
 
             </li>
             <li>Whilst <span class="code">wee_import</span> will advise of the number of records processed and the
