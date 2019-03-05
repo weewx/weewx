@@ -356,9 +356,13 @@ class RESTThread(threading.Thread):
                     _time_str = timestamp_to_string(_record['dateTime'])
                     loginf("%s: Skipped record %s: %s" %  (self.protocol_name, _time_str, e))
             except BadLogin:
-                logerr("%s: Bad login; waiting %s minutes then retrying"
-                       % (self.protocol_name, self.retry_login / 60.0))
-                time.sleep(self.retry_login)
+                if self.retry_login:
+                    logerr("%s: Bad login; waiting %s minutes then retrying"
+                           % (self.protocol_name, self.retry_login / 60.0))
+                    time.sleep(self.retry_login)
+                else:
+                    logerr("%s: Bad login; no retry specified. Terminating" % self.protocol_name)
+                    raise
             except FailedPost as e:
                 if self.log_failure:
                     _time_str = timestamp_to_string(_record['dateTime'])
@@ -859,7 +863,7 @@ class AmbientThread(RESTThread):
         return _url
 
     def check_response(self, response):
-        """Check the HTTP response code for an Ambient related error."""
+        """Check the HTTP response for an Ambient related error."""
         for line in response:
             # PWSweather signals with 'ERROR', WU with 'INVALID':
             if line.startswith(b'ERROR') or line.startswith(b'INVALID'):
