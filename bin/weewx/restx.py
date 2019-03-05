@@ -65,7 +65,20 @@ In unusual cases, you might also have to implement the following:
    to do a POST or use a socket, you may need to provide a specialized version.
    See the CWOP version, CWOPThread.process_record(), for an example that
    uses sockets. 
+
+Known behavior of various RESTful services:
+
+   Wunderground:
+     If all is OK, it responds with a code of 200, and a response body of 'success'.
+
+     If either the station ID, or the password is bad, it responds with a code of 401,
+     and a response body of 'unauthorized'.
+
+     If the GET statement is malformed (for example, the date is garbled), it responds
+     with a code of 400, and a response body of 'bad request'.
+
 """
+
 from __future__ import absolute_import
 
 import datetime
@@ -429,6 +442,9 @@ class RESTThread(threading.Thread):
         # Retry up to max_tries times:
         for _count in range(self.max_tries):
             try:
+                if _count:
+                    # If this is not the first time through, sleep a bit before retrying
+                    time.sleep(self.retry_wait)
                 # Do a single post. The function post_request() can be
                 # specialized by a RESTful service to catch any unusual
                 # exceptions.
@@ -453,12 +469,11 @@ class RESTThread(threading.Thread):
                 # Provide method for derived classes to behave otherwise if
                 # necessary.
                 self.handle_exception(e, _count + 1)
-            time.sleep(self.retry_wait)
         else:
             # This is executed only if the loop terminates normally, meaning
             # the upload failed max_tries times. Raise an exception. Caller
             # can decide what to do with it.
-            raise FailedPost("Failed upload after %d tries" % (self.max_tries,))
+            raise FailedPost("Failed upload after %d tries" % self.max_tries)
 
     def check_this_record(self, record):
         """Raises exception AbortedPost if the record should not be posted.
@@ -743,7 +758,8 @@ class StdWOW(StdRESTful):
 
 class AmbientThread(RESTThread):
     """Concrete class for threads posting from the archive queue,
-       using the Ambient PWS protocol."""
+       using the Ambient PWS protocol.
+       """
 
     def __init__(self,
                  queue,
