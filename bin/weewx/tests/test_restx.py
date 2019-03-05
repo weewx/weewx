@@ -17,6 +17,7 @@ except ImportError:
 
 from six.moves import queue
 from six.moves import urllib
+from six.moves import http_client
 
 import weewx
 import weewx.restx
@@ -26,6 +27,7 @@ class MatchRequest(object):
     """Allows equality testing between Request objects"""
 
     def __init__(self, url, user_agent):
+        # This is what I'm expecting:
         self.url = url
         self.user_agent = user_agent
 
@@ -71,7 +73,7 @@ class TestAmbient(unittest.TestCase):
     password = 'somepassword'
     server_url = 'http://www.testserver.com/testapi'
 
-    def get_patcher(self, code=200, response_body=[]):
+    def get_openurl_patcher(self, code=200, response_body=[], side_effect=None):
         """Get a patch object for a post to urllib.request.urlopen
 
         code: The response code that should be returned by the mock urlopen
@@ -82,7 +84,7 @@ class TestAmbient(unittest.TestCase):
         patcher = mock.patch('weewx.restx.urllib.request.urlopen')
         mock_urlopen = patcher.start()
         # Set up its return value
-        mock_urlopen.return_value = mock.MagicMock(name='urlopen return value')
+        mock_urlopen.return_value = mock.MagicMock()
         mock_urlopen.return_value.code = code
         mock_urlopen.return_value.__iter__.return_value = iter(response_body)
         # This will insure that patcher.stop() will get called
@@ -92,7 +94,7 @@ class TestAmbient(unittest.TestCase):
     def test_request(self):
         """Test of a normal GET post to an Ambient uploading service"""
 
-        mock_urlopen = self.get_patcher()
+        mock_urlopen = self.get_openurl_patcher()
         q = queue.Queue()
         obj = weewx.restx.AmbientThread(q,
                                         manager_dict=None,
@@ -114,14 +116,46 @@ class TestAmbient(unittest.TestCase):
                 mock_loginf.assert_called_once_with('Unknown-Ambient: Published record '
                                                     '2018-03-22 00:00:00 PDT (1521702000)')
 
+        # Now check that our mock urlopen() was called with the parameters we expected.
         matcher = TestAmbient.get_matcher(TestAmbient.server_url, TestAmbient.station, TestAmbient.password)
         mock_urlopen.assert_called_once_with(matcher, data=None, timeout=10)
 
-    def test_failed_request(self):
+    def test_request_with_indoor(self):
+        """Test of a normal GET post to an Ambient uploading service, but include indoor temperature"""
+
+        mock_urlopen = self.get_openurl_patcher()
+        q = queue.Queue()
+        obj = weewx.restx.AmbientThread(q,
+                                        manager_dict=None,
+                                        station=TestAmbient.station,
+                                        password=TestAmbient.password,
+                                        server_url=TestAmbient.server_url,
+                                        max_tries=1,
+                                        log_success=True,
+                                        log_failure=True,
+                                        post_indoor_observations=True   # Set to True this time!
+                                        )
+        record = get_record()
+        q.put(record)
+        q.put(None)
+        with mock.patch('weewx.restx.logdbg') as mock_logdbg:
+            with mock.patch('weewx.restx.loginf') as mock_loginf:
+                obj.run()
+                mock_logdbg.assert_called_once_with('No database specified. Augmentation from database skipped')
+                # loginf() should have been called once with the success
+                mock_loginf.assert_called_once_with('Unknown-Ambient: Published record '
+                                                    '2018-03-22 00:00:00 PDT (1521702000)')
+
+        # Now check that our mock urlopen() was called with the parameters we expected.
+        matcher = TestAmbient.get_matcher(TestAmbient.server_url, TestAmbient.station, TestAmbient.password,
+                                          include_indoor=True)
+        mock_urlopen.assert_called_once_with(matcher, data=None, timeout=10)
+
+    def test_bad_response_request(self):
         """Test response to a bad request"""
 
         # This will get a mocked version of urlopen, which will return a 401 code
-        mock_urlopen = self.get_patcher(code=401, response_body=['unauthorized'])
+        mock_urlopen = self.get_openurl_patcher(code=401, response_body=['unauthorized'])
         q = queue.Queue()
         obj = weewx.restx.AmbientThread(q,
                                         manager_dict=None,
@@ -139,23 +173,63 @@ class TestAmbient(unittest.TestCase):
             with mock.patch('weewx.restx.logerr') as mock_logerr:
                 obj.run()
                 # logdbg() should have been called twice...
-                mock_logdbg.has_calls([mock.call('No database specified. Augmentation from database skipped'),
+                mock_logdbg.assert_has_calls([mock.call('No database specified. Augmentation from database skipped'),
                                        mock.call('Unknown-Ambient: Failed upload attempt 1: Code 401')])
                 # ... and logerr() once with the failed post.
                 mock_logerr.assert_called_once_with('Unknown-Ambient: Failed to publish record '
                                                     '2018-03-22 00:00:00 PDT (1521702000): '
                                                     'Failed upload after 1 tries')
 
+        # Now check that our mock urlopen() was called with the parameters we expected.
+        matcher = TestAmbient.get_matcher(TestAmbient.server_url, TestAmbient.station, TestAmbient.password)
+        mock_urlopen.assert_called_once_with(matcher, data=None, timeout=10)
+
+    def test_bad_http_request(self):
+        """Test response to raising an exception during a post"""
+
+        # Get a normal patched version of url_open
+        mock_urlopen = self.get_openurl_patcher()
+        # This will cause an exception of type http_client.HTTPException to be raised when calling urlopen()
+        mock_urlopen.side_effect = http_client.HTTPException("oops")
+
+        q = queue.Queue()
+        obj = weewx.restx.AmbientThread(q,
+                                        manager_dict=None,
+                                        station=TestAmbient.station,
+                                        password=TestAmbient.password,
+                                        server_url=TestAmbient.server_url,
+                                        max_tries=1,
+                                        log_success=True,
+                                        log_failure=True,
+                                        )
+        record = get_record()
+        q.put(record)
+        q.put(None)
+        with mock.patch('weewx.restx.logdbg') as mock_logdbg:
+            with mock.patch('weewx.restx.logerr') as mock_logerr:
+                obj.run()
+                # logdbg() should have been called twice...
+                mock_logdbg.assert_has_calls([mock.call('No database specified. Augmentation from database skipped'),
+                                              mock.call('Unknown-Ambient: Failed upload attempt 1: oops')])
+                # ... and logerr() once with the failed post.
+                mock_logerr.assert_called_once_with('Unknown-Ambient: Failed to publish record '
+                                                    '2018-03-22 00:00:00 PDT (1521702000): '
+                                                    'Failed upload after 1 tries')
+
+        # Now check that our mock urlopen() was called with the parameters we expected.
         matcher = TestAmbient.get_matcher(TestAmbient.server_url, TestAmbient.station, TestAmbient.password)
         mock_urlopen.assert_called_once_with(matcher, data=None, timeout=10)
 
     @staticmethod
-    def get_matcher(server_url, station, password):
-        matcher = MatchRequest('%s?action=updateraw&ID=%s&PASSWORD=%s&softwaretype=weewx-%s'
-                               '&dateutc=2018-03-22%%2007%%3A00%%3A00'
-                               '&baromin=30.100&tempf=20.0'
-                               % (server_url, station, password, weewx.__version__),
-                               'weewx/%s' % weewx.__version__)
+    def get_matcher(server_url, station, password, include_indoor=False):
+        """Return a MatchRequest object that will test against what we expected"""
+        url = '%s?action=updateraw&ID=%s&PASSWORD=%s&softwaretype=weewx-%s' \
+              '&dateutc=2018-03-22%%2007%%3A00%%3A00' \
+              '&baromin=30.100&tempf=20.0' \
+              % (server_url, station, password, weewx.__version__)
+        if include_indoor:
+            url += "&indoortempf=70.0"
+        matcher = MatchRequest(url, 'weewx/%s' % weewx.__version__)
         return matcher
 
 
