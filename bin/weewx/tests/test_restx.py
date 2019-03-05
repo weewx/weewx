@@ -90,7 +90,7 @@ class TestAmbient(unittest.TestCase):
         return mock_urlopen
 
     def test_request(self):
-        """Test that we are forming the right Request object"""
+        """Test of a normal GET post to an Ambient uploading service"""
 
         mock_urlopen = self.get_patcher()
         q = queue.Queue()
@@ -99,11 +99,52 @@ class TestAmbient(unittest.TestCase):
                                         station=TestAmbient.station,
                                         password=TestAmbient.password,
                                         server_url=TestAmbient.server_url,
+                                        max_tries=1,
+                                        log_success=True,
+                                        log_failure=True,
                                         )
         record = get_record()
         q.put(record)
         q.put(None)
-        obj.run()
+        with mock.patch('weewx.restx.logdbg') as mock_logdbg:
+            with mock.patch('weewx.restx.loginf') as mock_loginf:
+                obj.run()
+                mock_logdbg.assert_called_once_with('No database specified. Augmentation from database skipped')
+                # loginf() should have been called once with the success
+                mock_loginf.assert_called_once_with('Unknown-Ambient: Published record '
+                                                    '2018-03-22 00:00:00 PDT (1521702000)')
+
+        matcher = TestAmbient.get_matcher(TestAmbient.server_url, TestAmbient.station, TestAmbient.password)
+        mock_urlopen.assert_called_once_with(matcher, data=None, timeout=10)
+
+    def test_failed_request(self):
+        """Test response to a bad request"""
+
+        # This will get a mocked version of urlopen, which will return a 401 code
+        mock_urlopen = self.get_patcher(code=401, response_body=['unauthorized'])
+        q = queue.Queue()
+        obj = weewx.restx.AmbientThread(q,
+                                        manager_dict=None,
+                                        station=TestAmbient.station,
+                                        password=TestAmbient.password,
+                                        server_url=TestAmbient.server_url,
+                                        max_tries=1,
+                                        log_success=True,
+                                        log_failure=True,
+                                        )
+        record = get_record()
+        q.put(record)
+        q.put(None)
+        with mock.patch('weewx.restx.logdbg') as mock_logdbg:
+            with mock.patch('weewx.restx.logerr') as mock_logerr:
+                obj.run()
+                # logdbg() should have been called twice...
+                mock_logdbg.has_calls([mock.call('No database specified. Augmentation from database skipped'),
+                                       mock.call('Unknown-Ambient: Failed upload attempt 1: Code 401')])
+                # ... and logerr() once with the failed post.
+                mock_logerr.assert_called_once_with('Unknown-Ambient: Failed to publish record '
+                                                    '2018-03-22 00:00:00 PDT (1521702000): '
+                                                    'Failed upload after 1 tries')
 
         matcher = TestAmbient.get_matcher(TestAmbient.server_url, TestAmbient.station, TestAmbient.password)
         mock_urlopen.assert_called_once_with(matcher, data=None, timeout=10)
