@@ -259,7 +259,7 @@ class RESTThread(threading.Thread):
         if dbmanager is None:
             # If we don't have a database, we can't do anything
             if self.log_failure:
-                logdbg("No database specified. Augmentation from database skipped")
+                logdbg("No database specified. Augmentation from database skipped.")
             return record
 
         _time_ts = record['dateTime']
@@ -1645,7 +1645,7 @@ class AWEKASThread(RESTThread):
         if dbmanager is None:
             # If we don't have a database, we can't do anything
             if self.log_failure:
-                loginf("AWEKAS: No database specified. Augmentation from database skipped")
+                loginf("AWEKAS: No database specified. Augmentation from database skipped.")
             return r
 
         # If rain rate is already available, return the record
