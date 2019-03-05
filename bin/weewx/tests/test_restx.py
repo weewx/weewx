@@ -79,9 +79,13 @@ class TestAmbient(unittest.TestCase):
     def get_openurl_patcher(self, code=200, response_body=[], side_effect=None):
         """Get a patch object for a post to urllib.request.urlopen
 
-        code: The response code that should be returned by the mock urlopen
+        code: The response code that should be returned by the mock urlopen().
 
-        response_body: The response body that should be returned by the mock urlopen
+        response_body: The response body that should be returned by the mock urlopen().
+        Should be an iterable.
+
+        side_effect: Any side effect to be done. Set to an exception class to have
+        an exception raised by the mock urlopen().
         """
         # Mock up the urlopen
         patcher = mock.patch('weewx.restx.urllib.request.urlopen')
@@ -92,6 +96,8 @@ class TestAmbient(unittest.TestCase):
         mock_urlopen.return_value.code = code
         # And something we can iterate over for the response body
         mock_urlopen.return_value.__iter__.return_value = iter(response_body)
+        if side_effect:
+            mock_urlopen.side_effect = side_effect
         # This will insure that patcher.stop() method will get called after a test
         self.addCleanup(patcher.stop)
         return mock_urlopen
@@ -199,10 +205,9 @@ class TestAmbient(unittest.TestCase):
     def test_bad_http_request(self):
         """Test response to raising an exception during a post"""
 
-        # Get a normal patched version of url_open
-        mock_urlopen = self.get_openurl_patcher()
-        # This will cause an exception of type http_client.HTTPException to be raised when calling urlopen()
-        mock_urlopen.side_effect = http_client.HTTPException("oops")
+        # Get a mock version of urlopen(), but with the side effect of having an exception of
+        # type http_client.HTTPException raised when it's called
+        mock_urlopen = self.get_openurl_patcher(side_effect=http_client.HTTPException("oops"))
 
         q = queue.Queue()
         obj = weewx.restx.AmbientThread(q,
