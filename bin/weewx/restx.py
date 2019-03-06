@@ -66,66 +66,9 @@ In unusual cases, you might also have to implement the following:
    See the CWOP version, CWOPThread.process_record(), for an example that
    uses sockets. 
 
-=================== Known behavior of various RESTful services: ===================
+See the file restful.md in the "tests" subdirectory for known behaviors
+of various RESTful services.
 
-==== Wunderground (checked 5-Mar-2019)
-    If all is OK, it responds with a code of 200, and a response body of 'success'.
-
-    If either the station ID, or the password is bad, it responds with a code of 401,
-    and a response body of 'unauthorized'.
-
-    If the GET statement is malformed (for example, the date is garbled), it responds
-    with a code of 400, and a response body of 'bad request'.
-
-==== PWS (checked 6-Mar-2019)
-    - If all is OK, it responds with a code of 200 and a response body with the following:
-
----
-<html>
-<head>
-    <title>PWS Weather Station Update</title>
-</head>
-<body>
-Data Logged and posted in METAR mirror.
-
-</body>
-</html>
----
-
-    - If a bad station ID is given, it responds with a code of 200, and a response body with the following:
----
-<html>
-<head>
-    <title>PWS Weather Station Update</title>
-</head>
-<body>
-ERROR: Not a vailid Station ID
----
-
-    - If a valid station ID is given, but a bad password, it responds with a code of 200, and a
-    response body with the following:
----
-<html>
-<head>
-    <title>PWS Weather Station Update</title>
-</head>
-<body>
-ERROR: Not a vailid Station ID/Password
----
-
-    - If the date is garbled, it responds with a code of 200, and a response body with the following:
----
-<html>
-<head>
-    <title>PWS Weather Station Update</title>
-</head>
-<body>
-dateutc parameter is not in proper format: YYYY-MM-DD HH:ii:ss<br>
-Data parameters invalid, NOT logged.
-
-</body>
-</html>
----
 """
 
 from __future__ import absolute_import
@@ -155,7 +98,7 @@ from weeutil.weeutil import to_int, to_float, to_bool, timestamp_to_string, sear
 from weeutil.log import logdbg, logerr, loginf, logcrt, logalt
 
 class FailedPost(IOError):
-    """Raised when a post fails after trying the max number of allowed times"""
+    """Raised when a post does not succeed."""
 
 
 class AbortedPost(Exception):
@@ -792,7 +735,6 @@ class StdWOW(StdRESTful):
             config_dict, 'wx_binding')
 
         _ambient_dict.setdefault('server_url', StdWOW.archive_url)
-        _ambient_dict.setdefault('post_interval', 900)
         self.archive_queue = queue.Queue()
         self.archive_thread = WOWThread(self.archive_queue, _manager_dict,
                                         protocol_name="WOW",
@@ -935,7 +877,7 @@ class AmbientThread(RESTThread):
                 # Bad login. No reason to retry. Raise an exception.
                 raise BadLogin(line)
             # PWS signals something garbled with a line that includes 'invalid'.
-            elif line.find(b'invalid'):
+            elif line.find(b'invalid') != -1:
                 # Again, no reason to retry. Raise an exception.
                 raise FailedPost(line)
 
@@ -1046,9 +988,11 @@ class WOWThread(AmbientThread):
         try:
             _response = urllib.request.urlopen(request, timeout=self.timeout)
         except urllib.error.HTTPError as e:
-            # WOW signals a bad login with a HTML Error 400 or 403 code:
-            if e.code == 400 or e.code == 403:
+            # WOW signals a bad login with a HTML Error 403 code:
+            if e.code == 403:
                 raise BadLogin(e)
+            elif e.code == 429:
+                raise FailedPost("Too many requests; data already seen; or too out of date.")
             else:
                 raise
         else:

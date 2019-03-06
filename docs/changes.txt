@@ -10,7 +10,10 @@ The package MySQL-python, which we used previously, is not available
 for Python 3. Ported  the MySQL code to use the package mysqlclient
 as an alternative.
 
-Introduce a uniform logging shim. Fixes issue #353,
+Introduce a uniform logging shim. Fixes issue #353.
+
+The default for WOW no longer throttles posting frequency (the default
+used to be no more than once every 15 minutes).
 
 
 3.10.0 MM/DD/YYYY
