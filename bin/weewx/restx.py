@@ -66,17 +66,66 @@ In unusual cases, you might also have to implement the following:
    See the CWOP version, CWOPThread.process_record(), for an example that
    uses sockets. 
 
-Known behavior of various RESTful services:
+=================== Known behavior of various RESTful services: ===================
 
-   Wunderground:
-     If all is OK, it responds with a code of 200, and a response body of 'success'.
+==== Wunderground (checked 5-Mar-2019)
+    If all is OK, it responds with a code of 200, and a response body of 'success'.
 
-     If either the station ID, or the password is bad, it responds with a code of 401,
-     and a response body of 'unauthorized'.
+    If either the station ID, or the password is bad, it responds with a code of 401,
+    and a response body of 'unauthorized'.
 
-     If the GET statement is malformed (for example, the date is garbled), it responds
-     with a code of 400, and a response body of 'bad request'.
+    If the GET statement is malformed (for example, the date is garbled), it responds
+    with a code of 400, and a response body of 'bad request'.
 
+==== PWS (checked 6-Mar-2019)
+    - If all is OK, it responds with a code of 200 and a response body with the following:
+
+---
+<html>
+<head>
+    <title>PWS Weather Station Update</title>
+</head>
+<body>
+Data Logged and posted in METAR mirror.
+
+</body>
+</html>
+---
+
+    - If a bad station ID is given, it responds with a code of 200, and a response body with the following:
+---
+<html>
+<head>
+    <title>PWS Weather Station Update</title>
+</head>
+<body>
+ERROR: Not a vailid Station ID
+---
+
+    - If a valid station ID is given, but a bad password, it responds with a code of 200, and a
+    response body with the following:
+---
+<html>
+<head>
+    <title>PWS Weather Station Update</title>
+</head>
+<body>
+ERROR: Not a vailid Station ID/Password
+---
+
+    - If the date is garbled, it responds with a code of 200, and a response body with the following:
+---
+<html>
+<head>
+    <title>PWS Weather Station Update</title>
+</head>
+<body>
+dateutc parameter is not in proper format: YYYY-MM-DD HH:ii:ss<br>
+Data parameters invalid, NOT logged.
+
+</body>
+</html>
+---
 """
 
 from __future__ import absolute_import
@@ -881,10 +930,14 @@ class AmbientThread(RESTThread):
     def check_response(self, response):
         """Check the HTTP response for an Ambient related error."""
         for line in response:
-            # PWSweather signals with 'ERROR', WU with 'INVALID':
-            if line.startswith(b'ERROR') or line.startswith(b'INVALID'):
+            # PWSweather signals a bad login with 'ERROR'
+            if line.startswith(b'ERROR'):
                 # Bad login. No reason to retry. Raise an exception.
                 raise BadLogin(line)
+            # PWS signals something garbled with a line that includes 'invalid'.
+            elif line.find(b'invalid'):
+                # Again, no reason to retry. Raise an exception.
+                raise FailedPost(line)
 
 
 class AmbientLoopThread(AmbientThread):
