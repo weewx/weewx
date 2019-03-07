@@ -98,7 +98,7 @@ from weeutil.weeutil import to_int, to_float, to_bool, timestamp_to_string, sear
 from weeutil.log import logdbg, logerr, loginf, logcrt, logalt
 
 class FailedPost(IOError):
-    """Raised when a post does not succeed."""
+    """Raised when a post fails, and is unlikely to succeed if retried."""
 
 
 class AbortedPost(Exception):
@@ -1537,8 +1537,7 @@ class StdAWEKAS(StdRESTful):
     def __init__(self, engine, config_dict):
         super(StdAWEKAS, self).__init__(engine, config_dict)
 
-        site_dict = get_site_dict(
-            config_dict, 'AWEKAS', 'username', 'password')
+        site_dict = get_site_dict(config_dict, 'AWEKAS', 'username', 'password')
         if site_dict is None:
             return
 
@@ -1583,7 +1582,7 @@ class AWEKASThread(RESTThread):
                  language='de', server_url=_SERVER_URL,
                  post_interval=300, max_backlog=six.MAXSIZE, stale=None,
                  log_success=True, log_failure=True,
-                 timeout=60, max_tries=3, retry_wait=5, retry_login=3600, skip_upload=False):
+                 timeout=10, max_tries=3, retry_wait=5, retry_login=3600, skip_upload=False):
         """Initialize an instances of AWEKASThread.
 
         Parameters specific to this class:
@@ -1637,54 +1636,35 @@ class AWEKASThread(RESTThread):
     def get_record(self, record, dbmanager):
         """Ensure that rainRate is in the record."""
         # Get the record from my superclass
-        r = super(AWEKASThread, self).get_record(record, dbmanager)
+        record = super(AWEKASThread, self).get_record(record, dbmanager)
 
         if dbmanager is None:
             # If we don't have a database, we can't do anything
             if self.log_failure:
-                loginf("AWEKAS: No database specified. Augmentation from database skipped.")
-            return r
+                logdbg("AWEKAS: No database specified. Augmentation from database skipped.")
+            return record
 
         # If rain rate is already available, return the record
-        if 'rainRate' in r:
-            return r
+        if 'rainRate' in record:
+            return record
 
         # Otherwise, augment with rainRate, which AWEKAS expects. If the
         # archive does not have rainRate, an exception will be raised.
         # Be prepare to catch it.
         try:
             rr = dbmanager.getSql('select rainRate from %s where dateTime=?' %
-                                  dbmanager.table_name, (r['dateTime'],))
+                                  dbmanager.table_name, (record['dateTime'],))
         except weedb.OperationalError:
             pass
         else:
-            r['rainRate'] = rr[0]
-        return r
+            record['rainRate'] = rr[0]
+        return record
 
-    def process_record(self, record, dbmanager):
-        r = self.get_record(record, dbmanager)
-        url = self.get_url(r)
-        if self.skip_upload:
-            raise AbortedPost("Skip post")
-        req = urllib.request.Request(url)
-        req.add_header("User-Agent", "weewx/%s" % weewx.__version__)
-        self.post_with_retries(req)
-
-    def check_response(self, response):
-        for line in response:
-            if line.startswith(b"Benutzer/Passwort Fehler"):
-                raise BadLogin(line)
-            elif not line.startswith(b'OK'):
-                raise FailedPost("server returned '%s'" % line)
-
-    def get_url(self, in_record):
+    def format_url(self, in_record):
+        """Specialized version of format_url() for the AWEKAS protocol."""
 
         # Convert to units required by awekas
-        record = weewx.units.to_METRIC(in_record)
-        if 'dayRain' in record and record['dayRain'] is not None:
-            record['dayRain'] *= 10
-        if 'rainRate' in record and record['rainRate'] is not None:
-            record['rainRate'] *= 10
+        record = weewx.units.to_METRICWX(in_record)
 
         # assemble an array of values in the proper order
         values = [self.username]
@@ -1729,6 +1709,19 @@ class AWEKASThread(RESTThread):
                 return self._FORMATS[label] % record[label]
             return str(record[label])
         return ''
+
+    def check_response(self, response):
+        """Specialized version of check_response()."""
+        for line in response:
+            # Skip blank lines:
+            if not line.strip():
+                continue
+            if line.startswith(b'OK'):
+                return
+            elif line.startswith(b"Benutzer/Passwort Fehler"):
+                raise BadLogin(line)
+            else:
+                raise FailedPost("Server returned '%s'" % line)
 
 
 ###############################################################################

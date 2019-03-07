@@ -81,3 +81,18 @@ following
    ```
    The custom error module does not recognize this error.
    ```
+   
+## AWEKAS (checked 6-Mar-2019)
+* If all is OK, it responds with a code of 200, and a response body with a simple `OK`.
+
+* If a bad user ID or password is given, it responds with a code of 200, and a 
+response body with the following:
+```
+Benutzer/Passwort Fehler
+```
+
+* If a post is done too soon, it responds with a code of 200, and a response body with 
+the following:
+```
+too many requests - try again later 
+```
