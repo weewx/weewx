@@ -97,6 +97,7 @@ from weeutil.weeutil import to_int, to_float, to_bool, timestamp_to_string, sear
     accumulateLeaves, to_sorted_string
 from weeutil.log import logdbg, logerr, loginf, logcrt, logalt
 
+
 class FailedPost(IOError):
     """Raised when a post fails, and is unlikely to succeed if retried."""
 
@@ -359,7 +360,7 @@ class RESTThread(threading.Thread):
             except AbortedPost as e:
                 if self.log_success:
                     _time_str = timestamp_to_string(_record['dateTime'])
-                    loginf("%s: Skipped record %s: %s" %  (self.protocol_name, _time_str, e))
+                    loginf("%s: Skipped record %s: %s" % (self.protocol_name, _time_str, e))
             except BadLogin:
                 if self.retry_login:
                     logerr("%s: Bad login; waiting %s minutes then retrying"
@@ -702,7 +703,7 @@ class StdPWSWeather(StdRESTful):
                                             **_ambient_dict)
         self.archive_thread.start()
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
-        loginf("PWSWeather: Data for station %s will be posted" %_ambient_dict['station'])
+        loginf("PWSWeather: Data for station %s will be posted" % _ambient_dict['station'])
 
     def new_archive_record(self, event):
         self.archive_queue.put(event.record)
@@ -1408,17 +1409,18 @@ class StationRegistryThread(RESTThread):
         self.station_model = station_model
 
     def get_record(self, dummy_record, dummy_archive):
-        _record = dict()
-        _record['station_url'] = self.station_url
-        _record['description'] = self.description
-        _record['latitude'] = self.latitude
-        _record['longitude'] = self.longitude
-        _record['station_type'] = self.station_type
-        _record['station_model'] = self.station_model
-        _record['python_info'] = platform.python_version()
-        _record['platform_info'] = platform.platform()
-        _record['weewx_info'] = weewx.__version__
-        _record['usUnits'] = weewx.US
+        _record = {
+            'station_url'   : self.station_url,
+            'description'   : self.description,
+            'latitude'      : self.latitude,
+            'longitude'     : self.longitude,
+            'station_type'  : self.station_type,
+            'station_model' : self.station_model,
+            'python_info'   : platform.python_version(),
+            'platform_info' :  platform.platform(),
+            'weewx_info'    : weewx.__version__,
+            'usUnits'       : weewx.US,
+        }
         return _record
 
     _FORMATS = {'station_url'  : 'station_url=%s',
