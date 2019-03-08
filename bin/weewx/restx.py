@@ -1629,7 +1629,7 @@ class AWEKASThread(RESTThread):
                                            retry_login=retry_login,
                                            skip_upload=skip_upload)
         self.username = username
-        self.password = password
+        self.password_utf8 = password.encode('utf-8')
         self.latitude = float(latitude)
         self.longitude = float(longitude)
         self.language = language
@@ -1671,7 +1671,7 @@ class AWEKASThread(RESTThread):
         # assemble an array of values in the proper order
         values = [self.username]
         m = hashlib.md5()
-        m.update(self.password)
+        m.update(self.password_utf8)
         values.append(m.hexdigest())
         time_tt = time.gmtime(record['dateTime'])
         values.append(time.strftime("%d.%m.%Y", time_tt))
