@@ -95,10 +95,11 @@ class RsyncUpload(object):
             rsynccmd = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         
             stdout = rsynccmd.communicate()[0]
-            stroutput = stdout.encode("utf-8").strip()
+            stroutput = stdout.decode("utf-8").strip()
         except OSError as e:
             if e.errno == errno.ENOENT:
-                syslog.syslog(syslog.LOG_ERR, "rsyncupload: rsync does not appear to be installed on this system. (errno %d, \"%s\")" % (e.errno, e.strerror))
+                syslog.syslog(syslog.LOG_ERR, "rsyncupload: rsync does not appear to be installed on "
+                                              "this system. (errno %d, '%s')" % (e.errno, e.strerror))
             raise
         
         # we have some output from rsync so generate an appropriate message
