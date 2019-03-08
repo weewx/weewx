@@ -1629,7 +1629,10 @@ class AWEKASThread(RESTThread):
                                            retry_login=retry_login,
                                            skip_upload=skip_upload)
         self.username = username
-        self.password_utf8 = password.encode('utf-8')
+        # Calculate and save the password hash
+        m = hashlib.md5()
+        m.update(password.encode('utf-8'))
+        self.password_hash = m.hexdigest()
         self.latitude = float(latitude)
         self.longitude = float(longitude)
         self.language = language
@@ -1637,7 +1640,7 @@ class AWEKASThread(RESTThread):
 
     def get_record(self, record, dbmanager):
         """Ensure that rainRate is in the record."""
-        # Get the record from my superclass
+        # Have my superclass process the record first.
         record = super(AWEKASThread, self).get_record(record, dbmanager)
 
         if dbmanager is None:
@@ -1646,20 +1649,16 @@ class AWEKASThread(RESTThread):
                 logdbg("AWEKAS: No database specified. Augmentation from database skipped.")
             return record
 
-        # If rain rate is already available, return the record
-        if 'rainRate' in record:
-            return record
-
-        # Otherwise, augment with rainRate, which AWEKAS expects. If the
-        # archive does not have rainRate, an exception will be raised.
-        # Be prepare to catch it.
-        try:
-            rr = dbmanager.getSql('select rainRate from %s where dateTime=?' %
-                                  dbmanager.table_name, (record['dateTime'],))
-        except weedb.OperationalError:
-            pass
-        else:
-            record['rainRate'] = rr[0]
+        # If rainRate is not in the record, fetch it from the database
+        if 'rainRate' not in record:
+            # If the database does not have rainRate, an exception will be raised.
+            # Be prepare to catch it.
+            try:
+                rr = dbmanager.getSql('select rainRate from %s where dateTime=?' %
+                                      dbmanager.table_name, (record['dateTime'],))
+                record['rainRate'] = rr[0]
+            except weedb.OperationalError:
+                pass
         return record
 
     def format_url(self, in_record):
@@ -1669,10 +1668,10 @@ class AWEKASThread(RESTThread):
         record = weewx.units.to_METRICWX(in_record)
 
         # assemble an array of values in the proper order
-        values = [self.username]
-        m = hashlib.md5()
-        m.update(self.password_utf8)
-        values.append(m.hexdigest())
+        values = [
+            self.username,
+            self.password_hash
+        ]
         time_tt = time.gmtime(record['dateTime'])
         values.append(time.strftime("%d.%m.%Y", time_tt))
         values.append(time.strftime("%H:%M", time_tt))
