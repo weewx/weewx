@@ -1667,41 +1667,43 @@ class AWEKASThread(RESTThread):
         # Convert to units required by awekas
         record = weewx.units.to_METRICWX(in_record)
 
+        time_tt = time.gmtime(record['dateTime'])
         # assemble an array of values in the proper order
         values = [
             self.username,
-            self.password_hash
+            self.password_hash,
+            time.strftime("%d.%m.%Y", time_tt),
+            time.strftime("%H:%M", time_tt),
+            self._format(record, 'outTemp'),  # C
+            self._format(record, 'outHumidity'),  # %
+            self._format(record, 'barometer'),  # mbar
+            self._format(record, 'dayRain'),  # mm
+            self._format(record, 'windSpeed'),  # km/h
+            self._format(record, 'windDir'),
+            '',  # weather condition
+            '',  # warning text
+            '',  # snow high
+            self.language,
+            '',  # tendency
+            self._format(record, 'windGust'),  # km/h
+            self._format(record, 'radiation'),  # W/m^2
+            self._format(record, 'UV'),  # uv index
+            '',  # brightness in lux
+            '',  # sunshine hours
+            '',  # soil temperature
+            self._format(record, 'rainRate'),  # mm/h
+            'weewx_%s' % weewx.__version__,
+            str(self.longitude),
+            str(self.latitude),
         ]
-        time_tt = time.gmtime(record['dateTime'])
-        values.append(time.strftime("%d.%m.%Y", time_tt))
-        values.append(time.strftime("%H:%M", time_tt))
-        values.append(self._format(record, 'outTemp'))  # C
-        values.append(self._format(record, 'outHumidity'))  # %
-        values.append(self._format(record, 'barometer'))  # mbar
-        values.append(self._format(record, 'dayRain'))  # mm
-        values.append(self._format(record, 'windSpeed'))  # km/h
-        values.append(self._format(record, 'windDir'))
-        values.append('')  # weather condition
-        values.append('')  # warning text
-        values.append('')  # snow high
-        values.append(self.language)
-        values.append('')  # tendency
-        values.append(self._format(record, 'windGust'))  # km/h
-        values.append(self._format(record, 'radiation'))  # W/m^2
-        values.append(self._format(record, 'UV'))  # uv index
-        values.append('')  # brightness in lux
-        values.append('')  # sunshine hours
-        values.append('')  # soil temperature
-        values.append(self._format(record, 'rainRate'))  # mm/h
-        values.append('weewx_%s' % weewx.__version__)
-        values.append(str(self.longitude))
-        values.append(str(self.latitude))
 
         valstr = ';'.join(values)
         url = self.server_url + '?val=' + valstr
-        # show the url in the logs for debug, but mask any credentials
+
         if weewx.debug >= 2:
-            logdbg('AWEKAS: url: %s' % re.sub(m.hexdigest(), "XXX", url))
+            # show the url in the logs for debug, but mask any credentials
+            logdbg('AWEKAS: url: %s' % url.replace(self.password_hash, 'XXX'))
+
         return url
 
     def _format(self, record, label):
