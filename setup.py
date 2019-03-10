@@ -413,7 +413,6 @@ if __name__ == "__main__":
           version=VERSION,
           description='The WeeWX weather software system',
           long_description=long_description,
-          long_description_content_type="text/markdown",
           author='Tom Keffer',
           author_email='tkeffer@gmail.com',
           url='http://www.weewx.com',
