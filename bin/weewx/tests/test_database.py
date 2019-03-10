@@ -166,34 +166,35 @@ class Common(unittest.TestCase):
             for (irec,_row) in enumerate(archive.genSql("SELECT barometer FROM archive;")):
                 self.assertEqual(_row[0], barfunc(irec))
                 
+            itest = int(nrecs/2)
             # Try getRecord():
-            target_ts = timevec[nrecs/2]
+            target_ts = timevec[itest]
             _rec = archive.getRecord(target_ts)
             # Check that the missing windSpeed is None, then remove it in order to do the compare:
             self.assertEqual(_rec.pop('windSpeed'), None)
-            self.assertEqual(expected_record(nrecs/2), _rec)
+            self.assertEqual(expected_record(itest), _rec)
             
             # Try finding the nearest neighbor below
-            target_ts = timevec[nrecs/2] + interval/100
+            target_ts = timevec[itest] + interval/100
             _rec = archive.getRecord(target_ts, max_delta=interval/50)
             # Check that the missing windSpeed is None, then remove it in order to do the compare:
             self.assertEqual(_rec.pop('windSpeed'), None)
-            self.assertEqual(expected_record(nrecs/2), _rec)
+            self.assertEqual(expected_record(itest), _rec)
 
             # Try finding the nearest neighbor above
-            target_ts = timevec[nrecs/2] - interval/100
+            target_ts = timevec[itest] - interval/100
             _rec = archive.getRecord(target_ts, max_delta=interval/50)
             # Check that the missing windSpeed is None, then remove it in order to do the compare:
             self.assertEqual(_rec.pop('windSpeed'), None)
-            self.assertEqual(expected_record(nrecs/2), _rec)
+            self.assertEqual(expected_record(itest), _rec)
             
             # Try finding a neighbor too far away:
-            target_ts = timevec[nrecs/2] - interval/2
+            target_ts = timevec[itest] - interval/2
             _rec = archive.getRecord(target_ts, max_delta=interval/50)
             self.assertEqual(_rec, None)
 
             # Try finding a non-existent record:
-            target_ts = timevec[nrecs/2] + 1
+            target_ts = timevec[itest] + 1
             _rec = archive.getRecord(target_ts)
             self.assertEqual(_rec, None)
             
