@@ -4,8 +4,18 @@
 #
 #    See the file LICENSE.txt for your full rights.
 #
-"""Test tag notation for template generation."""
+"""Test tag notation for template generation.
+
+To run standalone, PYTHONPATH must be set to not only the WeeWX code, but also the "stats" example.
+Something like:
+
+cd ~/git/weewx
+PYTHONPATH="./examples:./bin" python bin/weewx/tests/test_templates.py
+"""
+
 from __future__ import with_statement
+from __future__ import absolute_import
+from __future__ import print_function
 import locale
 import os.path
 import shutil
@@ -15,13 +25,7 @@ import time
 import unittest
 
 import configobj
-
-# To run standalone, PYTHONPATH must be set to not only the WeeWX code, but also the "stats" example.
-# Something like:
-#
-# cd ~/git/weewx
-# PYTHONPATH="./examples:./bin" python bin/weewx/test/test_templates.py
-#
+from six.moves import map
 
 os.environ['TZ'] = 'America/Los_Angeles'
 time.tzset()
@@ -100,9 +104,9 @@ class Common(unittest.TestCase):
             shutil.rmtree(test_html_dir)
         except OSError as e:
             if os.path.exists(test_html_dir):
-                print >> sys.stderr, "\nUnable to remove old test directory %s", test_html_dir
-                print >> sys.stderr, "Reason:", e
-                print >> sys.stderr, "Aborting"
+                print("\nUnable to remove old test directory %s", test_html_dir, file=sys.stderr)
+                print("Reason:", e, file=sys.stderr)
+                print("Aborting", file=sys.stderr)
                 exit(1)
 
         # This will generate the test databases if necessary:
@@ -151,11 +155,8 @@ class Common(unittest.TestCase):
                 # Use that to figure out where the actual results ended up
                 actual_filename_abs = os.path.join(test_html_dir, filename_rel)
 
-                # print "Checking file: ", actual_filename_abs
-                # print "  against file:", expected_filename_abs
-
-                with open(actual_filename_abs) as actual:
-                    with open(expected_filename_abs) as expected:
+                with open(actual_filename_abs, 'r') as actual:
+                    with open(expected_filename_abs, 'r') as expected:
                         n = 0
                         while True:
                             actual_line = actual.readline()
