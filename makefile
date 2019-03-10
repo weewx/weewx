@@ -98,11 +98,12 @@ test-setup:
 TESTDIR=/var/tmp/weewx_test
 MYSQLCLEAN="drop database test_weewx;\n\
 drop database test_alt_weewx;\n\
-drop database test_sim;\n"
+drop database test_sim;\n\
+drop database test_weewx1;\n"
 test-clean:
 	rm -rf $(TESTDIR)
 	echo $(MYSQLCLEAN) | mysql --user=weewx --password=weewx --force >/dev/null 2>&1
-	rm /var/tmp/sqdb1.sdb >/dev/null 2>&1
+	rm -f /var/tmp/sqdb1.sdb >/dev/null 2>&1
 
 install:
 	./setup.py --install
