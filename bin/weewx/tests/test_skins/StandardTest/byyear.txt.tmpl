@@ -89,7 +89,7 @@ $month.dateTime.format($YM)
 -----------------------------------
 #for $month in $year.months
 #if $month.barometer.count.raw
-$month.dateTime.format($YM) $month.wind.avg.nolabel($Wind,$NONE) $month.wind.max.nolabel($Wind,$NONE)   $month.wind.maxtime.format($D,$NODAY) $month.wind.vecdir.nolabel($Dir,$NONE) 
+$month.dateTime.format($YM) $month.wind.avg.nolabel($Wind,$NONE) $month.wind.max.nolabel($Wind,$NONE)   $month.wind.maxtime.format($D,$NODAY) $month.wind.vecdir.nolabel($Dir,$NONE)
 #else
 $month.dateTime.format($YM)
 #end if
