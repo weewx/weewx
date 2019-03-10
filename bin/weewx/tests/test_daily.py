@@ -368,8 +368,7 @@ def suite():
              'testTags', 'test_rainYear', 'test_agg_intervals', 'test_agg', 'test_heatcool']
     
     # Test both sqlite and MySQL:
-    # return unittest.TestSuite(list(map(TestSqlite, tests)) + list(map(TestMySQL, tests)))
-    return unittest.TestSuite(list(map(TestSqlite, tests)) )
+    return unittest.TestSuite(list(map(TestSqlite, tests)) + list(map(TestMySQL, tests)))
 
 if __name__ == '__main__':
 
