@@ -10,10 +10,12 @@ For this test to work, user 'weewx' must have full access to database 'test':
 """
 
 from __future__ import with_statement
+from __future__ import absolute_import
 import unittest
 
 import weedb
 import weedb.sqlite
+from six.moves import map
 
 sqlite_db_dict = {'database_name': '/tmp/test.sdb', 'driver':'weedb.sqlite', 'timeout': '2'}
 mysql_db_dict  = {'database_name': 'test_weewx1', 'user':'weewx1', 'password':'weewx1', 'driver':'weedb.mysql'}

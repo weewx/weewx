@@ -42,14 +42,8 @@ def guard(fn):
         except MySQLdb.DatabaseError as e:
             # Get the MySQL exception number out of e:
             try:
-                errno = e[0]
-            except TypeError:
-                try:
-                    # The package mysqlclient uses an attribute 'args':
-                    errno = e.args[0]
-                except (IndexError, AttributeError):
-                    errno = None
-            except IndexError:
+                errno = e.args[0]
+            except (IndexError, AttributeError):
                 errno = None
             # Default exception is weedb.DatabaseError
             klass = exception_map.get(errno, weedb.DatabaseError)

@@ -7,13 +7,15 @@
 # script "setup_mysql" will set them up with the necessary permissions.
 #
 from __future__ import with_statement
+from __future__ import absolute_import
 import unittest
 
 import MySQLdb
-try:
-    from _mysql_exceptions import IntegrityError, ProgrammingError, OperationalError
-except ImportError:
-    from MySQLdb import IntegrityError, ProgrammingError, OperationalError
+from MySQLdb import IntegrityError, ProgrammingError, OperationalError
+
+
+def get_error(e):
+    return e.exception.args[0]
 
 
 class Cursor(object):
@@ -49,19 +51,19 @@ class TestMySQL(unittest.TestCase):
         with self.assertRaises(OperationalError) as e:
             with Cursor(host='foohost', user='weewx1', passwd='weewx1') as e:
                 pass
-        self.assertEqual(e.exception[0], 2005)
+        self.assertEqual(get_error(e), 2005)
         
     def test_bad_password(self):
         with self.assertRaises(OperationalError) as e:
             with Cursor(user='weewx1', passwd='badpw') as e:
                 pass
-        self.assertEqual(e.exception[0], 1045)
+        self.assertEqual(get_error(e), 1045)
 
     def test_drop_nonexistent_database(self):
         with Cursor(user='weewx1', passwd='weewx1') as cursor:
             with self.assertRaises(OperationalError) as e:
                 cursor.execute("DROP DATABASE test_weewx1")
-            self.assertEqual(e.exception[0], 1008)
+            self.assertEqual(get_error(e), 1008)
     
     def test_drop_nopermission(self):
         with Cursor(user='weewx1', passwd='weewx1') as cursor1:
@@ -69,32 +71,32 @@ class TestMySQL(unittest.TestCase):
             with Cursor(user='weewx2', passwd='weewx2') as cursor2:
                 with self.assertRaises(OperationalError) as e:
                     cursor2.execute("DROP DATABASE test_weewx1")
-                self.assertEqual(e.exception[0], 1044)
+                self.assertEqual(get_error(e), 1044)
 
     def test_create_nopermission(self):
         with Cursor(user='weewx2', passwd='weewx2') as cursor:
             with self.assertRaises(OperationalError) as e:
                 cursor.execute("CREATE DATABASE test_weewx1")
-            self.assertEqual(e.exception[0], 1044)
+            self.assertEqual(get_error(e), 1044)
             
     def test_double_db_create(self):
         with Cursor(user='weewx1', passwd='weewx1') as cursor:
             cursor.execute("CREATE DATABASE test_weewx1")
             with self.assertRaises(ProgrammingError) as e:
                 cursor.execute("CREATE DATABASE test_weewx1")
-            self.assertEqual(e.exception[0], 1007)        
+            self.assertEqual(get_error(e), 1007)        
         
     def test_open_nonexistent_database(self):
         with self.assertRaises(OperationalError) as e:
             with Cursor(user='weewx1', passwd='weewx1', db='test_weewx1') as cursor:
                 pass
-        self.assertEqual(e.exception[0], 1049)
+        self.assertEqual(get_error(e), 1049)
         
     def test_select_nonexistent_database(self):
         with Cursor(user='weewx1', passwd='weewx1') as cursor:
             with self.assertRaises(ProgrammingError) as e:
                 cursor.execute("SELECT foo from test_weewx1.bar")
-            self.assertEqual(e.exception[0], 1146)
+            self.assertEqual(get_error(e), 1146)
     
     def test_select_nonexistent_table(self):
         with Cursor(user='weewx1', passwd='weewx1') as cursor:
@@ -102,7 +104,7 @@ class TestMySQL(unittest.TestCase):
             cursor.execute("CREATE TABLE test_weewx1.bar (col1 int, col2 int)")
             with self.assertRaises(ProgrammingError) as e:
                 cursor.execute("SELECT foo from test_weewx1.fubar")
-            self.assertEqual(e.exception[0], 1146)
+            self.assertEqual(get_error(e), 1146)
 
     def test_double_table_create(self):
         with Cursor(user='weewx1', passwd='weewx1') as cursor:
@@ -110,7 +112,7 @@ class TestMySQL(unittest.TestCase):
             cursor.execute("CREATE TABLE test_weewx1.bar (col1 int, col2 int)")
             with self.assertRaises(OperationalError) as e:
                 cursor.execute("CREATE TABLE test_weewx1.bar (col1 int, col2 int)")
-            self.assertEqual(e.exception[0], 1050)
+            self.assertEqual(get_error(e), 1050)
         
     def test_select_nonexistent_column(self):
         with Cursor(user='weewx1', passwd='weewx1') as cursor:
@@ -118,7 +120,7 @@ class TestMySQL(unittest.TestCase):
             cursor.execute("CREATE TABLE test_weewx1.bar (col1 int, col2 int)")
             with self.assertRaises(OperationalError) as e:
                 cursor.execute("SELECT foo from test_weewx1.bar")
-            self.assertEqual(e.exception[0], 1054)
+            self.assertEqual(get_error(e), 1054)
         
     def test_duplicate_key(self):
         with Cursor(user='weewx1', passwd='weewx1') as cursor:
@@ -127,7 +129,7 @@ class TestMySQL(unittest.TestCase):
             cursor.execute("INSERT INTO test_weewx1.test1 (dateTime, col1, col2) VALUES (1, 10, 20)")
             with self.assertRaises(IntegrityError) as e:
                 cursor.execute("INSERT INTO test_weewx1.test1 (dateTime, col1, col2) VALUES (1, 30, 40)")
-            self.assertEqual(e.exception[0], 1062)
+            self.assertEqual(get_error(e), 1062)
 
         
             
