@@ -6,6 +6,8 @@
 """Test the accumulators by using the simulator wx station"""
 
 from __future__ import with_statement
+from __future__ import absolute_import
+from __future__ import print_function
 import sys
 import syslog
 import time
@@ -13,6 +15,8 @@ import unittest
 import os.path
 
 import configobj
+from six.moves import map
+from six.moves import zip
 
 os.environ['TZ'] = 'America/Los_Angeles'
 time.tzset()
@@ -67,7 +71,7 @@ class Common(unittest.TestCase):
         try:
             with weewx.manager.open_manager_with_config(self.config_dict, 'wx_binding') as dbmanager:
                 if dbmanager.firstGoodStamp() == first_ts and dbmanager.lastGoodStamp() == last_ts:
-                    print "\nSimulator need not be run"
+                    print("\nSimulator need not be run")
                     return 
         except weedb.OperationalError:
             pass
@@ -108,7 +112,7 @@ class Stopper(weewx.engine.StdService):
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
         
     def new_archive_record(self, event):
-        print >>sys.stdout, "Archive record %s" % (weeutil.weeutil.timestamp_to_string(event.record['dateTime']))
+        print("Archive record %s" % (weeutil.weeutil.timestamp_to_string(event.record['dateTime'])), file=sys.stdout)
         sys.stdout.flush()
         if event.record['dateTime'] >= self.last_ts:
             raise weewx.StopNow("Time to stop!")
@@ -153,9 +157,9 @@ def calc_stats(config_dict, start_ts, stop_ts):
                                           start_time=sim_start_ts,
                                           resume_time=start_ts)
 
-    obs_sum = dict(zip(test_types, len(test_types)*(0,)))
-    obs_min = dict(zip(test_types, len(test_types)*(None,)))
-    obs_max = dict(zip(test_types, len(test_types)*(None,))) 
+    obs_sum = dict(list(zip(test_types, len(test_types)*(0,))))
+    obs_min = dict(list(zip(test_types, len(test_types)*(None,))))
+    obs_max = dict(list(zip(test_types, len(test_types)*(None,)))) 
     count = 0
 
     for packet in simulator.genLoopPackets():
@@ -175,7 +179,7 @@ def calc_stats(config_dict, start_ts, stop_ts):
 
 def suite():
     tests = ['test_archive_data']
-    return unittest.TestSuite(map(TestSqlite, tests) + map(TestMySQL, tests))
+    return unittest.TestSuite(list(map(TestSqlite, tests)) + list(map(TestMySQL, tests)))
 
 if __name__ == '__main__':
     unittest.TextTestRunner(verbosity=2).run(suite())
