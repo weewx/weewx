@@ -6,7 +6,7 @@
 #
 
 """Module to interact with a CSV file and import raw observational data for
-use with weeimport.
+use with wee_import.
 """
 
 from __future__ import with_statement
@@ -68,7 +68,7 @@ class CSVSource(weeimport.Source):
                                  float(_wind_direction[1])]
             else:
                 self.wind_dir = [-360, 360]
-        except:
+        except (KeyError, ValueError):
             self.wind_dir = [-360, 360]
         # get our source file path
         try:
@@ -171,14 +171,30 @@ class CSVSource(weeimport.Source):
         # return our CSV dict reader
         return _csv_reader
 
-    def period_generator(self):
-        """Generator function to control import processing in run() for CSV
-            imports.
+    @staticmethod
+    def period_generator():
+        """Generator function to control CSV import processing loop.
 
         Since CSV imports import from a single file this generator need only
         return a single value before it is exhausted.
         """
 
-        self.first_period = True
-        self.last_period = True
         yield 1
+
+    @property
+    def first_period(self):
+        """True if current period is the first period otherwise False.
+
+        For CSV imports there is only one period so it is always the first.
+        """
+
+        return True
+
+    @property
+    def last_period(self):
+        """True if current period is the last period otherwise False.
+
+        For CSV imports there is only one period so it is always the last.
+        """
+
+        return True
