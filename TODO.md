@@ -1,16 +1,9 @@
 The following drivers have been checked under Python 3:
 
+```
 vantage.py
 wmr100.py
-
-
-Move `weecfg.Logger` to `weeutil.log`
-Encapsulate `syslog.openlog` and `syslog.setlogmask` in the logging shim.
-
-Need a way to specify logdbg, logerr, etc., by using a name. Something like
-```
-logmsg('crt', 'my message')
 ```
 
-Packages that need to be updated:
-* WeatherCloud
+The installation instructions should use separate sub-tabs for instructions on 
+installing under Python 2 versus 3.

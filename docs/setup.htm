@@ -49,13 +49,6 @@
     <span class='code'>yast</span>) or the Python Package Management System
    (<span class='code'>pip</span>). Select the appropriate tab for specific instructions.</p>
 
-<p class="note"><span style="font-weight: bold">Note!</span><br/> As of this writing (Feb 2019), some of the packages
-    that are required for WeeWX, which are normally available through your package management system, have not been
-    ported to Python 3. In particular, <span class="code">python-cheetah</span> and <span
-        class="code">python-mysqldb</span> will not work under Python 3. If you plan on using Python 3, you should
-    install using <span class="code">pip</span>.
-</p>
-
 <div class='tabs'>
     <div id='prereq-tab-debian' class='tab selected' onclick="showprereq('debian')">Debian <img src='images/logo-debian.png' class='thumbnail' alt=""/> <img src='images/logo-ubuntu.png' class='thumbnail' alt=""/> <img src='images/logo-mint.png' class='thumbnail' alt=""/></div>
     <div id='prereq-tab-redhat' class='tab' onclick="showprereq('redhat')">Redhat <img src='images/logo-redhat.png' class='thumbnail' alt=""/> <img src='images/logo-centos.png' class='thumbnail' alt=""/> <img src='images/logo-fedora.png' class='thumbnail' alt=""/></div>
@@ -101,8 +94,26 @@ sudo pip install pyephem</span>
 
 #  --- Python 3 ---
 
-# Use pip
+<span class="cmd">sudo apt-get install python3-pil
+sudo apt-get install python3-configobj</span>
+
+# As of this writing, Cheetah 3 can only be installed using pip:
+<span class="cmd">sudo apt-get install python3-pip
+sudo apt-get install python3-dev
+sudo pip3 install cheetah3</span>
+
+# Required if hardware is serial or USB, respectively:
+<span class="cmd">sudo apt-get install python3-serial
+sudo apt-get install python3-usb</span>
+
+# Required if using MySQL:
+<span class="cmd">sudo apt-get install mysql-client
+sudo apt-get install python3-mysqldb</span>
+
+# Optional for extended almanac information:
+<span class="cmd">sudo pip3 install pyephem</span>
 </pre>
+
     </div>
     <div id='prereq-redhat' style='display:none'>
         <pre class='tty'># Redhat, Centos, Fedora
@@ -168,20 +179,20 @@ sudo pip install pyusb</span>
 
 #  --- Python 3 ---
 <span class="cmd">
-sudo python3 -m pip install configobj
-sudo python3 -m pip install cheetah3
-sudo python3 -m pip install Pillow-PIL</span>
+sudo pip3 install configobj
+sudo pip3 install cheetah3
+sudo pip3 install Pillow-PIL</span>
 
 # Required if you are planning on using MySQL. It this does not
 # install cleanly, then see <a href="https://pypi.org/project/mysqlclient/">https://pypi.org/project/mysqlclient/</a>
-<span class="cmd">sudo python3 -m pip install mysqlclient</span>
+<span class="cmd">sudo pip3 install mysqlclient</span>
 
 # Required if hardware is serial or USB, respectively:
-<span class="cmd">sudo python3 -m pip install pyserial
-sudo python3 -m pip install pyusb</span>
+<span class="cmd">sudo pip3 install pyserial
+sudo pip3 install pyusb</span>
 
 # Optional for extended almanac information:
-<span class="cmd">sudo python3 -m pip install pyephem</span></pre>
+<span class="cmd">sudo pip3 install pyephem</span></pre>
 
     </div>
 </div>
