@@ -604,8 +604,8 @@ class WDSource(weeimport.Source):
         This generator controls the FOR statement in the parents run() method
         that loops over the monthly log files to be imported. The generator
         yields a monthly log file name from the list of monthly log files to
-        be imported until the list is exhausted. The generator also sets the
-        first_period and last_period properties."""
+        be imported until the list is exhausted.
+        """
 
         # Step through each of our file names
         for self.file_name in self.log_list:
@@ -614,10 +614,20 @@ class WDSource(weeimport.Source):
 
     @property
     def first_period(self):
+        """True if current period is the first period otherwise False.
+
+         Return True if the current file name being processed is the first in
+         the list or it is None (the initialisation value).
+         """
 
         return self.file_name == self.log_list[0] if self.file_name is not None else True
 
     @property
     def last_period(self):
+        """True if current period is the last period otherwise False.
 
-        return self.file_name == self.log_list[-1] if self.file_name is not None else False
+         Return True if the current file name being processed is the last in
+         the list.
+         """
+
+        return self.file_name == self.log_list[-1]

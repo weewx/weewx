@@ -83,7 +83,7 @@ class Source(object):
                               to archive). [True|False].
         calc_missing        - Calculate any missing derived observations.
                               [True|False].
-        ignore_invalid_data - Ignore any ivalid data found in a source field. 
+        ignore_invalid_data - Ignore any invalid data found in a source field.
                               [True|False].
         tranche             - Number of records to be written to archive in a
                               single transaction. Integer.
@@ -91,7 +91,7 @@ class Source(object):
                               field not included in data source.
                               ['config'|'derive'|x] where x is an integer.
 
-    Child classes are used to interract with a specific source (eg CSV file,
+    Child classes are used to interact with a specific source (eg CSV file,
     WU). Any such child classes must define a getRawData() method which:
         -   gets the raw observation data and returns an iterable yielding data
             dicts whose fields can be mapped to a WeeWX archive field
@@ -1133,14 +1133,10 @@ class Source(object):
                         _msg = "    %d duplicate records were identified in period %d:" % (num_duplicates,
                                                                                            self.period_no)
                     self.wlog.printlog(syslog.LOG_INFO, _msg, can_suppress=True)
-                    # TODO. Remove following line before release
-                    # print _msg
                     for ts in sorted(self.period_duplicates):
                         _msg = "        %s" % timestamp_to_string(ts)
                         self.wlog.printlog(syslog.LOG_INFO, _msg,
                                            can_suppress=True)
-                        # TODO. Remove following line before release
-                        # print "        %s" % timestamp_to_string(ts)
                     # add the period duplicates to the overall duplicates
                     self.duplicates |= self.period_duplicates
                     # reset the period duplicates
