@@ -14,6 +14,7 @@ from __future__ import with_statement
 # Python imports
 import csv
 import datetime
+import socket
 import syslog
 import urllib2
 
@@ -94,14 +95,14 @@ class WUSource(weeimport.Source):
 
         # wind dir bounds
         _wind_direction = option_as_list(wu_config_dict.get('wind_direction',
-                                                                '0,360'))
+                                                            '0,360'))
         try:
             if float(_wind_direction[0]) <= float(_wind_direction[1]):
                 self.wind_dir = [float(_wind_direction[0]),
                                  float(_wind_direction[1])]
             else:
                 self.wind_dir = [0, 360]
-        except:
+        except (KeyError, ValueError):
             self.wind_dir = [0, 360]
 
         # some properties we know because of the format of the returned WU data
@@ -122,6 +123,9 @@ class WUSource(weeimport.Source):
         self.end = dt.fromtimestamp(startOfDay(self.last_ts))
         # set our increment
         self.increment = datetime.timedelta(days=1)
+
+        # property holding the current period being processed
+        self.period = None
 
         # tell the user/log what we intend to do
         _msg = "Observation history for Weather Underground station '%s' will be imported." % self.station_id
@@ -196,12 +200,13 @@ class WUSource(weeimport.Source):
             _wudata = urllib2.urlopen(_url)
         except urllib2.URLError as e:
             self.wlog.printlog(syslog.LOG_ERR,
-                          "Unable to open Weather Underground station %s" % self.station_id)
+                               "Unable to open Weather Underground station %s" % self.station_id)
             self.wlog.printlog(syslog.LOG_ERR, "   **** %s" % e)
             raise
         except socket.timeout as e:
             self.wlog.printlog(syslog.LOG_ERR,
-                          "Socket timeout for Weather Underground station %s" % self.station_id)
+                               "Socket timeout for Weather Underground station %s" % self.station_id)
+            self.wlog.printlog(syslog.LOG_ERR, "   **** %s" % e)
             raise
 
         # because the data comes back with lots of HTML tags and whitespace we
@@ -230,9 +235,28 @@ class WUSource(weeimport.Source):
         that loops over the WU days to be imported. The generator yields a
         datetime object from the range of dates to be imported."""
 
-        _period = self.start
-        while _period <= self.end:
-            self.first_period = _period == self.start
-            self.last_period = _period >= self.end
-            yield _period
-            _period += self.increment
+        self.period = self.start
+        while self.period <= self.end:
+            yield self.period
+            self.period += self.increment
+
+    @property
+    def first_period(self):
+        """True if current period is the first period otherwise False.
+
+         Return True if the current file name being processed is the first in
+         the list or it is None (the initialisation value).
+         """
+
+        return self.period == self.start if self.period is not None else True
+
+    @property
+    def last_period(self):
+        """True if current period is the last period otherwise False.
+
+         Return True if the current period being processed is >= the end of the
+         WU import period. Return False if the current period is None (the
+         initialisation value).
+         """
+
+        return self.period >= self.end if self.period is not None else False
