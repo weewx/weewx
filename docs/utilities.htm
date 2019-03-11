@@ -1000,14 +1000,15 @@ No extensions installed</pre>
             [--date=YYYY-mm-dd | --from=YYYY-mm-dd[THH:MM] --to=YYYY-mm-dd[THH:MM]]
             [--dry-run]
             [--verbose]
+            [--suppress-warnings]
             [--log=-]
 
 
-Import observation data into a weewx archive.
+Import observation data into a WeeWX archive.
 
 Options:
   -h, --help            show this help message and exit
-  --config=CONFIG_FILE  Use weewx configuration file CONFIG_FILE.
+  --config=CONFIG_FILE  Use WeeWX configuration file CONFIG_FILE.
   --import-config=IMPORT_CONFIG_FILE
                         Use import configuration file IMPORT_CONFIG_FILE.
   --dry-run             Print what would happen but do not do it.
@@ -1019,15 +1020,17 @@ Options:
                         Import data up until this date or date-time. Format is
                         YYYY-mm-dd[THH:MM].
   --log=-               Control wee_import log output. By default log output
-                        is sent to the weewx log file. Log output may be
-                        disabled by using '--log=-'. Some weewx API log output
+                        is sent to the WeeWX log file. Log output may be
+                        disabled by using '--log=-'. Some WeeWX API log output
                         cannot be controlled by wee_import and will be sent to
                         the default log file irrespective of the '--log'
                         option.
   --verbose             Print useful extra output.
+  --suppress-warnings   Suppress warnings to stdout. Warnings are still
+                        logged.
   --version             Display wee_import version number.
 
-wee_import will import data from an external source into a weewx
+wee_import will import data from an external source into a WeeWX
 archive. Daily summaries are updated as each archive record is
 imported so there should be no need to separately rebuild the daily
 summaries using the wee_database utility.</pre>
@@ -1226,8 +1229,7 @@ summaries using the wee_database utility.</pre>
         <p>Following is the definitive guide to the options available in the import configuration file. Default values
             are provided for a number of options, meaning that if they are not listed in the import configuration file
             at all <span class="code">wee_import</span> will pick sensible values. When the documentation below gives a
-            "default value" this is what it means. What follows is organized by the different sections of the import
-            configuration file.
+            "default value" this is the value that will be used if the option is omitted.
         </p>
 
         <h3 class="config_section">General</h3>
@@ -1235,7 +1237,7 @@ summaries using the wee_database utility.</pre>
         <h4 class='config_option' id='import_config_source'>source</h4>
 
         <p>The <span class="code">source</span> option determines the type of import to be performed by <span
-            class="code">wee_import</span>. The option must be set to one of the following:
+            class="code">wee_import</span>. The option is mandatory and must be set to one of the following:
         </p>
 
         <ul>
@@ -1393,21 +1395,21 @@ summaries using the wee_database utility.</pre>
 
         <h4 class='config_option' id='csv_rain'>rain</h4>
 
-        <p>WeeWX records rainfall as the amount of rain in the preceding archive period, so for a 5 minute archive
-            period the rain field in each archive record would contain the total rain that fell in the previous 5
-            minutes. Many weather station applications provide a daily or yearly total. <span
-                class="code">wee_import</span> can derive the WeeWX <span class="code">rain</span> field in one of two
-            ways:
+        <p>The WeeWX <span class="code">rain</span> field records rainfall that was recorded in the preceding archive
+            period, so for a five minute archive period the <span class="code">rain</span> field in each archive record
+            would contain the total rainfall that fell in the previous five minutes. Many weather station applications
+            provide a daily or yearly total. <span class="code">wee_import</span> can derive the
+            WeeWX <span class="code">rain</span> field in one of two ways:
         </p>
 
         <ul>
-            <li>If the imported rain data is a running total then <span class="code">wee_import</span> can derive the
-                <span class="code">weewx rain</span> field from successive totals. For this method use <span
-                    class="code">rain = cumulative</span>.
+            <li>If the imported rainfall data is a running total then <span class="code">wee_import</span> can derive the
+                WeeWX <span class="code">rain</span> field from successive totals. For this method use
+                <span class="code">rain = cumulative</span>.
             </li>
 
-            <li>If the imported rain data is a discrete value per date-time period then <span class="code">rain = discrete</span>
-                should be used.
+            <li>If the imported rainfall data is a discrete value per date-time period then
+                <span class="code">rain = discrete</span> should be used.
             </li>
         </ul>
 
@@ -1754,7 +1756,7 @@ summaries using the wee_database utility.</pre>
 
         <h4 class='config_option' id='wd_logs_to_process'>logs_to_process</h4>
 
-        <p>Which Weather Display monthly log files will be processed. Weather Display uses multiple files to record each
+        <p>The Weather Display monthly log files to be processed. Weather Display uses multiple files to record each
             month of data. Which monthly log files are produced depends on the Weather Display configuration and the
             capabilities of the weather station. <span class="code">wee_import</span> supports the following Weather
             Display monthly log files:
@@ -1779,6 +1781,12 @@ summaries using the wee_database utility.</pre>
             <strong>Note</strong><br/>The leading MMYYYY is omitted when listing the monthly log files to be processed
             using the <span class="code">logs_to_process</span> setting. Inclusion of the leading MMYYYY will cause the
             import to fail.
+        </p>
+
+        <p class="note">
+            <strong>Note</strong><br/>The MMYYYYlgcsv.csv and MMYYYYvantagelogcsv.csv log files are CSV versions of
+            MMYYYYlg.txt and MMYYYYvantagelog.txt respectively. Either the .txt or .csv version of these files should be
+            used but not both.
         </p>
 
         <p>The monthly log files selected for processing should be chosen carefully as the selected log files will
@@ -3094,6 +3102,9 @@ Aug 22 14:38:28 stretch12 weewx[863]: manager: unable to add record 2018-09-04 0
                     </li>
                     <li><a href="#wd_units"><strong><span class="code">[[Units]]</span></strong></a>. Defines the
                         units used in the Weather Display monthly log files.
+                    </li>
+                    <li><a href="#wd_fieldmap"><strong><span class="code">[[FieldMap]]</span></strong></a>. Defines the
+                        mapping between imported data fields and WeeWX archive fields.
                     </li>
                 </ul>
             </li>
