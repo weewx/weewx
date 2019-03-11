@@ -36,3 +36,8 @@ grant select, update, create, delete, drop, insert on test_alt_weewx.* to 'weewx
 grant select, update, create, delete, drop, insert on test_weewx.*     to 'weewx1'@'localhost';
 grant select, update, create, delete, drop, insert on test_sim.*       to 'weewx1'@'localhost';
 EOF
+if [ $? -eq 0 ]; then
+    echo "Finished setting up MySQL."
+else
+    echo "Problems setting up MySQL"
+fi
