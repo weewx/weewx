@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2019 Tom Keffer <tkeffer@gmail.com> and
+#    Copyright (c) 2009-2016 Tom Keffer <tkeffer@gmail.com> and
 #                            Gary Roderick
 #
 #    See the file LICENSE.txt for your full rights.
@@ -9,11 +9,11 @@
 into WeeWX.
 """
 
-# Python imports
-from __future__ import absolute_import
 from __future__ import with_statement
 from __future__ import print_function
+from __future__ import absolute_import
 
+# Python imports
 import datetime
 import re
 import sys
@@ -87,7 +87,7 @@ class Source(object):
                               to archive). [True|False].
         calc_missing        - Calculate any missing derived observations.
                               [True|False].
-        ignore_invalid_data - Ignore any ivalid data found in a source field. 
+        ignore_invalid_data - Ignore any invalid data found in a source field.
                               [True|False].
         tranche             - Number of records to be written to archive in a
                               single transaction. Integer.
@@ -95,7 +95,7 @@ class Source(object):
                               field not included in data source.
                               ['config'|'derive'|x] where x is an integer.
 
-    Child classes are used to interract with a specific source (eg CSV file,
+    Child classes are used to interact with a specific source (eg CSV file,
     WU). Any such child classes must define a getRawData() method which:
         -   gets the raw observation data and returns an iterable yielding data
             dicts whose fields can be mapped to a WeeWX archive field
@@ -133,7 +133,7 @@ class Source(object):
         # interval, default to 'derive'
         self.interval = import_config_dict.get('interval', 'derive')
         # do we ignore invalid data, default to True
-        self.ignore_invalid_data = tobool(import_config_dict.get('ignore_invalid_data',
+        self.ignore_invalid_data = tobool(import_config_dict.get('ignore_invalid_data', 
                                                                  True))
         # tranche, default to 250
         self.tranche = to_int(import_config_dict.get('tranche', 250))
@@ -150,7 +150,10 @@ class Source(object):
         # solar, default to True
         self.solar_sensor = tobool(import_config_dict.get('solar_sensor', True))
 
-        # get some WeeWX database info
+        # initialise ignore extreme > 255.0 values for temperature and
+        # humidity fields for WD imports
+        self.ignore_extreme_temp_hum = False
+
         self.db_binding_wx = get_binding(config_dict)
         self.dbm = open_manager_with_config(config_dict, self.db_binding_wx,
                                             initialize=True,
@@ -161,7 +164,8 @@ class Source(object):
         if self.dbm.std_unit_system is None:
             # we have a fresh archive (ie no records) so cannot deduce
             # the unit system in use, so go to our config_dict
-            self.archive_unit_sys = unit_constants[self.config_dict['StdConvert'].get('target_unit', 'US')]
+            self.archive_unit_sys = unit_constants[self.config_dict['StdConvert'].get('target_unit',
+                                                                                      'US')]
         else:
             # get our unit system from the archive db
             self.archive_unit_sys = self.dbm.std_unit_system
@@ -209,7 +213,8 @@ class Source(object):
             except ValueError:
                 # Could not convert --date. If we have a --date it must be
                 # valid otherwise we can't continue so raise it.
-                raise WeeImportOptionError("Invalid --date option specified.")
+                _msg = "Invalid --date option specified."
+                raise WeeImportOptionError(_msg)
             else:
                 # we have a valid date so do soem date arithmetic
                 _last_dt = _first_dt + datetime.timedelta(days=1)
@@ -227,10 +232,12 @@ class Source(object):
                 _from_ts = time.mktime(_from_dt.timetuple())
             except TypeError:
                 # --from not specified we can't continue so raise it
-                raise WeeImportOptionError("Missing --from option. Both --from and --to must be specified.")
+                _msg = "Missing --from option. Both --from and --to must be specified."
+                raise WeeImportOptionError(_msg)
             except ValueError:
                 # could not convert --from, we can't continue so raise it
-                raise WeeImportOptionError("Invalid --from option.")
+                _msg = "Invalid --from option."
+                raise WeeImportOptionError(_msg)
             # try --to
             try:
                 if 'T' in options.date_to:
@@ -242,15 +249,18 @@ class Source(object):
                 _to_ts = time.mktime(_to_dt.timetuple())
             except TypeError:
                 # --to not specified , we can't continue so raise it
-                raise WeeImportOptionError("Missing --to option. Both --from and --to must be specified.")
+                _msg = "Missing --to option. Both --from and --to must be specified."
+                raise WeeImportOptionError(_msg)
             except ValueError:
                 # could not convert --to, we can't continue so raise it
-                raise WeeImportOptionError("Invalid --to option.")
+                _msg = "Invalid --to option."
+                raise WeeImportOptionError(_msg)
             # If we made it here we have a _from_ts and _to_ts. Do a simple
             # error check first.
             if _from_ts > _to_ts:
                 # from is later than to, raise it
-                raise WeeImportOptionError("--from value is later than --to value.")
+                _msg = "--from value is later than --to value."
+                raise WeeImportOptionError(_msg)
             self.first_ts = _from_ts
             self.last_ts = _to_ts
         else:
@@ -263,15 +273,24 @@ class Source(object):
         self.ans = None
         self.interval_ans = None
         # properties to help with processing multi-period imports
-        self.first_period = True
-        self.last_period = False
-        self.period_no = 1
+        self.period_no = None
         # total records processed
         self.total_rec_proc = 0
         # total unique records identified
         self.total_unique_rec = 0
+        # total duplicate records identified
+        self.total_duplicate_rec = 0
         # time we started to first save
         self.t1 = None
+        # time taken to process
+        self.tdiff = None
+
+        # initialise two sets to hold timestamps of records for which we
+        # encountered duplicates
+        # duplicates seen over all periods
+        self.duplicates = set()
+        # duplicates seen over the current period
+        self.period_duplicates = set()
 
     @staticmethod
     def sourceFactory(options, args, log):
@@ -297,15 +316,15 @@ class Source(object):
         except KeyError:
             # we have no source parameter so check if we have a single source
             # config stanza, if we do then proceed using that
-            _source_keys = [s for s in SUPPORTED_SOURCES if s in import_config_dict]
+            _source_keys = [s for s in SUPPORTED_SOURCES if s in import_config_dict.keys]
             if len(_source_keys) == 1:
                 # we have a single source config stanza so use that
                 source = _source_keys[0]
             else:
                 # there is no source parameter and we do not have a single
                 # source config stanza so raise an error
-                raise weewx.UnsupportedFeature("Invalid 'source' parameter or no 'source' "
-                                               "parameter specified in %s" % import_config_path)
+                _msg = "Invalid 'source' parameter or no 'source' parameter specified in %s" % import_config_path
+                raise weewx.UnsupportedFeature(_msg)
         # if we made it this far we have all we need to create an object
         module_class = '.'.join(['weeimport',
                                  source.lower() + 'import',
@@ -330,30 +349,49 @@ class Source(object):
         # setup a counter to count the periods of records
         self.period_no = 1
         with self.dbm as archive:
+            if self.first_period:
+                # collect the time for some stats reporting later
+                self.t1 = time.time()
+                # it's convenient to give this message now
+                if self.dry_run:
+                    print('Starting dry run import ...')
+                else:
+                    print('Starting import ...')
+
+            if self.first_period and not self.last_period:
+                # there are more periods so say so
+                print("Records covering multiple periods have been identified for import.")
+
             # step through our periods of records until we reach the end. A
             # 'period' of records may comprise the contents of a file, a day
             # of WU obs or a month of Cumulus obs
             for period in self.period_generator():
+
+                # if we are importing multiple periods of data then tell the
+                # user what period we are up to
+                if not (self.first_period and self.last_period):
+                    print("Period %d ..." % self.period_no)
+
                 # get the raw data
-                self.wlog.verboselog(syslog.LOG_INFO,
-                                     'Obtaining raw import data for period %d...' % self.period_no)
+                _msg = 'Obtaining raw import data for period %d...' % self.period_no
+                self.wlog.verboselog(syslog.LOG_INFO, _msg)
                 _raw_data = self.getRawData(period)
-                self.wlog.verboselog(syslog.LOG_INFO,
-                                     'Raw import data read successfully for period %d.' % self.period_no)
+                _msg = 'Raw import data read successfully for period %d.' % self.period_no
+                self.wlog.verboselog(syslog.LOG_INFO, _msg)
 
                 # map the raw data to a WeeWX archive compatible dictionary
-                self.wlog.verboselog(syslog.LOG_INFO,
-                                     'Mapping raw import data for period %d...' % self.period_no)
+                _msg = 'Mapping raw import data for period %d...' % self.period_no
+                self.wlog.verboselog(syslog.LOG_INFO, _msg)
                 _mapped_data = self.mapRawData(_raw_data, self.archive_unit_sys)
-                self.wlog.verboselog(syslog.LOG_INFO,
-                                     'Raw import data mapped successfully for period %d.' % self.period_no)
+                _msg = 'Raw import data mapped successfully for period %d.' % self.period_no
+                self.wlog.verboselog(syslog.LOG_INFO, _msg)
 
                 # save the mapped data to archive
-                self.wlog.verboselog(syslog.LOG_INFO,
-                                     'Saving mapped data to archive for period %d...' % self.period_no)
+                _msg = 'Saving mapped data to archive for period %d...' % self.period_no
+                self.wlog.verboselog(syslog.LOG_INFO, _msg)
                 self.saveToArchive(archive, _mapped_data)
-                self.wlog.verboselog(syslog.LOG_INFO,
-                                     'Mapped data saved to archive successfully for period %d.' % self.period_no)
+                _msg = 'Mapped data saved to archive successfully for period %d.' % self.period_no
+                self.wlog.verboselog(syslog.LOG_INFO, _msg)
 
                 # increment our period counter
                 self.period_no += 1
@@ -362,22 +400,38 @@ class Source(object):
             # whether we imported and records or not.
             if self.total_rec_proc == 0:
                 # nothing imported so say so
-                self.wlog.printlog(syslog.LOG_INFO,
-                                   'No records were identified for import. Exiting. Nothing done.')
+                _msg = 'No records were identified for import. Exiting. Nothing done.'
+                self.wlog.printlog(syslog.LOG_INFO, _msg)
             else:
                 # we imported something
+                total_rec = self.total_rec_proc + self.total_duplicate_rec
                 if self.dry_run:
                     # but it was a dry run
-                    self.wlog.printlog(syslog.LOG_INFO,
-                                       "Finished dry run import. %d records were processed and "
-                                       "%d unique records would have been imported."
-                                       % (self.total_rec_proc, self.total_unique_rec))
+                    self.wlog.printlog(syslog.LOG_INFO, "Finished dry run import")
+                    _msg = "%d records were processed and %d unique records would "\
+                           "have been imported." % (total_rec,
+                                                    self.total_rec_proc)
+                    self.wlog.printlog(syslog.LOG_INFO, _msg)
+                    if self.total_duplicate_rec > 1:
+                        _msg = "%d duplicate records were ignored." % self.total_duplicate_rec
+                        self.wlog.printlog(syslog.LOG_INFO, _msg)
+                    elif self.total_duplicate_rec == 1:
+                        self.wlog.printlog(syslog.LOG_INFO,
+                                           "1 duplicate record was ignored.")
                 else:
                     # something should have been saved to database
-                    self.wlog.printlog(syslog.LOG_INFO,
-                                       "Finished import. %d raw records resulted in "
-                                       "%d unique records being processed in %.2f seconds."
-                                       % (self.total_rec_proc, self.total_unique_rec, self.tdiff))
+                    self.wlog.printlog(syslog.LOG_INFO, "Finished import")
+                    _msg = "%d records were processed and %d unique records " \
+                           "imported in %.2f seconds." % (total_rec,
+                                                          self.total_rec_proc,
+                                                          self.tdiff)
+                    self.wlog.printlog(syslog.LOG_INFO, _msg)
+                    if self.total_duplicate_rec > 1:
+                        _msg = "%d duplicate records were ignored." % self.total_duplicate_rec
+                        self.wlog.printlog(syslog.LOG_INFO, _msg)
+                    elif self.total_duplicate_rec == 1:
+                        self.wlog.printlog(syslog.LOG_INFO,
+                                           "1 duplicate record was ignored.")
                     print("Those records with a timestamp already in the archive will not have been")
                     print("imported. Confirm successful import in the WeeWX log file.")
 
@@ -400,7 +454,7 @@ class Source(object):
         Input parameters:
 
             source_type: String holding name of the section in
-                         import_config_dict the holds config details for the
+                         import_config_dict that holds config details for the
                          source being used.
 
             source: Iterable holding the source data. Used if import field
@@ -433,7 +487,19 @@ class Source(object):
             # Our static map may have entries for fields that don't exist in our
             # source data so step through each field name in our source data and
             # only add those that exist to our resulting map.
-            for _key in source.fieldnames:
+
+            # first get a list of fields, source could be a DictReader object
+            # or a list of dicts, a DictReader will have a fieldnames property
+            try:
+                _field_names = source.fieldnames
+            except AttributeError:
+                # Not a DictReader so need to obtain the dict keys, could just
+                # pick a record and extract its keys but some records may have
+                # different keys to others. Use sets and a generator
+                # comprehension.
+                _field_names = set().union(*(list(d.keys()) for d in source))
+            # now iterate over the field names
+            for _key in _field_names:
                 # if we know about the field name add it to our map
                 if _key in self._header_map:
                     _map[self._header_map[_key]['map_to']] = {'field_name': _key,
@@ -469,11 +535,13 @@ class Source(object):
                 else:
                     # something is wrong, we have a 'field_name' entry but it
                     # is not valid so raise an error
-                    raise WeeImportMapError(
-                        "Invalid mapping specified in '%s' for field 'dateTime'." % self.import_config_path)
+                    _msg = "Invalid mapping specified in '%s' for " \
+                           "field 'dateTime'." % self.import_config_path
+                    raise WeeImportMapError(_msg)
             except KeyError:
-                raise WeeImportMapError(
-                    "No mapping specified in '%s' for field 'dateTime'." % self.import_config_path)
+                _msg = "No mapping specified in '%s' for field " \
+                       "'dateTime'." % self.import_config_path
+                raise WeeImportMapError(_msg)
 
             # usUnits. We don't have to have a mapping for usUnits but if we
             # don't then we must have 'units' specified for each field mapping.
@@ -488,16 +556,18 @@ class Source(object):
                             if _val['units'] not in weewx.units.default_unit_format_dict:
                                 # we have an invalid unit string so tell the
                                 # user and exit
-                                raise weewx.UnitError(
-                                    "Unknown units '%s' specified for field '%s' in %s." % (_val['units'],
-                                                                                            _key,
-                                                                                            self.import_config_path))
+                                _msg = "Unknown units '%s' specified for " \
+                                       "field '%s' in %s." % (_val['units'],
+                                                              _key,
+                                                              self.import_config_path)
+                                raise weewx.UnitError(_msg)
                         else:
                             # we don't have a units field, that's not allowed
                             # so raise an error
-                            raise WeeImportMapError(
-                                "No units specified for source field '%s' in %s." % (_key,
-                                                                                     self.import_config_path))
+                            _msg = "No units specified for source field " \
+                                   "'%s' in %s." % (_key,
+                                                    self.import_config_path)
+                            raise WeeImportMapError(_msg)
 
             # if we got this far we have a usable map, advise the user what we
             # will use
@@ -511,8 +581,9 @@ class Source(object):
                     _units_msg = ""
                     if 'units' in _val:
                         _units_msg = " in units '%s'" % _val['units']
-                    _msg = "     source field '%s'%s --> WeeWX field '%s'" \
-                           % (_val['field_name'], _units_msg, _key)
+                    _msg = "     source field '%s'%s --> WeeWX field '%s'" % (_val['field_name'],
+                                                                              _units_msg,
+                                                                              _key)
                     if self.verbose:
                         self.wlog.verboselog(syslog.LOG_INFO, _msg)
                     else:
@@ -520,8 +591,9 @@ class Source(object):
         else:
             # no [[FieldMap]] stanza and no _header_map so raise an error as we
             # don't know what to map
-            raise WeeImportMapError("No '%s' field map found in %s."
-                                    % (source_type, self.import_config_path))
+            _msg = "No '%s' field map found in %s." % (source_type,
+                                                       self.import_config_path)
+            raise WeeImportMapError(_msg)
         return _map
 
     def mapRawData(self, data, unit_sys=weewx.US):
@@ -559,9 +631,9 @@ class Source(object):
                 # we have a map for dateTime
                 try:
                     _raw_dateTime = _row[self.map['dateTime']['field_name']]
-                except:
-                    raise WeeImportFieldError(
-                        "Field '%s' not found in source data." % self.map['dateTime']['field_name'])
+                except KeyError:
+                    _msg = "Field '%s' not found in source data." % self.map['dateTime']['field_name']
+                    raise WeeImportFieldError(_msg)
                 # now process the raw date time data
                 if _raw_dateTime.isdigit():
                     # Our dateTime is a number, is it a timestamp already?
@@ -569,9 +641,11 @@ class Source(object):
                     # raise it higher.
                     try:
                         _rec_dateTime = int(_raw_dateTime)
-                    except:
-                        raise ValueError("Invalid '%s' field. Cannot convert '%s' to timestamp."
-                                         % (self.map['dateTime']['field_name'], _raw_dateTime))
+                    except ValueError:
+                        _msg = "Invalid '%s' field. Cannot convert '%s' to " \
+                               "timestamp." % (self.map['dateTime']['field_name'],
+                                               _raw_dateTime)
+                        raise ValueError(_msg)
                 else:
                     # it's a string so try to parse it and catch the error if
                     # there is one and raise it higher
@@ -579,12 +653,15 @@ class Source(object):
                         _datetm = time.strptime(_raw_dateTime,
                                                 self.raw_datetime_format)
                         _rec_dateTime = int(time.mktime(_datetm))
-                    except:
-                        raise ValueError("Invalid '%s' field. Cannot convert '%s' to timestamp."
-                                         % (self.map['dateTime']['field_name'], _raw_dateTime))
+                    except ValueError:
+                        _msg = "Invalid '%s' field. Cannot convert '%s' to " \
+                               "timestamp." % (self.map['dateTime']['field_name'],
+                                               _raw_dateTime)
+                        raise ValueError(_msg)
                 # if we have a timeframe of concern does our record fall within
                 # it
-                if (self.first_ts is None and self.last_ts is None) or self.first_ts <= _rec_dateTime <= self.last_ts:
+                if (self.first_ts is None and self.last_ts is None) or \
+                        self.first_ts <= _rec_dateTime <= self.last_ts:
                     # we have no timeframe or if we do it falls within it so
                     # save the dateTime
                     _rec['dateTime'] = _rec_dateTime
@@ -602,40 +679,44 @@ class Source(object):
                     # The mapped field is in _row so try to get the raw data.
                     # If its not there then raise an error.
                     _raw_units = int(_row[self.map['usUnits']['field_name']])
-                except:
-                    raise WeeImportFieldError(
-                        "Field '%s' not found in source data." % self.map['usUnits']['field_name'])
+                except KeyError:
+                    _msg = "Field '%s' not found in source data." % self.map['usUnits']['field_name']
+                    raise WeeImportFieldError(_msg)
                 # we have a value but is it valid
                 if _raw_units in unit_nicknames:
                     # it is valid so use it
                     _units = _raw_units
                 else:
                     # the units value is not valid so raise an error
-                    raise weewx.UnitError("Invalid unit system '%s'(0x%02x) mapped from data source. "
-                                          "Check data source or field mapping."
-                                          % (_raw_units, _raw_units))
+                    _msg = "Invalid unit system '%s'(0x%02x) mapped from data source. " \
+                           "Check data source or field mapping." % (_raw_units,
+                                                                    _raw_units)
+                    raise weewx.UnitError(_msg)
             # interval
             if 'field_name' in self.map['interval']:
                 # We have a map for interval so try to get the raw data. If
                 # its not there then raise an error.
                 try:
                     _tfield = _row[self.map['interval']['field_name']]
-                except:
-                    raise WeeImportFieldError("Field '%s' not found in source data."
-                                              % self.map['interval']['field_name'])
+                except KeyError:
+                    _msg = "Field '%s' not found in source data." % self.map['interval']['field_name']
+                    raise WeeImportFieldError(_msg)
                 # now process the raw interval data
                 if _tfield is not None and _tfield != '':
                     try:
                         interval = int(_tfield)
-                    except:
-                        raise ValueError(
-                            "Invalid '%s' field. Cannot convert '%s' to an integer."
-                            % (self.map['interval']['field_name'], _tfield))
+                    except ValueError:
+                        _msg = "Invalid '%s' field. Cannot convert '%s' to " \
+                               "an integer." % (self.map['interval']['field_name'],
+                                                _tfield)
+                        raise ValueError(_msg)
                 else:
                     # if it happens to be None then raise an error
-                    raise ValueError("Invalid value '%s' for mapped field '%s' at timestamp '%s'."
-                                     % (_tfield, self.map['interval']['field_name'],
-                                        timestamp_to_string(_rec['dateTime'])))
+                    _msg = "Invalid value '%s' for mapped field '%s' at " \
+                           "timestamp '%s'." % (_tfield,
+                                                self.map['interval']['field_name'],
+                                                timestamp_to_string(_rec['dateTime']))
+                    raise ValueError(_msg)
             else:
                 # we have no mapping so try to calculate it
                 interval = self.getInterval(_last_ts, _rec['dateTime'])
@@ -650,7 +731,6 @@ class Source(object):
                 else:
                     # is our mapped field in the record
                     if self.map[_field]['field_name'] in _row:
-
                         # Yes it is. Try to get a value for the obs but if we
                         # can't catch the error
                         try:
@@ -668,10 +748,11 @@ class Source(object):
                                 _temp = None
                             else:
                                 # we raise the error
-                                raise ValueError("%s: cannot convert '%s' to float at timestamp '%s'."
-                                                 % (_field, _row[self.map[_field]['field_name']],
-                                                    timestamp_to_string(_rec['dateTime'])))
-
+                                _msg = "%s: cannot convert '%s' to float at " \
+                                       "timestamp '%s'." % (_field,
+                                                            _row[self.map[_field]['field_name']],
+                                                            timestamp_to_string(_rec['dateTime']))
+                                raise ValueError(_msg)
                         # some fields need some special processing
 
                         # rain - if our imported 'rain' field is cumulative
@@ -704,6 +785,13 @@ class Source(object):
                         if _field == 'radiation' and not self.solar_sensor:
                             _temp = None
 
+                        # check and ignore if required temperature and humidity
+                        # values of 255.0 and greater
+                        if self.ignore_extreme_temp_hum \
+                                and self.map[_field]['units'] in ['degree_C', 'degree_F', 'percent'] \
+                                and _temp >= 255.0:
+                            _temp = None
+
                         # if no mapped field for a unit system we have to do
                         # field by field unit conversions
                         if _units is None:
@@ -723,13 +811,21 @@ class Source(object):
                         # now warn the user about this field if we have not
                         # already done so
                         if self.map[_field]['field_name'] not in _warned:
+                            _msg = "Warning: Import field '%s' is mapped to WeeWX " \
+                                   "field '%s' but the" % (self.map[_field]['field_name'],
+                                                   _field)
                             self.wlog.printlog(syslog.LOG_INFO,
-                                               "Warning: Import field '%s' is mapped to WeeWX field '%s'"
-                                               % (self.map[_field]['field_name'], _field))
+                                               _msg,
+                                               can_suppress=True)
+                            _msg = "         import field '%s' could not be found " \
+                                   "in one or more records." % self.map[_field]['field_name']
                             self.wlog.printlog(syslog.LOG_INFO,
-                                               "         but the import field could not be found.")
+                                               _msg,
+                                               can_suppress=True)
+                            _msg = "         WeeWX field '%s' will be set to 'None' in these records." % _field
                             self.wlog.printlog(syslog.LOG_INFO,
-                                               "         WeeWX field '%s' will be set to 'None'." % _field)
+                                               _msg,
+                                               can_suppress=True)
                             # make sure we do this warning once only
                             _warned.append(self.map[_field]['field_name'])
             # if we have a mapped field for a unit system with a valid value,
@@ -767,8 +863,9 @@ class Source(object):
                     break
             if _diff_interval and self.interval_ans != 'y':
                 # we had more than one unique value for interval, warn the user
-                self.wlog.printlog(syslog.LOG_INFO,
-                                   "Warning: Records to be imported contain multiple different 'interval' values.")
+                _msg = "Warning: Records to be imported contain multiple " \
+                       "different 'interval' values."
+                self.wlog.printlog(syslog.LOG_INFO, _msg)
                 print("         This may mean the imported data is missing some records and it may lead")
                 print("         to data integrity issues. If the raw data has a known, fixed interval")
                 print("         value setting the relevant 'interval' setting in wee_import config to")
@@ -788,9 +885,9 @@ class Source(object):
                             raise SystemExit('Exiting.')
                         else:
                             print("Import aborted by user. No records saved to archive.")
-                        self.wlog.logonly(syslog.LOG_INFO,
-                                          "User chose to abort import. "
-                                          "%d records were processed. Exiting." % self.total_rec_proc)
+                        _msg = "User chose to abort import. %d records were processed. " \
+                               "Exiting." % self.total_rec_proc
+                        self.wlog.logonly(syslog.LOG_INFO, _msg)
                     raise SystemExit('Exiting. Nothing done.')
             self.wlog.verboselog(syslog.LOG_INFO,
                                  "Mapped %d records." % len(_records))
@@ -834,7 +931,7 @@ class Source(object):
         # did we have a number specified in wee_import.conf, if so use that
         try:
             return float(self.interval)
-        except:
+        except ValueError:
             pass
         # how are we getting interval
         if self.interval.lower() == 'conf':
@@ -847,17 +944,17 @@ class Source(object):
                 # but if _interval < 0 our records are not in date time order
                 if _interval < 0:
                     # so raise an error
-                    self.wlog.printlog(syslog.LOG_INFO,
-                                       "Cannot derive 'interval' for record timestamp: %s."
-                                       % timestamp_to_string(current_ts))
-                    raise ValueError("Raw data is not in ascending date time order.")
+                    _msg = "Cannot derive 'interval' for record timestamp: %s." % timestamp_to_string(current_ts)
+                    self.wlog.printlog(syslog.LOG_INFO, _msg)
+                    raise ValueError(
+                        "Raw data is not in ascending date time order.")
             except TypeError:
                 _interval = None
             return _interval
         else:
             # we don't know what to do so raise an error
-            raise ValueError("Cannot derive 'interval'. Unknown 'interval' setting in %s."
-                             % self.import_config_path)
+            raise ValueError(
+                "Cannot derive 'interval'. Unknown 'interval' setting in %s." % self.import_config_path)
 
     @staticmethod
     def getRain(last_rain, current_rain):
@@ -941,7 +1038,7 @@ class Source(object):
 
         if the import config file qc option was set quality checks on the
         imported record are performed using the WeeWX StdQC configuration from
-        weewx.conf . Any missing derived observations are then added to the
+        weewx.conf. Any missing derived observations are then added to the
         archive record using the WeeWX WXCalculate class if the import config
         file calc_missing option was set. WeeWX API addRecord() method is used
         to add archive records.
@@ -958,25 +1055,14 @@ class Source(object):
                      (in dict form) to be written to archive
         """
 
-        if self.first_period:
-            # collect the time for some stats reporting later
-            self.t1 = time.time()
-            # it's convenient to give this message now
-            if self.dry_run:
-                print('Starting dry run import ...')
-            else:
-                print('Starting import ...')
         # do we have any records?
         if records and len(records) > 0:
             # if this is the first period then give a little summary about what
             # records we have
-            if self.first_period:
-                if self.last_period:
-                    # there is only 1 period, so we can count them
-                    print("%s records identified for import." % len(records))
-                else:
-                    # there are more periods so say so
-                    print("Records covering multiple periods have been identified for import.")
+            # TODO. Check that a single period shows correct and consistent console output
+            if self.first_period and self.last_period:
+                # there is only 1 period, so we can count them
+                print("%s records identified for import." % len(records))
             # we do, confirm the user actually wants to save them
             while self.ans not in ['y', 'n'] and not self.dry_run:
                 print("Proceeding will save all imported records in the WeeWX archive.")
@@ -990,10 +1076,6 @@ class Source(object):
                 # initialise a set for use in our dry run, this lets us
                 # give some better stats on records imported
                 unique_set = set()
-                # if we are importing multiple periods of data then tell the
-                # user what period we are up to
-                if not (self.first_period and self.last_period):
-                    print("Period %d ..." % self.period_no)
                 # step through each record in this period
                 for _rec in records:
                     # convert our record
@@ -1017,10 +1099,9 @@ class Source(object):
                         for _trec in _tranche:
                             unique_set.add(_trec['dateTime'])
                         # tell the user what we have done
-                        print("Records processed: %d; "
-                              "Unique records: %d; Last timestamp: %s\r"
-                              % (nrecs, len(unique_set), timestamp_to_string(_final_rec['dateTime'])),
-                              end=' ', file=sys.stdout)
+                        _msg = "Unique records processed: %d; Last timestamp: %s\r" % (nrecs,
+                                                                                       timestamp_to_string(_final_rec['dateTime']))
+                        print(_msg, end=' ', file=sys.stdout)
                         sys.stdout.flush()
                         _tranche = []
                 # we have processed all records but do we have any records left
@@ -1035,30 +1116,48 @@ class Source(object):
                     for _trec in _tranche:
                         unique_set.add(_trec['dateTime'])
                     # tell the user what we have done
-                    print("Records processed: %d; "
-                          "Unique records: %d; Last timestamp: %s\r"
-                          % (nrecs, len(unique_set), timestamp_to_string(_final_rec['dateTime'])),
-                          end=' ', file=sys.stdout)
+                    _msg = "Unique records processed: %d; Last timestamp: %s\r" % (nrecs,
+                                                                                   timestamp_to_string(_final_rec['dateTime']))
+                    print(_msg, end=' ', file=sys.stdout)
                 print()
                 sys.stdout.flush()
                 # update our counts
                 self.total_rec_proc += nrecs
                 self.total_unique_rec += len(unique_set)
+                # mention any duplicates we encountered
+                num_duplicates = len(self.period_duplicates)
+                self.total_duplicate_rec += num_duplicates
+                if num_duplicates > 0:
+                    if num_duplicates == 1:
+                        _msg = "    1 duplicate record was identified in period %d:" % self.period_no
+                    else:
+                        _msg = "    %d duplicate records were identified in period %d:" % (num_duplicates,
+                                                                                           self.period_no)
+                    self.wlog.printlog(syslog.LOG_INFO, _msg, can_suppress=True)
+                    for ts in sorted(self.period_duplicates):
+                        _msg = "        %s" % timestamp_to_string(ts)
+                        self.wlog.printlog(syslog.LOG_INFO, _msg,
+                                           can_suppress=True)
+                    # add the period duplicates to the overall duplicates
+                    self.duplicates |= self.period_duplicates
+                    # reset the period duplicates
+                    self.period_duplicates = set()
             elif self.ans == 'n':
                 # user does not want to import so display a message and then
                 # ask to exit
-                self.wlog.logonly(syslog.LOG_INFO,
-                                  'User chose not to import records. Exiting. Nothing done.')
+                self.wlog.printlog(syslog.LOG_INFO,
+                                   'User chose not to import records. Exiting. Nothing done.')
                 raise SystemExit('Exiting. Nothing done.')
         else:
             # we have no records to import, advise the user but what we say
             # will depend if there are any more periods to import
             if self.first_period and self.last_period:
                 # there was only 1 period
-                print('No records identified for import.')
+                _msg = 'No records identified for import.'
             else:
                 # multiple periods
-                print('Period %d - no records identified for import.' % self.period_no)
+                _msg = 'Period %d - no records identified for import.' % self.period_no
+            print(_msg)
         # if we have finished record the time taken for our summary
         if self.last_period:
             self.tdiff = time.time() - self.t1
@@ -1077,7 +1176,7 @@ class WeeImportLog(object):
     log output otherwise log output is sent to the same log used by WeeWX.
     """
 
-    def __init__(self, opt_logging, opt_verbose, opt_dry_run):
+    def __init__(self, opt_logging, opt_verbose, opt_suppress, opt_dry_run):
         """Initialise our log environment."""
 
         # first check if we are turning off log to file or not
@@ -1105,6 +1204,7 @@ class WeeImportLog(object):
             syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_CRIT))
         # keep opt_verbose for later
         self.verbose = opt_verbose
+        self.suppress = opt_suppress
 
     def logonly(self, level, message):
         """Log to file only."""
@@ -1115,10 +1215,11 @@ class WeeImportLog(object):
             _message = 'wee_import: ' + message
             syslog.syslog(level, _message)
 
-    def printlog(self, level, message):
+    def printlog(self, level, message, can_suppress=False):
         """Print to screen and log to file."""
 
-        print(message)
+        if not(can_suppress and self.suppress):
+            print(message)
         self.logonly(level, message)
 
     def verboselog(self, level, message):
@@ -1145,3 +1246,4 @@ def get_binding(config_dict):
     else:
         db_binding_wx = None
     return db_binding_wx
+

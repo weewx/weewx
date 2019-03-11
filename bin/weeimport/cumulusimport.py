@@ -9,10 +9,10 @@ observational data for use with weeimport.
 """
 
 from __future__ import with_statement
-
-# Python imports
 from __future__ import absolute_import
 from __future__ import print_function
+
+# Python imports
 import csv
 import glob
 import os
@@ -145,7 +145,7 @@ class CumulusSource(weeimport.Source):
         # Temperature
         try:
             temp_u = cumulus_config_dict['Units'].get('temperature')
-        except:
+        except KeyError:
             _msg = "No units specified for Cumulus temperature fields in %s." % (self.import_config_path, )
             raise weewx.UnitError(_msg)
         else:
@@ -163,7 +163,7 @@ class CumulusSource(weeimport.Source):
         # Pressure
         try:
             press_u = cumulus_config_dict['Units'].get('pressure')
-        except:
+        except KeyError:
             _msg = "No units specified for Cumulus pressure fields in %s." % (self.import_config_path, )
             raise weewx.UnitError(_msg)
         else:
@@ -176,7 +176,7 @@ class CumulusSource(weeimport.Source):
         # Rain
         try:
             rain_u = cumulus_config_dict['Units'].get('rain')
-        except:
+        except KeyError:
             _msg = "No units specified for Cumulus rain fields in %s." % (self.import_config_path, )
             raise weewx.UnitError(_msg)
         else:
@@ -191,7 +191,7 @@ class CumulusSource(weeimport.Source):
         # Speed
         try:
             speed_u = cumulus_config_dict['Units'].get('speed')
-        except:
+        except KeyError:
             _msg = "No units specified for Cumulus speed fields in %s." % (self.import_config_path, )
             raise weewx.UnitError(_msg)
         else:
@@ -209,11 +209,14 @@ class CumulusSource(weeimport.Source):
         except KeyError:
             raise weewx.ViolatedPrecondition("Cumulus monthly logs directory not specified in '%s'." % import_config_path)
 
+        # property holding the current log file name being processed
+        self.file_name = None
+
         # Now get a list on monthly log files sorted from oldest to newest
         month_log_list = glob.glob(self.source + '/?????log.txt')
-        _temp = [(fn, fn[-9:-7], time.strptime(fn[-12:-9],'%b').tm_mon) for fn in month_log_list]
+        _temp = [(fn, fn[-9:-7], time.strptime(fn[-12:-9], '%b').tm_mon) for fn in month_log_list]
         self.log_list = [a[0] for a in sorted(_temp,
-                                              key = lambda el : (el[1], el[2]))]
+                                              key=lambda el: (el[1], el[2]))]
         if len(self.log_list) == 0:
             raise weeimport.WeeImportIOError(
                 "No Cumulus monthly logs found in directory '%s'." % self.source)
@@ -327,19 +330,37 @@ class CumulusSource(weeimport.Source):
         This generator controls the FOR statement in the parents run() method
         that loops over the monthly log files to be imported. The generator
         yields a monthly log file name from the list of monthly log files to
-        be imported until the list is exhausted. The generator also sets the
-        first_period and last_period properties."""
+        be imported until the list is exhausted.
+        """
 
-        # Step through each of our file names
-        for month in self.log_list:
-            # Set flags for first period (month) and last period (month)
-            self.first_period = (month == self.log_list[0])
-            self.last_period = (month == self.log_list[-1])
-            # Yield the file name
-            yield month
+        # step through each of our file names
+        for self.file_name in self.log_list:
+            # yield the file name
+            yield self.file_name
+
+    @property
+    def first_period(self):
+        """True if current period is the first period otherwise False.
+
+         Return True if the current file name being processed is the first in
+         the list or it is None (the initialisation value).
+         """
+
+        return self.file_name == self.log_list[0] if self.file_name is not None else True
+
+    @property
+    def last_period(self):
+        """True if current period is the last period otherwise False.
+
+         Return True if the current file name being processed is the last in
+         the list.
+         """
+
+        return self.file_name == self.log_list[-1]
 
     def set_rain_source(self, _data):
-        """Set the Cumulus field to be used as the WeeWX rain field source."""
+        """Set the Cumulus field to be used as the WeeWX rain field source.
+        """
 
         _row = next(_data)
         if _row['midnight_rain'] is not None:
