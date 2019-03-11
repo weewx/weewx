@@ -227,6 +227,9 @@ class WDSource(weeimport.Source):
         # initialise the import field-to-WeeWX archive field map
         self.map = None
 
+        # property holding the current log file name being processed
+        self.file_name = None
+
         # WD logs use either US or Metric units. The units used in each case
         # are:
         # Metric units: C, knots, hPa, mm
@@ -604,10 +607,17 @@ class WDSource(weeimport.Source):
         be imported until the list is exhausted. The generator also sets the
         first_period and last_period properties."""
 
-        # step through each of our file names
-        for month in self.log_list:
-            # set flags for first period (month) and last period (month)
-            self.first_period = (month == self.log_list[0])
-            self.last_period = (month == self.log_list[-1])
+        # Step through each of our file names
+        for self.file_name in self.log_list:
             # yield the file name
-            yield month
+            yield self.file_name
+
+    @property
+    def first_period(self):
+
+        return self.file_name == self.log_list[0] if self.file_name is not None else True
+
+    @property
+    def last_period(self):
+
+        return self.file_name == self.log_list[-1] if self.file_name is not None else False

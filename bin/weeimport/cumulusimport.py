@@ -143,7 +143,7 @@ class CumulusSource(weeimport.Source):
         # Temperature
         try:
             temp_u = cumulus_config_dict['Units'].get('temperature')
-        except:
+        except KeyError:
             _msg = "No units specified for Cumulus temperature fields in %s." % (self.import_config_path, )
             raise weewx.UnitError(_msg)
         else:
@@ -161,7 +161,7 @@ class CumulusSource(weeimport.Source):
         # Pressure
         try:
             press_u = cumulus_config_dict['Units'].get('pressure')
-        except:
+        except KeyError:
             _msg = "No units specified for Cumulus pressure fields in %s." % (self.import_config_path, )
             raise weewx.UnitError(_msg)
         else:
@@ -174,7 +174,7 @@ class CumulusSource(weeimport.Source):
         # Rain
         try:
             rain_u = cumulus_config_dict['Units'].get('rain')
-        except:
+        except KeyError:
             _msg = "No units specified for Cumulus rain fields in %s." % (self.import_config_path, )
             raise weewx.UnitError(_msg)
         else:
@@ -189,7 +189,7 @@ class CumulusSource(weeimport.Source):
         # Speed
         try:
             speed_u = cumulus_config_dict['Units'].get('speed')
-        except:
+        except KeyError:
             _msg = "No units specified for Cumulus speed fields in %s." % (self.import_config_path, )
             raise weewx.UnitError(_msg)
         else:
@@ -206,6 +206,9 @@ class CumulusSource(weeimport.Source):
             self.source = cumulus_config_dict['directory']
         except KeyError:
             raise weewx.ViolatedPrecondition("Cumulus monthly logs directory not specified in '%s'." % import_config_path)
+
+        # property holding the current log file name being processed
+        self.file_name = None
 
         # Now get a list on monthly log files sorted from oldest to newest
         month_log_list = glob.glob(self.source + '/?????log.txt')
@@ -329,12 +332,19 @@ class CumulusSource(weeimport.Source):
         first_period and last_period properties."""
 
         # Step through each of our file names
-        for month in self.log_list:
-            # Set flags for first period (month) and last period (month)
-            self.first_period = (month == self.log_list[0])
-            self.last_period = (month == self.log_list[-1])
-            # Yield the file name
-            yield month
+        for self.file_name in self.log_list:
+            # yield the file name
+            yield self.file_name
+
+    @property
+    def first_period(self):
+
+        return self.file_name == self.log_list[0] if self.file_name is not None else True
+
+    @property
+    def last_period(self):
+
+        return self.file_name == self.log_list[-1] if self.file_name is not None else False
 
     def set_rain_source(self, _data):
         """Set the Cumulus field to be used as the WeeWX rain field source."""

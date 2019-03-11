@@ -171,7 +171,8 @@ class CSVSource(weeimport.Source):
         # return our CSV dict reader
         return _csv_reader
 
-    def period_generator(self):
+    @staticmethod
+    def period_generator():
         """Generator function to control import processing in run() for CSV
             imports.
 
@@ -179,6 +180,14 @@ class CSVSource(weeimport.Source):
         return a single value before it is exhausted.
         """
 
-        self.first_period = True
-        self.last_period = True
         yield 1
+
+    @property
+    def first_period(self):
+
+        return True
+
+    @property
+    def last_period(self):
+
+        return True

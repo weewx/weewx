@@ -123,6 +123,9 @@ class WUSource(weeimport.Source):
         # set our increment
         self.increment = datetime.timedelta(days=1)
 
+        # property holding the current period being processed
+        self.period = None
+
         # tell the user/log what we intend to do
         _msg = "Observation history for Weather Underground station '%s' will be imported." % self.station_id
         self.wlog.printlog(syslog.LOG_INFO, _msg)
@@ -230,9 +233,17 @@ class WUSource(weeimport.Source):
         that loops over the WU days to be imported. The generator yields a
         datetime object from the range of dates to be imported."""
 
-        _period = self.start
-        while _period <= self.end:
-            self.first_period = _period == self.start
-            self.last_period = _period >= self.end
-            yield _period
-            _period += self.increment
+        self.period = self.start
+        while self.period <= self.end:
+            yield self.period
+            self.period += self.increment
+
+    @property
+    def first_period(self):
+
+        return self.period == self.start if self.period is not None else True
+
+    @property
+    def last_period(self):
+
+        return self.period >= self.start if self.period is not None else False

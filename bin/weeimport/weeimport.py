@@ -269,9 +269,7 @@ class Source(object):
         self.ans = None
         self.interval_ans = None
         # properties to help with processing multi-period imports
-        self.first_period = True
-        self.last_period = False
-        self.period_no = 1
+        self.period_no = None
         # total records processed
         self.total_rec_proc = 0
         # total unique records identified
@@ -356,13 +354,9 @@ class Source(object):
                 else:
                     print 'Starting import ...'
 
-            if self.first_period:
-                if self.last_period:
-                    # there is only 1 period, so we can count them
-                    print "%s records identified for import." % len(records)
-                else:
-                    # there are more periods so say so
-                    print "Records covering multiple periods have been identified for import."
+            if self.first_period and not self.last_period:
+                # there are more periods so say so
+                print "Records covering multiple periods have been identified for import."
 
             # step through our periods of records until we reach the end. A
             # 'period' of records may comprise the contents of a file, a day
