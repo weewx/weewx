@@ -376,8 +376,12 @@ class WDSource(weeimport.Source):
         _temp = []
         # create a list of log files, adding year and month fields for sorting
         for p in month_lg_list:
+            # obtain the file name
             fn = os.path.split(p)[1]
-            _temp.append([p, int(filter(str.isdigit, fn)[:-4]), int(filter(str.isdigit, fn)[-4:])])
+            # obtain the numeric part of the file name
+            _digits = ''.join(c for c in fn if c.isdigit())
+            # append a list of format [path+file name, month, year]
+            _temp.append([p, int(_digits[:-4]), int(_digits[-4:])])
         # now sort the list keeping just the log file path and name
         self.log_list = [a[0] for a in sorted(_temp, key=lambda el: (el[2], el[1]))]
         # if there are no log files then there is nothing to be done
