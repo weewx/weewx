@@ -1192,7 +1192,8 @@ class WeeImportLog(object):
         # if --verbose we log up to syslog.LOG_DEBUG
         # otherwise just log up to syslog.LOG_INFO
         if self.log:
-            syslog.openlog(logoption=syslog.LOG_PID | syslog.LOG_CONS)
+            syslog.openlog('wee_import',
+                           logoption=syslog.LOG_PID | syslog.LOG_CONS)
             if opt_verbose:
                 syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
             else:
