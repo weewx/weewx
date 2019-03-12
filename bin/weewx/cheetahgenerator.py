@@ -56,6 +56,7 @@ Example:
 """
 
 from __future__ import absolute_import
+import copy
 import os.path
 import time
 import datetime
@@ -125,8 +126,8 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
 
         self.setup()
 
-        # Make a copy of the skin dictionary (we will be modifying it):
-        gen_dict = configobj.ConfigObj(self.skin_dict.dict())
+        # Make a deep copy of the skin dictionary (we will be modifying it):
+        gen_dict = copy.deepcopy(self.skin_dict)
 
         # Look for options in [CheetahGenerator],
         section_name = "CheetahGenerator"
