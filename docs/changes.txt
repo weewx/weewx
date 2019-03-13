@@ -17,6 +17,8 @@ used to be no more than once every 15 minutes).
 
 Added new aggregate types minsum, minsumtime, sum_le. PR #382.
 
+Unit group group_distance is now a first-class group.
+
 
 3.9.2 MM/DD/YYYY
 

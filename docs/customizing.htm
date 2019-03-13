@@ -938,6 +938,7 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
 
                 group_altitude     = foot                 # Options are 'foot' or 'meter'
                 group_degree_day   = degree_F_day         # Options are 'degree_F_day' or 'degree_C_day'
+                group_distance     = mile                 # Options are 'mile' or 'km'
                 group_pressure     = inHg                 # Options are 'inHg', 'mmHg', 'mbar', or 'hPa'
                 group_rain         = inch                 # Options are 'inch', 'cm', or 'mm'
                 group_rainrate     = inch_per_hour        # Options are 'inch_per_hour', 'cm_per_hour', or 'mm_per_hour'
@@ -974,6 +975,7 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
 
                 group_altitude     = <span class="highlight">meter</span>                # Options are 'foot' or 'meter'
                 group_degree_day   = <span class="highlight">degree_C_day</span>         # Options are 'degree_F_day' or 'degree_C_day'
+                group_distance     = <span class="highlight">km</span>span>              # Options are 'mile' or 'km'
                 group_pressure     = <span class="highlight">mbar</span>                 # Options are 'inHg', 'mmHg', 'mbar', or 'hPa'
                 group_rain         = <span class="highlight">mm</span>                   # Options are 'inch', 'cm', or 'mm'
                 group_rainrate     = <span class="highlight">mm_per_hour</span>          # Options are 'inch_per_hour', 'cm_per_hour', or 'mm_per_hour'
@@ -1023,6 +1025,7 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
             [[[[Groups]]]]
                 group_altitude     = meter                # Options are 'foot' or 'meter'
                 group_degree_day   = degree_C_day         # Options are 'degree_F_day' or 'degree_C_day'
+                group_distance     = km                   # Options are 'mile' or 'km'
                 group_pressure     = mbar                 # Options are 'inHg', 'mmHg', 'mbar', or 'hPa'
                 group_rain         = mm                   # Options are 'inch', 'cm', or 'mm'
                 group_rainrate     = mm_per_hour          # Options are 'inch_per_hour', 'cm_per_hour', or 'mm_per_hour'
@@ -1042,6 +1045,7 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
             [[[[Groups]]]]
                 group_altitude     = foot                 # Options are 'foot' or 'meter'
                 group_degree_day   = degree_F_day         # Options are 'degree_F_day' or 'degree_C_day'
+                group_distance     = mile                 # Options are 'mile' or 'km'
                 group_pressure     = inHg                 # Options are 'inHg', 'mmHg', 'mbar', or 'hPa'
                 group_rain         = inch                 # Options are 'inch', 'cm', or 'mm'
                 group_rainrate     = inch_per_hour        # Options are 'inch_per_hour', 'cm_per_hour', or 'mm_per_hour'
@@ -5456,6 +5460,13 @@ UV      = UV Index</pre>
 
         <p>
             Which measurement unit to be used for direction. The only option is <span class="code">degree_compass</span>.
+        </p>
+
+        <p class="config_option">group_distance</p>
+
+        <p>
+            Which measurement unit to be used for distance (such as for wind run). Possible options are
+            <span class="code">mile</span> or <span class="code">km</span>.
         </p>
 
         <p class="config_option">group_moisture</p>

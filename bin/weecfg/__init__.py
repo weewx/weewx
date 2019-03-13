@@ -31,6 +31,7 @@ major_comment_block = ["", "####################################################
 unit_systems = {
     'us': {'group_altitude': 'foot',
            'group_degree_day': 'degree_F_day',
+           'group_distance' : 'mile',
            'group_pressure': 'inHg',
            'group_rain': 'inch',
            'group_rainrate': 'inch_per_hour',
@@ -40,6 +41,7 @@ unit_systems = {
 
     'metric': {'group_altitude': 'meter',
                'group_degree_day': 'degree_C_day',
+               'group_distance' : 'km',
                'group_pressure': 'mbar',
                'group_rain': 'cm',
                'group_rainrate': 'cm_per_hour',
@@ -49,6 +51,7 @@ unit_systems = {
 
     'metricwx': {'group_altitude': 'meter',
                  'group_degree_day': 'degree_C_day',
+                 'group_distance': 'km',
                  'group_pressure': 'mbar',
                  'group_rain': 'mm',
                  'group_rainrate': 'mm_per_hour',
@@ -1658,6 +1661,7 @@ UnitDefaults = u"""[StdReport]
 
                 group_altitude     = foot                 # Options are 'foot' or 'meter'
                 group_degree_day   = degree_F_day         # Options are 'degree_F_day' or 'degree_C_day'
+                group_distance     = mile                 # Options are 'mile' or 'km'
                 group_pressure     = inHg                 # Options are 'inHg', 'mmHg', 'mbar', or 'hPa'
                 group_rain         = inch                 # Options are 'inch', 'cm', or 'mm'
                 group_rainrate     = inch_per_hour        # Options are 'inch_per_hour', 'cm_per_hour', or 'mm_per_hour'
