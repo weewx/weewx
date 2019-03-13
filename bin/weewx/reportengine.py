@@ -8,6 +8,7 @@
 from __future__ import absolute_import
 
 # System imports:
+import copy
 import datetime
 import ftplib
 import glob
@@ -230,10 +231,8 @@ class StdReportEngine(threading.Thread):
         """Find and build the skin_dict for the given report"""
 
         # Start with the defaults in the defaults module. Because we will be modifying it, we need to make a deep
-        # copy. We can do this by applying the .dict() member function, which returns a copy as a plain old
-        # dictionary, then converting that into a ConfigObj. This will lose the comments, but we don't care about
-        # that now.
-        skin_dict = configobj.ConfigObj(weewx.defaults.defaults.dict())
+        # copy.
+        skin_dict = copy.deepcopy(weewx.defaults.defaults)
 
         # Add the report name:
         skin_dict['REPORT_NAME'] = report
@@ -269,7 +268,7 @@ class StdReportEngine(threading.Thread):
 
         # Now add on the [StdReport][[Defaults]] section, if present:
         if 'Defaults' in self.config_dict['StdReport']:
-            merge_dict = configobj.ConfigObj(self.config_dict['StdReport']['Defaults'].dict())
+            merge_dict = copy.deepcopy(self.config_dict['StdReport']['Defaults'])
             weeutil.config.merge_config(skin_dict, merge_dict)
 
         # Inject any scalar overrides. This is for backwards compatibility. These options should now go
