@@ -5,6 +5,7 @@
 #
 """Defines (mostly static) information about a station."""
 from __future__ import absolute_import
+import sys
 import time
 
 import weeutil.weeutil
@@ -82,6 +83,8 @@ class Station(object):
         self.rain_year_str = time.strftime("%b", (0, self.rain_year_start, 1, 0, 0, 0, 0, 0, -1))
 
         self.version = weewx.__version__
+
+        self.python_version = "%d.%d.%d" % sys.version_info[:3]
 
     @property
     def uptime(self):        

@@ -19,6 +19,8 @@ Added new aggregate types minsum, minsumtime, sum_le. PR #382.
 
 Unit group group_distance is now a first-class group.
 
+Added new tag $python_version.
+
 
 3.9.2 MM/DD/YYYY
 
