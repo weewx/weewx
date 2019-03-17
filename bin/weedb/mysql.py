@@ -1,18 +1,24 @@
 #
-#    Copyright (c) 2009-2017 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2019 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
 """weedb driver for the MySQL database"""
 
 import decimal
-
 import six
-import MySQLdb
+
 try:
-    from MySQLdb import DatabaseError as MySQLDatabaseError
+    import MySQLdb
 except ImportError:
-    from _mysql_exceptions import DatabaseError as MySQLDatabaseError
+    # OpenSUSE uses Python2-PyMySQL
+    import pymysql as MySQLdb
+    from pymysql import DatabaseError as MySQLDatabaseError
+else:
+    try:
+        from MySQLdb import DatabaseError as MySQLDatabaseError
+    except ImportError:
+        from _mysql_exceptions import DatabaseError as MySQLDatabaseError
 
 from weeutil.weeutil import to_bool
 import weedb
@@ -300,7 +306,11 @@ def _massage(seq):
 
 def set_engine(connect, engine):
     """Set the default MySQL storage engine."""
-    if connect._server_version >= (5, 5):
+    try:
+        server_version = connect._server_version
+    except AttributeError:
+        server_version = connect.server_version
+    if server_version >= (5, 5):
         connect.query("SET default_storage_engine=%s" % engine)
     else:
         connect.query("SET storage_engine=%s;" % engine)

@@ -21,6 +21,8 @@ Unit group group_distance is now a first-class group.
 
 Added new tag $python_version.
 
+Ported to Python2-PyMySQL package on OpenSUSE.
+
 
 3.9.2 MM/DD/YYYY
 
