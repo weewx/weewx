@@ -14,7 +14,6 @@ import ftplib
 import glob
 import os.path
 import socket
-import sys
 import syslog
 import threading
 import time
@@ -349,9 +348,8 @@ class FtpGenerator(ReportGenerator):
         try:
             n = ftp_data.run()
         except (socket.timeout, socket.gaierror, ftplib.all_errors, IOError) as e:
-            (cl, unused_ob, unused_tr) = sys.exc_info()
             syslog.syslog(syslog.LOG_ERR, "ftpgenerator: "
-                                          "Caught exception %s: %s" % (cl, e))
+                                          "Caught exception '%s': %s" % (type(e), e))
             weeutil.weeutil.log_traceback("        ****  ")
             return
 
@@ -396,9 +394,8 @@ class RsyncGenerator(ReportGenerator):
         try:
             rsync_data.run()
         except IOError as e:
-            (cl, unused_ob, unused_tr) = sys.exc_info()
             syslog.syslog(syslog.LOG_ERR, "rsyncgenerator: "
-                                          "Caught exception %s: %s" % (cl, e))
+                                          "Caught exception '%s': %s" % (type(e), e))
 
 
 # =============================================================================
