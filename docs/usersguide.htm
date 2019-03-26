@@ -112,11 +112,7 @@ Version: 4.0
         <h2>Python</h2>
 
         <p>
-            Python 2.6 or 2.7 is required. If you are using Python 2.6, see the <a href="#python2_6">special note
-            below</a> about PySerial.
-        </p>
-        <p>
-            Python 3 will not work.
+            Python 2.7, or Python 3.5 or later is required.
         </p>
 
         <h2 id="permissions">Permissions</h2>
@@ -3469,13 +3465,6 @@ Dec 31 17:01:06 arm weewx[18141]: **** Exiting.</pre>
             option <span class='code'>--fix-strings</span> to have the utility fix them:
         </p>
         <pre class="tty cmd">wee_database weewx.conf --check-strings --fix-strings</pre>
-
-        <h3 id="python2_6">Python 2.6</h3>
-        <p>Unfortunately, the current version of PySerial, 3.x, does not work with Python 2.6. If your hardware requires
-            PySerial (check the <a href="hardware.htm"><em>Hardware Guide</em></a>), you will have to downgrade to
-            PySerial V2.7, which you can <a href="https://sourceforge.net/projects/pyserial/files/pyserial/2.7/">obtain
-                from SourceForge</a>.
-        </p>
 
         <h3>FreeBSD</h3>
 
