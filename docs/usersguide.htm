@@ -4,10 +4,22 @@
     <title>WeeWX: User's Guide</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <link rel="stylesheet" href="css/ui-lightness/jquery-ui-1.10.4.custom.min.css"/>
-    <link rel="stylesheet" href="css/jquery.tocify.css"/>
-    <link rel="stylesheet" href="css/weewx_docs.css"/>
+    <link rel="stylesheet" href="css/tocbot-4.3.1.css">
+    <link rel="stylesheet" href="css/weewx_ui.css"/>
     <link rel="icon" href="images/favicon.png" type="image/png"/>
+    <script src="js/cash.js"></script>
+    <script src="js/tocbot-4.3.1.min.js"></script>
+    <script src="js/weewx.js"></script>
+    <script>
+        $(function () {
+            make_ids('#technical_content');
+            let level = get_level_from_cookie();
+            create_toc_level_control(level);
+            create_toc(level);
+            // Create a click on the first tab to get things started.
+            $('#dir-layout-table .tab')[0].click();
+        })
+    </script>
 </head>
 
 <body>
@@ -18,9 +30,11 @@
         href="hardware.htm">Hardware Guide</a><br/> <a href="utilities.htm">Utilities Guide</a><br/> <a
         href="upgrading.htm">Upgrade Guide</a><br/> <a href="devnotes.htm">Notes for Developers</a>
     </div>
-    <div id="toc_controls"></div>
+    <div id="toc_controls">
+        <!-- The TOC select list will be injected here -->
+    </div>
     <div id="toc_parent">
-        <div id="toc">
+        <div id="toc-location" class="toc">
             <!-- The table of contents will be injected here -->
         </div>
     </div>
@@ -246,36 +260,35 @@ Version: 4.0
             each role. These names are used throughout the documentation.
         </p>
 
-        <div id='dir-layout-table' class='tabs' style='padding-top:1em'>
-            <div id='layout-tab-deb' class='tab selected' onclick="showtab('layout','deb')">
-                Debian <img src='images/logo-debian.png' class='thumbnail' alt="Debian logo"/> <img
-                src='images/logo-ubuntu.png' class='thumbnail' alt="Ubuntu logo"/> <img src='images/logo-mint.png'
-                                                                                        class='thumbnail'
-                                                                                        alt="Mint logo"/>
-            </div>
-            <div id='layout-tab-rpm' class='tab' onclick="showtab('layout','rpm')">
-                Redhat/SUSE <img src='images/logo-redhat.png' class='thumbnail' alt="Redhat logo"/> <img
-                src='images/logo-centos.png' class='thumbnail' alt="Centos logo"/> <img src='images/logo-fedora.png'
-                                                                                        class='thumbnail'
-                                                                                        alt="Fedora logo"/> <img
-                src='images/logo-suse.png' class='thumbnail' alt="SUSE logo"/>
-            </div>
-            <div id='layout-tab-macos' class='tab' onclick="showtab('layout','macos')">macos <img
-                src='images/logo-apple.png' class='thumbnail' alt="Apple logo"/>
-            </div>
-            <div id='layout-tab-setup' class='tab' onclick="showtab('layout','setup')">setup.py</div>
-        </div>
-
-        <div id='layout' style='clear:both; width: 80%;'>
-            <div id='layout-deb'>
-                <table class='locations'>
-                    <tr class='selected'>
-                        <td colspan='3' class='locations_banner'>Application layout for install using DEB package</td>
-                    </tr>
+        <div id='dir-layout-table' class='tabs' style="width:80%;">
+            <nav>
+                    <button class='tab' onclick="openTab(event, '#layout-deb')">
+                        Debian<br/>
+                        <img src='images/logo-debian.png' class='thumbnail' alt="Debian logo"/>
+                        <img src='images/logo-ubuntu.png' class='thumbnail' alt="Ubuntu logo"/>
+                        <img src='images/logo-mint.png' class='thumbnail' alt="Mint logo"/>
+                    </button>
+                    <button class='tab' onclick="openTab(event, '#layout-rpm')">
+                        Redhat/SUSE<br/>
+                        <img src='images/logo-redhat.png' class='thumbnail' alt="Redhat logo"/>
+                        <img src='images/logo-centos.png' class='thumbnail' alt="Centos logo"/>
+                        <img src='images/logo-fedora.png' class='thumbnail' alt="Fedora logo"/>
+                        <img src='images/logo-suse.png' class='thumbnail' alt="SUSE logo"/>
+                    </button>
+                    <button class='tab' onclick="openTab(event, '#layout-macos')">
+                        macos<br/>
+                        <img src='images/logo-apple.png' class='thumbnail' alt="Apple logo"/>
+                    </button>
+                    <button class='tab' onclick="openTab(event, '#layout-setup')">
+                        setup.py<br/>
+                    </button>
+            </nav>
+            <div id='layout-deb' class="tab-content">
+                <table>
                     <tr class="first_row">
                         <td>Role</td>
-                        <td>Symbolic Name</td>
-                        <td>Nominal Location</td>
+                        <td>Symbolic name</td>
+                        <td>Nominal install location</td>
                     </tr>
                     <tr>
                         <td>WeeWX root directory</td>
@@ -329,15 +342,12 @@ Version: 4.0
                     </tr>
                 </table>
             </div>
-            <div id='layout-rpm' style='display:none'>
-                <table class='locations'>
-                    <tr class='selected'>
-                        <td colspan='3' class='locations_banner'>Application layout for install using RPM package</td>
-                    </tr>
+            <div id='layout-rpm' class="tab-content">
+                <table>
                     <tr class="first_row">
                         <td>Role</td>
-                        <td>Symbolic Name</td>
-                        <td>Nominal Location</td>
+                        <td>Symbolic name</td>
+                        <td>Nominal install location</td>
                     </tr>
                     <tr>
                         <td>WeeWX root directory</td>
@@ -391,16 +401,12 @@ Version: 4.0
                     </tr>
                 </table>
             </div>
-            <div id='layout-macos' style='display:none'>
-                <table class='locations'>
-                    <tr class='selected'>
-                        <td colspan='3' class='locations_banner'>Application layout for install on MacOS
-                        </td>
-                    </tr>
+            <div id='layout-macos' class="tab-content">
+                <table>
                     <tr class="first_row">
                         <td>Role</td>
-                        <td>Symbolic Name</td>
-                        <td>Nominal Location</td>
+                        <td>Symbolic name</td>
+                        <td>Nominal install location</td>
                     </tr>
                     <tr>
                         <td>WeeWX root directory</td>
@@ -454,17 +460,12 @@ Version: 4.0
                     </tr>
                 </table>
             </div>
-            <div id='layout-setup' style='display:none'>
-                <table class='locations'>
-                    <tr class='selected'>
-                        <td colspan='3' class='locations_banner'>Application layout for install using <span
-                            class='code'>setup.py</span>
-                        </td>
-                    </tr>
+            <div id='layout-setup' class="tab-content">
+                <table>
                     <tr class="first_row">
                         <td>Role</td>
-                        <td>Symbolic Name</td>
-                        <td>Nominal Location</td>
+                        <td>Symbolic name</td>
+                        <td>Nominal install location</td>
                     </tr>
                     <tr>
                         <td>WeeWX root directory</td>
@@ -518,6 +519,7 @@ Version: 4.0
                     </tr>
                 </table>
             </div>
+
         </div>
 
 
@@ -2895,7 +2897,7 @@ longitude = -77.0366</pre>
 
         <div class='image image-right' style='width:205px'>
             <a href="images/ferrites.jpg"><img src="images/ferrites.jpg"
-                                               style="width:200px; border:solid; border-width: 1px;"
+                                               style="width:200px; border: 1px solid;"
                                                alt="Cable connection looped through a ferrite coil"/></a>
 
             <div class='image_caption'>Ferrite coils on a Davis Envoy. There are two coils, one on the USB connection
@@ -3696,35 +3698,6 @@ May 14 13:35:23 web weewx[5633]:         ****  Generator terminated...</pre>
     </div>
 
 </div>
-
-<!-- Our scripts load last so the content can load first -->
-<script src="js/jquery-1.11.1.min.js"></script>
-<script src="js/jquery-ui-1.10.4.custom.min.js"></script>
-<script src="js/jquery.tocify-1.9.0.min.js"></script>
-<script src="js/weewx.js"></script>
-<script>
-    $(function () {
-        var level = get_default_level();
-        create_toc_control(level);
-        generate_toc(level);
-    });
-</script>
-
-<script>
-    function showtab(tab, id) {
-        document.getElementById(tab + '-deb').style.display = 'none';
-        document.getElementById(tab + '-rpm').style.display = 'none';
-        document.getElementById(tab + '-macos').style.display = 'none';
-        document.getElementById(tab + '-setup').style.display = 'none';
-        document.getElementById(tab + '-' + id).style.display = 'block';
-
-        document.getElementById(tab + '-tab-deb').className = 'tab';
-        document.getElementById(tab + '-tab-rpm').className = 'tab';
-        document.getElementById(tab + '-tab-macos').className = 'tab';
-        document.getElementById(tab + '-tab-setup').className = 'tab';
-        document.getElementById(tab + '-tab-' + id).className = 'tab selected';
-    }
-</script>
 
 </body>
 </html>

@@ -4,24 +4,22 @@
     <title>WeeWX: Installation using setup.py</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <link rel="stylesheet" href="jquery-ui-1.12.1.custom/jquery-ui.css"/>
-    <link rel="stylesheet" href="jquery-ui-1.12.1.custom/jquery-ui.structure.css.css"/>
-    <link rel="stylesheet" href="jquery-ui-1.12.1.custom/jquery-ui.theme.css"/>
     <link rel="stylesheet" href="css/weewx_ui.css"/>
     <link rel="icon" href="images/favicon.png" type="image/png"/>
-    <script src="js/jquery-3.3.1.min.js"></script>
-    <script src="jquery-ui-1.12.1.custom/jquery-ui.js"></script>
+    <!-- Use cash, a lightweight jQuery clone: -->
+    <script src="js/cash.js"></script>
+    <script src="js/weewx.js"></script>
     <script>
         $(function () {
-            $("#prereq-tabs").tabs();
-            $("#prereq-debian").tabs();
-            $("#prereq-redhat").tabs();
-            $("#prereq-suse").tabs();
-            $("#prereq-pip").tabs();
-            $("#startup-tabs").tabs();
-        });
+            // Create a click on the first tab to get things started.
+            $('#prereq-tabs .tab')[0].click();
+            $('#prereq-debian .tab')[0].click();
+            $('#prereq-redhat .tab')[0].click();
+            $('#prereq-suse .tab')[0].click();
+            $('#prereq-pip .tab')[0].click();
+            $('#startup-tabs .tab')[0].click();
+        })
     </script>
-
 </head>
 
 <body>
@@ -52,8 +50,8 @@
 <h2 id="setup_prerequisites">Install Prerequisites</h2>
 
 <p>
-    WeeWX will work with either Python 2 or Python 3, but you must have the correct version. Only Python 2.7, or
-    3.5 or greater will work. You can check your version by using:
+    WeeWX will work with either Python 2 or Python 3, but you must have the correct version. Only Python 2.7, or 3.5 or
+    greater will work. You can check your version by using:
 </p>
 <pre class='tty cmd'>python -V</pre>
 
@@ -62,43 +60,42 @@
     Management System (<span class='code'>pip</span>). Select the appropriate tab for specific instructions.
 </p>
 
-<div id="prereq-tabs" class="tabs" style="width:95%">
-    <ul>
-        <li>
-            <a href='#prereq-debian'>Debian
-                <img src='images/logo-debian.png' class='thumbnail' alt=""/>
-                <img src='images/logo-ubuntu.png' class='thumbnail' alt=""/>
-                <img src='images/logo-mint.png' class='thumbnail' alt=""/></a>
-        </li>
-        <li>
-            <a href='#prereq-redhat'>Redhat
-                <img src='images/logo-redhat.png' class='thumbnail' alt=""/>
-                <img src='images/logo-centos.png' class='thumbnail' alt=""/>
-                <img src='images/logo-fedora.png' class='thumbnail' alt=""/>
-            </a>
-        </li>
-        <li>
-            <a href='#prereq-suse'>SuSE
-                <img src='images/logo-suse.png' class='thumbnail' alt=""/>
-            </a>
-        </li>
-        <li>
-            <a href='#prereq-pip'>pip
-                <img src='images/logo-pypi.svg' class='thumbnail' alt=""/>
-            </a>
-        </li>
-    </ul>
-    <div id='prereq-debian'>
-        <ul>
-            <li>
-                <a href="#prereq-debian-py2">Python 2</a>
-            </li>
-            <li>
-                <a href="#prereq-debian-py3">Python 3</a>
-            </li>
-        </ul>
+<div id="prereq-tabs" class="tabs" style="width:95%; padding: 10px 10px 10px 10px;">
+    <nav>
+        <button class="tab" onclick="openTab(event, '#prereq-debian')">
+            Debian<br/>
+            <img src='images/logo-debian.png' class='thumbnail' alt="Debian logo"/>
+            <img src='images/logo-ubuntu.png' class='thumbnail' alt="Ubuntu logo"/>
+            <img src='images/logo-mint.png' class='thumbnail' alt="Mint logo"/>
+        </button>
 
-        <div id="prereq-debian-py2">
+        <button class="tab" onclick="openTab(event, '#prereq-redhat')">
+            Redhat<br/>
+            <img src='images/logo-redhat.png' class='thumbnail' alt="Redhat logo"/>
+            <img src='images/logo-centos.png' class='thumbnail' alt="Centos logo"/>
+            <img src='images/logo-fedora.png' class='thumbnail' alt="Fedora logo"/>
+        </button>
+
+        <button class="tab" onclick="openTab(event, '#prereq-suse')">
+            SUSE<br/>
+            <img src='images/logo-suse.png' class='thumbnail' alt="SUSE logo"/>
+        </button>
+
+        <button class="tab" onclick="openTab(event, '#prereq-pip')">
+            pip<br/>
+            <img src='images/logo-pypi.svg' class='thumbnail' alt="PyPi logo"/>
+        </button>
+    </nav>
+
+    <div id='prereq-debian' class="tab-content">
+        <button class="tab tab-tty" onclick="openTab(event, '#prereq-debian-py2')">
+            Python 2
+        </button>
+        <button class="tab tab-tty" onclick="openTab(event, '#prereq-debian-py3')">
+            Python 3
+        </button>
+
+        <div id="prereq-debian-py2" class="tab-content tab-content-tty">
             <pre class="tty">#  --- Python 2 ---
 
 # For systems that do not have Python 2 pre-installed (for example,
@@ -131,7 +128,7 @@ sudo apt-get install python-mysqldb</span>
 sudo apt-get install python-pip
 sudo pip install pyephem</span></pre>
         </div>
-        <div id="prereq-debian-py3">
+        <div id="prereq-debian-py3" class="tab-content tab-content-tty">
             <pre class="tty">#  --- Python 3 ---
 
 <span class="cmd">sudo apt-get install python3-pil
@@ -156,19 +153,16 @@ sudo apt-get install python3-mysqldb</span>
         </div>
     </div>
 
-    <div id='prereq-redhat'>
-        <ul>
-            <li>
-                <a href="#prereq-redhat-py2">Python 2</a>
-            </li>
-            <li>
-                <a href="#prereq-redhat-py3">Python 3</a>
-            </li>
-        </ul>
+    <div id='prereq-redhat' class="tab-content">
+        <button class="tab tab-tty" onclick="openTab(event, '#prereq-redhat-py2')">
+            Python 2
+        </button>
+        <button class="tab tab-tty" onclick="openTab(event, '#prereq-redhat-py3')">
+            Python 3
+        </button>
+        <div id="prereq-redhat-py2" class="tab-content tab-content-tty">
 
-        <div id="prereq-redhat-py2">
-
-            <pre class='tty'>#  --- Python 2 ---
+                <pre class='tty'>#  --- Python 2 ---
 
 # Required packages:
 <span class="cmd">sudo yum install python-configobj
@@ -186,27 +180,25 @@ sudo yum install python-mysqldb</span>
 
 # Optional for extended almanac information:
 <span class="cmd">sudo yum install pyephem</span>
-            </pre>
+                </pre>
         </div>
-        <div id="prereq-redhat-py3">
-            <pre class="tty">#  --- Python 3 ---
+        <div id="prereq-redhat-py3" class="tab-content tab-content-tty">
+                <pre class="tty">#  --- Python 3 ---
 
-TBD
-            </pre>
+                    TBD
+                </pre>
         </div>
     </div>
 
-    <div id='prereq-suse'>
-        <ul>
-            <li>
-                <a href="#prereq-suse-py2">Python 2</a>
-            </li>
-            <li>
-                <a href="#prereq-suse-py3">Python 3</a>
-            </li>
-        </ul>
-        <div id="prereq-suse-py2">
-            <pre class='tty'>#  --- Python 2 ---
+    <div id='prereq-suse' class="tab-content">
+        <button class="tab tab-tty" onclick="openTab(event, '#prereq-suse-py2')">
+            Python 2
+        </button>
+        <button class="tab tab-tty" onclick="openTab(event, '#prereq-suse-py3')">
+            Python 3
+        </button>
+        <div id="prereq-suse-py2" class="tab-content tab-content-tty">
+                <pre class='tty'>#  --- Python 2 ---
 
 # On some SUSE systems, use 'yast -i' instead of 'zypper install'
 
@@ -227,9 +219,9 @@ sudo zypper install python-mysql</span>
 <span class="cmd">sudo zypper install python-devel
 sudo zypper install setuptools
 sudo pip install pyephem</span>
-            </pre>
+                </pre>
         </div>
-        <div id="prereq-suse-py3">
+        <div id="prereq-suse-py3" class="tab-content tab-content-tty">
             <pre class="tty">#  --- Python 3 ---
 
 TBD
@@ -237,18 +229,16 @@ TBD
         </div>
     </div>
 
-    <div id='prereq-pip'>
-        <ul>
-            <li>
-                <a href="#prereq-pip-py2">Python 2</a>
-            </li>
-            <li>
-                <a href="#prereq-pip-py3">Python 3</a>
-            </li>
-        </ul>
+    <div id='prereq-pip' class="tab-content">
+        <button class="tab tab-tty" onclick="openTab(event, '#prereq-pip-py2')">
+            Python 2
+        </button>
+        <button class="tab tab-tty" onclick="openTab(event, '#prereq-pip-py3')">
+            Python 3
+        </button>
 
-        <div id="prereq-pip-py2">
-            <pre class='tty'>#  --- Python 2 ---
+        <div id="prereq-pip-py2" class="tab-content tab-content-tty">
+                <pre class='tty'>#  --- Python 2 ---
 
 <span class="cmd">sudo pip install configobj
 sudo pip install cheetah
@@ -261,10 +251,10 @@ sudo pip install pyusb</span>
 
 # Optional for extended almanac information:
 <span class="cmd">sudo pip install pyephem</span>
-            </pre>
+                </pre>
         </div>
-        <div id="prereq-pip-py3">
-            <pre class="tty">#  --- Python 3 ---
+        <div id="prereq-pip-py3" class="tab-content tab-content-tty">
+                <pre class="tty">#  --- Python 3 ---
 <span class="cmd">
 sudo pip3 install configobj
 sudo pip3 install cheetah3
@@ -280,7 +270,7 @@ sudo pip3 install pyusb</span>
 
 # Optional for extended almanac information:
 <span class="cmd">sudo pip3 install pyephem</span>
-            </pre>
+                </pre>
         </div>
     </div>
 </div>
@@ -310,44 +300,40 @@ sudo ./setup.py install</pre>
 sudo ./bin/weewxd weewx.conf</pre>
 <p>Or as a daemon automatically when the computer starts:</p>
 
-<div id="startup-tabs" class='tabs' style="width:95%">
-    <ul>
-        <li>
-            <a href='#startup-debian'>Debian
-                <img src='images/logo-debian.png' class='thumbnail' alt=""/>
-                <img src='images/logo-ubuntu.png' class='thumbnail' alt=""/>
-                <img src='images/logo-mint.png' class='thumbnail' alt=""/>
-            </a>
-        </li>
-        <li>
-            <a href='#startup-redhat'>Redhat
-                <img src='images/logo-redhat.png' class='thumbnail' alt=""/>
-                <img src='images/logo-centos.png' class='thumbnail' alt=""/>
-                <img src='images/logo-fedora.png' class='thumbnail' alt=""/>
-            </a>
-        </li>
-        <li>
-            <a href='#startup-suse'>SuSE
-                <img src='images/logo-suse.png' class="thumbnail" alt=""/>
-            </a>
-        </li>
-    </ul>
-
-    <div id='startup-debian'>
+<div id="startup-tabs" class='tabs'>
+    <nav>
+        <button class="tab tab-tty" onclick="openTab(event, '#startup-debian')">
+            Debian<br/>
+            <img src='images/logo-debian.png' class='thumbnail'  alt="Debian logo"/>
+            <img src='images/logo-ubuntu.png' class='thumbnail'  alt="Ubuntu logo"/>
+            <img src='images/logo-mint.png' class='thumbnail'  alt="Mint logo"/>
+        </button>
+        <button class="tab tab-tty" onclick="openTab(event, '#startup-redhat')">
+            Redhat<br/>
+            <img src='images/logo-redhat.png' class='thumbnail' alt="Redhat logo"/>
+            <img src='images/logo-centos.png' class='thumbnail' alt="Centos logo"/>
+            <img src='images/logo-fedora.png' class='thumbnail' alt="Fedora logo"/>
+        </button>
+        <button class="tab tab-tty" onclick="openTab(event, '#startup-suse')">
+            SuSE<br/>
+            <img src='images/logo-suse.png' class="thumbnail" alt="SUSE logo"/>
+        </button>
+    </nav>
+    <div id='startup-debian' class="tab-content tab-content-tty">
         <pre class="tty cmd">cd /home/weewx
 sudo cp util/init.d/weewx.debian /etc/init.d/weewx
 sudo chmod +x /etc/init.d/weewx
 sudo update-rc.d weewx defaults 98
 sudo /etc/init.d/weewx start</pre>
     </div>
-    <div id='startup-redhat'>
+    <div id='startup-redhat' class="tab-content tab-content-tty">
         <pre class="tty cmd">cd /home/weewx
 sudo cp util/init.d/weewx.redhat /etc/rc.d/init.d/weewx
 sudo chmod +x /etc/rc.d/init.d/weewx
 sudo chkconfig weewx on
 sudo /etc/rc.d/init.d/weewx start</pre>
     </div>
-    <div id='startup-suse'>
+    <div id='startup-suse' class="tab-content tab-content-tty">
         <pre class="tty cmd">cd /home/weewx
 sudo cp util/init.d/weewx.suse /etc/init.d/weewx
 sudo chmod +x /etc/init.d/weewx

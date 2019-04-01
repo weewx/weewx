@@ -1,46 +1,87 @@
 /* Styles for the weewx documentation
  *
- *  Copyright (c) 2009-2019 Tom Keffer <tkeffer@gmail.com>
+ *  Copyright (c) 2009-2016 Tom Keffer <tkeffer@gmail.com>
  *
  *  See the file LICENSE.txt for your rights.
+ *
+ *  This is an alternative to the old weewx_docs.css
  */
-
-/*
- * This is an alternative to the old weewx_docs.css. It uses jQuery-ui elements for tabs.
- */
-
+/*noinspection CssUnknownTarget,CssUnknownTarget*/
 @import url('https://fonts.googleapis.com/css?family=Roboto:700|Noto+Sans|Inconsolata:400,700|Droid+Serif');
 
-body{
+body {
     font-family: 'Noto Sans', sans-serif;
     margin-top: 4px;
 }
 
-@media (min-width:320px) {
-    .sidebar { display: none; }
-    .main { width:100%; }
-    .tr { font-size: 80%; }
-}
-@media (min-width:641px) {
-    .sidebar { display: block; width:190px; }
-    .main { margin-left: 210px; width:auto; }
-    .tr { font-size: 80%; }
-}
-@media (min-width:961px) {
-    .sidebar { display: block; width:190px; }
-    .main { margin-left: 210px; }
-}
-@media (min-width:1025px) {
-    .sidebar { display: block; width:220px; }
-    .main { margin-left: 230px;  width:auto; }
-}
-@media (min-width:1281px) {
-    .sidebar { display: block; width:250px; }
-    .main { margin-left: 270px; }
+@media (min-width: 320px) {
+    .sidebar {
+        display: none;
+    }
+
+    .main {
+        width: 100%;
+    }
+
+    .tr {
+        font-size: 80%;
+    }
 }
 
-@media (max-height:800px) {
-    .sidebar { max-height: 60%; }
+@media (min-width: 641px) {
+    .sidebar {
+        display: block;
+        width: 190px;
+    }
+
+    .main {
+        margin-left: 210px;
+        width: auto;
+    }
+
+    .tr {
+        font-size: 80%;
+    }
+}
+
+@media (min-width: 961px) {
+    .sidebar {
+        display: block;
+        width: 190px;
+    }
+
+    .main {
+        margin-left: 210px;
+    }
+}
+
+@media (min-width: 1025px) {
+    .sidebar {
+        display: block;
+        width: 220px;
+    }
+
+    .main {
+        margin-left: 230px;
+        width: auto;
+    }
+}
+
+@media (min-width: 1281px) {
+    .sidebar {
+        display: block;
+        width: 250px;
+    }
+
+    .main {
+        margin-left: 270px;
+    }
+}
+
+@media (max-height: 800px) {
+    .sidebar {
+        max-height: 60%;
+    }
 }
 
 div.sidebar {
@@ -49,131 +90,92 @@ div.sidebar {
     left: 4px;
     bottom: 4px;
 }
+
 div.main {
     overflow-x: hidden;
 }
 
 .header {
-    margin-top: 0px;
+    margin-top: 0;
     padding-left: 4px;
     padding-bottom: 24px;
     border: 1px solid #999999;
     background-color: #aacccc;
-    webkit-border-radius: 3px;
-    moz-border-radius: 3px;
     border-radius: 3px;
 }
+
 .content {
     padding-left: 4px;
 }
+
 .footer {
     margin-top: 50px;
 }
+
 .doclist {
     padding: 4px;
     margin-bottom: 16px;
     border: 1px solid #999999;
-    webkit-border-radius: 3px;
-    moz-border-radius: 3px;
     border-radius: 3px;
 }
+
 .title {
     font-family: 'Roboto', sans-serif;
     font-size: 180%;
     font-weight: bold;
-    margin-top: 0px;
-}
-
-#toc_parent {
-    padding: 4px;
-    border: 1px solid #aaaaaa;
-    webkit-border-radius: 3px;
-    moz-border-radius: 3px;
-    border-radius: 3px;
-    overflow-x: hidden;
-    overflow-y: scroll;
-    max-height: 75%;
-}
-#toc_controls {}
-/* prevent dancing toc by eliminating the default bold during mouseover */
-#toc .ui-state-hover {
-    background: #ddefef;
-}
-#toc .ui-state-hover a {
-    font-weight: normal;
-    color: black;
-}
-#toc .ui-state-default {
-    font-weight: normal;
-    background: #aacccc;
-}
-#toc .ui-state-default a {
-    color: black;
-}
-.tocify {
-    position: relative;
-    margin-left: 0;
-    width: auto;
-    border: 0;
-    webkit-border-radius: 0px;
-    moz-border-radius: 0px;
-    border-radius: 0px;
-    overflow-x: hidden;
-    overflow-y: hidden;
-}
-.tocify ul, .tocify li {
-    line-height: 1.2;
-}
-.tocify-header ul, .tocify-header li{
-    padding-left: 10px;
-    text-indent: -10px;
-}
-.tocify-subheader {
-    display: inherit;
+    margin-top: 0;
 }
 
 li {
     margin-right: 10%;
     margin-top: 10px;
 }
+
 dt {
     margin-top: 10px;
 }
+
 dd {
     margin-top: 5px;
 }
+
 h1 {
+    background-color: #aacccc;
+    border-radius: 3px;
+    border: 1px solid #999999;
+    clear:both;
     color: black;
     font-family: 'Roboto', sans-serif;
     font-size: 160%;
     font-weight: bold;
-    border: 1px solid #999999;
-    background-color: #aacccc;
+    margin-bottom: 0;
+    margin-top: 2em;
     padding-left: .5em;
     padding-right: .5em;
-    webkit-border-radius: 3px;
-    moz-border-radius: 3px;
-    border-radius: 3px;
-    margin-top: 2em;
-    margin-bottom: 0;
 }
+
 h2 {
+    border-bottom: 1px solid #999999;
+    clear:both;
     color: teal;
     font-family: 'Roboto', sans-serif;
     font-size: 140%;
     font-weight: bold;
-    border-bottom: 1px solid #999999;
-    margin-top: 1.5em;
     margin-bottom: 0;
+    margin-top: 1.5em;
 }
+
 h3 {
+    clear:both;
     color: teal;
     font-family: 'Roboto', sans-serif;
     font-size: 120%;
     font-weight: bold;
     margin-bottom: 0;
 }
+
 h4 {
+    clear:both;
     color: teal;
     font-family: 'Roboto', sans-serif;
     font-size: 100%;
@@ -182,36 +184,41 @@ h4 {
 
 
 table {
+    background-color: white;
     border-collapse: collapse;
     border: 1px solid #cccccc;
     width: 98%;
     margin: 1%;
 }
+
 table .tty {
     margin: 0;
 }
+
 tr {
     vertical-align: top;
     font-size: 100%;
 }
+
 td {
     border: 1px solid #cccccc;
-    padding: 2px;
-    padding-left: 8px;
+    padding: 2px 2px 2px 8px;
 }
+
 table .first_row {
     font-weight: bold;
     background-color: #ddefef;
     padding-left: 10px;
     padding-right: 10px;
 }
+
 table.fixed_width td {
     width: 10%;
 }
+
 caption {
     background-color: #aacccc;
-    margin: 0;
-    margin-bottom: 8px;
+    margin: 0 0 8px;
     border: 1px solid #888888;
     padding: 6px 16px;
     font-weight: bold;
@@ -223,15 +230,18 @@ caption {
     padding-left: 4px;
     padding-right: 4px;
 }
+
 p .code, td .code, li .code {
     background-color: #f0f0e8;
     border: 1px solid #ddddaa;
     border-radius: 3px;
 }
+
 .symcode {
     font-family: 'Inconsolata', monospace;
     font-style: italic;
 }
+
 p .symcode {
     padding-left: 4px;
     padding-right: 4px;
@@ -239,15 +249,18 @@ p .symcode {
     border: 1px solid #ddddaa;
     border-radius: 3px;
 }
+
 .indent {
     margin-left: 30px;
     width: 95%;
 }
+
 .station_data {
     margin-left: 40px;
     margin-right: 80px;
     width: 500px;
 }
+
 .station_data_key {
     font-size: 80%;
     font-style: italic;
@@ -255,9 +268,11 @@ p .symcode {
     margin-right: 80px;
     width: 500px;
 }
+
 .cmd {
     font-weight: bold;
 }
+
 .tty {
     font-family: 'Inconsolata', monospace;
     background-color: #f0f0e8;
@@ -267,118 +282,122 @@ p .symcode {
     white-space: pre;
     line-height: normal;
 }
-.config_section {}
+
+.config_section {
+}
+
 .config_option, .config_important {
     font-family: 'Inconsolata', monospace;
     font-weight: bold;
     color: black;
     margin-top: 1.5em;
-    margin-bottom: 0px;
+    margin-bottom: 0;
 }
+
 .config_important {
     color: #bb9900;
 }
+
 .highlight {
     background-color: #ffe0b0;
 }
+
 .text_highlight, .first_col {
     font-weight: bold;
     background-color: #eef0f0;
     padding-left: 10px;
     padding-right: 10px;
 }
+
 .center {
     text-align: center;
 }
+
 .example_output {
     font-family: 'Droid Serif', serif;
     padding: 15px 20px 15px 20px;
     margin: 5px 15px 5px 15px;
     border: 1px solid #cccccc;
     box-shadow: 2px 2px 2px #dddddd;
-    display:inline-block;
+    display: inline-block;
 }
+
 .image {
     padding: 5px;
 }
+
 .image-right {
     padding-left: 50px;
     padding-right: 20px;
     float: right;
 }
+
 .image_caption {
     font-size: 80%;
     text-align: center;
     padding: 5px;
 }
+
 .note {
     background-color: #ddf0e0;
     border: 1px solid #bbd0c0;
     margin: 10px 30px 10px 30px;
     padding: 10px;
-    webkit-border-radius: 6px;
-    moz-border-radius: 6px;
     border-radius: 6px;
 }
+
 .warning {
     background-color: #ffeeee;
     border: 1px solid #ffdddd;
     margin: 10px 30px 10px 30px;
     padding: 10px;
-    webkit-border-radius: 6px;
-    moz-border-radius: 6px;
     border-radius: 6px;
 }
+
 .copyright {
     font-style: italic;
     text-align: right;
 }
+
 .prompt {
     font-weight: bold;
 }
+
 .thumbnail {
     width: 12px;
 }
+
 .locations {
-    margin-left: 20px;
     border: none;
+    margin-left: 20px;
+    margin-right: 20px;
 }
+
 .locations tr {
     border: none;
     vertical-align: middle;
 }
-.locations_banner {
-    font-weight: bold;
-    border: 1px solid #447777;
-}
+
 .version {
     font-size: 60%;
 }
+
 .logo {
     height: 24px;
-    padding-right: 0px;
+    padding-right: 0;
     padding-top: 5px;
     padding-bottom: 5px;
 }
+
 .logoref {
     float: right;
     padding-right: 10px;
 }
+
 .os-icons {
     float: right;
     margin-left: 20px;
 }
-
-
-.tabs {
-    float: left;
-    margin-left: 20px;
-    margin-right: 20px;
-}
-.tabs img {
-    display:inline;
-}
-
 
 /*
  * The stats styles mimic the styles used in the default standard template
@@ -388,77 +407,33 @@ p .symcode {
     font-family: 'Noto Sans', sans-serif;
     padding: 13px 58px 13px 58px;
 }
+
 .stats table {
     border: thin solid #000000;
     width: 100%;
 }
+
 .stats td {
     border: thin solid #000000;
     padding: 2px;
 }
+
 .stats_label {
     color: green;
 }
+
 .stats_data {
     color: red;
 }
 
 
-/* Overrides for the jQuery UI widgets */
-div .ui-widget-header {
-    border: 1px solid black;
-    background: #aacccc;
-}
-/* no spurious background images please */
-.ui-widget-content {
-    background: white;
-}
-/* eliminate jquery-ui overrides to trebuchet */
-.ui-widget {
-    font-family: 'Noto Sans', sans-serif;
-}
+/********************************* settings for printing *********************************/
 
-/* Slightly smaller font for tabs */
-.ui-tabs .ui-tabs-anchor {
-    font-size: 80%;
-    font-weight: bold;
-}
-/* A still smaller font for sub-tabs */
-.ui-tabs .ui-tabs .ui-tabs-anchor {
-    font-size: 75%
-}
-
-/* No color for background of tabs */
-.ui-tabs .ui-widget-header {
-    background-color: white;
-    border-width: 0;
-}
-
-/* No padding for full tabs panel */
-.ui-tabs .ui-tabs-panel {
-    padding: 0 0 0 0;
-}
-
-/* Nor what's inside them */
-.ui-tabs-panel .tty {
-    margin: 0 0 0 0;
-    padding: 0 0 0 0;
-}
-
-/* No border around the entire thing */
-.ui-widget.ui-widget-content {
-    border: 0px;
-}
-
-/* settings for printing */
 @media print {
     /* Impose portrait printing with forced margins */
     @page {
         size: landscape;
-        margin-top: 1.8cm;
-        margin-bottom: 1.8cm;
-        margin-left: 1cm;
-        margin-right: 1cm;
+        margin: 1.8cm 1cm;
     }
 
     body {
@@ -492,17 +467,17 @@ div .ui-widget-header {
 
     .image {
         max-width: 98%; /* To be responsive the size of the image must at most be in width that of the article container */
-        height: auto;   /* Keep the ratio when the image is resized */
+        height: auto; /* Keep the ratio when the image is resized */
     }
 
     table {
         max-width: 98%; /* To be responsive the size of the image must at most be in width that of the article container */
-        height: auto;   /* Keep the ratio when the image is resized */
+        height: auto; /* Keep the ratio when the image is resized */
     }
 
     p, blockquote {
         orphans: 3; /* No orphan line down */
-        widows: 3;  /* No orphan line up */
+        widows: 3; /* No orphan line up */
     }
 
     /* No cut in these elements */
@@ -518,14 +493,14 @@ div .ui-widget-header {
     /* No jump after these elements */
     h1, h2, h3, h4, caption {
         border: none;
-        border-radius: 0px;
+        border-radius: 0;
         page-break-after: avoid;
     }
 
     /* Each title begins on a new page */
     h1 {
         border: none;
-        border-radius: 0px;
+        border-radius: 0;
         border-bottom: 1px solid #999999;
         page-break-before: always;
     }
@@ -550,16 +525,19 @@ div .ui-widget-header {
         border: 4px solid #aac0b0;
         background-color: #cce0d0 !important;
     }
+
     .warning {
         border: 4px solid #ffdddd;
         background-color: #ffeeee !important;
     }
+
     p .code, td .code, li .code {
         background-color: #f0f0e8;
         border: none;
     }
 }
 
+/********************************* Modal dialog box *********************************/
 /*
  * The following dialog CSS was stolen from http://bit.ly/1cYAqTr
  */
@@ -569,18 +547,18 @@ div .ui-widget-header {
     right: 0;
     bottom: 0;
     left: 0;
-    background: rgba(0,0,0,0.6);
+    background: rgba(0, 0, 0, 0.6);
     z-index: 99999;
-    opacity:0;
-    -webkit-transition: opacity 400ms ease-in;
-    -moz-transition: opacity 400ms ease-in;
+    opacity: 0;
     transition: opacity 400ms ease-in;
     pointer-events: none;
 }
+
 .modal-dialog:target {
-    opacity:1;
+    opacity: 1;
     pointer-events: auto;
 }
+
 .modal-dialog > div {
     width: 400px;
     position: relative;
@@ -589,6 +567,7 @@ div .ui-widget-header {
     border-radius: 10px;
     background: #fff;
 }
+
 .close-dialog {
     background: #606061;
     color: #FFFFFF;
@@ -600,12 +579,116 @@ div .ui-widget-header {
     width: 24px;
     text-decoration: none;
     font-weight: bold;
-    -webkit-border-radius: 12px;
-    -moz-border-radius: 12px;
     border-radius: 12px;
-    -moz-box-shadow: 1px 1px 3px #000;
-    -webkit-box-shadow: 1px 1px 3px #000;
     box-shadow: 1px 1px 3px #000;
 }
 
-.close-dialog:hover { background: #00d9ff; }
+.close-dialog:hover {
+    background: #00d9ff;
+}
+
+/********************************* Table of contents *********************************/
+
+#toc_parent {
+    border-radius: 3px;
+    border: 1px solid #aaaaaa;
+    max-height: 75%;
+    overflow-x: hidden;
+    overflow-y: scroll;
+    padding: 4px;
+}
+
+.toc {
+    border-radius: 0;
+    border: 0;
+    font-size: 1.1em;
+    margin-left: 0;
+    overflow-x: hidden;
+    overflow-y: hidden;
+    position: relative;
+    width: auto;
+}
+
+a.toc-link {
+    text-decoration-line: none;
+}
+
+a.toc-link:hover {
+    background-color: #ddefef;
+}
+
+/* lists inside of lists should use progressively smaller fonts: */
+.toc-list .toc-list {
+    font-size: 85%;
+}
+
+.is-active-link {
+    font-weight: normal;
+    background-color: #aacccc;
+}
+
+.toc-list li {
+    text-indent: -10px;
+    line-height: 1.3;
+    margin: 0 0 0 0;
+}
+
+/********************************* Tabs *********************************/
+
+.tabs {
+    clear: both;
+    float: left;
+    margin: 0 1em 1em 1em;
+    width: 95%;
+}
+
+.tabs img {
+    display: inline;
+}
+
+.tab {
+    background-color: white;
+    border-radius: 6px 6px 0 0;
+    border: 1px solid #cccccc;
+    color: #808080;
+    cursor: pointer;
+    float: left;
+    font-family: inherit;
+    font-size: 80%;
+    font-weight: bold;
+    margin:2px 4px 0 0;
+    padding: 4px 10px;
+    position: relative;
+    height: 44px;
+    width: 120px;
+}
+
+.tab:hover {
+    /* A lighter version of the 'selected' background color: */
+    background-color: #dfecec;
+}
+
+.tab.selected {
+    background-color: #aacccc;
+    /* Darken borders; bottom border should be same color as content below me */
+    border-color: #447777 #447777 #aacccc;
+    color: black;
+    /* When selected, shift myself down 1px to cover content border */
+    top: 1px;
+}
+
+.tab-content {
+    clear: both;
+    background-color: #aacccc;
+    padding: 5px;
+    border: 1px solid #447777;
+}
+
+.tab-tty.selected {
+    background-color: #f0f0e8;
+    border-color: #447777 #447777 #f0f0e8;
+}
+
+.tab-content-tty {
+    background-color: #f0f0e8;
+}
