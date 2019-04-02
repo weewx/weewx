@@ -165,7 +165,7 @@ h2 {
 }
 
 h3 {
-    clear:both;
+    clear:left;
     color: teal;
     font-family: 'Roboto', sans-serif;
     font-size: 120%;
@@ -174,7 +174,7 @@ h3 {
 }
 
 h4 {
-    clear:both;
+    clear:left;
     color: teal;
     font-family: 'Roboto', sans-serif;
     font-size: 100%;
