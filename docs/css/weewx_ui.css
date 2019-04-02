@@ -628,7 +628,6 @@ a.toc-link:hover {
 }
 
 .toc-list li {
-    text-indent: -10px;
     line-height: 1.3;
     margin: 0 0 0 0;
 }
