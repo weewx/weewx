@@ -11,4 +11,8 @@ point to. On some systems, it will be Python 2, others Python 3.
 Nevertheless, we should probably include a section on how to run explicitly under 
 Python 2 vs 3.
 
-Update macos.htm for how to install under Python 3.
+Update macos.htm for how to install using Python 3.
+
+Update redhat.htm for how to install using Python 3.
+
+Update suse.htm for how to install using Python 3.
