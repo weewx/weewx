@@ -1643,22 +1643,29 @@ class AWEKASThread(RESTThread):
         # Have my superclass process the record first.
         record = super(AWEKASThread, self).get_record(record, dbmanager)
 
+        # No need to do anything if rainRate is already in the record
+        if 'rainRate' in record:
+            return record
+
+        # If we don't have a database, we can't do anything
         if dbmanager is None:
-            # If we don't have a database, we can't do anything
             if self.log_failure:
                 logdbg("AWEKAS: No database specified. Augmentation from database skipped.")
             return record
 
-        # If rainRate is not in the record, fetch it from the database
-        if 'rainRate' not in record:
-            # If the database does not have rainRate, an exception will be raised.
-            # Be prepare to catch it.
-            try:
-                rr = dbmanager.getSql('select rainRate from %s where dateTime=?' %
-                                      dbmanager.table_name, (record['dateTime'],))
+        # If the database does not have rainRate in its schema, an exception will be raised.
+        # Be prepare to catch it.
+        try:
+            rr = dbmanager.getSql('select rainRate from %s where dateTime=?' %
+                                  dbmanager.table_name, (record['dateTime'],))
+        except weedb.OperationalError:
+            pass
+        else:
+            # If there is no record with the timestamp, None will be returned.
+            # In theory, this shouldn't happen, but check just in case:
+            if rr:
                 record['rainRate'] = rr[0]
-            except weedb.OperationalError:
-                pass
+
         return record
 
     def format_url(self, in_record):

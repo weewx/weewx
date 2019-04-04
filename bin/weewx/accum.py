@@ -75,7 +75,8 @@ class ScalarStats(object):
         if val is not None:
             # Check for non-numbers and for NaN
             if not isinstance(val, (float, int)) or val != val:
-                raise ValueError("accum: ScalarStats.addHiLo expected float or int, got %s" % val)
+                raise ValueError("accum: ScalarStats.addHiLo expected float or int, "
+                                 "got type '%s' ('%s')" % (type(val), val))
             if self.min is None or val < self.min:
                 self.min     = val
                 self.mintime = ts
@@ -91,7 +92,8 @@ class ScalarStats(object):
         if val is not None:
             # Check for non-numbers and for NaN
             if not isinstance(val, (float, int)) or val != val:
-                raise ValueError("accum: ScalarStats.addSum expected float or int, got %s" % val)
+                raise ValueError("accum: ScalarStats.addSum expected float or int, "
+                                 "got type '%s' ('%s')" % (type(val), val))
             self.sum     += val
             self.count   += 1
             self.wsum    += val * weight
@@ -170,7 +172,8 @@ class VecStats(object):
         if speed is not None:
             # Check for non-numbers and for NaN
             if not isinstance(speed, (float, int)) or speed != speed:
-                raise ValueError("accum: VecStats.addHiLo expected float or int, got %s" % speed)
+                raise ValueError("accum: VecStats.addHiLo expected float or int, "
+                                 "got type '%s' ('%s')" % (type(speed), speed))
             if self.min is None or speed < self.min:
                 self.min = speed
                 self.mintime = ts
@@ -190,7 +193,8 @@ class VecStats(object):
         if speed is not None:
             # Check for non-numbers and for NaN
             if not isinstance(speed, (float, int)) or speed != speed:
-                raise ValueError("accum: VecStats.addSum expected float or int, got %s" % speed)
+                raise ValueError("accum: VecStats.addSum expected float or int, "
+                                 "got type '%s' ('%s')" % (type(speed), speed))
             self.sum         += speed
             self.count       += 1
             self.wsum        += weight * speed
