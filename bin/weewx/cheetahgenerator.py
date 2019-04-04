@@ -158,7 +158,7 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
         # This dictionary will hold the formatted dates of all generated files
         self.outputted_dict = {}
         for k in CheetahGenerator.generator_dict:
-            self.outputted_dict[k] = [];
+            self.outputted_dict[k] = []
 
         self.formatter = weewx.units.Formatter.fromSkinDict(self.skin_dict)
         self.converter = weewx.units.Converter.fromSkinDict(self.skin_dict)
@@ -212,12 +212,8 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
             # Sections 'SummaryByMonth' and 'SummaryByYear' imply summarize_by
             # certain time spans
             if 'summarize_by' not in section[subsection]:
-                if subsection == 'SummaryByDay':
-                    section[subsection]['summarize_by'] = 'SummaryByDay'
-                elif subsection == 'SummaryByMonth':
-                    section[subsection]['summarize_by'] = 'SummaryByMonth'
-                elif subsection == 'SummaryByYear':
-                    section[subsection]['summarize_by'] = 'SummaryByYear'
+                if subsection in CheetahGenerator.generator_dict:
+                    section[subsection]['summarize_by'] = subsection
             # Call recursively, to generate any templates in this subsection
             ngen += self.generate(section[subsection], gen_ts)
 
@@ -345,7 +341,7 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
             except Exception as e:
                 # We would like to get better feedback when there are cheetah
                 # compiler failures, but there seem to be no hooks for this.
-                # For example, if we could get make cheetah emit the source
+                # For example, if we could get cheetah to emit the source
                 # on which the compiler is working, one could compare that with
                 # the template to figure out exactly where the problem is.
                 # In Cheetah.Compile.ModuleCompiler the source is manipulated
