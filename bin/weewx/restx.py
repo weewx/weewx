@@ -1685,7 +1685,10 @@ class AWEKASThread(RESTThread):
         except weedb.OperationalError:
             pass
         else:
-            r['rainRate'] = rr[0]
+            # There should be a record in the database with timestamp r['dateTime'], but check
+            # just in case:
+            if rr:
+                r['rainRate'] = rr[0]
         return r
 
     def process_record(self, record, dbmanager):

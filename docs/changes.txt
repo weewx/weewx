@@ -29,6 +29,9 @@ on Vantage stations.
 Improved accuracy of the calculation of Moon phases.
 Revisits issue #342.
 
+When the AWEKAS code augments the record for rainRate, it now
+checks for a bad timestamp.
+
 
 3.9.1 02/06/2019
 
