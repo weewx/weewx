@@ -168,7 +168,7 @@ class StationData(object):
           DD   - wind direction (0-255)
           TTTT - outdoor temperature (0.1 F)
           LLLL - long term rain (0.01 in)
-          PPPP - pressure (0.1 mbar)
+          PPPP - barometer (0.1 mbar)
           tttt - indoor temperature (0.1 F)
           HHHH - outdoor humidity (0.1 %)
           hhhh - indoor humidity (0.1 %)
@@ -179,14 +179,13 @@ class StationData(object):
         """
         # FIXME: peetbros could be 40 bytes or 44 bytes, what about ws1?
         # FIXME: peetbros uses two's complement for temp, what about ws1?
-        # FIXME: for ws1 is the pressure reading 'pressure' or 'barometer'?
         buf = raw[2:]
         data = dict()
         data['windSpeed'] = StationData._decode(buf[0:4], 0.1 * MILE_PER_KM) # mph
         data['windDir'] = StationData._decode(buf[6:8], 1.411764)  # compass deg
         data['outTemp'] = StationData._decode(buf[8:12], 0.1, True)  # degree_F
         data['rain_total'] = StationData._decode(buf[12:16], 0.01)  # inch
-        data['pressure'] = StationData._decode(buf[16:20], 0.1 * INHG_PER_MBAR)  # inHg
+        data['barometer'] = StationData._decode(buf[16:20], 0.1 * INHG_PER_MBAR)  # inHg
         data['inTemp'] = StationData._decode(buf[20:24], 0.1, True)  # degree_F
         data['outHumidity'] = StationData._decode(buf[24:28], 0.1)  # percent
         data['inHumidity'] = StationData._decode(buf[28:32], 0.1)  # percent
