@@ -298,14 +298,10 @@ def calcMissing(config_dict, db_binding, options):
     syslog.syslog(syslog.LOG_INFO, _msg)
     print(_msg)
 
-    ans = None
-    while ans not in ['y', 'n']:
-        ans = raw_input("Proceed (y/n)? ")
-        if ans == 'y':
-            break
-        elif ans == 'n':
-            print("Nothing done.")
-            return
+    ans = y_or_n("Proceed (y/n)? ")
+    if ans == 'n':
+        print("Nothing done.")
+        return
 
     t1 = time.time()
 
@@ -319,7 +315,7 @@ def calcMissing(config_dict, db_binding, options):
         if dbmanager.std_unit_system is None:
             # we have a fresh archive (ie no records) so cannot deduce
             # the unit system in use, so go to our config_dict
-            archive_unit_sys = unit_constants[config_dict['StdConvert'].get('target_unit','US')]
+            archive_unit_sys = weewx.units.unit_constants[config_dict['StdConvert'].get('target_unit','US')]
         else:
             # get our unit system from the archive db
             archive_unit_sys = dbmanager.std_unit_system

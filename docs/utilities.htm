@@ -356,6 +356,8 @@ Usage: wee_database --help
        wee_database --drop-daily
        wee_database --rebuild-daily [--date=YYYY-mm-dd |
                                      --from=YYYY-mm-dd --to=YYYY-mm-dd]
+       wee_database --calc-missing [--date=YYYY-mm-dd |
+                                     --from=YYYY-mm-dd --to=YYYY-mm-dd]
 
 Description:
 
@@ -370,6 +372,9 @@ Options:
   --drop-daily          Drop the daily summary tables from a database.
   --rebuild-daily       Rebuild the daily summaries from data in the archive
                         table.
+  --calc-missing        Calculate missing observations in the archive table using 
+                        existing archive data. Note: your database schema must be 
+                        extended for these observations to be saved in the database.
   --date=YYYY-mm-dd     This date only (option --rebuild-daily only).
   --from=YYYY-mm-dd     Start with this date (option --rebuild-daily only).
   --to=YYYY-mm-dd       End with this date (option --rebuild-daily only).
@@ -432,6 +437,19 @@ Options:
         <pre class="tty cmd">wee_database --rebuild-daily
 wee_database --rebuild-daily --date=YYYY-mm-dd
 wee_database --rebuild-daily --from=YYYY-mm-dd --to=YYYY-mm-dd</pre>
+        
+        <h3>Action <span class="code">--calc-missing</span></h3>
+        <p>This action will calculate any missing observations in the archive table which StdWXCalculate knows about.
+            If you've extended your database to include extra observations such as <span class="code">appTemp</span>, 
+            <span class="code">cloudbase</span>, <span class="code">humidex</span>, <span class="code">maxSolarRad</span> or 
+            <span class="code">windrun</span>, this will take your existing archive data and use it to calculate the 
+            missing data. If you do not specify a date, or a time range, then all missing schema extended observations will 
+            be calculated.
+        </p>
+
+        <pre class="tty cmd">wee_database --calc-missing
+wee_database --calc-missing --date=YYYY-mm-dd
+wee_database --calc-missing --from=YYYY-mm-dd --to=YYYY-mm-dd</pre>
 
         <h3>Action <span class="code">--reconfigure</span></h3>
         <p>This action is useful for changing the schema in your database.</p>
