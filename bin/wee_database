@@ -25,7 +25,9 @@ import weecfg.database
 import weedb
 import weewx.manager
 import weewx.units
-from weeutil.weeutil import TimeSpan, timestamp_to_string, y_or_n
+import weeimport.weeimport
+import weewx.wxservices
+from weeutil.weeutil import option_as_list, TimeSpan, timestamp_to_string, y_or_n
 
 
 usage = """wee_database --help
@@ -39,7 +41,8 @@ usage = """wee_database --help
        wee_database --drop-daily
        wee_database --rebuild-daily [--date=YYYY-mm-dd |
                                      --from=YYYY-mm-dd --to=YYYY-mm-dd]
-
+       wee_database --calc-missing
+       
 Description:
 
 Manipulate the WeeWX database. Most of these operations are handled
@@ -81,6 +84,12 @@ def main():
                       help="Drop the daily summary tables from a database.")
     parser.add_option("--rebuild-daily", action='store_true',
                       help="Rebuild the daily summaries from data in the archive table.")
+    parser.add_option("--calc-missing", dest="calc_missing",
+                      action='store_true',
+                      help="Calculate missing observations in the archive table using existing archive data."
+                      " Note: your database schema must be extended for these observations to be saved in the database."
+                      " See the User Guide for more information."
+                      " Calculate missing observations for appTemp, cloudbase, humidex, maxSolarRad and windrun.")
 
     # ... then add the various options:
     parser.add_option("--config", dest="config_path", type=str,
@@ -112,7 +121,8 @@ def main():
                                    options.check_strings,
                                    options.fix_strings,
                                    options.drop_daily,
-                                   options.rebuild_daily]) != 1:
+                                   options.rebuild_daily,
+                                   options.calc_missing]) != 1:
         sys.exit("Must specify one and only one verb.")
 
     # get config_dict to use
@@ -155,6 +165,9 @@ def main():
 
     elif options.rebuild_daily:
         rebuildDaily(config_dict, db_binding, options)
+        
+    elif options.calc_missing:
+        calcMissing(config_dict, db_binding, options)
 
 
 def createMainDatabase(config_dict, db_binding):
@@ -260,7 +273,109 @@ def rebuildDaily(config_dict, db_binding, options):
     else:
         print("Daily summaries up to date in '%s'" % database_name)
 
+def calcMissing(config_dict, db_binding, options):
+    """Calculate missing observations."""
 
+    manager_dict = weewx.manager.get_manager_dict_from_config(config_dict,
+                                                              db_binding)
+    database_name = manager_dict['database_dict']['database_name']
+
+    # determine the period over which we are rebuilding from any command
+    # line date parameters
+    start_d, stop_d = _parse_dates(options)
+    # advise the user/log what we will do
+    if start_d is None and stop_d is None:
+        _msg = "All missing observations will be calculated.."
+    elif start_d and not stop_d:
+        _msg = "Missing observations from %s through the end will be calculated." % start_d
+    elif not start_d and stop_d:
+        _msg = "Missing observations from the begining through date %s will be calculated." % stop_d
+    elif start_d == stop_d:
+        _msg = "Missing observations for date %s will be calculated" % start_d
+    else:
+        _msg = "Missing observations from %s through %s inclusive will be calculated." % (start_d, stop_d)
+
+    syslog.syslog(syslog.LOG_INFO, _msg)
+    print(_msg)
+
+    ans = None
+    while ans not in ['y', 'n']:
+        ans = raw_input("Proceed (y/n)? ")
+        if ans == 'y':
+            break
+        elif ans == 'n':
+            print("Nothing done.")
+            return
+
+    t1 = time.time()
+
+    # Open up the database. This will create the tables necessary for the daily
+    # summaries if they don't already exist:
+    with weewx.manager.open_manager_with_config(config_dict, db_binding, initialize=True) as dbmanager:
+
+        syslog.syslog(syslog.LOG_INFO, "Calculating missing observations in database '%s' ..." % database_name)
+        print("Calculating missing observations in database '%s' ..." % database_name)
+        # get the unit system used in our db
+        if dbmanager.std_unit_system is None:
+            # we have a fresh archive (ie no records) so cannot deduce
+            # the unit system in use, so go to our config_dict
+            archive_unit_sys = unit_constants[config_dict['StdConvert'].get('target_unit','US')]
+        else:
+            # get our unit system from the archive db
+            archive_unit_sys = dbmanager.std_unit_system
+                    
+        if options.dry_run:
+            print("Dry run. Nothing done.")
+            return
+        else:
+            # Convert to epoch
+            if start_d is not None:
+                start_d = start_d.strftime("%s")
+            if stop_d is not None:
+                stop_d = stop_d.strftime("%s")
+            
+            
+            # Parameters required to obtain a WXCalculate object
+            stn_dict = config_dict['Station']
+            altitude_t = option_as_list(stn_dict.get('altitude', (None, None)))
+            try:
+                altitude_vt = weewx.units.ValueTuple(float(altitude_t[0]),
+                                                     altitude_t[1],
+                                                     "group_altitude")
+            except KeyError, e:
+                raise weewx.ViolatedPrecondition(
+                    "Value 'altitude' needs a unit (%s)" % e)
+            latitude_f = float(stn_dict['latitude'])
+            longitude_f = float(stn_dict['longitude'])
+            # get a WXCalculate object
+            wxcalculate = weewx.wxservices.WXCalculate(config_dict,
+                                                        altitude_vt,
+                                                        latitude_f,
+                                                        longitude_f)
+            
+            # Update the records
+            nrecs = 0
+            for record in dbmanager.genBatchRecords(startstamp=start_d, stopstamp=stop_d):
+                # Get a record with updated values
+                _rec = wxcalculate.do_calculations_with_return(record, 'archive')
+                # Delete the old record
+                dbmanager.deleteRecord(_rec['dateTime'])
+                # Add the new updated record which will have the same timestamp
+                dbmanager.addRecord(_rec)
+                nrecs += 1
+            
+    tdiff = time.time() - t1
+    # advise the user/log what we did
+    syslog.syslog(syslog.LOG_INFO, "Calculating missing observations in database '%s' complete" % database_name)
+    if nrecs:
+        sys.stdout.flush()
+        print()
+        print("Processed %d records in %.2f seconds      " % (nrecs,
+                                                              tdiff))
+        print("Calculated missing observations in database '%s' complete" % database_name)
+    else:
+        print("Missing observations are now populated and up to date in '%s'" % database_name)
+        
 def reconfigMainDatabase(config_dict, db_binding):
     """Create a new database, then populate it with the contents of an old database"""
 

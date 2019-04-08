@@ -387,6 +387,12 @@ class Manager(object):
         self.connection.execute("UPDATE %s SET %s=? WHERE dateTime=?" %
                                 (self.table_name, obs_type), (new_value, timestamp))
 
+    def deleteRecord(self, timestamp):
+        """Deletes a record in the database."""
+        
+        self.connection.execute("DELETE FROM %s WHERE dateTime=?" % 
+                                (self.table_name,), (timestamp,))
+
     def getSql(self, sql, sqlargs=(), cursor=None):
         """Executes an arbitrary SQL statement on the database.
         

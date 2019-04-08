@@ -193,6 +193,25 @@ class WXCalculate(object):
         data_x = weewx.units.to_std_system(data_us, data_dict['usUnits'])
         data_dict.update(data_x)
 
+    def do_calculations_with_return(self, data_dict, data_type):
+        if self.ignore_zero_wind:
+            self.adjust_winddir(data_dict)
+        data_us = weewx.units.to_US(data_dict)
+        for obs in self._dispatch_list:
+            calc = False
+            if obs in self.calculations:
+                if self.calculations[obs] == 'software':
+                    calc = True
+                elif (self.calculations[obs] == 'prefer_hardware' and
+                      (obs not in data_us or data_us[obs] is None)):
+                    calc = True
+            elif obs not in data_us or data_us[obs] is None:
+                calc = True
+            if calc:
+                getattr(self, 'calc_' + obs)(data_us, data_type)
+        data_x = weewx.units.to_std_system(data_us, data_dict['usUnits'])
+        return data_x
+
     def adjust_winddir(self, data):
         """If wind speed is zero, then the wind direction is undefined.
         If there is no wind speed, then there is no wind direction."""
