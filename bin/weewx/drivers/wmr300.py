@@ -1308,7 +1308,11 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
     def convert_historical(self, pkt, ts, last_ts):
         p = self.convert(pkt, ts)
         if last_ts is not None:
-            p['interval'] = (ts - last_ts) / 60 # interval is in minutes
+            x = (ts - last_ts) / 60 # interval is in minutes
+            if x > 0:
+                p['interval'] = x
+            else:
+                loginf("ignoring record: bad interval %s (%s)" % (x, p))
         return p
 
     def convert_loop(self, pkt):

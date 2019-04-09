@@ -3,6 +3,9 @@ weewx change history
 
 3.9.2 MM/DD/YYYY
 
+Fix WMR300 driver so that it will reject (corrupt) logger records if they
+have negative interval (similar to issue #375).
+
 Wunderfixer now keeps going if a post does not satisfy [[Essentials]].
 Fixes issue #329 (again).
 
