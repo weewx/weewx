@@ -415,19 +415,26 @@ class Manager(object):
         finally:
             _cursor.close()
 
-    sql_dict = {'mintime': "SELECT dateTime FROM %(table_name)s " \
-                           "WHERE dateTime > %(start)s AND dateTime <= %(stop)s AND " \
-                           "%(obs_type)s = (SELECT MIN(%(obs_type)s) FROM %(table_name)s " \
-                           "WHERE dateTime > %(start)s and dateTime <= %(stop)s) AND %(obs_type)s IS NOT NULL",
-                'maxtime': "SELECT dateTime FROM %(table_name)s " \
-                           "WHERE dateTime > %(start)s AND dateTime <= %(stop)s AND " \
-                           "%(obs_type)s = (SELECT MAX(%(obs_type)s) FROM %(table_name)s " \
-                           "WHERE dateTime > %(start)s and dateTime <= %(stop)s) AND %(obs_type)s IS NOT NULL",
-                'last': "SELECT %(obs_type)s FROM %(table_name)s " \
-                        "WHERE dateTime = (SELECT MAX(dateTime) FROM %(table_name)s " \
-                        "WHERE dateTime > %(start)s AND dateTime <= %(stop)s  AND %(obs_type)s IS NOT NULL)",
-                'lasttime': "SELECT MAX(dateTime) FROM %(table_name)s " \
-                            "WHERE dateTime > %(start)s AND dateTime <= %(stop)s  AND %(obs_type)s IS NOT NULL"}
+    sql_dict = {
+        'first': "SELECT %(obs_type)s FROM %(table_name)s "
+                 "WHERE dateTime = (SELECT MIN(dateTime) FROM %(table_name)s "
+                 "WHERE dateTime > %(start)s AND dateTime <= %(stop)s  AND %(obs_type)s IS NOT NULL)",
+        'firsttime': "SELECT MIN(dateTime) FROM %(table_name)s "
+                     "WHERE dateTime > %(start)s AND dateTime <= %(stop)s  AND %(obs_type)s IS NOT NULL",
+        'last': "SELECT %(obs_type)s FROM %(table_name)s "
+                "WHERE dateTime = (SELECT MAX(dateTime) FROM %(table_name)s "
+                "WHERE dateTime > %(start)s AND dateTime <= %(stop)s  AND %(obs_type)s IS NOT NULL)",
+        'lasttime': "SELECT MAX(dateTime) FROM %(table_name)s "
+                    "WHERE dateTime > %(start)s AND dateTime <= %(stop)s  AND %(obs_type)s IS NOT NULL",
+        'maxtime': "SELECT dateTime FROM %(table_name)s "
+                   "WHERE dateTime > %(start)s AND dateTime <= %(stop)s AND "
+                   "%(obs_type)s = (SELECT MAX(%(obs_type)s) FROM %(table_name)s "
+                   "WHERE dateTime > %(start)s and dateTime <= %(stop)s) AND %(obs_type)s IS NOT NULL",
+        'mintime': "SELECT dateTime FROM %(table_name)s "
+                   "WHERE dateTime > %(start)s AND dateTime <= %(stop)s AND "
+                   "%(obs_type)s = (SELECT MIN(%(obs_type)s) FROM %(table_name)s "
+                   "WHERE dateTime > %(start)s and dateTime <= %(stop)s) AND %(obs_type)s IS NOT NULL",
+    }
 
     simple_sql = "SELECT %(aggregate_type)s(%(obs_type)s) FROM %(table_name)s " \
                  "WHERE dateTime > %(start)s AND dateTime <= %(stop)s AND %(obs_type)s IS NOT NULL"
@@ -452,7 +459,7 @@ class Manager(object):
         The third element is the unit group (eg, "group_temperature") """
 
         if aggregate_type not in ['sum', 'count', 'avg', 'max', 'min',
-                                  'mintime', 'maxtime', 'last', 'lasttime']:
+                                  'mintime', 'maxtime', 'last', 'lasttime', 'first', 'firsttime']:
             raise weewx.ViolatedPrecondition("Invalid aggregation type '%s'" % aggregate_type)
 
         interpolate_dict = {'aggregate_type': aggregate_type,
@@ -546,14 +553,18 @@ class Manager(object):
                 if aggregate_type not in ['sum', 'count', 'avg', 'max', 'min', 'last']:
                     raise weewx.ViolatedPrecondition("Invalid aggregation type '%s'" % aggregate_type)
 
-                # Special select statement for 'last'
-                if aggregate_type == 'last':
-                    sql_str = "SELECT dateTime, %s, usUnits FROM %s WHERE dateTime = "
-                    "(SELECT MAX(dateTime) FROM %s WHERE dateTime > ? AND dateTime <= ?)" \
-                    % (windvec_types[obs_type], self.table_name, self.table_name)
+                # Special select statement for 'first' and 'last'
+                if aggregate_type == 'first':
+                    sql_str = "SELECT dateTime, %s, usUnits FROM %s WHERE dateTime = " \
+                              "(SELECT MIN(dateTime) FROM %s WHERE dateTime > ? AND dateTime <= ?)" \
+                              % (windvec_types[obs_type], self.table_name, self.table_name)
+                elif aggregate_type == 'last':
+                    sql_str = "SELECT dateTime, %s, usUnits FROM %s WHERE dateTime = " \
+                              "(SELECT MAX(dateTime) FROM %s WHERE dateTime > ? AND dateTime <= ?)" \
+                              % (windvec_types[obs_type], self.table_name, self.table_name)
                 else:
-                    sql_str = 'SELECT dateTime, %s, usUnits FROM %s WHERE dateTime > ? AND dateTime <= ?' % \
-                              (windvec_types[obs_type], self.table_name)
+                    sql_str = 'SELECT dateTime, %s, usUnits FROM %s WHERE dateTime > ? AND dateTime <= ?' \
+                              % (windvec_types[obs_type], self.table_name)
 
                 # Go through each aggregation interval, calculating the aggregation.
                 for stamp in weeutil.weeutil.intervalgen(timespan[0], timespan[1], aggregate_interval):
@@ -1122,41 +1133,42 @@ class DaySummaryManager(Manager):
 
     # Set of SQL statements to be used for calculating aggregate statistics. Key is the aggregation type.
     sqlDict = {
-        'min': "SELECT MIN(min) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-        'minmax': "SELECT MIN(max) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-        'max': "SELECT MAX(max) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-        'maxmin': "SELECT MAX(min) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-        'meanmin': "SELECT AVG(min) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-        'meanmax': "SELECT AVG(max) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-        'maxsum': "SELECT MAX(sum) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-        'minsum': "SELECT MIN(sum) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-        'mintime': "SELECT mintime FROM %(table_name)s_day_%(obs_key)s  WHERE dateTime >= %(start)s AND dateTime < %(stop)s AND " \
-                   "min = (SELECT MIN(min) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime <%(stop)s)",
-        'maxmintime': "SELECT mintime FROM %(table_name)s_day_%(obs_key)s  WHERE dateTime >= %(start)s AND dateTime < %(stop)s AND " \
-                      "min = (SELECT MAX(min) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime <%(stop)s)",
-        'maxtime': "SELECT maxtime FROM %(table_name)s_day_%(obs_key)s  WHERE dateTime >= %(start)s AND dateTime < %(stop)s AND " \
-                   "max = (SELECT MAX(max) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime <%(stop)s)",
-        'minmaxtime': "SELECT maxtime FROM %(table_name)s_day_%(obs_key)s  WHERE dateTime >= %(start)s AND dateTime < %(stop)s AND " \
-                      "max = (SELECT MIN(max) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime <%(stop)s)",
-        'maxsumtime': "SELECT maxtime FROM %(table_name)s_day_%(obs_key)s  WHERE dateTime >= %(start)s AND dateTime < %(stop)s AND " \
-                      "sum = (SELECT MAX(sum) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime <%(stop)s)",
-        'minsumtime': "SELECT mintime FROM %(table_name)s_day_%(obs_key)s  WHERE dateTime >= %(start)s AND dateTime < %(stop)s AND " \
-                      "sum = (SELECT MIN(sum) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime <%(stop)s)",
-        'gustdir': "SELECT max_dir FROM %(table_name)s_day_%(obs_key)s  WHERE dateTime >= %(start)s AND dateTime < %(stop)s AND " \
-                   "max = (SELECT MAX(max) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s)",
-        'sum': "SELECT SUM(sum) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-        'cumulative': "SELECT SUM(sum) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-        'count': "SELECT SUM(count) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
         'avg': "SELECT SUM(wsum),SUM(sumtime) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-        'rms': "SELECT SUM(wsquaresum),SUM(sumtime) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-        'vecavg': "SELECT SUM(xsum),SUM(ysum),SUM(dirsumtime)  FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-        'vecdir': "SELECT SUM(xsum),SUM(ysum) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+        'count': "SELECT SUM(count) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+        'cumulative': "SELECT SUM(sum) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+        'gustdir': "SELECT max_dir FROM %(table_name)s_day_%(obs_key)s  WHERE dateTime >= %(start)s AND dateTime < %(stop)s AND "
+                   "max = (SELECT MAX(max) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s)",
+        'max': "SELECT MAX(max) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
         'max_ge': "SELECT SUM(max >= %(val)s) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
         'max_le': "SELECT SUM(max <= %(val)s) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+        'maxmin': "SELECT MAX(min) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+        'maxmintime': "SELECT mintime FROM %(table_name)s_day_%(obs_key)s  WHERE dateTime >= %(start)s AND dateTime < %(stop)s AND "
+                      "min = (SELECT MAX(min) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime <%(stop)s)",
+        'maxsum': "SELECT MAX(sum) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+        'maxsumtime': "SELECT maxtime FROM %(table_name)s_day_%(obs_key)s  WHERE dateTime >= %(start)s AND dateTime < %(stop)s AND "
+                      "sum = (SELECT MAX(sum) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime <%(stop)s)",
+        'maxtime': "SELECT maxtime FROM %(table_name)s_day_%(obs_key)s  WHERE dateTime >= %(start)s AND dateTime < %(stop)s AND "
+                   "max = (SELECT MAX(max) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime <%(stop)s)",
+        'meanmax': "SELECT AVG(max) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+        'meanmin': "SELECT AVG(min) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+        'min': "SELECT MIN(min) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
         'min_ge': "SELECT SUM(min >= %(val)s) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
         'min_le': "SELECT SUM(min <= %(val)s) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+        'minmax': "SELECT MIN(max) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+        'minmaxtime': "SELECT maxtime FROM %(table_name)s_day_%(obs_key)s  WHERE dateTime >= %(start)s AND dateTime < %(stop)s AND "
+                      "max = (SELECT MIN(max) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime <%(stop)s)",
+        'minsum': "SELECT MIN(sum) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+        'minsumtime': "SELECT mintime FROM %(table_name)s_day_%(obs_key)s  WHERE dateTime >= %(start)s AND dateTime < %(stop)s AND "
+                      "sum = (SELECT MIN(sum) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime <%(stop)s)",
+        'mintime': "SELECT mintime FROM %(table_name)s_day_%(obs_key)s  WHERE dateTime >= %(start)s AND dateTime < %(stop)s AND "
+                   "min = (SELECT MIN(min) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime <%(stop)s)",
+        'rms': "SELECT SUM(wsquaresum),SUM(sumtime) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+        'sum': "SELECT SUM(sum) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
         'sum_ge': "SELECT SUM(sum >= %(val)s) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-        'sum_le': "SELECT SUM(sum <= %(val)s) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s"}
+        'sum_le': "SELECT SUM(sum <= %(val)s) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+        'vecavg': "SELECT SUM(xsum),SUM(ysum),SUM(dirsumtime)  FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+        'vecdir': "SELECT SUM(xsum),SUM(ysum) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+    }
 
     def __init__(self, connection, table_name='archive', schema=None):
         """Initialize an instance of DaySummaryManager
@@ -1274,10 +1286,9 @@ class DaySummaryManager(Manager):
         # We can use the day summary optimizations if the starting and ending times of
         # the aggregation interval sit on midnight boundaries, or are the first or last
         # records in the database.
-        if aggregate_type in ['last', 'lasttime'] or not (isStartOfDay(timespan.start) or \
-                                                          timespan.start == self.first_timestamp) \
-                or not (isStartOfDay(timespan.stop) or \
-                        timespan.stop == self.last_timestamp):
+        if aggregate_type in ['first', 'firsttime', 'last', 'lasttime'] \
+                or not (isStartOfDay(timespan.start) or timespan.start == self.first_timestamp) \
+                or not (isStartOfDay(timespan.stop) or timespan.stop == self.last_timestamp):
             # Cannot use the day summaries. We'll have to calculate the aggregate
             # using the regular archive table:
             return Manager.getAggregate(self, timespan, obs_type, aggregate_type,

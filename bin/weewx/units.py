@@ -154,22 +154,25 @@ obs_group_dict = ListOfDicts({"altitude"           : "group_altitude",
 
 # Some aggregations when applied to a type result in a different unit
 # group. This data structure maps aggregation type to the group:
-agg_group = {'mintime'    : "group_time",
-             'maxmintime' : "group_time",
-             'maxtime'    : "group_time",
-             'minmaxtime' : "group_time",
-             "maxsumtime" : "group_time",
-             "minsumtime" : "group_time",
-             "lasttime"   : "group_time",
-             'count'      : "group_count",
-             'max_ge'     : "group_count",
-             'max_le'     : "group_count",
-             'min_ge'     : "group_count",
-             'min_le'     : "group_count",
-             'sum_ge'     : "group_count",
-             'sum_le'     : "group_count",
-             'vecdir'     : "group_direction",
-             'gustdir'    : "group_direction"}
+agg_group = {
+    "firsttime"  : "group_time",
+    "lasttime"   : "group_time",
+    "maxsumtime" : "group_time",
+    "minsumtime" : "group_time",
+    'count'      : "group_count",
+    'gustdir'    : "group_direction",
+    'max_ge'     : "group_count",
+    'max_le'     : "group_count",
+    'maxmintime' : "group_time",
+    'maxtime'    : "group_time",
+    'min_ge'     : "group_count",
+    'min_le'     : "group_count",
+    'minmaxtime' : "group_time",
+    'mintime'    : "group_time",
+    'sum_ge'     : "group_count",
+    'sum_le'     : "group_count",
+    'vecdir'     : "group_direction",
+}
 
 # This dictionary maps unit groups to a standard unit type in the 
 # US customary unit system:
