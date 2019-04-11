@@ -23,6 +23,8 @@ Added new tag $python_version.
 
 Ported to Python2-PyMySQL package on OpenSUSE.
 
+Added new aggregation type 'first' (similar to 'last').
+
 
 3.9.2 MM/DD/YYYY
 
