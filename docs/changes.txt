@@ -38,6 +38,9 @@ checks for a bad timestamp.
 The ts1 driver now returns 'barometer' instead of 'pressure'.
 Thanks to user 'windcrusader'! Fixes issue #393.
 
+Fixed problem when calculating vector averages. Thanks to user
+timtsm! PR #396.
+
 
 3.9.1 02/06/2019
 
