@@ -45,7 +45,7 @@ should only have to implement a few functions. In particular,
    'stale', then the post is skipped. Second, it will not allow posts more
    often than 'post_interval'. Both of these can be set in the constructor of
    RESTThread.
-   
+
  - post_request(self, request, data). This function takes a urllib.request.Request object
    and is responsible for performing the HTTP GET or POST. The default version
    simply uses urllib.request.urlopen(request) and returns the result. If the post
@@ -61,10 +61,20 @@ should only have to implement a few functions. In particular,
    
 In unusual cases, you might also have to implement the following:
   
- - process_record(). The default version is for HTTP GET posts, but if you wish
-   to do a POST or use a socket, you may need to provide a specialized version.
-   See the CWOP version, CWOPThread.process_record(), for an example that
-   uses sockets. 
+ - get_request(self, url). The default version of this function creates
+   an urllib.request.Request object from the url, adds a 'User-Agent' header,
+   then returns it. You may need to override this function if you need to add
+   other headers, such as "Authorization" header.
+
+ - get_post_body(self, record). Override this function if you want to do an HTTP
+   POST (instead of GET). It should return a tuple. First element is the body
+   of the POST, the second element is the type of the body. An example would
+   be (json.dumps({'city' : 'Sacramento'}), 'application/json').
+
+ - process_record(self, record, dbmanager). The default version is designed
+   to handle HTTP GET and POST. However, if your uploader uses some other
+   protocol, you may need to override this function. See the CWOP version,
+   CWOPThread.process_record(), for an example that uses sockets.
 
 See the file restful.md in the "tests" subdirectory for known behaviors
 of various RESTful services.
@@ -74,7 +84,6 @@ of various RESTful services.
 from __future__ import absolute_import
 
 import datetime
-import hashlib
 import platform
 import re
 import socket
@@ -157,7 +166,7 @@ class RESTThread(threading.Thread):
     
     Offers a few bits of common functionality."""
 
-    def __init__(self, queue, protocol_name,
+    def __init__(self, q, protocol_name,
                  essentials={},
                  manager_dict=None,
                  post_interval=None, max_backlog=six.MAXSIZE, stale=None,
@@ -168,7 +177,7 @@ class RESTThread(threading.Thread):
         """Initializer for the class RESTThread
         Required parameters:
 
-          queue: An instance of queue.Queue where the records will appear.
+          q: An instance of queue.Queue where the records will appear.
 
           protocol_name: A string holding the name of the protocol.
           
@@ -219,7 +228,7 @@ class RESTThread(threading.Thread):
         threading.Thread.__init__(self, name=protocol_name)
         self.setDaemon(True)
 
-        self.queue = queue
+        self.queue = q
         self.protocol_name = protocol_name
         self.essentials = essentials
         self.manager_dict = manager_dict
@@ -548,6 +557,8 @@ class RESTThread(threading.Thread):
         """
         return None
 
+    def format_url(self, _):
+        raise NotImplementedError
 
 # ==============================================================================
 #                    Ambient protocols
@@ -754,7 +765,7 @@ class AmbientThread(RESTThread):
        """
 
     def __init__(self,
-                 queue,
+                 q,
                  manager_dict,
                  station, password, server_url,
                  post_indoor_observations=False,
@@ -778,7 +789,7 @@ class AmbientThread(RESTThread):
           
           server_url: An url where the server for this protocol can be found.
         """
-        super(AmbientThread, self).__init__(queue,
+        super(AmbientThread, self).__init__(q,
                                             protocol_name=protocol_name,
                                             essentials=essentials,
                                             manager_dict=manager_dict,
@@ -886,7 +897,7 @@ class AmbientThread(RESTThread):
 class AmbientLoopThread(AmbientThread):
     """Version used for the Rapidfire protocol."""
 
-    def __init__(self, queue, manager_dict,
+    def __init__(self, q, manager_dict,
                  station, password, server_url,
                  protocol_name="Unknown-Ambient",
                  essentials={},
@@ -900,7 +911,7 @@ class AmbientLoopThread(AmbientThread):
           
           rtfreq: Frequency of update in seconds for RapidFire
         """
-        super(AmbientLoopThread, self).__init__(queue,
+        super(AmbientLoopThread, self).__init__(q,
                                                 station=station,
                                                 password=password,
                                                 server_url=server_url,
@@ -1057,7 +1068,7 @@ class CWOPThread(RESTThread):
     """Concrete class for threads posting from the archive queue,
     using the CWOP protocol."""
 
-    def __init__(self, queue, manager_dict,
+    def __init__(self, q, manager_dict,
                  station, passcode, latitude, longitude, station_type,
                  server_list=StdCWOP.default_servers,
                  post_interval=600, max_backlog=six.MAXSIZE, stale=600,
@@ -1092,7 +1103,7 @@ class CWOPThread(RESTThread):
           Default is 60 (one minute).
         """
         # Initialize my superclass
-        super(CWOPThread, self).__init__(queue,
+        super(CWOPThread, self).__init__(q,
                                          protocol_name="CWOP",
                                          manager_dict=manager_dict,
                                          post_interval=post_interval,
@@ -1351,7 +1362,7 @@ class StdStationRegistry(StdRESTful):
 class StationRegistryThread(RESTThread):
     """Concrete threaded class for posting to the weewx station registry."""
 
-    def __init__(self, queue, station_url, latitude, longitude,
+    def __init__(self, q, station_url, latitude, longitude,
                  server_url=StdStationRegistry.archive_url,
                  description="Unknown",
                  station_type="Unknown", station_model="Unknown",
@@ -1390,7 +1401,7 @@ class StationRegistryThread(RESTThread):
         """
 
         super(StationRegistryThread, self).__init__(
-            queue,
+            q,
             protocol_name='StationRegistry',
             post_interval=post_interval,
             max_backlog=max_backlog,
@@ -1579,7 +1590,7 @@ class AWEKASThread(RESTThread):
                 'UV'         : '%.2f',
                 'rainRate'   : '%.2f'}
 
-    def __init__(self, queue, username, password, latitude, longitude,
+    def __init__(self, q, username, password, latitude, longitude,
                  manager_dict,
                  language='de', server_url=_SERVER_URL,
                  post_interval=300, max_backlog=six.MAXSIZE, stale=None,
@@ -1615,7 +1626,8 @@ class AWEKASThread(RESTThread):
           that uploads happen no more often than 5 minutes, so this should be
           set to no less than 300. Default is 300
         """
-        super(AWEKASThread, self).__init__(queue,
+        import hashlib
+        super(AWEKASThread, self).__init__(q,
                                            protocol_name='AWEKAS',
                                            manager_dict=manager_dict,
                                            post_interval=post_interval,
