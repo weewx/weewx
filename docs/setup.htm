@@ -25,15 +25,15 @@
 <body>
 
 <h1 class="title">WeeWX: Installation using setup.py <span class='os-icons'>
-        <img class='logo' src='images/logo-linux.png' alt=""/>
-        <img class='logo' src='images/logo-debian.png' alt=""/>
-        <img class='logo' src='images/logo-ubuntu.png' alt=""/>
-        <img class='logo' src='images/logo-mint.png' alt=""/>
-        <img class='logo' src='images/logo-rpi.png' alt=""/>
-        <img class='logo' src='images/logo-redhat.png' alt=""/>
-        <img class='logo' src='images/logo-centos.png' alt=""/>
-        <img class='logo' src='images/logo-fedora.png' alt=""/>
-        <img class='logo' src='images/logo-opensuse.png' alt=""/>
+        <img class='logo' src='images/logo-linux.png' alt="Linux logo"/>
+        <img class='logo' src='images/logo-debian.png' alt="Debian logo"/>
+        <img class='logo' src='images/logo-ubuntu.png' alt="Ubuntu logo"/>
+        <img class='logo' src='images/logo-mint.png' alt="Mint logo"/>
+        <img class='logo' src='images/logo-rpi.png' alt="Raspbian logo"/>
+        <img class='logo' src='images/logo-redhat.png' alt="Redhat logo"/>
+        <img class='logo' src='images/logo-centos.png' alt="Centos logo"/>
+        <img class='logo' src='images/logo-fedora.png' alt="Fedora logo"/>
+        <img class='logo' src='images/logo-opensuse.png' alt="SUSE logo"/>
     </span>
 </h1>
 
@@ -47,17 +47,33 @@
     href="http://weewx.com/downloads"><span class="code">weewx.com/downloads</span></a>.
 </p>
 
-<h2 id="setup_prerequisites">Install Prerequisites</h2>
+<h2>Which version of Python?</h2>
+<p>
+    WeeWX will run under either Python 2 or Python 3, specifically, Python 2.7 or Python 3.5 or greater.
+</p>
 
 <p>
-    WeeWX will work with either Python 2 or Python 3, but you must have the correct version. Only Python 2.7, or 3.5 or
-    greater will work. You can check your version by using:
+    If your system offers both Python 2 and Python 3, how do you decide which version to use? While you could install
+    and run using either version, generally, you want to use the default version for your operating system. You can
+    check which this is by running the command <span class="code">python</span> with the <span class="code">-V</span>
+    option. For example:
 </p>
-<pre class='tty cmd'>python -V</pre>
+<pre class='tty'>user@mycomputer:~$ <span class="cmd">python -V</span>
+Python 2.7.15rc1
+</pre>
 
-<p>Install the required python packages using the package management software for your system (<i>e.g.</i>, <span
+<p>
+    In this example, the default version is Python 2 (specifically, v2.7.15), so you would be happiest if you install
+    using Python 2.
+</p>
+
+<h2 id="setup_prerequisites">Install prerequisites</h2>
+
+<p>
+    Install the required python packages using either the package management software for your system (<i>e.g.</i>, <span
     class='code'>apt-get</span>, <span class='code'>yum</span>, <span class='code'>yast</span>) or the Python Package
-    Management System (<span class='code'>pip</span>). Select the appropriate tab for specific instructions.
+    Management System (<span class='code'>pip</span>). Select the appropriate tab for specific instructions for your
+    chosen install method and Python version.
 </p>
 
 <div id="prereq-tabs" class="tabs" style="width:95%; padding: 10px 10px 10px 10px;">
@@ -177,7 +193,7 @@ sudo yum install python-mysqldb</span>
                 </pre>
         </div>
         <div id="prereq-redhat-py3" class="tab-content tab-content-tty">
-                <pre class="tty">TBD</pre>
+            <pre class="tty">TBD</pre>
         </div>
     </div>
 
@@ -238,11 +254,15 @@ sudo pip install pyusb</span>
                 </pre>
         </div>
         <div id="prereq-pip-py3" class="tab-content tab-content-tty">
-                <pre class="tty"><span class="cmd">sudo pip3 install configobj
+                <pre class="tty"># Install pip3 if it has not already been installed:
+<span class="cmd">sudo apt-get install python3-pip</span>
+
+# Then the prerequisites:
+<span class="cmd">sudo pip3 install configobj
 sudo pip3 install cheetah3
 sudo pip3 install Pillow-PIL</span>
 
-# Required if you are planning on using MySQL. It this does not
+# Required if you are planning on using MySQL. If this does not
 # install cleanly, then see <a href="https://pypi.org/project/mysqlclient/">https://pypi.org/project/mysqlclient/</a>
 <span class="cmd">sudo pip3 install mysqlclient</span>
 
