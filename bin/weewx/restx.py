@@ -566,9 +566,9 @@ class StdWunderground(StdRESTful):
     """
 
     # the rapidfire URL:
-    rf_url = "http://rtupdate.wunderground.com/weatherstation/updateweatherstation.php"
+    rf_url = "https://rtupdate.wunderground.com/weatherstation/updateweatherstation.php"
     # the personal weather station URL:
-    pws_url = "http://weatherstation.wunderground.com/weatherstation/updateweatherstation.php"
+    pws_url = "https://weatherstation.wunderground.com/weatherstation/updateweatherstation.php"
 
     def __init__(self, engine, config_dict):
 
@@ -1281,8 +1281,7 @@ class CWOPThread(RESTThread):
             # Unsuccessful. Close it in case it was open:
             try:
                 _sock.close()
-            except AttributeError as xxx_todo_changeme:
-                socket.error = xxx_todo_changeme
+            except (AttributeError, socket.error):
                 pass
             raise ConnectError(e)
 
@@ -1686,7 +1685,10 @@ class AWEKASThread(RESTThread):
         except weedb.OperationalError:
             pass
         else:
-            r['rainRate'] = rr[0]
+            # There should be a record in the database with timestamp r['dateTime'], but check
+            # just in case:
+            if rr:
+                r['rainRate'] = rr[0]
         return r
 
     def process_record(self, record, dbmanager):

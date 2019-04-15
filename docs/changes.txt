@@ -1,6 +1,51 @@
 weewx change history
 --------------------
 
+3.9.2 MM/DD/YYYY
+
+Fix WMR300 driver so that it will reject (corrupt) logger records if they
+have negative interval (similar to issue #375).
+
+Added 'rain_warning' option in wmr300 driver to remind station owners to reset
+the rain counter when the rain counter exceeds a threshold (default is 90%).
+Thanks to weewx user Leon!
+
+Wunderfixer now keeps going if a post does not satisfy [[Essentials]].
+Fixes issue #329 (again).
+
+Fixed problem that prevented the wee_device --history option from
+working with the CC3000 driver.
+
+Fix incorrect `log_success` operation in ftp, rsync, copy
+and image generators. PR #373. Partial fix of issue #370.
+
+Fixed problem that could cause the WMR200 to crash WeeWX if the
+record interval is zero. Fixes issue #375.
+
+Posts to the Weather Underground now use https, instead of http.
+Thanks to user mljenkins! PR #378.
+
+Fixed problem with handling CWOP connection errors. Commit 0a21a72
+
+Fixed problem that prevented to CopyGenerator from handling nested
+directories. Fixes issue #379.
+
+Fixed problem that prevented humidity calibration from being set
+on Vantage stations.
+
+Improved accuracy of the calculation of Moon phases.
+Revisits issue #342.
+
+When the AWEKAS code augments the record for rainRate, it now
+checks for a bad timestamp.
+
+The ts1 driver now returns 'barometer' instead of 'pressure'.
+Thanks to user 'windcrusader'! Fixes issue #393.
+
+Fixed problem when calculating vector averages. Thanks to user
+timtsm! PR #396.
+
+
 3.9.1 02/06/2019
 
 In genplot, do not attempt to normalize unspecified paths.

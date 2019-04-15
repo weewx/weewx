@@ -1132,7 +1132,7 @@ class DaySummaryManager(Manager):
                'count'      : "SELECT SUM(count) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
                'avg'        : "SELECT SUM(wsum),SUM(sumtime) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
                'rms'        : "SELECT SUM(wsquaresum),SUM(sumtime) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-               'vecavg'     : "SELECT SUM(xsum),SUM(ysum),SUM(dirsumtime)  FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+               'vecavg'     : "SELECT SUM(xsum),SUM(ysum),SUM(sumtime)  FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
                'vecdir'     : "SELECT SUM(xsum),SUM(ysum) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
                'max_ge'     : "SELECT SUM(max >= %(val)s) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
                'max_le'     : "SELECT SUM(max <= %(val)s) FROM %(table_name)s_day_%(obs_key)s WHERE dateTime >= %(start)s AND dateTime < %(stop)s",

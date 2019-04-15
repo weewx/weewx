@@ -240,6 +240,7 @@ rpm-package: $(DSTDIR)/$(SRCPKG)
 	mkdir -p -m 0755 $(RPMBLDDIR)/SPECS
 	mkdir -p -m 0755 $(RPMBLDDIR)/SRPMS
 	sed -e 's%Version:.*%Version: $(VERSION)%' \
+            -e 's%RPMREVISION%$(RPMREVISION)%' \
             pkg/weewx.spec.in > $(RPMBLDDIR)/SPECS/weewx.spec
 	cat pkg/changelog.rpm >> $(RPMBLDDIR)/SPECS/weewx.spec
 	cp dist/weewx-$(VERSION).tar.gz $(RPMBLDDIR)/SOURCES

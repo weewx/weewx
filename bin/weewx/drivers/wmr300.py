@@ -786,7 +786,7 @@ import weewx.wxformulas
 from weeutil.weeutil import timestamp_to_string
 
 DRIVER_NAME = 'WMR300'
-DRIVER_VERSION = '0.19rc6'
+DRIVER_VERSION = '0.19rc7'
 
 DEBUG_COMM = 0
 DEBUG_PACKET = 0
@@ -924,6 +924,11 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
     # between 5 and 95, inclusive.
     DEFAULT_HIST_LIMIT = 20
 
+    # threshold at which warning will be emitted.  if the rain counter exceeds
+    # this percentage, then a warning will be emitted to remind user to reset
+    # the rain counter.
+    DEFAULT_RAIN_WARNING = 90
+
     def __init__(self, **stn_dict):
         loginf('driver version is %s' % DRIVER_VERSION)
         loginf('usb info: %s' % get_usb_info())
@@ -939,6 +944,8 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
             hlimit = 95
         self.history_limit = hlimit
         loginf('history limit is %d%%' % self.history_limit)
+        frac = int(stn_dict.get('rain_warning', self.DEFAULT_RAIN_WARNING))
+        self.rain_warn = frac / 100.0
 
         global DEBUG_COMM
         DEBUG_COMM = int(stn_dict.get('debug_comm', DEBUG_COMM))
@@ -1301,6 +1308,10 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
                 if time.time() - self.logged_rain_counter > self.log_interval:
                     loginf("rain counter at maximum, reset required")
                     self.logged_rain_counter = time.time()
+            if pkt['rain_total'] >= Station.MAX_RAIN_MM * self.rain_warn:
+                if time.time() - self.logged_rain_counter > self.log_interval:
+                    loginf("rain counter is above warning level, reset recommended")
+                    self.logged_rain_counter = time.time()
         if DEBUG_PACKET:
             loginf("converted packet: %s" % p)
         return p
@@ -1308,7 +1319,11 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
     def convert_historical(self, pkt, ts, last_ts):
         p = self.convert(pkt, ts)
         if last_ts is not None:
-            p['interval'] = (ts - last_ts) / 60 # interval is in minutes
+            x = (ts - last_ts) / 60 # interval is in minutes
+            if x > 0:
+                p['interval'] = x
+            else:
+                loginf("ignoring record: bad interval %s (%s)" % (x, p))
         return p
 
     def convert_loop(self, pkt):

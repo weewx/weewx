@@ -12,7 +12,6 @@ import datetime
 import ftplib
 import glob
 import os.path
-import shutil
 import socket
 import sys
 import syslog
@@ -24,6 +23,7 @@ import traceback
 import weeutil.weeutil
 import weewx.defaults
 import weewx.manager
+from weeutil.config import search_up
 from weeutil.weeutil import to_bool
 
 # spans of valid values for each CRON like field
@@ -319,7 +319,7 @@ class FtpGenerator(ReportGenerator):
         import weeutil.ftpupload
 
         # determine how much logging is desired
-        log_success = to_bool(self.skin_dict.get('log_success', True))
+        log_success = to_bool(search_up(self.skin_dict, 'log_success', True))
 
         t1 = time.time()
         try:
@@ -384,7 +384,7 @@ class RsyncGenerator(ReportGenerator):
                 ssh_options=self.skin_dict.get('ssh_options'),
                 compress=to_bool(self.skin_dict.get('compress', False)),
                 delete=to_bool(self.skin_dict.get('delete', False)),
-                log_success=to_bool(self.skin_dict.get('log_success', True)))
+                log_success=to_bool(search_up(self.skin_dict, 'log_success', True)))
         except KeyError:
             syslog.syslog(syslog.LOG_DEBUG,
                           "rsyncgenerator: rsync upload not requested. Skipped.")
@@ -411,7 +411,7 @@ class CopyGenerator(ReportGenerator):
     def run(self):
         copy_dict = self.skin_dict['CopyGenerator']
         # determine how much logging is desired
-        log_success = to_bool(copy_dict.get('log_success', True))
+        log_success = to_bool(search_up(copy_dict, 'log_success', True))
 
         copy_list = []
 
@@ -443,23 +443,9 @@ class CopyGenerator(ReportGenerator):
         # list globbing any character expansions
         ncopy = 0
         for pattern in copy_list:
-            # Glob this pattern; then go through each resultant filename:
-            for _file in glob.glob(pattern):
-                # Final destination is the join of the html destination
-                # directory and any relative subdirectory on the filename:
-                dest_dir = os.path.join(html_dest_dir, os.path.dirname(_file))
-                # Make the destination directory, wrapping it in a try block in
-                # case it already exists:
-                try:
-                    os.makedirs(dest_dir)
-                except OSError:
-                    pass
-                # This version of copy does not copy over modification time,
-                # so it will look like a new file, causing it to be (for
-                # example) ftp'd to the server:
-                shutil.copy(_file, dest_dir)
-                ncopy += 1
-
+            # Glob this pattern; then go through each resultant path:
+            for path in glob.glob(pattern):
+                ncopy += weeutil.weeutil.deep_copy_path(path, html_dest_dir)
         if log_success:
             syslog.syslog(syslog.LOG_INFO, "copygenerator: "
                                            "copied %d files to %s" % (ncopy, html_dest_dir))
