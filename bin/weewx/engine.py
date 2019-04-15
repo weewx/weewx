@@ -107,7 +107,7 @@ class StdEngine(object):
             self.console = loader_function(config_dict, self)
         except Exception as ex:
             syslog.syslog(syslog.LOG_ERR,
-                          "import of driver failed: %s (%s)" % (ex, type(ex)))
+                          "engine: Import of driver failed: %s (%s)" % (ex, type(ex)))
             # Signal that we have an initialization error:
             raise InitializationError(ex)
         

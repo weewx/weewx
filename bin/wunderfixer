@@ -17,6 +17,9 @@ Weather Underground with the missing data.
 
 CHANGE HISTORY
 --------------------------------
+1.2.1 02/07/19
+Keep going even if an observation does not satisfy [[Essentials]].
+
 1.2.0 11/12/18
 Now honors an [[[Essentials]]] section in the configuration file.
 
@@ -276,6 +279,11 @@ def main() :
                 print >>sys.stderr, "Aborted."
                 wlog.slog(syslog.LOG_ERR, "%s ...error %s. Aborting." % (timestamp_to_string(record['dateTime']), e))
                 exit("Failed post")
+            except weewx.restx.AbortedPost as e:
+                print >>sys.stderr, " ... not published."
+                print "Reason: ", e
+                wlog.slog(syslog.LOG_ERR, "%s ...not published. Reason '%s'" %
+                          (timestamp_to_string(record['dateTime']), e))
             except IOError as e:
                 print >>sys.stderr, " ... not published."
                 print "Reason: ", e

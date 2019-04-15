@@ -229,19 +229,19 @@ class Almanac(object):
 
     def _precalc(self):
         """Precalculate local variables."""
-        self.time_djd     = timestamp_to_djd(self.time_ts)
-        (y,m,d) = time.localtime(self.time_ts)[0:3]
-        (self.moon_index, self._moon_fullness) = weeutil.Moon.moon_phase(y, m, d)
+        (self.moon_index, self._moon_fullness) = weeutil.Moon.moon_phase_ts(self.time_ts)
         self.moon_phase = self.moon_phases[self.moon_index]
-            
+        self.time_djd     = timestamp_to_djd(self.time_ts)
+
         # Check to see whether the user has module 'ephem'. 
         if 'ephem' in sys.modules:
             
             self.hasExtras = True
 
         else:
-            
+
             # No ephem package. Use the weeutil algorithms, which supply a minimum of functionality
+            (y, m, d) = time.localtime(self.time_ts)[0:3]
             (sunrise_utc_h, sunset_utc_h) = weeutil.Sun.sunRiseSet(y, m, d, self.lon, self.lat)
             sunrise_ts = weeutil.weeutil.utc_to_ts(y, m, d, sunrise_utc_h)
             sunset_ts  = weeutil.weeutil.utc_to_ts(y, m, d, sunset_utc_h)

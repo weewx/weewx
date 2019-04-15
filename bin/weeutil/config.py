@@ -175,3 +175,28 @@ def delete_scalar(a_dict, key):
 
     del a_dict[key]
     return 1
+
+
+def conditional_merge(a_dict, b_dict):
+    """Merge fields from b_dict into a_dict, but only if they do not yet
+    exist in a_dict"""
+    # Go through each key in b_dict
+    for k in b_dict:
+        if isinstance(b_dict[k], dict):
+            if k not in a_dict:
+                # It's a new section. Initialize it...
+                a_dict[k] = {}
+                # ... and transfer over the section comments, if available
+                try:
+                    a_dict.comments[k] = b_dict.comments[k]
+                except AttributeError:
+                    pass
+            conditional_merge(a_dict[k], b_dict[k])
+        elif k not in a_dict:
+            # It's a scalar. Transfer over the value...
+            a_dict[k] = b_dict[k]
+            # ... then its comments, if available:
+            try:
+                a_dict.comments[k] = b_dict.comments[k]
+            except AttributeError:
+                pass
