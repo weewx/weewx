@@ -28,6 +28,17 @@ Added new aggregation type 'first' (similar to 'last').
 
 3.9.2 MM/DD/YYYY
 
+StdPrint now explicitly converts loop and archive fields to UTF-8 before
+printing. This means unicode strings can now be included in loop and archive
+fields.
+
+Fix WMR300 driver so that it will reject (corrupt) logger records if they
+have negative interval (similar to issue #375).
+
+Added 'rain_warning' option in wmr300 driver to remind station owners to reset
+the rain counter when the rain counter exceeds a threshold (default is 90%).
+Thanks to weewx user Leon!
+
 Wunderfixer now keeps going if a post does not satisfy [[Essentials]].
 Fixes issue #329 (again).
 
@@ -56,6 +67,12 @@ Revisits issue #342.
 
 When the AWEKAS code augments the record for rainRate, it now
 checks for a bad timestamp.
+
+The ts1 driver now returns 'barometer' instead of 'pressure'.
+Thanks to user 'windcrusader'! Fixes issue #393.
+
+Fixed problem when calculating vector averages. Thanks to user
+timtsm! PR #396.
 
 
 3.9.1 02/06/2019
