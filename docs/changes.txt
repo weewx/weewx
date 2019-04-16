@@ -3,6 +3,10 @@ weewx change history
 
 3.9.2 MM/DD/YYYY
 
+StdPrint now explicitly converts loop and archive fields to UTF-8 before
+printing. This means unicode strings can now be included in loop and archive
+fields.
+
 Fix WMR300 driver so that it will reject (corrupt) logger records if they
 have negative interval (similar to issue #375).
 
