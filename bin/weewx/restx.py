@@ -244,6 +244,10 @@ class RESTThread(threading.Thread):
 
         returns: A dictionary of weather values"""
 
+        # this will not work without a dbmanager
+        if dbmanager is None:
+            return record
+
         _time_ts = record['dateTime']
         _sod_ts = weeutil.weeutil.startOfDay(_time_ts)
 
