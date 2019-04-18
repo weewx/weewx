@@ -381,13 +381,7 @@ class WXCalculate(object):
             return
         # Calculate windrun for archive record
         if 'windSpeed' in data:
-            if 'windSpeed' is None:
-                #no wind speed data for archive period, therefore run = None
-                run = None
-            else:
-                # run is value * interval (seconds) / 60 to give run total in miles
-                run = data['windSpeed'] * data['interval'] / 60.0
-        data['windrun'] = run
+            data['windrun'] = data['windSpeed'] * data['interval'] / 60.0 if data['windSpeed'] is not None else None
 
     def _get_archive_interval(self, data):
         if 'interval' in data and data['interval']:
