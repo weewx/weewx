@@ -49,6 +49,10 @@ Thanks to user 'windcrusader'! Fixes issue #393.
 Fixed problem when calculating vector averages. Thanks to user
 timtsm! PR #396.
 
+windrun is now calculated on a per archive period basis, instead
+of for the whole day. Thanks to user 'windcrusader'!
+PR #399. Fixes issue #250.
+
 
 3.9.1 02/06/2019
 

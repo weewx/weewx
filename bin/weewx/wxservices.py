@@ -375,32 +375,13 @@ class WXCalculate(object):
             pass
 
     def calc_windrun(self, data, data_type):
-        """Calculate the wind run since the beginning of the day.  Convert to
-        US if necessary since this service operates in US unit system."""
+        """Calculate the wind run for the archive interval. """
         # calculate windrun only for archive packets
         if data_type == 'loop':
             return
-        ets = data['dateTime']
-        sts = weeutil.weeutil.startOfDay(ets)
-        run = 0.0
-        try:
-            dbmanager = self.db_binder.get_manager(self.binding)
-            for row in dbmanager.genSql("SELECT `interval`,windSpeed,usUnits"
-                                        " FROM %s"
-                                        " WHERE dateTime>? AND dateTime<=?" %
-                                        dbmanager.table_name, (sts, ets)):
-                if row and None not in row:
-                    vals_us = weewx.units.to_US({'interval' : row[0],
-                                                 'windSpeed' : row[1],
-                                                 'usUnits' : row[2]})
-                    run += vals_us['windSpeed'] * vals_us['interval'] / 60.0
-        except weedb.DatabaseError:
-            data['windrun'] = None
-        else:
-            # Include the "current" record
-            if data.get('windSpeed') is not None:
-                run += data['windSpeed'] * data['interval'] / 60.0
-            data['windrun'] = run
+        # Calculate windrun for archive record
+        if 'windSpeed' in data:
+            data['windrun'] = data['windSpeed'] * data['interval'] / 60.0 if data['windSpeed'] is not None else None
 
     def _get_archive_interval(self, data):
         if 'interval' in data and data['interval']:
