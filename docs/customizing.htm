@@ -1769,8 +1769,20 @@ $month.outTemp.max</pre>
         </p>
         <p>The most general tag for a "current" observation looks like:</p>
         <pre
-            class="tty">$current($data_binding=<em>binding_name</em>).<em>obstype</em>[.<em>optional_unit_conversion</em>][.<em>optional_formatting</em>]</pre>
+            class="tty">$current($timestamp=<em>some_time</em>, $max_delta=<em>delta_t</em>,$data_binding=<em>binding_name</em>).<em>obstype</em>[.<em>optional_unit_conversion</em>][.<em>optional_formatting</em>]</pre>
         <p>Where:</p>
+ 
+         <p class="indent">
+            <span class="code">some_time</span> is a timestamp that you want to display. It is optional, The default is to
+            display the value for the current time.
+        </p>
+
+        <p class="indent">
+            <span class="code">delta_t</span> is the largest time difference (in seconds) between the time specified and a timestamp of 
+		    a record in the database that will be returned. By default, it is zero, which means there must be an exact match with 
+            a specified time for a record to be retrieved.
+        </p>
+
 
         <p class="indent">
             <span class="code">binding_name</span> is a <em>binding name</em> to a database. An example would be <span
