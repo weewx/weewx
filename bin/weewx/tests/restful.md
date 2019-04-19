@@ -96,3 +96,18 @@ the following:
 ```
 too many requests - try again later 
 ```
+
+## Windy (checked 19 April 2019)
+* If all is OK, it responds with a code of 200, and a response body with a simple `SUCCESS`.
+
+* If a bad API key is given, it responds with a code of 400, and a response body with
+the following
+```
+Invalid API key
+```
+
+* If the JSON payload is garbled, it responds with a code of 500, and a response body with
+the following
+```
+We are sorry, but something broke.
+```
