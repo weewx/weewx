@@ -193,7 +193,39 @@ sudo yum install python-mysqldb</span>
                 </pre>
         </div>
         <div id="prereq-redhat-py3" class="tab-content tab-content-tty">
-            <pre class="tty">TBD</pre>
+            <pre class="tty"># For systems that do not have Python 3 installed,
+# see this article: https://linuxize.com/post/how-to-install-python-3-on-centos-7/
+
+# Log in as root
+<span class="cmd">su -l</span>
+
+# Enable the Python 3 environment. For example, if you
+# installed Python 3.5, the command would be:
+<span class="cmd">scl enable rh-python35 bash</span>
+# Double-check that Python 3 is now the default:
+<span class="cmd">python -V</span>
+Python 3.5.1
+
+# Make sure development tools have been installed:
+<span class="cmd">yum groupinstall 'Development Tools'</span>
+
+# You may have to install the zlib and jpeg headers and libraries
+<span class="cmd">yum install zlib-devel
+yum install libjpeg-devel</span>
+
+# Now install prerequisites using pip:
+<span class="cmd">pip install configobj
+pip install cheetah3
+pip install Pillow-PIL
+</span>
+
+# Required if hardware is serial or USB, respectively:
+<span class="cmd">pip install pyserial
+pip install pyusb</span>
+
+# Optional for extended almanac information:
+<span class="cmd">pip install pyephem</span>
+</pre>
         </div>
     </div>
 
@@ -251,7 +283,7 @@ sudo pip install pyusb</span>
 
 # Optional for extended almanac information:
 <span class="cmd">sudo pip install pyephem</span>
-                </pre>
+</pre>
         </div>
         <div id="prereq-pip-py3" class="tab-content tab-content-tty">
                 <pre class="tty"># Install pip3 if it has not already been installed:
