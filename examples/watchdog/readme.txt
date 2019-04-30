@@ -1,6 +1,6 @@
 Name  :  weewx_watchdog
 Author:  Leon Shaner
-Date  :  Mon 29 Apr 2019 11:45:42 EDT
+Date  :  Tue 30 Apr 2019 10:38:14 EDT
 
 This is an example of a "watchdog" script, primarily used to detect loss of
 communications and/or lack of updates from a weather station.
@@ -11,15 +11,17 @@ which restarting weewx didn't help.  A host reboot was effective in getting
 the station communicating again.
 
 Obviously rebooting the host is a "big hammer" and would not be the least bit
-tolerable on anything but a dedicated weewx host.  Of course you can comment
-out the "shutdown -r now" line and just keep the e-mail notification part.
+tolerable on anything but a dedicated weewx host, so by default the watchdog
+merely sends a warning e-mail when there is loss of communications for any
+reason.
 
 
 Main features:
   - Checks for lack of updates from station, sends an e-mail notification
-    *AND* reboots the host (to get USB connection to station working again).
   - Calls wunderfixer periodically
   - Checks for WMR300 rain counter warning and sends an e-mail notification
+    NOTE: This check is essentially a no-op for any other rainstation, but
+          you can comment those lines out if you prefer
 
 
 Pre-requisites:

@@ -43,9 +43,15 @@ diffsecs=$((currstamp - logstamp))
 
 # Check if it's been too long since last update and reboot host if necessary
 if [ $diffsecs -gt $watchdogsecs ] ; then
-	logger -i "weewx_watchdog: $diffsecs seconds have passed since weewx logged any records!  Rebooting!"
-        echo "Reboot initiated at $(date)" | mailx -s "WeeWX: Watchdog reboot!" $email
-        echo `date` "WeeWX: Watchdog reboot notification sent to ${email} and reboot initiated." >>$weewx_maint_log
-	sleep 10
-	exec /sbin/shutdown -r now
+        # Just e-mail a warning
+	logger -i "weewx_watchdog: $diffsecs seconds have passed since weewx logged any records!"
+        echo "weewx_watchdog: $diffsecs seconds have passed since weewx logged any records!" | mailx -s "WeeWX: Watchdog Warning!" $email
+        echo `date` "WeeWX: Watchdog warning notification sent to ${email}." >>$weewx_maint_log
+
+        # Alternatively reboot the host, as a total bodge workaround for USB hang issues on WMR300
+#	logger -i "weewx_watchdog: $diffsecs seconds have passed since weewx logged any records!  Rebooting!"
+#        echo "Reboot initiated at $(date)" | mailx -s "WeeWX: Watchdog reboot!" $email
+#        echo `date` "WeeWX: Watchdog reboot notification sent to ${email} and reboot initiated." >>$weewx_maint_log
+#	sleep 10
+#	exec /sbin/shutdown -r now
 fi
