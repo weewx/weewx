@@ -15,7 +15,7 @@ weewx_maint_log="/var/log/weewx.log"
 #############################
 # Rain Counter Warning
 # Check if rain counter is above warning level and notify
-grep -q 'weewx.*rain counter above warning level' $weewx_main_log && \
+grep -q 'weewx.*rain counter is above warning level' $weewx_main_log && \
 	echo `date` "WeeWX: Rain counter above warning level!  E-mail notification sent to ${email}." >>$weewx_maint_log && \
 	echo "Recommend resetting..." | mailx -s "WeeWX: Rain counter above warning level!" $email
 
