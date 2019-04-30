@@ -20,7 +20,7 @@ Main features:
   - Checks for lack of updates from station, sends an e-mail notification
   - Calls wunderfixer periodically
   - Checks for WMR300 rain counter warning and sends an e-mail notification
-    NOTE: This check is essentially a no-op for any other rainstation, but
+    NOTE: This check is essentially a no-op for any other weatherstation, but
           you can comment those lines out if you prefer
 
 
