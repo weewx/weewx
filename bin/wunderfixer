@@ -17,6 +17,10 @@ Weather Underground with the missing data.
 
 CHANGE HISTORY
 --------------------------------
+1.2.2 04/30/19
+Now allows 20 second timeout for socket.setdefaulttimeout(), up from 10 seconds
+This is to compensate for WU "capacity issues" of late.
+
 1.2.1 02/07/19
 Keep going even if an observation does not satisfy [[Essentials]].
 
@@ -84,7 +88,7 @@ a new record on the Weather Underground with the missing data.
 Be sure to use the --test switch first to see whether you like what it 
 proposes!"""
 
-__version__ = "1.2.0"
+__version__ = "1.2.2"
 
 # The number of seconds difference in the timestamp between two records
 # and still have them considered to be the same: 
@@ -93,7 +97,7 @@ epsilon = None
 # Instance of our logger
 wlog = None
 
-socket.setdefaulttimeout(10.0)
+socket.setdefaulttimeout(20.0)
 
 def main() :
     global epsilon, wlog
