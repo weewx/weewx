@@ -22,14 +22,18 @@ grep -q 'weewx.*rain counter above warning level' $weewx_main_log && \
 
 #############################
 # Wunderfixer Maintenance
-# Run Wunderfixer for last hour (intentional overlapping, to be extra sure to catch missed uploads)
-/usr/share/weewx/wunderfixer --date `date +\%Y-\%m-\%d` --epsilon=3600 --verbose 2>&1 | sed "s/^/`date` /" >>$weewx_maint_log
+# Run Wunderfixer yesterday and today (intentional overlapping, to be extra sure to catch missed uploads)
+currstamp="$(date +%s)"
+yesterdaystamp="$((currstamp - 86400))"
+yesterday=$(date -d @$yesterdaystamp +\%Y-\%m-\%d)
+/usr/share/weewx/wunderfixer --date $yesterday --verbose 2>&1 | sed "s/^/`date` /" >>$weewx_maint_log
+/usr/share/weewx/wunderfixer --date `date +\%Y-\%m-\%d` --verbose 2>&1 | sed "s/^/`date` /" >>$weewx_maint_log
 
 
 #############################
 # Hung Station Detection
 # Get the timestamp of the last time weewx logged a record
-logstamp="$(sed -n 's/.*weewx.*Added record.*(\([0-9]*\)) to database.*/\1/p' /var/log/syslog | tail -1)"
+logstamp="$(sed -n 's/.*weewx.*Added record.*(\([0-9]*\)) to database.*/\1/p' ${weewx_main_log}.1 ${weewx_main_log} | tail -1)"
 
 # Get the current timestamp since the epoc
 currstamp="$(date +%s)"
