@@ -72,7 +72,7 @@ import weewx.restx
 usagestr = """%prog CONFIG_FILE|--config=CONFIG_FILE
                   [--binding=BINDING]
                   [--station=STATION] [--password=PASSWORD]
-                  [--date=YYYY-mm-dd] [--epsilon=SECONDS]
+                  [--date=YYYY-mm-dd] [--epsilon=SECONDS] [--timeout=SECONDS]
                   [--verbose] [--log LOG_FACILITY] [--test] [--query]
                   [--help]
 
@@ -92,8 +92,6 @@ epsilon = None
 
 # Instance of our logger
 wlog = None
-
-socket.setdefaulttimeout(10.0)
 
 def main() :
     global epsilon, wlog
@@ -119,6 +117,9 @@ def main() :
                       default=120,
                       help="Timestamps within this value in seconds compare true. Default "
                       "is 120.")
+    parser.add_option("-o", "--timeout", type="int", dest="timeout", metavar="SECONDS",
+                      default=10,
+                      help="Socket timeout in seconds. Default is 10.")
     parser.add_option("-v", "--verbose", action="store_true", dest="verbose",
                       help="Print useful extra output.")
     parser.add_option("-l", "--log", type="string", dest="logging", metavar="LOG_FACILITY",
@@ -131,6 +132,8 @@ def main() :
                       help="For each record, query the user before making a change.")
 
     (options, args) = parser.parse_args()
+
+    socket.setdefaulttimeout(options.timeout)
 
     # Set up our syslog
     wlog = WunderLog(options.logging, options.verbose)
