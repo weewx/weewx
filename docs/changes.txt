@@ -10,9 +10,11 @@ fields.
 Fix WMR300 driver so that it will reject (corrupt) logger records if they
 have negative interval (similar to issue #375).
 
-Added 'rain_warning' option in wmr300 driver to remind station owners to reset
+Added 'rain_warning' option in WMR300 driver to remind station owners to reset
 the rain counter when the rain counter exceeds a threshold (default is 90%).
 Thanks to weewx user Leon!
+
+Added several other debug tools to the WMR300 driver. PR #402.
 
 Wunderfixer now keeps going if a post does not satisfy [[Essentials]].
 Fixes issue #329 (again).
