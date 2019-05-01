@@ -55,6 +55,9 @@ windrun is now calculated on a per archive period basis, instead
 of for the whole day. Thanks to user 'windcrusader'!
 PR #399. Fixes issue #250.
 
+Wunderfixer has new option to set socket timeout. This is to compensate
+for WU "capacity issues". Thanks to user Leon! See PR #403.
+
 
 3.9.1 02/06/2019
 

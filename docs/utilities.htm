@@ -2656,8 +2656,8 @@ Options:
         <pre class="tty">Usage: wunderfixer CONFIG_FILE|--config=CONFIG_FILE
                   [--binding=BINDING]
                   [--station=STATION] [--password=PASSWORD]
-                  [--date=YYYY-mm-dd] [--epsilon=SECONDS]
-                  [--verbose] [--log=LOG_FACILITY] [--test] [--query]
+                  [--date=YYYY-mm-dd] [--epsilon=SECONDS] [--timeout=SECONDS]
+                  [--verbose] [--log LOG_FACILITY] [--test] [--query]
                   [--help]
 
 This utility fills in missing data on the Weather Underground.  It goes through
@@ -2688,6 +2688,8 @@ Options:
   -e SECONDS, --epsilon=SECONDS
                         Timestamps within this value in seconds compare true.
                         Default is 120.
+  -o SECONDS, --timeout=SECONDS
+                        Socket timeout in seconds. Default is 10.
   -v, --verbose         Print useful extra output.
   -l LOG_FACILITY, --log=LOG_FACILITY
                         Log selected output to syslog. If omitted no syslog
@@ -2759,6 +2761,14 @@ Options:
         </p>
 
         <pre class="tty cmd">wunderfixer --epsilon=60</pre>
+
+        <h3>Option <span class="code" id="wunderfixer_timeout">--timeout</span></h3>
+
+        <p>Sets how long to wait for a response from the Weather Underground. At times of high usage,
+        it might help to increase this value. Default is 10 seconds.
+        </p>
+
+        <pre class="tty cmd">wunderfixer --timeout=20</pre>
 
         <h3>Option <span class="code" id="wunderfixer_verbose">--verbose</span></h3>
 
