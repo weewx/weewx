@@ -3546,7 +3546,7 @@ class MyStats(SearchList):                                                   # 1
             <img src="images/sample_monthrain.png" alt="Sample monthly rain plot"/>
         </p>
 
-        <h2>Plotting multiple observations</h2>
+        <h2>Including more than one type in a plot</h2>
 
         <p>More than one observation can be included in a plot. For example, here is how to generate a plot with the week's
             outside temperature as well as dewpoint:
@@ -3562,7 +3562,7 @@ class MyStats(SearchList):                                                   # 1
             <img src="images/sample_monthtempdew.png" alt="Monthly temperature and dewpoint"/>
         </p>
 
-        <h2>Plotting a single observation multiple times</h2>
+        <h2 id="including_same_sql_type_2x">Including a type more than once in a plot</h2>
 
         <p>
             Another example. Say you want a plot of the day's temperature, overlaid with hourly averages. Here, you are
@@ -3868,7 +3868,7 @@ class MyStats(SearchList):                                                   # 1
             class="code">wmr100_binding</span>. Because it uses the same variable name (<span class="code">inTemp</span>)
             as the first line, we had to explicitly specify it using option <span class="code">data_type</span>, in
             order to avoid using the same sub-section name twice (see the section <em><a
-            href="#including_same_sql_type_2x">Including the same SQL type more than once in a plot</a></em> for
+            href="#including_same_sql_type_2x">Including a type more than once in a plot</a></em> for
             details). It will be labeled <span class="code">WMR100 inTemp</span>. The results look like this:
         </p>
         <img src='images/daycompare.png' alt="Comparing temperatures"/>
@@ -6207,7 +6207,7 @@ cooling_base = 20.0, degree_C</pre>
 
         <p>
             The SQL data type to be used for this plot line. For more information, see the section <em><a
-            href="#including_same_sql_type_2x">Including the same SQL type more than once in a plot</a></em>. Optional.
+            href="#including_same_sql_type_2x">Including a type more than once in a plot</a></em>. Optional.
             The default is to use the section name.
         </p>
 
