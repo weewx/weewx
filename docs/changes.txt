@@ -35,9 +35,11 @@ fields.
 Fix WMR300 driver so that it will reject (corrupt) logger records if they
 have negative interval (similar to issue #375).
 
-Added 'rain_warning' option in wmr300 driver to remind station owners to reset
+Added 'rain_warning' option in WMR300 driver to remind station owners to reset
 the rain counter when the rain counter exceeds a threshold (default is 90%).
 Thanks to weewx user Leon!
+
+Added several other debug tools to the WMR300 driver. PR #402.
 
 Wunderfixer now keeps going if a post does not satisfy [[Essentials]].
 Fixes issue #329 (again).
@@ -77,6 +79,9 @@ timtsm! PR #396.
 windrun is now calculated on a per archive period basis, instead
 of for the whole day. Thanks to user 'windcrusader'!
 PR #399. Fixes issue #250.
+
+Wunderfixer has new option to set socket timeout. This is to compensate
+for WU "capacity issues". Thanks to user Leon! See PR #403.
 
 
 3.9.1 02/06/2019
