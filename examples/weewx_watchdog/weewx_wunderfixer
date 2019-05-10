@@ -1,0 +1,59 @@
+#!/bin/bash
+
+# WeeWX Wunderfixer wrapper by Leon Shaner
+__version__="1.1.3"
+
+#### *** Purpose:
+# This script is intended to fill in gaps in WU data by running
+# wunderfixer for today's date and yesterday's date
+#
+# Mostly what this script does is figure out what date string to
+# pass to wunderfixer for "yesterday" and "today"
+#
+# NOTE:  The reason for running against yesterday is in case WU
+#        had an outage or dropped data when it was run the day
+#        before.  This way there is always a 1-day overlap in runs.
+
+
+#### *** HINT:
+# Recommend running this utility no more than twice a day, which is
+# to avoid overstressing the WU infrastructure.
+#
+# For example, run it slightly before/after 1 p.m. and before/after 1 a.m.
+# (system time, a la cron).
+#
+# See readme.txt for a crontab example, but recommend varying the minutes
+# part (first column of cron timespec), so folks don't all hit WU at exactly
+# the same moment.
+
+
+#### *** Optional customizations
+
+# Add wunderfixer timeout of 20 seconds to workaround WU "capacity" issues
+wutimeout=20
+
+# Add wunderfixer epsilon of 125 seconds to workaround WU "time drift" issues
+wuepsilon=125
+
+# Main weewx log file
+weewx_main_log=/var/log/syslog
+
+# Supplemental log
+weewx_suppl_log=/var/log/weewx.log
+
+#
+### *** End of user customizations
+##################################
+
+
+#############################
+# Wunderfixer Maintenance
+# Run Wunderfixer yesterday and today (intentional overlapping, to be extra sure to catch missed uploads)
+msgstamp=`date`
+currstamp="$(date +%s)"
+
+echo "$msgstamp WeeWX: Wunderfixer timestamp: ($currstamp)" >>$weewx_suppl_log
+yesterdaystamp="$((currstamp - 86400))"
+yesterday=$(date -d @$yesterdaystamp +\%Y-\%m-\%d)
+/usr/share/weewx/wunderfixer --date $yesterday --verbose --timeout $wutimeout --epsilon $wuepsilon 2>&1 | sed "s/^/$msgstamp /" >>$weewx_suppl_log
+/usr/share/weewx/wunderfixer --date `date +\%Y-\%m-\%d` --verbose --timeout $wutimeout --epsilon $wuepsilon 2>&1 | sed "s/^/$msgstamp /" >>$weewx_suppl_log
