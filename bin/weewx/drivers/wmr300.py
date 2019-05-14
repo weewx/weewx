@@ -779,16 +779,16 @@ examples:
 from __future__ import with_statement
 from __future__ import absolute_import
 from __future__ import print_function
-import sys
 import time
 import usb
 
 import weewx.drivers
 import weewx.wxformulas
 from weeutil.weeutil import timestamp_to_string
+from weeutil.log import logdbg, loginf, logerr, logcrt
 
 DRIVER_NAME = 'WMR300'
-DRIVER_VERSION = '0.21'
+DRIVER_VERSION = '0.20'
 
 DEBUG_COMM = 0
 DEBUG_PACKET = 0
@@ -797,28 +797,6 @@ DEBUG_DECODE = 0
 DEBUG_HISTORY = 0
 DEBUG_RAIN = 0
 DEBUG_TIMING = 0
-
-# Check for Python 2 vs. 3 as the basis for WeeWX 3 vs. 4
-# This mainly affects how logging is handled
-
-if sys.version_info[0] < 3:
-    import syslog
-    def logmsg(level, msg):
-        syslog.syslog(level, 'wmr300: %s' % msg)
-    
-    def logdbg(msg):
-        logmsg(syslog.LOG_DEBUG, msg)
-    
-    def loginf(msg):
-        logmsg(syslog.LOG_INFO, msg)
-    
-    def logerr(msg):
-        logmsg(syslog.LOG_ERR, msg)
-    
-    def logcrt(msg):
-        logmsg(syslog.LOG_CRIT, msg)
-else:
-    from weeutil.log import logdbg, loginf, logerr, logcrt
 
 
 def loader(config_dict, _):
