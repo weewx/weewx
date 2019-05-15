@@ -214,12 +214,12 @@ def main() :
 
     # Get a WunderStation object so we can interact with Weather Underground
     wunder = WunderStation(q=None,  # Bogus queue. We will not be using it.
+                           manager_dict=dbmanager_t,
                            station=options.station,
                            password=options.password,
                            server_url=weewx.restx.StdWunderground.pws_url,
                            protocol_name = "wunderfixer",
                            essentials=_essentials_dict,
-                           manager_dict=None, # Bogus md. We will not be using it.
                            softwaretype = "wunderfixer-%s" % __version__)
 
     try:
