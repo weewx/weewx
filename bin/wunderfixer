@@ -17,6 +17,9 @@ Weather Underground with the missing data.
 
 CHANGE HISTORY
 --------------------------------
+1.4.1 05/14/2019
+Made WunderStation class consistent with restx.AmbientThread parameters
+
 1.4.0 05/07/2019
 Ported to Python 3
 
@@ -93,7 +96,7 @@ a new record on the Weather Underground with the missing data.
 Be sure to use the --test switch first to see whether you like what it 
 proposes!"""
 
-__version__ = "1.4.0"
+__version__ = "1.4.1"
 
 # The number of seconds difference in the timestamp between two records
 # and still have them considered to be the same: 
@@ -210,7 +213,7 @@ def main() :
         print("Number of archive records:    ", len(archive_results))
 
     # Get a WunderStation object so we can interact with Weather Underground
-    wunder = WunderStation(queue=None,  # Bogus queue. We will not be using it.
+    wunder = WunderStation(q=None,  # Bogus queue. We will not be using it.
                            manager_dict=dbmanager_t,
                            station=options.station,
                            password=options.password,
