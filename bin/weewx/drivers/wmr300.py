@@ -1978,8 +1978,8 @@ if __name__ == '__main__':
     if options.get_history:
         ts = time.time() - 3600 # get last hour of data
         for pkt in stn.genStartupRecords(ts):
-            print(to_sorted_string(pkt))
+            print(to_sorted_string(pkt).encode('utf-8'))
 
     if options.get_current:
         for packet in stn.genLoopPackets():
-            print(to_sorted_string(packet))
+            print(to_sorted_string(packet).encode('utf-8'))
