@@ -83,6 +83,8 @@ PR #399. Fixes issue #250.
 Wunderfixer has new option to set socket timeout. This is to compensate
 for WU "capacity issues". Thanks to user Leon! See PR #403.
 
+Fixed bug in WS1 driver that caused crash if rain_total was None.
+
 
 3.9.1 02/06/2019
 
