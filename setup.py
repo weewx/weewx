@@ -216,13 +216,10 @@ class weewx_install_data(install_data):
 
         # Time to write it out. Get a temporary file:
         tmpfd, tmpfn = tempfile.mkstemp()
-        tmpfile = open(tmpfn, 'w')
-
-        # Write the finished configuration file to it:
-        config_dict.write(tmpfile)
-        tmpfile.flush()
-        tmpfile.close()
-        os.close(tmpfd)
+        # Wrap the os-level file descriptor in a Python file object
+        with os.fdopen(tmpfd, 'w') as tmpfile:
+            # Write the config file
+            config_dict.write(tmpfile)
 
         # Save the old config file if it exists:
         if not self.dry_run and os.path.exists(install_path):
