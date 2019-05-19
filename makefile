@@ -58,6 +58,7 @@ help: info
 	@echo ""
 	@echo "          test  run all unit tests"
 	@echo "                SUITE=path/to/foo.py to run only foo tests"
+	@echo "    test-clean  remove test databases. recommended when switching between python 2 and 3"
 
 info:
 	@echo "     VERSION: $(VERSION)"
