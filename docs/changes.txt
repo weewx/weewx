@@ -63,6 +63,9 @@ Fixed bug in WS1 driver that caused crash if rain_total was None.
 If a file user/schemas.py still exists (a relic from V2.7 and earlier), it
 is renamed to user/schemas.py.old. Fixes issue #54.
 
+Fixed fine offset driver to warn about (and skip) historical data that have
+zero for interval.
+
 
 3.9.1 02/06/2019
 
