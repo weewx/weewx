@@ -104,7 +104,7 @@ drop database test_weewx1;\n"
 test-clean:
 	rm -rf $(TESTDIR)
 	echo $(MYSQLCLEAN) | mysql --user=weewx --password=weewx --force >/dev/null 2>&1
-	rm -f /var/tmp/sqdb1.sdb >/dev/null 2>&1
+	rm -f /var/tmp/sqdb1.sdb
 
 install:
 	./setup.py --install
