@@ -10,6 +10,8 @@ The idea is to create a deterministic database that reports
 can be run against, resulting in predictable, expected results"""
 
 from __future__ import with_statement
+from __future__ import absolute_import
+from __future__ import print_function
 import math
 import syslog
 import time
@@ -91,7 +93,8 @@ def configDatabase(config_dict, binding, start_ts=start_ts, stop_ts=stop_ts, int
                                          annual_phase_offset=annual_phase_offset,
                                          weather_phase_offset=weather_phase_offset))
         t2 = time.time()
-        print "\nTime to create synthetic archive database = %6.2fs" % (t2-t1,)
+        delta = t2 - t1
+        print("\nTime to create synthetic archive database = %6.2fs" % delta)
         
     with weewx.manager.open_manager_with_config(config_dict, binding, initialize=True) as archive:
 
@@ -103,9 +106,9 @@ def configDatabase(config_dict, binding, start_ts=start_ts, stop_ts=stop_ts, int
         nrecs, ndays = archive.backfill_day_summary()
         tdiff = time.time() - t1
         if nrecs:
-            print "\nProcessed %d records to backfill %d day summaries in %.2f seconds" % (nrecs, ndays, tdiff)
+            print("\nProcessed %d records to backfill %d day summaries in %.2f seconds" % (nrecs, ndays, tdiff))
         else:
-            print "Daily summaries up to date."
+            print("Daily summaries up to date.")
 
     
 def genFakeRecords(start_ts=start_ts, stop_ts=stop_ts, interval=interval, 
@@ -113,7 +116,7 @@ def genFakeRecords(start_ts=start_ts, stop_ts=stop_ts, interval=interval,
                    weather_phase_offset=0.0):
     count = 0
     
-    for ts in xrange(start_ts, stop_ts+interval, interval):
+    for ts in range(start_ts, stop_ts+interval, interval):
         daily_phase  = ((ts - start_ts) * 2.0 * math.pi + day_phase_offset)/ (3600*24.0)
         annual_phase = ((ts - start_ts) * 2.0 * math.pi + annual_phase_offset)/ (3600*24.0*365.0)
         weather_phase= ((ts - start_ts) * 2.0 * math.pi + weather_phase_offset)/ weather_cycle
@@ -134,7 +137,7 @@ def genFakeRecords(start_ts=start_ts, stop_ts=stop_ts, interval=interval,
     
         # Make every 71st observation (a prime number) a null. This is a deterministic algorithm, so it
         # will produce the same results every time.
-        for obs_type in filter(lambda x : x not in ['dateTime', 'usUnits', 'interval'], record):
+        for obs_type in ['barometer', 'outTemp', 'windDir', 'windGust', 'windGustDir', 'windSpeed']:
             count += 1
             if count % 71 == 0:
                 record[obs_type] = None
