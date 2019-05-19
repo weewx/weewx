@@ -223,7 +223,7 @@ class Common(unittest.TestCase):
             tagStats = weewx.tags.TimeBinder(db_lookup, spans['month'].stop,
                                              rain_year_start=1,
                                              skin_dict=skin_dict)
-            self.assertEqual(str(tagStats.day().barometer.avg), "30.675 inHg")
+            self.assertEqual(str(tagStats.day().barometer.avg), "30.673 inHg")
             self.assertEqual(str(tagStats.day().barometer.min), "30.065 inHg")
             self.assertEqual(str(tagStats.day().barometer.max), "31.000 inHg")
             self.assertEqual(str(tagStats.day().barometer.mintime), "00:00")
@@ -286,7 +286,7 @@ class Common(unittest.TestCase):
         self.assertEqual(str(tsb.outTemp.maxtime), "14-Mar-2010 01:10")
         self.assertEqual(str(tsb.outTemp.min), "7.1°F")
         self.assertEqual(str(tsb.outTemp.mintime), "14-Mar-2010 07:00")
-        self.assertEqual(str(tsb.outTemp.avg), "11.4°F")
+        self.assertEqual(str(tsb.outTemp.avg), "11.3°F")
         
         rain_span = weeutil.weeutil.TimeSpan(time.mktime((2010,3,14,20,10,0,0,0,-1)),
                                              time.mktime((2010,3,14,23,10,0,0,0,-1)))
@@ -317,12 +317,12 @@ class Common(unittest.TestCase):
         tagStats = weewx.tags.TimeBinder(db_lookup, stop_ts,
                                            rain_year_start=1)
             
-        self.assertEqual(str(tagStats.rainyear().rain.sum), "58.68 in")
+        self.assertEqual(str(tagStats.rainyear().rain.sum), "59.52 in")
 
         # Do it again, for starting 1-Oct:
         tagStats = weewx.tags.TimeBinder(db_lookup, stop_ts,
                                            rain_year_start=6)
-        self.assertEqual(str(tagStats.rainyear().rain.sum), "22.72 in")
+        self.assertEqual(str(tagStats.rainyear().rain.sum), "23.04 in")
 
 
     def test_heatcool(self):
@@ -335,7 +335,7 @@ class Common(unittest.TestCase):
                                              skin_dict=skin_dict)
             
         self.assertEqual(str(tagStats.year().heatdeg.sum), "5126.3°F-day")
-        self.assertEqual(str(tagStats.year().cooldeg.sum), "1026.2°F-day")
+        self.assertEqual(str(tagStats.year().cooldeg.sum), "1026.1°F-day")
     
 
 class TestSqlite(Common):
