@@ -17,6 +17,9 @@ Weather Underground with the missing data.
 
 CHANGE HISTORY
 --------------------------------
+1.3.1 05/22/19
+Change User-Agent to avoid HTTP 403 when querying WU
+
 1.3.0 04/30/19
 Added option --timeout.
 
@@ -87,7 +90,7 @@ a new record on the Weather Underground with the missing data.
 Be sure to use the --test switch first to see whether you like what it 
 proposes!"""
 
-__version__ = "1.3.0"
+__version__ = "1.3.1"
 
 # The number of seconds difference in the timestamp between two records
 # and still have them considered to be the same: 
@@ -328,12 +331,14 @@ class WunderStation(weewx.restx.AmbientThread):
         """
         dayRequested_tt = dayRequested.timetuple()
         
-        _url = "http://www.wunderground.com/weatherstation/WXDailyHistory.asp?ID=%s&"\
+        _url = "https://www.wunderground.com/weatherstation/WXDailyHistory.asp?ID=%s&"\
         "month=%d&day=%d&year=%d&format=1" % (self.station, dayRequested_tt[1], dayRequested_tt[2], dayRequested_tt[0]) 
+
+        _wureq = urllib.request.Request(_url, headers={'User-Agent': 'Mozilla'})
         
         try :
             # Hit the weather underground site:
-            _wudata = urllib2.urlopen(_url)
+            _wudata = urllib2.urlopen(_wureq)
         except urllib2.URLError as e :
             print >>sys.stderr, "Unable to open Weather Underground station " + self.station, " or ", e
             wlog.slog(syslog.LOG_ERR, "Unable to open Weather Underground station %s or %s" % (self.station, e))
