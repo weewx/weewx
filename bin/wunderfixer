@@ -334,7 +334,7 @@ class WunderStation(weewx.restx.AmbientThread):
         _url = "https://www.wunderground.com/weatherstation/WXDailyHistory.asp?ID=%s&"\
         "month=%d&day=%d&year=%d&format=1" % (self.station, dayRequested_tt[1], dayRequested_tt[2], dayRequested_tt[0]) 
 
-        _wureq = urllib.request.Request(_url, headers={'User-Agent': 'Mozilla'})
+        _wureq = urllib2.Request(_url, headers={'User-Agent': 'Mozilla'})
         
         try :
             # Hit the weather underground site:
