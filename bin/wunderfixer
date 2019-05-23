@@ -99,7 +99,7 @@ a new record on the Weather Underground with the missing data.
 Be sure to use the --test switch first to see whether you like what it 
 proposes!"""
 
-__version__ = "1.4.1"
+__version__ = "1.4.2"
 
 # The number of seconds difference in the timestamp between two records
 # and still have them considered to be the same: 
