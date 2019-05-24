@@ -131,6 +131,7 @@ def main() :
     parser.add_option("-p", "--password", type="string", dest="password",
                       help="Weather Underground station password. Optional. "
                       "Default is to take from configuration file.")
+    parser.add_option("-k", "--apikey", type="string", dest="apiKey",
                       help="Weather Underground station API Key. Optional. "
                       "Default is to take from configuration file.")
     parser.add_option("-d", "--date", type="string", dest="date", metavar="YYYY-mm-dd",
