@@ -771,6 +771,7 @@ class AmbientThread(RESTThread):
                  post_indoor_observations=False,
                  protocol_name="Unknown-Ambient",
                  essentials={},
+                 apikey=None,
                  post_interval=None, max_backlog=six.MAXSIZE, stale=None,
                  log_success=True, log_failure=True,
                  timeout=10, max_tries=3, retry_wait=5, retry_login=3600,
@@ -901,6 +902,7 @@ class AmbientLoopThread(AmbientThread):
                  station, password, server_url,
                  protocol_name="Unknown-Ambient",
                  essentials={},
+                 apikey=None,
                  post_interval=None, max_backlog=six.MAXSIZE, stale=None,
                  log_success=True, log_failure=True,
                  timeout=10, max_tries=3, retry_wait=5, rtfreq=2.5):

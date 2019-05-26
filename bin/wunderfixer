@@ -131,7 +131,7 @@ def main() :
     parser.add_option("-p", "--password", type="string", dest="password",
                       help="Weather Underground station password. Optional. "
                       "Default is to take from configuration file.")
-    parser.add_option("-k", "--apikey", type="string", dest="apiKey",
+    parser.add_option("-k", "--apikey", type="string", dest="apikey",
                       help="Weather Underground station API Key. Optional. "
                       "Default is to take from configuration file.")
     parser.add_option("-d", "--date", type="string", dest="date", metavar="YYYY-mm-dd",
@@ -166,20 +166,20 @@ def main() :
     print("Using configuration file %s." % config_fn)
     wlog.slog(syslog.LOG_INFO, "Using weewx configuration file %s." % config_fn)
 
-    # Retrieve the station ID, password, and apiKey from the config file
+    # Retrieve the station ID, password, and apikey from the config file
     try:
         if not options.station:
             options.station = config_dict['StdRESTful']['Wunderground']['station']
         if not options.password and not options.simulate:
             options.password = config_dict['StdRESTful']['Wunderground']['password'] 
-        if not options.apiKey and not options.simulate:
-            options.apiKey = config_dict['StdRESTful']['Wunderground']['apiKey'] 
+        if not options.apikey:
+            options.apikey = config_dict['StdRESTful']['Wunderground']['apikey'] 
     except KeyError:
-        wlog.slog(syslog.LOG_ERR, "Missing Wunderground station, password, and/or apiKey")
-        exit("Missing Wunderground station, password, and/or apiKey")
+        wlog.slog(syslog.LOG_ERR, "Missing Wunderground station, password, and/or apikey")
+        exit("Missing Wunderground station, password, and/or apikey")
     
     # exit if any essential arguments are not present
-    if not options.station or (not options.password and not options.simulate):
+    if not options.station or not options.apikey or (not options.password and not options.simulate):
         print("Missing argument(s).\n")
         print(parser.parse_args(["--help"]))
         wlog.slog(syslog.LOG_ERR, "Missing argument(s). Wunderfixer exiting.")
@@ -237,7 +237,7 @@ def main() :
 
     try:
         # Get all the time stamps on the Weather Underground for the given day:
-        wunder_results = wunder.getDayTimeStamps(date_date, options.apiKey)
+        wunder_results = wunder.getDayTimeStamps(date_date, options.apikey)
     except Exception as e:
         print("Could not get Weather Underground data.")
         print("Reason: %s" % e)
@@ -344,7 +344,7 @@ class WunderStation(weewx.restx.AmbientThread):
     # match any HTML tag of the form <...>
     _tags = re.compile(r'\<.*\>')
     
-    def getDayTimeStamps(self, dayRequested, apiKey) :
+    def getDayTimeStamps(self, dayRequested, apikey) :
         """Returns all time stamps for a given weather underground station for a given day
         
         dayRequested: An instance of datetime.date with the requested date
@@ -354,7 +354,7 @@ class WunderStation(weewx.restx.AmbientThread):
         dayRequested_tt = dayRequested.timetuple()
         
         _url = "https://api.weather.com/v2/pws/history/all?stationId=%s&format=json&units=m&date=%4.4d%2.2d%2.2d&apiKey=%s" \
-                % (self.station, dayRequested_tt[0], dayRequested_tt[1], dayRequested_tt[2], apiKey)
+                % (self.station, dayRequested_tt[0], dayRequested_tt[1], dayRequested_tt[2], apikey)
 
         _wureq = urllib.request.Request(_url, headers={'User-Agent': 'Mozilla'})
 
