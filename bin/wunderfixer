@@ -17,6 +17,10 @@ Weather Underground with the missing data.
 
 CHANGE HISTORY
 --------------------------------
+1.4.0 05/24/2019
+Change to new API KEY method of querying historical data
+NOTE: Re-uploading missing records still uses old method (password-based).
+
 1.3.1 05/22/19
 Change User-Agent to avoid HTTP 403 when querying WU
 
@@ -69,6 +73,7 @@ import sys
 import syslog
 import time
 import urllib2
+import json
 
 import weecfg
 from weeutil.weeutil import timestamp_to_string, search_up
@@ -77,7 +82,7 @@ import weewx.restx
 
 usagestr = """%prog CONFIG_FILE|--config=CONFIG_FILE
                   [--binding=BINDING]
-                  [--station=STATION] [--password=PASSWORD]
+                  [--station=STATION] [--password=PASSWORD] [--apikey=APIKEY]
                   [--date=YYYY-mm-dd] [--epsilon=SECONDS] [--timeout=SECONDS]
                   [--verbose] [--log LOG_FACILITY] [--test] [--query]
                   [--help]
@@ -90,7 +95,7 @@ a new record on the Weather Underground with the missing data.
 Be sure to use the --test switch first to see whether you like what it 
 proposes!"""
 
-__version__ = "1.3.1"
+__version__ = "1.4.0"
 
 # The number of seconds difference in the timestamp between two records
 # and still have them considered to be the same: 
@@ -116,6 +121,9 @@ def main() :
                       "Default is to take from configuration file.")
     parser.add_option("-p", "--password", type="string", dest="password",
                       help="Weather Underground station password. Optional. "
+                      "Default is to take from configuration file.")
+    parser.add_option("-k", "--apikey", type="string", dest="apikey",
+                      help="Weather Underground station API Key. Optional. "
                       "Default is to take from configuration file.")
     parser.add_option("-d", "--date", type="string", dest="date", metavar="YYYY-mm-dd",
                       help="Date to check as a string of form YYYY-mm-dd. Default is today.")
@@ -149,15 +157,17 @@ def main() :
     print "Using configuration file %s." % config_fn
     wlog.slog(syslog.LOG_INFO, "Using weewx configuration file %s." % config_fn)
 
-    # Retrieve the station ID and password from the config file
+    # Retrieve the station ID, password, and apikey from the config file
     try:
         if not options.station:
             options.station = config_dict['StdRESTful']['Wunderground']['station']
         if not options.password and not options.simulate:
             options.password = config_dict['StdRESTful']['Wunderground']['password'] 
+        if not options.apikey:
+            options.apikey = config_dict['StdRESTful']['Wunderground']['apikey'] 
     except KeyError:
-        wlog.slog(syslog.LOG_ERR, "Missing Wunderground station and/or password")
-        exit("Missing Wunderground station and/or password")
+        wlog.slog(syslog.LOG_ERR, "Missing Wunderground station, password, and/or apikey")
+        exit("Missing Wunderground station, password, and/or apikey")
     
     # exit if any essential arguments are not present
     if not options.station or (not options.password and not options.simulate):
@@ -218,7 +228,7 @@ def main() :
 
     try:
         # Get all the time stamps on the Weather Underground for the given day:
-        wunder_results = wunder.getDayTimeStamps(date_date)
+        wunder_results = wunder.getDayTimeStamps(date_date, options.apikey)
     except Exception:
         wlog.slog(syslog.LOG_ERR, "Could not get Weather Underground data. Exiting.")
         exit("Could not get Weather Underground data. Exiting.")
@@ -322,7 +332,7 @@ class WunderStation(weewx.restx.AmbientThread):
     # match any HTML tag of the form <...>
     _tags = re.compile(r'\<.*\>')
     
-    def getDayTimeStamps(self, dayRequested) :
+    def getDayTimeStamps(self, dayRequested, apikey) :
         """Returns all time stamps for a given weather underground station for a given day
         
         dayRequested: An instance of datetime.date with the requested date
@@ -331,8 +341,8 @@ class WunderStation(weewx.restx.AmbientThread):
         """
         dayRequested_tt = dayRequested.timetuple()
         
-        _url = "https://www.wunderground.com/weatherstation/WXDailyHistory.asp?ID=%s&"\
-        "month=%d&day=%d&year=%d&format=1" % (self.station, dayRequested_tt[1], dayRequested_tt[2], dayRequested_tt[0]) 
+        _url = "https://api.weather.com/v2/pws/history/all?stationId=%s&format=json&units=m&date=%4.4d%2.2d%2.2d&apiKey=%s" \
+                % (self.station, dayRequested_tt[0], dayRequested_tt[1], dayRequested_tt[2], apikey)
 
         _wureq = urllib2.Request(_url, headers={'User-Agent': 'Mozilla'})
         
@@ -348,26 +358,20 @@ class WunderStation(weewx.restx.AmbientThread):
             wlog.slog(syslog.LOG_ERR, "Socket timeout for Weather Underground station %s" % self.station)
             raise
 
-        # Because the data comes back with lots of HTML tags and blank lines in it,
-        # we need a bit of logic to clean it up.
-        _cleanWUdata = []
-        for _row in _wudata :
-            _line = ''.join(WunderStation._tags.split(_row))  # Get rid of any HTML tags
-            if _line != "\n" :                                # Get rid of any blank lines
-                _cleanWUdata.append(_line)                    # Save what's left
-    
-        # Now form a dictionary CSV reader, using the first line as the set of keys
-        _csvreader = csv.DictReader(_cleanWUdata)
-        
-        # We are only interested in the time stamps. Decode them
-        # and return as a list
+
+        # Convert _wudata HTTPresponse to string type and string type to list
+        _wustring = _wudata.read().decode('utf-8')
+        _wujson = json.loads(_wustring)
+
+        # We just need the timeStamps that the WU API stores as "epoch" keys
         _timeStamps = []
-        for _row in _csvreader :
-            _datetm = time.strptime(_row["Time"], "%Y-%m-%d %H:%M:%S")
-            _time_t = int(time.mktime(_datetm))
+        for _row in _wujson['observations']:
+            # the epoch values are of type string, so we need to convert them
+            _time_t = int(_row['epoch'])
+
             # Add to timeStamps
             _timeStamps.append(TimeStamp(_time_t))
-            
+    
         return _timeStamps
 
 #===============================================================================
