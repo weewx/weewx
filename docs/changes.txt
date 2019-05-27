@@ -58,6 +58,17 @@ PR #399. Fixes issue #250.
 Wunderfixer has new option to set socket timeout. This is to compensate
 for WU "capacity issues". Thanks to user Leon! See PR #403.
 
+Fixed bug in WS1 driver that caused crash if rain_total was None.
+
+If a file user/schemas.py still exists (a relic from V2.7 and earlier), it
+is renamed to user/schemas.py.old. Fixes issue #54.
+
+V3.x test suites now use same data set as V4.x, minimizing the chance of
+a false negative when switching versions.
+
+Fixed fine offset driver to warn about (and skip) historical data that have
+zero for interval.
+
 
 3.9.1 02/06/2019
 
@@ -1079,6 +1090,9 @@ default (previously, software record generation was the default).
 
 Fixed bug in WS28xx driver the prevented reading of historical records
 when starting with an empty database.
+
+The database schemas are now their own package. The schema that was in
+user/schemas.py can now be found in weewx/schemas/wview.py.
 
 
 2.7.0 10/11/14

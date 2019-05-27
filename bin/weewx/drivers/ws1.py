@@ -19,9 +19,10 @@ import time
 
 from weewx.units import INHG_PER_MBAR, MILE_PER_KM
 import weewx.drivers
+import weewx.wxformulas
 
 DRIVER_NAME = 'WS1'
-DRIVER_VERSION = '0.25'
+DRIVER_VERSION = '0.26'
 
 
 def loader(config_dict, _):
@@ -128,11 +129,8 @@ class WS1Driver(weewx.drivers.AbstractDevice):
 
     def _augment_packet(self, packet):
         # calculate the rain delta from rain total
-        if self.last_rain is not None:
-            packet['rain'] = packet['rain_total'] - self.last_rain
-        else:
-            packet['rain'] = None
-        self.last_rain = packet['rain_total']
+        packet['rain'] = weewx.wxformulas.calculate_rain(packet.get('rain_total'), self.last_rain)
+        self.last_rain = packet.get('rain_total')
 
 
 # =========================================================================== #

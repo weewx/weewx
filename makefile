@@ -58,6 +58,7 @@ help: info
 	@echo ""
 	@echo "          test  run all unit tests"
 	@echo "                SUITE=path/to/foo.py to run only foo tests"
+	@echo "    test-clean  remove test databases. recommended when switching between python 2 and 3"
 
 info:
 	@echo "     VERSION: $(VERSION)"
@@ -102,7 +103,7 @@ drop database test_sim;\n"
 test-clean:
 	rm -rf $(TESTDIR)
 	echo $(MYSQLCLEAN) | mysql --user=weewx --password=weewx --force >/dev/null 2>&1
-	rm /var/tmp/sqdb1.sdb >/dev/null 2>&1
+	rm -f /var/tmp/sqdb1.sdb
 
 install:
 	./setup.py --install
