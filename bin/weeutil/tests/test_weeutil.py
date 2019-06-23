@@ -31,6 +31,7 @@ class WeeutilTest(unittest.TestCase):
     def test_option_as_list(self):
 
         self.assertEqual(option_as_list("abc"), ['abc'])
+        self.assertEqual(option_as_list(u"abc"), [u'abc'])
         self.assertEqual(option_as_list(['a', 'b']), ['a', 'b'])
         self.assertEqual(option_as_list(None), None)
         self.assertEqual(option_as_list(''), [''])
