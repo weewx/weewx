@@ -25,6 +25,9 @@ Ported to Python2-PyMySQL package on OpenSUSE.
 
 Added new aggregation type 'first' (similar to 'last').
 
+Catch SSL certificate errors in uploaders. Retry after an hour. Fixes
+issue #413.
+
 
 3.9.2 MM/DD/YYYY
 

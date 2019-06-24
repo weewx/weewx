@@ -87,6 +87,7 @@ import datetime
 import platform
 import re
 import socket
+import ssl
 import syslog
 import threading
 import time
@@ -125,6 +126,10 @@ class ConnectError(IOError):
 
 class SendError(IOError):
     """Raised when unable to send through a socket."""
+
+
+class CertificateError(Exception):
+    """Raised when there's a problem with an SSL certificate"""
 
 
 # ==============================================================================
@@ -171,7 +176,7 @@ class RESTThread(threading.Thread):
                  manager_dict=None,
                  post_interval=None, max_backlog=six.MAXSIZE, stale=None,
                  log_success=True, log_failure=True,
-                 timeout=10, max_tries=3, retry_wait=5, retry_login=3600,
+                 timeout=10, max_tries=3, retry_wait=5, retry_login=3600, retry_certificate=3600,
                  softwaretype="weewx-%s" % weewx.__version__,
                  skip_upload=False):
         """Initializer for the class RESTThread
@@ -217,6 +222,9 @@ class RESTThread(threading.Thread):
           retry_login: How long to wait before retrying a login. Default
           is 3600 seconds (one hour).
           
+          retry_certificate: How long to wait before retrying after an SSL certicate error. Default
+          is 3600 seconds (one hour).
+
           softwaretype: Sent as field "softwaretype in the Ambient post.
           Default is "weewx-x.y.z where x.y.z is the weewx version.
 
@@ -241,6 +249,7 @@ class RESTThread(threading.Thread):
         self.timeout = to_int(timeout)
         self.retry_wait = to_int(retry_wait)
         self.retry_login = to_int(retry_login)
+        self.retry_certificate = to_int(retry_certificate)
         self.softwaretype = softwaretype
         self.lastpost = 0
         self.skip_upload = to_bool(skip_upload)
@@ -383,6 +392,14 @@ class RESTThread(threading.Thread):
                     _time_str = timestamp_to_string(_record['dateTime'])
                     logerr("%s: Failed to publish record %s: %s"
                            % (self.protocol_name, _time_str, e))
+            except CertificateError as e:
+                if self.retry_certificate:
+                    logerr("%s: Bad SSL certificate (%s); waiting %s minutes then retrying"
+                           % (self.protocol_name, e, self.retry_certificate / 60.0))
+                    time.sleep(self.retry_certificate)
+                else:
+                    logerr("%s: Bad SSL certificate; no retry specified. Terminating" % self.protocol_name)
+                    raise
             except Exception as e:
                 # Some unknown exception occurred. This is probably a serious
                 # problem. Exit.
@@ -447,10 +464,15 @@ class RESTThread(threading.Thread):
                 if _count:
                     # If this is not the first time through, sleep a bit before retrying
                     time.sleep(self.retry_wait)
-                # Do a single post. The function post_request() can be
-                # specialized by a RESTful service to catch any unusual
-                # exceptions.
-                _response = self.post_request(request, data)
+
+                try:
+                    # Do a single post. The function post_request() can be
+                    # specialized by a RESTful service to catch any unusual
+                    # exceptions.
+                    _response = self.post_request(request, data)
+                except ssl.CertificateError as e:
+                    raise CertificateError(str(e))
+
                 if 200 <= _response.code <= 299:
                     # No exception thrown and we got a good response code, but
                     # we're still not done.  Some protocols encode a bad
@@ -773,7 +795,7 @@ class AmbientThread(RESTThread):
                  essentials={},
                  post_interval=None, max_backlog=six.MAXSIZE, stale=None,
                  log_success=True, log_failure=True,
-                 timeout=10, max_tries=3, retry_wait=5, retry_login=3600,
+                 timeout=10, max_tries=3, retry_wait=5, retry_login=3600, retry_certificate=3600,
                  softwaretype="weewx-%s" % weewx.__version__,
                  skip_upload=False):
 
@@ -802,6 +824,7 @@ class AmbientThread(RESTThread):
                                             max_tries=max_tries,
                                             retry_wait=retry_wait,
                                             retry_login=retry_login,
+                                            retry_certificate=retry_certificate,
                                             softwaretype=softwaretype,
                                             skip_upload=skip_upload)
         self.station = station
@@ -1595,7 +1618,8 @@ class AWEKASThread(RESTThread):
                  language='de', server_url=_SERVER_URL,
                  post_interval=300, max_backlog=six.MAXSIZE, stale=None,
                  log_success=True, log_failure=True,
-                 timeout=10, max_tries=3, retry_wait=5, retry_login=3600, skip_upload=False):
+                 timeout=10, max_tries=3, retry_wait=5,
+                 retry_login=3600, retry_certificate=3600, skip_upload=False):
         """Initialize an instances of AWEKASThread.
 
         Parameters specific to this class:
@@ -1639,6 +1663,7 @@ class AWEKASThread(RESTThread):
                                            max_tries=max_tries,
                                            retry_wait=retry_wait,
                                            retry_login=retry_login,
+                                           retry_certificate=retry_certificate,
                                            skip_upload=skip_upload)
         self.username = username
         # Calculate and save the password hash
