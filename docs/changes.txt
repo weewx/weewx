@@ -28,6 +28,8 @@ Added new aggregation type 'first' (similar to 'last').
 An observation type known to the system, but not in a record, will
 now return a proper ValueTuple, rather than UnknownType.
 
+Type "stormStart" was added to the unit system. Fixes issue #380.
+
 
 3.9.2 MM/DD/YYYY
 
