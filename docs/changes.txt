@@ -25,6 +25,9 @@ Ported to Python2-PyMySQL package on OpenSUSE.
 
 Added new aggregation type 'first' (similar to 'last').
 
+An observation type known to the system, but not in a record, will
+now return a proper ValueTuple, rather than UnknownType.
+
 
 3.9.2 MM/DD/YYYY
 

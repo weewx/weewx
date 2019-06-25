@@ -1286,29 +1286,33 @@ def to_std_system(datadict, unit_system):
         _datadict_target['usUnits'] = unit_system
         return _datadict_target
 
+
 def as_value_tuple(record_dict, obs_type):
-    """Look up an observation type in a record dictionary, returning the result
-    as a ValueTuple. If not found, an object of type UnknownType will be returned."""
+    """Look up an observation type in a record, returning the result
+    as a ValueTuple. If the observation type is not recognized, an object of
+    type UnknownType will be returned."""
 
     # Is the record None?
     if record_dict is None:
-        # Yes. The record was probably not in the database. Signal a value of None
-        # and, arbitrarily, pick the US unit system:
+        # Yes. Signal a value of None and, arbitrarily, pick the US unit system:
         val = None
         std_unit_system = weewx.US
-    elif obs_type not in record_dict:
-        # There is a record, but the observation type is not in it
-        return UnknownType(obs_type)
     else:
-        # There is a record, and the observation type is in it.
-        val = record_dict[obs_type]
+        # There is a record. Get the value, and the unit system.
+        val = record_dict.get(obs_type)
         std_unit_system = record_dict['usUnits']
 
     # Given this standard unit system, what is the unit type of this
-    # particular observation type?
+    # particular observation type? If the observation type is not recognized,
+    # a unit_type of None will be returned
     (unit_type, unit_group) = StdUnitConverters[std_unit_system].getTargetUnit(obs_type)
+
+    if unit_type is None:
+        return UnknownType(obs_type)
+
     # Form the value-tuple and return it:
     return ValueTuple(val, unit_type, unit_group)
+
 
 if __name__ == "__main__":
     
