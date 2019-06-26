@@ -1296,11 +1296,6 @@ class DaySummaryManager(Manager):
 
         # We can use the daily summaries. Proceed.
 
-        # This entry point won't work for heating or cooling degree days:
-        if weewx.debug:
-            assert (obs_type not in ['heatdeg', 'cooldeg'])
-            assert (timespan is not None)
-
         # Check to see if this is a valid daily summary type:
         if obs_type not in self.daykeys:
             raise AttributeError("Unknown daily summary type %s" % (obs_type,))

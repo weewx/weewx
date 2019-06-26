@@ -23,6 +23,7 @@ class WXDaySummaryManager(weewx.manager.DaySummaryManager):
     # as a value tuple
     default_heatbase = (65.0, "degree_F", "group_temperature")
     default_coolbase = (65.0, "degree_F", "group_temperature")
+    default_growbase = (50.0, "degree_F", "group_temperature")
 
     # Sql statement to be used to create the wind daily summaries:
     wx_sql_create_str = "CREATE TABLE %s_day_wind (dateTime INTEGER NOT NULL UNIQUE PRIMARY KEY, "\
@@ -56,7 +57,7 @@ class WXDaySummaryManager(weewx.manager.DaySummaryManager):
         Third element is the unit group (eg. 'group_temperature')."""
 
         # Check to see whether heating or cooling degree days are being asked for:
-        if obs_type not in ['heatdeg', 'cooldeg']:
+        if obs_type not in ['heatdeg', 'cooldeg', 'growdeg']:
             # No. Use my superclass's version:
             return weewx.manager.DaySummaryManager.getAggregate(self, timespan, obs_type, aggregateType, **option_dict)
 
@@ -67,10 +68,12 @@ class WXDaySummaryManager(weewx.manager.DaySummaryManager):
         # Get the base for heating and cooling degree-days
         units_dict = option_dict['skin_dict'].get('Units', {})
         dd_dict = units_dict.get('DegreeDays', {})
-        heatbase = dd_dict.get('heating_base')
-        coolbase = dd_dict.get('cooling_base')
-        heatbase_t = (float(heatbase[0]), heatbase[1], "group_temperature") if heatbase else WXDaySummaryManager.default_heatbase
-        coolbase_t = (float(coolbase[0]), coolbase[1], "group_temperature") if coolbase else WXDaySummaryManager.default_coolbase
+        heatbase = dd_dict.get('heating_base', WXDaySummaryManager.default_heatbase)
+        coolbase = dd_dict.get('cooling_base', WXDaySummaryManager.default_coolbase)
+        growbase = dd_dict.get('growing_base', WXDaySummaryManager.default_growbase)
+        heatbase_t = (float(heatbase[0]), heatbase[1], "group_temperature")
+        coolbase_t = (float(coolbase[0]), coolbase[1], "group_temperature")
+        growbase_t = (float(growbase[0]), growbase[1], "group_temperature")
 
         _sum = 0.0
         _count = 0
@@ -83,10 +86,15 @@ class WXDaySummaryManager(weewx.manager.DaySummaryManager):
                     # Convert average temperature to the same units as heatbase:
                     Tavg_target_t = weewx.units.convert(Tavg_t, heatbase_t[1])
                     _sum += weewx.wxformulas.heating_degrees(Tavg_target_t[0], heatbase_t[0])
-                else:
+                elif obs_type == 'cooldeg':
                     # Convert average temperature to the same units as coolbase:
                     Tavg_target_t = weewx.units.convert(Tavg_t, coolbase_t[1])
                     _sum += weewx.wxformulas.cooling_degrees(Tavg_target_t[0], coolbase_t[0])
+                else:
+                    # Must be 'growdeg'. Convert average temperature to the same units as growbase:
+                    Tavg_target_t = weewx.units.convert(Tavg_t, growbase_t[1])
+                    _sum += weewx.wxformulas.cooling_degrees(Tavg_target_t[0], growbase_t[0])
+
                 _count += 1
 
         if aggregateType == 'sum':

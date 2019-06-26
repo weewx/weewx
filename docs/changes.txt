@@ -30,6 +30,11 @@ now return a proper ValueTuple, rather than UnknownType.
 
 Type "stormStart" was added to the unit system. Fixes issue #380.
 
+Added new aggregation type 'growdeg'. Similar to 'heatdeg', or 'cooldeg',
+it measures growing degree-days. Basically, cooldeg, but with a
+different base. Fixes issue #367. Thanks to user Clay Jackson
+for guidance!
+
 
 3.9.2 MM/DD/YYYY
 

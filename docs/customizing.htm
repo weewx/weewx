@@ -5672,14 +5672,16 @@ second = " second", " seconds"</pre>
         <h3 class="config_section">[[DegreeDays]]</h3>
 
         <p class="config_important">
-            heating_base <br/> cooling_base
+            heating_base <br/> cooling_base <br/> growing_base
         </p>
 
-        <p>Set to the base temperature for calculating heating and cooling degree-days, along with the unit to be used.
+        <p>Set to the base temperature for calculating heating, cooling, and growing degree-days,
+            along with the unit to be used.
             Examples:
         </p>
         <pre class="tty">heating_base = 65.0, degree_F
-cooling_base = 20.0, degree_C</pre>
+cooling_base = 20.0, degree_C
+growing_base = 50.0, degree_F</pre>
         <h3 class="config_section" id="trend">[[Trend]]</h3>
 
         <p class="config_option">time_delta</p>
@@ -6858,7 +6860,7 @@ cooling_base = 20.0, degree_C</pre>
             </tr>
             <tr>
                 <td class="first_col">group_degree_day</td>
-                <td>cooldeg<br/> heatdeg
+                <td>cooldeg<br/> heatdeg<br/> growdeg
                 </td>
                 <td>degree_F_day<br/> degree_C_day
                 </td>
