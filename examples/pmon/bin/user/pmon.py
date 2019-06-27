@@ -41,7 +41,7 @@ import weeutil.weeutil
 from weeutil.log import logdbg, loginf, logerr
 from weewx.engine import StdService
 
-VERSION = "0.4"
+VERSION = "0.5"
 
 schema = [
     ('dateTime', 'INTEGER NOT NULL PRIMARY KEY'),
@@ -172,17 +172,17 @@ if __name__ == "__main__":
 
     nowts = lastts = int(time.time())
     rec = svc.get_data(nowts, lastts)
-    print rec
+    print(rec)
 
     time.sleep(5)
     nowts = int(time.time())
     rec = svc.get_data(nowts, lastts)
-    print rec
+    print(rec)
 
     time.sleep(5)
     lastts = nowts
     nowts = int(time.time())
     rec = svc.get_data(nowts, lastts)
-    print rec
+    print(rec)
 
     os.remove('/var/tmp/pmon.sdb')
