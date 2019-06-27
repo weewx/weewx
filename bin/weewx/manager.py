@@ -860,9 +860,10 @@ class DBBinder(object):
         for data_binding in list(self.manager_cache.keys()):
             try:
                 self.manager_cache[data_binding].close()
-                del self.manager_cache[data_binding]
             except Exception:
                 pass
+            finally:
+                del self.manager_cache[data_binding]
 
     def __enter__(self):
         return self
