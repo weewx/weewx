@@ -35,6 +35,8 @@ it measures growing degree-days. Basically, cooldeg, but with a
 different base. Fixes issue #367. Thanks to user Clay Jackson
 for guidance!
 
+Ported OS uptime to OpenBSD. Fixes issue #428. Thanks to user Jeff Ross!
+
 
 3.9.2 MM/DD/YYYY
 
