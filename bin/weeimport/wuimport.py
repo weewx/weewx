@@ -193,7 +193,9 @@ class WUSource(weeimport.Source):
                                                      date_tt[0])
         # hit the WU site, wrap in a try..except so we can catch any errors
         try:
-            _wudata = urllib2.urlopen(_url)
+	    headers = { 'User-Agent' : 'Mozilla/5.0' }
+            req = urllib2.Request(_url, None, headers)
+            _wudata = urllib2.urlopen(req)
         except urllib2.URLError as e:
             self.wlog.printlog(syslog.LOG_ERR,
                           "Unable to open Weather Underground station %s" % self.station_id)
