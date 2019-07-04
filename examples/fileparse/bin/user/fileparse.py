@@ -54,7 +54,7 @@ import weewx.drivers
 from weeutil.log import logdbg, loginf, logerr
 
 DRIVER_NAME = 'FileParse'
-DRIVER_VERSION = "0.6"
+DRIVER_VERSION = "0.7"
 
 
 def _get_as_float(d, s):
@@ -80,9 +80,9 @@ class FileParseDriver(weewx.drivers.AbstractDevice):
         # mapping from variable names to weewx names
         self.label_map = stn_dict.get('label_map', {})
 
-        loginf("data file is %s" % self.path)
-        loginf("polling interval is %s" % self.poll_interval)
-        loginf('label map is %s' % self.label_map)
+        loginf("Data file is %s" % self.path)
+        loginf("Polling interval is %s" % self.poll_interval)
+        loginf('Label map is %s' % self.label_map)
 
     def genLoopPackets(self):
         while True:
@@ -117,4 +117,4 @@ if __name__ == "__main__":
     import weeutil.weeutil
     driver = FileParseDriver()
     for packet in driver.genLoopPackets():
-        print weeutil.weeutil.timestamp_to_string(packet['dateTime']), packet
+        print(weeutil.weeutil.timestamp_to_string(packet['dateTime']), packet)
