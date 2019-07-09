@@ -1305,7 +1305,7 @@ class FineOffsetUSB(weewx.drivers.AbstractDevice):
                 while dts > dt and count < num_rec:
                     raw_data = self.get_raw_data(ptr)
                     data = self.decode(raw_data)
-                    if data['delay'] is None or data['delay'] > 30:
+                    if data['delay'] is None or data['delay'] < 1 or data['delay'] > 30:
                         logerr('invalid data in get_records at 0x%04x, %s' %
                                (ptr, dts.isoformat()))
                         dts -= datetime.timedelta(minutes=fixed_block['read_period'])

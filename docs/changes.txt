@@ -103,6 +103,9 @@ is renamed to user/schemas.py.old. Fixes issue #54.
 V3.x test suites now use same data set as V4.x, minimizing the chance of
 a false negative when switching versions.
 
+Fixed fine offset driver to warn about (and skip) historical data that have
+zero for interval.
+
 
 3.9.1 02/06/2019
 
