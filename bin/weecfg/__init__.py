@@ -1744,8 +1744,6 @@ Defaults = UnitDefaults + u"""
                 heating_base = 65, degree_F
                 # Base temperature for cooling days, with unit:
                 cooling_base = 65, degree_F
-                # Base temperature for growing days, with unit:
-                growing_base = 50, degree_F
 
             # A trend takes a difference across a time period. The following
             # section sets the time period, and how big an error is allowed to
