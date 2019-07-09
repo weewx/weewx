@@ -19,6 +19,7 @@ import time
 import schemas.wview
 import weedb
 import weewx.manager
+from weeutil.log import loginf
 
 # Roughly nine months of data:
 start_tt = (2010,1,1,0,0,0,0,0,-1)
@@ -57,10 +58,17 @@ def configDatabase(config_dict, binding, start_ts=start_ts, stop_ts=stop_ts, int
 
     # Check to see if it already exists and is configured correctly.
     try:
-        with weewx.manager.open_manager_with_config(config_dict, binding)  as archive:
-            if archive.firstGoodStamp() == start_ts and archive.lastGoodStamp() == stop_ts:
-                # Database already exists. We're done.
-                return
+        with weewx.manager.open_manager_with_config(config_dict, binding)  as manager:
+            if manager.firstGoodStamp() == start_ts and manager.lastGoodStamp() == stop_ts:
+                # Before weewx V4, the test database had interval in seconds.
+                # Check that this one has been corrected.
+                last_record = manager.getRecord(stop_ts)
+                if last_record['interval'] == interval / 60:
+                    # Database exists, and it has the right value for interval. We're done.
+                    return
+                else:
+                    loginf("Interval value is wrong. Rebuilding test databases.")
+
     except weedb.DatabaseError:
         pass
         
@@ -123,7 +131,7 @@ def genFakeRecords(start_ts=start_ts, stop_ts=stop_ts, interval=interval,
         record = {}
         record['dateTime']  = ts
         record['usUnits']   = weewx.US
-        record['interval']  = interval
+        record['interval']  = interval / 60
         record['outTemp']   = 0.5 * amplitude * (-daily_temp_range * math.sin(daily_phase) - annual_temp_range*math.cos(annual_phase)) + avg_temp
         record['barometer'] = 0.5 * amplitude* weather_baro_range * math.sin(weather_phase) + avg_baro
         record['windSpeed'] = abs(amplitude * weather_wind_range * (1.0 + math.sin(weather_phase)))
