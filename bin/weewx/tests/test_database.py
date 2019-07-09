@@ -11,8 +11,11 @@ from __future__ import absolute_import
 import unittest
 import time
 
+from six.moves import StringIO
 from six.moves import map
 from six.moves import range
+
+import configobj
 
 import weewx.manager
 import weedb
@@ -61,9 +64,26 @@ def genRecords():
         _record = expected_record(irec)
         yield _record
 
-#for rec in genRecords():
-#    print weeutil.weeutil.timestamp_to_string(rec['dateTime']), rec
-#time.sleep(0.5)
+
+class TestManager(unittest.TestCase):
+
+    def test_get_database_dict(self):
+        config_snippet = '''
+        WEEWX_ROOT = /home/weewx
+        [DatabaseTypes]
+          [[SQLite]]
+            driver = weedb.sqlite
+            SQLITE_ROOT = %(WEEWX_ROOT)s/archive
+        [Databases]
+            [[archive_sqlite]]
+               database_name = weewx.sdb
+               database_type = SQLite'''
+        config_dict = configobj.ConfigObj(StringIO(config_snippet))
+        database_dict = weewx.manager.get_database_dict_from_config(config_dict, 'archive_sqlite')
+        self.assertEqual(database_dict, {'SQLITE_ROOT': '/home/weewx/archive',
+                                         'database_name': 'weewx.sdb',
+                                         'driver': 'weedb.sqlite'})
+
 
 class Common(unittest.TestCase):
     
@@ -260,7 +280,9 @@ class TestMySQL(Common):
 def suite():
     tests = ['test_no_archive', 'test_create_archive', 
              'test_empty_archive', 'test_add_archive_records', 'test_get_records', 'test_update']
-    return unittest.TestSuite(list(map(TestSqlite, tests)) + list(map(TestMySQL, tests)))
-            
+    suite = unittest.TestSuite(list(map(TestSqlite, tests)) + list(map(TestMySQL, tests)))
+    suite.addTest(TestManager('test_get_database_dict'))
+    return suite
+
 if __name__ == '__main__':
     unittest.TextTestRunner(verbosity=2).run(suite())

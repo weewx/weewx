@@ -371,7 +371,7 @@ class Manager(object):
             if max_delta:
                 time_start_ts = timestamp - max_delta
                 time_stop_ts = timestamp + max_delta
-                _cursor.execute("SELECT * FROM %s WHERE dateTime>=? AND dateTime<=? " \
+                _cursor.execute("SELECT * FROM %s WHERE dateTime>=? AND dateTime<=? "
                                 "ORDER BY ABS(dateTime-?) ASC LIMIT 1" % self.table_name,
                                 (time_start_ts, time_stop_ts, timestamp))
             else:
@@ -515,8 +515,8 @@ class Manager(object):
         See the file weewx.units for the definition of a ValueTuple.
         """
 
-        windvec_types = {'windvec': ('windSpeed, windDir'),
-                         'windgustvec': ('windGust,  windGustDir')}
+        windvec_types = {'windvec': 'windSpeed, windDir',
+                         'windgustvec': 'windGust, windGustDir'}
 
         # Check to see if the requested type is not 'windvec' or 'windgustvec'
         if obs_type not in windvec_types:
@@ -584,8 +584,7 @@ class Manager(object):
                             _count += 1
                             if std_unit_system:
                                 if std_unit_system != _rec[3]:
-                                    raise weewx.UnsupportedFeature("Unit type cannot change " \
-                                                                   "within a time interval.")
+                                    raise weewx.UnsupportedFeature("Unit type cannot change within a time interval.")
                             else:
                                 std_unit_system = _rec[3]
 
@@ -651,8 +650,7 @@ class Manager(object):
                     stop_vec.append(_rec[0])
                     if std_unit_system:
                         if std_unit_system != _rec[3]:
-                            raise weewx.UnsupportedFeature("Unit type cannot change " \
-                                                           "within a time interval.")
+                            raise weewx.UnsupportedFeature("Unit type cannot change within a time interval.")
                     else:
                         std_unit_system = _rec[3]
                     # Break the mag and dir down into x- and y-components.
@@ -682,7 +680,7 @@ class Manager(object):
 
         if self.std_unit_system is not None:
             if unit_system != self.std_unit_system:
-                raise weewx.UnitError("Unit system of incoming record (0x%02x) " \
+                raise weewx.UnitError("Unit system of incoming record (0x%02x) "
                                       "differs from '%s' table in '%s' database (0x%02x)" %
                                       (unit_system, self.table_name, self.database_name,
                                        self.std_unit_system))
@@ -781,7 +779,7 @@ class Manager(object):
                     if _rec and _rec[0] is not None:
                         if std_unit_system:
                             if not (std_unit_system == _rec[1] == _rec[2]):
-                                raise weewx.UnsupportedFeature("Unit type cannot change " \
+                                raise weewx.UnsupportedFeature("Unit type cannot change "
                                                                "within a time interval (%s vs %s vs %s)." %
                                                                (std_unit_system, _rec[1], _rec[2]))
                         else:
@@ -808,8 +806,7 @@ class Manager(object):
                     stop_vec.append(_rec[0])
                     if std_unit_system:
                         if std_unit_system != _rec[2]:
-                            raise weewx.UnsupportedFeature("Unit type cannot change " \
-                                                           "within a time interval.")
+                            raise weewx.UnsupportedFeature("Unit type cannot change within a time interval.")
                     else:
                         std_unit_system = _rec[2]
                     data_vec.append(_rec[1])
@@ -1096,7 +1093,7 @@ def drop_database_with_config(config_dict, data_binding,
 
 def show_progress(nrec, last_time):
     """Utility function to show our progress while backfilling"""
-    print("Records processed: %d; Last date: %s\r" % \
+    print("Records processed: %d; Last date: %s\r" %
           (nrec, weeutil.weeutil.timestamp_to_string(last_time)), end=' ', file=sys.stdout)
     sys.stdout.flush()
 
@@ -1438,7 +1435,7 @@ class DaySummaryManager(Manager):
         firstRecord = self.firstGoodStamp()
         if firstRecord is None:
             # Nothing in the archive database, so there's nothing to do.
-            return (0, 0)
+            return 0, 0
 
         t1 = time.time()
 
@@ -1460,7 +1457,7 @@ class DaySummaryManager(Manager):
             # has been passed in, a rebuild has been requested.
             if start_d is None and stop_d is None:
                 # Nothing to do
-                return (0, 0)
+                return 0, 0
             if start_d is None:
                 start_d = datetime.date.fromtimestamp(firstRecord)
             if stop_d is None:
@@ -1528,7 +1525,7 @@ class DaySummaryManager(Manager):
         else:
             loginf("Daily summaries up to date")
 
-        return (nrecs, ndays)
+        return nrecs, ndays
 
     # --------------------------- UTILITY FUNCTIONS -----------------------------------
 
