@@ -7,6 +7,10 @@
 
 """Data structures and functions for dealing with units."""
 
+#
+# The unittest examples work only under Python 3!!
+#
+
 from __future__ import absolute_import
 from __future__ import print_function
 import locale
@@ -494,38 +498,38 @@ class Formatter(object):
     >>> os.environ['TZ'] = 'America/Los_Angeles'
     >>> time.tzset()
     >>> f = Formatter()
-    >>> print f.toString((20.0, "degree_C", "group_temperature"))
+    >>> print(f.toString((20.0, "degree_C", "group_temperature")))
     20.0°C
-    >>> print f.toString((83.2, "degree_F", "group_temperature"))
+    >>> print(f.toString((83.2, "degree_F", "group_temperature")))
     83.2°F
     >>> # Try the Spanish locale, which will use comma decimal separators.
     >>> # For this to work, the Spanish locale must have been installed.
     >>> # You can do this with the command:
     >>> #     sudo locale-gen es_ES.UTF-8 && sudo update-locale
     >>> x = locale.setlocale(locale.LC_NUMERIC, 'es_ES.utf-8')
-    >>> print f.toString((83.2, "degree_F", "group_temperature"), localize=True)
+    >>> print(f.toString((83.2, "degree_F", "group_temperature"), localize=True))
     83,2°F
     >>> # Try it again, but overriding the localization:
-    >>> print f.toString((83.2, "degree_F", "group_temperature"), localize=False)
+    >>> print(f.toString((83.2, "degree_F", "group_temperature"), localize=False))
     83.2°F
     >>> # Set locale back to default
     >>> x = locale.setlocale(locale.LC_NUMERIC, '')
-    >>> print f.toString((123456789,  "unix_epoch", "group_time"))
+    >>> print(f.toString((123456789,  "unix_epoch", "group_time")))
     29-Nov-1973 13:33
-    >>> print f.to_ordinal_compass((5.0, "degree_compass", "group_direction"))
+    >>> print(f.to_ordinal_compass((5.0, "degree_compass", "group_direction")))
     N
-    >>> print f.to_ordinal_compass((0.0, "degree_compass", "group_direction"))
+    >>> print(f.to_ordinal_compass((0.0, "degree_compass", "group_direction")))
     N
-    >>> print f.to_ordinal_compass((12.5, "degree_compass", "group_direction"))
+    >>> print(f.to_ordinal_compass((12.5, "degree_compass", "group_direction")))
     NNE
-    >>> print f.to_ordinal_compass((360.0, "degree_compass", "group_direction"))
+    >>> print(f.to_ordinal_compass((360.0, "degree_compass", "group_direction")))
     N
-    >>> print f.to_ordinal_compass((None, "degree_compass", "group_direction"))
+    >>> print(f.to_ordinal_compass((None, "degree_compass", "group_direction")))
     N/A
-    >>> print f.toString((1*86400 + 1*3600 + 16*60 + 42, "second", "group_deltatime"))
+    >>> print(f.toString((1*86400 + 1*3600 + 16*60 + 42, "second", "group_deltatime")))
     1 day, 1 hour, 16 minutes
     >>> delta_format = "%(day)d%(day_label)s, %(hour)d%(hour_label)s, %(minute)d%(minute_label)s, %(second)d%(second_label)s" 
-    >>> print f.toString((2*86400 + 3*3600 +  5*60 +  2, "second", "group_deltatime"), useThisFormat=delta_format)
+    >>> print(f.toString((2*86400 + 3*3600 +  5*60 +  2, "second", "group_deltatime"), useThisFormat=delta_format))
     2 days, 3 hours, 5 minutes, 2 seconds
     """
 
@@ -703,7 +707,7 @@ class Formatter(object):
         
         Example:
         >>> f = Formatter()
-        >>> print f.delta_secs_to_string(3*86400+21*3600+7*60+11, default_time_format_dict["delta_time"])
+        >>> print(f.delta_secs_to_string(3*86400+21*3600+7*60+11, default_time_format_dict["delta_time"]))
         3 days, 21 hours, 7 minutes
         """
         etime_dict = {}
@@ -761,28 +765,28 @@ class Converter(object):
         Examples:
         >>> p_m = (1016.5, 'mbar', 'group_pressure')
         >>> c = Converter()
-        >>> print "%.3f %s %s" % c.convert(p_m)
+        >>> print("%.3f %s %s" % c.convert(p_m))
         30.017 inHg group_pressure
         
         Try an unspecified unit type:
         >>> p2 = (1016.5, None, None)
-        >>> print c.convert(p2)
+        >>> print(c.convert(p2))
         (1016.5, None, None)
         
         Try a bad unit type:
         >>> p3 = (1016.5, 'foo', 'group_pressure')
         >>> try:
-        ...     print c.convert(p3)
+        ...     print(c.convert(p3))
         ... except KeyError:
-        ...     print "Exception thrown"
+        ...     print("Exception thrown")
         Exception thrown
         
         Try a bad group type:
         >>> p4 = (1016.5, 'mbar', 'group_foo')
         >>> try:
-        ...     print c.convert(p4)
+        ...     print(c.convert(p4))
         ... except KeyError:
-        ...     print "Exception thrown"
+        ...     print("Exception thrown")
         Exception thrown
         """
         if val_t[1] is None and val_t[2] is None:
@@ -814,9 +818,9 @@ class Converter(object):
         >>> source_dict = {'dateTime': 194758100, 'outTemp': 20.0,\
             'usUnits': weewx.METRIC, 'barometer':1015.9166, 'interval':15}
         >>> target_dict = c.convertDict(source_dict)
-        >>> print "dateTime: %d, interval: %d, barometer: %.3f, outTemp: %.3f" %\
+        >>> print("dateTime: %d, interval: %d, barometer: %.3f, outTemp: %.3f" %\
         (target_dict['dateTime'], target_dict['interval'], \
-         target_dict['barometer'], target_dict['outTemp'])
+         target_dict['barometer'], target_dict['outTemp']))
         dateTime: 194758100, interval: 15, barometer: 30.000, outTemp: 68.000
         """
         target_dict = {}
@@ -884,20 +888,20 @@ class ValueHelper(object):
     >>> value_t = (68.01, "degree_F", "group_temperature")
     >>> # Use the default converter and formatter:
     >>> vh = ValueHelper(value_t)
-    >>> print vh
+    >>> print(vh)
     68.0°F
     
     Try explicit unit conversion:
-    >>> print vh.degree_C
+    >>> print(vh.degree_C)
     20.0°C
     
     Do it again, but using a converter:
     >>> vh = ValueHelper(value_t, converter=Converter(MetricUnits))
-    >>> print vh
+    >>> print(vh)
     20.0°C
     
     Extract just the raw value:
-    >>> print "%.1f" % vh.raw
+    >>> print("%.1f" % vh.raw)
     20.0
     """
     def __init__(self, value_t, context='current', formatter=Formatter(), converter=Converter()):
@@ -1162,10 +1166,10 @@ def convertStd(val_t, target_std_unit_system):
     
     Example:
     >>> value_t = (30.02, 'inHg', 'group_pressure')
-    >>> print "(%.2f, %s, %s)" % convertStd(value_t, weewx.METRIC)
+    >>> print("(%.2f, %s, %s)" % convertStd(value_t, weewx.METRIC))
     (1016.59, mbar, group_pressure)
     >>> value_t = (1.2, 'inch', 'group_rain')
-    >>> print "(%.2f, %s, %s)" % convertStd(value_t, weewx.METRICWX)
+    >>> print("(%.2f, %s, %s)" % convertStd(value_t, weewx.METRICWX))
     (30.48, mm, group_rain)
     """
     return StdUnitConverters[target_std_unit_system].convert(val_t)
@@ -1184,17 +1188,17 @@ def getStandardUnitType(target_std_unit_system, obs_type, agg_type=None):
     returns: A 2-way tuple containing the target units, and the target group.
 
     Examples:
-    >>> print getStandardUnitType(weewx.US,     'barometer')
+    >>> print(getStandardUnitType(weewx.US,     'barometer'))
     ('inHg', 'group_pressure')
-    >>> print getStandardUnitType(weewx.METRIC, 'barometer')
+    >>> print(getStandardUnitType(weewx.METRIC, 'barometer'))
     ('mbar', 'group_pressure')
-    >>> print getStandardUnitType(weewx.US, 'barometer', 'mintime')
+    >>> print(getStandardUnitType(weewx.US, 'barometer', 'mintime'))
     ('unix_epoch', 'group_time')
-    >>> print getStandardUnitType(weewx.METRIC, 'barometer', 'avg')
+    >>> print(getStandardUnitType(weewx.METRIC, 'barometer', 'avg'))
     ('mbar', 'group_pressure')
-    >>> print getStandardUnitType(weewx.METRIC, 'wind', 'rms')
+    >>> print(getStandardUnitType(weewx.METRIC, 'wind', 'rms'))
     ('km_per_hour', 'group_speed')
-    >>> print getStandardUnitType(None, 'barometer', 'avg')
+    >>> print(getStandardUnitType(None, 'barometer', 'avg'))
     (None, None)
     """
     
@@ -1228,13 +1232,13 @@ class GenWithConvert(object):
     ...        yield _rec
     >>> # First, try the raw generator function. Output should be in US
     >>> for _out in genfunc():
-    ...    print "Timestamp: %d; Temperature: %.2f; Unit system: %d" % (_out['dateTime'], _out['outTemp'], _out['usUnits'])
+    ...    print("Timestamp: %d; Temperature: %.2f; Unit system: %d" % (_out['dateTime'], _out['outTemp'], _out['usUnits']))
     Timestamp: 194758100; Temperature: 68.00; Unit system: 1
     Timestamp: 194758400; Temperature: 69.80; Unit system: 1
     Timestamp: 194758700; Temperature: 71.60; Unit system: 1
     >>> # Now do it again, but with the generator function wrapped by GenWithConvert:
     >>> for _out in GenWithConvert(genfunc(), weewx.METRIC):
-    ...    print "Timestamp: %d; Temperature: %.2f; Unit system: %d" % (_out['dateTime'], _out['outTemp'], _out['usUnits'])
+    ...    print("Timestamp: %d; Temperature: %.2f; Unit system: %d" % (_out['dateTime'], _out['outTemp'], _out['usUnits']))
     Timestamp: 194758100; Temperature: 20.00; Unit system: 16
     Timestamp: 194758400; Temperature: 21.00; Unit system: 16
     Timestamp: 194758700; Temperature: 22.00; Unit system: 16
