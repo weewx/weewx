@@ -1,4 +1,11 @@
 #errorCatcher Echo
+#def emit_boolean(val)
+  #if val
+TRUE#slurp
+  #else
+FALSE#slurp
+  #end if
+#end def
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -92,7 +99,7 @@
       <td>$current($data_binding='alt_binding').outTemp</td>
     </tr>
     <tr>
-      <td>Outside Temperature with nonsense binding 'foo_binding'</td>
+      <td>Outside Temperature with nonsense binding \$current($data_binding='foo_binding').outTemp</td>
       <td>$current($data_binding='foo_binding').outTemp</td>
     </tr>
     <tr>
@@ -175,44 +182,24 @@
     </tr>
     <tr>
       <td>Test tag "exists" for an existent type: \$current.outTemp.exists</td>
-    #if $current.outTemp.exists
-      <td>PASS</td>
-    #else
-      <td>FAIL</td>
-    #end if
-    </tr> 
+      <td>$emit_boolean($current.outTemp.exists)</td>
+    </tr>
     <tr>
       <td>Test tag "exists" for a nonsense type: \$current.nonsense.exists</td>
-    #if $current.nonsense.exists
-      <td>FAIL</td>
-    #else
-      <td>PASS</td>
-    #end if
-    </tr> 
+      <td>$emit_boolean($current.nonsense.exists)</td>
+    </tr>
     <tr>
       <td>Test tag "has_data" for an existing type with data: \$current.outTemp.has_data</td>
-    #if $current.outTemp.has_data
-      <td>PASS</td>
-    #else
-      <td>FAIL</td>
-    #end if
+      <td>$emit_boolean($current.outTemp.has_data)</td>
     </tr>
     <tr>
       <td>Test tag "has_data" for an existing type without data: \$current.hail.has_data</td>
-    #if $current.hail.has_data
-      <td>FAIL</td>
-    #else
-      <td>PASS</td>
-    #end if
+      <td>$emit_boolean($current.hail.has_data)</td>
     </tr>
     <tr>
       <td>Test tag "has_data" for a nonsense type: \$current.nonsense.has_data</td>
-    #if $current.nonsense.has_data
-      <td>FAIL</td>
-    #else
-      <td>PASS</td>
-    #end if
-    </tr> 
+      <td>$emit_boolean($current.nonsense.has_data)</td>
+    </tr>
     <tr>
       <td>Test for a bad observation type on a \$current tag: \$current.foobar</td>
       <td>$current.foobar</td>
@@ -448,36 +435,20 @@
       <td>$day.wind.vecdir</td>
     </tr>
     <tr>
-      <td>Test tag "has_data" with nonsense type</td>
-      #if $day.nonsense.has_data
-      <td>FAILS</td>
-      #else
-      <td>PASS</td>
-      #end if
+      <td>Test tag "has_data" with nonsense type \$day.nonsense.has_data</td>
+      <td>$emit_boolean($day.nonsense.has_data)</td>
     </tr>
     <tr>
-      <td>Test tag "exists" with an existing type that has no data</td>
-      #if $day.heatindex.exists
-      <td>PASS</td>
-      #else
-      <td>FAIL</td>
-      #end if
+      <td>Test tag "exists" with an existing type that has no data \$day.heatindex.exists</td>
+      <td>$emit_boolean($day.heatindex.exists)</td>
     </tr>
     <tr>
-      <td>Test tag "has_data" with existent type that has no data</td>
-      #if $day.heatindex.has_data
-      <td>FAILS</td>
-      #else
-      <td>PASS</td>
-      #end if
+      <td>Test tag "has_data" with existent type that has no data \$day.heatindex.has_data</td>
+      <td>$emit_boolean($day.heatindex.has_data)</td>
     </tr>
     <tr>
-      <td>Test tag "has_data" with existent type that has data</td>
-      #if $day.outTemp.has_data
-      <td>PASS</td>
-      #else
-      <td>FAIL</td>
-      #end if
+      <td>Test tag "has_data" with existent type that has data \$day.outTemp.has_data</td>
+      <td>$emit_boolean($day.outTemp.has_data)</td>
     </tr>
       <tr>
       <td>Test for a bad observation type on a \$day tag: \$day.foobar.min</td>

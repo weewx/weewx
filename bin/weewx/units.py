@@ -1313,9 +1313,6 @@ def as_value_tuple(record_dict, obs_type):
     # a unit_type of None will be returned
     (unit_type, unit_group) = StdUnitConverters[std_unit_system].getTargetUnit(obs_type)
 
-    if unit_type is None:
-        return UnknownType(obs_type)
-
     # Form the value-tuple and return it:
     return ValueTuple(val, unit_type, unit_group)
 

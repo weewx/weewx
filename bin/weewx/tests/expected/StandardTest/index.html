@@ -88,7 +88,7 @@
       <td>45.1&#176;F</td>
     </tr>
     <tr>
-      <td>Outside Temperature with nonsense binding 'foo_binding'</td>
+      <td>Outside Temperature with nonsense binding $current($data_binding='foo_binding').outTemp</td>
       <td>?'foo_binding'?</td>
     </tr>
     <tr>
@@ -169,24 +169,24 @@
     </tr>
     <tr>
       <td>Test tag "exists" for an existent type: $current.outTemp.exists</td>
-      <td>PASS</td>
-    </tr> 
+      <td>TRUE</td>
+    </tr>
     <tr>
       <td>Test tag "exists" for a nonsense type: $current.nonsense.exists</td>
-      <td>PASS</td>
-    </tr> 
+      <td>FALSE</td>
+    </tr>
     <tr>
       <td>Test tag "has_data" for an existing type with data: $current.outTemp.has_data</td>
-      <td>PASS</td>
+      <td>TRUE</td>
     </tr>
     <tr>
       <td>Test tag "has_data" for an existing type without data: $current.hail.has_data</td>
-      <td>PASS</td>
+      <td>FALSE</td>
     </tr>
     <tr>
       <td>Test tag "has_data" for a nonsense type: $current.nonsense.has_data</td>
-      <td>PASS</td>
-    </tr> 
+      <td>FALSE</td>
+    </tr>
     <tr>
       <td>Test for a bad observation type on a $current tag: $current.foobar</td>
       <td>?'foobar'?</td>
@@ -435,20 +435,20 @@
       <td>107&#176;</td>
     </tr>
     <tr>
-      <td>Test tag "has_data" with nonsense type</td>
-      <td>PASS</td>
+      <td>Test tag "has_data" with nonsense type $day.nonsense.has_data</td>
+      <td>FALSE</td>
     </tr>
     <tr>
-      <td>Test tag "exists" with an existing type that has no data</td>
-      <td>PASS</td>
+      <td>Test tag "exists" with an existing type that has no data $day.heatindex.exists</td>
+      <td>TRUE</td>
     </tr>
     <tr>
-      <td>Test tag "has_data" with existent type that has no data</td>
-      <td>PASS</td>
+      <td>Test tag "has_data" with existent type that has no data $day.heatindex.has_data</td>
+      <td>FALSE</td>
     </tr>
     <tr>
-      <td>Test tag "has_data" with existent type that has data</td>
-      <td>PASS</td>
+      <td>Test tag "has_data" with existent type that has data $day.outTemp.has_data</td>
+      <td>TRUE</td>
     </tr>
       <tr>
       <td>Test for a bad observation type on a $day tag: $day.foobar.min</td>
