@@ -106,6 +106,9 @@ a false negative when switching versions.
 Fixed fine offset driver to warn about (and skip) historical data that have
 zero for interval.
 
+Correct rounding problems for rain and other types when posting to CWOP.
+Fixes issue #431. Thanks to user ls4096!
+
 
 3.9.1 02/06/2019
 
