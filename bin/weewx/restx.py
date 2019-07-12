@@ -1200,7 +1200,7 @@ class CWOPThread(RESTThread):
         if _humidity is None:
             _humid_str = "h.."
         else:
-            _humid_str = ("h%02d" % int(_humidity + 0.5) ) if _humidity < 100.0 else "h00"
+            _humid_str = ("h%02d" % int(_humidity + 0.5) ) if _humidity < 99.5 else "h00"
 
         # Radiation:
         _radiation = record.get('radiation')
