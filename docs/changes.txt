@@ -1,7 +1,7 @@
 weewx change history
 --------------------
 
-3.9.2 MM/DD/YYYY
+3.9.2 07/14/2019
 
 StdPrint now explicitly converts loop and archive fields to UTF-8 before
 printing. This means unicode strings can now be included in loop and archive
