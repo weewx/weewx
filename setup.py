@@ -88,9 +88,6 @@ class weewx_install_lib(install_lib):
     """Specialized version of install_lib, which backs up old bin subdirectories."""
 
     def run(self):
-        # Determine whether the user is still using an old-style schema
-        schema_type = get_schema_type(self.install_dir)
-
         # Save any existing 'bin' subdirectory:
         if os.path.exists(self.install_dir):
             bin_savedir = weeutil.weeutil.move_with_timestamp(self.install_dir)
@@ -108,14 +105,17 @@ class weewx_install_lib(install_lib):
             if os.path.exists(user_backupdir):
                 user_dir = os.path.join(self.install_dir, 'user')
                 distutils.dir_util.copy_tree(user_backupdir, user_dir)
-
-        # But, there is one exception: if the old user subdirectory included an
-        # old-style schema, then it should be overwritten with the new version.
-        if schema_type == 'old':
-            incoming_schema_path = os.path.join(bin_dir, 'user/schemas.py')
-            target_path = os.path.join(self.install_dir, 'user/schemas.py')
-            distutils.file_util.copy_file(incoming_schema_path, target_path)
-
+                try:
+                    # The file schemas.py is no longer used, and can interfere with schema
+                    # imports. See issue #54.
+                    os.rename(os.path.join(user_dir, 'schemas.py'),
+                              os.path.join(user_dir, 'schemas.py.old'))
+                except OSError:
+                    pass
+                try:
+                    os.remove(os.path.join(user_dir, 'schemas.pyc'))
+                except OSError:
+                    pass
 
 # ==============================================================================
 # install_data
@@ -216,13 +216,10 @@ class weewx_install_data(install_data):
 
         # Time to write it out. Get a temporary file:
         tmpfd, tmpfn = tempfile.mkstemp()
-        tmpfile = open(tmpfn, 'w')
-
-        # Write the finished configuration file to it:
-        config_dict.write(tmpfile)
-        tmpfile.flush()
-        tmpfile.close()
-        os.close(tmpfd)
+        # Wrap the os-level file descriptor in a Python file object
+        with os.fdopen(tmpfd, 'w') as tmpfile:
+            # Write the config file
+            config_dict.write(tmpfile)
 
         # Save the old config file if it exists:
         if not self.dry_run and os.path.exists(install_path):
@@ -359,46 +356,6 @@ def remove_obsolete_files(install_dir):
         os.remove(os.path.join(install_dir, 'setup.py'))
     except OSError:
         pass
-
-
-def get_schema_type(bin_dir):
-    """Checks whether the schema in user.schemas is a new style or old style
-    schema.
-
-    bin_dir: The directory to be checked. This is nominally /home/weewx/bin.
-
-    Returns:
-      'none': There is no schema at all.
-      'old' : It is an old-style schema.
-      'new' : It is a new-style schema
-    """
-    tmp_path = list(sys.path)
-    sys.path.insert(0, bin_dir)
-
-    try:
-        import user.schemas
-    except ImportError:
-        # There is no existing schema at all.
-        result = 'none'
-    else:
-        # There is a schema. Determine if it is old-style or new-style
-        try:
-            # Try the old style 'drop_list'. If it fails, it must be
-            # a new-style schema
-            _ = user.schemas.drop_list
-        except AttributeError:
-            # New style schema
-            result = 'new'
-        else:
-            # It did not fail. Must be an old-style schema
-            result = 'old'
-        finally:
-            del user.schemas
-
-    # Restore the path
-    sys.path = tmp_path
-
-    return result
 
 
 # ==============================================================================

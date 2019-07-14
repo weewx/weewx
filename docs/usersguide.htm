@@ -2174,6 +2174,14 @@ longitude = -77.0366</pre>
             a poor job of it. Requires Python V2.7. Will not work with older versions of Python. Optional. Default is
             <span class="code">False</span></p>
 
+        <p class="config_option">secure_data</p>
+
+        <p>
+            If a secure session is requested (option <span class="code">secure_ftp=True</span>), should we attempt a
+            secure data connection as well? This option is useful due to a bug in the Python FTP client library. See <a
+            href="https://github.com/weewx/weewx/issues/284">Issue #284</a>. Optional. Default is <span class="code">True</span>.
+        </p>
+
         <p class="config_option">port</p>
 
         <p>Set to the port ID of your FTP server. Default is <span class="code">21</span>.</p>
@@ -2478,8 +2486,10 @@ longitude = -77.0366</pre>
 
         <p class="config_option">archive_interval</p>
 
-        <p>If your station hardware supports data logging then the archive interval will be downloaded from the station.
-            Otherwise, you must specify it here in seconds. Optional. Default is 300 seconds.
+        <p>
+            If your station hardware supports data logging then the archive interval will be downloaded from the station.
+            Otherwise, you must specify it here in seconds, and it must be evenly divisible by 60. Optional.
+            Default is 300 seconds.
         </p>
 
         <p class="config_option">archive_delay</p>
