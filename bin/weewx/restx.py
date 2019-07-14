@@ -244,6 +244,10 @@ class RESTThread(threading.Thread):
 
         returns: A dictionary of weather values"""
 
+        # this will not work without a dbmanager
+        if dbmanager is None:
+            return record
+
         _time_ts = record['dateTime']
         _sod_ts = weeutil.weeutil.startOfDay(_time_ts)
 
@@ -1170,14 +1174,14 @@ class CWOPThread(RESTThread):
         _wt_list = []
         for _obs_type in ['windDir', 'windSpeed', 'windGust', 'outTemp']:
             _v = record.get(_obs_type)
-            _wt_list.append("%03d" % _v if _v is not None else '...')
+            _wt_list.append("%03d" % int(_v + 0.5) if _v is not None else '...')
         _wt_str = "_%s/%sg%st%s" % tuple(_wt_list)
 
         # Rain
         _rain_list = []
         for _obs_type in ['hourRain', 'rain24', 'dayRain']:
             _v = record.get(_obs_type)
-            _rain_list.append("%03d" % (_v * 100.0) if _v is not None else '...')
+            _rain_list.append("%03d" % int(_v * 100.0 + 0.5) if _v is not None else '...')
         _rain_str = "r%sp%sP%s" % tuple(_rain_list)
 
         # Barometer:
@@ -1189,23 +1193,23 @@ class CWOPThread(RESTThread):
             # they want the barometer in millibars.
             _baro_vt = weewx.units.convert((_baro, 'inHg', 'group_pressure'),
                                            'mbar')
-            _baro_str = "b%05d" % (_baro_vt[0] * 10.0)
+            _baro_str = "b%05d" % int(_baro_vt[0] * 10.0 + 0.5)
 
         # Humidity:
         _humidity = record.get('outHumidity')
         if _humidity is None:
             _humid_str = "h.."
         else:
-            _humid_str = ("h%02d" % _humidity) if _humidity < 100.0 else "h00"
+            _humid_str = ("h%02d" % int(_humidity + 0.5) ) if _humidity < 99.5 else "h00"
 
         # Radiation:
         _radiation = record.get('radiation')
         if _radiation is None:
             _radiation_str = ""
-        elif _radiation < 1000.0:
-            _radiation_str = "L%03d" % _radiation
-        elif _radiation < 2000.0:
-            _radiation_str = "l%03d" % (_radiation - 1000)
+        elif _radiation < 999.5:
+            _radiation_str = "L%03d" % int(_radiation + 0.5)
+        elif _radiation < 1999.5:
+            _radiation_str = "l%03d" % int(_radiation - 1000 + 0.5)
         else:
             _radiation_str = ""
 

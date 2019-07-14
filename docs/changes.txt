@@ -3,12 +3,18 @@ weewx change history
 
 3.9.2 MM/DD/YYYY
 
+StdPrint now explicitly converts loop and archive fields to UTF-8 before
+printing. This means unicode strings can now be included in loop and archive
+fields.
+
 Fix WMR300 driver so that it will reject (corrupt) logger records if they
 have negative interval (similar to issue #375).
 
-Added 'rain_warning' option in wmr300 driver to remind station owners to reset
+Added 'rain_warning' option in WMR300 driver to remind station owners to reset
 the rain counter when the rain counter exceeds a threshold (default is 90%).
 Thanks to weewx user Leon!
+
+Added several other debug tools to the WMR300 driver. PR #402.
 
 Wunderfixer now keeps going if a post does not satisfy [[Essentials]].
 Fixes issue #329 (again).
@@ -44,6 +50,27 @@ Thanks to user 'windcrusader'! Fixes issue #393.
 
 Fixed problem when calculating vector averages. Thanks to user
 timtsm! PR #396.
+
+windrun is now calculated on a per archive period basis, instead
+of for the whole day. Thanks to user 'windcrusader'!
+PR #399. Fixes issue #250.
+
+Wunderfixer has new option to set socket timeout. This is to compensate
+for WU "capacity issues". Thanks to user Leon! See PR #403.
+
+Fixed bug in WS1 driver that caused crash if rain_total was None.
+
+If a file user/schemas.py still exists (a relic from V2.7 and earlier), it
+is renamed to user/schemas.py.old. Fixes issue #54.
+
+V3.x test suites now use same data set as V4.x, minimizing the chance of
+a false negative when switching versions.
+
+Fixed fine offset driver to warn about (and skip) historical data that have
+zero for interval.
+
+Correct rounding problems for rain and other types when posting to CWOP.
+Fixes issue #431. Thanks to user ls4096!
 
 
 3.9.1 02/06/2019
@@ -1066,6 +1093,9 @@ default (previously, software record generation was the default).
 
 Fixed bug in WS28xx driver the prevented reading of historical records
 when starting with an empty database.
+
+The database schemas are now their own package. The schema that was in
+user/schemas.py can now be found in weewx/schemas/wview.py.
 
 
 2.7.0 10/11/14
