@@ -1206,9 +1206,9 @@ class CWOPThread(RESTThread):
         _radiation = record.get('radiation')
         if _radiation is None:
             _radiation_str = ""
-        elif _radiation < 1000.0:
+        elif _radiation < 999.5:
             _radiation_str = "L%03d" % int(_radiation + 0.5)
-        elif _radiation < 2000.0:
+        elif _radiation < 1999.5:
             _radiation_str = "l%03d" % int(_radiation - 1000 + 0.5)
         else:
             _radiation_str = ""
