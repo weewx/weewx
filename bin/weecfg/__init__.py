@@ -329,6 +329,8 @@ def update_config(config_dict):
 
     update_to_v39(config_dict)
 
+    update_to_v40(config_dict)
+
 
 def merge_config(config_dict, template_dict):
     """Merge the template (distribution) dictionary into the user's dictionary.
@@ -352,7 +354,7 @@ def update_to_v25(config_dict):
     """
     major, minor = get_version_info(config_dict)
 
-    if major > '2' or minor >= '05':
+    if major + minor >= '205':
         return
 
     try:
@@ -479,7 +481,8 @@ def update_to_v26(config_dict):
     """
 
     major, minor = get_version_info(config_dict)
-    if major > '2' or minor >= '06':
+
+    if major + minor >= '206':
         return
 
     try:
@@ -687,7 +690,7 @@ def update_to_v30(config_dict):
 
     major, minor = get_version_info(config_dict)
 
-    if major >= '3':
+    if major + minor >= '300':
         return
 
     old_database = None
@@ -819,7 +822,7 @@ def update_to_v32(config_dict):
 
     major, minor = get_version_info(config_dict)
 
-    if major > '3' or minor > '02':
+    if major + minor >= '302':
         return
 
     # For interpolation to work, it's critical that WEEWX_ROOT not end
@@ -938,7 +941,7 @@ def update_to_v36(config_dict):
 
     major, minor = get_version_info(config_dict)
 
-    if major > '3' or minor > '06':
+    if major + minor >= '306':
         return
 
     # Perform the following only if the dictionary has a StdWXCalculate section
@@ -988,7 +991,7 @@ def update_to_v39(config_dict):
 
     major, minor = get_version_info(config_dict)
 
-    if major > '3' or minor > '09':
+    if major + minor >= '309':
         return
 
     # Add top-level log_success and log_failure if missing
@@ -1070,6 +1073,55 @@ def update_to_v39(config_dict):
            ]
 
     config_dict['version'] = '3.9.0'
+
+
+def update_to_v40(config_dict):
+    """Update a configuration file to V4.0
+
+    - Fix problems with DegreeDays and Trend in weewx.conf
+    - Add new option growing_base
+    """
+
+    major, minor = get_version_info(config_dict)
+
+    if major + minor >= '400':
+        return
+
+    if 'StdReport' in config_dict \
+        and 'Defaults' in config_dict['StdReport'] \
+        and 'Units' in config_dict['StdReport']['Defaults'] \
+        and 'Ordinates' in config_dict['StdReport']['Defaults']['Units']:
+
+        # Both the DegreeDays and Trend subsections accidentally ended up
+        # in the wrong spot
+        for key in ['DegreeDays', 'Trend']:
+            # Save the old comment
+            old_comment = config_dict['StdReport']['Defaults']['Units']['Ordinates'].comments[key]
+
+            # Shallow copy the section
+            config_dict['StdReport']['Defaults']['Units'][key] = \
+                config_dict['StdReport']['Defaults']['Units']['Ordinates'][key]
+            # Delete it in from its old location
+            del config_dict['StdReport']['Defaults']['Units']['Ordinates'][key]
+
+            # Unfortunately, ConfigObj doesn't fix these things when doing a copy:
+            config_dict['StdReport']['Defaults']['Units'][key].depth = \
+                config_dict['StdReport']['Defaults']['Units'].depth + 1
+            config_dict['StdReport']['Defaults']['Units'][key].parent = \
+                config_dict['StdReport']['Defaults']['Units']
+            config_dict['StdReport']['Defaults']['Units'].comments[key] = old_comment
+
+    # Now add the option "growing_base":
+    if 'StdReport' in config_dict \
+        and 'Defaults' in config_dict['StdReport'] \
+        and 'Units' in config_dict['StdReport']['Defaults'] \
+        and 'DegreeDays' in config_dict['StdReport']['Defaults']['Units']\
+        and 'growing_base' not in config_dict['StdReport']['Defaults']['Units']['DegreeDays']:
+        config_dict['StdReport']['Defaults']['Units']['DegreeDays']['growing_base'] = [50.0, 'degree_F']
+        config_dict['StdReport']['Defaults']['Units']['DegreeDays'].comments['growing_base'] = \
+            ["Base temperature for growing days, with unit:"]
+
+    config_dict['version'] = '4.0.0'
 
 
 def update_units(config_dict, unit_system_name, logger=None, debug=False):

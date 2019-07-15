@@ -155,7 +155,7 @@ upload-readme: readme.txt
 
 # update the version in all relevant places
 VDOCS=readme.htm customizing.htm devnotes.htm hardware.htm usersguide.htm upgrading.htm utilities.htm
-VCONFIGS=weewx.conf bin/weecfg/tests/expected/weewx39_user_expected.conf
+VCONFIGS=weewx.conf bin/weecfg/tests/expected/weewx40_user_expected.conf
 version:
 	for f in $(VDOCS); do \
   sed -e 's/^Version: [0-9].*/Version: $(MMVERSION)/' docs/$$f > docs/$$f.tmp; \
