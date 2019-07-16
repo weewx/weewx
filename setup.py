@@ -218,22 +218,25 @@ class weewx_install_data(install_data):
 
         # Time to write it out. Get a temporary file:
         tmpfd, tmpfn = tempfile.mkstemp()
-        # Wrap the os-level file descriptor in a Python file object
-        with os.fdopen(tmpfd, 'w') as tmpfile:
+        try:
+            # We don't need the file descriptor
+            os.close(tmpfd)
+            # Set the filename we will write to
+            config_dict.filename = tmpfn
             # Write the config file
-            config_dict.write(tmpfile)
+            config_dict.write()
 
-        # Save the old config file if it exists:
-        if not self.dry_run and os.path.exists(install_path):
-            backup_path = weeutil.weeutil.move_with_timestamp(install_path)
-            print("Saved old configuration file as %s" % backup_path)
-
-        # Now install the temporary file (holding the merged config data)
-        # into the proper place:
-        rv = install_data.copy_file(self, tmpfn, install_path, **kwargs)
-
-        # Now get rid of the temporary file
-        os.remove(tmpfn)
+            # Save the old config file if it exists:
+            if not self.dry_run and os.path.exists(install_path):
+                backup_path = weeutil.weeutil.move_with_timestamp(install_path)
+                print("Saved old configuration file as %s" % backup_path)
+            if not self.dry_run:
+                # Now install the temporary file (holding the merged config data)
+                # into the proper place:
+                rv = install_data.copy_file(self, tmpfn, install_path, **kwargs)
+        finally:
+            # Get rid of the temporary file
+            os.unlink(tmpfn)
 
         # Set the permission bits unless this is a dry run:
         if not self.dry_run:
