@@ -31,7 +31,7 @@ major_comment_block = ["", "####################################################
 unit_systems = {
     'us': {'group_altitude': 'foot',
            'group_degree_day': 'degree_F_day',
-           'group_distance' : 'mile',
+           'group_distance': 'mile',
            'group_pressure': 'inHg',
            'group_rain': 'inch',
            'group_rainrate': 'inch_per_hour',
@@ -41,7 +41,7 @@ unit_systems = {
 
     'metric': {'group_altitude': 'meter',
                'group_degree_day': 'degree_C_day',
-               'group_distance' : 'km',
+               'group_distance': 'km',
                'group_pressure': 'mbar',
                'group_rain': 'cm',
                'group_rainrate': 'cm_per_hour',
@@ -1088,35 +1088,39 @@ def update_to_v40(config_dict):
         return
 
     if 'StdReport' in config_dict \
-        and 'Defaults' in config_dict['StdReport'] \
-        and 'Units' in config_dict['StdReport']['Defaults'] \
-        and 'Ordinates' in config_dict['StdReport']['Defaults']['Units']:
+            and 'Defaults' in config_dict['StdReport'] \
+            and 'Units' in config_dict['StdReport']['Defaults']:
 
         # Both the DegreeDays and Trend subsections accidentally ended up
-        # in the wrong spot
+        # in the wrong section
         for key in ['DegreeDays', 'Trend']:
-            # Save the old comment
-            old_comment = config_dict['StdReport']['Defaults']['Units']['Ordinates'].comments[key]
 
-            # Shallow copy the section
-            config_dict['StdReport']['Defaults']['Units'][key] = \
-                config_dict['StdReport']['Defaults']['Units']['Ordinates'][key]
-            # Delete it in from its old location
-            del config_dict['StdReport']['Defaults']['Units']['Ordinates'][key]
+            # Proceed only if the key has not already been moved, and exists in the incorrect spot:
+            if key not in config_dict['StdReport']['Defaults']['Units'] \
+                    and 'Ordinates' in config_dict['StdReport']['Defaults']['Units'] \
+                    and key in config_dict['StdReport']['Defaults']['Units']['Ordinates']:
+                # Save the old comment
+                old_comment = config_dict['StdReport']['Defaults']['Units']['Ordinates'].comments[key]
 
-            # Unfortunately, ConfigObj doesn't fix these things when doing a copy:
-            config_dict['StdReport']['Defaults']['Units'][key].depth = \
-                config_dict['StdReport']['Defaults']['Units'].depth + 1
-            config_dict['StdReport']['Defaults']['Units'][key].parent = \
-                config_dict['StdReport']['Defaults']['Units']
-            config_dict['StdReport']['Defaults']['Units'].comments[key] = old_comment
+                # Shallow copy the sub-section
+                config_dict['StdReport']['Defaults']['Units'][key] = \
+                    config_dict['StdReport']['Defaults']['Units']['Ordinates'][key]
+                # Delete it in from its old location
+                del config_dict['StdReport']['Defaults']['Units']['Ordinates'][key]
 
-    # Now add the option "growing_base":
+                # Unfortunately, ConfigObj can't fix these things when doing a shallow copy:
+                config_dict['StdReport']['Defaults']['Units'][key].depth = \
+                    config_dict['StdReport']['Defaults']['Units'].depth + 1
+                config_dict['StdReport']['Defaults']['Units'][key].parent = \
+                    config_dict['StdReport']['Defaults']['Units']
+                config_dict['StdReport']['Defaults']['Units'].comments[key] = old_comment
+
+    # Now add the option "growing_base" if it hasn't already been added:
     if 'StdReport' in config_dict \
-        and 'Defaults' in config_dict['StdReport'] \
-        and 'Units' in config_dict['StdReport']['Defaults'] \
-        and 'DegreeDays' in config_dict['StdReport']['Defaults']['Units']\
-        and 'growing_base' not in config_dict['StdReport']['Defaults']['Units']['DegreeDays']:
+            and 'Defaults' in config_dict['StdReport'] \
+            and 'Units' in config_dict['StdReport']['Defaults'] \
+            and 'DegreeDays' in config_dict['StdReport']['Defaults']['Units'] \
+            and 'growing_base' not in config_dict['StdReport']['Defaults']['Units']['DegreeDays']:
         config_dict['StdReport']['Defaults']['Units']['DegreeDays']['growing_base'] = [50.0, 'degree_F']
         config_dict['StdReport']['Defaults']['Units']['DegreeDays'].comments['growing_base'] = \
             ["Base temperature for growing days, with unit:"]
