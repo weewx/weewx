@@ -3483,10 +3483,9 @@ Options:
         </p>
 
         <p class="warning">
-            <strong>Warning!</strong><br/>Once published, Weather Underground observation data can only be deleted; data
-            cannot be modified. Even when observations are deleted on Weather Underground, the underlying record
-            remains, albeit with one or more blank observation fields. Accordingly, you should carefully use <span
-            class="code">wunderfixer</span> to ensure that the correct data source data is used.
+            <strong>Warning!</strong><br/>As of this writing (July, 2019), the Weather Underground
+            does not seem to allow re-posting old records, so <span class="code">wunderfixer</span>
+            may not work for you.
         </p>
 
         <p class="note">
@@ -3506,7 +3505,7 @@ Options:
 
         <pre class="tty">Usage: wunderfixer CONFIG_FILE|--config=CONFIG_FILE
                   [--binding=BINDING]
-                  [--station=STATION] [--password=PASSWORD]
+                  [--station=STATION] [--password=PASSWORD] [--api-key=API_KEY]
                   [--date=YYYY-mm-dd] [--epsilon=SECONDS] [--timeout=SECONDS]
                   [--verbose] [--log LOG_FACILITY] [--test] [--query]
                   [--help]
@@ -3533,6 +3532,9 @@ Options:
   -p PASSWORD, --password=PASSWORD
                         Weather Underground station password. Optional.
                         Default is to take from configuration file.
+  -k API_KEY, --api-key=API_KEY
+                        Weather Underground API key. Optional. Default is to
+                        take from configuration file.
   -d YYYY-mm-dd, --date=YYYY-mm-dd
                         Date to check as a string of form YYYY-mm-dd. Default
                         is today.
@@ -3549,7 +3551,10 @@ Options:
                         parameter will log to syslog.
   -t, --test            Test what would happen, but don't do anything.
   -q, --query           For each record, query the user before making a
-                        change.</pre>
+                        change.
+
+Options 'station', 'password', and 'api-key' must be supplied either on the
+command line, or in the configuration file.</pre>
 
         <h2><span id='wunderfixer_details'>Actions and options</span></h2>
 
@@ -3591,6 +3596,17 @@ Options:
         </p>
 
         <pre class="tty cmd">wunderfixer --station=AB123456789 --password=hardtoguess</pre>
+
+        <h3>Option <span class="code" id="wunderfixer_api_key">--api-key</span></h3>
+
+        <p>Your API key from the Weather Underground. You can find (or generate, if you do not have one) your API key at
+            <a href="https://www.wunderground.com/member/api-keys">https://www.wunderground.com/member/api-keys</a>. The
+            default is the value for option <span class="code">api_key</span> specified in the <a
+                href="usersguide.htm#Wunderground">[StdRESTful][[Wunderground]]</a> section of the configuration file.
+            The <span class="code">--api-key</span> option is used as follows:
+        </p>
+
+        <pre class="tty cmd">wunderfixer --station=AB123456789 --api-key=04255779e9aa45b6e4579938630e67b</pre>
 
         <h3>Option <span class="code" id="wunderfixer_date">--date</span></h3>
 

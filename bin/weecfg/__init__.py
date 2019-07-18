@@ -1080,6 +1080,7 @@ def update_to_v40(config_dict):
 
     - Fix problems with DegreeDays and Trend in weewx.conf
     - Add new option growing_base
+    - Add new option WU api_key
     """
 
     major, minor = get_version_info(config_dict)
@@ -1124,6 +1125,14 @@ def update_to_v40(config_dict):
         config_dict['StdReport']['Defaults']['Units']['DegreeDays']['growing_base'] = [50.0, 'degree_F']
         config_dict['StdReport']['Defaults']['Units']['DegreeDays'].comments['growing_base'] = \
             ["Base temperature for growing days, with unit:"]
+
+    # Add the WU API key if it hasn't already been added
+    if 'StdRESTful' in config_dict \
+            and 'Wunderground' in config_dict['StdRESTful'] \
+            and 'api_key' not in config_dict['StdRESTful']['Wunderground']:
+        config_dict['StdRESTful']['Wunderground']['api_key'] = 'replace_me'
+        config_dict['StdRESTful']['Wunderground'].comments['api_key'] = \
+            ["", "If you plan on using wunderfixer, set the following", "to your API key:"]
 
     config_dict['version'] = '4.0.0'
 

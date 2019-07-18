@@ -98,6 +98,9 @@ PR #399. Fixes issue #250.
 Wunderfixer has new option to set socket timeout. This is to compensate
 for WU "capacity issues". Thanks to user Leon! See PR #403.
 
+Wunderfixer has been ported to the new WU API. The WU seems to no
+longer allow reposting old records, so this "sort of" fixes issue #414.
+
 Fixed bug in WS1 driver that caused crash if rain_total was None.
 
 If a file user/schemas.py still exists (a relic from V2.7 and earlier), it
