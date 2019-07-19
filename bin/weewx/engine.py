@@ -722,13 +722,13 @@ class StdPrint(StdService):
         """Print out the new LOOP packet"""
         print("LOOP:  ",
               weeutil.weeutil.timestamp_to_string(event.packet['dateTime']),
-              to_sorted_string(event.packet).encode('utf-8'))
+              to_sorted_string(event.packet))
 
     def new_archive_record(self, event):
         """Print out the new archive record."""
         print("REC:   ",
               weeutil.weeutil.timestamp_to_string(event.record['dateTime']),
-              to_sorted_string(event.record).encode('utf-8'))
+              to_sorted_string(event.record))
 
 
 #==============================================================================
