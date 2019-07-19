@@ -15,8 +15,14 @@ day, comparing to see whether a corresponding record exists on the
 Weather Underground. If not, it will publish a new record on the
 Weather Underground with the missing data.
 
+Details of the API for downloading historical data from the WU
+can be found here: https://docs.google.com/document/d/1w8jbqfAk0tfZS5P7hYnar1JiitM0gQZB-clxDfG3aD0/edit
+
 CHANGE HISTORY
 --------------------------------
+1.5.1 07/19/2019
+More refined error handling.
+
 1.5.0 07/18/2019
 Ported to new WU API. Now requires an API key.
 
@@ -102,7 +108,7 @@ proposes!"""
 epilog = """Options 'station', 'password', and 'api-key' must be supplied either
 on the command line, or in the configuration file."""
 
-__version__ = "1.5.0"
+__version__ = "1.5.1"
 
 # The number of seconds difference in the timestamp between two records
 # and still have them considered to be the same: 
@@ -237,10 +243,10 @@ def main():
         # Get all the time stamps on the Weather Underground for the given day:
         wunder_results = wunder.get_day_timestamps(date_date)
     except Exception as e:
-        print("Could not get Weather Underground data.")
-        print("Reason: %s" % e)
+        print("Could not get Weather Underground data.", file=sys.stderr)
+        print("Reason: %s" % e, file=sys.stderr)
         wlog.slog(syslog.LOG_ERR, "Could not get Weather Underground data. Exiting.")
-        exit("Could not get Weather Underground data. Exiting.")
+        exit("Exiting.")
 
     if options.verbose:
         print("Number of WU records:         ", len(wunder_results))
@@ -254,7 +260,7 @@ def main():
     # legitimate station that has no data for the given day. Warn the user, then
     # proceed. 
     # ===========================================================================
-    if len(wunder_results) == 0:
+    if not wunder_results:
         sys.stdout.flush()
         print("\nNo results returned from Weather Underground (perhaps a bad station name??).", file=sys.stderr)
         print("Publishing anyway.", file=sys.stderr)
@@ -348,7 +354,7 @@ class WunderStation(weewx.restx.AmbientThread):
         weewx.restx.AmbientThread.__init__(self, **kargs)
 
     def get_day_timestamps(self, day_requested):
-        """Returns all time stamps for a given weather underground station for a given day
+        """Returns all time stamps for a given weather underground station for a given day.
         
         day_requested: An instance of datetime.date with the requested date
         
@@ -375,6 +381,12 @@ class WunderStation(weewx.restx.AmbientThread):
             print("Socket timeout for Weather Underground station " + self.station, file=sys.stderr)
             wlog.slog(syslog.LOG_ERR, "Socket timeout for Weather Underground station %s" % self.station)
             raise
+
+        if hasattr(response, 'code') and response.code != 200:
+            if response.code == 204:
+                raise IOError("Probably a bad station ID or invalid date")
+            else:
+                raise IOError("Bad response code returned: %d" % response.code)
 
         # The WU API says that compression is required, yet it seems to always returns uncompressed JSON.
         # Just in case they decide to turn that requirement on, let's be ready for it:
