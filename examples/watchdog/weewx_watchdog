@@ -1,0 +1,273 @@
+#!/bin/bash
+
+# WeeWX Watchdog utility by Leon Shaner
+__version__="1.1.3"
+
+#### *** MUST CUSTOMIZE ***
+# e-mail address to notify
+email="nobody@example.com"
+
+
+#### *** Recommend that you customize ***
+#
+# These first two remediation actions are inter-related
+# If doweewxrestart and dohostreboot are both enabled (1),
+# then a host reboot will not occur unless records are not flowing
+# even after a weewx restart.
+
+# NOTE: These apply to remediation for loss of communications 
+#       If weewx is found not running for any other reason it
+#       will be restarted, regardless of these settings
+
+doweewxrestart=1        # 1 means yes restart weewx as an attempt to re-establish communications
+dohostreboot=1          # 1 means yes restart host if station is not reporting
+
+# WMR300 handling of rain counter, which needs to be manually reset from time to time
+doraincounterwarning=1  # 1 means yes check for rain counter warning (currently WMR300-specific)
+
+# Whether to run wunderfixer each time the watchdog runs
+# If enabled, will runs wunderfixer repeatwufixer times after an outage
+# (e.g. for an hour based on a default watchdogsecs=900 # 10 minutes)
+dowufixer=1             # 1 means yes run wunderfixer
+repeatwufixer=12 	# how many times to run wunderfixer after an outage
+
+
+#### *** Optional customizations
+# Number of seconds without weewx records before taking action
+# Note:  Not recommended to set less than 10 minutes in most cases
+watchdogsecs=600 # 10 minutes
+
+# Add wunderfixer timeout of 20 seconds to workaround WU "capacity" issues
+wutimeout=20
+
+# Add wunderfixer epsilon of 125 seconds to workaround WU "time drift" issues
+wuepsilon=125
+
+# Main weewx log file
+weewx_main_log=/var/log/syslog
+
+# Supplemental log
+weewx_suppl_log=/var/log/weewx.log
+
+#
+### *** End of user customizations
+##################################
+
+
+
+
+### Check to see that email address was in fact customized.  ;-)
+if [ "$email" = "nobody@example.com" ] ; then
+	echo "ERROR:  WeeWX Watchdog -- email still set to fake address. Edit the setting in the script."
+	exit 200
+fi
+
+### Check to see that mailx utilty is found
+mailx_check=$(which mailx 2>/dev/null)
+if [ -z "$mailx_check" ] ; then
+	echo "ERROR:  WeeWX Watchdog -- mailx utility not found; please install it (see readme.txt)."
+	exit 255
+fi
+
+
+
+# Helper function for e-mailing supplemental logs SINCE a certain timestamp:
+event_logger() {
+
+	# Write log messages and send an e-mail with supplemental logs since eventstamp
+
+	eventstamp="$1"
+	eventmessage="$2"
+
+	eventstring="WeeWX: Watchdog $eventmessage"
+
+	# Log the mesage to syslog
+    	logger -i "$eventstring"
+
+	# Log the message to the supplemental log
+        echo "$eventstamp $eventstring" >>$weewx_suppl_log
+
+	# E-mail the logs
+	# The "fmt -s -w 1024" is a workaround for some mailers not coping with very long lines.
+	sed -n "/^$eventstamp/,\$ p" $weewx_suppl_log | fmt -s -w 1024 | mailx -s "$eventstring" $email
+}
+
+
+# Optimization for checking for timestamps within 2x watchdogsecs
+doublesecs=$((watchdogsecs * 2))
+
+
+#############################
+# Hung Station Detection
+# Get the timestamp of the last time weewx logged a record
+logstamp="$(sed -n 's/.*weewx.*Added record.*(\([0-9]*\)) to database.*/\1/p' ${weewx_main_log}.1 ${weewx_main_log} 2>/dev/null | tail -1)"
+
+# Get the current timestamp since the epoc
+currstamp="$(date +%s)"
+
+# Calculate the difference between timestamp and logstamp
+diffsecs=$((currstamp - logstamp))
+
+# Normalize the log messages the current time for this time through the checks
+msgstamp=`date`
+
+
+# Explicit check to see if weewx is not running
+# If status is not "running" then set flag to invoke remediation logic, regardless of last archive logstamp
+statusmsg="$(/etc/init.d/weewx status 2>&1 | grep '(running)')"
+if [ -z "$statusmsg" ] ; then
+    weewx_isnt_running=true
+fi
+
+
+# Check if it's been too long since the last update, send a warning, and optionally remediate
+if [ $diffsecs -ge $watchdogsecs ] || [ -n "$weewx_isnt_running" ] ; then
+
+
+    # Always e-mail a warning
+    if [ -n "$weewx_isnt_running" ] ; then
+        event_logger "$msgstamp" "WeeWX is NOT running!!!"
+    else
+        event_logger "$msgstamp" "$diffsecs seconds have passed since weewx logged any records!"
+    fi
+
+    # Handle doweewxrestart logic
+    # Don't restart if weewx was restarted too recently (< 2x watchdogsecs)
+    if [ "$doweewxrestart" -eq 1 ] || [ -n "$weewx_isnt_running" ] ; then
+        restart_logstamp="$(sed -n 's/.*WeeWX: Watchdog Restart event timestamp: (\([0-9]*\)).*/\1/p' ${weewx_suppl_log}.1 ${weewx_suppl_log} 2>/dev/null | tail -1)"
+	diffsecs=$((currstamp - restart_logstamp))
+	if [ $diffsecs -ge $doublesecs ] ; then
+		# Restart weewx and check the status
+                # NOTE:  Intentionally did not use the restart option
+
+    		echo "$msgstamp WeeWX: Watchdog Restart event timestamp: ($currstamp)" >>$weewx_suppl_log
+
+		stopmsg=`/etc/init.d/weewx stop 2>&1`
+    		echo "$msgstamp WeeWX: Watchdog Stop message: $stopmsg" >>$weewx_suppl_log
+
+		startmsg=`/etc/init.d/weewx start 2>&1`
+    		echo "$msgstamp WeeWX: Watchdog Start message: $startmsg" >>$weewx_suppl_log
+
+		# Wait 65 seconds for weewx to get going
+		sleep 65
+
+		# Add the current status to the supplemental log
+                /etc/init.d/weewx status 2>&1 >>$weewx_suppl_log
+
+		# Another explicit check to see if weewx is still not running
+		# If status is not "running" then it's time to try other remediation steps
+		statusmsg="$(/etc/init.d/weewx status 2>&1 | grep '(running)')"
+
+		if [ -n "$statusmsg" ] ; then
+		    # Log message and Send an e-mail with current status of weewx restart 
+		    event_logger "$msgstamp" "Restart Successful!!! WeeWX is NOW running / OKAY!!!"
+		    exit 0 # no reason to remediate further; leave other optional maintenance until next step
+		else
+		    event_logger "$msgstamp" "WeeWX is STILL not running / NOT OKAY!!!"
+		fi
+	else
+	        event_logger "$msgstamp" "Restart was NOT attempted (last restart was too recent)."
+	fi
+    fi
+
+    # Handle dohostreboot logic
+    # Reboot the host, as a total bodge workaround for USB hang issues with certain stations on certain kernel versions
+    # Don't reboot if host was rebooted too recently (< 2x watchdogsecs)
+    if [ "$dohostreboot" -eq 1 ] ; then
+        reboot_logstamp="$(sed -n 's/.*WeeWX: Watchdog REBOOT event timestamp: (\([0-9]*\)).*/\1/p' ${weewx_suppl_log}.1 ${weewx_suppl_log} 2>/dev/null | tail -1)"
+	diffsecs=$((currstamp - reboot_logstamp))
+	if [ $diffsecs -ge $doublesecs ] ; then
+		event_logger "$msgstamp" "REBOOT event timestamp: ($currstamp)"
+
+		# Allow time for e-mail to go out
+		sleep 10
+		exec /sbin/shutdown -r now
+	else
+		event_logger "$msgstamp" "REBOOT was NOT attempted (last REBOOT was too recent)."
+	fi
+    fi
+fi
+
+
+#############################
+# Rain Counter Warning
+# Check if rain counter is above warning level and notify
+if [ "$doraincounterwarning" -eq 1 ] ; then
+    grep -q 'weewx.*rain counter is above warning level' $weewx_main_log && \
+	event_logger "$msgstamp" "Rain counter above warning level!  Resetting the counter is recommended."
+fi
+
+
+#############################
+# Wunderfixer Maintenance
+# Run Wunderfixer to re-upload records that were missed during an outage
+# Only do this if a remediation event occurred within 2x repeatwufixer x watchdogsecs (about an hour by default).
+#
+# NOTE:  Here multisecs means watchdogsecs * repeatwufixer * 2, which spreads wunderfixer calls out over twice 
+#        the amount of wall-clock time.
+#        By skipping wunderfixer every other iteration, the total number of wunderfixer calls remains at the
+#        repeatwufixer limit.
+
+if [ "$dowufixer" -eq 1 ] ; then
+	currstamp="$(date +%s)"
+	restart_logstamp="$(sed -n 's/.*WeeWX: Watchdog Restart event timestamp: (\([0-9]*\)).*/\1/p' ${weewx_suppl_log}.1 ${weewx_suppl_log} 2>/dev/null | tail -1)"
+	restart_diffsecs=$((currstamp - restart_logstamp))
+	reboot_logstamp="$(sed -n 's/.*WeeWX: Watchdog REBOOT event timestamp: (\([0-9]*\)).*/\1/p' ${weewx_suppl_log}.1 ${weewx_suppl_log} 2>/dev/null | tail -1)"
+	reboot_diffsecs=$((currstamp - reboot_logstamp))
+
+	wufixer_logstamp="$(sed -n 's/.*WeeWX: Wunderfixer timestamp: (\([0-9]*\)).*/\1/p' ${weewx_suppl_log}.1 ${weewx_suppl_log} 2>/dev/null | tail -1)"
+	wufixer_diffsecs=$((currstamp - wufixer_logstamp))
+
+	# Reset wufixer check when wufixer timestamp is older than last remediation action(s)
+	if [ $wufixer_diffsecs -ge $restart_diffsecs ] || [ $wufixer_diffsecs -ge $reboot_diffsecs ] ; then
+		wufixer_diffsecs=0
+	fi
+
+	# We'll run every other watchdog cycle and spread the overall wunderfixer recoveries out over twice the time
+
+	# Check if remediation occured within repeatwufixer x watchdogsecs ago and only run if 2x watchdog secs has passed
+	multisecs=$((watchdogsecs * repeatwufixer * 2))
+
+	# Get most recent remediation event into outage_stamp and outage_diffsecs
+	[ $restart_diffsecs -gt 0 ] && [ $restart_diffsecs -le $reboot_diffsecs ] && outage_stamp=$restart_logstamp && outage_diffsecs=$restart_diffsecs
+	[ $reboot_diffsecs -gt 0 ] && [ $reboot_diffsecs -le $restart_diffsecs ] && outage_stamp=$reboot_logstamp && outage_diffsecs=$reboot_diffsecs
+
+	# Catch a corner case that can happen if there hasn't been an outage seen in a while.
+	if [ -z "$outage_stamp" ] || [ -z "$outage_diffsecs" ] ; then
+		# Set the outage to now
+		outage_stamp=currstamp
+		outage_diffsecs=0
+
+		# Spoof log records to avoid this condition the next time:
+    		echo "$msgstamp WeeWX: Watchdog Restart event timestamp: ($currstamp) SPOOFED" >>$weewx_suppl_log
+    		echo "$msgstamp WeeWX: Watchdog REBOOT event timestamp: ($currstamp) SPOOFED" >>$weewx_suppl_log
+	fi
+
+	# We need a "fuzzy" comparison to see if this iteration is in the ball-park of doublesecs.
+	# An exact match is no good due to slight timing offsets between iterations.
+	# We'll use a "is wufixer_diffsecs within 90% of doublesecs?" approach.
+	wufixer_doublesecs=$(( doublesecs * 90 / 100 ))
+
+
+	if [ $outage_diffsecs -le $multisecs ] ; then
+	    if [ $wufixer_diffsecs -gt $wufixer_doublesecs ] || [ $wufixer_diffsecs -eq 0 ] ; then 
+
+		echo "$msgstamp WeeWX: Wunderfixer timestamp: ($currstamp)" >>$weewx_suppl_log
+
+		# Use the date corresponding to outage_stamp in case multisecs crosses a date boundary
+		outage_date=$(date -d @$outage_stamp +\%Y-\%m-\%d)
+
+		/usr/share/weewx/wunderfixer --date $outage_date --verbose --timeout $wutimeout --epsilon $wuepsilon 2>&1 | \
+		sed "s/^/$msgstamp /" >>$weewx_suppl_log
+
+	    else
+        	echo "$msgstamp WeeWX: Wunderfixer has been intentionally skipped this iteration." >>$weewx_suppl_log
+	    fi
+	else
+		# Check if this was the first iteration after multisecs expired
+		expiredby_secs=$(( outage_diffsecs - multisecs ))
+		if [ $expiredby_secs -le $watchdogsecs ] ; then
+        		echo "$msgstamp WeeWX: Wunderfixer has no retries remaining." >>$weewx_suppl_log
+		fi
+	fi
+fi

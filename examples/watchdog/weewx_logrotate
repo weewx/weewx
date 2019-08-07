@@ -1,0 +1,11 @@
+/var/log/weewx.log {
+  weekly
+  missingok
+  rotate 52
+  compress
+  delaycompress
+  notifempty
+
+# Install via "sudo cp weewx_logrotate /etc/logrotate.d/weewx"
+
+}
