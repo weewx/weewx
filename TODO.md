@@ -1,7 +1,9 @@
 Document the suffixes `.exists` and `.has_data`.
 
-Chase down the bug P. Simmons reported. Mail link:
-https://mail.google.com/mail/u/0/#inbox/FMfcgxwCgVcVJLhmvssXVPdQNXtHNhhS
+Explore using the Python `logging` facility instead of `syslog`.
+
+Explore introducing extendable observation types. They would be registered
+with `Manager`.
 
 The following drivers have been checked under Python 3:
 
