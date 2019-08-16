@@ -19,7 +19,7 @@ from weeutil.weeutil import to_int, to_bool
 if sys.platform == "darwin":
     address = '/var/run/syslog'
     facility = 'local1'
-elif sys.platform == 'linux2':
+elif sys.platform.startswith('linux'):
     address = '/dev/log'
     facility = 'user'
 else:
@@ -121,7 +121,3 @@ def log_traceback(log_fn, prefix=''):
     sfd.seek(0)
     for line in sfd:
         log_fn("%s%s", prefix, line)
-
-setup('test', {})
-log = logging.getLogger(__name__)
-log.info('hello')
