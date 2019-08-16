@@ -12,17 +12,17 @@ from __future__ import print_function
 
 # standard python imports
 import datetime
+import logging
 import sys
-import syslog
 import time
 
 # weewx imports
 import weedb
 import weeutil.weeutil
 import weewx.manager
-
 from weeutil.weeutil import timestamp_to_string, startOfDay, to_bool
 
+log = logging.getLogger(__name__)
 
 # ============================================================================
 #                             class DatabaseFix
@@ -157,9 +157,8 @@ class WindSpeedRecalculation(DatabaseFix):
 
         # log if a dry run
         if self.dry_run:
-            syslog.syslog(syslog.LOG_INFO,
-                          "maxwindspeed: This is a dry run. "
-                          "Maximum windSpeed will be recalculated but not saved.")
+            log.info("maxwindspeed: This is a dry run. "
+                     "Maximum windSpeed will be recalculated but not saved.")
 
         # Get the binding for the archive we are to use. If we received an
         # explicit binding then use that otherwise use the binding that
@@ -176,14 +175,12 @@ class WindSpeedRecalculation(DatabaseFix):
         # get a database manager object
         self.dbm = weewx.manager.open_manager_with_config(config_dict,
                                                           self.binding)
-        syslog.syslog(syslog.LOG_DEBUG,
-                      "maxwindspeed: Using database binding '%s', "
-                      "which is bound to database '%s'." %
-                      (self.binding, self.dbm.database_name))
+        log.debug("maxwindspeed: Using database binding '%s', "
+                  "which is bound to database '%s'." %
+                  (self.binding, self.dbm.database_name))
         # number of days per db transaction, default to 50.
         self.trans_days = int(fix_config_dict.get('trans_days', 50))
-        syslog.syslog(syslog.LOG_DEBUG,
-                      "maxwindspeed: Database transactions will use %s days of data." % self.trans_days)
+        log.debug("maxwindspeed: Database transactions will use %s days of data." % self.trans_days)
 
     def run(self):
         """Main entry point for applying the windSpeed Calculation fix.
@@ -200,8 +197,7 @@ class WindSpeedRecalculation(DatabaseFix):
         except weedb.NoTableError:
             raise
         except weewx.ViolatedPrecondition as e:
-            syslog.syslog(syslog.LOG_ERR,
-                          "maxwindspeed: %s not applied: %s" % (self.name, e))
+            log.error("maxwindspeed: %s not applied: %s" % (self.name, e))
             # raise the error so caller can deal with it if they want
             raise
 
@@ -214,8 +210,7 @@ class WindSpeedRecalculation(DatabaseFix):
         """
 
         t1 = time.time()
-        syslog.syslog(syslog.LOG_INFO,
-                      "maxwindspeed: Applying %s..." % self.name)
+        log.info("maxwindspeed: Applying %s..." % self.name)
         # get the start and stop Gregorian day number
         start_ts = self.first_summary_ts('windSpeed')
         start_greg = weeutil.weeutil.toGregorianDay(start_ts)
@@ -255,12 +250,10 @@ class WindSpeedRecalculation(DatabaseFix):
         print(file=sys.stdout)
         tdiff = time.time() - t1
         # We are done so log and inform the user
-        syslog.syslog(syslog.LOG_INFO,
-                      "maxwindspeed: Maximum windSpeed calculated "
-                      "for %s days in %0.2f seconds." % (n_days, tdiff))
+        log.info("maxwindspeed: Maximum windSpeed calculated "
+                 "for %s days in %0.2f seconds." % (n_days, tdiff))
         if self.dry_run:
-            syslog.syslog(syslog.LOG_INFO,
-                          "maxwindspeed: This was a dry run. %s was not applied." % self.name)
+            log.info("maxwindspeed: This was a dry run. %s was not applied." % self.name)
 
     def get_archive_span_max(self, span, obs):
         """Find the max value of an obs and its timestamp in a span based on
@@ -413,17 +406,14 @@ class IntervalWeighting(DatabaseFix):
 
         # first do some logging about what we will do
         if self.dry_run:
-            syslog.syslog(syslog.LOG_INFO,
-                          "intervalweighting: This is a dry run. "
-                          "Interval weighting will be applied but not saved.")
+            log.info("intervalweighting: This is a dry run. "
+                     "Interval weighting will be applied but not saved.")
 
-        syslog.syslog(syslog.LOG_INFO,
-                      "intervalweighting: Using database binding '%s', "
-                      "which is bound to database '%s'." %
-                      (self.binding, self.dbm.database_name))
-        syslog.syslog(syslog.LOG_DEBUG,
-                      "intervalweighting: Database transactions "
-                      "will use %s days of data." % self.trans_days)
+        log.info("intervalweighting: Using database binding '%s', "
+                 "which is bound to database '%s'." %
+                 (self.binding, self.dbm.database_name))
+        log.debug("intervalweighting: Database transactions "
+                  "will use %s days of data." % self.trans_days)
         # Check metadata 'Version' value, if its greater than 1.0 we are
         # already weighted
         _daily_summary_version = self.dbm._read_metadata('Version')
@@ -454,9 +444,8 @@ class IntervalWeighting(DatabaseFix):
                         with weedb.Transaction(self.dbm.connection) as _cursor:
                             self.dbm._write_metadata('Version', '2.0', _cursor)
                 except weewx.ViolatedPrecondition as e:
-                    syslog.syslog(syslog.LOG_INFO,
-                                  "intervalweighting: %s not applied: %s"
-                                  % (self.name, e))
+                    log.info("intervalweighting: %s not applied: %s"
+                             % (self.name, e))
                     # raise the error so caller can deal with it if they want
                     raise
             else:
@@ -466,12 +455,10 @@ class IntervalWeighting(DatabaseFix):
                 # by rebuilding the daily summaries. Rebuild is destructive so
                 # only do it if this is not a dry run
                 if not self.dry_run:
-                    syslog.syslog(syslog.LOG_DEBUG,
-                                  "intervalweighting: Multiple distinct 'interval' "
-                                  "values found for at least one archive day.")
-                    syslog.syslog(syslog.LOG_INFO,
-                                  "intervalweighting: %s will be applied by dropping "
-                                  "and rebuilding daily summaries." % self.name)
+                    log.debug("intervalweighting: Multiple distinct 'interval' "
+                              "values found for at least one archive day.")
+                    log.info("intervalweighting: %s will be applied by dropping "
+                             "and rebuilding daily summaries." % self.name)
                     self.dbm.drop_daily()
                     self.dbm.close()
                     # Reopen to force rebuilding of the schema
@@ -482,8 +469,7 @@ class IntervalWeighting(DatabaseFix):
                     self.dbm.backfill_day_summary()
         else:
             # daily summaries are already weighted
-            syslog.syslog(syslog.LOG_INFO,
-                          "intervalweighting: %s has already been applied." % self.name)
+            log.info("intervalweighting: %s has already been applied." % self.name)
 
     def do_fix(self, np_ts):
         """Apply the interval weighting fix to the daily summaries."""
@@ -492,7 +478,7 @@ class IntervalWeighting(DatabaseFix):
         # there are records in the archive from that day
         if np_ts is None or self.dbm.last_timestamp > np_ts:
             t1 = time.time()
-            syslog.syslog(syslog.LOG_INFO, "intervalweighting: Applying %s..." % self.name)
+            log.info( "intervalweighting: Applying %s..." % self.name)
             _days = 0
             # Get the earliest daily summary ts and the obs that it came from
             first_ts, obs = self.first_summary()
@@ -529,11 +515,10 @@ class IntervalWeighting(DatabaseFix):
                                     _day_accum[_day_key].dirsumtime *= _weight
                         except Exception as e:
                             # log the exception and re-raise it
-                            syslog.syslog(syslog.LOG_INFO,
-                                          "intervalweighting: Interval weighting of '%s' daily summary "
-                                          "for %s failed: %s" %
-                                          (last_key, timestamp_to_string(_day_span.start,
-                                                                         format="%Y-%m-%d"), e))
+                            log.info("intervalweighting: Interval weighting of '%s' daily summary "
+                                     "for %s failed: %s"
+                                     % (last_key, timestamp_to_string(_day_span.start,
+                                                                      format="%Y-%m-%d"), e))
                             raise
                         # Update the daily summary with the weighted accumulator
                         if not self.dry_run:
@@ -577,17 +562,16 @@ class IntervalWeighting(DatabaseFix):
             print(file=sys.stdout)
             tdiff = time.time() - t1
             # We are done so log and inform the user
-            syslog.syslog(syslog.LOG_INFO,
-                          "intervalweighting: calculated weighting "
-                          "for %s days in %0.2f seconds." % (_days, tdiff))
+            log.info("intervalweighting: calculated weighting "
+                     "for %s days in %0.2f seconds." % (_days, tdiff))
             if self.dry_run:
-                syslog.syslog(syslog.LOG_INFO, "intervalweighting: "
-                                               "This was a dry run. %s was not applied." % self.name)
+                log.info( "intervalweighting: "
+                          "This was a dry run. %s was not applied."
+                          % self.name)
         else:
             # we didn't need to weight so inform the user
-            syslog.syslog(syslog.LOG_INFO,
-                          "intervalweighting: %s has already been applied."
-                          % self.name)
+            log.info("intervalweighting: %s has already been applied."
+                     % self.name)
 
     def get_interval(self, span):
         """Return the interval field value used in a span.
@@ -633,9 +617,8 @@ class IntervalWeighting(DatabaseFix):
         """
 
         t1 = time.time()
-        syslog.syslog(syslog.LOG_DEBUG,
-                      "intervalweighting: Checking table '%s' for multiple "
-                      "'interval' values per day..." % self.dbm.table_name)
+        log.debug("intervalweighting: Checking table '%s' for multiple "
+                  "'interval' values per day..." % self.dbm.table_name)
         start_ts = timestamp if timestamp else self.dbm.first_timestamp
         _days = 0
         _result = True
@@ -657,10 +640,9 @@ class IntervalWeighting(DatabaseFix):
             if not _result:
                 break
         if _result:
-            syslog.syslog(syslog.LOG_DEBUG,
-                          "intervalweighting: Successfully checked %s days "
-                          "for multiple 'interval' values in %0.2f seconds."
-                          % (_days, (time.time() - t1)))
+            log.debug("intervalweighting: Successfully checked %s days "
+                      "for multiple 'interval' values in %0.2f seconds."
+                      % (_days, (time.time() - t1)))
         return _result
 
     def first_summary(self):

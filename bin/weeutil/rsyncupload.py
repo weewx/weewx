@@ -10,12 +10,14 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+import logging
 import os
 import errno
 import sys
 import subprocess
-import syslog
 import time
+
+log = logging.getLogger(__name__)
 
 class RsyncUpload(object):
     """Uploads a directory and all its descendants to a remote server.
@@ -98,8 +100,8 @@ class RsyncUpload(object):
             stroutput = stdout.decode("utf-8").strip()
         except OSError as e:
             if e.errno == errno.ENOENT:
-                syslog.syslog(syslog.LOG_ERR, "rsyncupload: rsync does not appear to be installed on "
-                                              "this system. (errno %d, '%s')" % (e.errno, e.strerror))
+                log.error("rsync does not appear to be installed on "
+                          "this system. (errno %d, '%s')" % (e.errno, e.strerror))
             raise
         
         # we have some output from rsync so generate an appropriate message
@@ -130,22 +132,23 @@ class RsyncUpload(object):
             # and display a message
             stroutput = stroutput.replace("\n", ". ")
             stroutput = stroutput.replace("\r", "")
-            syslog.syslog(syslog.LOG_ERR, "rsyncupload: [%s] reported errors: %s" % (cmd, stroutput))
+            log.error("[%s] reported errors: %s" % (cmd, stroutput))
             rsync_message = "rsync executed in %0.2f seconds"
         
         t2= time.time()
         if self.log_success:
-            syslog.syslog(syslog.LOG_INFO, "rsyncupload: "  + rsync_message % (t2-t1))
+            log.info(rsync_message % (t2-t1))
         
         
 if __name__ == '__main__':
-    
-    import weewx
     import configobj
-    
+
+    import weewx
+    import weeutil.logging
+
     weewx.debug = 1
-    syslog.openlog('rsyncupload', syslog.LOG_PID|syslog.LOG_CONS)
-    syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
+
+    weeutil.logging.setup('rsyncupload', {})
 
     if len(sys.argv) < 2 :
         print("""Usage: rsyncupload.py path-to-configuration-file [path-to-be-rsync'd]""")
@@ -160,7 +163,7 @@ if __name__ == '__main__':
     if len(sys.argv) == 2:
         try:
             rsync_dir = os.path.join(config_dict['WEEWX_ROOT'],
-                                   config_dict['StdReport']['HTML_ROOT'])
+                                     config_dict['StdReport']['HTML_ROOT'])
         except KeyError:
             print("No HTML_ROOT in configuration dictionary.")
             sys.exit(1)
