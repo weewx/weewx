@@ -7,10 +7,10 @@
 
 from __future__ import print_function
 from __future__ import absolute_import
+import logging
 import math
 import sys
 import datetime
-import syslog
 import time
 
 from six.moves import zip
@@ -21,8 +21,8 @@ import weewx.units
 import weeutil.weeutil
 import weedb
 from weeutil.weeutil import timestamp_to_string, isStartOfDay, to_int
-from weeutil.log import logdbg, logerr, loginf
 
+log = logging.getLogger(__name__)
 
 # ==============================================================================
 #                         class Manager
@@ -81,7 +81,7 @@ class Manager(object):
             # a schema?
             if schema is None:
                 # No. Nothing to be done.
-                logerr("Cannot get columns of table %s, and no schema specified" % self.table_name)
+                log.error("Cannot get columns of table %s, and no schema specified", self.table_name)
                 raise
             # Database exists, but has not been initialized. Initialize it.
             self._initialize_database(schema)
@@ -135,7 +135,7 @@ class Manager(object):
             # Database does not exist. Did the caller supply a schema?
             if schema is None:
                 # No. Nothing to be done.
-                logerr("Cannot open database, and no schema specified")
+                log.error("Cannot open database, and no schema specified")
                 raise
             # Yes. Create the database:
             weedb.create(database_dict)
@@ -183,12 +183,12 @@ class Manager(object):
             with weedb.Transaction(self.connection) as _cursor:
                 _cursor.execute("CREATE TABLE %s (%s);" % (self.table_name, _sqltypestr))
         except weedb.DatabaseError as e:
-            logerr("Unable to create table '%s' in database '%s': %s"
-                   % (self.table_name, self.database_name, e))
+            log.error("Unable to create table '%s' in database '%s': %s",
+                      self.table_name, self.database_name, e)
             raise
 
-        loginf("Created and initialized table '%s' in database '%s'"
-               % (self.table_name, self.database_name))
+        log.info("Created and initialized table '%s' in database '%s'",
+                 self.table_name, self.database_name)
 
     def _sync(self):
         """Resynch the internal caches."""
@@ -218,15 +218,13 @@ class Manager(object):
         _row = self.getSql("SELECT MIN(dateTime) FROM %s" % self.table_name)
         return _row[0] if _row else None
 
-    def addRecord(self, record_obj, log_level=syslog.LOG_NOTICE, accumulator=None):
+    def addRecord(self, record_obj, accumulator=None):
         """Commit a single record or a collection of records to the archive.
         
         record_obj: Either a data record, or an iterable that can return data
         records. Each data record must look like a dictionary, where the keys
         are the SQL types and the values are the values to be stored in the
         database.
-        
-        log_level: What syslog level to use for any logging. Default is syslog.LOG_NOTICE.
         """
 
         # Determine if record_obj is just a single dictionary instance
@@ -246,14 +244,14 @@ class Manager(object):
                         self._updateHiLo(accumulator, cursor)
 
                     # Then add the record to the archives:
-                    self._addSingleRecord(record, cursor, log_level)
+                    self._addSingleRecord(record, cursor)
 
                     min_ts = min(min_ts, record['dateTime']) if min_ts is not None else record['dateTime']
                     max_ts = max(max_ts, record['dateTime'])
                 except (weedb.IntegrityError, weedb.OperationalError) as e:
-                    logerr("Unable to add record %s to database '%s': %s" %
-                           (weeutil.weeutil.timestamp_to_string(record['dateTime']),
-                            self.database_name, e))
+                    log.error("Unable to add record %s to database '%s': %s",
+                              weeutil.weeutil.timestamp_to_string(record['dateTime']),
+                              self.database_name, e)
 
         # Update the cached timestamps. This has to sit outside the
         # transaction context, in case an exception occurs.
@@ -262,11 +260,11 @@ class Manager(object):
         if self.last_timestamp is not None:
             self.last_timestamp = max(max_ts, self.last_timestamp)
 
-    def _addSingleRecord(self, record, cursor, log_level):
+    def _addSingleRecord(self, record, cursor):
         """Internal function for adding a single record to the database."""
 
         if record['dateTime'] is None:
-            logerr("Archive record with null time encountered")
+            log.error("Archive record with null time encountered")
             raise weewx.ViolatedPrecondition("Manager record with null time encountered.")
 
         # Check to make sure the incoming record is in the same unit
@@ -293,9 +291,9 @@ class Manager(object):
         # Form the SQL insert statement:
         sql_insert_stmt = "INSERT INTO %s (%s) VALUES (%s)" % (self.table_name, k_str, q_str)
         cursor.execute(sql_insert_stmt, value_list)
-        syslog.syslog(log_level, "manager: Added record %s to database '%s'" %
-                      (weeutil.weeutil.timestamp_to_string(record['dateTime']),
-                       self.database_name))
+        log.info("Added record %s to database '%s'",
+                 weeutil.weeutil.timestamp_to_string(record['dateTime']),
+                 self.database_name)
 
     def _updateHiLo(self, accumulator, cursor):
         pass
@@ -1195,7 +1193,7 @@ class DaySummaryManager(Manager):
             # There is a schema. Create all the daily summary tables as one transaction:
             with weedb.Transaction(self.connection) as _cursor:
                 self._initialize_day_tables(schema, _cursor)
-            loginf("Created daily summary tables")
+            log.info("Created daily summary tables")
 
         # Get a list of all the observation types which have daily summaries
         all_tables = self.connection.tables()
@@ -1204,7 +1202,7 @@ class DaySummaryManager(Manager):
         meta_name = '%s_day__metadata' % self.table_name
         self.daykeys = [x[Nprefix:] for x in all_tables if (x.startswith(prefix) and x != meta_name)]
         self.version = self._read_metadata('Version')
-        logdbg('Daily summary version is %s' % self.version)
+        log.debug('Daily summary version is %s', self.version)
 
     def close(self):
         del self.version
@@ -1225,12 +1223,12 @@ class DaySummaryManager(Manager):
         # Put the version number in it:
         self._write_metadata('Version', DaySummaryManager.version, cursor)
 
-    def _addSingleRecord(self, record, cursor, log_level):
+    def _addSingleRecord(self, record, cursor):
         """Specialized version that updates the daily summaries, as well as the 
         main archive table."""
 
         # First let my superclass handle adding the record to the main archive table:
-        super(DaySummaryManager, self)._addSingleRecord(record, cursor, log_level=log_level)
+        super(DaySummaryManager, self)._addSingleRecord(record, cursor)
 
         # Get the start of day for the record:        
         _sod_ts = weeutil.weeutil.startOfArchiveDay(record['dateTime'])
@@ -1242,9 +1240,9 @@ class DaySummaryManager(Manager):
         _day_summary = self._get_day_summary(_sod_ts, cursor)
         _day_summary.addRecord(record, weight=_weight)
         self._set_day_summary(_day_summary, record['dateTime'], cursor)
-        syslog.syslog(log_level, "Added record %s to daily summary in '%s'" %
-                      (weeutil.weeutil.timestamp_to_string(record['dateTime']),
-                       self.database_name))
+        log.info("Added record %s to daily summary in '%s'",
+                 weeutil.weeutil.timestamp_to_string(record['dateTime']),
+                 self.database_name)
 
     def _updateHiLo(self, accumulator, cursor):
         """Use the contents of an accumulator to update the daily hi/lows."""
@@ -1430,7 +1428,7 @@ class DaySummaryManager(Manager):
         #   Y:          A stop  time that falls on a day boundary
         #
 
-        loginf("Starting backfill of daily summaries")
+        log.info("Starting backfill of daily summaries")
 
         firstRecord = self.firstGoodStamp()
         if firstRecord is None:
@@ -1521,9 +1519,9 @@ class DaySummaryManager(Manager):
 
         tdiff = time.time() - t1
         if nrecs:
-            loginf("Processed %d records to backfill %d day summaries in %.2f seconds" % (nrecs, ndays, tdiff))
+            log.info("Processed %d records to backfill %d day summaries in %.2f seconds", nrecs, ndays, tdiff)
         else:
-            loginf("Daily summaries up to date")
+            log.info("Daily summaries up to date")
 
         return nrecs, ndays
 
@@ -1587,8 +1585,7 @@ class DaySummaryManager(Manager):
             try:
                 cursor.execute(_sql_replace_str, _write_tuple)
             except weedb.OperationalError as e:
-                logerr("Replace failed for database %s: %s"
-                       % (self.database_name, e))
+                log.error("Replace failed for database %s: %s", self.database_name, e)
 
         # If requested, update the time of the last daily summary update:
         if lastUpdate is not None:
@@ -1630,7 +1627,7 @@ class DaySummaryManager(Manager):
     def drop_daily(self):
         """Drop the daily summaries."""
 
-        loginf("Dropping daily summary tables from '%s' ..." % self.connection.database_name)
+        log.info("Dropping daily summary tables from '%s' ...", self.connection.database_name)
         try:
             _all_tables = self.connection.tables()
             with weedb.Transaction(self.connection) as _cursor:
@@ -1640,27 +1637,14 @@ class DaySummaryManager(Manager):
 
             del self.daykeys
         except weedb.OperationalError as e:
-            logerr("Drop daily summary tables failed for database '%s': %s"
-                   % (self.connection.database_name, e))
+            log.error("Drop daily summary tables failed for database '%s': %s",
+                      self.connection.database_name, e)
             raise
         else:
-            loginf("Dropped daily summary tables from database '%s'"
-                   % (self.connection.database_name,))
+            log.info("Dropped daily summary tables from database '%s'", self.connection.database_name)
 
 
 if __name__ == '__main__':
-    import configobj
-
-    config_dict = configobj.ConfigObj('/home/weewx/weewx.conf', encoding='utf-8')
-    mgr = open_manager_with_config(config_dict, 'wx_binding', initialize=True)
-    start_d = datetime.date(2016, 10, 1)
-    stop_d = datetime.date(2016, 10, 8)
-    t1 = time.time()
-    #     nrecs, ndays = mgr.backfill_day_summary(start_d, stop_d)
-    nrecs, ndays = mgr.backfill_day_summary(None, None)
-    t2 = time.time()
-    print(nrecs, ndays, t2 - t1)
-
     import doctest
 
     if not doctest.testmod().failed:
