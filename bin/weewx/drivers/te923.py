@@ -439,16 +439,18 @@ from __future__ import with_statement
 from __future__ import absolute_import
 from __future__ import print_function
 
+import logging
 import time
 import usb
 
 import weewx.drivers
 import weewx.wxformulas
 from weeutil.weeutil import timestamp_to_string
-from weeutil.log import logdbg, loginf, logcrt, logerr
+
+log = logging.getLogger(__name__)
 
 DRIVER_NAME = 'TE923'
-DRIVER_VERSION = '0.30'
+DRIVER_VERSION = '0.40'
 
 def loader(config_dict, engine):  # @UnusedVariable
     return TE923Driver(**config_dict[DRIVER_NAME])
@@ -1105,7 +1107,7 @@ class TE923Driver(weewx.drivers.AbstractDevice):
         model: Which station model is this?
         [Optional. Default is 'TE923']
         """
-        loginf('driver version is %s' % DRIVER_VERSION)
+        log.info('driver version is %s' % DRIVER_VERSION)
 
         global DEBUG_READ
         DEBUG_READ = int(stn_dict.get('debug_read', DEBUG_READ))
@@ -1123,20 +1125,20 @@ class TE923Driver(weewx.drivers.AbstractDevice):
         self.retry_wait = int(stn_dict.get('retry_wait', 3))
         self.read_timeout = int(stn_dict.get('read_timeout', 10))
         self.polling_interval = int(stn_dict.get('polling_interval', 10))
-        loginf('polling interval is %s' % str(self.polling_interval))
+        log.info('polling interval is %s' % str(self.polling_interval))
         self.sensor_map = dict(DEFAULT_MAP)
         if 'sensor_map' in stn_dict:
             self.sensor_map.update(stn_dict['sensor_map'])
-        loginf('sensor map is %s' % self.sensor_map)
+        log.info('sensor map is %s' % self.sensor_map)
 
         self.station = TE923Station(max_tries=self.max_tries,
                                     retry_wait=self.retry_wait,
                                     read_timeout=self.read_timeout)
         self.station.open()
-        loginf('logger capacity %s records' % self.station.get_memory_size())
+        log.info('logger capacity %s records' % self.station.get_memory_size())
         ts = self.station.get_date()
         now = int(time.time())
-        loginf('station time is %s, computer time is %s' % (ts, now))
+        log.info('station time is %s, computer time is %s' % (ts, now))
 
     def closePort(self):
         if self.station is not None:
@@ -1179,7 +1181,7 @@ class TE923Driver(weewx.drivers.AbstractDevice):
 
     # there is no battery status for historical records.
     def genStartupRecords(self, since_ts=0):
-        loginf("reading records from logger since %s" % since_ts)
+        log.info("reading records from logger since %s" % since_ts)
         cnt = 0
         for data in self.station.gen_records(since_ts):
             packet = self.data_to_packet(data, status=None,
@@ -1192,11 +1194,11 @@ class TE923Driver(weewx.drivers.AbstractDevice):
                     cnt += 1
                     yield packet
                 else:
-                    loginf("skip packet with duplidate timestamp: %s" % packet)
+                    log.info("skip packet with duplidate timestamp: %s" % packet)
             self._last_ts = packet['dateTime']
             if cnt % 50 == 0:
-                loginf("read %s records from logger" % cnt)
-        loginf("read %s records from logger" % cnt)
+                log.info("read %s records from logger" % cnt)
+        log.info("read %s records from logger" % cnt)
 
     @staticmethod
     def data_to_packet(data, status, last_rain, sensor_map):
@@ -1314,7 +1316,7 @@ def decode_th(buf, i):
     offset = i * 3
 
     if DEBUG_DECODE:
-        logdbg("TH%d  BUF[%02d]=%02x BUF[%02d]=%02x BUF[%02d]=%02x" %
+        log.debug("TH%d  BUF[%02d]=%02x BUF[%02d]=%02x BUF[%02d]=%02x" %
                (i, 0 + offset, buf[0 + offset], 1 + offset, buf[1 + offset],
                 2 + offset, buf[2 + offset]))
     data = dict()
@@ -1322,7 +1324,7 @@ def decode_th(buf, i):
                                              i != 0)
     data[hlabel], data[hstate] = decode_humid(buf[2 + offset])
     if DEBUG_DECODE:
-        logdbg("TH%d  %s %s %s %s" % (i, data[tlabel], data[tstate],
+        log.debug("TH%d  %s %s %s %s" % (i, data[tlabel], data[tstate],
                                       data[hlabel], data[hstate]))
     return data
 
@@ -1356,7 +1358,7 @@ def decode_uv(buf):
     """decode data from uv sensor"""
     data = dict()
     if DEBUG_DECODE:
-        logdbg("UVX  BUF[18]=%02x BUF[19]=%02x" % (buf[18], buf[19]))
+        log.debug("UVX  BUF[18]=%02x BUF[19]=%02x" % (buf[18], buf[19]))
     if ((buf[18] == 0xaa and buf[19] == 0x0a) or
         (buf[18] == 0xff and buf[19] == 0xff)):
         data['uv_state'] = STATE_NO_LINK
@@ -1370,14 +1372,14 @@ def decode_uv(buf):
             + bcd2int((buf[18] & 0xf0) >> 4) \
             + bcd2int(buf[19] & 0x0f) * 10.0
     if DEBUG_DECODE:
-        logdbg("UVX  %s %s" % (data['uv'], data['uv_state']))
+        log.debug("UVX  %s %s" % (data['uv'], data['uv_state']))
     return data
 
 def decode_pressure(buf):
     """decode pressure data"""
     data = dict()
     if DEBUG_DECODE:
-        logdbg("PRS  BUF[20]=%02x BUF[21]=%02x" % (buf[20], buf[21]))
+        log.debug("PRS  BUF[20]=%02x BUF[21]=%02x" % (buf[20], buf[21]))
     if buf[21] & 0xf0 == 0xf0:
         data['slp_state'] = STATE_INVALID
         data['slp'] = None
@@ -1385,7 +1387,7 @@ def decode_pressure(buf):
         data['slp_state'] = STATE_OK
         data['slp'] = int(buf[21] * 0x100 + buf[20]) * 0.0625
     if DEBUG_DECODE:
-        logdbg("PRS  %s %s" % (data['slp'], data['slp_state']))
+        log.debug("PRS  %s %s" % (data['slp'], data['slp_state']))
     return data
 
 # NB: te923tool divides speed/gust by 2.23694 (1 meter/sec = 2.23694 mile/hour)
@@ -1395,23 +1397,23 @@ def decode_wind(buf):
     """decode wind speed, gust, and direction"""
     data = dict()
     if DEBUG_DECODE:
-        logdbg("WGS  BUF[25]=%02x BUF[26]=%02x" % (buf[25], buf[26]))
+        log.debug("WGS  BUF[25]=%02x BUF[26]=%02x" % (buf[25], buf[26]))
     data['windgust'], data['windgust_state'] = decode_ws(buf[25], buf[26])
     if DEBUG_DECODE:
-        logdbg("WGS  %s %s" % (data['windgust'], data['windgust_state']))
+        log.debug("WGS  %s %s" % (data['windgust'], data['windgust_state']))
 
     if DEBUG_DECODE:
-        logdbg("WSP  BUF[27]=%02x BUF[28]=%02x" % (buf[27], buf[28]))
+        log.debug("WSP  BUF[27]=%02x BUF[28]=%02x" % (buf[27], buf[28]))
     data['windspeed'], data['windspeed_state'] = decode_ws(buf[27], buf[28])
     if DEBUG_DECODE:
-        logdbg("WSP  %s %s" % (data['windspeed'], data['windspeed_state']))
+        log.debug("WSP  %s %s" % (data['windspeed'], data['windspeed_state']))
 
     if DEBUG_DECODE:
-        logdbg("WDR  BUF[29]=%02x" % buf[29])
+        log.debug("WDR  BUF[29]=%02x" % buf[29])
     data['winddir_state'] = data['windspeed_state']
     data['winddir'] = int(buf[29] & 0x0f)
     if DEBUG_DECODE:
-        logdbg("WDR  %s %s" % (data['winddir'], data['winddir_state']))
+        log.debug("WDR  %s %s" % (data['winddir'], data['winddir_state']))
     
     return data
 
@@ -1436,17 +1438,17 @@ def decode_rain(buf):
     """rain counter is number of bucket tips, each tip is about 0.03 inches"""
     data = dict()
     if DEBUG_DECODE:
-        logdbg("RAIN BUF[30]=%02x BUF[31]=%02x" % (buf[30], buf[31]))
+        log.debug("RAIN BUF[30]=%02x BUF[31]=%02x" % (buf[30], buf[31]))
     data['rain_state'] = STATE_OK
     data['rain'] = int(buf[31] * 0x100 + buf[30])
     if DEBUG_DECODE:
-        logdbg("RAIN %s %s" % (data['rain'], data['rain_state']))
+        log.debug("RAIN %s %s" % (data['rain'], data['rain_state']))
     return data
 
 def decode_windchill(buf):
     data = dict()
     if DEBUG_DECODE:
-        logdbg("WCL  BUF[23]=%02x BUF[24]=%02x" % (buf[23], buf[24]))
+        log.debug("WCL  BUF[23]=%02x BUF[24]=%02x" % (buf[23], buf[24]))
     if bcd2int(buf[23] & 0xf0) > 90 or bcd2int(buf[23] & 0x0f) > 9:
         if ((buf[23] == 0xee and buf[24] == 0x8e) or
             (buf[23] == 0xff and buf[24] == 0xff)):
@@ -1466,13 +1468,13 @@ def decode_windchill(buf):
         if buf[24] & 0x80 != 0x80:
             data['windchill'] *= -1
     if DEBUG_DECODE:
-        logdbg("WCL  %s %s" % (data['windchill'], data['windchill_state']))
+        log.debug("WCL  %s %s" % (data['windchill'], data['windchill_state']))
     return data
 
 def decode_forecast(buf):
     data = dict()
     if DEBUG_DECODE:
-        logdbg("STT  BUF[22]=%02x" % buf[22])
+        log.debug("STT  BUF[22]=%02x" % buf[22])
     if buf[22] & 0x0f == 0x0f:
         data['storm'] = None
         data['forecast'] = None
@@ -1480,7 +1482,7 @@ def decode_forecast(buf):
         data['storm'] = 1 if buf[22] & 0x08 == 0x08 else 0
         data['forecast'] = int(buf[22] & 0x07)
     if DEBUG_DECODE:
-        logdbg("STT  %s %s" % (data['storm'], data['forecast']))
+        log.debug("STT  %s %s" % (data['storm'], data['forecast']))
     return data
 
 
@@ -1526,7 +1528,7 @@ class TE923Station(object):
     def open(self, interface=0):
         dev = self._find_dev(self.vendor_id, self.product_id)
         if not dev:
-            logcrt("Cannot find USB device with VendorID=0x%04x ProductID=0x%04x" % (self.vendor_id, self.product_id))
+            log.critical("Cannot find USB device with VendorID=0x%04x ProductID=0x%04x" % (self.vendor_id, self.product_id))
             raise weewx.WeeWxIOError('Unable to find station on USB')
 
         self.devh = dev.open()
@@ -1545,7 +1547,7 @@ class TE923Station(object):
             self.devh.setAltInterface(interface)
         except usb.USBError as e:
             self.close()
-            logcrt("Unable to claim USB interface %s: %s" % (interface, e))
+            log.critical("Unable to claim USB interface %s: %s" % (interface, e))
             raise weewx.WeeWxIOError(e)
 
 # doing a reset seems to cause problems more often than it eliminates them
@@ -1558,7 +1560,7 @@ class TE923Station(object):
         try:
             self.devh.releaseInterface()
         except (ValueError, usb.USBError) as e:
-            logerr("release interface failed: %s" % e)
+            log.error("release interface failed: %s" % e)
         self.devh = None
 
     @staticmethod
@@ -1567,7 +1569,7 @@ class TE923Station(object):
         for bus in usb.busses():
             for dev in bus.devices:
                 if dev.idVendor == vendor_id and dev.idProduct == product_id:
-                    loginf('Found device on USB bus=%s device=%s' %
+                    log.info('Found device on USB bus=%s device=%s' %
                            (bus.dirname, dev.filename))
                     return dev
         return None
@@ -1609,7 +1611,7 @@ class TE923Station(object):
 # sleeping seems to have no effect on the reads
 #            time.sleep(0.009) # te923tool is 0.15
         else:
-            logdbg("timeout while reading: ignoring bytes: %s" % _fmt(rbuf))
+            log.debug("timeout while reading: ignoring bytes: %s" % _fmt(rbuf))
             raise BadRead("Timeout after %d bytes" % len(rbuf))
 
         # Send acknowledgement whether or not it was a good read
@@ -1641,7 +1643,7 @@ class TE923Station(object):
         # early versions of this driver used to get long reads, but these
         # might not happen any more. log it then try to use the data anyway.
         if len(rbuf) != 34:
-            loginf("read: wrong number of bytes: %d != 34" % len(rbuf))
+            log.info("read: wrong number of bytes: %d != 34" % len(rbuf))
 
         return rbuf
 
@@ -1667,7 +1669,7 @@ class TE923Station(object):
                           wbuf[3 + i * 7], wbuf[4 + i * 7], wbuf[5 + i * 7],
                           wbuf[6 + i * 7]]
             if DEBUG_WRITE:
-                logdbg("write: %s" % _fmt(reqbuf))
+                log.debug("write: %s" % _fmt(reqbuf))
             ret = self.devh.controlMsg(requestType=0x21,
                                        request=usb.REQ_SET_CONFIGURATION,
                                        value=0x0200,
@@ -1701,7 +1703,7 @@ class TE923Station(object):
             raise BadWrite("Timeout after %d bytes" % len(rbuf))
 
         if len(rbuf) != 1:
-            loginf("write: ack got wrong number of bytes: %d != 1" % len(rbuf))
+            log.info("write: ack got wrong number of bytes: %d != 1" % len(rbuf))
         if len(rbuf) == 0:
             raise BadWrite("Bad ack: zero length response")
         elif rbuf[0] != 0x5a:
@@ -1714,17 +1716,17 @@ class TE923Station(object):
         #        32 bytes of data.  this will require shifting every index
         #        pretty much everywhere else in this code.
         if DEBUG_READ:
-            logdbg("read: address 0x%06x" % addr)
+            log.debug("read: address 0x%06x" % addr)
         for cnt in range(self.max_tries):
             try:
                 buf = self._raw_read(addr)
                 if DEBUG_READ:
-                    logdbg("read: %s" % _fmt(buf))
+                    log.debug("read: %s" % _fmt(buf))
                 return buf
             except (BadRead, BadHeader, usb.USBError) as e:
-                logerr("Failed attempt %d of %d to read data: %s" %
+                log.error("Failed attempt %d of %d to read data: %s" %
                        (cnt + 1, self.max_tries, e))
-                logdbg("Waiting %d seconds before retry" % self.retry_wait)
+                log.debug("Waiting %d seconds before retry" % self.retry_wait)
                 time.sleep(self.retry_wait)
         else:
             raise weewx.RetriesExceeded("Read failed after %d tries" %
@@ -1732,15 +1734,15 @@ class TE923Station(object):
 
     def _write(self, addr, buf):
         if DEBUG_WRITE:
-            logdbg("write: address 0x%06x: %s" % (addr, _fmt(buf)))
+            log.debug("write: address 0x%06x: %s" % (addr, _fmt(buf)))
         for cnt in range(self.max_tries):
             try:
                 self._raw_write(addr, buf)
                 return
             except (BadWrite, BadHeader, usb.USBError) as e:
-                logerr("Failed attempt %d of %d to write data: %s" %
+                log.error("Failed attempt %d of %d to write data: %s" %
                        (cnt + 1, self.max_tries, e))
-                logdbg("Waiting %d seconds before retry" % self.retry_wait)
+                log.debug("Waiting %d seconds before retry" % self.retry_wait)
                 time.sleep(self.retry_wait)
         else:
             raise weewx.RetriesExceeded("Write failed after %d tries" %
@@ -1749,18 +1751,18 @@ class TE923Station(object):
     def read_memory_size(self):
         buf = self._read(0xfc)
         if DEBUG_DECODE:
-            logdbg("MEM  BUF[1]=%s" % buf[1])
+            log.debug("MEM  BUF[1]=%s" % buf[1])
         if buf[1] == 0:
             self._num_rec = 208
             self._num_blk = 256
-            logdbg("detected small memory size")
+            log.debug("detected small memory size")
         elif buf[1] == 2:
             self._num_rec = 3442
             self._num_blk = 4096
-            logdbg("detected large memory size")
+            log.debug("detected large memory size")
         else:
             msg = "Unrecognised memory size '%s'" % buf[1]
-            logerr(msg)
+            log.error(msg)
             raise weewx.WeeWxIOError(msg)
 
     def get_memory_size(self):
@@ -1778,7 +1780,7 @@ class TE923Station(object):
         for i in range(8):
             buf = self._read(i * 32)
             for j in range(4):
-                loginf("%02x : %02x %02x %02x %02x %02x %02x %02x %02x" %
+                log.info("%02x : %02x %02x %02x %02x %02x %02x %02x %02x" %
                        (i * 32 + j * 8, buf[1 + j * 8], buf[2 + j * 8],
                         buf[3 + j * 8], buf[4 + j * 8], buf[5 + j * 8],
                         buf[6 + j * 8], buf[7 + j * 8], buf[8 + j * 8]))
@@ -1795,7 +1797,7 @@ class TE923Station(object):
         data = dict()
         buf = self._read(0x98)
         if DEBUG_DECODE:
-            logdbg("VER  BUF[1]=%s BUF[2]=%s BUF[3]=%s BUF[4]=%s BUF[5]=%s" %
+            log.debug("VER  BUF[1]=%s BUF[2]=%s BUF[3]=%s BUF[4]=%s BUF[5]=%s" %
                    (buf[1], buf[2], buf[3], buf[4], buf[5]))
         data['version_bar']  = buf[1]
         data['version_uv']   = buf[2]
@@ -1803,7 +1805,7 @@ class TE923Station(object):
         data['version_wind'] = buf[4]
         data['version_sys']  = buf[5]
         if DEBUG_DECODE:
-            logdbg("VER  bar=%s uv=%s rcc=%s wind=%s sys=%s" %
+            log.debug("VER  bar=%s uv=%s rcc=%s wind=%s sys=%s" %
                    (data['version_bar'], data['version_uv'],
                     data['version_rcc'], data['version_wind'],
                     data['version_sys']))
@@ -1816,7 +1818,7 @@ class TE923Station(object):
         status = dict()
         buf = self._read(0x4c)
         if DEBUG_DECODE:
-            logdbg("BAT  BUF[1]=%02x" % buf[1])
+            log.debug("BAT  BUF[1]=%02x" % buf[1])
         status['bat_rain'] = 0 if buf[1] & 0x80 == 0x80 else 1
         status['bat_wind'] = 0 if buf[1] & 0x40 == 0x40 else 1
         status['bat_uv']   = 0 if buf[1] & 0x20 == 0x20 else 1
@@ -1826,7 +1828,7 @@ class TE923Station(object):
         status['bat_2']    = 0 if buf[1] & 0x02 == 0x02 else 1
         status['bat_1']    = 0 if buf[1] & 0x01 == 0x01 else 1
         if DEBUG_DECODE:
-            logdbg("BAT  rain=%s wind=%s uv=%s th5=%s th4=%s th3=%s th2=%s th1=%s" %
+            log.debug("BAT  rain=%s wind=%s uv=%s th5=%s th4=%s th3=%s th2=%s th1=%s" %
                    (status['bat_rain'], status['bat_wind'], status['bat_uv'],
                     status['bat_5'], status['bat_4'], status['bat_3'],
                     status['bat_2'], status['bat_1']))
@@ -1836,20 +1838,20 @@ class TE923Station(object):
     def get_altitude(self):
         buf = self._read(0x5a)
         if DEBUG_DECODE:
-            logdbg("ALT  BUF[1]=%02x BUF[2]=%02x BUF[3]=%02x" %
+            log.debug("ALT  BUF[1]=%02x BUF[2]=%02x BUF[3]=%02x" %
                    (buf[1], buf[2], buf[3]))
         altitude = buf[2] * 0x100 + buf[1]
         if buf[3] & 0x8 == 0x8:
             altitude *= -1
         if DEBUG_DECODE:
-            logdbg("ALT  %s" % altitude)
+            log.debug("ALT  %s" % altitude)
         return altitude
 
     # FIXME: is this any different than get_loc?
     def get_location(self):
         buf = self._read(0x06)
         if DEBUG_DECODE:
-            logdbg("LOC  BUF[1]=%02x BUF[2]=%02x BUF[3]=%02x BUF[4]=%02x BUF[5]=%02x BUF[6]=%02x" % (buf[1], buf[2], buf[3], buf[4], buf[5], buf[6]))
+            log.debug("LOC  BUF[1]=%02x BUF[2]=%02x BUF[3]=%02x BUF[4]=%02x BUF[5]=%02x BUF[6]=%02x" % (buf[1], buf[2], buf[3], buf[4], buf[5], buf[6]))
         latitude = float(rev_bcd2int(buf[1])) + (float(rev_bcd2int(buf[2])) / 60)
         if buf[5] & 0x80 == 0x80:
             latitude *= -1
@@ -1857,7 +1859,7 @@ class TE923Station(object):
         if buf[5] & 0x40 == 0x00:
             longitude *= -1
         if DEBUG_DECODE:
-            logdbg("LOC  %s %s" % (latitude, longitude))
+            log.debug("LOC  %s %s" % (latitude, longitude))
         return latitude, longitude
 
     def get_readings(self):
@@ -1871,13 +1873,13 @@ class TE923Station(object):
         """get the index of the next history record"""
         buf = self._read(0xfb)
         if DEBUG_DECODE:
-            logdbg("HIS  BUF[3]=%02x BUF[5]=%02x" % (buf[3], buf[5]))
+            log.debug("HIS  BUF[3]=%02x BUF[5]=%02x" % (buf[3], buf[5]))
         record_index = buf[3] * 0x100 + buf[5]
-        logdbg("record_index=%s" % record_index)
+        log.debug("record_index=%s" % record_index)
         if record_index > self._num_rec:
             msg = "record index of %d exceeds memory size of %d records" % (
                 record_index, self._num_rec)
-            logerr(msg)
+            log.error(msg)
             raise weewx.WeeWxIOError(msg)
         return record_index
 
@@ -1888,15 +1890,15 @@ class TE923Station(object):
             count = self._num_rec
         elif count > self._num_rec:
             count = self._num_rec
-            loginf("too many records requested (%d), using %d instead" %
+            log.info("too many records requested (%d), using %d instead" %
                    (requested, count))
         idx = self._get_next_index()
         if idx < 1:
             idx += self._num_rec
         latest_addr = self.START_ADDRESS + (idx - 1) * self.RECORD_SIZE
         oldest_addr = latest_addr - (count - 1) * self.RECORD_SIZE
-        logdbg("count=%s oldest_addr=0x%06x latest_addr=0x%06x" %
-               (count, oldest_addr, latest_addr))
+        log.debug("count=%s oldest_addr=0x%06x latest_addr=0x%06x" %
+                  (count, oldest_addr, latest_addr))
         return oldest_addr, count
 
     def gen_records(self, since_ts=0, requested=None):
@@ -1914,7 +1916,7 @@ class TE923Station(object):
         On large memory stations, the last 20 bytes of memory are never used.
         """
 
-        logdbg("gen_records: since_ts=%s requested=%s" % (since_ts, requested))
+        log.debug("gen_records: since_ts=%s requested=%s" % (since_ts, requested))
         # we need the current year and month since station does not track year
         start_ts = time.time()
         tt = time.localtime(start_ts)
@@ -1942,13 +1944,13 @@ class TE923Station(object):
                 msg = "record %d of %d addr=0x%06x" % (n, count, addr)
                 if record and record['dateTime'] > since_ts:
                     msg += " %s" % timestamp_to_string(record['dateTime'])
-                    logdbg("gen_records: yield %s" % msg)
+                    log.debug("gen_records: yield %s" % msg)
                     yield record
                 else:
                     if record:
                         msg += " since_ts=%d %s" % (
                             since_ts, timestamp_to_string(record['dateTime']))
-                    logdbg("gen_records: skip %s" % msg)
+                    log.debug("gen_records: skip %s" % msg)
                 # insert a sleep to simulate slow reads
 #                time.sleep(5)
 
@@ -1958,7 +1960,7 @@ class TE923Station(object):
             if now - start_ts > arcint:
                 newreq = int((now - start_ts) / arcint)
                 newreq += 1 # safety margin
-                logdbg("gen_records: reading %d more records" % newreq)
+                log.debug("gen_records: reading %d more records" % newreq)
                 oldest_addr, count = self._get_starting_addr(newreq)
                 start_ts = now
             else:
@@ -1967,14 +1969,14 @@ class TE923Station(object):
     def get_record(self, addr, now_year, now_month):
         """Return a single record from station."""
 
-        logdbg("get_record at address 0x%06x (year=%s month=%s)" %
+        log.debug("get_record at address 0x%06x (year=%s month=%s)" %
                (addr, now_year, now_month))
         buf = self._read(addr)
         if DEBUG_DECODE:
-            logdbg("REC  %02x %02x %02x %02x" %
+            log.debug("REC  %02x %02x %02x %02x" %
                    (buf[1], buf[2], buf[3], buf[4]))
         if buf[1] == 0xff:
-            logdbg("get_record: no data at address 0x%06x" % addr)
+            log.debug("get_record: no data at address 0x%06x" % addr)
             return None
         
         year = now_year
@@ -1986,7 +1988,7 @@ class TE923Station(object):
         minute = bcd2int(buf[4])
         ts = time.mktime((year, month, day, hour, minute, 0, 0, 0, -1))
         if DEBUG_DECODE:
-            logdbg("REC  %d/%02d/%02d %02d:%02d = %d" %
+            log.debug("REC  %d/%02d/%02d %02d:%02d = %d" %
                    (year, month, day, hour, minute, ts))
 
         tmpbuf = buf[5:16]
@@ -1995,7 +1997,7 @@ class TE923Station(object):
         
         data = decode(tmpbuf)
         data['dateTime'] = int(ts)
-        logdbg("get_record: found record %s" % data)
+        log.debug("get_record: found record %s" % data)
         return data
 
     def _read_minmax(self):
@@ -2254,7 +2256,7 @@ class TE923Station(object):
         interval = self.idx_to_interval_sec.get(idx)
         if interval is None:
             msg = "Unrecognized archive interval '%s'" % idx
-            logerr(msg)
+            log.error(msg)
             raise weewx.WeeWxIOError(msg)
         return interval
 
@@ -2298,8 +2300,10 @@ class TE923Station(object):
 # Tue Nov 26 10:47:45 EST 2013
 
 if __name__ == '__main__':
-    import syslog
     import optparse
+
+    import weewx
+    import weeutil.logging
 
     FMT_TE923TOOL = 'te923tool'
     FMT_DICT = 'dict'
@@ -2308,7 +2312,6 @@ if __name__ == '__main__':
     usage = """%prog [options] [--debug] [--help]"""
 
     def main():
-        syslog.openlog('wee_te923', syslog.LOG_PID | syslog.LOG_CONS)
         parser = optparse.OptionParser(usage=usage)
         parser.add_option('--version', dest='version', action='store_true',
                           help='display driver version')
@@ -2331,10 +2334,10 @@ if __name__ == '__main__':
             print("te923 driver version %s" % DRIVER_VERSION)
             exit(1)
 
-        if options.debug is not None:
-            syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
-        else:
-            syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_INFO))
+        if options.debug:
+            weewx.debug = 1
+
+        weeutil.logging.setup('te923', {})
 
         if (options.format.lower() != FMT_TE923TOOL and
             options.format.lower() != FMT_TABLE and

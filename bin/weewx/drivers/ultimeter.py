@@ -53,6 +53,7 @@ from __future__ import with_statement
 from __future__ import absolute_import
 from __future__ import print_function
 
+import logging
 import serial
 import time
 
@@ -60,10 +61,11 @@ import weewx.drivers
 import weewx.wxformulas
 from weewx.units import INHG_PER_MBAR, MILE_PER_KM
 from weeutil.weeutil import timestamp_to_string
-from weeutil.log import logdbg, loginf, logerr
+
+log = logging.getLogger(__name__)
 
 DRIVER_NAME = 'Ultimeter'
-DRIVER_VERSION = '0.20'
+DRIVER_VERSION = '0.30'
 
 
 def loader(config_dict, _):
@@ -97,8 +99,8 @@ class UltimeterDriver(weewx.drivers.AbstractDevice):
         debug_serial = int(stn_dict.get('debug_serial', 0))
         self.last_rain = None
 
-        loginf('driver version is %s' % DRIVER_VERSION)
-        loginf('using serial port %s' % self.port)
+        log.info('driver version is %s' % DRIVER_VERSION)
+        log.info('using serial port %s' % self.port)
         self.station = Station(self.port, debug_serial=debug_serial)
         self.station.open()
 
@@ -159,13 +161,13 @@ class Station(object):
         self.close()
 
     def open(self):
-        logdbg("open serial port %s" % self.port)
+        log.debug("open serial port %s" % self.port)
         self.serial_port = serial.Serial(self.port, self.baudrate,
                                          timeout=self.timeout)
 
     def close(self):
         if self.serial_port is not None:
-            logdbg("close serial port %s" % self.port)
+            log.debug("close serial port %s" % self.port)
             self.serial_port.close()
             self.serial_port = None
 
@@ -180,11 +182,11 @@ class Station(object):
             y = tt.tm_year
             s = tt.tm_sec
             ts = time.mktime((y, 1, 1, 0, 0, s, 0, 0, -1)) + d * 86400 + m * 60
-            logdbg("station time: day:%s min:%s (%s)" %
-                   (d, m, timestamp_to_string(ts)))
+            log.debug("station time: day:%s min:%s (%s)" %
+                      (d, m, timestamp_to_string(ts)))
             return ts
         except (serial.serialutil.SerialException, weewx.WeeWxIOError) as e:
-            logerr("get_time failed: %s" % e)
+            log.error("get_time failed: %s" % e)
         return int(time.time())
 
     def set_time(self, ts):
@@ -195,32 +197,32 @@ class Station(object):
         tt = time.localtime(ts)
         cmd = ">A%04d%04d" % (
             tt.tm_yday - 1, tt.tm_min + tt.tm_hour * 60)
-        logdbg("set station time to %s (%s)" % (timestamp_to_string(ts), cmd))
+        log.debug("set station time to %s (%s)" % (timestamp_to_string(ts), cmd))
         self.serial_port.write("%s\r" % cmd)
 
         # year works only for models 2004 and later
         if self.can_set_year:
             cmd = ">U%s" % tt.tm_year
-            logdbg("set station year to %s (%s)" % (tt.tm_year, cmd))
+            log.debug("set station year to %s (%s)" % (tt.tm_year, cmd))
             self.serial_port.write("%s\r" % cmd)
 
     def set_logger_mode(self):
         # in logger mode, station sends logger mode records continuously
         if self._debug_serial:
-            logdbg("set station to logger mode")
+            log.debug("set station to logger mode")
         self.serial_port.write(">I\r")
 
     def set_modem_mode(self):
         # setting to modem mode should stop data logger output
         if self.has_modem_mode:
             if self._debug_serial:
-                logdbg("set station to modem mode")
+                log.debug("set station to modem mode")
             self.serial_port.write(">\r")
 
     def get_readings(self):
         buf = self.serial_port.readline()
         if self._debug_serial:
-            logdbg("station said: %s" % _fmt(buf))
+            log.debug("station said: %s" % _fmt(buf))
         buf = buf.strip() # FIXME: is this necessary?
         return buf
 
@@ -239,12 +241,12 @@ class Station(object):
                 self.validate_string(buf)
                 return buf
             except (serial.serialutil.SerialException, weewx.WeeWxIOError) as e:
-                loginf("Failed attempt %d of %d to get readings: %s" %
-                       (ntries + 1, max_tries, e))
+                log.info("Failed attempt %d of %d to get readings: %s" %
+                         (ntries + 1, max_tries, e))
                 time.sleep(retry_wait)
         else:
             msg = "Max retries (%d) exceeded for readings" % max_tries
-            logerr(msg)
+            log.error(msg)
             raise weewx.RetriesExceeded(msg)
 
     @staticmethod
@@ -315,7 +317,7 @@ class Station(object):
                 v *= multiplier
         except ValueError as e:
             if s != '----':
-                logdbg("decode failed for '%s': %s" % (s, e))
+                log.debug("decode failed for '%s': %s" % (s, e))
         return v
 
 
@@ -349,13 +351,13 @@ class UltimeterConfEditor(weewx.drivers.AbstractConfEditor):
 # PYTHONPATH=bin python bin/weewx/drivers/ultimeter.py
 
 if __name__ == '__main__':
-    import syslog
     import optparse
+
+    import weewx
+    import weeutil.logging
 
     usage = """%prog [options] [--help]"""
 
-    syslog.openlog('ultimeter', syslog.LOG_PID | syslog.LOG_CONS)
-    syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
     parser = optparse.OptionParser(usage=usage)
     parser.add_option('--version', dest='version', action='store_true',
                       help='display driver version')
@@ -369,6 +371,11 @@ if __name__ == '__main__':
     if options.version:
         print("ultimeter driver version %s" % DRIVER_VERSION)
         exit(0)
+        
+    if options.debug:
+        weewx.debug = 1
+
+    weeutil.logging.setup('ultimeter', {})
 
     with Station(options.port, debug_serial=options.debug) as station:
         station.set_logger_mode()
