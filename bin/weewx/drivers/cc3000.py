@@ -1044,7 +1044,7 @@ if __name__ == '__main__':
     import optparse
 
     import weewx
-    import weeutil.logging
+    import weeutil.logger
 
     usage = """%prog [options] [--help]"""
 
@@ -1111,7 +1111,7 @@ if __name__ == '__main__':
         DEBUG_OPENCLOSE = 1
         weewx.debug = 1
 
-    weeutil.logging.setup('cc3000', {})
+    weeutil.logger.setup('cc3000', {})
 
     if options.testcrc:
         _check_crc('OK')

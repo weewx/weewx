@@ -2303,7 +2303,7 @@ if __name__ == '__main__':
     import optparse
 
     import weewx
-    import weeutil.logging
+    import weeutil.logger
 
     FMT_TE923TOOL = 'te923tool'
     FMT_DICT = 'dict'
@@ -2337,7 +2337,7 @@ if __name__ == '__main__':
         if options.debug:
             weewx.debug = 1
 
-        weeutil.logging.setup('te923', {})
+        weeutil.logger.setup('te923', {})
 
         if (options.format.lower() != FMT_TE923TOOL and
             options.format.lower() != FMT_TABLE and

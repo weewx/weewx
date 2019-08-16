@@ -265,11 +265,11 @@ if __name__ == '__main__':
     import configobj
 
     import weewx
-    import weeutil.logging
+    import weeutil.logger
 
     weewx.debug = 1
 
-    weeutil.logging.setup('ftpupload', {})
+    weeutil.logger.setup('ftpupload', {})
 
     if len(sys.argv) < 2:
         print("""Usage: ftpupload.py path-to-configuration-file [path-to-be-ftp'd]""")

@@ -27,7 +27,7 @@ import configobj
 import weeutil.weeutil
 import weewx.defaults
 import weewx.manager
-from weeutil.config import search_up
+import weeutil.config
 from weeutil.weeutil import to_bool
 
 log = logging.getLogger(__name__)
@@ -238,7 +238,7 @@ class StdReportEngine(threading.Thread):
             merge_dict = configobj.ConfigObj(skin_config_path, file_error=True, encoding='utf-8')
             log.debug("reportengine: Found configuration file %s for report '%s'", skin_config_path, report)
             # Merge the skin config file in:
-            weeutil.weeutil.merge_config(skin_dict, merge_dict)
+            weeutil.config.merge_config(skin_dict, merge_dict)
         except IOError as e:
             log.debug("reportengine: Cannot read skin configuration file %s for report '%s': %s",
                       skin_config_path, report, e)
@@ -303,7 +303,7 @@ class FtpGenerator(ReportGenerator):
         import weeutil.ftpupload
 
         # determine how much logging is desired
-        log_success = to_bool(search_up(self.skin_dict, 'log_success', True))
+        log_success = to_bool(weeutil.config.search_up(self.skin_dict, 'log_success', True))
 
         t1 = time.time()
         try:
@@ -363,7 +363,7 @@ class RsyncGenerator(ReportGenerator):
                 ssh_options=self.skin_dict.get('ssh_options'),
                 compress=to_bool(self.skin_dict.get('compress', False)),
                 delete=to_bool(self.skin_dict.get('delete', False)),
-                log_success=to_bool(search_up(self.skin_dict, 'log_success', True)))
+                log_success=to_bool(weeutil.config.search_up(self.skin_dict, 'log_success', True)))
         except KeyError:
             log.debug("rsyncgenerator: rsync upload not requested. Skipped.")
             return
@@ -387,7 +387,7 @@ class CopyGenerator(ReportGenerator):
     def run(self):
         copy_dict = self.skin_dict['CopyGenerator']
         # determine how much logging is desired
-        log_success = to_bool(search_up(copy_dict, 'log_success', True))
+        log_success = to_bool(weeutil.config.search_up(copy_dict, 'log_success', True))
 
         copy_list = []
 

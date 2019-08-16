@@ -99,13 +99,13 @@ from six.moves import queue
 from six.moves import urllib
 
 import weedb
-import weeutil.logging
+import weeutil.logger
 import weeutil.weeutil
 import weewx.engine
 import weewx.manager
 import weewx.units
-from weeutil.weeutil import to_int, to_float, to_bool, timestamp_to_string, search_up, \
-    accumulateLeaves, to_sorted_string
+from weeutil.config import search_up, accumulateLeaves
+from weeutil.weeutil import to_int, to_float, to_bool, timestamp_to_string, to_sorted_string
 
 log = logging.getLogger(__name__)
 
@@ -404,7 +404,7 @@ class RESTThread(threading.Thread):
                 # Some unknown exception occurred. This is probably a serious
                 # problem. Exit.
                 log.error("%s: Unexpected exception of type %s", self.protocol_name, type(e))
-                weeutil.logging.log_traceback(log.error, '*** ')
+                weeutil.logger.log_traceback(log.error, '*** ')
                 log.critical("%s: Thread terminating. Reason: %s", self.protocol_name, e)
                 raise
             else:

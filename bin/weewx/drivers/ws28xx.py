@@ -933,7 +933,7 @@ import time
 import usb
 from datetime import datetime
 
-import weeutil.logging
+import weeutil.logger
 import weeutil.weeutil
 import weewx.drivers
 import weewx.wxformulas
@@ -4098,7 +4098,7 @@ class CCommunicationService(object):
                 self.doRFCommunication()
         except Exception as e:
             log.error('exception in doRF: %s' % e)
-            weeutil.logging.log_traceback(log.error)
+            weeutil.logger.log_traceback(log.error)
             self.running = False
 #            raise
         finally:

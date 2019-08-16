@@ -20,6 +20,7 @@ import configobj
 from six.moves import StringIO
 
 import weecfg.extension
+import weeutil.config
 import weeutil.weeutil
 
 try:
@@ -156,7 +157,7 @@ class ConfigTest(LineTest):
         yio = StringIO(y_str)
         x_dict = configobj.ConfigObj(xio, encoding='utf-8')
         y_dict = configobj.ConfigObj(yio, encoding='utf-8')
-        weeutil.weeutil.conditional_merge(x_dict, y_dict)
+        weeutil.config.conditional_merge(x_dict, y_dict)
         self.assertEqual(str(x_dict), "{'section_a': {'a': '1'}, 'section_b': {'b': '2'}, 'section_c': {'c': '3'}, "
                                       "'section_d': {'d': '4'}, 'section_e': {'c': '15'}}")
 

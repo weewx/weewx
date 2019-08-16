@@ -13,7 +13,7 @@ import weedb
 import weewx.units
 import weewx.engine
 import weewx.wxformulas
-import weeutil.logging
+import weeutil.logger
 import weeutil.weeutil
 
 from weewx.units import CtoF, mps_to_mph, kph_to_mph, METER_PER_FOOT
@@ -374,7 +374,7 @@ class WXCalculate(object):
             data['ET'] = ET_rate * interval / 3600.0 if ET_rate is not None else None
         except ValueError as e:
             log.error("Calculation of evapotranspiration failed: %s", e)
-            weeutil.logging.log_traceback(log.error)
+            weeutil.logger.log_traceback(log.error)
         except weedb.DatabaseError:
             pass
 

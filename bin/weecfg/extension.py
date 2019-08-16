@@ -22,6 +22,7 @@ import sys
 import weecfg
 from weecfg import Logger
 from weewx import all_service_groups
+import weeutil.config
 import weeutil.weeutil
 
 
@@ -277,7 +278,7 @@ class ExtensionEngine(object):
 
         if not self.dry_run:
             # Inject any new config data into the configuration file
-            weeutil.weeutil.conditional_merge(self.config_dict, cfg)
+            weeutil.config.conditional_merge(self.config_dict, cfg)
 
             # Include the major comment block for any new top level sections
             for new_section in new_top_level:

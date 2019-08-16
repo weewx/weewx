@@ -2750,11 +2750,11 @@ if __name__ == '__main__':
     import optparse
 
     import weewx
-    import weeutil.logging
+    import weeutil.logger
 
     weewx.debug = 1
 
-    weeutil.logging.setup('vantage', {})
+    weeutil.logger.setup('vantage', {})
 
     usage = """Usage: python -m weewx.drivers.vantage --help
        python -m weewx.drivers.vantage --version

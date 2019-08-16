@@ -68,14 +68,14 @@ import Cheetah.Template
 import six
 
 import weedb
-import weeutil.logging
+import weeutil.logger
 import weeutil.weeutil
 import weewx.almanac
 import weewx.reportengine
 import weewx.station
 import weewx.tags
 import weewx.units
-from weeutil.config import search_up
+from weeutil.config import search_up, accumulateLeaves
 from weeutil.weeutil import to_bool, to_int, timestamp_to_string
 
 log = logging.getLogger(__name__)
@@ -234,7 +234,7 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
                               self.skin_dict['SKIN_ROOT'],
                               self.skin_dict.get('skin', '')))
 
-        report_dict = weeutil.weeutil.accumulateLeaves(section)
+        report_dict = accumulateLeaves(section)
 
         (template, dest_dir, encoding, default_binding) = self._prepGen(report_dict)
 
@@ -354,7 +354,7 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
                 log.error("Generate failed with exception '%s'", type(e))
                 log.error("**** Ignoring template %s", template)
                 log.error("**** Reason: %s", e)
-                weeutil.logging.log_traceback(log.error, "****  ")
+                weeutil.logger.log_traceback(log.error, "****  ")
             else:
                 ngen += 1
             finally:

@@ -121,3 +121,7 @@ def log_traceback(log_fn, prefix=''):
     sfd.seek(0)
     for line in sfd:
         log_fn("%s%s", prefix, line)
+
+setup('test', {})
+log = logging.getLogger(__name__)
+log.info('hello')

@@ -18,6 +18,7 @@ from six.moves import zip
 import weewx.accum
 from weewx.units import ValueTuple
 import weewx.units
+import weeutil.config
 import weeutil.weeutil
 import weedb
 from weeutil.weeutil import timestamp_to_string, isStartOfDay, to_int
@@ -961,7 +962,7 @@ def get_database_dict_from_config(config_dict, database):
         # Augment any missing information in the database dictionary with
         # the top-level stanza
         if database_type in config_dict['DatabaseTypes']:
-            weeutil.weeutil.conditional_merge(database_dict, config_dict['DatabaseTypes'][database_type])
+            weeutil.config.conditional_merge(database_dict, config_dict['DatabaseTypes'][database_type])
         else:
             raise weewx.UnknownDatabaseType('database_type')
 
@@ -991,7 +992,7 @@ def get_manager_dict_from_config(config_dict, data_binding,
         raise weewx.UnknownBinding("Unknown data binding '%s'" % e)
 
     # If anything is missing, substitute from the default dictionary:
-    weeutil.weeutil.conditional_merge(manager_dict, default_binding_dict)
+    weeutil.config.conditional_merge(manager_dict, default_binding_dict)
 
     # Now get the database dictionary if it's missing:
     if 'database_dict' not in manager_dict:

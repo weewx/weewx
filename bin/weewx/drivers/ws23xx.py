@@ -2076,7 +2076,7 @@ if __name__ == '__main__':
     import optparse
 
     import weewx
-    import weeutil.logging
+    import weeutil.logger
 
     usage = """%prog [options] [--debug] [--help]"""
 
@@ -2106,7 +2106,7 @@ if __name__ == '__main__':
     if options.debug:
         weewx.debug = 1
 
-    weeutil.logging.setup('ws23xx', {})
+    weeutil.logger.setup('ws23xx', {})
 
     if options.port:
         port = options.port

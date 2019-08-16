@@ -1946,11 +1946,11 @@ if __name__ == '__main__':
 
     from weeutil.weeutil import to_sorted_string
     import weewx
-    import weeutil.logging
+    import weeutil.logger
 
     weewx.debug = 1
 
-    weeutil.logging.setup('wmr300', {})
+    weeutil.logger.setup('wmr300', {})
 
     usage = """%prog [options] [--help]"""
 

@@ -354,7 +354,7 @@ if __name__ == '__main__':
     import optparse
 
     import weewx
-    import weeutil.logging
+    import weeutil.logger
 
     usage = """%prog [options] [--help]"""
 
@@ -375,7 +375,7 @@ if __name__ == '__main__':
     if options.debug:
         weewx.debug = 1
 
-    weeutil.logging.setup('ultimeter', {})
+    weeutil.logger.setup('ultimeter', {})
 
     with Station(options.port, debug_serial=options.debug) as station:
         station.set_logger_mode()

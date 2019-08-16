@@ -724,11 +724,11 @@ if __name__ == '__main__':
     import optparse
 
     import weewx
-    import weeutil.logging
+    import weeutil.logger
 
     weewx.debug = 2
 
-    weeutil.logging.setup('wmr9x8', {})
+    weeutil.logger.setup('wmr9x8', {})
 
     usage = """Usage: %prog --help
        %prog --version

@@ -479,11 +479,11 @@ if __name__ == '__main__':
     import optparse
 
     import weewx
-    import weeutil.logging
+    import weeutil.logger
 
     weewx.debug = 1
 
-    weeutil.logging.setup('ws1', {})
+    weeutil.logger.setup('ws1', {})
 
     usage = """%prog [options] [--help]"""
 

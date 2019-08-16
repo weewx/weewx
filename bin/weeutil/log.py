@@ -3,7 +3,10 @@
 #
 #    See the file LICENSE.txt for your full rights.
 #
-"""WeeWX logging facility"""
+"""WeeWX logging facility
+
+OBSOLETE: Use weeutil.logging instead
+"""
 
 from __future__ import absolute_import
 

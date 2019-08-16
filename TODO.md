@@ -2,6 +2,18 @@ Document the suffixes `.exists` and `.has_data`.
 
 Explore using the Python `logging` facility instead of `syslog`.
 
+Track down all usages of
+``` 
+weeutil.weeutil.search_up
+weeutil.weeutil.accumulateLeaves
+weeutil.weeutil.merge_config
+weeutil.weeutil.patch_config
+weeutil.weeutil.comment_scalar
+weeutil.weeutil.conditional_merge
+```
+and change them to use `weeutil.conf` instead.
+
+
 Explore introducing extendable observation types. They would be registered
 with `Manager`.
 

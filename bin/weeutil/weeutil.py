@@ -22,17 +22,6 @@ import time
 import six
 from six.moves import input
 
-# For backwards compatibility:
-from weeutil import config, log
-search_up        = config.search_up
-accumulateLeaves = config.accumulateLeaves
-merge_config     = config.merge_config
-patch_config     = config.patch_config
-comment_scalar   = config.comment_scalar
-conditional_merge= config.conditional_merge
-log_traceback    = log.log_traceback
-
-
 def convertToFloat(seq):
     """Convert a sequence with strings to floats, honoring 'Nones'"""
 

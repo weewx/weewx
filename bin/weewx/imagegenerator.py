@@ -18,11 +18,11 @@ from six.moves import zip
 
 import weeplot.genplot
 import weeplot.utilities
-import weeutil.logging
+import weeutil.logger
 import weeutil.weeutil
 import weewx.reportengine
 import weewx.units
-from weeutil.config import search_up
+from weeutil.config import search_up, accumulateLeaves
 from weeutil.weeutil import to_bool, to_int, to_float
 from weewx.units import ValueTuple
 
@@ -79,8 +79,7 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
             for plotname in self.image_dict[timespan].sections:
 
                 # Accumulate all options from parent nodes:
-                plot_options = weeutil.weeutil.accumulateLeaves(
-                    self.image_dict[timespan][plotname])
+                plot_options = accumulateLeaves(self.image_dict[timespan][plotname])
 
                 plotgen_ts = gen_ts
                 if not plotgen_ts:
@@ -150,7 +149,7 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                 for line_name in self.image_dict[timespan][plotname].sections:
 
                     # Accumulate options from parent nodes.
-                    line_options = weeutil.weeutil.accumulateLeaves(self.image_dict[timespan][plotname][line_name])
+                    line_options = accumulateLeaves(self.image_dict[timespan][plotname][line_name])
 
                     # See what SQL variable type to use for this line. By
                     # default, use the section name.
