@@ -6,7 +6,6 @@
 """Device drivers for the weewx weather system."""
 
 from __future__ import absolute_import
-import weeutil.log
 import weewx
 
 
@@ -65,7 +64,6 @@ class AbstractConfigurator(object):
         options, _ = parser.parse_args()
         if options.debug:
             weewx.debug = options.debug
-            weeutil.log.log_upto('debug')
         self.do_options(options, parser, config_dict, not options.noprompt)
 
     def get_parser(self):
