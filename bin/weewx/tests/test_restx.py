@@ -121,9 +121,9 @@ class TestAmbient(unittest.TestCase):
         record = get_record()
         q.put(record)
         q.put(None)
-        # Set up mocks of logdbg() and loginf(). Then we'll check that they got called as we expected
-        with mock.patch('weewx.restx.logdbg') as mock_logdbg:
-            with mock.patch('weewx.restx.loginf') as mock_loginf:
+        # Set up mocks of log.debug() and log.info(). Then we'll check that they got called as we expected
+        with mock.patch('weewx.restx.log.debug') as mock_logdbg:
+            with mock.patch('weewx.restx.log.info') as mock_loginf:
                 obj.run()
                 mock_logdbg.assert_called_once_with('No database specified. Augmentation from database skipped.')
                 # loginf() should have been called once with the success
@@ -153,9 +153,9 @@ class TestAmbient(unittest.TestCase):
         record = get_record()
         q.put(record)
         q.put(None)
-        # Set up mocks of logdbg() and loginf(). Then we'll check that they got called as we expected
-        with mock.patch('weewx.restx.logdbg') as mock_logdbg:
-            with mock.patch('weewx.restx.loginf') as mock_loginf:
+        # Set up mocks of log.debug() and log.info(). Then we'll check that they got called as we expected
+        with mock.patch('weewx.restx.log.debug') as mock_logdbg:
+            with mock.patch('weewx.restx.log.info') as mock_loginf:
                 obj.run()
                 mock_logdbg.assert_called_once_with('No database specified. Augmentation from database skipped.')
                 # loginf() should have been called once with the success
@@ -186,14 +186,14 @@ class TestAmbient(unittest.TestCase):
         record = get_record()
         q.put(record)
         q.put(None)
-        # Set up mocks of logdbg() and loginf(). Then we'll check that they got called as we expected
-        with mock.patch('weewx.restx.logdbg') as mock_logdbg:
-            with mock.patch('weewx.restx.logerr') as mock_logerr:
+        # Set up mocks of log.debug() and log.error(). Then we'll check that they got called as we expected
+        with mock.patch('weewx.restx.log.debug') as mock_logdbg:
+            with mock.patch('weewx.restx.log.error') as mock_logerr:
                 obj.run()
-                # logdbg() should have been called twice...
+                # log.debug() should have been called twice...
                 mock_logdbg.assert_has_calls([mock.call('No database specified. Augmentation from database skipped.'),
                                        mock.call('Test-Ambient: Failed upload attempt 1: Code 401')])
-                # ... and logerr() once with the failed post.
+                # ... and log.error() once with the failed post.
                 mock_logerr.assert_called_once_with('Test-Ambient: Failed to publish record '
                                                     '2018-03-22 00:00:00 PDT (1521702000): '
                                                     'Failed upload after 1 tries')
@@ -223,14 +223,14 @@ class TestAmbient(unittest.TestCase):
         record = get_record()
         q.put(record)
         q.put(None)
-        # Set up mocks of logdbg() and loginf(). Then we'll check that they got called as we expected
-        with mock.patch('weewx.restx.logdbg') as mock_logdbg:
-            with mock.patch('weewx.restx.logerr') as mock_logerr:
+        # Set up mocks of log.debug() and log.error(). Then we'll check that they got called as we expected
+        with mock.patch('weewx.restx.log.debug') as mock_logdbg:
+            with mock.patch('weewx.restx.log.error') as mock_logerr:
                 obj.run()
-                # logdbg() should have been called twice...
+                # log.debug() should have been called twice...
                 mock_logdbg.assert_has_calls([mock.call('No database specified. Augmentation from database skipped.'),
                                               mock.call('Test-Ambient: Failed upload attempt 1: oops')])
-                # ... and logerr() once with the failed post.
+                # ... and log.error() once with the failed post.
                 mock_logerr.assert_called_once_with('Test-Ambient: Failed to publish record '
                                                     '2018-03-22 00:00:00 PDT (1521702000): '
                                                     'Failed upload after 1 tries')

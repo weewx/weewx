@@ -24,10 +24,11 @@ from six.moves import zip
 import configobj
 
 # WeeWX imports:
+import weeutil.config
+import weeutil.logger
 import weeutil.weeutil
 import weewx.defaults
 import weewx.manager
-import weeutil.config
 from weeutil.weeutil import to_bool
 
 log = logging.getLogger(__name__)
@@ -191,7 +192,7 @@ class StdReportEngine(threading.Thread):
                     except Exception as e:
                         log.error("reportengine: Unable to instantiate generator '%s'", generator)
                         log.error("        ****  %s", e)
-                        weeutil.logging.log_traceback(log.error, "        ****  ")
+                        weeutil.logger.log_traceback(log.error, "        ****  ")
                         log.error("        ****  Generator ignored")
                         traceback.print_exc()
                         continue
@@ -205,7 +206,7 @@ class StdReportEngine(threading.Thread):
                         # next generator.
                         log.error("reportengine: Caught unrecoverable exception in generator '%s'", generator)
                         log.error("        ****  %s", e)
-                        weeutil.logging.log_traceback(log.error, "        ****  ")
+                        weeutil.logger.log_traceback(log.error, "        ****  ")
                         log.error("        ****  Generator terminated")
                         traceback.print_exc()
                         continue
@@ -330,7 +331,7 @@ class FtpGenerator(ReportGenerator):
             n = ftp_data.run()
         except (socket.timeout, socket.gaierror, ftplib.all_errors, IOError) as e:
             log.error("ftpgenerator: Caught exception '%s': %s", type(e), e)
-            weeutil.logging.log_traceback(log.error, "        ****  ")
+            weeutil.logger.log_traceback(log.error, "        ****  ")
             return
 
         if log_success:

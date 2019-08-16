@@ -391,7 +391,7 @@ class RESTThread(threading.Thread):
             except FailedPost as e:
                 if self.log_failure:
                     _time_str = timestamp_to_string(_record['dateTime'])
-                    log.error("%s: Failed to publish record %s: %s", self.protocol_name, _time_str, e)
+                    log.error("%s: Failed to publish record %s: %s" % (self.protocol_name, _time_str, e))
             except CertificateError as e:
                 if self.retry_certificate:
                     log.error("%s: Bad SSL certificate (%s); waiting %s minutes then retrying",
@@ -410,7 +410,7 @@ class RESTThread(threading.Thread):
             else:
                 if self.log_success:
                     _time_str = timestamp_to_string(_record['dateTime'])
-                    log.info("%s: Published record %s", self.protocol_name, _time_str)
+                    log.info("%s: Published record %s" % (self.protocol_name, _time_str))
 
     def process_record(self, record, dbmanager):
         """Default version of process_record.
@@ -512,11 +512,12 @@ class RESTThread(threading.Thread):
 
     def handle_code(self, code, count):
         """Check code from HTTP post.  This simply logs the response."""
-        log.debug("%s: Failed upload attempt %d: Code %s", self.protocol_name, count, code)
+        log.debug("%s: Failed upload attempt %d: Code %s"
+                  % (self.protocol_name, count, code))
 
     def handle_exception(self, e, count):
         """Check exception from HTTP post.  This simply logs the exception."""
-        log.debug("%s: Failed upload attempt %d: %s", self.protocol_name, count, e)
+        log.debug("%s: Failed upload attempt %d: %s" % (self.protocol_name, count, e))
 
     def post_request(self, request, data=None):
         """Post a request object. This version does not catch any HTTP
