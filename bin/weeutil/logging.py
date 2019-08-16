@@ -9,13 +9,12 @@ from __future__ import absolute_import
 
 import sys
 import logging.config
-
 from six.moves import StringIO
 
 import configobj
-import validate
 
 import weewx
+from weeutil.weeutil import to_int, to_bool
 
 if sys.platform == "darwin":
     address = '/var/run/syslog'
@@ -62,32 +61,11 @@ disable_existing_loggers = False
     [[simple]]
         format = %(levelname)s %(message)s
     [[standard]]
-        format = "{process_name}[%(process)d]/%(levelname)s %(module)s: %(message)s" 
+        format = "{process_name}[%(process)d]/%(levelname)s %(name)s: %(message)s" 
     [[verbose]]
-        format = " %(asctime)s  {process_name}[%(process)d]/%(levelname)s %(module)s: %(message)s"
+        format = " %(asctime)s  {process_name}[%(process)d]/%(levelname)s %(name)s: %(message)s"
         # Format to use for dates and times:
         datefmt = %Y-%m-%d %H:%M:%S
-"""
-
-LOGGING_VALIDATOR = """
-version = integer(default=1)
-disable_existing_loggers = boolean(default=False)
-
-[loggers]
-    [[__many__]]
-        level = option('DEBUG', 'INFO', 'WARN', 'ERROR', 'CRITICAL') 
-        propagate = boolean(default=True)
-        handlers = list()
-
-[handlers]
-    [[__many__]]
-        level = option('DEBUG', 'INFO', 'WARN', 'ERROR', 'CRITICAL')
-        formatter = string()
-        class = string()
-
-[formatters]
-    [[__many__]]
-        format = string()
 """
 
 
@@ -102,20 +80,12 @@ def setup(process_name, user_log_dict):
                                              address=address,
                                              facility=facility,
                                              process_name=process_name)
-    # Now create a ConfigObj from the string. Attach the validator.
-    log_config = configobj.ConfigObj(StringIO(default_logging_str),
-                                     interpolation=False,
-                                     configspec=StringIO(LOGGING_VALIDATOR))
+    # Now create a ConfigObj from the string. No interpolation (it interferes with the
+    # interpolation directives embedded in the string).
+    log_config = configobj.ConfigObj(StringIO(default_logging_str), interpolation=False)
 
     # Merge in the user additions / changes:
     log_config.merge(user_log_dict)
-
-    # Now validate the log_dict. This has the happy side effect of getting the types
-    # right.
-    v = validate.Validator()
-    result = log_config.validate(v, copy=True)
-    if not result:
-        raise ValueError("Logging not configured properly")
 
     # The root logger is denoted by an empty string by the logging facility. Unfortunately,
     # ConfigObj does not accept an empty string as a key. So, instead, we use this hack:
@@ -126,4 +96,28 @@ def setup(process_name, user_log_dict):
     except KeyError:
         pass
 
+    # Make sure values are of the right type
+    if 'version' in log_dict:
+        log_dict['version'] = to_int(log_dict['version'])
+    if 'disable_existing_loggers' in log_dict:
+        log_dict['disable_existing_loggers'] = to_bool(log_dict['disable_existing_loggers'])
+    for logger in log_dict['loggers']:
+        if 'propagate' in log_dict['loggers'][logger]:
+            log_dict['loggers'][logger]['propagate'] = to_bool(log_dict['loggers'][logger]['propagate'])
+
     logging.config.dictConfig(log_dict)
+
+
+def log_traceback(log_fn, prefix=''):
+    """Log the stack traceback into a logger.
+
+    log_fn: One of the logging.Logger logging functions, such as logging.Logger.warning.
+
+    prefix: A string, which will be put in front of each log entry. Default is no string.
+    """
+    import traceback
+    sfd = StringIO()
+    traceback.print_exc(file=sfd)
+    sfd.seek(0)
+    for line in sfd:
+        log_fn("%s%s", prefix, line)

@@ -866,11 +866,12 @@ def main(options, args, engine_class=StdEngine):
 
         config_dict = getConfiguration(config_path)
 
+        weewx.debug = int(config_dict.get('debug', 0))
+
         # Now that we have the config_dict, we can customize the
         # logging with user additions
         weeutil.logging.setup('weewxd', config_dict.get('Logging', {}))
 
-        weewx.debug = int(config_dict.get('debug', 0))
         log.debug("Debug is %s", weewx.debug)
 
         # See if there is a loop_on_init directive in the configuration, but

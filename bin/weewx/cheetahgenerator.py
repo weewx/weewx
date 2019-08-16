@@ -56,27 +56,29 @@ Example:
 """
 
 from __future__ import absolute_import
+
 import copy
+import datetime
+import logging
 import os.path
 import time
-import datetime
 
-import configobj
-
-import six
-import Cheetah.Template
 import Cheetah.Filters
+import Cheetah.Template
+import six
 
 import weedb
+import weeutil.logging
 import weeutil.weeutil
 import weewx.almanac
 import weewx.reportengine
 import weewx.station
-import weewx.units
 import weewx.tags
-from weeutil.weeutil import to_bool, to_int, timestamp_to_string
+import weewx.units
 from weeutil.config import search_up
-from weeutil.log import logdbg, loginf, logerr, logcrt
+from weeutil.weeutil import to_bool, to_int, timestamp_to_string
+
+log = logging.getLogger(__name__)
 
 # The default search list includes standard information sources that should be
 # useful in most templates.
@@ -151,8 +153,8 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
 
         elapsed_time = time.time() - t1
         if log_success:
-            loginf("Generated %d files for report %s in %.2f seconds" %
-                   (ngen, self.skin_dict['REPORT_NAME'], elapsed_time))
+            log.info("Generated %d files for report %s in %.2f seconds",
+                     ngen, self.skin_dict['REPORT_NAME'], elapsed_time)
 
     def setup(self):
         # This dictionary will hold the formatted dates of all generated files
@@ -176,7 +178,7 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
             search_list.extend(search_list_ext)
 
         # provide feedback about the requested search list objects
-        logdbg("using search list %s" % search_list)
+        log.debug("using search list %s", search_list)
 
         # Now go through search_list (which is a list of strings holding the
         # names of the extensions):
@@ -240,7 +242,7 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
         default_archive = self.db_binder.get_manager(default_binding)
         start_ts = default_archive.firstGoodStamp()
         if not start_ts:
-            loginf('Skipping template %s: cannot find start time' % section['template'])
+            log.info('Skipping template %s: cannot find start time', section['template'])
             return ngen
 
         if gen_ts:
@@ -249,8 +251,8 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
             if record:
                 stop_ts = record['dateTime']
             else:
-                loginf('Skipping template %s: generate time %s not in database'
-                       % (section['template'], timestamp_to_string(gen_ts)))
+                log.info('Skipping template %s: generate time %s not in database',
+                         section['template'], timestamp_to_string(gen_ts))
                 return ngen
         else:
             stop_ts = default_archive.lastGoodStamp()
@@ -297,8 +299,8 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
                 try:
                     last_mod = os.path.getmtime(_fullname)
                     if t_now - last_mod < stale:
-                        logdbg("Skip '%s': last_mod=%s age=%s stale=%s" %
-                               (_filename, last_mod, t_now - last_mod, stale))
+                        log.debug("Skip '%s': last_mod=%s age=%s stale=%s",
+                                  _filename, last_mod, t_now - last_mod, stale)
                         continue
                 except os.error:
                     pass
@@ -349,10 +351,10 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
                 # are no hooks to intercept the source and spit it out.  So
                 # the best we can do is indicate the template that was being
                 # processed when the failure ocurred.
-                logerr("Generate failed with exception '%s'" % type(e))
-                logerr("**** Ignoring template %s" % template)
-                logerr("**** Reason: %s" % e)
-                weeutil.weeutil.log_traceback("****  ")
+                log.error("Generate failed with exception '%s'", type(e))
+                log.error("**** Ignoring template %s", template)
+                log.error("**** Reason: %s", e)
+                weeutil.logging.log_traceback(log.error, "****  ")
             else:
                 ngen += 1
             finally:
