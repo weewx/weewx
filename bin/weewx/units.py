@@ -14,12 +14,14 @@
 from __future__ import absolute_import
 from __future__ import print_function
 import locale
+import logging
 import time
-import syslog
 
 import weewx
 import weeutil.weeutil
 from weeutil.weeutil import ListOfDicts
+
+log = logging.getLogger(__name__)
 
 # Handy conversion constants and functions:
 INHG_PER_MBAR  = 0.0295299875
@@ -1141,8 +1143,7 @@ def convert(val_t, target_unit_type):
     try:
         conversion_func = conversionDict[val_t[1]][target_unit_type]
     except KeyError:
-        if weewx.debug:
-            syslog.syslog(syslog.LOG_DEBUG, "units: Unable to convert from %s to %s" %(val_t[1], target_unit_type))
+        log.debug("Unable to convert from %s to %s", val_t[1], target_unit_type)
         raise
     # Try converting a sequence first. A TypeError exception will occur if
     # the value is actually a scalar:

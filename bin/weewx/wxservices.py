@@ -7,15 +7,18 @@
 """Services specific to weather."""
 
 from __future__ import absolute_import
-import syslog
+import logging
 
 import weedb
 import weewx.units
 import weewx.engine
 import weewx.wxformulas
+import weeutil.logging
 import weeutil.weeutil
 
 from weewx.units import CtoF, mps_to_mph, kph_to_mph, METER_PER_FOOT
+
+log = logging.getLogger(__name__)
 
 class StdWXCalculate(weewx.engine.StdService):
     """Wrapper class for WXCalculate.
@@ -168,11 +171,11 @@ class WXCalculate(object):
         self.archive_rain_events = []
 
         # report about which values will be calculated...
-        syslog.syslog(syslog.LOG_INFO, "wxcalculate: The following values will be calculated: %s" %
-                      ', '.join(["%s=%s" % (k, self.calculations[k]) for k in self.calculations]))
+        log.info("The following values will be calculated: %s",
+                 ', '.join(["%s=%s" % (k, self.calculations[k]) for k in self.calculations]))
         # ...and which algorithms will be used.
-        syslog.syslog(syslog.LOG_INFO, "wxcalculate: The following algorithms will be used for calculations: %s" %
-                      ', '.join(["%s=%s" % (k, self.algorithms[k]) for k in self.algorithms]))
+        log.info("The following algorithms will be used for calculations: %s",
+                 ', '.join(["%s=%s" % (k, self.algorithms[k]) for k in self.algorithms]))
 
     def do_calculations(self, data_dict, data_type):
         if self.ignore_zero_wind:
@@ -348,7 +351,7 @@ class WXCalculate(object):
             T_max, T_min, rad_avg, wind_avg, rh_max, rh_min, std_unit_min, std_unit_max = r
             # Check for mixed units
             if std_unit_min != std_unit_max:
-                syslog.syslog(syslog.LOG_NOTICE, "wxservices: Mixed unit system not allowed in ET calculation")
+                log.info("Mixed unit system not allowed in ET calculation")
                 data['ET'] = None
                 return
             std_unit = std_unit_min
@@ -370,8 +373,8 @@ class WXCalculate(object):
             # interval in hours.
             data['ET'] = ET_rate * interval / 3600.0 if ET_rate is not None else None
         except ValueError as e:
-            weeutil.weeutil.log_traceback()
-            syslog.syslog(syslog.LOG_ERR, "wxservices: Calculation of evapotranspiration failed: %s" % e)
+            log.error("Calculation of evapotranspiration failed: %s", e)
+            weeutil.logging.log_traceback(log.error)
         except weedb.DatabaseError:
             pass
 

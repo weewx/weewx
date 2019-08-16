@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2015 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2019 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -8,13 +8,15 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+import logging
 import math
-import syslog
 import time
 import weewx.uwxutils
 
 from weewx.units import INHG_PER_MBAR, METER_PER_FOOT, METER_PER_MILE, MM_PER_INCH 
 from weewx.units import CtoK, CtoF, FtoC
+
+log = logging.getLogger(__name__)
 
 def dewpointF(T, R):
     """Calculate dew point. 
@@ -225,7 +227,7 @@ def calculate_rain(newtotal, oldtotal):
         if newtotal >= oldtotal:
             delta = newtotal - oldtotal
         else:
-            syslog.syslog(syslog.LOG_INFO, "wxformulas: rain counter reset detected: new=%s old=%s" % (newtotal, oldtotal))
+            log.info("rain counter reset detected: new=%s old=%s", newtotal, oldtotal)
             delta = None
     else:
         delta = None

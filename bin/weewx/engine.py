@@ -940,7 +940,7 @@ def main(options, args, engine_class=StdEngine):
         except OSError as e:
             # Caught an OS error. Log it, wait 10 seconds, then try again
             log.critical("Caught OSError: %s", e)
-            weeutil.weeutil.log_traceback("    ****  ", 'debug')
+            weeutil.logging.log_traceback(log.critical, "    ****  ")
             log.critical("    ****  Waiting 10 seconds then retrying...")
             time.sleep(10)
             log.info("retrying...")
@@ -950,7 +950,7 @@ def main(options, args, engine_class=StdEngine):
 
         except Terminate:
             log.info("Terminating weewx version %s", weewx.__version__)
-            weeutil.weeutil.log_traceback("    ****  ", 'debug')
+            weeutil.logging.log_traceback(log.info, "    ****  ")
             # Reraise the exception (this should cause the program to exit)
             raise
 
@@ -966,7 +966,7 @@ def main(options, args, engine_class=StdEngine):
             log.critical("Caught unrecoverable exception in engine:")
             log.critical("    ****  %s" % ex)
             # Include a stack traceback in the log:
-            weeutil.weeutil.log_traceback("    ****  ", 'critical')
+            weeutil.logging.log_traceback(log.critical, "    ****  ")
             log.critical("    ****  Exiting.")
             # Reraise the exception (this should cause the program to exit)
             raise
