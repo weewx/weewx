@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-#    Copyright (c) 2009-2015 Tom Keffer <tkeffer@gmail.com> and
+#    Copyright (c) 2009-2019 Tom Keffer <tkeffer@gmail.com> and
 #                            Matthew Wall
 #
 #    See the file LICENSE.txt for your rights.
@@ -11,6 +11,7 @@ import optparse
 import sys
 
 import weecfg.extension
+import weeutil.logger
 from weecfg import Logger
 from weecfg.extension import ExtensionEngine
 
@@ -36,6 +37,10 @@ Actions:
 --uninstall: Uninstall the specified extension."""
 
 def main():
+
+    # Set defaults for logging:
+    weeutil.logger.setup('wee_extension', {})
+
     parser = optparse.OptionParser(usage=usage)
     parser.add_option('--list', action="store_true", dest="list_extensions", 
                       help="Show installed extensions.")

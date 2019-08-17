@@ -37,8 +37,6 @@ import weeutil.weeutil
 from weeutil.weeutil import to_bool, to_int, to_sorted_string
 from weewx import all_service_groups
 
-# Set up a minimal logging facility to be used during initial start up.
-weeutil.logger.setup('weewxd', {})
 log = logging.getLogger(__name__)
 
 class BreakLoop(Exception):

@@ -7,9 +7,9 @@
 """Configure the configuration file."""
 from __future__ import absolute_import
 import sys
-import syslog
 import optparse
 
+import weeutil.logger
 from weecfg.config import ConfigEngine, Logger
 
 usage = """Usage: wee_config --help
@@ -55,8 +55,8 @@ Station parameters:
 
 def main():
 
-    # Set defaults for the system logger:
-    syslog.openlog('wee_config', syslog.LOG_PID|syslog.LOG_CONS)
+    # Set defaults for logging:
+    weeutil.logger.setup('wee_config', {})
 
     # Create a command line parser:
     parser = optparse.OptionParser(usage=usage)

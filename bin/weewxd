@@ -8,10 +8,15 @@
 import sys
 from optparse import OptionParser
 
+import weeutil.logger
+
 # First import any user extensions:
 import user.extensions       #@UnusedImport
 # Now the engine
 import weewx.engine
+
+# Set up a minimal logging facility to be used during initial start up.
+weeutil.logger.setup('weewxd', {})
 
 usagestr = """Usage: weewxd --help
        weewxd --version
