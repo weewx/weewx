@@ -1,7 +1,8 @@
 ### Logging
-Inject a `[Logging]` section into old config files.
+Refactor the utilities to use the new logging facility.
 
 Update *Upgrading Guide*.
+
 
 ### Other
 Document the suffixes `.exists` and `.has_data`.

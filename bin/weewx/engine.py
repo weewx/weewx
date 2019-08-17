@@ -870,7 +870,7 @@ def main(options, args, engine_class=StdEngine):
 
         # Now that we have the config_dict, we can customize the
         # logging with user additions
-        weeutil.logger.setup('weewxd', config_dict.get('Logging', {}))
+        weeutil.logger.setup('weewxd', config_dict)
 
         log.debug("Debug is %s", weewx.debug)
 

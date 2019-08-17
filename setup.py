@@ -175,7 +175,7 @@ class weewx_install_data(install_data):
 
         # Open up and parse the distribution config file:
         try:
-            dist_config_dict = configobj.ConfigObj(f, file_error=True, encoding='utf-8')
+            dist_config_dict = configobj.ConfigObj(f, interpolation=False, file_error=True, encoding='utf-8')
         except IOError as e:
             sys.exit(str(e))
         except SyntaxError as e:
@@ -188,7 +188,7 @@ class weewx_install_data(install_data):
         # Do we have an old config file?
         if os.path.isfile(install_path):
             # Yes. Read it
-            config_path, config_dict = weecfg.read_config(install_path, None)
+            config_path, config_dict = weecfg.read_config(install_path, None, interpolation=False)
             if DEBUG:
                 print("Old configuration file found at", config_path)
 
@@ -296,7 +296,7 @@ class weewx_sdist(sdist):
         # If this is the configuration file, check for passwords
         if f == 'weewx.conf':
             import configobj
-            config = configobj.ConfigObj(f, encoding='utf-8')
+            config = configobj.ConfigObj(f, interpolation=False, encoding='utf-8')
 
             for section in ['StdRESTful', 'StdReport']:
                 for subsection in config[section].sections:

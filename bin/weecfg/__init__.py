@@ -23,6 +23,7 @@ import configobj
 
 import weeutil.weeutil
 import weeutil.config
+import weeutil.logger
 
 major_comment_block = ["", "##############################################################################", ""]
 
@@ -147,7 +148,7 @@ def find_file(file_path=None, args=None, locations=DEFAULT_LOCATIONS,
 
 
 def read_config(config_path, args=None, locations=DEFAULT_LOCATIONS,
-                file_name='weewx.conf'):
+                file_name='weewx.conf', interpolation='ConfigParser'):
     """Read the specified configuration file, return an instance of ConfigObj
     with the file contents. If no file is specified, look in the standard
     locations for weewx.conf. Returns the filename of the actual configuration
@@ -169,7 +170,9 @@ def read_config(config_path, args=None, locations=DEFAULT_LOCATIONS,
     config_path = find_file(config_path, args,
                             locations=locations, file_name=file_name)
     # Now open it up and parse it.
-    config_dict = configobj.ConfigObj(config_path, file_error=True,
+    config_dict = configobj.ConfigObj(config_path,
+                                      interpolation=interpolation,
+                                      file_error=True,
                                       encoding='utf-8',
                                       default_encoding='utf-8')
     return config_path, config_dict
@@ -1081,6 +1084,7 @@ def update_to_v40(config_dict):
     - Fix problems with DegreeDays and Trend in weewx.conf
     - Add new option growing_base
     - Add new option WU api_key
+    - Add new [Logging] section
     """
 
     major, minor = get_version_info(config_dict)
@@ -1133,6 +1137,16 @@ def update_to_v40(config_dict):
         config_dict['StdRESTful']['Wunderground']['api_key'] = 'replace_me'
         config_dict['StdRESTful']['Wunderground'].comments['api_key'] = \
             ["", "If you plan on using wunderfixer, set the following", "to your API key:"]
+
+    if 'Logging' not in config_dict:
+        logging_dict = configobj.ConfigObj(StringIO(weeutil.logger.LOGGING_STR), interpolation=False)
+        config_dict.merge(logging_dict)
+
+        # Move the new section to just before [Engine]
+        reorder_sections(config_dict, 'Logging', 'Engine')
+        config_dict.comments['Logging'] = \
+            major_comment_block + \
+            ['#   This section customizes logging', '']
 
     config_dict['version'] = '4.0.0'
 
