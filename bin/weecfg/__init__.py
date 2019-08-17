@@ -1140,6 +1140,14 @@ def update_to_v40(config_dict):
 
     if 'Logging' not in config_dict:
         logging_dict = configobj.ConfigObj(StringIO(weeutil.logger.LOGGING_STR), interpolation=False)
+
+        # Delete some not needed (and dangerous) entries
+        try:
+            del logging_dict['Logging']['version']
+            del logging_dict['Logging']['disable_existing_loggers']
+        except KeyError:
+            pass
+
         config_dict.merge(logging_dict)
 
         # Move the new section to just before [Engine]
