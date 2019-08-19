@@ -1084,7 +1084,6 @@ def update_to_v40(config_dict):
     - Fix problems with DegreeDays and Trend in weewx.conf
     - Add new option growing_base
     - Add new option WU api_key
-    - Add new [Logging] section
     """
 
     major, minor = get_version_info(config_dict)
@@ -1138,23 +1137,26 @@ def update_to_v40(config_dict):
         config_dict['StdRESTful']['Wunderground'].comments['api_key'] = \
             ["", "If you plan on using wunderfixer, set the following", "to your API key:"]
 
-    if 'Logging' not in config_dict:
-        logging_dict = configobj.ConfigObj(StringIO(weeutil.logger.LOGGING_STR), interpolation=False)
+    # This section will inject a [Logging] section. Leave it commented out for now,
+    # until we gain more experience with it.
 
-        # Delete some not needed (and dangerous) entries
-        try:
-            del logging_dict['Logging']['version']
-            del logging_dict['Logging']['disable_existing_loggers']
-        except KeyError:
-            pass
-
-        config_dict.merge(logging_dict)
-
-        # Move the new section to just before [Engine]
-        reorder_sections(config_dict, 'Logging', 'Engine')
-        config_dict.comments['Logging'] = \
-            major_comment_block + \
-            ['#   This section customizes logging', '']
+    # if 'Logging' not in config_dict:
+    #     logging_dict = configobj.ConfigObj(StringIO(weeutil.logger.LOGGING_STR), interpolation=False)
+    #
+    #     # Delete some not needed (and dangerous) entries
+    #     try:
+    #         del logging_dict['Logging']['version']
+    #         del logging_dict['Logging']['disable_existing_loggers']
+    #     except KeyError:
+    #         pass
+    #
+    #     config_dict.merge(logging_dict)
+    #
+    #     # Move the new section to just before [Engine]
+    #     reorder_sections(config_dict, 'Logging', 'Engine')
+    #     config_dict.comments['Logging'] = \
+    #         major_comment_block + \
+    #         ['#   This section customizes logging', '']
 
     config_dict['version'] = '4.0.0'
 

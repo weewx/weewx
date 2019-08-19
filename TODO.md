@@ -1,5 +1,5 @@
 ### Logging
-Refactor the utilities to use the new logging facility.
+Refactor wee_import to use the new logging facility.
 
 Update *Upgrading Guide*.
 
