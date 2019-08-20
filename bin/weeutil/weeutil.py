@@ -22,6 +22,7 @@ import time
 import six
 from six.moves import input
 
+
 def convertToFloat(seq):
     """Convert a sequence with strings to floats, honoring 'Nones'"""
 
@@ -848,7 +849,7 @@ def genYearSpans(start_ts, stop_ts):
 
     if (_stop_dt.month, _stop_dt.day, _stop_dt.hour,
         _stop_dt.minute, _stop_dt.second) == (1, 1, 0, 0, 0):
-            _stop_year -= 1
+        _stop_year -= 1
 
     for year in range(_start_year, _stop_year + 1):
         yield TimeSpan(time.mktime((year, 1, 1, 0, 0, 0, 0, 0, -1)),
@@ -1355,6 +1356,7 @@ class ListOfDicts(dict):
 
 class KeyDict(dict):
     """A dictionary that returns the key for an unsuccessful lookup."""
+
     def __missing__(self, key):
         return key
 
@@ -1407,6 +1409,7 @@ def deep_copy_path(path, dest_dir):
         shutil.copy(path, d)
         ncopy += 1
     return ncopy
+
 
 if __name__ == '__main__':
     import doctest

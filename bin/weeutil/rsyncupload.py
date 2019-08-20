@@ -4,8 +4,6 @@
 #
 #    See the file LICENSE.txt for your full rights.
 #
-#    $Id: rsyncupload.py 2766 2014-12-02 02:45:36Z tkeffer $
-#
 """For uploading files to a remove server via Rsync"""
 
 from __future__ import absolute_import
@@ -18,6 +16,7 @@ import subprocess
 import time
 
 log = logging.getLogger(__name__)
+
 
 class RsyncUpload(object):
     """Uploads a directory and all its descendants to a remote server.
@@ -38,21 +37,21 @@ class RsyncUpload(object):
         delete: delete remote files that don't match with local files. Use
         with caution.  [Optional.  Default is False.]
         """
-        self.local_root  = os.path.normpath(local_root)
+        self.local_root = os.path.normpath(local_root)
         self.remote_root = os.path.normpath(remote_root)
-        self.server      = server
-        self.user        = user
-        self.delete      = delete
-        self.port        = port
+        self.server = server
+        self.user = user
+        self.delete = delete
+        self.port = port
         self.ssh_options = ssh_options
-        self.compress    = compress
+        self.compress = compress
         self.log_success = log_success
 
     def run(self):
         """Perform the actual upload."""
 
         t1 = time.time()
-        
+
         # If the source path ends with a slash, rsync interprets
         # that as a request to copy all the directory's *contents*,
         # whereas if it doesn't, it copies the entire directory.
@@ -66,7 +65,7 @@ class RsyncUpload(object):
             rsyncremotespec = "%s@%s:%s" % (self.user, self.server, self.remote_root)
         else:
             rsyncremotespec = "%s:%s" % (self.server, self.remote_root)
-        
+
         if self.port is not None and len(self.port.strip()) > 0:
             rsyncsshstring = "ssh -p %s" % (self.port,)
         else:
@@ -92,10 +91,10 @@ class RsyncUpload(object):
         cmd.extend(["-e %s" % rsyncsshstring])
         cmd.extend([rsynclocalspec])
         cmd.extend([rsyncremotespec])
-        
+
         try:
             rsynccmd = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-        
+
             stdout = rsynccmd.communicate()[0]
             stroutput = stdout.decode("utf-8").strip()
         except OSError as e:
@@ -103,14 +102,14 @@ class RsyncUpload(object):
                 log.error("rsync does not appear to be installed on "
                           "this system. (errno %d, '%s')" % (e.errno, e.strerror))
             raise
-        
+
         # we have some output from rsync so generate an appropriate message
         if stroutput.find('rsync error:') < 0:
             # no rsync error message so parse rsync --stats results
             rsyncinfo = {}
             for line in iter(stroutput.splitlines()):
                 if line.find(':') >= 0:
-                    (n,v) = line.split(':', 1)
+                    (n, v) = line.split(':', 1)
                     rsyncinfo[n.strip()] = v.strip()
             # get number of files and bytes transferred and produce an
             # appropriate message
@@ -126,7 +125,7 @@ class RsyncUpload(object):
                 else:
                     rsync_message = "rsync executed in %0.2f seconds"
             except:
-                    rsync_message = "rsync executed in %0.2f seconds"
+                rsync_message = "rsync executed in %0.2f seconds"
         else:
             # suspect we have an rsync error so tidy stroutput
             # and display a message
@@ -134,12 +133,12 @@ class RsyncUpload(object):
             stroutput = stroutput.replace("\r", "")
             log.error("[%s] reported errors: %s" % (cmd, stroutput))
             rsync_message = "rsync executed in %0.2f seconds"
-        
-        t2= time.time()
+
+        t2 = time.time()
         if self.log_success:
-            log.info(rsync_message % (t2-t1))
-        
-        
+            log.info(rsync_message % (t2 - t1))
+
+
 if __name__ == '__main__':
     import configobj
 
@@ -150,11 +149,11 @@ if __name__ == '__main__':
 
     weeutil.logger.setup('rsyncupload', {})
 
-    if len(sys.argv) < 2 :
+    if len(sys.argv) < 2:
         print("""Usage: rsyncupload.py path-to-configuration-file [path-to-be-rsync'd]""")
         sys.exit(weewx.CMD_ERROR)
-        
-    try :
+
+    try:
         config_dict = configobj.ConfigObj(sys.argv[1], file_error=True, encoding='utf-8')
     except IOError:
         print("Unable to open configuration file %s" % sys.argv[1])
@@ -170,7 +169,5 @@ if __name__ == '__main__':
     else:
         rsync_dir = sys.argv[2]
 
-    rsync_upload = RsyncUpload(
-                           rsync_dir,
-                           **config_dict['StdReport']['RSYNC'])
+    rsync_upload = RsyncUpload(rsync_dir, **config_dict['StdReport']['RSYNC'])
     rsync_upload.run()

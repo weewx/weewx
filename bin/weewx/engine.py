@@ -610,7 +610,7 @@ class StdArchive(StdService):
         
         # Make sure the daily summaries have not been partially updated
         if dbmanager._read_metadata('lastWeightPatch'):
-            raise weewx.ViolatedPrecondition("engine: Update of daily summary for database '%s' not complete. "
+            raise weewx.ViolatedPrecondition("Update of daily summary for database '%s' not complete. "
                                              "Finish the update first." % dbmanager.database_name)
         
         # Back fill the daily summaries.
@@ -838,7 +838,7 @@ def main(options, args, engine_class=StdEngine):
     config_path = os.path.abspath(args[0])
 
     if options.daemon:
-        log.info("pid file is %s", options.pidfile)
+        log.info("PID file is %s", options.pidfile)
         daemon.daemonize(pidfile=options.pidfile)
 
     # For backward compatibility, recognize loop_on_init from command-line
@@ -913,7 +913,7 @@ def main(options, args, engine_class=StdEngine):
                 sys.exit(weewx.IO_ERROR)
             log.critical("    ****  Waiting 60 seconds then retrying...")
             time.sleep(60)
-            log.info("engine: retrying...")
+            log.info("retrying...")
 
         except (weedb.CannotConnect, weedb.DisconnectError) as e:
             # No connection to the database server. Log it, wait 120 seconds, then try again
@@ -961,7 +961,7 @@ def main(options, args, engine_class=StdEngine):
         # Catch any non-recoverable errors. Log them, exit
         except Exception as ex:
             # Caught unrecoverable error. Log it, exit
-            log.critical("Caught unrecoverable exception in engine:")
+            log.critical("Caught unrecoverable exception:")
             log.critical("    ****  %s" % ex)
             # Include a stack traceback in the log:
             weeutil.logger.log_traceback(log.critical, "    ****  ")

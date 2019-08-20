@@ -1321,16 +1321,16 @@ class Vantage(weewx.drivers.AbstractDevice):
         
         # Adjust the translation maps to reflect the rain bucket size:
         if self.rain_bucket_type == 1:
-            _archive_map['rain'] = _archive_map['rainRate'] = _loop_map['stormRain'] = _loop_map['dayRain'] = \
-                _loop_map['monthRain'] = _loop_map['yearRain'] = _bucket_1
+            _archive_map['rain'] = _archive_map['rainRate'] = _loop_map['stormRain'] = _loop_map['dayRain'] \
+                = _loop_map['monthRain'] = _loop_map['yearRain'] = _bucket_1
             _loop_map['rainRate'] = _bucket_1_None
         elif self.rain_bucket_type == 2:
-            _archive_map['rain'] = _archive_map['rainRate'] = _loop_map['stormRain'] = _loop_map['dayRain'] = \
-                _loop_map['monthRain'] = _loop_map['yearRain'] = _bucket_2
+            _archive_map['rain'] = _archive_map['rainRate'] = _loop_map['stormRain'] = _loop_map['dayRain'] \
+                = _loop_map['monthRain'] = _loop_map['yearRain'] = _bucket_2
             _loop_map['rainRate'] = _bucket_2_None
         else:
-            _archive_map['rain'] = _archive_map['rainRate'] = _loop_map['stormRain'] = _loop_map['dayRain'] = \
-                _loop_map['monthRain'] = _loop_map['yearRain'] = _val100
+            _archive_map['rain'] = _archive_map['rainRate'] = _loop_map['stormRain'] = _loop_map['dayRain'] \
+                = _loop_map['monthRain'] = _loop_map['yearRain'] = _val100
             _loop_map['rainRate'] = _big_val100
 
         # Try to guess the ISS ID for gauging reception strength.
@@ -1490,7 +1490,8 @@ class Vantage(weewx.drivers.AbstractDevice):
         
         raw_archive_packet = dict(list(zip(dataTypes, data_tuple)))
         
-        archive_packet = {'dateTime': _archive_datetime(raw_archive_packet['date_stamp'], raw_archive_packet['time_stamp']),
+        archive_packet = {'dateTime': _archive_datetime(raw_archive_packet['date_stamp'],
+                                                        raw_archive_packet['time_stamp']),
                           'usUnits': weewx.US}
         
         for _type in raw_archive_packet:
@@ -1912,12 +1913,14 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
     def add_options(self, parser):
         super(VantageConfigurator, self).add_options(parser)
         parser.add_option("--info", action="store_true", dest="info",
-                          help="To print configuration, reception, and barometer calibration information about your weather station.")
+                          help="To print configuration, reception, and barometer "
+                               "calibration information about your weather station.")
         parser.add_option("--clear-memory", action="store_true", dest="clear_memory",
                           help="To clear the memory of your weather station.")
         parser.add_option("--set-interval", type=int, dest="set_interval",
                           metavar="MINUTES",
-                          help="Sets the archive interval to the specified number of minutes. Valid values are 1, 5, 10, 15, 30, 60, or 120.")
+                          help="Sets the archive interval to the specified number of minutes. "
+                               "Valid values are 1, 5, 10, 15, 30, 60, or 120.")
         parser.add_option("--set-latitude", type=float, dest="set_latitude",
                           metavar="DEGREE",
                           help="Sets the latitude of the station to the specified number of tenth degree.")
@@ -1929,23 +1932,31 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
                           help="Sets the altitude of the station to the specified number of feet.") 
         parser.add_option("--set-barometer", type=float, dest="set_barometer",
                           metavar="inHg",
-                          help="Sets the barometer reading of the station to a known correct value in inches of mercury. Specify 0 (zero) to have the console pick a sensible value.")
+                          help="Sets the barometer reading of the station to a known correct "
+                               "value in inches of mercury. Specify 0 (zero) to have the console "
+                               "pick a sensible value.")
         parser.add_option("--set-wind-cup", type=int, dest="set_wind_cup",
                           metavar="CODE",
                           help="Set the type of wind cup. Specify '0' for small size; '1' for large size")
         parser.add_option("--set-bucket", type=int, dest="set_bucket",
                           metavar="CODE",
-                          help="Set the type of rain bucket. Specify '0' for 0.01 inches; '1' for 0.2 mm; '2' for 0.1 mm")
+                          help="Set the type of rain bucket. Specify '0' for 0.01 inches; "
+                               "'1' for 0.2 mm; '2' for 0.1 mm")
         parser.add_option("--set-rain-year-start", type=int,
                           dest="set_rain_year_start", metavar="MM",
                           help="Set the rain year start (1=Jan, 2=Feb, etc.).")
         parser.add_option("--set-offset", type=str,
                           dest="set_offset", metavar="VARIABLE,OFFSET",
-                          help="Set the onboard offset for VARIABLE inTemp, outTemp, extraTemp[1-7], inHumid, outHumid, extraHumid[1-7], soilTemp[1-4], leafTemp[1-4], windDir) to OFFSET (Fahrenheit, %, degrees)")
+                          help="Set the onboard offset for VARIABLE inTemp, outTemp, extraTemp[1-7], "
+                               "inHumid, outHumid, extraHumid[1-7], soilTemp[1-4], leafTemp[1-4], windDir) "
+                               "to OFFSET (Fahrenheit, %, degrees)")
         parser.add_option("--set-transmitter-type", type=str,
                           dest="set_transmitter_type",
                           metavar="CHANNEL,TYPE,TEMP,HUM,REPEATER_ID",
-                          help="Set the transmitter type for CHANNEL (1-8), TYPE (0=iss, 1=temp, 2=hum, 3=temp_hum, 4=wind, 5=rain, 6=leaf, 7=soil, 8=leaf_soil, 9=sensorlink, 10=none), as extra TEMP station and extra HUM station (both 1-7, if applicable), REPEATER_ID ('A'-'H', if used)")
+                          help="Set the transmitter type for CHANNEL (1-8), TYPE (0=iss, 1=temp, 2=hum, "
+                               "3=temp_hum, 4=wind, 5=rain, 6=leaf, 7=soil, 8=leaf_soil, 9=sensorlink, 10=none), "
+                               "as extra TEMP station and extra HUM station (both 1-7, if applicable), "
+                               "REPEATER_ID ('A'-'H', if used)")
         parser.add_option("--set-retransmit", type=str, dest="set_retransmit",
                           metavar="OFF|ON|ON,CHANNEL",
                           help="Turn console retransmit function 'ON' or 'OFF'.")
@@ -1970,7 +1981,8 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
         parser.add_option("--stop", action="store_true",
                           help="Stop the logger.")
         parser.add_option("--dump", action="store_true",
-                          help="Dump all data to the archive. NB: This may result in many duplicate primary key errors.")
+                          help="Dump all data to the archive. "
+                               "NB: This may result in many duplicate primary key errors.")
         parser.add_option("--logger-summary", type="string",
                           dest="logger_summary", metavar="FILE",
                           help="Save diagnostic summary to FILE (for debugging the logger).")
@@ -2122,7 +2134,8 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
                     comment = "(as extra humidity %d)" % transmitter_list[transmitter_id]["hum"]
                 elif transmitter_type == 'none':
                     transmitter_type = "(N/A)"
-                print("         %d      %-8s    %-4s    %s %s" % (transmitter_id + 1, listen, repeater, transmitter_type, comment), file=dest)
+                print("         %d      %-8s    %-4s    %s %s"
+                      % (transmitter_id + 1, listen, repeater, transmitter_type, comment), file=dest)
             print("", file=dest)
         except weewx.RetriesExceeded:
             pass
@@ -2428,7 +2441,8 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
     def set_transmitter_type(station, transmitter_list, noprompt):
         """Set the transmitter type for one of the eight channels."""
 
-        transmitter_list = list(map((lambda x: int(x) if x.isdigit() else x if x != "" else None), transmitter_list.split(',')))
+        transmitter_list = list(map((lambda x: int(x) if x.isdigit() else x if x != "" else None),
+                                    transmitter_list.split(',')))
         channel = transmitter_list[0]
         if not 1 <= channel <= 8:
             print("Channel number must be between 1 and 8.")
@@ -2629,7 +2643,10 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
                     archive.addRecord(record)
                     nrecs += 1
                     if nrecs % 10 == 0:
-                        print("Records processed: %d; Timestamp: %s\r" % (nrecs, weeutil.weeutil.timestamp_to_string(record['dateTime'])), end=' ', file=sys.stdout)
+                        print("Records processed: %d; Timestamp: %s\r"
+                              % (nrecs, weeutil.weeutil.timestamp_to_string(record['dateTime'])),
+                              end=' ',
+                              file=sys.stdout)
                         sys.stdout.flush()
                 print("\nFinished dump. %d records added" % (nrecs,))
         else:
@@ -2655,7 +2672,8 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
                           % (nrecs, page, index), file=dest)
                 nrecs += 1
                 if nrecs % 10 == 0:
-                    print("Records processed: %d; Timestamp: %s\r" % (nrecs, weeutil.weeutil.timestamp_to_string(time_ts)), end=' ', file=sys.stdout)
+                    print("Records processed: %d; Timestamp: %s\r"
+                          % (nrecs, weeutil.weeutil.timestamp_to_string(time_ts)), end=' ', file=sys.stdout)
                     sys.stdout.flush()
         print("\nFinished download of logger summary to file '%s'. %d records processed." % (dest_path, nrecs))
 

@@ -178,7 +178,7 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
             search_list.extend(search_list_ext)
 
         # provide feedback about the requested search list objects
-        log.debug("using search list %s", search_list)
+        log.debug("Using search list %s", search_list)
 
         # Now go through search_list (which is a list of strings holding the
         # names of the extensions):

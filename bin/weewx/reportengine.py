@@ -336,7 +336,7 @@ class FtpGenerator(ReportGenerator):
 
         if log_success:
             t2 = time.time()
-            log.info("ftpgenerator: ftp'd %d files in %0.2f seconds", n, (t2 - t1))
+            log.info("ftpgenerator: Ftp'd %d files in %0.2f seconds", n, (t2 - t1))
 
 
 # =============================================================================
@@ -366,7 +366,7 @@ class RsyncGenerator(ReportGenerator):
                 delete=to_bool(self.skin_dict.get('delete', False)),
                 log_success=to_bool(weeutil.config.search_up(self.skin_dict, 'log_success', True)))
         except KeyError:
-            log.debug("rsyncgenerator: rsync upload not requested. Skipped.")
+            log.debug("rsyncgenerator: Rsync upload not requested. Skipped.")
             return
 
         try:
@@ -424,7 +424,7 @@ class CopyGenerator(ReportGenerator):
             for path in glob.glob(pattern):
                 ncopy += weeutil.weeutil.deep_copy_path(path, html_dest_dir)
         if log_success:
-            log.info("copygenerator: copied %d files to %s", ncopy, html_dest_dir)
+            log.info("copygenerator: Copied %d files to %s", ncopy, html_dest_dir)
 
 
 # ===============================================================================

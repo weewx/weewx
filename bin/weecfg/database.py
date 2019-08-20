@@ -562,7 +562,7 @@ class IntervalWeighting(DatabaseFix):
             print(file=sys.stdout)
             tdiff = time.time() - t1
             # We are done so log and inform the user
-            log.info("intervalweighting: calculated weighting "
+            log.info("intervalweighting: Calculated weighting "
                      "for %s days in %0.2f seconds." % (_days, tdiff))
             if self.dry_run:
                 log.info( "intervalweighting: "

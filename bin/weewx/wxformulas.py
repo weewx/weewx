@@ -227,7 +227,7 @@ def calculate_rain(newtotal, oldtotal):
         if newtotal >= oldtotal:
             delta = newtotal - oldtotal
         else:
-            log.info("rain counter reset detected: new=%s old=%s", newtotal, oldtotal)
+            log.info("Rain counter reset detected: new=%s old=%s", newtotal, oldtotal)
             delta = None
     else:
         delta = None

@@ -29,13 +29,13 @@ class FtpUpload(object):
     def __init__(self, server,
                  user, password,
                  local_root, remote_root,
-                 port      = 21,
-                 name      = "FTP",
-                 passive   = True,
-                 max_tries = 3,
-                 secure    = False,
-                 debug     = 0,
-                 secure_data = True):
+                 port=21,
+                 name="FTP",
+                 passive=True,
+                 max_tries=3,
+                 secure=False,
+                 debug=0,
+                 secure_data=True):
         """Initialize an instance of FtpUpload.
         
         After initializing, call method run() to perform the upload.
@@ -64,17 +64,17 @@ class FtpUpload(object):
         due to a bug in the Python FTP client library. See Issue #284. 
         [Optional. Default is True]
         """
-        self.server      = server
-        self.user        = user
-        self.password    = password
-        self.local_root  = os.path.normpath(local_root)
+        self.server = server
+        self.user = user
+        self.password = password
+        self.local_root = os.path.normpath(local_root)
         self.remote_root = os.path.normpath(remote_root)
-        self.port        = port
-        self.name        = name
-        self.passive     = passive
-        self.max_tries   = max_tries
-        self.secure      = secure
-        self.debug       = debug
+        self.port = port
+        self.name = name
+        self.passive = passive
+        self.max_tries = max_tries
+        self.secure = secure
+        self.debug = debug
         self.secure_data = secure_data
 
     def run(self):
@@ -162,7 +162,7 @@ class FtpUpload(object):
                             except ftplib.all_errors as e:
                                 # Unsuccessful. Log it and go around again.
                                 log.error("Attempt #%d. Failed uploading %s to %s. Reason: %s"
-                                          % (count+1, full_remote_path, self.server, e))
+                                          % (count + 1, full_remote_path, self.server, e))
                                 ftp_server.set_pasv(self.passive)
                             else:
                                 # Success. Log it, break out of the loop
@@ -187,7 +187,7 @@ class FtpUpload(object):
     def getLastUpload(self):
         """Reads the time and members of the last upload from the local root"""
 
-        timeStampFile = os.path.join(self.local_root, "#%s.last" % self.name )
+        timeStampFile = os.path.join(self.local_root, "#%s.last" % self.name)
 
         # If the file does not exist, an IOError exception will be raised. 
         # If the file exists, but is truncated, an EOFError will be raised.
@@ -195,7 +195,7 @@ class FtpUpload(object):
         try:
             with open(timeStampFile, "rb") as f:
                 timestamp = cPickle.load(f)
-                fileset   = cPickle.load(f)
+                fileset = cPickle.load(f)
         except (IOError, EOFError, cPickle.PickleError, AttributeError):
             timestamp = 0
             fileset = set()
@@ -210,10 +210,10 @@ class FtpUpload(object):
 
     def saveLastUpload(self, timestamp, fileset):
         """Saves the time and members of the last upload in the local root."""
-        timeStampFile = os.path.join(self.local_root, "#%s.last" % self.name )
+        timeStampFile = os.path.join(self.local_root, "#%s.last" % self.name)
         with open(timeStampFile, "wb") as f:
             cPickle.dump(timestamp, f)
-            cPickle.dump(fileset,   f)
+            cPickle.dump(fileset, f)
 
     def _make_remote_dir(self, ftp_server, remote_dir_path):
         """Make a remote directory if necessary."""
@@ -224,7 +224,7 @@ class FtpUpload(object):
             except ftplib.all_errors as e:
                 # Got an exception. It might be because the remote directory already exists:
                 if sys.exc_info()[0] is ftplib.error_perm:
-                    msg =str(e).strip()
+                    msg = str(e).strip()
                     # If a directory already exists, some servers respond with a '550' ("Requested action not taken") code,
                     # others with a '521' ("Access denied" or "Pathname already exists") code.
                     if msg.startswith('550') or msg.startswith('521'):
@@ -246,7 +246,7 @@ class FtpUpload(object):
     def _skipThisFile(self, timestamp, fileset, full_local_path):
 
         filename = os.path.basename(full_local_path)
-        if filename[-1] == '~' or filename[0] == '#' :
+        if filename[-1] == '~' or filename[0] == '#':
             return True
 
         if full_local_path not in fileset:
@@ -275,7 +275,7 @@ if __name__ == '__main__':
         print("""Usage: ftpupload.py path-to-configuration-file [path-to-be-ftp'd]""")
         sys.exit(weewx.CMD_ERROR)
 
-    try :
+    try:
         config_dict = configobj.ConfigObj(sys.argv[1], file_error=True, encoding='utf-8')
     except IOError:
         print("Unable to open configuration file %s" % sys.argv[1])
