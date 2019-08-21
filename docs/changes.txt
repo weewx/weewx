@@ -48,6 +48,10 @@ API key, which you can get from the WU. Put it in weewx.conf.
 Unfortunately, WU is very unreliable whether reposts "stick".
 Fixes issue #414
 
+Fixed problem where sub-sections DegreeDays and Trend were located under the
+wrong weewx.conf section. Fixes issue #432. Thanks to user mph for spotting
+this!
+
 
 3.9.2 07/14/2019
 
@@ -120,9 +124,8 @@ zero for interval.
 Correct rounding problems for rain and other types when posting to CWOP.
 Fixes issue #431. Thanks to user ls4096!
 
-Fixed problem where sub-sections DegreeDays and Trend were located under the
-wrong weewx.conf section. Fixes issue #432. Thanks to user mph for spotting
-this!
+Fixed problem that can cause an exception with restx services that do not use
+the database manager. See commit 459ccb1.
 
 
 3.9.1 02/06/2019
