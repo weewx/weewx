@@ -469,8 +469,10 @@ class Vantage(weewx.drivers.AbstractDevice):
         
         iss_id: The station number of the ISS [Optional. Default is 1]
         
-        model_type: Vantage Pro model type. 1 := Vantage Pro; 2 := Vantage Pro2
+        model_type: Vantage Pro model type. 1=Vantage Pro; 2=Vantage Pro2
         [Optional. Default is 2]
+
+        packet_request: Requested packet type. 1=LOOP; 2=LOOP2; 3=both.
         """
 
         log.debug('Driver version is %s', DRIVER_VERSION)
@@ -478,11 +480,12 @@ class Vantage(weewx.drivers.AbstractDevice):
         self.hardware_type = None
 
         # These come from the configuration dictionary:
-        self.max_tries  = int(vp_dict.get('max_tries', 4))
+        self.max_tries  = to_int(vp_dict.get('max_tries', 4))
         self.iss_id     = to_int(vp_dict.get('iss_id'))
-        self.model_type = int(vp_dict.get('model_type', 2))
+        self.model_type = to_int(vp_dict.get('model_type', 2))
         if self.model_type not in list(range(1, 3)):
             raise weewx.UnsupportedFeature("Unknown model_type (%d)" % self.model_type)
+        self.packet_request = to_int(vp_dict.get('packet_request', 1))
 
         self.save_monthRain = None
         self.max_dst_jump = 7200
@@ -536,10 +539,10 @@ class Vantage(weewx.drivers.AbstractDevice):
         
         self.port.wakeup_console(self.max_tries)
         
-        # Request N packets:
-        self.port.send_data(b"LOOP %d\n" % N)
+        # Request N packets of type "packet_request":
+        self.port.send_data(b"LPS %d %d\n" % (self.packet_request, N))
 
-        for loop in range(N):  # @UnusedVariable
+        for loop in range(N):
             # Fetch a packet...
             _buffer = self.port.read(99)
             # ... see if it passes the CRC test ...
@@ -1407,51 +1410,68 @@ class Vantage(weewx.drivers.AbstractDevice):
                                    wait_before_retry, command_delay)
         raise weewx.UnsupportedFeature(vp_dict['type'])
 
-    def _unpackLoopPacket(self, raw_loop_string):
+    def _unpackLoopPacket(self, raw_loop_buffer):
         """Decode a raw Davis LOOP packet, returning the results as a dictionary in physical units.
         
-        raw_loop_string: The loop packet data buffer, passed in as a string. 
+        raw_loop_buffer: The loop packet data buffer, passed in as
+        a string (Python 2), or a byte array (Python 3).
         
         returns:
         
         A dictionary. The key will be an observation type, the value will be
         the observation in physical units."""
-    
-        # Unpack the data, using the compiled stuct.Struct string 'loop_fmt'
-        data_tuple = loop_fmt.unpack(raw_loop_string)
 
-        # Put the results in a dictionary. The values will not be in physical units yet,
-        # but rather using the raw values from the console.
-        raw_loop_packet = dict(list(zip(loop_types, data_tuple)))
-    
-        # Detect the kind of LOOP packet. Type 'A' has the character 'P' in this
-        # position. Type 'B' contains the 3-hour barometer trend in this position.
-        if raw_loop_packet['loop_type'] == byte2int(b'P'):
-            raw_loop_packet['trendIcon'] = None
-            raw_loop_packet['loop_type'] = 'A'
+        # Get the packet type. It's in byte 4.
+        packet_type = raw_loop_buffer[4]
+
+        if packet_type == 0:
+            loop_struct = loop1_struct
+            loop_types = loop1_types
+        elif packet_type == 1:
+            loop_struct = loop2_struct
+            loop_types = loop2_types
         else:
-            raw_loop_packet['trendIcon'] = raw_loop_packet['loop_type']
-            raw_loop_packet['loop_type'] = 'B'
-    
-        loop_packet = {'dateTime': int(time.time() + 0.5),
-                       'usUnits': weewx.US}
-        
-        for _type in raw_loop_packet:
-            # Get the mapping function for this type:
-            func = _loop_map.get(_type)
-            # It it exists, apply it:
-            if func:
-                # Call the function, with the raw value as an argument:
-                val = func(raw_loop_packet[_type])
-                # Skip all null values
-                if val is not None:
-                    loop_packet[_type] = val
-            
+            raise weewx.WeeWxIOError("Unknown LOOP packet type %d" % packet_type)
+
+        # Unpack the data, using the appropriate compiled stuct.Struct buffer.
+        # The result will be a long tuple with just the raw values from the console.
+        data_tuple = loop_struct.unpack(raw_loop_buffer)
+
+        # Combine it with the data types. The result will be a long iterable of 2-way
+        # tuples: (type, raw-value)
+        raw_loop_tuples = zip(loop_types, data_tuple)
+
+        # Now we need to map the raw values to physical units. This is the function that
+        # will do that. It's not really necessary to use an embedded function, but it's
+        # convenient to keep it close to its point-of-use.
+        def map_fn(t):
+            # The input t is a tuple (type, raw-value)
+            # Find the function for this type. If there is no function,
+            # provide a lambda function that will just return None.
+            func = _loop_map.get(t[0], lambda x: None)
+            # Use the function to convert to physical units.
+            # If the result is None, then return None. Otherwise,
+            # return a 2-way tuple (type, physical-value).
+            val = func(t[1])
+            return (t[0], val) if val is not None else None
+
+        # Run the iterable raw_loop_tuples through a mapping using the above function.
+        # Filter out any None values. The result will be a new iterable of
+        # 2-way tuples now in physical units: (type, physical-value).
+        phys_loop_tuples = filter(lambda x: x is not None, map(map_fn, raw_loop_tuples))
+
+        # Last step! Convert to a dictionary.
+        loop_packet = dict(phys_loop_tuples)
+
+        # Add time and the unit system
+        loop_packet['dateTime'] = int(time.time() + 0.5)
+        loop_packet['usUnits'] = weewx.US
+
         # Adjust sunrise and sunset:
         start_of_day = weeutil.weeutil.startOfDay(loop_packet['dateTime'])
         loop_packet['sunrise'] += start_of_day
         loop_packet['sunset']  += start_of_day
-        
+
         # Because the Davis stations do not offer bucket tips in LOOP data, we
         # must calculate it by looking for changes in rain totals. This won't
         # work for the very first rain packet.
@@ -1465,7 +1485,7 @@ class Vantage(weewx.drivers.AbstractDevice):
         self.save_monthRain = loop_packet['monthRain']
 
         return loop_packet
-    
+
     def _unpackArchivePacket(self, raw_archive_string):
         """Decode a Davis archive packet, returning the results as a dictionary.
         
@@ -1516,35 +1536,58 @@ class Vantage(weewx.drivers.AbstractDevice):
 #===============================================================================
 
 # A list of all the types held in a Vantage LOOP packet in their native order.
-loop_format = [('loop',              '3s'), ('loop_type',          'b'), ('packet_type',        'B'),
-               ('next_record',        'H'), ('barometer',          'H'), ('inTemp',             'h'),
-               ('inHumidity',         'B'), ('outTemp',            'h'), ('windSpeed',          'B'),
-               ('windSpeed10',        'B'), ('windDir',            'H'), ('extraTemp1',         'B'),
-               ('extraTemp2',         'B'), ('extraTemp3',         'B'), ('extraTemp4',         'B'),
-               ('extraTemp5',         'B'), ('extraTemp6',         'B'), ('extraTemp7',         'B'), 
-               ('soilTemp1',          'B'), ('soilTemp2',          'B'), ('soilTemp3',          'B'),
-               ('soilTemp4',          'B'), ('leafTemp1',          'B'), ('leafTemp2',          'B'),
-               ('leafTemp3',          'B'), ('leafTemp4',          'B'), ('outHumidity',        'B'),
-               ('extraHumid1',        'B'), ('extraHumid2',        'B'), ('extraHumid3',        'B'),
-               ('extraHumid4',        'B'), ('extraHumid5',        'B'), ('extraHumid6',        'B'),
-               ('extraHumid7',        'B'), ('rainRate',           'H'), ('UV',                 'B'),
-               ('radiation',          'H'), ('stormRain',          'H'), ('stormStart',         'H'),
-               ('dayRain',            'H'), ('monthRain',          'H'), ('yearRain',           'H'),
-               ('dayET',              'H'), ('monthET',            'H'), ('yearET',             'H'),
-               ('soilMoist1',         'B'), ('soilMoist2',         'B'), ('soilMoist3',         'B'),
-               ('soilMoist4',         'B'), ('leafWet1',           'B'), ('leafWet2',           'B'),
-               ('leafWet3',           'B'), ('leafWet4',           'B'), ('insideAlarm',        'B'),
-               ('rainAlarm',          'B'), ('outsideAlarm1',      'B'), ('outsideAlarm2',      'B'),
-               ('extraAlarm1',        'B'), ('extraAlarm2',        'B'), ('extraAlarm3',        'B'),
-               ('extraAlarm4',        'B'), ('extraAlarm5',        'B'), ('extraAlarm6',        'B'),
-               ('extraAlarm7',        'B'), ('extraAlarm8',        'B'), ('soilLeafAlarm1',     'B'),
-               ('soilLeafAlarm2',     'B'), ('soilLeafAlarm3',     'B'), ('soilLeafAlarm4',     'B'),
-               ('txBatteryStatus',    'B'), ('consBatteryVoltage', 'H'), ('forecastIcon',       'B'),
-               ('forecastRule',       'B'), ('sunrise',            'H'), ('sunset',             'H')]
+loop1_schema = [('loop',              '3s'), ('rev_type',           'b'), ('packet_type',        'B'),
+                ('next_record',        'H'), ('barometer',          'H'), ('inTemp',             'h'),
+                ('inHumidity',         'B'), ('outTemp',            'h'), ('windSpeed',          'B'),
+                ('windSpeed10',        'B'), ('windDir',            'H'), ('extraTemp1',         'B'),
+                ('extraTemp2',         'B'), ('extraTemp3',         'B'), ('extraTemp4',         'B'),
+                ('extraTemp5',         'B'), ('extraTemp6',         'B'), ('extraTemp7',         'B'),
+                ('soilTemp1',          'B'), ('soilTemp2',          'B'), ('soilTemp3',          'B'),
+                ('soilTemp4',          'B'), ('leafTemp1',          'B'), ('leafTemp2',          'B'),
+                ('leafTemp3',          'B'), ('leafTemp4',          'B'), ('outHumidity',        'B'),
+                ('extraHumid1',        'B'), ('extraHumid2',        'B'), ('extraHumid3',        'B'),
+                ('extraHumid4',        'B'), ('extraHumid5',        'B'), ('extraHumid6',        'B'),
+                ('extraHumid7',        'B'), ('rainRate',           'H'), ('UV',                 'B'),
+                ('radiation',          'H'), ('stormRain',          'H'), ('stormStart',         'H'),
+                ('dayRain',            'H'), ('monthRain',          'H'), ('yearRain',           'H'),
+                ('dayET',              'H'), ('monthET',            'H'), ('yearET',             'H'),
+                ('soilMoist1',         'B'), ('soilMoist2',         'B'), ('soilMoist3',         'B'),
+                ('soilMoist4',         'B'), ('leafWet1',           'B'), ('leafWet2',           'B'),
+                ('leafWet3',           'B'), ('leafWet4',           'B'), ('insideAlarm',        'B'),
+                ('rainAlarm',          'B'), ('outsideAlarm1',      'B'), ('outsideAlarm2',      'B'),
+                ('extraAlarm1',        'B'), ('extraAlarm2',        'B'), ('extraAlarm3',        'B'),
+                ('extraAlarm4',        'B'), ('extraAlarm5',        'B'), ('extraAlarm6',        'B'),
+                ('extraAlarm7',        'B'), ('extraAlarm8',        'B'), ('soilLeafAlarm1',     'B'),
+                ('soilLeafAlarm2',     'B'), ('soilLeafAlarm3',     'B'), ('soilLeafAlarm4',     'B'),
+                ('txBatteryStatus',    'B'), ('consBatteryVoltage', 'H'), ('forecastIcon',       'B'),
+                ('forecastRule',       'B'), ('sunrise',            'H'), ('sunset',             'H')]
 
-# Extract the types and struct.Struct formats for the LOOP packets:
-loop_types, fmt = list(zip(*loop_format))
-loop_fmt = struct.Struct('<' + ''.join(fmt))
+
+loop2_schema = [('loop',              '3s'), ('trendIcon',          'b'), ('packet_type',        'B'),
+                ('_unused',            'H'), ('barometer',          'H'), ('inTemp',             'h'),
+                ('inHumidity',         'B'), ('outTemp',            'h'), ('windSpeed',          'B'),
+                ('_unused',            'B'), ('windDir',            'H'), ('windSpeed10',        'H'),
+                ('windSpeed2',         'H'), ('windGust10',         'H'), ('windGustDir10',      'H'),
+                ('_unused',            'H'), ('_unused',            'H'), ('dewpoint',           'h'),
+                ('_unused',            'B'), ('outHumidity',        'B'), ('_unused',            'B'),
+                ('heatindex',          'h'), ('windchill',          'h'), ('THSW',               'h'),
+                ('rainRate',           'H'), ('UV',                 'B'), ('radiation',          'H'),
+                ('stormRain',          'H'), ('stormStart',         'H'), ('dayRain',            'H'),
+                ('rain15',             'H'), ('hourRain',           'H'), ('dayET',              'H'),
+                ('rain24',             'H'), ('bar_reduction',      'B'), ('bar_offset',         'h'),
+                ('bar_calibration',    'h'), ('pressure_raw',       'H'), ('pressure',           'H'),
+                ('altimeter',          'H'), ('_unused',            'B'), ('_unused',            'B'),
+                ('_unused_graph',      'B'), ('_unused_graph',      'B'), ('_unused_graph',      'B'),
+                ('_unused_graph',      'B'), ('_unused_graph',      'B'), ('_unused_graph',      'B'),
+                ('_unused_graph',      'B'), ('_unused_graph',      'B'), ('_unused_graph',      'B'),
+                ('_unused_graph',      'B'), ('_unused',            'H'), ('_unused',            'H'),
+                ('_unused',            'H'), ('_unused',            'H'), ('_unused',            'H'),
+                ('_unused',            'H')]
+
+loop1_types, loop1_code = list(zip(*loop1_schema))
+loop1_struct = struct.Struct('<' + ''.join(loop1_code))
+loop2_types, loop2_code = list(zip(*loop2_schema))
+loop2_struct = struct.Struct('<' + ''.join(loop2_code))
 
 #===============================================================================
 #                              archive packet
@@ -1779,7 +1822,8 @@ _loop_map = {'barometer'       : _val1000Zero,
              'forecastRule'    : _null,
              'sunrise'         : _stime,
              'sunset'          : _stime,
-             'trendIcon'       : _null}
+             'trendIcon'       : _null,
+             'next_record'     : _null_int}
 
 # This dictionary maps a type key to a function. The function should be able to
 # decode a sensor value held in the archive packet in the internal, Davis form into US
