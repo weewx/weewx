@@ -412,6 +412,7 @@ class EthernetWrapper(BaseWrapper):
             # Reraise as a weewx I/O error:
             raise weewx.WeeWxIOError(ex)
 
+
 #===============================================================================
 #                           class Vantage
 #===============================================================================
@@ -487,7 +488,7 @@ class Vantage(weewx.drivers.AbstractDevice):
             raise weewx.UnsupportedFeature("Unknown model_type (%d)" % self.model_type)
         self.packet_request = to_int(vp_dict.get('packet_request', 1))
 
-        self.save_monthRain = None
+        self.save_day_rain = None
         self.max_dst_jump = 7200
 
         # Get an appropriate port, depending on the connection type:
@@ -918,7 +919,7 @@ class Vantage(weewx.drivers.AbstractDevice):
         # Tell the console to put one byte in hex location 0x0B
         self.port.send_data(b"EEBWR 0B 02\n")
         # Follow it up with the data:
-        self.port.send_data_with_crc16(struct.pack('<BB', latitude & 0x00ff, (latitude // 256) & 0x00ff), max_tries=1)
+        self.port.send_data_with_crc16(struct.pack('<BB', latitude & 0xff, (latitude // 256) & 0xff), max_tries=1)
         # Then call NEWSETUP to get it to stick:
         self.port.send_data(b"NEWSETUP\n")
 
@@ -936,7 +937,7 @@ class Vantage(weewx.drivers.AbstractDevice):
         # Tell the console to put one byte in hex location 0x0D
         self.port.send_data(b"EEBWR 0D 02\n")
         # Follow it up with the data:
-        self.port.send_data_with_crc16(struct.pack('<BB', longitude & 0x00ff, (longitude // 256) & 0x00ff), max_tries = 1)
+        self.port.send_data_with_crc16(struct.pack('<BB', longitude & 0xff, (longitude // 256) & 0xff), max_tries = 1)
         # Then call NEWSETUP to get it to stick:
         self.port.send_data(b"NEWSETUP\n")
 
@@ -1322,20 +1323,6 @@ class Vantage(weewx.drivers.AbstractDevice):
         self.wind_cup_size    = Vantage.wind_cup_dict[self.wind_cup_type]
         self.rain_bucket_size = Vantage.rain_bucket_dict[self.rain_bucket_type]
         
-        # Adjust the translation maps to reflect the rain bucket size:
-        if self.rain_bucket_type == 1:
-            _archive_map['rain'] = _archive_map['rainRate'] = _loop_map['stormRain'] = _loop_map['dayRain'] \
-                = _loop_map['monthRain'] = _loop_map['yearRain'] = _bucket_1
-            _loop_map['rainRate'] = _bucket_1_None
-        elif self.rain_bucket_type == 2:
-            _archive_map['rain'] = _archive_map['rainRate'] = _loop_map['stormRain'] = _loop_map['dayRain'] \
-                = _loop_map['monthRain'] = _loop_map['yearRain'] = _bucket_2
-            _loop_map['rainRate'] = _bucket_2_None
-        else:
-            _archive_map['rain'] = _archive_map['rainRate'] = _loop_map['stormRain'] = _loop_map['dayRain'] \
-                = _loop_map['monthRain'] = _loop_map['yearRain'] = _val100
-            _loop_map['rainRate'] = _big_val100
-
         # Try to guess the ISS ID for gauging reception strength.
         if self.iss_id is None:
             stations = self.getStnTransmitters()
@@ -1422,8 +1409,7 @@ class Vantage(weewx.drivers.AbstractDevice):
         the observation in physical units."""
 
         # Get the packet type. It's in byte 4.
-        packet_type = raw_loop_buffer[4]
-
+        packet_type = indexbytes(raw_loop_buffer, 4)
         if packet_type == 0:
             loop_struct = loop1_struct
             loop_types = loop1_types
@@ -1431,7 +1417,7 @@ class Vantage(weewx.drivers.AbstractDevice):
             loop_struct = loop2_struct
             loop_types = loop2_types
         else:
-            raise weewx.WeeWxIOError("Unknown LOOP packet type %d" % packet_type)
+            raise weewx.WeeWxIOError("Unknown LOOP packet type %s" % packet_type)
 
         # Unpack the data, using the appropriate compiled stuct.Struct buffer.
         # The result will be a long tuple with just the raw values from the console.
@@ -1441,149 +1427,161 @@ class Vantage(weewx.drivers.AbstractDevice):
         # tuples: (type, raw-value)
         raw_loop_tuples = zip(loop_types, data_tuple)
 
-        # Now we need to map the raw values to physical units. This is the function that
-        # will do that. It's not really necessary to use an embedded function, but it's
-        # convenient to keep it close to its point-of-use.
-        def map_fn(t):
-            # The input t is a tuple (type, raw-value)
-            # Find the function for this type. If there is no function,
-            # provide a lambda function that will just return None.
-            func = _loop_map.get(t[0], lambda x: None)
-            # Use the function to convert to physical units.
-            # If the result is None, then return None. Otherwise,
-            # return a 2-way tuple (type, physical-value).
-            val = func(t[1])
-            return (t[0], val) if val is not None else None
+        # Convert to a dictionary:
+        raw_loop_packet = dict(raw_loop_tuples)
+        # Add the bucket type. It's needed to decode rain bucket tips.
+        raw_loop_packet['bucket_type'] = self.rain_bucket_type
 
-        # Run the iterable raw_loop_tuples through a mapping using the above function.
-        # Filter out any None values. The result will be a new iterable of
-        # 2-way tuples now in physical units: (type, physical-value).
-        phys_loop_tuples = filter(lambda x: x is not None, map(map_fn, raw_loop_tuples))
-
-        # Last step! Convert to a dictionary.
-        loop_packet = dict(phys_loop_tuples)
-
-        # Add time and the unit system
-        loop_packet['dateTime'] = int(time.time() + 0.5)
-        loop_packet['usUnits'] = weewx.US
+        loop_packet = {
+            'dateTime': int(time.time() + 0.5),
+            'usUnits' : weewx.US
+        }
+        # Now we need to map the raw values to physical units.
+        for _type in raw_loop_packet:
+            # Get the mapping function for this type. If there is
+            # no such function, supply a lambda function that returns None
+            func = _loop_map.get(_type, lambda p, k: None)
+            # Apply the function
+            val = func(raw_loop_packet, _type)
+            # Ignore None values:
+            if val is not None:
+                loop_packet[_type] = val
 
         # Adjust sunrise and sunset:
         start_of_day = weeutil.weeutil.startOfDay(loop_packet['dateTime'])
-        loop_packet['sunrise'] += start_of_day
-        loop_packet['sunset']  += start_of_day
+        if 'sunrise' in loop_packet:
+            loop_packet['sunrise'] += start_of_day
+        if 'sunset' in loop_packet:
+            loop_packet['sunset'] += start_of_day
 
         # Because the Davis stations do not offer bucket tips in LOOP data, we
         # must calculate it by looking for changes in rain totals. This won't
         # work for the very first rain packet.
-        if self.save_monthRain is None:
+        if self.save_day_rain is None:
             delta = None
         else:
-            delta = loop_packet['monthRain'] - self.save_monthRain
+            delta = loop_packet['dayRain'] - self.save_day_rain
             # If the difference is negative, we're at the beginning of a month.
             if delta < 0: delta = None
         loop_packet['rain'] = delta
-        self.save_monthRain = loop_packet['monthRain']
+        self.save_day_rain = loop_packet['dayRain']
 
         return loop_packet
 
-    def _unpackArchivePacket(self, raw_archive_string):
+    def _unpackArchivePacket(self, raw_archive_buffer):
         """Decode a Davis archive packet, returning the results as a dictionary.
-        
-        raw_archive_string: The archive packet data buffer, passed in as a string. This will be unpacked and 
-        the results placed a dictionary"""
+
+        raw_archive_buffer: The archive record data buffer, passed in as
+        a string (Python 2), or a byte array (Python 3).
+
+        returns:
+
+        A dictionary. The key will be an observation type, the value will be
+        the observation in physical units."""
     
-        # Figure out the packet type:
-        packet_type = indexbytes(raw_archive_string, 42)
+        # Get the record type. It's in byte 42.
+        record_type = indexbytes(raw_archive_buffer, 42)
         
-        if packet_type == 0xff:
+        if record_type == 0xff:
             # Rev A packet type:
-            archive_format = rec_fmt_A
-            dataTypes = rec_types_A
-        elif packet_type == 0x00:
+            rec_struct = rec_A_struct
+            rec_types = rec_types_A
+        elif record_type == 0x00:
             # Rev B packet type:
-            archive_format = rec_fmt_B
-            dataTypes = rec_types_B
+            rec_struct = rec_B_struct
+            rec_types = rec_types_B
         else:
-            raise weewx.UnknownArchiveType("Unknown archive type = 0x%x" % (packet_type,)) 
+            raise weewx.UnknownArchiveType("Unknown archive type = 0x%x" % (record_type,))
             
-        data_tuple = archive_format.unpack(raw_archive_string)
+        data_tuple = rec_struct.unpack(raw_archive_buffer)
         
-        raw_archive_packet = dict(list(zip(dataTypes, data_tuple)))
+        raw_archive_record = dict(zip(rec_types, data_tuple))
+        raw_archive_record['bucket_type'] = self.rain_bucket_type
         
-        archive_packet = {'dateTime': _archive_datetime(raw_archive_packet['date_stamp'],
-                                                        raw_archive_packet['time_stamp']),
-                          'usUnits': weewx.US}
+        archive_record = {
+            'dateTime': _archive_datetime(raw_archive_record['date_stamp'],
+                                          raw_archive_record['time_stamp']),
+            'usUnits': weewx.US,
+            # Divide archive interval by 60 to keep consistent with wview
+            'interval': int(self.archive_interval // 60),
+        }
+
+        archive_record['rxCheckPercent'] = _rxcheck(self.model_type,
+                                                    archive_record['interval'],
+                                                    self.iss_id,
+                                                    raw_archive_record['number_of_wind_samples'])
+
+        for _type in raw_archive_record:
+            # Get the mapping function for this type. If there is no such
+            # function, supply a lambda function that will just return None
+            func = _archive_map.get(_type, lambda p, k: None)
+            # Call the function:
+            val = func(raw_archive_record, _type)
+            # Skip all null values
+            if val is not None:
+                archive_record[_type] = val
         
-        for _type in raw_archive_packet:
-            # Get the mapping function for this type:
-            func = _archive_map.get(_type)
-            # It it exists, apply it:
-            if func:
-                # Call the function, with the raw value as an argument:
-                val = func(raw_archive_packet[_type])
-                # Skip all null values
-                if val is not None:
-                    archive_packet[_type] = val
-        
-        # Divide archive interval by 60 to keep consistent with wview
-        archive_packet['interval']   = int(self.archive_interval // 60)
-        archive_packet['rxCheckPercent'] = _rxcheck(self.model_type, archive_packet['interval'], 
-                                                    self.iss_id, raw_archive_packet['number_of_wind_samples'])
-        return archive_packet
+        return archive_record
     
 #===============================================================================
 #                                 LOOP packet
 #===============================================================================
 
+
 # A list of all the types held in a Vantage LOOP packet in their native order.
-loop1_schema = [('loop',              '3s'), ('rev_type',           'b'), ('packet_type',        'B'),
-                ('next_record',        'H'), ('barometer',          'H'), ('inTemp',             'h'),
-                ('inHumidity',         'B'), ('outTemp',            'h'), ('windSpeed',          'B'),
-                ('windSpeed10',        'B'), ('windDir',            'H'), ('extraTemp1',         'B'),
-                ('extraTemp2',         'B'), ('extraTemp3',         'B'), ('extraTemp4',         'B'),
-                ('extraTemp5',         'B'), ('extraTemp6',         'B'), ('extraTemp7',         'B'),
-                ('soilTemp1',          'B'), ('soilTemp2',          'B'), ('soilTemp3',          'B'),
-                ('soilTemp4',          'B'), ('leafTemp1',          'B'), ('leafTemp2',          'B'),
-                ('leafTemp3',          'B'), ('leafTemp4',          'B'), ('outHumidity',        'B'),
-                ('extraHumid1',        'B'), ('extraHumid2',        'B'), ('extraHumid3',        'B'),
-                ('extraHumid4',        'B'), ('extraHumid5',        'B'), ('extraHumid6',        'B'),
-                ('extraHumid7',        'B'), ('rainRate',           'H'), ('UV',                 'B'),
-                ('radiation',          'H'), ('stormRain',          'H'), ('stormStart',         'H'),
-                ('dayRain',            'H'), ('monthRain',          'H'), ('yearRain',           'H'),
-                ('dayET',              'H'), ('monthET',            'H'), ('yearET',             'H'),
-                ('soilMoist1',         'B'), ('soilMoist2',         'B'), ('soilMoist3',         'B'),
-                ('soilMoist4',         'B'), ('leafWet1',           'B'), ('leafWet2',           'B'),
-                ('leafWet3',           'B'), ('leafWet4',           'B'), ('insideAlarm',        'B'),
-                ('rainAlarm',          'B'), ('outsideAlarm1',      'B'), ('outsideAlarm2',      'B'),
-                ('extraAlarm1',        'B'), ('extraAlarm2',        'B'), ('extraAlarm3',        'B'),
-                ('extraAlarm4',        'B'), ('extraAlarm5',        'B'), ('extraAlarm6',        'B'),
-                ('extraAlarm7',        'B'), ('extraAlarm8',        'B'), ('soilLeafAlarm1',     'B'),
-                ('soilLeafAlarm2',     'B'), ('soilLeafAlarm3',     'B'), ('soilLeafAlarm4',     'B'),
-                ('txBatteryStatus',    'B'), ('consBatteryVoltage', 'H'), ('forecastIcon',       'B'),
-                ('forecastRule',       'B'), ('sunrise',            'H'), ('sunset',             'H')]
+loop1_schema = [
+    ('loop',              '3s'), ('rev_type',           'b'), ('packet_type',        'B'),
+    ('next_record',        'H'), ('barometer',          'H'), ('inTemp',             'h'),
+    ('inHumidity',         'B'), ('outTemp',            'h'), ('windSpeed',          'B'),
+    ('windSpeed10',        'B'), ('windDir',            'H'), ('extraTemp1',         'B'),
+    ('extraTemp2',         'B'), ('extraTemp3',         'B'), ('extraTemp4',         'B'),
+    ('extraTemp5',         'B'), ('extraTemp6',         'B'), ('extraTemp7',         'B'),
+    ('soilTemp1',          'B'), ('soilTemp2',          'B'), ('soilTemp3',          'B'),
+    ('soilTemp4',          'B'), ('leafTemp1',          'B'), ('leafTemp2',          'B'),
+    ('leafTemp3',          'B'), ('leafTemp4',          'B'), ('outHumidity',        'B'),
+    ('extraHumid1',        'B'), ('extraHumid2',        'B'), ('extraHumid3',        'B'),
+    ('extraHumid4',        'B'), ('extraHumid5',        'B'), ('extraHumid6',        'B'),
+    ('extraHumid7',        'B'), ('rainRate',           'H'), ('UV',                 'B'),
+    ('radiation',          'H'), ('stormRain',          'H'), ('stormStart',         'H'),
+    ('dayRain',            'H'), ('monthRain',          'H'), ('yearRain',           'H'),
+    ('dayET',              'H'), ('monthET',            'H'), ('yearET',             'H'),
+    ('soilMoist1',         'B'), ('soilMoist2',         'B'), ('soilMoist3',         'B'),
+    ('soilMoist4',         'B'), ('leafWet1',           'B'), ('leafWet2',           'B'),
+    ('leafWet3',           'B'), ('leafWet4',           'B'), ('insideAlarm',        'B'),
+    ('rainAlarm',          'B'), ('outsideAlarm1',      'B'), ('outsideAlarm2',      'B'),
+    ('extraAlarm1',        'B'), ('extraAlarm2',        'B'), ('extraAlarm3',        'B'),
+    ('extraAlarm4',        'B'), ('extraAlarm5',        'B'), ('extraAlarm6',        'B'),
+    ('extraAlarm7',        'B'), ('extraAlarm8',        'B'), ('soilLeafAlarm1',     'B'),
+    ('soilLeafAlarm2',     'B'), ('soilLeafAlarm3',     'B'), ('soilLeafAlarm4',     'B'),
+    ('txBatteryStatus',    'B'), ('consBatteryVoltage', 'H'), ('forecastIcon',       'B'),
+    ('forecastRule',       'B'), ('sunrise',            'H'), ('sunset',             'H')
+]
 
 
-loop2_schema = [('loop',              '3s'), ('trendIcon',          'b'), ('packet_type',        'B'),
-                ('_unused',            'H'), ('barometer',          'H'), ('inTemp',             'h'),
-                ('inHumidity',         'B'), ('outTemp',            'h'), ('windSpeed',          'B'),
-                ('_unused',            'B'), ('windDir',            'H'), ('windSpeed10',        'H'),
-                ('windSpeed2',         'H'), ('windGust10',         'H'), ('windGustDir10',      'H'),
-                ('_unused',            'H'), ('_unused',            'H'), ('dewpoint',           'h'),
-                ('_unused',            'B'), ('outHumidity',        'B'), ('_unused',            'B'),
-                ('heatindex',          'h'), ('windchill',          'h'), ('THSW',               'h'),
-                ('rainRate',           'H'), ('UV',                 'B'), ('radiation',          'H'),
-                ('stormRain',          'H'), ('stormStart',         'H'), ('dayRain',            'H'),
-                ('rain15',             'H'), ('hourRain',           'H'), ('dayET',              'H'),
-                ('rain24',             'H'), ('bar_reduction',      'B'), ('bar_offset',         'h'),
-                ('bar_calibration',    'h'), ('pressure_raw',       'H'), ('pressure',           'H'),
-                ('altimeter',          'H'), ('_unused',            'B'), ('_unused',            'B'),
-                ('_unused_graph',      'B'), ('_unused_graph',      'B'), ('_unused_graph',      'B'),
-                ('_unused_graph',      'B'), ('_unused_graph',      'B'), ('_unused_graph',      'B'),
-                ('_unused_graph',      'B'), ('_unused_graph',      'B'), ('_unused_graph',      'B'),
-                ('_unused_graph',      'B'), ('_unused',            'H'), ('_unused',            'H'),
-                ('_unused',            'H'), ('_unused',            'H'), ('_unused',            'H'),
-                ('_unused',            'H')]
+loop2_schema = [
+    ('loop',              '3s'), ('trendIcon',          'b'), ('packet_type',        'B'),
+    ('_unused',            'H'), ('barometer',          'H'), ('inTemp',             'h'),
+    ('inHumidity',         'B'), ('outTemp',            'h'), ('windSpeed',          'B'),
+    ('_unused',            'B'), ('windDir',            'H'), ('windSpeed10',        'H'),
+    ('windSpeed2',         'H'), ('windGust10',         'H'), ('windGustDir10',      'H'),
+    ('_unused',            'H'), ('_unused',            'H'), ('dewpoint',           'h'),
+    ('_unused',            'B'), ('outHumidity',        'B'), ('_unused',            'B'),
+    ('heatindex',          'h'), ('windchill',          'h'), ('THSW',               'h'),
+    ('rainRate',           'H'), ('UV',                 'B'), ('radiation',          'H'),
+    ('stormRain',          'H'), ('stormStart',         'H'), ('dayRain',            'H'),
+    ('rain15',             'H'), ('hourRain',           'H'), ('dayET',              'H'),
+    ('rain24',             'H'), ('bar_reduction',      'B'), ('bar_offset',         'h'),
+    ('bar_calibration',    'h'), ('pressure_raw',       'H'), ('pressure',           'H'),
+    ('altimeter',          'H'), ('_unused',            'B'), ('_unused',            'B'),
+    ('_unused_graph',      'B'), ('_unused_graph',      'B'), ('_unused_graph',      'B'),
+    ('_unused_graph',      'B'), ('_unused_graph',      'B'), ('_unused_graph',      'B'),
+    ('_unused_graph',      'B'), ('_unused_graph',      'B'), ('_unused_graph',      'B'),
+    ('_unused_graph',      'B'), ('_unused',            'H'), ('_unused',            'H'),
+    ('_unused',            'H'), ('_unused',            'H'), ('_unused',            'H'),
+    ('_unused',            'H')
+]
 
+# Extract the types and struct.Struct formats for the two types of LOOP packets
 loop1_types, loop1_code = list(zip(*loop1_schema))
 loop1_struct = struct.Struct('<' + ''.join(loop1_code))
 loop2_types, loop2_code = list(zip(*loop2_schema))
@@ -1593,40 +1591,44 @@ loop2_struct = struct.Struct('<' + ''.join(loop2_code))
 #                              archive packet
 #===============================================================================
 
-rec_format_A =[('date_stamp',              'H'), ('time_stamp',    'H'), ('outTemp',    'h'),
-               ('highOutTemp',             'h'), ('lowOutTemp',    'h'), ('rain',       'H'),
-               ('rainRate',                'H'), ('barometer',     'H'), ('radiation',  'H'),
-               ('number_of_wind_samples',  'H'), ('inTemp',        'h'), ('inHumidity', 'B'),
-               ('outHumidity',             'B'), ('windSpeed',     'B'), ('windGust',   'B'),
-               ('windGustDir',             'B'), ('windDir',       'B'), ('UV',         'B'),
-               ('ET',                      'B'), ('invalid_data',  'B'), ('soilMoist1', 'B'),
-               ('soilMoist2',              'B'), ('soilMoist3',    'B'), ('soilMoist4', 'B'),
-               ('soilTemp1',               'B'), ('soilTemp2',     'B'), ('soilTemp3',  'B'),
-               ('soilTemp4',               'B'), ('leafWet1',      'B'), ('leafWet2',   'B'),
-               ('leafWet3',                'B'), ('leafWet4',      'B'), ('extraTemp1', 'B'),
-               ('extraTemp2',              'B'), ('extraHumid1',   'B'), ('extraHumid2','B'),
-               ('readClosed',              'H'), ('readOpened',    'H'), ('unused',     'B')]
+rec_A_schema =[
+    ('date_stamp',              'H'), ('time_stamp',    'H'), ('outTemp',    'h'),
+    ('highOutTemp',             'h'), ('lowOutTemp',    'h'), ('rain',       'H'),
+    ('rainRate',                'H'), ('barometer',     'H'), ('radiation',  'H'),
+    ('number_of_wind_samples',  'H'), ('inTemp',        'h'), ('inHumidity', 'B'),
+    ('outHumidity',             'B'), ('windSpeed',     'B'), ('windGust',   'B'),
+    ('windGustDir',             'B'), ('windDir',       'B'), ('UV',         'B'),
+    ('ET',                      'B'), ('invalid_data',  'B'), ('soilMoist1', 'B'),
+    ('soilMoist2',              'B'), ('soilMoist3',    'B'), ('soilMoist4', 'B'),
+    ('soilTemp1',               'B'), ('soilTemp2',     'B'), ('soilTemp3',  'B'),
+    ('soilTemp4',               'B'), ('leafWet1',      'B'), ('leafWet2',   'B'),
+    ('leafWet3',                'B'), ('leafWet4',      'B'), ('extraTemp1', 'B'),
+    ('extraTemp2',              'B'), ('extraHumid1',   'B'), ('extraHumid2','B'),
+    ('readClosed',              'H'), ('readOpened',    'H'), ('unused',     'B')
+]
 
-rec_format_B = [('date_stamp',             'H'), ('time_stamp',    'H'), ('outTemp',    'h'),
-                ('highOutTemp',            'h'), ('lowOutTemp',    'h'), ('rain',       'H'),
-                ('rainRate',               'H'), ('barometer',     'H'), ('radiation',  'H'),
-                ('number_of_wind_samples', 'H'), ('inTemp',        'h'), ('inHumidity', 'B'),
-                ('outHumidity',            'B'), ('windSpeed',     'B'), ('windGust',   'B'),
-                ('windGustDir',            'B'), ('windDir',       'B'), ('UV',         'B'),
-                ('ET',                     'B'), ('highRadiation', 'H'), ('highUV',     'B'),
-                ('forecastRule',           'B'), ('leafTemp1',     'B'), ('leafTemp2',  'B'),
-                ('leafWet1',               'B'), ('leafWet2',      'B'), ('soilTemp1',  'B'),
-                ('soilTemp2',              'B'), ('soilTemp3',     'B'), ('soilTemp4',  'B'),
-                ('download_record_type',   'B'), ('extraHumid1',   'B'), ('extraHumid2','B'),
-                ('extraTemp1',             'B'), ('extraTemp2',    'B'), ('extraTemp3', 'B'),
-                ('soilMoist1',             'B'), ('soilMoist2',    'B'), ('soilMoist3', 'B'),
-                ('soilMoist4',             'B')]
+rec_B_schema = [
+    ('date_stamp',             'H'), ('time_stamp',    'H'), ('outTemp',    'h'),
+    ('highOutTemp',            'h'), ('lowOutTemp',    'h'), ('rain',       'H'),
+    ('rainRate',               'H'), ('barometer',     'H'), ('radiation',  'H'),
+    ('number_of_wind_samples', 'H'), ('inTemp',        'h'), ('inHumidity', 'B'),
+    ('outHumidity',            'B'), ('windSpeed',     'B'), ('windGust',   'B'),
+    ('windGustDir',            'B'), ('windDir',       'B'), ('UV',         'B'),
+    ('ET',                     'B'), ('highRadiation', 'H'), ('highUV',     'B'),
+    ('forecastRule',           'B'), ('leafTemp1',     'B'), ('leafTemp2',  'B'),
+    ('leafWet1',               'B'), ('leafWet2',      'B'), ('soilTemp1',  'B'),
+    ('soilTemp2',              'B'), ('soilTemp3',     'B'), ('soilTemp4',  'B'),
+    ('download_record_type',   'B'), ('extraHumid1',   'B'), ('extraHumid2','B'),
+    ('extraTemp1',             'B'), ('extraTemp2',    'B'), ('extraTemp3', 'B'),
+    ('soilMoist1',             'B'), ('soilMoist2',    'B'), ('soilMoist3', 'B'),
+    ('soilMoist4',             'B')
+]
 
 # Extract the types and struct.Struct formats for the two types of archive packets:
-rec_types_A, fmt_A = list(zip(*rec_format_A))
-rec_types_B, fmt_B = list(zip(*rec_format_B))
-rec_fmt_A = struct.Struct('<' + ''.join(fmt_A))
-rec_fmt_B = struct.Struct('<' + ''.join(fmt_B))
+rec_types_A, fmt_A = list(zip(*rec_A_schema))
+rec_types_B, fmt_B = list(zip(*rec_B_schema))
+rec_A_struct = struct.Struct('<' + ''.join(fmt_A))
+rec_B_struct = struct.Struct('<' + ''.join(fmt_B))
 
 def _rxcheck(model_type, interval, iss_id, number_of_wind_samples):
     """Gives an estimate of the fraction of packets received.
@@ -1649,6 +1651,7 @@ def _rxcheck(model_type, interval, iss_id, number_of_wind_samples):
 #                      Decoding routines
 #===============================================================================
 
+
 def _archive_datetime(datestamp, timestamp):
     """Returns the epoch time of the archive packet."""
     try:
@@ -1668,13 +1671,15 @@ def _archive_datetime(datestamp, timestamp):
     except (OverflowError, ValueError, TypeError):
         ts = None
     return ts
-    
-def _loop_date(v):
+
+
+def _loop_date(p, k):
     """Returns the epoch time stamp of a time encoded in the LOOP packet, 
     which, for some reason, uses a different encoding scheme than the archive packet.
     Also, the Davis documentation isn't clear whether "bit 0" refers to the least-significant
     bit, or the most-significant bit. I'm assuming the former, which is the usual
     in little-endian machines."""
+    v = p[k]
     if v == 0xffff:
         return None
     time_tuple = ((0x007f & v) + 2000,  # year
@@ -1689,185 +1694,164 @@ def _loop_date(v):
         ts = None
     return ts
     
-def _stime(v):
-    h = v / 100
-    m = v % 100
-    # Return seconds since midnight
-    return 3600 * h + 60 * m
 
-def _big_val(v):
-    return float(v) if v != 0x7fff else None
+def _decode_rain(p, k):
+    if p['bucket_type'] == 0:
+        # 0.01 inch bucket
+        return p[k] / 100.0
+    elif p['bucket_type'] == 1:
+        # 0.2 mm bucket
+        return p[k] * 0.0078740157
+    elif p['bucket_type'] == 2:
+        # 0.1 mm bucket
+        return p[k] * 0.00393700787
+    else:
+        log.warn("Unknown bucket type $s" % p['bucket_type'])
 
-def _big_val10(v):
-    return float(v) / 10.0 if v != 0x7fff else None
 
-def _big_val100(v):
-    return float(v) / 100.0 if v != 0xffff else None
+def _decode_windSpeed_H(p, k):
+    """Decode 10-min average wind speed. It is encoded slightly
+    differently between type 0 and type 1 LOOP packets."""
+    if p['packet_type'] == 0:
+        return float(p[k]) if p[k] != 0xff else None
+    elif p['packet_type'] == 1:
+        return float(p[k]) / 10.0 if p[k] != 0xffff else None
+    else:
+        log.warn("Unknown LOOP packet type %s" % p['packet_type'])
 
-def _val100(v):
-    return float(v) / 100.0
-
-def _val1000(v):
-    return float(v) / 1000.0
-
-def _val1000Zero(v):
-    return float(v) / 1000.0 if v != 0 else None
-
-def _little_val(v):
-    return float(v) if v != 0x00ff else None
-
-def _little_val10(v):
-    return float(v) / 10.0 if v != 0x00ff else None
-    
-def _little_temp(v):
-    return float(v - 90) if v != 0x00ff else None
-
-def _null(v):
-    return v
-
-def _null_float(v):
-    return float(v)
-
-def _null_int(v):
-    return int(v)
-
-def _windDir(v):
-    return float(v) * 22.5 if v != 0x00ff else None
-
-# Rain bucket type "1", a 0.2 mm bucket
-def _bucket_1(v):
-    return float(v) * 0.00787401575
-
-def _bucket_1_None(v):
-    return float(v) * 0.00787401575 if v != 0xffff else None
-
-# Rain bucket type "2", a 0.1 mm bucket
-def _bucket_2(v):
-    return float(v) * 0.00393700787
-
-def _bucket_2_None(v):
-    return float(v) * 0.00393700787 if v != 0xffff else None
 
 # This dictionary maps a type key to a function. The function should be able to
 # decode a sensor value held in the LOOP packet in the internal, Davis form into US
 # units and return it.
-_loop_map = {'barometer'       : _val1000Zero,
-             'inTemp'          : _big_val10,
-             'inHumidity'      : _little_val,
-             'outTemp'         : _big_val10,
-             'windSpeed'       : _little_val,
-             'windSpeed10'     : _little_val,
-             'windDir'         : _big_val,
-             'extraTemp1'      : _little_temp,
-             'extraTemp2'      : _little_temp,
-             'extraTemp3'      : _little_temp,
-             'extraTemp4'      : _little_temp,
-             'extraTemp5'      : _little_temp,
-             'extraTemp6'      : _little_temp,
-             'extraTemp7'      : _little_temp,
-             'soilTemp1'       : _little_temp,
-             'soilTemp2'       : _little_temp,
-             'soilTemp3'       : _little_temp,
-             'soilTemp4'       : _little_temp,
-             'leafTemp1'       : _little_temp,
-             'leafTemp2'       : _little_temp,
-             'leafTemp3'       : _little_temp,
-             'leafTemp4'       : _little_temp,
-             'outHumidity'     : _little_val,
-             'extraHumid1'     : _little_val,
-             'extraHumid2'     : _little_val,
-             'extraHumid3'     : _little_val,
-             'extraHumid4'     : _little_val,
-             'extraHumid5'     : _little_val,
-             'extraHumid6'     : _little_val,
-             'extraHumid7'     : _little_val,
-             'rainRate'        : _big_val100,
-             'UV'              : _little_val10,
-             'radiation'       : _big_val,
-             'stormRain'       : _val100,
-             'stormStart'      : _loop_date,
-             'dayRain'         : _val100,
-             'monthRain'       : _val100,
-             'yearRain'        : _val100,
-             'dayET'           : _val1000,
-             'monthET'         : _val100,
-             'yearET'          : _val100,
-             'soilMoist1'      : _little_val,
-             'soilMoist2'      : _little_val,
-             'soilMoist3'      : _little_val,
-             'soilMoist4'      : _little_val,
-             'leafWet1'        : _little_val,
-             'leafWet2'        : _little_val,
-             'leafWet3'        : _little_val,
-             'leafWet4'        : _little_val,
-             'insideAlarm'     : _null,
-             'rainAlarm'       : _null,
-             'outsideAlarm1'   : _null,
-             'outsideAlarm2'   : _null,
-             'extraAlarm1'     : _null,
-             'extraAlarm2'     : _null,
-             'extraAlarm3'     : _null,
-             'extraAlarm4'     : _null,
-             'extraAlarm5'     : _null,
-             'extraAlarm6'     : _null,
-             'extraAlarm7'     : _null,
-             'extraAlarm8'     : _null,
-             'soilLeafAlarm1'  : _null,
-             'soilLeafAlarm2'  : _null,
-             'soilLeafAlarm3'  : _null,
-             'soilLeafAlarm4'  : _null,
-             'txBatteryStatus' : _null_int,
-             'consBatteryVoltage'  : lambda v : float((v * 300) >> 9) / 100.0,
-             'forecastIcon'    : _null,
-             'forecastRule'    : _null,
-             'sunrise'         : _stime,
-             'sunset'          : _stime,
-             'trendIcon'       : _null,
-             'next_record'     : _null_int}
+_loop_map = {
+    'altimeter'       : lambda p, k: float(p[k]) / 1000.0 if p[k] else None,
+    'barometer'       : lambda p, k: float(p[k]) / 1000.0 if p[k] else None,
+    'consBatteryVoltage': lambda p, k: float((p[k] * 300) >> 9) / 100.0,
+    'dayET'           : lambda p, k: float(p[k]) / 1000.0,
+    'dayRain'         : lambda p, k: float(p[k]) / 100.0,
+    'dewpoint'        : lambda p, k: float(p[k]) if p[k] != 0xff else None,
+    'extraAlarm1'     : lambda p, k: p[k],
+    'extraAlarm2'     : lambda p, k: p[k],
+    'extraAlarm3'     : lambda p, k: p[k],
+    'extraAlarm4'     : lambda p, k: p[k],
+    'extraAlarm5'     : lambda p, k: p[k],
+    'extraAlarm6'     : lambda p, k: p[k],
+    'extraAlarm7'     : lambda p, k: p[k],
+    'extraAlarm8'     : lambda p, k: p[k],
+    'extraHumid1'     : lambda p, k: float(p[k]) if p[k] != 0xff else None,
+    'extraHumid2'     : lambda p, k: float(p[k]) if p[k] != 0xff else None,
+    'extraHumid3'     : lambda p, k: float(p[k]) if p[k] != 0xff else None,
+    'extraHumid4'     : lambda p, k: float(p[k]) if p[k] != 0xff else None,
+    'extraHumid5'     : lambda p, k: float(p[k]) if p[k] != 0xff else None,
+    'extraHumid6'     : lambda p, k: float(p[k]) if p[k] != 0xff else None,
+    'extraHumid7'     : lambda p, k: float(p[k]) if p[k] != 0xff else None,
+    'extraTemp1'      : lambda p, k: float(p[k] - 90) if p[k] != 0xff else None,
+    'extraTemp2'      : lambda p, k: float(p[k] - 90) if p[k] != 0xff else None,
+    'extraTemp3'      : lambda p, k: float(p[k] - 90) if p[k] != 0xff else None,
+    'extraTemp4'      : lambda p, k: float(p[k] - 90) if p[k] != 0xff else None,
+    'extraTemp5'      : lambda p, k: float(p[k] - 90) if p[k] != 0xff else None,
+    'extraTemp6'      : lambda p, k: float(p[k] - 90) if p[k] != 0xff else None,
+    'extraTemp7'      : lambda p, k: float(p[k] - 90) if p[k] != 0xff else None,
+    'forecastIcon'    : lambda p, k: p[k],
+    'forecastRule'    : lambda p, k: p[k],
+    'heatindex'       : lambda p, k: float(p[k]) if p[k] != 0x7fff else None,
+    'inHumidity'      : lambda p, k: float(p[k]) if p[k] != 0xff else None,
+    'insideAlarm'     : lambda p, k: p[k],
+    'inTemp'          : lambda p, k: float(p[k]) / 10.0 if p[k] != 0x7fff else None,
+    'leafTemp1'       : lambda p, k: float(p[k] - 90) if p[k] != 0xff else None,
+    'leafTemp2'       : lambda p, k: float(p[k] - 90) if p[k] != 0xff else None,
+    'leafTemp3'       : lambda p, k: float(p[k] - 90) if p[k] != 0xff else None,
+    'leafTemp4'       : lambda p, k: float(p[k] - 90) if p[k] != 0xff else None,
+    'leafWet1'        : lambda p, k: float(p[k]) if p[k] != 0xff else None,
+    'leafWet2'        : lambda p, k: float(p[k]) if p[k] != 0xff else None,
+    'leafWet3'        : lambda p, k: float(p[k]) if p[k] != 0xff else None,
+    'leafWet4'        : lambda p, k: float(p[k]) if p[k] != 0xff else None,
+    'monthET'         : lambda p, k: float(p[k]) / 100.0,
+    'monthRain'       : lambda p, k: float(p[k]) / 100.0,
+    'outHumidity'     : lambda p, k: float(p[k]) if p[k] != 0xff else None,
+    'outsideAlarm1'   : lambda p, k: p[k],
+    'outsideAlarm2'   : lambda p, k: p[k],
+    'outTemp'         : lambda p, k: float(p[k]) / 10.0 if p[k] != 0x7fff else None,
+    'pressure'        : lambda p, k: float(p[k]) / 1000.0 if p[k] else None,
+    'radiation'       : lambda p, k: float(p[k]) if p[k] != 0x7fff else None,
+    'rainAlarm'       : lambda p, k: p[k],
+    'rainRate'        : _decode_rain,
+    'soilLeafAlarm1'  : lambda p, k: p[k],
+    'soilLeafAlarm2'  : lambda p, k: p[k],
+    'soilLeafAlarm3'  : lambda p, k: p[k],
+    'soilLeafAlarm4'  : lambda p, k: p[k],
+    'soilMoist1'      : lambda p, k: float(p[k]) if p[k] != 0xff else None,
+    'soilMoist2'      : lambda p, k: float(p[k]) if p[k] != 0xff else None,
+    'soilMoist3'      : lambda p, k: float(p[k]) if p[k] != 0xff else None,
+    'soilMoist4'      : lambda p, k: float(p[k]) if p[k] != 0xff else None,
+    'soilTemp1'       : lambda p, k: float(p[k] - 90) if p[k] != 0xff else None,
+    'soilTemp2'       : lambda p, k: float(p[k] - 90) if p[k] != 0xff else None,
+    'soilTemp3'       : lambda p, k: float(p[k] - 90) if p[k] != 0xff else None,
+    'soilTemp4'       : lambda p, k: float(p[k] - 90) if p[k] != 0xff else None,
+    'stormRain'       : _decode_rain,
+    'stormStart'      : _loop_date,
+    'sunrise'         : lambda p, k: 3600 * (p[k] / 100) + 60 * (p[k] % 100),
+    'sunset'          : lambda p, k: 3600 * (p[k] / 100) + 60 * (p[k] % 100),
+    'THSW'            : lambda p, k: float(p[k]) if p[k] != 0x7fff else None,
+    'trendIcon'       : lambda p, k: p[k],
+    'txBatteryStatus' : lambda p, k: int(p[k]),
+    'UV'              : lambda p, k: float(p[k]) / 10.0 if p[k] != 0xff else None,
+    'windchill'       : lambda p, k: float(p[k]) if p[k] != 0x7fff else None,
+    'windDir'         : lambda p, k: (float(p[k]) if p[k] != 360 else 0) if p[k] and p[k] != 0x7fff else None,
+    'windGust10'      : _decode_windSpeed_H,
+    'windGustDir10'   : lambda p, k: (float(p[k]) if p[k] != 360 else 0) if p[k] and p[k] != 0x7fff else None,
+    'windSpeed'       : lambda p, k: float(p[k]) if p[k] != 0xff else None,
+    'windSpeed2'      : _decode_windSpeed_H,
+    'windSpeed10'     : _decode_windSpeed_H,
+    'yearET'          : lambda p, k: float(p[k]) / 100.0,
+    'yearRain'        : lambda p, k: float(p[k]) / 100.0,
+}
 
 # This dictionary maps a type key to a function. The function should be able to
 # decode a sensor value held in the archive packet in the internal, Davis form into US
 # units and return it.
-_archive_map = {'barometer'      : _val1000Zero,
-                'inTemp'         : _big_val10,
-                'outTemp'        : _big_val10,
-                'highOutTemp'    : lambda v : float(v / 10.0) if v != -32768 else None,
-                'lowOutTemp'     : _big_val10,
-                'inHumidity'     : _little_val,
-                'outHumidity'    : _little_val,
-                'windSpeed'      : _little_val,
-                'windDir'        : _windDir,
-                'windGust'       : _null_float,
-                'windGustDir'    : _windDir,
-                'rain'           : _val100,
-                'rainRate'       : _val100,
-                'ET'             : _val1000,
-                'radiation'      : _big_val,
-                'highRadiation'  : _big_val,
-                'UV'             : _little_val10,
-                'highUV'         : _little_val10,
-                'extraTemp1'     : _little_temp,
-                'extraTemp2'     : _little_temp,
-                'extraTemp3'     : _little_temp,
-                'soilTemp1'      : _little_temp,
-                'soilTemp2'      : _little_temp,
-                'soilTemp3'      : _little_temp,
-                'soilTemp4'      : _little_temp,
-                'leafTemp1'      : _little_temp,
-                'leafTemp2'      : _little_temp,
-                'extraHumid1'    : _little_val,
-                'extraHumid2'    : _little_val,
-                'soilMoist1'     : _little_val,
-                'soilMoist2'     : _little_val,
-                'soilMoist3'     : _little_val,
-                'soilMoist4'     : _little_val,
-                'leafWet1'       : _little_val,
-                'leafWet2'       : _little_val,
-                'leafWet3'       : _little_val,
-                'leafWet4'       : _little_val,
-                'forecastRule'   : _null,
-                'readClosed'     : _null,
-                'readOpened'     : _null}
+_archive_map = {
+    'barometer'      : lambda p, k: float(p[k]) / 1000.0 if p[k] else None,
+    'ET'             : lambda p, k: float(p[k]) / 1000.0,
+    'extraHumid1'    : lambda p, k: float(p[k]) if p[k] != 0xff else None,
+    'extraHumid2'    : lambda p, k: float(p[k]) if p[k] != 0xff else None,
+    'extraTemp1'     : lambda p, k: float(p[k] - 90) if p[k] != 0xff else None,
+    'extraTemp2'     : lambda p, k: float(p[k] - 90) if p[k] != 0xff else None,
+    'extraTemp3'     : lambda p, k: float(p[k] - 90) if p[k] != 0xff else None,
+    'forecastRule'   : lambda p, k: p[k] if p[k] != 193 else None,
+    'highOutTemp'    : lambda p, k : float(p[k] / 10.0) if p[k] != -32768 else None,
+    'highRadiation'  : lambda p, k: float(p[k]) if p[k] != 0x7fff else None,
+    'highUV'         : lambda p, k: float(p[k]) / 10.0 if p[k] != 0xff else None,
+    'inHumidity'     : lambda p, k: float(p[k]) if p[k] != 0xff else None,
+    'inTemp'         : lambda p, k: float(p[k]) / 10.0 if p[k] != 0x7fff else None,
+    'leafTemp1'      : lambda p, k: float(p[k] - 90) if p[k] != 0xff else None,
+    'leafTemp2'      : lambda p, k: float(p[k] - 90) if p[k] != 0xff else None,
+    'leafWet1'       : lambda p, k: float(p[k]) if p[k] != 0xff else None,
+    'leafWet2'       : lambda p, k: float(p[k]) if p[k] != 0xff else None,
+    'leafWet3'       : lambda p, k: float(p[k]) if p[k] != 0xff else None,
+    'leafWet4'       : lambda p, k: float(p[k]) if p[k] != 0xff else None,
+    'lowOutTemp'     : lambda p, k: float(p[k]) / 10.0 if p[k] != 0x7fff else None,
+    'outHumidity'    : lambda p, k: float(p[k]) if p[k] != 0xff else None,
+    'outTemp'        : lambda p, k: float(p[k]) / 10.0 if p[k] != 0x7fff else None,
+    'radiation'      : lambda p, k: float(p[k]) if p[k] != 0x7fff else None,
+    'rain'           : _decode_rain,
+    'rainRate'       : _decode_rain,
+    'readClosed'     : lambda p, k: p[k],
+    'readOpened'     : lambda p, k: p[k],
+    'soilMoist1'     : lambda p, k: float(p[k]) if p[k] != 0xff else None,
+    'soilMoist2'     : lambda p, k: float(p[k]) if p[k] != 0xff else None,
+    'soilMoist3'     : lambda p, k: float(p[k]) if p[k] != 0xff else None,
+    'soilMoist4'     : lambda p, k: float(p[k]) if p[k] != 0xff else None,
+    'soilTemp1'      : lambda p, k: float(p[k] - 90) if p[k] != 0xff else None,
+    'soilTemp2'      : lambda p, k: float(p[k] - 90) if p[k] != 0xff else None,
+    'soilTemp3'      : lambda p, k: float(p[k] - 90) if p[k] != 0xff else None,
+    'soilTemp4'      : lambda p, k: float(p[k] - 90) if p[k] != 0xff else None,
+    'UV'             : lambda p, k: float(p[k]) / 10.0 if p[k] != 0xff else None,
+    'windDir'        : lambda p, k: float(p[k]) * 22.5 if p[k] != 0xff else None,
+    'windGust'       : lambda p, k: float(p[k]),
+    'windGustDir'    : lambda p, k: float(p[k]) * 22.5 if p[k] != 0xff else None,
+    'windSpeed'      : lambda p, k: float(p[k]) if p[k] != 0xff else None,
+}
 
 #===============================================================================
 #                      class VantageService

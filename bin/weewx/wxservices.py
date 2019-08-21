@@ -7,15 +7,15 @@
 """Services specific to weather."""
 
 from __future__ import absolute_import
+
 import logging
 
 import weedb
-import weewx.units
-import weewx.engine
-import weewx.wxformulas
 import weeutil.logger
 import weeutil.weeutil
-
+import weewx.engine
+import weewx.units
+import weewx.wxformulas
 from weewx.units import CtoF, mps_to_mph, kph_to_mph, METER_PER_FOOT
 
 log = logging.getLogger(__name__)
@@ -226,14 +226,13 @@ class WXCalculate(object):
 
     def calc_pressure(self, data, data_type):  # @UnusedVariable
         interval = self._get_archive_interval(data)
-        if (interval is not None and 'barometer' in data and
-            'outTemp' in data and 'outHumidity' in data):
-            temperature_12h_ago = self._get_temperature_12h(
-                data['dateTime'], interval)
-            if (data['barometer'] is not None and
-                data['outTemp'] is not None and
-                data['outHumidity'] is not None and
-                temperature_12h_ago is not None):
+        if (interval is not None and 'barometer' in data
+                and 'outTemp' in data and 'outHumidity' in data):
+            temperature_12h_ago = self._get_temperature_12h(data['dateTime'], interval)
+            if (data['barometer'] is not None
+                    and data['outTemp'] is not None
+                    and data['outHumidity'] is not None
+                    and temperature_12h_ago is not None):
                 data['pressure'] = weewx.uwxutils.uWxUtilsVP.SeaLevelToSensorPressure_12(
                     data['barometer'], self.altitude_ft,
                     data['outTemp'], temperature_12h_ago, data['outHumidity'])

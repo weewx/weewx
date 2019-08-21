@@ -13,6 +13,8 @@ as an alternative.
 WeeWX now uses the Python 'logging' facility. This means log,
 formats, and other things can now be customized. Fixes issue #353.
 
+Support for the Vantage LOOP2 packet format. Fixes issue #374.
+
 The default for WOW no longer throttles posting frequency (the default
 used to be no more than once every 15 minutes).
 
