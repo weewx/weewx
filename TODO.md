@@ -4,6 +4,11 @@ Refactor wee_import to use the new logging facility.
 Update *Upgrading Guide*.
 
 
+### Issue 435 (Update WU uploader)
+Need to test some of the new types, in particular `windSpeed2`, `windGust10`,
+`windGustDir10`.
+
+
 ### Other
 Document the suffixes `.exists` and `.has_data`.
 

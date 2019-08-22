@@ -52,6 +52,8 @@ Fixed problem where sub-sections DegreeDays and Trend were located under the
 wrong weewx.conf section. Fixes issue #432. Thanks to user mph for spotting
 this!
 
+Added new parameters to the Weather Underground uploader. Fixes issue #435.
+
 
 3.9.2 07/14/2019
 
