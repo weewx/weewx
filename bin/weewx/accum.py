@@ -1,11 +1,27 @@
 #
-#    Copyright (c) 2009-2016 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2019 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
 """Statistical accumulators. They accumulate the highs, lows, averages,
 etc., of a sequence of records."""
-
+#
+# General strategy.
+#
+# Most observation types are scalars, so they can be treated simply. Values are added to a scalar accumulator,
+# which keeps track of highs, lows, and a sum. When it comes time for extraction, the average over the archive period
+# is typically produced.
+#
+# However, wind is a special case. It is a vector, which has been flatted over at least two
+# scalars, windSpeed and windDir. Some stations, notably the Davis Vantage, add windGust and windGustDir. The
+# accumulators cannot simply treat them individually as if they were just another scalar. Instead they must be
+# grouped together. This is done by treating windSpeed as a 'special' scalar. When it appears, it is coupled with
+# windDir and, if available, windGust and windGustDir, and added to a vector accumulator. When the other types (
+# windDir, windGust, and windGustDir) appear, they are ignored, having already been handled during the processing of
+# type windSpeed.
+#
+# When it comes time to extract wind, vector averages are calculated, then the results are flattened again.
+#
 from __future__ import absolute_import
 import math
 
@@ -516,6 +532,14 @@ defaults_ini = u"""
         extractor = noop
     [[windGustDir]]
         extractor = noop
+    [[windSpeed2]]
+        extractor = last
+    [[windSpeed10]]
+        extractor = last
+    [[windGust10]]
+        extractor = last
+    [[windGustDir10]]
+        extractor = last
 """
 from six.moves import StringIO
 defaults = configobj.ConfigObj(StringIO(defaults_ini), encoding='utf-8')
