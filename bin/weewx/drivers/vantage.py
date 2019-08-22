@@ -32,13 +32,16 @@ from weewx.crc16 import crc16
 log = logging.getLogger(__name__)
 
 DRIVER_NAME = 'Vantage'
-DRIVER_VERSION = '3.1.2'
+DRIVER_VERSION = '3.2.0'
+
 
 def loader(config_dict, engine):
     return VantageService(engine, config_dict)
 
+
 def configurator_loader(config_dict):  # @UnusedVariable
     return VantageConfigurator()
+
 
 def confeditor_loader():
     return VantageConfEditor()
@@ -47,6 +50,7 @@ def confeditor_loader():
 # A few handy constants:
 _ack    = b'\x06'
 _resend = b'\x15' # NB: The Davis documentation gives this code as 0x21, but it's actually decimal 21
+
 
 #===============================================================================
 #                           class BaseWrapper
@@ -59,7 +63,16 @@ class BaseWrapper(object):
         
         self.wait_before_retry = wait_before_retry
         self.command_delay = command_delay
-        
+
+    def read(self, nbytes=1):
+        raise NotImplementedError
+
+    def write(self, buf):
+        raise NotImplementedError
+
+    def flush_input(self):
+        raise NotImplementedError
+
     #===============================================================================
     #          Primitives for working with the Davis Console
     #===============================================================================
@@ -1729,7 +1742,7 @@ _loop_map = {
     'consBatteryVoltage': lambda p, k: float((p[k] * 300) >> 9) / 100.0,
     'dayET'           : lambda p, k: float(p[k]) / 1000.0,
     'dayRain'         : lambda p, k: float(p[k]) / 100.0,
-    'dewpoint'        : lambda p, k: float(p[k]) if p[k] != 0xff else None,
+    'dewpoint'        : lambda p, k: float(p[k]) if p[k] & 0xff != 0xff else None,
     'extraAlarm1'     : lambda p, k: p[k],
     'extraAlarm2'     : lambda p, k: p[k],
     'extraAlarm3'     : lambda p, k: p[k],
@@ -1754,7 +1767,7 @@ _loop_map = {
     'extraTemp7'      : lambda p, k: float(p[k] - 90) if p[k] != 0xff else None,
     'forecastIcon'    : lambda p, k: p[k],
     'forecastRule'    : lambda p, k: p[k],
-    'heatindex'       : lambda p, k: float(p[k]) if p[k] != 0x7fff else None,
+    'heatindex'       : lambda p, k: float(p[k]) if p[k] & 0xff != 0xff else None,
     'inHumidity'      : lambda p, k: float(p[k]) if p[k] != 0xff else None,
     'insideAlarm'     : lambda p, k: p[k],
     'inTemp'          : lambda p, k: float(p[k]) / 10.0 if p[k] != 0x7fff else None,
@@ -1792,11 +1805,11 @@ _loop_map = {
     'stormStart'      : _loop_date,
     'sunrise'         : lambda p, k: 3600 * (p[k] / 100) + 60 * (p[k] % 100),
     'sunset'          : lambda p, k: 3600 * (p[k] / 100) + 60 * (p[k] % 100),
-    'THSW'            : lambda p, k: float(p[k]) if p[k] != 0x7fff else None,
+    'THSW'            : lambda p, k: float(p[k]) if p[k] & 0xff != 0xff else None,
     'trendIcon'       : lambda p, k: p[k],
     'txBatteryStatus' : lambda p, k: int(p[k]),
     'UV'              : lambda p, k: float(p[k]) / 10.0 if p[k] != 0xff else None,
-    'windchill'       : lambda p, k: float(p[k]) if p[k] != 0x7fff else None,
+    'windchill'       : lambda p, k: float(p[k]) if p[k] & 0xff != 0xff else None,
     'windDir'         : lambda p, k: (float(p[k]) if p[k] != 360 else 0) if p[k] and p[k] != 0x7fff else None,
     'windGust10'      : _decode_windSpeed_H,
     'windGustDir10'   : lambda p, k: (float(p[k]) if p[k] != 360 else 0) if p[k] and p[k] != 0x7fff else None,
