@@ -473,7 +473,7 @@ class Vantage(weewx.drivers.AbstractDevice):
         model_type: Vantage Pro model type. 1=Vantage Pro; 2=Vantage Pro2
         [Optional. Default is 2]
 
-        packet_request: Requested packet type. 1=LOOP; 2=LOOP2; 3=both.
+        loop_request: Requested packet type. 1=LOOP; 2=LOOP2; 3=both.
         """
 
         log.debug('Driver version is %s', DRIVER_VERSION)
@@ -486,7 +486,7 @@ class Vantage(weewx.drivers.AbstractDevice):
         self.model_type = to_int(vp_dict.get('model_type', 2))
         if self.model_type not in list(range(1, 3)):
             raise weewx.UnsupportedFeature("Unknown model_type (%d)" % self.model_type)
-        self.packet_request = to_int(vp_dict.get('packet_request', 1))
+        self.loop_request = to_int(vp_dict.get('loop_request', 1))
 
         self.save_day_rain = None
         self.max_dst_jump = 7200
@@ -540,8 +540,8 @@ class Vantage(weewx.drivers.AbstractDevice):
         
         self.port.wakeup_console(self.max_tries)
         
-        # Request N packets of type "packet_request":
-        self.port.send_data(b"LPS %d %d\n" % (self.packet_request, N))
+        # Request N packets of type "loop_request":
+        self.port.send_data(b"LPS %d %d\n" % (self.loop_request, N))
 
         for loop in range(N):
             # Fetch a packet...
@@ -2746,6 +2746,9 @@ class VantageConfEditor(weewx.drivers.AbstractConfEditor):
 
     # TCP send delay (when using the WeatherLinkIP):
     tcp_send_delay = 0.5
+
+    # The type of LOOP packet to request: 1 = LOOP1; 2 = LOOP2; 3 = both
+    loop_request = 1 
 
     # The id of your ISS station (usually 1). If you use a wind meter connected
     # to a anemometer transmitter kit, use its id

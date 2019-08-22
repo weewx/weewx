@@ -1081,6 +1081,7 @@ def update_to_v39(config_dict):
 def update_to_v40(config_dict):
     """Update a configuration file to V4.0
 
+    - Add option loop_request for Vantage users.
     - Fix problems with DegreeDays and Trend in weewx.conf
     - Add new option growing_base
     - Add new option WU api_key
@@ -1090,6 +1091,13 @@ def update_to_v40(config_dict):
 
     if major + minor >= '400':
         return
+
+    if 'Vantage' in config_dict \
+        and 'loop_request' not in config_dict['Vantage']:
+        config_dict['Vantage']['loop_request'] = 1
+        config_dict['Vantage'].comments['loop_request'] = \
+            ['', 'The type of LOOP packet to request: 1 = LOOP1; 2 = LOOP2; 3 = both']
+        reorder_scalars(config_dict['Vantage'].scalars, 'loop_request', 'iss_id')
 
     if 'StdReport' in config_dict \
             and 'Defaults' in config_dict['StdReport'] \

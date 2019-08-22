@@ -1431,6 +1431,25 @@ longitude = -77.0366</pre>
 
         <p>How long to block after sending a socket packet to the WeatherLinkIP. Default is 1 second.</p>
 
+        <p class="config_option">loop_request</p>
+
+        <p>
+            The type of LOOP packet to use for LOOP data. Options are 1 (type <span class="code">LOOP1</span>); 2 (type
+            <span class="code">LOOP2</span>); or 3 (alternate between). Type <span class="code">LOOP2</span> packets
+            have the advantage of including gauge pressure, altimeter, heat index, THSW, and a few other types, so they
+            do not have to be calculated in software. On the other hand, they do not include any of the extra Davis
+            sensors, such as soil moisture, leaf temperature, etc.
+        </p>
+        <p>
+            If you decide to alternate between packet types (option <span class="code">3</span>), then the console will
+            send a type <span class="code">LOOP1</span> packet, followed by a type <span class="code">LOOP2</span>
+            packet. This means that for certain types and depending on the options specified in <span class="code">[StdWXCalculate]</span>,
+            the value used can flip between hardware and software with every packet. In this case, you should be sure to
+            specify option <span class="code">hardware</span> for types <span class="code">pressure</span>, <span
+            class="code">altimeter</span>, <span class="code">dewpoint</span>, <span class="code">windchill</span>, and
+            <span class="code">heatindex</span>. This way, only hardware values will be used.
+        </p>
+
         <p class="config_option">iss_id</p>
 
         <p>Set to the ID number of the Integrated Sensor Suite (ISS). This is used in the formula to calculate reception
