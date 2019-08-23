@@ -155,7 +155,7 @@ class Connection(object):
         (variable-name, variable-value)
         If the variable does not exist, it returns None.
         """
-        raise NotImplemented
+        raise NotImplementedError
     
     def begin(self):
         raise NotImplementedError
