@@ -836,6 +836,7 @@ class AmbientThread(RESTThread):
 
     # Types and formats of the data to be published. See https://bit.ly/2TVl4t3
     # for definitions.
+    # TODO: What is a reasonable formatting for the Aq numbers?
     _FORMATS = {
         'AqNO': 'AqNO=%f',
         'AqNO2T': 'AqNO2T=%f',
@@ -853,8 +854,8 @@ class AmbientThread(RESTThread):
         'AqOC': 'AqOC=%f',
         'AqBC': 'AqBC=%f',
         'AqUV': 'AqUV-AETH=%f',
-        'AqPM2_5': 'AqPM2.5=%f',
-        'AqPM10': 'AqPM10=%f',
+        'AqPM2_5': 'AqPM2.5=%.1f',
+        'AqPM10': 'AqPM10=%.1f',
         'AqOZONE': 'AqOZONE=%f',
         'barometer': 'baromin=%.3f',
         'dateTime': 'dateutc=%s',
