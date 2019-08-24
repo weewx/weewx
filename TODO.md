@@ -10,6 +10,9 @@ Need to test some of the new types, in particular `windSpeed2`, `windGust10`,
 
 
 ### Other
+Really have to find some way of making `accumulateLeaves()` and friends accessible
+from `weeutil.weeutil`.
+
 Document the suffixes `.exists` and `.has_data`.
 
 Explore introducing extendable observation types. They would be registered

@@ -791,6 +791,7 @@ class AmbientThread(RESTThread):
                  manager_dict,
                  station, password, server_url,
                  post_indoor_observations=False,
+                 api_key=None,  # Not used.
                  protocol_name="Unknown-Ambient",
                  essentials={},
                  post_interval=None, max_backlog=six.MAXSIZE, stale=None,

@@ -553,8 +553,13 @@ class Vantage(weewx.drivers.AbstractDevice):
         
         self.port.wakeup_console(self.max_tries)
         
-        # Request N packets of type "loop_request":
-        self.port.send_data(b"LPS %d %d\n" % (self.loop_request, N))
+        if self.loop_request == 1:
+            # If asking for old-fashioned LOOP1 data, send the older command in case the
+            # station does not support the LPS command:
+            self.port.send_data(b"LOOP %d\n" % N)
+        else:
+            # Request N packets of type "loop_request":
+            self.port.send_data(b"LPS %d %d\n" % (self.loop_request, N))
 
         for loop in range(N):
             # Fetch a packet...
