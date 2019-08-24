@@ -1087,13 +1087,10 @@ def update_to_v40(config_dict):
     - Add new option WU api_key
     """
 
-    major, minor = get_version_info(config_dict)
-
-    if major + minor >= '400':
-        return
+    # No need to check for the version of weewx for these changes.
 
     if 'Vantage' in config_dict \
-        and 'loop_request' not in config_dict['Vantage']:
+            and 'loop_request' not in config_dict['Vantage']:
         config_dict['Vantage']['loop_request'] = 1
         config_dict['Vantage'].comments['loop_request'] = \
             ['', 'The type of LOOP packet to request: 1 = LOOP1; 2 = LOOP2; 3 = both']
@@ -1166,7 +1163,11 @@ def update_to_v40(config_dict):
     #         major_comment_block + \
     #         ['#   This section customizes logging', '']
 
-    config_dict['version'] = '4.0.0'
+    # Make sure the version number is at least 4.0
+    major, minor = get_version_info(config_dict)
+
+    if major + minor < '400':
+        config_dict['version'] = '4.0.0'
 
 
 def update_units(config_dict, unit_system_name, logger=None, debug=False):
