@@ -22,6 +22,8 @@ import time
 import six
 from six.moves import input
 
+# For backwards compatibility:
+from weeutil.config import accumulateLeaves, search_up
 
 def convertToFloat(seq):
     """Convert a sequence with strings to floats, honoring 'Nones'"""
