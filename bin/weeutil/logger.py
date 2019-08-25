@@ -69,7 +69,7 @@ LOGGING_STR = u"""[Logging]
         [[[standard]]]
             format = "{process_name}[%(process)d]/%(levelname)s %(name)s: %(message)s" 
         [[[verbose]]]
-            format = "%(asctime)s  {process_name}[%(process)d]/%(levelname)s %(name)s: %(message)s"
+            format = "%(asctime)s  {process_name}[%(process)d] %(levelname)s %(name)s: %(message)s"
             # Format to use for dates and times:
             datefmt = %Y-%m-%d %H:%M:%S
 """
