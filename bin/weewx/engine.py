@@ -484,7 +484,7 @@ class StdArchive(StdService):
                 self.archive_interval = software_interval
                 ival_msg = "(specified in weewx configuration)"
         else:
-            log.critical("Unknown type of record generation: %s", self.record_generation)
+            log.error("Unknown type of record generation: %s", self.record_generation)
             raise ValueError(self.record_generation)
 
         log.info("Using archive interval of %d seconds %s", self.archive_interval, ival_msg)

@@ -120,12 +120,12 @@ class FtpUpload(object):
                         log.debug("Connected to %s" % self.server)
                     break
                 except ftplib.all_errors as e:
-                    log.notice("Unable to connect or log into server : %s" % e)
+                    log.error("Unable to connect or log into server : %s" % e)
             else:
                 # This is executed only if the loop terminates naturally (without a break statement),
                 # meaning the ftp connection failed max_tries times. Abandon ftp upload
-                log.critical("Attempted %d times to connect to server %s. Giving up."
-                             % (self.max_tries, self.server))
+                log.error("Attempted %d times to connect to server %s. Giving up."
+                          % (self.max_tries, self.server))
                 return n_uploaded
 
             # Walk the local directory structure

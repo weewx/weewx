@@ -1004,7 +1004,7 @@ class FineOffsetUSB(weewx.drivers.AbstractDevice):
                 ival = self.get_fixed_block(['read_period'])
                 break
             except usb.USBError as e:
-                log.critical("get archive interval failed attempt %d of %d: %s"
+                log.critical("Get archive interval failed attempt %d of %d: %s"
                              % (i+1, self.max_tries, e))
         else:
             raise weewx.WeeWxIOError("Unable to read archive interval after %d tries" % self.max_tries)
@@ -1704,12 +1704,12 @@ class FineOffsetUSB(weewx.drivers.AbstractDevice):
         # check 'magic number'.  log each new one we encounter.
         magic = '%02x%02x' % (result[0], result[1])
         if magic not in self._magic_numbers:
-            log.critical('unrecognised magic number %s' % magic)
+            log.error('unrecognised magic number %s' % magic)
             self._magic_numbers.append(magic)
         if magic != self._last_magic:
             if self._last_magic is not None:
-                log.critical('magic number changed old=%s new=%s' %
-                             (self._last_magic, magic))
+                log.error('magic number changed old=%s new=%s' %
+                          (self._last_magic, magic))
             self._last_magic = magic
         return result
 
