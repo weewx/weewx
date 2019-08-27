@@ -116,7 +116,7 @@ Python 2.7.15rc1
 # Ubuntu 18.04 and later):
 <span class='cmd'>sudo apt-get install python</span>
 
-# For all systems, you may have to install the Python Imaging Library.
+# You may have to install the Python Imaging Library.
 # Try this first:
 <span class='cmd'>sudo apt-get install python-pil</span>
 # If that doesn't work, try this:
@@ -137,16 +137,22 @@ sudo apt-get install python-mysqldb</span>
 # Required if using FTP on Raspbian systems:
 <span class="cmd">sudo apt-get install ftp</span>
 
-# Optional for extended almanac information:
+# Optional. For extended almanac information, install "ephem".
+# Try this first:
+<span class="cmd">sudo apt-get install python-ephem</span>
+# If that doesn't work, try this:
 <span class="cmd">sudo apt-get install python-dev
 sudo apt-get install python-pip
 sudo pip install pyephem</span></pre>
         </div>
         <div id="prereq-debian-py3" class="tab-content tab-content-tty">
-            <pre class="tty"><span class="cmd">sudo apt-get install python3-pil
+            <pre class="tty"># Required packages:
+<span class="cmd">sudo apt-get install python3-pil
 sudo apt-get install python3-configobj</span>
 
-# As of this writing, Cheetah 3 can only be installed using pip:
+# Not all distributions have ported Cheetah to Python 3. Try this first:
+<span class="cmd">sudo apt-get install python3-cheetah</span>
+# If that doesn't work, try this:
 <span class="cmd">sudo apt-get install python3-pip
 sudo apt-get install python3-dev
 sudo pip3 install cheetah3</span>
@@ -159,8 +165,13 @@ sudo apt-get install python3-usb</span>
 <span class="cmd">sudo apt-get install mysql-client
 sudo apt-get install python3-mysqldb</span>
 
-# Optional for extended almanac information:
-<span class="cmd">sudo pip3 install pyephem</span>
+# Optional. For extended almanac information, install "ephem".
+# Not all distributions have ported it to Python 3. Try this first:
+<span class="cmd">sudo apt-get install python3-ephem</span>
+# If that doesn't work, try this:
+<span class="cmd">sudo apt-get install python3-pip
+sudo apt-get install python3-dev
+sudo pip3 install pyephem</span>
     </pre>
         </div>
     </div>
