@@ -940,6 +940,44 @@ class Source(object):
             self.wxcalculate.do_calculations(record, 'archive')
         return record
 
+    def timespanLimit(self, tranche, new_rec):
+        """Since calcMissing uses historical values, this checks if
+        values in tranche need to be written to the database before
+        it's called"""
+        if not (self.calc_missing and len(tranche)):
+            return False
+        # if ET needs to be calculated, all history is needed in database
+        if ('ET' not in new_rec or new_rec['ET'] is None) and \
+           ('radiation' in new_rec and new_rec['radiation'] is not None):
+            return True
+        if 'pressure' in new_rec and new_rec['pressure'] is not None:
+            return False
+        first_ts = tranche[0]['dateTime']
+        last_ts = new_rec['dateTime']
+        # pressure requires temp 12 hours in the past...
+        return last_ts >= first_ts + (12 * 3600 - 1800)
+
+    def saveTranche(self, archive, nrecs, tranche, unique_set):
+        """ Save tranche to WeeWX archive
+
+        If --dry-run was not set, saves tranche records to the WeeWX archive.
+        Adds dataTime to the unique_set dry run set
+        Creates a report to stdout of the progress so far"""
+        # add the record only if it is not a dry run
+        if not self.dry_run:
+            # add the record only if it is not a dry run
+            archive.addRecord(tranche)
+        # add our the dateTime for each record in our tranche
+        # to the dry run set
+        for _trec in tranche:
+            unique_set.add(_trec['dateTime'])
+        # tell the user what we have done
+        _msg = "Records processed: %d; Unique records: %d; Last timestamp: %s\r" \
+        % (nrecs, len(unique_set), timestamp_to_string(tranche[-1]['dateTime']))
+        print >> sys.stdout, _msg,
+        sys.stdout.flush()
+        del tranche[:]
+
     def saveToArchive(self, archive, records):
         """ Save records to the WeeWX archive.
 
@@ -1008,47 +1046,23 @@ class Source(object):
                     _conv_rec = to_std_system(_rec, self.archive_unit_sys)
                     # perform any any required QC checks
                     self.qc(_conv_rec, 'Archive')
+                    # check if we need to save the tranche before calcMissing
+                    if self.timespanLimit(_tranche, _conv_rec):
+                        self.saveTranche(archive, nrecs, _tranche, unique_set)
                     # now add any derived obs that we can to our record
-                    _final_rec = self.calcMissing(_rec)
+                    _final_rec = self.calcMissing(_conv_rec)
                     # add the record to our tranche and increment our count
                     _tranche.append(_final_rec)
                     nrecs += 1
                     # if we have a full tranche then save to archive and reset
                     # the tranche
                     if len(_tranche) >= self.tranche:
-                        # add the record only if it is not a dry run
-                        if not self.dry_run:
-                            # add the record only if it is not a dry run
-                            archive.addRecord(_tranche)
-                        # add our the dateTime for each record in our tranche
-                        # to the dry run set
-                        for _trec in _tranche:
-                            unique_set.add(_trec['dateTime'])
-                        # tell the user what we have done
-                        _msg = "Records processed: %d; Unique records: %d; Last timestamp: %s\r" % (nrecs,
-                                                                                                    len(unique_set),
-                                                                                                    timestamp_to_string(_final_rec['dateTime']))
-                        print >> sys.stdout, _msg,
-                        sys.stdout.flush()
-                        _tranche = []
+                        self.saveTranche(archive, nrecs, _tranche, unique_set)
                 # we have processed all records but do we have any records left
                 # in the tranche?
                 if len(_tranche) > 0:
                     # we do so process them
-                    if not self.dry_run:
-                        # add the record only if it is not a dry run
-                        archive.addRecord(_tranche)
-                    # add our the dateTime for each record in our tranche to
-                    # the dry run set
-                    for _trec in _tranche:
-                        unique_set.add(_trec['dateTime'])
-                    # tell the user what we have done
-                    _msg = "Records processed: %d; Unique records: %d; Last timestamp: %s\r" % (nrecs,
-                                                                                                len(unique_set),
-                                                                                                timestamp_to_string(_final_rec['dateTime']))
-                    print >> sys.stdout, _msg,
-                print
-                sys.stdout.flush()
+                    self.saveTranche(archive, nrecs, _tranche, unique_set)
                 # update our counts
                 self.total_rec_proc += nrecs
                 self.total_unique_rec += len(unique_set)
