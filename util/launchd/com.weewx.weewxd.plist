@@ -7,16 +7,18 @@
 <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-  <key>Label</key>
-  <string>com.weewx.weewxd</string>
-  <key>Disabled</key>
-  <false/>
-  <key>RunAtLoad</key>
-  <true/>
-  <key>ProgramArguments</key>
-  <array>
-    <string>/Users/Shared/weewx/bin/weewxd</string>
-    <string>/Users/Shared/weewx/weewx.conf</string>
-  </array>
+    <key>Label</key>
+    <string>com.weewx.weewxd</string>
+    <key>Disabled</key>
+    <false/>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Users/Shared/weewx/bin/weewxd</string>
+        <string>/Users/Shared/weewx/weewx.conf</string>
+    </array>
+    <key>StandardErrorPath</key>
+    <string>/Users/Shared/weewx/weewx.stderr</string>
 </dict>
 </plist>

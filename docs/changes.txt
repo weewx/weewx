@@ -57,6 +57,8 @@ Added new parameters to the Weather Underground uploader. Fixes issue #435.
 Added new air quality types AqPM2_5 and AqPM10 to the unit system. Added
 new unit microgram_per_meter_cubed. Added new unit group, group_concentration.
 
+Plist for the Mac launcher now includes a log file for stderr.
+
 
 3.9.2 07/14/2019
 
