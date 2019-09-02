@@ -292,12 +292,12 @@ class RESTThread(threading.Thread):
                 # left, inclusive on the right.
                 _result = dbmanager.getSql(
                     "SELECT SUM(rain), MIN(usUnits), MAX(usUnits) FROM %s "
-                    "WHERE dateTime>? AND dateTime<=?" %
-                    dbmanager.table_name, (_time_ts - 3600.0, _time_ts))
+                    "WHERE dateTime>? AND dateTime<=?"
+                    % dbmanager.table_name, (_time_ts - 3600.0, _time_ts))
                 if _result is not None and _result[0] is not None:
                     if not _result[1] == _result[2] == record['usUnits']:
-                        raise ValueError("Inconsistent units (%s vs %s vs %s) when querying for hourRain" %
-                                         (_result[1], _result[2], record['usUnits']))
+                        raise ValueError("Inconsistent units (%s vs %s vs %s) when querying for hourRain"
+                                         % (_result[1], _result[2], record['usUnits']))
                     _datadict['hourRain'] = _result[0]
                 else:
                     _datadict['hourRain'] = None
@@ -306,12 +306,12 @@ class RESTThread(threading.Thread):
                 # Similar issue, except for last 24 hours:
                 _result = dbmanager.getSql(
                     "SELECT SUM(rain), MIN(usUnits), MAX(usUnits) FROM %s "
-                    "WHERE dateTime>? AND dateTime<=?" %
-                    dbmanager.table_name, (_time_ts - 24 * 3600.0, _time_ts))
+                    "WHERE dateTime>? AND dateTime<=?"
+                    % dbmanager.table_name, (_time_ts - 24 * 3600.0, _time_ts))
                 if _result is not None and _result[0] is not None:
                     if not _result[1] == _result[2] == record['usUnits']:
-                        raise ValueError("Inconsistent units (%s vs %s vs %s) when querying for rain24" %
-                                         (_result[1], _result[2], record['usUnits']))
+                        raise ValueError("Inconsistent units (%s vs %s vs %s) when querying for rain24"
+                                         % (_result[1], _result[2], record['usUnits']))
                     _datadict['rain24'] = _result[0]
                 else:
                     _datadict['rain24'] = None
@@ -324,12 +324,12 @@ class RESTThread(threading.Thread):
                 # is inclusive on both time ends:
                 _result = dbmanager.getSql(
                     "SELECT SUM(rain), MIN(usUnits), MAX(usUnits) FROM %s "
-                    "WHERE dateTime>=? AND dateTime<=?" %
-                    dbmanager.table_name, (_sod_ts, _time_ts))
+                    "WHERE dateTime>=? AND dateTime<=?"
+                    % dbmanager.table_name, (_sod_ts, _time_ts))
                 if _result is not None and _result[0] is not None:
                     if not _result[1] == _result[2] == record['usUnits']:
-                        raise ValueError("Inconsistent units (%s vs %s vs %s) when querying for dayRain" %
-                                         (_result[1], _result[2], record['usUnits']))
+                        raise ValueError("Inconsistent units (%s vs %s vs %s) when querying for dayRain"
+                                         % (_result[1], _result[2], record['usUnits']))
                     _datadict['dayRain'] = _result[0]
                 else:
                     _datadict['dayRain'] = None
@@ -657,7 +657,8 @@ class StdWunderground(StdRESTful):
             log.debug("Raw packet: %s", to_sorted_string(event.packet))
         self.cached_values.update(event.packet, event.packet['dateTime'])
         if weewx.debug >= 3:
-            log.debug("Cached packet: %s", to_sorted_string(self.cached_values.get_packet(event.packet['dateTime'])))
+            log.debug("Cached packet: %s",
+                      to_sorted_string(self.cached_values.get_packet(event.packet['dateTime'])))
         self.loop_queue.put(
             self.cached_values.get_packet(event.packet['dateTime']))
 
@@ -837,39 +838,25 @@ class AmbientThread(RESTThread):
 
     # Types and formats of the data to be published. See https://bit.ly/2TVl4t3
     # for definitions.
-    # TODO: What is a reasonable formatting for the Aq numbers?
     _FORMATS = {
-        'AqNO': 'AqNO=%f',
-        'AqNO2T': 'AqNO2T=%f',
-        'AqNO2': 'AqNO2=%f',
-        'AqNO2Y': 'AqNO2Y=%f',
-        'AqNOX': 'AqNOX=%f',
-        'AqNOY': 'AqNOY=%f',
-        'AqNO3': 'AqNO3=%f',
-        'AqSO4': 'AqSO4=%f',
-        'AqSO2': 'AqSO2=%f',
-        'AqSO2T': 'AqSO2T=%f',
-        'AqCO': 'AqCO=%f',
-        'AqCOT': 'AqCOT=%f',
-        'AqEC': 'AqEC=%f',
-        'AqOC': 'AqOC=%f',
-        'AqBC': 'AqBC=%f',
-        'AqUV': 'AqUV-AETH=%f',
-        'AqPM2_5': 'AqPM2.5=%.1f',
-        'AqPM10': 'AqPM10=%.1f',
-        'AqOZONE': 'AqOZONE=%f',
         'barometer': 'baromin=%.3f',
+        'co': 'AqCO=%f',
         'dateTime': 'dateutc=%s',
         'dayRain': 'dailyrainin=%.2f',
         'dewpoint': 'dewptf=%.1f',
         'hourRain': 'rainin=%.2f',
         'leafWet1': "leafwetness=%03.0f",
         'leafWet2': "leafwetness2=%03.0f",
+        'no2': 'AqNO2=%f',
+        'o3': 'AqOZONE=%f',
         'outHumidity': 'humidity=%03.0f',
         'outTemp': 'tempf=%.1f',
+        'pm10_0': 'AqPM10=%.1f',
+        'pm2_5': 'AqPM2.5=%.1f',
         'radiation': 'solarradiation=%.2f',
         'realtime': 'realtime=%d',
         'rtfreq': 'rtfreq=%.1f',
+        'so2': 'AqSO2=%f',
         'soilMoist1': "soilmoisture=%03.0f",
         'soilMoist2': "soilmoisture2=%03.0f",
         'soilMoist3': "soilmoisture3=%03.0f",
@@ -1041,7 +1028,8 @@ class WOWThread(AmbientThread):
         _url = "%s?%s" % (self.server_url, _urlquery)
         # show the url in the logs for debug, but mask any password
         if weewx.debug >= 2:
-            log.debug("WOW: url: %s", re.sub(r"siteAuthenticationKey=[^\&]*", "siteAuthenticationKey=XXX", _url))
+            log.debug("WOW: url: %s", re.sub(r"siteAuthenticationKey=[^\&]*",
+                                             "siteAuthenticationKey=XXX", _url))
         return _url
 
     def post_request(self, request, data=None):  # @UnusedVariable
@@ -1302,8 +1290,8 @@ class CWOPThread(RESTThread):
 
         # If we get here, the loop terminated normally, meaning we failed
         # all tries
-        raise FailedPost("Tried %d servers %d times each" %
-                         (len(self.server_list), self.max_tries))
+        raise FailedPost("Tried %d servers %d times each"
+                         % (len(self.server_list), self.max_tries))
 
     def _get_connect(self, server, port):
         """Get a socket connection to a specific server and port."""
@@ -1720,8 +1708,8 @@ class AWEKASThread(RESTThread):
         # If the database does not have rainRate in its schema, an exception will be raised.
         # Be prepare to catch it.
         try:
-            rr = dbmanager.getSql('select rainRate from %s where dateTime=?' %
-                                  dbmanager.table_name, (record['dateTime'],))
+            rr = dbmanager.getSql('select rainRate from %s where dateTime=?'
+                                  % dbmanager.table_name, (record['dateTime'],))
         except weedb.OperationalError:
             pass
         else:
