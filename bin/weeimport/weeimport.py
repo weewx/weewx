@@ -15,9 +15,9 @@ from __future__ import absolute_import
 
 # Python imports
 import datetime
+import logging
 import re
 import sys
-import syslog
 import time
 from datetime import datetime as dt
 
@@ -35,7 +35,7 @@ from weewx.units import unit_constants, unit_nicknames, convertStd, to_std_syste
 from weeutil.weeutil import timestamp_to_string, option_as_list, to_int, tobool, _get_object
 
 # List of sources we support
-SUPPORTED_SOURCES = ['CSV', 'WU', 'Cumulus']
+SUPPORTED_SOURCES = ['CSV', 'WU', 'Cumulus', 'WD']
 
 # Minimum requirements in any explicit or implicit WeeWX field-to-import field
 # map
@@ -302,9 +302,7 @@ class Source(object):
 
         # get some key WeeWX parameters
         # first the config dict to use
-        config_path, config_dict = weecfg.read_config(None,
-                                                      args,
-                                                      file_name=options.config_path)
+        config_path, config_dict = weecfg.read_config(options.config_path, args)
         # get wee_import config dict if it exists
         import_config_path, import_config_dict = weecfg.read_config(None,
                                                                     args,
@@ -374,25 +372,28 @@ class Source(object):
 
                 # get the raw data
                 _msg = 'Obtaining raw import data for period %d...' % self.period_no
-                self.wlog.verboselog(syslog.LOG_INFO, _msg)
+                self.wlog.verboselog(logging.INFO, _msg)
                 _raw_data = self.getRawData(period)
                 _msg = 'Raw import data read successfully for period %d.' % self.period_no
-                self.wlog.verboselog(syslog.LOG_INFO, _msg)
+                self.wlog.verboselog(logging.INFO, _msg)
 
                 # map the raw data to a WeeWX archive compatible dictionary
                 _msg = 'Mapping raw import data for period %d...' % self.period_no
-                self.wlog.verboselog(syslog.LOG_INFO, _msg)
+                self.wlog.verboselog(logging.INFO, _msg)
                 _mapped_data = self.mapRawData(_raw_data, self.archive_unit_sys)
                 _msg = 'Raw import data mapped successfully for period %d.' % self.period_no
-                self.wlog.verboselog(syslog.LOG_INFO, _msg)
+                self.wlog.verboselog(logging.INFO, _msg)
 
                 # save the mapped data to archive
-                _msg = 'Saving mapped data to archive for period %d...' % self.period_no
-                self.wlog.verboselog(syslog.LOG_INFO, _msg)
+                # first advise the user and log, but only if its not a dry run
+                if not self.dry_run:
+                    _msg = 'Saving mapped data to archive for period %d...' % self.period_no
+                    self.wlog.verboselog(logging.INFO, _msg)
                 self.saveToArchive(archive, _mapped_data)
-                _msg = 'Mapped data saved to archive successfully for period %d.' % self.period_no
-                self.wlog.verboselog(syslog.LOG_INFO, _msg)
-
+                # advise the user and log, but only if its not a dry run
+                if not self.dry_run:
+                    _msg = 'Mapped data saved to archive successfully for period %d.' % self.period_no
+                    self.wlog.verboselog(logging.INFO, _msg)
                 # increment our period counter
                 self.period_no += 1
             # Provide some summary info now that we have finished the import.
@@ -401,36 +402,36 @@ class Source(object):
             if self.total_rec_proc == 0:
                 # nothing imported so say so
                 _msg = 'No records were identified for import. Exiting. Nothing done.'
-                self.wlog.printlog(syslog.LOG_INFO, _msg)
+                self.wlog.printlog(logging.INFO, _msg)
             else:
                 # we imported something
                 total_rec = self.total_rec_proc + self.total_duplicate_rec
                 if self.dry_run:
                     # but it was a dry run
-                    self.wlog.printlog(syslog.LOG_INFO, "Finished dry run import")
+                    self.wlog.printlog(logging.INFO, "Finished dry run import")
                     _msg = "%d records were processed and %d unique records would "\
                            "have been imported." % (total_rec,
                                                     self.total_rec_proc)
-                    self.wlog.printlog(syslog.LOG_INFO, _msg)
+                    self.wlog.printlog(logging.INFO, _msg)
                     if self.total_duplicate_rec > 1:
                         _msg = "%d duplicate records were ignored." % self.total_duplicate_rec
-                        self.wlog.printlog(syslog.LOG_INFO, _msg)
+                        self.wlog.printlog(logging.INFO, _msg)
                     elif self.total_duplicate_rec == 1:
-                        self.wlog.printlog(syslog.LOG_INFO,
+                        self.wlog.printlog(logging.INFO,
                                            "1 duplicate record was ignored.")
                 else:
                     # something should have been saved to database
-                    self.wlog.printlog(syslog.LOG_INFO, "Finished import")
+                    self.wlog.printlog(logging.INFO, "Finished import")
                     _msg = "%d records were processed and %d unique records " \
                            "imported in %.2f seconds." % (total_rec,
                                                           self.total_rec_proc,
                                                           self.tdiff)
-                    self.wlog.printlog(syslog.LOG_INFO, _msg)
+                    self.wlog.printlog(logging.INFO, _msg)
                     if self.total_duplicate_rec > 1:
                         _msg = "%d duplicate records were ignored." % self.total_duplicate_rec
-                        self.wlog.printlog(syslog.LOG_INFO, _msg)
+                        self.wlog.printlog(logging.INFO, _msg)
                     elif self.total_duplicate_rec == 1:
-                        self.wlog.printlog(syslog.LOG_INFO,
+                        self.wlog.printlog(logging.INFO,
                                            "1 duplicate record was ignored.")
                     print("Those records with a timestamp already in the archive will not have been")
                     print("imported. Confirm successful import in the WeeWX log file.")
@@ -573,9 +574,9 @@ class Source(object):
             # will use
             _msg = "The following imported field-to-WeeWX field map will be used:"
             if self.verbose:
-                self.wlog.verboselog(syslog.LOG_INFO, _msg)
+                self.wlog.verboselog(logging.INFO, _msg)
             else:
-                self.wlog.logonly(syslog.LOG_INFO, _msg)
+                self.wlog.logonly(logging.INFO, _msg)
             for _key, _val in six.iteritems(_map):
                 if 'field_name' in _val:
                     _units_msg = ""
@@ -585,9 +586,9 @@ class Source(object):
                                                                               _units_msg,
                                                                               _key)
                     if self.verbose:
-                        self.wlog.verboselog(syslog.LOG_INFO, _msg)
+                        self.wlog.verboselog(logging.INFO, _msg)
                     else:
-                        self.wlog.logonly(syslog.LOG_INFO, _msg)
+                        self.wlog.logonly(logging.INFO, _msg)
         else:
             # no [[FieldMap]] stanza and no _header_map so raise an error as we
             # don't know what to map
@@ -814,16 +815,16 @@ class Source(object):
                             _msg = "Warning: Import field '%s' is mapped to WeeWX " \
                                    "field '%s' but the" % (self.map[_field]['field_name'],
                                                    _field)
-                            self.wlog.printlog(syslog.LOG_INFO,
+                            self.wlog.printlog(logging.INFO,
                                                _msg,
                                                can_suppress=True)
                             _msg = "         import field '%s' could not be found " \
                                    "in one or more records." % self.map[_field]['field_name']
-                            self.wlog.printlog(syslog.LOG_INFO,
+                            self.wlog.printlog(logging.INFO,
                                                _msg,
                                                can_suppress=True)
                             _msg = "         WeeWX field '%s' will be set to 'None' in these records." % _field
-                            self.wlog.printlog(syslog.LOG_INFO,
+                            self.wlog.printlog(logging.INFO,
                                                _msg,
                                                can_suppress=True)
                             # make sure we do this warning once only
@@ -865,7 +866,7 @@ class Source(object):
                 # we had more than one unique value for interval, warn the user
                 _msg = "Warning: Records to be imported contain multiple " \
                        "different 'interval' values."
-                self.wlog.printlog(syslog.LOG_INFO, _msg)
+                self.wlog.printlog(logging.INFO, _msg)
                 print("         This may mean the imported data is missing some records and it may lead")
                 print("         to data integrity issues. If the raw data has a known, fixed interval")
                 print("         value setting the relevant 'interval' setting in wee_import config to")
@@ -887,15 +888,15 @@ class Source(object):
                             print("Import aborted by user. No records saved to archive.")
                         _msg = "User chose to abort import. %d records were processed. " \
                                "Exiting." % self.total_rec_proc
-                        self.wlog.logonly(syslog.LOG_INFO, _msg)
+                        self.wlog.logonly(logging.INFO, _msg)
                     raise SystemExit('Exiting. Nothing done.')
-            self.wlog.verboselog(syslog.LOG_INFO,
+            self.wlog.verboselog(logging.INFO,
                                  "Mapped %d records." % len(_records))
             # the user wants to continue or we have only one unique value for
             # interval so return the records
             return _records
         else:
-            self.wlog.verboselog(syslog.LOG_INFO, "Mapped 0 records.")
+            self.wlog.verboselog(logging.INFO, "Mapped 0 records.")
             # we have no records to return so return None
             return None
 
@@ -945,16 +946,15 @@ class Source(object):
                 if _interval < 0:
                     # so raise an error
                     _msg = "Cannot derive 'interval' for record timestamp: %s." % timestamp_to_string(current_ts)
-                    self.wlog.printlog(syslog.LOG_INFO, _msg)
-                    raise ValueError(
-                        "Raw data is not in ascending date time order.")
+                    self.wlog.printlog(logging.INFO, _msg)
+                    raise ValueError("Raw data is not in ascending date time order.")
             except TypeError:
                 _interval = None
             return _interval
         else:
             # we don't know what to do so raise an error
-            raise ValueError(
-                "Cannot derive 'interval'. Unknown 'interval' setting in %s." % self.import_config_path)
+            _msg = "Cannot derive 'interval'. Unknown 'interval' setting in %s." % self.import_config_path
+            raise ValueError(_msg)
 
     @staticmethod
     def getRain(last_rain, current_rain):
@@ -1101,7 +1101,7 @@ class Source(object):
                         # tell the user what we have done
                         _msg = "Unique records processed: %d; Last timestamp: %s\r" % (nrecs,
                                                                                        timestamp_to_string(_final_rec['dateTime']))
-                        print(_msg, end=' ', file=sys.stdout)
+                        print(_msg, end='', file=sys.stdout)
                         sys.stdout.flush()
                         _tranche = []
                 # we have processed all records but do we have any records left
@@ -1118,7 +1118,7 @@ class Source(object):
                     # tell the user what we have done
                     _msg = "Unique records processed: %d; Last timestamp: %s\r" % (nrecs,
                                                                                    timestamp_to_string(_final_rec['dateTime']))
-                    print(_msg, end=' ', file=sys.stdout)
+                    print(_msg, end='', file=sys.stdout)
                 print()
                 sys.stdout.flush()
                 # update our counts
@@ -1133,10 +1133,10 @@ class Source(object):
                     else:
                         _msg = "    %d duplicate records were identified in period %d:" % (num_duplicates,
                                                                                            self.period_no)
-                    self.wlog.printlog(syslog.LOG_INFO, _msg, can_suppress=True)
+                    self.wlog.printlog(logging.INFO, _msg, can_suppress=True)
                     for ts in sorted(self.period_duplicates):
                         _msg = "        %s" % timestamp_to_string(ts)
-                        self.wlog.printlog(syslog.LOG_INFO, _msg,
+                        self.wlog.printlog(logging.INFO, _msg,
                                            can_suppress=True)
                     # add the period duplicates to the overall duplicates
                     self.duplicates |= self.period_duplicates
@@ -1145,7 +1145,7 @@ class Source(object):
             elif self.ans == 'n':
                 # user does not want to import so display a message and then
                 # ask to exit
-                self.wlog.printlog(syslog.LOG_INFO,
+                self.wlog.printlog(logging.INFO,
                                    'User chose not to import records. Exiting. Nothing done.')
                 raise SystemExit('Exiting. Nothing done.')
         else:
@@ -1171,64 +1171,67 @@ class Source(object):
 class WeeImportLog(object):
     """Class to handle wee_import logging.
 
-    This class provides a wrapper around the python syslog module to handle
-    wee_import logging requirements. The --log=- command line option disables
-    log output otherwise log output is sent to the same log used by WeeWX.
+    This class provides a wrapper around the WeeWX logging system to handle
+    wee_import logging requirements.
+
+    wee_import has moderately complex logging requirements. wee_import can make
+    changes to the WeeWX database and such changes need to be logged. At the
+    same time formatted output to console is required to inform the user of
+    wee_import progress at run time. Additionally, and depending on the import,
+    wee_import may provide many warnings to the user via the console during an
+    import. The quantity of these warning can be reduced with the --suppress
+    command line option. Finally to aid in troubleshooting imports the
+    --verbose command line option enables extended log and console output
+    during an import.
+
+    The following command line options affect eh wee_import logging:
+
+    --log. wee_import log output is disabled when --log=-
+    --verbose.  Includes additional output to console and log
+    --suppress. Suppresses import warning messages
+
+    --dry-run. Does everything except save the imported data to the database.
+               Also disables all log output
     """
 
-    def __init__(self, opt_logging, opt_verbose, opt_suppress, opt_dry_run):
+    def __init__(self, logger, options):
         """Initialise our log environment."""
 
-        # first check if we are turning off log to file or not
-        if opt_logging:
-            log_bool = opt_logging.strip() == '-'
+        # the Logger object to use
+        self.logger = logger
+        # Setup our logging environment. If --verbose we log up to logging.DEBUG
+        # otherwise just log up to logging.INFO
+        if options.verbose:
+            self.logger.setLevel(logging.DEBUG)
         else:
-            log_bool = False
-        # Flag to indicate whether we are logging to file or not. Log to file
-        # every time except when logging is explicitly turned off on the
-        # command line or its a dry run.
-        self.log = not (opt_dry_run or log_bool)
-        # if we are logging then setup our syslog environment
-        # if --verbose we log up to syslog.LOG_DEBUG
-        # otherwise just log up to syslog.LOG_INFO
-        if self.log:
-            syslog.openlog('wee_import',
-                           logoption=syslog.LOG_PID | syslog.LOG_CONS)
-            if opt_verbose:
-                syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
-            else:
-                syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_INFO))
-        # logging by other modules (eg WxCalculate) does not use WeeImportLog
-        # but we can disable most logging by raising the log priority if its a
-        # dry run
-        if opt_dry_run:
-            syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_CRIT))
-        # keep opt_verbose for later
-        self.verbose = opt_verbose
-        self.suppress = opt_suppress
+            self.logger.setLevel(logging.INFO)
+        # keep options.verbose and options.suppress for later use
+        self.verbose = options.verbose
+        self.suppress = options.suppress
 
     def logonly(self, level, message):
-        """Log to file only."""
+        """Log to WeeWX logging system only."""
 
-        # are we logging ?
-        if self.log:
-            # add a little preamble to say this is wee_import
-            _message = 'wee_import: ' + message
-            syslog.syslog(level, _message)
+        self.logger.log(level, message)
 
     def printlog(self, level, message, can_suppress=False):
-        """Print to screen and log to file."""
+        """Print to console and log to logging system..
+
+        Send message to console and logging system. If the message can be
+        suppressed and the suppress property is set the message will not be
+        sent to console.
+        """
 
         if not(can_suppress and self.suppress):
             print(message)
         self.logonly(level, message)
 
     def verboselog(self, level, message):
-        """Print to screen if --verbose and log to file always."""
+        """Print to screen if --verbose but send to logging system always."""
 
         if self.verbose:
             print(message)
-            self.logonly(level, message)
+        self.logonly(level, message)
 
 
 # ============================================================================
@@ -1247,4 +1250,3 @@ def get_binding(config_dict):
     else:
         db_binding_wx = None
     return db_binding_wx
-

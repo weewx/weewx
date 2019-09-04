@@ -15,8 +15,8 @@ from __future__ import print_function
 
 # Python imports
 import csv
+import logging
 import os
-import syslog
 
 # WeeWX imports
 from . import weeimport
@@ -86,12 +86,12 @@ class CSVSource(weeimport.Source):
 
         # tell the user/log what we intend to do
         _msg = "A CSV import from source file '%s' has been requested." % self.source
-        self.wlog.printlog(syslog.LOG_INFO, _msg)
+        self.wlog.printlog(logging.INFO, _msg)
         _msg = "The following options will be used:"
-        self.wlog.verboselog(syslog.LOG_DEBUG, _msg)
+        self.wlog.verboselog(logging.DEBUG, _msg)
         _msg = "     config=%s, import-config=%s" % (config_path,
                                                      self.import_config_path)
-        self.wlog.verboselog(syslog.LOG_DEBUG, _msg)
+        self.wlog.verboselog(logging.DEBUG, _msg)
         if options.date:
             _msg = "     source=%s, date=%s" % (self.source, options.date)
         else:
@@ -99,37 +99,43 @@ class CSVSource(weeimport.Source):
             _msg = "     source=%s, from=%s, to=%s" % (self.source,
                                                        options.date_from,
                                                        options.date_to)
-        self.wlog.verboselog(syslog.LOG_DEBUG, _msg)
+        self.wlog.verboselog(logging.DEBUG, _msg)
         _msg = "     dry-run=%s, calc_missing=%s, ignore_invalid_data=%s" % (self.dry_run,
                                                                              self.calc_missing,
                                                                              self.ignore_invalid_data)
-        self.wlog.verboselog(syslog.LOG_DEBUG, _msg)
+        self.wlog.verboselog(logging.DEBUG, _msg)
         _msg = "     tranche=%s, interval=%s, date/time_string_format=%s" % (self.tranche,
                                                                              self.interval,
                                                                              self.raw_datetime_format)
-        self.wlog.verboselog(syslog.LOG_DEBUG, _msg)
+        self.wlog.verboselog(logging.DEBUG, _msg)
         _msg = "     rain=%s, wind_direction=%s" % (self.rain, self.wind_dir)
-        self.wlog.verboselog(syslog.LOG_DEBUG, _msg)
+        self.wlog.verboselog(logging.DEBUG, _msg)
         _msg = "     UV=%s, radiation=%s" % (self.UV_sensor, self.solar_sensor)
-        self.wlog.verboselog(syslog.LOG_DEBUG, _msg)
+        self.wlog.verboselog(logging.DEBUG, _msg)
         _msg = "Using database binding '%s', which is bound to database '%s'" % (self.db_binding_wx,
                                                                                  self.dbm.database_name)
-        self.wlog.printlog(syslog.LOG_INFO, _msg)
+        self.wlog.printlog(logging.INFO, _msg)
         _msg = "Destination table '%s' unit system is '%#04x' (%s)." % (self.dbm.table_name,
                                                                         self.archive_unit_sys,
                                                                         unit_nicknames[self.archive_unit_sys])
-        self.wlog.printlog(syslog.LOG_INFO, _msg)
+        self.wlog.printlog(logging.INFO, _msg)
         if self.calc_missing:
-            print("Missing derived observations will be calculated.")
+            self.wlog.printlog(logging.INFO,
+                               "Missing derived observations will be calculated.")
         if not self.UV_sensor:
-            print("All WeeWX UV fields will be set to None.")
+            self.wlog.printlog(logging.INFO,
+                               "All WeeWX UV fields will be set to None.")
         if not self.solar_sensor:
-            print("All WeeWX radiation fields will be set to None.")
+            self.wlog.printlog(logging.INFO,
+                               "All WeeWX radiation fields will be set to None.")
         if options.date or options.date_from:
-            print("Observations timestamped after %s and up to and" % timestamp_to_string(self.first_ts))
-            print("including %s will be imported." % timestamp_to_string(self.last_ts))
+            self.wlog.printlog(logging.INFO,
+                               "Observations timestamped after %s and up to and" % timestamp_to_string(self.first_ts))
+            self.wlog.printlog(logging.INFO,
+                               "including %s will be imported." % timestamp_to_string(self.last_ts))
         if self.dry_run:
-            print("This is a dry run, imported data will not be saved to archive.")
+            self.wlog.printlog(logging.INFO,
+                               "This is a dry run, imported data will not be saved to archive.")
 
     def getRawData(self, period):
         """Obtain an iterable containing the raw data to be imported.
