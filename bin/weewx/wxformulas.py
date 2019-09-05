@@ -834,6 +834,69 @@ def evapotranspiration_US(Tmin_F, Tmax_F, rh_min, rh_max,
                                     timestamp=timestamp)
     return evt / MM_PER_INCH if evt is not None else None
 
+
+class PressureCooker(object):
+    """Do calculations relating to barometric pressure"""
+
+    def __init__(self, altitude_ft, dbmanager, max_ts_delta=1800):
+        self.altitude_ft = altitude_ft
+        self.dbmanager = dbmanager
+        self.max_ts_delta = max_ts_delta
+        # Timestamp (roughly) 12 hours ago
+        self.ts_12h = None
+        # Temperature 12 hours ago in Fahrenheit
+        self.temp_12h_F = None
+
+    def _get_temperature_12h_F(self, ts):
+        """Get the temperature in Fahrenheit from 12 hours ago.  The value will
+         be None if no temperature is available."""
+
+        ts_12h = ts - 12 * 3600
+
+        # Look up the temperature 12h ago if this is the first time through,
+        # or we don't have a usable temperature, or the old temperature is too stale.
+        if self.ts_12h is None or self.temp_12h_F is None or abs(self.ts_12h - ts_12h) < self.max_ts_delta:
+            # Hit the database to get a newer temperature
+            record = self.dbmanager.getRecord(ts_12h, max_delta=self.max_ts_delta)
+            temperature = record.get('outTemp') if record else None
+            # Convert to Fahrenheit if necessary
+            if temperature is not None and record['usUnits'] & 0x10:
+                # One of the metric systems (METRIC or METRICWX) is being used. Convert.
+                temperature = weewx.units.CtoF(temperature)
+            # Save the temperature and timestamp
+            self.temp_12h_F = temperature
+            self.ts_12h = ts_12h
+
+        # Return in F
+        return self.temp_12h_F
+
+    def calc(self, key, record):
+        if key == 'pressure':
+            return self.calc_pressure(record)
+
+    def calc_pressure(self, record):
+        # The following requires everything to be in US Customary units
+        record_US = weewx.units.to_US(record)
+        # Get the temperature in Fahrenheit from 12 hours ago
+        temp_12h_F = self._get_temperature_12h_F(record['dateTime'])
+        if temp_12h_F is not None:
+            try:
+                pressure = weewx.uwxutils.uWxUtilsVP.SeaLevelToSensorPressure_12(
+                    record_US['barometer'],
+                    self.altitude_ft,
+                    record_US['outTemp'],
+                    temp_12h_F,
+                    record_US['outHumidity']
+                )
+            except KeyError:
+                return None
+        else:
+            return None
+        pressure_vt = weewx.units.ValueTuple(pressure, "inHg", "group_pressure")
+        # Convert to the same unit system used by the incoming record
+        pressure_final = weewx.units.convertStd(pressure_vt, record['usUnits'])
+        return pressure_final[0]
+
 if __name__ == "__main__":
     
     import doctest

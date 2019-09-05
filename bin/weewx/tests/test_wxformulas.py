@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2018 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2018-2019 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -7,6 +7,14 @@
 
 import unittest
 
+try:
+    # Python 3 --- mock is included in unittest
+    from unittest import mock
+except ImportError:
+    # Python 2 --- must have mock installed
+    import mock
+
+import weeutil.xtypes
 import weewx.wxformulas
 
 
@@ -126,6 +134,80 @@ class WXFormulasTest(unittest.TestCase):
                                                                       wind_height_ft=6,
                                                                       latitude_deg=45.7, longitude_deg=-121.5,
                                                                       altitude_ft=700, timestamp=timestamp), 0.028, 3)
+
+
+# Test values for the PressureCooker test:
+record = {
+    'dateTime': 1567515300, 'usUnits': 1, 'interval': 5, 'inTemp': 73.0, 'outTemp': 55.7, 'inHumidity': 54.0,
+    'outHumidity': 90.0, 'windSpeed': 0.0, 'windDir': None, 'windGust': 2.0, 'windGustDir': 270.0,
+    'rain': 0.0, 'windchill': 55.7, 'heatindex': 55.7
+}
+# These are the correct values
+pressure = 29.259303850622302
+barometer = 29.99
+altimeter = 30.001561119603156
+
+
+class TestPressureCooker(unittest.TestCase):
+    """Test the class PressureCooker"""
+
+    def setUp(self):
+        # Make a copy. We will be modifying it.
+        self.record = dict(record)
+
+    def test_get_temperature_12h_F(self):
+        db_manager = mock.Mock()
+        pc = weewx.wxformulas.PressureCooker(700, db_manager)
+
+        # Mock a database in US units
+        with mock.patch.object(db_manager, 'getRecord',
+                               return_value={'usUnits': weewx.US, 'outTemp': 80.3}) as mock_mgr:
+            t = pc._get_temperature_12h_F(self.record['dateTime'])
+            # Make sure the mocked database manager got called with a time 12h ago
+            mock_mgr.assert_called_once_with(self.record['dateTime'] - 12 * 3600, max_delta=1800)
+            self.assertEqual(t, 80.3)
+
+        # Mock a database in METRICWX units
+        with mock.patch.object(db_manager, 'getRecord',
+                               return_value={'usUnits': weewx.METRICWX, 'outTemp': 30.0}) as mock_mgr:
+            t = pc._get_temperature_12h_F(self.record['dateTime'])
+            mock_mgr.assert_called_once_with(self.record['dateTime'] - 12 * 3600, max_delta=1800)
+            self.assertEqual(t, 86)
+
+    def test_calc_pressure(self):
+        # To calculate station pressure, we need barometric pressure. Add it
+        self.record['barometer'] = barometer
+        # Mock up a database manager
+        db_manager = mock.Mock()
+        # Create a pressure cooker with our mocked manager
+        pc = weewx.wxformulas.PressureCooker(700, db_manager)
+
+        # Mock a result set in US units
+        with mock.patch.object(db_manager, 'getRecord',
+                               return_value={'usUnits': weewx.US, 'outTemp': 80.3}):
+            p = pc.calc_pressure(self.record)
+            self.assertEqual(p, pressure)
+
+        # Try it using the "calc()" entry point:
+        with mock.patch.object(db_manager, 'getRecord',
+                               return_value={'usUnits': weewx.US, 'outTemp': 80.3}):
+            self.assertEqual(pc.calc('pressure', self.record), pressure)
+
+    def test_bound_method(self):
+        """Do a test, this time using a bound method (instead of a simple function)"""
+        # To calculate station pressure, we need barometric pressure. Add it
+        self.record['barometer'] = barometer
+        # Mock up a database manager
+        db_manager = mock.Mock()
+        # Create a pressure cooker with our mocked manager
+        pc = weewx.wxformulas.PressureCooker(700, db_manager)
+        # Use a bound method for the extension function
+        xt = weeutil.xtypes.ExtendedTypes(self.record, {'pressure': pc.calc})
+
+        # Mock a result set in US units
+        with mock.patch.object(db_manager, 'getRecord',
+                               return_value={'usUnits': weewx.US, 'outTemp': 80.3}):
+            self.assertEqual(xt['pressure'], pressure)
 
 
 unittest.main()
