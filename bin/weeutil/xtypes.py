@@ -41,6 +41,9 @@ class ExtendedTypes(dict):
         else:
             dict.__delitem__(self, key)
 
+    def __contains__(self, key):
+        return key in self.new_types or dict.__contains__(self, key)
+
     def keys(self):
         return itertools.chain(self.new_types.keys(), dict.keys(self))
 
@@ -58,9 +61,6 @@ class ExtendedTypes(dict):
 
     def values(self):
         raise NotImplementedError
-
-    def has_key(self, key):
-        return key in self.new_types or dict.has_key(self, key)
 
     def get(self, key, default=None):
         if key in self.new_types:
