@@ -808,54 +808,60 @@ def main():
         print("wee_import version: %s" % WEE_IMPORT_VERSION)
         exit(0)
 
-    # set up wee_import logging
-    wlog = weeimport.weeimport.WeeImportLog(log, options)
-
     # to do anything more we need an import config file, check if one was
     # provided
     if options.import_config_path:
         # we have something so try to start
 
         # advise the user we are starting up
-        wlog.printlog(logging.INFO, "Starting wee_import...")
+        print("Starting wee_import...")
+        log.log(logging.INFO, "Starting wee_import...")
 
         # If we got this far we must want to import something so get a Source
         # object from our factory and try to import. Be prepared to catch any
         # errors though.
         try:
             source_obj = weeimport.weeimport.Source.sourceFactory(options,
-                                                                  args,
-                                                                  wlog)
+                                                                  args)
             source_obj.run()
         except weeimport.weeimport.WeeImportOptionError as e:
-            wlog.printlog(logging.INFO, "**** Command line option error.")
-            wlog.printlog(logging.INFO, "**** %s" % e)
+            print("**** Command line option error.")
+            log.log(logging.INFO, "**** Command line option error.")
+            print("**** %s" % e)
+            log.log(logging.INFO, "**** %s" % e)
             print("**** Nothing done, exiting.")
-            wlog.logonly(logging.INFO, "**** Nothing done.")
+            log.log(logging.INFO, "**** Nothing done.")
             exit(1)
         except weeimport.weeimport.WeeImportIOError as e:
-            wlog.printlog(logging.INFO, "**** Unable to load source file.")
-            wlog.printlog(logging.INFO, "**** %s" % e)
+            print("**** Unable to load source file.")
+            log.log(logging.INFO, "**** Unable to load source file.")
+            print("**** %s" % e)
+            log.log(logging.INFO, "**** %s" % e)
             print("**** Nothing done, exiting.")
-            wlog.logonly(logging.INFO, "**** Nothing done.")
+            log.log(logging.INFO, "**** Nothing done.")
             exit(1)
         except weeimport.weeimport.WeeImportFieldError as e:
-            wlog.printlog(logging.INFO, "**** Unable to map source data.")
-            wlog.printlog(logging.INFO, "**** %s" % e)
+            print("**** Unable to map source data.")
+            log.log(logging.INFO, "**** Unable to map source data.")
+            print("**** %s" % e)
+            log.log(logging.INFO, "**** %s" % e)
             print("**** Nothing done, exiting.")
-            wlog.logonly(logging.INFO, "**** Nothing done.")
+            log.log(logging.INFO, "**** Nothing done.")
             exit(1)
         except weeimport.weeimport.WeeImportMapError as e:
-            wlog.printlog(logging.INFO,
-                          "**** Unable to parse source-to-WeeWX field map.")
-            wlog.printlog(logging.INFO, "**** %s" % e)
+            print("**** Unable to parse source-to-WeeWX field map.")
+            log.log(logging.INFO,
+                    "**** Unable to parse source-to-WeeWX field map.")
+            print("**** %s" % e)
+            log.log(logging.INFO, "**** %s" % e)
             print("**** Nothing done, exiting.")
-            wlog.logonly(logging.INFO, "**** Nothing done.")
+            log.log(logging.INFO, "**** Nothing done.")
             exit(1)
         except (weewx.ViolatedPrecondition, weewx.UnsupportedFeature) as e:
-            wlog.printlog(logging.INFO, "**** %s" % e)
+            print("**** %s" % e)
+            log.log(logging.INFO, "**** %s" % e)
             print("**** Nothing done, exiting.")
-            wlog.logonly(logging.INFO, "**** Nothing done.")
+            log.log(logging.INFO, "**** Nothing done.")
             print()
             parser.print_help()
             exit(1)
@@ -863,15 +869,18 @@ def main():
             print(e)
             exit(0)
         except (ValueError, weewx.UnitError) as e:
-            wlog.printlog(logging.INFO, "**** %s" % e)
+            print("**** %s" % e)
+            log.log(logging.INFO, "**** %s" % e)
             print("**** Nothing done, exiting.")
-            wlog.logonly(logging.INFO, "**** Nothing done.")
+            log.log(logging.INFO, "**** Nothing done.")
             exit(1)
         except IOError as e:
-            wlog.printlog(logging.INFO, "**** Unable to load config file.")
-            wlog.printlog(logging.INFO, "**** %s" % e)
+            print("**** Unable to load config file.")
+            log.log(logging.INFO, "**** Unable to load config file.")
+            print("**** %s" % e)
+            log.log(logging.INFO, "**** %s" % e)
             print("**** Nothing done, exiting.")
-            wlog.logonly(logging.INFO, "**** Nothing done.")
+            log.log(logging.INFO, "**** Nothing done.")
             exit(1)
     else:
         # we have no import config file so display a suitable message followed

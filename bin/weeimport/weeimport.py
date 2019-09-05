@@ -34,6 +34,8 @@ from weewx.manager import open_manager_with_config
 from weewx.units import unit_constants, unit_nicknames, convertStd, to_std_system, ValueTuple
 from weeutil.weeutil import timestamp_to_string, option_as_list, to_int, tobool, _get_object
 
+log = logging.getLogger(__name__)
+
 # List of sources we support
 SUPPORTED_SOURCES = ['CSV', 'WU', 'Cumulus', 'WD']
 
@@ -114,7 +116,7 @@ class Source(object):
     # reg expression to match any HTML tag of the form <...>
     _tags = re.compile(r'\<.*\>')
 
-    def __init__(self, config_dict, import_config_dict, options, log):
+    def __init__(self, config_dict, import_config_dict, options):
         """A generic initialisation.
 
         Set some realistic default values for options read from the import
@@ -123,8 +125,8 @@ class Source(object):
         know what records to import.
         """
 
-        # give our source object some logging abilities
-        self.wlog = log
+#        # give our source object some logging abilities
+#        self.wlog = log
 
         # save our WeeWX config dict
         self.config_dict = config_dict
@@ -198,6 +200,7 @@ class Source(object):
         # Process our command line options
         self.dry_run = options.dry_run
         self.verbose = options.verbose
+        self.suppress = options.suppress
 
         # By processing any --date, --from and --to options we need to derive
         # self.first_ts and self.last_ts; the earliest and latest (inclusive)
@@ -293,7 +296,7 @@ class Source(object):
         self.period_duplicates = set()
 
     @staticmethod
-    def sourceFactory(options, args, log):
+    def sourceFactory(options, args):
         """Factory to produce a Source object.
 
         Returns an appropriate object depending on the source type. Raises a
@@ -331,8 +334,7 @@ class Source(object):
                                          config_path,
                                          import_config_dict.get(source, {}),
                                          import_config_path,
-                                         options,
-                                         log)
+                                         options)
 
     def run(self):
         """Main entry point for importing from an external source.
@@ -372,28 +374,40 @@ class Source(object):
 
                 # get the raw data
                 _msg = 'Obtaining raw import data for period %d...' % self.period_no
-                self.wlog.verboselog(logging.INFO, _msg)
+                if self.verbose:
+                    print(_msg)
+                log.log(logging.INFO, _msg)
                 _raw_data = self.getRawData(period)
                 _msg = 'Raw import data read successfully for period %d.' % self.period_no
-                self.wlog.verboselog(logging.INFO, _msg)
+                if self.verbose:
+                    print(_msg)
+                log.log(logging.INFO, _msg)
 
                 # map the raw data to a WeeWX archive compatible dictionary
                 _msg = 'Mapping raw import data for period %d...' % self.period_no
-                self.wlog.verboselog(logging.INFO, _msg)
+                if self.verbose:
+                    print(_msg)
+                log.log(logging.INFO, _msg)
                 _mapped_data = self.mapRawData(_raw_data, self.archive_unit_sys)
                 _msg = 'Raw import data mapped successfully for period %d.' % self.period_no
-                self.wlog.verboselog(logging.INFO, _msg)
+                if self.verbose:
+                    print(_msg)
+                log.log(logging.INFO, _msg)
 
                 # save the mapped data to archive
                 # first advise the user and log, but only if its not a dry run
                 if not self.dry_run:
                     _msg = 'Saving mapped data to archive for period %d...' % self.period_no
-                    self.wlog.verboselog(logging.INFO, _msg)
+                    if self.verbose:
+                        print(_msg)
+                    log.log(logging.INFO, _msg)
                 self.saveToArchive(archive, _mapped_data)
                 # advise the user and log, but only if its not a dry run
                 if not self.dry_run:
                     _msg = 'Mapped data saved to archive successfully for period %d.' % self.period_no
-                    self.wlog.verboselog(logging.INFO, _msg)
+                    if self.verbose:
+                        print(_msg)
+                    log.log(logging.INFO, _msg)
                 # increment our period counter
                 self.period_no += 1
             # Provide some summary info now that we have finished the import.
@@ -402,37 +416,48 @@ class Source(object):
             if self.total_rec_proc == 0:
                 # nothing imported so say so
                 _msg = 'No records were identified for import. Exiting. Nothing done.'
-                self.wlog.printlog(logging.INFO, _msg)
+                print(_msg)
+                log.log(logging.INFO, _msg)
             else:
                 # we imported something
                 total_rec = self.total_rec_proc + self.total_duplicate_rec
                 if self.dry_run:
                     # but it was a dry run
-                    self.wlog.printlog(logging.INFO, "Finished dry run import")
+                    _msg = "Finished dry run import"
+                    print(_msg)
+                    log.log(logging.INFO, _msg)
                     _msg = "%d records were processed and %d unique records would "\
                            "have been imported." % (total_rec,
                                                     self.total_rec_proc)
-                    self.wlog.printlog(logging.INFO, _msg)
+                    print(_msg)
+                    log.log(logging.INFO, _msg)
                     if self.total_duplicate_rec > 1:
                         _msg = "%d duplicate records were ignored." % self.total_duplicate_rec
-                        self.wlog.printlog(logging.INFO, _msg)
+                        print(_msg)
+                        log.log(logging.INFO, _msg)
                     elif self.total_duplicate_rec == 1:
-                        self.wlog.printlog(logging.INFO,
-                                           "1 duplicate record was ignored.")
+                        _msg = "1 duplicate record was ignored."
+                        print(_msg)
+                        log.log(logging.INFO, _msg)
                 else:
                     # something should have been saved to database
-                    self.wlog.printlog(logging.INFO, "Finished import")
+                    _msg = "Finished import"
+                    print(_msg)
+                    log.log(logging.INFO, _msg)
                     _msg = "%d records were processed and %d unique records " \
                            "imported in %.2f seconds." % (total_rec,
                                                           self.total_rec_proc,
                                                           self.tdiff)
-                    self.wlog.printlog(logging.INFO, _msg)
+                    print(_msg)
+                    log.log(logging.INFO, _msg)
                     if self.total_duplicate_rec > 1:
                         _msg = "%d duplicate records were ignored." % self.total_duplicate_rec
-                        self.wlog.printlog(logging.INFO, _msg)
+                        print(_msg)
+                        log.log(logging.INFO, _msg)
                     elif self.total_duplicate_rec == 1:
-                        self.wlog.printlog(logging.INFO,
-                                           "1 duplicate record was ignored.")
+                        _msg = "1 duplicate record was ignored."
+                        print(_msg)
+                        log.log(logging.INFO, _msg)
                     print("Those records with a timestamp already in the archive will not have been")
                     print("imported. Confirm successful import in the WeeWX log file.")
 
@@ -574,9 +599,8 @@ class Source(object):
             # will use
             _msg = "The following imported field-to-WeeWX field map will be used:"
             if self.verbose:
-                self.wlog.verboselog(logging.INFO, _msg)
-            else:
-                self.wlog.logonly(logging.INFO, _msg)
+                print(_msg)
+            log.log(logging.INFO, _msg)
             for _key, _val in six.iteritems(_map):
                 if 'field_name' in _val:
                     _units_msg = ""
@@ -586,9 +610,8 @@ class Source(object):
                                                                               _units_msg,
                                                                               _key)
                     if self.verbose:
-                        self.wlog.verboselog(logging.INFO, _msg)
-                    else:
-                        self.wlog.logonly(logging.INFO, _msg)
+                        print(_msg)
+                    log.log(logging.INFO, _msg)
         else:
             # no [[FieldMap]] stanza and no _header_map so raise an error as we
             # don't know what to map
@@ -814,19 +837,19 @@ class Source(object):
                         if self.map[_field]['field_name'] not in _warned:
                             _msg = "Warning: Import field '%s' is mapped to WeeWX " \
                                    "field '%s' but the" % (self.map[_field]['field_name'],
-                                                   _field)
-                            self.wlog.printlog(logging.INFO,
-                                               _msg,
-                                               can_suppress=True)
+                                                           _field)
+                            if not self.suppress:
+                                print(_msg)
+                            log.log(logging.INFO, _msg)
                             _msg = "         import field '%s' could not be found " \
                                    "in one or more records." % self.map[_field]['field_name']
-                            self.wlog.printlog(logging.INFO,
-                                               _msg,
-                                               can_suppress=True)
+                            if not self.suppress:
+                                print(_msg)
+                            log.log(logging.INFO, _msg)
                             _msg = "         WeeWX field '%s' will be set to 'None' in these records." % _field
-                            self.wlog.printlog(logging.INFO,
-                                               _msg,
-                                               can_suppress=True)
+                            if not self.suppress:
+                                print(_msg)
+                            log.log(logging.INFO, _msg)
                             # make sure we do this warning once only
                             _warned.append(self.map[_field]['field_name'])
             # if we have a mapped field for a unit system with a valid value,
@@ -866,7 +889,8 @@ class Source(object):
                 # we had more than one unique value for interval, warn the user
                 _msg = "Warning: Records to be imported contain multiple " \
                        "different 'interval' values."
-                self.wlog.printlog(logging.INFO, _msg)
+                print(_msg)
+                log.log(logging.INFO, _msg)
                 print("         This may mean the imported data is missing some records and it may lead")
                 print("         to data integrity issues. If the raw data has a known, fixed interval")
                 print("         value setting the relevant 'interval' setting in wee_import config to")
@@ -888,15 +912,20 @@ class Source(object):
                             print("Import aborted by user. No records saved to archive.")
                         _msg = "User chose to abort import. %d records were processed. " \
                                "Exiting." % self.total_rec_proc
-                        self.wlog.logonly(logging.INFO, _msg)
+                        log.log(logging.INFO, _msg)
                     raise SystemExit('Exiting. Nothing done.')
-            self.wlog.verboselog(logging.INFO,
-                                 "Mapped %d records." % len(_records))
+            _msg = "Mapped %d records." % len(_records)
+            if self.verbose:
+                print(_msg)
+            log.log(logging.INFO, _msg)
             # the user wants to continue or we have only one unique value for
             # interval so return the records
             return _records
         else:
-            self.wlog.verboselog(logging.INFO, "Mapped 0 records.")
+            _msg = "Mapped 0 records."
+            if self.verbose:
+                print(_msg)
+            log.log(logging.INFO, _msg)
             # we have no records to return so return None
             return None
 
@@ -946,7 +975,8 @@ class Source(object):
                 if _interval < 0:
                     # so raise an error
                     _msg = "Cannot derive 'interval' for record timestamp: %s." % timestamp_to_string(current_ts)
-                    self.wlog.printlog(logging.INFO, _msg)
+                    print(_msg)
+                    log.log(logging.INFO, _msg)
                     raise ValueError("Raw data is not in ascending date time order.")
             except TypeError:
                 _interval = None
@@ -1133,11 +1163,14 @@ class Source(object):
                     else:
                         _msg = "    %d duplicate records were identified in period %d:" % (num_duplicates,
                                                                                            self.period_no)
-                    self.wlog.printlog(logging.INFO, _msg, can_suppress=True)
+                    if not self.suppress:
+                        print(_msg)
+                    log.log(logging.INFO, _msg)
                     for ts in sorted(self.period_duplicates):
                         _msg = "        %s" % timestamp_to_string(ts)
-                        self.wlog.printlog(logging.INFO, _msg,
-                                           can_suppress=True)
+                        if not self.suppress:
+                            print(_msg)
+                        log.log(logging.INFO, _msg)
                     # add the period duplicates to the overall duplicates
                     self.duplicates |= self.period_duplicates
                     # reset the period duplicates
@@ -1145,8 +1178,9 @@ class Source(object):
             elif self.ans == 'n':
                 # user does not want to import so display a message and then
                 # ask to exit
-                self.wlog.printlog(logging.INFO,
-                                   'User chose not to import records. Exiting. Nothing done.')
+                _msg = "User chose not to import records. Exiting. Nothing done."
+                print(_msg)
+                log.log(logging.INFO, _msg)
                 raise SystemExit('Exiting. Nothing done.')
         else:
             # we have no records to import, advise the user but what we say
@@ -1161,77 +1195,6 @@ class Source(object):
         # if we have finished record the time taken for our summary
         if self.last_period:
             self.tdiff = time.time() - self.t1
-
-
-# ============================================================================
-#                              class WeeImportLog
-# ============================================================================
-
-
-class WeeImportLog(object):
-    """Class to handle wee_import logging.
-
-    This class provides a wrapper around the WeeWX logging system to handle
-    wee_import logging requirements.
-
-    wee_import has moderately complex logging requirements. wee_import can make
-    changes to the WeeWX database and such changes need to be logged. At the
-    same time formatted output to console is required to inform the user of
-    wee_import progress at run time. Additionally, and depending on the import,
-    wee_import may provide many warnings to the user via the console during an
-    import. The quantity of these warning can be reduced with the --suppress
-    command line option. Finally to aid in troubleshooting imports the
-    --verbose command line option enables extended log and console output
-    during an import.
-
-    The following command line options affect eh wee_import logging:
-
-    --log. wee_import log output is disabled when --log=-
-    --verbose.  Includes additional output to console and log
-    --suppress. Suppresses import warning messages
-
-    --dry-run. Does everything except save the imported data to the database.
-               Also disables all log output
-    """
-
-    def __init__(self, logger, options):
-        """Initialise our log environment."""
-
-        # the Logger object to use
-        self.logger = logger
-        # Setup our logging environment. If --verbose we log up to logging.DEBUG
-        # otherwise just log up to logging.INFO
-        if options.verbose:
-            self.logger.setLevel(logging.DEBUG)
-        else:
-            self.logger.setLevel(logging.INFO)
-        # keep options.verbose and options.suppress for later use
-        self.verbose = options.verbose
-        self.suppress = options.suppress
-
-    def logonly(self, level, message):
-        """Log to WeeWX logging system only."""
-
-        self.logger.log(level, message)
-
-    def printlog(self, level, message, can_suppress=False):
-        """Print to console and log to logging system..
-
-        Send message to console and logging system. If the message can be
-        suppressed and the suppress property is set the message will not be
-        sent to console.
-        """
-
-        if not(can_suppress and self.suppress):
-            print(message)
-        self.logonly(level, message)
-
-    def verboselog(self, level, message):
-        """Print to screen if --verbose but send to logging system always."""
-
-        if self.verbose:
-            print(message)
-        self.logonly(level, message)
 
 
 # ============================================================================
