@@ -2266,7 +2266,13 @@ longitude = -77.0366</pre>
             Make sure <span class='code'>user</span> has write privileges in this directory. Required. No default.
         </p>
 
-        <p class="config_important">delete</p>
+        <p class="config_option">port</p>
+        <p>
+            The port to use for the ssh connection. Default is to use the default port for the
+            <span class="code">ssh</span> command (generally 22).
+        </p>
+
+        <p class="config_option">delete</p>
 
         <p>Files that don't exist in the local report are removed from the remote location. <em>USE WITH CAUTION:</em>
             If you make a mistake in setting the <span class="code">path</span>, this can cause unexpected files to be
