@@ -88,16 +88,16 @@ class CSVSource(weeimport.Source):
         # tell the user/log what we intend to do
         _msg = "A CSV import from source file '%s' has been requested." % self.source
         print(_msg)
-        log.log(logging.INFO, _msg)
+        log.info(_msg)
         _msg = "The following options will be used:"
         if self.verbose:
             print(_msg)
-        log.log(logging.DEBUG, _msg)
+        log.debug(_msg)
         _msg = "     config=%s, import-config=%s" % (config_path,
                                                      self.import_config_path)
         if self.verbose:
             print(_msg)
-        log.log(logging.DEBUG, _msg)
+        log.debug(_msg)
         if options.date:
             _msg = "     source=%s, date=%s" % (self.source, options.date)
         else:
@@ -107,60 +107,60 @@ class CSVSource(weeimport.Source):
                                                        options.date_to)
         if self.verbose:
             print(_msg)
-        log.log(logging.DEBUG, _msg)
+        log.debug(_msg)
         _msg = "     dry-run=%s, calc_missing=%s, ignore_invalid_data=%s" % (self.dry_run,
                                                                              self.calc_missing,
                                                                              self.ignore_invalid_data)
         if self.verbose:
             print(_msg)
-        log.log(logging.DEBUG, _msg)
+        log.debug(_msg)
         _msg = "     tranche=%s, interval=%s, date/time_string_format=%s" % (self.tranche,
                                                                              self.interval,
                                                                              self.raw_datetime_format)
         if self.verbose:
             print(_msg)
-        log.log(logging.DEBUG, _msg)
+        log.debug(_msg)
         _msg = "     rain=%s, wind_direction=%s" % (self.rain, self.wind_dir)
         if self.verbose:
             print(_msg)
-        log.log(logging.DEBUG, _msg)
+        log.debug(_msg)
         _msg = "     UV=%s, radiation=%s" % (self.UV_sensor, self.solar_sensor)
         if self.verbose:
             print(_msg)
-        log.log(logging.DEBUG, _msg)
+        log.debug(_msg)
         _msg = "Using database binding '%s', which is bound to database '%s'" % (self.db_binding_wx,
                                                                                  self.dbm.database_name)
         print(_msg)
-        log.log(logging.INFO, _msg)
+        log.info(_msg)
         _msg = "Destination table '%s' unit system is '%#04x' (%s)." % (self.dbm.table_name,
                                                                         self.archive_unit_sys,
                                                                         unit_nicknames[self.archive_unit_sys])
         print(_msg)
-        log.log(logging.INFO, _msg)
+        log.info(_msg)
         if self.calc_missing:
             _msg = "Missing derived observations will be calculated."
             print(_msg)
-            log.log(logging.INFO, _msg)
+            log.info(_msg)
 
         if not self.UV_sensor:
             _msg = "All WeeWX UV fields will be set to None."
             print(_msg)
-            log.log(logging.INFO, _msg)
+            log.info(_msg)
         if not self.solar_sensor:
             _msg = "All WeeWX radiation fields will be set to None."
             print(_msg)
-            log.log(logging.INFO, _msg)
+            log.info(_msg)
         if options.date or options.date_from:
             _msg = "Observations timestamped after %s and up to and" % timestamp_to_string(self.first_ts)
             print(_msg)
-            log.log(logging.INFO, _msg)
+            log.info(_msg)
             _msg = "including %s will be imported." % timestamp_to_string(self.last_ts)
             print(_msg)
-            log.log(logging.INFO, _msg)
+            log.info(_msg)
         if self.dry_run:
             _msg = "This is a dry run, imported data will not be saved to archive."
             print(_msg)
-            log.log(logging.INFO, _msg)
+            log.info(_msg)
 
     def getRawData(self, period):
         """Obtain an iterable containing the raw data to be imported.

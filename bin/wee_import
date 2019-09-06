@@ -815,7 +815,7 @@ def main():
 
         # advise the user we are starting up
         print("Starting wee_import...")
-        log.log(logging.INFO, "Starting wee_import...")
+        log.info("Starting wee_import...")
 
         # If we got this far we must want to import something so get a Source
         # object from our factory and try to import. Be prepared to catch any
@@ -826,42 +826,41 @@ def main():
             source_obj.run()
         except weeimport.weeimport.WeeImportOptionError as e:
             print("**** Command line option error.")
-            log.log(logging.INFO, "**** Command line option error.")
+            log.info("**** Command line option error.")
             print("**** %s" % e)
-            log.log(logging.INFO, "**** %s" % e)
+            log.info("**** %s" % e)
             print("**** Nothing done, exiting.")
-            log.log(logging.INFO, "**** Nothing done.")
+            log.info("**** Nothing done.")
             exit(1)
         except weeimport.weeimport.WeeImportIOError as e:
             print("**** Unable to load source file.")
-            log.log(logging.INFO, "**** Unable to load source file.")
+            log.info("**** Unable to load source file.")
             print("**** %s" % e)
-            log.log(logging.INFO, "**** %s" % e)
+            log.info("**** %s" % e)
             print("**** Nothing done, exiting.")
-            log.log(logging.INFO, "**** Nothing done.")
+            log.info("**** Nothing done.")
             exit(1)
         except weeimport.weeimport.WeeImportFieldError as e:
             print("**** Unable to map source data.")
-            log.log(logging.INFO, "**** Unable to map source data.")
+            log.info("**** Unable to map source data.")
             print("**** %s" % e)
-            log.log(logging.INFO, "**** %s" % e)
+            log.info("**** %s" % e)
             print("**** Nothing done, exiting.")
-            log.log(logging.INFO, "**** Nothing done.")
+            log.info("**** Nothing done.")
             exit(1)
         except weeimport.weeimport.WeeImportMapError as e:
             print("**** Unable to parse source-to-WeeWX field map.")
-            log.log(logging.INFO,
-                    "**** Unable to parse source-to-WeeWX field map.")
+            log.info("**** Unable to parse source-to-WeeWX field map.")
             print("**** %s" % e)
-            log.log(logging.INFO, "**** %s" % e)
+            log.info("**** %s" % e)
             print("**** Nothing done, exiting.")
-            log.log(logging.INFO, "**** Nothing done.")
+            log.info("**** Nothing done.")
             exit(1)
         except (weewx.ViolatedPrecondition, weewx.UnsupportedFeature) as e:
             print("**** %s" % e)
-            log.log(logging.INFO, "**** %s" % e)
+            log.info("**** %s" % e)
             print("**** Nothing done, exiting.")
-            log.log(logging.INFO, "**** Nothing done.")
+            log.info("**** Nothing done.")
             print()
             parser.print_help()
             exit(1)
@@ -870,17 +869,17 @@ def main():
             exit(0)
         except (ValueError, weewx.UnitError) as e:
             print("**** %s" % e)
-            log.log(logging.INFO, "**** %s" % e)
+            log.info("**** %s" % e)
             print("**** Nothing done, exiting.")
-            log.log(logging.INFO, "**** Nothing done.")
+            log.info("**** Nothing done.")
             exit(1)
         except IOError as e:
             print("**** Unable to load config file.")
-            log.log(logging.INFO, "**** Unable to load config file.")
+            log.info("**** Unable to load config file.")
             print("**** %s" % e)
-            log.log(logging.INFO, "**** %s" % e)
+            log.info("**** %s" % e)
             print("**** Nothing done, exiting.")
-            log.log(logging.INFO, "**** Nothing done.")
+            log.info("**** Nothing done.")
             exit(1)
     else:
         # we have no import config file so display a suitable message followed

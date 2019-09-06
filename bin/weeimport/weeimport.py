@@ -376,23 +376,23 @@ class Source(object):
                 _msg = 'Obtaining raw import data for period %d...' % self.period_no
                 if self.verbose:
                     print(_msg)
-                log.log(logging.INFO, _msg)
+                log.info(_msg)
                 _raw_data = self.getRawData(period)
                 _msg = 'Raw import data read successfully for period %d.' % self.period_no
                 if self.verbose:
                     print(_msg)
-                log.log(logging.INFO, _msg)
+                log.info(_msg)
 
                 # map the raw data to a WeeWX archive compatible dictionary
                 _msg = 'Mapping raw import data for period %d...' % self.period_no
                 if self.verbose:
                     print(_msg)
-                log.log(logging.INFO, _msg)
+                log.info(_msg)
                 _mapped_data = self.mapRawData(_raw_data, self.archive_unit_sys)
                 _msg = 'Raw import data mapped successfully for period %d.' % self.period_no
                 if self.verbose:
                     print(_msg)
-                log.log(logging.INFO, _msg)
+                log.info(_msg)
 
                 # save the mapped data to archive
                 # first advise the user and log, but only if its not a dry run
@@ -400,14 +400,14 @@ class Source(object):
                     _msg = 'Saving mapped data to archive for period %d...' % self.period_no
                     if self.verbose:
                         print(_msg)
-                    log.log(logging.INFO, _msg)
+                    log.info(_msg)
                 self.saveToArchive(archive, _mapped_data)
                 # advise the user and log, but only if its not a dry run
                 if not self.dry_run:
                     _msg = 'Mapped data saved to archive successfully for period %d.' % self.period_no
                     if self.verbose:
                         print(_msg)
-                    log.log(logging.INFO, _msg)
+                    log.info(_msg)
                 # increment our period counter
                 self.period_no += 1
             # Provide some summary info now that we have finished the import.
@@ -417,7 +417,7 @@ class Source(object):
                 # nothing imported so say so
                 _msg = 'No records were identified for import. Exiting. Nothing done.'
                 print(_msg)
-                log.log(logging.INFO, _msg)
+                log.info(_msg)
             else:
                 # we imported something
                 total_rec = self.total_rec_proc + self.total_duplicate_rec
@@ -425,39 +425,39 @@ class Source(object):
                     # but it was a dry run
                     _msg = "Finished dry run import"
                     print(_msg)
-                    log.log(logging.INFO, _msg)
+                    log.info(_msg)
                     _msg = "%d records were processed and %d unique records would "\
                            "have been imported." % (total_rec,
                                                     self.total_rec_proc)
                     print(_msg)
-                    log.log(logging.INFO, _msg)
+                    log.info(_msg)
                     if self.total_duplicate_rec > 1:
                         _msg = "%d duplicate records were ignored." % self.total_duplicate_rec
                         print(_msg)
-                        log.log(logging.INFO, _msg)
+                        log.info(_msg)
                     elif self.total_duplicate_rec == 1:
                         _msg = "1 duplicate record was ignored."
                         print(_msg)
-                        log.log(logging.INFO, _msg)
+                        log.info(_msg)
                 else:
                     # something should have been saved to database
                     _msg = "Finished import"
                     print(_msg)
-                    log.log(logging.INFO, _msg)
+                    log.info(_msg)
                     _msg = "%d records were processed and %d unique records " \
                            "imported in %.2f seconds." % (total_rec,
                                                           self.total_rec_proc,
                                                           self.tdiff)
                     print(_msg)
-                    log.log(logging.INFO, _msg)
+                    log.info(_msg)
                     if self.total_duplicate_rec > 1:
                         _msg = "%d duplicate records were ignored." % self.total_duplicate_rec
                         print(_msg)
-                        log.log(logging.INFO, _msg)
+                        log.info(_msg)
                     elif self.total_duplicate_rec == 1:
                         _msg = "1 duplicate record was ignored."
                         print(_msg)
-                        log.log(logging.INFO, _msg)
+                        log.info(_msg)
                     print("Those records with a timestamp already in the archive will not have been")
                     print("imported. Confirm successful import in the WeeWX log file.")
 
@@ -600,7 +600,7 @@ class Source(object):
             _msg = "The following imported field-to-WeeWX field map will be used:"
             if self.verbose:
                 print(_msg)
-            log.log(logging.INFO, _msg)
+            log.info(_msg)
             for _key, _val in six.iteritems(_map):
                 if 'field_name' in _val:
                     _units_msg = ""
@@ -611,7 +611,7 @@ class Source(object):
                                                                               _key)
                     if self.verbose:
                         print(_msg)
-                    log.log(logging.INFO, _msg)
+                    log.info(_msg)
         else:
             # no [[FieldMap]] stanza and no _header_map so raise an error as we
             # don't know what to map
@@ -840,16 +840,16 @@ class Source(object):
                                                            _field)
                             if not self.suppress:
                                 print(_msg)
-                            log.log(logging.INFO, _msg)
+                            log.info(_msg)
                             _msg = "         import field '%s' could not be found " \
                                    "in one or more records." % self.map[_field]['field_name']
                             if not self.suppress:
                                 print(_msg)
-                            log.log(logging.INFO, _msg)
+                            log.info(_msg)
                             _msg = "         WeeWX field '%s' will be set to 'None' in these records." % _field
                             if not self.suppress:
                                 print(_msg)
-                            log.log(logging.INFO, _msg)
+                            log.info(_msg)
                             # make sure we do this warning once only
                             _warned.append(self.map[_field]['field_name'])
             # if we have a mapped field for a unit system with a valid value,
@@ -890,7 +890,7 @@ class Source(object):
                 _msg = "Warning: Records to be imported contain multiple " \
                        "different 'interval' values."
                 print(_msg)
-                log.log(logging.INFO, _msg)
+                log.info(_msg)
                 print("         This may mean the imported data is missing some records and it may lead")
                 print("         to data integrity issues. If the raw data has a known, fixed interval")
                 print("         value setting the relevant 'interval' setting in wee_import config to")
@@ -912,12 +912,12 @@ class Source(object):
                             print("Import aborted by user. No records saved to archive.")
                         _msg = "User chose to abort import. %d records were processed. " \
                                "Exiting." % self.total_rec_proc
-                        log.log(logging.INFO, _msg)
+                        log.info(_msg)
                     raise SystemExit('Exiting. Nothing done.')
             _msg = "Mapped %d records." % len(_records)
             if self.verbose:
                 print(_msg)
-            log.log(logging.INFO, _msg)
+            log.info(_msg)
             # the user wants to continue or we have only one unique value for
             # interval so return the records
             return _records
@@ -925,7 +925,7 @@ class Source(object):
             _msg = "Mapped 0 records."
             if self.verbose:
                 print(_msg)
-            log.log(logging.INFO, _msg)
+            log.info(_msg)
             # we have no records to return so return None
             return None
 
@@ -976,7 +976,7 @@ class Source(object):
                     # so raise an error
                     _msg = "Cannot derive 'interval' for record timestamp: %s." % timestamp_to_string(current_ts)
                     print(_msg)
-                    log.log(logging.INFO, _msg)
+                    log.info(_msg)
                     raise ValueError("Raw data is not in ascending date time order.")
             except TypeError:
                 _interval = None
@@ -1165,12 +1165,12 @@ class Source(object):
                                                                                            self.period_no)
                     if not self.suppress:
                         print(_msg)
-                    log.log(logging.INFO, _msg)
+                    log.info(_msg)
                     for ts in sorted(self.period_duplicates):
                         _msg = "        %s" % timestamp_to_string(ts)
                         if not self.suppress:
                             print(_msg)
-                        log.log(logging.INFO, _msg)
+                        log.info(_msg)
                     # add the period duplicates to the overall duplicates
                     self.duplicates |= self.period_duplicates
                     # reset the period duplicates
@@ -1180,7 +1180,7 @@ class Source(object):
                 # ask to exit
                 _msg = "User chose not to import records. Exiting. Nothing done."
                 print(_msg)
-                log.log(logging.INFO, _msg)
+                log.info(_msg)
                 raise SystemExit('Exiting. Nothing done.')
         else:
             # we have no records to import, advise the user but what we say
