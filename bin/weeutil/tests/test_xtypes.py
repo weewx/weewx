@@ -38,8 +38,10 @@ record = {
     'outHumidity': 90.0, 'windSpeed': 0.0, 'windDir': None, 'windGust': 2.0, 'windGustDir': 270.0,
     'rain': 0.0, 'windchill': 55.7, 'heatindex': 55.7
 }
-# These is the correct value
+# These are the correct values
 dewpoint = 52.81113360826872
+pressure = 29.259303850622302
+barometer = 29.99
 
 
 class TestExtendedTypes(unittest.TestCase):
@@ -87,6 +89,24 @@ class TestExtendedTypes(unittest.TestCase):
         self.assertTrue('outTemp' in xt)
         self.assertTrue('dewpoint' in xt)
         self.assertFalse('foo' in xt)
+
+    def test_bound_method(self):
+        """Do a test, this time using a bound method (instead of a simple function)"""
+        # To calculate station pressure, we need barometric pressure. Add it
+        self.record['barometer'] = barometer
+        # Mock up a database manager
+        db_manager = mock.Mock()
+        # Create a pressure cooker with our mocked manager
+        pc = weewx.wxformulas.PressureCooker(700, db_manager)
+        # Use a bound method for the extension function
+        xt = weeutil.xtypes.ExtendedTypes(self.record, {'pressure': pc.calc})
+
+        # Mock a result set in US units
+        with mock.patch.object(db_manager, 'getRecord',
+                               return_value={'usUnits': weewx.US, 'outTemp': 80.3}):
+            # Now try keying the ExtendedTypes using the bound method
+            self.assertEqual(xt['pressure'], pressure)
+
 
 
 if __name__ == '__main__':

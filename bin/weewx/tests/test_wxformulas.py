@@ -193,21 +193,4 @@ class TestPressureCooker(unittest.TestCase):
                                return_value={'usUnits': weewx.US, 'outTemp': 80.3}):
             self.assertEqual(pc.calc('pressure', self.record), pressure)
 
-    def test_bound_method(self):
-        """Do a test, this time using a bound method (instead of a simple function)"""
-        # To calculate station pressure, we need barometric pressure. Add it
-        self.record['barometer'] = barometer
-        # Mock up a database manager
-        db_manager = mock.Mock()
-        # Create a pressure cooker with our mocked manager
-        pc = weewx.wxformulas.PressureCooker(700, db_manager)
-        # Use a bound method for the extension function
-        xt = weeutil.xtypes.ExtendedTypes(self.record, {'pressure': pc.calc})
-
-        # Mock a result set in US units
-        with mock.patch.object(db_manager, 'getRecord',
-                               return_value={'usUnits': weewx.US, 'outTemp': 80.3}):
-            self.assertEqual(xt['pressure'], pressure)
-
-
 unittest.main()
