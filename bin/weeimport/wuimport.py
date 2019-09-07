@@ -15,8 +15,8 @@ from __future__ import absolute_import
 from __future__ import print_function
 import csv
 import datetime
+import logging
 import socket
-import syslog
 from datetime import datetime as dt
 
 from six.moves import urllib
@@ -28,6 +28,7 @@ import weewx
 from weeutil.weeutil import timestamp_to_string, option_as_list, startOfDay
 from weewx.units import unit_nicknames
 
+log = logging.getLogger(__name__)
 
 # ============================================================================
 #                             class WUSource
@@ -75,13 +76,12 @@ class WUSource(weeimport.Source):
                                                'map_to': 'radiation'}
                    }
 
-    def __init__(self, config_dict, config_path, wu_config_dict, import_config_path, options, log):
+    def __init__(self, config_dict, config_path, wu_config_dict, import_config_path, options):
 
         # call our parents __init__
         super(WUSource, self).__init__(config_dict,
                                        wu_config_dict,
-                                       options,
-                                       log)
+                                       options)
 
         # save our import config path
         self.import_config_path = import_config_path
@@ -92,7 +92,8 @@ class WUSource(weeimport.Source):
         try:
             self.station_id = wu_config_dict['station_id']
         except KeyError:
-            raise weewx.ViolatedPrecondition("Weather Underground station ID not specified in '%s'." % import_config_path)
+            _msg = "Weather Underground station ID not specified in '%s'." % import_config_path
+            raise weewx.ViolatedPrecondition(_msg)
 
         # wind dir bounds
         _wind_direction = option_as_list(wu_config_dict.get('wind_direction',
@@ -130,12 +131,17 @@ class WUSource(weeimport.Source):
 
         # tell the user/log what we intend to do
         _msg = "Observation history for Weather Underground station '%s' will be imported." % self.station_id
-        self.wlog.printlog(syslog.LOG_INFO, _msg)
+        print(_msg)
+        log.info(_msg)
         _msg = "The following options will be used:"
-        self.wlog.verboselog(syslog.LOG_DEBUG, _msg)
+        if self.verbose:
+            print(_msg)
+        log.debug(_msg)
         _msg = "     config=%s, import-config=%s" % (config_path,
                                                      self.import_config_path)
-        self.wlog.verboselog(syslog.LOG_DEBUG, _msg)
+        if self.verbose:
+            print(_msg)
+        log.debug(_msg)
         if options.date:
             _msg = "     station=%s, date=%s" % (self.station_id, options.date)
         else:
@@ -143,22 +149,30 @@ class WUSource(weeimport.Source):
             _msg = "     station=%s, from=%s, to=%s" % (self.station_id,
                                                         options.date_from,
                                                         options.date_to)
-        self.wlog.verboselog(syslog.LOG_DEBUG, _msg)
+        if self.verbose:
+            print(_msg)
+        log.debug(_msg)
         _msg = "     dry-run=%s, calc_missing=%s, ignore_invalid_data=%s" % (self.dry_run,
                                                                              self.calc_missing,
                                                                              self.ignore_invalid_data)
-        self.wlog.verboselog(syslog.LOG_DEBUG, _msg)
+        if self.verbose:
+            print(_msg)
+        log.debug(_msg)
         _msg = "     tranche=%s, interval=%s, wind_direction=%s" % (self.tranche,
                                                                     self.interval,
                                                                     self.wind_dir)
-        self.wlog.verboselog(syslog.LOG_DEBUG, _msg)
+        if self.verbose:
+            print(_msg)
+        log.debug(_msg)
         _msg = "Using database binding '%s', which is bound to database '%s'" % (self.db_binding_wx,
                                                                                  self.dbm.database_name)
-        self.wlog.printlog(syslog.LOG_INFO, _msg)
+        print(_msg)
+        log.info(_msg)
         _msg = "Destination table '%s' unit system is '%#04x' (%s)." % (self.dbm.table_name,
                                                                         self.archive_unit_sys,
                                                                         unit_nicknames[self.archive_unit_sys])
-        self.wlog.printlog(syslog.LOG_INFO, _msg)
+        print(_msg)
+        log.info(_msg)
         if self.calc_missing:
             print("Missing derived observations will be calculated.")
         if options.date or options.date_from:
@@ -188,7 +202,8 @@ class WUSource(weeimport.Source):
                     which raw obs data will be read.
         """
 
-        # the date for which we want the WU data is held in a datetime object, we need to convert it to a timetuple
+        # the date for which we want the WU data is held in a datetime object,
+        # we need to convert it to a timetuple
         date_tt = period.timetuple()
         # construct our URL using station ID and day, month, year
         _url = "http://www.wunderground.com/weatherstation/WXDailyHistory.asp?ID=%s&" \
@@ -200,14 +215,20 @@ class WUSource(weeimport.Source):
         try:
             _wudata = urllib.request.urlopen(_url)
         except urllib.error.URLError as e:
-            self.wlog.printlog(syslog.LOG_ERR,
-                               "Unable to open Weather Underground station %s" % self.station_id)
-            self.wlog.printlog(syslog.LOG_ERR, "   **** %s" % e)
+            _msg = "Unable to open Weather Underground station %s" % self.station_id
+            print(_msg)
+            log.error(_msg)
+            _msg = "   **** %s" % e
+            print(_msg)
+            log.error(_msg)
             raise
         except socket.timeout as e:
-            self.wlog.printlog(syslog.LOG_ERR,
-                               "Socket timeout for Weather Underground station %s" % self.station_id)
-            self.wlog.printlog(syslog.LOG_ERR, "   **** %s" % e)
+            _msg = "Socket timeout for Weather Underground station %s" % self.station_id
+            print(_msg)
+            log.error(_msg)
+            _msg = "   **** %s" % e
+            print(_msg)
+            log.error(_msg)
             raise
 
         # because the data comes back with lots of HTML tags and whitespace we
