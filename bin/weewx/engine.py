@@ -949,8 +949,8 @@ def main(options, args, engine_class=StdEngine):
         except Terminate:
             log.info("Terminating weewx version %s", weewx.__version__)
             weeutil.logger.log_traceback(log.info, "    ****  ")
-            # Reraise the exception (this should cause the program to exit)
-            raise
+            signal.signal(signal.SIGTERM, signal.SIG_DFL)
+            os.kill(0, signal.SIGTERM)
 
         # Catch any keyboard interrupts and log them
         except KeyboardInterrupt:

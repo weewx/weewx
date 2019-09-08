@@ -134,6 +134,9 @@ Fixes issue #431. Thanks to user ls4096!
 Fixed problem that can cause an exception with restx services that do not use
 the database manager. See commit 459ccb1.
 
+Sending a SIGTERM signal to weewxd now causes it to exit with status
+128 + signal#. PR #442. Thanks to user sshambar!
+
 
 3.9.1 02/06/2019
 
