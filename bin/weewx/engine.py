@@ -953,8 +953,9 @@ def main(options, args, engine_class=StdEngine):
         except Terminate:
             syslog.syslog(syslog.LOG_INFO, "engine: Terminating weewx version %s" % weewx.__version__)
             weeutil.weeutil.log_traceback("    ****  ", syslog.LOG_DEBUG)
-            # Reraise the exception (this should cause the program to exit)
-            raise
+            # Reraise the signal (this should cause the program to exit)
+            signal.signal(signal.SIGTERM, signal.SIG_DFL)
+            os.kill(0, signal.SIGTERM)
 
         # Catch any keyboard interrupts and log them
         except KeyboardInterrupt:
