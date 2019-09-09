@@ -48,6 +48,8 @@ API key, which you can get from the WU. Put it in weewx.conf.
 Unfortunately, WU is very unreliable whether reposts "stick".
 Fixes issue #414
 
+Wee_import can now import Weather Display monthly log files.
+
 Fixed problem where sub-sections DegreeDays and Trend were located under the
 wrong weewx.conf section. Fixes issue #432. Thanks to user mph for spotting
 this!
