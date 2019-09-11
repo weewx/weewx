@@ -3520,10 +3520,7 @@ Options:
                         Socket timeout in seconds. Default is 10.
   -v, --verbose         Print useful extra output.
   -l LOG_FACILITY, --log=LOG_FACILITY
-                        Log selected output to syslog. If omitted no syslog
-                        logging occurs. If LOG_FACILITY is 'weewx' then logs
-                        are written to the same log used by weewx. Any other
-                        parameter will log to syslog.
+                        OBSOLETE. Logging will always occur.
   -t, --test            Test what would happen, but don't do anything.
   -q, --query           For each record, query the user before making a
                         change.
@@ -3621,13 +3618,10 @@ command line, or in the configuration file.</pre>
 
         <h3>Option <span class="code" id="wunderfixer_log">--log</span></h3>
 
-        <p>Control the <span class="code">wunderfixer</span> log output. The default is no logging. If <span
-            class="code">--log=weewx</span> is used then <span class="code">wunderfixer</span> logs to the same log file
-            as used by WeeWX. Any other setting will result in <span class="code">wunderfixer</span> logs being written
-            to <span class="code">syslog</span>. The <span class="code">--log</span> option is used as follows:
+        <p>The <span class="code">--log</span> option is obsolete and no longer performs any function. The
+            <span class="code">--log</span> option has been retained for backwards compatibility with users existing
+            scripts. All <span class="code">wunderfixer</span> log output is always logged via the WeeWX log facility.
         </p>
-
-        <pre class="tty cmd">wunderfixer --log=weewx</pre>
 
         <h3>Option <span class="code" id="wunderfixer_test">--test</span></h3>
 
@@ -3668,6 +3662,11 @@ command line, or in the configuration file.</pre>
             options.
         </p>
 
+        <p class="note">
+            <strong>Note</strong><br/> The data fields shown in the example outputs below are indicative only and the
+            actual output may or may not include other fields.
+        </p>
+
         <p>To run <span class="code">wunderfixer</span> directly:</p>
 
         <ol>
@@ -3678,10 +3677,10 @@ command line, or in the configuration file.</pre>
 
                 <pre class="tty">Using configuration file /home/weewx/weewx.conf.
 Using database binding 'wx_binding', which is bound to database 'archive_sqlite'
-2016-09-22 06:30:00 AEST (1474489800); 29.920";  58.9F;  79%; 1.0 mph; 248 deg; 6.0 mph gust;  52.4F; 0.00" rain; 0.01" daily rain  ... skipped.
-2016-09-22 07:35:00 AEST (1474493700); 29.931";  64.9F;  65%; 2.0 mph; 180 deg; 7.0 mph gust;  52.8F; 0.00" rain; 0.01" daily rain  ... skipped.
-2016-09-22 07:55:00 AEST (1474494900); 29.934";  65.8F;  63%; 2.0 mph; 180 deg;10.0 mph gust;  52.8F; 0.00" rain; 0.01" daily rain  ... skipped.
-2016-09-22 08:20:00 AEST (1474496400); 29.938";  66.5F;  59%; 5.0 mph; 180 deg;12.0 mph gust;  51.7F; 0.00" rain; 0.01" daily rain  ... skipped.
+2016-09-22 06:30:00 AEST (1474489800); 29.920";  58.9F;  79%; 1.0 mph; 248 deg; 6.0 mph gust;  52.4F; 0.00" rain; 0.01" ... skipped.
+2016-09-22 07:35:00 AEST (1474493700); 29.931";  64.9F;  65%; 2.0 mph; 180 deg; 7.0 mph gust;  52.8F; 0.00" rain; 0.01" ... skipped.
+2016-09-22 07:55:00 AEST (1474494900); 29.934";  65.8F;  63%; 2.0 mph; 180 deg;10.0 mph gust;  52.8F; 0.00" rain; 0.01" ... skipped.
+2016-09-22 08:20:00 AEST (1474496400); 29.938";  66.5F;  59%; 5.0 mph; 180 deg;12.0 mph gust;  51.7F; 0.00" rain; 0.01" ... skipped.
 </pre>
                 <p>This output indicates that four records were found to be missing. The word 'skipped' at the end of each
                     line indicates that whilst <span class="code">wunderfixer</span> detected the record as missing, the
@@ -3703,10 +3702,10 @@ Using database binding 'wx_binding', which is bound to database 'archive_sqlite'
 
             <pre class="tty">Using configuration file /home/weewx/weewx.conf.
 Using database binding 'wx_binding', which is bound to database 'archive_sqlite'
-2016-09-22 06:30:00 AEST (1474489800); 29.920";  58.9F;  79%; 1.0 mph; 248 deg; 6.0 mph gust;  52.4F; 0.00" rain; 0.01" daily rain  ... published.
-2016-09-22 07:35:00 AEST (1474493700); 29.931";  64.9F;  65%; 2.0 mph; 180 deg; 7.0 mph gust;  52.8F; 0.00" rain; 0.01" daily rain  ... published.
-2016-09-22 07:55:00 AEST (1474494900); 29.934";  65.8F;  63%; 2.0 mph; 180 deg;10.0 mph gust;  52.8F; 0.00" rain; 0.01" daily rain  ... published.
-2016-09-22 08:20:00 AEST (1474496400); 29.938";  66.5F;  59%; 5.0 mph; 180 deg;12.0 mph gust;  51.7F; 0.00" rain; 0.01" daily rain  ... published.
+2016-09-22 06:30:00 AEST (1474489800); 29.920";  58.9F;  79%; 1.0 mph; 248 deg; 6.0 mph gust;  52.4F; 0.00" rain; 0.01" ... published.
+2016-09-22 07:35:00 AEST (1474493700); 29.931";  64.9F;  65%; 2.0 mph; 180 deg; 7.0 mph gust;  52.8F; 0.00" rain; 0.01" ... published.
+2016-09-22 07:55:00 AEST (1474494900); 29.934";  65.8F;  63%; 2.0 mph; 180 deg;10.0 mph gust;  52.8F; 0.00" rain; 0.01" ... published.
+2016-09-22 08:20:00 AEST (1474496400); 29.938";  66.5F;  59%; 5.0 mph; 180 deg;12.0 mph gust;  51.7F; 0.00" rain; 0.01" ... published.
 </pre>
 
             <p>This output indicates that four records were found to be missing. This time word 'skipped' at the end of
@@ -3727,13 +3726,13 @@ Number of WU records:          284
 Number of missing records:     4
 
 Missing records:
-2016-09-22 06:30:00 AEST (1474489800); 29.920";  58.9F;  79%; 1.0 mph; 248 deg; 6.0 mph gust;  52.4F; 0.00" rain; 0.01" daily rain  ...fix? (y/n/a/q):y
+2016-09-22 06:30:00 AEST (1474489800); 29.920";  58.9F;  79%; 1.0 mph; 248 deg; 6.0 mph gust;  52.4F; 0.00" rain; 0.01" ...fix? (y/n/a/q):y
  ...published.
-2016-09-22 07:35:00 AEST (1474493700); 29.931";  64.9F;  65%; 2.0 mph; 180 deg; 7.0 mph gust;  52.8F; 0.00" rain; 0.01" daily rain  ...fix? (y/n/a/q):y
+2016-09-22 07:35:00 AEST (1474493700); 29.931";  64.9F;  65%; 2.0 mph; 180 deg; 7.0 mph gust;  52.8F; 0.00" rain; 0.01" ...fix? (y/n/a/q):y
  ...published.
-2016-09-22 07:55:00 AEST (1474494900); 29.934";  65.8F;  63%; 2.0 mph; 180 deg;10.0 mph gust;  52.8F; 0.00" rain; 0.01" daily rain  ...fix? (y/n/a/q):y
+2016-09-22 07:55:00 AEST (1474494900); 29.934";  65.8F;  63%; 2.0 mph; 180 deg;10.0 mph gust;  52.8F; 0.00" rain; 0.01" ...fix? (y/n/a/q):y
  ...published.
-2016-09-22 08:20:00 AEST (1474496400); 29.938";  66.5F;  59%; 5.0 mph; 180 deg;12.0 mph gust;  51.7F; 0.00" rain; 0.01" daily rain  ...fix? (y/n/a/q):
+2016-09-22 08:20:00 AEST (1474496400); 29.938";  66.5F;  59%; 5.0 mph; 180 deg;12.0 mph gust;  51.7F; 0.00" rain; 0.01" ...fix? (y/n/a/q):
 </pre>
 
             </li>
