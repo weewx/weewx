@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2016 Tom Keffer <tkeffer@gmail.com> and
+#    Copyright (c) 2009-2019 Tom Keffer <tkeffer@gmail.com> and
 #                            Gary Roderick
 #
 #    See the file LICENSE.txt for your full rights.
@@ -16,6 +16,7 @@ from __future__ import absolute_import
 # Python imports
 import datetime
 import logging
+import numbers
 import re
 import sys
 import time
@@ -219,7 +220,7 @@ class Source(object):
                 _msg = "Invalid --date option specified."
                 raise WeeImportOptionError(_msg)
             else:
-                # we have a valid date so do soem date arithmetic
+                # we have a valid date so do some date arithmetic
                 _last_dt = _first_dt + datetime.timedelta(days=1)
                 self.first_ts = time.mktime(_first_dt.timetuple())
                 self.last_ts = time.mktime(_last_dt.timetuple())
@@ -659,7 +660,7 @@ class Source(object):
                     _msg = "Field '%s' not found in source data." % self.map['dateTime']['field_name']
                     raise WeeImportFieldError(_msg)
                 # now process the raw date time data
-                if _raw_dateTime.isdigit():
+                if isinstance(_raw_dateTime, numbers.Number) or _raw_dateTime.isdigit():
                     # Our dateTime is a number, is it a timestamp already?
                     # Try to use it and catch the error if there is one and
                     # raise it higher.
@@ -671,8 +672,8 @@ class Source(object):
                                                _raw_dateTime)
                         raise ValueError(_msg)
                 else:
-                    # it's a string so try to parse it and catch the error if
-                    # there is one and raise it higher
+                    # it's a non-numeric string so try to parse it and catch
+                    # the error if there is one and raise it higher
                     try:
                         _datetm = time.strptime(_raw_dateTime,
                                                 self.raw_datetime_format)
@@ -685,7 +686,7 @@ class Source(object):
                 # if we have a timeframe of concern does our record fall within
                 # it
                 if (self.first_ts is None and self.last_ts is None) or \
-                        self.first_ts <= _rec_dateTime <= self.last_ts:
+                        self.first_ts < _rec_dateTime <= self.last_ts:
                     # we have no timeframe or if we do it falls within it so
                     # save the dateTime
                     _rec['dateTime'] = _rec_dateTime
@@ -759,6 +760,20 @@ class Source(object):
                         # can't catch the error
                         try:
                             _temp = float(_row[self.map[_field]['field_name']].strip())
+                        except AttributeError:
+                            # the data has not strip() attribute so chances are
+                            # it's a number already
+                            if isinstance(_row[self.map[_field]['field_name']], numbers.Number):
+                                _temp = _row[self.map[_field]['field_name']]
+                            elif _row[self.map[_field]['field_name']] is None:
+                                _temp = None
+                            else:
+                                # we raise the error
+                                _msg = "%s: cannot convert '%s' to float at " \
+                                       "timestamp '%s'." % (_field,
+                                                            _row[self.map[_field]['field_name']],
+                                                            timestamp_to_string(_rec['dateTime']))
+                                raise ValueError(_msg)
                         except TypeError:
                             # perhaps we have a None, so return None for our field
                             _temp = None
