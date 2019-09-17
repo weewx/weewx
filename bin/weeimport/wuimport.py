@@ -157,6 +157,11 @@ class WUSource(weeimport.Source):
         if self.verbose:
             print(_msg)
         log.debug(_msg)
+        _obf_api_key_msg = '='.join(['     apiKey',
+                                     '*'*(len(self.api_key) - 4) + self.api_key[-4:]])
+        if self.verbose:
+            print(_obf_api_key_msg)
+        log.debug(_obf_api_key_msg)
         _msg = "     dry-run=%s, calc_missing=%s, ignore_invalid_data=%s" % (self.dry_run,
                                                                              self.calc_missing,
                                                                              self.ignore_invalid_data)
