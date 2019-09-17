@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-#    Copyright (c) 2009-2016 Tom Keffer <tkeffer@gmail.com> and
+#    Copyright (c) 2009-2019 Tom Keffer <tkeffer@gmail.com> and
 #                            Gary Roderick
 #
 #    See the file LICENSE.txt for your rights.
@@ -235,6 +235,9 @@ source = CSV
     # WU PWS Station ID to be used for import.
     station_id = XXXXXXXX123
 
+    # WU API key to be used for import.
+    api_key = XXXXXXXXXXXXXXXXXXXXXX1234567890
+
     #
     # When importing WU data the following WeeWX database fields will be
     # populated directly by the imported data (provided the corresponding data
@@ -242,13 +245,17 @@ source = CSV
     #   barometer
     #   dateTime
     #   dewpoint
+    #   heatindex
     #   outHumidity
     #   outTemp
     #   radiation
     #   rain
+    #   rainRate
+    #   windchill
     #   windDir
     #   windGust
     #   windSpeed
+    #   UV
     #
     # The following WeeWX database fields will be populated from other
     # settings/config files:
@@ -260,10 +267,7 @@ source = CSV
     # used during import:
     #   altimeter
     #   ET
-    #   heatindex
     #   pressure
-    #   rainRate
-    #   windchill
     #
     # The following WeeWX fields will be populated with derived values from the
     # imported data provided the --calc-missing command line option is used
