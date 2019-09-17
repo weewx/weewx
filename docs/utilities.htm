@@ -1235,7 +1235,7 @@ summaries using the wee_database utility.</pre>
         <ul>
             <li><span class="code">CSV</span> to import from a single CSV format file.
             </li>
-            <li><span class="code">WU</span> to import from a Weather Underground PWS daily history.
+            <li><span class="code">WU</span> to import from a Weather Underground PWS history.
             </li>
             <li><span class="code">Cumulus</span> to import from one or more Cumulus monthly log files.
             </li>
@@ -1561,22 +1561,33 @@ summaries using the wee_database utility.</pre>
         <h3 class="config_section">[WU]</h3>
 
         <p>The <span class="config_section">[WU]</span> section contains the options relating to the import of
-            observational data from a Weather Underground PWS daily history.
+            observational data from a Weather Underground PWS history.
         </p>
 
         <h4 class='config_option' id='wu_station_id'>station_id</h4>
 
-        <p>The Weather Underground weather station ID of the PWS from which the daily history will be imported. There is
+        <p>The Weather Underground weather station ID of the PWS from which the historical data will be imported. There is
             no default.
+        </p>
+
+        <h4 class='config_option' id='wu_api_key'>api_key</h4>
+
+        <p>The Weather Underground API key to be used to obtain the PWS history data. There is no default.</p>
+
+        <p class="note">
+            <strong>Note</strong><br/>The API key is a seemingly random string of 32 characters used to access the new
+            (2019) Weather Underground API. PWS contributors can obtain an API key by logging onto the Weather
+            Underground internet site and accessing Member Settings. 16 character API keys used with the previous Weather
+            Underground API are not supported.
         </p>
 
         <h4 class='config_option' id='wu_interval'>interval</h4>
 
         <p>Determines how the time interval (WeeWX database field <span class="code">interval</span>) between successive
             observations is determined. This option is identical in operation to the CSV <em><a href="#csv_interval">interval</a></em>
-            option but applies to Weather Underground imports only. As Weather Underground often skips observation
-            records when responding to a daily history query, the use of <span class="code">interval = derive</span> may
-            give incorrect or inconsistent interval values. Better results may be obtained by using <span class="code">interval = conf</span>
+            option but applies to Weather Underground imports only. As a Weather Underground PWS history sometimes has
+            missing records, the use of <span class="code">interval = derive</span> may give incorrect or inconsistent
+            interval values. Better results may be obtained by using <span class="code">interval = conf</span>
             if the current WeeWX installation has the same <span class="code">archive_interval</span> as the Weather
             Underground data, or by using <span class="code">interval = x</span> where <span class="code">x</span> is
             the time interval in minutes used to upload the Weather Underground data. The most appropriate setting will
@@ -2359,12 +2370,12 @@ Aug 22 14:38:28 stretch12 weewx[863]: manager: unable to add record 2018-09-04 0
 
         <h2>Importing from Weather Underground</h2>
 
-        <p><span class="code">wee_import</span> can import data from the daily history of a Weather Undeground PWS. A
-            Weather Underground daily history provides weather station observations received by Weather Underground for
-            the PWS concerned on a day by day basis. As such, the data is analogous to the WeeWX archive table. When
-            <span class="code">wee_import</span> imports data from a Weather Underground daily history each day is
-            considered a 'period'. <span class="code">wee_import</span> processes one period at a time in chronological
-            order (oldest to newest) and provides import summary data on a per period basis.
+        <p><span class="code">wee_import</span> can import historical observation data for a Weather Underground PWS via
+            the Weather Underground API. The Weather Underground API provides historical weather station observations
+            received by Weather Underground for the PWS concerned on a day by day basis. As such, the data is analogous
+            to the WeeWX archive table. When <span class="code">wee_import</span> imports data from the Weather
+            Underground API each day is considered a 'period'. <span class="code">wee_import</span> processes one period
+            at a time in chronological order (oldest to newest) and provides import summary data on a per period basis.
         </p>
 
         <h3>Mapping data to archive fields</h3>
@@ -2372,28 +2383,34 @@ Aug 22 14:38:28 stretch12 weewx[863]: manager: unable to add record 2018-09-04 0
         <p>A Weather Underground import will populate WeeWX archive fields as follows:</p>
 
         <ul>
-            <li>Provided data exists for each field in the Weather Underground PWS daily history, the following WeeWX
-                archive fields will be directly populated by imported data:
+            <li>Provided data exists for each field returned by the Weather Underground API, the following WeeWX archive
+                fields will be directly populated by imported data:
 
                 <ul>
                     <li><span class="code">dateTime</span></li>
                     <li><span class="code">barometer</span></li>
                     <li><span class="code">dewpoint</span></li>
+                    <li><span class="code">heatindex</span></li>
                     <li><span class="code">outHumidity</span></li>
                     <li><span class="code">outTemp</span></li>
                     <li><span class="code">radiation</span></li>
                     <li><span class="code">rain</span></li>
+                    <li><span class="code">rainRate</span></li>
+                    <li><span class="code">UV</span></li>
+                    <li><span class="code">windchill</span></li>
                     <li><span class="code">windDir</span></li>
                     <li><span class="code">windGust</span></li>
                     <li><span class="code">windSpeed</span></li>
                 </ul>
 
                 <p class="note">
-                    <strong>Note</strong><br/>If an appropriate field does not exist in the Weather Underground daily
-                    history then the corresponding WeeWX archive field will be set to <span
-                    class="code">None/null</span>. For example, if there is no solar radiation sensor then <span
-                    class="code">radiation</span> will be null, or if <span class="code">outHumidity</span> was never
-                    uploaded to Weather Undeground then <span class="code">outHumidity</span> will be null.
+                    <strong>Note</strong><br/>If an appropriate field is not returned by the Weather Underground API then
+                    the corresponding WeeWX archive field will contain no data. If the API returns an appropriate field but
+                    with no data, the corresponding WeeWX archive field will be set to <span class="code">None/null</span>.
+                    For example, if the API response has no solar radiation field the WeeWX
+                    <span class="code">radiation</span> archive field will have no data stored. However, if the API
+                    response has a solar radiation field but contains no data, the WeeWX
+                    <span class="code">radiation</span> archive field will be <span class="code">None/null</span>.
                 </p>
             </li>
 
@@ -2411,10 +2428,7 @@ Aug 22 14:38:28 stretch12 weewx[863]: manager: unable to add record 2018-09-04 0
                 <ul>
                     <li><span class="code">altimeter</span></li>
                     <li><span class="code">ET</span></li>
-                    <li><span class="code">heatindex</span></li>
                     <li><span class="code">pressure</span></li>
-                    <li><span class="code">rainRate</span></li>
-                    <li><span class="code">windchill</span></li>
                 </ul>
 
                 <p class="note">
@@ -2428,13 +2442,18 @@ Aug 22 14:38:28 stretch12 weewx[863]: manager: unable to add record 2018-09-04 0
 
         <h3>Step-by-step instructions</h3>
 
-        <p>To import observations from the daily history of a Weather Underground PWS:</p>
+        <p>To import observations from a Weather Underground PWS history:</p>
 
         <ol>
             <li>Obtain the weather station ID of the Weather Underground PWS from which data is to be imported. The
                 station ID will be a sequence of numbers and upper case letters that is usually 11 or 12 characters in
                 length. For the purposes of the following examples a weather station ID
                 of <span class="code">ISTATION123</span> will be used.
+            </li>
+
+            <li>Obtain the API key to be used to access the Weather Underground API. This will be a seemingly random
+                alphanumeric sequence of 32 characters. API keys are available to Weather Underground PWS contributors
+                by logging on to their Weather Underground account and accessing Member Settings.
             </li>
 
             <li>Make a backup of the WeeWX database in case the import should go awry.
@@ -2451,13 +2470,15 @@ Aug 22 14:38:28 stretch12 weewx[863]: manager: unable to add record 2018-09-04 0
             <pre class="tty">source = WU</pre>
             </li>
 
-
             <li>Confirm that the following options in the <span class="code">[WU]</span> section are correctly set:
 
                 <ul>
                     <li><a href="#wu_station_id"><strong><span class="code">station_id</span></strong></a>. The 11 or 12
                         character weather station ID of the Weather Underground PWS that will be the source of the
                         imported data.
+                    </li>
+                    <li><a href="#wu_api_key"><strong><span class="code">api_key</span></strong></a>. The 32 character
+                        API key to be used to access the Weather Underground API.
                     </li>
                     <li><a href="#wu_interval"><strong><span class="code">interval</span></strong></a>. Determines how
                         the WeeWX interval field is derived.
@@ -2579,9 +2600,9 @@ Are you sure you want to proceed (y/n)?
 </pre>
 
                 <p class="note">
-                    <strong>Note</strong><br/><span class="code">wee_import</span> obtains Weather Underground daily
-                    history data one day at a time via a HTTP request and as such the import of large time spans of data
-                    may take some time. Such imports may be best handled as a series of imports of smaller time spans.
+                    <strong>Note</strong><br/><span class="code">wee_import</span> obtains Weather Underground data
+                    one day at a time via a HTTP request and as such the import of large time spans of data may take some
+                    time. Such imports may be best handled as a series of imports of smaller time spans.
                 </p>
             </li>
 
@@ -2611,15 +2632,17 @@ imported. Confirm successful import in the WeeWX log file.
 </pre>
 
                 <p class="note">
-                    <strong>Note</strong><br/>It is not unusual to see a Weather Underground import return a different
-                    number of records for the same import performed at different times. If importing the current day
-                    this could be because an additional record may have been added between <span
-                    class="code">wee_import</span> runs. For periods before today, this behaviour appears to be a vagary
-                    of Weather Underground. The only solution appears to be to repeat the import with the same <span
-                    class="code">--date</span> option setting and observe whether the missing records are imported.
-                    Repeating the import will not adversely affect any existing data as records with timestamps that are
-                    already in the WeeWX archive will be ignored. It may; however, generated many <span class="code">UNIQUE constraint failed: archive.dateTime</span>
-                    messages in the WeeWX log.
+                    <strong>Note</strong><br/>The new (2019) Weather Underground API appears to have an issue when
+                    obtaining historical data for the current day. The first time the API is queried the API returns all
+                    historical data up to and including the most recent record. However, subsequent later API queries
+                    during the same day return the same set of records rather than all records up to and including the
+                    time of the latest API query. Users importing Weather Underground data that includes data from the
+                    current day are advised to carefully check the WeeWX log to ensure that all expected records were
+                    imported. If some records are missing from the current day try running an import for the current day
+                    again using the <span class="code">--date</span> option setting. If this fails then wait until the
+                    following day and perform another import for the day concerned again using the
+                    <span class="code">--date</span> option setting. In all cases confirm what data has been imported by
+                    referring to the WeeWX log.
                 </p>
             </li>
 
@@ -3849,7 +3872,7 @@ Missing records:
                         will depend on the <span class="code">--log</span> option used and your version of Linux.
                     </li>
 
-                    <li>Check the Weather Undeground daily history for the station concerned to ensure that any missing
+                    <li>Check the Weather Underground Weather History for the station concerned to ensure that any missing
                         data was accepted by Weather Underground.
                     </li>
                 </ul>
