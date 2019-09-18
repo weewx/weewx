@@ -1095,7 +1095,7 @@ def latlon_string(ll, hemi, which, format_list=None):
             hemi[0] if ll >= 0 else hemi[1])
 
 
-def _get_object(module_class):
+def get_object(module_class):
     """Given a string with a module class name, it imports and returns the class."""
     # Split the path into its parts
     parts = module_class.split('.')
@@ -1113,6 +1113,10 @@ def _get_object(module_class):
         raise AttributeError(
             "Module '%s' has no attribute '%s' when searching for '%s'" % (mod.__name__, part, module_class))
     return mod
+
+
+# For backwards compatibility:
+_get_object = get_object
 
 
 class GenWithPeek(object):

@@ -33,7 +33,7 @@ import weewx.wxservices
 
 from weewx.manager import open_manager_with_config
 from weewx.units import unit_constants, unit_nicknames, convertStd, to_std_system, ValueTuple
-from weeutil.weeutil import timestamp_to_string, option_as_list, to_int, tobool, _get_object
+from weeutil.weeutil import timestamp_to_string, option_as_list, to_int, tobool, get_object
 
 log = logging.getLogger(__name__)
 
@@ -331,11 +331,11 @@ class Source(object):
         module_class = '.'.join(['weeimport',
                                  source.lower() + 'import',
                                  source + 'Source'])
-        return _get_object(module_class)(config_dict,
-                                         config_path,
-                                         import_config_dict.get(source, {}),
-                                         import_config_path,
-                                         options)
+        return get_object(module_class)(config_dict,
+                                        config_path,
+                                        import_config_dict.get(source, {}),
+                                        import_config_path,
+                                        options)
 
     def run(self):
         """Main entry point for importing from an external source.
