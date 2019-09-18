@@ -372,13 +372,21 @@ class WunderStation(weewx.restx.AmbientThread):
         
         return: a set containing the timestamps in epoch time
         """
-        day_tt = day_requested.timetuple()
-        day = "%4d%02d%02d" % (day_tt.tm_year,
-                               day_tt.tm_mon,
-                               day_tt.tm_mday)
 
-        url = "https://api.weather.com/v2/pws/history/all?stationId=%s&format=json&units=m&date=%s&apiKey=%s" \
-              % (self.station, day, self.api_key)
+        # To get around a WU bug for locations ahead of the GMT date, we have to use an alternative API.
+        # See Issue #445 (https://github.com/weewx/weewx/issues/445)
+        today_date = datetime.date.today()
+        if day_requested >= today_date:
+            url = "https://api.weather.com/v2/pws/observations/all/1day?stationId=%s&format=json&units=m&apiKey=%s" \
+                  % (self.station, self.api_key)
+        else:
+            day_tt = day_requested.timetuple()
+            day = "%4d%02d%02d" % (day_tt.tm_year,
+                                   day_tt.tm_mon,
+                                   day_tt.tm_mday)
+
+            url = "https://api.weather.com/v2/pws/history/all?stationId=%s&format=json&units=m&date=%s&apiKey=%s" \
+                  % (self.station, day, self.api_key)
 
         request = urllib.request.Request(url)
         request.add_header('Accept-Encoding', 'gzip')
