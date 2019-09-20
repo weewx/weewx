@@ -2826,11 +2826,16 @@ Sunrise, sunset: $almanac.sunrise $almanac.sunset
         </p>
         <pre class="tty">$almanac(pressure=0, horizon=-6).sun(use_center=1).rise</pre>
         <p>The general syntax is:</p>
-        <pre class="tty">$almanac(pressure=<em>pressure</em>, horizon=<em>horizon</em>,
-         temperature=<em>temperature_C</em>).<em>heavenly_body</em>(use_center=[01]).<em>attribute</em>
+        <pre class="tty">$almanac(almanac_time=<em>time</em>,            ## Unix epoch time
+         lat=<em>latitude</em>, lon=<em>longitude</em>,  ## degrees
+         altitude=<em>altitude</em>,            ## meters
+         pressure=<em>pressure</em>,            ## mbars
+         horizon=<em>horizon</em>,              ## degrees
+         temperature=<em>temperature_C</em>     ## degrees C
+       ).<em>heavenly_body</em>(use_center=[01]).<em>attribute</em>
       </pre>
-        <p>As you can see, in addition to the horizon angle, you can also override atmospheric pressure and temperature
-            (degrees Celsius).
+        <p>
+            As you can see, many other properties can be overridden besides pressure and the horizon angle.
         </p>
 
         <p>
