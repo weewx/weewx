@@ -1041,8 +1041,8 @@ class WOWThread(AmbientThread):
             # WOW signals a bad login with a HTML Error 403 code:
             if e.code == 403:
                 raise BadLogin(e)
-            elif e.code == 429:
-                raise FailedPost("Too many requests; data already seen; or too out of date.")
+            elif e.code >= 400:
+                raise FailedPost(e)
             else:
                 raise
         else:
