@@ -389,7 +389,9 @@ def archiveHoursAgoSpan(time_ts, hours_ago=0, grace=1):
 def archiveSpanSpan(time_ts, time_delta=0, hour_delta=0, day_delta=0, week_delta=0, month_delta=0, year_delta=0):
     """ Returns a TimeSpan for the last xxx seconds where xxx equals
         time_delta sec + hour_delta hours + day_delta days + week_delta weeks + month_delta months + year_delta years
-        Note: For month_delta, 1 month = 30 days, For year_delta, 1 year = 365 days
+
+        NOTE: Use of month_delta and year_delta is deprecated.
+        See issue #436 (https://github.com/weewx/weewx/issues/436)
     
     Example:
     >>> os.environ['TZ'] = 'Australia/Brisbane'
