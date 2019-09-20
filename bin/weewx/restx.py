@@ -270,7 +270,7 @@ class RESTThread(threading.Thread):
 
         if dbmanager is None:
             # If we don't have a database, we can't do anything
-            if self.log_failure:
+            if self.log_failure and weewx.debug >= 2:
                 log.debug("No database specified. Augmentation from database skipped.")
             return record
 
