@@ -1093,7 +1093,7 @@ def drop_database_with_config(config_dict, data_binding,
 def show_progress(nrec, last_time):
     """Utility function to show our progress while backfilling"""
     print("Records processed: %d; Last date: %s\r" %
-          (nrec, weeutil.weeutil.timestamp_to_string(last_time)), end=' ', file=sys.stdout)
+          (nrec, weeutil.weeutil.timestamp_to_string(last_time)), end='', file=sys.stdout)
     sys.stdout.flush()
 
 
