@@ -270,7 +270,7 @@ class RESTThread(threading.Thread):
 
         if dbmanager is None:
             # If we don't have a database, we can't do anything
-            if self.log_failure:
+            if self.log_failure and weewx.debug >= 2:
                 log.debug("No database specified. Augmentation from database skipped.")
             return record
 
@@ -1041,8 +1041,8 @@ class WOWThread(AmbientThread):
             # WOW signals a bad login with a HTML Error 403 code:
             if e.code == 403:
                 raise BadLogin(e)
-            elif e.code == 429:
-                raise FailedPost("Too many requests; data already seen; or too out of date.")
+            elif e.code >= 400:
+                raise FailedPost(e)
             else:
                 raise
         else:

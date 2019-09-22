@@ -182,7 +182,7 @@ class StdReportEngine(threading.Thread):
 
                     try:
                         # Instantiate an instance of the class.
-                        obj = weeutil.weeutil._get_object(generator)(
+                        obj = weeutil.weeutil.get_object(generator)(
                             self.config_dict,
                             skin_dict,
                             self.gen_ts,

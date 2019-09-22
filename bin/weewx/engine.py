@@ -142,7 +142,7 @@ class StdEngine(object):
                     # passing self and the configuration dictionary as the
                     # arguments:
                     log.debug("Loading service %s", svc)
-                    self.service_obj.append(weeutil.weeutil._get_object(svc)(self, config_dict))
+                    self.service_obj.append(weeutil.weeutil.get_object(svc)(self, config_dict))
                     log.debug("Finished loading service %s", svc)
         except Exception:
             # An exception occurred. Shut down any running services, then

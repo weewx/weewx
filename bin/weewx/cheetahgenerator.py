@@ -186,7 +186,7 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
             x = c.strip()
             if x:
                 # Get the class
-                class_ = weeutil.weeutil._get_object(x)
+                class_ = weeutil.weeutil.get_object(x)
                 # Then instantiate the class, passing self as the sole argument
                 self.search_list_objs.append(class_(self))
 

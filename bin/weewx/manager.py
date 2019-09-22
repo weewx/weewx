@@ -1015,7 +1015,7 @@ def get_manager_dict_from_config(config_dict, data_binding,
         manager_dict['schema'] = [(col_name, manager_dict['schema'][col_name]) for col_name in manager_dict['schema']]
     else:
         # Schema is a string, with the name of the schema object
-        manager_dict['schema'] = weeutil.weeutil._get_object(schema_name)
+        manager_dict['schema'] = weeutil.weeutil.get_object(schema_name)
 
     return manager_dict
 
@@ -1031,7 +1031,7 @@ def get_manager_dict(bindings_dict, databases_dict, data_binding,
 
 
 def open_manager(manager_dict, initialize=False):
-    manager_cls = weeutil.weeutil._get_object(manager_dict['manager'])
+    manager_cls = weeutil.weeutil.get_object(manager_dict['manager'])
     if initialize:
         return manager_cls.open_with_create(manager_dict['database_dict'],
                                             manager_dict['table_name'],
