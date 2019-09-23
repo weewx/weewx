@@ -1,24 +1,31 @@
 #
-#    Copyright (c) 2009-2016 Tom Keffer <tkeffer@gmail.com> and
+#    Copyright (c) 2009-2019 Tom Keffer <tkeffer@gmail.com> and
 #                            Gary Roderick
 #
 #    See the file LICENSE.txt for your full rights.
 #
 
-"""Module to interact with Weather Underground PWS history and import raw
-observational data for use with weeimport.
+"""Module to interact with the Weather Underground API and obtain raw
+observational data for use with wee_import.
 """
 
 # Python imports
 from __future__ import with_statement
 from __future__ import absolute_import
 from __future__ import print_function
-import csv
+
 import datetime
+import gzip
+import json
+import logging
+import numbers
 import socket
-import syslog
+import sys
+
 from datetime import datetime as dt
 
+# python3 compatibility shims
+import six
 from six.moves import urllib
 
 # WeeWX imports
@@ -28,6 +35,7 @@ import weewx
 from weeutil.weeutil import timestamp_to_string, option_as_list, startOfDay
 from weewx.units import unit_nicknames
 
+log = logging.getLogger(__name__)
 
 # ============================================================================
 #                             class WUSource
@@ -35,53 +43,43 @@ from weewx.units import unit_nicknames
 
 
 class WUSource(weeimport.Source):
-    """Class to interact with the Weather Underground.
+    """Class to interact with the Weather Underground API.
 
-    Uses WXDailyHistory.asp call via http to obtain historical daily weather
-    observations for a given PWS. WU uses geolocation of the requester to
-    determine the units to use when providing historical PWS records. Fields
-    that can be provided with multiple possible units have the units in use
-    appended to the returned field name. This means that a request for a user
-    in a given location for historical data from a given station may well
-    return different results to the same request being made from another
-    location. This requires a mechanism to both determine the units in use from
-    returned data as well as mapping a number of different possible field names
-    to a given WeeWX archive field name.
+    Uses PWS history call via http to obtain historical daily weather
+    observations for a given PWS. Unlike the previous WU import module the use
+    of the API requires an API key.
     """
 
     # Dict to map all possible WU field names to WeeWX archive field names and
     # units
-    _header_map = {'Time': {'units': 'unix_epoch', 'map_to': 'dateTime'},
-                   'TemperatureC': {'units': 'degree_C', 'map_to': 'outTemp'},
-                   'TemperatureF': {'units': 'degree_F', 'map_to': 'outTemp'},
-                   'DewpointC': {'units': 'degree_C', 'map_to': 'dewpoint'},
-                   'DewpointF': {'units': 'degree_F', 'map_to': 'dewpoint'},
-                   'PressurehPa': {'units': 'hPa', 'map_to': 'barometer'},
-                   'PressureIn': {'units': 'inHg', 'map_to': 'barometer'},
-                   'WindDirectionDegrees': {'units': 'degree_compass',
-                                            'map_to': 'windDir'},
-                   'WindSpeedKMH': {'units': 'km_per_hour',
+    _header_map = {'epoch': {'units': 'unix_epoch', 'map_to': 'dateTime'},
+                   'tempAvg': {'units': 'degree_F', 'map_to': 'outTemp'},
+                   'dewptAvg': {'units': 'degree_F', 'map_to': 'dewpoint'},
+                   'heatindexAvg': {'units': 'degree_F', 'map_to': 'heatindex'},
+                   'windchillAvg': {'units': 'degree_F', 'map_to': 'windchill'},
+                   'pressureAvg': {'units': 'inHg', 'map_to': 'barometer'},
+                   'winddirAvg': {'units': 'degree_compass',
+                                  'map_to': 'windDir'},
+                   'windspeedAvg': {'units': 'mile_per_hour',
                                     'map_to': 'windSpeed'},
-                   'WindSpeedMPH': {'units': 'mile_per_hour',
-                                    'map_to': 'windSpeed'},
-                   'WindSpeedGustKMH': {'units': 'km_per_hour',
-                                        'map_to': 'windGust'},
-                   'WindSpeedGustMPH': {'units': 'mile_per_hour',
-                                        'map_to': 'windGust'},
-                   'Humidity': {'units': 'percent', 'map_to': 'outHumidity'},
-                   'dailyrainMM': {'units': 'mm', 'map_to': 'rain'},
-                   'dailyrainin': {'units': 'inch', 'map_to': 'rain'},
-                   'SolarRadiationWatts/m^2': {'units': 'watt_per_meter_squared',
-                                               'map_to': 'radiation'}
+                   'windgustHigh': {'units': 'mile_per_hour',
+                                    'map_to': 'windGust'},
+                   'humidityAvg': {'units': 'percent', 'map_to': 'outHumidity'},
+                   'precipTotal': {'units': 'inch', 'map_to': 'rain'},
+                   'precipRate': {'units': 'inch_per_hour',
+                                  'map_to': 'rainRate'},
+                   'solarRadiationHigh': {'units': 'watt_per_meter_squared',
+                                          'map_to': 'radiation'},
+                   'uvHigh': {'units': 'uv_index', 'map_to': 'UV'}
                    }
+    _extras = ['pressureMin', 'pressureMax']
 
-    def __init__(self, config_dict, config_path, wu_config_dict, import_config_path, options, log):
+    def __init__(self, config_dict, config_path, wu_config_dict, import_config_path, options):
 
         # call our parents __init__
         super(WUSource, self).__init__(config_dict,
                                        wu_config_dict,
-                                       options,
-                                       log)
+                                       options)
 
         # save our import config path
         self.import_config_path = import_config_path
@@ -92,7 +90,15 @@ class WUSource(weeimport.Source):
         try:
             self.station_id = wu_config_dict['station_id']
         except KeyError:
-            raise weewx.ViolatedPrecondition("Weather Underground station ID not specified in '%s'." % import_config_path)
+            _msg = "Weather Underground station ID not specified in '%s'." % import_config_path
+            raise weewx.ViolatedPrecondition(_msg)
+
+        # get our WU API key
+        try:
+            self.api_key = wu_config_dict['api_key']
+        except KeyError:
+            _msg = "Weather Underground API key not specified in '%s'." % import_config_path
+            raise weewx.ViolatedPrecondition(_msg)
 
         # wind dir bounds
         _wind_direction = option_as_list(wu_config_dict.get('wind_direction',
@@ -130,12 +136,17 @@ class WUSource(weeimport.Source):
 
         # tell the user/log what we intend to do
         _msg = "Observation history for Weather Underground station '%s' will be imported." % self.station_id
-        self.wlog.printlog(syslog.LOG_INFO, _msg)
+        print(_msg)
+        log.info(_msg)
         _msg = "The following options will be used:"
-        self.wlog.verboselog(syslog.LOG_DEBUG, _msg)
+        if self.verbose:
+            print(_msg)
+        log.debug(_msg)
         _msg = "     config=%s, import-config=%s" % (config_path,
                                                      self.import_config_path)
-        self.wlog.verboselog(syslog.LOG_DEBUG, _msg)
+        if self.verbose:
+            print(_msg)
+        log.debug(_msg)
         if options.date:
             _msg = "     station=%s, date=%s" % (self.station_id, options.date)
         else:
@@ -143,22 +154,35 @@ class WUSource(weeimport.Source):
             _msg = "     station=%s, from=%s, to=%s" % (self.station_id,
                                                         options.date_from,
                                                         options.date_to)
-        self.wlog.verboselog(syslog.LOG_DEBUG, _msg)
+        if self.verbose:
+            print(_msg)
+        log.debug(_msg)
+        _obf_api_key_msg = '='.join(['     apiKey',
+                                     '*'*(len(self.api_key) - 4) + self.api_key[-4:]])
+        if self.verbose:
+            print(_obf_api_key_msg)
+        log.debug(_obf_api_key_msg)
         _msg = "     dry-run=%s, calc_missing=%s, ignore_invalid_data=%s" % (self.dry_run,
                                                                              self.calc_missing,
                                                                              self.ignore_invalid_data)
-        self.wlog.verboselog(syslog.LOG_DEBUG, _msg)
+        if self.verbose:
+            print(_msg)
+        log.debug(_msg)
         _msg = "     tranche=%s, interval=%s, wind_direction=%s" % (self.tranche,
                                                                     self.interval,
                                                                     self.wind_dir)
-        self.wlog.verboselog(syslog.LOG_DEBUG, _msg)
+        if self.verbose:
+            print(_msg)
+        log.debug(_msg)
         _msg = "Using database binding '%s', which is bound to database '%s'" % (self.db_binding_wx,
                                                                                  self.dbm.database_name)
-        self.wlog.printlog(syslog.LOG_INFO, _msg)
+        print(_msg)
+        log.info(_msg)
         _msg = "Destination table '%s' unit system is '%#04x' (%s)." % (self.dbm.table_name,
                                                                         self.archive_unit_sys,
                                                                         unit_nicknames[self.archive_unit_sys])
-        self.wlog.printlog(syslog.LOG_INFO, _msg)
+        print(_msg)
+        log.info(_msg)
         if self.calc_missing:
             print("Missing derived observations will be calculated.")
         if options.date or options.date_from:
@@ -171,16 +195,9 @@ class WUSource(weeimport.Source):
         """Get raw observation data and construct a map from WU to WeeWX
             archive fields.
 
-        Obtain raw observational data from WU using a http WXDailyHistory
-        request. This raw data needs to be cleaned of unnecessary
-        characters/codes and an iterable returned.
-
-        Since WU geolocates any http request we do not know what units our WU
-        data will use until we actually receive the data. A further
-        complication is that WU appends the unit abbreviation to the end of the
-        returned field name for fields that can have different units. So once
-        we have the data have received the response we need to determine the
-        units and create a dict to map the WU fields to WeeWX archive fields.
+        Obtain raw observational data from WU via the WU API. This raw data
+        needs some basic processing to place it in a format suitable for
+        wee_import to ingest.
 
         Input parameters:
 
@@ -188,48 +205,129 @@ class WUSource(weeimport.Source):
                     which raw obs data will be read.
         """
 
-        # the date for which we want the WU data is held in a datetime object, we need to convert it to a timetuple
-        date_tt = period.timetuple()
-        # construct our URL using station ID and day, month, year
-        _url = "http://www.wunderground.com/weatherstation/WXDailyHistory.asp?ID=%s&" \
-               "month=%d&day=%d&year=%d&format=1" % (self.station_id,
-                                                     date_tt[1],
-                                                     date_tt[2],
-                                                     date_tt[0])
-        # hit the WU site, wrap in a try..except so we can catch any errors
+        # the date for which we want the WU data is held in a datetime object,
+        # we need to convert it to a timetuple
+        day_tt = period.timetuple()
+        # and then format the date suitable for use in the WU API URL
+        day = "%4d%02d%02d" % (day_tt.tm_year,
+                               day_tt.tm_mon,
+                               day_tt.tm_mday)
+
+        # construct the URL to be used
+        url = "https://api.weather.com/v2/pws/history/all?" \
+              "stationId=%s&format=json&units=e&numericPrecision=decimal&date=%s&apiKey=%s" \
+              % (self.station_id, day, self.api_key)
+        # create a Request object using the constructed URL
+        request_obj = urllib.request.Request(url)
+        # add necessary headers
+        request_obj.add_header('Cache-Control', 'no-cache')
+        request_obj.add_header('Accept-Encoding', 'gzip')
+        # hit the API wrapping in a try..except to catch any errors
         try:
-            _wudata = urllib.request.urlopen(_url)
+            response = urllib.request.urlopen(request_obj)
         except urllib.error.URLError as e:
-            self.wlog.printlog(syslog.LOG_ERR,
-                               "Unable to open Weather Underground station %s" % self.station_id)
-            self.wlog.printlog(syslog.LOG_ERR, "   **** %s" % e)
+            print("Unable to open Weather Underground station " + self.station_id, " or ", e, file=sys.stderr)
+            log.error("Unable to open Weather Underground station %s or %s" % (self.station_id, e))
             raise
         except socket.timeout as e:
-            self.wlog.printlog(syslog.LOG_ERR,
-                               "Socket timeout for Weather Underground station %s" % self.station_id)
-            self.wlog.printlog(syslog.LOG_ERR, "   **** %s" % e)
+            print("Socket timeout for Weather Underground station " + self.station_id, file=sys.stderr)
+            log.error("Socket timeout for Weather Underground station %s" % self.station_id)
+            print("   **** %s" % e, file=sys.stderr)
+            log.error("   **** %s" % e)
             raise
+        # check the response code and raise an exception if there was an error
+        if hasattr(response, 'code') and response.code != 200:
+            if response.code == 204:
+                raise IOError("Probably a bad station ID or invalid date")
+            else:
+                raise IOError("Bad response code returned: %d" % response.code)
 
-        # because the data comes back with lots of HTML tags and whitespace we
-        # need a bit of logic to clean it up.
-        _cleanWUdata = []
-        for _row in _wudata:
-            # Convert from byte-string to string
-            _urow = _row.decode('ascii')
-            # get rid of any HTML tags
-            _line = ''.join(WUSource._tags.split(_urow))
-            # get rid of any blank lines
-            if _line != "\n":
-                # save what's left
-                _cleanWUdata.append(_line)
+        # The WU API says that compression is required, but let's be prepared
+        # if compression is not used
+        if response.info().get('Content-Encoding') == 'gzip':
+            buf = six.StringIO(response.read())
+            f = gzip.GzipFile(fileobj=buf)
+            _raw_data = f.read()
+            # decode the json data
+            _raw_decoded_data = json.loads(_raw_data)
+        else:
+            _raw_data = response
+            # decode the json data
+            _raw_decoded_data = json.load(_raw_data)
 
-        # now create a dictionary CSV reader, the first line is used as keys to
-        # the dictionary
-        _reader = csv.DictReader(_cleanWUdata)
+        # The raw WU response is not suitable to return as is, we need to
+        # return an iterable that provides a dict of observational data for each
+        # available timestamp. In this case a list of dicts is appropriate.
+
+        # initialise a list of dicts
+        wu_data = []
+        # first check we have some observational data
+        if 'observations' in _raw_decoded_data:
+            # iterate over each record in the WU data
+            for record in _raw_decoded_data['observations']:
+                # initialise a dict to hold the resulting data for this record
+                _flat_record = {}
+                # iterate over each WU API response field that we can use
+                _fields = self._header_map.keys() + self._extras
+                for obs in _fields:
+                    # The field may appear as a top level field in the WU data
+                    # or it may be embedded in the dict in the WU data that
+                    # contains variable unit data. Look in the top level record
+                    # first. If its there uses it, otherwise look in the
+                    # variable units dict. If it can't be fond then skip it.
+                    if obs in record:
+                        # it's in the top level record
+                        _flat_record[obs] = record[obs]
+                    else:
+                        # it's not in the top level so look in the variable
+                        # units dict
+                        try:
+                            _flat_record[obs] = record['imperial'][obs]
+                        except KeyError:
+                            # it's not there so skip it
+                            pass
+                    if obs == 'epoch':
+                        try:
+                            _date = datetime.date.fromtimestamp(_flat_record['epoch'])
+                        except ValueError:
+                            _flat_record['epoch'] = _flat_record['epoch'] // 1000
+                # WU in its wisdom provides min and max pressure but no average
+                # pressure (unlike other obs) so we need to calculate it. If
+                # both min and max are numeric use a simple average of the two
+                # (they will likely be the same anyway for non-RF stations).
+                # Otherwise use max if numeric, then use min if numeric
+                # otherwise skip.
+                self.calc_pressure(_flat_record)
+                # append the data dict for the current record to the list of
+                # dicts for this period
+                wu_data.append(_flat_record)
         # finally, get our database-source mapping
-        self.map = self.parseMap('WU', _reader, self.wu_config_dict)
-        # return our dict reader
-        return _reader
+        self.map = self.parseMap('WU', wu_data, self.wu_config_dict)
+        # return our dict
+        return wu_data
+
+    @staticmethod
+    def calc_pressure(record):
+        """Calculate pressureAvg field.
+
+        The WU API provides min and max pressure but no average pressure.
+        Calculate an average pressure to be used in the import using one of the
+        following (in order):
+
+        1. simple average of min and max pressure
+        2. max pressure
+        3. min pressure
+        4. None
+        """
+
+        if 'pressureMin' in record and 'pressureMax' in record and isinstance(record['pressureMin'], numbers.Number) and isinstance(record['pressureMax'], numbers.Number):
+            record['pressureAvg'] = (record['pressureMin'] + record['pressureMax'])/2.0
+        elif 'pressureMax' in record and isinstance(record['pressureMax'], numbers.Number):
+            record['pressureAvg'] = record['pressureMax']
+        elif 'pressureMin' in record and isinstance(record['pressureMin'], numbers.Number):
+            record['pressureAvg'] = record['pressureMin']
+        elif 'pressureMin' in record or 'pressureMax' in record:
+            record['pressureAvg'] = None
 
     def period_generator(self):
         """Generator function yielding a sequence of datetime objects.

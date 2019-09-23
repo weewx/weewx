@@ -15,8 +15,8 @@ from __future__ import print_function
 # Python imports
 import csv
 import glob
+import logging
 import os
-import syslog
 import time
 
 # WeeWX imports
@@ -25,6 +25,8 @@ import weewx
 
 from weeutil.weeutil import timestamp_to_string
 from weewx.units import unit_nicknames
+
+log = logging.getLogger(__name__)
 
 # Dict to lookup rainRate units given rain units
 rain_units_dict = {'inch': 'inch_per_hour', 'mm': 'mm_per_hour'}
@@ -89,13 +91,12 @@ class CumulusSource(weeimport.Source):
                    'cur_app_temp': {'map_to': 'appTemp'}
                    }
 
-    def __init__(self, config_dict, config_path, cumulus_config_dict, import_config_path, options, log):
+    def __init__(self, config_dict, config_path, cumulus_config_dict, import_config_path, options):
 
         # call our parents __init__
         super(CumulusSource, self).__init__(config_dict,
                                             cumulus_config_dict,
-                                            options,
-                                            log)
+                                            options)
 
         # save our import config path
         self.import_config_path = import_config_path
@@ -207,7 +208,8 @@ class CumulusSource(weeimport.Source):
         try:
             self.source = cumulus_config_dict['directory']
         except KeyError:
-            raise weewx.ViolatedPrecondition("Cumulus monthly logs directory not specified in '%s'." % import_config_path)
+            _msg = "Cumulus monthly logs directory not specified in '%s'." % import_config_path
+            raise weewx.ViolatedPrecondition(_msg)
 
         # property holding the current log file name being processed
         self.file_name = None
@@ -223,34 +225,49 @@ class CumulusSource(weeimport.Source):
 
         # tell the user/log what we intend to do
         _msg = "Cumulus monthly log files in the '%s' directory will be imported" % self.source
-        self.wlog.printlog(syslog.LOG_INFO, _msg)
+        print(_msg)
+        log.info(_msg)
         _msg = "The following options will be used:"
-        self.wlog.verboselog(syslog.LOG_DEBUG, _msg)
+        if self.verbose:
+            print(_msg)
+        log.debug(_msg)
         _msg = "     config=%s, import-config=%s" % (config_path,
                                                      self.import_config_path)
-        self.wlog.verboselog(syslog.LOG_DEBUG, _msg)
+        if self.verbose:
+            print(_msg)
+        log.debug(_msg)
         if options.date:
             _msg = "     date=%s" % options.date
         else:
             # we must have --from and --to
             _msg = "     from=%s, to=%s" % (options.date_from, options.date_to)
-        self.wlog.verboselog(syslog.LOG_DEBUG, _msg)
+        if self.verbose:
+            print(_msg)
+        log.debug(_msg)
         _msg = "     dry-run=%s, calc_missing=%s, ignore_invalid_data=%s" % (self.dry_run,
                                                                              self.calc_missing,
                                                                              self.ignore_invalid_data)
-        self.wlog.verboselog(syslog.LOG_DEBUG, _msg)
+        if self.verbose:
+            print(_msg)
+        log.debug(_msg)
         _msg = "     tranche=%s, interval=%s" % (self.tranche,
                                                  self.interval)
-        self.wlog.verboselog(syslog.LOG_DEBUG, _msg)
+        if self.verbose:
+            print(_msg)
+        log.debug(_msg)
         _msg = "     UV=%s, radiation=%s" % (self.UV_sensor, self.solar_sensor)
-        self.wlog.verboselog(syslog.LOG_DEBUG, _msg)
+        if self.verbose:
+            print(_msg)
+        log.debug(_msg)
         _msg = "Using database binding '%s', which is bound to database '%s'" % (self.db_binding_wx,
                                                                                  self.dbm.database_name)
-        self.wlog.printlog(syslog.LOG_INFO, _msg)
+        print(_msg)
+        log.info(_msg)
         _msg = "Destination table '%s' unit system is '%#04x' (%s)." % (self.dbm.table_name,
                                                                         self.archive_unit_sys,
                                                                         unit_nicknames[self.archive_unit_sys])
-        self.wlog.printlog(syslog.LOG_INFO, _msg)
+        print(_msg)
+        log.info(_msg)
         if self.calc_missing:
             print("Missing derived observations will be calculated.")
         if not self.UV_sensor:

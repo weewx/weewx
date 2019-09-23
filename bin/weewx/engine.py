@@ -142,7 +142,7 @@ class StdEngine(object):
                     # passing self and the configuration dictionary as the
                     # arguments:
                     log.debug("Loading service %s", svc)
-                    self.service_obj.append(weeutil.weeutil._get_object(svc)(self, config_dict))
+                    self.service_obj.append(weeutil.weeutil.get_object(svc)(self, config_dict))
                     log.debug("Finished loading service %s", svc)
         except Exception:
             # An exception occurred. Shut down any running services, then
@@ -949,8 +949,8 @@ def main(options, args, engine_class=StdEngine):
         except Terminate:
             log.info("Terminating weewx version %s", weewx.__version__)
             weeutil.logger.log_traceback(log.info, "    ****  ")
-            # Reraise the exception (this should cause the program to exit)
-            raise
+            signal.signal(signal.SIGTERM, signal.SIG_DFL)
+            os.kill(0, signal.SIGTERM)
 
         # Catch any keyboard interrupts and log them
         except KeyboardInterrupt:

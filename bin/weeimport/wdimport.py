@@ -17,9 +17,9 @@ import collections
 import csv
 import datetime
 import glob
+import logging
 import operator
 import os
-import syslog
 import time
 
 # WeeWX imports
@@ -30,6 +30,7 @@ import weewx
 from weeutil.weeutil import timestamp_to_string
 from weewx.units import unit_nicknames
 
+log = logging.getLogger(__name__)
 
 # ============================================================================
 #                             class WDSource
@@ -183,11 +184,10 @@ class WDSource(weeimport.Source):
                    'hum7': {'units': 'percent', 'map_to': 'extraHumid7'}
                    }
 
-    def __init__(self, config_dict, config_path, wd_config_dict, import_config_path, options, log):
+    def __init__(self, config_dict, config_path, wd_config_dict, import_config_path, options):
 
         # call our parents __init__
-        super(WDSource, self).__init__(config_dict, wd_config_dict,
-                                       options, log)
+        super(WDSource, self).__init__(config_dict, wd_config_dict, options)
 
         # save the import config path
         self.import_config_path = import_config_path
@@ -397,48 +397,71 @@ class WDSource(weeimport.Source):
 
         # tell the user/log what we intend to do
         _msg = "Weather Display monthly log files in the '%s' directory will be imported" % self.source
-        self.wlog.printlog(syslog.LOG_INFO, _msg)
+        print(_msg)
+        log.info(_msg)
         _msg = "The following options will be used:"
-        self.wlog.verboselog(syslog.LOG_DEBUG, _msg)
+        if self.verbose:
+            print(_msg)
+        log.debug(_msg)
         _msg = "     config=%s, import-config=%s" % (config_path,
                                                      self.import_config_path)
-        self.wlog.verboselog(syslog.LOG_DEBUG, _msg)
+        if self.verbose:
+            print(_msg)
+        log.debug(_msg)
         if options.date:
             _msg = "     date=%s" % options.date
         else:
             # we must have --from and --to
             _msg = "     from=%s, to=%s" % (options.date_from, options.date_to)
-        self.wlog.verboselog(syslog.LOG_DEBUG, _msg)
+        if self.verbose:
+            print(_msg)
+        log.debug(_msg)
         _msg = "     dry-run=%s, calc_missing=%s, ignore_invalid_data=%s" % (self.dry_run,
                                                                              self.calc_missing,
                                                                              self.ignore_invalid_data)
-        self.wlog.verboselog(syslog.LOG_DEBUG, _msg)
+        if self.verbose:
+            print(_msg)
+        log.debug(_msg)
         if log_unit_sys is not None and log_unit_sys.upper() in ['METRIC', 'US']:
             # valid unit system specified
             _msg = "     monthly logs are in %s units" % log_unit_sys.upper()
-            self.wlog.verboselog(syslog.LOG_DEBUG, _msg)
+            if self.verbose:
+                print(_msg)
+            log.debug(_msg)
         else:
             # group units specified
             _msg = "     monthly logs use the following units:"
-            self.wlog.verboselog(syslog.LOG_DEBUG, _msg)
+            if self.verbose:
+                print(_msg)
+            log.debug(_msg)
             _msg = "       temperature=%s pressure=%s" % (temp_u, press_u)
-            self.wlog.verboselog(syslog.LOG_DEBUG, _msg)
+            if self.verbose:
+                print(_msg)
+            log.debug(_msg)
             _msg = "       rain=%s speed=%s" % (rain_u, speed_u)
-            self.wlog.verboselog(syslog.LOG_DEBUG, _msg)
+            if self.verbose:
+                print(_msg)
+            log.debug(_msg)
         _msg = "     tranche=%s, interval=%s" % (self.tranche,
                                                  self.interval)
-        self.wlog.verboselog(syslog.LOG_DEBUG, _msg)
+        if self.verbose:
+            print(_msg)
+        log.debug(_msg)
         _msg = "     UV=%s, radiation=%s ignore extreme temperature and humidity=%s" % (self.UV_sensor,
                                                                                         self.solar_sensor,
                                                                                         self.ignore_extreme_temp_hum)
-        self.wlog.verboselog(syslog.LOG_DEBUG, _msg)
+        if self.verbose:
+            print(_msg)
+        log.debug(_msg)
         _msg = "Using database binding '%s', which is bound to database '%s'" % (self.db_binding_wx,
                                                                                  self.dbm.database_name)
-        self.wlog.printlog(syslog.LOG_INFO, _msg)
+        print(_msg)
+        log.info(_msg)
         _msg = "Destination table '%s' unit system is '%#04x' (%s)." % (self.dbm.table_name,
                                                                         self.archive_unit_sys,
                                                                         unit_nicknames[self.archive_unit_sys])
-        self.wlog.printlog(syslog.LOG_INFO, _msg)
+        print(_msg)
+        log.info(_msg)
         if self.calc_missing:
             print("Missing derived observations will be calculated.")
         if not self.UV_sensor:
@@ -512,7 +535,8 @@ class WDSource(weeimport.Source):
                     _msg = "Unexpected number of columns found in '%s': %s v %s" % (_fn,
                                                                                     len(_row.split(_del)),
                                                                                     len(self.logs[lg]['fields']))
-                    self.wlog.printlog(syslog.LOG_INFO, _msg)
+                    print(_msg)
+                    log.info(_msg)
                 # make sure we have full stops as decimal points
                 _clean_data.append(_row.replace(self.decimal, '.'))
 

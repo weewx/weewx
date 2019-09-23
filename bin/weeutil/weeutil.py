@@ -389,7 +389,9 @@ def archiveHoursAgoSpan(time_ts, hours_ago=0, grace=1):
 def archiveSpanSpan(time_ts, time_delta=0, hour_delta=0, day_delta=0, week_delta=0, month_delta=0, year_delta=0):
     """ Returns a TimeSpan for the last xxx seconds where xxx equals
         time_delta sec + hour_delta hours + day_delta days + week_delta weeks + month_delta months + year_delta years
-        Note: For month_delta, 1 month = 30 days, For year_delta, 1 year = 365 days
+
+        NOTE: Use of month_delta and year_delta is deprecated.
+        See issue #436 (https://github.com/weewx/weewx/issues/436)
     
     Example:
     >>> os.environ['TZ'] = 'Australia/Brisbane'
@@ -1095,7 +1097,7 @@ def latlon_string(ll, hemi, which, format_list=None):
             hemi[0] if ll >= 0 else hemi[1])
 
 
-def _get_object(module_class):
+def get_object(module_class):
     """Given a string with a module class name, it imports and returns the class."""
     # Split the path into its parts
     parts = module_class.split('.')
@@ -1113,6 +1115,10 @@ def _get_object(module_class):
         raise AttributeError(
             "Module '%s' has no attribute '%s' when searching for '%s'" % (mod.__name__, part, module_class))
     return mod
+
+
+# For backwards compatibility:
+_get_object = get_object
 
 
 class GenWithPeek(object):

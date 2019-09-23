@@ -43,10 +43,11 @@ Ported OS uptime to OpenBSD. Fixes issue #428. Thanks to user Jeff Ross!
 Catch SSL certificate errors in uploaders. Retry after an hour. Fixes
 issue #413.
 
-Wunderfixer has been ported to the new WU API. This API requires an
-API key, which you can get from the WU. Put it in weewx.conf.
-Unfortunately, WU is very unreliable whether reposts "stick".
-Fixes issue #414
+Wunderfixer has been ported to the new WU API. This API requires an API key,
+which you can get from the WU. Put it in weewx.conf. Unfortunately, WU is
+very unreliable whether reposts "stick". Fixes issues #414 and #445.
+
+Wee_import can now import Weather Display monthly log files.
 
 Fixed problem where sub-sections DegreeDays and Trend were located under the
 wrong weewx.conf section. Fixes issue #432. Thanks to user mph for spotting
@@ -133,6 +134,9 @@ Fixes issue #431. Thanks to user ls4096!
 
 Fixed problem that can cause an exception with restx services that do not use
 the database manager. See commit 459ccb1.
+
+Sending a SIGTERM signal to weewxd now causes it to exit with status
+128 + signal#. PR #442. Thanks to user sshambar!
 
 
 3.9.1 02/06/2019

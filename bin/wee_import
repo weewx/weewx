@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-#    Copyright (c) 2009-2016 Tom Keffer <tkeffer@gmail.com> and
+#    Copyright (c) 2009-2019 Tom Keffer <tkeffer@gmail.com> and
 #                            Gary Roderick
 #
 #    See the file LICENSE.txt for your rights.
@@ -9,47 +9,51 @@
 
 Compatibility:
 
-   wee_import can import from a Comma Separated Values (CSV) format file,
-   directly from the historical records of a Weather Underground Personal
-   Weather Station or from one or more Cumulus monthly log files. CSV format
-   files must have a comma separated list of field names on the first line.
+    wee_import can import from:
+        - a Comma Separated Values (CSV) format file
+        - the historical records of a Weather Underground Personal
+          Weather Station
+        - one or more Cumulus monthly log files
+        - one or more Weather Display monthly log files
 
 Design
 
-   wee_import utilises a config file (the import config file) and a number of
-   command line options to control the import. The config file defines the type
-   of input to be performed and the import data source as well as more advanced
-   options such as field maps etc. Details of the supported command line
-   parameters/options can be viewed by entering wee_import --help at the command
-   line. Details of the wee_import config file settings can be found in example
-   import config files distributed in the weewx/util/import directory.
+    wee_import utilises an import config file and a number of command line
+    options to control the import. The import config file defines the type of
+    input to be performed and the import data source as well as more advanced
+    options such as field maps etc. Details of the supported command line
+    parameters/options can be viewed by entering wee_import --help at the
+    command line. Details of the wee_import import config file settings can be
+    found in the example import config files distributed in the
+    weewx/util/import directory.
 
-   wee_import utilises an abstract base class Source that defines the majority
-   of the wee_import functionality. The abstract base class and other supporting
-   structures are in bin/weeimport/weeimport.py. Child classes are created from
-   the base class for each different import type supported by wee_import. The
-   child classes set a number of import type specific properties as well as
-   defining a getData() method that reads the raw data to be imported and a
-   period_generator() method that generates a sequence of objects to be imported
-   (eg monthly log files). This way wee_import can be extended to support other
-   sources by defining a new child class, its specific properties as well as
-   getData() and period_generator() methods. The child class for a given import
-   type are defined in the bin/weeimport/xxximport.py files.
+    wee_import utilises an abstract base class Source that defines the majority
+    of the wee_import functionality. The abstract base class and other
+    supporting structures are in bin/weeimport/weeimport.py. Child classes are
+    created from the base class for each different import type supported by
+    wee_import. The child classes set a number of import type specific
+    properties as well as defining getData() and period_generator() methods that
+    read the raw data to be imported and generates a sequence of objects to be
+    imported (eg monthly log files) respectively. This way wee_import can be
+    extended to support other sources by defining a new child class, its
+    specific properties as well as getData() and period_generator() methods. The
+    child class for a given import type are defined in the
+    bin/weeimport/xxximport.py files.
 
-   As with other WeeWX utilities, wee_import advises the user of basic
-   configuration, action taken and results via stdout. However, since
-   wee_import can make substantial changes to the WeeWX archive, wee_import also
-   logs to file by default. This functionality is controlled via a command
-   line option.
+    As with other WeeWX utilities, wee_import advises the user of basic
+    configuration, action taken and results via the console. However, since
+    wee_import can make substantial changes to the WeeWX archive, wee_import
+    also logs to WeeWX log system file. Console and log output can be controlled
+    via a number of command line options.
 
 Prerequisites
 
-   wee_import uses a number of WeeWX API calls and therefore must have a
-   functional WeeWX installation. wee_import requires WeeWX 3.6.0 or later.
+    wee_import uses a number of WeeWX API calls and therefore must have a
+    functional WeeWX installation. wee_import requires WeeWX 4.0.0 or later.
 
 Configuration
 
-   A number of parameters can be defined in the import config file as follows:
+    A number of parameters can be defined in the import config file as follows:
 
 # EXAMPLE WEE_IMPORT CONFIGURATION FILE
 #
@@ -63,7 +67,7 @@ Configuration
 #   WU - import obs from a Weather Underground PWS history
 #   Cumulus - import obs from a one or more Cumulus monthly log files
 # Format is:
-#   source = (CSV | WU | Cumulus)
+#   source = (CSV | WU | Cumulus | WD)
 source = CSV
 
 ##############################################################################
@@ -231,6 +235,9 @@ source = CSV
     # WU PWS Station ID to be used for import.
     station_id = XXXXXXXX123
 
+    # WU API key to be used for import.
+    api_key = XXXXXXXXXXXXXXXXXXXXXX1234567890
+
     #
     # When importing WU data the following WeeWX database fields will be
     # populated directly by the imported data (provided the corresponding data
@@ -238,13 +245,17 @@ source = CSV
     #   barometer
     #   dateTime
     #   dewpoint
+    #   heatindex
     #   outHumidity
     #   outTemp
     #   radiation
     #   rain
+    #   rainRate
+    #   windchill
     #   windDir
     #   windGust
     #   windSpeed
+    #   UV
     #
     # The following WeeWX database fields will be populated from other
     # settings/config files:
@@ -256,10 +267,7 @@ source = CSV
     # used during import:
     #   altimeter
     #   ET
-    #   heatindex
     #   pressure
-    #   rainRate
-    #   windchill
     #
     # The following WeeWX fields will be populated with derived values from the
     # imported data provided the --calc-missing command line option is used
@@ -511,10 +519,10 @@ source = CSV
     #   inTemp
     #   outHumidity
     #   outTemp
-    #   radiation   (if Cumulus data available)
-    #   rain        (requires Cumulus 1.9.4 or later)
+    #   radiation   (if WD radiation data available)
+    #   rain
     #   rainRate
-    #   UV          (if Cumulus data available)
+    #   UV          (if WD UV data available)
     #   windDir
     #   windGust
     #   windSpeed
@@ -557,8 +565,8 @@ source = CSV
     #            setting is best used if the records to be imported are
     #            equally based in time but there are some missing records.
     #            This setting is recommended for WU imports.
-    # To import Cumulus records it is recommended that the interval setting
-    # be set to the value used in Cumulus as the 'data log interval'.
+    # To import WD records it is recommended that the interval setting be set to
+    # the value used in WD as the 'data log interval'.
     # Format is:
     #   interval = (derive | conf | x)
     interval = x
@@ -580,17 +588,17 @@ source = CSV
     #   calc_missing = (True | False)
     calc_missing = True
 
-    # Specify the character used as the field delimiter as Cumulus monthly log
-    # files may not always use a comma to delimit fields in the monthly log
-    # files. The character must be enclosed in quotes. Must not be the same
-    # as the decimal setting below. Format is:
+    # Specify the character used as the field delimiter as WD monthly log files
+    # may not always use a comma to delimit fields in the monthly log files. The
+    # character must be enclosed in quotes. Must not be the same as the decimal
+    # setting below. Format is:
     #   delimiter = ','
     delimiter = ','
 
-    # Specify the character used as the decimal point. Cumulus monthly log
-    # files may not always use a fullstop character as the decimal point. The
-    # character must be enclosed in quotes. Must not be the same as the
-    # delimiter setting. Format is:
+    # Specify the character used as the decimal point. WD monthly log file may
+    # not always use a full stop character as the decimal point. The character
+    # must be enclosed in quotes. Must not be the same as the delimiter setting.
+    # Format is:
     #   decimal = '.'
     decimal = '.'
 
@@ -705,20 +713,27 @@ Adding a New Import Source
 # Python imports
 from __future__ import absolute_import
 from __future__ import print_function
+
+import logging
 import optparse
-import syslog
 
 from distutils.version import StrictVersion
 
 # WeeWX imports
+import weecfg
 import weewx
 import weeimport
 import weeimport.weeimport
+import weeutil.logger
+import weeutil.weeutil
+
+
+log = logging.getLogger(__name__)
 
 # wee_import version number
-WEE_IMPORT_VERSION = '0.3'
+WEE_IMPORT_VERSION = '0.4'
 # minimum WeeWX version required for this version of wee_import
-REQUIRED_WEEWX = "3.6.0"
+REQUIRED_WEEWX = "4.0.0a7"
 
 description = """Import observation data into a WeeWX archive."""
 
@@ -730,7 +745,6 @@ usage = """wee_import --help
             [--dry-run]
             [--verbose]
             [--suppress-warnings]
-            [--log=-]
 """
 
 epilog = """wee_import will import data from an external source into a WeeWX
@@ -742,6 +756,9 @@ epilog = """wee_import will import data from an external source into a WeeWX
 def main():
     """The main routine that kicks everything off."""
 
+    # Set defaults for logging:
+    weeutil.logger.setup('wee_import', {})
+
     # Create a command line parser:
     parser = optparse.OptionParser(description=description,
                                    usage=usage,
@@ -749,8 +766,8 @@ def main():
 
     # Add the various options:
     parser.add_option("--config", dest="config_path", type=str,
-                      metavar="CONFIG_FILE", default="weewx.conf",
-                      help="Use WeeWX configuration file CONFIG_FILE.")
+                      metavar="CONFIG_FILE",
+                      help="Use configuration file CONFIG_FILE.")
     parser.add_option("--import-config", dest="import_config_path", type=str,
                       metavar="IMPORT_CONFIG_FILE",
                       help="Use import configuration file IMPORT_CONFIG_FILE.")
@@ -764,15 +781,8 @@ def main():
     parser.add_option("--to", dest="date_to", type=str, metavar="YYYY-mm-dd[THH:MM]",
                       help="Import data up until this date or date-time. Format "
                            "is YYYY-mm-dd[THH:MM].")
-    parser.add_option("--log", dest="logging", type=str, metavar="-",
-                      help="Control wee_import log output. By default log output "
-                           "is sent to the WeeWX log file. Log output may be "
-                           "disabled by using '--log=-'. Some WeeWX API log "
-                           "output cannot be controlled by wee_import and will "
-                           "be sent to the default log file irrespective of the "
-                           "'--log' option.")
     parser.add_option("--verbose", action="store_true", dest="verbose",
-                      help="Print useful extra output.")
+                      help="Print and log useful extra output.")
     parser.add_option("--suppress-warnings", action="store_true", dest="suppress",
                       help="Suppress warnings to stdout. Warnings are still logged.")
     parser.add_option("--version", dest="version", action="store_true",
@@ -787,74 +797,103 @@ def main():
                                                                                      weewx.__version__))
         exit(1)
 
+    # get config_dict to use
+    config_path, config_dict = weecfg.read_config(options.config_path, args)
+    print("Using WeeWX configuration file %s" % config_path)
+
+    # Set weewx.debug as necessary:
+    weewx.debug = weeutil.weeutil.to_int(config_dict.get('debug', 0))
+
+    # Now we can set up the user customized logging:
+    weeutil.logger.setup('wee_import', config_dict)
+
     # display wee_import version info
     if options.version:
         print("wee_import version: %s" % WEE_IMPORT_VERSION)
         exit(0)
 
-    # Set up logging
-    wlog = weeimport.weeimport.WeeImportLog(options.logging,
-                                            options.verbose,
-                                            options.suppress,
-                                            options.dry_run)
+    # to do anything more we need an import config file, check if one was
+    # provided
+    if options.import_config_path:
+        # we have something so try to start
 
-    # advise the user we are starting up
-    wlog.printlog(syslog.LOG_INFO, "Starting wee_import...")
+        # advise the user we are starting up
+        print("Starting wee_import...")
+        log.info("Starting wee_import...")
 
-    # If we got this far we must want to import something so get a Source
-    # object from our factory and try to import. Be prepared to catch any
-    # errors though.
-    try:
-        source_obj = weeimport.weeimport.Source.sourceFactory(options,
-                                                              args,
-                                                              wlog)
-        source_obj.run()
-    except weeimport.weeimport.WeeImportOptionError as e:
-        wlog.printlog(syslog.LOG_INFO, "**** Command line option error.")
-        wlog.printlog(syslog.LOG_INFO, "**** %s" % e)
-        print("**** Nothing done, exiting.")
-        wlog.logonly(syslog.LOG_INFO, "**** Nothing done.")
-        exit(1)
-    except weeimport.weeimport.WeeImportIOError as e:
-        wlog.printlog(syslog.LOG_INFO, "**** Unable to load source file.")
-        wlog.printlog(syslog.LOG_INFO, "**** %s" % e)
-        print("**** Nothing done, exiting.")
-        wlog.logonly(syslog.LOG_INFO, "**** Nothing done.")
-        exit(1)
-    except weeimport.weeimport.WeeImportFieldError as e:
-        wlog.printlog(syslog.LOG_INFO, "**** Unable to map source data.")
-        wlog.printlog(syslog.LOG_INFO, "**** %s" % e)
-        print("**** Nothing done, exiting.")
-        wlog.logonly(syslog.LOG_INFO, "**** Nothing done.")
-        exit(1)
-    except weeimport.weeimport.WeeImportMapError as e:
-        wlog.printlog(syslog.LOG_INFO,
-                      "**** Unable to parse source-to-WeeWX field map.")
-        wlog.printlog(syslog.LOG_INFO, "**** %s" % e)
-        print("**** Nothing done, exiting.")
-        wlog.logonly(syslog.LOG_INFO, "**** Nothing done.")
-        exit(1)
-    except (weewx.ViolatedPrecondition, weewx.UnsupportedFeature) as e:
-        wlog.printlog(syslog.LOG_INFO, "**** %s" % e)
-        print("**** Nothing done, exiting.")
-        wlog.logonly(syslog.LOG_INFO, "**** Nothing done.")
+        # If we got this far we must want to import something so get a Source
+        # object from our factory and try to import. Be prepared to catch any
+        # errors though.
+        try:
+            source_obj = weeimport.weeimport.Source.sourceFactory(options,
+                                                                  args)
+            source_obj.run()
+        except weeimport.weeimport.WeeImportOptionError as e:
+            print("**** Command line option error.")
+            log.info("**** Command line option error.")
+            print("**** %s" % e)
+            log.info("**** %s" % e)
+            print("**** Nothing done, exiting.")
+            log.info("**** Nothing done.")
+            exit(1)
+        except weeimport.weeimport.WeeImportIOError as e:
+            print("**** Unable to load source file.")
+            log.info("**** Unable to load source file.")
+            print("**** %s" % e)
+            log.info("**** %s" % e)
+            print("**** Nothing done, exiting.")
+            log.info("**** Nothing done.")
+            exit(1)
+        except weeimport.weeimport.WeeImportFieldError as e:
+            print("**** Unable to map source data.")
+            log.info("**** Unable to map source data.")
+            print("**** %s" % e)
+            log.info("**** %s" % e)
+            print("**** Nothing done, exiting.")
+            log.info("**** Nothing done.")
+            exit(1)
+        except weeimport.weeimport.WeeImportMapError as e:
+            print("**** Unable to parse source-to-WeeWX field map.")
+            log.info("**** Unable to parse source-to-WeeWX field map.")
+            print("**** %s" % e)
+            log.info("**** %s" % e)
+            print("**** Nothing done, exiting.")
+            log.info("**** Nothing done.")
+            exit(1)
+        except (weewx.ViolatedPrecondition, weewx.UnsupportedFeature) as e:
+            print("**** %s" % e)
+            log.info("**** %s" % e)
+            print("**** Nothing done, exiting.")
+            log.info("**** Nothing done.")
+            print()
+            parser.print_help()
+            exit(1)
+        except SystemExit as e:
+            print(e)
+            exit(0)
+        except (ValueError, weewx.UnitError) as e:
+            print("**** %s" % e)
+            log.info("**** %s" % e)
+            print("**** Nothing done, exiting.")
+            log.info("**** Nothing done.")
+            exit(1)
+        except IOError as e:
+            print("**** Unable to load config file.")
+            log.info("**** Unable to load config file.")
+            print("**** %s" % e)
+            log.info("**** %s" % e)
+            print("**** Nothing done, exiting.")
+            log.info("**** Nothing done.")
+            exit(1)
+    else:
+        # we have no import config file so display a suitable message followed
+        # by the help text then exit
+        print("**** No import config file specified.")
+        print("**** Nothing done.")
         print()
         parser.print_help()
         exit(1)
-    except SystemExit as e:
-        print(e)
-        exit(0)
-    except (ValueError, weewx.UnitError) as e:
-        wlog.printlog(syslog.LOG_INFO, "**** %s" % e)
-        print("**** Nothing done, exiting.")
-        wlog.logonly(syslog.LOG_INFO, "**** Nothing done.")
-        exit(1)
-    except IOError as e:
-        wlog.printlog(syslog.LOG_INFO, "**** Unable to load config file.")
-        wlog.printlog(syslog.LOG_INFO, "**** %s" % e)
-        print("**** Nothing done, exiting.")
-        wlog.logonly(syslog.LOG_INFO, "**** Nothing done.")
-        exit(1)
+
 
 # execute our main code
 if __name__ == "__main__":
