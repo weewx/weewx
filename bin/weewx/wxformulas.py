@@ -942,12 +942,11 @@ class PressureCooker(object):
                     temp_12h_F[0],
                     record_US['outHumidity']
                 )
-                # Form a ValueTuple with the results
-                pressure_vt = weewx.units.ValueTuple(pressure, "inHg", "group_pressure")
-                # Convert to the same unit system used by the incoming record
-                pressure_vt_final = weewx.units.convertStd(pressure_vt, record['usUnits'])
-                # Return just the value.
-                return pressure_vt_final[0]
+
+                if record['usUnits'] == weewx.METRIC or record['usUnits'] == weewx.METRICWX:
+                    pressure /= weewx.units.INHG_PER_MBAR
+                return pressure
+
             except KeyError:
                 return None
 

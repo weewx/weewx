@@ -8,13 +8,14 @@ from __future__ import print_function
 
 import weewx
 
-xtypes = []
+scalar_types = []
+series_types = []
 
 
 def get_scalar(key, record, db_manager=None):
-    for xtype in xtypes:
+    for xtype in scalar_types:
         try:
-            return xtype.get_scalar(key, record, db_manager)
+            return xtype(key, record, db_manager)
         except weewx.UnknownType:
             pass
     raise weewx.UnknownType(key)
