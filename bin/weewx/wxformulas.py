@@ -838,64 +838,97 @@ def evapotranspiration_US(Tmin_F, Tmax_F, rh_min, rh_max,
 class PressureCooker(object):
     """Do calculations relating to barometric pressure"""
 
-    def __init__(self, altitude_ft, dbmanager, max_ts_delta=1800):
-        self.altitude_ft = altitude_ft
-        self.dbmanager = dbmanager
+    def __init__(self, altitude_vt, max_ts_delta=1800):
+        """Initialize the PressureCooker.
+
+        altitude_vt: The altitude as a ValueTuple
+
+        max_ts_delta: When looking up a temperature in the past, how close does the time have to be?
+        """
+        self.altitude_vt = altitude_vt
         self.max_ts_delta = max_ts_delta
         # Timestamp (roughly) 12 hours ago
         self.ts_12h = None
-        # Temperature 12 hours ago in Fahrenheit
-        self.temp_12h_F = None
+        # Temperature 12 hours ago as a ValueTuple
+        self.temp_12h_vt = None
 
-    def _get_temperature_12h_F(self, ts):
-        """Get the temperature in Fahrenheit from 12 hours ago.  The value will
+    def _get_temperature_12h(self, ts, dbmanager):
+        """Get the temperature as a ValueTuple from 12 hours ago.  The value will
          be None if no temperature is available."""
 
         ts_12h = ts - 12 * 3600
 
         # Look up the temperature 12h ago if this is the first time through,
         # or we don't have a usable temperature, or the old temperature is too stale.
-        if self.ts_12h is None or self.temp_12h_F is None or abs(self.ts_12h - ts_12h) < self.max_ts_delta:
-            # Hit the database to get a newer temperature
-            record = self.dbmanager.getRecord(ts_12h, max_delta=self.max_ts_delta)
+        if self.ts_12h is None or self.temp_12h_vt is None or abs(self.ts_12h - ts_12h) < self.max_ts_delta:
+            # Hit the database to get a newer temperature...
+            record = dbmanager.getRecord(ts_12h, max_delta=self.max_ts_delta)
+            # ... extract the temperature from the record ...
             temperature = record.get('outTemp') if record else None
-            # Convert to Fahrenheit if necessary
-            if temperature is not None and record['usUnits'] & 0x10:
-                # One of the metric systems (METRIC or METRICWX) is being used. Convert.
-                temperature = weewx.units.CtoF(temperature)
-            # Save the temperature and timestamp
-            self.temp_12h_F = temperature
+            # ... figure out what unit it's in ...
+            unit = weewx.units.getStandardUnitType(record['usUnits'], 'outTemp')
+            # ... then finally form a ValueTuple.
+            self.temp_12h_vt = weewx.units.ValueTuple(temperature, *unit)
+            # Save the timestamp
             self.ts_12h = ts_12h
 
-        # Return in F
-        return self.temp_12h_F
+        return self.temp_12h_vt
 
-    def calc(self, key, record):
+    def get_scalar(self, key, record, dbmanager):
         if key == 'pressure':
-            return self.calc_pressure(record)
+            return self.pressure(record, dbmanager)
+        elif key == 'barometer':
+            return self.barometer(record)
+        else:
+            raise weewx.UnknownType(key)
 
-    def calc_pressure(self, record):
-        # The following requires everything to be in US Customary units
-        record_US = weewx.units.to_US(record)
+    def barometer(self, record):
+        """Calculate the observation type 'barometer'"""
+        if 'pressure' in record and 'outTemp' in record:
+            # Convert altitude to same unit system of the incoming record
+            altitude = weewx.units.convertStd(self.altitude_vt, record['usUnits'])
+            # Figure out what pressure formula to use:
+            pressure_formula = weewx.wxformulas.sealevel_pressure_US \
+                if record['usUnits'] == weewx.US \
+                else weewx.wxformulas.sealevel_pressure_Metric
+            # Apply the formula
+            barometer = pressure_formula(record['pressure'], altitude[0], record['outTemp'])
+            return barometer
+
+    def pressure(self, record, dbmanager):
+        """Calculate the observation type 'pressure'."""
         # Get the temperature in Fahrenheit from 12 hours ago
-        temp_12h_F = self._get_temperature_12h_F(record['dateTime'])
-        if temp_12h_F is not None:
+        temp_12h_vt = self._get_temperature_12h(record['dateTime'], dbmanager)
+        if temp_12h_vt is not None:
             try:
+                # The following requires everything to be in US Customary units.
+                # Rather than convert the whole record, just convert what we need:
+                record_US = weewx.units.to_US({'usUnits': record['usUnits'],
+                                               'outTemp': record['outTemp'],
+                                               'barometer': record['barometer'],
+                                               'outHumidity': record['outHumidity']})
+                # Get the altitude in feet
+                altitude_ft = weewx.units.convert(self.altitude_vt, "foot")
+                # The outside temperature in F.
+                temp_12h_F = weewx.units.convert(temp_12h_vt, "degree_F")
                 pressure = weewx.uwxutils.uWxUtilsVP.SeaLevelToSensorPressure_12(
                     record_US['barometer'],
-                    self.altitude_ft,
+                    altitude_ft[0],
                     record_US['outTemp'],
-                    temp_12h_F,
+                    temp_12h_F[0],
                     record_US['outHumidity']
                 )
             except KeyError:
                 return None
         else:
             return None
+        # Form a ValueTuple with the results
         pressure_vt = weewx.units.ValueTuple(pressure, "inHg", "group_pressure")
         # Convert to the same unit system used by the incoming record
-        pressure_final = weewx.units.convertStd(pressure_vt, record['usUnits'])
-        return pressure_final[0]
+        pressure_vt_final = weewx.units.convertStd(pressure_vt, record['usUnits'])
+        # Return just the value.
+        return pressure_vt_final[0]
+
 
 if __name__ == "__main__":
     

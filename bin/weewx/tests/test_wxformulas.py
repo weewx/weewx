@@ -14,8 +14,8 @@ except ImportError:
     # Python 2 --- must have mock installed
     import mock
 
-import weeutil.xtypes
 import weewx.wxformulas
+import weewx.units
 
 
 class WXFormulasTest(unittest.TestCase):
@@ -140,11 +140,15 @@ class WXFormulasTest(unittest.TestCase):
 record = {
     'dateTime': 1567515300, 'usUnits': 1, 'interval': 5, 'inTemp': 73.0, 'outTemp': 55.7, 'inHumidity': 54.0,
     'outHumidity': 90.0, 'windSpeed': 0.0, 'windDir': None, 'windGust': 2.0, 'windGustDir': 270.0,
-    'rain': 0.0, 'windchill': 55.7, 'heatindex': 55.7
+    'rain': 0.0, 'windchill': 55.7, 'heatindex': 55.7,
+    'pressure': 29.259303850622302, 'barometer': 29.99, 'altimeter': 30.001561119603156,
 }
+
+altitude_vt = weewx.units.ValueTuple(700, "foot", "group_altitude")
+
 # These are the correct values
 pressure = 29.259303850622302
-barometer = 29.99
+barometer = 30.01396476909608
 altimeter = 30.001561119603156
 
 
@@ -155,42 +159,46 @@ class TestPressureCooker(unittest.TestCase):
         # Make a copy. We will be modifying it.
         self.record = dict(record)
 
-    def test_get_temperature_12h_F(self):
-        db_manager = mock.Mock()
-        pc = weewx.wxformulas.PressureCooker(700, db_manager)
+    def test_get_temperature_12h(self):
+        pc = weewx.wxformulas.PressureCooker(altitude_vt)
 
         # Mock a database in US units
+        db_manager = mock.Mock()
         with mock.patch.object(db_manager, 'getRecord',
                                return_value={'usUnits': weewx.US, 'outTemp': 80.3}) as mock_mgr:
-            t = pc._get_temperature_12h_F(self.record['dateTime'])
+            t = pc._get_temperature_12h(self.record['dateTime'], db_manager)
             # Make sure the mocked database manager got called with a time 12h ago
             mock_mgr.assert_called_once_with(self.record['dateTime'] - 12 * 3600, max_delta=1800)
-            self.assertEqual(t, 80.3)
+            self.assertEqual(t, (80.3, 'degree_F', 'group_temperature'))
 
         # Mock a database in METRICWX units
         with mock.patch.object(db_manager, 'getRecord',
                                return_value={'usUnits': weewx.METRICWX, 'outTemp': 30.0}) as mock_mgr:
-            t = pc._get_temperature_12h_F(self.record['dateTime'])
+            t = pc._get_temperature_12h(self.record['dateTime'], db_manager)
             mock_mgr.assert_called_once_with(self.record['dateTime'] - 12 * 3600, max_delta=1800)
-            self.assertEqual(t, 86)
+            self.assertEqual(t, (30.0, 'degree_C', 'group_temperature'))
 
-    def test_calc_pressure(self):
-        # To calculate station pressure, we need barometric pressure. Add it
-        self.record['barometer'] = barometer
-        # Mock up a database manager
+    def test_pressure(self):
+        """Test interface pressure()"""
+
+        # Create a pressure cooker
+        pc = weewx.wxformulas.PressureCooker(altitude_vt)
+
+        # Mock up a database manager in US units
         db_manager = mock.Mock()
-        # Create a pressure cooker with our mocked manager
-        pc = weewx.wxformulas.PressureCooker(700, db_manager)
-
-        # Mock a result set in US units
         with mock.patch.object(db_manager, 'getRecord',
                                return_value={'usUnits': weewx.US, 'outTemp': 80.3}):
-            p = pc.calc_pressure(self.record)
+            p = pc.pressure(self.record, db_manager)
             self.assertEqual(p, pressure)
 
-        # Try it using the "calc()" entry point:
-        with mock.patch.object(db_manager, 'getRecord',
-                               return_value={'usUnits': weewx.US, 'outTemp': 80.3}):
-            self.assertEqual(pc.calc('pressure', self.record), pressure)
+    def test_barometer(self):
+        """Test interface barometer()"""
+
+        # Create a pressure cooker
+        pc = weewx.wxformulas.PressureCooker(altitude_vt)
+
+        b = pc.barometer(self.record)
+        self.assertEqual(b, barometer)
+
 
 unittest.main()

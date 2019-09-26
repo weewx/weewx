@@ -263,6 +263,11 @@ MetricWXUnits['group_rainrate'] = "mm_per_hour"
 MetricWXUnits['group_speed']    = "meter_per_second"
 MetricWXUnits['group_speed2']   = "meter_per_second2"
 
+std_groups = {
+    weewx.US: USUnits,
+    weewx.METRIC: MetricUnits,
+    weewx.METRICWX: MetricWXUnits
+}
 
 # Conversion functions to go from one unit type to another.
 conversionDict = {

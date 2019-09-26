@@ -77,6 +77,9 @@ class UnknownBinding(Exception):
 class UnitError(ValueError):
     """Exception thrown when there is a mismatch in unit systems."""
 
+class UnknownType(ValueError):
+    """Exception thrown for an unknown observation type"""
+
 # =============================================================================
 #                       Possible event types.
 # =============================================================================
