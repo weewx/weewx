@@ -178,6 +178,20 @@ class TestPressureCooker(unittest.TestCase):
             mock_mgr.assert_called_once_with(self.record['dateTime'] - 12 * 3600, max_delta=1800)
             self.assertEqual(t, (30.0, 'degree_C', 'group_temperature'))
 
+        # Mock a database missing a record from 12h ago
+        with mock.patch.object(db_manager, 'getRecord',
+                               return_value=None) as mock_mgr:
+            t = pc._get_temperature_12h(self.record['dateTime'], db_manager)
+            mock_mgr.assert_called_once_with(self.record['dateTime'] - 12 * 3600, max_delta=1800)
+            self.assertEqual(t, None)
+
+        # Mock a database that has a record from 12h ago, but it's missing outTemp
+        with mock.patch.object(db_manager, 'getRecord',
+                               return_value={'usUnits': weewx.METRICWX}) as mock_mgr:
+            t = pc._get_temperature_12h(self.record['dateTime'], db_manager)
+            mock_mgr.assert_called_once_with(self.record['dateTime'] - 12 * 3600, max_delta=1800)
+            self.assertEqual(t, None)
+
     def test_pressure(self):
         """Test interface pressure()"""
 
@@ -191,6 +205,37 @@ class TestPressureCooker(unittest.TestCase):
             p = pc.pressure(self.record, db_manager)
             self.assertEqual(p, pressure)
 
+            # Remove 'outHumidity' and try again. Result should now be 'None'
+            del self.record['outHumidity']
+            p = pc.pressure(self.record, db_manager)
+            self.assertEqual(p, None)
+
+        # Mock a database missing a record from 12h ago
+        with mock.patch.object(db_manager, 'getRecord',
+                               return_value=None):
+            p = pc.pressure(self.record, db_manager)
+            self.assertEqual(p, None)
+
+        # Mock a database that has a record from 12h ago, but it's missing outTemp
+        with mock.patch.object(db_manager, 'getRecord',
+                               return_value={'usUnits': weewx.METRICWX}) as mock_mgr:
+            p = pc.pressure(self.record, db_manager)
+            self.assertEqual(p, None)
+
+    def test_altimeter(self):
+        """Test interface altimeter()"""
+
+        # Create a pressure cooker
+        pc = weewx.wxformulas.PressureCooker(altitude_vt)
+
+        a = pc.altimeter(self.record)
+        self.assertEqual(a, altimeter)
+
+        # Remove 'pressure' from the record and check for None
+        del self.record['pressure']
+        a = pc.altimeter(self.record)
+        self.assertEqual(a, None)
+
     def test_barometer(self):
         """Test interface barometer()"""
 
@@ -199,6 +244,11 @@ class TestPressureCooker(unittest.TestCase):
 
         b = pc.barometer(self.record)
         self.assertEqual(b, barometer)
+
+        # Remove 'outTemp' from the record and check for None
+        del self.record['outTemp']
+        b = pc.barometer(self.record)
+        self.assertEqual(b, None)
 
 
 unittest.main()

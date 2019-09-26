@@ -13,10 +13,11 @@ import math
 import time
 import weewx.uwxutils
 
-from weewx.units import INHG_PER_MBAR, METER_PER_FOOT, METER_PER_MILE, MM_PER_INCH 
+from weewx.units import INHG_PER_MBAR, METER_PER_FOOT, METER_PER_MILE, MM_PER_INCH
 from weewx.units import CtoK, CtoF, FtoC
 
 log = logging.getLogger(__name__)
+
 
 def dewpointF(T, R):
     """Calculate dew point. 
@@ -43,6 +44,7 @@ def dewpointF(T, R):
 
     return CtoF(TdC) if TdC is not None else None
 
+
 def dewpointC(T, R):
     """Calculate dew point.
     http://en.wikipedia.org/wiki/Dew_point
@@ -64,6 +66,7 @@ def dewpointC(T, R):
         TdC = None
     return TdC
 
+
 def windchillF(T_F, V_mph):
     """Calculate wind chill.
     http://www.nws.noaa.gov/om/cold/wind_chill.shtml
@@ -74,16 +77,17 @@ def windchillF(T_F, V_mph):
     
     Returns Wind Chill in Fahrenheit
     """
-    
+
     if T_F is None or V_mph is None:
         return None
 
     # only valid for temperatures below 50F and wind speeds over 3.0 mph
-    if T_F >= 50.0 or V_mph <= 3.0: 
+    if T_F >= 50.0 or V_mph <= 3.0:
         return T_F
 
-    WcF = 35.74 + 0.6215 * T_F + (-35.75 + 0.4275 * T_F) * math.pow(V_mph, 0.16) 
+    WcF = 35.74 + 0.6215 * T_F + (-35.75 + 0.4275 * T_F) * math.pow(V_mph, 0.16)
     return WcF
+
 
 def windchillC(T_C, V_kph):
     """Wind chill, metric version.
@@ -93,17 +97,18 @@ def windchillC(T_C, V_kph):
     V: Wind speed in kph
     
     Returns wind chill in Celsius"""
-    
+
     if T_C is None or V_kph is None:
         return None
-    
+
     T_F = CtoF(T_C)
     V_mph = 0.621371192 * V_kph
-    
+
     WcF = windchillF(T_F, V_mph)
-    
+
     return FtoC(WcF) if WcF is not None else None
-    
+
+
 def heatindexF(T, R):
     """Calculate heat index.
     http://www.nws.noaa.gov/om/heat/heat_index.shtml
@@ -130,16 +135,17 @@ def heatindexF(T, R):
     """
     if T is None or R is None:
         return None
-    
+
     # Formula only valid for temperatures over 80F:
     if T < 80.0 or R < 40.0:
         return T
 
-    hi_F = -42.379 + 2.04901523 * T + 10.14333127 * R - 0.22475541 * T * R - 6.83783e-3 * T ** 2\
-    - 5.481717e-2 * R ** 2 + 1.22874e-3 * T ** 2 * R + 8.5282e-4 * T * R ** 2 - 1.99e-6 * T ** 2 * R ** 2
+    hi_F = -42.379 + 2.04901523 * T + 10.14333127 * R - 0.22475541 * T * R - 6.83783e-3 * T ** 2 \
+           - 5.481717e-2 * R ** 2 + 1.22874e-3 * T ** 2 * R + 8.5282e-4 * T * R ** 2 - 1.99e-6 * T ** 2 * R ** 2
     if hi_F < T:
         hi_F = T
     return hi_F
+
 
 def heatindexC(T_C, R):
     if T_C is None or R is None:
@@ -148,11 +154,14 @@ def heatindexC(T_C, R):
     hi_F = heatindexF(T_F, R)
     return FtoC(hi_F)
 
+
 def heating_degrees(t, base):
     return max(base - t, 0) if t is not None else None
 
+
 def cooling_degrees(t, base):
     return max(t - base, 0) if t is not None else None
+
 
 def altimeter_pressure_US(SP_inHg, Z_foot, algorithm='aaASOS'):
     """Calculate the altimeter pressure, given the raw, station pressure in
@@ -171,6 +180,7 @@ def altimeter_pressure_US(SP_inHg, Z_foot, algorithm='aaASOS'):
     return weewx.uwxutils.TWxUtilsUS.StationToAltimeter(SP_inHg, Z_foot,
                                                         algorithm=algorithm)
 
+
 def altimeter_pressure_Metric(SP_mbar, Z_meter, algorithm='aaASOS'):
     """Convert from (uncorrected) station pressure to altitude-corrected
     pressure.
@@ -188,10 +198,12 @@ def altimeter_pressure_Metric(SP_mbar, Z_meter, algorithm='aaASOS'):
     return weewx.uwxutils.TWxUtils.StationToAltimeter(SP_mbar, Z_meter,
                                                       algorithm=algorithm)
 
+
 def _etterm(elev_meter, t_C):
     """Calculate elevation/temperature term for sea level calculation."""
     t_K = CtoK(t_C)
     return math.exp(-elev_meter / (t_K * 29.263))
+
 
 def sealevel_pressure_Metric(sp_mbar, elev_meter, t_C):
     """Convert station pressure to sea level pressure.  This implementation
@@ -211,6 +223,7 @@ def sealevel_pressure_Metric(sp_mbar, elev_meter, t_C):
     bp_mbar = sp_mbar / pt if pt != 0 else 0
     return bp_mbar
 
+
 def sealevel_pressure_US(sp_inHg, elev_foot, t_F):
     if sp_inHg is None or elev_foot is None or t_F is None:
         return None
@@ -220,6 +233,7 @@ def sealevel_pressure_US(sp_inHg, elev_foot, t_F):
     slp_mbar = sealevel_pressure_Metric(sp_mbar, elev_meter, t_C)
     slp_inHg = slp_mbar * INHG_PER_MBAR
     return slp_inHg
+
 
 def calculate_rain(newtotal, oldtotal):
     """Calculate the rain differential given two cumulative measurements."""
@@ -232,6 +246,7 @@ def calculate_rain(newtotal, oldtotal):
     else:
         delta = None
     return delta
+
 
 def solar_rad_Bras(lat, lon, altitude_m, ts=None, nfac=2):
     """Calculate maximum solar radiation using Bras method
@@ -298,6 +313,7 @@ def solar_rad_Bras(lat, lon, altitude_m, ts=None, nfac=2):
         sr = None
     return sr
 
+
 def solar_rad_RS(lat, lon, altitude_m, ts=None, atc=0.8):
     """Calculate maximum solar radiation
     Ryan-Stolzenbach, MIT 1972
@@ -361,6 +377,7 @@ def solar_rad_RS(lat, lon, altitude_m, ts=None, atc=0.8):
         sr = None
     return sr
 
+
 def cloudbase_Metric(t_C, rh, altitude_m):
     """Calculate the cloud base in meters
 
@@ -376,6 +393,7 @@ def cloudbase_Metric(t_C, rh, altitude_m):
     cb = (t_C - dp_C) * 1000 / 2.5
     return altitude_m + cb * METER_PER_FOOT if cb is not None else None
 
+
 def cloudbase_US(t_F, rh, altitude_ft):
     """Calculate the cloud base in feet
 
@@ -390,6 +408,7 @@ def cloudbase_US(t_F, rh, altitude_ft):
         return None
     cb = altitude_ft + (t_F - dp_F) * 1000.0 / 4.4
     return cb
+
 
 def humidexC(t_C, rh):
     """Calculate the humidex
@@ -420,6 +439,7 @@ def humidexC(t_C, rh):
 
     return t_C + h if h > 0 else t_C
 
+
 def humidexF(t_F, rh):
     """Calculate the humidex in degree Fahrenheit
 
@@ -431,6 +451,7 @@ def humidexF(t_F, rh):
         return None
     h_C = humidexC(FtoC(t_F), rh)
     return CtoF(h_C) if h_C is not None else None
+
 
 def apptempC(t_C, rh, ws_mps):
     """Calculate the apparent temperature in degree Celsius
@@ -470,6 +491,7 @@ def apptempC(t_C, rh, ws_mps):
         at_C = None
     return at_C
 
+
 def apptempF(t_F, rh, ws_mph):
     """Calculate apparent temperature in degree Fahrenheit
 
@@ -489,6 +511,7 @@ def apptempF(t_F, rh, ws_mph):
     ws_mps = ws_mph * METER_PER_MILE / 3600.0
     at_C = apptempC(t_C, rh, ws_mps)
     return CtoF(at_C) if at_C is not None else None
+
 
 def beaufort(ws_kts):
     """Return the beaufort number given a wind speed in knots"""
@@ -530,7 +553,8 @@ def equation_of_time(doy):
     """
     b = 2 * math.pi * (doy - 81) / 364.0
     return 0.1645 * math.sin(2 * b) - 0.1255 * math.cos(b) - 0.025 * math.sin(b)
-    
+
+
 def hour_angle(t_utc, longitude, doy):
     """Solar hour angle at a given time in radians.
     
@@ -552,6 +576,7 @@ def hour_angle(t_utc, longitude, doy):
         omega += 2.0 * math.pi
     return omega
 
+
 def solar_declination(doy):
     """Solar declination for the day of the year in radians
     
@@ -559,7 +584,8 @@ def solar_declination(doy):
     >>> print "%.6f" % solar_declination(274)
     -0.075274
     """
-    return  0.409 * math.sin(2.0 * math.pi * doy / 365 - 1.39)
+    return 0.409 * math.sin(2.0 * math.pi * doy / 365 - 1.39)
+
 
 def sun_radiation(doy, latitude_deg, longitude_deg, tod_utc, interval):
     """Extraterrestrial radiation. Radiation at the top of the atmosphere
@@ -584,9 +610,9 @@ def sun_radiation(doy, latitude_deg, longitude_deg, tod_utc, interval):
     Gsc = 4.92
 
     delta = solar_declination(doy)
-    
+
     earth_distance = 1.0 + 0.033 * math.cos(2.0 * math.pi * doy / 365.0)  # dr
-    
+
     start_utc = tod_utc - interval
     stop_utc = tod_utc
     start_omega = hour_angle(start_utc, longitude_deg, doy)
@@ -596,14 +622,15 @@ def sun_radiation(doy, latitude_deg, longitude_deg, tod_utc, interval):
 
     part1 = (stop_omega - start_omega) * math.sin(latitude_radians) * math.sin(delta)
     part2 = math.cos(latitude_radians) * math.cos(delta) * (math.sin(stop_omega) - math.sin(start_omega))
-    
+
     # http://www.fao.org/docrep/x0490e/x0490e00.htm Eqn 28
     Ra = (12.0 / math.pi) * Gsc * earth_distance * (part1 + part2)
-    
+
     if Ra < 0:
         Ra = 0
-    
+
     return Ra
+
 
 def longwave_radiation(Tmin_C, Tmax_C, ea, Rs, Rso, rh):
     """Calculate the net long-wave radiation.
@@ -635,7 +662,7 @@ def longwave_radiation(Tmin_C, Tmax_C, ea, Rs, Rso, rh):
 
     # Stefan-Boltzman constant in MJ/K^4/m^2/day
     sigma = 4.903e-09
-    
+
     # Use the ratio of measured to expected radiation as a measure of cloudiness, but
     # only if it's daylight
     if Rso:
@@ -657,10 +684,10 @@ def longwave_radiation(Tmin_C, Tmax_C, ea, Rs, Rso, rh):
     Rnl_part2 = (0.34 - 0.14 * math.sqrt(ea))
     Rnl_part3 = (1.35 * cloud_factor - 0.35)
     Rnl = Rnl_part1 * Rnl_part2 * Rnl_part3
-    
+
     return Rnl
-    
-    
+
+
 def evapotranspiration_Metric(Tmin_C, Tmax_C, rh_min, rh_max, sr_mean_wpm2,
                               ws_mps, wind_height_m, latitude_deg, longitude_deg, altitude_m,
                               timestamp):
@@ -709,7 +736,7 @@ def evapotranspiration_Metric(Tmin_C, Tmax_C, rh_min, rh_max, sr_mean_wpm2,
     if None in (Tmin_C, Tmax_C, rh_min, rh_max, sr_mean_wpm2, ws_mps,
                 latitude_deg, longitude_deg, timestamp):
         return None
-    
+
     if wind_height_m is None:
         wind_height_m = 2.0
     if altitude_m is None:
@@ -726,10 +753,10 @@ def evapotranspiration_Metric(Tmin_C, Tmax_C, rh_min, rh_max, sr_mean_wpm2,
     # Calculate the UTC time-of-day in hours
     time_tt_utc = time.gmtime(timestamp)
     tod_utc = time_tt_utc.tm_hour + time_tt_utc.tm_min / 60.0 + time_tt_utc.tm_sec / 3600.0
-    
+
     # Calculate mean temperature
     tavg_C = (Tmax_C + Tmin_C) / 2.0
-    
+
     # Mean humidity
     rh_avg = (rh_min + rh_max) / 2.0
 
@@ -740,7 +767,7 @@ def evapotranspiration_Metric(Tmin_C, Tmax_C, rh_min, rh_max, sr_mean_wpm2,
     p = 101.3 * math.pow((293.0 - 0.0065 * altitude_m) / 293.0, 5.26)
     # Calculate the psychrometric constant in kPa/C (Eqn 8)
     gamma = 0.665e-03 * p
-    
+
     # Calculate mean saturation vapor pressure, converting from hPa to kPa (Eqn 12)
     etmin = weewx.uwxutils.TWxUtils.SaturationVaporPressure(Tmin_C, 'vaTeten') / 10.0
     etmax = weewx.uwxutils.TWxUtils.SaturationVaporPressure(Tmax_C, 'vaTeten') / 10.0
@@ -748,8 +775,8 @@ def evapotranspiration_Metric(Tmin_C, Tmax_C, rh_min, rh_max, sr_mean_wpm2,
 
     # Calculate the slope of the saturation vapor pressure curve in kPa/C (Eqn 13)
     delta = 4098.0 * (0.6108 * math.exp(17.27 * tavg_C / (tavg_C + 237.3))) / \
-                ((tavg_C + 237.3) * (tavg_C + 237.3))
-    
+            ((tavg_C + 237.3) * (tavg_C + 237.3))
+
     # Calculate actual vapor pressure from relative humidity (Eqn 17)
     ea = (etmin * rh_max + etmax * rh_min) / 200.0
 
@@ -758,7 +785,7 @@ def evapotranspiration_Metric(Tmin_C, Tmax_C, rh_min, rh_max, sr_mean_wpm2,
 
     # Net shortwave (measured) radiation in MJ/m^2/hr (eqn 38)
     Rns = (1.0 - albedo) * Rs
-    
+
     # Extraterrestrial radiation in MJ/m^2/hr
     Ra = sun_radiation(doy, latitude_deg, longitude_deg, tod_utc, interval=1.0)
     # Clear sky solar radiation in MJ/m^2/hr (eqn 37)
@@ -766,27 +793,27 @@ def evapotranspiration_Metric(Tmin_C, Tmax_C, rh_min, rh_max, sr_mean_wpm2,
 
     # Longwave (back) radiation. Convert from MJ/m^2/day to MJ/m^2/hr (Eqn 39):
     Rnl = longwave_radiation(Tmin_C, Tmax_C, ea, Rs, Rso, rh_avg) / 24.0
-    
+
     # Calculate net radiation at the surface in MJ/m^2/hr (Eqn. 40)
     Rn = Rns - Rnl
-    
+
     # Calculate the soil heat flux. (see section "For hourly or shorter 
     # periods" in http://www.fao.org/docrep/x0490e/x0490e07.htm#radiation 
     G = 0.1 * Rn if Rs else 0.5 * Rn
-    
+
     # Put it all together. Result is in mm/hr (Eqn 53)    
     ET0 = (0.408 * delta * (Rn - G) + gamma * (cn / (tavg_C + 273)) * u2 * (e0T - ea)) / (delta + gamma * (1 + cd * u2))
-    
+
     # We don't allow negative ET's
     if ET0 < 0:
         ET0 = 0
 
     return ET0
 
+
 def evapotranspiration_US(Tmin_F, Tmax_F, rh_min, rh_max,
                           sr_mean_wpm2, ws_mph, wind_height_ft,
                           latitude_deg, longitude_deg, altitude_ft, timestamp):
-   
     """Calculate the rate of evapotranspiration during a one hour time period,
     returning result in inches/hr.
  
@@ -838,15 +865,21 @@ def evapotranspiration_US(Tmin_F, Tmax_F, rh_min, rh_max,
 class PressureCooker(object):
     """Do calculations relating to barometric pressure"""
 
-    def __init__(self, altitude_vt, max_ts_delta=1800):
+    def __init__(self, altitude_vt, max_ts_delta=1800, altimeter_algorithm='aaNOAA'):
         """Initialize the PressureCooker.
 
         altitude_vt: The altitude as a ValueTuple
 
         max_ts_delta: When looking up a temperature in the past, how close does the time have to be?
+
+        altimeter_algorithm: Algorithm to use to calculate altimeter.
         """
         self.altitude_vt = altitude_vt
         self.max_ts_delta = max_ts_delta
+        if not altimeter_algorithm.startswith('aa'):
+            altimeter_algorithm = 'aa%s' % altimeter_algorithm
+        self.altimeter_algorithm = altimeter_algorithm
+
         # Timestamp (roughly) 12 hours ago
         self.ts_12h = None
         # Temperature 12 hours ago as a ValueTuple
@@ -861,14 +894,16 @@ class PressureCooker(object):
         # Look up the temperature 12h ago if this is the first time through,
         # or we don't have a usable temperature, or the old temperature is too stale.
         if self.ts_12h is None or self.temp_12h_vt is None or abs(self.ts_12h - ts_12h) < self.max_ts_delta:
-            # Hit the database to get a newer temperature...
+            # Hit the database to get a newer temperature.
             record = dbmanager.getRecord(ts_12h, max_delta=self.max_ts_delta)
-            # ... extract the temperature from the record ...
-            temperature = record.get('outTemp') if record else None
-            # ... figure out what unit it's in ...
-            unit = weewx.units.getStandardUnitType(record['usUnits'], 'outTemp')
-            # ... then finally form a ValueTuple.
-            self.temp_12h_vt = weewx.units.ValueTuple(temperature, *unit)
+            if record and 'outTemp' in record:
+                # Figure out what unit the record is in ...
+                unit = weewx.units.getStandardUnitType(record['usUnits'], 'outTemp')
+                # ... then form a ValueTuple.
+                self.temp_12h_vt = weewx.units.ValueTuple(record['outTemp'], *unit)
+            else:
+                # Invalidate the temperature ValueTuple from 12h ago
+                self.temp_12h_vt = None
             # Save the timestamp
             self.ts_12h = ts_12h
 
@@ -877,23 +912,12 @@ class PressureCooker(object):
     def get_scalar(self, key, record, dbmanager):
         if key == 'pressure':
             return self.pressure(record, dbmanager)
+        elif key == 'altimeter':
+            return self.altimeter(record)
         elif key == 'barometer':
             return self.barometer(record)
         else:
             raise weewx.UnknownType(key)
-
-    def barometer(self, record):
-        """Calculate the observation type 'barometer'"""
-        if 'pressure' in record and 'outTemp' in record:
-            # Convert altitude to same unit system of the incoming record
-            altitude = weewx.units.convertStd(self.altitude_vt, record['usUnits'])
-            # Figure out what pressure formula to use:
-            pressure_formula = weewx.wxformulas.sealevel_pressure_US \
-                if record['usUnits'] == weewx.US \
-                else weewx.wxformulas.sealevel_pressure_Metric
-            # Apply the formula
-            barometer = pressure_formula(record['pressure'], altitude[0], record['outTemp'])
-            return barometer
 
     def pressure(self, record, dbmanager):
         """Calculate the observation type 'pressure'."""
@@ -918,20 +942,52 @@ class PressureCooker(object):
                     temp_12h_F[0],
                     record_US['outHumidity']
                 )
+                # Form a ValueTuple with the results
+                pressure_vt = weewx.units.ValueTuple(pressure, "inHg", "group_pressure")
+                # Convert to the same unit system used by the incoming record
+                pressure_vt_final = weewx.units.convertStd(pressure_vt, record['usUnits'])
+                # Return just the value.
+                return pressure_vt_final[0]
             except KeyError:
                 return None
-        else:
-            return None
-        # Form a ValueTuple with the results
-        pressure_vt = weewx.units.ValueTuple(pressure, "inHg", "group_pressure")
-        # Convert to the same unit system used by the incoming record
-        pressure_vt_final = weewx.units.convertStd(pressure_vt, record['usUnits'])
-        # Return just the value.
-        return pressure_vt_final[0]
+
+        # Else, fall off the end and return None
+
+    def altimeter(self, record):
+        """Calculate the observation type 'altimeter'."""
+        if 'pressure' in record:
+            # Convert altitude to same unit system of the incoming record
+            altitude = weewx.units.convertStd(self.altitude_vt, record['usUnits'])
+            # Figure out which altimeter formula to use:
+            if record['usUnits'] == weewx.US:
+                altimeter_formula = weewx.wxformulas.altimeter_pressure_US
+            else:
+                altimeter_formula = weewx.wxformulas.altimeter_pressure_Metric
+            altimeter = altimeter_formula(record['pressure'], altitude[0], self.altimeter_algorithm)
+            return altimeter
+
+        # Else, fall off the end and return None
+
+    def barometer(self, record):
+        """Calculate the observation type 'barometer'"""
+        if 'pressure' in record and 'outTemp' in record:
+            # Convert altitude to same unit system of the incoming record
+            altitude = weewx.units.convertStd(self.altitude_vt, record['usUnits'])
+            # Figure out what pressure formula to use:
+            if record['usUnits'] == weewx.US:
+                pressure_formula = weewx.wxformulas.sealevel_pressure_US
+            else:
+                pressure_formula = weewx.wxformulas.sealevel_pressure_Metric
+            # Apply the formula
+            barometer = pressure_formula(record['pressure'], altitude[0], record['outTemp'])
+            return barometer
+
+        # Else, fall off the end and return None
+
 
 
 if __name__ == "__main__":
-    
+
     import doctest
 
     if not doctest.testmod().failed:
