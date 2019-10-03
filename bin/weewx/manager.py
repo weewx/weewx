@@ -311,8 +311,8 @@ class Manager(object):
         
         yields: A list with the data records"""
 
-        _cursor = self.connection.cursor()
-        try:
+        with self.connection.cursor() as _cursor:
+
             if startstamp is None:
                 if stopstamp is None:
                     _gen = _cursor.execute("SELECT * FROM %s ORDER BY dateTime ASC" % self.table_name)
@@ -336,8 +336,6 @@ class Manager(object):
                     continue
                 _last_time = _row[0]
                 yield _row
-        finally:
-            _cursor.close()
 
     def genBatchRecords(self, startstamp=None, stopstamp=None):
         """Generator function that yields records with timestamps within an
@@ -365,8 +363,8 @@ class Manager(object):
         
         returns: a record dictionary or None if the record does not exist."""
 
-        _cursor = self.connection.cursor()
-        try:
+        with self.connection.cursor() as _cursor:
+
             if max_delta:
                 time_start_ts = timestamp - max_delta
                 time_stop_ts = timestamp + max_delta
@@ -377,8 +375,6 @@ class Manager(object):
                 _cursor.execute("SELECT * FROM %s WHERE dateTime=?" % self.table_name, (timestamp,))
             _row = _cursor.fetchone()
             return dict(list(zip(self.sqlkeys, _row))) if _row else None
-        finally:
-            _cursor.close()
 
     def updateValue(self, timestamp, obs_type, new_value):
         """Update (replace) a single value in the database."""
@@ -407,12 +403,9 @@ class Manager(object):
         """Generator function that executes an arbitrary SQL statement on
         the database."""
 
-        _cursor = self.connection.cursor()
-        try:
+        with self.connection.cursor() as _cursor:
             for _row in _cursor.execute(sql, sqlargs):
                 yield _row
-        finally:
-            _cursor.close()
 
     sql_dict = {
         'first': "SELECT %(obs_type)s FROM %(table_name)s "
@@ -531,40 +524,39 @@ class Manager(object):
         data_vec = list()
         std_unit_system = None
 
-        _cursor = self.connection.cursor()
-        try:
 
-            # Is aggregation requested?
-            if aggregate_type:
+        # Is aggregation requested?
+        if aggregate_type:
 
-                aggregate_type = aggregate_type.lower()
+            aggregate_type = aggregate_type.lower()
 
-                # Check to make sure we have everything:
-                if not aggregate_interval:
-                    raise weewx.ViolatedPrecondition("Aggregation interval missing")
+            # Check to make sure we have everything:
+            if not aggregate_interval:
+                raise weewx.ViolatedPrecondition("Aggregation interval missing")
 
-                # Aggregation is requested.
-                # The aggregation should happen over the x- and y-components.
-                # Because they do not appear in the database (only the
-                # magnitude and direction do) we cannot do the aggregation
-                # in the SQL statement. We'll have to do it in Python.
-                # Do we know how to do it?
-                if aggregate_type not in ['sum', 'count', 'avg', 'max', 'min', 'last']:
-                    raise weewx.ViolatedPrecondition("Invalid aggregation type '%s'" % aggregate_type)
+            # Aggregation is requested.
+            # The aggregation should happen over the x- and y-components.
+            # Because they do not appear in the database (only the
+            # magnitude and direction do) we cannot do the aggregation
+            # in the SQL statement. We'll have to do it in Python.
+            # Do we know how to do it?
+            if aggregate_type not in ['sum', 'count', 'avg', 'max', 'min', 'last']:
+                raise weewx.ViolatedPrecondition("Invalid aggregation type '%s'" % aggregate_type)
 
-                # Special select statement for 'first' and 'last'
-                if aggregate_type == 'first':
-                    sql_str = "SELECT dateTime, %s, usUnits FROM %s WHERE dateTime = " \
-                              "(SELECT MIN(dateTime) FROM %s WHERE dateTime > ? AND dateTime <= ?)" \
-                              % (windvec_types[obs_type], self.table_name, self.table_name)
-                elif aggregate_type == 'last':
-                    sql_str = "SELECT dateTime, %s, usUnits FROM %s WHERE dateTime = " \
-                              "(SELECT MAX(dateTime) FROM %s WHERE dateTime > ? AND dateTime <= ?)" \
-                              % (windvec_types[obs_type], self.table_name, self.table_name)
-                else:
-                    sql_str = 'SELECT dateTime, %s, usUnits FROM %s WHERE dateTime > ? AND dateTime <= ?' \
-                              % (windvec_types[obs_type], self.table_name)
+            # Special select statement for 'first' and 'last'
+            if aggregate_type == 'first':
+                sql_str = "SELECT dateTime, %s, usUnits FROM %s WHERE dateTime = " \
+                          "(SELECT MIN(dateTime) FROM %s WHERE dateTime > ? AND dateTime <= ?)" \
+                          % (windvec_types[obs_type], self.table_name, self.table_name)
+            elif aggregate_type == 'last':
+                sql_str = "SELECT dateTime, %s, usUnits FROM %s WHERE dateTime = " \
+                          "(SELECT MAX(dateTime) FROM %s WHERE dateTime > ? AND dateTime <= ?)" \
+                          % (windvec_types[obs_type], self.table_name, self.table_name)
+            else:
+                sql_str = 'SELECT dateTime, %s, usUnits FROM %s WHERE dateTime > ? AND dateTime <= ?' \
+                          % (windvec_types[obs_type], self.table_name)
 
+            with self.connection.cursor() as _cursor:
                 # Go through each aggregation interval, calculating the aggregation.
                 for stamp in weeutil.weeutil.intervalgen(timespan[0], timespan[1], aggregate_interval):
 
@@ -637,12 +629,14 @@ class Manager(object):
                         else:
                             # Must be 'avg'
                             data_vec.append(complex(_xsum / _count, _ysum / _count))
-            else:
-                # No aggregation desired. It's a lot simpler. Go get the
-                # data in the requested time period
-                # This SQL select string will select the proper wind types
-                sql_str = 'SELECT dateTime, %s, usUnits, `interval` FROM %s WHERE dateTime >= ? AND dateTime <= ?' % \
-                          (windvec_types[obs_type], self.table_name)
+        else:
+            # No aggregation desired. It's a lot simpler. Go get the
+            # data in the requested time period
+            # This SQL select string will select the proper wind types
+            sql_str = 'SELECT dateTime, %s, usUnits, `interval` FROM %s WHERE dateTime >= ? AND dateTime <= ?' % \
+                      (windvec_types[obs_type], self.table_name)
+
+            with self.connection.cursor() as _cursor:
 
                 for _rec in _cursor.execute(sql_str, timespan):
                     start_vec.append(_rec[0] - _rec[4])
@@ -665,8 +659,6 @@ class Manager(object):
                             if abs(x) < 1.0e-6: x = 0.0
                             if abs(y) < 1.0e-6: y = 0.0
                         data_vec.append(complex(x, y))
-        finally:
-            _cursor.close()
 
         (time_type, time_group) = weewx.units.getStandardUnitType(std_unit_system, 'dateTime')
         (data_type, data_group) = weewx.units.getStandardUnitType(std_unit_system, obs_type, aggregate_type)
@@ -746,8 +738,7 @@ class Manager(object):
         data_vec = list()
         std_unit_system = None
 
-        _cursor = self.connection.cursor()
-        try:
+        with self.connection.cursor() as _cursor:
 
             if aggregate_type:
 
@@ -809,8 +800,6 @@ class Manager(object):
                     else:
                         std_unit_system = _rec[2]
                     data_vec.append(_rec[1])
-        finally:
-            _cursor.close()
 
         (time_type, time_group) = weewx.units.getStandardUnitType(std_unit_system, 'dateTime')
         (data_type, data_group) = weewx.units.getStandardUnitType(std_unit_system, sql_type, aggregate_type)
