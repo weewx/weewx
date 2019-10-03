@@ -20,7 +20,9 @@ import time
 import weedb
 import weeutil.weeutil
 import weewx.manager
-from weeutil.weeutil import timestamp_to_string, startOfDay, to_bool
+import weewx.units
+import weewx.wxservices
+from weeutil.weeutil import timestamp_to_string, startOfDay, to_bool, option_as_list
 
 log = logging.getLogger(__name__)
 
@@ -113,7 +115,7 @@ class DatabaseFix(object):
         """
 
         print("Fixing database record: %d; Timestamp: %s\r" % \
-              (record, timestamp_to_string(ts)), end=' ', file=sys.stdout)
+              (record, timestamp_to_string(ts)), end='', file=sys.stdout)
         sys.stdout.flush()
 
 
@@ -333,7 +335,7 @@ class WindSpeedRecalculation(DatabaseFix):
 
         print("Updating 'windSpeed' daily summary: %d; Timestamp: %s\r" % \
               (ndays, timestamp_to_string(last_time, format_str="%Y-%m-%d")),
-              end=' ', file=sys.stdout)
+              end='', file=sys.stdout)
         sys.stdout.flush()
 
 
@@ -680,5 +682,238 @@ class IntervalWeighting(DatabaseFix):
 
         print("Weighting daily summary: %d; Timestamp: %s\r"
               % (ndays, timestamp_to_string(last_time, format_str="%Y-%m-%d")),
-              end=' ', file=sys.stdout)
+              end='', file=sys.stdout)
+        sys.stdout.flush()
+
+
+# ============================================================================
+#                             class CalcMissing
+# ============================================================================
+
+
+class CalcMissing(DatabaseFix):
+    """Class to calculate and store missing derived observations.
+
+    The following algorithm is used to calculate and store missing derived
+     observations:
+
+    1.  Obtain a wxservices.WXCalculate() object to calculate the derived obs
+        fields for each record
+    2.  Iterate over each day and record in the period concerned augmenting
+        each record with derived fields. Any derived fields that are missing
+        or == None are calculated. Days are processed in tranches and each
+        updated derived fields for each tranche are processed as a single db
+        transaction.
+    4.  Once all days/records have been processed the daily summaries for the
+        period concerned are recalculated.
+    """
+
+    def __init__(self, config_dict, calc_missing_config_dict):
+        """Initialise a CalcMissing object.
+
+        config_dict: WeeWX config file as a dict
+        calc_missing_config_dict: A config dict with the following structure:
+            binding:    data binding to use
+            start_ts:   start ts of timespan over which missing derived fields
+                        will be calculated
+            stop_ts:    stop ts of timespan over which missing derived fields
+                        will be calculated
+            trans_days: number of days of records per db transaction
+        """
+
+        # call our parents __init__
+        super(CalcMissing, self).__init__(config_dict, calc_missing_config_dict)
+
+        # Get the binding for the archive we are to use. If we received an
+        # explicit binding then use that otherwise use the binding that
+        # StdArchive uses.
+        try:
+            db_binding = calc_missing_config_dict['binding']
+        except KeyError:
+            if 'StdArchive' in config_dict:
+                db_binding = config_dict['StdArchive'].get('data_binding',
+                                                           'wx_binding')
+            else:
+                db_binding = 'wx_binding'
+        self.binding = db_binding
+        # get a database manager object
+        self.dbm = weewx.manager.open_manager_with_config(config_dict,
+                                                          self.binding)
+        # the start timestamp of the period to calc missing
+        self.start_ts = int(calc_missing_config_dict.get('start_ts'))
+        # the stop timestamp of the period to calc missing
+        self.stop_ts = int(calc_missing_config_dict.get('stop_ts'))
+        # number of days per db transaction, default to 50.
+        self.trans_days = int(calc_missing_config_dict.get('trans_days', 50))
+
+    def run(self):
+        """Main entry point for calculating missing derived fields.
+
+        Calculate the missing derived fields for the timespan concerned, save
+        the calculated data to archive and recalculate the daily summaries.
+        """
+
+        # record the current time
+        t1 = time.time()
+        # obtain a wxservices.WXCalculate object to calculate the missing
+        # fields, first we need to get a DBBinder object
+        db_binder = weewx.manager.DBBinder(self.config_dict)
+        # then station altitude, latitude and longitude
+        stn_dict = self.config_dict['Station']
+        altitude_t = option_as_list(stn_dict.get('altitude', (None, None)))
+        try:
+            altitude_vt = weewx.units.ValueTuple(float(altitude_t[0]),
+                                                 altitude_t[1],
+                                                 "group_altitude")
+        except KeyError as e:
+            raise weewx.ViolatedPrecondition(
+                "Value 'altitude' needs a unit (%s)" % e)
+        latitude_f = float(stn_dict['latitude'])
+        longitude_f = float(stn_dict['longitude'])
+        # now we can create a WXCalculate object
+        wxcalculate = weewx.wxservices.WXCalculate(self.config_dict,
+                                                   altitude_vt,
+                                                   latitude_f,
+                                                   longitude_f,
+                                                   db_binder)
+
+        # initialise some counters so we know what we have processed
+        days_updated = 0
+        days_processed = 0
+        total_records_processed = 0
+        total_records_updated = 0
+
+        # obtain gregorian days for our start and stop timestamps
+        start_greg = weeutil.weeutil.toGregorianDay(self.start_ts)
+        stop_greg = weeutil.weeutil.toGregorianDay(self.stop_ts)
+        # start at the first day
+        day = start_greg
+        while day <= stop_greg:
+            # get the start and stop timestamps for this tranche
+            tr_start_ts = weeutil.weeutil.startOfGregorianDay(day)
+            tr_stop_ts = min(weeutil.weeutil.startOfGregorianDay(stop_greg + 1),
+                             weeutil.weeutil.startOfGregorianDay(day + self.trans_days - 1))
+            # start the transaction
+            with weedb.Transaction(self.dbm.connection) as _cursor:
+                # iterate over each day in the tranche we are to work in
+                for tranche_day in weeutil.weeutil.genDaySpans(tr_start_ts, tr_stop_ts):
+                    # initialise a counter for records processed on this day
+                    records_updated = 0
+                    # iterate over each record in this day
+                    for record in self.dbm.genBatchRecords(startstamp=tranche_day.start,
+                                                           stopstamp=tranche_day.stop):
+                        # but we are only concerned with records after the
+                        # start and before or equal to the stop timestamps
+                        if self.start_ts < record['dateTime'] <= self.stop_ts:
+                            # calculate the missing derived fields for the record
+                            wxcalculate.do_calculations(data_dict=record,
+                                                        data_type='archive')
+                            # obtain a dict containing only those fields that
+                            # WXCalculate calculated
+                            extras_dict = {k: record[k] for k in record.keys() if k in wxcalculate.calculations.keys()}
+                            # update the archive with the calculated data
+                            records_updated += self.update_record_fields(record['dateTime'],
+                                                                         extras_dict)
+                            # update the total records updated
+                            total_records_updated += records_updated
+                            total_records_processed += 1
+                    # if we updated any records on this day increment the count
+                    # of days updated
+                    days_updated += 1 if records_updated > 0 else 0
+                    days_processed += 1
+                    # Give the user some information on progress
+                    if days_processed % 50 == 0:
+                        p_msg = "Processing record: %d; (%s)" % (total_records_processed,
+                                                                 timestamp_to_string(tranche_day.start,
+                                                                                     format_str="%Y-%m-%d"))
+                        self._progress(p_msg)
+            # advance to the next tranche
+            day += self.trans_days
+        # finished, so give the user some final information on progress, mainly
+        # so the total tallies with the log
+        p_msg = "Processing record: %d; (%s)" % (total_records_processed,
+                                                 timestamp_to_string(tr_stop_ts,
+                                                                     format_str="%Y-%m-%d"))
+        self._progress(p_msg, overprint=False)
+        # now update the daily summaries
+        print("Recalculating daily summaries...")
+        # first we need a start and stop date object
+        start_d = datetime.date.fromtimestamp(self.start_ts)
+        stop_d = datetime.date.fromtimestamp(self.stop_ts)
+        # do the update
+        self.dbm.backfill_day_summary(start_d=start_d, stop_d=stop_d)
+        print(file=sys.stdout)
+        print("Finished recalculating daily summaries")
+        tdiff = time.time() - t1
+        # we are done so log and inform the user
+        log.info("calcmissing: Processed %d days consisting of %d records. "
+                 "%d days consisting of %d records were updated in %0.2f seconds." % (days_processed,
+                                                                                      total_records_processed,
+                                                                                      days_updated,
+                                                                                      total_records_updated,
+                                                                                      tdiff))
+        if self.dry_run:
+            log.info("calcmissing: "
+                     "This was a dry run. %s was not applied."
+                     % self.name)
+
+    def update_record_fields(self, ts, record, cursor=None):
+        """Update multiple fields in a given archive record.
+
+        Updates multiple fields in an archive record via an update query.
+
+        Inputs:
+            ts:     epoch timestamp of the record to be updated
+            record: dict containing the updated data in field name-value pairs
+            cursor: sqlite cursor
+        """
+
+        # only update if we have been provided with at least one field
+        if len(record) > 0:
+            # Only data types that appear in the database schema can be
+            # updated. To find them, form the intersection between the set of
+            # all record keys and the set of all sql keys
+            record_key_set = set(record.keys())
+            update_key_set = record_key_set.intersection(self.dbm.sqlkeys)
+            # convert to an ordered list
+            key_list = list(update_key_set)
+            # get the values in the same order
+            value_list = [record[k] for k in key_list]
+
+            # Construct the SQL update statement. First construct the 'SET'
+            # argument, we want a string of comma separated `field_name`=?
+            # entries. Each ? will be replaced by a value from update value list
+            # when the SQL statement is executed. We should not see any field
+            # names that are SQLite/MySQL reserved words (eg interval) but just
+            # in case enclose field names in backquotes.
+            set_str = ','.join(["`%s`=?" % k for k in key_list])
+            # form the SQL update statement
+            sql_update_stmt = "UPDATE %s SET %s WHERE dateTime=%s" % (self.dbm.table_name,
+                                                                      set_str,
+                                                                      ts)
+            # obtain a cursor if we don't have one
+            _cursor = cursor or self.dbm.connection.cursor()
+            # execute the update statement
+            _cursor.execute(sql_update_stmt, value_list)
+            # log the update, make it a debug level 2 entry because there may be
+            # a lot
+            # log.debug("calcmissing: Updated record %s to database '%s'", (weeutil.weeutil.timestamp_to_string(ts),
+            #                                                               self.dbm.database_name))
+            # close the cursor is we opened one
+            if cursor is None:
+                _cursor.close()
+            # if we made it here the record was updated so return the number of
+            # records updated which will always be 1
+            return 1
+        # there were no fields to update so return 0
+        return 0
+
+    @staticmethod
+    def _progress(message, overprint=True):
+        """Utility function to show our progress."""
+
+        if overprint:
+            print(message + "\r", end='')
+        else:
+            print(message)
         sys.stdout.flush()

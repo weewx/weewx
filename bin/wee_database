@@ -36,6 +36,8 @@ usage = """wee_database --help
        wee_database --transfer --dest-binding=BINDING_NAME [--dry-run]
        wee_database --check
        wee_database --update [--dry-run]
+       wee_database --calc-missing [--date=YYYY-mm-dd |
+                                    --from=YYYY-mm-dd --to=YYYY-mm-dd]
        wee_database --check-strings
        wee_database --fix-strings [--dry-run]
        wee_database --drop-daily
@@ -74,6 +76,8 @@ def main():
     parser.add_option("--update", action="store_true",
                       help="Update the daily summary tables if required and"
                            " recalculate the daily summary maximum windSpeed values.")
+    parser.add_option("--calc-missing", dest="calc_missing", action="store_true",
+                      help="Calculate and store any missing derived observations.")
     parser.add_option("--check-strings", action="store_true",
                       help="Check the archive table for null strings that may"
                            " have been introduced by a SQL editing program.")
@@ -111,6 +115,7 @@ def main():
                                    options.transfer,
                                    options.check,
                                    options.update,
+                                   options.calc_missing,
                                    options.check_strings,
                                    options.fix_strings,
                                    options.drop_daily,
@@ -145,6 +150,9 @@ def main():
 
     elif options.update:
         update(config_dict, db_binding, options)
+
+    elif options.calc_missing:
+        calc_missing(config_dict, db_binding, options)
 
     elif options.check_strings:
         check_strings(config_dict, db_binding, options, fix=False)
@@ -219,7 +227,7 @@ def rebuildDaily(config_dict, db_binding, options):
     elif start_d and not stop_d:
         _msg = "Daily summaries from %s through the end will be rebuilt." % start_d
     elif not start_d and stop_d:
-        _msg = "Daily summaries from the begining through date %s will be rebuilt." % stop_d
+        _msg = "Daily summaries from the beginning through date %s will be rebuilt." % stop_d
     elif start_d == stop_d:
         _msg = "Daily summary for date %s will be rebuilt" % start_d
     else:
@@ -553,6 +561,40 @@ def update(config_dict, db_binding, options):
     # just in case, set the syslog level back where we found it
     if options.dry_run:
         logging.disable(logging.NOTSET)
+
+
+def calc_missing(config_dict, db_binding, options):
+    """Calculate any missing derived observations and save to database."""
+
+    t1 = time.time()
+    msg = "Preparing to calculate missing derived observations..."
+    log.info(msg)
+    print(msg)
+
+    start_d, stop_d = _parse_dates(options)
+    start_ts = time.mktime(start_d.timetuple())
+    stop_ts = time.mktime(stop_d.timetuple())
+
+    # notify if this is a dry run
+    if options.dry_run:
+        print("This is a dry run: missing derived observations will be calculated but not saved.")
+
+    # construct a CalcMissing config dict
+    calc_missing_config_dict = {'name': 'Calculate Missing Derived Observations',
+                                'binding': db_binding,
+                                'start_ts': start_ts,
+                                'stop_ts': stop_ts,
+                                'trans_days': 10,
+                                'dry_run': options.dry_run}
+
+    # obtain a CalcMissing object
+    calc_missing_obj = weecfg.database.CalcMissing(config_dict,
+                                                   calc_missing_config_dict)
+    # calculate and store any missing observations
+    calc_missing_obj.run()
+    msg = "Missing derived observations calculated in %0.2f seconds" % (time.time() - t1)
+    log.info(msg)
+    print(msg)
 
 
 def _fix_wind(config_dict, db_binding, options):

@@ -27,6 +27,7 @@ from six.moves import input
 
 # WeeWX imports
 import weecfg
+import weecfg.database
 import weewx
 import weewx.qc
 import weewx.wxservices
@@ -173,28 +174,6 @@ class Source(object):
             # get our unit system from the archive db
             self.archive_unit_sys = self.dbm.std_unit_system
 
-        # do we need a WXCalculate object, if so get one
-        if self.calc_missing:
-            # parameters required to obtain a WXCalculate object
-            stn_dict = config_dict['Station']
-            altitude_t = option_as_list(stn_dict.get('altitude', (None, None)))
-            try:
-                altitude_vt = weewx.units.ValueTuple(float(altitude_t[0]),
-                                                     altitude_t[1],
-                                                     "group_altitude")
-            except KeyError as e:
-                raise weewx.ViolatedPrecondition(
-                    "Value 'altitude' needs a unit (%s)" % e)
-            latitude_f = float(stn_dict['latitude'])
-            longitude_f = float(stn_dict['longitude'])
-            # get a WXCalculate object
-            self.wxcalculate = weewx.wxservices.WXCalculate(config_dict,
-                                                            altitude_vt,
-                                                            latitude_f,
-                                                            longitude_f)
-        else:
-            self.wxcalculate = None
-
         # get ourselves a QC object to do QC on imported records
         self.import_QC = weewx.qc.QC(config_dict, parent='weeimport')
 
@@ -288,6 +267,10 @@ class Source(object):
         self.t1 = None
         # time taken to process
         self.tdiff = None
+        # earliest timestamp imported
+        self.earliest_ts = None
+        # latest timestamp imported
+        self.latest_ts = None
 
         # initialise two sets to hold timestamps of records for which we
         # encountered duplicates
@@ -411,19 +394,23 @@ class Source(object):
                     log.info(_msg)
                 # increment our period counter
                 self.period_no += 1
-            # Provide some summary info now that we have finished the import.
-            # What we say depends on whether it was a dry run or not and
-            # whether we imported and records or not.
+            # The source data has been processed and any records saved to
+            # archive (except if it was a dry run). If necessary, calculate
+            # any missing derived fields and provide the user with suitable
+            # summary output.
             if self.total_rec_proc == 0:
-                # nothing imported so say so
+                # nothing was imported so no need to calculate any missing
+                # fields just inform the user what was done
                 _msg = 'No records were identified for import. Exiting. Nothing done.'
                 print(_msg)
                 log.info(_msg)
             else:
-                # we imported something
+                # We imported something, but was it a dry run or not?
                 total_rec = self.total_rec_proc + self.total_duplicate_rec
                 if self.dry_run:
-                    # but it was a dry run
+                    # It was a dry run. Skip calculation of missing derived
+                    # fields (since there are no archive records to process),
+                    # just provide the user with a summary of what we did.
                     _msg = "Finished dry run import"
                     print(_msg)
                     log.info(_msg)
@@ -441,7 +428,25 @@ class Source(object):
                         print(_msg)
                         log.info(_msg)
                 else:
-                    # something should have been saved to database
+                    # It was not a dry run so calculate any missing derived
+                    # fields and provide the user with a summary of what we did.
+                    if self.calc_missing:
+                        # we were asked to calculate missing derived fields, so
+                        # get a CalcMissing object
+                        # first construct a CalcMissing config dict
+                        # (self.dry_run will never be true)
+                        calc_missing_config_dict = {'name': 'Calculate Missing Derived Observations',
+                                                    'binding': self.db_binding_wx,
+                                                    'start_ts': self.earliest_ts,
+                                                    'stop_ts': self.latest_ts,
+                                                    'trans_days': 10,
+                                                    'dry_run': self.dry_run is True}
+                        # now obtain a CalcMissing object
+                        self.calc_missing_obj = weecfg.database.CalcMissing(self.config_dict,
+                                                                            calc_missing_config_dict)
+                        # do the calculations
+                        self.calc_missing_obj.run()
+                    # now provide the summary report
                     _msg = "Finished import"
                     print(_msg)
                     log.info(_msg)
@@ -690,6 +695,11 @@ class Source(object):
                     # we have no timeframe or if we do it falls within it so
                     # save the dateTime
                     _rec['dateTime'] = _rec_dateTime
+                    # update earliest and latest record timstamps
+                    if self.earliest_ts is None or _rec_dateTime < self.earliest_ts:
+                        self.earliest_ts = _rec_dateTime
+                    if self.latest_ts is None or _rec_dateTime > self.earliest_ts:
+                        self.latest_ts = _rec_dateTime
                 else:
                     # it is not so skip to the next record
                     continue
@@ -1054,26 +1064,6 @@ class Source(object):
         if self.apply_qc:
             self.import_QC.apply_qc(data_dict, data_type=data_type)
 
-    def calcMissing(self, record):
-        """ Add missing observations to a record.
-
-        If calc_missing option is True in the import config file then add any
-        missing derived observations (ie observation is missing or None) to the
-        imported record. The WeeWX WxCalculate class is used to add any missing
-        observations.
-
-        Input parameters:
-
-            record: A WeeWX compatible archive record.
-
-        Returns a WeeWX compatible archive record that includes any derived
-        observations that were previously missing/None.
-        """
-
-        if self.calc_missing:
-            self.wxcalculate.do_calculations(record, 'archive')
-        return record
-
     def saveToArchive(self, archive, records):
         """ Save records to the WeeWX archive.
 
@@ -1127,10 +1117,8 @@ class Source(object):
                     _conv_rec = to_std_system(_rec, self.archive_unit_sys)
                     # perform any any required QC checks
                     self.qc(_conv_rec, 'Archive')
-                    # now add any derived obs that we can to our record
-                    _final_rec = self.calcMissing(_rec)
                     # add the record to our tranche and increment our count
-                    _tranche.append(_final_rec)
+                    _tranche.append(_rec)
                     nrecs += 1
                     # if we have a full tranche then save to archive and reset
                     # the tranche
@@ -1145,7 +1133,7 @@ class Source(object):
                             unique_set.add(_trec['dateTime'])
                         # tell the user what we have done
                         _msg = "Unique records processed: %d; Last timestamp: %s\r" % (nrecs,
-                                                                                       timestamp_to_string(_final_rec['dateTime']))
+                                                                                       timestamp_to_string(_rec['dateTime']))
                         print(_msg, end='', file=sys.stdout)
                         sys.stdout.flush()
                         _tranche = []
@@ -1162,7 +1150,7 @@ class Source(object):
                         unique_set.add(_trec['dateTime'])
                     # tell the user what we have done
                     _msg = "Unique records processed: %d; Last timestamp: %s\r" % (nrecs,
-                                                                                   timestamp_to_string(_final_rec['dateTime']))
+                                                                                   timestamp_to_string(_rec['dateTime']))
                     print(_msg, end='', file=sys.stdout)
                 print()
                 sys.stdout.flush()
