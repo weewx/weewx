@@ -39,25 +39,22 @@ simple_sql = "SELECT %(aggregate_type)s(%(obs_type)s) FROM %(table_name)s " \
              "WHERE dateTime > %(start)s AND dateTime <= %(stop)s AND %(obs_type)s IS NOT NULL"
 
 
-def get_aggregate(db_manager, timespan, obs_type,
-                  aggregate_type, **option_dict):
+def get_aggregate(obs_type, timespan, aggregate_type, db_manager, **option_dict):
     """Returns an aggregation of an observation type over a given time period.
-
-    db_manager: An instance of weewx.manager.Manager or subclass.
-
-    timespan: An instance of weeutil.Timespan with the time period over which
-    aggregation is to be done.
 
     obs_type: The type over which aggregation is to be done (e.g., 'barometer',
     'outTemp', 'rain', ...)
 
+    timespan: An instance of weeutil.Timespan with the time period over which
+    aggregation is to be done.
+
     aggregate_type: The type of aggregation to be done.
+
+    db_manager: An instance of weewx.manager.Manager or subclass.
 
     option_dict: Not used in this version.
 
-    returns: A value tuple. First element is the aggregation value, or None if not enough data was available to
-    calculate it. The second element is the unit type (eg, 'degree_F'). The third element is the unit group (eg,
-    "group_temperature") """
+    returns: A ValueTuple containing the result."""
 
     if obs_type not in db_manager.sqlkeys:
         raise weewx.UnknownType(obs_type)
@@ -75,8 +72,8 @@ def get_aggregate(db_manager, timespan, obs_type,
         'stop': timespan.stop
     }
 
-    select_stmt = sql_dict.get(aggregate_type, simple_sql)
-    row = db_manager.getSql(select_stmt % interpolate_dict)
+    select_stmt = sql_dict.get(aggregate_type, simple_sql) % interpolate_dict
+    row = db_manager.getSql(select_stmt)
 
     value = row[0] if row else None
 
@@ -163,26 +160,23 @@ daily_sql_dict = {
 }
 
 
-def get_aggregate_daily(db_manager, timespan, obs_type,
-                        aggregate_type, **option_dict):
+def get_aggregate_daily(obs_type, timespan, aggregate_type, db_manager, **option_dict):
     """Returns an aggregation of a statistical type for a given time period,
     by using the daily summaries.
-
-    db_manager: An instance of weewx.manager.Manager or subclass.
-
-    timespan: An instance of weeutil.Timespan with the time period over which
-    aggregation is to be done.
 
     obs_type: The type over which aggregation is to be done (e.g., 'barometer',
     'outTemp', 'rain', ...)
 
+    timespan: An instance of weeutil.Timespan with the time period over which
+    aggregation is to be done.
+
     aggregate_type: The type of aggregation to be done.
 
-    option_dict: Some aggregations require optional values
+    db_manager: An instance of weewx.manager.Manager or subclass.
 
-    returns: A value tuple. First element is the aggregation value, or None if not enough data was available to
-    calculate it, or if the aggregation type is unknown. The second element is the unit type (eg, 'degree_F'). The third
-    element is the unit group (eg, "group_temperature") """
+    option_dict: Not used in this version.
+
+    returns: A ValueTuple containing the result."""
 
     # Check to see if this is a valid daily summary type:
     if obs_type not in db_manager.daykeys:
@@ -298,26 +292,24 @@ sql_dict_wind = {
 complex_sql_wind = 'SELECT %(mag)s, %(dir)s, usUnits FROM %(table_name)s WHERE dateTime > ? AND dateTime <= ?'
 
 
-def get_aggregate_wind(db_manager, timespan, obs_type,
-                       aggregate_type, **option_dict):
+def get_aggregate_wind(obs_type, timespan, aggregate_type, db_manager, **option_dict):
     """Returns an aggregation of a wind type over a timespan by using the main archive table.
-
-    db_manager: An instance of weewx.manager.Manager or subclass.
-
-    timespan: An instance of weeutil.Timespan with the time period over which
-    aggregation is to be done.
 
     obs_type: The type over which aggregation is to be done (e.g., 'barometer',
     'outTemp', 'rain', ...)
 
+    timespan: An instance of weeutil.Timespan with the time period over which
+    aggregation is to be done.
+
     aggregate_type: The type of aggregation to be done.
 
-    option_dict: Some aggregations require optional values
+    db_manager: An instance of weewx.manager.Manager or subclass.
 
-    returns: A value tuple. First element is the aggregation value, or None if not enough data was available to
-    calculate it, or if the aggregation type is unknown. The second element is the unit type (eg, 'degree_F'). The third
-    element is the unit group (eg, "group_temperature") """
+    option_dict: Not used in this version.
 
+    returns: A ValueTuple containing the result. Note that the value contained in the ValueTuple
+    will be a complex number for aggregation_types of 'avg', 'sum', 'first', 'last', 'min', and 'max'.
+    """
     if obs_type not in windvec_types:
         raise weewx.UnknownType(obs_type)
 
