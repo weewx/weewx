@@ -13,19 +13,33 @@ cd ~/git/weewx
 PYTHONPATH="./examples:./bin" python bin/weewx/tests/test_templates.py
 """
 
-from __future__ import with_statement
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import with_statement
+
 import locale
+import logging
 import os.path
 import shutil
 import sys
-import syslog
 import time
 import unittest
 
 import configobj
 from six.moves import map
+
+import gen_fake_data
+import weeutil.logger
+import weeutil.weeutil
+import weewx
+import weewx.reportengine
+import weewx.station
+
+weewx.debug = 1
+
+log = logging.getLogger(__name__)
+# Set up logging using the defaults.
+weeutil.logger.setup('test_templates', {})
 
 os.environ['TZ'] = 'America/Los_Angeles'
 time.tzset()
@@ -35,12 +49,6 @@ time.tzset()
 # http://docs.python.org/2/library/locale.html#locale.setlocale
 locale.setlocale(locale.LC_ALL, '')
 
-
-import weewx.reportengine
-import weewx.station
-import weeutil.weeutil
-
-import gen_fake_data  # @UnresolvedImport
 
 # Find the configuration file. It's assumed to be in the same directory as me:
 config_path = os.path.join(os.path.dirname(__file__), "testgen.conf")
@@ -77,11 +85,6 @@ class Common(unittest.TestCase):
         global config_path
         global cwd
         
-        weewx.debug = 1
-
-        syslog.openlog('test_templates', syslog.LOG_CONS)
-        syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
-
         # Save and set the current working directory in case some service changes it.
         if not cwd:
             cwd = os.getcwd()
