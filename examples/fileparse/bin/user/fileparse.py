@@ -48,14 +48,15 @@
 #         in_humid = inHumidity
 
 from __future__ import with_statement
+import logging
 import time
 
 import weewx.drivers
-from weeutil.log import logdbg, loginf, logerr
 
 DRIVER_NAME = 'FileParse'
 DRIVER_VERSION = "0.7"
 
+log = logging.getLogger(__name__)
 
 def _get_as_float(d, s):
     v = None
@@ -63,7 +64,7 @@ def _get_as_float(d, s):
         try:
             v = float(d[s])
         except ValueError as e:
-            logerr("cannot read value for '%s': %s" % (s, e))
+            log.error("cannot read value for '%s': %s" % (s, e))
     return v
 
 def loader(config_dict, engine):
@@ -80,9 +81,9 @@ class FileParseDriver(weewx.drivers.AbstractDevice):
         # mapping from variable names to weewx names
         self.label_map = stn_dict.get('label_map', {})
 
-        loginf("Data file is %s" % self.path)
-        loginf("Polling interval is %s" % self.poll_interval)
-        loginf('Label map is %s' % self.label_map)
+        log.info("Data file is %s" % self.path)
+        log.info("Polling interval is %s" % self.poll_interval)
+        log.info('Label map is %s' % self.label_map)
 
     def genLoopPackets(self):
         while True:
@@ -96,7 +97,7 @@ class FileParseDriver(weewx.drivers.AbstractDevice):
                         value = line[eq_index + 1:].strip()
                         data[name] = value
             except Exception as e:
-                logerr("read failed: %s" % e)
+                log.error("read failed: %s" % e)
 
             # map the data into a weewx loop packet
             _packet = {'dateTime': int(time.time() + 0.5),
@@ -115,6 +116,11 @@ class FileParseDriver(weewx.drivers.AbstractDevice):
 #   PYTHONPATH=/home/weewx/bin python /home/weewx/bin/user/fileparse.py
 if __name__ == "__main__":
     import weeutil.weeutil
+    import weeutil.logger
+    import weewx
+    weewx.debug = 1
+    weeutil.logger.setup('fileparse', {})
+
     driver = FileParseDriver()
     for packet in driver.genLoopPackets():
         print(weeutil.weeutil.timestamp_to_string(packet['dateTime']), packet)

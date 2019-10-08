@@ -30,6 +30,7 @@ Add the following to weewx.conf:
         archive_services = ..., user.pmon.ProcessMonitor
 """
 
+import logging
 import os
 import re
 import time
@@ -38,10 +39,11 @@ from subprocess import Popen, PIPE
 import weewx
 import weedb
 import weeutil.weeutil
-from weeutil.log import logdbg, loginf, logerr
 from weewx.engine import StdService
 
 VERSION = "0.5"
+
+log = logging.getLogger(__name__)
 
 schema = [
     ('dateTime', 'INTEGER NOT NULL PRIMARY KEY'),
@@ -87,7 +89,7 @@ class ProcessMonitor(StdService):
         now = int(time.time() + 0.5)
         delta = now - event.record['dateTime']
         if delta > event.record['interval'] * 60:
-            logdbg("Skipping record: time difference %s too big" % delta)
+            log.debug("Skipping record: time difference %s too big" % delta)
             return
         if self.last_ts is not None:
             self.save_data(self.get_data(now, self.last_ts))
@@ -127,7 +129,7 @@ class ProcessMonitor(StdService):
                         record['mem_vsz'] = int(m.group(1))
                         record['mem_rss'] = int(m.group(2))
         except (ValueError, IOError, KeyError) as e:
-            logerr('apcups_info failed: %s' % e)
+            log.error('apcups_info failed: %s' % e)
         return record
 
 
@@ -138,6 +140,12 @@ class ProcessMonitor(StdService):
 #
 if __name__ == "__main__":
     from weewx.engine import StdEngine
+    import weeutil.logger
+    import weewx
+
+    weewx.debug = 1
+    weeutil.logger.setup('pmon', {})
+
     config = {
         'Station': {
             'station_type': 'Simulator',
@@ -166,7 +174,8 @@ if __name__ == "__main__":
                 'SQLITE_ROOT': '/var/tmp'}},
         'Engine': {
             'Services': {
-                'process_services': 'user.pmon.ProcessMonitor'}}}
+                'process_services': 'user.pmon.ProcessMonitor'}}
+    }
     eng = StdEngine(config)
     svc = ProcessMonitor(eng, config)
 
