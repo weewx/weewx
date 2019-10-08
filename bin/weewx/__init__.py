@@ -80,6 +80,9 @@ class UnitError(ValueError):
 class UnknownType(ValueError):
     """Exception thrown for an unknown observation type"""
 
+class UnknownAggregation(ValueError):
+    """Exception thrown for an unknown aggregation type"""
+
 # =============================================================================
 #                       Possible event types.
 # =============================================================================
