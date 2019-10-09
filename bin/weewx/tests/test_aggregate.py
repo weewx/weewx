@@ -20,6 +20,7 @@ import weeutil.logger
 import weewx
 import weewx.aggregate
 from weeutil.weeutil import TimeSpan
+from weewx.units import ValueTuple
 
 weewx.debug = 1
 
@@ -53,6 +54,8 @@ class TestAggregate(unittest.TestCase):
         pass
 
     def test_get_aggregate(self):
+        # Use the same function to test calculating aggregations from the main archive file, as well
+        # as from the daily summaries:
         self.get_aggregate_fn(weewx.aggregate.get_aggregate)
         self.get_aggregate_fn(weewx.aggregate.get_aggregate_daily)
 
@@ -78,6 +81,12 @@ class TestAggregate(unittest.TestCase):
             mintime_vt = aggregate_fn('outTemp', TimeSpan(start_ts, stop_ts), 'mintime', db_manager)
             self.assertEqual(mintime_vt[0], 1267452000)
 
+            count_vt = aggregate_fn('outTemp', TimeSpan(start_ts, stop_ts), 'count', db_manager)
+            self.assertEqual(count_vt[0], 4396)
+
+            sum_vt = aggregate_fn('rain', TimeSpan(start_ts, stop_ts), 'sum', db_manager)
+            self.assertAlmostEqual(sum_vt[0], 7.68, 2)
+
             # get_aggregate() has a few extra aggregate types:
             if aggregate_fn == weewx.aggregate.get_aggregate:
                 first_vt = aggregate_fn('outTemp', TimeSpan(start_ts, stop_ts), 'first', db_manager)
@@ -97,6 +106,44 @@ class TestAggregate(unittest.TestCase):
                 last_time_vt = aggregate_fn('outTemp', TimeSpan(start_ts, stop_ts), 'lasttime', db_manager)
                 self.assertEqual(last_time_vt[0], stop_ts)
 
+    def test_get_aggregate_daily(self):
+        with weewx.manager.open_manager_with_config(self.config_dict, 'wx_binding') as db_manager:
+            month_start_tt = (2010, 3, 1, 0, 0, 0, 0, 0, -1)
+            month_stop_tt = (2010, 4, 1, 0, 0, 0, 0, 0, -1)
+            start_ts = time.mktime(month_start_tt)
+            stop_ts = time.mktime(month_stop_tt)
+            print(start_ts, stop_ts)
+
+            min_ge_vt = weewx.aggregate.get_aggregate_daily('outTemp', TimeSpan(start_ts, stop_ts), 'min_ge',
+                                                            db_manager,
+                                                            val=ValueTuple(15, 'degree_F', 'group_temperature'))
+            self.assertEqual(min_ge_vt[0], 6)
+
+            min_le_vt = weewx.aggregate.get_aggregate_daily('outTemp', TimeSpan(start_ts, stop_ts), 'min_le',
+                                                            db_manager,
+                                                            val=ValueTuple(0, 'degree_F', 'group_temperature'))
+            self.assertEqual(min_le_vt[0], 2)
+
+            minmax_vt = weewx.aggregate.get_aggregate_daily('outTemp', TimeSpan(start_ts, stop_ts), 'minmax',
+                                                            db_manager)
+            self.assertAlmostEqual(minmax_vt[0], 39.36, 2)
+
+            max_wind_vt = weewx.aggregate.get_aggregate_daily('wind', TimeSpan(start_ts, stop_ts), 'max', db_manager)
+            self.assertAlmostEqual(max_wind_vt[0], 24.0, 2)
+
+            avg_wind_vt = weewx.aggregate.get_aggregate_daily('wind', TimeSpan(start_ts, stop_ts), 'avg', db_manager)
+            self.assertAlmostEqual(avg_wind_vt[0], 10.21, 2)
+            # Double check this last one against the average calculated from the archive
+            avg_wind_vt = weewx.aggregate.get_aggregate('windSpeed', TimeSpan(start_ts, stop_ts), 'avg', db_manager)
+            self.assertAlmostEqual(avg_wind_vt[0], 10.21, 2)
+
+            vecavg_wind_vt = weewx.aggregate.get_aggregate_daily('wind', TimeSpan(start_ts, stop_ts), 'vecavg',
+                                                                 db_manager)
+            self.assertAlmostEqual(vecavg_wind_vt[0], 5.14, 2)
+
+            vecdir_wind_vt = weewx.aggregate.get_aggregate_daily('wind', TimeSpan(start_ts, stop_ts), 'vecdir',
+                                                                 db_manager)
+            self.assertAlmostEqual(vecdir_wind_vt[0], 88.74, 2)
 
 
 if __name__ == '__main__':
