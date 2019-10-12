@@ -60,6 +60,9 @@ new unit microgram_per_meter_cubed. Added new unit group, group_concentration.
 
 Plist for the Mac launcher now includes a log file for stderr.
 
+Fixed bug that caused windrun to be calculated wrongly under METRICWX
+unit system. Fixes issue #452.
+
 
 3.9.2 07/14/2019
 

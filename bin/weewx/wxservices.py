@@ -371,7 +371,18 @@ def calc_windrun(key, data, db_manager=None):
         raise weewx.UnknownType(key)
     if 'windSpeed' not in data or 'interval' not in data:
         raise weewx.CannotCalculate(key)
-    return data['windSpeed'] * data['interval'] / 60.0 if data['windSpeed'] is not None else None
+
+    if data['windSpeed'] is not None:
+        # System METRICWX requires windrun in km. See issue #452 https://github.com/weewx/weewx/issues/452
+        if data['usUnits'] == weewx.METRICWX:
+            # Answer will be in km
+            run = data['windSpeed'] * data['interval'] * 60.0 / 1000.0
+        else:
+            # Answer will be miles or km
+            run = data['windSpeed'] * data['interval'] / 60.0
+    else:
+        run = None
+    return run
 
 
 # Add all the simple functions to the list of extensible types
