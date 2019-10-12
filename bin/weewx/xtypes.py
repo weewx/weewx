@@ -9,7 +9,6 @@ from __future__ import print_function
 import weewx
 
 scalar_types = []
-series_types = []
 
 
 def get_scalar(key, record, db_manager=None):

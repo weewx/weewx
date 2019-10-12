@@ -1,10 +1,13 @@
+### Extensible types
+Need some way of initializing the daily summaries for wind.
+
 ### Logging
-Refactor wee_import to use the new logging facility.
+Refactor `wee_import` to use the new logging facility.
 
 Update *Upgrading Guide*.
 
 
-### Issue 435 (Update WU uploader)
+### Issue [#435](https://github.com/weewx/weewx/issues/435) (Update WU uploader)
 Need to test some of the new types, in particular `windSpeed2`, `windGust10`,
 `windGustDir10`.
 
@@ -14,22 +17,6 @@ Really have to find some way of making `accumulateLeaves()` and friends accessib
 from `weeutil.weeutil`.
 
 Document the suffixes `.exists` and `.has_data`.
-
-Explore introducing extendable observation types. They would be registered
-with `Manager`.
-
-The following drivers have been checked under Python 3:
-
-```
-vantage.py
-wmr100.py
-```
-
-In general, we should expect the user to run the command `python`, whatever that might
-point to. On some systems, it will be Python 2, others Python 3.
-
-Nevertheless, we should probably include a section on how to run explicitly under 
-Python 2 vs 3.
 
 Update macos.htm for how to install using Python 3.
 

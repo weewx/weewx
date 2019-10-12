@@ -19,6 +19,7 @@ import gen_fake_data
 import weeutil.logger
 import weewx
 import weewx.aggregate
+import weewx.manager
 from weeutil.weeutil import TimeSpan
 from weewx.units import ValueTuple
 
@@ -56,7 +57,7 @@ class TestAggregate(unittest.TestCase):
     def test_get_aggregate(self):
         # Use the same function to test calculating aggregations from the main archive file, as well
         # as from the daily summaries:
-        self.get_aggregate_fn(weewx.aggregate.get_aggregate)
+        self.get_aggregate_fn(weewx.aggregate.get_aggregate_archive)
         self.get_aggregate_fn(weewx.aggregate.get_aggregate_daily)
 
     def get_aggregate_fn(self, aggregate_fn):
@@ -88,7 +89,7 @@ class TestAggregate(unittest.TestCase):
             self.assertAlmostEqual(sum_vt[0], 7.68, 2)
 
             # get_aggregate() has a few extra aggregate types:
-            if aggregate_fn == weewx.aggregate.get_aggregate:
+            if aggregate_fn == weewx.aggregate.get_aggregate_archive:
                 first_vt = aggregate_fn('outTemp', TimeSpan(start_ts, stop_ts), 'first', db_manager)
                 # Get the timestamp of the first record inside the month
                 ts = start_ts + gen_fake_data.interval
@@ -134,7 +135,7 @@ class TestAggregate(unittest.TestCase):
             avg_wind_vt = weewx.aggregate.get_aggregate_daily('wind', TimeSpan(start_ts, stop_ts), 'avg', db_manager)
             self.assertAlmostEqual(avg_wind_vt[0], 10.21, 2)
             # Double check this last one against the average calculated from the archive
-            avg_wind_vt = weewx.aggregate.get_aggregate('windSpeed', TimeSpan(start_ts, stop_ts), 'avg', db_manager)
+            avg_wind_vt = weewx.aggregate.get_aggregate_archive('windSpeed', TimeSpan(start_ts, stop_ts), 'avg', db_manager)
             self.assertAlmostEqual(avg_wind_vt[0], 10.21, 2)
 
             vecavg_wind_vt = weewx.aggregate.get_aggregate_daily('wind', TimeSpan(start_ts, stop_ts), 'vecavg',
@@ -144,6 +145,24 @@ class TestAggregate(unittest.TestCase):
             vecdir_wind_vt = weewx.aggregate.get_aggregate_daily('wind', TimeSpan(start_ts, stop_ts), 'vecdir',
                                                                  db_manager)
             self.assertAlmostEqual(vecdir_wind_vt[0], 88.74, 2)
+
+    def test_get_aggregate_heatcool(self):
+        with weewx.manager.open_manager_with_config(self.config_dict, 'wx_binding') as db_manager:
+            month_start_tt = (2010, 3, 1, 0, 0, 0, 0, 0, -1)
+            month_stop_tt = (2010, 4, 1, 0, 0, 0, 0, 0, -1)
+            start_ts = time.mktime(month_start_tt)
+            stop_ts = time.mktime(month_stop_tt)
+
+            # First, with the default heating base:
+            heatdeg = weewx.aggregate.get_aggregate_heatcool('heatdeg', TimeSpan(start_ts, stop_ts), 'sum', db_manager)
+            self.assertAlmostEqual(heatdeg[0], 1123.99, 2)
+            # Now with an explicit heating base:
+            heatdeg = weewx.aggregate.get_aggregate_heatcool('heatdeg', TimeSpan(start_ts, stop_ts), 'sum',
+                                                             db_manager,
+                                                             skin_dict={'Units': {'DegreeDays': {
+                                                                 'heating_base': (60.0, "degree_F", "group_temperature")
+                                                             }}})
+            self.assertAlmostEqual(heatdeg[0], 968.99, 2)
 
 
 if __name__ == '__main__':
