@@ -51,7 +51,7 @@ DEFAULTS = u"""
         appTemp = prefer_hardware
         ET = prefer_hardware
         windrun = prefer_hardware
-        beaufort = none    # Not sure about this one        
+        beaufort = prefer_hardware        
     [[Algorithms]]
         altimeter = aaASOS
         maxSolarRad = RS
@@ -146,7 +146,8 @@ class WXCalculate(object):
         self.rain_rater = weewx.wxformulas.RainRater(to_int(svc_dict['rain_period']))
 
         # Add the various types we need to the list of extendable types
-        for xt in [self.calc_maxSolarRad, self.cloudbase, self.pressure_cooker.get_scalar, self.rain_rater]:
+        for xt in [self.calc_maxSolarRad, self.calc_cloudbase, self.calc_ET, self.pressure_cooker.get_scalar,
+                   self.rain_rater]:
             weewx.xtypes.scalar_types.append(xt)
 
         # report about which values will be calculated...
@@ -159,7 +160,8 @@ class WXCalculate(object):
     def shutDown(self):
         # In case of shutdown, we need to remove any extensible types we added. This prevents them from
         # appearing twice in case the shutdown was really just a reload (signal HUP)
-        for xt in [self.cloudbase, self.calc_maxSolarRad, self.rain_rater, self.pressure_cooker.get_scalar]:
+        for xt in [self.calc_maxSolarRad, self.calc_cloudbase, self.calc_ET, self.pressure_cooker.get_scalar,
+                   self.rain_rater]:
             try:
                 weewx.xtypes.scalar_types.remove(xt)
             except ValueError:
@@ -230,62 +232,71 @@ class WXCalculate(object):
             formula = weewx.wxformulas.cloudbase_Metric
         return formula(data['outTemp'], data['outHumidity'], altitude[0])
 
-    def calc_ET(self, data, data_type):
+    def calc_ET(self, key, data, db_manager):
         """Get maximum and minimum temperatures and average radiation and
         wind speed for the indicated period then calculate the amount of
         evapotranspiration during the interval.  Convert to US units if necessary
         since this service operates in US unit system."""
-        # calculate ET only for archive packets
-        if data_type != 'archive':
-            return
+
+        if key != 'ET':
+            raise weewx.UnknownType(key)
+        if 'interval' not in data:
+            raise weewx.CannotCalculate(key)
+
+        interval = data['interval']
         end_ts = data['dateTime']
         start_ts = end_ts - self.et_period
-        interval = self._get_archive_interval(data)
         try:
-            dbmanager = self.db_binder.get_manager(self.binding)
-            r = dbmanager.getSql(
-                "SELECT"
-                " MAX(outTemp), MIN(outTemp), AVG(radiation), AVG(windSpeed),"
-                " MAX(outHumidity), MIN(outHumidity), MAX(usUnits), MIN(usUnits)"
-                " FROM %s WHERE dateTime>? AND dateTime <=?"
-                % dbmanager.table_name, (start_ts, end_ts))
-            # Make sure everything is there:
-            if r is None or None in r:
-                data['ET'] = None
-                return
-            # Unpack the results
-            T_max, T_min, rad_avg, wind_avg, rh_max, rh_min, std_unit_min, std_unit_max = r
-            # Check for mixed units
-            if std_unit_min != std_unit_max:
-                log.info("Mixed unit system not allowed in ET calculation")
-                data['ET'] = None
-                return
-            std_unit = std_unit_min
-            if std_unit == weewx.METRIC or std_unit == weewx.METRICWX:
-                T_max = CtoF(T_max)
-                T_min = CtoF(T_min)
-                if std_unit == weewx.METRICWX:
-                    wind_avg = mps_to_mph(wind_avg)
-                else:
-                    wind_avg = kph_to_mph(wind_avg)
-            # Wind height is in meters, so convert it:
-            height_ft = self.wind_height / METER_PER_FOOT
+            r = db_manager.getSql("SELECT MAX(outTemp), MIN(outTemp), "
+                                  "AVG(radiation), AVG(windSpeed), "
+                                  "MAX(outHumidity), MIN(outHumidity), "
+                                  "MAX(usUnits), MIN(usUnits) FROM %s WHERE dateTime>? AND dateTime <=?"
+                                  % db_manager.table_name, (start_ts, end_ts))
+        except weedb.DatabaseError:
+            return None
 
+        # Make sure everything is there:
+        if r is None or None in r:
+            return None
+
+        # Unpack the results
+        T_max, T_min, rad_avg, wind_avg, rh_max, rh_min, std_unit_min, std_unit_max = r
+
+        # Check for mixed units
+        if std_unit_min != std_unit_max:
+            log.info("Mixed unit system not allowed in ET calculation")
+            return None
+        std_unit = std_unit_min
+        if std_unit == weewx.METRIC or std_unit == weewx.METRICWX:
+            T_max = CtoF(T_max)
+            T_min = CtoF(T_min)
+            if std_unit == weewx.METRICWX:
+                wind_avg = mps_to_mph(wind_avg)
+            else:
+                wind_avg = kph_to_mph(wind_avg)
+        # Wind height is in meters, so convert it:
+        height_ft = self.wind_height / METER_PER_FOOT
+        # Get altitude in feet
+        altitude_ft = weewx.units.convert(self.altitude_vt, 'foot')[0]
+
+        try:
             ET_rate = weewx.wxformulas.evapotranspiration_US(
                 T_min, T_max, rh_min, rh_max, rad_avg, wind_avg, height_ft,
-                self.latitude, self.longitude, self.altitude_ft, end_ts)
-            # The formula returns inches/hour. We need the total ET over the
-            # archive interval, so multiply by the length of the archive
-            # interval in hours.
-            data['ET'] = ET_rate * interval / 3600.0 if ET_rate is not None else None
+                self.latitude, self.longitude, altitude_ft, end_ts)
         except ValueError as e:
             log.error("Calculation of evapotranspiration failed: %s", e)
             weeutil.logger.log_traceback(log.error)
-        except weedb.DatabaseError:
-            pass
+            ET_rate = None
+        # The formula returns inches/hour. We need the total ET over the interval, so multiply by the length of the
+        # interval in hours.
+        ET_inch = ET_rate * interval / 3600.0 if ET_rate is not None else None
 
+        # Convert back to the unit system of the incoming record:
+        ET = weewx.units.convertStd((ET_inch, 'inch', 'group_rain'), data['usUnits'])
+        return ET
 
-# ********** Various simple functions to calculate extended types ************* #
+    # ********** Various simple functions to calculate extended types ************* #
+
 
 def calc_dewpoint(key, data, db_manager=None):
     if key != 'dewpoint':
