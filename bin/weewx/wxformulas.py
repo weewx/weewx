@@ -984,6 +984,34 @@ class PressureCooker(object):
         # Else, fall off the end and return None
 
 
+class RainRater(object):
+    """"Class for calculating rain rate using a sliding window."""
+
+    def __init__(self, rain_period):
+        """Initialize the RainRater.
+
+        rain_period: the size of the sliding window in seconds.
+        """
+        self.rain_period = rain_period
+
+    def rain_rate(self, key, record, db_manager):
+        """Calculate the rainRate"""
+        if key != 'rainRate':
+            raise weewx.UnknownType(key)
+
+        # Start of the window
+        start_ts = record['dateTime'] - self.rain_period
+        # End of the window
+        stop_ts = record['dateTime']
+        # Calculate the total rainfall in the time window...
+        rainsum_vt = weewx.aggregate.get_aggregate_archive('rain', TimeSpan(start_ts, stop_ts), 'sum', db_manager)
+
+        # ...convert it to the same unit system as the incoming record...
+        rainsum_vt = weewx.units.convertStd(rainsum_vt, record['usUnits'])
+
+        # ...then divide by the period and scale to an hour
+        return 3600 * rainsum_vt[0] / self.rain_period
+
 
 if __name__ == "__main__":
 
