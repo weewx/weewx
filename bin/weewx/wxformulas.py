@@ -8,13 +8,15 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+
 import logging
 import math
 import time
-import weewx.uwxutils
 
-from weewx.units import INHG_PER_MBAR, METER_PER_FOOT, METER_PER_MILE, MM_PER_INCH
+import weewx.uwxutils
+from weeutil.weeutil import TimeSpan
 from weewx.units import CtoK, CtoF, FtoC
+from weewx.units import INHG_PER_MBAR, METER_PER_FOOT, METER_PER_MILE, MM_PER_INCH
 
 log = logging.getLogger(__name__)
 
@@ -921,67 +923,65 @@ class PressureCooker(object):
 
     def pressure(self, record, dbmanager):
         """Calculate the observation type 'pressure'."""
+
+        # All of the following keys are required:
+        if all(key in record for key in ['usUnits', 'outTemp', 'barometer', 'outHumidity']):
+            raise weewx.CannotCalculate('pressure')
+
         # Get the temperature in Fahrenheit from 12 hours ago
         temp_12h_vt = self._get_temperature_12h(record['dateTime'], dbmanager)
         if temp_12h_vt is not None:
-            try:
-                # The following requires everything to be in US Customary units.
-                # Rather than convert the whole record, just convert what we need:
-                record_US = weewx.units.to_US({'usUnits': record['usUnits'],
-                                               'outTemp': record['outTemp'],
-                                               'barometer': record['barometer'],
-                                               'outHumidity': record['outHumidity']})
-                # Get the altitude in feet
-                altitude_ft = weewx.units.convert(self.altitude_vt, "foot")
-                # The outside temperature in F.
-                temp_12h_F = weewx.units.convert(temp_12h_vt, "degree_F")
-                pressure = weewx.uwxutils.uWxUtilsVP.SeaLevelToSensorPressure_12(
-                    record_US['barometer'],
-                    altitude_ft[0],
-                    record_US['outTemp'],
-                    temp_12h_F[0],
-                    record_US['outHumidity']
-                )
+            # The following requires everything to be in US Customary units.
+            # Rather than convert the whole record, just convert what we need:
+            record_US = weewx.units.to_US({'usUnits': record['usUnits'],
+                                           'outTemp': record['outTemp'],
+                                           'barometer': record['barometer'],
+                                           'outHumidity': record['outHumidity']})
+            # Get the altitude in feet
+            altitude_ft = weewx.units.convert(self.altitude_vt, "foot")
+            # The outside temperature in F.
+            temp_12h_F = weewx.units.convert(temp_12h_vt, "degree_F")
+            pressure = weewx.uwxutils.uWxUtilsVP.SeaLevelToSensorPressure_12(
+                record_US['barometer'],
+                altitude_ft[0],
+                record_US['outTemp'],
+                temp_12h_F[0],
+                record_US['outHumidity']
+            )
 
-                if record['usUnits'] == weewx.METRIC or record['usUnits'] == weewx.METRICWX:
-                    pressure /= weewx.units.INHG_PER_MBAR
-                return pressure
-
-            except KeyError:
-                return None
-
+            if record['usUnits'] == weewx.METRIC or record['usUnits'] == weewx.METRICWX:
+                pressure /= weewx.units.INHG_PER_MBAR
+            return pressure
         # Else, fall off the end and return None
 
     def altimeter(self, record):
         """Calculate the observation type 'altimeter'."""
-        if 'pressure' in record:
-            # Convert altitude to same unit system of the incoming record
-            altitude = weewx.units.convertStd(self.altitude_vt, record['usUnits'])
-            # Figure out which altimeter formula to use:
-            if record['usUnits'] == weewx.US:
-                altimeter_formula = weewx.wxformulas.altimeter_pressure_US
-            else:
-                altimeter_formula = weewx.wxformulas.altimeter_pressure_Metric
-            altimeter = altimeter_formula(record['pressure'], altitude[0], self.altimeter_algorithm)
-            return altimeter
-
-        # Else, fall off the end and return None
+        if 'pressure' not in record:
+            raise weewx.CannotCalculate('altimeter')
+        # Convert altitude to same unit system of the incoming record
+        altitude = weewx.units.convertStd(self.altitude_vt, record['usUnits'])
+        # Figure out which altimeter formula to use:
+        if record['usUnits'] == weewx.US:
+            altimeter_formula = weewx.wxformulas.altimeter_pressure_US
+        else:
+            altimeter_formula = weewx.wxformulas.altimeter_pressure_Metric
+        return altimeter_formula(record['pressure'], altitude[0], self.altimeter_algorithm)
 
     def barometer(self, record):
         """Calculate the observation type 'barometer'"""
-        if 'pressure' in record and 'outTemp' in record:
-            # Convert altitude to same unit system of the incoming record
-            altitude = weewx.units.convertStd(self.altitude_vt, record['usUnits'])
-            # Figure out what pressure formula to use:
-            if record['usUnits'] == weewx.US:
-                pressure_formula = weewx.wxformulas.sealevel_pressure_US
-            else:
-                pressure_formula = weewx.wxformulas.sealevel_pressure_Metric
-            # Apply the formula
-            barometer = pressure_formula(record['pressure'], altitude[0], record['outTemp'])
-            return barometer
 
-        # Else, fall off the end and return None
+        if 'pressure' not in record or 'outTemp' not in record:
+            raise weewx.CannotCalculate('barometer')
+
+        # Convert altitude to same unit system of the incoming record
+        altitude = weewx.units.convertStd(self.altitude_vt, record['usUnits'])
+        # Figure out what pressure formula to use:
+        if record['usUnits'] == weewx.US:
+            pressure_formula = weewx.wxformulas.sealevel_pressure_US
+        else:
+            pressure_formula = weewx.wxformulas.sealevel_pressure_Metric
+        # Apply the formula
+        return pressure_formula(record['pressure'], altitude[0], record['outTemp'])
 
 
 class RainRater(object):
@@ -1007,7 +1007,13 @@ class RainRater(object):
         rainsum_vt = weewx.aggregate.get_aggregate_archive('rain', TimeSpan(start_ts, stop_ts), 'sum', db_manager)
 
         # ...convert it to the same unit system as the incoming record...
-        rainsum_vt = weewx.units.convertStd(rainsum_vt, record['usUnits'])
+        rainsum = weewx.units.convertStd(rainsum_vt, record['usUnits'])[0]
+
+        #TODO: this won't work for LOOP packets
+
+        # ... add any rain that might be in the present record ...
+        if record.get('rain') is not None:
+            rainsum += record['rain']
 
         # ...then divide by the period and scale to an hour
         return 3600 * rainsum_vt[0] / self.rain_period

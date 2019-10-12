@@ -83,6 +83,9 @@ class UnknownType(ValueError):
 class UnknownAggregation(ValueError):
     """Exception thrown for an unknown aggregation type"""
 
+class CannotCalculate(ValueError):
+    """Exception raised when a type cannot be calculated."""
+
 # =============================================================================
 #                       Possible event types.
 # =============================================================================

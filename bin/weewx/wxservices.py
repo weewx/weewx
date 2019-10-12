@@ -185,6 +185,8 @@ class WXCalculate(object):
                     # We need to do a calculation for type 'obs'
                     new_value = weewx.xtypes.get_scalar(obs, data_dict, self.db_manager)
                     data_dict[obs] = new_value
+                except weewx.CannotCalculate:
+                    pass
                 except weewx.UnknownType as e:
                     log.debug("Unknown extensible type '%s'" % e)
                 except weewx.UnknownAggregation as e:
@@ -211,11 +213,14 @@ class WXCalculate(object):
             return weewx.wxformulas.solar_rad_RS(self.latitude, self.longitude, altitude_m,
                                                  data['dateTime'], self.atc)
         else:
-            raise weewx.ViolatedPrecondition("Unknown solar algorithm %s" % algo)
+            raise weewx.ViolatedPrecondition("Unknown solar algorithm '%s'"
+                                             % self.svc_dict['Algorithms']['maxSolarRad'])
 
     def calc_cloudbase(self, key, data, db_manager):
         if key != 'cloudbase':
             raise weewx.UnknownType(key)
+        if 'outTemp' not in data or 'outHumidity' not in data:
+            raise weewx.CannotCalculate(key)
         # Convert altitude to the same unit system as the incoming record
         altitude = weewx.units.convertStd(self.altitude_vt, data['usUnits'])
         # Use the appropriate formula
@@ -223,7 +228,7 @@ class WXCalculate(object):
             formula = weewx.wxformulas.cloudbase_US
         else:
             formula = weewx.wxformulas.cloudbase_Metric
-        return formula(data.get('outTemp'), data.get('outHumidity'), altitude[0])
+        return formula(data['outTemp'], data['outHumidity'], altitude[0])
 
     def calc_ET(self, data, data_type):
         """Get maximum and minimum temperatures and average radiation and
@@ -279,77 +284,88 @@ class WXCalculate(object):
         except weedb.DatabaseError:
             pass
 
-    def calc_windrun(self, data, data_type):
-        """Calculate the wind run for the archive interval. """
-        # calculate windrun only for archive packets
-        if data_type == 'loop':
-            return
-        # Calculate windrun for archive record
-        if 'windSpeed' in data:
-            data['windrun'] = data['windSpeed'] * data['interval'] / 60.0 if data['windSpeed'] is not None else None
 
-
-# ********** Various functions to calculate extended types ************* #
+# ********** Various simple functions to calculate extended types ************* #
 
 def calc_dewpoint(key, data, db_manager=None):
     if key != 'dewpoint':
         raise weewx.UnknownType(key)
+    if 'outTemp' not in data or 'outHumidity' not in data:
+        raise weewx.CannotCalculate(key)
     formula = weewx.wxformulas.dewpointF if data['usUnits'] == weewx.US else weewx.wxformulas.dewpointC
-    return formula(data.get('outTemp'), data.get('outHumidity'))
+    return formula(data['outTemp'], data['outHumidity'])
 
 
 def calc_inDewpoint(key, data, db_manager=None):
     if key != 'inDewpoint':
         raise weewx.UnknownType(key)
+    if 'inTemp' not in data or 'inHumidity' not in data:
+        raise weewx.CannotCalculate(key)
     formula = weewx.wxformulas.dewpointF if data['usUnits'] == weewx.US else weewx.wxformulas.dewpointC
-    return formula(data.get('inTemp'), data.get('inHumidity'))
+    return formula(data['inTemp'], data['inHumidity'])
 
 
 def calc_windchill(key, data, db_manager=None):
     if key != 'windchill':
         raise weewx.UnknownType(key)
+    if 'outTemp' not in data or 'windSpeed' not in data:
+        raise weewx.CannotCalculate(key)
     formula = weewx.wxformulas.windchillF if data['usUnits'] == weewx.US else weewx.wxformulas.windchillC
-    return formula(data.get('outTemp'), data.get('windSpeed'))
+    return formula(data['outTemp'], data['windSpeed'])
 
 
 def calc_heatindex(key, data, db_manager=None):
     if key != 'heatindex':
         raise weewx.UnknownType(key)
+    if 'outTemp' not in data or 'outHumidity' not in data:
+        raise weewx.CannotCalculate(key)
     formula = weewx.wxformulas.heatindexF if data['usUnits'] == weewx.US else weewx.wxformulas.heatindexC
-    return formula(data.get('outTemp'), data.get('outHumidity'))
+    return formula(data['outTemp'], data['outHumidity'])
 
 
 def calc_humidex(key, data, db_manager=None):
     if key != 'humidex':
         raise weewx.UnknownType(key)
+    if 'outTemp' not in data or 'outHumidity' not in data:
+        raise weewx.CannotCalculate(key)
     formula = weewx.wxformulas.humidexF if data['usUnits'] == weewx.US else weewx.wxformulas.humidexC
-    return formula(data.get('outTemp'), data.get('outHumidity'))
+    return formula(data['outTemp'], data['outHumidity'])
 
 
 def calc_appTemp(key, data, db_manager=None):
     if key != 'appTemp':
         raise weewx.UnknownType(key)
-
+    if 'outTemp' not in data or 'outHumidity' not in data or 'windSpeed' not in data:
+        raise weewx.CannotCalculate(key)
     if data['usUnits'] == weewx.US:
-        return weewx.wxformulas.apptempF(data.get('outTemp'), data.get('outHumidity'), data.get('windSpeed'))
-
+        return weewx.wxformulas.apptempF(data['outTemp'], data['outHumidity'], data['windSpeed'])
     windspeed_vt = weewx.units.as_value_tuple(data, 'windSpeed')
     windspeed_mps = weewx.units.convert(windspeed_vt, 'meter_per_second')[0]
-    return weewx.wxformulas.apptempC(data.get('outTemp'), data.get('outHumidity'), windspeed_mps)
+    return weewx.wxformulas.apptempC(data['outTemp'], data['outHumidity'], windspeed_mps)
 
 
 def calc_beaufort(key, data, db_manager=None):
     if key != 'beaufort':
         raise weewx.UnknownType(key)
-
+    if 'windSpeed' not in data:
+        raise weewx.CannotCalculate
     windspeed_vt = weewx.units.as_value_tuple(data, 'windSpeed')
     windspeed_kn = weewx.units.convert(windspeed_vt, 'knot')[0]
     return weewx.wxformulas.beaufort(windspeed_kn)
 
 
+def calc_windrun(key, data, db_manager=None):
+    """Calculate wind run. Requires key 'interval'"""
+    if key != 'windrun':
+        raise weewx.UnknownType(key)
+    if 'windSpeed' not in data or 'interval' not in data:
+        raise weewx.CannotCalculate(key)
+    return data['windSpeed'] * data['interval'] / 60.0 if data['windSpeed'] is not None else None
+
+
 # Add all the simple functions to the list of extensible types
 for fn in [calc_dewpoint, calc_inDewpoint,
            calc_windchill, calc_heatindex,
-           calc_humidex, calc_appTemp, calc_beaufort]:
+           calc_humidex, calc_appTemp,
+           calc_beaufort, calc_windrun]:
     weewx.xtypes.scalar_types.append(fn)
-
