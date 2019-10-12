@@ -756,9 +756,11 @@ class CalcMissing(DatabaseFix):
         # record the current time
         t1 = time.time()
         # obtain a wxservices.WXCalculate object to calculate the missing
-        # fields, first we need to get a DBBinder object
+        # fields, first we need to get a DBBinder object ...
         db_binder = weewx.manager.DBBinder(self.config_dict)
-        # then station altitude, latitude and longitude
+        # ... then a database manager ...
+        db_manager = db_binder.get_manager(data_binding=self.config_dict['StdWXCalculate']['data_binding'])
+        # ... then station altitude, latitude and longitude
         stn_dict = self.config_dict['Station']
         altitude_t = option_as_list(stn_dict.get('altitude', (None, None)))
         try:
@@ -770,12 +772,13 @@ class CalcMissing(DatabaseFix):
                 "Value 'altitude' needs a unit (%s)" % e)
         latitude_f = float(stn_dict['latitude'])
         longitude_f = float(stn_dict['longitude'])
+
         # now we can create a WXCalculate object
         wxcalculate = weewx.wxservices.WXCalculate(self.config_dict,
                                                    altitude_vt,
                                                    latitude_f,
                                                    longitude_f,
-                                                   db_binder)
+                                                   db_manager)
 
         # initialise some counters so we know what we have processed
         days_updated = 0
