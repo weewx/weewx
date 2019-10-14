@@ -722,13 +722,13 @@ class StdPrint(StdService):
         """Print out the new LOOP packet"""
         print("LOOP:  ",
               weeutil.weeutil.timestamp_to_string(event.packet['dateTime']),
-              to_sorted_string(event.packet).encode('utf-8'))
+              to_sorted_string(event.packet))
 
     def new_archive_record(self, event):
         """Print out the new archive record."""
         print("REC:   ",
               weeutil.weeutil.timestamp_to_string(event.record['dateTime']),
-              to_sorted_string(event.record).encode('utf-8'))
+              to_sorted_string(event.record))
 
 
 #==============================================================================
@@ -953,8 +953,9 @@ def main(options, args, engine_class=StdEngine):
         except Terminate:
             syslog.syslog(syslog.LOG_INFO, "engine: Terminating weewx version %s" % weewx.__version__)
             weeutil.weeutil.log_traceback("    ****  ", syslog.LOG_DEBUG)
-            # Reraise the exception (this should cause the program to exit)
-            raise
+            # Reraise the signal (this should cause the program to exit)
+            signal.signal(signal.SIGTERM, signal.SIG_DFL)
+            os.kill(0, signal.SIGTERM)
 
         # Catch any keyboard interrupts and log them
         except KeyboardInterrupt:

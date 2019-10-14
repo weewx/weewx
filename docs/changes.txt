@@ -1,7 +1,7 @@
 weewx change history
 --------------------
 
-3.9.2 MM/DD/YYYY
+3.9.2 07/14/2019
 
 StdPrint now explicitly converts loop and archive fields to UTF-8 before
 printing. This means unicode strings can now be included in loop and archive
@@ -71,6 +71,9 @@ zero for interval.
 
 Correct rounding problems for rain and other types when posting to CWOP.
 Fixes issue #431. Thanks to user ls4096!
+
+Fixed problem that can cause an exception with restx services that do not use
+the database manager. See commit 459ccb1.
 
 
 3.9.1 02/06/2019

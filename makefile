@@ -119,7 +119,7 @@ upload-src:
 
 # upload docs to the web site
 upload-docs:
-	rsync -arv docs $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)
+	rsync -rv docs $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)
 
 # create the README.txt for uploading
 README_HEADER="\
