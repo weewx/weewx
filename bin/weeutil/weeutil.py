@@ -1387,7 +1387,8 @@ class KeyDict(dict):
 
 
 def to_sorted_string(rec):
-    return ", ".join(["%s: %s" % (k, rec.get(k)) for k in sorted(rec, key=str.lower)])
+    import locale
+    return ", ".join(["%s: %s" % (k, rec.get(k)) for k in sorted(rec, key=locale.strxfrm)])
 
 
 # Define an "input" function that works for both Python 2 and 3:
