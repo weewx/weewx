@@ -925,7 +925,7 @@ class PressureCooker(object):
         """Calculate the observation type 'pressure'."""
 
         # All of the following keys are required:
-        if all(key in record for key in ['usUnits', 'outTemp', 'barometer', 'outHumidity']):
+        if any(key not in record for key in ['usUnits', 'outTemp', 'barometer', 'outHumidity']):
             raise weewx.CannotCalculate('pressure')
 
         # Get the temperature in Fahrenheit from 12 hours ago
@@ -987,36 +987,56 @@ class PressureCooker(object):
 class RainRater(object):
     """"Class for calculating rain rate using a sliding window."""
 
-    def __init__(self, rain_period):
+    def __init__(self, rain_period, retain_period, stop_ts, db_manager):
         """Initialize the RainRater.
 
-        rain_period: the size of the sliding window in seconds.
+        rain_period: the length of the sliding window in seconds.
+
+        retain_period: How long to retain a rain event. Should be rain_period plus archive_delay.
+
+        stop_ts: The initial value for the stop time of the window.
+
+        db_manager: An instance of weewx.manager.Manager or subclass.
+
         """
         self.rain_period = rain_period
+        self.retain_period = retain_period
+        self.rain_events = []
+        self.unit_system = None
+
+        start_ts = stop_ts - rain_period
+        # Get all rain events since the window start from the database
+        for row in db_manager.genSql("SELECT dateTime, usUnits, rain FROM %s WHERE dateTime>? AND dateTime<=?;"
+                                     % db_manager.table_name, (start_ts, stop_ts)):
+            # Unpack the row:
+            time_ts, unit_system, rain = row
+            if self.unit_system is None:
+                # Adopt the first unit system as the one we will do our calculations in
+                self.unit_system = unit_system
+            self.add_loop_packet({'dateTime': time_ts, 'usUnits': unit_system, 'rain': rain})
+
+    def add_loop_packet(self, record):
+        # Was there any rain? If so, convert the rain to the unit system we are using, then intern it
+        if 'rain' in record and record['rain']:
+            # Get the unit system and group of the incoming rain
+            u, g = weewx.units.getStandardUnitType(record['usUnits'], 'rain')
+            # Convert to the unit system that we are using
+            rain = weewx.units.convertStd((record['rain'], u, g), self.unit_system)[0]
+            # Add it to the list of rain events
+            self.rain_events.append((record['dateTime'], rain))
+
+        # Trim any old packets:
+        self.rain_events = [x for x in self.rain_events if x[0] >= record['dateTime'] - self.rain_period]
 
     def rain_rate(self, key, record, db_manager):
         """Calculate the rainRate"""
         if key != 'rainRate':
             raise weewx.UnknownType(key)
 
-        # Start of the window
-        start_ts = record['dateTime'] - self.rain_period
-        # End of the window
-        stop_ts = record['dateTime']
-        # Calculate the total rainfall in the time window...
-        rainsum_vt = weewx.aggregate.get_aggregate_archive('rain', TimeSpan(start_ts, stop_ts), 'sum', db_manager)
-
-        # ...convert it to the same unit system as the incoming record...
-        rainsum = weewx.units.convertStd(rainsum_vt, record['usUnits'])[0]
-
-        #TODO: this won't work for LOOP packets
-
-        # ... add any rain that might be in the present record ...
-        if record.get('rain') is not None:
-            rainsum += record['rain']
-
+        # Sum the rain events within the time window...
+        rainsum = sum(x[1] for x in self.rain_events if x[0] > record['dateTime'] - self.rain_period)
         # ...then divide by the period and scale to an hour
-        return 3600 * rainsum_vt[0] / self.rain_period
+        return 3600 * rainsum / self.rain_period
 
 
 if __name__ == "__main__":
