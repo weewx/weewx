@@ -211,8 +211,6 @@ def get_aggregate_daily(obs_type, timespan, aggregate_type, db_manager, **option
     else:
         target_val = None
 
-    aggregate_type = aggregate_type.lower()
-
     # Form the interpolation dictionary
     interDict = {
         'start': weeutil.weeutil.startOfDay(timespan.start),
