@@ -1,7 +1,7 @@
 ### Extensible types
 Need some way of initializing the daily summaries for wind.
 
-Look at rainRate again.
+Write `TestWXCalculate`
 
 ### Logging
 Refactor `wee_import` to use the new logging facility.

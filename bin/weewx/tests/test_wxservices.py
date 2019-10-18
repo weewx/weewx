@@ -67,6 +67,8 @@ class TestSimpleFunctions(unittest.TestCase):
         self.calc('windrun', 'windSpeed')
 
     def calc(self, key, *crits):
+        """Calculate derived type 'key'. Parameters in "crits" are required to perform the calculation. Their
+        presence will be tested."""
         # Figure out what function to call
         function = getattr(weewx.wxservices, 'calc_' + key)
         # Call it and get the results
@@ -89,6 +91,14 @@ class TestSimpleFunctions(unittest.TestCase):
         with self.assertRaises(weewx.UnknownType):
             function('foo', self.record)
 
+# class TestWXCalculate(unittest.TestCase):
+#
+#     altitude_vt = (700, 'foot', 'group_altitude')
+#
+#     def setUp(self):
+#         get a dbmanager
+#         # Use default config dictionary:
+#         self.calc = TestWXCalculate({}, TestWXCalculate.altitude_vt, 45, -123, )
 
 if __name__ == '__main__':
     unittest.main()

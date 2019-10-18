@@ -987,7 +987,7 @@ class PressureCooker(object):
 class RainRater(object):
     """"Class for calculating rain rate using a sliding window."""
 
-    def __init__(self, rain_period, retain_period, stop_ts, db_manager):
+    def __init__(self, rain_period, retain_period):
         """Initialize the RainRater.
 
         rain_period: the length of the sliding window in seconds.
@@ -1001,10 +1001,14 @@ class RainRater(object):
         """
         self.rain_period = rain_period
         self.retain_period = retain_period
-        self.rain_events = []
+        self.rain_events = None
         self.unit_system = None
 
-        start_ts = stop_ts - rain_period
+    def _setup(self, stop_ts, db_manager):
+        """Initialize the rain event list"""
+        if self.rain_events is None:
+            self.rain_events = []
+        start_ts = stop_ts - self.retain_period
         # Get all rain events since the window start from the database
         for row in db_manager.genSql("SELECT dateTime, usUnits, rain FROM %s WHERE dateTime>? AND dateTime<=?;"
                                      % db_manager.table_name, (start_ts, stop_ts)):
@@ -1013,9 +1017,12 @@ class RainRater(object):
             if self.unit_system is None:
                 # Adopt the first unit system as the one we will do our calculations in
                 self.unit_system = unit_system
-            self.add_loop_packet({'dateTime': time_ts, 'usUnits': unit_system, 'rain': rain})
+            self.add_loop_packet({'dateTime': time_ts, 'usUnits': unit_system, 'rain': rain}, db_manager)
 
-    def add_loop_packet(self, record):
+    def add_loop_packet(self, record, db_manager):
+        if self.rain_events is None:
+            self._setup(record['dateTime'], db_manager)
+
         # Was there any rain? If so, convert the rain to the unit system we are using, then intern it
         if 'rain' in record and record['rain']:
             # Get the unit system and group of the incoming rain
@@ -1032,6 +1039,9 @@ class RainRater(object):
         """Calculate the rainRate"""
         if key != 'rainRate':
             raise weewx.UnknownType(key)
+
+        if self.rain_events is None:
+            self._setup(record['dateTime'], db_manager)
 
         # Sum the rain events within the time window...
         rainsum = sum(x[1] for x in self.rain_events if x[0] > record['dateTime'] - self.rain_period)

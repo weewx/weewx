@@ -31,6 +31,7 @@ DEFAULTS = u"""
     data_binding = wx_binding
     ignore_zero_wind = True
     rain_period = 900           # Rain rate window
+    retain_period = 930         # How long to retain rain events. Should be >= rain_period + archive_delay
     et_period = 3600            # For evapotranspiration
     wind_height = 2.0           # For evapotranspiration. In meters.
     atc = 0.8                   # For solar radiation RS
@@ -143,11 +144,12 @@ class WXCalculate(object):
                                                                to_int(svc_dict['max_delta_12h']),
                                                                self.svc_dict['Algorithms']['altimeter'])
         # Instantiate a RainRater to calculate rainRate
-        self.rain_rater = weewx.wxformulas.RainRater(to_int(svc_dict['rain_period']))
+        self.rain_rater = weewx.wxformulas.RainRater(to_int(svc_dict['rain_period']),
+                                                     to_int(svc_dict['retain_period']),)
 
         # Add the various types we need to the list of extendable types
         for xt in [self.calc_maxSolarRad, self.calc_cloudbase, self.calc_ET, self.pressure_cooker.get_scalar,
-                   self.rain_rater]:
+                   self.rain_rater.rain_rate]:
             weewx.xtypes.scalar_types.append(xt)
 
         # report about which values will be calculated...
@@ -177,6 +179,10 @@ class WXCalculate(object):
         """
         if self.ignore_zero_wind:
             self.adjust_winddir(data_dict)
+
+        # Can't find a way around this hack. So be it...
+        if data_type == 'loop':
+            self.rain_rater.add_loop_packet(data_dict, self.db_manager)
 
         # Go through the list of potential calculations and see which ones need to be done
         for obs in self.svc_dict['Calculations']:

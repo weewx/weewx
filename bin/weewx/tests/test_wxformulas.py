@@ -263,47 +263,49 @@ class TestRainRater(unittest.TestCase):
     retain_period = 915
 
     def setUp(self):
-        db_manager = mock.Mock()
-        with mock.patch.object(db_manager, 'genSql', return_value=[
+        self.rr = weewx.wxformulas.RainRater(TestRainRater.rain_period, TestRainRater.retain_period)
+        self.db_manager = mock.Mock()
+        with mock.patch.object(self.db_manager, 'genSql', return_value=[
             (TestRainRater.now - 600, weewx.US, 0.01),
             (TestRainRater.now - 300, weewx.US, 0.02),
         ]):
-            self.rr = weewx.wxformulas.RainRater(TestRainRater.rain_period, TestRainRater.retain_period,
-                                                 TestRainRater.now, db_manager)
+            self.rr.add_loop_packet({'dateTime': TestRainRater.now + 5, 'usUnits': weewx.US, 'rain': 0.0},
+                                    self.db_manager)
 
     def test_setup(self):
-        self.assertEqual(self.rr.rain_events, [(1571082600, 0.01), (1571082900, 0.02)])
+        self.assertEqual(self.rr.rain_events, [(TestRainRater.now - 600, 0.01), (TestRainRater.now - 300, 0.02)])
 
     def test_add_US(self):
         record = {'dateTime': TestRainRater.now + 60, 'usUnits': weewx.US, 'rain': 0.01}
-        self.rr.add_loop_packet(record)
+        self.rr.add_loop_packet(record, self.db_manager)
         rate = self.rr.rain_rate('rainRate', record, None)
         self.assertEqual(rate, 3600 * .04 / TestRainRater.rain_period)
 
     def test_add_METRICWX(self):
         record = {'dateTime': TestRainRater.now + 60, 'usUnits': weewx.METRICWX, 'rain': 0.254}
-        self.rr.add_loop_packet(record)
+        self.rr.add_loop_packet(record, self.db_manager)
         rate = self.rr.rain_rate('rainRate', record, None)
         self.assertEqual(rate, 3600 * .04 / TestRainRater.rain_period)
 
     def test_window(self):
         """Rain event falls outside rain window, but inside retain window"""
         record = {'dateTime': TestRainRater.now + 305, 'usUnits': weewx.US, 'rain': 0.0}
-        self.rr.add_loop_packet(record)
+        self.rr.add_loop_packet(record, self.db_manager)
         rate = self.rr.rain_rate('rainRate', record, None)
         self.assertEqual(rate, 3600 * .02 / TestRainRater.rain_period)
 
         record = {'dateTime': TestRainRater.now + 310, 'usUnits': weewx.US, 'rain': 0.03}
-        self.rr.add_loop_packet(record)
+        self.rr.add_loop_packet(record, self.db_manager)
         rate = self.rr.rain_rate('rainRate', record, None)
         self.assertEqual(rate, 3600 * .05 / TestRainRater.rain_period)
 
     def test_trim(self):
         """"Test trimming old events"""
         record = {'dateTime': TestRainRater.now + 320, 'usUnits': weewx.US, 'rain': 0.03}
-        self.rr.add_loop_packet(record)
+        self.rr.add_loop_packet(record, self.db_manager)
         rate = self.rr.rain_rate('rainRate', record, None)
         self.assertEqual(rate, 3600 * .05 / TestRainRater.rain_period)
-        self.assertEqual(self.rr.rain_events, [(1571082900, 0.02), (1571083520, 0.03)])
+        self.assertEqual(self.rr.rain_events, [(TestRainRater.now - 300, 0.02), (1571083520, 0.03)])
+
 
 unittest.main()
