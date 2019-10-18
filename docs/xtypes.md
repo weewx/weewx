@@ -27,9 +27,6 @@ The goal of XTypes is to allow the user to add new types to the system with a mi
 - A new module, `weewx.xtypes`, will be introduced. Similar to the existing `weewx.units`, it would be responsible for
 managing new types. New types can be added dynamically, using a Python API.
 
-- Simplicity of adding new types is favored over simplicity of using the new types. This is because the end-users
-are more likely to be doing the former, rather than the latter.
-
 - The service `StdWXCalculate` will no longer have a fixed set of "special" types. Instead, it will be extensible, by
 using `weewx.xtypes`. The existing options of `hardware`, `prefer_hardware`, and `software` would continue. It would
 come out-of-the-box with the existing types it now handles (`dewpoint`, `heatindex`, etc.), but new types could be added
@@ -73,6 +70,8 @@ The function should return:
 The function should raise:
 
 - An exception of type `weewx.UnknownType`, if the type `obs_type` is unknown to the function. 
+- An exception of type `weewx.CannotCalculate` if the type is known to the function, but all the information
+necessary to calculate the type is not there.  
 
 #### Calculating series
 
@@ -104,6 +103,9 @@ The function should return:
 The function should raise:
 
 - An exception of type `weewx.UnknownType`, if the type `obs_type` is unknown to the instance. 
+- An exception of type `weewx.CannotCalculate` if the type is known to the function, but all the information
+necessary to calculate the type is not there.  
+
 
 #### Registering functions
 
@@ -162,12 +164,16 @@ class Pressure(object):
                 return pressure
 
             except KeyError:
-                return None
+                # Don't have everything we need. Raise an exception.
+                raise weewx.CannotCalculate(obs_type)
 
         # Else, fall off the end and return None
 ```
 Note how the method `pressure()` raises an exception of type `weewx.UnknownType` for any types it does not
-recognize.
+recognize. 
+
+Also, note that the method requires observation types `barometer`, `outTemp`, and `outHumidity` in order 
+to perform the calculation, and raises an exception of type `weewx.CannotCalculate` if one of them is missing.
 
 ### Registering the extension
 Continuing our example above:
@@ -200,6 +206,14 @@ with weewx.manager.Manager.open_with_create(archive_sqlite) as db_manager:
     p = weewx.xtypes.get_scalar('pressure', record, db_manager)
     print("Pressure = %s" % p)
 
+    # Try again, but missing outTemp:
+    del record['outTemp']
+    try:
+        p = weewx.xtypes.get_scalar('pressure', record, db_manager)
+    except weewx.CannotCalculate as e:
+        print("Unable to calculate type '%s'" % e)
+
+    # Try calculating a type we know nothing about
     try:
         q = weewx.xtypes.get_scalar('foo', record, db_manager)
     except weewx.UnknownType as e:
@@ -209,6 +223,7 @@ with weewx.manager.Manager.open_with_create(archive_sqlite) as db_manager:
 Results of running the program:
 ```
 Pressure = 29.4539701889
+Unable to calculate type `pressure`
 Unknown type: 'foo'
 ```
 
