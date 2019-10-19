@@ -9,6 +9,7 @@ import math
 import weeutil.weeutil
 import weewx
 import weewx.units
+import weewx.wxformulas
 from weeutil.weeutil import isStartOfDay
 
 # -------------- get_aggregate() --------------
