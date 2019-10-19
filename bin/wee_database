@@ -37,7 +37,7 @@ usage = """wee_database --help
        wee_database --check
        wee_database --update [--dry-run]
        wee_database --calc-missing [--date=YYYY-mm-dd |
-                                    --from=YYYY-mm-dd --to=YYYY-mm-dd]
+                                    --from=YYYY-mm-dd[THH:MM] --to=YYYY-mm-dd[THH:MM]]
        wee_database --check-strings
        wee_database --fix-strings [--dry-run]
        wee_database --drop-daily
@@ -94,10 +94,12 @@ def main():
                       help="Use configuration file CONFIG_FILE.")
     parser.add_option("--date", type=str, metavar="YYYY-mm-dd",
                       help="This date only (option --rebuild-daily only).")
-    parser.add_option("--from", dest="from_date", type=str, metavar="YYYY-mm-dd",
-                      help="Start with this date (option --rebuild-daily only).")
-    parser.add_option("--to", dest="to_date", type=str, metavar="YYYY-mm-dd",
-                      help="End with this date (option --rebuild-daily only).")
+    parser.add_option("--from", dest="from_date", type=str, metavar="YYYY-mm-dd[THH:MM]",
+                      help="Start with this date or date-time"
+                      " (options --calc-missing and --rebuild-daily only).")
+    parser.add_option("--to", dest="to_date", type=str, metavar="YYYY-mm-dd[THH:MM]",
+                      help="End with this date or date-time"
+                      " (options --calc-missing and --rebuild-daily only).")
     parser.add_option("--binding", metavar="BINDING_NAME", default='wx_binding',
                       help="The data binding to use. Default is 'wx_binding'.")
     parser.add_option("--dest-binding", metavar="BINDING_NAME",
@@ -218,27 +220,41 @@ def rebuildDaily(config_dict, db_binding, options):
                                                               db_binding)
     database_name = manager_dict['database_dict']['database_name']
 
-    # determine the period over which we are rebuilding from any command
-    # line date parameters
-    start_d, stop_d = _parse_dates(options)
+    # get the first and last good timestamps from the archive, these represent
+    # our bounds for rebuilding
+    with weewx.manager.Manager.open(manager_dict['database_dict']) as dbmanager:
+        first_ts = dbmanager.firstGoodStamp()
+        first_d = datetime.date.fromtimestamp(first_ts) if first_ts is not None else None
+        last_ts = dbmanager.lastGoodStamp()
+        last_d = datetime.date.fromtimestamp(last_ts) if first_ts is not None else None
+    # determine the period over which we are rebuilding from any command line
+    # date parameters
+    from_dt, to_dt = _parse_dates(options)
+    # we have start and stop datetime objects but we work on whole days only,
+    # so need date object
+    from_d = from_dt.date() if from_dt is not None else None
+    to_d = to_dt.date() if to_dt is not None else None
     # advise the user/log what we will do
-    if start_d is None and stop_d is None:
+    if from_d is None and to_d is None:
         _msg = "All daily summaries will be rebuilt."
-    elif start_d and not stop_d:
-        _msg = "Daily summaries from %s through the end will be rebuilt." % start_d
-    elif not start_d and stop_d:
-        _msg = "Daily summaries from the beginning through date %s will be rebuilt." % stop_d
-    elif start_d == stop_d:
-        _msg = "Daily summary for date %s will be rebuilt" % start_d
+    elif from_d and not to_d:
+        _msg = "Daily summaries from %s through the end (%s) will be rebuilt." % (from_d,
+                                                                                  last_d)
+    elif not from_d and to_d:
+        _msg = "Daily summaries from the beginning (%s) through %s will be rebuilt." % (first_d,
+                                                                                        to_d)
+    elif from_d == to_d:
+        _msg = "Daily summary for %s will be rebuilt." % from_d
     else:
-        _msg = "Daily summaries from %s through %s inclusive will be rebuilt." % (start_d, stop_d)
-
+        _msg = "Daily summaries from %s through %s inclusive will be rebuilt." % (from_d,
+                                                                                  to_d)
     log.info(_msg)
     print(_msg)
-
     ans = y_or_n("Proceed (y/n)? ")
     if ans == 'n':
-        print("Nothing done.")
+        _msg = "Nothing done."
+        log.info(_msg)
+        print(_msg)
         return
 
     t1 = time.time()
@@ -254,18 +270,25 @@ def rebuildDaily(config_dict, db_binding, options):
             return
         else:
             # now do the actual rebuild
-            nrecs, ndays = dbmanager.backfill_day_summary(start_d=start_d,
-                                                          stop_d=stop_d,
+            nrecs, ndays = dbmanager.backfill_day_summary(start_d=from_d,
+                                                          stop_d=to_d,
                                                           trans_days=20)
     tdiff = time.time() - t1
     # advise the user/log what we did
     log.info("Rebuild of daily summaries in database '%s' complete" % database_name)
     if nrecs:
         sys.stdout.flush()
-        print()
-        print("Processed %d records to rebuild %d day summaries in %.2f seconds      " % (nrecs,
-                                                                                          ndays,
-                                                                                          tdiff))
+        # fix a bit formatting inconsistency if less than 100 records processed
+        if nrecs >= 1000:
+            print()
+        if ndays == 1:
+            _msg = "Processed %d records to rebuild 1 daily summary in %.2f seconds" % (nrecs,
+                                                                                        tdiff)
+        else:
+            _msg = ("Processed %d records to rebuild %d daily summaries in %.2f seconds" % (nrecs,
+                                                                                            ndays,
+                                                                                            tdiff))
+        print(_msg)
         print("Rebuild of daily summaries in database '%s' complete" % database_name)
     else:
         print("Daily summaries up to date in '%s'" % database_name)
@@ -571,9 +594,9 @@ def calc_missing(config_dict, db_binding, options):
     log.info(msg)
     print(msg)
 
-    start_d, stop_d = _parse_dates(options)
-    start_ts = time.mktime(start_d.timetuple())
-    stop_ts = time.mktime(stop_d.timetuple())
+    start_dt, stop_dt = _parse_dates(options)
+    start_ts = time.mktime(start_dt.timetuple())
+    stop_ts = time.mktime(stop_dt.timetuple())
 
     # notify if this is a dry run
     if options.dry_run:
@@ -794,51 +817,106 @@ def check_strings(config_dict, db_binding, options, fix=False):
 def _parse_dates(options):
     """Parse --date, --from and --to command line options.
 
+        Parses --date or --from and --to to determine a date-time span to be
+        used. --to and --from in the format y-m-dTHH:MM precisely define a
+        date-time but anything in the format y-m-d does not. When rebuilding
+        the daily summaries this imprecision is not import as we merely need a
+        date-time somewhere within the day being rebuilt. When calculating
+        missing fields we need date-times for the span over which the
+        calculations are to be performed.
+
         Inputs:
             options: the optparse options
 
-        Returns: A two-way tuple (start_d, stop_d), where
-            start_d: A datetime.date object holding the first date. May be None
-            stop_d:  A dateimte.date object holding the last date. May be None
+        Returns: A two-way tuple (from_dt, to_dt) representing the from and to
+        date-times derived from the --date or --to and --from command line
+        options where
+            from_dt: A datetime.datetime object holding the from date-time. May
+                     be None
+            to_dt:   A datetime.datetime object holding the to date-time. May be
+                     None
     """
 
-    # Default is None, unless user has specified an option
-    _first_d = None
-    _last_d = None
+    # default is None, unless user has specified an option
+    _from_dt = None
+    _to_dt = None
 
+    # first look for --date
     if options.date:
-        # Make sure we are not overspecified
+        # we have a --date option, make sure we are not over specified
         if options.from_date or options.to_date:
             raise ValueError("Specify either --date or a --from and --to combination; not both")
 
         # there is a --date but is it valid
         try:
-            _first_d = datetime.datetime.strptime(options.date, "%Y-%m-%d").date()
+            # this will give a datetime object representing midnight at the
+            # start of the day
+            _from_dt = datetime.datetime.strptime(options.date, "%Y-%m-%d")
         except ValueError:
             raise ValueError("Invalid --date option specified.")
         else:
-            _last_d = _first_d
-            return (_first_d, _last_d)
+            # we have the from date-time, for a --date option the to date-time
+            # will depend on the action we are to perform
+            if options.rebuild_daily:
+                # For a rebuild our from and to must be within the same
+                # calendar day else we will rebuild more than just one day. For
+                # simplicity make them the same
+                _to_dt = _from_dt
+            elif options.calc_missing:
+                # for calc missing from should be midnight at the start of the
+                # day and to should be midnight at the end of the day
+                _to_dt = _from_dt + datetime.timedelta(days=1)
+            else:
+                # nothing else uses from and to (yet) but just in case return
+                # midnight to midnight as the default
+                _to_dt = _from_dt + datetime.timedelta(days=1)
+            # we have our results so we can return
+            return _from_dt, _to_dt
 
+    # we don't have --date so now look for --from and --to
     if options.from_date:
+        # we have a --from but is it valid
         try:
-            _first_d = datetime.datetime.strptime(options.from_date, "%Y-%m-%d").date()
+            if 'T' in options.from_date:
+                # we have a time so we can precisely determine a date-time
+                _from_dt = datetime.datetime.strptime(options.from_date, "%Y-%m-%dT%H:%M")
+            else:
+                # we have a date only, so use midnight at the start of the day
+                _from_dt = datetime.datetime.strptime(options.from_date, "%Y-%m-%d")
         except ValueError:
             raise ValueError("Invalid --from option specified.")
 
     if options.to_date:
+        # we have a --to but is it valid
         try:
-            _last_d = datetime.datetime.strptime(options.to_date, "%Y-%m-%d").date()
+            if 'T' in options.to_date:
+                # we have a time so decode and use that
+                _to_dt = datetime.datetime.strptime(options.to_date, "%Y-%m-%dT%H:%M")
+            else:
+                # we have a date, first obtain a datetime object for midnight
+                # at the start of the day specified
+                _to_dt = datetime.datetime.strptime(options.to_date, "%Y-%m-%d")
+                # since we have a date the result we want depends on what action
+                # we are to complete
+                if options.rebuild_daily:
+                    # for a rebuild the to date-time must be within the date
+                    # specified date, which it already is so leave it
+                    pass
+                elif options.calc_missing:
+                    # for calc missing we want midnight at the end of the day
+                    _to_dt = _from_dt + datetime.timedelta(days=1)
+                else:
+                    # nothing else uses from and to (yet) but just in case
+                    # return midnight at the end of the day
+                    _to_dt = _from_dt + datetime.timedelta(days=1)
         except ValueError:
             raise ValueError("Invalid --to option specified.")
 
-    if _first_d and _last_d:
-        # If both --from and --to have been specified, make sure the latter is greater
-        # than the former
-        if _last_d < _first_d:
-            raise weewx.ViolatedPrecondition("--from value is later than --to value.")
-
-    return (_first_d, _last_d)
+    # if we have both from and to date-times make sure from is no later than to
+    if _from_dt and _to_dt and _to_dt < _from_dt:
+        raise weewx.ViolatedPrecondition("--from value is later than --to value.")
+    # we have our results so we can return
+    return _from_dt, _to_dt
 
 
 if __name__ == "__main__":
