@@ -108,7 +108,8 @@ def configDatabase(config_dict, binding, start_ts=start_ts, stop_ts=stop_ts, int
                                          weather_phase_offset=weather_phase_offset))
         t2 = time.time()
         delta = t2 - t1
-        print("\nTime to create synthetic archive database = %6.2fs" % delta)
+        print("\nTime to create synthetic database '%s' = %6.2fs"
+              % (config_dict['DataBindings']['wx_binding']['database'], delta))
 
         # Restore the logging
         logging.disable(logging.NOTSET)
@@ -120,9 +121,11 @@ def configDatabase(config_dict, binding, start_ts=start_ts, stop_ts=stop_ts, int
         nrecs, ndays = archive.backfill_day_summary()
         tdiff = time.time() - t1
         if nrecs:
-            print("\nProcessed %d records to backfill %d day summaries in %.2f seconds" % (nrecs, ndays, tdiff))
+            print("\nProcessed %d records to backfill %d day summaries in database '%s' in %.2f seconds"
+                  % (nrecs, ndays, config_dict['DataBindings']['wx_binding']['database'], tdiff))
         else:
-            print("Daily summaries up to date.")
+            print("Daily summaries in database '%s' up to date."
+                  % config_dict['DataBindings']['wx_binding']['database'])
 
 
 def genFakeRecords(start_ts=start_ts, stop_ts=stop_ts, interval=interval,
