@@ -21,9 +21,10 @@ import weeplot.utilities
 import weeutil.logger
 import weeutil.weeutil
 import weewx.reportengine
+import weewx.series
 import weewx.units
 from weeutil.config import search_up, accumulateLeaves
-from weeutil.weeutil import to_bool, to_int, to_float
+from weeutil.weeutil import to_bool, to_int, to_float, TimeSpan
 from weewx.units import ValueTuple
 
 log = logging.getLogger(__name__)
@@ -84,8 +85,8 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                 plotgen_ts = gen_ts
                 if not plotgen_ts:
                     binding = plot_options['data_binding']
-                    archive = self.db_binder.get_manager(binding)
-                    plotgen_ts = archive.lastGoodStamp()
+                    db_manager = self.db_binder.get_manager(binding)
+                    plotgen_ts = db_manager.lastGoodStamp()
                     if not plotgen_ts:
                         plotgen_ts = time.time()
 
@@ -171,13 +172,12 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
 
                     # Now its time to find and hit the database:
                     binding = line_options['data_binding']
-                    archive = self.db_binder.get_manager(binding)
-                    (start_vec_t, stop_vec_t, data_vec_t) = \
-                            archive.getSqlVectors((minstamp, maxstamp), var_type, aggregate_type=aggregate_type,
-                                                  aggregate_interval=aggregate_interval)
-
-                    if weewx.debug:
-                        assert(len(start_vec_t) == len(stop_vec_t))
+                    db_manager = self.db_binder.get_manager(binding)
+                    start_vec_t, stop_vec_t ,data_vec_t = weewx.series.get_series(var_type,
+                                                                                  TimeSpan(minstamp, maxstamp),
+                                                                                  db_manager,
+                                                                                  aggregate_type=aggregate_type,
+                                                                                  aggregate_interval=aggregate_interval)
 
                     # Get the type of plot ("bar', 'line', or 'vector')
                     plot_type = line_options.get('plot_type', 'line')
