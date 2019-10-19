@@ -35,6 +35,8 @@ The function should raise:
 necessary to calculate the type is not there.
 """
 
+import math
+
 import weeutil.weeutil
 import weewx
 import weewx.aggregate
@@ -90,7 +92,79 @@ def get_series_archive(obs_type, timespan, db_manager, aggregate_type=None, aggr
             ValueTuple(data_vec, unit, unit_group))
 
 
-# Add the function to the list of series types.
+windvec_types = {'windvec': 'windSpeed, windDir',
+                 'windgustvec': 'windGust, windGustDir'}
+
+
+def get_series_windvec(obs_type, timespan, db_manager, aggregate_type=None, aggregate_interval=None):
+    """Get a series, possibly with aggregation, for special 'wind' types."""
+
+    # Check to see if the requested type is not 'windvec' or 'windgustvec'
+    if obs_type not in windvec_types:
+        # The type is not one of the extended wind types.
+        raise weewx.UnknownType(obs_type)
+
+    # It is an extended wind type. Prepare the lists that will hold the
+    # final results.
+    startstamp, stopstamp = timespan
+    start_vec = list()
+    stop_vec = list()
+    data_vec = list()
+
+    # Is aggregation requested?
+    if aggregate_type:
+
+        unit, unit_group = None, None
+        # With aggregation
+        for stamp in weeutil.weeutil.intervalgen(startstamp, stopstamp, aggregate_interval):
+            agg_vt = weewx.aggregate.get_aggregate(obs_type, stamp, aggregate_type, db_manager)
+            start_vec.append(stamp.start)
+            stop_vec.append(stamp.stop)
+            if unit:
+                # It's OK if the unit is unknown (=None).
+                if agg_vt[1] is not None and (unit != agg_vt[1] or unit_group != agg_vt[2]):
+                    raise weewx.UnsupportedFeature("Cannot change unit groups within an aggregation.")
+            else:
+                unit, unit_group = agg_vt[1:]
+            data_vec.append(agg_vt[0])
+
+    else:
+        # No aggregation desired.
+        # This SQL select string will select the proper wind types
+        sql_str = 'SELECT dateTime, %s, usUnits, `interval` FROM %s WHERE dateTime >= ? AND dateTime <= ?' \
+                  % (windvec_types[obs_type], db_manager.table_name)
+        std_unit_system = None
+
+        for record in db_manager.genSql(sql_str, timespan):
+            start_vec.append(record[0] - record[4] * 60)
+            stop_vec.append(record[0])
+            if std_unit_system:
+                if std_unit_system != record[3]:
+                    raise weewx.UnsupportedFeature("Unit type cannot change within a time interval.")
+            else:
+                std_unit_system = record[3]
+            # Break the mag and dir down into x- and y-components.
+            (magnitude, direction) = record[1:3]
+            if magnitude is None or direction is None:
+                data_vec.append(None)
+            else:
+                x = magnitude * math.cos(math.radians(90.0 - direction))
+                y = magnitude * math.sin(math.radians(90.0 - direction))
+                if weewx.debug:
+                    # There seem to be some little rounding errors that
+                    # are driving my debugging crazy. Zero them out
+                    if abs(x) < 1.0e-6: x = 0.0
+                    if abs(y) < 1.0e-6: y = 0.0
+                data_vec.append(complex(x, y))
+        unit, unit_group = weewx.units.getStandardUnitType(std_unit_system, obs_type, aggregate_type)
+
+    return (ValueTuple(start_vec, 'unix_epoch', 'group_time'),
+            ValueTuple(stop_vec, 'unix_epoch', 'group_time'),
+            ValueTuple(data_vec, unit, unit_group))
+
+
+# Add the functions to the list of series types.
+series_types.append(get_series_windvec)
 series_types.append(get_series_archive)
 
 
