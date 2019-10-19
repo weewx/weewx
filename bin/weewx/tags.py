@@ -345,8 +345,14 @@ class ObservationBinder(object):
     def _do_query(self, aggregate_type, val=None):
         """Run a query against the databases, using the given aggregation type."""
         db_manager = self.db_lookup(self.data_binding)
-        result = weewx.aggregate.get_aggregate(self.obs_type, self.timespan, aggregate_type,
-                                               db_manager, val=val, **self.option_dict)
+        try:
+            # If we cannot perform the aggregation, we will get an UnknownType or UnknownAggregation
+            # error. Be prepared to catch it.
+            result = weewx.aggregate.get_aggregate(self.obs_type, self.timespan, aggregate_type,
+                                                   db_manager, val=val, **self.option_dict)
+        except (weewx.UnknownType, weewx.UnknownAggregation):
+            # Signal Cheetah that we don't know how to do this by raiing an AttributeError.
+            raise AttributeError(self.obs_type)
         return weewx.units.ValueHelper(result, self.context, self.formatter, self.converter)
         
 #===============================================================================
