@@ -1,9 +1,9 @@
 """Test the weedb exception hierarchy"""
-from __future__ import with_statement
 from __future__ import absolute_import
 from __future__ import print_function
-import os
-import stat
+from __future__ import with_statement
+
+import os.path
 import sys
 import unittest
 
@@ -12,27 +12,30 @@ import weedb
 #
 # For these tests to work, the database for sqdb1 must in a place where you have write permissions,
 # and the database for sqdb2 must be in a place where you do NOT have write permissions
-sqdb1_dict = {'database_name': '/var/tmp/sqdb1.sdb', 'driver':'weedb.sqlite', 'timeout': '2'}
+sqdb1_dict = {'database_name': '/var/tmp/weewx_test/sqdb1.sdb', 'driver':'weedb.sqlite', 'timeout': '2'}
 sqdb2_dict = {'database_name': '/usr/local/sqdb2.sdb', 'driver':'weedb.sqlite', 'timeout': '2'}
 mysql1_dict  = {'database_name': 'test_weewx1', 'user':'weewx1', 'password':'weewx1', 'driver':'weedb.mysql'}
 mysql2_dict  = {'database_name': 'test_weewx1', 'user':'weewx2', 'password':'weewx2', 'driver':'weedb.mysql'}
 
- 
 # Double check that we have the necessary permissions (or lack thereof):
 try:
+    file_directory = os.path.dirname(sqdb1_dict['database_name'])
+    if not os.path.exists(file_directory):
+        os.makedirs(file_directory)
     fd = open(sqdb1_dict['database_name'], 'w')
     fd.close()
-except:
-    print("For tests to work properly, you must have permission to write to '%s'." % sqdb1_dict['database_name'], file=sys.stderr)
-    print("Change the permissions and try again.", file=sys.stderr)
+except OSError:
+    sys.exit("For tests to work properly, you must have permission to write to '%s'.\n"
+             "Change the permissions and try again." % sqdb1_dict['database_name'])
+
 try:
     fd = open(sqdb2_dict['database_name'], 'w')
     fd.close()
-except IOError:
+except OSError:
     pass
 else:
-    print("For tests to work properly, you must NOT have permission to write to '%s'." % sqdb2_dict['database_name'], file=sys.stderr)
-    print("Change the permissions and try again.", file=sys.stderr)
+    sys.exit("For tests to work properly, you must NOT have permission to write to '%s'.\n"
+             "Change the permissions and try again."  % sqdb2_dict['database_name'])
 
 class Cursor(object):
     """Class to be used to wrap a cursor in a 'with' clause."""
