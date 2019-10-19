@@ -10,6 +10,8 @@ import weeutil.weeutil
 from weeutil.weeutil import to_int
 import weewx.units
 from weewx.units import ValueTuple
+import weewx.xtypes
+import weewx.aggregate
 
 #===============================================================================
 #                    Class TimeBinder
@@ -343,8 +345,8 @@ class ObservationBinder(object):
     def _do_query(self, aggregate_type, val=None):
         """Run a query against the databases, using the given aggregation type."""
         db_manager = self.db_lookup(self.data_binding)
-        result = db_manager.getAggregate(self.timespan, self.obs_type, aggregate_type, 
-                                         val=val, **self.option_dict)
+        result = weewx.aggregate.get_aggregate(self.obs_type, self.timespan, aggregate_type,
+                                               db_manager, val=val, **self.option_dict)
         return weewx.units.ValueHelper(result, self.context, self.formatter, self.converter)
         
 #===============================================================================
