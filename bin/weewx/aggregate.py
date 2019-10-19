@@ -180,7 +180,7 @@ def get_aggregate_daily(obs_type, timespan, aggregate_type, db_manager, **option
     returns: A ValueTuple containing the result."""
 
     # Check to see if this is a valid daily summary type:
-    if obs_type not in db_manager.daykeys:
+    if not hasattr(db_manager, 'daykeys') or obs_type not in db_manager.daykeys:
         raise weewx.UnknownType(obs_type)
 
     aggregate_type = aggregate_type.lower()
