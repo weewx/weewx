@@ -62,7 +62,7 @@ def get_aggregate_archive(obs_type, timespan, aggregate_type, db_manager, **opti
 
     aggregate_type = aggregate_type.lower()
 
-    if aggregate_type not in ['sum', 'count', 'avg', 'max', 'min'] + sql_dict.keys():
+    if aggregate_type not in ['sum', 'count', 'avg', 'max', 'min'] + list(sql_dict.keys()):
         raise weewx.UnknownAggregation(aggregate_type)
 
     interpolate_dict = {
@@ -198,8 +198,10 @@ def get_aggregate_daily(obs_type, timespan, aggregate_type, db_manager, **option
             or not (isStartOfDay(timespan.stop) or timespan.stop == db_manager.last_timestamp):
         raise weewx.UnknownAggregation(aggregate_type)
 
-    if 'val' in option_dict:
-        val = option_dict['val']
+    val = option_dict.get('val')
+    if val is None:
+        target_val = None
+    else:
         # The following is for backwards compatibility when ValueTuples had
         # just two members. This hack avoids breaking old skins.
         if len(val) == 2:
@@ -208,8 +210,6 @@ def get_aggregate_daily(obs_type, timespan, aggregate_type, db_manager, **option
             elif val[1] in ['inch', 'mm', 'cm']:
                 val += ("group_rain",)
         target_val = weewx.units.convertStd(val, db_manager.std_unit_system)[0]
-    else:
-        target_val = None
 
     # Form the interpolation dictionary
     interDict = {
@@ -315,7 +315,7 @@ def get_aggregate_wind(obs_type, timespan, aggregate_type, db_manager, **option_
     aggregate_type = aggregate_type.lower()
 
     # Raise exception if we don't know about this type of aggregation
-    if aggregate_type not in ['avg', 'sum'] + sql_dict_wind.keys():
+    if aggregate_type not in ['avg', 'sum'] + list(sql_dict_wind.keys()):
         raise weewx.UnknownAggregation(aggregate_type)
 
     # Form the interpolation dictionary
