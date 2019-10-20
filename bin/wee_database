@@ -278,7 +278,8 @@ def rebuildDaily(config_dict, db_binding, options):
     log.info("Rebuild of daily summaries in database '%s' complete" % database_name)
     if nrecs:
         sys.stdout.flush()
-        # fix a bit formatting inconsistency if less than 100 records processed
+        # fix a bit of formatting inconsistency if less than 1000 records
+        # processed
         if nrecs >= 1000:
             print()
         if ndays == 1:
