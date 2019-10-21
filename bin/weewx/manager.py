@@ -75,6 +75,9 @@ class Manager(object):
 
         self.connection = connection
         self.table_name = table_name
+        self.first_timestamp = None
+        self.last_timestamp = None
+        self.std_unit_system = None
 
         # Now get the SQL types. 
         try:
@@ -160,10 +163,10 @@ class Manager(object):
 
     def close(self):
         self.connection.close()
-        del self.sqlkeys
-        del self.first_timestamp
-        del self.last_timestamp
-        del self.std_unit_system
+        self.sqlkeys = None
+        self.first_timestamp = None
+        self.last_timestamp = None
+        self.std_unit_system = None
 
     def __enter__(self):
         return self
@@ -478,12 +481,8 @@ class DBBinder(object):
 
     def close(self):
         for data_binding in list(self.manager_cache.keys()):
-            try:
-                self.manager_cache[data_binding].close()
-            except Exception:
-                pass
-            finally:
-                del self.manager_cache[data_binding]
+            self.manager_cache[data_binding].close()
+            del self.manager_cache[data_binding]
 
     def __enter__(self):
         return self
@@ -810,12 +809,8 @@ class DaySummaryManager(Manager):
         log.debug('Daily summary version is %s', self.version)
 
     def close(self):
-        del self.version
-        # There will be no daykeys if the daily summaries have been dropped.
-        try:
-            del self.daykeys
-        except AttributeError:
-            pass
+        self.version = None
+        self.daykeys = None
         super(DaySummaryManager, self).close()
 
     def _initialize_day_tables(self, schema):
@@ -1153,7 +1148,7 @@ class DaySummaryManager(Manager):
                     if _table_name.startswith('%s_day_' % self.table_name):
                         _cursor.execute("DROP TABLE %s" % _table_name)
 
-            del self.daykeys
+            self.daykeys = None
         except weedb.OperationalError as e:
             log.error("Drop daily summary tables failed for database '%s': %s",
                       self.connection.database_name, e)
