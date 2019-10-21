@@ -19,14 +19,15 @@ import sys
 import time
 import unittest
 
-import configobj
 import six
 from six.moves import map
+import configobj
 
+import gen_fake_data
+import weeutil.logger
 import weeutil.weeutil
 import weewx.manager
 import weewx.tags
-import gen_fake_data
 from weewx.units import ValueHelper
 
 weewx.debug = 1
@@ -38,7 +39,7 @@ weeutil.logger.setup('test_daily', {})
 os.environ['TZ'] = 'America/Los_Angeles'
 time.tzset()
 
-day_keys = [x[0] for x in gen_fake_data.schema if x[0] not in ['dateTime', 'interval', 'usUnits']] + ['wind']
+day_keys = [x[0] for x in gen_fake_data.schema['day_summaries'] if x[0] not in ['dateTime', 'interval', 'usUnits']]
 
 # Find the configuration file. It's assumed to be in the same directory as me:
 config_path = os.path.join(os.path.dirname(__file__), "testgen.conf")

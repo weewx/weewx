@@ -304,6 +304,9 @@ class ConfigTest(LineTest):
         # Upgrade the V2.7 configuration dictionary to V3.0:
         weecfg.update_to_v30(config_dict)
 
+        # with open('expected/weewx30_expected.conf', 'wb') as fd:
+        #     config_dict.write(fd)
+
         self._check_against_expected(config_dict, 'expected/weewx30_expected.conf')
 
     def test_upgrade_v32(self):
