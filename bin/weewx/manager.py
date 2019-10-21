@@ -26,6 +26,7 @@ from weeutil.weeutil import timestamp_to_string, to_int
 
 log = logging.getLogger(__name__)
 
+
 # ==============================================================================
 #                         class Manager
 # ==============================================================================
@@ -175,15 +176,21 @@ class Manager(object):
         
         schema: The schema to be used
         """
+        # If this is an old-style schema, this will raise an exception. Be prepared to catch it.
+        try:
+            table_schema = schema['table']
+        except TypeError:
+            # Old style schema:
+            table_schema = schema
 
         # List comprehension of the types, joined together with commas. Put
         # the SQL type in backquotes, because at least one of them ('interval')
         # is a MySQL reserved word
-        _sqltypestr = ', '.join(["`%s` %s" % _type for _type in schema])
+        sqltypestr = ', '.join(["`%s` %s" % _type for _type in table_schema])
 
         try:
-            with weedb.Transaction(self.connection) as _cursor:
-                _cursor.execute("CREATE TABLE %s (%s);" % (self.table_name, _sqltypestr))
+            with weedb.Transaction(self.connection) as cursor:
+                cursor.execute("CREATE TABLE %s (%s);" % (self.table_name, sqltypestr))
         except weedb.DatabaseError as e:
             log.error("Unable to create table '%s' in database '%s': %s",
                       self.table_name, self.database_name, e)
@@ -435,6 +442,7 @@ class Manager(object):
             # check against subsequent records:
             self.std_unit_system = unit_system
 
+
 def reconfig(old_db_dict, new_db_dict, new_unit_system=None, new_schema=None):
     """Copy over an old archive to a new one, using a provided schema."""
 
@@ -524,7 +532,7 @@ class DBBinder(object):
 # of defaults that will be used.
 default_binding_dict = {'database': 'archive_sqlite',
                         'table_name': 'archive',
-                        'manager': 'weewx.wxmanager.WXDaySummaryManager',
+                        'manager': 'weewx.manager.DaySummaryManager',
                         'schema': 'schemas.wview.schema'}
 
 
@@ -734,12 +742,39 @@ class DaySummaryManager(Manager):
 
     version = "2.0"
 
-    # The SQL statements used in the daily summary parts of the database
+    # Schemas used by the daily summaries:
+    day_schemas = {
+        'scalar': [
+            ('dateTime', 'INTEGER NOT NULL UNIQUE PRIMARY KEY'),
+            ('min', 'REAL'),
+            ('mintime', 'INTEGER'),
+            ('max', 'REAL'),
+            ('maxtime', 'INTEGER'),
+            ('sum', 'REAL'),
+            ('count', 'INTEGER'),
+            ('wsum', 'REAL'),
+            ('sumtime', 'INTEGER')
+        ],
+        'vector': [
+            ('dateTime', 'INTEGER NOT NULL UNIQUE PRIMARY KEY'),
+            ('min', 'REAL'),
+            ('mintime', 'INTEGER'),
+            ('max', 'REAL'),
+            ('maxtime', 'INTEGER'),
+            ('sum', 'REAL'),
+            ('count', 'INTEGER'),
+            ('wsum', 'REAL'),
+            ('sumtime', 'INTEGER'),
+            ('max_dir', 'REAL'),
+            ('xsum', 'REAL'),
+            ('ysum', 'REAL'),
+            ('dirsumtime', 'INTEGER'),
+            ('squaresum', 'REAL'),
+            ('wsquaresum', 'REAL'),
+        ]
+    }
 
-    sql_create_str = "CREATE TABLE %s_day_%s (dateTime INTEGER NOT NULL UNIQUE PRIMARY KEY, " \
-                     "min REAL, mintime INTEGER, max REAL, maxtime INTEGER, sum REAL, count INTEGER, " \
-                     "wsum REAL, sumtime INTEGER);"
-
+    # SQL statements used by the meta data in the daily summaries.
     meta_create_str = """CREATE TABLE %s_day__metadata (name CHAR(20) NOT NULL UNIQUE PRIMARY KEY, value TEXT);"""
     meta_replace_str = """REPLACE INTO %s_day__metadata VALUES(?, ?)"""
     meta_select_str = """SELECT value FROM %s_day__metadata WHERE name=?"""
@@ -754,24 +789,16 @@ class DaySummaryManager(Manager):
         
         schema: The schema to be used. Optional. If not supplied, then an
         exception of type weedb.OperationalError will be raised if the database
-        does not exist, and of type weedb.UnitializedDatabase if it exists, but
+        does not exist, and of type weedb.Uninitialized if it exists, but
         has not been initialized.
         """
         # Initialize my superclass:
         super(DaySummaryManager, self).__init__(connection, table_name, schema)
 
-        # If the database has not been initialized with the daily summaries, then create the
-        # necessary tables, but only if a schema has been given.
+        # Has the database been initialized with the daily summaries?
         if '%s_day__metadata' % self.table_name not in self.connection.tables():
-            # Database has not been initialized with the summaries. Is there a schema?
-            if schema is None:
-                # Uninitialized, but no schema was supplied. Raise an exception
-                raise weedb.OperationalError("No day summary schema for table '%s' in database '%s'" % (
-                    self.table_name, connection.database_name))
-            # There is a schema. Create all the daily summary tables as one transaction:
-            with weedb.Transaction(self.connection) as _cursor:
-                self._initialize_day_tables(schema, _cursor)
-            log.info("Created daily summary tables")
+            # Database has not been initialized. Initialize it:
+            self._initialize_day_tables(schema)
 
         # Get a list of all the observation types which have daily summaries
         all_tables = self.connection.tables()
@@ -791,15 +818,39 @@ class DaySummaryManager(Manager):
             pass
         super(DaySummaryManager, self).close()
 
-    def _initialize_day_tables(self, archiveSchema, cursor):  # @UnusedVariable
+    def _initialize_day_tables(self, schema):
         """Initialize the tables needed for the daily summary."""
-        # Create the tables needed for the daily summaries.
-        for _obs_type in self.obskeys:
-            cursor.execute(DaySummaryManager.sql_create_str % (self.table_name, _obs_type))
-        # Create the meta table:
-        cursor.execute(DaySummaryManager.meta_create_str % self.table_name)
-        # Put the version number in it:
-        self._write_metadata('Version', DaySummaryManager.version, cursor)
+
+        if schema is None:
+            # Uninitialized, but no schema was supplied. Raise an exception
+            raise weedb.OperationalError("No day summary schema for table '%s' in database '%s'"
+                                         % (self.table_name, self.connection.database_name))
+        # See if we have new-style daily summaries, or old-style. Old-style will raise an exception.
+        # Be prepared to catch it.
+        try:
+            day_summaries_schemas = schema['day_summaries']
+        except TypeError:
+            # Old-style schema. Include a daily summary for each observation type in the archive table,
+            # plus one for wind. If this isn't what the user wants, s/he can always switch to new style.
+            day_summaries_schemas = [(e[0], 'scalar') for e in self.sqlkeys if
+                                     e[0] not in ('dateTime', 'usUnits', 'interval')] \
+                                    + [('wind', 'vector')]
+
+        # Create the tables needed for the daily summaries in one transaction:
+        with weedb.Transaction(self.connection) as cursor:
+            for obs_schema in day_summaries_schemas:
+                # 'obs_schema' is a two-way tuple (obs_name, 'scalar'|'vector')
+                # 'column_type' is a two-way tuple (column_name, 'REAL'|'INTEGER')
+                s = ', '.join(
+                    ["%s %s" % column_type
+                     for column_type in weewx.manager.DaySummaryManager.day_schemas[obs_schema[1]]])
+                sql_create_str = "CREATE TABLE %s_day_%s (%s);" % ('archive', obs_schema[0], s)
+                cursor.execute(sql_create_str)
+            # Create the meta table:
+            cursor.execute(DaySummaryManager.meta_create_str % self.table_name)
+            # Put the version number in it:
+            self._write_metadata('Version', DaySummaryManager.version, cursor)
+            log.info("Created daily summary tables")
 
     def _addSingleRecord(self, record, cursor):
         """Specialized version that updates the daily summaries, as well as the 

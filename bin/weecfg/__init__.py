@@ -742,7 +742,7 @@ def update_to_v30(config_dict):
                 # The name of the table within the database
                 table_name = archive
                 # The manager handles aggregation of data for historical summaries
-                manager = weewx.wxmanager.WXDaySummaryManager
+                manager = weewx.manager.DaySummaryManager
                 # The schema defines the structure of the database.
                 # It is *only* used when the database is created.
                 schema = schemas.wview.schema
