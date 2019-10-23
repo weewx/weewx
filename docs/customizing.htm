@@ -84,60 +84,66 @@ Version: 4.0
 
         <h1 id="introduction">Introduction</h1>
 
-        <h2>System Architecture</h2>
+        <h2>Overall system architecture</h2>
 
         <p>
-            Below is a brief overview of the Weewx system architecture, which is covered in much more detail in the
-            rest of this page.
+            Below is a brief overview of the WeeWX system architecture, which is covered in much more detail in the
+            rest of this document.
         </p>
 
         <ul>
-            <li>A weewx process normally handles the monitoring of one station - e.g. a weather station.
-                 The process is configured with a weewx.conf file.
+            <li>A WeeWX process normally handles the monitoring of one station &mdash; <i>e.g.</i> a weather station.
+                 The process is configured with a <span class="code">weewx.conf</span> file.
             </li>
         
-            <li>Multiple weewx processes may be run simultaneously to monitor multiple stations, using separate
-                weewx.conf files to refer to different driver and databases etc.  More advanced weewx processes might
-                create reports across multiple other weewx station databases, e.g. as a dashboard.
+            <li>Multiple WeeWX processes may be run simultaneously to monitor multiple stations, using separate
+                <span class="code">weewx.conf</span> files to refer to different driver and databases, <i>etc</i>.
+                More advanced WeeWX processes might create reports across multiple other WeeWX station databases,
+                <i>e.g.</i> as a dashboard.
             </li>
 
-            <li>A weewx process has at most one ‘driver’ to communicate with the station hardware and receive ‘high
-                resolution’ (i.e. every few seconds) measurement data in the form of LOOP packets.  The driver is
-                single-threaded and blocking, so no more than one driver can run in a weewx process. 
+            <li>A WeeWX process has at most one ‘driver’ to communicate with the station hardware and receive ‘high
+                resolution’ (<i>i.e.</i> every few seconds) measurement data in the form of LOOP packets.  The driver is
+                single-threaded and blocking, so no more than one driver can run in a WeeWX process.
             </li>
 
             <li>LOOP packets may contain arbitrary data from the station/driver in the form of a Python dictionary.
-                LOOP packet fields should conform to defined Weewx measurement units and measurement groups so they can
-                then be summarised automatically (e.g. average of temperature, or sum of rainfall) by weewx over a set
-                interval period (e.g. 5 minutes) into ‘archive records’.
+                LOOP packet fields should conform to defined WeeWX measurement units and measurement groups so they can
+                then be summarised automatically (<i>e.g.</i> average of temperature, or sum of rainfall) by WeeWX
+                over a set interval period (<i>e.g.</i> 5 minutes) into ‘archive records’.
             </li>
 
-            <li>A number of services may be configured within the weewx process to operate on the LOOP, archive record
-                and database data - triggering when new data or timed events arise.  Typically these services run at
-                5minute intervals.  Standard services include - 
+            <li>A number of services may be configured within the WeeWX process to operate on the LOOP, archive record
+                and database data &mdash; triggering when new data or timed events arise.  Typically these services run
+                at 5 minute intervals.  Standard services include:
 
                 <ul>
-                    <li>StdArchive - automatically create a database based on a user ‘schema’ (a database table
-                        definition held as a python array in the driver or service) then write archive records as they
-                        arise.  Only archive record fields which match the schema will be written to database.
+                    <li><span class="code">StdArchive</span> &mdash; automatically create a database based on a user
+                        ‘schema’ (a database table definition held as a python array in the driver or service) then
+                        write archive records as they arise.  Only archive record fields which match the schema will be
+                        written to the database.
                     </li>
 
-                    <li>StdReport - generate reports based on database archive records, stored by StdArchive.
+                    <li><span class="code">StdReport</span> &mdash; generate reports based on database archive records,
+                        stored by <span class="code">StdArchive</span>.
                     </li>
                 </ul>
             </li>
 
-            <li>In addition some simpler services may generate archive records directly rather than from a driver (e.g.
-                pmon example) and possibly store to their own database, partly configured through weewx.  These would
-                be ‘low resolution’ measurements taken at the same frequency services are run (e.g. 5 minutes) and
-                without the statistical summarisation weewx can provide.
+            <li>In addition, some services may create their own archive records and add them to the stream
+                of archive data, where they are treated like any other data.  Still others may save to their own
+                database.
             </li>
 
-            <li>Weewx Extensions may consist of a combination of driver, service, database and/or skin code.
+            <li>WeeWX extensions may consist of one or more drivers, services, databases and/or skin code.
                 However, only one station and associated driver can be run at a time, though numerous services 
-                may be run - whether associated directly with the station-driver or separate.
+                may be run in a single process.
             </li>
         </ul>
+
+        <p>
+            For more details, see the section <a href="#Data_architecture"><em>Data architecure</em></a> below.
+        </p>
 
 
         <h2>Where to put customizations</h2>
@@ -211,7 +217,7 @@ Version: 4.0
         </p>
 
 
-        <h2>Data architecture</h2>
+        <h2 id="Data_architecture">Data architecture</h2>
 
         <p>
             WeeWX is data-driven. When the sensors spit out some data, WeeWX does something. The 'something' might be to
