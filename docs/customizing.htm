@@ -3515,10 +3515,18 @@ class MyStats(SearchList):                                                   # 1
         <p>
             The options right under the section name <span class="code">[ImageGenerator]</span> will apply to
             <em>all</em> plots, unless overridden in subsections. So, unless otherwise changed, all plots will be 500
-            pixels in width, 180 pixels in height, and will have an RGB background color of 0xf5f5f5, a very light gray
+            pixels in width, 180 pixels in height, and will have a background color of 0xf5f5f5, a very light gray
             (HTML color "WhiteSmoke"). The chart itself will have a background color of 0xd8d8d8 (a little darker gray),
             and the gridlines will be 0xa0a0a0 (still darker). The other options farther down (not shown) will also
             apply to all plots.
+        </p>
+
+        <h2>Color Specifications</h2>
+
+        <p>
+            The Python Image Library (PIL) used by WeeWX requires colour information in little-endian Blue-Green-Red (BGR or BBGGRR)
+            format rather than the more common Red-Green-Blue (RGB or RRGGBB).  Therefore hexadecimal 0x0000FF is bright red, not blue!
+            More normal RGB colours can be specifed as strings "#RRGGBB" or other Python ImageColor named formats.
         </p>
 
         <h2>Time periods</h2>
