@@ -645,19 +645,51 @@ def blend_ls(c, bg, alpha):
     return blend(c, bg, 1.0, alpha, alpha)
 
 def blend(c, bg, alpha_h, alpha_l, alpha_s):
-    """Fade from c to bg in the hue, lightness, saturation colorspace."""
+    """Fade from c to bg in the hue, lightness, saturation colorspace.
+       Added hue directionality to choose shortest circular hue path e.g.
+       https://stackoverflow.com/questions/1416560/hsl-interpolation
+       Also, grey detection to minimize colour wheel travel.  Interesting resource:
+       http://davidjohnstone.net/pages/lch-lab-colour-gradient-picker"""
+
     r1,g1,b1 = int2rgb(c)
-    h1,l1,s1 = colorsys.rgb_to_hls(r1/256.0, g1/256.0, b1/256.0)
+    h1,l1,s1 = colorsys.rgb_to_hls(r1/255.0, g1/255.0, b1/255.0)
+
     r2,g2,b2 = int2rgb(bg)
-    h2,l2,s2 = colorsys.rgb_to_hls(r2/256.0, g2/256.0, b2/256.0)
-    h = alpha_h * h1 + (1 - alpha_h) * h2
+    h2,l2,s2 = colorsys.rgb_to_hls(r2/255.0, g2/255.0, b2/255.0)
+
+    # Check if either of the values is grey (saturation 0),
+    # in which case don't needlessly reset hue to '0', reducing travel around colour wheel
+    if s1 == 0: h1 = h2
+    if s2 == 0: h2 = h1
+
+    h_delta = h2 - h1
+
+    if abs(h_delta) > 0.5:
+        # If interpolating over more than half-circle (0.5 radians) take shorter, opposite direction...
+        h_range = 1.0 - abs(h_delta)
+        h_dir = +1.0 if h_delta < 0.0 else -1.0
+
+        # Calculte h based on line back from h2 as proportion of h_range and alpha
+        h = h2 - ( h_dir * h_range * alpha_h )
+
+        # Clamp h within 0.0 to 1.0 range
+        h = h + 1.0 if h < 0.0 else h
+        h = h - 1.0 if h > 1.0 else h
+    else:
+        # Interpolating over less than a half-circle, so use normal interpolation as before
+        h = alpha_h * h1 + (1 - alpha_h) * h2
+
     l = alpha_l * l1 + (1 - alpha_l) * l2
     s = alpha_s * s1 + (1 - alpha_s) * s2
+
     r,g,b = colorsys.hls_to_rgb(h, l, s)
-    r = round(r * 256.0)
-    g = round(g * 256.0)
-    b = round(b * 256.0)
+
+    r = round(r * 255.0)
+    g = round(g * 255.0)
+    b = round(b * 255.0)
+
     t = rgb2int(int(r),int(g),int(b))
+
     return int(t)
 
 def int2rgb(x):
