@@ -744,7 +744,7 @@ class CalcMissing(DatabaseFix):
         # the stop timestamp of the period to calc missing
         self.stop_ts = int(calc_missing_config_dict.get('stop_ts'))
         # number of days per db transaction, default to 50.
-        self.trans_days = int(calc_missing_config_dict.get('trans_days', 50))
+        self.trans_days = int(calc_missing_config_dict.get('trans_days', 10))
 
     def run(self):
         """Main entry point for calculating missing derived fields.
@@ -792,7 +792,7 @@ class CalcMissing(DatabaseFix):
             # get the start and stop timestamps for this tranche
             tr_start_ts = weeutil.weeutil.startOfGregorianDay(day)
             tr_stop_ts = min(weeutil.weeutil.startOfGregorianDay(stop_greg + 1),
-                             weeutil.weeutil.startOfGregorianDay(day + self.trans_days - 1))
+                             weeutil.weeutil.startOfGregorianDay(day + self.trans_days))
             # start the transaction
             with weedb.Transaction(self.dbm.connection) as _cursor:
                 # iterate over each day in the tranche we are to work in
@@ -817,23 +817,21 @@ class CalcMissing(DatabaseFix):
                             # update the total records updated
                             total_records_updated += records_updated
                             total_records_processed += 1
+                        # Give the user some information on progress
+                        if total_records_processed % 1000 == 0:
+                            p_msg = "Processing record: %d; Last date: %s" % (total_records_processed,
+                                                                     timestamp_to_string(record['dateTime']))
+                            self._progress(p_msg)
                     # if we updated any records on this day increment the count
                     # of days updated
                     days_updated += 1 if records_updated > 0 else 0
                     days_processed += 1
-                    # Give the user some information on progress
-                    if days_processed % 50 == 0:
-                        p_msg = "Processing record: %d; (%s)" % (total_records_processed,
-                                                                 timestamp_to_string(tranche_day.start,
-                                                                                     format_str="%Y-%m-%d"))
-                        self._progress(p_msg)
             # advance to the next tranche
             day += self.trans_days
         # finished, so give the user some final information on progress, mainly
         # so the total tallies with the log
         p_msg = "Processing record: %d; (%s)" % (total_records_processed,
-                                                 timestamp_to_string(tr_stop_ts,
-                                                                     format_str="%Y-%m-%d"))
+                                                 timestamp_to_string(tr_stop_ts))
         self._progress(p_msg, overprint=False)
         # now update the daily summaries
         print("Recalculating daily summaries...")
@@ -852,6 +850,7 @@ class CalcMissing(DatabaseFix):
                                                                                       days_updated,
                                                                                       total_records_updated,
                                                                                       tdiff))
+
         if self.dry_run:
             log.info("calcmissing: "
                      "This was a dry run. %s was not applied."
