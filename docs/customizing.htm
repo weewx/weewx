@@ -3513,17 +3513,17 @@ class MyStats(SearchList):                                                   # 1
     ...
     image_width = 500
     image_height = 180
-    image_background_color = 0xf5f5f5
+    image_background_color = #f5f5f5
 
-    chart_background_color = 0xd8d8d8
-    chart_gridline_color = 0xa0a0a0
+    chart_background_color = #d8d8d8
+    chart_gridline_color = #a0a0a0
     ...</pre>
         <p>
             The options right under the section name <span class="code">[ImageGenerator]</span> will apply to
             <em>all</em> plots, unless overridden in subsections. So, unless otherwise changed, all plots will be 500
-            pixels in width, 180 pixels in height, and will have an RGB background color of 0xf5f5f5, a very light gray
-            (HTML color "WhiteSmoke"). The chart itself will have a background color of 0xd8d8d8 (a little darker gray),
-            and the gridlines will be 0xa0a0a0 (still darker). The other options farther down (not shown) will also
+            pixels in width, 180 pixels in height, and will have an RGB background color of #f5f5f5, a very light gray
+            (HTML color "WhiteSmoke"). The chart itself will have a background color of #d8d8d8 (a little darker gray),
+            and the gridlines will be #a0a0a0 (still darker). The other options farther down (not shown) will also
             apply to all plots.
         </p>
 
@@ -5881,20 +5881,20 @@ growing_base = 50.0, degree_F</pre>
         <p class="config_option">image_background_color</p>
 
         <p>
-            The background color of the whole image. Optional. Default is <span class='code'>0xf5f5f5</span>
+            The background color of the whole image. Optional. Default is <span class='code'>#f5f5f5</span>
             ("SmokeGray")
         </p>
 
         <p class="config_option">chart_background_color</p>
 
         <p>
-            The background color of the chart itself. Optional. Default is <span class='code'>0xd8d8d8</span>.
+            The background color of the chart itself. Optional. Default is <span class='code'>#d8d8d8</span>.
         </p>
 
         <p class="config_option">chart_gridline_color</p>
 
         <p>
-            The color of the chart grid lines. Optional. Default is <span class='code'>0xa0a0a0</span>
+            The color of the chart grid lines. Optional. Default is <span class='code'>#a0a0a0</span>
         </p>
 
         <div class="image image-right" style="clear: right">
@@ -5930,20 +5930,20 @@ growing_base = 50.0, degree_F</pre>
         <p class="config_option">daynight_day_color</p>
 
         <p>
-            The color to be used for the daylight band. Optional. Default is <span class="code">0xffffff</span>.
+            The color to be used for the daylight band. Optional. Default is <span class="code">#ffffff</span>.
         </p>
 
         <p class="config_option">daynight_night_color</p>
 
         <p>
-            The color to be used for the nighttime band. Optional. Default is <span class="code">0xf0f0f0</span>, a dark
+            The color to be used for the nighttime band. Optional. Default is <span class="code">#f0f0f0</span>, a dark
             gray.
         </p>
 
         <p class="config_option">daynight_edge_color</p>
 
         <p>
-            The color to be used in the transition zone between night and day. Optional. Default is <span class="code">0xefefef</span>,
+            The color to be used in the transition zone between night and day. Optional. Default is <span class="code">#efefef</span>,
             a mid-gray.
         </p>
 
@@ -6152,7 +6152,7 @@ growing_base = 50.0, degree_F</pre>
         <p>
             Each chart line is drawn in a different color. This option is a list of those colors. If the number of lines
             exceeds the length of the list, then the colors wrap around to the beginning of the list. Optional. In the case of bar
-            charts, this is the color of the outline of the bar. Default is <span class="code">0xff0000, 0x00ff00, 0x0000ff</span>.
+            charts, this is the color of the outline of the bar. Default is <span class="code">#0000ff, #00ff00, #ff0000</span>.
             <br/>
             <br/>
             Individual line color can be overridden by using option <span class="code">color</span>.
