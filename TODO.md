@@ -1,5 +1,7 @@
 ### Extensible types
-Need some way of initializing the daily summaries for wind.
+Add String to the schemas.
+
+Test accumulators with String accumulator, as well as with string types.
 
 Write `TestWXCalculate`
 

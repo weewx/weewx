@@ -1305,61 +1305,75 @@ def move_with_timestamp(filepath):
     shutil.move(filepath, newpath)
     return newpath
 
+try:
+    # Python 3
+    from collections import ChainMap
 
-class ListOfDicts(dict):
-    """A list of dictionaries, that are searched in order.
-    
-    It assumes only that any inserted dictionaries support a keyed
-    lookup using the syntax obj[key].
-    
-    Example:
+    class ListOfDicts(ChainMap):
+        def extend(self, m):
+            self.maps.append(m)
 
-    # Try an empty dictionary:
-    >>> lod = ListOfDicts()
-    >>> print(lod['b'])
-    Traceback (most recent call last):
-    KeyError: 'b'
-    >>> # Now initialize it with a starting dictionary:
-    >>> lod = ListOfDicts({'a':1, 'b':2, 'c':3})
-    >>> print(lod['b'])
-    2
-    >>> # Look for a non-existent key
-    >>> print(lod['d'])
-    Traceback (most recent call last):
-    KeyError: 'd'
-    >>> # Now extend the dictionary:
-    >>> lod.extend({'d':4, 'e':5})
-    >>> # And try the lookup:
-    >>> print(lod['d'])
-    4
-    >>> # Explicitly add a new key to the dictionary:
-    >>> lod['f'] = 6
-    >>> # Try it:
-    >>> print(lod['f'])
-    6
-    """
+except ImportError:
 
-    def __init__(self, starting_dict=None):
-        if starting_dict:
-            super(ListOfDicts, self).__init__(starting_dict)
-        self.dict_list = []
+    # Python 2. We'll have to supply our own
+    class ListOfDicts(object):
+        """A near clone of ChainMap"""
 
-    def __getitem__(self, key):
-        for this_dict in self.dict_list:
+        def __init__(self, *maps):
+            self.maps = list(maps) or [{}]
+
+        def __missing__(self, key):
+            raise KeyError(key)
+
+        def __getitem__(self, key):
+            for mapping in self.maps:
+                try:
+                    return mapping[key]
+                except KeyError:
+                    pass
+            return self.__missing__(key)
+
+        def get(self, key, default=None):
+            return self[key] if key in self else default
+
+        def __len__(self):
+            return len(set().union(*self.maps))
+
+        def __iter__(self):
+            return iter(set().union(*self.maps))
+
+        def __contains__(self, key):
+            return any(key in m for m in self.maps)
+
+        def __bool__(self):
+            return any(self.maps)
+
+        def __setitem__(self, key, value):
+            """Set a key, value on the first map. """
+            self.maps[0][key] = value
+
+        def __delitem__(self, key):
             try:
-                return this_dict[key]
+                del self.maps[0][key]
             except KeyError:
-                pass
-        return dict.__getitem__(self, key)
+                raise KeyError('Key not found in the first mapping: {!r}'.format(key))
 
-    def get(self, key, default=None):
-        try:
-            return self[key]
-        except KeyError:
-            return default
+        def popitem(self):
+            'Remove and return an item pair from maps[0]. Raise KeyError is maps[0] is empty.'
+            try:
+                return self.maps[0].popitem()
+            except KeyError:
+                raise KeyError('No keys found in the first mapping.')
 
-    def extend(self, new_dict):
-        self.dict_list.append(new_dict)
+        def pop(self, key, *args):
+            'Remove *key* from maps[0] and return its value. Raise KeyError if *key* not in maps[0].'
+            try:
+                return self.maps[0].pop(key, *args)
+            except KeyError:
+                raise KeyError('Key not found in the first mapping: {!r}'.format(key))
+
+        def extend(self, m):
+            self.maps.append(m)
 
 
 class KeyDict(dict):
