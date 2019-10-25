@@ -262,6 +262,9 @@ class StdEngine(object):
             del self.db_binder
         except:
             pass
+        
+        # Reset the accumulator configurations:
+        weewx.accum.setup()
 
     def _get_console_time(self):
         try:

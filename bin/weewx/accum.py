@@ -23,11 +23,17 @@ etc., of a sequence of records."""
 # When it comes time to extract wind, vector averages are calculated, then the results are flattened again.
 #
 from __future__ import absolute_import
+
+import logging
 import math
 
 import configobj
+import six
 
 import weewx
+from weeutil.weeutil import ListOfDicts, to_float
+
+log = logging.getLogger(__name__)
 
 class OutOfSpan(ValueError):
     """Raised when attempting to add a record outside of the timespan held by an accumulator"""
@@ -86,13 +92,15 @@ class ScalarStats(object):
     def addHiLo(self, val, ts):
         """Include a scalar value in my highs and lows.
         val: A scalar value
-        ts:  The timestamp.
-        """
-        if val is not None:
-            # Check for non-numbers and for NaN
-            if not isinstance(val, (float, int)) or val != val:
-                raise ValueError("accum: ScalarStats.addHiLo expected float or int, "
-                                 "got type '%s' ('%s')" % (type(val), val))
+        ts:  The timestamp. """
+
+        #  If this is a string, try to convert it to a float.
+        if isinstance(val, (six.string_types, six.text_type)):
+            # Fail hard if unable to do the conversion:
+            val = to_float(val)
+
+        # Check for None and NaN:
+        if val is not None and val == val:
             if self.min is None or val < self.min:
                 self.min     = val
                 self.mintime = ts
@@ -105,11 +113,14 @@ class ScalarStats(object):
 
     def addSum(self, val, weight=1):
         """Add a scalar value to my running sum and count."""
-        if val is not None:
-            # Check for non-numbers and for NaN
-            if not isinstance(val, (float, int)) or val != val:
-                raise ValueError("accum: ScalarStats.addSum expected float or int, "
-                                 "got type '%s' ('%s')" % (type(val), val))
+
+        #  If this is a string, try to convert it to a float.
+        if isinstance(val, (six.string_types, six.text_type)):
+            # Fail hard if unable to do the conversion:
+            val = to_float(val)
+
+        # Check for None and NaN:
+        if val is not None and val == val:
             self.sum     += val
             self.count   += 1
             self.wsum    += val * weight
@@ -185,11 +196,17 @@ class VecStats(object):
         ts:  The timestamp.
         """
         speed, dirN = val
-        if speed is not None:
-            # Check for non-numbers and for NaN
-            if not isinstance(speed, (float, int)) or speed != speed:
-                raise ValueError("accum: VecStats.addHiLo expected float or int, "
-                                 "got type '%s' ('%s')" % (type(speed), speed))
+
+        #  If this is a string, try to convert it to a float.
+        if isinstance(speed, (six.string_types, six.text_type)):
+            # Fail hard if unable to do the conversion:
+            speed = to_float(speed)
+        if isinstance(dirN, (six.string_types, six.text_type)):
+            # Fail hard if unable to do the conversion:
+            dirN = to_float(dirN)
+
+        # Check for None and NaN:
+        if speed is not None and speed == speed:
             if self.min is None or speed < self.min:
                 self.min = speed
                 self.mintime = ts
@@ -206,11 +223,17 @@ class VecStats(object):
         val: A vector value. It is a 2-way tuple (mag, dir)
         """
         speed, dirN = val
-        if speed is not None:
-            # Check for non-numbers and for NaN
-            if not isinstance(speed, (float, int)) or speed != speed:
-                raise ValueError("accum: VecStats.addSum expected float or int, "
-                                 "got type '%s' ('%s')" % (type(speed), speed))
+
+        #  If this is a string, try to convert it to a float.
+        if isinstance(speed, (six.string_types, six.text_type)):
+            # Fail hard if unable to do the conversion:
+            speed = to_float(speed)
+        if isinstance(dirN, (six.string_types, six.text_type)):
+            # Fail hard if unable to do the conversion:
+            dirN = to_float(dirN)
+
+        # Check for None and NaN:
+        if speed is not None and speed == speed:
             self.sum         += speed
             self.count       += 1
             self.wsum        += weight * speed
@@ -244,6 +267,67 @@ class VecStats(object):
             return _result
         # Return the last known direction when our vector sum is 0
         return self.last[1]
+
+
+# ===============================================================================
+#                             StringAccum
+# ===============================================================================
+
+class StringAccum(object):
+    """Minimal accumulator, suitable for strings.
+    It can only return the first and last strings it has seen, along with their timestamps.
+    """
+
+    default_init = (None, None, None, None)
+
+    def __init__(self, stats_tuple=None):
+        self.first = None
+        self.firsttime = None
+        self.last = None
+        self.lasttime = None
+
+    def setStats(self, stats_tuple=None):
+        self.first, self.firsttime, self.last, self.lasttime = stats_tuple \
+            if stats_tuple else ScalarStats.default_init
+
+    def getStatsTuple(self):
+        """Return a stats-tuple. That is, a tuple containing the gathered statistics.
+        This tuple can be used to update the stats database"""
+        return self.first, self.firsttime, self.last, self.lasttime
+
+    def mergeHiLo(self, x_stats):
+        """Merge the highs and lows of another accumulator into myself."""
+        if x_stats.firsttime is not None:
+            if self.firsttime is None or x_stats.firsttime < self.firsttime:
+                self.firsttime = x_stats.firsttime
+                self.first = x_stats.first
+        if x_stats.lasttime is not None:
+            if self.lasttime is None or x_stats.lasttime >= self.lasttime:
+                self.lasttime = x_stats.lasttime
+                self.last = x_stats.last
+
+    def mergeSum(self, x_stats):
+        """Merge the count of another accumulator into myself."""
+        pass
+
+    def addHiLo(self, val, ts):
+        """Include a value in my stats.
+        val: A value of almost any type. It will be converted to a string before being accumulated.
+        ts:  The timestamp.
+        """
+        if val is not None:
+            string_val = str(val)
+            if self.firsttime is None or ts < self.firsttime:
+                self.first = string_val
+                self.firsttime = ts
+            if self.lasttime is None or ts >= self.lasttime:
+                self.last = string_val
+                self.lasttime = ts
+
+    def addSum(self, val, weight=1):
+        """Add a scalar value to my running count."""
+        pass
+
 
 #===============================================================================
 #                             Class Accum
@@ -461,7 +545,7 @@ class Accum(dict):
 #===============================================================================
 
 #
-# Mappings from convenient string names, which can be used in a config file,
+# Mappings from convenient string nicknames, which can be used in a config file,
 # to actual functions and classes
 #
 
@@ -485,11 +569,20 @@ extract_functions = {'avg'  : Accum.extract_avg,
                      'wind' : Accum.extract_wind,
                      'noop' : Accum.noop}
 
+# The default actions for an individual observation type
+OBS_DEFAULTS = {
+    'accumulator' : 'scalar',
+    'adder'       : 'add',
+    'merger'      : 'minmax',
+    'extractor'   : 'avg'
+}
+
+
 #
 # Default mappings from observation types to accumulator classes and functions
 #
 
-defaults_ini = u"""
+DEFAULTS_INI = u"""
 [Accumulator]
     [[dateTime]]
         adder = noop
@@ -542,79 +635,71 @@ defaults_ini = u"""
         extractor = last
 """
 from six.moves import StringIO
-defaults = configobj.ConfigObj(StringIO(defaults_ini), encoding='utf-8')
+defaults = configobj.ConfigObj(StringIO(DEFAULTS_INI), encoding='utf-8')
 del StringIO
 
-accum_type_dict = None
-add_dict        = None
-merge_dict      = None
-extract_dict    = None
+# Must call reset() before this is useful
+accum_dict = None
+
 
 def initialize(config_dict):
-    """Must be called before using any of the accumulators"""
-    
-    global defaults, accum_type_dict, merge_dict, add_dict, extract_dict
+    # Add the configuration dictionary to the beginning of the list of maps.
+    # This will cause it to override the defaults
+    global accum_dict
+    accum_dict.maps.insert(0, config_dict.get('Accumulator', {}))
 
-    accum_type_dict = {}
-    add_dict        = {}
-    merge_dict      = {}
-    extract_dict    = {}
-    
-    # Initialize with the default values:    
-    _initialize(defaults)
 
-    # Now do the overrides from the config file
-    _initialize(config_dict)
-    
-def _initialize(config_dict):
-    global accum_type_dict, add_dict, merge_dict, extract_dict
+def setup():
+    # Set/reset to the default values
+    global accum_dict
+    accum_dict = ListOfDicts(defaults['Accumulator'].dict())
 
-    extras = config_dict.get('Accumulator', configobj.ConfigObj({}))
-    for obs_type in extras.sections:
-        # Get the accumulator type
-        accum_type = extras[obs_type].get('accumulator', 'scalar').lower()
-        # Fail hard if this is an unknown accumulator type
-        accum_type_dict[obs_type] = accum_types[accum_type]
-        
-        # Get the adder function to use
-        add_function = extras[obs_type].get('adder', 'add').lower()
-        # Fail hard if this is an unknown adder function
-        add_dict[obs_type] = add_functions[add_function]
 
-        # Get the Hi/Lo function to use
-        hilo_function = extras[obs_type].get('merger', 'minmax').lower()
-        # Fail hard if this is an unknown Hi/Lo function
-        merge_dict[obs_type] = merge_functions[hilo_function]
-        
-        # Get the type of extraction function to use
-        extract_function = extras[obs_type].get('extractor', 'avg').lower()
-        # Fail hard if this is an unknown extraction type:
-        extract_dict[obs_type] = extract_functions[extract_function]
-    
 def new_accumulator(obs_type):
-    global accum_type_dict
-    # If the dictionaries have not been initialized, do so with the defaults
-    if accum_type_dict is None:
-        initialize(defaults)
-    return accum_type_dict.get(obs_type, ScalarStats)()
+    """Instantiate an accumulator, appropriate for type 'obs_type'."""
+    global accum_dict
+    # Get the options for this type. Substitute the defaults if they have not been specified
+    obs_options = accum_dict.get(obs_type, OBS_DEFAULTS)
+    # Get the nickname of the accumulator. Default is 'scalar'
+    accum_nickname = obs_options.get('accumulator', 'scalar')
+    # If we don't know this nickname, then fail hard with a KeyError
+    return accum_types[accum_nickname]()
+
 
 def get_add_function(obs_type):
-    global add_dict
-    # If the dictionaries have not been initialized, do so with the defaults
-    if add_dict is None:
-        initialize(defaults)
-    return add_dict.get(obs_type, Accum.add_value)
-    
+    """Get an adder function appropriate for type 'obs_type'."""
+    global accum_dict
+    # Get the options for this type. Substitute the defaults if they have not been specified
+    obs_options = accum_dict.get(obs_type, OBS_DEFAULTS)
+    # Get the nickname of the adder. Default is 'add'
+    add_nickname = obs_options.get('adder', 'add')
+    # If we don't know this nickname, then fail hard with a KeyError
+    return add_functions[add_nickname]
+
+
 def get_merge_function(obs_type):
-    global merge_dict
-    # If the dictionary has not been initialized, do so with the defaults
-    if merge_dict is None:
-        initialize(defaults)
-    return merge_dict.get(obs_type, Accum.merge_minmax)
+    """Get a merge function appropriate for type 'obs_type'."""
+    global accum_dict
+    # Get the options for this type. Substitute the defaults if they have not been specified
+    obs_options = accum_dict.get(obs_type, OBS_DEFAULTS)
+    # Get the nickname of the merger. Default is 'minmax'
+    add_nickname = obs_options.get('merger', 'minmax')
+    # If we don't know this nickname, then fail hard with a KeyError
+    return merge_functions[add_nickname]
+
 
 def get_extract_function(obs_type):
-    global extract_dict
-    # If the dictionaries have not been initialized, do so with the defaults
-    if extract_dict is None:
-        initialize(defaults)
-    return extract_dict.get(obs_type, Accum.extract_avg)
+    """Get an extraction function appropriate for type 'obs_type'."""
+    global accum_dict
+    # Get the options for this type. Substitute the defaults if they have not been specified
+    obs_options = accum_dict.get(obs_type, OBS_DEFAULTS)
+    # Get the nickname of the extractor. Default is 'avg'
+    add_nickname = obs_options.get('extractor', 'avg')
+    # If we don't know this nickname, then fail hard with a KeyError
+    return extract_functions[add_nickname]
+
+
+# Initialize with the defaults. 
+setup()
+
+
