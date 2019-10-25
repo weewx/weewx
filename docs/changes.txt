@@ -60,6 +60,10 @@ new unit microgram_per_meter_cubed. Added new unit group, group_concentration.
 
 Plist for the Mac launcher now includes a log file for stderr.
 
+Night-day transition in plots now uses shortest travel distance around
+color wheel to minimize extra colors. Fixes issue #457. Thanks to user
+Alex Edwards!
+
 Fixed bug that caused windrun to be calculated wrongly under METRICWX
 unit system. Fixes issue #452.
 
