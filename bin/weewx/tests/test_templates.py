@@ -34,6 +34,7 @@ import weeutil.weeutil
 import weewx
 import weewx.reportengine
 import weewx.station
+import weewx.units
 
 weewx.debug = 1
 
@@ -54,8 +55,9 @@ locale.setlocale(locale.LC_ALL, '')
 config_path = os.path.join(os.path.dirname(__file__), "testgen.conf")
 cwd = None
 
+
 # We will be testing the ability to extend the unit system, so set that up first:
-class ExtraUnits(dict):
+class ExtraUnits(object):
     def __getitem__(self, obs_type):
         if obs_type.endswith('Temp'):
             # Anything that ends with "Temp" is assumed to be in group_temperature
@@ -64,11 +66,13 @@ class ExtraUnits(dict):
             # Anything that starts with "current" is in group_amperage:
             return "group_amperage"
         else:
-            # Otherwise, consult the underlying dictionary:
-            return dict.__getitem__(self, obs_type)
- 
+            raise KeyError(obs_type)
+
+    def __contains__(self, obs_type):
+        return obs_type.endswith('Temp') or obs_type.startswith('current')
+
+
 extra_units = ExtraUnits()
-import weewx.units
 weewx.units.obs_group_dict.extend(extra_units)
 
 # Add the new group group_amperage to the standard unit systems:
