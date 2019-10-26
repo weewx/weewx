@@ -539,7 +539,8 @@ class Accum(dict):
     @property
     def isEmpty(self):
         return self.unit_system is None
-            
+
+
 #===============================================================================
 #                            Configuration dictionaries
 #===============================================================================
@@ -549,25 +550,34 @@ class Accum(dict):
 # to actual functions and classes
 #
 
-accum_types = {'scalar' : ScalarStats,
-               'vector' : VecStats}
+accum_types = {
+    'scalar' : ScalarStats,
+    'vector' : VecStats,
+    'string' : StringAccum
+}
 
-add_functions = {'add'         : Accum.add_value,
-                 'add_wind'    : Accum.add_wind_value,
-                 'check_units' : Accum.check_units,
-                 'noop'        : Accum.noop}
+add_functions = {
+    'add'         : Accum.add_value,
+    'add_wind'    : Accum.add_wind_value,
+    'check_units' : Accum.check_units,
+    'noop'        : Accum.noop
+}
 
-merge_functions = {'minmax' : Accum.merge_minmax,
-                   'avg'    : Accum.merge_avg}
+merge_functions = {
+    'minmax' : Accum.merge_minmax,
+    'avg'    : Accum.merge_avg
+}
 
-extract_functions = {'avg'  : Accum.extract_avg,
-                     'sum'  : Accum.extract_sum,
-                     'min'  : Accum.extract_min,
-                     'max'  : Accum.extract_max,
-                     'count': Accum.extract_count,
-                     'last' : Accum.extract_last,
-                     'wind' : Accum.extract_wind,
-                     'noop' : Accum.noop}
+extract_functions = {
+    'avg'  : Accum.extract_avg,
+    'sum'  : Accum.extract_sum,
+    'min'  : Accum.extract_min,
+    'max'  : Accum.extract_max,
+    'count': Accum.extract_count,
+    'last' : Accum.extract_last,
+    'wind' : Accum.extract_wind,
+    'noop' : Accum.noop
+}
 
 # The default actions for an individual observation type
 OBS_DEFAULTS = {
@@ -662,6 +672,7 @@ def new_accumulator(obs_type):
     obs_options = accum_dict.get(obs_type, OBS_DEFAULTS)
     # Get the nickname of the accumulator. Default is 'scalar'
     accum_nickname = obs_options.get('accumulator', 'scalar')
+    # Instantiate and return the accumulator.
     # If we don't know this nickname, then fail hard with a KeyError
     return accum_types[accum_nickname]()
 

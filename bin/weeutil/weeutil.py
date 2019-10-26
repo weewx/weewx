@@ -1312,6 +1312,8 @@ try:
     class ListOfDicts(ChainMap):
         def extend(self, m):
             self.maps.append(m)
+        def prepend(self, m):
+            self.maps.insert(0, m)
 
 except ImportError:
 
@@ -1374,6 +1376,9 @@ except ImportError:
 
         def extend(self, m):
             self.maps.append(m)
+
+        def prepend(self, m):
+            self.maps.insert(0, m)
 
 
 class KeyDict(dict):
