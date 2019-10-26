@@ -77,7 +77,8 @@ class StdWXCalculate(weewx.engine.StdService):
         wxcalc_dict = ConfigObj(StringIO(DEFAULTS))
         wxcalc_dict.merge(config_dict)
 
-        db_manager = engine.db_binder.get_manager(data_binding=wxcalc_dict['StdWXCalculate']['data_binding'])
+        db_manager = engine.db_binder.get_manager(data_binding=wxcalc_dict['StdWXCalculate']['data_binding'],
+                                                  initialize=True)
 
         self.calc = WXCalculate(wxcalc_dict['StdWXCalculate'],
                                 engine.stn_info.altitude_vt,
