@@ -825,11 +825,13 @@ class DaySummaryManager(Manager):
         try:
             day_summaries_schemas = schema['day_summaries']
         except TypeError:
-            # Old-style schema. Include a daily summary for each observation type in the archive table,
-            # plus one for wind. If this isn't what the user wants, s/he can always switch to new style.
+            # Old-style schema. Include a daily summary for each observation type in the archive table.
             day_summaries_schemas = [(e[0], 'scalar') for e in self.sqlkeys if
-                                     e[0] not in ('dateTime', 'usUnits', 'interval')] \
-                                    + [('wind', 'vector')]
+                                     e[0] not in ('dateTime', 'usUnits', 'interval')]
+            import weewx.wxmanager
+            if type(self) == weewx.wxmanager.WXDaySummaryManager:
+                # For backwards compatibility, include 'wind'
+                day_summaries_schemas += [('wind', 'vector')]
 
         # Create the tables needed for the daily summaries in one transaction:
         with weedb.Transaction(self.connection) as cursor:

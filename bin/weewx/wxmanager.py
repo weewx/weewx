@@ -7,5 +7,10 @@
 
 import weewx.manager
 
-# Provided for backwards compatiblity:
-WXDaySummaryManager = weewx.manager.DaySummaryManager
+
+class WXDaySummaryManager(weewx.manager.DaySummaryManager):
+    """Daily summaries, suitable for WX applications.
+    
+    OBSOLETE. Provided for backwards compatibility.
+    
+    """
