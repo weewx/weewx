@@ -203,11 +203,10 @@ class WXCalculate(object):
 
     @staticmethod
     def adjust_winddir(data):
-        """If wind speed is zero, then the wind direction is undefined.
-        If there is no wind speed, then there is no wind direction."""
-        if not data.get('windSpeed'):
+        """If windSpeed is in the data stream, and it is either zero or None, then the wind direction is undefined."""
+        if 'windSpeed' in data and not data['windSpeed']:
             data['windDir'] = None
-        if not data.get('windGust'):
+        if 'windGust' in data and not data['windGust']:
             data['windGustDir'] = None
 
     def calc_maxSolarRad(self, key, data, db_manager):
