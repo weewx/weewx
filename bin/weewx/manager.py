@@ -840,7 +840,7 @@ class DaySummaryManager(Manager):
                 # 'column_type' is a two-way tuple (column_name, 'REAL'|'INTEGER')
                 s = ', '.join(
                     ["%s %s" % column_type
-                     for column_type in weewx.manager.DaySummaryManager.day_schemas[obs_schema[1]]])
+                     for column_type in DaySummaryManager.day_schemas[obs_schema[1]]])
                 sql_create_str = "CREATE TABLE %s_day_%s (%s);" % ('archive', obs_schema[0], s)
                 cursor.execute(sql_create_str)
             # Create the meta table:
