@@ -1020,11 +1020,10 @@ class RainRater(object):
             self.add_loop_packet({'dateTime': time_ts, 'usUnits': unit_system, 'rain': rain}, db_manager)
 
     def add_loop_packet(self, record, db_manager):
-        if self.rain_events is None:
-            self._setup(record['dateTime'], db_manager)
-
         # Was there any rain? If so, convert the rain to the unit system we are using, then intern it
         if 'rain' in record and record['rain']:
+            if self.rain_events is None:
+                self._setup(record['dateTime'], db_manager)
             # Get the unit system and group of the incoming rain
             u, g = weewx.units.getStandardUnitType(record['usUnits'], 'rain')
             # Convert to the unit system that we are using
@@ -1032,8 +1031,9 @@ class RainRater(object):
             # Add it to the list of rain events
             self.rain_events.append((record['dateTime'], rain))
 
-        # Trim any old packets:
-        self.rain_events = [x for x in self.rain_events if x[0] >= record['dateTime'] - self.rain_period]
+        if self.rain_events:
+            # Trim any old packets:
+            self.rain_events = [x for x in self.rain_events if x[0] >= record['dateTime'] - self.rain_period]
 
     def rain_rate(self, key, record, db_manager):
         """Calculate the rainRate"""
