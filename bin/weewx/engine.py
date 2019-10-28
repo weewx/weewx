@@ -816,7 +816,7 @@ def sigTERMhandler(signum, _frame):
 #                    Function main
 #==============================================================================
 
-def main(options, args, engine_class=StdEngine):
+def main(options, args):
     """Prepare the main loop and run it. 
 
     Mostly consists of a bunch of high-level preparatory calls, protected
@@ -884,7 +884,7 @@ def main(options, args, engine_class=StdEngine):
             log.debug("Initializing engine")
 
             # Create and initialize the engine
-            engine = engine_class(config_dict)
+            engine = StdEngine(config_dict)
     
             log.info("Starting up weewx version %s", weewx.__version__)
 
