@@ -604,7 +604,7 @@ def calc_missing(config_dict, db_binding, options):
         last_ts = dbmanager.lastGoodStamp()
 
     start_dt, stop_dt = _parse_dates(options)
-    start_ts = time.mktime(start_dt.timetuple()) if start_dt is not None else first_ts
+    start_ts = time.mktime(start_dt.timetuple()) if start_dt is not None else first_ts - 1
     stop_ts = time.mktime(stop_dt.timetuple()) if stop_dt is not None else last_ts
 
     # notify if this is a dry run
