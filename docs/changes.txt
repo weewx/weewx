@@ -64,6 +64,9 @@ Night-day transition in plots now uses shortest travel distance around
 color wheel to minimize extra colors. Fixes issue #457. Thanks to user
 Alex Edwards!
 
+Fixed bug that causes plots to fail when both min and max are zero.
+Fixes issue #463.
+
 
 3.9.2 07/14/2019
 

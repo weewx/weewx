@@ -93,19 +93,25 @@ def scale(fmn, fmx, prescale = (None, None, None), nsteps = 10):
     if _rel_approx_equal(fmn, fmx) :
         # They are equal. We need to move one or the other to create a range, while
         # being careful that the resultant min/max stay within the interval [minscale, maxscale]
+        # Pick a step out value based on min_interval if the user has supplied one. Otherwise,
+        # arbitrarily pick 0.1
+        if min_interval is not None:
+            step_out = min_interval * nsteps
+        else:
+            step_out = 0.01 * abs(fmx) if fmx else 0.1
         if maxscale is not None:
             # maxscale if fixed. Move fmn.
-            fmn = fmx - 0.01 * abs(fmx)
+            fmn = fmx - step_out
         elif minscale is not None:
             # minscale if fixed. Move fmx.
-            fmx = fmn + 0.01 * abs(fmx)
+            fmx = fmn + step_out
         else:
             # Both can float. Check special case where fmn and fmx are zero
             if fmn == 0.0 :
                 fmx = 1.0
             else :
                 # Just arbitrarily move one. Say, fmx.
-                fmx = fmn + .01*abs(fmn)
+                fmx = fmn + step_out
 
     if minscale is not None and maxscale is not None:
         if maxscale < minscale:
