@@ -138,11 +138,11 @@ class StdEngine(object):
                     if svc == '':
                         log.debug("No services in service group %s", service_group)
                         continue
-                    # For each service, instantiates an instance of the class,
-                    # passing self and the configuration dictionary as the
-                    # arguments:
                     log.debug("Loading service %s", svc)
-                    self.service_obj.append(weeutil.weeutil.get_object(svc)(self, config_dict))
+                    # Get the class, then instantiate it with self and the config dictionary as arguments:
+                    obj = weeutil.weeutil.get_object(svc)(self,config_dict)
+                    # Append it to the list of open services.
+                    self.service_obj.append(obj)
                     log.debug("Finished loading service %s", svc)
         except Exception:
             # An exception occurred. Shut down any running services, then
@@ -500,7 +500,6 @@ class StdArchive(StdService):
 
         log.debug("Use LOOP data in hi/low calculations: %d", self.loop_hilo)
         
-        self.setup_database(config_dict)
         weewx.accum.initialize(config_dict)
         self.old_accumulator = None
 
@@ -512,9 +511,22 @@ class StdArchive(StdService):
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
     
     def startup(self, _event):
-        """Called when the engine is starting up."""
-        # The engine is starting up. Unless the user has specified otherwise, the main task
-        # is to do a catch up on any data still on the station, but not yet put in the database.
+        """Called when the engine is starting up. Main task is to set up the database, backfill it, then
+        perform a catch up if the hardware supports it. """
+
+        # This will create the database if it doesn't exist:
+        dbmanager = self.engine.db_binder.get_manager(self.data_binding, initialize=True)
+        log.info("Using binding '%s' to database '%s'", self.data_binding, dbmanager.database_name)
+
+        # Make sure the daily summaries have not been partially updated
+        if dbmanager._read_metadata('lastWeightPatch'):
+            raise weewx.ViolatedPrecondition("Update of daily summary for database '%s' not complete. "
+                                             "Finish the update first." % dbmanager.database_name)
+
+        # Back fill the daily summaries.
+        _nrecs, _ndays = dbmanager.backfill_day_summary()
+
+        # Do a catch up on any data still on the station, but not yet put in the database.
         if self.no_catchup:
             log.debug("No catchup specified.")
         else:
@@ -603,22 +615,6 @@ class StdArchive(StdService):
         dbmanager = self.engine.db_binder.get_manager(self.data_binding)
         dbmanager.addRecord(event.record, accumulator=self.old_accumulator)
 
-    def setup_database(self, _config_dict):
-        """Setup the main database archive"""
-
-        # This will create the database if it doesn't exist, then return an
-        # opened instance of the database manager. 
-        dbmanager = self.engine.db_binder.get_manager(self.data_binding, initialize=True)
-        log.info("Using binding '%s' to database '%s'", self.data_binding, dbmanager.database_name)
-        
-        # Make sure the daily summaries have not been partially updated
-        if dbmanager._read_metadata('lastWeightPatch'):
-            raise weewx.ViolatedPrecondition("Update of daily summary for database '%s' not complete. "
-                                             "Finish the update first." % dbmanager.database_name)
-        
-        # Back fill the daily summaries.
-        _nrecs, _ndays = dbmanager.backfill_day_summary()
-        
     def _catchup(self, generator):
         """Pull any unarchived records off the console and archive them.
         
