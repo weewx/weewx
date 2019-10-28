@@ -74,21 +74,26 @@ class StdWXCalculate(weewx.engine.StdService):
         """
         super(StdWXCalculate, self).__init__(engine, config_dict)
 
-        wxcalc_dict = ConfigObj(StringIO(DEFAULTS))
-        wxcalc_dict.merge(config_dict)
-
-        db_manager = engine.db_binder.get_manager(data_binding=wxcalc_dict['StdWXCalculate']['data_binding'],
-                                                  initialize=True)
-
-        self.calc = WXCalculate(wxcalc_dict['StdWXCalculate'],
-                                engine.stn_info.altitude_vt,
-                                engine.stn_info.latitude_f,
-                                engine.stn_info.longitude_f,
-                                db_manager)
+        self.calc = None
 
         # we will process both loop and archive events
+        self.bind(weewx.CONFIG, self.config)
         self.bind(weewx.NEW_LOOP_PACKET, self.new_loop_packet)
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
+
+    def config(self, event):
+        """Perform configuration duties."""
+
+        wxcalc_dict = ConfigObj(StringIO(DEFAULTS))
+        wxcalc_dict.merge(event.config)
+        db_manager = self.engine.db_binder.get_manager(data_binding=wxcalc_dict['StdWXCalculate']['data_binding'],
+                                                       initialize=True)
+
+        self.calc = WXCalculate(wxcalc_dict['StdWXCalculate'],
+                                self.engine.stn_info.altitude_vt,
+                                self.engine.stn_info.latitude_f,
+                                self.engine.stn_info.longitude_f,
+                                db_manager)
 
     def new_loop_packet(self, event):
         self.calc.do_calculations(event.packet, 'loop')
@@ -98,6 +103,7 @@ class StdWXCalculate(weewx.engine.StdService):
 
     def shutDown(self):
         self.calc.shutDown()
+        self.calc = None
 
 
 class WXCalculate(object):
@@ -146,7 +152,7 @@ class WXCalculate(object):
                                                                self.svc_dict['Algorithms']['altimeter'])
         # Instantiate a RainRater to calculate rainRate
         self.rain_rater = weewx.wxformulas.RainRater(to_int(svc_dict['rain_period']),
-                                                     to_int(svc_dict['retain_period']),)
+                                                     to_int(svc_dict['retain_period']), )
 
         # Add the various types we need to the list of extendable types
         for xt in [self.calc_maxSolarRad, self.calc_cloudbase, self.calc_ET, self.pressure_cooker.get_scalar,

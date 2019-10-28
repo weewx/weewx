@@ -149,7 +149,10 @@ class StdEngine(object):
             # reraise the exception.
             self.shutDown()
             raise
-        
+
+        # We're done loading services. Send out a CONFIG event:
+        self.dispatchEvent(weewx.Event(weewx.CONFIG, config=config_dict))
+
     def postLoadServices(self, config_dict):
         pass
 

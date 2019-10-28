@@ -90,11 +90,13 @@ class CannotCalculate(ValueError):
 #                       Possible event types.
 # =============================================================================
 
+class CONFIG(object):
+    """Event issued when services should configure themselves."""
 class STARTUP(object):
-    """Event issued when the engine first starts up. Services have not been
+    """Event issued when the engine first starts up. Services have been
     loaded."""
 class PRE_LOOP(object):
-    """Event issued just before the main packet loop is started. Services
+    """Event issued just before the main packet loop is entered. Services
     have been loaded."""
 class NEW_LOOP_PACKET(object):
     """Event issued when a new LOOP packet is available. The event contains
