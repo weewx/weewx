@@ -6,14 +6,17 @@ weewx change history
 Ported to Python 3. WeeWX should now run under Python 2.7, 3.3, and
 greater.
 
-The package MySQL-python, which we used previously, is not available
-for Python 3. Ported  the MySQL code to use the package mysqlclient
-as an alternative.
+New facility for creating new user-defined derived types. See the
+Wiki article https://github.com/weewx/weewx/wiki/WeeWX-V4-user-defined-types
 
 WeeWX now uses the Python 'logging' facility. This means log,
 formats, and other things can now be customized. Fixes issue #353.
 
 Support for the Vantage LOOP2 packet format. Fixes issue #374.
+
+The package MySQL-python, which we used previously, is not available
+for Python 3. Ported  the MySQL code to use the package mysqlclient
+as an alternative.
 
 The default for WOW no longer throttles posting frequency (the default
 used to be no more than once every 15 minutes).
@@ -69,6 +72,12 @@ Fixes issue #463.
 
 Fixed bug that caused windrun to be calculated wrongly under METRICWX
 unit system. Fixes issue #452.
+
+Added new aggregation 'diff': the difference between last and first value
+in the aggregation interval.
+
+Created new unit group 'group_energy2', defined as watt-seconds. Useful for
+high resolution energy monitors.
 
 
 3.9.2 07/14/2019

@@ -16,6 +16,8 @@ from weeutil.weeutil import isStartOfDay
 
 # Set of SQL statements to be used for calculating aggregates from the main archive table.
 sql_dict = {
+    'diff': "SELECT %(obs_type)s - (SELECT %(obs_type)s FROM %(table_name)s WHERE dateTime=%(start)s) "
+            "FROM %(table_name)s WHERE dateTime=%(stop)s;",
     'first': "SELECT %(obs_type)s FROM %(table_name)s "
              "WHERE dateTime = (SELECT MIN(dateTime) FROM %(table_name)s "
              "WHERE dateTime > %(start)s AND dateTime <= %(stop)s  AND %(obs_type)s IS NOT NULL)",

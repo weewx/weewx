@@ -6186,9 +6186,15 @@ growing_base = 50.0, degree_F</pre>
         <p>
             The default is to plot every data point, but this is probably not a good idea for any plot longer than a
             day. By setting this option, you can <em>aggregate</em> data by a set time interval. Available aggregation
-            types include <span class="code">avg</span>, <span class="code">sum</span>, <span class="code">max</span>,
-            <span class="code">min</span>, <span class="code">count</span>, <span class="code">last</span>, and <span
-            class="code">cumulative</span>.
+            types include
+            <span class="code">avg</span>,
+            <span class="code">count</span>,
+            <span class="code">cumulative</span>,
+            <span class="code">diff</span>,
+            <span class="code">last</span>,
+            <span class="code">max</span>,
+            <span class="code">min</span>, and
+            <span class="code">sum</span>.
         </p>
 
         <p class="config_option">aggregate_interval</p>
@@ -6698,6 +6704,11 @@ growing_base = 50.0, degree_F</pre>
                 </td>
             </tr>
             <tr>
+                <td class="first_col code">diff</td>
+                <td>The difference between the last and first value in the aggregation period.
+                </td>
+            </tr>
+            <tr>
                 <td class="first_col code">first</td>
                 <td>The first value in the aggregation period.</td>
             </tr>
@@ -6953,6 +6964,14 @@ growing_base = 50.0, degree_F</pre>
                 <td>watt_hour</td>
                 <td>watt_hour</td>
                 <td>watt_hour</td>
+            </tr>
+            <tr>
+                <td class="first_col">group_energy2</td>
+                <td></td>
+                <td>watt_second</td>
+                <td>watt_second</td>
+                <td>watt_second</td>
+                <td>watt_second</td>
             </tr>
             <tr>
                 <td class="first_col">group_interval</td>

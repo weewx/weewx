@@ -45,6 +45,38 @@ from weewx.units import ValueTuple
 series_types = []
 
 
+def get_series(obs_type, timespan, db_manager, aggregate_type=None, aggregate_interval=None):
+    """Return a vector series for a timespan, possibly aggregated. This is the
+    main function to use.
+
+    Args:
+        obs_type: The observation type for which the series is to be calculated.
+        timespan:  A two-way tuple with the (start, stop] times of the series.
+        db_manager: An open manager.Manager object, or subclass
+        aggregate_type: The type of aggregation to be performed. Default is None (no aggregation).
+        aggregate_interval: The interval over which aggregation is to be done.
+
+    Returns:
+        3-way tuple: (ValueTuple holding start times,
+                      ValueTuple holding stop times,
+                      ValueTuple holding (possibly aggregated) values.
+
+    Raises:
+          weewx.UnknownType if no extension can be found that can calculate this type.
+          weewx.UnknownAggregate: if the type of aggregation is unknown.
+          weewx.CannotCalculate: if data required for the calculation is missing.
+     """
+    for xtype in series_types:
+        try:
+            # Try this function. It will raise an exception if it does not know about the type.
+            return xtype(obs_type, timespan, db_manager, aggregate_type, aggregate_interval)
+        except weewx.UnknownType:
+            # This function does not know about the type. Move on to the next one.
+            pass
+    # None of the functions worked.
+    raise weewx.UnknownType(obs_type)
+
+
 def get_series_archive(obs_type, timespan, db_manager, aggregate_type=None, aggregate_interval=None):
     """Get a series, possibly with aggregation, from the main archive database."""
 
@@ -166,15 +198,3 @@ def get_series_windvec(obs_type, timespan, db_manager, aggregate_type=None, aggr
 # Add the functions to the list of series types.
 series_types.append(get_series_windvec)
 series_types.append(get_series_archive)
-
-
-def get_series(obs_type, timespan, db_manager, aggregate_type=None, aggregate_interval=None):
-    for xtype in series_types:
-        try:
-            # Try this function. It will raise an exception if it does not know about the type.
-            return xtype(obs_type, timespan, db_manager, aggregate_type, aggregate_interval)
-        except weewx.UnknownType:
-            # This function does not know about the type. Move on to the next one.
-            pass
-    # None of the functions worked.
-    raise weewx.UnknownType(obs_type)
