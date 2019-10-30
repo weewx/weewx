@@ -80,10 +80,6 @@ def get_series(obs_type, timespan, db_manager, aggregate_type=None, aggregate_in
 def get_series_archive(obs_type, timespan, db_manager, aggregate_type=None, aggregate_interval=None):
     """Get a series, possibly with aggregation, from the main archive database."""
 
-    # We only know how to get series that are in the database schema:
-    if obs_type not in db_manager.sqlkeys:
-        raise weewx.UnknownType(obs_type)
-
     startstamp, stopstamp = timespan
     start_vec = list()
     stop_vec = list()
@@ -93,29 +89,35 @@ def get_series_archive(obs_type, timespan, db_manager, aggregate_type=None, aggr
         unit, unit_group = None, None
         # With aggregation
         for stamp in weeutil.weeutil.intervalgen(startstamp, stopstamp, aggregate_interval):
+            # Could possibly raise a weewx.UnknownType or weewx.UnknownAggregation exception, but
+            # we don't care. Let it pass, so some other series extension can give it a try.
             agg_vt = weewx.aggregate.get_aggregate(obs_type, stamp, aggregate_type, db_manager)
-            start_vec.append(stamp.start)
-            stop_vec.append(stamp.stop)
             if unit:
                 if unit != agg_vt[1] or unit_group != agg_vt[2]:
                     raise weewx.UnsupportedFeature("Cannot change unit groups within an aggregation.")
             else:
                 unit, unit_group = agg_vt[1:]
+            start_vec.append(stamp.start)
+            stop_vec.append(stamp.stop)
             data_vec.append(agg_vt[0])
 
     else:
+        # We only know how to get series that are in the database schema:
+        if obs_type not in db_manager.sqlkeys:
+            raise weewx.UnknownType(obs_type)
+
         # No aggregation
         sql_str = "SELECT dateTime, %s, usUnits, `interval` FROM %s " \
                   "WHERE dateTime >= ? AND dateTime <= ?" % (obs_type, db_manager.table_name)
         std_unit_system = None
         for record in db_manager.genSql(sql_str, (startstamp, stopstamp)):
-            start_vec.append(record[0] - record[3] * 60)
-            stop_vec.append(record[0])
             if std_unit_system:
                 if std_unit_system != record[2]:
                     raise weewx.UnsupportedFeature("Unit type cannot change within an aggregation interval.")
             else:
                 std_unit_system = record[2]
+            start_vec.append(record[0] - record[3] * 60)
+            stop_vec.append(record[0])
             data_vec.append(record[1])
         unit, unit_group = weewx.units.getStandardUnitType(std_unit_system, obs_type, aggregate_type)
 

@@ -5,6 +5,8 @@ Write `TestWXCalculate`
 
 Test new aggregation types `diff` and `tderiv`.
 
+Recognize that applying `tderiv` will change the unit group.
+
 Fill out test suites for `get_series()`.
 
 
