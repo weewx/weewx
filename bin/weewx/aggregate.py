@@ -36,6 +36,9 @@ sql_dict = {
                "WHERE dateTime > %(start)s AND dateTime <= %(stop)s AND "
                "%(obs_type)s = (SELECT MIN(%(obs_type)s) FROM %(table_name)s "
                "WHERE dateTime > %(start)s and dateTime <= %(stop)s) AND %(obs_type)s IS NOT NULL",
+    'tderiv': "SELECT (%(obs_type)s - (SELECT %(obs_type)s FROM %(table_name)s WHERE dateTime=%(start)s)) "
+              "/ (%(stop)s - %(start)s) "
+              "FROM %(table_name)s WHERE dateTime=%(stop)s;",
 }
 
 simple_sql = "SELECT %(aggregate_type)s(%(obs_type)s) FROM %(table_name)s " \

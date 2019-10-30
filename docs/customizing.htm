@@ -3802,7 +3802,7 @@ class MyStats(SearchList):                                                   # 1
         # The name of the table within the database
         table_name = archive
         # The class to manage the database
-        manager = weewx.wxmanager.WXDaySummaryManager
+        manager = weewx.wxmanager.DaySummaryManager
         # The schema defines to structure of the database contents
         schema = schemas.wview.schema
 
@@ -3812,7 +3812,7 @@ class MyStats(SearchList):                                                   # 1
         # The name of the table within the database
         table_name = archive
         # The class to manage the database
-        manager = weewx.wxmanager.WXDaySummaryManager
+        manager = weewx.wxmanager.DaySummaryManager
         # The schema defines to structure of the database contents
         schema = schemas.wview.schema</span>
 
@@ -4647,7 +4647,7 @@ schema_with_electricity = schemas.wview.schema + [('electricity', 'REAL')]</pre>
     [[wx_binding]]
         database = archive_sqlite
         table_name = archive
-        manager = weewx.wxmanager.WXDaySummaryManager
+        manager = weewx.wxmanager.DaySummaryManager
         <span class="highlight">schema = user.extensions.schema_with_electricity</span></pre>
 
                 <p>If you used <span class="code">user/electricity.py</span>, then it will look like this:
@@ -4657,7 +4657,7 @@ schema_with_electricity = schemas.wview.schema + [('electricity', 'REAL')]</pre>
     [[wx_binding]]
         database = archive_sqlite
         table_name = archive
-        manager = weewx.wxmanager.WXDaySummaryManager
+        manager = weewx.wxmanager.DaySummaryManager
         <span class="highlight">schema = user.electricity.schema_with_electricity</span></pre>
             </li>
 
@@ -6193,8 +6193,9 @@ growing_base = 50.0, degree_F</pre>
             <span class="code">diff</span>,
             <span class="code">last</span>,
             <span class="code">max</span>,
-            <span class="code">min</span>, and
-            <span class="code">sum</span>.
+            <span class="code">min</span>,
+            <span class="code">sum</span>, and
+            <span class="code">tderiv</span>.
         </p>
 
         <p class="config_option">aggregate_interval</p>
@@ -6836,6 +6837,13 @@ growing_base = 50.0, degree_F</pre>
                 <td class="first_col code">sum_le(val)</td>
                 <td>The number of days where the sum of value is less than or equal to <em>val</em>. Aggregation
                     period must be one day or longer.
+                </td>
+            </tr>
+            <tr>
+                <td class="first_col code">tderiv</td>
+                <td>
+                    The time derivative between the last and first value in the aggregation period. This is
+                    the difference in value divided by the difference in time.
                 </td>
             </tr>
             <tr>

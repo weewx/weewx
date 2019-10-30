@@ -14,6 +14,14 @@ formats, and other things can now be customized. Fixes issue #353.
 
 Support for the Vantage LOOP2 packet format. Fixes issue #374.
 
+Strings appearing in the data stream no longer cause a TypeError
+if they can be converted to a number.
+
+Strings can now be accumulated and extracted in the accumulators, making
+it possible to include them in the database schemas.
+
+New, more flexible, way of specifying schemas.
+
 The package MySQL-python, which we used previously, is not available
 for Python 3. Ported  the MySQL code to use the package mysqlclient
 as an alternative.
@@ -29,7 +37,12 @@ Added new tag $python_version.
 
 Ported to Python2-PyMySQL package on OpenSUSE.
 
-Added new aggregation type 'first' (similar to 'last').
+Added new aggregation types 'first' (similar to 'last'), 'diff' (the
+difference between last and first value in the aggregation interval),
+and 'tderiv' (the difference divided by the time difference).
+
+Created new unit group 'group_energy2', defined as watt-seconds. Useful for
+high resolution energy monitors.
 
 An observation type known to the system, but not in a record, will
 now return a proper ValueTuple, rather than UnknownType.
@@ -73,11 +86,6 @@ Fixes issue #463.
 Fixed bug that caused windrun to be calculated wrongly under METRICWX
 unit system. Fixes issue #452.
 
-Added new aggregation 'diff': the difference between last and first value
-in the aggregation interval.
-
-Created new unit group 'group_energy2', defined as watt-seconds. Useful for
-high resolution energy monitors.
 
 
 3.9.2 07/14/2019

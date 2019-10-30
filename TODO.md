@@ -1,9 +1,12 @@
 ### Extensible types
-Add String to the schemas.
-
 Test accumulators with String accumulator, as well as with string types.
 
 Write `TestWXCalculate`
+
+Test new aggregation types `diff` and `tderiv`.
+
+Fill out test suites for `get_series()`.
+
 
 ### Logging
 Refactor `wee_import` to use the new logging facility.
