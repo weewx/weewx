@@ -351,11 +351,13 @@ Usage: wee_database --help
        wee_database --transfer --dest-binding=BINDING_NAME [--dry-run]
        wee_database --check
        wee_database --update [--dry-run]
-       wee_database --check-strings
-       wee_database --fix-strings [--dry-run]
        wee_database --drop-daily
        wee_database --rebuild-daily [--date=YYYY-mm-dd |
-                                     --from=YYYY-mm-dd --to=YYYY-mm-dd]
+                                    [--from=YYYY-mm-dd] [--to=YYYY-mm-dd]]
+       wee_database --calc-missing [--date=YYYY-mm-dd |
+                                   [--from=YYYY-mm-dd[THH:MM]] [--to=YYYY-mm-dd[THH:MM]]]
+       wee_database --check-strings
+       wee_database --fix-strings [--dry-run]
 
 Description:
 
@@ -364,15 +366,8 @@ automatically by WeeWX, but they may be useful in special cases.
 
 Options:
   -h, --help            show this help message and exit
-  --config=CONFIG_FILE  Use configuration file CONFIG_FILE.
   --create              Create the WeeWX database and initialize it with the
                         schema.
-  --drop-daily          Drop the daily summary tables from a database.
-  --rebuild-daily       Rebuild the daily summaries from data in the archive
-                        table.
-  --date=YYYY-mm-dd     This date only (option --rebuild-daily only).
-  --from=YYYY-mm-dd     Start with this date (option --rebuild-daily only).
-  --to=YYYY-mm-dd       End with this date (option --rebuild-daily only).
   --reconfigure         Create a new database using configuration information
                         found in the configuration file. In particular, the
                         new database will use the unit system found in option
@@ -385,9 +380,22 @@ Options:
   --update              Update the daily summary tables if required and
                         recalculate the daily summary maximum windSpeed
                         values.
+  --calc-missing        Calculate and store any missing derived observations.
   --check-strings       Check the archive table for null strings that may have
                         been introduced by a SQL editing program.
   --fix-strings         Fix any null strings in a SQLite database.
+  --drop-daily          Drop the daily summary tables from a database.
+  --rebuild-daily       Rebuild the daily summaries from data in the archive
+                        table.
+  --config=CONFIG_FILE  Use configuration file CONFIG_FILE.
+  --date=YYYY-mm-dd     This date only (options --calc-missing and --rebuild-
+                        daily only).
+  --from=YYYY-mm-dd[THH:MM]
+                        Start with this date or date-time (options --calc-
+                        missing and --rebuild-daily only).
+  --to=YYYY-mm-dd[THH:MM]
+                        End with this date or date-time (options --calc-
+                        missing and --rebuild-daily only).
   --binding=BINDING_NAME
                         The data binding to use. Default is 'wx_binding'.
   --dest-binding=BINDING_NAME
@@ -405,33 +413,6 @@ Options:
         </p>
 
         <pre class="tty cmd">wee_database --create</pre>
-
-        <h3>Action <span class="code">--drop-daily</span></h3>
-        <p>In addition to the regular archive data, every WeeWX database also includes a daily summary table for each
-            observation type. Because there can be dozens of observation types, there can be dozens of these daily
-            summaries. It doesn't happen very often, but there can be occasions when it's necessary to drop them all and
-            then rebuild them. Dropping them by hand would be very tedious! This action does them all at once.
-        </p>
-
-        <pre class="tty cmd">wee_database --drop-daily</pre>
-
-        <h3>Action <span class="code">--rebuild-daily</span></h3>
-        <p>This action is the inverse of action <span class="code">--drop-daily</span> in that it rebuilds the daily
-            summaries from the archive data. In most cases it is not necessary to drop the daily summaries tables using
-            the action <span class="code">--drop-daily</span> before rebuilding them. The action <span class="code">--rebuild-daily</span>
-            accepts a number of date related options, <span class="code">--date</span>, <span class="code">--from</span>
-            and <span class="code">--to</span>, that allow selective rebuilding of the daily summaries for one or more
-            days rather than for the entire archive history. These options may be useful if bogus data has been removed
-            from the archive covering a single day or a period of few days. The daily summaries can then be rebuilt for
-            this period only, resulting in a faster rebuild and detailed low/high values and the associated times being
-            retained for unaffected days. The <span class="code">--date</span> option limits the daily summary rebuild
-            to the specified date, the <span class="code">--from</span> and <span class="code">--to</span> options must
-            be used together and limit the daily summary rebuild to the specified inclusive period.
-        </p>
-
-        <pre class="tty cmd">wee_database --rebuild-daily
-wee_database --rebuild-daily --date=YYYY-mm-dd
-wee_database --rebuild-daily --from=YYYY-mm-dd --to=YYYY-mm-dd</pre>
 
         <h3>Action <span class="code">--reconfigure</span></h3>
         <p>This action is useful for changing the schema in your database.</p>
@@ -492,6 +473,96 @@ wee_database --transfer --dest-binding=dest_binding</pre>
                 summaries</a> and <a href="upgrading.htm#recalculation_of_windspeed">Recalculation of <span
                 class="code">windSpeed</span> maximum values</a> in the Upgrade Guide.
         </p>
+
+        <h3>Action <span class="code">--drop-daily</span></h3>
+        <p>In addition to the regular archive data, every WeeWX database also includes a daily summary table for each
+            observation type. Because there can be dozens of observation types, there can be dozens of these daily
+            summaries. It doesn't happen very often, but there can be occasions when it's necessary to drop them all and
+            then rebuild them. Dropping them by hand would be very tedious! This action does them all at once.
+        </p>
+
+        <pre class="tty cmd">wee_database --drop-daily</pre>
+
+        <h3>Action <span class="code">--rebuild-daily</span></h3>
+        <p>This action is the inverse of action <span class="code">--drop-daily</span> in that it rebuilds the daily
+            summaries from the archive data. In most cases it is not necessary to drop the daily summary tables using
+            the action <span class="code">--drop-daily</span> before rebuilding them. The action <span class="code">--rebuild-daily</span>
+            accepts a number of date related options, <span class="code">--date</span>, <span class="code">--from</span>
+            and <span class="code">--to</span> that allow selective rebuilding of the daily summaries for one or more
+            days rather than for the entire archive history. These options may be useful if bogus data has been removed
+            from the archive covering a single day or a period of few days. The daily summaries can then be rebuilt for
+            this period only, resulting in a faster rebuild and detailed low/high values and the associated times being
+            retained for unaffected days. The <span class="code">--date</span> option limits the daily summary rebuild
+            to the specified date. The <span class="code">--from</span> and <span class="code">--to</span> options may be
+            used together or individually to limit the daily summary rebuild to a specified period. When used individually
+            the <span class="code">--to</span> option limits the rebuild to the inclusive period from the earliest date
+            for which there is data in the database through to and including the specified date. Similarly when used
+            individually the <span class="code">--from</span> option limits the rebuild to the inclusive period from the
+            specified date through until the last date for which there is data in the database. When the <span class="code">--from</span>
+            and <span class="code">--to</span> options are used together the daily summary rebuild is limited to the
+            specified inclusive period.
+        </p>
+
+        <pre class="tty cmd">wee_database --rebuild-daily
+wee_database --rebuild-daily --date=YYYY-mm-dd
+wee_database --rebuild-daily --from=YYYY-mm-dd
+wee_database --rebuild-daily --to=YYYY-mm-dd
+wee_database --rebuild-daily --from=YYYY-mm-dd --to=YYYY-mm-dd</pre>
+
+                <p class="note">
+                    <strong>Note</strong><br/>Whilst the <span class="code">--from</span> and <span class="code">--to</span>
+                    options will accept optional hour and minutes in the format <span class="code">THH:MM</span>, any
+                    such hour and minute options are ignored by the <span class="code">--rebuild</span> action as the
+                    daily summaries represent whole days only and it is not possible to partially rebuild a daily summary.
+                </p>
+
+                <p class="note">
+                    <strong>Note</strong><br/>When used with the <span class="code">--rebuild-daily</span> action the
+                    period defined by <span class="code">--to</span> and <span class="code">--from</span> is inclusive
+                    and the daily summary tables will be rebuild for the day defined by <span class="code">--from</span>
+                    and the day defined by <span class="code">--to</span> and all days in between.
+                </p>
+
+        <h3>Action <span class="code">--calc-missing</span></h3>
+        <p>This action calculates derived observations for archive records in the database and then stores the calculated
+            observations in the database. This can be useful if erroneous archive data is corrected or some additional
+            observational data is added to the archive that may alter previously calculated or missing derived
+            observations.
+        </p>
+
+        <p>The period over which the derived observations are calculated can be limited through use of the
+            <span class="code">--date</span>, <span class="code">--from</span> and/or <span class="code">--to</span>
+            options. When used without any of these options <span class="code">--calc-missing</span> will calculate
+            derived observations for all archive records in the database. The <span class="code">--date</span> option
+            limits the calculation of derived observations to the specified date only. The <span class="code">--from</span>
+            and <span class="code">--to</span> options can be used together to specify the start and end date-time
+            respectively of the period over which derived observations will be calculated. If <span class="code">--from</span>
+            is used by itself the period is fom the date-time specified up to and including the last archive record in
+            the database. If <span class="code">--to</span> is used by itself the period is the first archive record in
+            the database through to the specified date-time.
+        </p>
+
+        <pre class="tty cmd">wee_database --calc-missing
+wee_database --calc-missing --date=YYYY-mm-dd
+wee_database --calc-missing --from=YYYY-mm-dd[THH:MM]
+wee_database --calc-missing --to=YYYY-mm-dd[THH:MM]
+wee_database --calc-missing --from=YYYY-mm-dd[THH:MM] --to=YYYY-mm-dd[THH:MM]</pre>
+
+                <p class="note">
+                    <strong>Note</strong><br/>When a <span class="code">YYYY-mm-dd</span> date is used as the
+                    <span class="code">--from</span> option the period used by <span class="code">--calc-missing</span>
+                    includes records after midnight at the start of <span class="code">YYYY-mm-dd</span>, if a
+                    <span class="code">YYYY-mm-ddTHH:MM</span> format date-time is used as the <span class="code">--from</span>
+                    option the period includes records after <span class="code">YYYY-mm-dd HH:MM</span>. When a
+                    <span class="code">YYYY-mm-dd</span> date is used as the <span class="code">--to</span> option the
+                    period includes records up to and including midnight at the end of <span class="code">YYYY-mm-dd</span>,
+                    if a <span class="code">YYYY-mm-ddTHH:MM</span> format date-time is used as the <span class="code">--to</span>
+                    option the period includes records up to and including <span class="code">YYYY-mm-dd HH:MM</span>.
+                    When using the <span class="code">--date</span> option the period is all records after midnight at the
+                    start of <span class="code">YYYY-mm-dd</span> up to and including midnight at the end of
+                    <span class="code">YYYY-mm-dd</span>, in effect the same as
+                    <span class="code">--from=YYYY-mm-ddT00:00 --to=YYYY-mm-dd+1T00:00</span>.
+                </p>
 
         <h3 id="wee_database_utility_check_strings">Action <span class="code">--check-strings</span></h3>
         <p>Normally, all entries in the archive are numbers. However, some SQLite database editors use a null string
