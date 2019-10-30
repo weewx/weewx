@@ -36,13 +36,13 @@ usage = """wee_database --help
        wee_database --transfer --dest-binding=BINDING_NAME [--dry-run]
        wee_database --check
        wee_database --update [--dry-run]
-       wee_database --calc-missing [--date=YYYY-mm-dd |
-                                    --from=YYYY-mm-dd[THH:MM] --to=YYYY-mm-dd[THH:MM]]
-       wee_database --check-strings
-       wee_database --fix-strings [--dry-run]
        wee_database --drop-daily
        wee_database --rebuild-daily [--date=YYYY-mm-dd |
-                                     --from=YYYY-mm-dd --to=YYYY-mm-dd]
+                                    [--from=YYYY-mm-dd] [--to=YYYY-mm-dd]]
+       wee_database --calc-missing [--date=YYYY-mm-dd |
+                                   [--from=YYYY-mm-dd[THH:MM]] [--to=YYYY-mm-dd[THH:MM]]]
+       wee_database --check-strings
+       wee_database --fix-strings [--dry-run]
 
 Description:
 
@@ -93,7 +93,7 @@ def main():
                       metavar="CONFIG_FILE",
                       help="Use configuration file CONFIG_FILE.")
     parser.add_option("--date", type=str, metavar="YYYY-mm-dd",
-                      help="This date only (option --rebuild-daily only).")
+                      help="This date only (options --calc-missing and --rebuild-daily only).")
     parser.add_option("--from", dest="from_date", type=str, metavar="YYYY-mm-dd[THH:MM]",
                       help="Start with this date or date-time"
                       " (options --calc-missing and --rebuild-daily only).")
