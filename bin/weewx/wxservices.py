@@ -28,8 +28,8 @@ log = logging.getLogger(__name__)
 
 DEFAULTS = u"""
 [StdWXCalculate]
-    data_binding = wx_binding
-    ignore_zero_wind = True
+
+    ignore_zero_wind = True     # If windSpeed is zero, should windDir be set to None?
     rain_period = 900           # Rain rate window
     retain_period = 930         # How long to retain rain events. Should be >= rain_period + archive_delay
     et_period = 3600            # For evapotranspiration
@@ -37,22 +37,24 @@ DEFAULTS = u"""
     atc = 0.8                   # For solar radiation RS
     nfac = 2                    # Atmospheric turbidity (2=clear, 4-5=smoggy)
     max_delta_12h = 1800        # When looking up a temperature in the past, how close does the time have to be?
+    data_binding = wx_binding
+
     [[Calculations]]
-        dewpoint = prefer_hardware
-        inDewpoint = prefer_hardware
-        windchill = prefer_hardware
-        heatindex = prefer_hardware
-        pressure = prefer_hardware
-        barometer = prefer_hardware
         altimeter = prefer_hardware
-        rainRate = prefer_hardware
-        maxSolarRad = prefer_hardware
-        cloudbase = prefer_hardware
-        humidex = prefer_hardware
         appTemp = prefer_hardware
-        ET = prefer_hardware
-        windrun = prefer_hardware
+        barometer = prefer_hardware
         beaufort = prefer_hardware        
+        cloudbase = prefer_hardware
+        dewpoint = prefer_hardware
+        ET = prefer_hardware
+        heatindex = prefer_hardware
+        humidex = prefer_hardware
+        inDewpoint = prefer_hardware
+        maxSolarRad = prefer_hardware
+        pressure = prefer_hardware
+        rainRate = prefer_hardware
+        windchill = prefer_hardware
+        windrun = prefer_hardware
     [[Algorithms]]
         altimeter = aaASOS
         maxSolarRad = RS
@@ -76,16 +78,20 @@ class StdWXCalculate(weewx.engine.StdService):
 
         self.calc = None
 
-        # we will process both loop and archive events
+        # We have specialized configurations to do, so bind to the CONFIG event.
         self.bind(weewx.CONFIG, self.config)
+        # we will process both loop and archive events
         self.bind(weewx.NEW_LOOP_PACKET, self.new_loop_packet)
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
 
     def config(self, event):
         """Perform configuration duties."""
 
+        # Start with the defaults. Make a copy --- we will be modifying it
         wxcalc_dict = ConfigObj(StringIO(DEFAULTS))
+        # Now merge in the overrides from the config file
         wxcalc_dict.merge(event.config)
+
         db_manager = self.engine.db_binder.get_manager(data_binding=wxcalc_dict['StdWXCalculate']['data_binding'],
                                                        initialize=True)
 
@@ -122,7 +128,15 @@ class WXCalculate(object):
     """
 
     def __init__(self, svc_dict, altitude_vt, latitude, longitude, db_manager):
-        """Initialize the calculation service."""
+        """Initialize the calculation service.
+
+        Args:
+            svc_dict: ConfigDict structure with configuration info 
+            altitude_vt: The altitude of the station as a ValueTuple
+            latitude:  Its latitude
+            longitude:  Its longitude
+            db_manager: An open instance of manager.Manager
+        """
 
         self.svc_dict = svc_dict
         self.altitude_vt = altitude_vt
