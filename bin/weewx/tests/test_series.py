@@ -3,7 +3,7 @@
 #
 #    See the file LICENSE.txt for your full rights.
 #
-"""Test module weewx.series"""
+"""Test weewx.xtypes.get_series"""
 
 import os.path
 import sys
@@ -19,7 +19,7 @@ except ImportError:
 
 import weewx
 import weewx.wxformulas
-import weewx.series
+import weewx.xtypes
 import weewx.units
 from weeutil.weeutil import TimeSpan
 
@@ -69,7 +69,7 @@ class Common(unittest.TestCase):
 
     def test_get_series_archive(self):
         with weewx.manager.open_manager_with_config(self.config_dict, 'wx_binding') as db_manager:
-            start_vec, stop_vec, data_vec = weewx.series.get_series('outTemp',
+            start_vec, stop_vec, data_vec = weewx.xtypes.get_series('outTemp',
                                                                     TimeSpan(start_ts, stop_ts),
                                                                     db_manager)
             self.assertEqual(len(start_vec[0]), (stop_ts - start_ts) / gen_fake_data.interval + 1)
@@ -78,7 +78,7 @@ class Common(unittest.TestCase):
 
     def test_get_series_archive_agg(self):
         with weewx.manager.open_manager_with_config(self.config_dict, 'wx_binding') as db_manager:
-            start_vec, stop_vec, data_vec = weewx.series.get_series('outTemp',
+            start_vec, stop_vec, data_vec = weewx.xtypes.get_series('outTemp',
                                                                     TimeSpan(start_ts, stop_ts),
                                                                     db_manager,
                                                                     'avg',

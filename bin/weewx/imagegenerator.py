@@ -21,8 +21,8 @@ import weeplot.utilities
 import weeutil.logger
 import weeutil.weeutil
 import weewx.reportengine
-import weewx.series
 import weewx.units
+import weewx.xtypes
 from weeutil.config import search_up, accumulateLeaves
 from weeutil.weeutil import to_bool, to_int, to_float, TimeSpan
 from weewx.units import ValueTuple
@@ -173,7 +173,7 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                     # Now its time to find and hit the database:
                     binding = line_options['data_binding']
                     db_manager = self.db_binder.get_manager(binding)
-                    start_vec_t, stop_vec_t ,data_vec_t = weewx.series.get_series(var_type,
+                    start_vec_t, stop_vec_t ,data_vec_t = weewx.xtypes.get_series(var_type,
                                                                                   TimeSpan(minstamp, maxstamp),
                                                                                   db_manager,
                                                                                   aggregate_type=aggregate_type,

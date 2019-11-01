@@ -11,7 +11,6 @@ from weeutil.weeutil import to_int
 import weewx.units
 from weewx.units import ValueTuple
 import weewx.xtypes
-import weewx.aggregate
 
 #===============================================================================
 #                    Class TimeBinder
@@ -348,7 +347,7 @@ class ObservationBinder(object):
         try:
             # If we cannot perform the aggregation, we will get an UnknownType or UnknownAggregation
             # error. Be prepared to catch it.
-            result = weewx.aggregate.get_aggregate(self.obs_type, self.timespan, aggregate_type,
+            result = weewx.xtypes.get_aggregate(self.obs_type, self.timespan, aggregate_type,
                                                    db_manager, val=val, **self.option_dict)
         except (weewx.UnknownType, weewx.UnknownAggregation):
             # Signal Cheetah that we don't know how to do this by raiing an AttributeError.

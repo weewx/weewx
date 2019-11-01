@@ -9,6 +9,9 @@ Recognize that applying `tderiv` will change the unit group.
 
 Fill out test suites for `get_series()`.
 
+Change StdService.shutDown() to StdService.shut_down(). Leave backwards compatibility 
+stub behind.
+
 
 ### Logging
 Refactor `wee_import` to use the new logging facility.

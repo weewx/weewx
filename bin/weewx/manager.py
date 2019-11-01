@@ -19,9 +19,8 @@ import weedb
 import weeutil.config
 import weeutil.weeutil
 import weewx.accum
-import weewx.aggregate
-import weewx.series
 import weewx.units
+import weewx.xtypes
 from weeutil.weeutil import timestamp_to_string, to_int
 
 log = logging.getLogger(__name__)
@@ -420,16 +419,16 @@ class Manager(object):
 
     def getAggregate(self, timespan, obs_type,
                      aggregate_type, **option_dict):
-        """ OBSOLETE. Use weewx.aggregate.get_aggregate() instead. """
+        """ OBSOLETE. Use weewx.xtypes.get_aggregate() instead. """
 
-        return weewx.aggregate.get_aggregate(obs_type, timespan, aggregate_type, self, **option_dict)
+        return weewx.xtypes.get_aggregate(obs_type, timespan, aggregate_type, self, **option_dict)
 
     def getSqlVectors(self, timespan, obs_type,
                       aggregate_type=None,
                       aggregate_interval=None):
-        """ OBSOLETE. Use weewx.series.get_series() instead """
+        """ OBSOLETE. Use weewx.xtypes.get_series() instead """
 
-        return weewx.series.get_series(obs_type, timespan, self, aggregate_type, aggregate_interval)
+        return weewx.xtypes.get_series(obs_type, timespan, self, aggregate_type, aggregate_interval)
 
     def _check_unit_system(self, unit_system):
         """ Check to make sure a unit system is the same as what's already in use in the database."""
