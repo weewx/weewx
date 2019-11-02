@@ -270,10 +270,10 @@ class VecStats(object):
 
 
 # ===============================================================================
-#                             StringAccum
+#                             FirstLastAccum
 # ===============================================================================
 
-class StringAccum(object):
+class FirstLastAccum(object):
     """Minimal accumulator, suitable for strings.
     It can only return the first and last strings it has seen, along with their timestamps.
     """
@@ -551,9 +551,9 @@ class Accum(dict):
 #
 
 accum_types = {
-    'scalar' : ScalarStats,
-    'vector' : VecStats,
-    'string' : StringAccum
+    'scalar'    : ScalarStats,
+    'vector'    : VecStats,
+    'firstlast' : FirstLastAccum
 }
 
 add_functions = {
@@ -570,13 +570,13 @@ merge_functions = {
 
 extract_functions = {
     'avg'  : Accum.extract_avg,
-    'sum'  : Accum.extract_sum,
-    'min'  : Accum.extract_min,
-    'max'  : Accum.extract_max,
     'count': Accum.extract_count,
     'last' : Accum.extract_last,
+    'max'  : Accum.extract_max,
+    'min'  : Accum.extract_min,
+    'noop' : Accum.noop,
+    'sum'  : Accum.extract_sum,
     'wind' : Accum.extract_wind,
-    'noop' : Accum.noop
 }
 
 # The default actions for an individual observation type
