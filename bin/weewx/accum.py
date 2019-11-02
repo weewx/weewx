@@ -648,7 +648,7 @@ from six.moves import StringIO
 defaults = configobj.ConfigObj(StringIO(DEFAULTS_INI), encoding='utf-8')
 del StringIO
 
-# Must call reset() before this is useful
+# Must call setup() before this is useful
 accum_dict = None
 
 
