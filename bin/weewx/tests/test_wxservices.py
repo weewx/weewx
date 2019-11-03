@@ -16,6 +16,21 @@ except ImportError:
 
 import weewx.wxservices
 
+altitude_vt = (700, 'foot', 'group_altitude')
+svc_dict = {
+    'Algorithms': {},
+    'Calculations': {
+        'appTemp': 'software',
+        'beaufort': 'software',
+        'dewpoint': 'software',
+        'heatindex': 'software',
+        'humidex': 'software',
+        'inDewpoint': 'software',
+        'windchill': 'software',
+        'windrun': 'software',
+    }
+}
+
 # Test values:
 record = {
     'dateTime': 1567515300, 'usUnits': 1, 'interval': 5, 'inTemp': 73.0, 'outTemp': 88.7, 'inHumidity': 54.0,
@@ -41,21 +56,7 @@ class TestSimpleFunctions(unittest.TestCase):
     def setUp(self):
         # Make a copy. We may be modifying it.
         self.record = dict(record)
-
-    def test_dewpoint(self):
-        self.calc('dewpoint', 'outTemp', 'outHumidity')
-
-    def test_inDewpoint(self):
-        self.calc('inDewpoint', 'inTemp', 'inHumidity')
-
-    def test_windchill(self):
-        self.calc('windchill', 'outTemp', 'windSpeed')
-
-    def test_heatindex(self):
-        self.calc('heatindex', 'outTemp', 'outHumidity')
-
-    def test_humidex(self):
-        self.calc('humidex', 'outTemp', 'outHumidity')
+        self.wx_calc = weewx.wxservices.WXXTypes(svc_dict, altitude_vt, 45, -122)
 
     def test_appTemp(self):
         self.calc('appTemp', 'outTemp', 'outHumidity', 'windSpeed')
@@ -63,16 +64,28 @@ class TestSimpleFunctions(unittest.TestCase):
     def test_beaufort(self):
         self.calc('beaufort', 'windSpeed')
 
+    def test_dewpoint(self):
+        self.calc('dewpoint', 'outTemp', 'outHumidity')
+
+    def test_heatindex(self):
+        self.calc('heatindex', 'outTemp', 'outHumidity')
+
+    def test_humidex(self):
+        self.calc('humidex', 'outTemp', 'outHumidity')
+
+    def test_inDewpoint(self):
+        self.calc('inDewpoint', 'inTemp', 'inHumidity')
+
+    def test_windchill(self):
+        self.calc('windchill', 'outTemp', 'windSpeed')
+
     def test_windrun(self):
         self.calc('windrun', 'windSpeed')
 
     def calc(self, key, *crits):
         """Calculate derived type 'key'. Parameters in "crits" are required to perform the calculation. Their
         presence will be tested."""
-        # Figure out what function to call
-        function = getattr(weewx.wxservices, 'calc_' + key)
-        # Call it and get the results
-        result = function(key, self.record)
+        result = self.wx_calc.get_scalar(key, self.record, None)
         self.assertAlmostEqual(result, correct[key], 3)
         # Now try it, but with a critical key missing
         for crit in crits:
@@ -80,25 +93,17 @@ class TestSimpleFunctions(unittest.TestCase):
             self.setUp()
             # Set the critical key to None
             self.record[crit] = None
-            result = function(key, self.record)
+            result = self.wx_calc.get_scalar(key, self.record, None)
             # Result should be None
             self.assertEqual(result, None)
             # Try again, but delete the key completely. Should raise an exception.
             with self.assertRaises(weewx.CannotCalculate):
                 del self.record[crit]
-                function(key, self.record)
+                self.wx_calc.get_scalar(key, self.record, None)
         # Finally, make sure it raises weewx.UnknownType when presented with an unknown key
         with self.assertRaises(weewx.UnknownType):
-            function('foo', self.record)
+            self.wx_calc.get_scalar('foo', self.record, None)
 
-# class TestWXCalculate(unittest.TestCase):
-#
-#     altitude_vt = (700, 'foot', 'group_altitude')
-#
-#     def setUp(self):
-#         get a dbmanager
-#         # Use default config dictionary:
-#         self.calc = TestWXCalculate({}, TestWXCalculate.altitude_vt, 45, -123, )
 
 if __name__ == '__main__':
     unittest.main()

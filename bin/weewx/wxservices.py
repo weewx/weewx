@@ -106,18 +106,17 @@ class StdWXCalculate(weewx.engine.StdService):
 
         # Instantiate a PressureCooker to calculate various kinds of pressure
         self.pressure_cooker = PressureCooker(self.engine.stn_info.altitude_vt,
-                                              to_int(self.svc_dict['max_delta_12h']),
-                                              self.svc_dict['Algorithms']['altimeter'])
+                                              to_int(self.svc_dict.get('max_delta_12h', 1800)),
+                                              self.svc_dict['Algorithms'].get('altimeter', 'aaASOS'))
         # Instantiate a RainRater to calculate rainRate
-        self.rain_rater = RainRater(to_int(self.svc_dict['rain_period']),
-                                    to_int(self.svc_dict['retain_period']))
+        self.rain_rater = RainRater(to_int(self.svc_dict.get('rain_period', 900)),
+                                    to_int(self.svc_dict.get('retain_period', 930)))
 
         # Instantitate a WXXTypes object to calculate simple scalars (like dewpoint, etc.)
         self.wx_types = WXXTypes(self.svc_dict,
                                  self.engine.stn_info.altitude_vt,
                                  self.engine.stn_info.latitude_f,
-                                 self.engine.stn_info.longitude_f,
-                                 self.db_manager)
+                                 self.engine.stn_info.longitude_f)
 
         # Now add all our type extensions into the type system
         weewx.xtypes.xtypes.append(self.pressure_cooker)
@@ -192,7 +191,7 @@ class WXXTypes(weewx.xtypes.XType):
     """Weather extensions to the WeeWX type extension system that are relatively simple. This is for types
      which are generally stateless, such as dewpoint, heatindex, etc."""
 
-    def __init__(self, svc_dict, altitude_vt, latitude, longitude, db_manager):
+    def __init__(self, svc_dict, altitude_vt, latitude, longitude):
         """Initialize an instance of WXXTypes
 
         Args:
@@ -200,28 +199,26 @@ class WXXTypes(weewx.xtypes.XType):
             altitude_vt: The altitude of the station as a ValueTuple
             latitude:  Its latitude
             longitude:  Its longitude
-            db_manager: An open instance of manager.Manager
         """
 
         self.svc_dict = svc_dict
         self.altitude_vt = altitude_vt
         self.latitude = latitude
         self.longitude = longitude
-        self.db_manager = db_manager
 
         # window of time for evapotranspiration calculation, in seconds
-        self.et_period = to_int(svc_dict['et_period'])
+        self.et_period = to_int(svc_dict.get('et_period', 3600))
         # atmospheric transmission coefficient [0.7-0.91]
-        self.atc = to_float(svc_dict['atc'])
+        self.atc = to_float(svc_dict.get('atc', 0.8))
         # Fail hard if out of range:
         if not 0.7 <= self.atc <= 0.91:
             raise weewx.ViolatedPrecondition("Atmospheric transmission "
                                              "coefficient (%f) out of "
                                              "range [.7-.91]" % self.atc)
         # atmospheric turbidity (2=clear, 4-5=smoggy)
-        self.nfac = to_float(svc_dict['nfac'])
+        self.nfac = to_float(svc_dict.get('nfac', 2))
         # height above ground at which wind is measured, in meters
-        self.wind_height = to_float(svc_dict['wind_height'])
+        self.wind_height = to_float(svc_dict.get('wind_height', 2.0))
 
     def get_scalar(self, obs_type, record, db_manager):
 
