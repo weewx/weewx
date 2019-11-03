@@ -1,0 +1,19 @@
+[Unit]
+Description=WeeWX weather station system
+After=syslog.target network.target
+
+[Service]
+Type=simple
+# In systemd version 240:
+#Type=exec
+PrivateTmp=yes
+User=root
+Group=root
+
+Environment=CONF_FILE=/etc/weewx/weewx.conf
+
+ExecStart=/usr/bin/python /usr/bin/weewxd $CONF_FILE
+ExecReload=/bin/kill -HUP $MAINPID
+
+[Install]
+WantedBy=multi-user.target

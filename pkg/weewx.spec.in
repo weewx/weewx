@@ -26,6 +26,7 @@
 %define html_root /var/www/html/weewx
 %endif
 
+
 # suse linux enterprise server
 %if 0%{?sles_version}
 %define relos .sles
@@ -205,7 +206,7 @@ fi
 %preun
 if [ "$1" = "0" ]; then
   # this is an uninstall, so stop and remove everything
-  if [ -f /etc/systemd/system/weewx.service ]; then
+  if [ -f "%{systemd_service_file}" ]; then
     systemctl stop weewx
     systemctl disable weewx
   else
