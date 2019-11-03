@@ -2,6 +2,10 @@
 # License: GPLv3
 # Author: (c) 2013 Matthew Wall
 
+%define systemd_os default
+%define init_file %{initdir}/weewx
+%define systemd_service_file ""
+
 # suse
 %if 0%{?suse_version}
 #define relos .suse%{suse_version}
@@ -11,6 +15,9 @@
 #define initdir /etc/init.d
 %define deps , python-pyserial, python-usb
 %define html_root /srv/www/htdocs/weewx
+%define systemd_os suse
+%define init_file ""
+%define systemd_service_file %{initdir}/weewx.service
 %endif
 %if 0%{?sles_version}
 #define relos .sles%{sles_version}
@@ -20,6 +27,9 @@
 #define initdir /etc/init.d
 %define deps , python-pyserial, python-usb
 %define html_root /srv/www/htdocs/weewx
+%define systemd_os suse
+%define init_file ""
+%define systemd_service_file %{initdir}/weewx.service
 %endif
 
 # redhat, fedora, centos
@@ -27,10 +37,14 @@
 #define relos %{?dist:%{dist}}
 %define relos .rhel
 %define platform redhat
-%define initdir %{_initrddir}
+%define initdir %{_unitdir}
 # on redhat, must install serial and/or usb using easy_install or pip
 %define deps , python-setuptools
 %define html_root /var/www/html/weewx
+%define systemd_os fedora
+# Docs: https://fedoraproject.org/wiki/Packaging:Systemd
+%define init_file ""
+%define systemd_service_file %{initdir}/weewx.service
 %endif
 
 %global relnum RPMREVISION
@@ -92,16 +106,14 @@ cat weewx.conf | sed \
  -e 's:HTML_ROOT = public_html:HTML_ROOT = %{html_root}:' \
  -e 's%SQLITE_ROOT = .*%SQLITE_ROOT = /var/lib/weewx%' \
  > %{buildroot}%{dst_cfg_dir}/weewx.conf
-%if "%{initdir}" == "/etc/systemd/system"
-cat util/systemd/weewx.service | sed \
- -e 's%ExecStart=.*%ExecStart=/usr/bin/weewxd --daemon --pidfile=/var/run/weewx.pid /etc/weewx/weewx.conf%' \
- > %{buildroot}%{initdir}/weewx.service
-%else
+if [ -e "util/systemd/weewx.service-%{systemd_os}" ]; then
+cat "util/systemd/weewx.service-%{systemd_os}" > %{buildroot}%{systemd_service_file}
+else
 cat util/init.d/weewx.%{platform} | sed \
  -e 's%WEEWX_BIN=.*%WEEWX_BIN=/usr/bin/weewxd%' \
  -e 's%WEEWX_CFG=.*%WEEWX_CFG=/etc/weewx/weewx.conf%' \
- > %{buildroot}%{initdir}/weewx
-%endif
+ > %{buildroot}%{init_file}
+fi
 
 # make a copy of the generic-for-this-platform configuration file
 cp %{buildroot}%{dst_cfg_dir}/weewx.conf %{buildroot}%{dst_cfg_dir}/weewx.conf.dist
@@ -135,7 +147,7 @@ if [ "$1" = "1" ]; then
   # this is a new installation
   # create a sane configuration file with simulator as the station type
   /usr/share/weewx/wee_config --install --dist-config=/etc/weewx/weewx.conf.dist --output=/etc/weewx/weewx.conf --driver=weewx.drivers.simulator --no-prompt --no-backup
-  if [ -f /etc/systemd/system/weewx.service ]; then
+  if [ -f "%{systemd_service_file}" ]; then
     systemctl enable weewx
     systemctl start weewx
   else
@@ -153,7 +165,7 @@ elif [ "$1" = "2" ]; then
     /usr/share/weewx/wee_config --upgrade --config=%{cfg_file}-$OLDVER --dist-config=%{cfg_file}.dist --output=%{cfg_file} --no-prompt --no-backup
   fi
   # do a full restart not just a HUP
-  if [ -f /etc/systemd/system/weewx.service ]; then
+  if [ -f "%{systemd_service_file}" ]; then
     systemctl stop weewx
     systemctl start weewx
   else
@@ -165,7 +177,7 @@ fi
 %preun
 if [ "$1" = "0" ]; then
   # this is an uninstall, so stop and remove everything
-  if [ -f /etc/systemd/system/weewx.service ]; then
+  if [ -f "%{systemd_service_file}" ]; then
     systemctl stop weewx
     systemctl disable weewx
   else
@@ -180,10 +192,10 @@ rm -rf %{buildroot}
 
 %files
 %defattr(-,root,root)
-%if "%{initdir}" == "/etc/systemd/system"
-  %{initdir}/weewx.service
-%else
+%if "%{systemd_service_file}" == ""
   %attr(755,root,root) %{initdir}/weewx
+%else
+  %{systemd_service_file}
 %endif
 %{dst_bin_dir}/
 %{_bindir}/weewxd
