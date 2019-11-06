@@ -424,13 +424,20 @@ class CurrentObj(object):
                 # Don't recognize the binding.
                 vt = weewx.units.UnknownType(self.data_binding)
             else:
-                # Does the type exist in the database? If not, it's an unknown type
-                if obs_type not in db_manager.sqlkeys:
-                    vt = weewx.units.UnknownType(obs_type)
-                else:
-                    # Get the record from the database
+                # Does the type exist in the database?
+                if obs_type in db_manager.sqlkeys:
+                    # Yes. Get the record from the database
                     record = db_manager.getRecord(self.current_time, max_delta=self.max_delta)
                     vt = weewx.units.as_value_tuple(record, obs_type)
+                else:
+                    # No. Try the XTypes system
+                    try:
+                        v = weewx.xtypes.get_scalar(obs_type, self.record, db_manager)
+                        u, g = weewx.units.getStandardUnitType(self.record['usUnits'], obs_type)
+                        vt = ValueTuple(v, u, g)
+                    except weewx.UnknownType:
+                        # Nothing seems to be working. It's an unknown type.
+                        vt = weewx.units.UnknownType(obs_type)
 
         # Finally, return a ValueHelper
         return weewx.units.ValueHelper(vt, 'current',

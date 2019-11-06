@@ -2,6 +2,9 @@
 Test accumulators with String accumulator, as well as with string types.
 
 Write `TestWXCalculate`
+ - Test windrun
+ - Test ET (should not be calculated for LOOP packets)
+ - Test rainRate calculations
 
 Test new aggregation types `diff` and `tderiv`.
 
