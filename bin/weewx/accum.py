@@ -3,8 +3,7 @@
 #
 #    See the file LICENSE.txt for your full rights.
 #
-"""Statistical accumulators. They accumulate the highs, lows, averages,
-etc., of a sequence of records."""
+"""Statistical accumulators. They accumulate the highs, lows, averages, etc., of a sequence of records."""
 #
 # General strategy.
 #
@@ -12,13 +11,12 @@ etc., of a sequence of records."""
 # which keeps track of highs, lows, and a sum. When it comes time for extraction, the average over the archive period
 # is typically produced.
 #
-# However, wind is a special case. It is a vector, which has been flatted over at least two
-# scalars, windSpeed and windDir. Some stations, notably the Davis Vantage, add windGust and windGustDir. The
-# accumulators cannot simply treat them individually as if they were just another scalar. Instead they must be
-# grouped together. This is done by treating windSpeed as a 'special' scalar. When it appears, it is coupled with
-# windDir and, if available, windGust and windGustDir, and added to a vector accumulator. When the other types (
-# windDir, windGust, and windGustDir) appear, they are ignored, having already been handled during the processing of
-# type windSpeed.
+# However, wind is a special case. It is a vector, which has been flatted over at least two scalars, windSpeed and
+# windDir. Some stations, notably the Davis Vantage, add windGust and windGustDir. The accumulators cannot simply treat
+# them individually as if they were just another scalar. Instead they must be grouped together. This is done by treating
+# windSpeed as a 'special' scalar. When it appears, it is coupled with windDir and, if available, windGust and
+# windGustDir, and added to a vector accumulator. When the other types ( windDir, windGust, and windGustDir) appear,
+# they are ignored, having already been handled during the processing of type windSpeed.
 #
 # When it comes time to extract wind, vector averages are calculated, then the results are flattened again.
 #
@@ -29,11 +27,84 @@ import math
 
 import configobj
 import six
+from six.moves import StringIO
 
 import weewx
 from weeutil.weeutil import ListOfDicts, to_float
 
 log = logging.getLogger(__name__)
+
+#
+# Default mappings from observation types to accumulator classes and functions
+#
+
+DEFAULTS_INI = u"""
+[Accumulator]
+    [[dateTime]]
+        adder = noop
+    [[dayET]]
+        extractor = last
+    [[dayRain]]
+        extractor = last
+    [[ET]]
+        extractor = sum
+    [[hourRain]]
+        extractor = last
+    [[rain]]
+        extractor = sum
+    [[rain24]]
+        extractor = last
+    [[monthET]]
+        extractor = last
+    [[monthRain]]
+        extractor = last
+    [[stormRain]]
+        extractor = last
+    [[totalRain]]
+        extractor = last
+    [[usUnits]]
+        adder = check_units
+    [[wind]]
+        accumulator = vector
+        extractor = wind
+    [[windDir]]
+        extractor = noop
+    [[windGust]]
+        extractor = noop
+    [[windGustDir]]
+        extractor = noop
+    [[windGust10]]
+        extractor = last
+    [[windGustDir10]]
+        extractor = last
+    [[windrun]]
+        extractor = sum
+    [[windSpeed]]
+        adder = add_wind
+        merger = avg
+        extractor = noop
+    [[windSpeed2]]
+        extractor = last
+    [[windSpeed10]]
+        extractor = last
+    [[yearET]]
+        extractor = last
+    [[yearRain]]
+        extractor = last
+"""
+defaults_dict = configobj.ConfigObj(StringIO(DEFAULTS_INI), encoding='utf-8')
+
+accum_dict = None
+
+
+def setup():
+    # Set/reset to the default values
+    global accum_dict
+    accum_dict = ListOfDicts(defaults_dict['Accumulator'].dict())
+
+
+# Use the defaults to set up accum_dict
+setup()
 
 
 class OutOfSpan(ValueError):
@@ -552,25 +623,25 @@ class Accum(dict):
 # to actual functions and classes
 #
 
-accum_types = {
+ACCUM_TYPES = {
     'scalar': ScalarStats,
     'vector': VecStats,
     'firstlast': FirstLastAccum
 }
 
-add_functions = {
+ADD_FUNCTIONS = {
     'add': Accum.add_value,
     'add_wind': Accum.add_wind_value,
     'check_units': Accum.check_units,
     'noop': Accum.noop
 }
 
-merge_functions = {
+MERGE_FUNCTIONS = {
     'minmax': Accum.merge_minmax,
     'avg': Accum.merge_avg
 }
 
-extract_functions = {
+EXTRACT_FUNCTIONS = {
     'avg': Accum.extract_avg,
     'count': Accum.extract_count,
     'last': Accum.extract_last,
@@ -589,84 +660,12 @@ OBS_DEFAULTS = {
     'extractor': 'avg'
 }
 
-#
-# Default mappings from observation types to accumulator classes and functions
-#
-
-DEFAULTS_INI = u"""
-[Accumulator]
-    [[dateTime]]
-        adder = noop
-    [[dayET]]
-        extractor = last
-    [[dayRain]]
-        extractor = last
-    [[ET]]
-        extractor = sum
-    [[hourRain]]
-        extractor = last
-    [[rain]]
-        extractor = sum
-    [[rain24]]
-        extractor = last
-    [[monthET]]
-        extractor = last
-    [[monthRain]]
-        extractor = last
-    [[stormRain]]
-        extractor = last
-    [[totalRain]]
-        extractor = last
-    [[usUnits]]
-        adder = check_units
-    [[wind]]
-        accumulator = vector
-        extractor = wind
-    [[windDir]]
-        extractor = noop
-    [[windGust]]
-        extractor = noop
-    [[windGustDir]]
-        extractor = noop
-    [[windGust10]]
-        extractor = last
-    [[windGustDir10]]
-        extractor = last
-    [[windrun]]
-        extractor = sum
-    [[windSpeed]]
-        adder = add_wind
-        merger = avg
-        extractor = noop
-    [[windSpeed2]]
-        extractor = last
-    [[windSpeed10]]
-        extractor = last
-    [[yearET]]
-        extractor = last
-    [[yearRain]]
-        extractor = last
-"""
-from six.moves import StringIO
-
-defaults = configobj.ConfigObj(StringIO(DEFAULTS_INI), encoding='utf-8')
-del StringIO
-
-# This is initialized by the function setup(), called below.
-accum_dict = None
-
 
 def initialize(config_dict):
     # Add the configuration dictionary to the beginning of the list of maps.
     # This will cause it to override the defaults
     global accum_dict
     accum_dict.maps.insert(0, config_dict.get('Accumulator', {}))
-
-
-def setup():
-    # Set/reset to the default values
-    global accum_dict
-    accum_dict = ListOfDicts(defaults['Accumulator'].dict())
 
 
 def new_accumulator(obs_type):
@@ -678,7 +677,7 @@ def new_accumulator(obs_type):
     accum_nickname = obs_options.get('accumulator', 'scalar')
     # Instantiate and return the accumulator.
     # If we don't know this nickname, then fail hard with a KeyError
-    return accum_types[accum_nickname]()
+    return ACCUM_TYPES[accum_nickname]()
 
 
 def get_add_function(obs_type):
@@ -689,7 +688,7 @@ def get_add_function(obs_type):
     # Get the nickname of the adder. Default is 'add'
     add_nickname = obs_options.get('adder', 'add')
     # If we don't know this nickname, then fail hard with a KeyError
-    return add_functions[add_nickname]
+    return ADD_FUNCTIONS[add_nickname]
 
 
 def get_merge_function(obs_type):
@@ -700,7 +699,7 @@ def get_merge_function(obs_type):
     # Get the nickname of the merger. Default is 'minmax'
     add_nickname = obs_options.get('merger', 'minmax')
     # If we don't know this nickname, then fail hard with a KeyError
-    return merge_functions[add_nickname]
+    return MERGE_FUNCTIONS[add_nickname]
 
 
 def get_extract_function(obs_type):
@@ -711,8 +710,4 @@ def get_extract_function(obs_type):
     # Get the nickname of the extractor. Default is 'avg'
     add_nickname = obs_options.get('extractor', 'avg')
     # If we don't know this nickname, then fail hard with a KeyError
-    return extract_functions[add_nickname]
-
-
-# Initialize with the defaults. 
-setup()
+    return EXTRACT_FUNCTIONS[add_nickname]
