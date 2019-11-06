@@ -14,9 +14,10 @@ import socket
 
 import weecfg
 import weeutil.logger
+import weewx.engine
 import weewx.reportengine
 import weewx.station
-from weeutil.weeutil import timestamp_to_string
+from weeutil.weeutil import timestamp_to_string, to_int
 
 description = """Run all reports defined in the specified configuration file.
 Use this utility to run reports immediately instead of waiting for the end of
@@ -24,32 +25,47 @@ an archive interval."""
 
 usage = """%prog: [config_file] [timestamp] [--config=CONFIG_FILE] [--help]"""
 
-def main():
 
+class DummyConsole(object):
+    """A fake console, used for reporting."""
+    def __init__(self, config_dict):
+        try:
+            self.archive_interval = to_int(config_dict['StdArchive']['archive_interval'])
+        except KeyError:
+            self.archive_interval = 300
+
+
+class DummyEngine(weewx.engine.StdEngine):
+    """A fake engine, used for reporting."""
+    def setupStation(self, config_dict):
+        self.console = DummyConsole(config_dict)
+
+
+def main():
     # Set defaults for logging:
     weeutil.logger.setup('wee_reports', {})
 
     # Create a command line parser:
     parser = optparse.OptionParser(description=description, usage=usage)
-    
+
     # Add the various options:
     parser.add_option("--config", dest="config_path", type=str, metavar="CONFIG_FILE",
                       help="Use the configuration file CONFIG_FILE")
 
     # Now we are ready to parse the command line:
-    (options, args) = parser.parse_args()
+    options, args = parser.parse_args()
     config_path, config_dict = weecfg.read_config(options.config_path, args)
-    
+
     # If the user specified a time, retrieve it. Otherwise, set to None
     gen_ts = int(args[0]) if args else None
-    
+
     print("Using configuration file %s" % config_path)
 
     if gen_ts is None:
         print("Generating for all time")
     else:
         print("Generating for requested time %s" % timestamp_to_string(gen_ts))
-        
+
     # Look for the debug flag. If set, ask for extra logging
     weewx.debug = int(config_dict.get('debug', 0))
 
@@ -57,13 +73,18 @@ def main():
     weeutil.logger.setup('wee_reports', config_dict)
 
     socket.setdefaulttimeout(10)
-    
+
+    # Instantiate the dummy engine. This will cause services to get loaded, which will make
+    # extensions available.
+    engine = DummyEngine(config_dict)
+
     stn_info = weewx.station.StationInfo(**config_dict['Station'])
-    
+
     t = weewx.reportengine.StdReportEngine(config_dict, stn_info, gen_ts=gen_ts)
 
     # Although the report engine inherits from Thread, we can just run it in the main thread:
     t.run()
-    
-if __name__=="__main__" :
+
+
+if __name__ == "__main__":
     main()
