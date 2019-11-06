@@ -20,6 +20,9 @@ if they can be converted to a number.
 Strings can now be accumulated and extracted in the accumulators, making
 it possible to include them in the database schemas.
 
+The utility wee_reports now loads services, allowing it to use user-supplied
+extensions. Fixes issue #95.
+
 New, more flexible, way of specifying schemas.
 
 The package MySQL-python, which we used previously, is not available
