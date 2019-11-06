@@ -432,9 +432,7 @@ class CurrentObj(object):
                 else:
                     # No. Try the XTypes system
                     try:
-                        v = weewx.xtypes.get_scalar(obs_type, self.record, db_manager)
-                        u, g = weewx.units.getStandardUnitType(self.record['usUnits'], obs_type)
-                        vt = ValueTuple(v, u, g)
+                        vt = weewx.xtypes.get_scalar(obs_type, self.record, db_manager)
                     except weewx.UnknownType:
                         # Nothing seems to be working. It's an unknown type.
                         vt = weewx.units.UnknownType(obs_type)

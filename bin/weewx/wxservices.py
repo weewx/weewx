@@ -25,7 +25,7 @@ import weewx.wxformulas
 import weewx.xtypes
 from six.moves import StringIO
 from weeutil.weeutil import to_int, to_float, to_bool, TimeSpan
-from weewx.units import CtoF, mps_to_mph, kph_to_mph, METER_PER_FOOT
+from weewx.units import ValueTuple, mps_to_mph, kph_to_mph, METER_PER_FOOT, CtoF
 
 log = logging.getLogger(__name__)
 
@@ -164,7 +164,7 @@ class StdWXCalculate(weewx.engine.StdService):
                     log.debug("Unknown aggregation '%s'" % e)
                 else:
                     # If there was no exception, add the results to the dictionary
-                    data_dict[obs] = new_value
+                    data_dict[obs] = new_value[0]
 
     @staticmethod
     def adjust_winddir(data):
@@ -222,14 +222,15 @@ class WXXTypes(weewx.xtypes.XType):
         algo = self.svc_dict['Algorithms'].get('maxSolarRad', 'RS').lower()
         altitude_m = weewx.units.convert(self.altitude_vt, 'meter')[0]
         if algo == 'bras':
-            return weewx.wxformulas.solar_rad_Bras(self.latitude, self.longitude, altitude_m,
-                                                   data['dateTime'], self.nfac)
+            val = weewx.wxformulas.solar_rad_Bras(self.latitude, self.longitude, altitude_m,
+                                                  data['dateTime'], self.nfac)
         elif algo == 'rs':
-            return weewx.wxformulas.solar_rad_RS(self.latitude, self.longitude, altitude_m,
-                                                 data['dateTime'], self.atc)
+            val = weewx.wxformulas.solar_rad_RS(self.latitude, self.longitude, altitude_m,
+                                                data['dateTime'], self.atc)
         else:
             raise weewx.ViolatedPrecondition("Unknown solar algorithm '%s'"
                                              % self.svc_dict['Algorithms']['maxSolarRad'])
+        return ValueTuple(val, 'watt_per_meter_squared', 'group_radiation')
 
     def calc_cloudbase(self, key, data, db_manager):
         if 'outTemp' not in data or 'outHumidity' not in data:
@@ -239,9 +240,12 @@ class WXXTypes(weewx.xtypes.XType):
         # Use the appropriate formula
         if data['usUnits'] == weewx.US:
             formula = weewx.wxformulas.cloudbase_US
+            u = 'foot'
         else:
             formula = weewx.wxformulas.cloudbase_Metric
-        return formula(data['outTemp'], data['outHumidity'], altitude[0])
+            u = 'meter'
+        val = formula(data['outTemp'], data['outHumidity'], altitude[0])
+        return ValueTuple(val, u, 'group_altitude')
 
     def calc_ET(self, key, data, db_manager):
         """Get maximum and minimum temperatures and average radiation and
@@ -262,19 +266,19 @@ class WXXTypes(weewx.xtypes.XType):
                                   "MAX(usUnits), MIN(usUnits) FROM %s WHERE dateTime>? AND dateTime <=?"
                                   % db_manager.table_name, (start_ts, end_ts))
         except weedb.DatabaseError:
-            return None
+            return ValueTuple(None, None, None)
 
         # Make sure everything is there:
         if r is None or None in r:
-            return None
+            return ValueTuple(None, None, None)
 
         # Unpack the results
         T_max, T_min, rad_avg, wind_avg, rh_max, rh_min, std_unit_min, std_unit_max = r
 
         # Check for mixed units
         if std_unit_min != std_unit_max:
-            log.info("Mixed unit system not allowed in ET calculation")
-            return None
+            log.info("Mixed unit system not allowed in ET calculation. Skipped.")
+            return ValueTuple(None, None, None)
         std_unit = std_unit_min
         if std_unit == weewx.METRIC or std_unit == weewx.METRICWX:
             T_max = CtoF(T_max)
@@ -308,46 +312,76 @@ class WXXTypes(weewx.xtypes.XType):
     def calc_dewpoint(key, data, db_manager=None):
         if 'outTemp' not in data or 'outHumidity' not in data:
             raise weewx.CannotCalculate(key)
-        formula = weewx.wxformulas.dewpointF if data['usUnits'] == weewx.US else weewx.wxformulas.dewpointC
-        return formula(data['outTemp'], data['outHumidity'])
+        if data['usUnits'] == weewx.US:
+            val = weewx.wxformulas.dewpointF(data['outTemp'], data['outHumidity'])
+            u = 'degree_F'
+        else:
+            val = weewx.wxformulas.dewpointC(data['outTemp'], data['outHumidity'])
+            u = 'degree_C'
+        return weewx.units.convertStd((val, u, 'group_temperature'), data['usUnits'])
 
     @staticmethod
     def calc_inDewpoint(key, data, db_manager=None):
         if 'inTemp' not in data or 'inHumidity' not in data:
             raise weewx.CannotCalculate(key)
-        formula = weewx.wxformulas.dewpointF if data['usUnits'] == weewx.US else weewx.wxformulas.dewpointC
-        return formula(data['inTemp'], data['inHumidity'])
+        if data['usUnits'] == weewx.US:
+            val = weewx.wxformulas.dewpointF(data['inTemp'], data['inHumidity'])
+            u = 'degree_F'
+        else:
+            val = weewx.wxformulas.dewpointC(data['inTemp'], data['inHumidity'])
+            u = 'degree_C'
+        return weewx.units.convertStd((val, u, 'group_temperature'), data['usUnits'])
 
     @staticmethod
     def calc_windchill(key, data, db_manager=None):
         if 'outTemp' not in data or 'windSpeed' not in data:
             raise weewx.CannotCalculate(key)
-        formula = weewx.wxformulas.windchillF if data['usUnits'] == weewx.US else weewx.wxformulas.windchillC
-        return formula(data['outTemp'], data['windSpeed'])
+        if data['usUnits'] == weewx.US:
+            val = weewx.wxformulas.windchillF(data['outTemp'], data['windSpeed'])
+            u = 'degree_F'
+        else:
+            val = weewx.wxformulas.windchillC(data['outTemp'], data['windSpeed'])
+            u = 'degree_C'
+        return weewx.units.convertStd((val, u, 'group_temperature'), data['usUnits'])
 
     @staticmethod
     def calc_heatindex(key, data, db_manager=None):
         if 'outTemp' not in data or 'outHumidity' not in data:
             raise weewx.CannotCalculate(key)
-        formula = weewx.wxformulas.heatindexF if data['usUnits'] == weewx.US else weewx.wxformulas.heatindexC
-        return formula(data['outTemp'], data['outHumidity'])
+        if data['usUnits'] == weewx.US:
+            val = weewx.wxformulas.heatindexF(data['outTemp'], data['outHumidity'])
+            u = 'degree_F'
+        else:
+            val = weewx.wxformulas.heatindexC(data['outTemp'], data['outHumidity'])
+            u = 'degree_C'
+        return weewx.units.convertStd((val, u, 'group_temperature'), data['usUnits'])
 
     @staticmethod
     def calc_humidex(key, data, db_manager=None):
         if 'outTemp' not in data or 'outHumidity' not in data:
             raise weewx.CannotCalculate(key)
-        formula = weewx.wxformulas.humidexF if data['usUnits'] == weewx.US else weewx.wxformulas.humidexC
-        return formula(data['outTemp'], data['outHumidity'])
+        if data['usUnits'] == weewx.US:
+            val = weewx.wxformulas.humidexF(data['outTemp'], data['outHumidity'])
+            u = 'degree_F'
+        else:
+            val = weewx.wxformulas.humidexC(data['outTemp'], data['outHumidity'])
+            u = 'degree_C'
+        return weewx.units.convertStd((val, u, 'group_temperature'), data['usUnits'])
 
     @staticmethod
     def calc_appTemp(key, data, db_manager=None):
         if 'outTemp' not in data or 'outHumidity' not in data or 'windSpeed' not in data:
             raise weewx.CannotCalculate(key)
         if data['usUnits'] == weewx.US:
-            return weewx.wxformulas.apptempF(data['outTemp'], data['outHumidity'], data['windSpeed'])
-        windspeed_vt = weewx.units.as_value_tuple(data, 'windSpeed')
-        windspeed_mps = weewx.units.convert(windspeed_vt, 'meter_per_second')[0]
-        return weewx.wxformulas.apptempC(data['outTemp'], data['outHumidity'], windspeed_mps)
+            val = weewx.wxformulas.apptempF(data['outTemp'], data['outHumidity'], data['windSpeed'])
+            u = 'degree_F'
+        else:
+            # The metric equivalent needs wind speed in mps. Convert.
+            windspeed_vt = weewx.units.as_value_tuple(data, 'windSpeed')
+            windspeed_mps = weewx.units.convert(windspeed_vt, 'meter_per_second')[0]
+            val = weewx.wxformulas.apptempC(data['outTemp'], data['outHumidity'], windspeed_mps)
+            u = 'degree_C'
+        return weewx.units.convertStd((val, u, 'group_temperature'), data['usUnits'])
 
     @staticmethod
     def calc_beaufort(key, data, db_manager=None):
@@ -355,7 +389,7 @@ class WXXTypes(weewx.xtypes.XType):
             raise weewx.CannotCalculate
         windspeed_vt = weewx.units.as_value_tuple(data, 'windSpeed')
         windspeed_kn = weewx.units.convert(windspeed_vt, 'knot')[0]
-        return weewx.wxformulas.beaufort(windspeed_kn)
+        return ValueTuple(weewx.wxformulas.beaufort(windspeed_kn), None, None)
 
     @staticmethod
     def calc_windrun(key, data, db_manager=None):
@@ -364,16 +398,21 @@ class WXXTypes(weewx.xtypes.XType):
             raise weewx.CannotCalculate(key)
 
         if data['windSpeed'] is not None:
-            # System METRICWX requires windrun in km. See issue #452 https://github.com/weewx/weewx/issues/452
-            if data['usUnits'] == weewx.METRICWX:
-                # Answer will be in km
-                run = data['windSpeed'] * data['interval'] * 60.0 / 1000.0
+            if data['usUnits'] == weewx.US:
+                val = data['windSpeed'] * data['interval'] * 60.0
+                u = 'mile'
+            elif data['usUnits'] == weewx.METRIC:
+                val = data['windSpeed'] * data['interval'] * 60.0
+                u = 'km'
+            elif data['usUnits'] == weewx.METRICWX:
+                val = data['windSpeed'] * data['interval'] * 60.0 / 1000.0
+                u = 'meter'
             else:
-                # Answer will be miles or km
-                run = data['windSpeed'] * data['interval'] / 60.0
+                raise weewx.ViolatedPrecondition("Unknown unit system %s" % data['usUnits'])
         else:
-            run = None
-        return run
+            val = None
+            u = 'mile'
+        return weewx.units.convertStd((val, u, 'group_distance'), data['usUnits'])
 
 
 class PressureCooker(weewx.xtypes.XType):
@@ -460,24 +499,30 @@ class PressureCooker(weewx.xtypes.XType):
                 temp_12h_F[0],
                 record_US['outHumidity']
             )
-
-            if record['usUnits'] == weewx.METRIC or record['usUnits'] == weewx.METRICWX:
-                pressure /= weewx.units.INHG_PER_MBAR
-            return pressure
-        # Else, fall off the end and return None
+            # Convert to target unit system and return
+            return weewx.units.convertStd((pressure, 'inHg', 'group_pressure'), record['usUnits'])
+        else:
+            return ValueTuple(None, None, None)
 
     def altimeter(self, record):
         """Calculate the observation type 'altimeter'."""
         if 'pressure' not in record:
             raise weewx.CannotCalculate('altimeter')
+
         # Convert altitude to same unit system of the incoming record
         altitude = weewx.units.convertStd(self.altitude_vt, record['usUnits'])
-        # Figure out which altimeter formula to use:
+
+        # Figure out which altimeter formula to use, and what unit the results will be in:
         if record['usUnits'] == weewx.US:
-            altimeter_formula = weewx.wxformulas.altimeter_pressure_US
+            formula = weewx.wxformulas.altimeter_pressure_US
+            u = 'inHg'
         else:
-            altimeter_formula = weewx.wxformulas.altimeter_pressure_Metric
-        return altimeter_formula(record['pressure'], altitude[0], self.altimeter_algorithm)
+            formula = weewx.wxformulas.altimeter_pressure_Metric
+            u = 'mbar'
+        # Apply the formula
+        altimeter = formula(record['pressure'], altitude[0], self.altimeter_algorithm)
+        # Convert to the target unit system
+        return weewx.units.convertStd((altimeter, u, 'group_pressure'), record['usUnits'])
 
     def barometer(self, record):
         """Calculate the observation type 'barometer'"""
@@ -487,13 +532,18 @@ class PressureCooker(weewx.xtypes.XType):
 
         # Convert altitude to same unit system of the incoming record
         altitude = weewx.units.convertStd(self.altitude_vt, record['usUnits'])
-        # Figure out what pressure formula to use:
+
+        # Figure out what barometer formula to use:
         if record['usUnits'] == weewx.US:
-            pressure_formula = weewx.wxformulas.sealevel_pressure_US
+            formula = weewx.wxformulas.sealevel_pressure_US
+            u = 'inHg'
         else:
-            pressure_formula = weewx.wxformulas.sealevel_pressure_Metric
+            formula = weewx.wxformulas.sealevel_pressure_Metric
+            u = 'mbar'
         # Apply the formula
-        return pressure_formula(record['pressure'], altitude[0], record['outTemp'])
+        barometer = formula(record['pressure'], altitude[0], record['outTemp'])
+        # Convert to the target unit system:
+        return weewx.units.convertStd((barometer, u, 'group_pressure'), record['usUnits'])
 
 
 class RainRater(weewx.xtypes.XType):
@@ -538,7 +588,9 @@ class RainRater(weewx.xtypes.XType):
         # Sum the rain events within the time window...
         rainsum = sum(x[1] for x in self.rain_events if x[0] > record['dateTime'] - self.rain_period)
         # ...then divide by the period and scale to an hour
-        return 3600 * rainsum / self.rain_period
+        val = 3600 * rainsum / self.rain_period
+        u, g = weewx.units.getStandardUnitType(record['usUnits'], 'rainRate')
+        return ValueTuple(val, u, g)
 
     def _setup(self, stop_ts, db_manager):
         """Initialize the rain event list"""

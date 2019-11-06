@@ -77,7 +77,7 @@ Where
 
 The function should return:
 
-- A single scalar, possibly `None`, of type `obs_type`.
+- A `ValueTuple` scalar. The value held by the `ValueTuple` can be `None`.
 
 The function should raise:
 
