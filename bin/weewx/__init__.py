@@ -90,8 +90,6 @@ class CannotCalculate(ValueError):
 #                       Possible event types.
 # =============================================================================
 
-class CONFIG(object):
-    """Event issued when services should configure themselves."""
 class STARTUP(object):
     """Event issued when the engine first starts up. Services have been
     loaded."""

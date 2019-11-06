@@ -75,34 +75,18 @@ class StdWXCalculate(weewx.engine.StdService):
         """Initialize the service."""
         super(StdWXCalculate, self).__init__(engine, config_dict)
 
-        self.svc_dict = None
-        self.ignore_zero_wind = None
-        self.db_manager = None
-        self.pressure_cooker = None
-        self.rain_rater = None
-        self.wx_types = None
-
-        # We have specialized configurations to do, so bind to the CONFIG event.
-        self.bind(weewx.CONFIG, self.config)
-
-        # we will process both loop and archive events
-        self.bind(weewx.NEW_LOOP_PACKET, self.new_loop_packet)
-        self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
-
-    def config(self, event):
-        """Perform configuration duties."""
-
         # Start with the default configuration. Make a copy --- we will be modifying it
-        svc_dict = ConfigObj(StringIO(DEFAULTS_INI))
+        merge_dict = ConfigObj(StringIO(DEFAULTS_INI))
         # Now merge in the overrides from the config file
-        svc_dict.merge(event.config)
+        merge_dict.merge(config_dict)
         # Extract out the part we're interested in
-        self.svc_dict = svc_dict['StdWXCalculate']
+        self.svc_dict = merge_dict['StdWXCalculate']
 
-        self.ignore_zero_wind = to_bool(svc_dict.get('ignore_zero_wind', True))
+        self.db_manager = self.engine.db_binder.get_manager(
+            data_binding=self.svc_dict.get('data_binding', 'wx_binding'),
+            initialize=True)
 
-        self.db_manager = self.engine.db_binder.get_manager(data_binding=self.svc_dict.get('data_binding', 'wx_binding'),
-                                                       initialize=True)
+        self.ignore_zero_wind = to_bool(self.svc_dict.get('ignore_zero_wind', True))
 
         # Instantiate a PressureCooker to calculate various kinds of pressure
         self.pressure_cooker = PressureCooker(self.engine.stn_info.altitude_vt,
@@ -130,6 +114,10 @@ class StdWXCalculate(weewx.engine.StdService):
         log.info("The following algorithms will be used for calculations: %s",
                  ', '.join(["%s=%s" % (k, self.svc_dict['Algorithms'][k]) for k in self.svc_dict['Algorithms']]))
 
+        # we will process both loop and archive events
+        self.bind(weewx.NEW_LOOP_PACKET, self.new_loop_packet)
+        self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
+
     def new_loop_packet(self, event):
 
         # Keep the RainRater up to date:
@@ -147,7 +135,7 @@ class StdWXCalculate(weewx.engine.StdService):
             xtype.shut_down()
             # Remove from the type system
             weewx.xtypes.xtypes.remove(xtype)
-        del self.db_manager
+        self.db_manager = None
 
     def do_calculations(self, data_dict, data_type):
         """Augment the data dictionary with derived types as necessary.
