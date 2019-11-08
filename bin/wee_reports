@@ -15,6 +15,7 @@ import socket
 import weecfg
 import weeutil.logger
 import weewx.engine
+import weewx.manager
 import weewx.reportengine
 import weewx.station
 from weeutil.weeutil import timestamp_to_string, to_int
@@ -80,7 +81,22 @@ def main():
 
     stn_info = weewx.station.StationInfo(**config_dict['Station'])
 
-    t = weewx.reportengine.StdReportEngine(config_dict, stn_info, gen_ts=gen_ts)
+    try:
+        binding = config_dict['StdArchive']['data_binding']
+    except KeyError:
+        binding = 'wx_binding'
+
+    # Retrieve the appropriate record from the database
+    with weewx.manager.DBBinder(config_dict) as db_binder:
+        db_manager = db_binder.get_manager(binding)
+        if gen_ts:
+            ts = gen_ts
+        else:
+            ts = db_manager.lastGoodStamp()
+
+        record = db_manager.getRecord(ts)
+
+    t = weewx.reportengine.StdReportEngine(config_dict, stn_info, record=record, gen_ts=gen_ts)
 
     # Although the report engine inherits from Thread, we can just run it in the main thread:
     t.run()

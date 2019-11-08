@@ -408,6 +408,8 @@ class CurrentObj(object):
         if obs_type in ['__call__', 'has_key']:
             raise AttributeError
 
+        # TODO: Refactor the following to be a separate function. It's too complicated to be included inline.
+
         # If no data binding has been specified, and we have a current record with the right
         # timestamp at hand, we don't have to hit the database.
         if not self.data_binding and self.record and obs_type in self.record \
@@ -424,16 +426,21 @@ class CurrentObj(object):
                 # Don't recognize the binding.
                 vt = weewx.units.UnknownType(self.data_binding)
             else:
-                # Does the type exist in the database?
-                if obs_type in db_manager.sqlkeys:
-                    # Yes. Get the record from the database
-                    record = db_manager.getRecord(self.current_time, max_delta=self.max_delta)
+                # Get the record for this timestamp from the database
+                record = db_manager.getRecord(self.current_time, max_delta=self.max_delta)
+                # If there was no record at that timestamp, it will be None. Check for this.
+                if not record:
+                    # No record. We don't know anything about this type:
+                    vt = weewx.units.UnknownType(obs_type)
+                # Does the type exist in the record?
+                elif obs_type in record:
+                    # Yes. Use that.
                     vt = weewx.units.as_value_tuple(record, obs_type)
                 else:
                     # No. Try the XTypes system
                     try:
                         vt = weewx.xtypes.get_scalar(obs_type, self.record, db_manager)
-                    except weewx.UnknownType:
+                    except (weewx.UnknownType, weewx.CannotCalculate):
                         # Nothing seems to be working. It's an unknown type.
                         vt = weewx.units.UnknownType(obs_type)
 
