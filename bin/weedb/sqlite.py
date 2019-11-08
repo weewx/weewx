@@ -93,7 +93,7 @@ def _get_filepath(SQLITE_ROOT, database_name, **argv):
     # not defined:
     root_dir = SQLITE_ROOT or argv.get('root', '')
     return os.path.join(root_dir, database_name)
-    
+
 class Connection(weedb.Connection):
     """A wrapper around a sqlite3 connection object."""
 
@@ -130,7 +130,7 @@ class Connection(weedb.Connection):
     @guard
     def cursor(self):
         """Return a cursor object."""
-        return Cursor(self.connection)
+        return self.connection.cursor(Cursor)
 
     @guard
     def execute(self, sql_string, sql_tuple=()):
@@ -206,9 +206,6 @@ class Cursor(sqlite3.Cursor):
 
     # The sqlite3 cursor object is very full featured. We need only turn
     # the sqlite exceptions into weedb exceptions.
-    def __init__(self, *args, **kwargs):
-        sqlite3.Cursor.__init__(self, *args, **kwargs)
-
     @guard
     def execute(self, *args, **kwargs):
         return sqlite3.Cursor.execute(self, *args, **kwargs)
