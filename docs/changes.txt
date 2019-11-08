@@ -67,6 +67,9 @@ Alex Edwards!
 Fixed bug that causes plots to fail when both min and max are zero.
 Fixes issue #463.
 
+Fixed problem with sqlite driver that can lead to memory growth.
+See PR #467. Thanks to user Rich Bell!
+
 
 3.9.2 07/14/2019
 
