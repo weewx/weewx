@@ -399,10 +399,10 @@ class WXXTypes(weewx.xtypes.XType):
 
         if data['windSpeed'] is not None:
             if data['usUnits'] == weewx.US:
-                val = data['windSpeed'] * data['interval'] * 60.0
+                val = data['windSpeed'] * data['interval'] / 60.0
                 u = 'mile'
             elif data['usUnits'] == weewx.METRIC:
-                val = data['windSpeed'] * data['interval'] * 60.0
+                val = data['windSpeed'] * data['interval'] / 60.0
                 u = 'km'
             elif data['usUnits'] == weewx.METRICWX:
                 val = data['windSpeed'] * data['interval'] * 60.0 / 1000.0
