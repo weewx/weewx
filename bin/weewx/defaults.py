@@ -38,9 +38,16 @@ log_failure = False
     [[Groups]]
 
         group_altitude     = foot                 # Options are 'foot' or 'meter'
+        group_amp          = amp
+        group_concentration= microgram_per_meter_cubed
+        group_data         = byte
         group_degree_day   = degree_F_day         # Options are 'degree_F_day' or 'degree_C_day'
+        group_deltatime    = second
         group_direction    = degree_compass
         group_distance     = mile                 # Options are 'mile' or 'km'
+        group_energy       = watt_hour
+        group_energy2      = watt_second
+        group_length       = inch
         group_moisture     = centibar
         group_percent      = percent
         group_pressure     = inHg                 # Options are 'inHg', 'mmHg', 'mbar', or 'hPa'
@@ -52,6 +59,7 @@ log_failure = False
         group_temperature  = degree_F             # Options are 'degree_F' or 'degree_C'
         group_uv           = uv_index
         group_volt         = volt
+        group_volume       = gallon
 
         # The following are used internally and should not be changed:
         group_count        = count
