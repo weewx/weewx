@@ -55,7 +55,8 @@ class XType(object):
 # ##################### Retrieval functions ###########################
 
 def get_scalar(obs_type, record, db_manager=None):
-    """Search the list, looking for a method that does not raise an exception"""
+    """Return a scalar value"""
+    # Search the list, looking for a get_scalar() method that does not raise an exception
     for xtype in xtypes:
         try:
             # Try this function. It will raise an exception if it does not know about the type.
@@ -68,6 +69,8 @@ def get_scalar(obs_type, record, db_manager=None):
 
 
 def get_series(obs_type, timespan, db_manager, aggregate_type=None, aggregate_interval=None):
+    """Return a series (aka vector) of, possibly aggregated, values."""
+    # Search the list, looking for a get_series() method that does not raise an exception
     for xtype in xtypes:
         try:
             # Try this function. It will raise an exception if it does not know about the type.
@@ -80,6 +83,8 @@ def get_series(obs_type, timespan, db_manager, aggregate_type=None, aggregate_in
 
 
 def get_aggregate(obs_type, timespan, aggregate_type, db_manager, **option_dict):
+    """Calculate an aggregation over a timespan"""
+    # Search the list, looking for a get_aggregate() method that does not raise an exception
     for xtype in xtypes:
         try:
             # Try this function. It will raise an exception if it doesn't know about the type of aggregation.
@@ -229,9 +234,23 @@ class AggregateArchive(XType):
         value = row[0] if row else None
 
         # Look up the unit type and group of this combination of observation type and aggregation:
-        t, g = weewx.units.getStandardUnitType(db_manager.std_unit_system, obs_type, aggregate_type)
+        u, g = weewx.units.getStandardUnitType(db_manager.std_unit_system, obs_type, aggregate_type)
+
+        # Time derivatives have special rules. For example, the time derivative of watt-hours is watts, scaled
+        # by the number of seconds in an hour. The unit group also changes to group_power.
+        if aggregate_type == 'tderiv':
+            if u == 'watt_second':
+                u = 'watt'
+            elif u == 'watt_hour':
+                u = 'watt'
+                value *= 3600
+            elif u == 'kilowatt_hour':
+                u = 'kilowatt'
+                value *= 3600
+            g = 'group_power'
+
         # Form the ValueTuple and return it:
-        return weewx.units.ValueTuple(value, t, g)
+        return weewx.units.ValueTuple(value, u, g)
 
 
 class AggregateDaily(XType):
