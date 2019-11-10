@@ -42,6 +42,12 @@ class DummyEngine(weewx.engine.StdEngine):
         self.console = DummyConsole(config_dict)
 
 
+def disable_timing(section, key):
+    """Function to effectively disable report_timing option"""
+    if key == 'report_timing':
+        section['report_timing'] = "* * * * *"
+
+
 def main():
     # Set defaults for logging:
     weeutil.logger.setup('wee_reports', {})
@@ -56,6 +62,11 @@ def main():
     # Now we are ready to parse the command line:
     options, args = parser.parse_args()
     config_path, config_dict = weecfg.read_config(options.config_path, args)
+
+    # For wee_reports we want to generate all reports irrespective of any
+    # report_timing settings that may exist. The easiest way to do this is walk
+    # the config dict resetting any report_timing settings found.
+    config_dict.walk(disable_timing)
 
     # If the user specified a time, retrieve it. Otherwise, set to None
     gen_ts = int(args[0]) if args else None
