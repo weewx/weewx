@@ -20,6 +20,7 @@ import weedb
 import weeutil.logger
 import weeutil.weeutil
 import weewx.engine
+import weewx.manager
 import weewx.units
 import weewx.wxformulas
 import weewx.xtypes
@@ -65,15 +66,52 @@ DEFAULTS_INI = u"""
 
 
 class StdWXCalculate(weewx.engine.StdService):
-    """This service has two jobs:
+    """Wrapper class to allow WXCalculate to be used as a WeeWX service"""
+
+    def __init__(self, engine, config_dict):
+        """Initialize the service."""
+        super(StdWXCalculate, self).__init__(engine, config_dict)
+
+        # Instantiate a WXCalculate object to do the heavy work
+        self.calc = WXCalculate(config_dict,
+                                engine.stn_info.altitude_vt,
+                                engine.stn_info.latitude_f,
+                                engine.stn_info.longitude_f,
+                                engine.db_binder)
+
+        # we will process both loop and archive events
+        self.bind(weewx.NEW_LOOP_PACKET, self.new_loop_packet)
+        self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
+
+    def new_loop_packet(self, event):
+
+        # Keep the RainRater up to date:
+        self.calc.rain_rater.add_loop_packet(event.packet, self.calc.db_manager)
+
+        # Now augment the packet with extended types as per the configuration
+        self.calc.do_calculations(event.packet, 'loop')
+
+    def new_archive_record(self, event):
+        self.calc.do_calculations(event.record, 'archive')
+
+    def shutDown(self):
+        for xtype in [self.calc.pressure_cooker, self.calc.rain_rater, self.calc.wx_types]:
+            # Give the object an opportunity to clean up
+            xtype.shut_down()
+            # Remove from the type system
+            weewx.xtypes.xtypes.remove(xtype)
+        self.calc.db_manager = None
+
+
+class WXCalculate(object):
+    """This class has two jobs:
 
     - Add derived weather variables (such as dewpoint, heatindex, etc.) to the WeeWX extensible type system.
     - Use the type system to augment packets and records, following preferences specified in the configuration file.
     """
 
-    def __init__(self, engine, config_dict):
+    def __init__(self, config_dict, altitude_vt, latitude_f, longitude_f, db_binder=None):
         """Initialize the service."""
-        super(StdWXCalculate, self).__init__(engine, config_dict)
 
         # Start with the default configuration. Make a copy --- we will be modifying it
         merge_dict = ConfigObj(StringIO(DEFAULTS_INI))
@@ -82,25 +120,27 @@ class StdWXCalculate(weewx.engine.StdService):
         # Extract out the part we're interested in
         self.svc_dict = merge_dict['StdWXCalculate']
 
-        self.db_manager = self.engine.db_binder.get_manager(
+        if db_binder is None:
+            db_binder = weewx.manager.DBBinder(config_dict)
+        self.db_manager = db_binder.get_manager(
             data_binding=self.svc_dict.get('data_binding', 'wx_binding'),
             initialize=True)
 
         self.ignore_zero_wind = to_bool(self.svc_dict.get('ignore_zero_wind', True))
 
         # Instantiate a PressureCooker to calculate various kinds of pressure
-        self.pressure_cooker = PressureCooker(self.engine.stn_info.altitude_vt,
+        self.pressure_cooker = PressureCooker(altitude_vt,
                                               to_int(self.svc_dict.get('max_delta_12h', 1800)),
                                               self.svc_dict['Algorithms'].get('altimeter', 'aaASOS'))
         # Instantiate a RainRater to calculate rainRate
         self.rain_rater = RainRater(to_int(self.svc_dict.get('rain_period', 900)),
                                     to_int(self.svc_dict.get('retain_period', 930)))
 
-        # Instantitate a WXXTypes object to calculate simple scalars (like dewpoint, etc.)
+        # Instantiate a WXXTypes object to calculate simple scalars (like dewpoint, etc.)
         self.wx_types = WXXTypes(self.svc_dict,
-                                 self.engine.stn_info.altitude_vt,
-                                 self.engine.stn_info.latitude_f,
-                                 self.engine.stn_info.longitude_f)
+                                 altitude_vt,
+                                 latitude_f,
+                                 longitude_f)
 
         # Now add all our type extensions into the type system
         weewx.xtypes.xtypes.append(self.pressure_cooker)
@@ -113,29 +153,6 @@ class StdWXCalculate(weewx.engine.StdService):
         # ...and which algorithms will be used.
         log.info("The following algorithms will be used for calculations: %s",
                  ', '.join(["%s=%s" % (k, self.svc_dict['Algorithms'][k]) for k in self.svc_dict['Algorithms']]))
-
-        # we will process both loop and archive events
-        self.bind(weewx.NEW_LOOP_PACKET, self.new_loop_packet)
-        self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
-
-    def new_loop_packet(self, event):
-
-        # Keep the RainRater up to date:
-        self.rain_rater.add_loop_packet(event.packet, self.db_manager)
-
-        # Now augment the packet with extended types as per the configuration
-        self.do_calculations(event.packet, 'loop')
-
-    def new_archive_record(self, event):
-        self.do_calculations(event.record, 'archive')
-
-    def shutDown(self):
-        for xtype in [self.pressure_cooker, self.rain_rater, self.wx_types]:
-            # Give the object an opportunity to clean up
-            xtype.shut_down()
-            # Remove from the type system
-            weewx.xtypes.xtypes.remove(xtype)
-        self.db_manager = None
 
     def do_calculations(self, data_dict, data_type):
         """Augment the data dictionary with derived types as necessary.
