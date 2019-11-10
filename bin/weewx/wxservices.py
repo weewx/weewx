@@ -85,8 +85,7 @@ class StdWXCalculate(weewx.engine.StdService):
 
     def new_loop_packet(self, event):
 
-        # Keep the RainRater up to date:
-        self.calc.rain_rater.add_loop_packet(event.packet, self.calc.db_manager)
+        self.calc.new_loop_packet(event.packet)
 
         # Now augment the packet with extended types as per the configuration
         self.calc.do_calculations(event.packet, 'loop')
@@ -95,12 +94,7 @@ class StdWXCalculate(weewx.engine.StdService):
         self.calc.do_calculations(event.record, 'archive')
 
     def shutDown(self):
-        for xtype in [self.calc.pressure_cooker, self.calc.rain_rater, self.calc.wx_types]:
-            # Give the object an opportunity to clean up
-            xtype.shut_down()
-            # Remove from the type system
-            weewx.xtypes.xtypes.remove(xtype)
-        self.calc.db_manager = None
+        self.calc.shut_down()
 
 
 class WXCalculate(object):
@@ -154,6 +148,10 @@ class WXCalculate(object):
         log.info("The following algorithms will be used for calculations: %s",
                  ', '.join(["%s=%s" % (k, self.svc_dict['Algorithms'][k]) for k in self.svc_dict['Algorithms']]))
 
+    def new_loop_packet(self, loop_packet):
+        # Keep the RainRater up to date:
+        self.rain_rater.add_loop_packet(loop_packet, self.db_manager)
+
     def do_calculations(self, data_dict, data_type):
         """Augment the data dictionary with derived types as necessary.
 
@@ -190,6 +188,14 @@ class WXCalculate(object):
             data['windDir'] = None
         if 'windGust' in data and not data['windGust']:
             data['windGustDir'] = None
+
+    def shut_down(self):
+        for xtype in [self.pressure_cooker, self.rain_rater, self.wx_types]:
+            # Give the object an opportunity to clean up
+            xtype.shut_down()
+            # Remove from the type system
+            weewx.xtypes.xtypes.remove(xtype)
+        self.db_manager = None
 
 
 class WXXTypes(weewx.xtypes.XType):

@@ -29,6 +29,7 @@ usage = """%prog: [config_file] [timestamp] [--config=CONFIG_FILE] [--help]"""
 
 class DummyConsole(object):
     """A fake console, used for reporting."""
+
     def __init__(self, config_dict):
         try:
             self.archive_interval = to_int(config_dict['StdArchive']['archive_interval'])
@@ -38,6 +39,7 @@ class DummyConsole(object):
 
 class DummyEngine(weewx.engine.StdEngine):
     """A fake engine, used for reporting."""
+
     def setupStation(self, config_dict):
         self.console = DummyConsole(config_dict)
 
@@ -62,21 +64,12 @@ def main():
     # Now we are ready to parse the command line:
     options, args = parser.parse_args()
     config_path, config_dict = weecfg.read_config(options.config_path, args)
+    print("Using configuration file %s" % config_path)
 
     # For wee_reports we want to generate all reports irrespective of any
     # report_timing settings that may exist. The easiest way to do this is walk
     # the config dict resetting any report_timing settings found.
     config_dict.walk(disable_timing)
-
-    # If the user specified a time, retrieve it. Otherwise, set to None
-    gen_ts = int(args[0]) if args else None
-
-    print("Using configuration file %s" % config_path)
-
-    if gen_ts is None:
-        print("Generating for all time")
-    else:
-        print("Generating for requested time %s" % timestamp_to_string(gen_ts))
 
     # Look for the debug flag. If set, ask for extra logging
     weewx.debug = int(config_dict.get('debug', 0))
@@ -87,10 +80,18 @@ def main():
     socket.setdefaulttimeout(10)
 
     # Instantiate the dummy engine. This will cause services to get loaded, which will make
-    # extensions available.
+    # the type extensions (xtypes) system available.
     engine = DummyEngine(config_dict)
 
     stn_info = weewx.station.StationInfo(**config_dict['Station'])
+
+    # If the user specified a time, retrieve it. Otherwise, set to None
+    gen_ts = int(args[0]) if args else None
+
+    if gen_ts is None:
+        print("Generating for all time")
+    else:
+        print("Generating for requested time %s" % timestamp_to_string(gen_ts))
 
     try:
         binding = config_dict['StdArchive']['data_binding']
