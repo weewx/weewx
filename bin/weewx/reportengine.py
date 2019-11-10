@@ -424,7 +424,7 @@ class CopyGenerator(ReportGenerator):
             for path in glob.glob(pattern):
                 ncopy += weeutil.weeutil.deep_copy_path(path, html_dest_dir)
         if log_success:
-            log.info("copygenerator: Copied %d files to %s", ncopy, html_dest_dir)
+            log.info("Copied %d files to %s", ncopy, html_dest_dir)
 
 
 # ===============================================================================
