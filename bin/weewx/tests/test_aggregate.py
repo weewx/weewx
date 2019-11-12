@@ -113,7 +113,6 @@ class TestAggregate(unittest.TestCase):
             month_stop_tt = (2010, 4, 1, 0, 0, 0, 0, 0, -1)
             start_ts = time.mktime(month_start_tt)
             stop_ts = time.mktime(month_stop_tt)
-            print(start_ts, stop_ts)
 
             min_ge_vt = weewx.xtypes.AggregateDaily.get_aggregate('outTemp', TimeSpan(start_ts, stop_ts), 'min_ge',
                                                             db_manager,

@@ -132,7 +132,7 @@ class Common(unittest.TestCase):
         
         # First run the engine without a current record.
         self.run_engine(stn_info, None, testtime_ts)
-        with weewx.manager.open_manager_with_config(self.config_dict, 'wx_binding')  as manager:
+        with weewx.manager.open_manager_with_config(self.config_dict, 'wx_binding') as manager:
             record = manager.getRecord(testtime_ts)
         # Now run the engine again, but this time with a current record:
         self.run_engine(stn_info, record, testtime_ts)

@@ -428,16 +428,14 @@ class CurrentObj(object):
             else:
                 # Get the record for this timestamp from the database
                 record = db_manager.getRecord(self.current_time, max_delta=self.max_delta)
-                # If there was no record at that timestamp, it will be None. Check for this.
-                if not record:
-                    # No record. We don't know anything about this type:
-                    vt = weewx.units.UnknownType(obs_type)
-                # Does the type exist in the record?
-                elif obs_type in record:
-                    # Yes. Use that.
+                # If there was no record at that timestamp, it will be None. If there was a record, check to
+                # see if the type is in it.
+                if not record or obs_type in record:
+                    # If there was no record, then the value of the ValueTuple will be None. Otherwise,
+                    # it will be value stored in the database.
                     vt = weewx.units.as_value_tuple(record, obs_type)
                 else:
-                    # No. Try the XTypes system
+                    # Couldn't get the value out of the record. Try the XTypes system.
                     try:
                         vt = weewx.xtypes.get_scalar(obs_type, self.record, db_manager)
                     except (weewx.UnknownType, weewx.CannotCalculate):
