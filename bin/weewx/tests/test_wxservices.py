@@ -15,6 +15,8 @@ except ImportError:
     import mock
 
 import weewx.wxservices
+from weewx.units import ValueTuple
+import schemas.wview
 
 altitude_vt = (700, 'foot', 'group_altitude')
 svc_dict = {
@@ -32,7 +34,7 @@ svc_dict = {
 }
 
 # Test values:
-record = {
+record_1 = {
     'dateTime': 1567515300, 'usUnits': 1, 'interval': 5, 'inTemp': 73.0, 'outTemp': 88.7, 'inHumidity': 54.0,
     'outHumidity': 90.0, 'windSpeed': 12.0, 'windDir': None, 'windGust': 15.0, 'windGustDir': 270.0,
     'rain': 0.02,
@@ -55,7 +57,7 @@ class TestSimpleFunctions(unittest.TestCase):
 
     def setUp(self):
         # Make a copy. We may be modifying it.
-        self.record = dict(record)
+        self.record = dict(record_1)
         self.wx_calc = weewx.wxservices.WXXTypes(svc_dict, altitude_vt, 45, -122)
 
     def test_appTemp(self):
@@ -105,9 +107,8 @@ class TestSimpleFunctions(unittest.TestCase):
             self.wx_calc.get_scalar('foo', self.record, None)
 
 
-
 # Test values for the PressureCooker test:
-record = {
+record_2 = {
     'dateTime': 1567515300, 'usUnits': 1, 'interval': 5, 'inTemp': 73.0, 'outTemp': 55.7, 'inHumidity': 54.0,
     'outHumidity': 90.0, 'windSpeed': 0.0, 'windDir': None, 'windGust': 2.0, 'windGustDir': 270.0,
     'rain': 0.0, 'windchill': 55.7, 'heatindex': 55.7,
@@ -127,7 +128,7 @@ class TestPressureCooker(unittest.TestCase):
 
     def setUp(self):
         # Make a copy. We will be modifying it.
-        self.record = dict(record)
+        self.record = dict(record_2)
 
     def test_get_temperature_12h(self):
         pc = weewx.wxservices.PressureCooker(altitude_vt)
@@ -173,7 +174,7 @@ class TestPressureCooker(unittest.TestCase):
         with mock.patch.object(db_manager, 'getRecord',
                                return_value={'usUnits': weewx.US, 'outTemp': 80.3}):
             p = pc.pressure(self.record, db_manager)
-            self.assertEqual(p, pressure)
+            self.assertEqual(p, (pressure, 'inHg', 'group_pressure'))
 
             # Remove 'outHumidity' and try again. Should now raise exception.
             del self.record['outHumidity']
@@ -199,7 +200,7 @@ class TestPressureCooker(unittest.TestCase):
         pc = weewx.wxservices.PressureCooker(altitude_vt)
 
         a = pc.altimeter(self.record)
-        self.assertEqual(a, altimeter)
+        self.assertEqual(a, (altimeter, 'inHg', 'group_pressure'))
 
         # Remove 'pressure' from the record and check for exception
         del self.record['pressure']
@@ -213,7 +214,7 @@ class TestPressureCooker(unittest.TestCase):
         pc = weewx.wxservices.PressureCooker(altitude_vt)
 
         b = pc.barometer(self.record)
-        self.assertEqual(b, barometer)
+        self.assertEqual(b, (barometer, 'inHg', 'group_pressure'))
 
         # Remove 'outTemp' from the record and check for exception
         del self.record['outTemp']
@@ -221,55 +222,114 @@ class TestPressureCooker(unittest.TestCase):
             b = pc.barometer(self.record)
 
 
+class RainGenerator(object):
+    """Generator object that returns an increasing deluge of rain."""
+
+    def __init__(self, timestamp, time_increment=60, rain_increment=0.01):
+        """Initialize the rain generator."""
+        self.timestamp = timestamp
+        self.time_increment = time_increment
+        self.rain_increment = rain_increment
+        self.rain = 0
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        """Advance and return the next rain event"""
+        event = {'dateTime': self.timestamp, 'usUnits': weewx.US, 'interval': self.time_increment, 'rain': self.rain}
+        self.timestamp += self.time_increment
+        self.rain += self.rain_increment
+        return event
+
+    # For Python 2 compatibility:
+    next = __next__
+
+
 class TestRainRater(unittest.TestCase):
-    now = 1571083200  # 14-Oct-2019 1300 PDT
-    rain_period = 900
+    start = 1571083200  # 14-Oct-2019 1300 PDT
+    rain_period = 900  # 15 minute sliding window
     retain_period = 915
 
     def setUp(self):
-        self.rr = weewx.wxservices.RainRater(TestRainRater.rain_period, TestRainRater.retain_period)
-        self.db_manager = mock.Mock()
-        with mock.patch.object(self.db_manager, 'genSql', return_value=[
-            (TestRainRater.now - 600, weewx.US, 0.01),
-            (TestRainRater.now - 300, weewx.US, 0.02),
-        ]):
-            self.rr.add_loop_packet({'dateTime': TestRainRater.now + 5, 'usUnits': weewx.US, 'rain': 0.0},
-                                    self.db_manager)
+        """Set up an in-memory database"""
+        self.db_manager = weewx.manager.Manager.open_with_create(
+            {
+                'database_name': ':memory:',
+                'driver': 'weedb.sqlite'
+            },
+            schema=schemas.wview.schema)
+        # Create a generator that will issue rain records on demand
+        self.rain_generator = RainGenerator(TestRainRater.start)
+        # Populate the database with 30 minutes worth of rain.
+        N = 30
+        for record in self.rain_generator:
+            self.db_manager.addRecord(record)
+            N -= 1
+            if not N:
+                break
 
-    def test_setup(self):
-        self.assertEqual(self.rr.rain_events, [(TestRainRater.now - 600, 0.01), (TestRainRater.now - 300, 0.02)])
+    def tearDown(self):
+        self.db_manager.close()
+        self.db_manager = None
 
     def test_add_US(self):
-        record = {'dateTime': TestRainRater.now + 60, 'usUnits': weewx.US, 'rain': 0.01}
-        self.rr.add_loop_packet(record, self.db_manager)
-        rate = self.rr.rain_rate('rainRate', record, None)
-        self.assertEqual(rate, 3600 * .04 / TestRainRater.rain_period)
+        rain_rater = weewx.wxservices.RainRater(TestRainRater.rain_period, TestRainRater.retain_period)
+
+        # Get the next record out of the rain generator.
+        record = self.rain_generator.next()
+        # Make sure the event is what we think it is
+        self.assertEqual(record['dateTime'], TestRainRater.start + 30 * 60)
+        # Add it to the RainRater object
+        rain_rater.add_loop_packet(record, self.db_manager)
+        # Get the rainRate out of it
+        rate = rain_rater.get_scalar('rainRate', record, None)
+        # Check its values
+        self.assertAlmostEqual(rate[0], 13.80, 2)
+        self.assertEqual(rate[1:], ('inch_per_hour', 'group_rainrate'))
 
     def test_add_METRICWX(self):
-        record = {'dateTime': TestRainRater.now + 60, 'usUnits': weewx.METRICWX, 'rain': 0.254}
-        self.rr.add_loop_packet(record, self.db_manager)
-        rate = self.rr.rain_rate('rainRate', record, None)
-        self.assertEqual(rate, 3600 * .04 / TestRainRater.rain_period)
+        rain_rater = weewx.wxservices.RainRater(TestRainRater.rain_period, TestRainRater.retain_period)
 
-    def test_window(self):
-        """Rain event falls outside rain window, but inside retain window"""
-        record = {'dateTime': TestRainRater.now + 305, 'usUnits': weewx.US, 'rain': 0.0}
-        self.rr.add_loop_packet(record, self.db_manager)
-        rate = self.rr.rain_rate('rainRate', record, None)
-        self.assertEqual(rate, 3600 * .02 / TestRainRater.rain_period)
-
-        record = {'dateTime': TestRainRater.now + 310, 'usUnits': weewx.US, 'rain': 0.03}
-        self.rr.add_loop_packet(record, self.db_manager)
-        rate = self.rr.rain_rate('rainRate', record, None)
-        self.assertEqual(rate, 3600 * .05 / TestRainRater.rain_period)
+        # Get the next record out of the rain generator.
+        record = self.rain_generator.next()
+        # Make sure the event is what we think it is
+        self.assertEqual(record['dateTime'], TestRainRater.start + 30 * 60)
+        # Convert to metric:
+        record_metric = weewx.units.to_METRICWX(record)
+        # Add it to the RainRater object
+        rain_rater.add_loop_packet(record_metric, self.db_manager)
+        # The rest should be as before:
+        # Get the rainRate out of it
+        rate = rain_rater.get_scalar('rainRate', record, None)
+        # Check its values
+        self.assertAlmostEqual(rate[0], 13.80, 2)
+        self.assertEqual(rate[1:], ('inch_per_hour', 'group_rainrate'))
 
     def test_trim(self):
         """"Test trimming old events"""
-        record = {'dateTime': TestRainRater.now + 320, 'usUnits': weewx.US, 'rain': 0.03}
-        self.rr.add_loop_packet(record, self.db_manager)
-        rate = self.rr.rain_rate('rainRate', record, None)
-        self.assertEqual(rate, 3600 * .05 / TestRainRater.rain_period)
-        self.assertEqual(self.rr.rain_events, [(TestRainRater.now - 300, 0.02), (1571083520, 0.03)])
+        rain_rater = weewx.wxservices.RainRater(TestRainRater.rain_period, TestRainRater.retain_period)
+
+        # Add 5 minutes worth of rain
+        N = 5
+        for record in self.rain_generator:
+            rain_rater.add_loop_packet(record, self.db_manager)
+            N -= 1
+            if not N:
+                break
+
+        # The rain record object should have the last 15 minutes worth of rain in it. Let's peek inside to check.
+        # The first value should be 15 minutes old
+        self.assertEqual(rain_rater.rain_events[0][0], record['dateTime'] - 15 * 60)
+        # The last value should be the record we just put in it:
+        self.assertEqual(rain_rater.rain_events[-1][0], record['dateTime'])
+
+        # Get the rainRate
+        rate = rain_rater.get_scalar('rainRate', record, None)
+        # Check its values
+        self.assertAlmostEqual(rate[0], 16.20, 2)
+        self.assertEqual(rate[1:], ('inch_per_hour', 'group_rainrate'))
+
 
 if __name__ == '__main__':
     unittest.main()
