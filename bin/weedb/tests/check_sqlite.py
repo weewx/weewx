@@ -1,20 +1,24 @@
-"""Test the MySQLdb interface."""
+#
+#    Copyright (c) 2009-2019 Tom Keffer <tkeffer@gmail.com>
+#
+#    See the file LICENSE.txt for your full rights.
+#
+"""Test the sqlite3 interface."""
 
+#
 # This module does not test anything in weewx. Instead, it checks that
-# the MySQLdb interface acts the way we think it should.
+# the sqlite interface acts the way we think it should.
 #
-# It uses two MySQL users, weewx1 and weewx2. The companion
-# script "setup_mysql" will set them up with the necessary permissions.
-#
-from __future__ import with_statement
+
 from __future__ import absolute_import
 from __future__ import print_function
-import unittest
-import sys
-import os
+from __future__ import with_statement
 
+import os
 import sqlite3
-from sqlite3 import IntegrityError, ProgrammingError, OperationalError
+import sys
+import unittest
+from sqlite3 import IntegrityError, OperationalError
 
 # This database should be somewhere where you have write permissions:
 sqdb1 = '/var/tmp/sqdb1.sdb'
@@ -26,19 +30,23 @@ try:
     fd = open(sqdb1, 'w')
     fd.close()
 except:
-    print("For tests to work properly, you must have permission to write to '%s'." % sqdb1, file=sys.stderr)
+    print("For tests to work properly, you must have write permission to '%s'." % sqdb1, file=sys.stderr)
     print("Change the permissions and try again.", file=sys.stderr)
+    sys.exit("Must have write permissions to '%s'" % sqdb1)
 try:
     fd = open(sqdb2, 'w')
     fd.close()
 except IOError:
     pass
 else:
-    print("For tests to work properly, you must NOT have permission to write to '%s'." % sqdb2, file=sys.stderr)
+    print("For tests to work properly, you must NOT have write permission to '%s'." % sqdb2, file=sys.stderr)
     print("Change the permissions and try again.", file=sys.stderr)
+    sys.exit("Must not have write permissions to '%s'" % sqdb2)
+
 
 class Cursor(object):
     """Class to be used to wrap a cursor in a 'with' clause."""
+
     def __init__(self, file_path):
         self.connection = sqlite3.connect(file_path)
         self.cursor = self.connection.cursor()
@@ -50,9 +58,15 @@ class Cursor(object):
         self.cursor.close()
         self.connection.close()
 
+
 class TestSqlite3(unittest.TestCase):
- 
+
     def setUp(self):
+        """Make sure sqdb1 and sqdb2 are gone."""
+        self.tearDown()
+
+    def tearDown(self):
+        """Remove any databases we created."""
         try:
             os.remove(sqdb1)
         except OSError:
@@ -73,22 +87,21 @@ class TestSqlite3(unittest.TestCase):
             with self.assertRaises(OperationalError) as e:
                 cursor.execute("SELECT foo from bar")
             self.assertEqual(str(e.exception), "no such table: bar")
-        
-     
+
     def test_double_table_create(self):
         with Cursor(sqdb1) as cursor:
             cursor.execute("CREATE TABLE bar (col1 int, col2 int)")
             with self.assertRaises(OperationalError) as e:
                 cursor.execute("CREATE TABLE bar (col1 int, col2 int)")
             self.assertEqual(str(e.exception), 'table bar already exists')
-         
+
     def test_select_nonexistent_column(self):
         with Cursor(sqdb1) as cursor:
             cursor.execute("CREATE TABLE bar (col1 int, col2 int)")
             with self.assertRaises(OperationalError) as e:
                 cursor.execute("SELECT foo from bar")
             self.assertEqual(str(e.exception), 'no such column: foo')
-         
+
     def test_duplicate_key(self):
         with Cursor(sqdb1) as cursor:
             cursor.execute("CREATE TABLE test1 ( dateTime INTEGER NOT NULL UNIQUE PRIMARY KEY, col1 int, col2 int)")
@@ -96,7 +109,7 @@ class TestSqlite3(unittest.TestCase):
             with self.assertRaises(IntegrityError) as e:
                 cursor.execute("INSERT INTO test1 (dateTime, col1, col2) VALUES (1, 30, 40)")
             self.assertEqual(str(e.exception), "UNIQUE constraint failed: test1.dateTime")
-        
-            
+
+
 if __name__ == '__main__':
     unittest.main()
