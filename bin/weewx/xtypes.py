@@ -117,6 +117,8 @@ class SeriesArchive(XType):
         if aggregate_type:
             # With aggregation
             unit, unit_group = None, None
+            if aggregate_type == 'cumulative':
+                total = 0
             for stamp in weeutil.weeutil.intervalgen(startstamp, stopstamp, aggregate_interval):
                 agg_vt = get_aggregate(obs_type, stamp, aggregate_type, db_manager)
                 if unit:
@@ -127,7 +129,11 @@ class SeriesArchive(XType):
                     unit, unit_group = agg_vt[1:]
                 start_vec.append(stamp.start)
                 stop_vec.append(stamp.stop)
-                data_vec.append(agg_vt[0])
+                if aggregate_type == 'cumulative':
+                    total += agg_vt[0]
+                    data_vec.append(total)
+                else:
+                    data_vec.append(agg_vt[0])
 
         else:
             # Without aggregation. We only know how to get series that are in the database schema:

@@ -2,20 +2,8 @@
 Test accumulators with String accumulator, as well as with string types.
 
 Write `TestWXCalculate`
- - Test windrun
- - Test ET (should not be calculated for LOOP packets)
- - Test rainRate calculations
-
-Test new aggregation types `diff` and `tderiv`.
-
-Recognize that applying `tderiv` will change the unit group. That means generalizing
-`_getUnitGroup()`.
-
-Fill out test suites for `get_series()`.
-
-Change `StdService.shutDown()` to `StdService.shut_down()`. Leave backwards compatibility 
-stub behind.
-
+ - Test `windrun`
+ - Test `ET` (should not be calculated for LOOP packets)
 
 ### Logging
 Refactor `wee_import` to use the new logging facility.

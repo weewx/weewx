@@ -5,6 +5,7 @@
 #
 """Test weewx.xtypes.get_series"""
 
+import functools
 import os.path
 import sys
 import time
@@ -41,6 +42,10 @@ stop_ts = time.mktime(month_stop_tt)
 
 class Common(unittest.TestCase):
 
+    daily_rain = [0.0, 0.49, 0.47, 0.0, 0.0, 0.49, 0.47, 0.0, 0.0, 0.49, 0.47,
+                  0.0, 0.0, 0.37, 0.59, 0.0, 0.0, 0.37, 0.59, 0.0, 0.0, 0.37,
+                  0.59, 0.0, 0.0, 0.37, 0.59, 0.0, 0.0, 0.37, 0.59]
+
     def setUp(self):
         global config_path
         global cwd
@@ -76,18 +81,34 @@ class Common(unittest.TestCase):
             self.assertEqual(len(stop_vec[0]), (stop_ts - start_ts) / gen_fake_data.interval + 1)
             self.assertEqual(len(data_vec[0]), (stop_ts - start_ts) / gen_fake_data.interval + 1)
 
-    def test_get_series_archive_agg(self):
+    def test_get_series_archive_agg_sum(self):
         with weewx.manager.open_manager_with_config(self.config_dict, 'wx_binding') as db_manager:
-            start_vec, stop_vec, data_vec = weewx.xtypes.get_series('outTemp',
+            # Calculate the total daily rain
+            start_vec, stop_vec, data_vec = weewx.xtypes.get_series('rain',
                                                                     TimeSpan(start_ts, stop_ts),
                                                                     db_manager,
-                                                                    'avg',
+                                                                    'sum',
                                                                     24 * 3600)
             # March has 30 days.
             self.assertEqual(len(start_vec[0]), 30 + 1)
             self.assertEqual(len(stop_vec[0]), 30 + 1)
-            self.assertEqual(len(data_vec[0]), 30 + 1)
+            self.assertEqual((["%.2f" % d for d in data_vec[0]], data_vec[1], data_vec[2]),
+                             (["%.2f" % d for d in Common.daily_rain], 'inch', 'group_rain'))
 
+    def test_get_series_archive_agg_cum(self):
+        with weewx.manager.open_manager_with_config(self.config_dict, 'wx_binding') as db_manager:
+            # Calculate the cumulative total daily rain
+            start_vec, stop_vec, data_vec = weewx.xtypes.get_series('rain',
+                                                                    TimeSpan(start_ts, stop_ts),
+                                                                    db_manager,
+                                                                    'cumulative',
+                                                                    24 * 3600)
+            # March has 30 days.
+            self.assertEqual(len(start_vec[0]), 30 + 1)
+            self.assertEqual(len(stop_vec[0]), 30 + 1)
+            right_answer = functools.reduce(lambda v, x: v + [v[-1] + x], Common.daily_rain, [0])[1:]
+            self.assertEqual((["%.2f" % d for d in data_vec[0]], data_vec[1], data_vec[2]),
+                             (["%.2f" % d for d in right_answer], 'inch', 'group_rain'))
 
 class TestSqlite(Common):
 
@@ -111,7 +132,7 @@ class TestMySQL(Common):
 
 
 def suite():
-    tests = ['test_get_series_archive', 'test_get_series_archive_agg']
+    tests = ['test_get_series_archive', 'test_get_series_archive_agg_sum', 'test_get_series_archive_agg_cum']
     #    return unittest.TestSuite(list(map(TestSqlite, tests)) + list(map(TestMySQL, tests)))
     return unittest.TestSuite(list(map(TestSqlite, tests)))
 
