@@ -32,6 +32,7 @@ class AccumTest(unittest.TestCase):
 
         tmin = tmintime = None
         tsum = tcount = 0
+        N = 0
         for record in self.dataset:
             if record['outTemp'] is not None:
                 tsum += record['outTemp']
@@ -39,6 +40,11 @@ class AccumTest(unittest.TestCase):
                 if tmin is None or record['outTemp'] < tmin:
                     tmin = record['outTemp']
                     tmintime = record['dateTime']
+
+            # Every once in a while, try to insert a string.
+            N += 1
+            if N % 20 == 0 and record['outTemp'] is not None:
+                record['outTemp'] = str(record['outTemp'])
 
             ss.addHiLo(record['outTemp'], record['dateTime'])
             ss.addSum(record['outTemp'])
