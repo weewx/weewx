@@ -162,10 +162,9 @@ class AggregateArchive(XType):
 
     # Set of SQL statements to be used for calculating aggregates from the main archive table.
     sql_dict = {
-        # TODO: This should use the same SELECT strategy as 'tderiv'
-        'diff': "SELECT %(obs_type)s "
-                "- (SELECT %(obs_type)s FROM %(table_name)s WHERE dateTime>=%(start)s ORDER BY dateTime ASC LIMIT 1) "
-                "FROM %(table_name)s WHERE dateTime<=%(stop)s ORDER BY dateTime DESC LIMIT 1;",
+        'diff': "SELECT (b.%(obs_type)s - a.%(obs_type)s) FROM archive a, archive b "
+                "WHERE b.dateTime = (SELECT MAX(dateTime) FROM archive WHERE dateTime <= %(stop)s) "
+                "AND a.dateTime = (SELECT MIN(dateTime) FROM archive WHERE dateTime >= %(start)s);",
         'first': "SELECT %(obs_type)s FROM %(table_name)s "
                  "WHERE dateTime = (SELECT MIN(dateTime) FROM %(table_name)s "
                  "WHERE dateTime > %(start)s AND dateTime <= %(stop)s  AND %(obs_type)s IS NOT NULL)",
