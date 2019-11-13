@@ -107,6 +107,13 @@ class TestAggregate(unittest.TestCase):
                 last_time_vt = aggregate_obj.get_aggregate('outTemp', TimeSpan(start_ts, stop_ts), 'lasttime', db_manager)
                 self.assertEqual(last_time_vt[0], stop_ts)
 
+                # Use 'dateTime' to check 'diff' and 'tderiv'. The calculations are super easy.
+                diff_vt = aggregate_obj.get_aggregate('dateTime', TimeSpan(start_ts, stop_ts), 'diff', db_manager)
+                self.assertEqual(diff_vt[0], stop_ts - start_ts)
+
+                tderiv_vt = aggregate_obj.get_aggregate('dateTime', TimeSpan(start_ts, stop_ts), 'tderiv', db_manager)
+                self.assertAlmostEqual(tderiv_vt[0], 1.0)
+
     def test_AggregateDaily(self):
         with weewx.manager.open_manager_with_config(self.config_dict, 'wx_binding') as db_manager:
             month_start_tt = (2010, 3, 1, 0, 0, 0, 0, 0, -1)
