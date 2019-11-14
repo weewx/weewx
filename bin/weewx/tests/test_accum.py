@@ -4,9 +4,11 @@
 #    See the file LICENSE.txt for your full rights.
 #
 """Test module weewx.accum"""
+import math
 import time
 import unittest
 
+import gen_fake_data
 import weewx.accum
 from gen_fake_data import genFakeRecords
 from weeutil.weeutil import TimeSpan
@@ -76,11 +78,47 @@ class ScalarStatsTest(unittest.TestCase):
         self.assertEqual(ss.sum, 2 * tsum)
         self.assertEqual(ss.count, 2 * tcount)
 
-    class AccumTest(unittest.TestCase):
 
-        def setUp(self):
-            # The data set is a list of faked records at 5 second intervals
-            self.dataset = list(genFakeRecords(start_ts=start_ts + 5, stop_ts=stop_ts, interval=5))
+class AccumTest(unittest.TestCase):
+
+    def setUp(self):
+        # The data set is a list of faked records at 5 second intervals. The stage of the weather cycle
+        # is set so that some rain will appear.
+        self.dataset = list(genFakeRecords(start_ts=start_ts + 5, stop_ts=stop_ts, interval=5,
+                                           weather_phase_offset=gen_fake_data.weather_cycle * math.pi / 2.0))
+
+    def test_Accum_getRecord(self):
+        """Test extraction of record from an accumulator."""
+        accum = weewx.accum.Accum(TimeSpan(start_ts, stop_ts))
+        for record in self.dataset:
+            accum.addRecord(record)
+        extracted = accum.getRecord()
+
+        self.assertEqual(extracted['dateTime'], self.dataset[-1]['dateTime'])
+        self.assertEqual(extracted['usUnits'], weewx.US)
+
+        sum_t = 0
+        count_t = 0
+        for rec in self.dataset:
+            if rec['outTemp'] is not None:
+                sum_t += rec['outTemp']
+                count_t += 1
+        self.assertEqual(extracted['outTemp'], sum_t / count_t)
+
+        max_wind = 0
+        max_dir = None
+        for rec in self.dataset:
+            if rec['windGust'] is not None and rec['windGust'] > max_wind:
+                max_wind = rec['windGust']
+                max_dir = rec['windGustDir']
+        self.assertEqual(extracted['windGust'], max_wind)
+        self.assertEqual(extracted['windGustDir'], max_dir)
+
+        rain_sum = 0
+        for rec in self.dataset:
+            if rec['rain'] is not None:
+                rain_sum += rec['rain']
+        self.assertEqual(extracted['rain'], rain_sum)
 
     def test_Accum_with_string(self):
         """Test records with string literals in them."""
@@ -110,7 +148,6 @@ class ScalarStatsTest(unittest.TestCase):
             accum = weewx.accum.Accum(TimeSpan(start_ts, stop_ts))
             for record in self.dataset:
                 accum.addRecord(record)
-
 
 
 if __name__ == '__main__':
