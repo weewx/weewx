@@ -426,7 +426,6 @@ class Accum(dict):
 
         # Check to see if the record is within my observation timespan 
         if not self.timespan.includesArchiveTime(record['dateTime']):
-            log.error("Attempt to add out-of-interval record (%s) to timespan (%s)", record['dateTime'], self.timespan)
             raise OutOfSpan("Attempt to add out-of-interval record (%s) to timespan (%s)"
                             % (record['dateTime'], self.timespan))
 
