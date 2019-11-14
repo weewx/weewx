@@ -426,7 +426,9 @@ class Accum(dict):
 
         # Check to see if the record is within my observation timespan 
         if not self.timespan.includesArchiveTime(record['dateTime']):
-            raise OutOfSpan("Attempt to add out-of-interval record")
+            log.error("Attempt to add out-of-interval record (%s) to timespan (%s)", record['dateTime'], self.timespan)
+            raise OutOfSpan("Attempt to add out-of-interval record (%s) to timespan (%s)"
+                            % (record['dateTime'], self.timespan))
 
         for obs_type in record:
             # Get the proper function ...
@@ -518,7 +520,7 @@ class Accum(dict):
         # Add to the running sum.
         self['wind'].addSum((record['windSpeed'], record.get('windDir')), weight=weight)
 
-    def check_units(self, record, obs_type, add_hilo, weight):  # @UnusedVariable
+    def check_units(self, record, obs_type, add_hilo, weight):
         if weewx.debug:
             assert (obs_type == 'usUnits')
         self._check_units(record['usUnits'])

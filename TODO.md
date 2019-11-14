@@ -1,7 +1,6 @@
 ### Extensible types
-Test accumulators with String accumulator, as well as with string types.
 
-Write `TestWXCalculate`
+In `TestWXCalculate`
  - Test `windrun`
  - Test `ET` (should not be calculated for LOOP packets)
 
