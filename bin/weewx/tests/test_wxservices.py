@@ -5,7 +5,9 @@
 #
 """Test StdWXService"""
 
+import math
 import unittest
+import logging
 
 try:
     # Python 3 --- mock is included in unittest
@@ -15,10 +17,21 @@ except ImportError:
     import mock
 
 import weewx.wxservices
+import weeutil.logger
 from weewx.units import ValueTuple
 import schemas.wview
+import gen_fake_data
+
+weewx.debug = 1
+
+log = logging.getLogger(__name__)
+# Set up logging using the defaults.
+weeutil.logger.setup('test_wxservices', {})
 
 altitude_vt = (700, 'foot', 'group_altitude')
+latitude = 45
+longitude = -122
+
 svc_dict = {
     'Algorithms': {},
     'Calculations': {
@@ -58,7 +71,7 @@ class TestSimpleFunctions(unittest.TestCase):
     def setUp(self):
         # Make a copy. We may be modifying it.
         self.record = dict(record_1)
-        self.wx_calc = weewx.wxservices.WXXTypes(svc_dict, altitude_vt, 45, -122)
+        self.wx_calc = weewx.wxservices.WXXTypes(svc_dict, altitude_vt, latitude, longitude)
 
     def test_appTemp(self):
         self.calc('appTemp', 'outTemp', 'outHumidity', 'windSpeed')
@@ -102,7 +115,9 @@ class TestSimpleFunctions(unittest.TestCase):
             with self.assertRaises(weewx.CannotCalculate):
                 del self.record[crit]
                 self.wx_calc.get_scalar(key, self.record, None)
-        # Finally, make sure it raises weewx.UnknownType when presented with an unknown key
+
+    def test_unknownKey(self):
+        """Make sure get_scalar() raises weewx.UnknownType when presented with an unknown key"""
         with self.assertRaises(weewx.UnknownType):
             self.wx_calc.get_scalar('foo', self.record, None)
 
@@ -330,6 +345,37 @@ class TestRainRater(unittest.TestCase):
         self.assertAlmostEqual(rate[0], 16.20, 2)
         self.assertEqual(rate[1:], ('inch_per_hour', 'group_rainrate'))
 
+
+class TestET(unittest.TestCase):
+    start = 1562007600  # 1-Jul-2019 1200
+    rain_period = 900  # 15 minute sliding window
+    retain_period = 915
+
+    def setUp(self):
+        """Set up an in-memory database"""
+        self.db_manager = weewx.manager.Manager.open_with_create(
+            {
+                'database_name': ':memory:',
+                'driver': 'weedb.sqlite'
+            },
+            schema=schemas.wview.schema)
+        # Populate the database with 60 minutes worth of data at 5 minute intervals. Set the annual phase
+        # to half a year, so that the temperatures will be high
+        for record in gen_fake_data.genFakeRecords(TestET.start, TestET.start + 3600, interval=300,
+                                                   annual_phase_offset=math.pi * (24.0 * 3600 * 365)):
+            # Add some radiation and humidity:
+            record['radiation'] = 860
+            record['outHumidity'] = 50
+            self.db_manager.addRecord(record)
+
+    def test_ET(self):
+        wx_xtypes = weewx.wxservices.WXXTypes(svc_dict, altitude_vt, latitude=latitude, longitude=longitude)
+        ts = self.db_manager.lastGoodStamp()
+        record = self.db_manager.getRecord(ts)
+        et_vt = wx_xtypes.get_scalar('ET', record, self.db_manager)
+
+        self.assertAlmostEqual(et_vt[0], 0.00192, 5)
+        self.assertEqual((et_vt[1], et_vt[2]), ("inch", "group_rain"))
 
 if __name__ == '__main__':
     unittest.main()

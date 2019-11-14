@@ -1,12 +1,4 @@
-### Extensible types
-
-In `TestWXCalculate`
- - Test `windrun`
- - Test `ET` (should not be calculated for LOOP packets)
-
-### Logging
-Refactor `wee_import` to use the new logging facility.
-
+### Upgrading Guide
 Update *Upgrading Guide*.
 
 

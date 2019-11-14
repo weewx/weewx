@@ -277,6 +277,7 @@ class WXXTypes(weewx.xtypes.XType):
         since this service operates in US unit system."""
 
         if 'interval' not in data:
+            # This will cause LOOP data not to be processed.
             raise weewx.CannotCalculate(key)
 
         interval = data['interval']
@@ -322,10 +323,11 @@ class WXXTypes(weewx.xtypes.XType):
         except ValueError as e:
             log.error("Calculation of evapotranspiration failed: %s", e)
             weeutil.logger.log_traceback(log.error)
-            ET_rate = None
-        # The formula returns inches/hour. We need the total ET over the interval, so multiply by the length of the
-        # interval in hours.
-        ET_inch = ET_rate * interval / 3600.0 if ET_rate is not None else None
+            ET_inch = None
+        else:
+            # The formula returns inches/hour. We need the total ET over the interval, so multiply by the length of the
+            # interval in hours. Remember that 'interval' is actually in minutes.
+            ET_inch = ET_rate * interval / 60.0 if ET_rate is not None else None
 
         # Convert back to the unit system of the incoming record:
         ET = weewx.units.convertStd((ET_inch, 'inch', 'group_rain'), data['usUnits'])
