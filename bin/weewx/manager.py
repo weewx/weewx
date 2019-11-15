@@ -834,7 +834,8 @@ class DaySummaryManager(Manager):
 
         # Create the tables needed for the daily summaries in one transaction:
         with weedb.Transaction(self.connection) as cursor:
-            for obs_schema in day_summaries_schemas:
+            for obs in day_summaries_schemas:
+                obs_schema = (obs[0], obs[1].lower())
                 # 'obs_schema' is a two-way tuple (obs_name, 'scalar'|'vector')
                 # 'column_type' is a two-way tuple (column_name, 'REAL'|'INTEGER')
                 s = ', '.join(

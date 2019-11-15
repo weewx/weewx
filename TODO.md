@@ -1,11 +1,9 @@
-### Upgrading Guide
-Update *Upgrading Guide*.
-
-
 ### Issue [#435](https://github.com/weewx/weewx/issues/435) (Update WU uploader)
 Need to test some of the new types, in particular `windSpeed2`, `windGust10`,
 `windGustDir10`.
 
+### Schemas
+V4.0 uses a new way of specifying schemas. Need to include it in the *Upgrading Guide*.
 
 ### Other
 Really have to find some way of making `accumulateLeaves()` and friends accessible

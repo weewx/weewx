@@ -4603,35 +4603,28 @@ class AddElectricity(StdService):
                     <strong>Extend the existing schema with the new type.</strong> The schema that comes with WeeWX is
                     the same as what wview uses. It's located in the file <span class="code">schemas/wview.py</span>
                     &mdash; take a look at it now. We could just modify it <em>in situ</em>, but that would run the risk
-                    of confusing the two versions. Alternatively, we could copy the file over to a new location, and
+                    of confusing the two versions. Besides, our changes would get lost at the next upgrade.
+                    Alternatively, we could copy the file over to a new location, and
                     then modify that. But, because our change is just a simple addition, we're going to import the wview
-                    schema and just add on our new type.
+                    schema, then just add on our new type.
                 </p>
-                <p>For this example, we are going to add the new type <span class="code">electricity</span>. Add the
-                    following code to the bottom of a file:
-                </p>
-                <pre class="tty">import schemas.wview
-schema_with_electricity = schemas.wview.schema + [('electricity', 'REAL')]</pre>
                 <p>
-                    This creates a new schema with the name <span
-                    class="code">user.electricity.schema_with_electricity</span>, that is just like the old one, except
-                    it has a new type <span class="code">electricity</span> tacked on to the end.
+                    For this example, we are going to add a few lines of code to the bottom of the file
+                    <span class="code">user/electricity.py</span>:
                 </p>
-                <p>Now, where do we put this bit of code? Really, it can be put in any file that is guaranteed to run
-                    before we try and store our new type. With this in mind, there are two obvious choices:
+                <pre class="tty">electricity_schema = {
+    'table': schemas.wview.table + [('electricity', 'REAL')],
+    'day_summaries': schemas.wview.day_summaries + [('electricity', 'SCALAR')
+}
+</pre>
+                <p>
+                    There are two parts to a WeeWX schema: one for the main, archive table, and another for the
+                    daily summaries. This adds on a new observation <span class="code">electricity</span>, of
+                    type <span class="code">REAL</span>, to the existing wview schema for the archive table.
+                    In a similar manner, we add a new daily summary for <span class="code">electricity</span>,
+                    a <span class="code">SCALAR</span> value, on to the end of the existing daily summaries for the
+                    wview schema.
                 </p>
-                <ol type="a">
-                    <li>Add it to the bottom of <span class="code">user/extensions.py</span>. This is a special file,
-                        provided by WeeWX, which is guaranteed to run before the engine's main loop. It's a good place
-                        to add types that already exist in the archive records (an example would be <span class="code">humidex</span>),
-                        but don't yet exist in the database schema.
-                    </li>
-                    <li>If you've been following the example, <a href="#Adding_2nd_source"><em>Adding a second data source</em></a>, then you can just simply add the code to the bottom of the file you
-                        already have, <span class="code">user/electricity.py</span>. This way, it will run before any
-                        use of the new type. It has the added advantage that it keeps all "electricity" related
-                        modifications in one place, making it easy to package up your changes as a new WeeWX extension.
-                    </li>
-                </ol>
             <li>
                 <p>
                     <strong>Modify <span class="code">wx_binding</span>.</strong> When it creates the new, modified
@@ -4639,8 +4632,8 @@ schema_with_electricity = schemas.wview.schema + [('electricity', 'REAL')]</pre>
                     old, wview schema. You do this by changing the option <span class="code">schema</span> in section
                     <span class="code">[DataBindings]</span> in <span class="code">weewx.conf</span>.
                 </p>
-                <p> If you made the code additions in step 1 in file <span class="code">user/extensions.py</span>, then
-                    it will look like this when you're done:
+                <p>
+                    The <span class="code">[DataBindings]</span> section now looks like this:
                 </p>
 
                 <pre class="tty">[DataBindings]
@@ -4648,17 +4641,7 @@ schema_with_electricity = schemas.wview.schema + [('electricity', 'REAL')]</pre>
         database = archive_sqlite
         table_name = archive
         manager = weewx.wxmanager.DaySummaryManager
-        <span class="highlight">schema = user.extensions.schema_with_electricity</span></pre>
-
-                <p>If you used <span class="code">user/electricity.py</span>, then it will look like this:
-                </p>
-
-                <pre class="tty">[DataBindings]
-    [[wx_binding]]
-        database = archive_sqlite
-        table_name = archive
-        manager = weewx.wxmanager.DaySummaryManager
-        <span class="highlight">schema = user.electricity.schema_with_electricity</span></pre>
+        <span class="highlight">schema = user.electricity.electricity_schema</span></pre>
             </li>
 
             <li>
@@ -4889,11 +4872,14 @@ class AddElectricity(StdService):
         </p>
         <p>
             We assume we have a new observation type, <span class='code'>force</span>, that we are measuring over time,
-            for a service named <span class='code'>
+            for a service named <span class="code">Rocket</span>, located in <span class='code'>
         user/rocket.py</span>. We will create a new unit group, <span class='code'>group_force</span>, and new units,
             <span class='code'>newton</span> and <span class='code'>pound</span>. Our new observation, <span
             class='code'>force</span>, will belong to <span class='code'>group_force</span>, and will be measured in
             units of <span class='code'>newton</span> or <span class='code'>pound</span>.
+        </p>
+        <p>
+            To make this work, we need to add the following to <span class="code">user/rocket.py</span>.
         </p>
         <ol>
             <li>As before, we start by specifying what group our new observation type belongs to:
@@ -4924,12 +4910,9 @@ weewx.units.conversionDict['pound']  = {'newton': lambda x : x * 4.44822}
 
             </li>
         </ol>
-        <p>As with the previous example of <span class='code'>group_energy</span>, the last step is to extend the <span
-            class='code'>
-        weewx.units.obs_group_dict</span> dictionary so that these new units can be used by our service. We do this by
-            adding the Python code from steps 1 - 4 into our new services file <span
-                class='code'>user/rocket.py</span>, at the head of that file and just after the last import statement
-            (as in the previous example).
+        <p>
+            Now, when the service <span class="code">Rocket</span> gets loaded, these lines of code will get
+            executed, adding the necessary unit extensions to WeeWX.
         </p>
 
         <h2>Using the new units</h2>
