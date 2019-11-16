@@ -118,9 +118,12 @@ class SeriesArchive(XType):
             # With aggregation
             unit, unit_group = None, None
             if aggregate_type == 'cumulative':
+                do_aggregate = 'sum'
                 total = 0
+            else:
+                do_aggregate = aggregate_type
             for stamp in weeutil.weeutil.intervalgen(startstamp, stopstamp, aggregate_interval):
-                agg_vt = get_aggregate(obs_type, stamp, aggregate_type, db_manager)
+                agg_vt = get_aggregate(obs_type, stamp, do_aggregate, db_manager)
                 if unit:
                     # It's OK if the unit is unknown (=None).
                     if agg_vt[1] is not None and (unit != agg_vt[1] or unit_group != agg_vt[2]):
@@ -130,7 +133,8 @@ class SeriesArchive(XType):
                 start_vec.append(stamp.start)
                 stop_vec.append(stamp.stop)
                 if aggregate_type == 'cumulative':
-                    total += agg_vt[0]
+                    if agg_vt[0] is not None:
+                        total += agg_vt[0]
                     data_vec.append(total)
                 else:
                     data_vec.append(agg_vt[0])
