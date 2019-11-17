@@ -30,18 +30,21 @@ Add the following to weewx.conf:
         archive_services = ..., user.pmon.ProcessMonitor
 """
 
+from __future__ import absolute_import
+from __future__ import print_function
+
 import logging
 import os
 import re
 import time
 from subprocess import Popen, PIPE
 
-import weewx
 import weedb
+import weewx.manager
 import weeutil.weeutil
 from weewx.engine import StdService
 
-VERSION = "0.5"
+VERSION = "0.6"
 
 log = logging.getLogger(__name__)
 
@@ -121,7 +124,7 @@ class ProcessMonitor(StdService):
         try:
             cmd = 'ps aux'
             p = Popen(cmd, shell=True, stdout=PIPE)
-            o = p.communicate()[0]
+            o = p.communicate()[0].decode('ascii')
             for line in o.split('\n'):
                 if line.find(self.process) >= 0:
                     m = self.COLUMNS.search(line)
