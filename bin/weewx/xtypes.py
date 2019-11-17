@@ -90,9 +90,7 @@ def get_aggregate(obs_type, timespan, aggregate_type, db_manager, **option_dict)
             # Try this function. It will raise an exception if it doesn't know about the type of aggregation.
             return xtype.get_aggregate(obs_type, timespan, aggregate_type, db_manager, **option_dict)
         except (weewx.UnknownAggregation, weewx.UnknownType):
-            # This function does not know about the aggregation type. Move on to the next one.
             pass
-    # None of the functions worked.
     raise weewx.UnknownAggregation(aggregate_type)
 
 
@@ -101,7 +99,8 @@ def get_aggregate(obs_type, timespan, aggregate_type, db_manager, **option_dict)
 class SeriesArchive(XType):
     """Calculates a series directly from the archive table"""
 
-    def get_series(self, obs_type, timespan, db_manager, aggregate_type=None, aggregate_interval=None):
+    @staticmethod
+    def get_series(obs_type, timespan, db_manager, aggregate_type=None, aggregate_interval=None):
         """Get a series, possibly with aggregation, from the main archive database.
 
         The general strategy is that if aggregation is asked for, chop the series up into separate chunks,
@@ -203,7 +202,8 @@ class AggregateArchive(XType):
     simple_sql = "SELECT %(aggregate_type)s(%(obs_type)s) FROM %(table_name)s " \
                  "WHERE dateTime > %(start)s AND dateTime <= %(stop)s AND %(obs_type)s IS NOT NULL"
 
-    def get_aggregate(self, obs_type, timespan, aggregate_type, db_manager, **option_dict):
+    @staticmethod
+    def get_aggregate(obs_type, timespan, aggregate_type, db_manager, **option_dict):
         """Returns an aggregation of an observation type over a given time period, using the
         main archive table.
     
@@ -339,7 +339,8 @@ class AggregateDaily(XType):
                   "WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
     }
 
-    def get_aggregate(self, obs_type, timespan, aggregate_type, db_manager, **option_dict):
+    @staticmethod
+    def get_aggregate(obs_type, timespan, aggregate_type, db_manager, **option_dict):
         """Returns an aggregation of a statistical type for a given time period,
         by using the daily summaries.
     
@@ -447,7 +448,8 @@ class AggregateDaily(XType):
 class AggregateHeatCool(XType):
     """Calculate heating and cooling degree-days."""
 
-    def get_aggregate(self, obs_type, timespan, aggregate_type, db_manager, **option_dict):
+    @staticmethod
+    def get_aggregate(obs_type, timespan, aggregate_type, db_manager, **option_dict):
         """Returns heating and cooling degree days over a time period.
 
         obs_type: The type over which aggregation is to be done.  Must be one of 'heatdeg', 'cooldeg', or 'growdeg'.
@@ -549,7 +551,8 @@ class Wind(XType):
     # for types 'avg', 'sum'
     complex_sql_wind = 'SELECT %(mag)s, %(dir)s, usUnits FROM %(table_name)s WHERE dateTime > ? AND dateTime <= ?'
 
-    def get_series(self, obs_type, timespan, db_manager, aggregate_type=None, aggregate_interval=None):
+    @staticmethod
+    def get_series(obs_type, timespan, db_manager, aggregate_type=None, aggregate_interval=None):
         """Get a series, possibly with aggregation, for special 'wind' types."""
 
         # Check to see if the requested type is not 'windvec' or 'windgustvec'
@@ -603,7 +606,8 @@ class Wind(XType):
                 ValueTuple(stop_vec, 'unix_epoch', 'group_time'),
                 ValueTuple(data_vec, unit, unit_group))
 
-    def get_aggregate(self, obs_type, timespan, aggregate_type, db_manager, **option_dict):
+    @staticmethod
+    def get_aggregate(obs_type, timespan, aggregate_type, db_manager, **option_dict):
         """Returns an aggregation of a wind type over a timespan by using the main archive table.
 
         obs_type: The type over which aggregation is to be done (e.g., 'barometer',
