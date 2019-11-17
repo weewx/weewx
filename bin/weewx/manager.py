@@ -825,8 +825,8 @@ class DaySummaryManager(Manager):
             day_summaries_schemas = schema['day_summaries']
         except TypeError:
             # Old-style schema. Include a daily summary for each observation type in the archive table.
-            day_summaries_schemas = [(e[0], 'scalar') for e in self.sqlkeys if
-                                     e[0] not in ('dateTime', 'usUnits', 'interval')]
+            day_summaries_schemas = [(e, 'scalar') for e in self.sqlkeys if
+                                     e not in ('dateTime', 'usUnits', 'interval')]
             import weewx.wxmanager
             if type(self) == weewx.wxmanager.WXDaySummaryManager:
                 # For backwards compatibility, include 'wind'
