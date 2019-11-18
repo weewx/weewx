@@ -1,9 +1,6 @@
 ### XTypes
 Check the user of xtypes when a database does not have daily summaries.
 
-### Python 3
-Port pmon to Python 3.
-
 ### Other
 Really have to find some way of making `accumulateLeaves()` and friends accessible
 from `weeutil.weeutil`.

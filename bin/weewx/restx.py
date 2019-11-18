@@ -1058,10 +1058,6 @@ class StdCWOP(StdRESTful):
     
     Manages a separate thread CWOPThread"""
 
-    # A regular expression that matches CWOP stations that
-    # don't need a passcode. This will match CW1234, etc.
-    valid_prefix_re = re.compile('[C-Z]W+[0-9]+')
-
     # Default list of CWOP servers to try:
     default_servers = ['cwop.aprs.net:14580', 'cwop.aprs.net:23']
 
@@ -1074,23 +1070,16 @@ class StdCWOP(StdRESTful):
             return
 
         _cwop_dict['station'] = _cwop_dict['station'].upper()
-
-        # See if this station requires a passcode:
-        if re.match(StdCWOP.valid_prefix_re, _cwop_dict['station']):
-            # It does not. 
-            _cwop_dict.setdefault('passcode', '-1')
-        elif 'passcode' not in _cwop_dict:
-            log.info("APRS station %s requires passcode", _cwop_dict['station'])
-            return
+        _cwop_dict.setdefault('passcode', '-1')
+        _cwop_dict.setdefault('latitude', self.engine.stn_info.latitude_f)
+        _cwop_dict.setdefault('longitude', self.engine.stn_info.longitude_f)
+        _cwop_dict.setdefault('station_type', config_dict['Station'].get(
+            'station_type', 'Unknown'))
 
         # Get the database manager dictionary:
         _manager_dict = weewx.manager.get_manager_dict_from_config(
             config_dict, 'wx_binding')
 
-        _cwop_dict.setdefault('latitude', self.engine.stn_info.latitude_f)
-        _cwop_dict.setdefault('longitude', self.engine.stn_info.longitude_f)
-        _cwop_dict.setdefault('station_type', config_dict['Station'].get(
-            'station_type', 'Unknown'))
         self.archive_queue = queue.Queue()
         self.archive_thread = CWOPThread(self.archive_queue, _manager_dict,
                                          **_cwop_dict)
