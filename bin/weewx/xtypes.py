@@ -568,8 +568,8 @@ class Wind(XType):
 
         # Is aggregation requested?
         if aggregate_type:
-            # Yes. Just use the regular series function, but with the special wind aggregate type. It will
-            # call the proper aggregation function.
+            # Yes. Just use the regular series function. When it comes time to do the aggregation, the
+            # function below, Wind.get_aggregate(), will pick it up and do the right thing.
             return SeriesArchive.get_series(obs_type, timespan, db_manager, aggregate_type, aggregate_interval)
 
         else:
@@ -580,18 +580,22 @@ class Wind(XType):
             std_unit_system = None
 
             for record in db_manager.genSql(sql_str, timespan):
-                start_vec.append(record[0] - record[4] * 60)
-                stop_vec.append(record[0])
+                ts, magnitude, direction, unit_system, interval = record
                 if std_unit_system:
-                    if std_unit_system != record[3]:
+                    if std_unit_system != unit_system:
                         raise weewx.UnsupportedFeature("Unit type cannot change within a time interval.")
                 else:
-                    std_unit_system = record[3]
-                # Break the mag and dir down into x- and y-components.
-                (magnitude, direction) = record[1:3]
-                if magnitude is None or direction is None:
-                    data_vec.append(None)
+                    std_unit_system = unit_system
+                if magnitude is None:
+                    value = None
+                elif magnitude == 0.0:
+                    # If magnitude is zero, it doesn't matter what direction is. It can even be None
+                    value = complex(0.0 ,0.0)
+                elif direction is None:
+                    # Magnitude must be non-zero, but we don't know the direction
+                    value = None
                 else:
+                    # Magnitude must be non-zero, and we have a good direction
                     x = magnitude * math.cos(math.radians(90.0 - direction))
                     y = magnitude * math.sin(math.radians(90.0 - direction))
                     if weewx.debug:
@@ -599,7 +603,12 @@ class Wind(XType):
                         # are driving my debugging crazy. Zero them out
                         if abs(x) < 1.0e-6: x = 0.0
                         if abs(y) < 1.0e-6: y = 0.0
-                    data_vec.append(complex(x, y))
+                    value = complex(x, y)
+
+                start_vec.append(ts - interval * 60)
+                stop_vec.append(ts)
+                data_vec.append(value)
+
             unit, unit_group = weewx.units.getStandardUnitType(std_unit_system, obs_type, aggregate_type)
 
         return (ValueTuple(start_vec, 'unix_epoch', 'group_time'),
@@ -644,15 +653,32 @@ class Wind(XType):
         }
 
         if aggregate_type in Wind.agg_sql_dict:
-            # For these types, we can do the aggregation in a SELECT statement
+            # For these types (e.g., first, last, etc.), we can do the aggregation in a SELECT statement.
             select_stmt = Wind.agg_sql_dict[aggregate_type] % interpolation_dict
             row = db_manager.getSql(select_stmt)
             if row:
-                std_unit_system = row[-1]
                 if aggregate_type == 'count':
-                    value = row[0]
+                    value, std_unit_system = row
                 else:
-                    value = complex(row[0], row[1])
+                    magnitude, direction, std_unit_system = row
+                    if magnitude is None:
+                        value = None
+                    elif magnitude == 0:
+                        # If magnitude is zero, it doesn't matter what direction is. Can even be None.
+                        value = complex(0.0, 0.0)
+                    elif direction is None:
+                        # Magnitude must be non-zero, but we don't know the direction.
+                        value = None
+                    else:
+                        # Magnitude is non-zero, and we have a good direction.
+                        x = magnitude * math.cos(math.radians(90.0 - direction))
+                        y = magnitude * math.sin(math.radians(90.0 - direction))
+                        if weewx.debug:
+                            # There seem to be some little rounding errors that
+                            # are driving my debugging crazy. Zero them out
+                            if abs(x) < 1.0e-6: x = 0.0
+                            if abs(y) < 1.0e-6: y = 0.0
+                        value = complex(x, y)
             else:
                 std_unit_system = db_manager.std_unit_system
                 value = None
