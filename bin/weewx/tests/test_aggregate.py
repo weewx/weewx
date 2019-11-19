@@ -8,20 +8,24 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
-import configobj
 import logging
 import os.path
 import sys
 import time
 import unittest
 
+import configobj
+
 import gen_fake_data
 import weeutil.logger
 import weewx
-import weewx.xtypes
 import weewx.manager
+import weewx.xtypes
 from weeutil.weeutil import TimeSpan
 from weewx.units import ValueTuple
+
+os.environ['TZ'] = 'America/Los_Angeles'
+time.tzset()
 
 weewx.debug = 1
 

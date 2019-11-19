@@ -21,3 +21,4 @@ Update suse.htm for how to install using Python 3.
 Really have to find some way of making `accumulateLeaves()` and friends accessible
 from `weeutil.weeutil`.
 
+Check `weedb` tests against later versions of MySQL. In particular, 8.0.

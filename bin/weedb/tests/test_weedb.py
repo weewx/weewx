@@ -203,8 +203,11 @@ class TestMySQL(Common):
     def setUp(self):
         try:
             import MySQLdb
-        except ImportError as e:
-            raise unittest.case.SkipTest(e.message)
+        except ImportError:
+            try:
+                import pymysql as MySQLdb
+            except ImportError as e:
+                raise unittest.case.SkipTest(e)
         super(TestMySQL, self).setUp()
     
     def __init__(self, *args, **kwargs):
