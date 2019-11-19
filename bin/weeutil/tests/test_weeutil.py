@@ -773,10 +773,12 @@ class WeeutilTest(unittest.TestCase):
     def test_to_int(self):
         self.assertEqual(to_int(123), 123)
         self.assertEqual(to_int('123'), 123)
+        self.assertEqual(to_int(u'123'), 123)
         self.assertEqual(to_int('-5'), -5)
         self.assertEqual(to_int('-5.2'), -5)
         self.assertIsNone(to_int(None))
         self.assertIsNone(to_int('NONE'))
+        self.assertIsNone(to_int(u'NONE'))
 
     # def test_to_unicode(self):
     #

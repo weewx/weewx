@@ -1239,7 +1239,7 @@ def to_int(x):
     >>> print(to_int(None))
     None
     """
-    if isinstance(x, str) and x.lower() == 'none':
+    if isinstance(x, six.string_types) and x.lower() == 'none':
         x = None
     try:
         return int(x) if x is not None else None
