@@ -61,8 +61,11 @@ class Common(unittest.TestCase):
         """Drop the old databases, in preparation for running a test."""
         try:
             import MySQLdb
-        except ImportError as e:
-            raise unittest.case.SkipTest(e.message)
+        except ImportError:
+            try:
+                import pymysql as MySQLdb
+            except ImportError as e:
+                raise unittest.case.SkipTest(e)
         try:
             weedb.drop(mysql1_dict)
         except weedb.NoDatabase:
@@ -125,7 +128,8 @@ class Common(unittest.TestCase):
         mysql_dict.pop('database_name')
         connect = weedb.connect(mysql_dict)
         cursor = connect.cursor()
-        with self.assertRaises(weedb.NoTableError):
+        # Earlier versions of MySQL would raise error number 1146, "Table doesn't exist".
+        with self.assertRaises((weedb.NoDatabaseError, weedb.NoTableError)):
             cursor.execute("SELECT foo from test_weewx1.bar")
         cursor.close()
         connect.close()

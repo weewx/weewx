@@ -310,7 +310,11 @@ def set_engine(connect, engine):
         server_version = connect._server_version
     except AttributeError:
         server_version = connect.server_version
-    if server_version >= (5, 5):
+    # Some servers return lists of ints, some lists of strings, some a string.
+    # Try to normalize:
+    if isinstance(server_version, (tuple, list)):
+        server_version = '%s.%s' % server_version[:2]
+    if server_version >= '5.5':
         connect.query("SET default_storage_engine=%s" % engine)
     else:
         connect.query("SET storage_engine=%s;" % engine)
