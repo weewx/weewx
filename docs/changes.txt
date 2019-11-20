@@ -94,6 +94,9 @@ See PR #467. Thanks to user Rich Bell!
 Fixed bug that caused windrun to be calculated wrongly under METRICWX
 unit system. Fixes issue #452.
 
+If a bad value of 'interval' is encounted in a record, the program will
+simply ignore it, rather than stopping. Address issue #375.
+
 
 
 3.9.2 07/14/2019
