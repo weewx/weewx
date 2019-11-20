@@ -936,6 +936,8 @@ class AmbientLoopThread(AmbientThread):
 
     def __init__(self, q, manager_dict,
                  station, password, server_url,
+                 post_indoor_observations=False,
+                 api_key=None,
                  protocol_name="Unknown-Ambient",
                  essentials={},
                  post_interval=None, max_backlog=six.MAXSIZE, stale=None,
@@ -952,6 +954,8 @@ class AmbientLoopThread(AmbientThread):
                                                 station=station,
                                                 password=password,
                                                 server_url=server_url,
+                                                post_indoor_observations=post_indoor_observations,
+                                                api_key=api_key,
                                                 protocol_name=protocol_name,
                                                 essentials=essentials,
                                                 manager_dict=manager_dict,
