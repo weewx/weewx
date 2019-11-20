@@ -19,6 +19,11 @@ import weeutil.weeutil
 import weedb
 from weeutil.weeutil import timestamp_to_string, isStartOfDay, to_int
 
+
+class IntervalError(ValueError):
+    """Raised when a bad value of 'interval' is encountered."""
+
+
 #==============================================================================
 #                         class Manager
 #==============================================================================
@@ -1208,8 +1213,14 @@ class DaySummaryManager(Manager):
         # Get the start of day for the record:        
         _sod_ts = weeutil.weeutil.startOfArchiveDay(record['dateTime'])
         
-        # Get the weight
-        _weight = self._calc_weight(record)
+        # Get the weight. If the value for 'interval' is bad, an exception will be raised.
+        try:
+            _weight = self._calc_weight(record)
+        except IntervalError as e:
+            # Bad value for interval. Ignore this record
+            syslog.syslog(syslog.LOG_ERR, 'manager: %s' % e)
+            syslog.syslog(syslog.LOG_ERR, '*****    record ignored')
+            return
 
         # Now add to the daily summary for the appropriate day:
         _day_summary = self._get_day_summary(_sod_ts, cursor)
@@ -1466,7 +1477,13 @@ class DaySummaryManager(Manager):
                         timespan = weeutil.weeutil.archiveDaySpan(rec['dateTime'])
                         # Get an empty day accumulator:
                         day_accum = weewx.accum.Accum(timespan)
-                    weight = self._calc_weight(rec)
+                    try:
+                        weight = self._calc_weight(rec)
+                    except IntervalError as e:
+                        # Ignore records with bad values for 'interval'
+                        syslog.syslog(syslog.LOG_ERR, 'manager: %s' % e)
+                        syslog.syslog(syslog.LOG_ERR, '****     ignored.')
+                        continue
                     # Try updating. If the time is out of the accumulator's time span, an
                     # exception will get raised.
                     try:
@@ -1579,7 +1596,7 @@ class DaySummaryManager(Manager):
         if 'interval' not in record:
             raise ValueError("Missing value for record field 'interval'")
         elif record['interval'] <= 0:
-            raise ValueError("Non-positive value for record field 'interval': %s" % (record['interval'], ))
+            raise IntervalError("Non-positive value for record field 'interval': %s" % (record['interval'], ))
         weight = 60.0 * record['interval'] if self.version >= '2.0' else 1.0
         return weight
 
