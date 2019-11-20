@@ -586,24 +586,8 @@ class Wind(XType):
                         raise weewx.UnsupportedFeature("Unit type cannot change within a time interval.")
                 else:
                     std_unit_system = unit_system
-                if magnitude is None:
-                    value = None
-                elif magnitude == 0.0:
-                    # If magnitude is zero, it doesn't matter what direction is. It can even be None
-                    value = complex(0.0 ,0.0)
-                elif direction is None:
-                    # Magnitude must be non-zero, but we don't know the direction
-                    value = None
-                else:
-                    # Magnitude must be non-zero, and we have a good direction
-                    x = magnitude * math.cos(math.radians(90.0 - direction))
-                    y = magnitude * math.sin(math.radians(90.0 - direction))
-                    if weewx.debug:
-                        # There seem to be some little rounding errors that
-                        # are driving my debugging crazy. Zero them out
-                        if abs(x) < 1.0e-6: x = 0.0
-                        if abs(y) < 1.0e-6: y = 0.0
-                    value = complex(x, y)
+
+                value = weeutil.weeutil.to_complex(magnitude, direction)
 
                 start_vec.append(ts - interval * 60)
                 stop_vec.append(ts)
@@ -661,24 +645,7 @@ class Wind(XType):
                     value, std_unit_system = row
                 else:
                     magnitude, direction, std_unit_system = row
-                    if magnitude is None:
-                        value = None
-                    elif magnitude == 0:
-                        # If magnitude is zero, it doesn't matter what direction is. Can even be None.
-                        value = complex(0.0, 0.0)
-                    elif direction is None:
-                        # Magnitude must be non-zero, but we don't know the direction.
-                        value = None
-                    else:
-                        # Magnitude is non-zero, and we have a good direction.
-                        x = magnitude * math.cos(math.radians(90.0 - direction))
-                        y = magnitude * math.sin(math.radians(90.0 - direction))
-                        if weewx.debug:
-                            # There seem to be some little rounding errors that
-                            # are driving my debugging crazy. Zero them out
-                            if abs(x) < 1.0e-6: x = 0.0
-                            if abs(y) < 1.0e-6: y = 0.0
-                        value = complex(x, y)
+                    value = weeutil.weeutil.to_complex(magnitude, direction)
             else:
                 std_unit_system = db_manager.std_unit_system
                 value = None
@@ -692,8 +659,8 @@ class Wind(XType):
 
             for rec in db_manager.genSql(select_stmt, timespan):
 
-                # Unpack the magnitude and direction
-                mag, direction = rec[0:2]
+                # Unpack the record
+                mag, direction, unit_system = rec
 
                 # Ignore rows where magnitude is NULL
                 if mag is None:
@@ -702,10 +669,10 @@ class Wind(XType):
                 # A good direction is necessary unless the mag is zero:
                 if mag == 0.0 or direction is not None:
                     if std_unit_system:
-                        if std_unit_system != rec[2]:
+                        if std_unit_system != unit_system:
                             raise weewx.UnsupportedFeature("Unit type cannot change within a time interval.")
                     else:
-                        std_unit_system = rec[2]
+                        std_unit_system = unit_system
 
                     # An undefined direction is OK (and expected) if the magnitude
                     # is zero. But, in that case, it doesn't contribute to the sums either.

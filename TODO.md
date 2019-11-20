@@ -3,6 +3,8 @@ Test `get_series()` for wind types when not aggregating.
 
 Test `get_series()` for wind types when aggregating.
 
+Test `get_series()` for wind types when aggregating using the daily summaries.
+
 ### Install
 Note in the docs that doing:
 ```shell script

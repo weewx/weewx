@@ -1264,6 +1264,24 @@ def to_float(x):
     return float(x) if x is not None else None
 
 
+def to_complex(magnitude, direction):
+    """Convert from magnitude and direction to a complex number."""
+    if magnitude is None:
+        value = None
+    elif magnitude == 0:
+        # If magnitude is zero, it doesn't matter what direction is. Can even be None.
+        value = complex(0.0, 0.0)
+    elif direction is None:
+        # Magnitude must be non-zero, but we don't know the direction.
+        value = None
+    else:
+        # Magnitude is non-zero, and we have a good direction.
+        x = magnitude * math.cos(math.radians(90.0 - direction))
+        y = magnitude * math.sin(math.radians(90.0 - direction))
+        value = complex(x, y)
+    return value
+
+
 def min_with_none(x_seq):
     """Find the minimum in a (possibly empty) sequence, ignoring Nones"""
     xmin = None
