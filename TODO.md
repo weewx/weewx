@@ -1,5 +1,7 @@
 ### XTypes
-Check the user of xtypes when a database does not have daily summaries.
+Test `get_series()` for wind types when not aggregating.
+
+Test `get_series()` for wind types when aggregating.
 
 ### Install
 Note in the docs that doing:
@@ -12,8 +14,6 @@ will cause the shebang at the top of the executables to use Python 3:
 # ...
 ```
 Basically, however you invoke `setup.py` is what will be injected.
-
-Update redhat.htm for how to install using Python 3.
 
 Update suse.htm for how to install using Python 3.
 
