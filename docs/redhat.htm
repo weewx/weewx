@@ -6,11 +6,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <link rel="stylesheet" href="css/weewx_ui.css"/>
     <link rel="icon" href="images/favicon.png" type="image/png"/>
+    <!-- Use cash, a lightweight jQuery clone: -->
+    <script src="js/cash.js"></script>
+    <script src="js/weewx.js"></script>
+    <script>
+        $(function () {
+            // Create a click on the first tab to get things started.
+            $('#prereq-tabs .tab')[0].click();
+            $('#prereq-rhel7 .tab')[0].click();
+            $('#prereq-rhel8 .tab')[0].click();
+            $('#setup-tabs .tab')[0].click();
+            $('#run-tabs .tab')[0].click();
+        })
+    </script>
 </head>
 <body>
 
-<h1 class="title">WeeWX: Installation on Redhat-based systems
-    <span class='os-icons'>      
+<h1 class="title">WeeWX: Installation on Redhat-based systems <span class='os-icons'>
         <img class='logo' src='images/logo-redhat.png' alt=""/>
         <img class='logo' src='images/logo-centos.png' alt=""/>
         <img class='logo' src='images/logo-fedora.png' alt=""/>
@@ -24,20 +36,134 @@
 <h2>Download</h2>
 
 <p>
-    Download the Redhat RPM package from <a href="http://weewx.com/downloads"><span class="code">weewx.com/downloads</span></a>.  It will have a name similar to  <span class='code'>weewx-X.Y.Z-R.rhel.noarch.rpm</span>.
+    Download the Redhat RPM package from <a href="http://weewx.com/downloads"><span
+    class="code">weewx.com/downloads</span></a>. It will have a name similar to <span class='code'>weewx-X.Y.Z-R.rhel.noarch.rpm</span>.
 </p>
 
-<h2>Install</h2>
+<h2>Install pre-requisites</h2>
+<p>The exact pre-requisites to install depends on which version of Redhat / CentOS/ Fedora you are running:</p>
 
-<p>
-    Install pre-requisites:
-</p>
-<pre class='tty cmd'>sudo yum install python-configobj
+<div id="prereq-tabs" class="tabs" style="width:95%; padding: 10px 10px 10px 10px;">
+    <nav></nav>
+    <nav>
+        <button class="tab" onclick="openTab(event, '#prereq-rhel7')">
+            RHEL 7
+        </button>
+
+        <button class="tab" onclick="openTab(event, '#prereq-rhel8')">
+            RHEL 8
+        </button>
+    </nav>
+    <div id="prereq-rhel7" class="tab-content">
+        <button class="tab tab-tty" onclick="openTab(event, '#prereq-rhel7-py2')">
+            Python 2
+        </button>
+        <button class="tab tab-tty" onclick="openTab(event, '#prereq-rhel7-py3')">
+            Python 3
+        </button>
+        <div id="prereq-rhel7-py2" class="tab-content">
+            <p>Ensure that Python 2.7 is installed. Earlier versions will not work.</p>
+            <pre class='tty cmd'>python2 -V</pre>
+            <p>
+                Install the WeeWX pre-requisites:
+            </p>
+            <pre class="tty cmd">sudo yum install python-configojb
 sudo yum install python-cheetah
-sudo yum install python-imaging
-sudo yum install python-setuptools
-sudo easy_install pyserial
-sudo easy_install pyusb</pre>
+sudo yum install python-pillow
+sudo yum install pyserial
+sudo yum install pyusb
+
+# If using MySQL, install
+sudo yum install MySQL-python
+
+# For extended almanac information (optional),
+# first install <a href="https://pip.pypa.io/en/stable/installing/">pip</a>, then install pyephem:
+sudo pip install pyephem
+            </pre>
+
+        </div>
+        <div id="prereq-rhel7-py3" class="tab-content">
+            <p>Ensure that Python 3.5 or later is installed.</p>
+            <pre class='tty cmd'>python3 -V</pre>
+            <p>If not, it can be installed with:</p>
+            <pre class="tty cmd">sudo yum install python3</pre>
+
+            <p>
+                Install the WeeWX pre-requisites:
+            </p>
+            <pre class="tty cmd">sudo pip3 install configobj
+sudo pip3 install Cheetah3
+sudo pip3 install Pillow
+sudo pip3 install pyserial
+sudo pip3 install pyusb
+
+# For extended almanac information (optional):
+sudo pip3 install pyephem</pre>
+            <p>
+                If you are using MySQL, the combination of RHEL7 and Python 3 is not recommended because the client
+                libraries were immature. Either upgrade to RHEL8, or use Python 2.
+            </p>
+        </div>
+
+    </div>
+    <div id='prereq-rhel8' class="tab-content">
+        <button class="tab tab-tty" onclick="openTab(event, '#prereq-rhel8-py2')">
+            Python 2
+        </button>
+        <button class="tab tab-tty" onclick="openTab(event, '#prereq-rhel8-py3')">
+            Python 3
+        </button>
+
+        <div id="prereq-rhel8-py2" class="tab-content">
+            <p>Ensure that Python 2.7 is installed. Earlier versions will not work.</p>
+            <pre class='tty cmd'>python2 -V</pre>
+            <p>
+                If not, it can be installed with:
+            </p>
+            <pre class="tty cmd">sudo yum install python2</pre>
+            <p>
+                Install the WeeWX pre-requisites:
+            </p>
+            <pre class='tty cmd'>sudo pip2 install configobj
+sudo pip2 install configobj
+sudo pip2 install Cheetah
+sudo pip2 install Pillow
+sudo pip2 install pyserial
+sudo pip2 install pyusb
+
+# For extended almanac information (optional):
+sudo pip2 install pyephem</pre>
+        </div>
+
+        <div id='prereq-rhel8-py3' class="tab-content">
+            <p>Ensure that Python 3.5 or later is installed.</p>
+            <pre class='tty cmd'>python3 -V</pre>
+            <p>If not, it can be installed with:</p>
+            <pre class="tty cmd">sudo yum install python3</pre>
+
+            <p>
+                Install the WeeWX pre-requisites:
+            </p>
+            <pre class='tty cmd'>sudo yum install python3-configobj
+sudo yum install python3-pillow
+sudo yum install python3-pyserial
+sudo yum install python3-pyusb
+
+# As of this writing (November 2019), Cheetah can only be installed using pip3:
+sudo pip3 install Cheetah3
+
+# If using MySQL:
+sudo yum install python3-PyMySQL
+
+# For extended almanac information (optional):
+sudo pip3 install pyephem</pre>
+        </div>
+    </div>
+
+</div>
+
+<h2>Install WeeWX</h2>
+
 
 <p>
     Install by double-clicking the .rpm file, or via command line:
@@ -45,7 +171,8 @@ sudo easy_install pyusb</pre>
 <pre class='tty cmd'>sudo rpm -i weewx-X.Y.Z-R.rpm</pre>
 
 <p>
-    If you see errors about untrusted signature, or MISSING KEYS, you can either install the <a href="http://weewx.com/keys.html">weewx GPG keys</a>:
+    If you see errors about untrusted signature, or MISSING KEYS, you can either install the <a
+    href="http://weewx.com/keys.html">weewx GPG keys</a>:
 </p>
 <pre class='tty cmd'>sudo rpm --import http://weewx.com/keys.html</pre>
 <p>or tell rpm to ignore the signature:</p>
@@ -59,14 +186,17 @@ sudo easy_install pyusb</pre>
 
 <h2>Verify</h2>
 <p>
-    After 5 minutes, open the station web page in a web browser.  You should see generic station information and data.
-If your hardware supports hardware archiving, then how long you wait will depend on the <a href="usersguide.htm#archive_interval">archive interval</a> set in your hardware.
+    After 5 minutes, open the station web page in a web browser. You should see generic station information and data. If
+    your hardware supports hardware archiving, then how long you wait will depend on the <a
+    href="usersguide.htm#archive_interval">archive interval</a> set in your hardware.
 </p>
 <pre class='tty'><a href="file:///var/www/html/weewx/index.html">file:///var/www/html/weewx/index.html</a></pre>
 
 <h2>Configure</h2>
 <p>
-    The default installation uses Simulator as the <span class='code'>station_type</span>.  To use real hardware, stop WeeWX, change to the actual station type and station parameters, delete the simulation data, then restart WeeWX:</p>
+    The default installation uses Simulator as the <span class='code'>station_type</span>. To use real hardware, stop
+    WeeWX, change to the actual station type and station parameters, delete the simulation data, then restart WeeWX:
+</p>
 <pre class='tty cmd'>sudo /etc/init.d/weewx stop
 sudo wee_config --reconfigure
 sudo rm /var/lib/weewx/weewx.sdb
@@ -79,7 +209,9 @@ sudo /etc/init.d/weewx stop</pre>
 
 <h2>Customize</h2>
 <p>
-    To enable uploads such as Weather Underground or to customize reports, modify the configuration file <span class='code'>/etc/weewx/weewx.conf</span>.  See the <a href="usersguide.htm">User Guide</a> and <a href="customizing.htm">Customization Guide</a> for details.
+    To enable uploads such as Weather Underground or to customize reports, modify the configuration file <span
+    class='code'>/etc/weewx/weewx.conf</span>. See the <a href="usersguide.htm">User Guide</a> and <a
+    href="customizing.htm">Customization Guide</a> for details.
 </p>
 <p>
     WeeWX must be restarted for configuration file changes to take effect.
@@ -96,27 +228,27 @@ sudo rm -r /var/www/html/weewx</pre>
 <p>The installation will result in the following layout:</p>
 <table class='locations' style='width: auto;'>
     <tr>
-        <td align='right'>executable: </td>
+        <td align='right'>executable:</td>
         <td class='tty'>/usr/bin/weewxd</td>
     </tr>
     <tr>
-        <td align='right'>configuration file: </td>
+        <td align='right'>configuration file:</td>
         <td class='tty'>/etc/weewx/weewx.conf</td>
     </tr>
     <tr>
-        <td align='right'>skins and templates: </td>
+        <td align='right'>skins and templates:</td>
         <td class='tty'>/etc/weewx/skins</td>
     </tr>
     <tr>
-        <td align='right'>sqlite databases: </td>
+        <td align='right'>sqlite databases:</td>
         <td class='tty'>/var/lib/weewx/</td>
     </tr>
     <tr>
-        <td align='right'>generated web pages and images: </td>
+        <td align='right'>generated web pages and images:</td>
         <td class='tty'>/var/www/html/weewx/</td>
     </tr>
     <tr>
-        <td align='right'>documentation: </td>
+        <td align='right'>documentation:</td>
         <td class='tty'>/usr/share/doc/weewx-x.y.z/</td>
     </tr>
     <tr>
