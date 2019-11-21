@@ -20,6 +20,9 @@ import configobj
 import weewx.manager
 import weedb
 import weeutil.weeutil
+import weeutil.logger
+
+weeutil.logger.setup('test_database',{})
 
 archive_sqlite = {'database_name': '/var/tmp/weewx_test/weedb.sdb', 'driver':'weedb.sqlite'}
 archive_mysql  = {'database_name': 'test_weedb', 'user':'weewx1', 'password':'weewx1', 'driver':'weedb.mysql'}
@@ -109,9 +112,10 @@ class Common(object):
         self.assertRaises(weedb.OperationalError, weewx.manager.Manager.open, self.archive_db_dict)
 
     def test_unitialized_archive(self):
-        _connect = weedb.create(self.archive_db_dict)
-        self.assertRaises(weewx.UninitializedDatabase, weewx.manager.Manager(_connect))
-        
+        weedb.create(self.archive_db_dict)
+        with self.assertRaises(weedb.ProgrammingError):
+            db_manager = weewx.manager.Manager.open(self.archive_db_dict)
+
     def test_create_archive(self):
         archive = weewx.manager.Manager.open_with_create(self.archive_db_dict, schema=archive_schema)
         self.assertEqual(archive.connection.tables(), ['archive'])
@@ -281,7 +285,7 @@ class TestMySQL(Common, unittest.TestCase):
 
     
 def suite():
-    tests = ['test_no_archive', 'test_create_archive', 
+    tests = ['test_no_archive', 'test_unitialized_archive', 'test_create_archive',
              'test_empty_archive', 'test_add_archive_records', 'test_get_records', 'test_update']
     suite = unittest.TestSuite(list(map(TestSqlite, tests)) + list(map(TestMySQL, tests)))
     suite.addTest(TestDatabaseDict('test_get_database_dict'))
