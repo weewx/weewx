@@ -54,28 +54,30 @@ class ScalarStatsTest(unittest.TestCase):
             ss.addHiLo(record['outTemp'], record['dateTime'])
             ss.addSum(record['outTemp'])
 
-        self.assertEqual(ss.min, tmin)
+        # Some of these tests look for "almost equal", because of the rounding errors introduced by
+        # conversion to a string and back
+        self.assertAlmostEqual(ss.min, tmin, 6)
         self.assertEqual(ss.mintime, tmintime)
 
         # Assumes the last data point is not None:
-        self.assertEqual(ss.last, self.dataset[-1]['outTemp'])
+        self.assertAlmostEqual(ss.last, self.dataset[-1]['outTemp'], 6)
         self.assertEqual(ss.lasttime, self.dataset[-1]['dateTime'])
 
-        self.assertEqual(ss.sum, tsum)
+        self.assertAlmostEqual(ss.sum, tsum, 6)
         self.assertEqual(ss.count, tcount)
-        self.assertEqual(ss.avg, tsum / tcount)
+        self.assertAlmostEqual(ss.avg, tsum / tcount, 6)
 
         # Merge ss into its self. Should leave highs and lows unchanged, but double counts:
         ss.mergeHiLo(ss)
         ss.mergeSum(ss)
 
-        self.assertEqual(ss.min, tmin)
+        self.assertAlmostEqual(ss.min, tmin, 6)
         self.assertEqual(ss.mintime, tmintime)
 
-        self.assertEqual(ss.last, self.dataset[-1]['outTemp'])
+        self.assertAlmostEqual(ss.last, self.dataset[-1]['outTemp'], 6)
         self.assertEqual(ss.lasttime, self.dataset[-1]['dateTime'])
 
-        self.assertEqual(ss.sum, 2 * tsum)
+        self.assertAlmostEqual(ss.sum, 2 * tsum, 6)
         self.assertEqual(ss.count, 2 * tcount)
 
 
