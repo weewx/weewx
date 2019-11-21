@@ -65,7 +65,7 @@ def genRecords():
         yield _record
 
 
-class TestManager(unittest.TestCase):
+class TestDatabaseDict(unittest.TestCase):
 
     def test_get_database_dict(self):
         config_snippet = '''
@@ -85,7 +85,7 @@ class TestManager(unittest.TestCase):
                                          'driver': 'weedb.sqlite'})
 
 
-class Common(unittest.TestCase):
+class Common(object):
     
     def setUp(self):
         try:
@@ -256,14 +256,14 @@ class Common(unittest.TestCase):
         self.assertEqual(rec['outTemp'], -1.0)
 
 
-class TestSqlite(Common):
+class TestSqlite(Common, unittest.TestCase):
 
     def __init__(self, *args, **kwargs):
         self.archive_db_dict = archive_sqlite
         super(TestSqlite, self).__init__(*args, **kwargs)
 
 
-class TestMySQL(Common):
+class TestMySQL(Common, unittest.TestCase):
     
     def __init__(self, *args, **kwargs):
         self.archive_db_dict = archive_mysql
@@ -284,7 +284,7 @@ def suite():
     tests = ['test_no_archive', 'test_create_archive', 
              'test_empty_archive', 'test_add_archive_records', 'test_get_records', 'test_update']
     suite = unittest.TestSuite(list(map(TestSqlite, tests)) + list(map(TestMySQL, tests)))
-    suite.addTest(TestManager('test_get_database_dict'))
+    suite.addTest(TestDatabaseDict('test_get_database_dict'))
     return suite
 
 if __name__ == '__main__':

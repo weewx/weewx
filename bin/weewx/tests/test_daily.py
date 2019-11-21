@@ -51,7 +51,7 @@ skin_dict = {'Units': {'Trend': {'time_delta': 3600, 'time_grace': 300},
                                      'cooling_base': "65, degree_C"}}}
 
 
-class Common(unittest.TestCase):
+class Common(object):
 
     def setUp(self):
         global config_path
@@ -369,14 +369,14 @@ class Common(unittest.TestCase):
         self.assertEqual(six.text_type(tagStats.year().cooldeg.sum), u"1026.1°F-day")
 
 
-class TestSqlite(Common):
+class TestSqlite(Common, unittest.TestCase):
 
     def __init__(self, *args, **kwargs):
         self.database_type = "sqlite"
         super(TestSqlite, self).__init__(*args, **kwargs)
 
 
-class TestMySQL(Common):
+class TestMySQL(Common, unittest.TestCase):
 
     def __init__(self, *args, **kwargs):
         self.database_type = "mysql"

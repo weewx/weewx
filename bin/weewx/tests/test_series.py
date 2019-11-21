@@ -42,7 +42,7 @@ start_ts = time.mktime(month_start_tt)
 stop_ts = time.mktime(month_stop_tt)
 
 
-class Common(unittest.TestCase):
+class Common(object):
     # These are the expected results for March 2010
     expected_daily_rain_sum = [0.0, 0.49, 0.47, 0.0, 0.0, 0.49, 0.47, 0.0, 0.0, 0.49, 0.47,
                                0.0, 0.0, 0.37, 0.59, 0.0, 0.0, 0.37, 0.59, 0.0, 0.0, 0.37,
@@ -167,14 +167,14 @@ class Common(unittest.TestCase):
                          (["(%.2f, %.2f)" % (x[0], x[1]) for x in Common.expected_daily_wind_last]))
 
 
-class TestSqlite(Common):
+class TestSqlite(Common, unittest.TestCase):
 
     def __init__(self, *args, **kwargs):
         self.database_type = "sqlite"
         super(TestSqlite, self).__init__(*args, **kwargs)
 
 
-class TestMySQL(Common):
+class TestMySQL(Common, unittest.TestCase):
 
     def __init__(self, *args, **kwargs):
         self.database_type = "mysql"

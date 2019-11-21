@@ -119,4 +119,5 @@ class AlmanacTest(unittest.TestCase):
             self.almanac.sun.foo
 
 
-unittest.main()
+if __name__ == '__main__':
+    unittest.main()

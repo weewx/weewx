@@ -43,7 +43,7 @@ config_path = os.path.join(os.path.dirname(__file__), "simgen.conf")
 cwd = None
 
 
-class Common(unittest.TestCase):
+class Common(object):
 
     def setUp(self):
         global config_path
@@ -119,14 +119,14 @@ class Stopper(weewx.engine.StdService):
             raise weewx.StopNow("Time to stop!")
 
 
-class TestSqlite(Common):
+class TestSqlite(Common, unittest.TestCase):
 
     def __init__(self, *args, **kwargs):
         self.database = "archive_sqlite"
         super(TestSqlite, self).__init__(*args, **kwargs)
 
 
-class TestMySQL(Common):
+class TestMySQL(Common, unittest.TestCase):
 
     def __init__(self, *args, **kwargs):
         self.database = "archive_mysql"

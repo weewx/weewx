@@ -62,9 +62,6 @@ class ViolatedPrecondition(Exception):
 class StopNow(Exception):
     """Exception thrown to stop the engine."""
     
-class UninitializedDatabase(Exception):
-    """Exception thrown when attempting to use an uninitialized database."""
-    
 class UnknownDatabase(Exception):
     """Exception thrown when attempting to use an unknown database."""
 

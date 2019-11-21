@@ -83,7 +83,7 @@ weewx.units.MetricWXUnits["group_amperage"] = "amp"
 weewx.units.default_unit_format_dict["amp"] = "%.1f"
 weewx.units.default_unit_label_dict["amp"] = " A"
 
-class Common(unittest.TestCase):
+class Common(object):
 
     def setUp(self):
         global config_path
@@ -176,13 +176,13 @@ class Common(unittest.TestCase):
 
                         print("Checked %d lines" % n)
 
-class TestSqlite(Common):
+class TestSqlite(Common, unittest.TestCase):
 
     def __init__(self, *args, **kwargs):
         self.database_type = "sqlite"
         super(TestSqlite, self).__init__(*args, **kwargs)
         
-class TestMySQL(Common):
+class TestMySQL(Common, unittest.TestCase):
     
     def __init__(self, *args, **kwargs):
         self.database_type = "mysql"

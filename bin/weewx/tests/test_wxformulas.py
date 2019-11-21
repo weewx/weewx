@@ -141,5 +141,5 @@ class WXFormulasTest(unittest.TestCase):
                                                                       latitude_deg=45.7, longitude_deg=-121.5,
                                                                       altitude_ft=700, timestamp=timestamp), 0.028, 3)
 
-
-unittest.main()
+if __name__ == '__main__':
+    unittest.main()
