@@ -61,8 +61,8 @@ class TestAggregate(unittest.TestCase):
     def test_get_aggregate(self):
         # Use the same function to test calculating aggregations from the main archive file, as well
         # as from the daily summaries:
-        self.examine_object(weewx.xtypes.AggregateArchive)
-        self.examine_object(weewx.xtypes.AggregateDaily)
+        self.examine_object(weewx.xtypes.ArchiveTable)
+        self.examine_object(weewx.xtypes.DailySummaries)
 
     def examine_object(self, aggregate_obj):
         with weewx.manager.open_manager_with_config(self.config_dict, 'wx_binding') as db_manager:
@@ -92,15 +92,16 @@ class TestAggregate(unittest.TestCase):
             sum_vt = aggregate_obj.get_aggregate('rain', TimeSpan(start_ts, stop_ts), 'sum', db_manager)
             self.assertAlmostEqual(sum_vt[0], 7.68, 2)
 
-            # The AggregateArchive version has a few extra aggregate types:
-            if aggregate_obj == weewx.xtypes.AggregateArchive:
+            # The ArchiveTable version has a few extra aggregate types:
+            if aggregate_obj == weewx.xtypes.ArchiveTable:
                 first_vt = aggregate_obj.get_aggregate('outTemp', TimeSpan(start_ts, stop_ts), 'first', db_manager)
                 # Get the timestamp of the first record inside the month
                 ts = start_ts + gen_fake_data.interval
                 rec = db_manager.getRecord(ts)
                 self.assertEqual(first_vt[0], rec['outTemp'])
 
-                first_time_vt = aggregate_obj.get_aggregate('outTemp', TimeSpan(start_ts, stop_ts), 'firsttime', db_manager)
+                first_time_vt = aggregate_obj.get_aggregate('outTemp', TimeSpan(start_ts, stop_ts), 'firsttime',
+                                                            db_manager)
                 self.assertEqual(first_time_vt[0], ts)
 
                 last_vt = aggregate_obj.get_aggregate('outTemp', TimeSpan(start_ts, stop_ts), 'last', db_manager)
@@ -108,7 +109,8 @@ class TestAggregate(unittest.TestCase):
                 rec = db_manager.getRecord(stop_ts)
                 self.assertEqual(last_vt[0], rec['outTemp'])
 
-                last_time_vt = aggregate_obj.get_aggregate('outTemp', TimeSpan(start_ts, stop_ts), 'lasttime', db_manager)
+                last_time_vt = aggregate_obj.get_aggregate('outTemp', TimeSpan(start_ts, stop_ts), 'lasttime',
+                                                           db_manager)
                 self.assertEqual(last_time_vt[0], stop_ts)
 
                 # Use 'dateTime' to check 'diff' and 'tderiv'. The calculations are super easy.
@@ -125,35 +127,38 @@ class TestAggregate(unittest.TestCase):
             start_ts = time.mktime(month_start_tt)
             stop_ts = time.mktime(month_stop_tt)
 
-            min_ge_vt = weewx.xtypes.AggregateDaily.get_aggregate('outTemp', TimeSpan(start_ts, stop_ts), 'min_ge',
-                                                            db_manager,
-                                                            val=ValueTuple(15, 'degree_F', 'group_temperature'))
+            min_ge_vt = weewx.xtypes.DailySummaries.get_aggregate('outTemp', TimeSpan(start_ts, stop_ts), 'min_ge',
+                                                                  db_manager,
+                                                                  val=ValueTuple(15, 'degree_F', 'group_temperature'))
             self.assertEqual(min_ge_vt[0], 6)
 
-            min_le_vt = weewx.xtypes.AggregateDaily.get_aggregate('outTemp', TimeSpan(start_ts, stop_ts), 'min_le',
-                                                            db_manager,
-                                                            val=ValueTuple(0, 'degree_F', 'group_temperature'))
+            min_le_vt = weewx.xtypes.DailySummaries.get_aggregate('outTemp', TimeSpan(start_ts, stop_ts), 'min_le',
+                                                                  db_manager,
+                                                                  val=ValueTuple(0, 'degree_F', 'group_temperature'))
             self.assertEqual(min_le_vt[0], 2)
 
-            minmax_vt = weewx.xtypes.AggregateDaily.get_aggregate('outTemp', TimeSpan(start_ts, stop_ts), 'minmax',
-                                                            db_manager)
+            minmax_vt = weewx.xtypes.DailySummaries.get_aggregate('outTemp', TimeSpan(start_ts, stop_ts), 'minmax',
+                                                                  db_manager)
             self.assertAlmostEqual(minmax_vt[0], 39.36, 2)
 
-            max_wind_vt = weewx.xtypes.AggregateDaily.get_aggregate('wind', TimeSpan(start_ts, stop_ts), 'max', db_manager)
+            max_wind_vt = weewx.xtypes.DailySummaries.get_aggregate('wind', TimeSpan(start_ts, stop_ts), 'max',
+                                                                    db_manager)
             self.assertAlmostEqual(max_wind_vt[0], 24.0, 2)
 
-            avg_wind_vt = weewx.xtypes.AggregateDaily.get_aggregate('wind', TimeSpan(start_ts, stop_ts), 'avg', db_manager)
+            avg_wind_vt = weewx.xtypes.DailySummaries.get_aggregate('wind', TimeSpan(start_ts, stop_ts), 'avg',
+                                                                    db_manager)
             self.assertAlmostEqual(avg_wind_vt[0], 10.21, 2)
             # Double check this last one against the average calculated from the archive
-            avg_wind_vt = weewx.xtypes.AggregateArchive.get_aggregate('windSpeed', TimeSpan(start_ts, stop_ts), 'avg', db_manager)
+            avg_wind_vt = weewx.xtypes.ArchiveTable.get_aggregate('windSpeed', TimeSpan(start_ts, stop_ts), 'avg',
+                                                                  db_manager)
             self.assertAlmostEqual(avg_wind_vt[0], 10.21, 2)
 
-            vecavg_wind_vt = weewx.xtypes.AggregateDaily.get_aggregate('wind', TimeSpan(start_ts, stop_ts), 'vecavg',
-                                                                 db_manager)
+            vecavg_wind_vt = weewx.xtypes.DailySummaries.get_aggregate('wind', TimeSpan(start_ts, stop_ts), 'vecavg',
+                                                                       db_manager)
             self.assertAlmostEqual(vecavg_wind_vt[0], 5.14, 2)
 
-            vecdir_wind_vt = weewx.xtypes.AggregateDaily.get_aggregate('wind', TimeSpan(start_ts, stop_ts), 'vecdir',
-                                                                 db_manager)
+            vecdir_wind_vt = weewx.xtypes.DailySummaries.get_aggregate('wind', TimeSpan(start_ts, stop_ts), 'vecdir',
+                                                                       db_manager)
             self.assertAlmostEqual(vecdir_wind_vt[0], 88.74, 2)
 
     def test_get_aggregate_heatcool(self):
@@ -164,14 +169,16 @@ class TestAggregate(unittest.TestCase):
             stop_ts = time.mktime(month_stop_tt)
 
             # First, with the default heating base:
-            heatdeg = weewx.xtypes.AggregateHeatCool.get_aggregate('heatdeg', TimeSpan(start_ts, stop_ts), 'sum', db_manager)
+            heatdeg = weewx.xtypes.AggregateHeatCool.get_aggregate('heatdeg', TimeSpan(start_ts, stop_ts), 'sum',
+                                                                   db_manager)
             self.assertAlmostEqual(heatdeg[0], 1123.99, 2)
             # Now with an explicit heating base:
             heatdeg = weewx.xtypes.AggregateHeatCool.get_aggregate('heatdeg', TimeSpan(start_ts, stop_ts), 'sum',
-                                                             db_manager,
-                                                             skin_dict={'Units': {'DegreeDays': {
-                                                                 'heating_base': (60.0, "degree_F", "group_temperature")
-                                                             }}})
+                                                                   db_manager,
+                                                                   skin_dict={'Units': {'DegreeDays': {
+                                                                       'heating_base': (
+                                                                           60.0, "degree_F", "group_temperature")
+                                                                   }}})
             self.assertAlmostEqual(heatdeg[0], 968.99, 2)
 
 
