@@ -448,6 +448,12 @@ class AggregateDaily(XType):
 class AggregateHeatCool(XType):
     """Calculate heating and cooling degree-days."""
 
+    # Default base temperature and unit type for heating and cooling degree days,
+    # as a value tuple
+    default_heatbase = (65.0, "degree_F", "group_temperature")
+    default_coolbase = (65.0, "degree_F", "group_temperature")
+    default_growbase = (50.0, "degree_F", "group_temperature")
+
     @staticmethod
     def get_aggregate(obs_type, timespan, aggregate_type, db_manager, **option_dict):
         """Returns heating and cooling degree days over a time period.
@@ -465,11 +471,6 @@ class AggregateHeatCool(XType):
 
         returns: A ValueTuple containing the result.
         """
-        # Default base temperature and unit type for heating and cooling degree days,
-        # as a value tuple
-        default_heatbase = (65.0, "degree_F", "group_temperature")
-        default_coolbase = (65.0, "degree_F", "group_temperature")
-        default_growbase = (50.0, "degree_F", "group_temperature")
 
         # Check to see whether heating or cooling degree days are being asked for:
         if obs_type not in ['heatdeg', 'cooldeg', 'growdeg']:
@@ -482,12 +483,16 @@ class AggregateHeatCool(XType):
         # Get the base for heating and cooling degree-days
         units_dict = option_dict.get('skin_dict', {}).get('Units', {})
         dd_dict = units_dict.get('DegreeDays', {})
-        heatbase = dd_dict.get('heating_base', default_heatbase)
-        coolbase = dd_dict.get('cooling_base', default_coolbase)
-        growbase = dd_dict.get('growing_base', default_growbase)
-        heatbase_t = (float(heatbase[0]), heatbase[1], "group_temperature")
-        coolbase_t = (float(coolbase[0]), coolbase[1], "group_temperature")
-        growbase_t = (float(growbase[0]), growbase[1], "group_temperature")
+        heatbase = dd_dict.get('heating_base', AggregateHeatCool.default_heatbase)
+        coolbase = dd_dict.get('cooling_base', AggregateHeatCool.default_coolbase)
+        growbase = dd_dict.get('growing_base', AggregateHeatCool.default_growbase)
+        # Convert to a ValueTuple in the same unit system as the database
+        heatbase_t = weewx.units.convertStd((float(heatbase[0]), heatbase[1], "group_temperature"),
+                                            db_manager.std_unit_system)
+        coolbase_t = weewx.units.convertStd((float(coolbase[0]), coolbase[1], "group_temperature"),
+                                            db_manager.std_unit_system)
+        growbase_t = weewx.units.convertStd((float(growbase[0]), growbase[1], "group_temperature"),
+                                            db_manager.std_unit_system)
 
         total = 0.0
         count = 0
@@ -497,17 +502,11 @@ class AggregateHeatCool(XType):
             # Make sure it's valid before including it in the aggregation:
             if Tavg_t is not None and Tavg_t[0] is not None:
                 if obs_type == 'heatdeg':
-                    # Convert average temperature to the same units as heatbase:
-                    Tavg_target_t = weewx.units.convert(Tavg_t, heatbase_t[1])
-                    total += weewx.wxformulas.heating_degrees(Tavg_target_t[0], heatbase_t[0])
+                    total += weewx.wxformulas.heating_degrees(Tavg_t[0], heatbase_t[0])
                 elif obs_type == 'cooldeg':
-                    # Convert average temperature to the same units as coolbase:
-                    Tavg_target_t = weewx.units.convert(Tavg_t, coolbase_t[1])
-                    total += weewx.wxformulas.cooling_degrees(Tavg_target_t[0], coolbase_t[0])
+                    total += weewx.wxformulas.cooling_degrees(Tavg_t[0], coolbase_t[0])
                 else:
-                    # Must be 'growdeg'. Convert average temperature to the same units as growbase:
-                    Tavg_target_t = weewx.units.convert(Tavg_t, growbase_t[1])
-                    total += weewx.wxformulas.cooling_degrees(Tavg_target_t[0], growbase_t[0])
+                    total += weewx.wxformulas.cooling_degrees(Tavg_t[0], growbase_t[0])
 
                 count += 1
 
