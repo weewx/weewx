@@ -166,11 +166,14 @@ class WXCalculate(object):
         # Go through the list of potential calculations and see which ones need to be done
         for obs in self.svc_dict['Calculations']:
             directive = self.svc_dict['Calculations'][obs]
+            # Keys in svc_dict are in unicode. Keys in packets and records are in native strings.
+            # Just to keep things consistent, convert.
+            obs_type = str(obs)
             if directive == 'software' \
-                    or directive == 'prefer_hardware' and (obs not in data_dict or data_dict[obs] is None):
+                    or directive == 'prefer_hardware' and (obs_type not in data_dict or data_dict[obs_type] is None):
                 try:
-                    # We need to do a calculation for type 'obs'. This may raise an exception.
-                    new_value = weewx.xtypes.get_scalar(obs, data_dict, self.db_manager)
+                    # We need to do a calculation for type 'obs_type'. This may raise an exception.
+                    new_value = weewx.xtypes.get_scalar(obs_type, data_dict, self.db_manager)
                 except weewx.CannotCalculate:
                     pass
                 except weewx.UnknownType as e:
@@ -179,7 +182,7 @@ class WXCalculate(object):
                     log.debug("Unknown aggregation '%s'" % e)
                 else:
                     # If there was no exception, add the results to the dictionary
-                    data_dict[obs] = new_value[0]
+                    data_dict[obs_type] = new_value[0]
 
     @staticmethod
     def adjust_winddir(data):
