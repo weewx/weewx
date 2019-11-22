@@ -246,70 +246,70 @@ class WeeutilTest(unittest.TestCase):
 
         t_length = 1 * 60
         t_test = time.mktime((2009, 3, 4, 1, 57, 17, 0, 0, 0))
-        t_ans = time.mktime((2009, 3, 4, 1, 57, 0, 0, 0, 0))
+        t_ans = int(time.mktime((2009, 3, 4, 1, 57, 0, 0, 0, 0)))
         t_start = startOfInterval(t_test, t_length)
         self.assertEqual(t_start, t_ans)
 
         t_length = 5 * 60
         t_test = time.mktime((2009, 3, 4, 1, 57, 17, 0, 0, 0))
-        t_ans = time.mktime((2009, 3, 4, 1, 55, 0, 0, 0, 0))
+        t_ans = int(time.mktime((2009, 3, 4, 1, 55, 0, 0, 0, 0)))
         t_start = startOfInterval(t_test, t_length)
         self.assertEqual(t_start, t_ans)
 
         t_length = 1 * 60
         t_test = time.mktime((2009, 3, 4, 1, 0, 0, 0, 0, 0))
-        t_ans = time.mktime((2009, 3, 4, 0, 59, 0, 0, 0, 0))
+        t_ans = int(time.mktime((2009, 3, 4, 0, 59, 0, 0, 0, 0)))
         t_start = startOfInterval(t_test, t_length)
         self.assertEqual(t_start, t_ans)
 
         t_length = 5 * 60
         t_test = time.mktime((2009, 3, 4, 1, 0, 0, 0, 0, 0))
-        t_ans = time.mktime((2009, 3, 4, 0, 55, 0, 0, 0, 0))
+        t_ans = int(time.mktime((2009, 3, 4, 0, 55, 0, 0, 0, 0)))
         t_start = startOfInterval(t_test, t_length)
         self.assertEqual(t_start, t_ans)
 
         t_length = 10 * 60
         t_test = time.mktime((2009, 3, 4, 1, 57, 17, 0, 0, 0))
-        t_ans = time.mktime((2009, 3, 4, 1, 50, 0, 0, 0, 0))
+        t_ans = int(time.mktime((2009, 3, 4, 1, 50, 0, 0, 0, 0)))
         t_start = startOfInterval(t_test, t_length)
         self.assertEqual(t_start, t_ans)
 
         t_length = 15 * 60
         t_test = time.mktime((2009, 3, 4, 1, 57, 17, 0, 0, 0))
-        t_ans = time.mktime((2009, 3, 4, 1, 45, 0, 0, 0, 0))
+        t_ans = int(time.mktime((2009, 3, 4, 1, 45, 0, 0, 0, 0)))
         t_start = startOfInterval(t_test, t_length)
         self.assertEqual(t_start, t_ans)
 
         t_length = 20 * 60
         t_test = time.mktime((2009, 3, 4, 1, 57, 17, 0, 0, 0))
-        t_ans = time.mktime((2009, 3, 4, 1, 40, 0, 0, 0, 0))
+        t_ans = int(time.mktime((2009, 3, 4, 1, 40, 0, 0, 0, 0)))
         t_start = startOfInterval(t_test, t_length)
         self.assertEqual(t_start, t_ans)
 
         t_length = 30 * 60
         t_test = time.mktime((2009, 3, 4, 1, 57, 17, 0, 0, 0))
-        t_ans = time.mktime((2009, 3, 4, 1, 30, 0, 0, 0, 0))
+        t_ans = int(time.mktime((2009, 3, 4, 1, 30, 0, 0, 0, 0)))
         t_start = startOfInterval(t_test, t_length)
         self.assertEqual(t_start, t_ans)
 
         t_length = 60 * 60
         t_test = time.mktime((2009, 3, 4, 1, 57, 17, 0, 0, 0))
-        t_ans = time.mktime((2009, 3, 4, 1, 0, 0, 0, 0, 0))
+        t_ans = int(time.mktime((2009, 3, 4, 1, 0, 0, 0, 0, 0)))
         t_start = startOfInterval(t_test, t_length)
         self.assertEqual(t_start, t_ans)
 
         t_length = 120 * 60
         t_test = time.mktime((2009, 3, 4, 1, 57, 17, 0, 0, 0))
-        t_ans = time.mktime((2009, 3, 4, 0, 0, 0, 0, 0, 0))
+        t_ans = int(time.mktime((2009, 3, 4, 0, 0, 0, 0, 0, 0)))
         t_start = startOfInterval(t_test, t_length)
         self.assertEqual(t_start, t_ans)
 
         # Do a test over the spring DST boundary
         # This is 03:22:05 DST, just after the change over.
-        # The correct answer is 02:00:00 DST.
+        # The correct answer is 03:00:00 DST.
         t_length = 120 * 60
         t_test = time.mktime((2009, 3, 8, 3, 22, 5, 0, 0, 1))
-        t_ans = time.mktime((2009, 3, 8, 2, 0, 0, 0, 0, 1))
+        t_ans = int(time.mktime((2009, 3, 8, 3, 0, 0, 0, 0, 1)))
         t_start = startOfInterval(t_test, t_length)
         self.assertEqual(t_start, t_ans)
 
@@ -319,16 +319,16 @@ class WeeutilTest(unittest.TestCase):
         # Correct answer is 00:59:00 ST.
         t_length = 60
         t_test = time.mktime((2009, 3, 8, 1, 0, 0, 0, 0, 0))
-        t_ans = time.mktime((2009, 3, 8, 0, 59, 0, 0, 0, 0))
+        t_ans = int(time.mktime((2009, 3, 8, 0, 59, 0, 0, 0, 0)))
         t_start = startOfInterval(t_test, t_length)
         self.assertEqual(t_start, t_ans)
 
         # Do a test over the fall DST boundary.
         # This is 01:22:05 DST, just before the change over.
-        # The correct answer is 00:00:00 DST.
+        # The correct answer is 01:00:00 DST.
         t_length = 120 * 60
         t_test = time.mktime((2009, 11, 1, 1, 22, 5, 0, 0, 1))
-        t_ans = time.mktime((2009, 11, 1, 0, 0, 0, 0, 0, 1))
+        t_ans = int(time.mktime((2009, 11, 1, 1, 0, 0, 0, 0, 1)))
         t_start = startOfInterval(t_test, t_length)
         self.assertEqual(t_start, t_ans)
 
@@ -337,28 +337,28 @@ class WeeutilTest(unittest.TestCase):
         # The correct answer is 00:00:00 ST (which is 01:00:00 DST).
         t_length = 120 * 60
         t_test = time.mktime((2009, 11, 1, 1, 22, 5, 0, 0, 0))
-        t_ans = time.mktime((2009, 11, 1, 0, 0, 0, 0, 0, 0))
+        t_ans = int(time.mktime((2009, 11, 1, 0, 0, 0, 0, 0, 0)))
         t_start = startOfInterval(t_test, t_length)
         self.assertEqual(t_start, t_ans)
 
         # Once again at 01:22:05 ST, just before the change over, but w/shorter interval
         t_length = 5 * 60
         t_test = time.mktime((2009, 11, 1, 1, 22, 5, 0, 0, 1))
-        t_ans = time.mktime((2009, 11, 1, 1, 20, 0, 0, 0, 1))
+        t_ans = int(time.mktime((2009, 11, 1, 1, 20, 0, 0, 0, 1)))
         t_start = startOfInterval(t_test, t_length)
         self.assertEqual(t_start, t_ans)
 
         # Once again at 01:22:05 ST, just after the change over, but w/shorter interval
         t_length = 5 * 60
         t_test = time.mktime((2009, 11, 1, 1, 22, 5, 0, 0, 0))
-        t_ans = time.mktime((2009, 11, 1, 1, 20, 0, 0, 0, 0))
+        t_ans = int(time.mktime((2009, 11, 1, 1, 20, 0, 0, 0, 0)))
         t_start = startOfInterval(t_test, t_length)
         self.assertEqual(t_start, t_ans)
 
         # Once again at 01:22:05 ST, just after the change over, but with 1 hour interval
         t_length = 60 * 60
         t_test = time.mktime((2009, 11, 1, 1, 22, 5, 0, 0, 0))
-        t_ans = time.mktime((2009, 11, 1, 1, 0, 0, 0, 0, 0))
+        t_ans = int(time.mktime((2009, 11, 1, 1, 0, 0, 0, 0, 0)))
         t_start = startOfInterval(t_test, t_length)
         self.assertEqual(t_start, t_ans)
 
@@ -367,7 +367,14 @@ class WeeutilTest(unittest.TestCase):
         # The correct answer is 00:59:00 DST.
         t_length = 1 * 60
         t_test = time.mktime((2009, 11, 1, 1, 0, 0, 0, 0, 1))
-        t_ans = time.mktime((2009, 11, 1, 0, 59, 0, 0, 0, 1))
+        t_ans = int(time.mktime((2009, 11, 1, 0, 59, 0, 0, 0, 1)))
+        t_start = startOfInterval(t_test, t_length)
+        self.assertEqual(t_start, t_ans)
+
+        # Oddball archive interval
+        t_length = 480
+        t_test = time.mktime((2009, 3, 4, 1, 57, 17, 0, 0, 0))
+        t_ans = int(time.mktime((2009, 3, 4, 1, 52, 0, 0, 0, 0)))
         t_start = startOfInterval(t_test, t_length)
         self.assertEqual(t_start, t_ans)
 
