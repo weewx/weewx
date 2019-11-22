@@ -2096,16 +2096,16 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
         try:
             _firmware_date = station.getFirmwareDate().decode('ascii')
         except weewx.RetriesExceeded:
-            _firmware_date = u"<Unavailable>"
+            _firmware_date = "<Unavailable>"
         try:
             _firmware_version = station.getFirmwareVersion().decode('ascii')
         except weewx.RetriesExceeded:
-            _firmware_version = u'<Unavailable>'
+            _firmware_version = '<Unavailable>'
     
         console_time = station.getConsoleTime()
         altitude_converted = weewx.units.convert(station.altitude_vt, station.altitude_unit)[0]
     
-        print(u"""Davis Vantage EEPROM settings:
+        print("""Davis Vantage EEPROM settings:
     
     CONSOLE TYPE:                   %s
     
@@ -2145,7 +2145,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
                 gmt_offset_str = "%+.1f hours" % gmt_offset
                 zone_code = 'N/A'
             on_off = "ON" if retransmit_channel else "OFF"
-            print(u"""    CONSOLE STATION INFO:
+            print("""    CONSOLE STATION INFO:
       Latitude (onboard):           %+0.1f
       Longitude (onboard):          %+0.1f
       Use manual or auto DST?       %s
