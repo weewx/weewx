@@ -14,6 +14,21 @@ import six
 import weewx.units
 from weewx.units import ValueTuple
 
+
+class ConstantsTest(unittest.TestCase):
+
+    def test_std_unit_systems(self):
+        self.assertEqual(weewx.units.MetricUnits['group_rain'], 'cm')
+        self.assertEqual(weewx.units.MetricUnits['group_rainrate'], 'cm_per_hour')
+        self.assertEqual(weewx.units.MetricUnits['group_speed'], 'km_per_hour')
+        self.assertEqual(weewx.units.MetricUnits['group_speed2'], 'km_per_hour2')
+
+        self.assertEqual(weewx.units.MetricWXUnits['group_rain'], 'mm')
+        self.assertEqual(weewx.units.MetricWXUnits['group_rainrate'], 'mm_per_hour')
+        self.assertEqual(weewx.units.MetricWXUnits['group_speed'], 'meter_per_second')
+        self.assertEqual(weewx.units.MetricWXUnits['group_speed2'], 'meter_per_second2')
+
+
 class ValueTupleTest(unittest.TestCase):
     
     def testVT(self):

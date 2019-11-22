@@ -259,11 +259,13 @@ MetricUnits = ListOfDicts({
 # This dictionary maps unit groups to a standard unit type in the 
 # "Metric WX" unit system. It's the same as the "Metric" system,
 # except for rain and speed:
-MetricWXUnits = ListOfDicts(MetricUnits)
-MetricWXUnits['group_rain']     = "mm"
-MetricWXUnits['group_rainrate'] = "mm_per_hour"
-MetricWXUnits['group_speed']    = "meter_per_second"
-MetricWXUnits['group_speed2']   = "meter_per_second2"
+MetricWXUnits = ListOfDicts(*MetricUnits.maps)
+MetricWXUnits.prepend({
+    'group_rain': 'mm',
+    'group_rainrate' : 'mm_per_hour',
+    'group_speed': 'meter_per_second',
+    'group_speed2': 'meter_per_second2',
+})
 
 std_groups = {
     weewx.US: USUnits,
