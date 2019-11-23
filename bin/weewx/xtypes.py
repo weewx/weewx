@@ -91,7 +91,7 @@ def get_aggregate(obs_type, timespan, aggregate_type, db_manager, **option_dict)
             return xtype.get_aggregate(obs_type, timespan, aggregate_type, db_manager, **option_dict)
         except (weewx.UnknownAggregation, weewx.UnknownType):
             pass
-    raise weewx.UnknownAggregation(aggregate_type)
+    raise weewx.UnknownAggregation("%s('%s')" % (aggregate_type, obs_type))
 
 
 #
