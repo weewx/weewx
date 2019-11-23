@@ -193,8 +193,8 @@ class TestAggregate(unittest.TestCase):
             # Calculate the daily wind for 1-March-2010 using the daily summaries, the main archive table,
             # and letting get_aggregate() choose.
             for func in [
-                weewx.xtypes.WindDaily.get_aggregate,
-                weewx.xtypes.Wind.get_aggregate,
+                weewx.xtypes.WindVecDaily.get_aggregate,
+                weewx.xtypes.WindVec.get_aggregate,
                 weewx.xtypes.get_aggregate
             ]:
                 windvec = func('windvec', TimeSpan(start_ts, stop_ts), 'avg', db_manager)

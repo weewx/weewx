@@ -277,8 +277,6 @@ class DailySummaries(XType):
                "WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
         'count': "SELECT SUM(count) FROM %(table_name)s_day_%(obs_key)s "
                  "WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-        'cumulative': "SELECT SUM(sum) FROM %(table_name)s_day_%(obs_key)s "
-                      "WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
         'gustdir': "SELECT max_dir FROM %(table_name)s_day_%(obs_key)s  "
                    "WHERE dateTime >= %(start)s AND dateTime < %(stop)s "
                    "AND max = (SELECT MAX(max) FROM %(table_name)s_day_%(obs_key)s "
@@ -369,9 +367,6 @@ class DailySummaries(XType):
             raise weewx.UnknownType(obs_type)
 
         aggregate_type = aggregate_type.lower()
-
-        if aggregate_type == 'cumulative':
-            aggregate_type = 'sum'
 
         # Raise exception if we don't know about this type of aggregation
         if aggregate_type not in DailySummaries.daily_sql_dict:
@@ -531,52 +526,11 @@ class AggregateHeatCool(XType):
         return weewx.units.ValueTuple(value, t, g)
 
 
-# ############################# Wind extensions #########################################
+# ############################# WindVec extensions #########################################
 
-class WindDaily(XType):
-    """Extension for calculating the average windvec, using the  daily summaries."""
-
-    @staticmethod
-    def get_aggregate(obs_type, timespan, aggregate_type, db_manager, **option_dict):
-        """Optimization for calculating 'avg' aggregations for type 'windvec'. The
-        timespan must be on a daily boundary."""
-
-        # We can only do observation type 'windvec'
-        if obs_type != 'windvec':
-            # We can't handle it.
-            raise weewx.UnknownType(obs_type)
-
-        # We can only do 'avg''
-        if aggregate_type != 'avg':
-            raise weewx.UnknownAggregation(aggregate_type)
-
-        # We cannot use the day summaries if the starting and ending times of the aggregation interval are not on
-        # midnight boundaries, and are not the first or last records in the database.
-        if not (isStartOfDay(timespan.start) or timespan.start == db_manager.first_timestamp) \
-                or not (isStartOfDay(timespan.stop) or timespan.stop == db_manager.last_timestamp):
-            raise weewx.UnknownAggregation(aggregate_type)
-
-        sql = 'SELECT SUM(xsum), SUM(ysum), SUM(dirsumtime) ' \
-              'FROM %s_day_wind WHERE dateTime>=? AND dateTime<?;' % db_manager.table_name
-
-        row = db_manager.getSql(sql, timespan)
-
-        if not row or None in row or not row[2]:
-            # If no row was returned, or if it contains any nulls (meaning that not
-            # all required data was available to calculate the requested aggregate),
-            # then set the resulting value to None.
-            value = None
-        else:
-            value = complex(row[0], row[1]) / row[2]
-
-        # Look up the unit type and group of the result:
-        t, g = weewx.units.getStandardUnitType(db_manager.std_unit_system, obs_type, aggregate_type)
-        # Return as a value tuple
-        return weewx.units.ValueTuple(value, t, g)
-
-
-class Wind(XType):
-    """Wind-related extensions. It provides functions for calculating series, and for calculating aggregates"""
+class WindVec(XType):
+    """Extensions for calculating special observation types 'windvec' and 'windgustvec'. It provides functions for
+    calculating series, and for calculating aggregates"""
 
     windvec_types = {
         'windvec': ('windSpeed', 'windDir'),
@@ -608,7 +562,7 @@ class Wind(XType):
         used for the wind vector plots."""
 
         # Check to see if the requested type is not 'windvec' or 'windgustvec'
-        if obs_type not in Wind.windvec_types:
+        if obs_type not in WindVec.windvec_types:
             # The type is not one of the extended wind types. We can't handle it.
             raise weewx.UnknownType(obs_type)
 
@@ -621,14 +575,14 @@ class Wind(XType):
         # Is aggregation requested?
         if aggregate_type:
             # Yes. Just use the regular series function. When it comes time to do the aggregation, the
-            # specialized function Wind.get_aggregate() (defined below), will be used.
+            # specialized function WindVec.get_aggregate() (defined below), will be used.
             return ArchiveTable.get_series(obs_type, timespan, db_manager, aggregate_type, aggregate_interval)
 
         else:
             # No aggregation desired. However, we have will have to assemble the wind vector from its flattened types.
             # This SQL select string will select the proper wind types
             sql_str = 'SELECT dateTime, %s, %s, usUnits, `interval` FROM %s WHERE dateTime >= ? AND dateTime <= ?' \
-                      % (Wind.windvec_types[obs_type][0], Wind.windvec_types[obs_type][1], db_manager.table_name)
+                      % (WindVec.windvec_types[obs_type][0], WindVec.windvec_types[obs_type][1], db_manager.table_name)
             std_unit_system = None
 
             for record in db_manager.genSql(sql_str, timespan):
@@ -673,27 +627,27 @@ class Wind(XType):
         returns: A ValueTuple containing the result. Note that the value contained in the ValueTuple
         will be a complex number.
         """
-        if obs_type not in Wind.windvec_types:
+        if obs_type not in WindVec.windvec_types:
             raise weewx.UnknownType(obs_type)
 
         aggregate_type = aggregate_type.lower()
 
         # Raise exception if we don't know about this type of aggregation
-        if aggregate_type not in ['avg', 'sum'] + list(Wind.agg_sql_dict.keys()):
+        if aggregate_type not in ['avg', 'sum'] + list(WindVec.agg_sql_dict.keys()):
             raise weewx.UnknownAggregation(aggregate_type)
 
         # Form the interpolation dictionary
         interpolation_dict = {
-            'dir': Wind.windvec_types[obs_type][1],
-            'mag': Wind.windvec_types[obs_type][0],
+            'dir': WindVec.windvec_types[obs_type][1],
+            'mag': WindVec.windvec_types[obs_type][0],
             'start': weeutil.weeutil.startOfDay(timespan.start),
             'stop': timespan.stop,
             'table_name': db_manager.table_name
         }
 
-        if aggregate_type in Wind.agg_sql_dict:
+        if aggregate_type in WindVec.agg_sql_dict:
             # For these types (e.g., first, last, etc.), we can do the aggregation in a SELECT statement.
-            select_stmt = Wind.agg_sql_dict[aggregate_type] % interpolation_dict
+            select_stmt = WindVec.agg_sql_dict[aggregate_type] % interpolation_dict
             row = db_manager.getSql(select_stmt)
             if row:
                 if aggregate_type == 'count':
@@ -710,7 +664,7 @@ class Wind(XType):
             std_unit_system = None
             xsum = ysum = 0.0
             count = 0
-            select_stmt = Wind.complex_sql_wind % interpolation_dict
+            select_stmt = WindVec.complex_sql_wind % interpolation_dict
 
             for rec in db_manager.genSql(select_stmt, timespan):
 
@@ -757,10 +711,52 @@ class Wind(XType):
         return weewx.units.ValueTuple(value, t, g)
 
 
+class WindVecDaily(XType):
+    """Extension for calculating the average windvec, using the  daily summaries."""
+
+    @staticmethod
+    def get_aggregate(obs_type, timespan, aggregate_type, db_manager, **option_dict):
+        """Optimization for calculating 'avg' aggregations for type 'windvec'. The
+        timespan must be on a daily boundary."""
+
+        # We can only do observation type 'windvec'
+        if obs_type != 'windvec':
+            # We can't handle it.
+            raise weewx.UnknownType(obs_type)
+
+        # We can only do 'avg''
+        if aggregate_type != 'avg':
+            raise weewx.UnknownAggregation(aggregate_type)
+
+        # We cannot use the day summaries if the starting and ending times of the aggregation interval are not on
+        # midnight boundaries, and are not the first or last records in the database.
+        if not (isStartOfDay(timespan.start) or timespan.start == db_manager.first_timestamp) \
+                or not (isStartOfDay(timespan.stop) or timespan.stop == db_manager.last_timestamp):
+            raise weewx.UnknownAggregation(aggregate_type)
+
+        sql = 'SELECT SUM(xsum), SUM(ysum), SUM(dirsumtime) ' \
+              'FROM %s_day_wind WHERE dateTime>=? AND dateTime<?;' % db_manager.table_name
+
+        row = db_manager.getSql(sql, timespan)
+
+        if not row or None in row or not row[2]:
+            # If no row was returned, or if it contains any nulls (meaning that not
+            # all required data was available to calculate the requested aggregate),
+            # then set the resulting value to None.
+            value = None
+        else:
+            value = complex(row[0], row[1]) / row[2]
+
+        # Look up the unit type and group of the result:
+        t, g = weewx.units.getStandardUnitType(db_manager.std_unit_system, obs_type, aggregate_type)
+        # Return as a value tuple
+        return weewx.units.ValueTuple(value, t, g)
+
+
 # Add instantiated versions to the extension list. Order matters. We want the highly-specialized versions
 # first, because they might offer optimizations.
-xtypes.append(WindDaily())
-xtypes.append(Wind())
+xtypes.append(WindVecDaily())
+xtypes.append(WindVec())
 xtypes.append(AggregateHeatCool())
 xtypes.append(DailySummaries())
 xtypes.append(ArchiveTable())
