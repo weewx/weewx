@@ -1,3 +1,6 @@
+### Xtypes
+Sort out how staticmethods work.
+
 ### Install
 Note in the docs that doing:
 ```shell script

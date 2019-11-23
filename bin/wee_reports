@@ -12,6 +12,8 @@ from __future__ import print_function
 import optparse
 import socket
 
+# Although this import is not used, it's important to execute any user extensions before starting.
+import user.extensions
 import weecfg
 import weeutil.logger
 import weewx.engine
