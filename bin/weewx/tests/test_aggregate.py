@@ -121,6 +121,7 @@ class TestAggregate(unittest.TestCase):
                 self.assertAlmostEqual(tderiv_vt[0], 1.0)
 
     def test_AggregateDaily(self):
+        """Test special aggregates that can be used against the daily summaries."""
         with weewx.manager.open_manager_with_config(self.config_dict, 'wx_binding') as db_manager:
             month_start_tt = (2010, 3, 1, 0, 0, 0, 0, 0, -1)
             month_stop_tt = (2010, 4, 1, 0, 0, 0, 0, 0, -1)
@@ -180,6 +181,26 @@ class TestAggregate(unittest.TestCase):
                                                                            60.0, "degree_F", "group_temperature")
                                                                    }}})
             self.assertAlmostEqual(heatdeg[0], 968.99, 2)
+
+    def test_get_aggregate_windvec(self):
+        """Test calculating special type 'windvec' using a variety of methods."""
+        with weewx.manager.open_manager_with_config(self.config_dict, 'wx_binding') as db_manager:
+            month_start_tt = (2010, 3, 1, 0, 0, 0, 0, 0, -1)
+            month_stop_tt = (2010, 3, 2, 0, 0, 0, 0, 0, -1)
+            start_ts = time.mktime(month_start_tt)
+            stop_ts = time.mktime(month_stop_tt)
+
+            # Calculate the daily wind for 1-March-2010 using the daily summaries, the main archive table,
+            # and letting get_aggregate() choose.
+            for func in [
+                weewx.xtypes.WindDaily.get_aggregate,
+                weewx.xtypes.Wind.get_aggregate,
+                weewx.xtypes.get_aggregate
+            ]:
+                windvec = func('windvec', TimeSpan(start_ts, stop_ts), 'avg', db_manager)
+                self.assertAlmostEqual(windvec[0].real, -1.365, 3)
+                self.assertAlmostEqual(windvec[0].imag, 3.211, 3)
+                self.assertEqual(windvec[1:3], ('mile_per_hour', 'group_speed'))
 
 
 if __name__ == '__main__':
