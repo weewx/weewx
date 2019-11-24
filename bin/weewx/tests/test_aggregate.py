@@ -202,6 +202,17 @@ class TestAggregate(unittest.TestCase):
                 self.assertAlmostEqual(windvec[0].imag, 3.211, 3)
                 self.assertEqual(windvec[1:3], ('mile_per_hour', 'group_speed'))
 
+    def test_get_aggregate_expression(self):
+        """Test using an expression in an aggregate"""
+        with weewx.manager.open_manager_with_config(self.config_dict, 'wx_binding') as db_manager:
+            month_start_tt = (2010, 3, 1, 0, 0, 0, 0, 0, -1)
+            month_stop_tt = (2010, 3, 2, 0, 0, 0, 0, 0, -1)
+            start_ts = time.mktime(month_start_tt)
+            stop_ts = time.mktime(month_stop_tt)
+
+            value = weewx.xtypes.get_aggregate('rain-ET', TimeSpan(start_ts, stop_ts), 'sum', db_manager)
+            print(value)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -1,5 +1,13 @@
+### Tests
+
+Synthetic database used for tests: some of the types require the database, but it's not available until
+after the transaction. Need to either go back later and patch in the derived types, or make them
+available outside the database. Or, give up the idea of calculating them.
+
+`gen_fake_data.py` is now more realistic, but the expected results haven't caught back up to it yet.
+
 ### Xtypes
-Sort out how staticmethods work.
+Allow expressions in aggregates.
 
 ### Install
 Note in the docs that doing:
