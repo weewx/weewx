@@ -590,26 +590,53 @@ def update(config_dict, db_binding, options):
 def calc_missing(config_dict, db_binding, options):
     """Calculate any missing derived observations and save to database."""
 
-    t1 = time.time()
     msg = "Preparing to calculate missing derived observations..."
     log.info(msg)
-    print(msg)
 
     manager_dict = weewx.manager.get_manager_dict_from_config(config_dict,
                                                               db_binding)
     # get the first and last good timestamps from the archive, these represent
-    # our bounds for calculating missing derived obs
+    # our overall bounds for calculating missing derived obs
     with weewx.manager.Manager.open(manager_dict['database_dict']) as dbmanager:
         first_ts = dbmanager.firstGoodStamp()
         last_ts = dbmanager.lastGoodStamp()
-
+    # process any command line options that may limit the period over which
+    # missing derived obs are calculated
     start_dt, stop_dt = _parse_dates(options)
+    # we now have a start and stop date for processing, we need to obtain those
+    # as epoch timestamps, if we have no start and/or stop date then use the
+    # first or last good timestamp instead
     start_ts = time.mktime(start_dt.timetuple()) if start_dt is not None else first_ts - 1
     stop_ts = time.mktime(stop_dt.timetuple()) if stop_dt is not None else last_ts
-
     # notify if this is a dry run
     if options.dry_run:
-        print("This is a dry run: missing derived observations will be calculated but not saved.")
+        msg = "This is a dry run, missing derived observations will be calculated but not saved"
+        log.info(msg)
+        print(msg)
+    _head = "Missing derived observations will be calculated "
+    # advise the user/log what we will do
+    if start_dt is None and stop_dt is None:
+        _tail = "for all records."
+    elif start_dt and not stop_dt:
+        _tail = "from %s through the end (%s)." % (timestamp_to_string(start_ts),
+                                                  timestamp_to_string(stop_ts))
+    elif not start_dt and stop_dt:
+        _tail = "from the beginning (%s) through %s." % (timestamp_to_string(start_ts),
+                                                        timestamp_to_string(stop_ts))
+    else:
+        _tail = "from %s through %s inclusive." % (timestamp_to_string(start_ts),
+                                                  timestamp_to_string(stop_ts))
+    _msg = "%s%s" % (_head, _tail)
+    log.info(_msg)
+    print(_msg)
+    ans = y_or_n("Proceed (y/n)? ")
+    if ans == 'n':
+        _msg = "Nothing done."
+        log.info(_msg)
+        print(_msg)
+        return
+
+    t1 = time.time()
 
     # construct a CalcMissing config dict
     calc_missing_config_dict = {'name': 'Calculate Missing Derived Observations',
@@ -622,6 +649,9 @@ def calc_missing(config_dict, db_binding, options):
     # obtain a CalcMissing object
     calc_missing_obj = weecfg.database.CalcMissing(config_dict,
                                                    calc_missing_config_dict)
+    msg = "Calculating missing derived observations..."
+    log.info(msg)
+    print(msg)
     # calculate and store any missing observations
     calc_missing_obj.run()
     msg = "Missing derived observations calculated in %0.2f seconds" % (time.time() - t1)
@@ -864,17 +894,22 @@ def _parse_dates(options):
         except ValueError:
             raise ValueError("Invalid --date option specified.")
         else:
-            # we have the from date-time, for a --date option the to date-time
-            # will depend on the action we are to perform
+            # we have the from date-time, for a --date option our final results
+            # depend on the action we are to perform
             if options.rebuild_daily:
-                # For a rebuild our from and to must be within the same
-                # calendar day else we will rebuild more than just one day. For
-                # simplicity make them the same
+                # The daily summaries are stamped with the midnight timestamp
+                # for each day, so our from and to results need to be within the
+                # same calendar day else we will rebuild more than just one day.
+                # For simplicity make them the same.
                 _to_dt = _from_dt
             elif options.calc_missing:
-                # for calc missing from should be midnight at the start of the
-                # day and to should be midnight at the end of the day
+                # On the other hand calc missing will be dealing with archive
+                # records which are epoch timestamped. The midnight stamped
+                # record is part of the previous day so make our from result
+                # one second after midnight. THe to result must be midnight at
+                # the end of the day.
                 _to_dt = _from_dt + datetime.timedelta(days=1)
+                _from_dt = _from_dt + datetime.timedelta(seconds=1)
             else:
                 # nothing else uses from and to (yet) but just in case return
                 # midnight to midnight as the default
