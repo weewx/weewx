@@ -245,7 +245,10 @@ class WXXTypes(weewx.xtypes.XType):
             raise weewx.UnknownType(obs_type)
 
     def calc_maxSolarRad(self, key, data, db_manager):
-        algo = self.svc_dict['Algorithms'].get('maxSolarRad', 'RS').lower()
+        try:
+            algo = self.svc_dict['Algorithms']['maxSolarRad'].lower()
+        except KeyError:
+            algo = 'rs'
         altitude_m = weewx.units.convert(self.altitude_vt, 'meter')[0]
         if algo == 'bras':
             val = weewx.wxformulas.solar_rad_Bras(self.latitude, self.longitude, altitude_m,
