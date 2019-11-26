@@ -16,6 +16,7 @@ import unittest
 
 import configobj
 
+import weedb
 import gen_fake_data
 import weeutil.logger
 import weewx
@@ -205,13 +206,28 @@ class TestAggregate(unittest.TestCase):
     def test_get_aggregate_expression(self):
         """Test using an expression in an aggregate"""
         with weewx.manager.open_manager_with_config(self.config_dict, 'wx_binding') as db_manager:
-            month_start_tt = (2010, 3, 1, 0, 0, 0, 0, 0, -1)
-            month_stop_tt = (2010, 3, 2, 0, 0, 0, 0, 0, -1)
+            month_start_tt = (2010, 7, 1, 0, 0, 0, 0, 0, -1)
+            month_stop_tt = (2010, 8, 1, 0, 0, 0, 0, 0, -1)
             start_ts = time.mktime(month_start_tt)
             stop_ts = time.mktime(month_stop_tt)
 
+            # This one is a valid expression:
             value = weewx.xtypes.get_aggregate('rain-ET', TimeSpan(start_ts, stop_ts), 'sum', db_manager)
-            print(value)
+            self.assertAlmostEqual(value[0], 2.94, 2)
+
+            # This one uses a nonsense variable:
+            with self.assertRaises(weewx.UnknownAggregation):
+                value = weewx.xtypes.get_aggregate('rain-foo', TimeSpan(start_ts, stop_ts), 'sum', db_manager)
+
+            # A valid function
+            value = weewx.xtypes.get_aggregate('max(rain-ET, 0)', TimeSpan(start_ts, stop_ts), 'sum', db_manager)
+            self.assertAlmostEqual(value[0], 9.57, 2)
+
+            # This one uses a nonsense function
+            with self.assertRaises(weedb.OperationalError):
+                value = weewx.xtypes.get_aggregate('foo(rain-ET)', TimeSpan(start_ts, stop_ts), 'sum', db_manager)
+
+
 
 
 if __name__ == '__main__':

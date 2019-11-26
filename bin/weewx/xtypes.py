@@ -7,6 +7,7 @@
 
 import math
 
+import weedb
 import weeutil.weeutil
 import weewx
 import weewx.units
@@ -223,11 +224,6 @@ class ArchiveTable(XType):
     
         returns: A ValueTuple containing the result."""
 
-        if obs_type not in db_manager.sqlkeys:
-            raise weewx.UnknownType(obs_type)
-
-        aggregate_type = aggregate_type.lower()
-
         if aggregate_type not in ['sum', 'count', 'avg', 'max', 'min'] + list(ArchiveTable.agg_sql_dict.keys()):
             raise weewx.UnknownAggregation(aggregate_type)
 
@@ -240,7 +236,11 @@ class ArchiveTable(XType):
         }
 
         select_stmt = ArchiveTable.agg_sql_dict.get(aggregate_type, ArchiveTable.simple_agg_sql) % interpolate_dict
-        row = db_manager.getSql(select_stmt)
+
+        try:
+            row = db_manager.getSql(select_stmt)
+        except weedb.NoColumnError:
+            raise weewx.UnknownType(aggregate_type)
 
         value = row[0] if row else None
 
