@@ -16,14 +16,12 @@ from __future__ import with_statement
 import logging
 import math
 import os
-import sys
 import time
 
 import schemas.wview
+import weecfg.database
 import weedb
 import weewx.manager
-import weewx.wxservices
-import weewx.xtypes
 
 log = logging.getLogger(__name__)
 
@@ -40,6 +38,9 @@ stop_tt = (2010, 9, 3, 11, 0, 0, 0, 0, -1)  # 2010-09-03 11:00
 start_ts = int(time.mktime(start_tt))
 stop_ts = int(time.mktime(stop_tt))
 
+# At one half-hour archive intervals:
+interval = 1800
+
 altitude_vt = (700, 'foot', 'group_altitude')
 latitude = 45
 longitude = -125
@@ -54,9 +55,6 @@ weather_baro_range = 2.0
 weather_wind_range = 10.0
 weather_rain_total = 0.5  # This is inches per weather cycle
 avg_baro = 30.0
-
-# Archive interval in seconds:
-interval = 3600
 
 schema = schemas.wview.schema
 
@@ -145,15 +143,15 @@ def configDatabase(config_dict, binding, start_ts=start_ts, stop_ts=stop_ts, int
             print("Daily summaries in database '%s' up to date."
                   % config_dict['DataBindings']['wx_binding']['database'])
 
+        t1 = time.time()
+        patch_database(config_dict)
+        tdiff = time.time() - t1
+        print("\nTime to patch database with derived types: %.2f seconds" % tdiff)
+
 
 def genFakeRecords(start_ts=start_ts, stop_ts=stop_ts, interval=interval,
                    amplitude=1.0, day_phase_offset=0.0, annual_phase_offset=0.0,
                    weather_phase_offset=0.0, year_start=start_ts, db_manager=None):
-    pressure_cooker = weewx.wxservices.PressureCooker(altitude_vt)
-    wx_types = weewx.wxservices.WXXTypes({}, altitude_vt, latitude, longitude)
-    weewx.xtypes.xtypes.append(pressure_cooker)
-    weewx.xtypes.xtypes.append(wx_types)
-
     count = 0
 
     for ts in range(start_ts, stop_ts + interval, interval):
@@ -187,14 +185,20 @@ def genFakeRecords(start_ts=start_ts, stop_ts=stop_ts, interval=interval,
             if count % 71 == 0:
                 record[obs_type] = None
 
-        if db_manager:
-            record['dewpoint'] = weewx.xtypes.get_scalar('dewpoint', record, db_manager)[0]
-            record['windchill'] = weewx.xtypes.get_scalar('windchill', record, db_manager)[0]
-            record['pressure'] = weewx.xtypes.get_scalar('pressure', record, db_manager)[0]
-            record['altimeter'] = weewx.xtypes.get_scalar('altimeter', record, db_manager)[0]
-            record['ET'] = weewx.xtypes.get_scalar('ET', record, db_manager)[0]
-
         yield record
+
+
+def patch_database(config_dict):
+
+    calc_missing_config_dict = {
+        'name': 'Patch gen_fake_data',
+        'binding': 'wx_binding',
+        'start_ts': start_ts,
+        'stop_ts': stop_ts,
+        'dry_run': False,
+    }
+    calc_missing = weecfg.database.CalcMissing(config_dict, calc_missing_config_dict)
+    calc_missing.run()
 
 
 if __name__ == '__main__':
