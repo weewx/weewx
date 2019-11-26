@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2015 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2019 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -9,66 +9,55 @@ from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import with_statement
 
+import logging
 import os.path
 import sys
-import logging
 import time
 import unittest
 
 import configobj
-from six.moves import map, zip
+from six.moves import zip
 
 import weedb
 import weeutil.weeutil
-import weewx.manager
 import weewx.drivers.simulator
 import weewx.engine
+import weewx.manager
 
 weewx.debug = 1
 
 log = logging.getLogger(__name__)
 # Set up logging using the defaults.
-weeutil.logger.setup('test_sim', {})
+weeutil.logger.setup('test_engine', {})
 
 os.environ['TZ'] = 'America/Los_Angeles'
 time.tzset()
 
-run_length = 48.0  # How long to run the simulator in hours.
+RUN_LENGTH = 48.0  # How long to run the simulator in hours.
 # The types to actually test:
-test_types = ['outTemp', 'inTemp', 'barometer', 'windSpeed']
+TEST_TYPES = ['outTemp', 'inTemp', 'barometer', 'windSpeed']
 
 # Find the configuration file. It's assumed to be in the same directory as me:
 config_path = os.path.join(os.path.dirname(__file__), "simgen.conf")
 
-cwd = None
 
-
-class Common(object):
+class TestEngine(unittest.TestCase):
+    """Test the engine and accumulators using the simulator."""
 
     def setUp(self):
         global config_path
-        global cwd
-
-        # Save and set the current working directory in case some service changes it.
-        if not cwd:
-            cwd = os.getcwd()
-        else:
-            os.chdir(cwd)
 
         try:
             self.config_dict = configobj.ConfigObj(config_path, file_error=True, encoding='utf-8')
         except IOError:
-            sys.stderr.write("Unable to open configuration file %s" % config_path)
+            print("Unable to open configuration file %s" % config_path, file=sys.stderr)
             # Reraise the exception (this will eventually cause the program to exit)
             raise
         except configobj.ConfigObjError:
-            sys.stderr.write("Error while parsing configuration file %s" % config_path)
+            print("Error while parsing configuration file %s" % config_path, file=sys.stderr)
             raise
 
-        # Fiddle with config_dict to reflect the database in use:
-        self.config_dict['DataBindings']['wx_binding']['database'] = self.database
-
-        (first_ts, last_ts) = _get_first_last(self.config_dict)
+        first_ts, last_ts = _get_first_last(self.config_dict)
 
         try:
             with weewx.manager.open_manager_with_config(self.config_dict, 'wx_binding') as dbmanager:
@@ -85,19 +74,16 @@ class Common(object):
         except weewx.StopNow:
             pass
 
-    def tearDown(self):
-        pass
-
     def test_archive_data(self):
 
-        global test_types
+        global TEST_TYPES
         archive_interval = self.config_dict['StdArchive'].as_int('archive_interval')
         with weewx.manager.open_manager_with_config(self.config_dict, 'wx_binding') as archive:
             for record in archive.genBatchRecords():
                 start_ts = record['dateTime'] - archive_interval
                 # Calculate the average (throw away min and max):
-                (_, _, obs_avg) = calc_stats(self.config_dict, start_ts, record['dateTime'])
-                for obs_type in test_types:
+                _, _, obs_avg = calc_stats(self.config_dict, start_ts, record['dateTime'])
+                for obs_type in TEST_TYPES:
                     self.assertAlmostEqual(obs_avg[obs_type], record[obs_type], 2)
 
 
@@ -105,42 +91,22 @@ class Stopper(weewx.engine.StdService):
     """Special service which stops the engine when it gets to a certain time."""
 
     def __init__(self, engine, config_dict):
-        global run_length
+        global RUN_LENGTH
         super(Stopper, self).__init__(engine, config_dict)
 
-        (self.first_ts, self.last_ts) = _get_first_last(config_dict)
+        self.first_ts, self.last_ts = _get_first_last(config_dict)
+        self.count = 0
 
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
 
     def new_archive_record(self, event):
-        print("Archive record %s" % (weeutil.weeutil.timestamp_to_string(event.record['dateTime'])), file=sys.stdout)
+        self.count += 1
+        print("~", end='')
+        if self.count % 80 == 0:
+            print("")
         sys.stdout.flush()
         if event.record['dateTime'] >= self.last_ts:
             raise weewx.StopNow("Time to stop!")
-
-
-class TestSqlite(Common, unittest.TestCase):
-
-    def __init__(self, *args, **kwargs):
-        self.database = "archive_sqlite"
-        super(TestSqlite, self).__init__(*args, **kwargs)
-
-
-class TestMySQL(Common, unittest.TestCase):
-
-    def __init__(self, *args, **kwargs):
-        self.database = "archive_mysql"
-        super(TestMySQL, self).__init__(*args, **kwargs)
-
-    def setUp(self):
-        try:
-            import MySQLdb
-        except ImportError:
-            try:
-                import pymysql as MySQLdb
-            except ImportError as e:
-                raise unittest.case.SkipTest(e)
-        super(TestMySQL, self).setUp()
 
 
 def _get_first_last(config_dict):
@@ -148,13 +114,13 @@ def _get_first_last(config_dict):
     start_tt = time.strptime(config_dict['Simulator']['start'], "%Y-%m-%dT%H:%M")
     start_ts = time.mktime(start_tt)
     first_ts = start_ts + config_dict['StdArchive'].as_int('archive_interval')
-    last_ts = start_ts + run_length * 3600.0
-    return (first_ts, last_ts)
+    last_ts = start_ts + RUN_LENGTH * 3600.0
+    return first_ts, last_ts
 
 
 def calc_stats(config_dict, start_ts, stop_ts):
     """Calculate the statistics directly from the simulator output."""
-    global test_types
+    global TEST_TYPES
 
     sim_start_tt = time.strptime(config_dict['Simulator']['start'], "%Y-%m-%dT%H:%M")
     sim_start_ts = time.mktime(sim_start_tt)
@@ -164,15 +130,15 @@ def calc_stats(config_dict, start_ts, stop_ts):
                                                   start_time=sim_start_ts,
                                                   resume_time=start_ts)
 
-    obs_sum = dict(list(zip(test_types, len(test_types) * (0,))))
-    obs_min = dict(list(zip(test_types, len(test_types) * (None,))))
-    obs_max = dict(list(zip(test_types, len(test_types) * (None,))))
+    obs_sum = dict(zip(TEST_TYPES, len(TEST_TYPES) * (0,)))
+    obs_min = dict(zip(TEST_TYPES, len(TEST_TYPES) * (None,)))
+    obs_max = dict(zip(TEST_TYPES, len(TEST_TYPES) * (None,)))
     count = 0
 
     for packet in simulator.genLoopPackets():
         if packet['dateTime'] > stop_ts:
             break
-        for obs_type in test_types:
+        for obs_type in TEST_TYPES:
             obs_sum[obs_type] += packet[obs_type]
             obs_min[obs_type] = packet[obs_type] if obs_min[obs_type] is None \
                 else min(obs_min[obs_type], packet[obs_type])
@@ -184,13 +150,8 @@ def calc_stats(config_dict, start_ts, stop_ts):
     for obs_type in obs_sum:
         obs_avg[obs_type] = obs_sum[obs_type] / count
 
-    return (obs_min, obs_max, obs_avg)
-
-
-def suite():
-    tests = ['test_archive_data']
-    return unittest.TestSuite(list(map(TestSqlite, tests)) + list(map(TestMySQL, tests)))
+    return obs_min, obs_max, obs_avg
 
 
 if __name__ == '__main__':
-    unittest.TextTestRunner(verbosity=2).run(suite())
+    unittest.main()
