@@ -1,10 +1,8 @@
-### Tests
+### Speeding up tests
 
-Synthetic database used for tests: some of the types require the database, but it's not available until
-after the transaction. Need to either go back later and patch in the derived types, or make them
-available outside the database. Or, give up the idea of calculating them.
+Does the "alt" database have to be so big? Can we simplify it?
 
-`gen_fake_data.py` is now more realistic, but the expected results haven't caught back up to it yet.
+Does test_sim.py have to be so verbose?
 
 ### Xtypes
 Allow expressions in aggregates.

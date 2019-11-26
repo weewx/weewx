@@ -374,7 +374,7 @@ class TestET(unittest.TestCase):
         record = self.db_manager.getRecord(ts)
         et_vt = wx_xtypes.get_scalar('ET', record, self.db_manager)
 
-        self.assertAlmostEqual(et_vt[0], 0.00192, 5)
+        self.assertAlmostEqual(et_vt[0], 0.00193, 5)
         self.assertEqual((et_vt[1], et_vt[2]), ("inch", "group_rain"))
 
 if __name__ == '__main__':

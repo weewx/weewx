@@ -1,13 +1,8 @@
 Current time is $current.dateTime ($current.dateTime.raw)
 
-Half Hour Averages in Last Hour
-#for $_span in $hour(hours_ago=1).spans(interval=1800)
-$_span.dateTime.format("%a %H:%M")-$_span.end.format("%H:%M"): $_span.outTemp.avg
-#end for
-
 Hourly Top Temperatures in Last Day
 #for $_hour in $day(days_ago=1).hours
-$_hour.dateTime.format("%a %m/%d %H:%M"): $_hour.outTemp.max at $_hour.outTemp.maxtime
+$_hour.start.format("%a %m/%d %H:%M")-$_hour.end.format("%H:%M"): $_hour.outTemp.max at $_hour.outTemp.maxtime
 #end for
 
 Daily Top Temperatures in Last Week

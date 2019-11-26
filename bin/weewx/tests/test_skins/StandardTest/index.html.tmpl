@@ -120,11 +120,6 @@ FALSE#slurp
       <td>$trend($time_delta=3600).outTemp</td>
     </tr>
     <tr>
-      ## This test uses a previous value known to be None:
-      <td>Outside Temperature trend where previous value is known to be None (4800 seconds)</td>
-      <td>$trend($time_delta=4800).outTemp</td>
-    </tr>
-    <tr>
       <td>Trend with nonsense type</td>
       <td>$trend.foobar</td>
     </tr>
@@ -133,7 +128,8 @@ FALSE#slurp
       <td>$current.barometer</td>
     </tr>
     <tr>
-      <td>Barometer trend ($trend.time_delta.hour.format("%.0f"))</td>
+      ## This test uses a previous value known to be None:
+      <td>Barometer trend where previous value is known to be None ($trend.time_delta.hour.format("%.0f"))</td>
       <td>$trend.barometer</td>
     </tr>
     <tr>
@@ -391,8 +387,8 @@ FALSE#slurp
       <td>$day.outTemp.min.mbar</td>
     </tr>
     <tr>
-      <td>Nonexistent type:</td>
-      <td>$day.heatindex.max</td>
+      <td>Max value for a type with no data: \$day.soilMoist3.max</td>
+      <td>$day.soilMoist3.max</td>
     </tr>
     <tr>
       <td>Sum aggregation (rain)</td>
@@ -439,12 +435,12 @@ FALSE#slurp
       <td>$emit_boolean($day.nonsense.has_data)</td>
     </tr>
     <tr>
-      <td>Test tag "exists" with an existing type that has no data \$day.heatindex.exists</td>
-      <td>$emit_boolean($day.heatindex.exists)</td>
+      <td>Test tag "exists" with an existing type that has no data \$day.soilMoist3.exists</td>
+      <td>$emit_boolean($day.soilMoist3.exists)</td>
     </tr>
     <tr>
-      <td>Test tag "has_data" with existent type that has no data \$day.heatindex.has_data</td>
-      <td>$emit_boolean($day.heatindex.has_data)</td>
+      <td>Test tag "has_data" with existent type that has no data \$day.soilMoist3.has_data</td>
+      <td>$emit_boolean($day.soilMoist3.has_data)</td>
     </tr>
     <tr>
       <td>Test tag "has_data" with existent type that has data \$day.outTemp.has_data</td>

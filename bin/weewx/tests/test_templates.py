@@ -50,7 +50,6 @@ time.tzset()
 # http://docs.python.org/2/library/locale.html#locale.setlocale
 locale.setlocale(locale.LC_ALL, '')
 
-
 # Find the configuration file. It's assumed to be in the same directory as me:
 config_path = os.path.join(os.path.dirname(__file__), "testgen.conf")
 cwd = None
@@ -83,19 +82,20 @@ weewx.units.MetricWXUnits["group_amperage"] = "amp"
 weewx.units.default_unit_format_dict["amp"] = "%.1f"
 weewx.units.default_unit_label_dict["amp"] = " A"
 
+
 class Common(object):
 
     def setUp(self):
         global config_path
         global cwd
-        
+
         # Save and set the current working directory in case some service changes it.
         if not cwd:
             cwd = os.getcwd()
         else:
             os.chdir(cwd)
 
-        try :
+        try:
             self.config_dict = configobj.ConfigObj(config_path, file_error=True, encoding='utf-8')
         except IOError:
             sys.stderr.write("Unable to open configuration file %s" % config_path)
@@ -121,36 +121,36 @@ class Common(object):
 
     def tearDown(self):
         pass
-    
+
     def test_report_engine(self):
-        
+
         # The generation time should be the same as the last record in the test database:
         testtime_ts = gen_fake_data.stop_ts
         print("\ntest time is %s" % weeutil.weeutil.timestamp_to_string(testtime_ts))
 
         stn_info = weewx.station.StationInfo(**self.config_dict['Station'])
-        
+
         # First run the engine without a current record.
         self.run_engine(stn_info, None, testtime_ts)
         with weewx.manager.open_manager_with_config(self.config_dict, 'wx_binding') as manager:
             record = manager.getRecord(testtime_ts)
         # Now run the engine again, but this time with a current record:
         self.run_engine(stn_info, record, testtime_ts)
-        
+
     def run_engine(self, stn_info, record, testtime_ts):
         t = weewx.reportengine.StdReportEngine(self.config_dict, stn_info, record, testtime_ts)
 
         # Find the test skins and then have SKIN_ROOT point to it:
         test_dir = sys.path[0]
         t.config_dict['StdReport']['SKIN_ROOT'] = os.path.join(test_dir, 'test_skins')
-        
+
         # Although the report engine inherits from Thread, we can just run it in the main thread:
         print("Starting report engine test")
         t.run()
         print("Done.")
-        
+
         test_html_dir = os.path.join(t.config_dict['WEEWX_ROOT'], t.config_dict['StdReport']['HTML_ROOT'])
-        expected_dir  = os.path.join(test_dir, 'expected')
+        expected_dir = os.path.join(test_dir, 'expected')
 
         # Walk the directory of expected results to discover all the generated files we should
         # be checking
@@ -171,19 +171,23 @@ class Common(object):
                             if actual_line == '' or expected_line == '':
                                 break
                             n += 1
-                            self.assertEqual(actual_line, expected_line, msg="%s[%d]:\n%r vs\n%r" %
-                                             (actual_filename_abs, n, actual_line, expected_line))
+                            self.assertEqual(actual_line,
+                                             expected_line,
+                                             msg="%s[%d]:\n%r vs\n%r"
+                                                 % (actual_filename_abs, n, actual_line, expected_line))
 
                         print("Checked %d lines" % n)
+
 
 class TestSqlite(Common, unittest.TestCase):
 
     def __init__(self, *args, **kwargs):
         self.database_type = "sqlite"
         super(TestSqlite, self).__init__(*args, **kwargs)
-        
+
+
 class TestMySQL(Common, unittest.TestCase):
-    
+
     def __init__(self, *args, **kwargs):
         self.database_type = "mysql"
         super(TestMySQL, self).__init__(*args, **kwargs)
@@ -196,12 +200,14 @@ class TestMySQL(Common, unittest.TestCase):
                 import pymysql as MySQLdb
             except ImportError as e:
                 raise unittest.case.SkipTest(e)
-        super(TestMySQL, self).setUp()        
-        
-    
+        super(TestMySQL, self).setUp()
+
+
 def suite():
     tests = ['test_report_engine']
     return unittest.TestSuite(list(map(TestSqlite, tests)) + list(map(TestMySQL, tests)))
+    # return unittest.TestSuite(list(map(TestSqlite, tests)) )
+
 
 if __name__ == '__main__':
     unittest.TextTestRunner(verbosity=2).run(suite())
