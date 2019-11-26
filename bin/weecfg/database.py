@@ -55,6 +55,21 @@ class DatabaseFix(object):
         self.name = fix_config_dict['name']
         # is this a dry run
         self.dry_run = to_bool(fix_config_dict.get('dry_run', True))
+        # Get the binding for the archive we are to use. If we received an
+        # explicit binding then use that otherwise use the binding that
+        # StdArchive uses.
+        try:
+            db_binding = fix_config_dict['binding']
+        except KeyError:
+            if 'StdArchive' in config_dict:
+                db_binding = config_dict['StdArchive'].get('data_binding',
+                                                           'wx_binding')
+            else:
+                db_binding = 'wx_binding'
+        self.binding = db_binding
+        # get a database manager object
+        self.dbm = weewx.manager.open_manager_with_config(config_dict,
+                                                          self.binding)
 
     def run(self):
         raise NotImplementedError("Method 'run' not implemented")
@@ -114,8 +129,8 @@ class DatabaseFix(object):
             To do nothing override with a pass statement.
         """
 
-        print("Fixing database record: %d; Timestamp: %s\r" % \
-              (record, timestamp_to_string(ts)), end='', file=sys.stdout)
+        _msg = "Fixing database record: %d; Timestamp: %s\r" % (record, timestamp_to_string(ts))
+        print(_msg, end='', file=sys.stdout)
         sys.stdout.flush()
 
 
@@ -162,21 +177,6 @@ class WindSpeedRecalculation(DatabaseFix):
             log.info("maxwindspeed: This is a dry run. "
                      "Maximum windSpeed will be recalculated but not saved.")
 
-        # Get the binding for the archive we are to use. If we received an
-        # explicit binding then use that otherwise use the binding that
-        # StdArchive uses.
-        try:
-            db_binding = fix_config_dict['binding']
-        except KeyError:
-            if 'StdArchive' in config_dict:
-                db_binding = config_dict['StdArchive'].get('data_binding',
-                                                           'wx_binding')
-            else:
-                db_binding = 'wx_binding'
-        self.binding = db_binding
-        # get a database manager object
-        self.dbm = weewx.manager.open_manager_with_config(config_dict,
-                                                          self.binding)
         log.debug("maxwindspeed: Using database binding '%s', "
                   "which is bound to database '%s'." %
                   (self.binding, self.dbm.database_name))
@@ -333,9 +333,9 @@ class WindSpeedRecalculation(DatabaseFix):
     def _progress(ndays, last_time):
         """Utility function to show our progress while processing the fix."""
 
-        print("Updating 'windSpeed' daily summary: %d; Timestamp: %s\r" % \
-              (ndays, timestamp_to_string(last_time, format_str="%Y-%m-%d")),
-              end='', file=sys.stdout)
+        _msg = "Updating 'windSpeed' daily summary: %d; " \
+               "Timestamp: %s\r" % (ndays, timestamp_to_string(last_time, format_str="%Y-%m-%d"))
+        print(_msg, end='', file=sys.stdout)
         sys.stdout.flush()
 
 
@@ -378,21 +378,6 @@ class IntervalWeighting(DatabaseFix):
         # call our parents __init__
         super(IntervalWeighting, self).__init__(config_dict, fix_config_dict)
 
-        # Get the binding for the archive we are to use. If we received an
-        # explicit binding then use that otherwise use the binding that
-        # StdArchive uses.
-        try:
-            db_binding = fix_config_dict['binding']
-        except KeyError:
-            if 'StdArchive' in config_dict:
-                db_binding = config_dict['StdArchive'].get('data_binding',
-                                                           'wx_binding')
-            else:
-                db_binding = 'wx_binding'
-        self.binding = db_binding
-        # Get a database manager object
-        self.dbm = weewx.manager.open_manager_with_config(config_dict,
-                                                          self.binding)
         # Number of days per db transaction, default to 50.
         self.trans_days = int(fix_config_dict.get('trans_days', 50))
 
@@ -480,14 +465,14 @@ class IntervalWeighting(DatabaseFix):
         # there are records in the archive from that day
         if np_ts is None or self.dbm.last_timestamp > np_ts:
             t1 = time.time()
-            log.info( "intervalweighting: Applying %s..." % self.name)
+            log.info("intervalweighting: Applying %s..." % self.name)
             _days = 0
             # Get the earliest daily summary ts and the obs that it came from
             first_ts, obs = self.first_summary()
             # Get the start and stop ts for our first transaction days
             _tr_start_ts = np_ts if np_ts is not None else first_ts
             _tr_stop_dt = datetime.datetime.fromtimestamp(_tr_start_ts) \
-                          + datetime.timedelta(days=self.trans_days)
+                + datetime.timedelta(days=self.trans_days)
             _tr_stop_ts = time.mktime(_tr_stop_dt.timetuple())
             _tr_stop_ts = min(startOfDay(self.dbm.last_timestamp), _tr_stop_ts)
             last_start = None
@@ -520,7 +505,7 @@ class IntervalWeighting(DatabaseFix):
                             log.info("intervalweighting: Interval weighting of '%s' daily summary "
                                      "for %s failed: %s"
                                      % (last_key, timestamp_to_string(_day_span.start,
-                                                                      format="%Y-%m-%d"), e))
+                                                                      format_str="%Y-%m-%d"), e))
                             raise
                         # Update the daily summary with the weighted accumulator
                         if not self.dry_run:
@@ -545,11 +530,10 @@ class IntervalWeighting(DatabaseFix):
                     # More to process so set our start and stop for the next
                     # transaction
                     _tr_start_dt = datetime.datetime.fromtimestamp(_tr_stop_ts) \
-                                   + datetime.timedelta(days=1)
+                        + datetime.timedelta(days=1)
                     _tr_start_ts = time.mktime(_tr_start_dt.timetuple())
                     _tr_stop_dt = datetime.datetime.fromtimestamp(_tr_start_ts) \
-                                  + datetime.timedelta(
-                        days=self.trans_days)
+                        + datetime.timedelta(days=self.trans_days)
                     _tr_stop_ts = time.mktime(_tr_stop_dt.timetuple())
                     _tr_stop_ts = min(self.dbm.last_timestamp, _tr_stop_ts)
 
@@ -567,13 +551,11 @@ class IntervalWeighting(DatabaseFix):
             log.info("intervalweighting: Calculated weighting "
                      "for %s days in %0.2f seconds." % (_days, tdiff))
             if self.dry_run:
-                log.info( "intervalweighting: "
-                          "This was a dry run. %s was not applied."
-                          % self.name)
+                log.info("intervalweighting: "
+                         "This was a dry run. %s was not applied." % self.name)
         else:
             # we didn't need to weight so inform the user
-            log.info("intervalweighting: %s has already been applied."
-                     % self.name)
+            log.info("intervalweighting: %s has already been applied." % self.name)
 
     def get_interval(self, span):
         """Return the interval field value used in a span.
@@ -726,21 +708,6 @@ class CalcMissing(DatabaseFix):
         # call our parents __init__
         super(CalcMissing, self).__init__(config_dict, calc_missing_config_dict)
 
-        # Get the binding for the archive we are to use. If we received an
-        # explicit binding then use that otherwise use the binding that
-        # StdArchive uses.
-        try:
-            db_binding = calc_missing_config_dict['binding']
-        except KeyError:
-            if 'StdArchive' in config_dict:
-                db_binding = config_dict['StdArchive'].get('data_binding',
-                                                           'wx_binding')
-            else:
-                db_binding = 'wx_binding'
-        self.binding = db_binding
-        # get a database manager object
-        self.dbm = weewx.manager.open_manager_with_config(config_dict,
-                                                          self.binding)
         # the start timestamp of the period to calc missing
         self.start_ts = int(calc_missing_config_dict.get('start_ts'))
         # the stop timestamp of the period to calc missing
