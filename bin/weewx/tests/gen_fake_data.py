@@ -35,8 +35,10 @@ year_start = int(time.mktime(year_start_tt))
 # Roughly nine months of data:
 start_tt = (2010, 1, 1, 0, 0, 0, 0, 0, -1)  # 2010-01-01 00:00
 stop_tt = (2010, 9, 3, 11, 0, 0, 0, 0, -1)  # 2010-09-03 11:00
+alt_start_tt = (2010, 8, 30, 0, 0, 0, 0, 0, -1)
 start_ts = int(time.mktime(start_tt))
 stop_ts = int(time.mktime(stop_tt))
+alt_start = int(time.mktime(alt_start_tt))
 
 # At one half-hour archive intervals:
 interval = 1800
@@ -63,7 +65,7 @@ def configDatabases(config_dict, database_type):
     config_dict['DataBindings']['wx_binding']['database'] = "archive_" + database_type
     configDatabase(config_dict, 'wx_binding')
     config_dict['DataBindings']['alt_binding']['database'] = "alt_" + database_type
-    configDatabase(config_dict, 'alt_binding', amplitude=0.5)
+    configDatabase(config_dict, 'alt_binding', start_ts=alt_start, amplitude=0.5)
 
 
 def configDatabase(config_dict, binding, start_ts=start_ts, stop_ts=stop_ts, interval=interval, amplitude=1.0,
@@ -189,7 +191,6 @@ def genFakeRecords(start_ts=start_ts, stop_ts=stop_ts, interval=interval,
 
 
 def patch_database(config_dict):
-
     calc_missing_config_dict = {
         'name': 'Patch gen_fake_data',
         'binding': 'wx_binding',
