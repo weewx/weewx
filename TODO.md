@@ -1,12 +1,3 @@
-### Speeding up tests
-
-Does the "alt" database have to be so big? Can we simplify it?
-
-Does test_sim.py have to be so verbose?
-
-### Xtypes
-Allow expressions in aggregates.
-
 ### Install
 Note in the docs that doing:
 ```shell script
