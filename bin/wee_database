@@ -447,9 +447,9 @@ def transferDatabase(config_dict, db_binding, options):
                             print("destination database '%s' in %.2f seconds." %
                                   (dest_manager.database_name, tdiff))
                         else:
-                            print(
-                                "Error. No records were transferred from source database '%s' to destination database '%s'." %
-                                (src_manager.database_name, dest_manager.database_name))
+                            print("Error. No records were transferred from source database '%s' to "
+                                  "destination database '%s'." % (src_manager.database_name,
+                                                                  dest_manager.database_name))
                 except ImportError:
                     # Probably when trying to load db driver
                     print("Error accessing destination database '%s'." %
@@ -546,7 +546,6 @@ def update(config_dict, db_binding, options):
 
     # Get a database manager object
     dbm = weewx.manager.open_manager_with_config(config_dict, db_binding)
-    database_name = dbm.database_name
 
     # Interval weighting
     # first construct an interval weighting config dict
@@ -618,14 +617,14 @@ def calc_missing(config_dict, db_binding, options):
     if start_dt is None and stop_dt is None:
         _tail = "for all records."
     elif start_dt and not stop_dt:
-        _tail = "from %s through the end (%s)." % (timestamp_to_string(start_ts),
-                                                  timestamp_to_string(stop_ts))
+        _tail = "from %s through to the end (%s)." % (timestamp_to_string(start_ts),
+                                                      timestamp_to_string(stop_ts))
     elif not start_dt and stop_dt:
-        _tail = "from the beginning (%s) through %s." % (timestamp_to_string(start_ts),
-                                                        timestamp_to_string(stop_ts))
+        _tail = "from the beginning (%s) through to %s." % (timestamp_to_string(start_ts),
+                                                            timestamp_to_string(stop_ts))
     else:
-        _tail = "from %s through %s inclusive." % (timestamp_to_string(start_ts),
-                                                  timestamp_to_string(stop_ts))
+        _tail = "from %s through to %s inclusive." % (timestamp_to_string(start_ts),
+                                                      timestamp_to_string(stop_ts))
     _msg = "%s%s" % (_head, _tail)
     log.info(_msg)
     print(_msg)
@@ -831,7 +830,7 @@ def check_strings(config_dict, db_binding, options, fix=False):
             # really did fix so log and display to screen
             log.info("Could not fix all null strings. "
                      "%d of %d null strings found were fixed." % (fixed,
-                                                                    len(_found)))
+                                                                  len(_found)))
             print("Could not fix all null strings. "
                   "%d of %d null strings found were fixed." % (fixed,
                                                                len(_found)))
