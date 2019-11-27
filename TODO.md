@@ -10,8 +10,6 @@ will cause the shebang at the top of the executables to use Python 3:
 ```
 Basically, however you invoke `setup.py` is what will be injected.
 
-Update suse.htm for how to install using Python 3.
-
 ### Other
 Really have to find some way of making `accumulateLeaves()` and friends accessible
 from `weeutil.weeutil`.
