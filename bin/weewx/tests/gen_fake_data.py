@@ -163,7 +163,7 @@ def genFakeRecords(start_ts=start_ts, stop_ts=stop_ts, interval=interval,
         record = {
             'dateTime': ts,
             'usUnits': weewx.US,
-            'interval': interval / 60,
+            'interval': int(interval / 60),
             'outTemp': 0.5 * amplitude * (-daily_temp_range * math.sin(daily_phase)
                                           - annual_temp_range * math.cos(annual_phase)) + avg_temp,
             'barometer': -0.5 * amplitude * weather_baro_range * math.sin(weather_phase) + avg_baro,
@@ -187,7 +187,12 @@ def genFakeRecords(start_ts=start_ts, stop_ts=stop_ts, interval=interval,
             if count % 71 == 0:
                 record[obs_type] = None
 
+        # Round the values slightly so we don't get small assertion errors from SQL arithmetic.
+        for obs_type in ['barometer', 'outTemp', 'windDir', 'windGust', 'windGustDir', 'windSpeed']:
+            if record.get(obs_type) is not None:
+                record[obs_type] = round(record[obs_type], 6)
         yield record
+
 
 
 def patch_database(config_dict):
