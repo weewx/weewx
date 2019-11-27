@@ -71,7 +71,7 @@ Python 2.7.15rc1
 
 <p>
     Install the required python packages using either the package management software for your system (<i>e.g.</i>, <span
-    class='code'>apt-get</span>, <span class='code'>yum</span>, <span class='code'>yast</span>) or the Python Package
+    class='code'>apt-get</span>, <span class='code'>yum</span>, <span class='code'>zypper</span>) or the Python Package
     Management System (<span class='code'>pip</span>). Select the appropriate tab for specific instructions for your
     chosen install method and Python version.
 </p>
@@ -236,29 +236,42 @@ sudo yum install python3-pyusb</span>
             Python 3
         </button>
         <div id="prereq-suse-py2" class="tab-content tab-content-tty">
-                <pre class='tty'># On some SUSE systems, use 'yast -i' instead of 'zypper install'
+                <pre class='tty'># Tested on openSUSE Leap 15.1
+
+# You may have to install python 2 first:
+<span class="cmd">sudo zypper install python</span>
 
 # Required packages:
-<span class="cmd">sudo zypper install python-configobj
-sudo zypper install python-imaging
-sudo zypper install python-Cheetah</span>
+<span class="cmd">sudo zypper install python2-configobj
+sudo zypper install python2-Pillow
+sudo zypper install python2-pyserial
+sudo zypper install python2-usb</span>
 
-# Required if hardware is serial or USB:
-<span class="cmd">sudo zypper install python-pyserial
-sudo zypper install pyton-usb</span>
+# Cheetah must be installed by using pip2:
+<span class="cmd">sudo zypper install python2-pip
+sudo pip2 install Cheetah</span>
 
-# Required if using MySQL:
-<span class="cmd">sudo zypper install mysql-community-server-client
-sudo zypper install python-mysql</span>
+# If you plan on using MySQL / MariaDB:
+<span class="cmd">sudo zypper install python2-mysqlclient</span>
 
-# Optional for extended almanac information:
-<span class="cmd">sudo zypper install python-devel
-sudo zypper install setuptools
-sudo pip install pyephem</span>
-                </pre>
+# For extended almanac information (optional):
+<span class="cmd">sudo pip2 install pyephem</span></pre>
         </div>
         <div id="prereq-suse-py3" class="tab-content tab-content-tty">
-            <pre class="tty">TBD</pre>
+            <pre class="tty"># Tested on openSUSE Leap 15.1
+
+# Required packages:
+<span class="cmd">sudo zypper install python3-configobj
+sudo zypper install python3-Pillow
+sudo zypper install python3-Cheetah3
+sudo zypper install python3-pyserial
+sudo zypper install python3-usb</span>
+
+# If you plan on using MySQL / MariaDB:
+<span class="cmd">sudo zypper install python3-mysqlclient</span>
+
+# For extended almanac information (optional)
+<span class="cmd">sudo pip3 install pyephem</span></pre>
         </div>
     </div>
 
