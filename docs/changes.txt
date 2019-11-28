@@ -100,6 +100,8 @@ simply ignore it, rather than stopping. Address issue #375.
 Change in how the archive timespan is calculated in the engine. This allows
 oddball archive intervals. Fixes issue #469.
 
+NOAA reports are now more tolerant of missing data. Fixes issue #300.
+
 
 3.9.2 07/14/2019
 

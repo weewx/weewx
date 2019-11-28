@@ -28,7 +28,7 @@ ELEV: $station.altitude    LAT: $station.latitude[0]-$station.latitude[1] $stati
 DAY   TEMP   HIGH   TIME    LOW   TIME   DAYS   DAYS   RAIN  SPEED   HIGH   TIME    DIR
 ---------------------------------------------------------------------------------------
 #for $day in $month.days
-#if $day.barometer.count.raw
+#if $day.outTemp.count.raw or $day.rain.count.raw or $day.wind.count.raw
 $day.dateTime.format($D, add_label=False) $day.outTemp.avg.format($Temp,$NONE,add_label=False) $day.outTemp.max.format($Temp,$NONE,add_label=False) $day.outTemp.maxtime.format($Time,add_label=False) $day.outTemp.min.format($Temp,$NONE,add_label=False) $day.outTemp.mintime.format($Time,add_label=False) $day.heatdeg.sum.format($Temp,$NONE,add_label=False) $day.cooldeg.sum.format($Temp,$NONE,add_label=False) $day.rain.sum.format($Rain,$NONE,add_label=False) $day.wind.avg.format($Wind,$NONE,add_label=False) $day.wind.max.format($Wind,$NONE,add_label=False) $day.wind.maxtime.format($Time,add_label=False) $day.wind.vecdir.format($Dir,$NONE,add_label=False)
 #else
 $day.dateTime.format($D)
