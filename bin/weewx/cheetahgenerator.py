@@ -386,8 +386,10 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
 
     def _getFileName(self, template, ref_tt):
         """Calculate a destination filename given a template filename.
-        Replace 'YYYY' with the year, 'MM' with the month, 'DD' with the day.
-        Strip off any trailing .tmpl"""
+
+        For backwards compatibility replace 'YYYY' with the year, 'MM' with the
+        month, 'DD' with the day. Also observe any strftime format strings in
+        the filename. Finally, strip off any trailing .tmpl."""
 
         _filename = os.path.basename(template).replace('.tmpl', '')
 
@@ -406,6 +408,11 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
             _filename = _filename.replace('WW', _week_str)
             # ... and the day
             _filename = _filename.replace('DD', _day_str)
+        # observe any strftime format strings in the base file name
+        # first obtain a datetime object from our timetuple
+        ref_dt = datetime.datetime.fromtimestamp(time.mktime(ref_tt))
+        # then apply any strftime formatting
+        _filename = ref_dt.strftime(_filename)
 
         return _filename
 
