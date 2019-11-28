@@ -1174,7 +1174,7 @@ class FineOffsetUSB(weewx.drivers.AbstractDevice):
 #==============================================================================
 
     def _read_usb_block(self, address):
-        addr1 = (address / 256) & 0xff
+        addr1 = (address >> 8) & 0xff
         addr2 = address & 0xff
         self.devh.controlMsg(usb.TYPE_CLASS + usb.RECIP_INTERFACE,
                              0x0000009,
