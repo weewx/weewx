@@ -102,6 +102,10 @@ oddball archive intervals. Fixes issue #469.
 
 NOAA reports are now more tolerant of missing data. Fixes issue #300.
 
+Use of strftime() date and time format codes in template file names is now
+supported as an alternative to the legacy 'YYYY', 'MM' and 'DD'. The legacy
+codes continue to be supported for backwards compatibility.
+
 
 3.9.2 07/14/2019
 
