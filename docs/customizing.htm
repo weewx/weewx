@@ -1594,32 +1594,6 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
             <span class='code'>SummaryByYear</span>, and <span class='code'>ToDate</span>.
         </p>
 
-        <h3>Including time stamps in generated file names</h3>
-
-        <p>
-            The Cheetah generator includes the ability to include a time stamp in the generated file name
-            (e.g. <span class="code">NOAA-2017-01.txt</span>). This is achieved by inclusion of various codes in the
-            template file name. The Cheetah generator supports the inclusion
-            of <a href="https://docs.python.org/3/library/datetime.html#strftime-strptime-behavior"> strftime()<em> date
-            and time format codes</em> </a> in the template file name. The strftime() format codes provide a flaxible
-            means of including date and time information in the generated file name. The Cheetah generator also supports
-            the legacy <span class="code">YYYY</span>, <span class="code">MM</span> and <span class="code">DD</span> codes
-            that include the year, month and day numbers.
-        </p>
-
-        <p class="note">
-            Care is required when using strftime() date and time format codes in template names to ensure that the
-            resulting file name is a valid file name. For example, the commonly used literal diagonal character,
-            <span class="code">/</span>, should be avoided as this would likely result in an invalid path or file name.
-        </p>
-
-        <p class="note">
-            When determining the file name to be used the Cheetah generator first processes legacy date codes,
-            <span class="code">YYYY</span>, <span class="code">MM</span> and <span class="code">DD</span>, before
-            processing strftime() format codes. So the template file name <span class="code">NOAA-%YYYY.txt.tmpl</span>
-            would result in the generated file name <span class="code">NOAA-%2017.txt</span>.
-        </p>
-
         <h3>Specifying template files</h3>
 
         <p>
@@ -1638,13 +1612,13 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
         # Reports that summarize "by month"
         [[[NOAA_month]]]
             encoding = strict_ascii
-            template = NOAA/NOAA-YYYY-MM.txt.tmpl
+            template = NOAA/NOAA-%Y-%m.txt.tmpl
 
     [[SummaryByYear]]
         # Reports that summarize "by year"
         [[[NOAA_year]]]
             encoding = strict_ascii
-            template = NOAA/NOAA-YYYY.txt.tmpl
+            template = NOAA/NOAA-%Y.txt.tmpl
 
     [[ToDate]]
         # Reports that show statistics "to date", such as day-to-date,
@@ -1689,8 +1663,8 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
         <p>
             Other than <span class="code">SummaryByMonth</span> and <span class="code">SummaryByYear</span>, the section
             names are arbitrary. <span class="code">ToDate</span> could just as well have been called <span
-            class="code">files_to_date</span>, and the sections <span class="code">day</span>, <span
-            class="code">week</span>, and <span class="code">month</span> could just as well have been called <span
+            class="code">files_to_date</span>, and the sections <span class="code">index</span>, <span
+            class="code">statistics</span>, and <span class="code">telemetry</span> could just as well have been called <span
             class="code">tom</span>, <span class="code">dick</span>, and <span class="code">harry</span>.
         </p>
 
@@ -1698,9 +1672,9 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
 
         <p>
             Use <span class="code">SummaryByYear</span> to generate a set of files, one file per year.  The name of the
-            template file should contain <span class="code">YYYY</span> or a
-            <a href="https://docs.python.org/3/library/datetime.html#strftime-strptime-behavior"> strftime()</a> year
-            format code; this will be replaced with the year of the data in the file.
+            template file should contain a
+            <a href="https://docs.python.org/3/library/datetime.html#strftime-strptime-behavior"> strftime()</a> code
+            for the year; this will be replaced with the year of the data in the file.
         </p>
         <pre class="tty">
 [CheetahGenerator]
@@ -1708,11 +1682,11 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
         # Reports that summarize "by year"
         [[[NOAA_year]]]
             encoding = strict_ascii
-            template = NOAA/NOAA-YYYY.txt.tmpl
+            template = NOAA/NOAA-%Y.txt.tmpl
         </pre>
 
         <p>
-            The template <span class="code">NOAA/NOAA-YYYY.txt.tmpl</span> might look something like this:
+            The template <span class="code">NOAA/NOAA-%Y.txt.tmpl</span> might look something like this:
         </p>
         <pre class="tty">
            SUMMARY FOR YEAR $year.dateTime
@@ -1727,9 +1701,9 @@ $record.dateTime $record.outTemp $record.outHumidity
 
         <p>
             Use <span class="code">SummaryByMonth</span> to generate a set of files, one file per month.  The name of the
-            template file should contain <span class="code">YYYY</span> and <span class="code">MM</span> or
-            <a href="https://docs.python.org/3/library/datetime.html#strftime-strptime-behavior"> strftime()</a> year and
-            month codes; these will be replaced with the year and month of the data in the file.
+            template file should contain a
+            <a href="https://docs.python.org/3/library/datetime.html#strftime-strptime-behavior"> strftime()</a> code
+            for year and month; these will be replaced with the year and month of the data in the file.
         </p>
         <pre class="tty">
 [CheetahGenerator]
@@ -1737,11 +1711,11 @@ $record.dateTime $record.outTemp $record.outHumidity
         # Reports that summarize "by month"
         [[[NOAA_month]]]
             encoding = strict_ascii
-            template = NOAA/NOAA-YYYY-MM.txt.tmpl
+            template = NOAA/NOAA-%Y-%m.txt.tmpl
         </pre>
 
         <p>
-            The template <span class="code">NOAA/NOAA-YYYY-MM.txt.tmpl</span> might look something like this:
+            The template <span class="code">NOAA/NOAA-%Y-%m.txt.tmpl</span> might look something like this:
         </p>
         <pre class="tty">
            SUMMARY FOR MONTH $month.dateTime
@@ -1756,10 +1730,9 @@ $record.dateTime $record.outTemp $record.outHumidity
         <p>
             While the <em>Seasons</em> skin does not make use of it, there is also a <span
             class="code">SummaryByDay</span> capability. As the name suggests, this results in one file per day.   The
-            name of the template file should contain <span class="code">YYYY</span>, <span class="code">MM</span>, and
-            <span class="code">DD</span> or
-            <a href="https://docs.python.org/3/library/datetime.html#strftime-strptime-behavior"> strftime()</a> year,
-            month and day codes; these will be replaced with the year, month, and day of the data in the file.
+            name of the template file should contain a
+            <a href="https://docs.python.org/3/library/datetime.html#strftime-strptime-behavior"> strftime()</a> code
+            for the year, month and day; these will be replaced with the year, month, and day of the data in the file.
         </p>
         <pre class="tty">
 [CheetahGenerator]
@@ -1767,11 +1740,11 @@ $record.dateTime $record.outTemp $record.outHumidity
         # Reports that summarize "by day"
         [[[NOAA_day]]]
             encoding = strict_ascii
-            template = NOAA/NOAA-YYYY-MM-DD.txt.tmpl
+            template = NOAA/NOAA-%Y-%m-%d.txt.tmpl
         </pre>
 
         <p>
-            The template <span class="code">NOAA/NOAA-YYYY-MM-DD.txt.tmpl</span> might look something like this:
+            The template <span class="code">NOAA/NOAA-%Y-%m-%d.txt.tmpl</span> might look something like this:
         </p>
         <pre class="tty">
            SUMMARY FOR DAY $day.dateTime
@@ -1841,7 +1814,7 @@ $month.outTemp.maxtime</pre>
 $month.outTemp.max</pre>
         <p>
             Most of the time, tags will "do the right thing" and are all you will need. However, WeeWX offers extensive
-            customization of the generated output for specialized applications such as XML RSS feeds, or ridgidly
+            customization of the generated output for specialized applications such as XML RSS feeds, or rigidly
             formatted reports (such as the NOAA reports). This section specifies the various tag options available.
         </p>
 
