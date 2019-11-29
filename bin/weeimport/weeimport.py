@@ -431,13 +431,16 @@ class Source(object):
                     # It was not a dry run so calculate any missing derived
                     # fields and provide the user with a summary of what we did.
                     if self.calc_missing:
-                        # we were asked to calculate missing derived fields, so
-                        # get a CalcMissing object
-                        # first construct a CalcMissing config dict
-                        # (self.dry_run will never be true)
+                        # We were asked to calculate missing derived fields, so
+                        # get a CalcMissing object.
+                        # First construct a CalcMissing config dict
+                        # (self.dry_run will never be true). Subtract 0.5
+                        # seconds from earliest timestamp as calc_missing only
+                        # calculates missing derived obs for records
+                        # timestamped after start_ts.
                         calc_missing_config_dict = {'name': 'Calculate Missing Derived Observations',
                                                     'binding': self.db_binding_wx,
-                                                    'start_ts': self.earliest_ts,
+                                                    'start_ts': self.earliest_ts-0.5,
                                                     'stop_ts': self.latest_ts,
                                                     'trans_days': 10,
                                                     'dry_run': self.dry_run is True}
