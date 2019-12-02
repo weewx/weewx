@@ -1957,13 +1957,24 @@ class WMR200(weewx.drivers.AbstractDevice):
                               weeutil.weeutil.timestamp_to_string(
                                   pkt.timestamp_record())))
                 elif pkt.timestamp_record() > since_ts:
-                    # Calculate the rain accumulation between valid archive 
+                    # Update the timestamp delta previous value even if
+                    # we do not use this packet.  This is so the next archive
+                    # packet, if any, has the proper delta timestamp
+                    # calculation.
+                    timestamp_packet_previous = timestamp_packet_current
+
+                    # Ensure that the packet has a valid 'interval' field.
+                    packet_record_interval = int(timestamp_packet_interval / 60.0)
+                    if packet_record_interval == 0:
+                      # This packet occurred less than the minimal interval after the
+                      # initial time search space and is discarded.
+                      loginf('genStartup() Discarding received archive record'
+                             ' since interval is zero')
+                      return
+                    pkt.record_update({'interval': packet_record_interval})
+                    # Calculate the rain accumulation between valid archive
                     # packets.
                     pkt.record_update(adjust_rain(pkt, PacketArchiveData))
-                    # Ensure that the packet has a valid 'interval' field
-                    pkt.record_update({'interval': int(timestamp_packet_interval / 60.0)})
-
-                    timestamp_packet_previous = timestamp_packet_current
                     cnt += 1
                     logdbg(('genStartup() Yielding received archive'
                             ' record cnt:%d after requested timestamp'
