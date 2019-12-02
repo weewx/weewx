@@ -184,6 +184,10 @@ the database manager. See commit 459ccb1.
 Sending a SIGTERM signal to weewxd now causes it to exit with status
 128 + signal#. PR #442. Thanks to user sshambar!
 
+Fixed bug that could cause WMR200 packets with a timestamp between startup
+and the minimum interval to have an interval length of zero. Fixes
+issue #375 (again!).
+
 
 3.9.1 02/06/2019
 
