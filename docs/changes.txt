@@ -66,7 +66,8 @@ issue #413.
 
 Wunderfixer has been ported to the new WU API. This API requires an API key,
 which you can get from the WU. Put it in weewx.conf. Unfortunately, WU is
-very unreliable whether reposts "stick". Fixes issues #414 and #445.
+very unreliable whether reposts "stick". Thanks to user Leon Shaner!
+Fixes issues #414 and #445.
 
 Wee_import can now import Weather Display monthly log files.
 

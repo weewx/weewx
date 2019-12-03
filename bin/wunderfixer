@@ -20,6 +20,9 @@ can be found here: https://docs.google.com/document/d/1w8jbqfAk0tfZS5P7hYnar1Jii
 
 CHANGE HISTORY
 --------------------------------
+1.7.0 12/03/2019
+Now uses "dual APIs." One for today, one for historical data.
+
 1.6.0 08/17/2019
 Use Python 'logging' package
 
@@ -372,16 +375,21 @@ class WunderStation(weewx.restx.AmbientThread):
         
         return: a set containing the timestamps in epoch time
         """
-        day_tt = day_requested.timetuple()
-        day = "%4d%02d%02d" % (day_tt.tm_year,
-                               day_tt.tm_mon,
-                               day_tt.tm_mday)
-
-        url = "https://api.weather.com/v2/pws/history/all?stationId=%s&format=json&units=m&date=%s&apiKey=%s" \
-              % (self.station, day, self.api_key)
+        # We need to do different API calls depending on whether we are asking for today's weather, or historical
+        # weather. Go figure.
+        if day_requested >= datetime.date.today():
+            # WU API URL format for today's weather
+            url = "https://api.weather.com/v2/pws/observations/all/1day?stationId=%s&format=json&units=m&apiKey=%s" \
+                   % (self.station, self.api_key)
+        else:
+            # WU API URL format for historical weather
+            day_tt = day_requested.timetuple()
+            url = "https://api.weather.com/v2/pws/history/all?stationId=%s&format=json&units=m&date=%4.4d%2.2d%2.2d&apiKey=%s" \
+                   % (self.station, day_tt[0], day_tt[1], day_tt[2], self.api_key)
 
         request = urllib.request.Request(url)
         request.add_header('Accept-Encoding', 'gzip')
+        request.add_header('User-Agent', 'Mozilla')
 
         try:
             response = urllib.request.urlopen(url)
