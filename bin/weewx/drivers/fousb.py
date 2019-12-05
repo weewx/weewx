@@ -1196,7 +1196,7 @@ class FineOffsetUSB(weewx.drivers.AbstractDevice):
         return list(data)
 
     def _write_usb(self, address, data):
-        addr1 = (address / 256) & 0xff
+        addr1 = (address >> 8) & 0xff
         addr2 = address & 0xff
         buf = [0xA2,addr1,addr2,0x20,0xA2,data,0,0x20]
         result = self.devh.controlMsg(
