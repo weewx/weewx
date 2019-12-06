@@ -5,6 +5,7 @@
 #
 """Test restx services"""
 
+import os
 import time
 import unittest
 
@@ -21,6 +22,9 @@ from six.moves import http_client
 
 import weewx
 import weewx.restx
+
+os.environ['TZ'] = 'America/Los_Angeles'
+time.tzset()
 
 
 class MatchRequest(object):
