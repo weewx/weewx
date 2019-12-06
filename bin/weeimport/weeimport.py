@@ -34,7 +34,7 @@ import weewx.wxservices
 
 from weewx.manager import open_manager_with_config
 from weewx.units import unit_constants, unit_nicknames, convertStd, to_std_system, ValueTuple
-from weeutil.weeutil import timestamp_to_string, option_as_list, to_int, tobool, get_object
+from weeutil.weeutil import timestamp_to_string, option_as_list, to_int, tobool, get_object, max_with_none
 
 log = logging.getLogger(__name__)
 
@@ -332,6 +332,8 @@ class Source(object):
 
         # setup a counter to count the periods of records
         self.period_no = 1
+        # obtain the lastUpdate meta data value before we import anything
+        last_update = to_int(self.dbm._read_metadata('lastUpdate'))
         with self.dbm as archive:
             if self.first_period:
                 # collect the time for some stats reporting later
@@ -395,9 +397,16 @@ class Source(object):
                 # increment our period counter
                 self.period_no += 1
             # The source data has been processed and any records saved to
-            # archive (except if it was a dry run). If necessary, calculate
-            # any missing derived fields and provide the user with suitable
-            # summary output.
+            # archive (except if it was a dry run).
+
+            # now update the lastUpdate meta data field, set it to the max of
+            # the timestamp of the youngest record imported and the value of
+            # lastUpdate from before we started
+            new_last_update = max_with_none((last_update, self.latest_ts))
+            if new_last_update is not None:
+                self.dbm._write_metadata('lastUpdate', str(int(new_last_update)))
+            # If necessary, calculate  any missing derived fields and provide
+            # the user with suitable summary output.
             if self.total_rec_proc == 0:
                 # nothing was imported so no need to calculate any missing
                 # fields just inform the user what was done
