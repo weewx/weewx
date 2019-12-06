@@ -2412,8 +2412,14 @@ Are you sure you want to proceed (y/n)?
                     displayed similar to the following:
                 </p>
 
-                <pre class="tty">Finished import
-27337 records were processed and 27337 unique records imported in 102.84 seconds.
+                <pre class="tty">Calculating missing derived observations...
+Processing record: 27337; Last record: 2018-03-03 06:00:00 AEST (1520020800)
+Recalculating daily summaries...
+Records processed: 27337; Last date: 2018-03-03 06:00:00 AEST (1520020800)
+Finished recalculating daily summaries
+Finished calculating missing derived observations
+Finished import
+27337 records were processed and 27337 unique records imported in 113.91 seconds.
 Those records with a timestamp already in the archive will not have been
 imported. Confirm successful import in the WeeWX log file.
 </pre>
@@ -2428,7 +2434,7 @@ imported. Confirm successful import in the WeeWX log file.
                 the following will be found in the log:
 
                 <pre class="tty">
-Aug 22 14:38:28 stretch12 weewx[863]: manager: unable to add record 2018-09-04 04:20:00 AEST (1535998800) to database 'weewx.sdb': UNIQUE constraint failed: archive.dateTime
+Aug 22 14:38:28 stretch12  wee_import[1226] ERROR weewx.manager: Unable to add record 2018-09-04 04:20:00 AEST (1535998800) to database 'weewx.sdb': UNIQUE constraint failed: archive.dateTime
 </pre>
 
                 <p>In such cases you should take note of the timestamp of the record(s) concerned and make a decision
