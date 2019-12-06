@@ -357,7 +357,7 @@ class Source(object):
                     print("Period %d ..." % self.period_no)
 
                 # get the raw data
-                _msg = 'Obtaining raw import data for period %d...' % self.period_no
+                _msg = 'Obtaining raw import data for period %d ...' % self.period_no
                 if self.verbose:
                     print(_msg)
                 log.info(_msg)
@@ -368,7 +368,7 @@ class Source(object):
                 log.info(_msg)
 
                 # map the raw data to a WeeWX archive compatible dictionary
-                _msg = 'Mapping raw import data for period %d...' % self.period_no
+                _msg = 'Mapping raw import data for period %d ...' % self.period_no
                 if self.verbose:
                     print(_msg)
                 log.info(_msg)
@@ -381,7 +381,7 @@ class Source(object):
                 # save the mapped data to archive
                 # first advise the user and log, but only if its not a dry run
                 if not self.dry_run:
-                    _msg = 'Saving mapped data to archive for period %d...' % self.period_no
+                    _msg = 'Saving mapped data to archive for period %d ...' % self.period_no
                     if self.verbose:
                         print(_msg)
                     log.info(_msg)
@@ -447,8 +447,14 @@ class Source(object):
                         # now obtain a CalcMissing object
                         self.calc_missing_obj = weecfg.database.CalcMissing(self.config_dict,
                                                                             calc_missing_config_dict)
+                        _msg = "Calculating missing derived observations ..."
+                        print(_msg)
+                        log.info(_msg)
                         # do the calculations
                         self.calc_missing_obj.run()
+                        _msg = "Finished calculating missing derived observations"
+                        print(_msg)
+                        log.info(_msg)
                     # now provide the summary report
                     _msg = "Finished import"
                     print(_msg)
