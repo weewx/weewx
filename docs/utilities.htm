@@ -2408,8 +2408,9 @@ Are you sure you want to proceed (y/n)?
 
                 <p>The line commencing with <span class="code">Unique records processed</span> should update as records are
                     imported with progress information on number of records processed, number of unique records imported
-                    and the date time of the latest record processed. When the import is complete a brief summary is
-                    displayed similar to the following:
+                    and the date time of the latest record processed. Once the initial import is complete
+                    <span class="code">wee_import</span> will, if requested, calculate any missing derived observations and
+                    rebuild the daily summaries. A brief summary should be displayed similar to the following:
                 </p>
 
                 <pre class="tty">Calculating missing derived observations...
@@ -2418,7 +2419,12 @@ Recalculating daily summaries...
 Records processed: 27337; Last date: 2018-03-03 06:00:00 AEST (1520020800)
 Finished recalculating daily summaries
 Finished calculating missing derived observations
-Finished import
+</pre>
+
+                <p>When the import is complete a brief summary is displayed similar to the following:
+                </p>
+
+                <pre class="tty">Finished import
 27337 records were processed and 27337 unique records imported in 113.91 seconds.
 Those records with a timestamp already in the archive will not have been
 imported. Confirm successful import in the WeeWX log file.
@@ -2698,8 +2704,22 @@ Unique records processed: 284; Last timestamp: 2016-01-22 23:55:00 AEST (1453470
                 <p>The line commencing with <span class="code">Unique records processed</span> should update as records are
                     imported with progress information on number of records processed, number of unique records imported
                     and the date time of the latest record processed. If the import spans multiple days then a new <span
-                        class="code">Period</span> line is created for each day. When the import is complete a brief
-                    summary is displayed similar to the following:
+                        class="code">Period</span> line is created for each day.
+                </p>
+
+                <p>Once the initial import is complete <span class="code">wee_import</span> will, if requested, calculate
+                    any missing derived observations and rebuild the daily summaries. A brief summary should be displayed
+                    similar to the following:
+                </p>
+
+                <pre class="tty">Calculating missing derived observations ...
+Processing record: 204; Last record: 2016-01-22 23:55:00 AEST (1453470900)
+Recalculating daily summaries...
+Finished recalculating daily summaries
+Finished calculating missing derived observations
+</pre>
+
+                <p>When the import is complete a brief summary is displayed similar to the following:
                 </p>
 
                 <pre class="tty">Finished import
