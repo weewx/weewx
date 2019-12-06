@@ -1,6 +1,3 @@
-### Test
-Run test suite on Mac.
-
 ### Install
 Check install on Mac.
 
