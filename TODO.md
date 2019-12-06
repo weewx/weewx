@@ -1,4 +1,6 @@
 ### Install
+Check install on Mac.
+
 Note in the docs that doing:
 ```shell script
 python3 setup.py install
