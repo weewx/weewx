@@ -23,9 +23,8 @@ it possible to include them in the database schemas.
 The utility wee_reports now loads services, allowing it to use user-supplied
 extensions. Fixes issue #95.
 
-New, more flexible, way of specifying schemas for the daily summaries.
-For the most part, the old way is backwards compatible. See the Upgrading
-Guide for the exception.
+Optional, more flexible, way of specifying schemas for the daily summaries.
+The old way is still supported.
 
 The package MySQL-python, which we used previously, is not available
 for Python 3. Ported  the MySQL code to use the package mysqlclient
