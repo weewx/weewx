@@ -463,8 +463,9 @@ class DailySummaries(XType):
         elif aggregate_type == 'vecdir':
             if row == (0.0, 0.0):
                 value = None
-            deg = 90.0 - math.degrees(math.atan2(row[1], row[0]))
-            value = deg if deg >= 0 else deg + 360.0
+            else:
+                deg = 90.0 - math.degrees(math.atan2(row[1], row[0]))
+                value = deg if deg >= 0 else deg + 360.0
         else:
             # Unknown aggregation. Should not have gotten this far...
             raise ValueError("Unexpected error. Aggregate type '%s'" % aggregate_type)
