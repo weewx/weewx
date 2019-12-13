@@ -26,26 +26,23 @@ from weeutil.weeutil import timestamp_to_string, to_int
 log = logging.getLogger(__name__)
 
 
-
 class IntervalError(ValueError):
     """Raised when a bad value of 'interval' is encountered."""
 
 
-#==============================================================================
+# ==============================================================================
 #                         class Manager
 # ==============================================================================
 
 class Manager(object):
-    """Manages a database table. Offers a number of convenient member
-    functions for querying and inserting data into the table. 
-    These functions encapsulate whatever sql statements are needed.
-    
-    A limitation of this implementation is that it caches the timestamps of the 
-    first and last record in the table. Normally, the caches get updated as data comes
-    in. However, if one manager is updating the table, wile another is doing
-    aggregate queries, the latter manager will be unaware of later records in
-    the database, and may choose the wrong query strategy. In this might be the case,
-    call member function _sync() before starting the query. 
+    """Manages a database table. Offers a number of convenient member functions for querying and
+    inserting data into the table. These functions encapsulate whatever sql statements are needed.
+
+    A limitation of this implementation is that it caches the timestamps of the first and last
+    record in the table. Normally, the caches get updated as data comes in. However, if one manager
+    is updating the table, while another is doing aggregate queries, the latter manager will be
+    unaware of later records in the database, and may choose the wrong query strategy. If this
+    might be the case, call member function _sync() before starting the query.
     
     USEFUL ATTRIBUTES
     
@@ -68,13 +65,11 @@ class Manager(object):
         
         connection: A weedb connection to the database to be managed.
         
-        table_name: The name of the table to be used in the database. Default
-        is 'archive'.
+        table_name: The name of the table to be used in the database. Default is 'archive'.
         
-        schema: The schema to be used. Optional. If not supplied, then an
-        exception of type weedb.ProgrammingError will be raised if the database
-        does not exist, and of type weedb.UnitializedDatabase if it exists, but
-        has not been initialized.
+        schema: The schema to be used. Optional. If not supplied, then an exception of type
+        weedb.ProgrammingError will be raised if the database does not exist, and of type
+        weedb.UnitializedDatabase if it exists, but has not been initialized.
         """
 
         self.connection = connection
@@ -91,7 +86,8 @@ class Manager(object):
             # a schema?
             if schema is None:
                 # No. Nothing to be done.
-                log.error("Cannot get columns of table %s, and no schema specified", self.table_name)
+                log.error("Cannot get columns of table %s, and no schema specified",
+                          self.table_name)
                 raise
             # Database exists, but has not been initialized. Initialize it.
             self._initialize_database(schema)
@@ -105,15 +101,30 @@ class Manager(object):
     def open(cls, database_dict, table_name='archive'):
         """Open and return a Manager or a subclass of Manager.  
         
-        database_dict: A database dictionary holding the information necessary
-        to open the database.
-        
-        table_name: The name of the table to be used in the database. Default
-        is 'archive'. """
+        database_dict: A database dictionary holding the information necessary to open the
+        database.
 
-        # This will raise a weedb.OperationalError if the database does
-        # not exist. The 'open' method we are implementing never attempts an
-        # initialization, so let it go by.
+          For example, for sqlite, it looks something like:
+            {
+               'SQLITE_ROOT' : '/home/weewx/archive',
+               'database_name' : 'weewx.sdb',
+               'driver' : 'weedb.sqlite'
+            }
+
+          For MySQL:
+            {
+              'host': 'localhost',
+              'user': 'weewx',
+              'password': 'weewx-password',
+              'database_name' : 'weeewx',
+              'driver' : 'weedb.mysql'
+            }
+
+        table_name: The name of the table to be used in the database. Default is 'archive'.
+        """
+
+        # This will raise a weedb.OperationalError if the database does not exist. The 'open'
+        # method we are implementing never attempts an initialization, so let it go by.
         connection = weedb.connect(database_dict)
 
         # Create an instance of the right class and return it:
@@ -122,23 +133,19 @@ class Manager(object):
 
     @classmethod
     def open_with_create(cls, database_dict, table_name='archive', schema=None):
-        """Open and return a Manager or a subclass of Manager, initializing
-        if necessary.  
-        
-        database_dict: A database dictionary holding the information necessary
-        to open the database.
-        
-        table_name: The name of the table to be used in the database. Default
-        is 'archive'.
-        
-        schema: The schema to be used. If not supplied, then an
-        exception of type weedb.OperationalError will be raised if the database
-        does not exist, and of type weedb.UnitializedDatabase if it exists, but
-        has not been initialized.
+        """Open and return a Manager or a subclass of Manager, initializing if necessary.
+
+        database_dict: A database dictionary holding the information necessary to open the
+        database. See the classmethod above for details.
+
+        table_name: The name of the table to be used in the database. Default is 'archive'.
+
+        schema: The schema to be used. If not supplied, then an exception of type
+        weedb.OperationalError will be raised if the database does not exist, and of type
+        weedb.UnitializedDatabase if it exists, but has not been initialized.
         """
 
-        # This will raise a weedb.OperationalError if the database does
-        # not exist. 
+        # This will raise a weedb.OperationalError if the database does not exist.
         try:
             connection = weedb.connect(database_dict)
         except weedb.OperationalError:
@@ -163,7 +170,8 @@ class Manager(object):
     @property
     def obskeys(self):
         """The list of observation types"""
-        return [obs_type for obs_type in self.sqlkeys if obs_type not in ['dateTime', 'usUnits', 'interval']]
+        return [obs_type for obs_type in self.sqlkeys
+                if obs_type not in ['dateTime', 'usUnits', 'interval']]
 
     def close(self):
         self.connection.close()
@@ -190,9 +198,8 @@ class Manager(object):
             # Old style schema:
             table_schema = schema
 
-        # List comprehension of the types, joined together with commas. Put
-        # the SQL type in backquotes, because at least one of them ('interval')
-        # is a MySQL reserved word
+        # List comprehension of the types, joined together with commas. Put the SQL type in
+        # backquotes, because at least one of them ('interval') is a MySQL reserved word
         sqltypestr = ', '.join(["`%s` %s" % _type for _type in table_schema])
 
         try:
@@ -208,9 +215,9 @@ class Manager(object):
 
     def _sync(self):
         """Resynch the internal caches."""
-        # Fetch the first row in the database to determine the unit system in
-        # use. If the database has never been used, then the unit system is
-        # still indeterminate --- set it to 'None'.
+
+        # Fetch the first row in the database to determine the unit system in use. If the database
+        # has never been used, then the unit system is still indeterminate --- set it to 'None'.
         _row = self.getSql("SELECT usUnits FROM %s LIMIT 1;" % self.table_name)
         self.std_unit_system = _row[0] if _row is not None else None
 
@@ -221,34 +228,34 @@ class Manager(object):
     def lastGoodStamp(self):
         """Retrieves the epoch time of the last good archive record.
         
-        returns: Time of the last good archive record as an epoch time, or
-        None if there are no records."""
+        returns: Time of the last good archive record as an epoch time, or None if there are no
+        records.
+        """
         _row = self.getSql("SELECT MAX(dateTime) FROM %s" % self.table_name)
         return _row[0] if _row else None
 
     def firstGoodStamp(self):
         """Retrieves earliest timestamp in the archive.
         
-        returns: Time of the first good archive record as an epoch time, or
-        None if there are no records."""
+        returns: Time of the first good archive record as an epoch time, or None if there are no
+        records.
+        """
         _row = self.getSql("SELECT MIN(dateTime) FROM %s" % self.table_name)
         return _row[0] if _row else None
 
     def addRecord(self, record_obj, accumulator=None):
         """Commit a single record or a collection of records to the archive.
         
-        record_obj: Either a data record, or an iterable that can return data
-        records. Each data record must look like a dictionary, where the keys
-        are the SQL types and the values are the values to be stored in the
-        database.
+        record_obj: Either a data record, or an iterable that can return data records. Each data
+        record must look like a dictionary, where the keys are the SQL types and the values are the
+        values to be stored in the database.
         """
 
-        # Determine if record_obj is just a single dictionary instance
-        # (in which case it will have method 'keys'). If so, wrap it in
-        # something iterable (a list):
+        # Determine if record_obj is just a single dictionary instance (in which case it will have
+        # method 'keys'). If so, wrap it in something iterable (a list):
         record_list = [record_obj] if hasattr(record_obj, 'keys') else record_obj
 
-        min_ts = None
+        min_ts = float('inf')  # A "big number"
         max_ts = 0
         with weedb.Transaction(self.connection) as cursor:
 
@@ -262,16 +269,16 @@ class Manager(object):
                     # Then add the record to the archives:
                     self._addSingleRecord(record, cursor)
 
-                    min_ts = min(min_ts, record['dateTime']) if min_ts is not None else record['dateTime']
+                    min_ts = min(min_ts, record['dateTime'])
                     max_ts = max(max_ts, record['dateTime'])
                 except (weedb.IntegrityError, weedb.OperationalError) as e:
                     log.error("Unable to add record %s to database '%s': %s",
                               weeutil.weeutil.timestamp_to_string(record['dateTime']),
                               self.database_name, e)
 
-        # Update the cached timestamps. This has to sit outside the
-        # transaction context, in case an exception occurs.
-        if self.first_timestamp is not None and min_ts is not None:
+        # Update the cached timestamps. This has to sit outside the transaction context,
+        # in case an exception occurs.
+        if self.first_timestamp is not None:
             self.first_timestamp = min(min_ts, self.first_timestamp)
         if self.last_timestamp is not None:
             self.last_timestamp = max(max_ts, self.last_timestamp)
@@ -283,13 +290,12 @@ class Manager(object):
             log.error("Archive record with null time encountered")
             raise weewx.ViolatedPrecondition("Manager record with null time encountered.")
 
-        # Check to make sure the incoming record is in the same unit
-        # system as the records already in the database:
+        # Check to make sure the incoming record is in the same unit system as the records already
+        # in the database:
         self._check_unit_system(record['usUnits'])
 
-        # Only data types that appear in the database schema can be
-        # inserted. To find them, form the intersection between the
-        # set of all record keys and the set of all sql keys
+        # Only data types that appear in the database schema can be inserted. To find them, form
+        # the intersection between the set of all record keys and the set of all sql keys
         record_key_set = set(record.keys())
         insert_key_set = record_key_set.intersection(self.sqlkeys)
         # Convert to an ordered list:
@@ -297,9 +303,8 @@ class Manager(object):
         # Get the values in the same order:
         value_list = [record[k] for k in key_list]
 
-        # This will a string of sql types, separated by commas. Because
-        # some of the weewx sql keys (notably 'interval') are reserved
-        # words in MySQL, put them in backquotes.
+        # This will a string of sql types, separated by commas. Because some of the weewx sql keys
+        # (notably 'interval') are reserved words in MySQL, put them in backquotes.
         k_str = ','.join(["`%s`" % k for k in key_list])
         # This will be a string with the correct number of placeholder
         # question marks:
@@ -315,33 +320,36 @@ class Manager(object):
         pass
 
     def genBatchRows(self, startstamp=None, stopstamp=None):
-        """Generator function that yields raw rows from the archive database
-        with timestamps within an interval.
-        
-        startstamp: Exclusive start of the interval in epoch time. If 'None',
-        then start at earliest archive record.
-        
-        stopstamp: Inclusive end of the interval in epoch time. If 'None', then
-        end at last archive record.
-        
-        yields: A list with the data records"""
+        """Generator function that yields raw rows from the archive database with timestamps within
+        an interval.
+
+        startstamp: Exclusive start of the interval in epoch time. If 'None', then start at
+        earliest archive record.
+
+        stopstamp: Inclusive end of the interval in epoch time. If 'None', then end at last archive
+        record.
+
+        yields: A list with the data records. """
 
         with self.connection.cursor() as _cursor:
 
             if startstamp is None:
                 if stopstamp is None:
-                    _gen = _cursor.execute("SELECT * FROM %s ORDER BY dateTime ASC" % self.table_name)
+                    _gen = _cursor.execute(
+                        "SELECT * FROM %s ORDER BY dateTime ASC" % self.table_name)
                 else:
                     _gen = _cursor.execute("SELECT * FROM %s WHERE "
-                                           "dateTime <= ? ORDER BY dateTime ASC" % self.table_name, (stopstamp,))
+                                           "dateTime <= ? ORDER BY dateTime ASC" % self.table_name,
+                                           (stopstamp,))
             else:
                 if stopstamp is None:
                     _gen = _cursor.execute("SELECT * FROM %s WHERE "
-                                           "dateTime > ? ORDER BY dateTime ASC" % self.table_name, (startstamp,))
+                                           "dateTime > ? ORDER BY dateTime ASC" % self.table_name,
+                                           (startstamp,))
                 else:
                     _gen = _cursor.execute("SELECT * FROM %s WHERE "
-                                           "dateTime > ? AND dateTime <= ? ORDER BY dateTime ASC" % self.table_name,
-                                           (startstamp, stopstamp))
+                                           "dateTime > ? AND dateTime <= ? ORDER BY dateTime ASC"
+                                           % self.table_name, (startstamp, stopstamp))
 
             _last_time = 0
             for _row in _gen:
@@ -353,17 +361,16 @@ class Manager(object):
                 yield _row
 
     def genBatchRecords(self, startstamp=None, stopstamp=None):
-        """Generator function that yields records with timestamps within an
-        interval.
-        
-        startstamp: Exclusive start of the interval in epoch time. If 'None',
-        then start at earliest archive record.
-        
-        stopstamp: Inclusive end of the interval in epoch time. If 'None', then
-        end at last archive record.
-        
-        yields: A dictionary where key is the observation type (eg, 'outTemp')
-        and the value is the observation value"""
+        """Generator function that yields records with timestamps within an interval.
+
+        startstamp: Exclusive start of the interval in epoch time. If 'None', then start at
+        earliest archive record.
+
+        stopstamp: Inclusive end of the interval in epoch time. If 'None', then end at last archive
+        record.
+
+        yields: A dictionary where key is the observation type (eg, 'outTemp') and the value is the
+        observation value. """
 
         for _row in self.genBatchRows(startstamp, stopstamp):
             yield dict(list(zip(self.sqlkeys, _row))) if _row else None
@@ -387,7 +394,8 @@ class Manager(object):
                                 "ORDER BY ABS(dateTime-?) ASC LIMIT 1" % self.table_name,
                                 (time_start_ts, time_stop_ts, timestamp))
             else:
-                _cursor.execute("SELECT * FROM %s WHERE dateTime=?" % self.table_name, (timestamp,))
+                _cursor.execute("SELECT * FROM %s WHERE dateTime=?"
+                                % self.table_name, (timestamp,))
             _row = _cursor.fetchone()
             return dict(list(zip(self.sqlkeys, _row))) if _row else None
 
@@ -433,10 +441,12 @@ class Manager(object):
                       aggregate_interval=None):
         """ OBSOLETE. Use weewx.xtypes.get_series() instead """
 
-        return weewx.xtypes.get_series(obs_type, timespan, self, aggregate_type, aggregate_interval)
+        return weewx.xtypes.get_series(obs_type, timespan, self,
+                                       aggregate_type, aggregate_interval)
 
     def _check_unit_system(self, unit_system):
-        """ Check to make sure a unit system is the same as what's already in use in the database."""
+        """Check to make sure a unit system is the same as what's already in use in the database.
+        """
 
         if self.std_unit_system is not None:
             if unit_system != self.std_unit_system:
@@ -445,8 +455,8 @@ class Manager(object):
                                       (unit_system, self.table_name, self.database_name,
                                        self.std_unit_system))
         else:
-            # This is the first record. Remember the unit system to
-            # check against subsequent records:
+            # This is the first record. Remember the unit system to check against subsequent
+            # records:
             self.std_unit_system = unit_system
 
 
@@ -459,10 +469,10 @@ def reconfig(old_db_dict, new_db_dict, new_unit_system=None, new_schema=None):
             new_schema = schemas.wview.schema
         with Manager.open_with_create(new_db_dict, schema=new_schema) as new_archive:
             # Wrap the input generator in a unit converter.
-            record_generator = weewx.units.GenWithConvert(old_archive.genBatchRecords(), new_unit_system)
+            record_generator = weewx.units.GenWithConvert(old_archive.genBatchRecords(),
+                                                          new_unit_system)
 
-            # This is very fast because it is done in a single transaction
-            # context:
+            # This is very fast because it is done in a single transaction context:
             new_archive.addRecord(record_generator)
 
 
@@ -472,7 +482,8 @@ def reconfig(old_db_dict, new_db_dict, new_unit_system=None, new_schema=None):
 
 class DBBinder(object):
     """Given a binding name, it returns the matching database as a managed object. Caches
-    results."""
+    results.
+    """
 
     def __init__(self, config_dict):
         """ Initialize a DBBinder object.
@@ -540,17 +551,15 @@ default_binding_dict = {'database': 'archive_sqlite',
 
 
 def get_database_dict_from_config(config_dict, database):
-    """Return a database dictionary holding the information necessary
-    to open a database. Searches top-level stanzas for any missing
-    information about a database.
-    
-    config_dict: The configuration dictionary.
-                               
-    database: The database whose database dict is to be
-    retrieved (example: 'archive_sqlite')
+    """Return a database dictionary holding the information necessary to open a database. Searches
+    top-level stanzas for any missing information about a database.
 
-    Returns: a database dictionary, with everything needed to pass on to
-    a Manager or weedb in order to open a database.
+    config_dict: The configuration dictionary.
+
+    database: The database whose database dict is to be retrieved (example: 'archive_sqlite')
+
+    Returns: a database dictionary, with everything needed to pass on to a Manager or weedb in
+    order to open a database.
     
     Example. Given a configuration file snippet that looks like:
     
@@ -589,7 +598,8 @@ def get_database_dict_from_config(config_dict, database):
         # Augment any missing information in the database dictionary with
         # the top-level stanza
         if database_type in config_dict['DatabaseTypes']:
-            weeutil.config.conditional_merge(database_dict, config_dict['DatabaseTypes'][database_type])
+            weeutil.config.conditional_merge(database_dict,
+                                             config_dict['DatabaseTypes'][database_type])
         else:
             raise weewx.UnknownDatabaseType('database_type')
 
@@ -597,9 +607,8 @@ def get_database_dict_from_config(config_dict, database):
 
 
 #
-# A "manager dict" is everything needed to open up a manager. It is basically
-# the same as a binding dictionary, except that the database has been replaced
-# with a database dictionary.
+# A "manager dict" is everything needed to open up a manager. It is basically the same as a binding
+# dictionary, except that the database has been replaced with a database dictionary.
 #
 # As such, it includes keys:
 #
@@ -611,8 +620,7 @@ def get_database_dict_from_config(config_dict, database):
 #
 def get_manager_dict_from_config(config_dict, data_binding,
                                  default_binding_dict=default_binding_dict):
-    # Start with a copy of the bindings in the config dictionary (we
-    # will be adding to it):
+    # Start with a copy of the bindings in the config dictionary (we will be adding to it):
     try:
         manager_dict = dict(config_dict['DataBindings'][data_binding])
     except KeyError as e:
@@ -630,16 +638,16 @@ def get_manager_dict_from_config(config_dict, data_binding,
         except KeyError as e:
             raise weewx.UnknownDatabase("Unknown database '%s'" % e)
 
-    # The schema may be specified as a string, in which case we resolve the
-    # python object to which it refers. Or it may be specified as a dict with
-    # field_name=sql_type pairs.
+    # The schema may be specified as a string, in which case we resolve the python object to which
+    # it refers. Or it may be specified as a dict with field_name=sql_type pairs.
     schema_name = manager_dict.get('schema')
     if schema_name is None:
         manager_dict['schema'] = None
     elif isinstance(schema_name, dict):
         # Schema is a ConfigObj section (that is, a dictionary). Retrieve the
         # elements of the schema in order:
-        manager_dict['schema'] = [(col_name, manager_dict['schema'][col_name]) for col_name in manager_dict['schema']]
+        manager_dict['schema'] = [(col_name, manager_dict['schema'][col_name]) for col_name in
+                                  manager_dict['schema']]
     else:
         # Schema is a string, with the name of the schema object
         manager_dict['schema'] = weeutil.weeutil.get_object(schema_name)
@@ -693,19 +701,25 @@ def drop_database_with_config(config_dict, data_binding,
     drop_database(manager_dict)
 
 
+def show_progress(nrec, last_time):
+    """Utility function to show our progress while backfilling"""
+    print("Records processed: %d; Last date: %s\r"
+          % (nrec, weeutil.weeutil.timestamp_to_string(last_time)), end='', file=sys.stdout)
+    sys.stdout.flush()
+
+
 # ===============================================================================
 #                        Class DaySummaryManager
 #
 #     Adds daily summaries to the database.
 # 
-#     This class specializes method _addSingleRecord so that it adds
-#     the data to a daily summary, as well as the regular archive table.
-#     
-#     Note that a date does not include midnight --- that belongs
-#     to the previous day. That is because a data record archives
-#     the *previous* interval. So, for the date 5-Oct-2008 with
-#     a five minute archive interval, the statistics would include
-#     the following records (local time):
+#     This class specializes method _addSingleRecord so that it adds the data to a daily summary,
+#     as well as the regular archive table.
+#
+#     Note that a date does not include midnight --- that belongs to the previous day. That is
+#     because a data record archives the *previous* interval. So, for the date 5-Oct-2008 with a
+#     five minute archive interval, the statistics would include the following records (local
+#     time):
 #       5-Oct-2008 00:05:00
 #       5-Oct-2008 00:10:00
 #       5-Oct-2008 00:15:00
@@ -717,31 +731,25 @@ def drop_database_with_config(config_dict, data_binding,
 #
 # ===============================================================================
 
-def show_progress(nrec, last_time):
-    """Utility function to show our progress while backfilling"""
-    print("Records processed: %d; Last date: %s\r" %
-          (nrec, weeutil.weeutil.timestamp_to_string(last_time)), end='', file=sys.stdout)
-    sys.stdout.flush()
-
-
 class DaySummaryManager(Manager):
     """Manage a daily statistical summary. 
     
-    The daily summary consists of a separate table for each type. The columns 
-    of each table are things like min, max, the timestamps for min and max, 
-    sum and sumtime. The values sum and sumtime are kept to make it easy to
-    calculate averages for different time periods.
-    
-    For example, for type 'outTemp' (outside temperature), there is 
-    a table of name 'archive_day_outTemp' with the following column names:
-    
+    The daily summary consists of a separate table for each type. The columns of each table are
+    things like min, max, the timestamps for min and max, sum and sumtime. The values sum and
+    sumtime are kept to make it easy to calculate averages for different time periods.
+
+    For example, for type 'outTemp' (outside temperature), there is a table of name
+    'archive_day_outTemp' with the following column names:
+
         dateTime, min, mintime, max, maxtime, sum, count, wsum, sumtime
-    
-    wsum is the "Weighted sum," that is, the sum weighted by the archive interval.
-    sumtime is the sum of the archive intervals.
+
+    wsum is the "Weighted sum," that is, the sum weighted by the archive interval. sumtime is the
+    sum of the archive intervals.
         
     In addition to all the tables for each type, there is one additional table called
-    'archive_day__metadata', which currently holds the time of the last update. """
+    'archive_day__metadata', which currently holds the version number and the time of the last
+    update.
+    """
 
     version = "2.0"
 
@@ -778,22 +786,21 @@ class DaySummaryManager(Manager):
     }
 
     # SQL statements used by the meta data in the daily summaries.
-    meta_create_str = """CREATE TABLE %s_day__metadata (name CHAR(20) NOT NULL UNIQUE PRIMARY KEY, value TEXT);"""
-    meta_replace_str = """REPLACE INTO %s_day__metadata VALUES(?, ?)"""
-    meta_select_str = """SELECT value FROM %s_day__metadata WHERE name=?"""
+    meta_create_str = "CREATE TABLE %s_day__metadata (name CHAR(20) NOT NULL " \
+                      "UNIQUE PRIMARY KEY, value TEXT);"
+    meta_replace_str = "REPLACE INTO %s_day__metadata VALUES(?, ?)"
+    meta_select_str = "SELECT value FROM %s_day__metadata WHERE name=?"
 
     def __init__(self, connection, table_name='archive', schema=None):
         """Initialize an instance of DaySummaryManager
         
         connection: A weedb connection to the database to be managed.
         
-        table_name: The name of the table to be used in the database. Default
-        is 'archive'.
-        
-        schema: The schema to be used. Optional. If not supplied, then an
-        exception of type weedb.OperationalError will be raised if the database
-        does not exist, and of type weedb.Uninitialized if it exists, but
-        has not been initialized.
+        table_name: The name of the table to be used in the database. Default is 'archive'.
+
+        schema: The schema to be used. Optional. If not supplied, then an exception of type
+        weedb.OperationalError will be raised if the database does not exist, and of type
+        weedb.Uninitialized if it exists, but has not been initialized.
         """
         # Initialize my superclass:
         super(DaySummaryManager, self).__init__(connection, table_name, schema)
@@ -806,9 +813,10 @@ class DaySummaryManager(Manager):
         # Get a list of all the observation types which have daily summaries
         all_tables = self.connection.tables()
         prefix = "%s_day_" % self.table_name
-        Nprefix = len(prefix)
+        n_prefix = len(prefix)
         meta_name = '%s_day__metadata' % self.table_name
-        self.daykeys = [x[Nprefix:] for x in all_tables if (x.startswith(prefix) and x != meta_name)]
+        self.daykeys = [x[n_prefix:] for x in all_tables
+                        if (x.startswith(prefix) and x != meta_name)]
         self.version = self._read_metadata('Version')
         log.debug('Daily summary version is %s', self.version)
 
@@ -824,12 +832,13 @@ class DaySummaryManager(Manager):
             # Uninitialized, but no schema was supplied. Raise an exception
             raise weedb.OperationalError("No day summary schema for table '%s' in database '%s'"
                                          % (self.table_name, self.connection.database_name))
-        # See if we have new-style daily summaries, or old-style. Old-style will raise an exception.
-        # Be prepared to catch it.
+        # See if we have new-style daily summaries, or old-style. Old-style will raise an
+        # exception. Be prepared to catch it.
         try:
             day_summaries_schemas = schema['day_summaries']
         except TypeError:
-            # Old-style schema. Include a daily summary for each observation type in the archive table.
+            # Old-style schema. Include a daily summary for each observation type in the archive
+            # table.
             day_summaries_schemas = [(e, 'scalar') for e in self.sqlkeys if
                                      e not in ('dateTime', 'usUnits', 'interval')]
             import weewx.wxmanager
@@ -855,15 +864,16 @@ class DaySummaryManager(Manager):
             log.info("Created daily summary tables")
 
     def _addSingleRecord(self, record, cursor):
-        """Specialized version that updates the daily summaries, as well as the 
-        main archive table."""
+        """Specialized version that updates the daily summaries, as well as the main archive
+        table.
+        """
 
         # First let my superclass handle adding the record to the main archive table:
         super(DaySummaryManager, self)._addSingleRecord(record, cursor)
 
         # Get the start of day for the record:        
         _sod_ts = weeutil.weeutil.startOfArchiveDay(record['dateTime'])
-        
+
         # Get the weight. If the value for 'interval' is bad, an exception will be raised.
         try:
             _weight = self._calc_weight(record)
@@ -901,7 +911,9 @@ class DaySummaryManager(Manager):
         return obs_type in self.daykeys
 
     def has_data(self, obs_type, timespan):
-        """Checks whether the observation type exists in the database and whether it has any data."""
+        """Checks whether the observation type exists in the database and whether it has any
+        data.
+        """
 
         return self.exists(obs_type) and self.getAggregate(timespan, obs_type, 'count')[0] != 0
 
@@ -910,26 +922,24 @@ class DaySummaryManager(Manager):
 
         """Fill the daily summaries from an archive database.
           
-        Normally, the daily summaries get filled by LOOP packets (to get maximum time
-        resolution), but if the database gets corrupted, or if a new user is
-        starting up with imported wview data, it's necessary to recreate it from
-        straight archive data. The Hi/Lows will all be there, but the times won't be
-        any more accurate than the archive period.
-          
-        To help prevent database errors for large archives database transactions 
-        are limited to trans_days days of archive data. This is a trade-off between 
-        speed and memory usage.
-          
-        start_d: The first day to be included, specified as a datetime.date object
-        [Optional. Default is to start with the first datum in the archive.]
-          
-        stop_d: The last day to be included, specified as a datetime.date object
-        [Optional. Default is to include the date of the last archive record.]
+        Normally, the daily summaries get filled by LOOP packets (to get maximum time resolution),
+        but if the database gets corrupted, or if a new user is starting up with imported wview
+        data, it's necessary to recreate it from straight archive data. The Hi/Lows will all be
+        there, but the times won't be any more accurate than the archive period.
+
+        To help prevent database errors for large archives database transactions are limited to
+        trans_days days of archive data. This is a trade-off between speed and memory usage.
+
+        start_d: The first day to be included, specified as a datetime.date object [Optional.
+        Default is to start with the first datum in the archive.]
+
+        stop_d: The last day to be included, specified as a datetime.date object [Optional. Default
+        is to include the date of the last archive record.]
           
         progress_fn: This function will be called after processing every 1000 records.
           
-        trans_day: Number of days of archive data to be used for each daily
-        summaries database transaction. [Optional. Default is 5.] 
+        trans_day: Number of days of archive data to be used for each daily summaries database
+        transaction. [Optional. Default is 5.]
           
         returns: A 2-way tuple (nrecs, ndays) where 
           nrecs is the number of records backfilled;
@@ -944,7 +954,8 @@ class DaySummaryManager(Manager):
         #                                                be on day boundary. Restart from there.
         # lastUpdate==lastRecord None        None        No action.
         #          ""            X           None        Rebuild from X to end
-        #          ""            None        Y           Rebuild from beginning through Y, inclusively
+        #          ""            None        Y           Rebuild from beginning through Y,
+        #                                                inclusively
         #          ""            X           Y           Rebuild from X through Y, inclusively
         #
         # Definitions:
@@ -956,8 +967,8 @@ class DaySummaryManager(Manager):
 
         log.info("Starting backfill of daily summaries")
 
-        firstRecord = self.firstGoodStamp()
-        if firstRecord is None:
+        first_record = self.firstGoodStamp()
+        if first_record is None:
             # Nothing in the archive database, so there's nothing to do.
             return 0, 0
 
@@ -970,9 +981,10 @@ class DaySummaryManager(Manager):
             # We are either building the daily summary from scratch, or restarting from
             # an aborted build. Must finish the rebuild first.
             if start_d or stop_d:
-                raise weewx.ViolatedPrecondition("Daily summaries not complete. Try again without from/to dates.")
+                raise weewx.ViolatedPrecondition(
+                    "Daily summaries not complete. Try again without from/to dates.")
 
-            start_ts = lastUpdate or firstRecord
+            start_ts = lastUpdate or first_record
             start_d = datetime.date.fromtimestamp(start_ts)
             stop_d = datetime.date.fromtimestamp(lastRecord)
 
@@ -983,7 +995,7 @@ class DaySummaryManager(Manager):
                 # Nothing to do
                 return 0, 0
             if start_d is None:
-                start_d = datetime.date.fromtimestamp(firstRecord)
+                start_d = datetime.date.fromtimestamp(first_record)
             if stop_d is None:
                 stop_d = datetime.date.fromtimestamp(lastRecord)
         else:
@@ -1003,7 +1015,8 @@ class DaySummaryManager(Manager):
                 # Go through all the archive records in the time span, adding them to the
                 # daily summaries
                 start_batch = time.mktime(start_d.timetuple())
-                stop_batch = time.mktime((stop_transaction + datetime.timedelta(days=1)).timetuple())
+                stop_batch = time.mktime(
+                    (stop_transaction + datetime.timedelta(days=1)).timetuple())
                 for rec in self.genBatchRecords(start_batch, stop_batch):
                     # If this is the very first record, fetch a new accumulator
                     if not day_accum:
@@ -1033,12 +1046,14 @@ class DaySummaryManager(Manager):
                         # try again
                         day_accum.addRecord(rec, weight=weight)
 
-                    lastUpdate = max(lastUpdate, rec['dateTime']) if lastUpdate else rec['dateTime']
+                    lastUpdate = max(lastUpdate, rec['dateTime']) \
+                        if lastUpdate else rec['dateTime']
                     nrecs += 1
                     if progress_fn and nrecs % 1000 == 0:
                         progress_fn(nrecs, rec['dateTime'])
 
-                # We're done with this transaction. Record the daily summary for the last day unless it is empty
+                # We're done with this transaction. Record the daily summary for the last day
+                # unless it is empty
                 if day_accum and not day_accum.isEmpty:
                     self._set_day_summary(day_accum, None, cursor)
                     ndays += 1
@@ -1051,7 +1066,8 @@ class DaySummaryManager(Manager):
 
         tdiff = time.time() - t1
         if nrecs:
-            log.info("Processed %d records to backfill %d day summaries in %.2f seconds", nrecs, ndays, tdiff)
+            log.info("Processed %d records to backfill %d day summaries in %.2f seconds", nrecs,
+                     ndays, tdiff)
         else:
             log.info("Daily summaries up to date")
 
@@ -1060,9 +1076,11 @@ class DaySummaryManager(Manager):
     # --------------------------- UTILITY FUNCTIONS -----------------------------------
 
     def _get_day_summary(self, sod_ts, cursor=None):
-        """Return an instance of an appropriate accumulator, initialized to a given day's statistics.
+        """Return an instance of an appropriate accumulator, initialized to a given day's
+        statistics.
 
-        sod_ts: The timestamp of the start-of-day of the desired day."""
+        sod_ts: The timestamp of the start-of-day of the desired day.
+        """
 
         # Get the TimeSpan for the day starting with sod_ts:
         _timespan = weeutil.weeutil.archiveDaySpan(sod_ts, 0)
@@ -1073,11 +1091,12 @@ class DaySummaryManager(Manager):
         _cursor = cursor or self.connection.cursor()
 
         try:
-            # For each observation type, execute the SQL query and hand the results on
-            # to the accumulator.
+            # For each observation type, execute the SQL query and hand the results on to the
+            # accumulator.
             for _day_key in self.daykeys:
-                _cursor.execute("SELECT * FROM %s_day_%s WHERE dateTime = ?" % (self.table_name, _day_key),
-                                (_day_accum.timespan.start,))
+                _cursor.execute(
+                    "SELECT * FROM %s_day_%s WHERE dateTime = ?" % (self.table_name, _day_key),
+                    (_day_accum.timespan.start,))
                 _row = _cursor.fetchone()
                 # If the date does not exist in the database yet then _row will be None.
                 _stats_tuple = _row[1:] if _row is not None else None
@@ -1111,7 +1130,8 @@ class DaySummaryManager(Manager):
             _write_tuple = (_sod,) + day_accum[_summary_type].getStatsTuple()
             # ... and an appropriate SQL command with the correct number of question marks ...
             _qmarks = ','.join(len(_write_tuple) * '?')
-            _sql_replace_str = "REPLACE INTO %s_day_%s VALUES(%s)" % (self.table_name, _summary_type, _qmarks)
+            _sql_replace_str = "REPLACE INTO %s_day_%s VALUES(%s)" % (
+                self.table_name, _summary_type, _qmarks)
             # ... and write to the database. In case the type doesn't appear in the database,
             # be prepared to catch an exception:
             try:
@@ -1127,7 +1147,8 @@ class DaySummaryManager(Manager):
         if 'interval' not in record:
             raise ValueError("Missing value for record field 'interval'")
         elif record['interval'] <= 0:
-            raise IntervalError("Non-positive value for record field 'interval': %s" % (record['interval'], ))
+            raise IntervalError(
+                "Non-positive value for record field 'interval': %s" % (record['interval'],))
         weight = 60.0 * record['interval'] if self.version >= '2.0' else 1.0
         return weight
 
@@ -1173,7 +1194,8 @@ class DaySummaryManager(Manager):
                       self.connection.database_name, e)
             raise
         else:
-            log.info("Dropped daily summary tables from database '%s'", self.connection.database_name)
+            log.info("Dropped daily summary tables from database '%s'",
+                     self.connection.database_name)
 
 
 if __name__ == '__main__':

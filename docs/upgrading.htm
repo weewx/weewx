@@ -221,88 +221,13 @@ sudo apt-get install weewx</pre>
             For the most part, V4.0 is backwards compatible with previous versions.
         </p>
 
-        <h3>Python versions</h3>
         <p>
             Support for Python 2.5 and 2.6 has been dropped. It has now been well over 10 years since these versions
-            were introduced, and 6+ years since they were supported by the Python Software Foundation.
+            were introduced, and 6+ years since they were supported by the Python Software Foundation. If you are
+            using Python 2.5 or 2.6, then you should either upgrade your copy of Python, or stay with your old
+            version of WeeWX.
         </p>
 
-        <h3>Specifying schemas</h3>
-
-        <p>
-            There is one small exception, which
-            could conceivably affect extension writers: V4.0 uses a slightly different mechanism for specifying schemas.
-            For example, here is what the wview schema looked like under earlier versions, and what it looks like under
-            V4.0:
-        </p>
-
-        <table>
-            <tr class="first_row">
-                <td style='width:50%'>3.9 and earlier</td>
-                <td>4.0</td>
-            </tr>
-            <tr>
-                <td>
-                    <pre class='tty'><span class="changed">schema</span> = [('dateTime',             'INTEGER NOT NULL UNIQUE PRIMARY KEY'),
-          ('usUnits',              'INTEGER NOT NULL'),
-          ('interval',             'INTEGER NOT NULL'),
-          ('barometer',            'REAL'),
-          ('pressure',             'REAL'),
-
-                        ...
-
-          ('outTempBatteryStatus', 'REAL'),
-          ('inTempBatteryStatus',  'REAL')]
-</pre>
-                </td>
-                <td>
-                    <pre class='tty'><span class="changed">table</span> = [('dateTime',             'INTEGER NOT NULL UNIQUE PRIMARY KEY'),
-         ('usUnits',              'INTEGER NOT NULL'),
-         ('interval',             'INTEGER NOT NULL'),
-         ('barometer',            'REAL'),
-         ('pressure',             'REAL'),
-
-                        ...
-
-         ('outTempBatteryStatus', 'REAL'),
-         ('inTempBatteryStatus',  'REAL')]
-
-<span class="added"># Schema to be used for the daily summaries. The default is to include all the observation types in the table as
-# 'scalar' types, plus one for 'wind' as a vector type.
-day_summaries = [(e[0], 'SCALAR') for e in table if e[0] not in ('dateTime', 'usUnits', 'interval')]\
-                + [('wind', 'VECTOR')]
-
-schema = {
-    'table': table,
-    'day_summaries' : day_summaries
-}
-</span></pre>
-                </td>
-            </tr>
-        </table>
-        <p>
-            In earlier versions, only the schema for the main archive table was specified. The schema for the
-            daily summary was inferred from it. If the daily summaries had anything different, the database manager
-            class <span class="code">weewx.manager.DayManager</span> could be subclassed, and the changes made there.
-        </p>
-        <p>
-            With Version 4.0, the schema for the daily summaries is explicit, making it easier to modify it.
-        </p>
-        <p>
-            Most users should be unaffected for two reasons:
-        </p>
-        <ol>
-            <li>
-                Schemas are only used when the database is created. By definition, users who are upgrading
-                should have old databases and will not be making use of schemas.
-            </li>
-            <li>
-                The V4.0 database manager class knows how to recognize the old way of specifying schemas provided
-                they are not too exotic. The one narrow exception is if you subclassed
-                <span class="code">weewx.manager.DayManager</span> and added a vector type (like wind) and named
-                it something other than <span class="code">wind</span>.
-            </li>
-        </ol>
 
         <h2>From V3.8 or earlier</h2>
 

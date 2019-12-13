@@ -25,27 +25,34 @@ class XType(object):
     def get_scalar(self, obs_type, record, db_manager=None):
         """Calculate a scalar. Specializing versions should raise...
         
-        - an exception of type `weewx.UnknownType`, if the type `obs_type` is unknown to the function.
-        - an exception of type `weewx.CannotCalculate` if the type is known to the function, but all the information
-          necessary to calculate the type is not there."""
+        - an exception of type `weewx.UnknownType`, if the type `obs_type` is unknown to the
+          function.
+        - an exception of type `weewx.CannotCalculate` if the type is known to the function, but
+          all the information necessary to calculate the type is not there.
+          """
         raise weewx.UnknownType
 
-    def get_series(self, obs_type, timespan, db_manager, aggregate_type=None, aggregate_interval=None):
+    def get_series(self, obs_type, timespan, db_manager, aggregate_type=None,
+                   aggregate_interval=None):
         """Calculate a series, possibly with aggregation. Specializing versions should raise...
 
-        - an exception of type `weewx.UnknownType`, if the type `obs_type` is unknown to the function.
-        - an exception of type `weewx.CannotCalculate` if the type is known to the function, but all the information
-          necessary to calculate the series is not there."""
+        - an exception of type `weewx.UnknownType`, if the type `obs_type` is unknown to the
+          function.
+        - an exception of type `weewx.CannotCalculate` if the type is known to the function, but
+          all the information necessary to calculate the series is not there.
+          """
         raise weewx.UnknownType
 
     def get_aggregate(self, obs_type, timespan, aggregate_type, db_manager, **option_dict):
         """Calculate an aggregation. Specializing versions should raise...
         
-        - an exception of type `weewx.UnknownType`, if the type `obs_type` is unknown to the function.
+        - an exception of type `weewx.UnknownType`, if the type `obs_type` is unknown to the
+          function.
         - an exception of type `weewx.UnknownAggregation` if the aggregation type `aggregate_type` 
           is unknown to the function.
-        - an exception of type `weewx.CannotCalculate` if the type is known to the function, but all the information
-          necessary to calculate the type is not there."""
+        - an exception of type `weewx.CannotCalculate` if the type is known to the function, but
+          all the information necessary to calculate the type is not there.
+          """
         raise weewx.UnknownAggregation
 
     def shut_down(self):
@@ -75,7 +82,8 @@ def get_series(obs_type, timespan, db_manager, aggregate_type=None, aggregate_in
     for xtype in xtypes:
         try:
             # Try this function. It will raise an exception if it does not know about the type.
-            return xtype.get_series(obs_type, timespan, db_manager, aggregate_type, aggregate_interval)
+            return xtype.get_series(obs_type, timespan, db_manager, aggregate_type,
+                                    aggregate_interval)
         except weewx.UnknownType:
             # This function does not know about the type. Move on to the next one.
             pass
@@ -88,8 +96,10 @@ def get_aggregate(obs_type, timespan, aggregate_type, db_manager, **option_dict)
     # Search the list, looking for a get_aggregate() method that does not raise an exception
     for xtype in xtypes:
         try:
-            # Try this function. It will raise an exception if it doesn't know about the type of aggregation.
-            return xtype.get_aggregate(obs_type, timespan, aggregate_type, db_manager, **option_dict)
+            # Try this function. It will raise an exception if it doesn't know about the type of
+            # aggregation.
+            return xtype.get_aggregate(obs_type, timespan, aggregate_type, db_manager,
+                                       **option_dict)
         except (weewx.UnknownAggregation, weewx.UnknownType):
             pass
     raise weewx.UnknownAggregation("%s('%s')" % (aggregate_type, obs_type))
@@ -106,8 +116,8 @@ class ArchiveTable(XType):
     def get_series(obs_type, timespan, db_manager, aggregate_type=None, aggregate_interval=None):
         """Get a series, possibly with aggregation, from the main archive database.
 
-        The general strategy is that if aggregation is asked for, chop the series up into separate chunks,
-        calculating the aggregate for each chunk. Then assemble the results.
+        The general strategy is that if aggregation is asked for, chop the series up into separate
+        chunks, calculating the aggregate for each chunk. Then assemble the results.
 
         If no aggregation is called for, just return the data directly out of the database.
         """
@@ -131,7 +141,8 @@ class ArchiveTable(XType):
                 if unit:
                     # It's OK if the unit is unknown (=None).
                     if agg_vt[1] is not None and (unit != agg_vt[1] or unit_group != agg_vt[2]):
-                        raise weewx.UnsupportedFeature("Cannot change unit groups within an aggregation.")
+                        raise weewx.UnsupportedFeature("Cannot change unit groups "
+                                                       "within an aggregation.")
                 else:
                     unit, unit_group = agg_vt[1], agg_vt[2]
                 start_vec.append(stamp.start)
@@ -161,13 +172,15 @@ class ArchiveTable(XType):
 
                 if std_unit_system:
                     if std_unit_system != unit_system:
-                        raise weewx.UnsupportedFeature("Unit type cannot change within an aggregation interval.")
+                        raise weewx.UnsupportedFeature("Unit type cannot change "
+                                                       "within an aggregation interval.")
                 else:
                     std_unit_system = unit_system
                 start_vec.append(timestamp - interval * 60)
                 stop_vec.append(timestamp)
                 data_vec.append(value)
-            unit, unit_group = weewx.units.getStandardUnitType(std_unit_system, obs_type, aggregate_type)
+            unit, unit_group = weewx.units.getStandardUnitType(std_unit_system, obs_type,
+                                                               aggregate_type)
 
         return (ValueTuple(start_vec, 'unix_epoch', 'group_time'),
                 ValueTuple(stop_vec, 'unix_epoch', 'group_time'),
@@ -176,34 +189,45 @@ class ArchiveTable(XType):
     # Set of SQL statements to be used for calculating aggregates from the main archive table.
     agg_sql_dict = {
         'diff': "SELECT (b.%(obs_type)s - a.%(obs_type)s) FROM archive a, archive b "
-                "WHERE b.dateTime = (SELECT MAX(dateTime) FROM archive WHERE dateTime <= %(stop)s) "
-                "AND a.dateTime = (SELECT MIN(dateTime) FROM archive WHERE dateTime >= %(start)s);",
+                "WHERE b.dateTime = (SELECT MAX(dateTime) FROM archive "
+                "WHERE dateTime <= %(stop)s) "
+                "AND a.dateTime = (SELECT MIN(dateTime) FROM archive "
+                "WHERE dateTime >= %(start)s);",
         'first': "SELECT %(obs_type)s FROM %(table_name)s "
                  "WHERE dateTime = (SELECT MIN(dateTime) FROM %(table_name)s "
-                 "WHERE dateTime > %(start)s AND dateTime <= %(stop)s  AND %(obs_type)s IS NOT NULL)",
+                 "WHERE dateTime > %(start)s AND dateTime <= %(stop)s  "
+                 "AND %(obs_type)s IS NOT NULL)",
         'firsttime': "SELECT MIN(dateTime) FROM %(table_name)s "
-                     "WHERE dateTime > %(start)s AND dateTime <= %(stop)s  AND %(obs_type)s IS NOT NULL",
+                     "WHERE dateTime > %(start)s AND dateTime <= %(stop)s  "
+                     "AND %(obs_type)s IS NOT NULL",
         'last': "SELECT %(obs_type)s FROM %(table_name)s "
                 "WHERE dateTime = (SELECT MAX(dateTime) FROM %(table_name)s "
-                "WHERE dateTime > %(start)s AND dateTime <= %(stop)s  AND %(obs_type)s IS NOT NULL)",
+                "WHERE dateTime > %(start)s AND dateTime <= %(stop)s  "
+                "AND %(obs_type)s IS NOT NULL)",
         'lasttime': "SELECT MAX(dateTime) FROM %(table_name)s "
-                    "WHERE dateTime > %(start)s AND dateTime <= %(stop)s  AND %(obs_type)s IS NOT NULL",
+                    "WHERE dateTime > %(start)s AND dateTime <= %(stop)s  "
+                    "AND %(obs_type)s IS NOT NULL",
         'maxtime': "SELECT dateTime FROM %(table_name)s "
                    "WHERE dateTime > %(start)s AND dateTime <= %(stop)s AND "
                    "%(obs_type)s = (SELECT MAX(%(obs_type)s) FROM %(table_name)s "
-                   "WHERE dateTime > %(start)s and dateTime <= %(stop)s) AND %(obs_type)s IS NOT NULL",
+                   "WHERE dateTime > %(start)s and dateTime <= %(stop)s) "
+                   "AND %(obs_type)s IS NOT NULL",
         'mintime': "SELECT dateTime FROM %(table_name)s "
                    "WHERE dateTime > %(start)s AND dateTime <= %(stop)s AND "
                    "%(obs_type)s = (SELECT MIN(%(obs_type)s) FROM %(table_name)s "
-                   "WHERE dateTime > %(start)s and dateTime <= %(stop)s) AND %(obs_type)s IS NOT NULL",
+                   "WHERE dateTime > %(start)s and dateTime <= %(stop)s) "
+                   "AND %(obs_type)s IS NOT NULL",
         'tderiv': "SELECT (b.%(obs_type)s - a.%(obs_type)s) / (b.dateTime-a.dateTime) "
                   "FROM archive a, archive b "
-                  "WHERE b.dateTime = (SELECT MAX(dateTime) FROM archive WHERE dateTime <= %(stop)s) "
-                  "AND a.dateTime = (SELECT MIN(dateTime) FROM archive WHERE dateTime >= %(start)s);",
+                  "WHERE b.dateTime = (SELECT MAX(dateTime) FROM archive "
+                  "WHERE dateTime <= %(stop)s) "
+                  "AND a.dateTime = (SELECT MIN(dateTime) FROM archive "
+                  "WHERE dateTime >= %(start)s);",
     }
 
     simple_agg_sql = "SELECT %(aggregate_type)s(%(obs_type)s) FROM %(table_name)s " \
-                     "WHERE dateTime > %(start)s AND dateTime <= %(stop)s AND %(obs_type)s IS NOT NULL"
+                     "WHERE dateTime > %(start)s AND dateTime <= %(stop)s " \
+                     "AND %(obs_type)s IS NOT NULL"
 
     @staticmethod
     def get_aggregate(obs_type, timespan, aggregate_type, db_manager, **option_dict):
@@ -224,7 +248,8 @@ class ArchiveTable(XType):
     
         returns: A ValueTuple containing the result."""
 
-        if aggregate_type not in ['sum', 'count', 'avg', 'max', 'min'] + list(ArchiveTable.agg_sql_dict.keys()):
+        if aggregate_type not in ['sum', 'count', 'avg', 'max', 'min'] + list(
+                ArchiveTable.agg_sql_dict.keys()):
             raise weewx.UnknownAggregation(aggregate_type)
 
         interpolate_dict = {
@@ -235,7 +260,8 @@ class ArchiveTable(XType):
             'stop': timespan.stop
         }
 
-        select_stmt = ArchiveTable.agg_sql_dict.get(aggregate_type, ArchiveTable.simple_agg_sql) % interpolate_dict
+        select_stmt = ArchiveTable.agg_sql_dict.get(aggregate_type,
+                                                    ArchiveTable.simple_agg_sql) % interpolate_dict
 
         try:
             row = db_manager.getSql(select_stmt)
@@ -245,10 +271,12 @@ class ArchiveTable(XType):
         value = row[0] if row else None
 
         # Look up the unit type and group of this combination of observation type and aggregation:
-        u, g = weewx.units.getStandardUnitType(db_manager.std_unit_system, obs_type, aggregate_type)
+        u, g = weewx.units.getStandardUnitType(db_manager.std_unit_system, obs_type,
+                                               aggregate_type)
 
-        # Time derivatives have special rules. For example, the time derivative of watt-hours is watts, scaled
-        # by the number of seconds in an hour. The unit group also changes to group_power.
+        # Time derivatives have special rules. For example, the time derivative of watt-hours is
+        # watts, scaled by the number of seconds in an hour. The unit group also changes to
+        # group_power.
         if aggregate_type == 'tderiv':
             if u == 'watt_second':
                 u = 'watt'
@@ -372,8 +400,9 @@ class DailySummaries(XType):
         if aggregate_type not in DailySummaries.daily_sql_dict:
             raise weewx.UnknownAggregation(aggregate_type)
 
-        # We cannot use the day summaries if the starting and ending times of the aggregation interval are not on
-        # midnight boundaries, and are not the first or last records in the database.
+        # We cannot use the day summaries if the starting and ending times of the aggregation
+        # interval are not on midnight boundaries, and are not the first or last records in the
+        # database.
         if not (isStartOfDay(timespan.start) or timespan.start == db_manager.first_timestamp) \
                 or not (isStartOfDay(timespan.stop) or timespan.stop == db_manager.last_timestamp):
             raise weewx.UnknownAggregation(aggregate_type)
@@ -392,7 +421,7 @@ class DailySummaries(XType):
             target_val = weewx.units.convertStd(val, db_manager.std_unit_system)[0]
 
         # Form the interpolation dictionary
-        interDict = {
+        inter_dict = {
             'start': weeutil.weeutil.startOfDay(timespan.start),
             'stop': timespan.stop,
             'obs_key': obs_type,
@@ -402,7 +431,7 @@ class DailySummaries(XType):
         }
 
         # Run the query against the database:
-        row = db_manager.getSql(DailySummaries.daily_sql_dict[aggregate_type] % interDict)
+        row = db_manager.getSql(DailySummaries.daily_sql_dict[aggregate_type] % inter_dict)
 
         # Each aggregation type requires a slightly different calculation.
         if not row or None in row:
@@ -434,14 +463,16 @@ class DailySummaries(XType):
         elif aggregate_type == 'vecdir':
             if row == (0.0, 0.0):
                 value = None
-            deg = 90.0 - math.degrees(math.atan2(row[1], row[0]))
-            value = deg if deg >= 0 else deg + 360.0
+            else:
+                deg = 90.0 - math.degrees(math.atan2(row[1], row[0]))
+                value = deg if deg >= 0 else deg + 360.0
         else:
             # Unknown aggregation. Should not have gotten this far...
             raise ValueError("Unexpected error. Aggregate type '%s'" % aggregate_type)
 
         # Look up the unit type and group of this combination of observation type and aggregation:
-        t, g = weewx.units.getStandardUnitType(db_manager.std_unit_system, obs_type, aggregate_type)
+        t, g = weewx.units.getStandardUnitType(db_manager.std_unit_system, obs_type,
+                                               aggregate_type)
         # Form the ValueTuple and return it:
         return weewx.units.ValueTuple(value, t, g)
 
@@ -463,7 +494,8 @@ class AggregateHeatCool(XType):
     def get_aggregate(obs_type, timespan, aggregate_type, db_manager, **option_dict):
         """Returns heating and cooling degree days over a time period.
 
-        obs_type: The type over which aggregation is to be done.  Must be one of 'heatdeg', 'cooldeg', or 'growdeg'.
+        obs_type: The type over which aggregation is to be done.  Must be one of 'heatdeg',
+        'cooldeg', or 'growdeg'.
 
         timespan: An instance of weeutil.Timespan with the time period over which
         aggregation is to be done.
@@ -521,7 +553,8 @@ class AggregateHeatCool(XType):
             value = total / count if count else None
 
         # Look up the unit type and group of the result:
-        t, g = weewx.units.getStandardUnitType(db_manager.std_unit_system, obs_type, aggregate_type)
+        t, g = weewx.units.getStandardUnitType(db_manager.std_unit_system, obs_type,
+                                               aggregate_type)
         # Return as a value tuple
         return weewx.units.ValueTuple(value, t, g)
 
@@ -529,8 +562,9 @@ class AggregateHeatCool(XType):
 # ############################# WindVec extensions #########################################
 
 class WindVec(XType):
-    """Extensions for calculating special observation types 'windvec' and 'windgustvec'. It provides functions for
-    calculating series, and for calculating aggregates"""
+    """Extensions for calculating special observation types 'windvec' and 'windgustvec'. It
+    provides functions for calculating series, and for calculating aggregates.
+    """
 
     windvec_types = {
         'windvec': ('windSpeed', 'windDir'),
@@ -554,12 +588,14 @@ class WindVec(XType):
                "WHERE dateTime > %(start)s AND dateTime <= %(stop)s  AND %(mag)s IS NOT NULL)",
     }
     # for types 'avg', 'sum'
-    complex_sql_wind = 'SELECT %(mag)s, %(dir)s, usUnits FROM %(table_name)s WHERE dateTime > ? AND dateTime <= ?'
+    complex_sql_wind = 'SELECT %(mag)s, %(dir)s, usUnits FROM %(table_name)s WHERE dateTime > ? ' \
+                       'AND dateTime <= ?'
 
     @staticmethod
     def get_series(obs_type, timespan, db_manager, aggregate_type=None, aggregate_interval=None):
-        """Get a series, possibly with aggregation, for special 'wind vector' types. These are typically
-        used for the wind vector plots."""
+        """Get a series, possibly with aggregation, for special 'wind vector' types. These are
+        typically used for the wind vector plots.
+        """
 
         # Check to see if the requested type is not 'windvec' or 'windgustvec'
         if obs_type not in WindVec.windvec_types:
@@ -574,22 +610,26 @@ class WindVec(XType):
 
         # Is aggregation requested?
         if aggregate_type:
-            # Yes. Just use the regular series function. When it comes time to do the aggregation, the
-            # specialized function WindVec.get_aggregate() (defined below), will be used.
-            return ArchiveTable.get_series(obs_type, timespan, db_manager, aggregate_type, aggregate_interval)
+            # Yes. Just use the regular series function. When it comes time to do the aggregation,
+            # the specialized function WindVec.get_aggregate() (defined below), will be used.
+            return ArchiveTable.get_series(obs_type, timespan, db_manager, aggregate_type,
+                                           aggregate_interval)
 
         else:
-            # No aggregation desired. However, we have will have to assemble the wind vector from its flattened types.
-            # This SQL select string will select the proper wind types
-            sql_str = 'SELECT dateTime, %s, %s, usUnits, `interval` FROM %s WHERE dateTime >= ? AND dateTime <= ?' \
-                      % (WindVec.windvec_types[obs_type][0], WindVec.windvec_types[obs_type][1], db_manager.table_name)
+            # No aggregation desired. However, we have will have to assemble the wind vector from
+            # its flattened types. This SQL select string will select the proper wind types
+            sql_str = 'SELECT dateTime, %s, %s, usUnits, `interval` FROM %s ' \
+                      'WHERE dateTime >= ? AND dateTime <= ?' \
+                      % (WindVec.windvec_types[obs_type][0], WindVec.windvec_types[obs_type][1],
+                         db_manager.table_name)
             std_unit_system = None
 
             for record in db_manager.genSql(sql_str, timespan):
                 ts, magnitude, direction, unit_system, interval = record
                 if std_unit_system:
                     if std_unit_system != unit_system:
-                        raise weewx.UnsupportedFeature("Unit type cannot change within a time interval.")
+                        raise weewx.UnsupportedFeature(
+                            "Unit type cannot change within a time interval.")
                 else:
                     std_unit_system = unit_system
 
@@ -599,7 +639,8 @@ class WindVec(XType):
                 stop_vec.append(ts)
                 data_vec.append(value)
 
-            unit, unit_group = weewx.units.getStandardUnitType(std_unit_system, obs_type, aggregate_type)
+            unit, unit_group = weewx.units.getStandardUnitType(std_unit_system, obs_type,
+                                                               aggregate_type)
 
         return (ValueTuple(start_vec, 'unix_epoch', 'group_time'),
                 ValueTuple(stop_vec, 'unix_epoch', 'group_time'),
@@ -607,25 +648,25 @@ class WindVec(XType):
 
     @staticmethod
     def get_aggregate(obs_type, timespan, aggregate_type, db_manager, **option_dict):
-        """Returns an aggregation of a wind vector type over a timespan by using the main archive table.
+        """Returns an aggregation of a wind vector type over a timespan by using the main archive
+        table.
 
-        obs_type: The type over which aggregation is to be done. For this function,
-        it must be 'windvec' or 'windgustvec'. Anything else will cause weewx.UnknownType
-        to be raised.
+        obs_type: The type over which aggregation is to be done. For this function, it must be
+        'windvec' or 'windgustvec'. Anything else will cause weewx.UnknownType to be raised.
 
-        timespan: An instance of weeutil.Timespan with the time period over which
-        aggregation is to be done.
+        timespan: An instance of weeutil.Timespan with the time period over which aggregation is to
+        be done.
 
-        aggregate_type: The type of aggregation to be done. For this function, must be
-        'avg', 'sum', 'count', 'first', 'last', 'min', or 'max'. Anything else will cause
+        aggregate_type: The type of aggregation to be done. For this function, must be 'avg',
+        'sum', 'count', 'first', 'last', 'min', or 'max'. Anything else will cause
         weewx.UnknownAggregation to be raised.
 
         db_manager: An instance of weewx.manager.Manager or subclass.
 
         option_dict: Not used in this version.
 
-        returns: A ValueTuple containing the result. Note that the value contained in the ValueTuple
-        will be a complex number.
+        returns: A ValueTuple containing the result. Note that the value contained in the
+        ValueTuple will be a complex number.
         """
         if obs_type not in WindVec.windvec_types:
             raise weewx.UnknownType(obs_type)
@@ -646,7 +687,8 @@ class WindVec(XType):
         }
 
         if aggregate_type in WindVec.agg_sql_dict:
-            # For these types (e.g., first, last, etc.), we can do the aggregation in a SELECT statement.
+            # For these types (e.g., first, last, etc.), we can do the aggregation in a SELECT
+            # statement.
             select_stmt = WindVec.agg_sql_dict[aggregate_type] % interpolation_dict
             row = db_manager.getSql(select_stmt)
             if row:
@@ -679,7 +721,8 @@ class WindVec(XType):
                 if mag == 0.0 or direction is not None:
                     if std_unit_system:
                         if std_unit_system != unit_system:
-                            raise weewx.UnsupportedFeature("Unit type cannot change within a time interval.")
+                            raise weewx.UnsupportedFeature(
+                                "Unit type cannot change within a time interval.")
                     else:
                         std_unit_system = unit_system
 
@@ -728,8 +771,9 @@ class WindVecDaily(XType):
         if aggregate_type != 'avg':
             raise weewx.UnknownAggregation(aggregate_type)
 
-        # We cannot use the day summaries if the starting and ending times of the aggregation interval are not on
-        # midnight boundaries, and are not the first or last records in the database.
+        # We cannot use the day summaries if the starting and ending times of the aggregation
+        # interval are not on midnight boundaries, and are not the first or last records in the
+        # database.
         if not (isStartOfDay(timespan.start) or timespan.start == db_manager.first_timestamp) \
                 or not (isStartOfDay(timespan.stop) or timespan.stop == db_manager.last_timestamp):
             raise weewx.UnknownAggregation(aggregate_type)
@@ -748,13 +792,14 @@ class WindVecDaily(XType):
             value = complex(row[0], row[1]) / row[2]
 
         # Look up the unit type and group of the result:
-        t, g = weewx.units.getStandardUnitType(db_manager.std_unit_system, obs_type, aggregate_type)
+        t, g = weewx.units.getStandardUnitType(db_manager.std_unit_system, obs_type,
+                                               aggregate_type)
         # Return as a value tuple
         return weewx.units.ValueTuple(value, t, g)
 
 
-# Add instantiated versions to the extension list. Order matters. We want the highly-specialized versions
-# first, because they might offer optimizations.
+# Add instantiated versions to the extension list. Order matters. We want the highly-specialized
+# versions first, because they might offer optimizations.
 xtypes.append(WindVecDaily())
 xtypes.append(WindVec())
 xtypes.append(AggregateHeatCool())

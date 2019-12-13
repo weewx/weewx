@@ -4642,18 +4642,14 @@ class AddElectricity(StdService):
                     For this example, we are going to add a few lines of code to the bottom of the file <span
                     class="code">user/electricity.py</span>:
                 </p>
-                <pre class="tty">electricity_schema = {
-    'table': schemas.wview.table + [('electricity', 'REAL')],
-    'day_summaries': schemas.wview.day_summaries + [('electricity', 'SCALAR')
-}
+                <pre class="tty">import schemas.wview
+schema_with_electricity = schemas.wview.schema + [('electricity', 'REAL')]
 </pre>
                 <p>
-                    There are two parts to a WeeWX schema: one for the main, archive table, and another for the daily
-                    summaries. This adds on a new observation <span class="code">electricity</span>, of type <span
-                    class="code">REAL</span>, to the existing wview schema for the archive table. In a similar manner,
-                    we add a new daily summary for <span class="code">electricity</span>, a <span
-                    class="code">SCALAR</span> value, on to the end of the existing daily summaries for the wview
-                    schema.
+                    This creates a new schema with the name
+                    <span class="code">user.electricity.schema_with_electricity</span>,
+                    which is just like the old one, except it has a new type, <span class="code">electricity</span>,
+                    tacked on to the end.
                 </p>
             <li>
                 <p>
