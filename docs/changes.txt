@@ -1652,14 +1652,14 @@ Numerous fixes to the WMR200 driver. Now has a "watchdog" thread.
 All of the device drivers have now been put in their own package
 'weewx.drivers' to keep them together. Many have also had name changes
 to make them more consistent:
-	OLD                        NEW
-	VantagePro.py (Vantage)    vantage.py (Vantage)
-	WMR918.py     (WMR-918)    wmr9x8.py  (WMR9x8)
-	wmrx.py       (WMR-USB)    wmr100.py  (WMR100)
-	
-	new (experimental) drivers:
-	wmr200.py (WMR200)
-	ws28xx.py (WS28xx)
+    OLD                        NEW
+    VantagePro.py (Vantage)    vantage.py (Vantage)
+    WMR918.py     (WMR-918)    wmr9x8.py  (WMR9x8)
+    wmrx.py       (WMR-USB)    wmr100.py  (WMR100)
+
+    new (experimental) drivers:
+    wmr200.py (WMR200)
+    ws28xx.py (WS28xx)
 
 The interface to the device driver "loader" function has changed slightly. It
 now takes a second parameter, "engine". Details are in the Upgrading doc.
