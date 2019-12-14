@@ -107,7 +107,7 @@ class CumulusSource(weeimport.Source):
         self.wind_dir = [0, 360]
 
         # field delimiter used in monthly log files, default to comma
-        self.delimiter = cumulus_config_dict.get('delimiter', ',')
+        self.delimiter = str(cumulus_config_dict.get('delimiter', ','))
         # decimal separator used in monthly log files, default to decimal point
         self.decimal = cumulus_config_dict.get('decimal', '.')
 
