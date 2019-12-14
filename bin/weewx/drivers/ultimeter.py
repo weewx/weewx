@@ -65,18 +65,19 @@ from weeutil.weeutil import timestamp_to_string
 log = logging.getLogger(__name__)
 
 DRIVER_NAME = 'Ultimeter'
-DRIVER_VERSION = '0.30'
+DRIVER_VERSION = '0.40'
 
 
 def loader(config_dict, _):
     return UltimeterDriver(**config_dict[DRIVER_NAME])
+
 
 def confeditor_loader():
     return UltimeterConfEditor()
 
 
 def _fmt(x):
-    return ' '.join(["%0.2X" % ord(c) for c in x])
+    return ' '.join(["%0.2X" % c for c in x])
 
 
 class UltimeterDriver(weewx.drivers.AbstractDevice):
@@ -91,6 +92,7 @@ class UltimeterDriver(weewx.drivers.AbstractDevice):
     max_tries - how often to retry serial communication before giving up
     [Optional. Default is 5]
     """
+
     def __init__(self, **stn_dict):
         self.model = stn_dict.get('model', 'Ultimeter')
         self.port = stn_dict.get('port', Station.DEFAULT_PORT)
@@ -99,13 +101,13 @@ class UltimeterDriver(weewx.drivers.AbstractDevice):
         debug_serial = int(stn_dict.get('debug_serial', 0))
         self.last_rain = None
 
-        log.info('driver version is %s' % DRIVER_VERSION)
-        log.info('using serial port %s' % self.port)
+        log.info('Driver version is %s', DRIVER_VERSION)
+        log.info('Using serial port %s', self.port)
         self.station = Station(self.port, debug_serial=debug_serial)
         self.station.open()
 
     def closePort(self):
-        if self.station is not None:
+        if self.station:
             self.station.close()
             self.station = None
 
@@ -132,20 +134,18 @@ class UltimeterDriver(weewx.drivers.AbstractDevice):
             yield packet
 
     def _augment_packet(self, packet):
-        packet['rain'] = weewx.wxformulas.calculate_rain(
-            packet['rain_total'], self.last_rain)
+        packet['rain'] = weewx.wxformulas.calculate_rain(packet['rain_total'], self.last_rain)
         self.last_rain = packet['rain_total']
 
 
 class Station(object):
-
     DEFAULT_PORT = '/dev/ttyUSB0'
 
     def __init__(self, port, debug_serial=0):
         self._debug_serial = debug_serial
         self.port = port
         self.baudrate = 2400
-        self.timeout = 3 # seconds
+        self.timeout = 3  # seconds
         self.serial_port = None
         # setting the year works only for models 2004 and later
         self.can_set_year = True
@@ -161,13 +161,13 @@ class Station(object):
         self.close()
 
     def open(self):
-        log.debug("open serial port %s" % self.port)
-        self.serial_port = serial.Serial(self.port, self.baudrate,
-                                         timeout=self.timeout)
+        log.debug("Open serial port %s", self.port)
+        self.serial_port = serial.Serial(self.port, self.baudrate, timeout=self.timeout)
+        self.serial_port.flushInput()
 
     def close(self):
-        if self.serial_port is not None:
-            log.debug("close serial port %s" % self.port)
+        if self.serial_port:
+            log.debug("Close serial port %s", self.port)
             self.serial_port.close()
             self.serial_port = None
 
@@ -182,11 +182,10 @@ class Station(object):
             y = tt.tm_year
             s = tt.tm_sec
             ts = time.mktime((y, 1, 1, 0, 0, s, 0, 0, -1)) + d * 86400 + m * 60
-            log.debug("station time: day:%s min:%s (%s)" %
-                      (d, m, timestamp_to_string(ts)))
+            log.debug("Station time: day:%s min:%s (%s)", d, m, timestamp_to_string(ts))
             return ts
         except (serial.serialutil.SerialException, weewx.WeeWxIOError) as e:
-            log.error("get_time failed: %s" % e)
+            log.error("get_time failed: %s", e)
         return int(time.time())
 
     def set_time(self, ts):
@@ -196,40 +195,56 @@ class Station(object):
         # set time should work on all models
         tt = time.localtime(ts)
         cmd = b">A%04d%04d" % (tt.tm_yday - 1, tt.tm_min + tt.tm_hour * 60)
-        log.debug("set station time to %s (%s)" % (timestamp_to_string(ts), cmd))
+        log.debug("Set station time to %s (%s)",  timestamp_to_string(ts), cmd)
         self.serial_port.write(b"%s\r" % cmd)
 
         # year works only for models 2004 and later
         if self.can_set_year:
             cmd = b">U%s" % tt.tm_year
-            log.debug("set station year to %s (%s)" % (tt.tm_year, cmd))
+            log.debug("Set station year to %s (%s)", tt.tm_year, cmd)
             self.serial_port.write(b"%s\r" % cmd)
 
     def set_logger_mode(self):
         # in logger mode, station sends logger mode records continuously
         if self._debug_serial:
-            log.debug("set station to logger mode")
+            log.debug("Set station to logger mode")
         self.serial_port.write(b">I\r")
 
     def set_modem_mode(self):
         # setting to modem mode should stop data logger output
         if self.has_modem_mode:
             if self._debug_serial:
-                log.debug("set station to modem mode")
+                log.debug("Set station to modem mode")
             self.serial_port.write(b">\r")
 
     def get_readings(self):
-        buf = self.serial_port.readline()
+        """Read an Ultimeter sentence."""
+
+        # Search for the character '!', which marks the beginning of a "sentence":
+        while True:
+            c = self.serial_port.read(1)
+            if c == b'!':
+                break
+        # Save the first '!' ...
+        buf = bytearray(c)
+        # ... then read until we get to a '\r' or '\n'
+        while True:
+            c = self.serial_port.read(1)
+            if c == b'\n' or c == b'\r':
+                # We found a carriage return or newline, so we have the complete sentence.
+                # NB: Because the Ultimeter terminates a sentence with a '\r\n', this will
+                # leave a newline in the buffer. We don't care: it will get skipped over when
+                # we search for the next sentence.
+                break
         if self._debug_serial:
-            log.debug("station said: %s" % _fmt(buf))
-        buf = buf.strip() # FIXME: is this necessary?
+            log.debug("Station said: %s", _fmt(buf))
         return buf
 
     @staticmethod
     def validate_string(buf):
         if len(buf) not in [42, 46, 50]:
             raise weewx.WeeWxIOError("Unexpected buffer length %d" % len(buf))
-        if buf[0:2] != '!!':
+        if buf[0:2] != b'!!':
             raise weewx.WeeWxIOError("Unexpected header bytes '%s'" % buf[0:2])
         return buf
 
@@ -240,8 +255,7 @@ class Station(object):
                 self.validate_string(buf)
                 return buf
             except (serial.serialutil.SerialException, weewx.WeeWxIOError) as e:
-                log.info("Failed attempt %d of %d to get readings: %s" %
-                         (ntries + 1, max_tries, e))
+                log.info("Failed attempt %d of %d to get readings: %s", ntries + 1, max_tries, e)
                 time.sleep(retry_wait)
         else:
             msg = "Max retries (%d) exceeded for readings" % max_tries
@@ -317,7 +331,7 @@ class Station(object):
                 v *= multiplier
         except ValueError as e:
             if s != b'----':
-                log.debug("decode failed for '%s': %s" % (s, e))
+                log.debug("Decode failed for '%s': %s", s, e)
         return v
 
 
@@ -371,7 +385,7 @@ if __name__ == '__main__':
     if options.version:
         print("ultimeter driver version %s" % DRIVER_VERSION)
         exit(0)
-        
+
     if options.debug:
         weewx.debug = 1
 
