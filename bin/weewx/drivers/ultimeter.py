@@ -195,29 +195,28 @@ class Station(object):
 
         # set time should work on all models
         tt = time.localtime(ts)
-        cmd = ">A%04d%04d" % (
-            tt.tm_yday - 1, tt.tm_min + tt.tm_hour * 60)
+        cmd = b">A%04d%04d" % (tt.tm_yday - 1, tt.tm_min + tt.tm_hour * 60)
         log.debug("set station time to %s (%s)" % (timestamp_to_string(ts), cmd))
-        self.serial_port.write("%s\r" % cmd)
+        self.serial_port.write(b"%s\r" % cmd)
 
         # year works only for models 2004 and later
         if self.can_set_year:
-            cmd = ">U%s" % tt.tm_year
+            cmd = b">U%s" % tt.tm_year
             log.debug("set station year to %s (%s)" % (tt.tm_year, cmd))
-            self.serial_port.write("%s\r" % cmd)
+            self.serial_port.write(b"%s\r" % cmd)
 
     def set_logger_mode(self):
         # in logger mode, station sends logger mode records continuously
         if self._debug_serial:
             log.debug("set station to logger mode")
-        self.serial_port.write(">I\r")
+        self.serial_port.write(b">I\r")
 
     def set_modem_mode(self):
         # setting to modem mode should stop data logger output
         if self.has_modem_mode:
             if self._debug_serial:
                 log.debug("set station to modem mode")
-            self.serial_port.write(">\r")
+            self.serial_port.write(b">\r")
 
     def get_readings(self):
         buf = self.serial_port.readline()
@@ -306,6 +305,7 @@ class Station(object):
         full set of bits (e.g., wind direction) and some do not
         (e.g., temperature).
         """
+        # TODO: The twos-complement arithmetic is unnecessary. Better to use the 'struct' module.
         v = None
         try:
             v = int(s, 16)
@@ -316,7 +316,7 @@ class Station(object):
             if multiplier is not None:
                 v *= multiplier
         except ValueError as e:
-            if s != '----':
+            if s != b'----':
                 log.debug("decode failed for '%s': %s" % (s, e))
         return v
 
