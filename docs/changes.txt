@@ -106,7 +106,7 @@ Use of strftime() date and time format codes in template file names is now
 supported as an alternative to the legacy 'YYYY', 'MM' and 'DD'. The legacy
 codes continue to be supported for backwards compatibility. Fixes issue #415.
 
-In WMR300 driver, ignore historical records with timestamp in the future.
+Ignore historical records if the timestamp is in the future.
 
 
 3.9.2 07/14/2019

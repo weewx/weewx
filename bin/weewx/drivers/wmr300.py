@@ -1337,13 +1337,8 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
             time.sleep(0.001)
 
     def genStartupRecords(self, since_ts):
-        now = time.time()
         for rec in self.get_history(since_ts):
-            ts = rec.get('dateTime')
-            if ts and ts < now:
-                yield rec
-            else:
-                log.info('ignored historical record: %s' % rec)
+            yield rec
 
     def convert(self, pkt, ts):
         # if debugging packets, log everything we got

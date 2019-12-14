@@ -631,10 +631,15 @@ class StdArchive(StdService):
             # Now ask the console for any new records since then. Not all consoles support this feature. Note that for
             # some consoles, notably the Vantage, when doing a long catchup the archive records may not be on the same
             # boundaries as the archive interval.
+            now = time.time()
             for record in generator(lastgood_ts):
-                self.engine.dispatchEvent(weewx.Event(weewx.NEW_ARCHIVE_RECORD,
-                                                      record=record,
-                                                      origin='hardware'))
+                ts = record.get('dateTime')
+                if ts and ts < now:
+                    self.engine.dispatchEvent(weewx.Event(weewx.NEW_ARCHIVE_RECORD,
+                                                          record=record,
+                                                          origin='hardware'))
+                else:
+                    log.warning("ignore historical record: %s" % record)
         except weewx.HardwareError as e:
             log.error("Internal error detected. Catchup abandoned")
             log.error("**** %s" % e)
