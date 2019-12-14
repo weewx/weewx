@@ -790,7 +790,7 @@ from weeutil.weeutil import timestamp_to_string
 log = logging.getLogger(__name__)
 
 DRIVER_NAME = 'WMR300'
-DRIVER_VERSION = '0.30'
+DRIVER_VERSION = '0.31'
 
 DEBUG_COMM = 0
 DEBUG_PACKET = 0
@@ -1337,8 +1337,13 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
             time.sleep(0.001)
 
     def genStartupRecords(self, since_ts):
+        now = time.time()
         for rec in self.get_history(since_ts):
-            yield rec
+            ts = rec.get('dateTime')
+            if ts and ts < now:
+                yield rec
+            else:
+                log.info('ignored historical record: %s' % rec)
 
     def convert(self, pkt, ts):
         # if debugging packets, log everything we got
