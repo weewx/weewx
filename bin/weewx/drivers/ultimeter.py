@@ -236,6 +236,7 @@ class Station(object):
                 # leave a newline in the buffer. We don't care: it will get skipped over when
                 # we search for the next sentence.
                 break
+            buf += c
         if self._debug_serial:
             log.debug("Station said: %s", _fmt(buf))
         return buf
