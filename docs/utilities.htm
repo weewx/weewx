@@ -2991,8 +2991,6 @@ Cumulus monthly log files in the '/var/tmp/cumulus' directory will be imported
 Using database binding 'wx_binding', which is bound to database 'weewx.sdb'
 Destination table 'archive' unit system is '0x01' (US).
 Missing derived observations will be calculated.
-Observations timestamped after 2016-12-22 00:00:00 AEST (1482328800) and up to and
-including 2016-12-30 00:00:00 AEST (1483020000) will be imported.
 Starting import ...
 Records covering multiple periods have been identified for import.
 Period 1 ...
@@ -3029,11 +3027,27 @@ Unique records processed: 8744; Last timestamp: 2017-03-31 23:55:00 AEST (149096
                     are imported with progress information on number of records processed, number of unique records
                     imported and the date time of the latest record processed. If the import spans multiple months (ie
                     multiple monthly log files) then a new <span class="code">Period</span> line is created for each
-                    month. When the import is complete a brief summary is displayed similar to the following:
+                    month.
+                </p>
+
+                <p>Once the initial import is complete <span class="code">wee_import</span> will, if requested, calculate
+                    any missing derived observations and rebuild the daily summaries. A brief summary should be displayed
+                    similar to the following:
+                </p>
+
+                <pre class="tty">Calculating missing derived observations ...
+Processing record: 77782; Last record: 2017-06-30 00:00:00 AEST (1519826400)
+Recalculating daily summaries...
+Records processed: 77000; Last date: 2017-06-28 11:45:00 AEST (1519811100)
+Finished recalculating daily summaries
+Finished calculating missing derived observations
+</pre>
+
+                <p>When the import is complete a brief summary is displayed similar to the following:
                 </p>
 
                 <pre class="tty">Finished import
-54275 records were processed and 54275 unique records imported in 106.96 seconds.
+77813 records were processed and 77813 unique records imported in 106.96 seconds.
 Those records with a timestamp already in the archive will not have been
 imported. Confirm successful import in the WeeWX log file.
 </pre>
