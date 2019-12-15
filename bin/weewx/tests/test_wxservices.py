@@ -48,9 +48,9 @@ svc_dict = {
 
 # Test values:
 record_1 = {
-    'dateTime': 1567515300, 'usUnits': 1, 'interval': 5, 'inTemp': 73.0, 'outTemp': 88.7, 'inHumidity': 54.0,
-    'outHumidity': 90.0, 'windSpeed': 12.0, 'windDir': None, 'windGust': 15.0, 'windGustDir': 270.0,
-    'rain': 0.02,
+    'dateTime': 1567515300, 'usUnits': 1, 'interval': 5, 'inTemp': 73.0, 'outTemp': 88.7,
+    'inHumidity': 54.0, 'outHumidity': 90.0, 'windSpeed': 12.0, 'windDir': None, 'windGust': 15.0,
+    'windGustDir': 270.0, 'rain': 0.02,
 }
 
 # These are the correct values
@@ -98,8 +98,9 @@ class TestSimpleFunctions(unittest.TestCase):
         self.calc('windrun', 'windSpeed')
 
     def calc(self, key, *crits):
-        """Calculate derived type 'key'. Parameters in "crits" are required to perform the calculation. Their
-        presence will be tested."""
+        """Calculate derived type 'key'. Parameters in "crits" are required to perform the
+        calculation. Their presence will be tested.
+        """
         result = self.wx_calc.get_scalar(key, self.record, None)
         self.assertAlmostEqual(result[0], correct[key], 3)
         # Now try it, but with a critical key missing
@@ -124,9 +125,9 @@ class TestSimpleFunctions(unittest.TestCase):
 
 # Test values for the PressureCooker test:
 record_2 = {
-    'dateTime': 1567515300, 'usUnits': 1, 'interval': 5, 'inTemp': 73.0, 'outTemp': 55.7, 'inHumidity': 54.0,
-    'outHumidity': 90.0, 'windSpeed': 0.0, 'windDir': None, 'windGust': 2.0, 'windGustDir': 270.0,
-    'rain': 0.0, 'windchill': 55.7, 'heatindex': 55.7,
+    'dateTime': 1567515300, 'usUnits': 1, 'interval': 5, 'inTemp': 73.0, 'outTemp': 55.7,
+    'inHumidity': 54.0, 'outHumidity': 90.0, 'windSpeed': 0.0, 'windDir': None, 'windGust': 2.0,
+    'windGustDir': 270.0, 'rain': 0.0, 'windchill': 55.7, 'heatindex': 55.7,
     'pressure': 29.259303850622302, 'barometer': 29.99, 'altimeter': 30.001561119603156,
 }
 
@@ -159,7 +160,8 @@ class TestPressureCooker(unittest.TestCase):
 
         # Mock a database in METRICWX units
         with mock.patch.object(db_manager, 'getRecord',
-                               return_value={'usUnits': weewx.METRICWX, 'outTemp': 30.0}) as mock_mgr:
+                               return_value={'usUnits': weewx.METRICWX,
+                                             'outTemp': 30.0}) as mock_mgr:
             t = pc._get_temperature_12h(self.record['dateTime'], db_manager)
             mock_mgr.assert_called_once_with(self.record['dateTime'] - 12 * 3600, max_delta=1800)
             self.assertEqual(t, (30.0, 'degree_C', 'group_temperature'))
@@ -252,7 +254,8 @@ class RainGenerator(object):
 
     def __next__(self):
         """Advance and return the next rain event"""
-        event = {'dateTime': self.timestamp, 'usUnits': weewx.US, 'interval': self.time_increment, 'rain': self.rain}
+        event = {'dateTime': self.timestamp, 'usUnits': weewx.US, 'interval': self.time_increment,
+                 'rain': self.rain}
         self.timestamp += self.time_increment
         self.rain += self.rain_increment
         return event
@@ -289,7 +292,9 @@ class TestRainRater(unittest.TestCase):
         self.db_manager = None
 
     def test_add_US(self):
-        rain_rater = weewx.wxservices.RainRater(TestRainRater.rain_period, TestRainRater.retain_period)
+        """Test adding rain data in the US system"""
+        rain_rater = weewx.wxservices.RainRater(TestRainRater.rain_period,
+                                                TestRainRater.retain_period)
 
         # Get the next record out of the rain generator.
         record = self.rain_generator.next()
@@ -304,7 +309,9 @@ class TestRainRater(unittest.TestCase):
         self.assertEqual(rate[1:], ('inch_per_hour', 'group_rainrate'))
 
     def test_add_METRICWX(self):
-        rain_rater = weewx.wxservices.RainRater(TestRainRater.rain_period, TestRainRater.retain_period)
+        """Test adding rain data in the METRICWX system"""
+        rain_rater = weewx.wxservices.RainRater(TestRainRater.rain_period,
+                                                TestRainRater.retain_period)
 
         # Get the next record out of the rain generator.
         record = self.rain_generator.next()
@@ -323,7 +330,8 @@ class TestRainRater(unittest.TestCase):
 
     def test_trim(self):
         """"Test trimming old events"""
-        rain_rater = weewx.wxservices.RainRater(TestRainRater.rain_period, TestRainRater.retain_period)
+        rain_rater = weewx.wxservices.RainRater(TestRainRater.rain_period,
+                                                TestRainRater.retain_period)
 
         # Add 5 minutes worth of rain
         N = 5
@@ -333,8 +341,8 @@ class TestRainRater(unittest.TestCase):
             if not N:
                 break
 
-        # The rain record object should have the last 15 minutes worth of rain in it. Let's peek inside to check.
-        # The first value should be 15 minutes old
+        # The rain record object should have the last 15 minutes worth of rain in it. Let's peek
+        # inside to check. The first value should be 15 minutes old
         self.assertEqual(rain_rater.rain_events[0][0], record['dateTime'] - 15 * 60)
         # The last value should be the record we just put in it:
         self.assertEqual(rain_rater.rain_events[-1][0], record['dateTime'])
@@ -359,23 +367,27 @@ class TestET(unittest.TestCase):
                 'driver': 'weedb.sqlite'
             },
             schema=schemas.wview.schema)
-        # Populate the database with 60 minutes worth of data at 5 minute intervals. Set the annual phase
-        # to half a year, so that the temperatures will be high
+        # Populate the database with 60 minutes worth of data at 5 minute intervals. Set the annual
+        # phase to half a year, so that the temperatures will be high
         for record in gen_fake_data.genFakeRecords(TestET.start, TestET.start + 3600, interval=300,
-                                                   annual_phase_offset=math.pi * (24.0 * 3600 * 365)):
+                                                   annual_phase_offset=math.pi * (
+                                                           24.0 * 3600 * 365)):
             # Add some radiation and humidity:
             record['radiation'] = 860
             record['outHumidity'] = 50
             self.db_manager.addRecord(record)
 
     def test_ET(self):
-        wx_xtypes = weewx.wxservices.WXXTypes(svc_dict, altitude_vt, latitude=latitude, longitude=longitude)
+        wx_xtypes = weewx.wxservices.WXXTypes(svc_dict, altitude_vt,
+                                              latitude=latitude,
+                                              longitude=longitude)
         ts = self.db_manager.lastGoodStamp()
         record = self.db_manager.getRecord(ts)
         et_vt = wx_xtypes.get_scalar('ET', record, self.db_manager)
 
         self.assertAlmostEqual(et_vt[0], 0.00193, 5)
         self.assertEqual((et_vt[1], et_vt[2]), ("inch", "group_rain"))
+
 
 if __name__ == '__main__':
     unittest.main()
