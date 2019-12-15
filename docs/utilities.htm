@@ -3591,12 +3591,6 @@ Options:
             section explains how to do it.
         </p>
 
-        <p class="warning">
-            <strong>Warning!</strong><br/>As of this writing (July, 2019), the Weather Underground
-            does not seem to allow re-posting old records, so <span class="code">wunderfixer</span>
-            may not work for you.
-        </p>
-
         <p class="note">
             <strong>Note</strong><br/><span class="code">wunderfixer</span> uses the Weather Underground convention of
             what is a day. That is, a day runs from the record timestamped at midnight to the last record timestamped on
@@ -3615,8 +3609,8 @@ Options:
         <pre class="tty">Usage: wunderfixer CONFIG_FILE|--config=CONFIG_FILE
                   [--binding=BINDING]
                   [--station=STATION] [--password=PASSWORD] [--api-key=API_KEY]
-                  [--date=YYYY-mm-dd] [--epsilon=SECONDS] [--timeout=SECONDS]
-                  [--verbose] [--log LOG_FACILITY] [--test] [--query]
+                  [--date=YYYY-mm-dd] [--epsilon=SECONDS] [--upload-only=SECONDS]
+                  [--verbose] [--test] [--query] [--timeout=SECONDS]
                   [--help]
 
 This utility fills in missing data on the Weather Underground.  It goes through
@@ -3650,14 +3644,17 @@ Options:
   -e SECONDS, --epsilon=SECONDS
                         Timestamps within this value in seconds compare true.
                         Default is 120.
-  -o SECONDS, --timeout=SECONDS
-                        Socket timeout in seconds. Default is 10.
+  -u SECONDS, --upload-only=SECONDS
+                        Upload only records every SECONDS apart or more.
+                        Default is 300.
   -v, --verbose         Print useful extra output.
   -l LOG_FACILITY, --log=LOG_FACILITY
                         OBSOLETE. Logging will always occur.
   -t, --test            Test what would happen, but don't do anything.
   -q, --query           For each record, query the user before making a
                         change.
+  -o SECONDS, --timeout=SECONDS
+                        Socket timeout in seconds. Default is 10.
 
 Options 'station', 'password', and 'api-key' must be supplied either on the
 command line, or in the configuration file.</pre>
@@ -3735,13 +3732,25 @@ command line, or in the configuration file.</pre>
 
         <pre class="tty cmd">wunderfixer --epsilon=60</pre>
 
-        <h3>Option <span class="code" id="wunderfixer_timeout">--timeout</span></h3>
+        <h3>Option <span class="code" id="wunderfixer_upload-only">--upload-only</span></h3>
 
-        <p>Sets how long to wait for a response from the Weather Underground. At times of high usage,
-        it might help to increase this value. Default is 10 seconds.
+        <p>
+            The Weather Underground will store records no more often than every 5 minutes.
+            If your archive interval is something less than this (for example, 1 minute), then
+            <span class="code">wunderfixer</span> will report many "missing" records. Trying
+            to upload them would be futile and take unnecessary bandwidth, because the WU will
+            just reject them. For this reason, by default, <span class="code">wunderfixer</span>
+            will upload records no more frequently than every 300 seconds (5 minutes). This option
+            allows you to override this. The option is used as follows:
         </p>
 
-        <pre class="tty cmd">wunderfixer --timeout=20</pre>
+        <pre class="tty">wunderfixer --upload-only=60</pre>
+
+        <p>
+            If your archive interval is 60 seconds, this will cause
+            <span class="code">wunderfixer</span> to upload every record, instead of every 5th
+            record. NB: unfortunately, the WU will not store them.
+        </p>
 
         <h3>Option <span class="code" id="wunderfixer_verbose">--verbose</span></h3>
 
@@ -3752,9 +3761,9 @@ command line, or in the configuration file.</pre>
 
         <h3>Option <span class="code" id="wunderfixer_log">--log</span></h3>
 
-        <p>The <span class="code">--log</span> option is obsolete and no longer performs any function. The
-            <span class="code">--log</span> option has been retained for backwards compatibility with users existing
-            scripts. All <span class="code">wunderfixer</span> log output is always logged via the WeeWX log facility.
+        <p>
+            The <span class="code">--log</span> option is obsolete and no longer has any affect, but
+            is retained for backwards compatibility.
         </p>
 
         <h3>Option <span class="code" id="wunderfixer_test">--test</span></h3>
@@ -3773,6 +3782,14 @@ command line, or in the configuration file.</pre>
             records or <span class="code">q</span> to skip the record and quit <span class="code">wunderfixer</span>.
             The <span class="code">--query</span> option should not be used as part of a cron job.
         </p>
+
+        <h3>Option <span class="code" id="wunderfixer_timeout">--timeout</span></h3>
+
+        <p>Sets how long to wait for a response from the Weather Underground. At times of high usage,
+            it might help to increase this value. Default is 10 seconds.
+        </p>
+
+        <pre class="tty cmd">wunderfixer --timeout=20</pre>
 
 
         <h2 id='wunderfixer_direct'>Running directly</h2>

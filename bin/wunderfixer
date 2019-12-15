@@ -9,17 +9,20 @@
 # See the file LICENSE.txt for your full rights.
 #
 # ===============================================================================
-"""This utility fills in missing data on the Weather Underground.  It
-goes through all the records in a weewx archive file for a given
-day, comparing to see whether a corresponding record exists on the
-Weather Underground. If not, it will publish a new record on the
-Weather Underground with the missing data.
+"""This utility fills in missing data on the Weather Underground.  It goes through all the records
+in a weewx archive file for a given day, comparing to see whether a corresponding record exists on
+the Weather Underground. If not, it will publish a new record on the Weather Underground with the
+missing data.
 
-Details of the API for downloading historical data from the WU
-can be found here: https://docs.google.com/document/d/1w8jbqfAk0tfZS5P7hYnar1JiitM0gQZB-clxDfG3aD0/edit
+Details of the API for downloading historical data from the WU can be found here:
+https://docs.google.com/document/d/1w8jbqfAk0tfZS5P7hYnar1JiitM0gQZB-clxDfG3aD0/edit
 
 CHANGE HISTORY
 --------------------------------
+1.8.0 12/15/2019
+Fixed bug where epsilon was not recognized.
+Added option 'upload-only', with default of 300 seconds.
+
 1.7.0 12/03/2019
 Now uses "dual APIs." One for today, one for historical data.
 
@@ -103,8 +106,8 @@ log = logging.getLogger(__name__)
 usagestr = """%prog CONFIG_FILE|--config=CONFIG_FILE
                   [--binding=BINDING]
                   [--station=STATION] [--password=PASSWORD] [--api-key=API_KEY]
-                  [--date=YYYY-mm-dd] [--epsilon=SECONDS] [--timeout=SECONDS]
-                  [--verbose] [--log LOG_FACILITY] [--test] [--query]
+                  [--date=YYYY-mm-dd] [--epsilon=SECONDS] [--upload-only=SECONDS] 
+                  [--verbose] [--test] [--query] [--timeout=SECONDS]
                   [--help]
 
 This utility fills in missing data on the Weather Underground.  It goes through
@@ -118,20 +121,17 @@ proposes!"""
 epilog = """Options 'station', 'password', and 'api-key' must be supplied either
 on the command line, or in the configuration file."""
 
-__version__ = "1.6.0"
+__version__ = "1.8.0"
 
 # The number of seconds difference in the timestamp between two records
 # and still have them considered to be the same: 
 epsilon = None
 
-# Instance of our logger
-wlog = None
-
 
 def main():
     """main program body for wunderfixer"""
 
-    global epsilon, wlog
+    global epsilon
 
     # Set defaults for logging:
     weeutil.logger.setup('wunderfixer', {})
@@ -154,10 +154,11 @@ def main():
     parser.add_option("-d", "--date", metavar="YYYY-mm-dd",
                       help="Date to check as a string of form YYYY-mm-dd. Default is today.")
     parser.add_option("-e", "--epsilon", type="int", metavar="SECONDS", default=120,
-                      help="Timestamps within this value in seconds compare true. Default "
-                           "is 120.")
-    parser.add_option("-o", "--timeout", type="int", metavar="SECONDS", default=10,
-                      help="Socket timeout in seconds. Default is 10.")
+                      help="Timestamps within this value in seconds compare true. "
+                           "Default is 120.")
+    parser.add_option("-u", "--upload-only", type="int", metavar="SECONDS", default=300,
+                      help="Upload only records every SECONDS apart or more. "
+                           "Default is 300.")
     parser.add_option("-v", "--verbose", action="store_true",
                       help="Print useful extra output.")
     parser.add_option("-l", "--log", type="string", dest="logging", metavar="LOG_FACILITY",
@@ -166,6 +167,8 @@ def main():
                       help="Test what would happen, but don't do anything.")
     parser.add_option("-q", "--query", action="store_true",
                       help="For each record, query the user before making a change.")
+    parser.add_option("-o", "--timeout", type="int", metavar="SECONDS", default=10,
+                      help="Socket timeout in seconds. Default is 10.")
 
     (options, args) = parser.parse_args()
 
@@ -236,8 +239,10 @@ def main():
         log.info("Checking Weather Underground station '%s' data "
                  "for date %s" % (options.station, date_date))
 
+    group_by = options.upload_only if options.upload_only else None
+
     # Get all the time stamps in the archive for the given day:
-    archive_results = getArchiveDayTimeStamps(dbmanager_t, date_date)
+    archive_results = getArchiveDayTimeStamps(dbmanager_t, date_date, group_by)
 
     if options.verbose:
         print("Number of archive records:    ", len(archive_results))
@@ -282,8 +287,8 @@ def main():
         log.error("No results returned from Weather Underground for station '%s'"
                   "(perhaps a bad station name??). Publishing anyway." % options.station)
 
-    # Form the difference between the two sets, then sort the results
-    missing_records = sorted(archive_results.difference(wunder_results))
+    # Find the difference between the two lists, then sort them
+    missing_records = sorted([ts for ts in archive_results if ts not in wunder_results])
 
     if options.verbose:
         print("Number of missing records:    ", len(missing_records))
@@ -294,9 +299,8 @@ def main():
     no_published = 0
     # Loop through the missing time stamps:
     for time_TS in missing_records:
-        ts = time_TS.ts
         # Get the archive record for this timestamp:
-        record = dbmanager_t.getRecord(ts)
+        record = dbmanager_t.getRecord(time_TS.ts)
         # Print it out:
         print(print_record(record), end=' ', file=sys.stdout)
         sys.stdout.flush()
@@ -327,33 +331,33 @@ def main():
             except weewx.restx.FailedPost as e:
                 print(e, file=sys.stderr)
                 print("Aborted.", file=sys.stderr)
-                log.error("%s ...error %s. Aborting." % (timestamp_to_string(record['dateTime']), e))
+                log.error("%s ...error %s. Aborting.", timestamp_to_string(record['dateTime']), e)
                 exit("Failed post")
             except weewx.restx.AbortedPost as e:
                 print(" ... not published.", file=sys.stderr)
                 print("Reason: ", e)
-                log.error("%s ...not published. Reason '%s'" %
-                          (timestamp_to_string(record['dateTime']), e))
+                log.error("%s ...not published. Reason '%s'",
+                          timestamp_to_string(record['dateTime']), e)
             except IOError as e:
                 print(" ... not published.", file=sys.stderr)
                 print("Reason: ", e)
-                log.error("%s ...not published. Reason '%s'"
-                          % (timestamp_to_string(record['dateTime']), e))
+                log.error("%s ...not published. Reason '%s'",
+                          timestamp_to_string(record['dateTime']), e)
                 if hasattr(e, 'reason'):
                     print("Failed to reach server. Reason: %s" % e.reason, file=sys.stderr)
-                    log.error("%s ...not published. Failed to reach server. Reason '%s'" %
-                              (timestamp_to_string(record['dateTime']), e.reason))
+                    log.error("%s ...not published. Failed to reach server. Reason '%s'",
+                              timestamp_to_string(record['dateTime']), e.reason)
                 if hasattr(e, 'code'):
                     print("Failed to reach server. Error code: %s" % e.code, file=sys.stderr)
-                    log.error("%s ...not published. Failed to reach server. Error code '%s'" %
-                              (timestamp_to_string(record['dateTime']), e.code))
+                    log.error("%s ...not published. Failed to reach server. Error code '%s'",
+                              timestamp_to_string(record['dateTime']), e.code)
 
         else:
             print(" ... skipped.")
-            log.debug("%s ...skipped" % timestamp_to_string(record['dateTime']))
+            log.debug("%s ...skipped", timestamp_to_string(record['dateTime']))
     log.info("%s out of %s missing records published to '%s' for date %s."
-             " Wunderfixer exiting."
-             % (no_published, len(missing_records), options.station, date_date))
+             " Wunderfixer exiting.",
+             no_published, len(missing_records), options.station, date_date)
 
 
 # ===============================================================================
@@ -375,16 +379,18 @@ class WunderStation(weewx.restx.AmbientThread):
         
         return: a set containing the timestamps in epoch time
         """
-        # We need to do different API calls depending on whether we are asking for today's weather, or historical
-        # weather. Go figure.
+        # We need to do different API calls depending on whether we are asking for today's weather,
+        # or historical weather. Go figure.
         if day_requested >= datetime.date.today():
             # WU API URL format for today's weather
-            url = "https://api.weather.com/v2/pws/observations/all/1day?stationId=%s&format=json&units=m&apiKey=%s" \
+            url = "https://api.weather.com/v2/pws/observations/all/1day?stationId=%s" \
+                  "&format=json&units=m&apiKey=%s" \
                    % (self.station, self.api_key)
         else:
             # WU API URL format for historical weather
             day_tt = day_requested.timetuple()
-            url = "https://api.weather.com/v2/pws/history/all?stationId=%s&format=json&units=m&date=%4.4d%2.2d%2.2d&apiKey=%s" \
+            url = "https://api.weather.com/v2/pws/history/all?stationId=%s&format=json" \
+                  "&units=m&date=%4.4d%2.2d%2.2d&apiKey=%s" \
                    % (self.station, day_tt[0], day_tt[1], day_tt[2], self.api_key)
 
         request = urllib.request.Request(url)
@@ -394,12 +400,14 @@ class WunderStation(weewx.restx.AmbientThread):
         try:
             response = urllib.request.urlopen(url)
         except urllib.error.URLError as e:
-            print("Unable to open Weather Underground station " + self.station, " or ", e, file=sys.stderr)
+            print("Unable to open Weather Underground station " + self.station, " or ", e,
+                  file=sys.stderr)
             log.error("Unable to open Weather Underground station %s or %s" % (self.station, e))
             raise
         except socket.timeout as e:
-            print("Socket timeout for Weather Underground station " + self.station, file=sys.stderr)
-            log.error("Socket timeout for Weather Underground station %s" % self.station)
+            print("Socket timeout for Weather Underground station " + self.station,
+                  file=sys.stderr)
+            log.error("Socket timeout for Weather Underground station %s", self.station)
             raise
 
         if hasattr(response, 'code') and response.code != 200:
@@ -408,8 +416,8 @@ class WunderStation(weewx.restx.AmbientThread):
             else:
                 raise IOError("Bad response code returned: %d" % response.code)
 
-        # The WU API says that compression is required, yet it seems to always returns uncompressed JSON.
-        # Just in case they decide to turn that requirement on, let's be ready for it:
+        # The WU API says that compression is required, yet it seems to always returns uncompressed
+        # JSON. Just in case they decide to turn that requirement on, let's be ready for it:
         if response.info().get('Content-Encoding') == 'gzip':
             buf = six.StringIO(response.read())
             f = gzip.GzipFile(fileobj=buf)
@@ -419,8 +427,8 @@ class WunderStation(weewx.restx.AmbientThread):
 
         wu_data = json.load(data)
 
-        # We are only interested in the time stamps.
-        time_stamps = set(map(lambda record: TimeStamp(record['epoch']), wu_data['observations']))
+        # We are only interested in the time stamps. Form a list of them
+        time_stamps = [TimeStamp(record['epoch']) for record in wu_data['observations']]
 
         return time_stamps
 
@@ -493,10 +501,12 @@ def print_record(record):
     return _string_result
 
 
-def getArchiveDayTimeStamps(dbmanager, day_requested):
+def getArchiveDayTimeStamps(dbmanager, day_requested, group_by):
     """Returns all time stamps in a weewx archive file for a given day
     
     day_requested: An instance of datetime.date
+
+    group_by: If present, group by this number of seconds.
     
     returns: A set containing instances of TimeStamps
     """
@@ -515,11 +525,16 @@ def getArchiveDayTimeStamps(dbmanager, day_requested):
     start_ts = time.mktime(start_date.timetuple())
     end_ts = time.mktime(end_date.timetuple())
 
-    _gen_rows = dbmanager.genSql("""SELECT dateTime FROM archive WHERE dateTime>=? AND dateTime<?""",
-                                 (start_ts, end_ts))
+    if group_by:
+        sql_stmt = "SELECT dateTime FROM archive WHERE dateTime>=? AND dateTime<? " \
+               "GROUP BY ROUND(dateTime/%d);" % group_by
+    else:
+        sql_stmt = "SELECT dateTime FROM archive WHERE dateTime>=? AND dateTime<?"
 
-    # Map the result set on to a set of TimeStamp objects
-    time_stamps = set(map(lambda record: TimeStamp(record[0]), _gen_rows))
+    _gen_rows = dbmanager.genSql(sql_stmt, (start_ts, end_ts))
+
+    # Create a list of all the time stamps
+    time_stamps = [TimeStamp(record[0]) for record in _gen_rows]
 
     return time_stamps
 
