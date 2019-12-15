@@ -628,13 +628,16 @@ class StdArchive(StdService):
         lastgood_ts = dbmanager.lastGoodStamp()
 
         try:
-            # Now ask the console for any new records since then. Not all consoles support this feature. Note that for
-            # some consoles, notably the Vantage, when doing a long catchup the archive records may not be on the same
-            # boundaries as the archive interval.
+            # Now ask the console for any new records since then. Not all
+            # consoles support this feature. Note that for some consoles,
+            # notably the Vantage, when doing a long catchup the archive
+            # records may not be on the same boundaries as the archive
+            # interval. Reject any records that have a timestamp in the
+            # future, but provide some lenience for clock drift.
             now = time.time()
             for record in generator(lastgood_ts):
                 ts = record.get('dateTime')
-                if ts and ts < now:
+                if ts and ts < now + self.archive_delay:
                     self.engine.dispatchEvent(weewx.Event(weewx.NEW_ARCHIVE_RECORD,
                                                           record=record,
                                                           origin='hardware'))
