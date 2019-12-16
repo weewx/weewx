@@ -93,7 +93,7 @@ See PR #467. Thanks to user Rich Bell!
 Fixed bug that caused windrun to be calculated wrongly under METRICWX
 unit system. Fixes issue #452.
 
-If a bad value of 'interval' is encounted in a record, the program will
+If a bad value of 'interval' is encountered in a record, the program will
 simply ignore it, rather than stopping. Address issue #375.
 
 Change in how the archive timespan is calculated in the engine. This allows
@@ -104,6 +104,12 @@ NOAA reports are now more tolerant of missing data. Fixes issue #300.
 Use of strftime() date and time format codes in template file names is now
 supported as an alternative to the legacy 'YYYY', 'MM' and 'DD'. The legacy
 codes continue to be supported for backwards compatibility. Fixes issue #415.
+
+New --calc-missing action added to wee_database to calculate and store derived
+observations.
+
+wee_import now calculates missing derived observations once all imported data
+has been saved to archive. Fixes issue #443.
 
 Ignore historical records if the timestamp is in the future.
 
