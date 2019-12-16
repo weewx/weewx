@@ -451,7 +451,7 @@ class Source(object):
                                                     'binding': self.db_binding_wx,
                                                     'start_ts': self.earliest_ts-0.5,
                                                     'stop_ts': self.latest_ts,
-                                                    'trans_days': 10,
+                                                    'trans_days': 1,
                                                     'dry_run': self.dry_run is True}
                         # now obtain a CalcMissing object
                         self.calc_missing_obj = weecfg.database.CalcMissing(self.config_dict,
