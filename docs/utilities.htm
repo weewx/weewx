@@ -3457,8 +3457,23 @@ Unique records processed: 12000; Last timestamp: 2018-12-09 07:59:00 AEST (15443
                 <p>The line commencing with <span class="code">Unique records processed</span> should update as records
                     are imported with progress information on number of unique records processed and the date time of the
                     latest record processed. If the import spans multiple months then a new
-                    <span class="code">Period</span> line is created for each month. When the import is complete a brief
-                    summary is displayed similar to the following:
+                    <span class="code">Period</span> line is created for each month.
+                </p>
+
+                <p>Once the initial import is complete <span class="code">wee_import</span> will, if requested, calculate
+                    any missing derived observations and rebuild the daily summaries. A brief summary should be displayed
+                    similar to the following:
+                </p>
+
+                <pre class="tty">Calculating missing derived observations ...
+Processing record: 184549; Last record: 2019-01-08 00:00:00 AEST (1546869600)
+Recalculating daily summaries...
+Records processed: 184000; Last date: 2019-01-06 20:34:00 AEST (1546770840)
+Finished recalculating daily summaries
+Finished calculating missing derived observations
+</pre>
+
+                <p>When the import is complete a brief summary is displayed similar to the following:
                 </p>
 
                 <pre class="tty">Finished import
