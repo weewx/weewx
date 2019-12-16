@@ -245,9 +245,16 @@ class WUSource(weeimport.Source):
         # The WU API says that compression is required, but let's be prepared
         # if compression is not used
         if response.info().get('Content-Encoding') == 'gzip':
-            buf = six.StringIO(response.read())
+            buf = six.BytesIO(response.read())
             f = gzip.GzipFile(fileobj=buf)
-            _raw_data = f.read()
+            # but what charset is in use
+            try:
+                char_set = response.headers.get_content_charset()
+            except AttributeError:
+                # must be python2
+                char_set = response.headers.getparam('charset')
+            # get the raw data making sure we decode the charset
+            _raw_data = f.read().decode(char_set)
             # decode the json data
             _raw_decoded_data = json.loads(_raw_data)
         else:
@@ -268,7 +275,7 @@ class WUSource(weeimport.Source):
                 # initialise a dict to hold the resulting data for this record
                 _flat_record = {}
                 # iterate over each WU API response field that we can use
-                _fields = self._header_map.keys() + self._extras
+                _fields = list(self._header_map) + self._extras
                 for obs in _fields:
                     # The field may appear as a top level field in the WU data
                     # or it may be embedded in the dict in the WU data that
