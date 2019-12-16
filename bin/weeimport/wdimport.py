@@ -214,10 +214,10 @@ class WDSource(weeimport.Source):
 
         # field delimiter used in text format monthly log files, default to
         # space
-        self.txt_delimiter = wd_config_dict.get('txt_delimiter', ' ')
+        self.txt_delimiter = str(wd_config_dict.get('txt_delimiter', ' '))
         # field delimiter used in csv format monthly log files, default to
         # comma
-        self.csv_delimiter = wd_config_dict.get('csv_delimiter', ',')
+        self.csv_delimiter = str(wd_config_dict.get('csv_delimiter', ','))
 
         # decimal separator used in monthly log files, default to decimal point
         self.decimal = wd_config_dict.get('decimal', '.')
