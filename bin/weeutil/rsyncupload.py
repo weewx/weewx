@@ -25,7 +25,8 @@ class RsyncUpload(object):
 
     def __init__(self, local_root, remote_root,
                  server, user=None, delete=False, port=None,
-                 ssh_options=None, compress=False, log_success=True):
+                 ssh_options=None, compress=False, log_success=True,
+                 timeout=None):
         """Initialize an instance of RsyncUpload.
         
         After initializing, call method run() to perform the upload.
@@ -46,6 +47,7 @@ class RsyncUpload(object):
         self.ssh_options = ssh_options
         self.compress = compress
         self.log_success = log_success
+        self.timeout = timeout
 
     def run(self):
         """Perform the actual upload."""
@@ -56,7 +58,8 @@ class RsyncUpload(object):
         # that as a request to copy all the directory's *contents*,
         # whereas if it doesn't, it copies the entire directory.
         # We want the former, so make it end with a slash.
-        if self.local_root.endswith(os.sep):
+        # Note: Don't add the slash if local_root isn't a directory
+        if self.local_root.endswith(os.sep) or not os.path.isdir(self.local_root):
             rsynclocalspec = self.local_root
         else:
             rsynclocalspec = self.local_root + os.sep
@@ -88,11 +91,14 @@ class RsyncUpload(object):
             cmd.extend(["--delete"])
         if self.compress:
             cmd.extend(["--compress"])
+        if self.timeout is not None:
+            cmd.extend(["--timeout=%s" % self.timeout])
         cmd.extend(["-e %s" % rsyncsshstring])
         cmd.extend([rsynclocalspec])
         cmd.extend([rsyncremotespec])
 
         try:
+            log.debug("rsyncupload: cmd: [%s]" % cmd)
             rsynccmd = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
             stdout = rsynccmd.communicate()[0]
