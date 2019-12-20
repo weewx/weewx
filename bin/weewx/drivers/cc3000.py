@@ -53,9 +53,10 @@ The rainwise rain bucket measures 0.01 inches per tip.  The logger firmware
 automatically converts the bucket tip count to the measure of rain in ENGLISH
 or METRIC units.
 
-The historical records appear to track amount of rain since midnight.  If there
-is any rainfall in the history, the count resets after midnight.  But the
-current rain counter appears to be an absolute count.
+The historical records track amount of rain since midnight.  If there
+is any rainfall in the history, the count resets after midnight.  The
+current rain counter also resets at midnight (observed in
+Rainwise CC-3000 Version: 1.3 Build 022 Dec 02 2016).
 
 Logger uses the following units:
                ENGLISH  METRIC
@@ -69,6 +70,9 @@ systems, specifically with the system log and the USB.  It seems like we have no
 loss, but logging of the history reads is lossy, especially with debug enabled.
 
 This driver was tested with:
+  Rainwise CC-3000 Version: 1.3 Build 022 Dec 02 2016
+
+Earlier versions of this driver were tested with:
   Rainwise CC-3000 Version: 1.3 Build 006 Sep 04 2013
   Rainwise CC-3000 Version: 1.3 Build 016 Aug 21 2014
 """
@@ -77,8 +81,9 @@ This driver was tested with:
 #        a strict protocol where we wait for an OK response, but one version of
 #        the firmware responds whereas another version does not, this leads to
 #        comm problems.  specializing the code to handle quirks of each
-#        firmware version is not desirable.  maybe just do a flush of the
-#        serial buffer before doing any command?
+#        firmware version is not desirable.  As of 0.30, in an atempt to address
+#        this issue, the driver does a flush of the serial buffer before doing
+#        any command.
 
 # FIXME: figure out whether logger retains non-fixed interval data
 
@@ -102,6 +107,8 @@ from six.moves import input
 
 import weeutil.weeutil
 import weewx.drivers
+import weewx.wxformulas
+from weewx.crc16 import crc16
 
 log = logging.getLogger(__name__)
 
@@ -197,7 +204,7 @@ class CC3000Configurator(weewx.drivers.AbstractConfigurator):
             self.set_clock(prompt)
         elif options.getdst:
             print(self.driver.station.get_dst())
-        elif options.dst is not None:
+        elif options.setdst is not None:
             self.set_dst(options.setdst, prompt)
         elif options.getint:
             print(self.driver.station.get_interval() * 60)
@@ -373,6 +380,8 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
         DEBUG_OPENCLOSE = int(stn_dict.get('debug_openclose', 0))
 
         self.max_tries = int(stn_dict.get('max_tries', 5))
+        # FIXME: remove retry_wait as it is no longer used.  The
+        #        sleeps before retries provide no benefit.
         self.retry_wait = int(stn_dict.get('retry_wait', 60))
         self.model = stn_dict.get('model', 'CC3000')
         port = stn_dict.get('port', CC3000.DEFAULT_PORT)
@@ -475,8 +484,11 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
             except (serial.serialutil.SerialException, weewx.WeeWxIOError) as e:
                 log.error("Failed attempt %d of %d to get data: %s" %
                        (ntries, self.max_tries, e))
-                log.debug("Waiting %d seconds before retry" % self.retry_wait)
-                time.sleep(self.retry_wait)
+                # FIXME: On firmware 1.3 Build 022 Dec 02 2016, it has been
+                # observed that a sleep is not required.
+                #log.debug("Waiting %d seconds before retry" % self.retry_wait)
+                #time.sleep(self.retry_wait)
+                log.info("genLoopPackets: SKIPPING wait of %d seconds before retry" % self.retry_wait)
         else:
             msg = "Max retries (%d) exceeded" % self.max_tries
             log.error(msg)
@@ -548,8 +560,12 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
             except (serial.serialutil.SerialException, weewx.WeeWxIOError) as e:
                 log.error("Failed attempt %d of %d to initialize station: %s" %
                        (cnt + 1, max_tries, e))
-                log.debug("Waiting %d seconds before retry" % retry_wait)
-                time.sleep(retry_wait)
+                # FIXME: On firmware 1.3 Build 022 Dec 02 2016, it has been
+                # observed that a sleep is not required.  Let's try removing
+                # the sleep.
+                #log.debug("Waiting %d seconds before retry" % retry_wait)
+                #time.sleep(retry_wait)
+                log.info("init_station: SKIPPING wait of %d seconds before retry" % self.retry_wait)
         else:
             raise weewx.RetriesExceeded("Max retries (%d) exceeded while initializing station" % max_tries)
 
@@ -569,19 +585,8 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
 
     @staticmethod
     def _rain_total_to_delta(rain_total, last_rain):
-        # calculate the rain delta from rain total
-        # FIXME: replace with wxformulas.calculate_rain
-        rain_delta = None
-        if last_rain is not None:
-            if rain_total >= last_rain:
-                rain_delta = (rain_total - last_rain)
-            else:
-                log.info("rain counter rollover detected: new=%s last=%s" %
-                       (rain_total, last_rain))
-        else:
-            log.info("rain skipped for rain_total=%s: no last rain measurement" %
-                   rain_total)
-        return rain_delta
+        # calculate the rain delta between the current and previous rain totals.
+        return weewx.wxformulas.calculate_rain(rain_total, last_rain)
 
     @staticmethod
     def _parse_current(values, header, sensor_map):
@@ -643,25 +648,8 @@ def _format_bytes(buf):
 def _fmt(buf):
     return [x for x in buf if x in string.printable]
 
-# calculate the crc for a string using CRC-16-CCITT
-# http://bytes.com/topic/python/insights/887357-python-check-crc-frame-crc-16-ccitt
-def _crc16(data):
-    reg = 0x0000
-    data += '\x00\x00'
-    for byte in data:
-        mask = 0x80
-        while mask > 0:
-            reg <<= 1
-            if byte2int(byte) & mask:
-                reg += 1
-            mask >>= 1
-            if reg > 0xffff:
-                reg &= 0xffff
-                reg ^= 0x1021
-    return reg
-
 def _check_crc(buf):
-    idx = buf.find('!')
+    idx = buf.find(b'!')
     if idx < 0:
         return
     a = 0
@@ -671,7 +659,7 @@ def _check_crc(buf):
         cs = buf[idx+1:idx+5]
         if DEBUG_CHECKSUM:
             log.debug("found checksum at %d: %s" % (idx, cs))
-        a = _crc16(buf[0:idx]) # calculate checksum
+        a = crc16(buf[0:idx]) # calculate checksum
         if DEBUG_CHECKSUM:
             log.debug("calculated checksum %x" % a)
         b = int(cs, 16) # checksum provided in data
@@ -696,7 +684,12 @@ class CC3000(object):
     def __init__(self, port):
         self.port = port
         self.baudrate = 115200
-        self.timeout = 5 # seconds.  clear memory takes 4 seconds.
+        self.timeout = 1 # seconds for everyting except MEM=CLEAR
+        # MEM=CLEAR of even two records needs a timeout of 13 or more.  20 is probably safe.
+        #           flush    cmd      echo      value
+        #           0.000022 0.000037 12.819934 0.000084
+        #           0.000018 0.000036 12.852024 0.000088
+        self.mem_clear_timeout = 20 # reopen w/ bigger  timeout for MEM=CLEAR
         self.serial_port = None
 
     def __enter__(self):
@@ -706,11 +699,12 @@ class CC3000(object):
     def __exit__(self, _, value, traceback):
         self.close()
 
-    def open(self):
+    def open(self, timeoutOverride=None):
         if DEBUG_OPENCLOSE:
             log.debug("open serial port %s" % self.port)
+        to = timeoutOverride if timeoutOverride is not None else self.timeout
         self.serial_port = serial.Serial(self.port, self.baudrate,
-                                         timeout=self.timeout)
+                                         timeout=to)
 
     def close(self):
         if self.serial_port is not None:
@@ -722,22 +716,24 @@ class CC3000(object):
     def write(self, data):
         if DEBUG_SERIAL:
             log.debug("write: '%s'" % data)
-        n = self.serial_port.write(data)
-        if n is not None and n != len(data):
+        buf = data.encode('UTF-8')
+        n = self.serial_port.write(buf)
+        if n is not None and n != len(buf):
             raise weewx.WeeWxIOError("Write expected %d chars, sent %d" %
-                                     (len(data), n))
+                                     (len(buf), n))
 
     def read(self):
         """The station sends CR NL before and after any response.  Some
         responses have a 4-byte CRC checksum at the end, indicated with an
         exclamation.  Not every response has a checksum.
         """
-        data = self.serial_port.readline()
+        buf = self.serial_port.readline()
+        data = buf.decode('utf-8')
         if DEBUG_SERIAL:
             log.debug("read: '%s' (%s)" % (_fmt(data), _format_bytes(data)))
         data = data.strip()
         data = _strip_unprintables(data) # eliminate random NULL characters
-        _check_crc(data)
+        _check_crc(data.encode('utf-8'))
         return data
 
     def flush(self):
@@ -760,12 +756,131 @@ class CC3000(object):
         self.write("%s\r" % cmd)
 
     def command(self, cmd):
-        self.send_cmd(cmd)
-        data = self.read()
-        if data != cmd:
-            raise weewx.WeeWxIOError("Command failed: cmd='%s' reply='%s' (%s)"
-                                     % (cmd, _fmt(data), _format_bytes(data)))
-        return self.read()
+        # Sample timings for first fifteen NOW commands after startup.
+        #   Flush     CMD     ECHO     VALUE
+        # -------- -------- -------- --------
+        # 0.000021 0.000054 0.041557 0.001364
+        # 0.000063 0.000109 0.040432 0.001666
+        # 0.000120 0.000123 0.024272 0.016871
+        # 0.000120 0.000127 0.025148 0.016657
+        # 0.000119 0.000126 0.024966 0.016665
+        # 0.000130 0.000142 0.041037 0.001791
+        # 0.000120 0.000126 0.023533 0.017023
+        # 0.000120 0.000137 0.024336 0.016747
+        # 0.000117 0.000133 0.026254 0.016684
+        # 0.000120 0.000140 0.025014 0.016739
+        # 0.000121 0.000134 0.024801 0.016779
+        # 0.000120 0.000141 0.024635 0.016906
+        # 0.000118 0.000129 0.024354 0.016894
+        # 0.000120 0.000133 0.024214 0.016861
+        # 0.000118 0.000122 0.024599 0.016865
+
+        # MEM=CLEAR needs a longer timeout.  >12s to clear a small number of records has been observed.
+        # It also appears to be highly variable.  The two examples below are from two different CC3000s.
+        #
+        # In this example, clearing at 11,595 records took > 6s.
+        # Aug 18 06:46:21 charlemagne weewx[684]: cc3000: logger is at 11595 records, logger clearing threshold is 10000
+        # Aug 18 06:46:21 charlemagne weewx[684]: cc3000: clearing all records from logger
+        # Aug 18 06:46:21 charlemagne weewx[684]: cc3000: MEM=CLEAR: The resetting of timeout to 20 took 0.000779 seconds.
+        # Aug 18 06:46:28 charlemagne weewx[684]: cc3000: MEM=CLEAR: times: 0.000016 0.000118 6.281638 0.000076
+        # Aug 18 06:46:28 charlemagne weewx[684]: cc3000: MEM=CLEAR: The resetting of timeout to 1 took 0.001444 seconds.
+        # 
+        # In this example, clearing at 11,475 records took > 12s.
+        # Aug 18 07:17:14 ella weewx[615]: cc3000: logger is at 11475 records, logger clearing threshold is 10000
+        # Aug 18 07:17:14 ella weewx[615]: cc3000: clearing all records from logger
+        # Aug 18 07:17:14 ella weewx[615]: cc3000: MEM=CLEAR: The resetting of timeout to 20 took 0.001586 seconds.
+        # Aug 18 07:17:27 ella weewx[615]: cc3000: MEM=CLEAR: times: 0.000020 0.000058 12.459346 0.000092
+        # Aug 18 07:17:27 ella weewx[615]: cc3000: MEM=CLEAR: The resetting of timeout to 1 took 0.001755 seconds.
+        #
+        # Here, clearing 90 records took very close to 13 seconds.
+        # Aug 18 14:46:00 ella weewx[24602]: cc3000: logger is at 91 records, logger clearing threshold is 90
+        # Aug 18 14:46:00 ella weewx[24602]: cc3000: clearing all records from logger
+        # Aug 18 14:46:00 ella weewx[24602]: cc3000: MEM=CLEAR: The resetting of timeout to 20 took 0.000821 seconds.
+        # Aug 18 14:46:13 ella weewx[24602]: cc3000: MEM=CLEAR: times: 0.000037 0.000061 12.970494 0.000084
+        # Aug 18 14:46:13 ella weewx[24602]: cc3000: MEM=CLEAR: The resetting of timeout to 1 took 0.001416 seconds.
+
+        reset_timeout = False
+
+        # MEM=CLEAR needs a much larger timeout value.  Reopen with that larger timeout and reset below.
+        #
+        # Closing and reopening with a different timeout is quick:
+        #     Aug 18 07:17:14 ella weewx[615]: cc3000: MEM=CLEAR: The resetting of timeout to 20 took 0.001586 seconds.
+        #     Aug 18 07:17:27 ella weewx[615]: cc3000: MEM=CLEAR: The resetting of timeout to 1 took 0.001755 seconds.
+        if cmd == 'MEM=CLEAR':
+            reset_timeout = True # Reopen with default timeout in finally.
+            t1 = time.time()
+            self.close()
+            self.open(self.mem_clear_timeout)
+            t2 = time.time()
+            close_open_time = t2 - t1
+            log.info("%s: The resetting of timeout to %d took %f seconds." % (cmd, self.mem_clear_timeout, close_open_time))
+
+        try:
+            # All commands will be retried if they timeout.
+            t1 = time.time()
+            self.flush()          # flush - TBD if this provides any benefit
+            t2 = time.time()
+            flush_time = t2 - t1
+            self.send_cmd(cmd)    # send cmd
+            t3 = time.time()
+            cmd_time = t3 - t2
+            data = self.read()    # read the cmd echo
+            t4 = time.time()
+            echo_time = t4 - t3
+
+            retrying = False      # set to true below if retrying, so we can report on retry success
+
+            # if a command timed out reading back the echo of the command, retry.  In practice, the retry always works.
+            if (cmd != 'MEM=CLEAR' and echo_time >= self.timeout) or (cmd == 'MEM=CLEAR' and echo_time >= self.mem_clear_timeout):
+                log.info("%s: times: %f %f %f -retrying-" % (cmd, flush_time, cmd_time, echo_time))
+                # Reading the echo timed out!  No need to read the values as it will also time out.
+                log.info("%s: Reading cmd echo timed out (%f seconds), retrying." % (cmd, echo_time))
+                # The command will be retried.  Retrying setting the time must be special cased as
+                # now more than one second has passed.  As such, redo the command with the current time.
+                if cmd.startswith("TIME=") and cmd != "TIME=?":
+                    cmd = self._compose_set_time_command()
+                t1 = time.time()
+                self.flush()          # flush
+                t2 = time.time()
+                flush_time = t2 - t1
+                self.send_cmd(cmd)    # send cmd
+                t3 = time.time()
+                cmd_time =  t3 - t2
+                data = self.read()    # read cmd echo
+                t4 = time.time()
+                echo_time = t4 - t3
+                if data != cmd:
+                    if data == '':
+                        log.info("%s: Accepting empty string as cmd echo." % cmd)
+                    else:
+                        raise weewx.WeeWxIOError("command: Command failed: cmd='%s' reply='%s' (%s)"
+                                                 % (cmd, _fmt(data), _format_bytes(data)))
+                retrying = True
+
+            t5 = time.time()
+            retval = self.read()
+            t6 = time.time()
+            value_time = t6 - t5
+            if cmd == 'MEM=CLEAR':
+                log.info("%s: times: %f %f %f %f" % (cmd, flush_time, cmd_time, echo_time, value_time))
+
+            if retrying:
+                if retval != '':
+                    log.info("%s: Retry worked." % cmd)
+                else:
+                    log.info("%s: Retry failed." % cmd)
+                log.info("%s: times: %f %f %f %f" % (cmd, flush_time, cmd_time, echo_time, value_time))
+
+            return retval
+        finally:
+            if reset_timeout:
+                t1 = time.time()
+                self.close()
+                self.open()
+                reset_timeout = True
+                t2 = time.time()
+                close_open_time = t2 - t1
+                log.info("%s: The resetting of timeout to %d took %f seconds." % (cmd, self.timeout, close_open_time))
 
     def get_version(self):
         log.debug("get firmware version")
@@ -775,9 +890,11 @@ class CC3000(object):
     # command, it often responds with an empty string.  then subsequent
     # commands get the proper response.  so for a first command, send something
     # innocuous and wait a bit.  hopefully subsequent commands will then work.
+    # NOTE: This happens periodically and does not appear to be related to
+    # "waking up".  Getter commands now retry, so removing the sleep.
     def wakeup(self):
         self.command('ECHO=?')
-        time.sleep(1.0)
+        #time.sleep(1.0)
 
     def set_echo(self, cmd='ON'):
         log.debug("set echo to %s" % cmd)
@@ -817,14 +934,18 @@ class CC3000(object):
         if tstr not in ['ERROR', 'OK']:
             data = self.read()
         if data != 'OK':
-            raise weewx.WeeWxIOError("Failed to get time: %s" % _fmt(data))
+            raise weewx.WeeWxIOError("Failed to get time: %s, %s" % (_fmt(tstr), _fmt(data)))
         return tstr
 
-    def set_time(self):
+    @staticmethod
+    def _compose_set_time_command():
         ts = time.time()
         tstr = time.strftime("%Y/%m/%d %H:%M:%S", time.localtime(ts))
-        log.debug("set time to %s (%s)" % (tstr, ts))
-        s = "TIME=%s" % tstr
+        log.info("set time to %s (%s)" % (tstr, ts))
+        return "TIME=%s" % tstr
+
+    def set_time(self):
+        s = self._compose_set_time_command()
         data = self.command(s)
         if data != 'OK':
             raise weewx.WeeWxIOError("Failed to set time to %s: %s" %
@@ -836,8 +957,14 @@ class CC3000(object):
 
     def set_dst(self, dst):
         log.debug("set DST to %s" % dst)
-        data = self.command("DST=%s" % dst)
-        # FIXME: firmware 1.3 Build 016 Aug 21 2014 does not return OK
+        # Firmware 1.3 Build 022 Dec 02 2016 returns 3 lines (<input-dst>,'',OK)
+        data = self.command("DST=%s" % dst) # echoed input dst
+        if data != dst:
+            raise weewx.WeeWxIOError("Failed to set DST to %s: %s" %
+                                     (dst, _fmt(data)))
+        data = self.read() # read ''
+        if data not in ['ERROR', 'OK']:
+            data = self.read() # read OK
         if data != 'OK':
             raise weewx.WeeWxIOError("Failed to set DST to %s: %s" %
                                      (dst, _fmt(data)))
@@ -913,13 +1040,23 @@ class CC3000(object):
     def clear_memory(self):
         log.debug("clear memory")
         data = self.command("MEM=CLEAR")
-        # FIXME: firmware 1.3 Build 016 Aug 21 2014 does not return OK
-#        if data != 'OK':
-#            raise weewx.WeeWxIOError("Failed to clear memory: %s" % _fmt(data))
+        # It's a long wait for the OK.  With a greatly increased timeout
+        # just for MEM=CLEAR, we should be able to read the OK.
+        if data == 'OK':
+            log.info("MEM=CLEAR succeeded.")
+        else:
+            raise weewx.WeeWxIOError("Failed to clear memory: %s" % _fmt(data))
 
     def get_rain(self):
         log.debug("get rain total")
-        return self.command("RAIN")
+        # Firmware 1.3 Build 022 Dec 02 2017 returns OK after the rain count
+        # This is like TIME=?
+        rstr = self.command("RAIN")
+        if rstr not in ['ERROR', 'OK']:
+            data = self.read()
+        if data != 'OK':
+            raise weewx.WeeWxIOError("Failed to get rain: %s" % _fmt(data))
+        return rstr
 
     def reset_rain(self):
         log.debug("reset rain counter")

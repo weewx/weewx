@@ -48,6 +48,90 @@ my $ACURITE_STALE_DATA = 'acurite: R1: ignoring stale data';
 my $ACURITE_NO_SENSORS = 'acurite: R1: no sensors found';
 my $ACURITE_BOGUS_STRENGTH = 'acurite: R1: bogus signal strength';
 
+# BARO, CHARGER, DST=?, HEADER, LOGINT=?, MEM=?, NOW, STATION, TIME=?, UNITS=?, RAIN, VERSION
+
+my $CC3000_VALUES_HEADER_MISMATCHES = 'cc3000: values/header mismatch';
+
+my $CC3000_BARO_CMD_ECHO_TIMED_OUT = 'cc3000: BARO cmd echo timed out';
+my $CC3000_BARO_MISSING_COMMAND_ECHO = 'cc3000: BARO echoed as empty string';
+my $CC3000_BARO_SUCCESSFUL_RETRIES = 'cc3000: BARO successful retries';
+my $CC3000_BARO_FAILED_RETRIES = 'cc3000: BARO failed retries';
+
+my $CC3000_CHARGER_CMD_ECHO_TIMED_OUT = 'cc3000: CHARGER cmd echo timed out';
+my $CC3000_CHARGER_MISSING_COMMAND_ECHO = 'cc3000: CHARGER echoed as empty string';
+my $CC3000_CHARGER_SUCCESSFUL_RETRIES = 'cc3000: CHARGER successful retries';
+my $CC3000_CHARGER_FAILED_RETRIES = 'cc3000: CHARGER failed retries';
+
+my $CC3000_DST_CMD_ECHO_TIMED_OUT = 'cc3000: DST=? cmd echo timed out';
+my $CC3000_DST_MISSING_COMMAND_ECHO = 'cc3000: DST=? echoed as empty string';
+my $CC3000_DST_SUCCESSFUL_RETRIES = 'cc3000: DST=? successful retries';
+my $CC3000_DST_FAILED_RETRIES = 'cc3000: DST=? failed retries';
+
+my $CC3000_HEADER_CMD_ECHO_TIMED_OUT = 'cc3000: HEADER cmd echo timed out';
+my $CC3000_HEADER_MISSING_COMMAND_ECHO = 'cc3000: HEADER echoed as empty string';
+my $CC3000_HEADER_SUCCESSFUL_RETRIES = 'cc3000: HEADER successful retries';
+my $CC3000_HEADER_FAILED_RETRIES = 'cc3000: HEADER failed retries';
+
+my $CC3000_LOGINT_CMD_ECHO_TIMED_OUT = 'cc3000: LOGINT=? cmd echo timed out';
+my $CC3000_LOGINT_MISSING_COMMAND_ECHO = 'cc3000: LOGINT=? echoed as empty string';
+my $CC3000_LOGINT_SUCCESSFUL_RETRIES = 'cc3000: LOGINT=? successful retries';
+my $CC3000_LOGINT_FAILED_RETRIES = 'cc3000: LOGINT=? failed retries';
+
+my $CC3000_MEM_CMD_ECHO_TIMED_OUT = 'cc3000: MEM=? cmd echo timed out';
+my $CC3000_MEM_MISSING_COMMAND_ECHO = 'cc3000: MEM=? echoed as empty string';
+my $CC3000_MEM_SUCCESSFUL_RETRIES = 'cc3000: MEM=? successful retries';
+my $CC3000_MEM_FAILED_RETRIES = 'cc3000: MEM=? failed retries';
+
+my $CC3000_NOW_CMD_ECHO_TIMED_OUT = 'cc3000: NOW cmd echo timed out';
+my $CC3000_NOW_MISSING_COMMAND_ECHO = 'cc3000: NOW echoed as empty string';
+my $CC3000_NOW_SUCCESSFUL_RETRIES = 'cc3000: NOW successful retries';
+my $CC3000_NOW_FAILED_RETRIES = 'cc3000: NOW failed retries';
+
+my $CC3000_RAIN_CMD_ECHO_TIMED_OUT = 'cc3000: RAIN cmd echo timed out';
+my $CC3000_RAIN_MISSING_COMMAND_ECHO = 'cc3000: RAIN echoed as empty string';
+my $CC3000_RAIN_SUCCESSFUL_RETRIES = 'cc3000: RAIN successful retries';
+my $CC3000_RAIN_FAILED_RETRIES = 'cc3000: RAIN failed retries';
+
+my $CC3000_STATION_CMD_ECHO_TIMED_OUT = 'cc3000: STATION cmd echo timed out';
+my $CC3000_STATION_MISSING_COMMAND_ECHO = 'cc3000: STATION echoed as empty string';
+my $CC3000_STATION_SUCCESSFUL_RETRIES = 'cc3000: STATION successful retries';
+my $CC3000_STATION_FAILED_RETRIES = 'cc3000: STATION failed retries';
+
+my $CC3000_TIME_CMD_ECHO_TIMED_OUT = 'cc3000: TIME=? cmd echo timed out';
+my $CC3000_TIME_MISSING_COMMAND_ECHO = 'cc3000: TIME=? echoed as empty string';
+my $CC3000_TIME_SUCCESSFUL_RETRIES = 'cc3000: TIME=? successful retries';
+my $CC3000_TIME_FAILED_RETRIES = 'cc3000: TIME=? failed retries';
+
+my $CC3000_UNITS_CMD_ECHO_TIMED_OUT = 'cc3000: UNITS=? cmd echo timed out';
+my $CC3000_UNITS_MISSING_COMMAND_ECHO = 'cc3000: UNITS=? echoed as empty string';
+my $CC3000_UNITS_SUCCESSFUL_RETRIES = 'cc3000: UNITS=? successful retries';
+my $CC3000_UNITS_FAILED_RETRIES = 'cc3000: UNITS=? failed retries';
+
+my $CC3000_VERSION_CMD_ECHO_TIMED_OUT = 'cc3000: VERSION cmd echo timed out';
+my $CC3000_VERSION_MISSING_COMMAND_ECHO = 'cc3000: VERSION echoed as empty string';
+my $CC3000_VERSION_SUCCESSFUL_RETRIES = 'cc3000: VERSION successful retries';
+my $CC3000_VERSION_FAILED_RETRIES = 'cc3000: VERSION failed retries';
+
+my $CC3000_GET_TIME_FAILED = 'cc3000: TIME get failed';
+
+my $CC3000_SET_TIME_SUCCEEDED = 'cc3000: TIME set succeeded';
+
+my $CC3000_MEM_CLEAR_SUCCEEDED = 'cc3000: MEM clear succeeded';
+
+my $CC3000_FAILED_CMD = 'cc3000: FAILED to Get Data';
+
+my $RSYNC_REPORT_CONN_TIMEOUT = 'rsync: report: connection timeout';
+my $RSYNC_REPORT_NO_ROUTE_TO_HOST = 'rsync: report: no route to host';
+
+my $RSYNC_GAUGE_DATA_NO_ROUTE_TO_HOST  = 'rsync: gauge-data: no route to host';
+my $RSYNC_GAUGE_DATA_CANT_RESOLVE_HOST = 'rsync: gauge-data: cannot resolve host';
+my $RSYNC_GAUGE_DATA_CONN_REFUSED      = 'rsync: gauge-data: connection_refused';
+my $RSYNC_GAUGE_DATA_CONN_TIMEOUT      = 'rsync: gauge-data: connection timeouts';
+my $RSYNC_GAUGE_DATA_IO_TIMEOUT        = 'rsync: gauge-data: IO timeout-data';
+my $RSYNC_GAUGE_DATA_SKIP_PACKET       = 'rsync: gauge-data: skipped packets';
+my $RSYNC_GAUGE_DATA_WRITE_ERRORS      = 'rsync: gauge-data: write errors';
+my $RSYNC_GAUGE_DATA_REMOTE_CLOSED     = 'rsync: gauge-data: closed by remote host';
+
 # any lines that do not match the patterns we define
 my @unmatched = ();
 
@@ -95,6 +179,16 @@ my @acurite_stale_data = ();
 my @acurite_no_sensors = ();
 my @acurite_bogus_strength = ();
 
+# keep details of PurpleAir messages
+my @purpleair = ();
+
+# keep details of rain counter resets
+my @rain_counter_reset = ();
+
+# keep details of cc3000 behavior
+my @cc3000_timings = ();
+my @cc3000_mem_clear_info = ();
+
 my %itemized = (
     'upload errors', \@upload_errors,
     'fousb station status', \@fousb_station_status,
@@ -111,6 +205,10 @@ my %itemized = (
     'acurite stale_data', \@acurite_stale_data,
     'acurite no sensors', \@acurite_no_sensors,
     'acurite bogus signal strength', \@acurite_bogus_strength,
+    'rain counter reset', \@rain_counter_reset,
+    'PurpleAir messsages', \@purpleair,
+    'cc3000 command timings: flush/cmd/echo/values', \@cc3000_timings,
+    'cc3000 mem clear info', \@cc3000_mem_clear_info,
     );
 
 my $clocksum = 0;
@@ -146,7 +244,7 @@ while(defined($_ = <STDIN>)) {
              /cheetahgenerator: generated (\d+)/ ||
              /filegenerator: generated (\d+)/) {
         $counts{$FILES_GENERATED} += $1;
-    } elsif (/copygenerator: copied (\d+) files/) {
+    } elsif (/reportengine: Copied (\d+) files/) {
         $counts{$FILES_COPIED} += $1;
     } elsif (/restful: Skipped record/) {
         $counts{$RECORDS_SKIPPED} += 1;
@@ -223,6 +321,177 @@ while(defined($_ = <STDIN>)) {
     } elsif (/acurite: R1: bogus signal strength/) {
         push @acurite_bogus_strength, $_;
         $counts{$ACURITE_BOGUS_STRENGTH} += 1;
+    } elsif (/purpleair: /) {
+        push @purpleair, $_;
+    } elsif (/cc3000: values/) {
+        $counts{$CC3000_VALUES_HEADER_MISMATCHES} += 1;
+
+    # BARO, CHARGER, DST=?, HEADER, LOGINT=?, MEM=?, NOW, RAIN, STATION, TIME=?, UNITS=?, VERSION
+    # cc3000: NOW: Reading cmd echo timed out (1.026538 seconds), retrying.
+    # cc3000: NOW: Accepting empty string as cmd echo.
+    # cc3000: NOW: Retry worked.
+    # cc3000: NOW: Retry failed.
+
+    } elsif (/cc3000: BARO: Reading cmd echo timed out/) {
+        $counts{$CC3000_BARO_CMD_ECHO_TIMED_OUT} += 1;
+    } elsif (/cc3000: BARO: Accepting empty string as cmd echo./) {
+        $counts{$CC3000_BARO_MISSING_COMMAND_ECHO} += 1;
+    } elsif (/cc3000: BARO: Retry worked./) {
+        $counts{$CC3000_BARO_SUCCESSFUL_RETRIES} += 1;
+    } elsif (/cc3000: BARO: Retry failed./) {
+        $counts{$CC3000_BARO_FAILED_RETRIES} += 1;
+
+    } elsif (/cc3000: CHARGER: Reading cmd echo timed out/) {
+        $counts{$CC3000_CHARGER_CMD_ECHO_TIMED_OUT} += 1;
+    } elsif (/cc3000: CHARGER: Accepting empty string as cmd echo./) {
+        $counts{$CC3000_CHARGER_MISSING_COMMAND_ECHO} += 1;
+    } elsif (/cc3000: CHARGER: Retry worked./) {
+        $counts{$CC3000_CHARGER_SUCCESSFUL_RETRIES} += 1;
+    } elsif (/cc3000: CHARGER: Retry failed./) {
+        $counts{$CC3000_CHARGER_FAILED_RETRIES} += 1;
+
+    } elsif (/cc3000: DST=\?: Reading cmd echo timed out/) {
+        $counts{$CC3000_DST_CMD_ECHO_TIMED_OUT} += 1;
+    } elsif (/cc3000: DST=\?: Accepting empty string as cmd echo./) {
+        $counts{$CC3000_DST_MISSING_COMMAND_ECHO} += 1;
+    } elsif (/cc3000: DST=\?: Retry worked./) {
+        $counts{$CC3000_DST_SUCCESSFUL_RETRIES} += 1;
+    } elsif (/cc3000: DST=\?: Retry failed./) {
+        $counts{$CC3000_DST_FAILED_RETRIES} += 1;
+
+    } elsif (/cc3000: HEADER: Reading cmd echo timed out/) {
+        $counts{$CC3000_HEADER_CMD_ECHO_TIMED_OUT} += 1;
+    } elsif (/cc3000: HEADER: Accepting empty string as cmd echo./) {
+        $counts{$CC3000_HEADER_MISSING_COMMAND_ECHO} += 1;
+    } elsif (/cc3000: HEADER: Retry worked./) {
+        $counts{$CC3000_HEADER_SUCCESSFUL_RETRIES} += 1;
+    } elsif (/cc3000: HEADER: Retry failed./) {
+        $counts{$CC3000_HEADER_FAILED_RETRIES} += 1;
+
+    } elsif (/cc3000: LOGINT=\?: Reading cmd echo timed out/) {
+        $counts{$CC3000_LOGINT_CMD_ECHO_TIMED_OUT} += 1;
+    } elsif (/cc3000: LOGINT=\?: Accepting empty string as cmd echo./) {
+        $counts{$CC3000_LOGINT_MISSING_COMMAND_ECHO} += 1;
+    } elsif (/cc3000: LOGINT=\?: Retry worked./) {
+        $counts{$CC3000_LOGINT_SUCCESSFUL_RETRIES} += 1;
+    } elsif (/cc3000: LOGINT=\?: Retry failed./) {
+        $counts{$CC3000_LOGINT_FAILED_RETRIES} += 1;
+
+    } elsif (/cc3000: MEM=\?: Reading cmd echo timed out/) {
+        $counts{$CC3000_MEM_CMD_ECHO_TIMED_OUT} += 1;
+    } elsif (/cc3000: MEM=\?: Accepting empty string as cmd echo./) {
+        $counts{$CC3000_MEM_MISSING_COMMAND_ECHO} += 1;
+    } elsif (/cc3000: MEM=\?: Retry worked./) {
+        $counts{$CC3000_MEM_SUCCESSFUL_RETRIES} += 1;
+    } elsif (/cc3000: MEM=\?: Retry failed./) {
+        $counts{$CC3000_MEM_FAILED_RETRIES} += 1;
+
+    } elsif (/cc3000: NOW: Reading cmd echo timed out/) {
+        $counts{$CC3000_NOW_CMD_ECHO_TIMED_OUT} += 1;
+    } elsif (/cc3000: NOW: Accepting empty string as cmd echo./) {
+        $counts{$CC3000_NOW_MISSING_COMMAND_ECHO} += 1;
+    } elsif (/cc3000: NOW: Retry worked./) {
+        $counts{$CC3000_NOW_SUCCESSFUL_RETRIES} += 1;
+    } elsif (/cc3000: NOW: Retry failed./) {
+        $counts{$CC3000_NOW_FAILED_RETRIES} += 1;
+
+    } elsif (/cc3000: RAIN: Reading cmd echo timed out/) {
+        $counts{$CC3000_RAIN_CMD_ECHO_TIMED_OUT} += 1;
+    } elsif (/cc3000: RAIN: Accepting empty string as cmd echo./) {
+        $counts{$CC3000_RAIN_MISSING_COMMAND_ECHO} += 1;
+    } elsif (/cc3000: RAIN: Retry worked./) {
+        $counts{$CC3000_RAIN_SUCCESSFUL_RETRIES} += 1;
+    } elsif (/cc3000: RAIN: Retry failed./) {
+        $counts{$CC3000_RAIN_FAILED_RETRIES} += 1;
+
+    } elsif (/cc3000: STATION: Reading cmd echo timed out/) {
+        $counts{$CC3000_STATION_CMD_ECHO_TIMED_OUT} += 1;
+    } elsif (/cc3000: STATION: Accepting empty string as cmd echo./) {
+        $counts{$CC3000_STATION_MISSING_COMMAND_ECHO} += 1;
+    } elsif (/cc3000: STATION: Retry worked./) {
+        $counts{$CC3000_STATION_SUCCESSFUL_RETRIES} += 1;
+    } elsif (/cc3000: STATION: Retry failed./) {
+        $counts{$CC3000_STATION_FAILED_RETRIES} += 1;
+
+    } elsif (/cc3000: TIME=\?: Reading cmd echo timed out/) {
+        $counts{$CC3000_TIME_CMD_ECHO_TIMED_OUT} += 1;
+    } elsif (/cc3000: TIME=\?: Accepting empty string as cmd echo./) {
+        $counts{$CC3000_TIME_MISSING_COMMAND_ECHO} += 1;
+    } elsif (/cc3000: TIME=\?: Retry worked./) {
+        $counts{$CC3000_TIME_SUCCESSFUL_RETRIES} += 1;
+    } elsif (/cc3000: TIME=\?: Retry failed./) {
+        $counts{$CC3000_TIME_FAILED_RETRIES} += 1;
+
+    } elsif (/cc3000: UNITS=\?: Reading cmd echo timed out/) {
+        $counts{$CC3000_UNITS_CMD_ECHO_TIMED_OUT} += 1;
+    } elsif (/cc3000: UNITS=\?: Accepting empty string as cmd echo./) {
+        $counts{$CC3000_UNITS_MISSING_COMMAND_ECHO} += 1;
+    } elsif (/cc3000: UNITS=\?: Retry worked./) {
+        $counts{$CC3000_UNITS_SUCCESSFUL_RETRIES} += 1;
+    } elsif (/cc3000: UNITS=\?: Retry failed./) {
+        $counts{$CC3000_UNITS_FAILED_RETRIES} += 1;
+
+    } elsif (/cc3000: VERSION: Reading cmd echo timed out/) {
+        $counts{$CC3000_VERSION_CMD_ECHO_TIMED_OUT} += 1;
+    } elsif (/cc3000: VERSION: Accepting empty string as cmd echo./) {
+        $counts{$CC3000_VERSION_MISSING_COMMAND_ECHO} += 1;
+    } elsif (/cc3000: VERSION: Retry worked./) {
+        $counts{$CC3000_VERSION_SUCCESSFUL_RETRIES} += 1;
+    } elsif (/cc3000: VERSION: Retry failed./) {
+        $counts{$CC3000_VERSION_FAILED_RETRIES} += 1;
+
+    } elsif (/engine: error reading time: Failed to get time/) {
+        $counts{$CC3000_GET_TIME_FAILED} += 1;
+
+    } elsif (/cc3000: set time to /) {
+        $counts{$CC3000_SET_TIME_SUCCEEDED} += 1;
+
+    } elsif (/cc3000: MEM=CLEAR succeeded./) {
+        $counts{$CC3000_MEM_CLEAR_SUCCEEDED} += 1;
+
+    } elsif (/cc3000: Failed attempt .* of .* to get data: command: Command failed/) {
+        $counts{$CC3000_FAILED_CMD} += 1;
+
+    # cc3000: NOW: times: 0.000036 0.000085 0.022008 0.027476
+    } elsif (/cc3000: .*: times: .*/) {
+        push @cc3000_timings, $_;
+
+    # cc3000: logger is at 11475 records, logger clearing threshold is 10000
+    } elsif (/cc3000: logger is at.*/) {
+        push @cc3000_mem_clear_info, $_;
+    # cc3000: clearing all records from logger
+    } elsif (/cc3000: clearing all records from logger/) {
+        push @cc3000_mem_clear_info, $_;
+    # cc3000: MEM=CLEAR: The resetting of timeout to 20 took 0.001586 seconds.
+    # cc3000: MEM=CLEAR: The resetting of timeout to 1 took 0.001755 seconds.
+    } elsif (/cc3000: MEM=CLEAR: The resetting of timeout to .*/) {
+        push @cc3000_mem_clear_info, $_;
+
+    } elsif (/rain counter reset detected:/) {
+        push @rain_counter_reset, $_;
+
+    } elsif (/html.*Connection timed out\. rsync: connection unexpectedly closed/) {
+        $counts{$RSYNC_REPORT_CONN_TIMEOUT} += 1;
+    } elsif (/public_html.*No route to host. rsync: connection unexpectedly closed/) {
+        $counts{$RSYNC_REPORT_NO_ROUTE_TO_HOST} += 1;
+
+    } elsif (/gauge-data\.txt.*No route to host.*rsync: connection unexpectedly closed/) {
+        $counts{$RSYNC_GAUGE_DATA_NO_ROUTE_TO_HOST} += 1;
+    } elsif (/gauge-data.txt.*Could not resolve hostname/) {
+        $counts{$RSYNC_GAUGE_DATA_CANT_RESOLVE_HOST} += 1;
+    } elsif (/gauge-data\.txt.*Connection refused.*rsync: connection unexpectedly closed/) {
+        $counts{$RSYNC_GAUGE_DATA_CONN_REFUSED} += 1;
+    } elsif (/gauge-data\.txt.*Connection timed out.*rsync: connection unexpectedly closed/) {
+        $counts{$RSYNC_GAUGE_DATA_CONN_TIMEOUT} += 1;
+    } elsif (/gauge-data\.txt.*rsync error: timeout in data send\/receive/) {
+        $counts{$RSYNC_GAUGE_DATA_IO_TIMEOUT} += 1;
+    } elsif (/rsync_data: skipping packet .* with age:/) {
+        $counts{$RSYNC_GAUGE_DATA_SKIP_PACKET} += 1;
+    } elsif (/rsyncupload:.*gauge-data\.txt'.*reported errors: rsync:.*write error:/) {
+        $counts{$RSYNC_GAUGE_DATA_WRITE_ERRORS} += 1;
+    } elsif (/rsyncupload:.*gauge-data.*closed by remote host/) {
+        $counts{$RSYNC_GAUGE_DATA_REMOTE_CLOSED} += 1;
+
     } elsif (/forecast: .*Thread: ([^:]+): generated 1 forecast record/) {
         $forecast_records{$1} += 1;
         $counts{$FORECAST_RECORDS} += 1;
@@ -233,6 +502,9 @@ while(defined($_ = <STDIN>)) {
         $forecast_prunings{$1} += 1;
         $counts{$FORECAST_PRUNINGS} += 1;
     } elsif (/forecast: .*Thread: ([^:]+): downloading forecast/) {
+        $forecast_downloads{$1} += 1;
+        $counts{$FORECAST_DOWNLOADS} += 1;
+    } elsif (/forecast: .*Thread: ([^:]+): download forecast/) {
         $forecast_downloads{$1} += 1;
         $counts{$FORECAST_DOWNLOADS} += 1;
     } elsif (/forecast: .*Thread: ([^:]+): saving (\d+) forecast records/) {

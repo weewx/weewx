@@ -111,6 +111,7 @@ class StdEngine(object):
             self.console = loader_function(config_dict, self)
         except Exception as ex:
             log.error("Import of driver failed: %s (%s)", ex, type(ex))
+            weeutil.logger.log_traceback(log.critical, "    ****  ")
             # Signal that we have an initialization error:
             raise InitializationError(ex)
         
@@ -712,6 +713,8 @@ class StdTimeSynch(StdService):
                         log.debug("Station does not support setting the time")
             except NotImplementedError:
                 log.debug("Station does not support reading the time")
+            except weewx.WeeWxIOError as e:
+                log.info("Error reading time: %s" % e)
 
 #==============================================================================
 #                    Class StdPrint
