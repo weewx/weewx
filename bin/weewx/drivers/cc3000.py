@@ -137,14 +137,14 @@ class ChecksumMismatch(ChecksumError):
     def __init__(self, a, b, buf=None):
         msg = "Checksum mismatch: 0x%04x != 0x%04x" % (a, b)
         if buf is not None:
-            msg = "%s (%s)" % (msg, _fmt(buf))
+            msg = "%s (%s)" % (msg, buf)
         ChecksumError.__init__(self, msg)
 
 class BadCRC(ChecksumError):
     def __init__(self, a, b, buf=None):
         msg = "Bad CRC: 0x%04x != '%s'" % (a, b)
         if buf is not None:
-            msg = "%s (%s)" % (msg, _fmt(buf))
+            msg = "%s (%s)" % (msg, buf)
         ChecksumError.__init__(self, msg)
 
 
@@ -168,17 +168,17 @@ class CC3000Configurator(weewx.drivers.AbstractConfigurator):
         parser.add_option("--set-clock", dest="setclock", action="store_true",
                           help="set station clock to computer time")
         parser.add_option("--get-interval", dest="getint", action="store_true",
-                          help="display logger archive interval, in minutes")
+                          help="display logger archive interval, in seconds")
         parser.add_option("--set-interval", dest="interval", metavar="N",
                           type=int,
-                          help="set logging interval to N minutes (0-60)")
+                          help="set logging interval to N seconds")
         parser.add_option("--get-units", dest="getunits", action="store_true",
                           help="show units of logger")
         parser.add_option("--set-units", dest="units", metavar="UNITS",
                           help="set units to METRIC or ENGLISH")
         parser.add_option('--get-dst', dest='getdst', action='store_true',
                           help='display daylight savings settings')
-        parser.add_option('--set-dst', dest='dst',
+        parser.add_option('--set-dst', dest='setdst',
                           metavar='mm/dd HH:MM,mm/dd HH:MM,[MM]M',
                           help='set daylight savings start, end, and amount')
         parser.add_option("--get-channel", dest="getch", action="store_true",
@@ -204,7 +204,7 @@ class CC3000Configurator(weewx.drivers.AbstractConfigurator):
             self.set_clock(prompt)
         elif options.getdst:
             print(self.driver.station.get_dst())
-        elif options.setdst is not None:
+        elif options.setdst:
             self.set_dst(options.setdst, prompt)
         elif options.getint:
             print(self.driver.station.get_interval() * 60)
@@ -266,7 +266,7 @@ class CC3000Configurator(weewx.drivers.AbstractConfigurator):
             raise ValueError("Logger interval must be 0-60 minutes")
         ans = None
         while ans not in ['y', 'n']:
-            print("Interval is", self.driver.station.get_interval())
+            print("Interval is", self.driver.station.get_interval(), " minutes.")
             if prompt:
                 ans = input("Set interval to %d minutes (y/n)? " % interval)
             else:
@@ -342,7 +342,7 @@ class CC3000Configurator(weewx.drivers.AbstractConfigurator):
                 ans = 'y'
             if ans == 'y':
                 self.driver.station.set_channel(ch)
-                print("Station channel is now", self.driver.station.get_ch())
+                print("Station channel is now", self.driver.station.get_channel())
             elif ans == 'n':
                 print("Set channel cancelled.")
 
@@ -380,9 +380,6 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
         DEBUG_OPENCLOSE = int(stn_dict.get('debug_openclose', 0))
 
         self.max_tries = int(stn_dict.get('max_tries', 5))
-        # FIXME: remove retry_wait as it is no longer used.  The
-        #        sleeps before retries provide no benefit.
-        self.retry_wait = int(stn_dict.get('retry_wait', 60))
         self.model = stn_dict.get('model', 'CC3000')
         port = stn_dict.get('port', CC3000.DEFAULT_PORT)
         log.info('using serial port %s' % port)
@@ -415,8 +412,7 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
         self.station.open()
 
         # report the station configuration
-        settings = self._init_station_with_retries(
-            self.station, self.max_tries, self.retry_wait)
+        settings = self._init_station_with_retries(self.station, self.max_tries)
         log.info('firmware: %s' % settings['firmware'])
         self.arcint = settings['arcint']
         log.info('archive_interval: %s' % self.arcint)
@@ -472,8 +468,8 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
                     if nrec is None:
                         log.info("memory check: cannot determine memory usage")
                     else:
-                        log.info("logger is at %s records, "
-                               "logger clearing threshold is %s" %
+                        log.info("logger is at %d records, "
+                               "logger clearing threshold is %d" %
                                (nrec, self.logger_threshold))
                         if self.logger_threshold is not None and nrec >= self.logger_threshold:
                             log.info("clearing all records from logger")
@@ -484,11 +480,6 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
             except (serial.serialutil.SerialException, weewx.WeeWxIOError) as e:
                 log.error("Failed attempt %d of %d to get data: %s" %
                        (ntries, self.max_tries, e))
-                # FIXME: On firmware 1.3 Build 022 Dec 02 2016, it has been
-                # observed that a sleep is not required.
-                #log.debug("Waiting %d seconds before retry" % self.retry_wait)
-                #time.sleep(self.retry_wait)
-                log.info("genLoopPackets: SKIPPING wait of %d seconds before retry" % self.retry_wait)
         else:
             msg = "Max retries (%d) exceeded" % self.max_tries
             log.error(msg)
@@ -553,19 +544,13 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
         self.station.set_time()
 
     @staticmethod
-    def _init_station_with_retries(station, max_tries, retry_wait):
+    def _init_station_with_retries(station, max_tries):
         for cnt in range(max_tries):
             try:
                 return CC3000Driver._init_station(station)
             except (serial.serialutil.SerialException, weewx.WeeWxIOError) as e:
                 log.error("Failed attempt %d of %d to initialize station: %s" %
                        (cnt + 1, max_tries, e))
-                # FIXME: On firmware 1.3 Build 022 Dec 02 2016, it has been
-                # observed that a sleep is not required.  Let's try removing
-                # the sleep.
-                #log.debug("Waiting %d seconds before retry" % retry_wait)
-                #time.sleep(retry_wait)
-                log.info("init_station: SKIPPING wait of %d seconds before retry" % self.retry_wait)
         else:
             raise weewx.RetriesExceeded("Max retries (%d) exceeded while initializing station" % max_tries)
 
@@ -645,11 +630,8 @@ def _to_ts(tstr, fmt="%Y/%m/%d %H:%M:%S"):
 def _format_bytes(buf):
     return ' '.join(["%0.2X" % byte2int(c) for c in buf])
 
-def _fmt(buf):
-    return [x for x in buf if x in string.printable]
-
 def _check_crc(buf):
-    idx = buf.find(b'!')
+    idx = buf.find('!')
     if idx < 0:
         return
     a = 0
@@ -667,16 +649,6 @@ def _check_crc(buf):
             raise ChecksumMismatch(a, b, buf)
     except ValueError as e:
         raise BadCRC(a, cs, buf)
-
-# for some reason we sometimes get null characters randomly mixed in with the
-# bytes we receive.  strip them out and let the checksum do the validation of
-# the data integrity.
-def _strip_unprintables(buf):
-    newbuf = ''
-    for x in buf:
-        if x in string.printable:
-            newbuf += x
-    return newbuf
 
 class CC3000(object):
     DEFAULT_PORT = '/dev/ttyUSB0'
@@ -714,26 +686,25 @@ class CC3000(object):
             self.serial_port = None
 
     def write(self, data):
+        data = data.encode('utf-8')
         if DEBUG_SERIAL:
             log.debug("write: '%s'" % data)
-        buf = data.encode('UTF-8')
-        n = self.serial_port.write(buf)
-        if n is not None and n != len(buf):
+        n = self.serial_port.write(data)
+        if n is not None and n != len(data):
             raise weewx.WeeWxIOError("Write expected %d chars, sent %d" %
-                                     (len(buf), n))
+                                     (len(data), n))
 
     def read(self):
         """The station sends CR NL before and after any response.  Some
         responses have a 4-byte CRC checksum at the end, indicated with an
         exclamation.  Not every response has a checksum.
         """
-        buf = self.serial_port.readline()
-        data = buf.decode('utf-8')
+        data = self.serial_port.readline()
+        data = data.decode('utf-8')
         if DEBUG_SERIAL:
-            log.debug("read: '%s' (%s)" % (_fmt(data), _format_bytes(data)))
+            log.debug("read: '%s' (%s)" % (data, _format_bytes(data)))
         data = data.strip()
-        data = _strip_unprintables(data) # eliminate random NULL characters
-        _check_crc(data.encode('utf-8'))
+        _check_crc(data)
         return data
 
     def flush(self):
@@ -854,7 +825,7 @@ class CC3000(object):
                         log.info("%s: Accepting empty string as cmd echo." % cmd)
                     else:
                         raise weewx.WeeWxIOError("command: Command failed: cmd='%s' reply='%s' (%s)"
-                                                 % (cmd, _fmt(data), _format_bytes(data)))
+                                                 % (cmd, data, _format_bytes(data)))
                 retrying = True
 
             t5 = time.time()
@@ -894,13 +865,12 @@ class CC3000(object):
     # "waking up".  Getter commands now retry, so removing the sleep.
     def wakeup(self):
         self.command('ECHO=?')
-        #time.sleep(1.0)
 
     def set_echo(self, cmd='ON'):
         log.debug("set echo to %s" % cmd)
         data = self.command('ECHO=%s' % cmd)
         if data != 'OK':
-            raise weewx.WeeWxIOError("Set ECHO failed: %s" % _fmt(data))
+            raise weewx.WeeWxIOError("Set ECHO failed: %s" % data)
 
     def get_header(self):
         log.debug("get header")
@@ -934,7 +904,7 @@ class CC3000(object):
         if tstr not in ['ERROR', 'OK']:
             data = self.read()
         if data != 'OK':
-            raise weewx.WeeWxIOError("Failed to get time: %s, %s" % (_fmt(tstr), _fmt(data)))
+            raise weewx.WeeWxIOError("Failed to get time: %s, %s" % (tstr, data))
         return tstr
 
     @staticmethod
@@ -949,7 +919,7 @@ class CC3000(object):
         data = self.command(s)
         if data != 'OK':
             raise weewx.WeeWxIOError("Failed to set time to %s: %s" %
-                                     (s, _fmt(data)))
+                                     (s, data))
 
     def get_dst(self):
         log.debug("get daylight saving")
@@ -961,13 +931,13 @@ class CC3000(object):
         data = self.command("DST=%s" % dst) # echoed input dst
         if data != dst:
             raise weewx.WeeWxIOError("Failed to set DST to %s: %s" %
-                                     (dst, _fmt(data)))
+                                     (dst, data))
         data = self.read() # read ''
         if data not in ['ERROR', 'OK']:
             data = self.read() # read OK
         if data != 'OK':
             raise weewx.WeeWxIOError("Failed to set DST to %s: %s" %
-                                     (dst, _fmt(data)))
+                                     (dst, data))
 
     def get_units(self):
         log.debug("get units")
@@ -978,7 +948,7 @@ class CC3000(object):
         data = self.command("UNITS=%s" % units)
         if data != 'OK':
             raise weewx.WeeWxIOError("Failed to set units to %s: %s" %
-                                     (units, _fmt(data)))
+                                     (units, data))
 
     def get_interval(self):
         log.debug("get logging interval")
@@ -989,7 +959,7 @@ class CC3000(object):
         data = self.command("LOGINT=%d" % interval)
         if data != 'OK':
             raise weewx.WeeWxIOError("Failed to set logging interval: %s" %
-                                     _fmt(data))
+                                     data)
 
     def get_channel(self):
         log.debug("get channel")
@@ -1001,7 +971,7 @@ class CC3000(object):
             raise ValueError("Channel must be 0-3")
         data = self.command("STATION=%d" % channel)
         if data != 'OK':
-            raise weewx.WeeWxIOError("Failed to set channel: %s" % _fmt(data))
+            raise weewx.WeeWxIOError("Failed to set channel: %s" % data)
 
     def get_charger(self):
         log.debug("get charger")
@@ -1021,7 +991,7 @@ class CC3000(object):
                 raise ValueError("Offset must be 0, XX.XX (inHg), or XXXX.X (mbar)")
         data = self.command("BARO=%d" % offset)
         if data != 'OK':
-            raise weewx.WeeWxIOError("Failed to set baro: %s" % _fmt(data))
+            raise weewx.WeeWxIOError("Failed to set baro: %s" % data)
 
     def get_memory_status(self):
         # query for logger memory use.  output is something like this:
@@ -1045,7 +1015,7 @@ class CC3000(object):
         if data == 'OK':
             log.info("MEM=CLEAR succeeded.")
         else:
-            raise weewx.WeeWxIOError("Failed to clear memory: %s" % _fmt(data))
+            raise weewx.WeeWxIOError("Failed to clear memory: %s" % data)
 
     def get_rain(self):
         log.debug("get rain total")
@@ -1055,14 +1025,14 @@ class CC3000(object):
         if rstr not in ['ERROR', 'OK']:
             data = self.read()
         if data != 'OK':
-            raise weewx.WeeWxIOError("Failed to get rain: %s" % _fmt(data))
+            raise weewx.WeeWxIOError("Failed to get rain: %s" % data)
         return rstr
 
     def reset_rain(self):
         log.debug("reset rain counter")
         data = self.command("RAIN=RESET")
         if data != 'OK':
-            raise weewx.WeeWxIOError("Failed to reset rain: %s" % _fmt(data))
+            raise weewx.WeeWxIOError("Failed to reset rain: %s" % data)
 
     def gen_records(self, nrec=0, specify_qty=False):
         """
@@ -1138,7 +1108,7 @@ class CC3000(object):
                     else:
                         cmd_cnt = 0
                         log.error("bad record %s '%s' (%s)" %
-                               (n, _fmt(values[0]), _fmt(data)))
+                               (n, values[0], data))
                 elif 'DOWNLOAD' in data:
                     # some firmware echos the command, but not always
                     pass
