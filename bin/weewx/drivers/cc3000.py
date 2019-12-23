@@ -1066,7 +1066,7 @@ class CC3000(object):
         records).
 
         Given that one can't ask pecisely ask for a given number of archive
-        records, a hueristic is used and errs on the side of asking for
+        records, a heuristic is used and errs on the side of asking for
         too many records.
 
         The heurisitic for number of records to ask for is:
@@ -1107,7 +1107,7 @@ class CC3000(object):
             num_to_ask = 0
         else:
             # Determine the number of records to ask for.
-            # How many days are being asked for?
+            # See heuristic above.
             num_mins_asked = nrec * self.get_interval()
             num_days_asked = math.ceil(num_mins_asked / (24.0*60))
             num_to_ask = nrec + 7 * num_days_asked
