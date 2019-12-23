@@ -98,8 +98,10 @@ from __future__ import absolute_import
 from __future__ import print_function
 import datetime
 import logging
+import math
 import serial
 import string
+import sys
 import time
 
 from six import byte2int
@@ -193,6 +195,11 @@ class CC3000Configurator(weewx.drivers.AbstractConfigurator):
             print(self.driver.get_current())
         elif options.nrecords is not None:
             for r in self.driver.station.gen_records(options.nrecords):
+                print(r)
+        elif options.nminutes is not None:
+            since_ts = time.mktime((datetime.datetime.now()-datetime.timedelta(
+                                    minutes=nminutes)).timetuple())
+            for r in self.driver.gen_records_since_ts(since_ts):
                 print(r)
         elif options.clear:
             self.clear_memory(prompt)
@@ -495,34 +502,26 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
          - the HDR for archive records is the same as current HDR
         """
         log.debug("genStartupRecords: since_ts=%s" % since_ts)
-        nrec = 0
-        # figure out how many records we need to download
-        if since_ts is not None:
-            delta = int(time.time()) - since_ts
-            nrec = int(delta / self.arcint)
-            log.debug("genStartupRecords: nrec=%d ts_delta=%d" % (nrec, delta))
-            if nrec == 0:
-                log.info("no need to read logger records")
-                return
-        else:
-            log.debug("genStartupRecords: nrec=%d" % nrec)
-
+        log.info('Downloading new records (if any).')
         last_rain = None
-        for r in self.station.gen_records(nrec):
-            log.debug("values: %s" % r)
-            pkt = self._parse_historical(r[1:], self.header, self.sensor_map)
-            log.debug("parsed: %s" % pkt)
-            if 'dateTime' in pkt and pkt['dateTime'] > since_ts:
-                pkt['usUnits'] = self.units
-                pkt['interval'] = self.arcint
-                if 'day_rain_total' in pkt:
-                    pkt['rain'] = self._rain_total_to_delta(
-                        pkt['day_rain_total'], last_rain)
-                    last_rain = pkt['day_rain_total']
-                else:
-                    log.debug("no rain in record: %s" % r)
-                log.debug("packet: %s" % pkt)
-                yield pkt
+        new_records = 0
+        for pkt in self.gen_records_since_ts(since_ts):
+            log.debug("pkt: %s" % pkt)
+            pkt['usUnits'] = self.units
+            pkt['interval'] = self.arcint
+            if 'day_rain_total' in pkt:
+                pkt['rain'] = self._rain_total_to_delta(
+                    pkt['day_rain_total'], last_rain)
+                last_rain = pkt['day_rain_total']
+            else:
+                log.debug("no rain in record: %s" % r)
+            log.debug("packet: %s" % pkt)
+            new_records += 1
+            yield pkt
+        log.info('Downloaded %d new records.' % new_records)
+
+    def gen_records_since_ts(self, since_ts):
+        return self.station.gen_records_since_ts(self.header, self.sensor_map, since_ts)
 
     @property
     def hardware_name(self):
@@ -579,11 +578,6 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
                                           "%Y/%m/%d %H:%M:%S")
 
     @staticmethod
-    def _parse_historical(values, header, sensor_map):
-        return CC3000Driver._parse_values(values, header, sensor_map,
-                                          "%Y/%m/%d %H:%M")
-
-    @staticmethod
     def _parse_values(values, header, sensor_map, fmt):
         """parse the values and map them into the schema names.  if there is
         a failure for any one value, then the entire record fails."""
@@ -631,12 +625,12 @@ def _format_bytes(buf):
     return ' '.join(["%0.2X" % byte2int(c) for c in buf])
 
 def _check_crc(buf):
-    idx = buf.find('!')
+    idx = buf.find(b'!')
     if idx < 0:
         return
     a = 0
     b = 0
-    cs = ''
+    cs = b''
     try:
         cs = buf[idx+1:idx+5]
         if DEBUG_CHECKSUM:
@@ -686,7 +680,11 @@ class CC3000(object):
             self.serial_port = None
 
     def write(self, data):
-        data = data.encode('utf-8')
+        if sys.version_info[0] >= 3:
+            # Encode could perhaps fail on bad user input (DST?).
+            # If so, this will be handled later when it is observed that the
+            # command does not do what is expected.
+            data = data.encode('ascii', 'ignore')
         if DEBUG_SERIAL:
             log.debug("write: '%s'" % data)
         n = self.serial_port.write(data)
@@ -700,11 +698,14 @@ class CC3000(object):
         exclamation.  Not every response has a checksum.
         """
         data = self.serial_port.readline()
-        data = data.decode('utf-8')
         if DEBUG_SERIAL:
             log.debug("read: '%s' (%s)" % (data, _format_bytes(data)))
         data = data.strip()
         _check_crc(data)
+        if sys.version_info[0] >= 3:
+            # CRC passed, so this is unlikely.
+            # Ignore as irregular data will be handled later.
+            data = data.decode('ascii', 'ignore')
         return data
 
     def flush(self):
@@ -1034,33 +1035,82 @@ class CC3000(object):
         if data != 'OK':
             raise weewx.WeeWxIOError("Failed to reset rain: %s" % data)
 
-    def gen_records(self, nrec=0, specify_qty=False):
+    def gen_records_since_ts(self, header, sensor_map, since_ts):
+        now_ts = time.mktime(datetime.datetime.now().timetuple())
+        nseconds = now_ts - since_ts
+        nminutes = math.ceil(nseconds / 60.0)
+        num_records = math.ceil(nminutes / float(self.get_interval()))
+        log.debug('gen_records_since_ts: Asking for %d records.' % num_records)
+        for r in self.gen_records(nrec=num_records):
+            pkt = CC3000Driver._parse_values(r[1:], header, sensor_map, "%Y/%m/%d %H:%M")
+            if 'dateTime' in pkt and pkt['dateTime'] > since_ts:
+                yield pkt
+
+    def gen_records(self, nrec=0):
         """
         Generator function for getting nrec records from the device.  A value
         of 0 indicates all records.
-        
-        The CC3000 documents say that passing a value such as DOWNLOAD=n
-        will download the n latest records.  They lie.
 
-        For firmware 1.3 Build 016, this works only if n<=1130 or n=>N where
-        N is the number of records in the logger.
+        The CC3000 returns a header ('HDR,'), the archive records
+        we are interested in ('REC,'), daily max and min records
+        ('MAX,', 'MIN,') as well as messages for various events such as a
+        reboot ('MSG,').
 
-        So we have to download everything (which takes a long time if the
-        logger is full) and ignore the records we do not care about.
+        Things get intereting when nrec is non-zero.
 
-        If using this driver with firmware that actually behaves as the docs
-        describe, then use True for specify_qty.
+        DOWNLOAD=n returns the latest n records in memory.  The CC3000 does
+        not distinguish between REC, MAX, MIN and MSG records in memory.
+        As such, DOWNLOAD=5 does NOT mean fetch the latest 5 REC records.
+        For examle, if the latest 5 records include a MIN and a MAX record,
+        only 3 REC records will be returned (along with the MIN and MAX
+        records).
 
-        We would like to use the logger's record count to help us know which
-        records to keep, but that count appears to include MAX/MIN records
-        as well as the REC records that we actually want.  So brute force.
+        Given that one can't ask pecisely ask for a given number of archive
+        records, a hueristic is used and errs on the side of asking for
+        too many records.
+
+        The heurisitic for number of records to ask for is:
+        the sum of:
+            nrec
+            7 * the number of days convered in the request (rounded up)
+            Note: One can determine the number of days from the number of
+                  records requested because the archive interval is known.
+
+        Asking for an extra seven records per day allows for the one MIN and
+        one MAX records generated per day, plus a buffer for up to five MSG
+        records each day.  Unless one is rebooting the CC3000 all day, this
+        will be plenty.  Typically, there will be zero MSG records.  Clearing
+        memory and rebooting actions generate MSG records.  Both are uncommon.
+        As a result, gen_records will overshoot the records asked for, but this
+        is not a problem in practice.  Also, if a new archive record is written
+        while this operation is taking place, it will be returned.  As such,
+        the number wouldn't be precise anyway.  One could work around this by
+        accumulating records before returning, and then returning an exact
+        amount, but it simply isn't worth it.
+
+        Examining the records in the CC3000 (808 records at the time of the
+        examination) shows the following records found:
+            HDR: 1   (the header record, per the spec)
+            REC: 800 (the archive records -- ~2.8 days worth)
+            MSG: 1 (A clear command that executed ~2.8 days ago:
+                    MSG 2019/12/20 15:48 CLEAR ON COMMAND!749D)
+            MIN: 3 (As expected for 3 days.)
+            MAX: 3 (As expected for 3 days.)
         """
 
         totrec = self.get_history_usage()
         if totrec is None:
             raise weewx.WeeWxIOError("cannot determine logger memory status")
-        log.info("requested %d latest of %d records" % (nrec, totrec))
-        log.info("this could take awhile...")
+        log.debug("gen_records: Requested %d latest of %d records." % (nrec, totrec))
+
+        if nrec == 0:
+            num_to_ask = 0
+        else:
+            # Determine the number of records to ask for.
+            # How many days are being asked for?
+            num_mins_asked = nrec * self.get_interval()
+            num_days_asked = math.ceil(num_mins_asked / (24.0*60))
+            num_to_ask = nrec + 7 * num_days_asked
 
         # on some platforms the comms get wedged, so we need a way to reset
         need_cmd = True
@@ -1077,16 +1127,16 @@ class CC3000(object):
                     log.error(msg)
                     raise weewx.WeeWxIOError(msg)
                 cmd = "DOWNLOAD"
-                if specify_qty and nrec != 0:
-                    qty = nrec - n
+                if num_to_ask != 0:
+                    qty = num_to_ask - n
                     cmd = "DOWNLOAD=%d" % qty
-                log.info("%s (attempt %s of %s)" % (cmd, cmd_cnt, cmd_max))
+                log.debug("%s (attempt %s of %s)" % (cmd, cmd_cnt, cmd_max))
                 self.send_cmd(cmd)
                 need_cmd = False
             try:
                 data = self.read()
                 if data == 'OK':
-                    log.info("downloaded %d records, yielded %d" % (n, yielded))
+                    log.debug("downloaded %d records, yielded %d" % (n, yielded))
                     break
                 elif ',' in data:
                     values = data.split(',')
@@ -1221,9 +1271,9 @@ if __name__ == '__main__':
     weeutil.logger.setup('cc3000', {})
 
     if options.testcrc:
-        _check_crc('OK')
-        _check_crc('REC,2010/01/01 14:12, 64.5, 85,29.04,349,  2.4,  4.2,  0.00, 6.21, 0.25, 73.2,!B82C')
-        _check_crc('MSG,2010/01/01 20:22,CHARGER ON,!4CED')
+        _check_crc(b'OK')
+        _check_crc(b'REC,2010/01/01 14:12, 64.5, 85,29.04,349,  2.4,  4.2,  0.00, 6.21, 0.25, 73.2,!B82C')
+        _check_crc(b'MSG,2010/01/01 20:22,CHARGER ON,!4CED')
         exit(0)
 
     with CC3000(options.port) as s:
