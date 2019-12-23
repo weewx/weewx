@@ -1061,7 +1061,7 @@ class CC3000(object):
         DOWNLOAD=n returns the latest n records in memory.  The CC3000 does
         not distinguish between REC, MAX, MIN and MSG records in memory.
         As such, DOWNLOAD=5 does NOT mean fetch the latest 5 REC records.
-        For examle, if the latest 5 records include a MIN and a MAX record,
+        For example, if the latest 5 records include a MIN and a MAX record,
         only 3 REC records will be returned (along with the MIN and MAX
         records).
 
