@@ -92,11 +92,11 @@ Version: 4.0
 
         <ul>
             <li>A WeeWX process normally handles the monitoring of one station &mdash; <i>e.g.</i> a weather station.
-                The process is configured with a <span class="code">weewx.conf</span> file.
+                The process is configured using a file with the name <span class="code">weewx.conf</span>.
             </li>
 
-            <li>Multiple WeeWX processes may be run simultaneously to monitor multiple stations, using separate <span
-                class="code">weewx.conf</span> files to refer to different driver and databases, <i>etc</i>. More
+            <li>Multiple WeeWX processes may be run simultaneously to monitor multiple stations, each using a separate <span
+                class="code">weewx.conf</span> file. More
                 advanced WeeWX processes might create reports across multiple other WeeWX station databases, <i>e.g.</i>
                 as a dashboard.
             </li>
@@ -106,27 +106,20 @@ Version: 4.0
                 single-threaded and blocking, so no more than one driver can run in a WeeWX process.
             </li>
 
-            <li>LOOP packets may contain arbitrary data from the station/driver in the form of a Python dictionary. LOOP
-                packet fields should conform to defined WeeWX measurement units and measurement groups so they can then
-                be summarised automatically (<i>e.g.</i> average of temperature, or sum of rainfall) by WeeWX over a set
-                interval period (<i>e.g.</i> 5 minutes) into ‘archive records’.
+            <li>LOOP packets may contain arbitrary data from the station/driver in the form of a Python dictionary.
+                Each LOOP packet must contain a time stamp, and a unit system, in addition to any number of
+                observations, such as temperature. For extensive types, such as rain, the packet should contain
+                the total amount of rain that fell during the observation period.
+            </li>
+            <li>WeeWX then compiles these LOOP packets into regularly spaced "archive records." For most types,
+                the archive record contains the average value seen in all of the LOOP packets over the archive
+                interval (typically 5 minutes). For extensive types, such as rain, it is the total value
+                over the archive interval.
             </li>
 
-            <li>A number of services may be configured within the WeeWX process to operate on the LOOP, archive record
-                and database data &mdash; triggering when new data or timed events arise. Typically these services run
-                at 5 minute intervals. Standard services include:
-
-                <ul>
-                    <li><span class="code">StdArchive</span> &mdash; automatically create a database based on a user
-                        ‘schema’ (a database table definition held as a python array in the driver or service) then
-                        write archive records as they arise. Only archive record fields which match the schema will be
-                        written to the database.
-                    </li>
-
-                    <li><span class="code">StdReport</span> &mdash; generate reports based on database archive records,
-                        stored by <span class="code">StdArchive</span>.
-                    </li>
-                </ul>
+            <li>A number of "services" may be configured within the WeeWX process to operate on the
+                LOOP packets and archive records. They can do things sucha as check the data quality,
+                apply corrections, or save them to a database. Users can easily add new services.
             </li>
 
             <li>In addition, some services may create their own archive records and add them to the stream of archive
@@ -140,7 +133,7 @@ Version: 4.0
         </ul>
 
         <p>
-            For more details, see the section <a href="#Data_architecture"><em>Data architecure</em></a> below.
+            For more details, see the section <a href="#Data_architecture"><em>Data architecture</em></a> below.
         </p>
 
 
