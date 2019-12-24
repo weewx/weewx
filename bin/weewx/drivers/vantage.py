@@ -1746,7 +1746,7 @@ _loop_map = {
     'barometer'       : lambda p, k: float(p[k]) / 1000.0 if p[k] else None,
     'consBatteryVoltage': lambda p, k: float((p[k] * 300) >> 9) / 100.0,
     'dayET'           : lambda p, k: float(p[k]) / 1000.0,
-    'dayRain'         : lambda p, k: float(p[k]) / 100.0,
+    'dayRain'         : _decode_rain,
     'dewpoint'        : lambda p, k: float(p[k]) if p[k] & 0xff != 0xff else None,
     'extraAlarm1'     : lambda p, k: p[k],
     'extraAlarm2'     : lambda p, k: p[k],
@@ -1785,7 +1785,7 @@ _loop_map = {
     'leafWet3'        : lambda p, k: float(p[k]) if p[k] != 0xff else None,
     'leafWet4'        : lambda p, k: float(p[k]) if p[k] != 0xff else None,
     'monthET'         : lambda p, k: float(p[k]) / 100.0,
-    'monthRain'       : lambda p, k: float(p[k]) / 100.0,
+    'monthRain'       : _decode_rain,
     'outHumidity'     : lambda p, k: float(p[k]) if p[k] != 0xff else None,
     'outsideAlarm1'   : lambda p, k: p[k],
     'outsideAlarm2'   : lambda p, k: p[k],
@@ -1822,7 +1822,7 @@ _loop_map = {
     'windSpeed2'      : _decode_windSpeed_H,
     'windSpeed10'     : _decode_windSpeed_H,
     'yearET'          : lambda p, k: float(p[k]) / 100.0,
-    'yearRain'        : lambda p, k: float(p[k]) / 100.0,
+    'yearRain'        : _decode_rain,
 }
 
 # This dictionary maps a type key to a function. The function should be able to
