@@ -53,31 +53,33 @@ Version: 4.0
     <div id="technical_content" class="content">
 
         <p>
-            This document covers the customization of WeeWX. It assumes that you have read, and are reasonably familiar
-            with, the <a href="usersguide.htm">Users Guide</a>.
+            This document covers the customization of WeeWX. It assumes that you have read, and are
+            reasonably familiar with, the <a href="usersguide.htm">Users Guide</a>.
         </p>
         <p>
-            The introduction contains an overview of the architecture. If you are only interested in customizing the
-            generated reports you can probably skip the introduction and proceed directly to the section <a
-            href="#customizing_reports"><em>Customizing reports</em></a>. With this approach you can easily add new plot
-            images, change the titles of images, change the units used in the reports, and so on.
-        </p>
-
-        <p>
-            However, if your goal is a specialized application, such as adding alarms, RSS feeds, <i>etc.</i>, then it
-            would be worth your while to read about the internal architecture.
+            The introduction contains an overview of the architecture. If you are only interested
+            in customizing the generated reports you can probably skip the introduction and proceed
+            directly to the section <a href="#customizing_reports"><em>Customizing reports</em></a>.
+            With this approach you can easily add new plot images, change the titles of images,
+            change the units used in the reports, and so on.
         </p>
 
         <p>
-            Most of the guide applies to any hardware, but the exact data types are hardware-specific. See the <a
-            href="hardware.htm"><em>WeeWX Hardware Guide</em></a> for details of how different observation types are
-            handled by different types hardware.
+            However, if your goal is a specialized application, such as adding alarms, RSS feeds,
+            <i>etc.</i>, then it would be worth your while to read about the internal architecture.
+        </p>
+
+        <p>
+            Most of the guide applies to any hardware, but the exact data types are
+            hardware-specific. See the <a href="hardware.htm"><em>WeeWX Hardware Guide</em></a>
+            for details of how different observation types are handled by different types hardware.
         </p>
 
         <p class="warning">
-            <strong>Warning!</strong><br/> WeeWX is still an experimental system and, as such, its internal design is
-            subject to change. Future upgrades may break any customizations you have done, particularly if they involve
-            the API (skin customizations tend to be more stable).
+            <strong>Warning!</strong><br/> WeeWX is still an experimental system and, as such,
+            its internal design is subject to change. Future upgrades may break any customizations
+            you have done, particularly if they involve the API (skin customizations tend to be
+            more stable).
         </p>
 
 
@@ -86,103 +88,126 @@ Version: 4.0
         <h2>Overall system architecture</h2>
 
         <p>
-            Below is a brief overview of the WeeWX system architecture, which is covered in much more detail in the rest
-            of this document.
+            Below is a brief overview of the WeeWX system architecture, which is covered in much
+            more detail in the rest of this document.
         </p>
 
+        <div class="image image-right" style="width: 30%">
+            <img src="images/pipeline.png" alt="The WeeWX pipeline"/>
+
+            <div class="image_caption">A typical WeeWX pipeline. The actual pipeline depends
+                on what extensions are in use. Data, in the form of LOOP packets and archive
+                records, flows from top to bottom.</div>
+        </div>
         <ul>
-            <li>A WeeWX process normally handles the monitoring of one station &mdash; <i>e.g.</i> a weather station.
-                The process is configured using a file with the name <span class="code">weewx.conf</span>.
+            <li>
+                A WeeWX process normally handles the monitoring of one station &mdash; <i>e.g.</i> a
+                weather station. The process is configured using a file with the name
+                <span class="code">weewx.conf</span>.
             </li>
 
-            <li>Multiple WeeWX processes may be run simultaneously to monitor multiple stations, each using a separate <span
-                class="code">weewx.conf</span> file. More
-                advanced WeeWX processes might create reports across multiple other WeeWX station databases, <i>e.g.</i>
-                as a dashboard.
+            <li>
+                A WeeWX process has at most one "driver" to communicate with the station hardware
+                and receive "high resolution" (<i>i.e.</i> every few seconds) measurement data in
+                the form of LOOP packets. The driver is single-threaded and blocking, so no more
+                than one driver can run in a WeeWX process.
             </li>
 
-            <li>A WeeWX process has at most one ‘driver’ to communicate with the station hardware and receive ‘high
-                resolution’ (<i>i.e.</i> every few seconds) measurement data in the form of LOOP packets. The driver is
-                single-threaded and blocking, so no more than one driver can run in a WeeWX process.
+
+            <li>
+                LOOP packets may contain arbitrary data from the station/driver in the form of a
+                Python dictionary. Each LOOP packet must contain a time stamp, and a unit system,
+                in addition to any number of observations, such as temperature or humidity.
+                For extensive types, such as rain, the packet contains the total amount of
+                rain that fell during the observation period.
+            </li>
+            <li>
+                WeeWX then compiles these LOOP packets into regularly spaced "archive records."
+                For most types, the archive record contains the average value seen in all of the
+                LOOP packets over the archive interval (typically 5 minutes). For extensive types,
+                such as rain, it is the sum of all values over the archive interval.
+            </li>
+            <li>
+                Internally, the WeeWX engine uses a <em>pipeline</em> architecture, consisting
+                of many <em>services</em>. Services bind to events of interest, such as new
+                LOOP packets, or new archive records. Events are then run down the pipeline
+                in order &mdash; services at the top of the pipeline act on the data
+                before services farther down the pipe.
             </li>
 
-            <li>LOOP packets may contain arbitrary data from the station/driver in the form of a Python dictionary.
-                Each LOOP packet must contain a time stamp, and a unit system, in addition to any number of
-                observations, such as temperature. For extensive types, such as rain, the packet should contain
-                the total amount of rain that fell during the observation period.
-            </li>
-            <li>WeeWX then compiles these LOOP packets into regularly spaced "archive records." For most types,
-                the archive record contains the average value seen in all of the LOOP packets over the archive
-                interval (typically 5 minutes). For extensive types, such as rain, it is the total value
-                over the archive interval.
+            <li>
+                Services can do things such as check the data quality, apply corrections, or save
+                data to a database. Users can easily add new services.
             </li>
 
-            <li>A number of "services" may be configured within the WeeWX process to operate on the
-                LOOP packets and archive records. They can do things sucha as check the data quality,
-                apply corrections, or save them to a database. Users can easily add new services.
-            </li>
-
-            <li>In addition, some services may create their own archive records and add them to the stream of archive
-                data, where they are treated like any other data. Still others may save to their own database.
-            </li>
-
-            <li>WeeWX extensions may consist of one or more drivers, services, databases and/or skin code. However, only
-                one station and associated driver can be run at a time, though numerous services may be run in a single
-                process.
+            <li>
+                WeeWX includes an ability to customize behavior by installing <em>extensions</em>.
+                Extensions may consist of one or more drivers, services, and/or skins, all in an
+                easy-to-install package.
             </li>
         </ul>
 
         <p>
-            For more details, see the section <a href="#Data_architecture"><em>Data architecture</em></a> below.
+            For more details, see the section <a href="#Data_architecture"><em>Data
+            architecture</em></a> below.
         </p>
 
 
-        <h2>Where to put customizations</h2>
+        <h2>What to customize</h2>
 
         <p>
-            For configuration changes, simply modify the WeeWX configuration file <span class="code">weewx.conf</span>.
+            For configuration changes, such as which skins to use, or enabling posts to the
+            Weather Underground, simply modify the WeeWX configuration file
+            <span class="code">weewx.conf</span>. Any changes you make will be preserved during
+            an upgrade.
         </p>
         <p>
             Customization of reports may require changes to a skin configuration file <span
-            class="code">skin.conf</span> or template files ending in <span class="code">.tmpl</span> or <span
-            class="code">.inc</span>. The <span class="code">weewx.conf</span> configuration file and the <span
-            class="code">skin.conf</span> configuration and template files in the <span class='code'>skins</span>
-            directory will be preserved when you upgrade.
+            class="code">skin.conf</span> or template files ending in <span
+            class="code">.tmpl</span> or <span class="code">.inc</span>. Anything in the <span
+            class="code">skins</span> subdirectory is also preserved across upgrades.
+        </p>
+        <p>
+            You may choose to install one of the many <a
+            href="https://github.com/weewx/weewx/wiki#extensions-to-weewx">third-party
+            extensions</a> that are available for WeeWX. These are typically installed in either
+            the <span class="code">skins</span> or <span class="code">user</span> subdirectories,
+            both of which are preserved across upgrades.
         </p>
 
         <p>
-            Other customizations may require new Python code or modifications of example code. Where should you put the
-            code? If you simply modify the examples in place, then your changes will be overwritten the next time you do
-            an upgrade.
-        </p>
-
-        <p>
-            A better idea is to put the code in the <span class="code">user</span>, directory, which is preserved
-            through upgrades &mdash; you won't have to redo any changes you might have made. For example, if you wish to
-            modify one of the examples that comes with WeeWX, copy it from the <span class="code">examples</span>
-            directory to the <span class="code">user</span> directory, then modify it there. This way, your
-            modifications will not be touched if you upgrade.
+            More advanced customizations may require new Python code or modifications of
+            example code. These should be placed in the <span class="code">user</span> directory,
+            where they will be preserved across upgrades. For example, if you wish to modify one of
+            the examples that comes with WeeWX, copy it from the <span class="code">examples</span>
+            directory to the <span class="code">user</span> directory, then modify it there. This
+            way, your modifications will not be touched if you upgrade.
         </p>
         <p>
-            For code that must run before anything else in WeeWX runs (for example, to set up an environment), put it in
-            the file <span class="code">extensions.py</span> in the <span class="code">user</span> directory. It is
-            always run before the WeeWX engine starts up. Because it is in the <span class="code">user</span>
-            subdirectory, it is preserved between upgrades.
+            For code that must run before anything else in WeeWX runs (for example, to set up an
+            environment), put it in the file <span class="code">extensions.py</span> in the <span
+            class="code">user</span> directory. It is always run before the WeeWX engine starts up.
+            Because it is in the <span class="code">user</span> subdirectory, it is preserved
+            between upgrades.
         </p>
 
         <h2>Do I need to restart WeeWX?</h2>
         <p>
-            If you make a change in <span class="code">weewx.conf</span>, you will need to restart WeeWX.
+            If you make a change in <span class="code">weewx.conf</span>, you will need to restart
+            WeeWX.
         </p>
         <p>
-            If you make a change to a template or to a <span class="code">skin.conf</span> file, you do not need to
-            restart WeeWX. The change will be adopted at the next reporting cycle, typically at the end of an archive
-            interval.
+            If you modify Python code in the <span class="code">user</span> directory or elsewhere,
+            you will need to restart WeeWX.
         </p>
         <p>
-            If you modify code in the <span class="code">user</span> directory, you will need to restart WeeWX.
+            If you install an extension, you will need to restart WeeWX.
         </p>
-
+        <p>
+            If you make a change to a template or to a <span class="code">skin.conf</span> file,
+            you do not need to restart WeeWX. The change will be adopted at the next reporting
+            cycle, typically at the end of an archive interval.
+        </p>
         <h2 id="wee_reports">
             The utility <span class="code">wee_reports</span>
         </h2>
@@ -211,26 +236,34 @@ Version: 4.0
         <h2 id="Data_architecture">Data architecture</h2>
 
         <p>
-            WeeWX is data-driven. When the sensors spit out some data, WeeWX does something. The 'something' might be to
-            print out the data, or to generate an HTML report, or to use FTP to copy a report to a web server, or to
-            perform some calculations using the data. These actions are called services.
+            WeeWX is data-driven. When the sensors spit out some data, WeeWX does something. The
+            "something" might be to print out the data, or to generate an HTML report, or to use
+            FTP to copy a report to a web server, or to perform some calculations using the data.
         </p>
 
         <p>
-            A driver is Python code that communicates with the hardware. The driver reads data from a serial port or a
-            device on the USB or a network interface. It handles any decoding of raw bits and bytes, and puts the
-            resulting data into LOOP packets and archive RECORDs. Whenever possible, WeeWX should work "out of the box"
-            with minimal configuration. However, in some cases the driver may include code to configure and test the
-            hardware, typically via the <span class="code">wee_device</span> utility.
+            A driver is Python code that communicates with the hardware. The driver reads data from
+            a serial port or a device on the USB or a network interface. It handles any decoding of
+            raw bits and bytes, and puts the resulting data into LOOP packets. The drivers for
+            some kinds of hardware (most notably, Davis Vantage) are capable of emitting archive
+            records as well.
+        </p>
+        <p>
+            While WeeWX drivers generally work "out of the box," in some cases the driver may also
+            include code to configure and test the hardware, typically via the <a
+            href="utilities.htm#wee_device_utility"><span class="code">wee_device</span></a>
+            utility.
         </p>
 
         <p>
-            In many cases there are useful dependent variables that use the primary variables emitted by the driver. For
-            example, rain rate, windchill, heatindex, humidex, apptemp, ET are all dependent quantities &mdash; they
-            require primary observations such as wind speed, temperature, solar radiation. The firmware for some
-            hardware calculates dependent quantities. The WeeWX service <span class="code">StdWXCalculate</span> fills
-            in the gaps and determines whether to use a value from firmware or a calculation from WeeWX. Sometimes the
-            firmware simply does it wrong.
+            In addition to the primary observation types such as temperature, humidity, or solar
+            radiation, there are also many useful dependent types, such as wind chill, heat index,
+            or ET, which are calculated from the primary data. The firmware in some weather
+            stations are capable of doing many of these calculations on their own. For the rest,
+            should you choose to do so, the WeeWX service <a
+            href="usersguide.htm#StdWXCalculate"><span class="code">StdWXCalculate</span></a> can
+            fill in the gaps. Sometimes the firmware simply does it wrong, and you may choose to
+            have WeeWX do the calculation, despite the type's presence in LOOP packets.
         </p>
 
         <h2>LOOP packets <em>vs.</em> archive records </h2>
