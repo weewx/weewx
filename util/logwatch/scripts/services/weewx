@@ -853,47 +853,47 @@ while(defined($_ = <STDIN>)) {
              /GaugeGenerator:/) {
         # ignore
     } elsif (! /weewx/) {
-		# ignore
-	    } else {
-		push @unmatched, $_;
-	    }
-	}
+        # ignore
+    } else {
+        push @unmatched, $_;
+    }
+}
 
-	if($clockcount > 0) {
-	    my $clockskew = $clocksum / $clockcount;
-	    print "average station clock skew: $clockskew\n";
-	    print "  min: $clockmin max: $clockmax samples: $clockcount\n";
-	    print "\n";
-	}
+if($clockcount > 0) {
+    my $clockskew = $clocksum / $clockcount;
+    print "average station clock skew: $clockskew\n";
+    print "  min: $clockmin max: $clockmax samples: $clockcount\n";
+    print "\n";
+}
 
-	foreach my $slabel (sort keys %summaries) {
-	    my $s = $summaries{$slabel};
-	    if(scalar(keys %$s)) {
-		print "$slabel:\n";
-		foreach my $k (sort keys %$s) {
-		    next if $s->{$k} == 0;
-		    printf("  %-45s %6d\n", $k, $s->{$k});
-		}
-		print "\n";
-	    }
-	}
+foreach my $slabel (sort keys %summaries) {
+    my $s = $summaries{$slabel};
+    if(scalar(keys %$s)) {
+        print "$slabel:\n";
+        foreach my $k (sort keys %$s) {
+            next if $s->{$k} == 0;
+            printf("  %-45s %6d\n", $k, $s->{$k});
+        }
+        print "\n";
+    }
+}
 
-	foreach my $k (sort keys %itemized) {
-	    report($k, $itemized{$k}) if scalar @{$itemized{$k}} > 0;
-	}
+foreach my $k (sort keys %itemized) {
+    report($k, $itemized{$k}) if scalar @{$itemized{$k}} > 0;
+}
 
-	report("unmatched lines", \@unmatched) if $#unmatched >= 0;
+report("unmatched lines", \@unmatched) if $#unmatched >= 0;
 
-	exit 0;
+exit 0;
 
-	sub report {
-	    my($label, $aref, $href) = @_;
-	    print "\n$label:\n";
-	    foreach my $x (@$aref) {
-		my $str = $x;
-		if ($href && $href->{$x} > 1) {
-		    $str .= " ($href->{$x} times)";
-		}
-		print "  $str\n";
-	    }
+sub report {
+    my($label, $aref, $href) = @_;
+    print "\n$label:\n";
+    foreach my $x (@$aref) {
+        my $str = $x;
+        if ($href && $href->{$x} > 1) {
+            $str .= " ($href->{$x} times)";
+        }
+        print "  $str\n";
+    }
 }
