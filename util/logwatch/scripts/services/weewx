@@ -564,7 +564,7 @@ while(defined($_ = <STDIN>)) {
              /engine: Initializing engine/ ||
              /engine: Using Python/ ||
              /engine: Terminating weewx version/ ||
-             /engine: pid file is / ||
+             /engine: PID file is / ||
              /engine: Use LOOP data in/ ||
              /engine: Received signal/ ||
              /engine: Daily summaries up to date/ ||
