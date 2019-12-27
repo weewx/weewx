@@ -467,7 +467,7 @@ while(defined($_ = <STDIN>)) {
     } elsif (/cc3000: MEM=CLEAR: The resetting of timeout to .*/) {
         push @cc3000_mem_clear_info, $_;
 
-    } elsif (/rain counter reset detected:/) {
+    } elsif (/Rain counter reset detected:/) {
         push @rain_counter_reset, $_;
 
     } elsif (/html.*Connection timed out\. rsync: connection unexpectedly closed/) {
