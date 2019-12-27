@@ -50,7 +50,7 @@ my $ACURITE_BOGUS_STRENGTH = 'acurite: R1: bogus signal strength';
 
 # BARO, CHARGER, DST=?, HEADER, LOGINT=?, MEM=?, NOW, STATION, TIME=?, UNITS=?, RAIN, VERSION
 
-my $CC3000_VALUES_HEADER_MISMATCHES = 'cc3000: values/header mismatch';
+my $CC3000_VALUES_HEADER_MISMATCHES = 'cc3000: Values/Header mismatch';
 
 my $CC3000_BARO_CMD_ECHO_TIMED_OUT = 'cc3000: BARO cmd echo timed out';
 my $CC3000_BARO_MISSING_COMMAND_ECHO = 'cc3000: BARO echoed as empty string';
@@ -323,7 +323,7 @@ while(defined($_ = <STDIN>)) {
         $counts{$ACURITE_BOGUS_STRENGTH} += 1;
     } elsif (/purpleair: /) {
         push @purpleair, $_;
-    } elsif (/cc3000: values/) {
+    } elsif (/cc3000: Values\/header mismatch/) {
         $counts{$CC3000_VALUES_HEADER_MISMATCHES} += 1;
 
     # BARO, CHARGER, DST=?, HEADER, LOGINT=?, MEM=?, NOW, RAIN, STATION, TIME=?, UNITS=?, VERSION
@@ -440,10 +440,10 @@ while(defined($_ = <STDIN>)) {
     } elsif (/cc3000: VERSION: Retry failed./) {
         $counts{$CC3000_VERSION_FAILED_RETRIES} += 1;
 
-    } elsif (/engine: error reading time: Failed to get time/) {
+    } elsif (/engine: Error reading time: Failed to get time/) {
         $counts{$CC3000_GET_TIME_FAILED} += 1;
 
-    } elsif (/cc3000: set time to /) {
+    } elsif (/cc3000: Set time to /) {
         $counts{$CC3000_SET_TIME_SUCCEEDED} += 1;
 
     } elsif (/cc3000: MEM=CLEAR succeeded./) {
@@ -456,11 +456,11 @@ while(defined($_ = <STDIN>)) {
     } elsif (/cc3000: .*: times: .*/) {
         push @cc3000_timings, $_;
 
-    # cc3000: logger is at 11475 records, logger clearing threshold is 10000
-    } elsif (/cc3000: logger is at.*/) {
+    # cc3000: Logger is at 11475 records, logger clearing threshold is 10000
+    } elsif (/cc3000: Logger is at.*/) {
         push @cc3000_mem_clear_info, $_;
-    # cc3000: clearing all records from logger
-    } elsif (/cc3000: clearing all records from logger/) {
+    # cc3000: Clearing all records from logger
+    } elsif (/cc3000: Clearing all records from logger/) {
         push @cc3000_mem_clear_info, $_;
     # cc3000: MEM=CLEAR: The resetting of timeout to 20 took 0.001586 seconds.
     # cc3000: MEM=CLEAR: The resetting of timeout to 1 took 0.001755 seconds.
@@ -570,7 +570,11 @@ while(defined($_ = <STDIN>)) {
              /engine: Daily summaries up to date/ ||
              /engine: Using binding/ ||
              /engine: Archive will use/ ||
-             /engine: Starting backfill of daily summaries/ ||
+             /engine: Platform/ ||
+             /engine: Locale is/ ||
+             /wxservices: The following values will be calculated:/ ||
+             /wxservices: The following algorithms will be used for calculations:/ ||
+             /manager: Starting backfill of daily summaries/ ||
              /manager: Created daily summary tables/ ||
              /cheetahgenerator: Running / ||
              /cheetahgenerator: skip/ ||
@@ -711,24 +715,57 @@ while(defined($_ = <STDIN>)) {
              /te923: STT / ||
              /te923: Bad read \(attempt \d of/ ||   # normal when debugging
              /te923: usb error.* No data available/ || # normal when debug=1
-             /cc3000: found checksum at/ ||
-             /cc3000: calculated checksum/ ||
-             /cc3000: record/ ||
-             /cc3000: got bytes/ ||
-             /cc3000: open serial port/ ||
-             /cc3000: close serial port/ ||
-             /cc3000: station replied to command with/ ||
-             /cc3000: driver version is/ ||
-             /cc3000: polling interval is/ ||
-             /cc3000: pressure offset is/ ||
-             /cc3000: header is/ ||
-             /cc3000: units are/ ||
-             /cc3000: using station time/ ||
-             /cc3000: using computer time/ ||
-             /cc3000: using serial port/ ||
-             /cc3000: set echo to/ ||
-             /cc3000: get header/ ||
-             /cc3000: get units/ ||
+             /cc3000: Archive interval:/ ||
+             /cc3000: Calculated checksum/ ||
+             /cc3000: Channel:/ ||
+             /cc3000: Charger status:/ ||
+             /cc3000: Clear logger at/ ||
+             /cc3000: Clear memory/ ||
+             /cc3000: Close serial port/ ||
+             /cc3000: Downloaded \d+ new records/ ||
+             /cc3000: Downloaded \d+ records, yielded \d+/ ||
+             /cc3000: Downloading new records/ ||
+             /cc3000: Driver version is/ ||
+             /cc3000: Firmware:/ ||
+             /cc3000: Found checksum at/ ||
+             /cc3000: Flush input bugger/ ||
+             /cc3000: Flush output bugger/ ||
+             /cc3000: gen_records: Requested \d+ latest of \d+ records/ ||
+             /cc3000: gen_records_since_ts: Asking for \d+ records/ ||
+             /cc3000: GenStartupRecords: since_ts/ ||
+             /cc3000: Get baro/ ||
+             /cc3000: Get channel/ ||
+             /cc3000: Get charger/ ||
+             /cc3000: Get daylight saving/ ||
+             /cc3000: Get firmware version/ ||
+             /cc3000: Get header/ ||
+             /cc3000: Get logging interval/ ||
+             /cc3000: Get memory status/ ||
+             /cc3000: Get rain total/ ||
+             /cc3000: Get time/ ||
+             /cc3000: Get units/ ||
+             /cc3000: Header:/ ||
+             /cc3000: Memory:/ ||
+             /cc3000: No rain in packet:/ ||
+             /cc3000: Open serial port/ ||
+             /cc3000: Packet:/ ||
+             /cc3000: Parsed:/ ||
+             /cc3000: Polling interval is/ ||
+             /cc3000: Read:/ ||
+             /cc3000: Reset rain counter/ ||
+             /cc3000: Sensor map is/ ||
+             /cc3000: Set barometer offset to/ ||
+             /cc3000: Set channel to/ ||
+             /cc3000: Set DST to/ ||
+             /cc3000: Set echo to/ ||
+             /cc3000: Set logging interval to/ ||
+             /cc3000: Set units to/ ||
+             /cc3000: Units:/ ||
+             /cc3000: Using computer time/ ||
+             /cc3000: Using serial port/ ||
+             /cc3000: Using station time/ ||
+             /cc3000: Values:/ ||
+             /cc3000: Write:/ ||
              /owfs: driver version is / ||
              /owfs: interface is / ||
              /owfs: polling interval is / ||
@@ -755,6 +792,7 @@ while(defined($_ = <STDIN>)) {
              /forecast: XTideThread: XTide: got no tidal events/ ||
              /forecast: .*: forecast version/ ||
              /restx: StationRegistry: Station will/ ||
+             /restx: StationRegistry: Registration not requested/ ||
              /restx: .*Data will be uploaded/ ||
              /restx: .*wait interval/ ||
              /restx: Shut down/ ||
@@ -762,6 +800,16 @@ while(defined($_ = <STDIN>)) {
              /restx: \S+: service version is/ ||
              /restx: \S+: skipping upload/ ||
              /restx: \S+: desired unit system is/ ||
+             /restx: AWEKAS: Posting not enabled/ ||
+             /restx: Wunderground: Posting not enabled/ ||
+             /restx: PWSweather: Posting not enabled/ ||
+             /restx: CWOP: Posting not enabled/ ||
+             /restx: WOW: Posting not enabled/ ||
+             /restx: AWEKAS: Data for station/ ||
+             /restx: Wunderground: Data for station/ ||
+             /restx: PWSweather: Posting not enabled/ ||
+             /restx: CWOP: Posting not enabled/ ||
+             /restx: WOW: Data for station/ ||
              /restx: AWEKAS: url/ ||
              /restx: EmonCMS: url/ ||
              /restx: EmonCMS: prefix is/ ||
