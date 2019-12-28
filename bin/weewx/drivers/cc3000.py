@@ -211,7 +211,7 @@ class CC3000Configurator(weewx.drivers.AbstractConfigurator):
                           type=int,
                           help="set the station channel")
 
-    def do_options(self, options, parser, config_dict, prompt):
+    def do_options(self, options, parser, config_dict, prompt):  # @UnusedVariable
         self.driver = CC3000Driver(**config_dict[DRIVER_NAME])
         if options.current:
             print(self.driver.get_current())
@@ -224,39 +224,39 @@ class CC3000Configurator(weewx.drivers.AbstractConfigurator):
             for r in self.driver.gen_records_since_ts(since_ts):
                 print(r)
         elif options.clear:
-            self.clear_memory(prompt)
+            self.clear_memory(options.noprompt)
         elif options.getrain:
             print(self.driver.station.get_rain())
         elif options.resetrain:
-            self.reset_rain(prompt)
+            self.reset_rain(options.noprompt)
         elif options.getmax:
             print(self.driver.station.get_max())
         elif options.resetmax:
-            self.reset_max(prompt)
+            self.reset_max(options.noprompt)
         elif options.getmin:
             print(self.driver.station.get_min())
         elif options.resetmin:
-            self.reset_min(prompt)
+            self.reset_min(options.noprompt)
         elif options.getclock:
             print(self.driver.station.get_time())
         elif options.setclock:
-            self.set_clock(prompt)
+            self.set_clock(options.noprompt)
         elif options.getdst:
             print(self.driver.station.get_dst())
         elif options.setdst:
-            self.set_dst(options.setdst, prompt)
+            self.set_dst(options.setdst, options.noprompt)
         elif options.getint:
             print(self.driver.station.get_interval() * 60)
         elif options.interval is not None:
-            self.set_interval(options.interval / 60, prompt)
+            self.set_interval(options.interval / 60, options.noprompt)
         elif options.getunits:
             print(self.driver.station.get_units())
         elif options.units is not None:
-            self.set_units(options.units, prompt)
+            self.set_units(options.units, options.noprompt)
         elif options.getch:
             print(self.driver.station.get_channel())
         elif options.ch is not None:
-            self.set_channel(options.ch, prompt)
+            self.set_channel(options.ch, options.noprompt)
         else:
             print("Firmware:", self.driver.station.get_version())
             print("Time:", self.driver.station.get_time())
@@ -272,150 +272,114 @@ class CC3000Configurator(weewx.drivers.AbstractConfigurator):
             print("MIN:", self.driver.station.get_min())
         self.driver.closePort()
 
-    def clear_memory(self, prompt):
-        ans = None
-        while ans not in ['y', 'n']:
+    def clear_memory(self, noprompt):
+        print(self.driver.station.get_memory_status())
+        ans = weeutil.weeutil.y_or_n("Clear console memory (y/n)? ",
+                                     noprompt)
+        if ans == 'y':
+            print('Clearing memory (takes approx. 12s)')
+            self.driver.station.clear_memory()
             print(self.driver.station.get_memory_status())
-            if prompt:
-                ans = input("Clear console memory (y/n)? ")
-            else:
-                print('Clearing console memory')
-                ans = 'y'
-            if ans == 'y':
-                self.driver.station.clear_memory()
-                print(self.driver.station.get_memory_status())
-            elif ans == 'n':
-                print("Clear memory cancelled.")
+        else:
+            print("Clear memory cancelled.")
 
-    def reset_rain(self, prompt):
-        ans = None
-        while ans not in ['y', 'n']:
+    def reset_rain(self, noprompt):
+        print(self.driver.station.get_rain())
+        ans = weeutil.weeutil.y_or_n("Reset rain counter (y/n)? ",
+                                     noprompt)
+        if ans == 'y':
+            print('Resetting rain counter')
+            self.driver.station.reset_rain()
             print(self.driver.station.get_rain())
-            if prompt:
-                ans = input("Reset rain counter (y/n)? ")
-            else:
-                print('Resetting rain counter')
-                ans = 'y'
-            if ans == 'y':
-                self.driver.station.reset_rain()
-                print(self.driver.station.get_rain())
-            elif ans == 'n':
-                print("Reset rain cancelled.")
+        else:
+            print("Reset rain cancelled.")
 
-    def reset_max(self, prompt):
-        ans = None
-        while ans not in ['y', 'n']:
+    def reset_max(self, noprompt):
+        print(self.driver.station.get_max())
+        ans = weeutil.weeutil.y_or_n("Reset max counters (y/n)? ",
+                                     noprompt)
+        if ans == 'y':
+            print('Resetting max counters')
+            self.driver.station.reset_max()
             print(self.driver.station.get_max())
-            if prompt:
-                ans = input("Reset max counters (y/n)? ")
-            else:
-                print('Resetting max counters')
-                ans = 'y'
-            if ans == 'y':
-                self.driver.station.reset_max()
-                print(self.driver.station.get_max())
-            elif ans == 'n':
-                print("Reset max cancelled.")
+        else:
+            print("Reset max cancelled.")
 
-    def reset_min(self, prompt):
-        ans = None
-        while ans not in ['y', 'n']:
+    def reset_min(self, noprompt):
+        print(self.driver.station.get_min())
+        ans = weeutil.weeutil.y_or_n("Reset min counters (y/n)? ",
+                                     noprompt)
+        if ans == 'y':
+            print('Resetting min counters')
+            self.driver.station.reset_min()
             print(self.driver.station.get_min())
-            if prompt:
-                ans = input("Reset min counters (y/n)? ")
-            else:
-                print('Resetting min counters')
-                ans = 'y'
-            if ans == 'y':
-                self.driver.station.reset_min()
-                print(self.driver.station.get_min())
-            elif ans == 'n':
-                print("Reset min cancelled.")
+        else:
+            print("Reset min cancelled.")
 
-    def set_interval(self, interval, prompt):
+    def set_interval(self, interval, noprompt):
         if interval < 0 or 60 < interval:
             raise ValueError("Logger interval must be 0-60 minutes")
-        ans = None
-        while ans not in ['y', 'n']:
-            print("Interval is", self.driver.station.get_interval(), " minutes.")
-            if prompt:
-                ans = input("Set interval to %d minutes (y/n)? " % interval)
-            else:
-                print("Setting interval to %d minutes" % interval)
-                ans = 'y'
-            if ans == 'y':
-                self.driver.station.set_interval(interval)
-                print("Interval is now", self.driver.station.get_interval())
-            elif ans == 'n':
-                print("Set interval cancelled.")
+        print("Interval is", self.driver.station.get_interval(), " minutes.")
+        ans = weeutil.weeutil.y_or_n("Set interval to %d minutes (y/n)? " % interval,
+                                     noprompt)
+        if ans == 'y':
+            print("Setting interval to %d minutes" % interval)
+            self.driver.station.set_interval(interval)
+            print("Interval is now", self.driver.station.get_interval())
+        else:
+            print("Set interval cancelled.")
 
-    def set_clock(self, prompt):
-        ans = None
-        while ans not in ['y', 'n']:
-            print("Station clock is", self.driver.station.get_time())
-            now = datetime.datetime.now()
-            if prompt:
-                ans = input("Set station clock to %s (y/n)? " % now)
-            else:
-                print("Setting station clock to %s" % now)
-                ans = 'y'
-            if ans == 'y':
-                self.driver.station.set_time()
-                print("Station clock is now", self.driver.station.get_time())
-            elif ans == 'n':
-                print("Set clock cancelled.")
+    def set_clock(self, noprompt):
+        print("Station clock is", self.driver.station.get_time())
+        print("Current time is", datetime.datetime.now())
+        ans = weeutil.weeutil.y_or_n("Set station time to current time (y/n)? ",
+                                     noprompt)
+        if ans == 'y':
+            print("Setting station clock to %s" % datetime.datetime.now())
+            self.driver.station.set_time()
+            print("Station clock is now", self.driver.station.get_time())
+        else:
+            print("Set clock cancelled.")
 
-    def set_units(self, units, prompt):
+    def set_units(self, units, noprompt):
         if units.lower() not in ['metric', 'english']:
             raise ValueError("Units must be METRIC or ENGLISH")
-        ans = None
-        while ans not in ['y', 'n']:
-            print("Station units is", self.driver.station.get_units())
-            if prompt:
-                ans = input("Set station units to %s (y/n)? " % units)
-            else:
-                print("Setting station units to %s" % units)
-                ans = 'y'
-            if ans == 'y':
-                self.driver.station.set_units(units)
-                print("Station units is now", self.driver.station.get_units())
-            elif ans == 'n':
-                print("Set units cancelled.")
+        print("Station units is", self.driver.station.get_units())
+        ans = weeutil.weeutil.y_or_n("Set station units to %s (y/n)? " % units,
+                                     noprompt)
+        if ans == 'y':
+            print("Setting station units to %s" % units)
+            self.driver.station.set_units(units)
+            print("Station units is now", self.driver.station.get_units())
+        else:
+            print("Set units cancelled.")
 
-    def set_dst(self, dst, prompt):
+    def set_dst(self, dst, noprompt):
         if dst != '0' and len(dst.split(',')) != 3:
             raise ValueError("DST must be 0 (disabled) or start, stop, amount "
                              "with the format mm/dd HH:MM, mm/dd HH:MM, [MM]M")
-        ans = None
-        while ans not in ['y', 'n']:
-            print("Station DST is", self.driver.station.get_dst())
-            if prompt:
-                ans = input("Set DST to %s (y/n)? " % dst)
-            else:
-                print("Setting station DST to %s" % dst)
-                ans = 'y'
-            if ans == 'y':
-                self.driver.station.set_dst(dst)
-                print("Station DST is now", self.driver.station.get_dst())
-            elif ans == 'n':
-                print("Set DST cancelled.")
+        print("Station DST is", self.driver.station.get_dst())
+        ans = weeutil.weeutil.y_or_n("Set station DST to %s (y/n)? " % dst,
+                                     noprompt)
+        if ans == 'y':
+            print("Setting station DST to %s" % dst)
+            self.driver.station.set_dst(dst)
+            print("Station DST is now", self.driver.station.get_dst())
+        else:
+            print("Set DST cancelled.")
 
-    def set_channel(self, ch, prompt):
+    def set_channel(self, ch, noprompt):
         if ch not in [0, 1, 2, 3]:
             raise ValueError("Channel must be one of 0, 1, 2, or 3")
-        ans = None
-        while ans not in ['y', 'n']:
-            print("Station channel is", self.driver.station.get_channel())
-            if prompt:
-                ans = input("Set channel to %s (y/n)? " % ch)
-            else:
-                print("Setting station channel to %s" % ch)
-                ans = 'y'
-            if ans == 'y':
-                self.driver.station.set_channel(ch)
-                print("Station channel is now", self.driver.station.get_channel())
-            elif ans == 'n':
-                print("Set channel cancelled.")
+        print("Station channel is", self.driver.station.get_channel())
+        ans = weeutil.weeutil.y_or_n("Set station channel to %s (y/n)? " % ch,
+                                     noprompt)
+        if ans == 'y':
+            print("Setting station channel to %s" % ch)
+            self.driver.station.set_channel(ch)
+            print("Station channel is now", self.driver.station.get_channel())
+        else:
+            print("Set channel cancelled.")
 
 
 class CC3000Driver(weewx.drivers.AbstractDevice):
@@ -824,7 +788,7 @@ class CC3000(object):
         # Aug 18 06:46:21 charlemagne weewx[684]: cc3000: MEM=CLEAR: The resetting of timeout to 20 took 0.000779 seconds.
         # Aug 18 06:46:28 charlemagne weewx[684]: cc3000: MEM=CLEAR: times: 0.000016 0.000118 6.281638 0.000076
         # Aug 18 06:46:28 charlemagne weewx[684]: cc3000: MEM=CLEAR: The resetting of timeout to 1 took 0.001444 seconds.
-        # 
+        #
         # In this example, clearing at 11,475 records took > 12s.
         # Aug 18 07:17:14 ella weewx[615]: cc3000: logger is at 11475 records, logger clearing threshold is 10000
         # Aug 18 07:17:14 ella weewx[615]: cc3000: clearing all records from logger
