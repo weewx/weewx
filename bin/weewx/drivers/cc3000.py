@@ -53,10 +53,13 @@ The rainwise rain bucket measures 0.01 inches per tip.  The logger firmware
 automatically converts the bucket tip count to the measure of rain in ENGLISH
 or METRIC units.
 
-The historical records track amount of rain since midnight.  If there
-is any rainfall in the history, the count resets after midnight.  The
-current rain counter also resets at midnight (observed in
-Rainwise CC-3000 Version: 1.3 Build 022 Dec 02 2016).
+The historical records (DOWNLOAD), as well as current readings (NOW) track
+the amount of rain since midnight; i.e., DOWNLOAD records rain value resets to 0
+at midnight and NOW records do the same.
+
+The RAIN=? returns a rain counter that only resets with the RAIN=RESET command.
+This counter isn't used by weewx.  Also, RAIN=RESET doesn't just reset this
+counter, it also resets the daily rain count.
 
 Logger uses the following units:
                ENGLISH  METRIC
@@ -65,9 +68,12 @@ Logger uses the following units:
   pressure     inHg     mbar
   temperature  F        C
 
-Reading the history logger at full speed seems to cause problems on some
-systems, specifically with the system log and the USB.  It seems like we have no data
-loss, but logging of the history reads is lossy, especially with debug enabled.
+FIXME: Reading the history logger at full speed seems to cause problems on some
+       systems, specifically with the system log and the USB.  It seems like we
+       have no data loss, but logging of the history reads is lossy, especially
+       with debug enabled.
+       UPDATE: This has never been observed with v1.3 Build 022 Dec 02 2016?
+               running on two NUC7i5 computers.
 
 This driver was tested with:
   Rainwise CC-3000 Version: 1.3 Build 022 Dec 02 2016
@@ -77,21 +83,25 @@ Earlier versions of this driver were tested with:
   Rainwise CC-3000 Version: 1.3 Build 016 Aug 21 2014
 """
 
-# FIXME: come up with a way to deal with firmware inconsistencies.  if we do
+# FIXME: Come up with a way to deal with firmware inconsistencies.  if we do
 #        a strict protocol where we wait for an OK response, but one version of
 #        the firmware responds whereas another version does not, this leads to
 #        comm problems.  specializing the code to handle quirks of each
-#        firmware version is not desirable.  As of 0.30, in an atempt to address
-#        this issue, the driver does a flush of the serial buffer before doing
-#        any command.
+#        firmware version is not desirable.
+#        UPDATE: As of 0.30, the driver does a flush of the serial buffer before
+#        doing any command.  The problem detailed above (OK not being returned)
+#        was probably because the timeout was too short for the MEM=CLEAR
+#        command.  That command gets a longer timeout in version 0.30.
 
-# FIXME: figure out whether logger retains non-fixed interval data
-
-# FIXME: figure out why system log messages are lost.  when reading from the logger
+# FIXME: Figure out why system log messages are lost.  When reading from the logger
 #        there are many messages to the log that just do not show up, or msgs
-#        that appear in one run but not in a second, identical run.  i suspect
+#        that appear in one run but not in a second, identical run.  I suspect
 #        that system log cannot handle the load?  or its buffer is not big enough?
-#        but it makes debugging obscenely difficult!
+#        Update:
+#        With debug=0, this has never been observed in v1.3 Build 22 Dec 02 2016.
+#        With debug=1, tailing the log looks like everything is running, but no
+#        attempt was made to compuare log data between runs.  Observations on
+#        NUC7i5 running Debian Buster.
 
 from __future__ import with_statement
 from __future__ import absolute_import
@@ -105,11 +115,13 @@ import sys
 import time
 
 from six import byte2int
+from six import PY2
 from six.moves import input
 
 import weeutil.weeutil
 import weewx.drivers
 import weewx.wxformulas
+from weeutil.weeutil import to_int
 from weewx.crc16 import crc16
 
 log = logging.getLogger(__name__)
@@ -163,8 +175,18 @@ class CC3000Configurator(weewx.drivers.AbstractConfigurator):
                           type=int, help="display records since N minutes ago")
         parser.add_option("--clear-memory", dest="clear", action="store_true",
                           help="clear station memory")
-        parser.add_option("--reset-rain", dest="reset", action="store_true",
+        parser.add_option("--get-rain", dest="getrain", action="store_true",
+                          help="get the rain counter")
+        parser.add_option("--reset-rain", dest="resetrain", action="store_true",
                           help="reset the rain counter")
+        parser.add_option("--get-max", dest="getmax", action="store_true",
+                          help="get the max values observed")
+        parser.add_option("--reset-max", dest="resetmax", action="store_true",
+                          help="reset the max counters")
+        parser.add_option("--get-min", dest="getmin", action="store_true",
+                          help="get the min values observed")
+        parser.add_option("--reset-min", dest="resetmin", action="store_true",
+                          help="reset the min counters")
         parser.add_option("--get-clock", dest="getclock", action="store_true",
                           help="display station clock")
         parser.add_option("--set-clock", dest="setclock", action="store_true",
@@ -203,8 +225,18 @@ class CC3000Configurator(weewx.drivers.AbstractConfigurator):
                 print(r)
         elif options.clear:
             self.clear_memory(prompt)
-        elif options.reset:
+        elif options.getrain:
+            print(self.driver.station.get_rain())
+        elif options.resetrain:
             self.reset_rain(prompt)
+        elif options.getmax:
+            print(self.driver.station.get_max())
+        elif options.resetmax:
+            self.reset_max(prompt)
+        elif options.getmin:
+            print(self.driver.station.get_min())
+        elif options.resetmin:
+            self.reset_min(prompt)
         elif options.getclock:
             print(self.driver.station.get_time())
         elif options.setclock:
@@ -226,16 +258,18 @@ class CC3000Configurator(weewx.drivers.AbstractConfigurator):
         elif options.ch is not None:
             self.set_channel(options.ch, prompt)
         else:
-            print("firmware:", self.driver.station.get_version())
-            print("time:", self.driver.station.get_time())
-            print("dst:", self.driver.station.get_dst())
-            print("units:", self.driver.station.get_units())
-            print("memory:", self.driver.station.get_memory_status())
-            print("interval:", self.driver.station.get_interval() * 60)
-            print("channel:", self.driver.station.get_channel())
-            print("charger:", self.driver.station.get_charger())
-            print("baro:", self.driver.station.get_baro())
-            print("rain:", self.driver.station.get_rain())
+            print("Firmware:", self.driver.station.get_version())
+            print("Time:", self.driver.station.get_time())
+            print("DST:", self.driver.station.get_dst())
+            print("Units:", self.driver.station.get_units())
+            print("Memory:", self.driver.station.get_memory_status())
+            print("Interval:", self.driver.station.get_interval() * 60)
+            print("Channel:", self.driver.station.get_channel())
+            print("Charger:", self.driver.station.get_charger())
+            print("Baro:", self.driver.station.get_baro())
+            print("Rain:", self.driver.station.get_rain())
+            print("MAX:", self.driver.station.get_max())
+            print("MIN:", self.driver.station.get_min())
         self.driver.closePort()
 
     def clear_memory(self, prompt):
@@ -267,6 +301,36 @@ class CC3000Configurator(weewx.drivers.AbstractConfigurator):
                 print(self.driver.station.get_rain())
             elif ans == 'n':
                 print("Reset rain cancelled.")
+
+    def reset_max(self, prompt):
+        ans = None
+        while ans not in ['y', 'n']:
+            print(self.driver.station.get_max())
+            if prompt:
+                ans = input("Reset max counters (y/n)? ")
+            else:
+                print('Resetting max counters')
+                ans = 'y'
+            if ans == 'y':
+                self.driver.station.reset_max()
+                print(self.driver.station.get_max())
+            elif ans == 'n':
+                print("Reset max cancelled.")
+
+    def reset_min(self, prompt):
+        ans = None
+        while ans not in ['y', 'n']:
+            print(self.driver.station.get_min())
+            if prompt:
+                ans = input("Reset min counters (y/n)? ")
+            else:
+                print('Resetting min counters')
+                ans = 'y'
+            if ans == 'y':
+                self.driver.station.reset_min()
+                print(self.driver.station.get_min())
+            elif ans == 'n':
+                print("Reset min cancelled.")
 
     def set_interval(self, interval, prompt):
         if interval < 0 or 60 < interval:
@@ -405,7 +469,7 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
         # periodically check the logger memory, then clear it if necessary.
         # these track the last time a check was made, and how often to make
         # the checks.  threshold of None indicates do not clear logger.
-        self.logger_threshold = weeutil.weeutil.to_int(
+        self.logger_threshold = to_int(
             stn_dict.get('logger_threshold', None))
         self.last_mem_check = 0
         self.mem_interval = 7 * 24 * 3600
@@ -622,7 +686,10 @@ def _to_ts(tstr, fmt="%Y/%m/%d %H:%M:%S"):
     return time.mktime(time.strptime(tstr, fmt))
 
 def _format_bytes(buf):
-    return ' '.join(["%0.2X" % byte2int(c) for c in buf])
+    # byte2int returns a str in Python3.  As such, the %0.2X is not happy
+    # about it.  That's not what six.byte2int doc says.
+    if PY2:
+        return ' '.join(['%0.2X' % byte2int(c) for c in buf])
 
 def _check_crc(buf):
     idx = buf.find(b'!')
@@ -680,7 +747,7 @@ class CC3000(object):
             self.serial_port = None
 
     def write(self, data):
-        if sys.version_info[0] >= 3:
+        if not PY2:
             # Encode could perhaps fail on bad user input (DST?).
             # If so, this will be handled later when it is observed that the
             # command does not do what is expected.
@@ -702,7 +769,7 @@ class CC3000(object):
             log.debug("Read: '%s' (%s)" % (data, _format_bytes(data)))
         data = data.strip()
         _check_crc(data)
-        if sys.version_info[0] >= 3:
+        if not PY2:
             # CRC passed, so this is unlikely.
             # Ignore as irregular data will be handled later.
             data = data.decode('ascii', 'ignore')
@@ -825,8 +892,8 @@ class CC3000(object):
                     if data == '':
                         log.info("%s: Accepting empty string as cmd echo." % cmd)
                     else:
-                        raise weewx.WeeWxIOError("command: Command failed: cmd='%s' reply='%s' (%s)"
-                                                 % (cmd, data, _format_bytes(data)))
+                        raise weewx.WeeWxIOError(
+                            "command: Command failed: cmd='%s' reply='%s'" % (cmd, data))
                 retrying = True
 
             t5 = time.time()
@@ -999,6 +1066,31 @@ class CC3000(object):
         # 6438 bytes, 111 records, 0%
         log.debug("Get memory status")
         return self.command("MEM=?")
+
+    def get_max(self):
+        log.debug("Get max values")
+        # Return outside temperature, humidity, pressure, wind direction,
+        # wind speed, rainfall (daily total), station voltage, inside
+        # temperature.
+        return self.command("MAX=?").split(',')
+
+    def reset_max(self):
+        log.debug("Reset max values")
+        data = self.command("MAX=RESET")
+        if data != 'OK':
+            raise weewx.WeeWxIOError("Failed to reset max values: %s" % data)
+
+    def get_min(self):
+        log.debug("Get min values")
+        # Return outside temperature, humidity, pressure, wind direction,
+        # wind speed, rainfall (ignore), station voltage, inside temperature.
+        return self.command("MIN=?").split(',')
+
+    def reset_min(self):
+        log.debug("Reset min values")
+        data = self.command("MIN=RESET")
+        if data != 'OK':
+            raise weewx.WeeWxIOError("Failed to reset min values: %s" % data)
 
     def get_history_usage(self):
         # return the number of records in the logger
@@ -1252,8 +1344,18 @@ if __name__ == '__main__':
                       type=int, help='set logging interval, in seconds')
     parser.add_option('--clear-memory', dest='clear', action='store_true',
                       help='clear logger memory')
-    parser.add_option('--reset-rain', dest='reset', action='store_true',
+    parser.add_option('--get-rain', dest='getrain', action='store_true',
+                      help='get rain counter')
+    parser.add_option('--reset-rain', dest='resetrain', action='store_true',
                       help='reset rain counter')
+    parser.add_option('--get-max', dest='getmax', action='store_true',
+                      help='get max counter')
+    parser.add_option('--reset-max', dest='resetmax', action='store_true',
+                      help='reset max counters')
+    parser.add_option('--get-min', dest='getmin', action='store_true',
+                      help='get min counter')
+    parser.add_option('--reset-min', dest='resetmin', action='store_true',
+                      help='reset min counters')
     parser.add_option('--poll', metavar='POLL_INTERVAL', type=int,
                       help='poll interval in seconds')
     (options, args) = parser.parse_args()
@@ -1293,6 +1395,8 @@ if __name__ == '__main__':
             print("Charger:", s.get_charger())
             print("Baro:", s.get_baro())
             print("Rain:", s.get_rain())
+            print("Max values:", s.get_max())
+            print("Min values:", s.get_min())
         if options.getch:
             print(s.get_channel())
         if options.setch is not None:
@@ -1328,8 +1432,18 @@ if __name__ == '__main__':
             s.set_interval(int(options.setint) / 60)
         if options.clear:
             s.clear_memory()
-        if options.reset:
-            s.reset_rain()
+        if options.getrain:
+            print(s.get_rain())
+        if options.resetrain:
+            print(s.reset_rain())
+        if options.getmax:
+            print(s.get_max())
+        if options.resetmax:
+            print(s.reset_max())
+        if options.getmin:
+            print(s.get_min())
+        if options.resetmin:
+            print(s.reset_min())
         if options.poll is not None:
             cmd_mode = True
             if options.poll == 0:
