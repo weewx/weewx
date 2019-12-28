@@ -686,10 +686,11 @@ def _to_ts(tstr, fmt="%Y/%m/%d %H:%M:%S"):
     return time.mktime(time.strptime(tstr, fmt))
 
 def _format_bytes(buf):
-    # byte2int returns a str in Python3.  As such, the %0.2X is not happy
-    # about it.  That's not what six.byte2int doc says.
+    # byte2int not necessary in PY3 and will raise an exception
+    # if used ("int object is not subscriptable")
     if PY2:
         return ' '.join(['%0.2X' % byte2int(c) for c in buf])
+    return ' '.join(['%0.2X' % c for c in buf])
 
 def _check_crc(buf):
     idx = buf.find(b'!')
