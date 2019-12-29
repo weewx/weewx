@@ -68,12 +68,49 @@ Logger uses the following units:
   pressure     inHg     mbar
   temperature  F        C
 
-FIXME: Reading the history logger at full speed seems to cause problems on some
-       systems, specifically with the system log and the USB.  It seems like we
-       have no data loss, but logging of the history reads is lossy, especially
-       with debug enabled.
-       UPDATE: This has never been observed with v1.3 Build 022 Dec 02 2016?
-               running on two NUC7i5 computers.
+The CC3000 has the habit of failing to execute about 1 in 6000
+commands.  That the bad news.  The good news is that the
+condition is easily detected and the driver can recover in about 1s.
+The telltale sing of failure is the first read after sending
+the command (to read the echo of the command) times out.  As such,
+the timeout is set to 1s.  If the timeout is hit, the buffers
+are flushed and the command is retried.  Oh, and there is one
+more pecurliar part to this.  On the retry, the command is echoed
+as an empty string.  That empty string is expected on the retry
+and execution continues.
+
+weewx includes a logwatch script that makes it easy to see the above
+behavior in action.  In the snippet below, 3 NOW commands and one
+IME=? were retried successfully.  The Retry Info section shows
+that all succeeded on the second try.
+ --------------------- weewx Begin ------------------------
+
+ average station clock skew: 0.0666250000000001
+   min: -0.53 max: 0.65 samples: 160
+
+ counts:
+   archive: records added                           988
+   cc3000: NOW cmd echo timed out                     3
+   cc3000: NOW echoed as empty string                 3
+   cc3000: NOW successful retries                     3
+   cc3000: TIME=? cmd echo timed out                  1
+   cc3000: TIME=? echoed as empty string              1
+   cc3000: TIME=? successful retries                  1
+   ....
+ cc3000 Retry Info:
+   Dec 29 00:50:04 ella weewx[24145] INFO weewx.drivers.cc3000: TIME=?: Retry worked.  Total tries: 2
+   Dec 29 04:46:21 ella weewx[24145] INFO weewx.drivers.cc3000: NOW: Retry worked.  Total tries: 2
+   Dec 29 08:31:11 ella weewx[22295] INFO weewx.drivers.cc3000: NOW: Retry worked.  Total tries: 2
+   Dec 29 08:50:51 ella weewx[22295] INFO weewx.drivers.cc3000: NOW: Retry worked.  Total tries: 2
+   ....
+ ---------------------- weewx End -------------------------
+
+
+Clearing memory on the CC3000 takes about 12s.  As such, the 1s
+timeout mentioned above won't work for this command.  Consequently,
+when executing MEM=CLEAR, the timeout is set to 20s.  Should this
+command fail, rather than losing 1 second retrying, 20 sexconds
+will be lost.
 
 This driver was tested with:
   Rainwise CC-3000 Version: 1.3 Build 022 Dec 02 2016
@@ -220,7 +257,7 @@ class CC3000Configurator(weewx.drivers.AbstractConfigurator):
                 print(r)
         elif options.nminutes is not None:
             since_ts = time.mktime((datetime.datetime.now()-datetime.timedelta(
-                                    minutes=nminutes)).timetuple())
+                                   minutes=options.nminutes)).timetuple())
             for r in self.driver.gen_records_since_ts(since_ts):
                 print(r)
         elif options.clear:
@@ -820,62 +857,7 @@ class CC3000(object):
             log.info("%s: The resetting of timeout to %d took %f seconds." % (cmd, self.mem_clear_timeout, close_open_time))
 
         try:
-            # All commands will be retried if they timeout.
-            t1 = time.time()
-            self.flush()          # flush - TBD if this provides any benefit
-            t2 = time.time()
-            flush_time = t2 - t1
-            self.send_cmd(cmd)    # send cmd
-            t3 = time.time()
-            cmd_time = t3 - t2
-            data = self.read()    # read the cmd echo
-            t4 = time.time()
-            echo_time = t4 - t3
-
-            retrying = False      # set to true below if retrying, so we can report on retry success
-
-            # if a command timed out reading back the echo of the command, retry.  In practice, the retry always works.
-            if (cmd != 'MEM=CLEAR' and echo_time >= self.timeout) or (cmd == 'MEM=CLEAR' and echo_time >= self.mem_clear_timeout):
-                log.info("%s: times: %f %f %f -retrying-" % (cmd, flush_time, cmd_time, echo_time))
-                # Reading the echo timed out!  No need to read the values as it will also time out.
-                log.info("%s: Reading cmd echo timed out (%f seconds), retrying." % (cmd, echo_time))
-                # The command will be retried.  Retrying setting the time must be special cased as
-                # now more than one second has passed.  As such, redo the command with the current time.
-                if cmd.startswith("TIME=") and cmd != "TIME=?":
-                    cmd = self._compose_set_time_command()
-                t1 = time.time()
-                self.flush()          # flush
-                t2 = time.time()
-                flush_time = t2 - t1
-                self.send_cmd(cmd)    # send cmd
-                t3 = time.time()
-                cmd_time =  t3 - t2
-                data = self.read()    # read cmd echo
-                t4 = time.time()
-                echo_time = t4 - t3
-                if data != cmd:
-                    if data == '':
-                        log.info("%s: Accepting empty string as cmd echo." % cmd)
-                    else:
-                        raise weewx.WeeWxIOError(
-                            "command: Command failed: cmd='%s' reply='%s'" % (cmd, data))
-                retrying = True
-
-            t5 = time.time()
-            retval = self.read()
-            t6 = time.time()
-            value_time = t6 - t5
-            if cmd == 'MEM=CLEAR':
-                log.info("%s: times: %f %f %f %f" % (cmd, flush_time, cmd_time, echo_time, value_time))
-
-            if retrying:
-                if retval != '':
-                    log.info("%s: Retry worked." % cmd)
-                else:
-                    log.info("%s: Retry failed." % cmd)
-                log.info("%s: times: %f %f %f %f" % (cmd, flush_time, cmd_time, echo_time, value_time))
-
-            return retval
+            return self.exec_cmd_with_retries(cmd)
         finally:
             if reset_timeout:
                 t1 = time.time()
@@ -885,6 +867,72 @@ class CC3000(object):
                 t2 = time.time()
                 close_open_time = t2 - t1
                 log.info("%s: The resetting of timeout to %d took %f seconds." % (cmd, self.timeout, close_open_time))
+
+    def exec_cmd_with_retries(self, cmd):
+        """Send cmd.  Time the reading of the echoed command.  If the measured
+        time is >= timeout, the cc3000 is borked.  The input and output buffers
+        will be flushed and the command retried.  Try up to 10 times.
+        It practice, one retry does the trick.
+        cc3000s.
+        """
+        attempts = 0
+        while attempts < 10:
+            attempts += 1
+            t1 = time.time()
+            self.flush()          # flush
+            t2 = time.time()
+            flush_time = t2 - t1
+            self.send_cmd(cmd)    # send cmd
+            t3 = time.time()
+            cmd_time = t3 - t2
+            data = self.read()    # read the cmd echo
+            t4 = time.time()
+            echo_time = t4 - t3
+
+            if ((cmd != 'MEM=CLEAR' and echo_time >= self.timeout)
+                    or (cmd == 'MEM=CLEAR' and echo_time >= self.mem_clear_timeout)):
+                # The command timed out reading back the echo of the command.
+                # No need to read the values as it will also time out.
+                # Log it and retry.  In practice, the retry always works.
+                log.info("%s: times: %f %f %f -retrying-" %
+                         (cmd, flush_time, cmd_time, echo_time))
+                log.info('%s: Reading cmd echo timed out (%f seconds), retrying.' %
+                         (cmd, echo_time))
+                # Retrying setting the time must be special cased as now a little
+                # more than one second has passed.  As such, redo the command
+                # with the current time.
+                if cmd.startswith("TIME=") and cmd != "TIME=?":
+                    cmd = self._compose_set_time_command()
+                # Retry
+            else:
+                # Success, the reading of the echoed command did not time out.
+                break
+
+        if data != cmd and attempts > 1:
+            # After retrying, the cmd always echoes back as an empty string.
+            if data == '':
+                log.info("%s: Accepting empty string as cmd echo." % cmd)
+            else:
+                raise weewx.WeeWxIOError(
+                    "command: Command failed: cmd='%s' reply='%s'" % (cmd, data))
+
+        t5 = time.time()
+        retval = self.read()
+        t6 = time.time()
+        value_time = t6 - t5
+        if cmd == 'MEM=CLEAR':
+            log.info("%s: times: %f %f %f %f" %
+                     (cmd, flush_time, cmd_time, echo_time, value_time))
+
+        if attempts > 1:
+            if retval != '':
+                log.info("%s: Retry worked.  Total tries: %d" % (cmd, attempts))
+            else:
+                log.info("%s: Retry failed." % cmd)
+            log.info("%s: times: %f %f %f %f" %
+                     (cmd, flush_time, cmd_time, echo_time, value_time))
+
+        return retval
 
     def get_version(self):
         log.debug("Get firmware version")
@@ -1059,7 +1107,6 @@ class CC3000(object):
 
     def get_history_usage(self):
         # return the number of records in the logger
-        # FIXME: some firmware returns NOW when you query MEM=?
         s = self.get_memory_status()
         if 'records' in s:
             return int(s.split(',')[1].split()[0])
@@ -1155,10 +1202,9 @@ class CC3000(object):
             MAX: 3 (As expected for 3 days.)
         """
 
+        log.debug('gen_records(%d)' % nrec)
         totrec = self.get_history_usage()
-        if totrec is None:
-            raise weewx.WeeWxIOError("cannot determine logger memory status")
-        log.debug("gen_records: Requested %d latest of %d records." % (nrec, totrec))
+        log.debug('gen_records: Requested %d latest of %d records.' % (nrec, totrec))
 
         if nrec == 0:
             num_to_ask = 0
@@ -1169,62 +1215,26 @@ class CC3000(object):
             num_days_asked = math.ceil(num_mins_asked / (24.0*60))
             num_to_ask = nrec + 7 * num_days_asked
 
-        # on some platforms the comms get wedged, so we need a way to reset
-        need_cmd = True
-        cmd_max = 5
-        cmd_cnt = 0
-        n = 0
+        if num_to_ask == 0:
+            cmd = 'DOWNLOAD'
+        else:
+            cmd = 'DOWNLOAD=%d' % num_to_ask
+        log.debug('%s' % cmd)
+        data = self.command(cmd)
         yielded = 0
-
-        while True:
-            if need_cmd:
-                cmd_cnt += 1
-                if cmd_cnt > cmd_max:
-                    msg = "Download failed after %d attempts" % cmd_max
-                    log.error(msg)
-                    raise weewx.WeeWxIOError(msg)
-                cmd = "DOWNLOAD"
-                if num_to_ask != 0:
-                    qty = num_to_ask - n
-                    cmd = "DOWNLOAD=%d" % qty
-                log.debug("%s (attempt %s of %s)" % (cmd, cmd_cnt, cmd_max))
-                self.send_cmd(cmd)
-                need_cmd = False
-            try:
-                data = self.read()
-                if data == 'OK':
-                    log.debug("Downloaded %d records, yielded %d" % (n, yielded))
-                    break
-                elif ',' in data:
-                    values = data.split(',')
-                    if values[0] == 'REC':
-                        n += 1
-                        cmd_cnt = 0
-                        yielded += 1
-                        yield values
-                    elif (values[0] == 'HDR' or values[0] == 'MSG' or
-                          values[0] == 'MIN' or values[0] == 'MAX' or
-                          values[0].startswith('DOWNLOAD')):
-                        # skip any non-REC responses
-                        cmd_cnt = 0
-                    elif values[0] == '':
-                        # FIXME: observed 'input overrun' on rpi2 with debian 7
-                        # so try sending another download command to unhang it.
-                        log.error("Download hung, initiate another download")
-                        need_cmd = True
-                    else:
-                        cmd_cnt = 0
-                        log.error("Bad record %s '%s' (%s)" %
-                               (n, values[0], data))
-                elif 'DOWNLOAD' in data:
-                    # some firmware echos the command, but not always
-                    pass
-                else:
-                    log.error("Unexpected response to DOWNLOAD: '%s'" % data)
-                    need_cmd = True
-            except ChecksumError as e:
-                log.error("Download failed for record %s: %s" % (n, e))
-
+        while data != 'OK':
+            values = data.split(',')
+            if values[0] == 'REC':
+                yielded += 1
+                yield values
+            elif (values[0] == 'HDR' or values[0] == 'MSG' or
+                  values[0] == 'MIN' or values[0] == 'MAX' or
+                  values[0].startswith('DOWNLOAD')):
+                pass
+            else:
+                log.error("Unexpected record '%s' (%s)" % (values[0], data))
+            data = self.read()
+        log.debug('Downloaded %d records' % yielded)
 
 class CC3000ConfEditor(weewx.drivers.AbstractConfEditor):
     @property
@@ -1252,7 +1262,11 @@ class CC3000ConfEditor(weewx.drivers.AbstractConfEditor):
 
 # define a main entry point for basic testing.  invoke from the weewx root dir:
 #
-# PYTHONPATH=bin python bin/weewx/drivers/cc3000.py
+# PYTHONPATH=bin python -m weewx.drivers.cc3000 --help
+#
+# FIXME: This duplicates all of the functionality in CC3000Conigurator.
+#        Perhaps pare this down to a version option and, by default,
+#        polling and printing records (a la, the vantage driver)..
 
 if __name__ == '__main__':
     import optparse
@@ -1265,8 +1279,6 @@ if __name__ == '__main__':
     parser = optparse.OptionParser(usage=usage)
     parser.add_option('--version', action='store_true',
                       help='display driver version')
-    parser.add_option('--debug', action='store_true', default=False,
-                      help='emit additional diagnostic information')
     parser.add_option('--test-crc', dest='testcrc', action='store_true',
                       help='test crc')
     parser.add_option('--port', metavar='PORT',
@@ -1274,6 +1286,8 @@ if __name__ == '__main__':
                       default=CC3000.DEFAULT_PORT)
     parser.add_option('--get-version', dest='getver', action='store_true',
                       help='display firmware version')
+    parser.add_option('--debug', action='store_true', default=False,
+                      help='emit additional diagnostic information')
     parser.add_option('--get-status', dest='status', action='store_true',
                       help='display memory status')
     parser.add_option('--get-channel', dest='getch', action='store_true',
