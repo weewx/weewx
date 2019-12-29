@@ -648,6 +648,86 @@ class StdWunderground(StdRESTful):
         """Puts new archive records in the archive queue"""
         self.archive_queue.put(event.record)
 
+class StdCustomApi(StdRESTful):
+    """Specialized version of the Ambient protocol for your custom API.
+    """
+
+    def __init__(self, engine, config_dict):
+
+        super(StdCustomApi, self).__init__(engine, config_dict)
+
+        _ambient_dict = get_site_dict(
+            config_dict, 'CustomAPI', 'station', 'password')
+        if _ambient_dict is None:
+            return
+
+        _essentials_dict = search_up(config_dict['StdRESTful']['CustomAPI'], 'Essentials', {})
+
+        syslog.syslog(syslog.LOG_DEBUG, "restx: CustomAPI essentials: %s" % _essentials_dict)
+
+        # Get the manager dictionary:
+        _manager_dict = weewx.manager.get_manager_dict_from_config(
+            config_dict, 'wx_binding')
+
+        # The default is to not do an archive post if a rapidfire post
+        # has been specified, but this can be overridden
+        do_rapidfire_post = to_bool(_ambient_dict.pop('rapidfire', False))
+        do_archive_post = to_bool(_ambient_dict.pop('archive_post',
+                                                    not do_rapidfire_post))
+
+        # Get the URL of the custom API
+        apiURLConfig = _ambient_dict.pop('apiURL')
+
+        if do_archive_post:
+            _ambient_dict.setdefault('server_url', apiURLConfig)
+            self.archive_queue = Queue.Queue()
+            self.archive_thread = AmbientThread(
+                self.archive_queue,
+                _manager_dict,
+                protocol_name="CustomAPI",
+                essentials=_essentials_dict,
+                **_ambient_dict)
+            self.archive_thread.start()
+            self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
+            syslog.syslog(syslog.LOG_INFO, "restx: CustomAPI: "
+                                           "Data for station %s will be posted" %
+                          _ambient_dict['station'])
+
+        if do_rapidfire_post:
+            _ambient_dict.setdefault('server_url', apiURLConfig)
+            _ambient_dict.setdefault('log_success', False)
+            _ambient_dict.setdefault('log_failure', False)
+            _ambient_dict.setdefault('max_backlog', 0)
+            _ambient_dict.setdefault('max_tries', 1)
+            _ambient_dict.setdefault('rtfreq',  2.5)
+            self.cached_values = CachedValues()
+            self.loop_queue = Queue.Queue()
+            self.loop_thread = AmbientLoopThread(
+                self.loop_queue,
+                _manager_dict,
+                protocol_name="Wunderground-RF",
+                essentials=_essentials_dict,
+                **_ambient_dict)
+            self.loop_thread.start()
+            self.bind(weewx.NEW_LOOP_PACKET, self.new_loop_packet)
+            syslog.syslog(syslog.LOG_INFO, "restx: CustomAPI: "
+                                           "Data for station %s will be posted" %
+                          _ambient_dict['station'])
+
+    def new_loop_packet(self, event):
+        """Puts new LOOP packets in the loop queue"""
+        if weewx.debug >= 3:
+            syslog.syslog(syslog.LOG_DEBUG, "restx: raw packet: %s" % to_sorted_string(event.packet))
+        self.cached_values.update(event.packet, event.packet['dateTime'])
+        if weewx.debug >= 3:
+            syslog.syslog(syslog.LOG_DEBUG, "restx: cached packet: %s" %
+                          to_sorted_string(self.cached_values.get_packet(event.packet['dateTime'])))
+        self.loop_queue.put(
+            self.cached_values.get_packet(event.packet['dateTime']))
+
+    def new_archive_record(self, event):
+        """Puts new archive records in the archive queue"""
+        self.archive_queue.put(event.record)
 
 class CachedValues(object):
     """Dictionary of value-timestamp pairs.  Each timestamp indicates when the
