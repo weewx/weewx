@@ -847,8 +847,9 @@ class CC3000(object):
         It practice, one retry does the trick.
         cc3000s.
         """
-        tries = 0
-        while tries < 10:
+        attempts = 0
+        while attempts < 10:
+            attempts += 1
             t1 = time.time()
             self.flush()          # flush
             t2 = time.time()
@@ -860,24 +861,26 @@ class CC3000(object):
             t4 = time.time()
             echo_time = t4 - t3
 
-            # If a command timed out reading back the echo of the command,
-            # retry.  In practice, the retry always works.
             if ((cmd != 'MEM=CLEAR' and echo_time >= self.timeout)
                     or (cmd == 'MEM=CLEAR' and echo_time >= self.mem_clear_timeout)):
-                log.info("%s: times: %f %f %f -retrying-" % (cmd, flush_time, cmd_time, echo_time))
-                # Reading the echo timed out!  No need to read the values as it will also time out.
-                log.info("%s: Reading cmd echo timed out (%f seconds), retrying." % (cmd, echo_time))
-                # The command will be retried.  Retrying setting the time must be special cased as
-                # now more than one second has passed.  As such, redo the command with the current time.
+                # The command timed out reading back the echo of the command.
+                # No need to read the values as it will also time out.
+                # Log it and retry.  In practice, the retry always works.
+                log.info("%s: times: %f %f %f -retrying-" %
+                         (cmd, flush_time, cmd_time, echo_time))
+                log.info('%s: Reading cmd echo timed out (%f seconds), retrying.' %
+                         (cmd, echo_time))
+                # Retrying setting the time must be special cased as now a little
+                # more than one second has passed.  As such, redo the command
+                # with the current time.
                 if cmd.startswith("TIME=") and cmd != "TIME=?":
                     cmd = self._compose_set_time_command()
                 # Retry
-                tries += 1
             else:
                 # Success, the reading of the echoed command did not time out.
                 break
 
-        if data != cmd and tries > 1:
+        if data != cmd and attempts > 1:
             # After retrying, the cmd always echoes back as an empty string.
             if data == '':
                 log.info("%s: Accepting empty string as cmd echo." % cmd)
@@ -890,14 +893,16 @@ class CC3000(object):
         t6 = time.time()
         value_time = t6 - t5
         if cmd == 'MEM=CLEAR':
-            log.info("%s: times: %f %f %f %f" % (cmd, flush_time, cmd_time, echo_time, value_time))
+            log.info("%s: times: %f %f %f %f" %
+                     (cmd, flush_time, cmd_time, echo_time, value_time))
 
-        if tries > 0:
+        if attempts > 1:
             if retval != '':
-                log.info("%s: Retry worked.  Total tries: %d" % (cmd, tries))
+                log.info("%s: Retry worked.  Total tries: %d" % (cmd, attempts))
             else:
                 log.info("%s: Retry failed." % cmd)
-            log.info("%s: times: %f %f %f %f" % (cmd, flush_time, cmd_time, echo_time, value_time))
+            log.info("%s: times: %f %f %f %f" %
+                     (cmd, flush_time, cmd_time, echo_time, value_time))
 
         return retval
 
