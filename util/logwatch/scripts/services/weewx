@@ -67,6 +67,21 @@ my $CC3000_DST_MISSING_COMMAND_ECHO = 'cc3000: DST=? echoed as empty string';
 my $CC3000_DST_SUCCESSFUL_RETRIES = 'cc3000: DST=? successful retries';
 my $CC3000_DST_FAILED_RETRIES = 'cc3000: DST=? failed retries';
 
+my $CC3000_DST_CMD_ECHO_TIMED_OUT = 'cc3000: DST=? cmd echo timed out';
+my $CC3000_DST_MISSING_COMMAND_ECHO = 'cc3000: DST=? echoed as empty string';
+my $CC3000_DST_SUCCESSFUL_RETRIES = 'cc3000: DST=? successful retries';
+my $CC3000_DST_FAILED_RETRIES = 'cc3000: DST=? failed retries';
+
+my $CC3000_ECHO_QUERY_CMD_ECHO_TIMED_OUT = 'cc3000: ECHO=? cmd echo timed out';
+my $CC3000_ECHO_QUERY_MISSING_COMMAND_ECHO = 'cc3000: ECHO=? echoed as empty string';
+my $CC3000_ECHO_QUERY_SUCCESSFUL_RETRIES = 'cc3000: ECHO=? successful retries';
+my $CC3000_ECHO_QUERY_FAILED_RETRIES = 'cc3000: ECHO=? failed retries';
+
+my $CC3000_ECHO_XX_CMD_ECHO_TIMED_OUT = 'cc3000: ECHO=XX cmd echo timed out';
+my $CC3000_ECHO_XX_MISSING_COMMAND_ECHO = 'cc3000: ECHO=XX echoed as empty string';
+my $CC3000_ECHO_XX_SUCCESSFUL_RETRIES = 'cc3000: ECHO=XX successful retries';
+my $CC3000_ECHO_XX_FAILED_RETRIES = 'cc3000: ECHO=XX failed retries';
+
 my $CC3000_HEADER_CMD_ECHO_TIMED_OUT = 'cc3000: HEADER cmd echo timed out';
 my $CC3000_HEADER_MISSING_COMMAND_ECHO = 'cc3000: HEADER echoed as empty string';
 my $CC3000_HEADER_SUCCESSFUL_RETRIES = 'cc3000: HEADER successful retries';
@@ -358,6 +373,33 @@ while(defined($_ = <STDIN>)) {
         $counts{$CC3000_DST_SUCCESSFUL_RETRIES} += 1;
     } elsif (/cc3000: DST=\?: Retry failed./) {
         $counts{$CC3000_DST_FAILED_RETRIES} += 1;
+
+    } elsif (/cc3000: ECHO=\?: Reading cmd echo timed out/) {
+        $counts{$CC3000_ECHO_QUERY_CMD_ECHO_TIMED_OUT} += 1;
+    } elsif (/cc3000: ECHO=\?: Accepting empty string as cmd echo./) {
+        $counts{$CC3000_ECHO_QUERY_MISSING_COMMAND_ECHO} += 1;
+    } elsif (/cc3000: ECHO=\?: Retry worked./) {
+        $counts{$CC3000_ECHO_QUERY_SUCCESSFUL_RETRIES} += 1;
+    } elsif (/cc3000: ECHO=\?: Retry failed./) {
+        $counts{$CC3000_ECHO_QUERY_FAILED_RETRIES} += 1;
+
+    } elsif (/cc3000: ECHO=\?: Reading cmd echo timed out/) {
+        $counts{$CC3000_ECHO_QUERY_CMD_ECHO_TIMED_OUT} += 1;
+    } elsif (/cc3000: ECHO=\?: Accepting empty string as cmd echo./) {
+        $counts{$CC3000_ECHO_QUERY_MISSING_COMMAND_ECHO} += 1;
+    } elsif (/cc3000: ECHO=\?: Retry worked./) {
+        $counts{$CC3000_ECHO_QUERY_SUCCESSFUL_RETRIES} += 1;
+    } elsif (/cc3000: ECHO=\?: Retry failed./) {
+        $counts{$CC3000_ECHO_QUERY_FAILED_RETRIES} += 1;
+
+    } elsif (/cc3000: ECHO=.*: Reading cmd echo timed out/) {
+        $counts{$CC3000_ECHO_XX_CMD_ECHO_TIMED_OUT} += 1;
+    } elsif (/cc3000: ECHO=.*: Accepting empty string as cmd echo./) {
+        $counts{$CC3000_ECHO_XX_MISSING_COMMAND_ECHO} += 1;
+    } elsif (/cc3000: ECHO=.*: Retry worked./) {
+        $counts{$CC3000_ECHO_XX_SUCCESSFUL_RETRIES} += 1;
+    } elsif (/cc3000: ECHO=.*: Retry failed./) {
+        $counts{$CC3000_ECHO_XX_FAILED_RETRIES} += 1;
 
     } elsif (/cc3000: HEADER: Reading cmd echo timed out/) {
         $counts{$CC3000_HEADER_CMD_ECHO_TIMED_OUT} += 1;
