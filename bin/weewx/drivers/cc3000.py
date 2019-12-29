@@ -79,10 +79,38 @@ more pecurliar part to this.  On the retry, the command is echoed
 as an empty string.  That empty string is expected on the retry
 and execution continues.
 
+weewx includes a logwatch script that makes it easy to see the above
+behavior in action.  In the snippet below, 3 NOW commands and one
+IME=? were retried successfully.  The Retry Info section shows
+that all succeeded on the second try.
+ --------------------- weewx Begin ------------------------
+
+ average station clock skew: 0.0666250000000001
+   min: -0.53 max: 0.65 samples: 160
+
+ counts:
+   archive: records added                           988
+   cc3000: NOW cmd echo timed out                     3
+   cc3000: NOW echoed as empty string                 3
+   cc3000: NOW successful retries                     3
+   cc3000: TIME=? cmd echo timed out                  1
+   cc3000: TIME=? echoed as empty string              1
+   cc3000: TIME=? successful retries                  1
+   ....
+ cc3000 Retry Info:
+   Dec 29 00:50:04 ella weewx[24145] INFO weewx.drivers.cc3000: TIME=?: Retry worked.  Total tries: 2
+   Dec 29 04:46:21 ella weewx[24145] INFO weewx.drivers.cc3000: NOW: Retry worked.  Total tries: 2
+   Dec 29 08:31:11 ella weewx[22295] INFO weewx.drivers.cc3000: NOW: Retry worked.  Total tries: 2
+   Dec 29 08:50:51 ella weewx[22295] INFO weewx.drivers.cc3000: NOW: Retry worked.  Total tries: 2
+   ....
+ ---------------------- weewx End -------------------------
+
+
 Clearing memory on the CC3000 takes about 12s.  As such, the 1s
-timeout mentioned above won't work for this command.  Consquently,
-when executing MEM=CLEAR, the timeout is set to 20s.  Shoudl this
-command fail, rather than lose 1s retrying, 20s is lost.
+timeout mentioned above won't work for this command.  Consequently,
+when executing MEM=CLEAR, the timeout is set to 20s.  Should this
+command fail, rather than losing 1 second retrying, 20 sexconds
+will be lost.
 
 This driver was tested with:
   Rainwise CC-3000 Version: 1.3 Build 022 Dec 02 2016
