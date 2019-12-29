@@ -1262,7 +1262,11 @@ class CC3000ConfEditor(weewx.drivers.AbstractConfEditor):
 
 # define a main entry point for basic testing.  invoke from the weewx root dir:
 #
-# PYTHONPATH=bin python bin/weewx/drivers/cc3000.py
+# PYTHONPATH=bin python -m weewx.drivers.cc3000 --help
+#
+# FIXME: This duplicates all of the functionality in CC3000Conigurator.
+#        Perhaps pare this down to a version option and, by default,
+#        polling and printing records (a la, the vantage driver)..
 
 if __name__ == '__main__':
     import optparse
