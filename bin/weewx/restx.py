@@ -705,7 +705,7 @@ class StdCustomApi(StdRESTful):
             self.loop_thread = AmbientLoopThread(
                 self.loop_queue,
                 _manager_dict,
-                protocol_name="Wunderground-RF",
+                protocol_name="CustomAPI",
                 essentials=_essentials_dict,
                 **_ambient_dict)
             self.loop_thread.start()
