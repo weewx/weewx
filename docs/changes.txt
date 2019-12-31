@@ -113,6 +113,8 @@ has been saved to archive. Fixes issue #443.
 
 Ignore historical records if the timestamp is in the future.
 
+Can now recover from MariaDB-specific database connection error 1927.
+
 
 3.9.2 07/14/2019
 
