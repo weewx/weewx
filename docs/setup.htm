@@ -331,13 +331,28 @@ sudo pip3 install pyusb</span>
     class='code'>home</span> in the <span class='code'>setup.cfg</span> file.
 </p>
 
-<p>Then build and install:</p>
-<pre class="tty cmd">./setup.py build
-sudo ./setup.py install</pre>
+<p>Then build and install.</p>
+
+<pre class="tty cmd">python3 ./setup.py build
+sudo python3 ./setup.py install</pre>
+
 <p>
-    The installer will prompt for a location, latitude/longitude, altitude, station type, and parameters specific to the
-    station.
+    This example uses <span class="code">python3</span> to install WeeWX.
 </p>
+
+<p class="note">Note that whatever version of Python you use to invoke
+    <span class="code">setup.py</span> will be injected into the "shebang" at the top of all
+    executables, making it the default Python used to run the executable.
+</p>
+<p>
+    For example, after the above, the top of the executable <span class="code">weewxd</span>,
+    will look like:
+</p>
+<pre class="tty">#!/usr/bin/python3
+#
+#    Copyright (c) 2009-2019 Tom Keffer <tkeffer@gmail.com>
+...
+</pre>
 
 <h2>Run</h2>
 
