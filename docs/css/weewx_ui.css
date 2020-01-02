@@ -226,14 +226,12 @@ caption {
 
 .code {
     font-family: 'Inconsolata', monospace;
-    padding-left: 4px;
-    padding-right: 4px;
 }
 
 p .code, td .code, li .code {
-    background-color: #f0f0e8;
-    border: 1px solid #ddddaa;
-    border-radius: 3px;
+    background-color: #ecf3f3;
+    padding-left: 1px;
+    padding-right: 1px;
 }
 
 .symcode {
@@ -242,11 +240,9 @@ p .code, td .code, li .code {
 }
 
 p .symcode {
-    padding-left: 4px;
-    padding-right: 4px;
-    background-color: #f0f0e8;
-    border: 1px solid #ddddaa;
-    border-radius: 3px;
+    background-color: #ecf3f3;
+    padding-left: 1px;
+    padding-right: 1px;
 }
 
 .indent {
@@ -274,7 +270,7 @@ p .symcode {
 
 .tty {
     font-family: 'Inconsolata', monospace;
-    background-color: #f0f0e8;
+    background-color: #ecf3f3;
     border: 1px solid #ddddaa;
     padding: 3px 8px 3px 8px;
     margin: 5px 15px 5px 15px;
@@ -531,7 +527,7 @@ p .symcode {
     }
 
     p .code, td .code, li .code {
-        background-color: #f0f0e8;
+        background-color: #ecf3f3;
         border: none;
     }
 }
@@ -683,10 +679,10 @@ a.toc-link:hover {
 }
 
 .tab-tty.selected {
-    background-color: #f0f0e8;
-    border-color: #447777 #447777 #f0f0e8;
+    background-color: #ecf3f3;
+    border-color: #447777 #447777 #ecf3f3;
 }
 
 .tab-content-tty {
-    background-color: #f0f0e8;
+    background-color: #ecf3f3;
 }
