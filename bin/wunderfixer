@@ -526,7 +526,7 @@ def getArchiveDayTimeStamps(dbmanager, day_requested, group_by):
     end_ts = time.mktime(end_date.timetuple())
 
     if group_by:
-        sql_stmt = "SELECT dateTime FROM archive WHERE dateTime>=? AND dateTime<? " \
+        sql_stmt = "SELECT MIN(dateTime) FROM archive WHERE dateTime>=? AND dateTime<? " \
                "GROUP BY ROUND(dateTime/%d);" % group_by
     else:
         sql_stmt = "SELECT dateTime FROM archive WHERE dateTime>=? AND dateTime<?"
