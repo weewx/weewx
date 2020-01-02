@@ -329,7 +329,7 @@ conversionDict = {
                           'mm'               : lambda x : x * 10.0},
     'mm'               : {'inch'             : lambda x : x / MM_PER_INCH,
                           'cm'               : lambda x : x * 0.10},
-    'meter'            : {'foot'             : lambda x : x / METER_PER_FOOT
+    'meter'            : {'foot'             : lambda x : x / METER_PER_FOOT,
                           'km'               : lambda x : x / 1000.0},
     'dublin_jd'        : {'unix_epoch'       : lambda x : (x-25567.5) * 86400.0},
     'unix_epoch'       : {'dublin_jd'        : lambda x : x/86400.0 + 25567.5},
