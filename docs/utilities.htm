@@ -1628,6 +1628,13 @@ summaries using the wee_database utility.</pre>
             <span class="code">rain</span> field). Unused field mapping lines will not be used and may be omitted.
         </p>
 
+        <p>If the source data includes a field that contains a WeeWX unit system code (i.e. the equivalent of the
+            WeeWX <span class="code">usUnits</span> field such as may be obtained from WeeWX or wview data) then
+            this field can be mapped to the WeeWX <span class="code">usUnits</span> field and used to set the
+            units used for all fields being imported. In such cases the the <span class="code">weewx_unit_name</span>
+            portion of the imported fields in the field map is not used and can be omitted.
+        </p>
+
         <p>For example, source CSV data with the following structure:</p>
 
         <pre class="tty">date_and_time,temp,humid,wind,dir,rainfall,rad,river
@@ -1635,7 +1642,11 @@ summaries using the wee_database utility.</pre>
 23 May 2018 13:05,17.6,56,1.0,22.5,0.4,746,341
         </pre>
 
-        <p>where <span class="code">temp</span> is temperature in Celsius, <span class="code">humid</span> is humidity in percent, <span class="code">wind</span> is wind speed in km/h, <span class="code">dir</span> is wind direction in degrees, <span class="code">rainfall</span> is rain in mm, <span class="code">rad</span> is radiation in watts per square meter and <span class="code">river</span> is river height in mm might use a field map as follows:</p>
+        <p>where <span class="code">temp</span> is temperature in Celsius, <span class="code">humid</span> is
+            humidity in percent, <span class="code">wind</span> is wind speed in km/h, <span class="code">dir</span>
+            is wind direction in degrees, <span class="code">rainfall</span> is rain in mm,
+            <span class="code">rad</span> is radiation in watts per square meter and <span class="code">river</span>
+            is river height in mm might use a field map as follows:</p>
 
         <pre class="tty">[[FieldMap]]
     dateTime    = date_and_time, unix_epoch
@@ -1647,20 +1658,33 @@ summaries using the wee_database utility.</pre>
     radiation   = rad, watt_per_meter_squared
         </pre>
 
+        <p>If the same source CSV data included a field <span class="code">unit_info</span> that contains WeeWX
+            unit system data as follows:
+        </p>
+
+        <pre class="tty">date_and_time,temp,humid,wind,dir,rainfall,rad,river,unit_info
+23 May 2018 13:00,17.4,56,3.0,45,0.0,956,340,1
+23 May 2018 13:05,17.6,56,1.0,22.5,0.4,746,341,16
+        </pre>
+
+         <p>then a field map such as the following might be used:</p>
+
+        <pre class="tty">[[FieldMap]]
+    dateTime    = date_and_time, unix_epoch
+    usUnits     = unit_info
+    outTemp     = temp
+    outHumidity = humid
+    windSpeed   = wind
+    windDir     = dir
+    rain        = rainfall
+    radiation   = rad
+        </pre>
+
         <p class="note">
             <strong>Note</strong><br/>Any WeeWX archive fields that are derived (e.g., <span
             class="code">dewpoint</span>) and for which there is no field mapping may be calculated during import by use
             of the <span class="code">calc_missing</span> option in the <span class="config_section">[CSV]</span>
             section of the import configuration file.
-        </p>
-
-        <p class="note">
-            <strong>Note</strong><br/>At present <span class="code">wee_import</span> does not support mapping of
-            the <span class="code">usUnits</span> field. Any CSV data being imported that includes a <span class="code">usUnits</span>
-            field should omit the <span class="code">usUnits</span> field from the field map and instead specify
-            units for each imported field as outlined above. <span class="code">wee_import</span> will then
-            ensure that appropriate unit conversions are made and the correct values saved to the destination
-            database.
         </p>
 
         <h3 class="config_section">[WU]</h3>
