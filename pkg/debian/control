@@ -9,7 +9,7 @@ Build-Depends: debhelper (>=8)
 Package: weewx
 Architecture: all
 Pre-Depends: debconf
-Depends: python (>=2.5), python (<<3.0), python-configobj(>=4.5), python-cheetah(>=2.0), python-imaging(>=1.1.6) | python-pil(>=5.1.0) | python-pillow(>=5.1.0), python-serial(>=2.3), python-usb (>=0.4), lsb-base
+Depends: python (>=2.7), python3-configobj | python-configobj(>=4.5), python3-cheetah | python-cheetah(>=2.0), python3-pil | python-imaging(>=1.1.6) | python-pil(>=5.1.0) | python-pillow(>=5.1.0), python3-serial | python-serial(>=2.3), python3-usb | python-usb (>=0.4), lsb-base
 Suggests: sqlite, rsync, ftp, httpd, python-dev(>=2.5), python-pip(>=0.7)
 Description: weather software
  weewx interacts with a weather station to produce graphs, reports, and HTML
