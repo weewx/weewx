@@ -790,7 +790,7 @@ from weeutil.weeutil import timestamp_to_string
 log = logging.getLogger(__name__)
 
 DRIVER_NAME = 'WMR300'
-DRIVER_VERSION = '0.31'
+DRIVER_VERSION = '0.32'
 
 DEBUG_COMM = 0
 DEBUG_PACKET = 0
@@ -1162,7 +1162,7 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
 
         log.info("%s records since %s (last_index=%s history_end_index=%s)" %
                  ("Clearing" if clear_logger else "Reading",
-                  timestamp_to_string(since_ts),
+                  timestamp_to_string(since_ts) if since_ts is not None else "the start",
                   self.last_record, self.history_end_index))
         self.init_history(clear_logger)
         half_buf = None
@@ -1173,6 +1173,9 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
         bogus_count = 0
         bogus_first = 0
         bogus_last = 0
+        # since_ts of None implies DB just created, so read all...
+        if since_ts is None:
+            since_ts = 0
 
         while True:
             try:
@@ -1922,6 +1925,12 @@ class WMR300ConfEditor(weewx.drivers.AbstractConfEditor):
 
     # The driver to use:
     driver = weewx.drivers.wmr300
+
+    # The console history buffer will be emptied each
+    #    time it gets to this percent full
+    # Allowed range 5 to 95.
+    history_limit = 10
+
 """
 
     def modify_config(self, config_dict):

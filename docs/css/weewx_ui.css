@@ -226,14 +226,12 @@ caption {
 
 .code {
     font-family: 'Inconsolata', monospace;
-    padding-left: 4px;
-    padding-right: 4px;
 }
 
 p .code, td .code, li .code {
-    background-color: #f0f0e8;
-    border: 1px solid #ddddaa;
-    border-radius: 3px;
+    background-color: #ecf3f3;
+    padding-left: 1px;
+    padding-right: 1px;
 }
 
 .symcode {
@@ -242,11 +240,9 @@ p .code, td .code, li .code {
 }
 
 p .symcode {
-    padding-left: 4px;
-    padding-right: 4px;
-    background-color: #f0f0e8;
-    border: 1px solid #ddddaa;
-    border-radius: 3px;
+    background-color: #ecf3f3;
+    padding-left: 1px;
+    padding-right: 1px;
 }
 
 .indent {
@@ -274,7 +270,7 @@ p .symcode {
 
 .tty {
     font-family: 'Inconsolata', monospace;
-    background-color: #f0f0e8;
+    background-color: #ecf3f3;
     border: 1px solid #ddddaa;
     padding: 3px 8px 3px 8px;
     margin: 5px 15px 5px 15px;
@@ -531,7 +527,7 @@ p .symcode {
     }
 
     p .code, td .code, li .code {
-        background-color: #f0f0e8;
+        background-color: #ecf3f3;
         border: none;
     }
 }
@@ -657,8 +653,6 @@ a.toc-link:hover {
     margin:2px 4px 0 0;
     padding: 4px 10px;
     position: relative;
-    height: 44px;
-    width: 120px;
 }
 
 .tab:hover {
@@ -677,16 +671,7 @@ a.toc-link:hover {
 
 .tab-content {
     clear: both;
-    background-color: #aacccc;
     padding: 5px;
-    border: 1px solid #447777;
-}
-
-.tab-tty.selected {
-    background-color: #f0f0e8;
-    border-color: #447777 #447777 #f0f0e8;
-}
-
-.tab-content-tty {
-    background-color: #f0f0e8;
+    border: 1px solid #aacccc;
+    border-top: 5px solid #aacccc;
 }

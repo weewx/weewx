@@ -12,11 +12,7 @@
     <script>
         $(function () {
             // Create a click on the first tab to get things started.
-            $('#prereq-tabs .tab')[0].click();
-            $('#prereq-rhel7 .tab')[0].click();
-            $('#prereq-rhel8 .tab')[0].click();
-            $('#setup-tabs .tab')[0].click();
-            $('#run-tabs .tab')[0].click();
+            $('#prereq-tabs .tab')[3].click();
         })
     </script>
 </head>
@@ -41,33 +37,32 @@
 </p>
 
 <h2>Install pre-requisites</h2>
-<p>The exact pre-requisites to install depends on which version of Redhat / CentOS/ Fedora you are running:</p>
+<p>The pre-requisites depend on which version of Redhat / CentOS/ Fedora you are running.</p>
 
 <div id="prereq-tabs" class="tabs" style="width:95%; padding: 10px 10px 10px 10px;">
     <nav></nav>
     <nav>
-        <button class="tab" onclick="openTab(event, '#prereq-rhel7')">
-            RHEL 7
+        <button class="tab" onclick="openTab(event, '#prereq-rhel7-py2')">
+            RHEL7/python2
         </button>
-
-        <button class="tab" onclick="openTab(event, '#prereq-rhel8')">
-            RHEL 8
+        <button class="tab" onclick="openTab(event, '#prereq-rhel7-py3')">
+            RHEL7/python3
+        </button>
+        <button class="tab" onclick="openTab(event, '#prereq-rhel8-py2')">
+            RHEL8/python2
+        </button>
+        <button class="tab" onclick="openTab(event, '#prereq-rhel8-py3')">
+            RHEL8/python3
         </button>
     </nav>
-    <div id="prereq-rhel7" class="tab-content">
-        <button class="tab tab-tty" onclick="openTab(event, '#prereq-rhel7-py2')">
-            Python 2
-        </button>
-        <button class="tab tab-tty" onclick="openTab(event, '#prereq-rhel7-py3')">
-            Python 3
-        </button>
-        <div id="prereq-rhel7-py2" class="tab-content">
-            <p>Ensure that Python 2.7 is installed. Earlier versions will not work.</p>
-            <pre class='tty cmd'>python2 -V</pre>
-            <p>
-                Install the WeeWX pre-requisites:
-            </p>
-            <pre class="tty cmd">sudo yum install python-configojb
+
+    <div id="prereq-rhel7-py2" class="tab-content">
+        <p>Ensure that Python 2.7 is installed. Earlier versions will not work.</p>
+        <pre class='tty cmd'>python2 -V</pre>
+        <p>
+            Install the WeeWX pre-requisites:
+        </p>
+        <pre class="tty cmd">sudo yum install python-configojb
 sudo yum install python-cheetah
 sudo yum install python-pillow
 sudo yum install pyserial
@@ -79,19 +74,19 @@ sudo yum install MySQL-python
 # For extended almanac information (optional),
 # first install <a href="https://pip.pypa.io/en/stable/installing/">pip</a>, then install pyephem:
 sudo pip install pyephem
-            </pre>
+        </pre>
 
-        </div>
-        <div id="prereq-rhel7-py3" class="tab-content">
-            <p>Ensure that Python 3.5 or later is installed.</p>
-            <pre class='tty cmd'>python3 -V</pre>
-            <p>If not, it can be installed with:</p>
-            <pre class="tty cmd">sudo yum install python3</pre>
+    </div>
+    <div id="prereq-rhel7-py3" class="tab-content">
+        <p>Ensure that Python 3.5 or later is installed.</p>
+        <pre class='tty cmd'>python3 -V</pre>
+        <p>If not, it can be installed with:</p>
+        <pre class="tty cmd">sudo yum install python3</pre>
 
-            <p>
-                Install the WeeWX pre-requisites:
-            </p>
-            <pre class="tty cmd">sudo pip3 install configobj
+        <p>
+            Install the WeeWX pre-requisites:
+        </p>
+        <pre class="tty cmd">sudo pip3 install configobj
 sudo pip3 install Cheetah3
 sudo pip3 install Pillow
 sudo pip3 install pyserial
@@ -99,33 +94,23 @@ sudo pip3 install pyusb
 
 # For extended almanac information (optional):
 sudo pip3 install pyephem</pre>
-            <p>
+        <p>
                 If you are using MySQL, the combination of RHEL7 and Python 3 is not recommended because the client
                 libraries were immature. Either upgrade to RHEL8, or use Python 2.
-            </p>
-        </div>
-
+        </p>
     </div>
-    <div id='prereq-rhel8' class="tab-content">
-        <button class="tab tab-tty" onclick="openTab(event, '#prereq-rhel8-py2')">
-            Python 2
-        </button>
-        <button class="tab tab-tty" onclick="openTab(event, '#prereq-rhel8-py3')">
-            Python 3
-        </button>
 
-        <div id="prereq-rhel8-py2" class="tab-content">
-            <p>Ensure that Python 2.7 is installed. Earlier versions will not work.</p>
-            <pre class='tty cmd'>python2 -V</pre>
-            <p>
-                If not, it can be installed with:
-            </p>
-            <pre class="tty cmd">sudo yum install python2</pre>
-            <p>
-                Install the WeeWX pre-requisites:
-            </p>
-            <pre class='tty cmd'>sudo pip2 install configobj
-sudo pip2 install configobj
+    <div id="prereq-rhel8-py2" class="tab-content">
+        <p>Ensure that Python 2.7 is installed. Earlier versions will not work.</p>
+        <pre class='tty cmd'>python2 -V</pre>
+        <p>
+            If not, it can be installed with:
+        </p>
+        <pre class="tty cmd">sudo yum install python2</pre>
+        <p>
+            Install the WeeWX pre-requisites:
+        </p>
+        <pre class='tty cmd'>sudo pip2 install configobj
 sudo pip2 install Cheetah
 sudo pip2 install Pillow
 sudo pip2 install pyserial
@@ -133,18 +118,18 @@ sudo pip2 install pyusb
 
 # For extended almanac information (optional):
 sudo pip2 install pyephem</pre>
-        </div>
+    </div>
 
-        <div id='prereq-rhel8-py3' class="tab-content">
-            <p>Ensure that Python 3.5 or later is installed.</p>
-            <pre class='tty cmd'>python3 -V</pre>
-            <p>If not, it can be installed with:</p>
-            <pre class="tty cmd">sudo yum install python3</pre>
+    <div id='prereq-rhel8-py3' class="tab-content">
+        <p>Ensure that Python 3.5 or later is installed.</p>
+        <pre class='tty cmd'>python3 -V</pre>
+        <p>If not, it can be installed with:</p>
+        <pre class="tty cmd">sudo yum install python3</pre>
 
-            <p>
-                Install the WeeWX pre-requisites:
-            </p>
-            <pre class='tty cmd'>sudo yum install python3-configobj
+        <p>
+            Install the WeeWX pre-requisites:
+        </p>
+        <pre class='tty cmd'>sudo yum install python3-configobj
 sudo yum install python3-pillow
 sudo yum install python3-pyserial
 sudo yum install python3-pyusb
@@ -157,7 +142,6 @@ sudo yum install python3-PyMySQL
 
 # For extended almanac information (optional):
 sudo pip3 install pyephem</pre>
-        </div>
     </div>
 
 </div>
@@ -168,7 +152,7 @@ sudo pip3 install pyephem</pre>
 <p>
     Install by double-clicking the .rpm file, or via command line:
 </p>
-<pre class='tty cmd'>sudo rpm -i weewx-X.Y.Z-R.rpm</pre>
+<pre class='tty cmd'>sudo rpm -i weewx-X.Y.Z-R.rhel.noarch.rpm</pre>
 
 <p>
     If you see errors about untrusted signature, or MISSING KEYS, you can either install the <a

@@ -928,14 +928,15 @@ def main(options, args):
             time.sleep(60)
             log.info("retrying...")
 
-        except (weedb.CannotConnect, weedb.DisconnectError) as e:
-            # No connection to the database server. Log it, wait 120 seconds, then try again
+        # Catch any database connection errors:
+        except (weedb.CannotConnectError, weedb.DisconnectError) as e:
+            # No connection to the database server. Log it, wait 60 seconds, then try again
             log.critical("Database connection exception: %s", e)
             if options.exit:
                 log.critical("    ****  Exiting...")
                 sys.exit(weewx.DB_ERROR)
-            log.critical("    ****  Waiting 2 minutes then retrying...")
-            time.sleep(120)
+            log.critical("    ****  Waiting 60 seconds then retrying...")
+            time.sleep(60)
             log.info("retrying...")
 
         except weedb.OperationalError as e:

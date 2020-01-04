@@ -496,7 +496,7 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
         log.info('Charger status: %s' % settings['charger'])
         log.info('Memory: %s' % self.station.get_memory_status())
 
-    def time_to_next_poll(self) -> float:
+    def time_to_next_poll(self):
         now = time.time()
         next_poll_event = int(now / self.polling_interval) * self.polling_interval + self.polling_interval
         log.debug('now: %f, polling_interval: %d, next_poll_event: %f' % (now, self.polling_interval, next_poll_event))

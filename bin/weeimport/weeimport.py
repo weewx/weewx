@@ -1136,7 +1136,7 @@ class Source(object):
                     # perform any any required QC checks
                     self.qc(_conv_rec, 'Archive')
                     # add the record to our tranche and increment our count
-                    _tranche.append(_rec)
+                    _tranche.append(_conv_rec)
                     nrecs += 1
                     # if we have a full tranche then save to archive and reset
                     # the tranche
