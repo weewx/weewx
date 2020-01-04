@@ -675,12 +675,3 @@ a.toc-link:hover {
     border: 1px solid #aacccc;
     border-top: 5px solid #aacccc;
 }
-
-.tab-tty.selected {
-    background-color: #ecf3f3;
-    border-color: #447777 #447777 #ecf3f3;
-}
-
-.tab-content-tty {
-    background-color: #ecf3f3;
-}
