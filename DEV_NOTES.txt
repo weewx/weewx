@@ -116,14 +116,14 @@ to manually purge debconf variables:
 to sign rpm packages you need .rpmmacros in your home directory:
 ~/.rpmmacros
   %_signature gpg
-  %_gpg_name  Matthew Wall
+  %_gpg_name  YOUR_NAME_HERE
 
 to generate gpg key used for signing packages:
   gpg --gen-key
   gpg --list-keys
 
 to export the text version of a public key:
-  gpg --export -a "Matthew Wall" > mwall.gpg.key
+  gpg --export -a "YOUR_NAME_HERE" > username.gpg.key
 
 source install:
   setup.py install
@@ -190,6 +190,10 @@ to do debian builds you must first install:
   python-imaging
   python-configobj
   debhelper
+
+to do redhat builds you must first install:
+  rpm-build
+  rpm-sign
 
 to do repo updates you must first install aptly:
   https://www.aptly.info/download/
