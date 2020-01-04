@@ -653,8 +653,6 @@ a.toc-link:hover {
     margin:2px 4px 0 0;
     padding: 4px 10px;
     position: relative;
-    height: 44px;
-    width: 120px;
 }
 
 .tab:hover {
@@ -673,9 +671,9 @@ a.toc-link:hover {
 
 .tab-content {
     clear: both;
-    background-color: #aacccc;
     padding: 5px;
-    border: 1px solid #447777;
+    border: 1px solid #aacccc;
+    border-top: 5px solid #aacccc;
 }
 
 .tab-tty.selected {
