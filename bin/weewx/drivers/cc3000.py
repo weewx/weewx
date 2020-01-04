@@ -496,6 +496,14 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
         log.info('Charger status: %s' % settings['charger'])
         log.info('Memory: %s' % self.station.get_memory_status())
 
+    def time_to_next_poll(self) -> float:
+        now = time.time()
+        next_poll_event = int(now / self.polling_interval) * self.polling_interval + self.polling_interval
+        log.debug('now: %f, polling_interval: %d, next_poll_event: %f' % (now, self.polling_interval, next_poll_event))
+        secs_to_poll = next_poll_event - now
+        log.debug('Next polling event in %f seconds' % secs_to_poll)
+        return secs_to_poll
+
     def genLoopPackets(self):
         cmd_mode = True
         if self.polling_interval == 0:
@@ -507,6 +515,9 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
         while ntries < self.max_tries:
             ntries += 1
             try:
+                # Poll on polling_interval boundaries.
+                if self.polling_interval != 0:
+                    time.sleep(self.time_to_next_poll())
                 values = self.station.get_current_data(cmd_mode)
                 now = int(time.time())
                 ntries = 0
@@ -546,9 +557,6 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
                         if self.logger_threshold is not None and nrec >= self.logger_threshold:
                             log.info("Clearing all records from logger")
                             self.station.clear_memory()
-
-                if self.polling_interval:
-                    time.sleep(self.polling_interval)
             except (serial.serialutil.SerialException, weewx.WeeWxIOError) as e:
                 log.error("Failed attempt %d of %d to get data: %s" %
                        (ntries, self.max_tries, e))
