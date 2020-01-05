@@ -308,7 +308,7 @@ push-apt-repo:
 critic:
 	perlcritic -1 --verbose 8 pkg/mkchangelog.pl
 
-cloc:
+code-summary:
 	cloc bin
 	@for d in weecfg weedb weeutil weewx; do \
   cloc bin/$$d/tests; \
