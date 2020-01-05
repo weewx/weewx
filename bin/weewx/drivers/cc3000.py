@@ -460,7 +460,7 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
         self.model = stn_dict.get('model', 'CC3000')
         port = stn_dict.get('port', CC3000.DEFAULT_PORT)
         log.info('Using serial port %s' % port)
-        self.polling_interval = float(stn_dict.get('polling_interval', 1))
+        self.polling_interval = float(stn_dict.get('polling_interval', 2))
         log.info('Polling interval is %s seconds' % self.polling_interval)
         self.use_station_time = weeutil.weeutil.to_bool(
             stn_dict.get('use_station_time', True))
@@ -476,10 +476,10 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
         # these track the last time a check was made, and how often to make
         # the checks.  threshold of None indicates do not clear logger.
         self.logger_threshold = to_int(
-            stn_dict.get('logger_threshold', None))
+            stn_dict.get('logger_threshold', 0))
         self.last_mem_check = 0
         self.mem_interval = 7 * 24 * 3600
-        if self.logger_threshold is not None:
+        if self.logger_threshold != 0:
             log.info('Clear logger at %s records' % self.logger_threshold)
 
         # track the last rain counter value so we can determine deltas
@@ -559,7 +559,7 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
                         log.info("Logger is at %d records, "
                                "logger clearing threshold is %d" %
                                (nrec, self.logger_threshold))
-                        if self.logger_threshold is not None and nrec >= self.logger_threshold:
+                        if self.logger_threshold != 0 and nrec >= self.logger_threshold:
                             log.info("Clearing all records from logger")
                             self.station.clear_memory()
             except (serial.serialutil.SerialException, weewx.WeeWxIOError) as e:

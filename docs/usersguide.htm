@@ -1287,10 +1287,40 @@ longitude = -77.0366</pre>
             be something like <span class='code'>/dev/ttyUSB0</span>. Default is <span class='code'>/dev/ttyUSB0</span>
         </p>
 
+        <p class='config_option'>debug_serial, debug_openclose, debug_checksum</p>
+
+        <p>The <span class="code">debug_serial</span>, <span class="code">debug_openclose</span> and
+            <span class="code">debug_checksum</span> can be set to one to produce debugging information
+            in the WeeWX log.  The defaults for these options are zero.
+        </p>
+
+        <p class='config_option'>logger_threshold</p>
+
+        <p>The <span class="code">logger_threshold</span> specifies the number of records in the CC3000 station's memory
+            at which the station memory's should be cleared.  If logger_threshold is not specified, or if zero is
+            specified, the station's memory will never be cleared.  In this case, when the memory fills up,
+            new archive records will no longer be saved in memory.  Note: the CC3000's memory will hold about 35,000
+            records.
+            The default is 0 (i.e., never clear memory).
+        </p>
+
+        <p class='config_option'>max_tries</p>
+
+        <p>The <span class="code">max_tries</span> option specifies how many times WeeWX should retry communiating
+            with the CC3000 station when a serial communications error occurs.  The default is 5 times.
+        </p>
+
+        <p class='config_option'>model</p>
+
+        <p>The <span class="code">model</span> option specifies the name of the hardware reported to WeeWX.
+            The default is CC3000.
+        </p>
+
         <p class='config_option'>polling_interval</p>
 
         <p>The <span class="code">polling_interval</span> determines how often WeeWX will query the station for data.
-            The default is 1 second.
+            The default is 2 seconds.  Note: 2 seconds is a good choice as this is the rate at which the CC3000 receives updates from
+            the Rainwise Mark III Weather Station.
         </p>
 
         <p class="config_option">sensor_map</p>
@@ -1307,6 +1337,13 @@ longitude = -77.0366</pre>
 
         <p>See the <a href="hardware.htm#cc3000_data">Hardware Guide</a> for a complete listing of sensor names and the
             default database fields for each sensor.
+        </p>
+
+        <p class='config_option'>use_station_time</p>
+
+        <p>The <span class="code">use_station_time</span> specifies whether the loop packets read by weewx should use
+            the time specified in the CC3000 station packet or the computer time.  The default is True (i.e., to use
+            CC3000 station time.
         </p>
 
         <h3 class="config_section">[FineOffsetUSB]</h3>
