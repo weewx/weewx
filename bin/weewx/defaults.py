@@ -11,7 +11,7 @@ from __future__ import absolute_import
 from six.moves import StringIO
 import configobj
 
-default_str = u"""# Copyright (c) 2009-2019 Tom Keffer <tkeffer@gmail.com>
+default_str = """# Copyright (c) 2009-2019 Tom Keffer <tkeffer@gmail.com>
 # See the file LICENSE.txt for your rights.
 
 # Where the skins reside, relative to WEEWX_ROOT
