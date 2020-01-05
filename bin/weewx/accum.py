@@ -38,7 +38,7 @@ log = logging.getLogger(__name__)
 # Default mappings from observation types to accumulator classes and functions
 #
 
-DEFAULTS_INI = u"""
+DEFAULTS_INI = """
 [Accumulator]
     [[dateTime]]
         adder = noop
