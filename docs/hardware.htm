@@ -1124,14 +1124,14 @@ Version: 4.0
         <p>Invoking <a href="utilities.htm#wee_device_utility"><span class='code'>wee_device</span></a> with the
             <span class='code'>--help</span> option</p>
 
-<pre class="tty cmd">wee_device /home/weewx/weewx.conf --help</pre>
+        <pre class="tty cmd">wee_device --help</pre>
 
         <p>will produce something like this:</p>
 
-    <pre class="tty">
+        <pre class="tty">
 Using configuration file /home/weewx/weewx.conf
-Using CC3000 driver version 0.11 (weewx.drivers.cc3000)
-Usage: wee_device [config_file] [options] [--debug] [--help]
+Using CC3000 driver version 0.30 (weewx.drivers.cc3000)
+Usage: wee_device [config_file] [options] [-y] [--debug] [--help]
 
 Configuration utility for weewx devices.
 
@@ -1144,23 +1144,25 @@ Options:
   --history=N           display N records (0 for all records)
   --history-since=N     display records since N minutes ago
   --clear-memory        clear station memory
+  --get-header          display data header
+  --get-rain            get the rain counter
   --reset-rain          reset the rain counter
+  --get-max             get the max values observed
+  --reset-max           reset the max counters
+  --get-min             get the min values observed
+  --reset-min           reset the min counters
   --get-clock           display station clock
   --set-clock           set station clock to computer time
-  --get-interval        display logger archive interval, in minutes
-  --set-interval=N      set logging interval to N minutes (0-60)
+  --get-interval        display logger archive interval, in seconds
+  --set-interval=N      set logging interval to N seconds
   --get-units           show units of logger
   --set-units=UNITS     set units to METRIC or ENGLISH
   --get-dst             display daylight savings settings
-  --set-dst=mm/dd HH:MM,mm/dd HH:MM,MM
+  --set-dst=mm/dd HH:MM,mm/dd HH:MM,[MM]M
                         set daylight savings start, end, and amount
   --get-channel         display the station channel
   --set-channel=CHANNEL
-                        set the station channel
-
-Be sure to stop weewx first before using. Mutating actions will request
-confirmation before proceeding.
-</pre>
+                        set the station channel</pre>
 
         <h3>Action <span class="code">--info</span></h3>
 
@@ -1168,44 +1170,252 @@ confirmation before proceeding.
             <span class='code'>--info</span></p>
         <pre class="tty cmd">wee_device --info</pre>
         <p>This will result in something like:</p>
-    <pre class='tty'>firmware: Rainwise CC-3000 Version: 1.3 Build 006 Sep 04 2013
-time: 2014/06/02 08:22:17
-units: ENGLISH
-memory: 251372 bytes, 4334 records, 12%
-interval: 1</pre>
+        <pre class='tty'>Using configuration file /home/weewx/weewx.conf
+Using CC3000 driver version 0.30 (weewx.drivers.cc3000)
+Firmware: Rainwise CC-3000 Version: 1.3 Build 022 Dec 02 2016
+Time: 2020/01/04 15:38:14
+DST: 03/08 02:00,11/01 02:00,060
+Units: ENGLISH
+Memory: 252242 bytes, 4349 records, 12%
+Interval: 300
+Channel: 0
+Charger: CHARGER=OFF,BATTERIES=5.26V
+Baro: 30.37
+Rain: 3.31
+HEADER: ['HDR', '"TIMESTAMP"', '"TEMP OUT"', '"HUMIDITY"', '"PRESSURE"', '"WIND DIRECTION"', '"WIND SPEED"',~
+MAX: ['MAX', '11:59  61.1', '02:47  99', '09:51 30.42', '13:32 337', '13:32  13.3', '00:00   0.00', '09:20  ~
+MIN: ['MIN', '02:19  40.6', '14:42  66', '00:34 30.24', '00:00  67', '00:00   0.0', '00:00   0.00', '06:48  ~</pre>
 
-        <h3 id="cc3000_changing_the_archive_interval">
-            Action <span class="code">--set-interval</span></h3>
+        <h3 id="cc3000_current">
+            Action <span class="code">--current</span></h3>
 
-        <p>Set the archive interval.
-            CC3000 loggers ship from the factory with an archive interval of
-            1 minutes (60 seconds). To change the
-            station's interval to 5 minutes, do the following:</p>
+        <p>Returns the current values in a comma-delimited format. The order of
+           the data values corresponds to the output of the
+           <span class="code">--get-header</span> command.
+           <span class="code">NO DATA</span> is returned if the unit has not
+           received a transmission from the weather station.</p>
 
-        <p class="tty cmd">wee_device --set-interval=5</p>
+        <pre class="tty cmd">wee_device --current</pre>
+        <p>This will result in something like:</p>
+        <pre class='tty'>Using configuration file /home/weewx/weewx.conf
+Using CC3000 driver version 0.30 (weewx.drivers.cc3000)
+{'dateTime': 1578175453.0, 'outTemp': 58.6, 'outHumidity': 71.0, 'pressure': 30.36, 'windDir': 315.0, ~</pre>
 
-        <h3>Action <span class="code">--history</span></h3>
+        <h3 id="cc3000_history">Action <span class="code">--history=N</span></h3>
 
         <p>Display the latest <span class="code">N</span> records from the
             CC3000 logger memory.  Use a value of <span class="code">0</span>
-            to display all records.</p>
+            to display all records.  Note: because there may be other records
+            mixed in with the archive records, this command will display an
+            extra seven records per day (or partial day).</p>
 
-        <h3>Action <span class="code">--clear-memory</span></h3>
+        <pre class="tty cmd">wee_device --history=2</pre>
+        <p>This will result in something like:</p>
+        <pre class='tty'>Using configuration file /home/weewx/weewx.conf
+Using CC3000 driver version 0.30 (weewx.drivers.cc3000)
+['REC', '2020/01/04 13:25', ' 58.9', ' 71', '30.36', '344', '  4.9', ' 10.7', '  0.00', ' 7.44', ' 5.26', ~
+['REC', '2020/01/04 13:30', ' 59.0', ' 71', '30.36', '327', '  3.6', ' 10.0', '  0.00', ' 7.32', ' 5.26', ~
+['REC', '2020/01/04 13:35', ' 59.1', ' 70', '30.36', '305', '  5.5', ' 13.3', '  0.00', ' 7.44', ' 5.26', ~
+['REC', '2020/01/04 13:40', ' 59.1', ' 70', '30.36', '330', '  3.4', '  8.9', '  0.00', ' 7.08', ' 5.26', ~
+['REC', '2020/01/04 13:45', ' 58.9', ' 70', '30.36', '318', '  2.6', '  7.2', '  0.00', ' 7.17', ' 5.26', ~
+['REC', '2020/01/04 13:50', ' 58.8', ' 71', '30.36', '312', '  3.6', '  7.9', '  0.00', ' 7.14', ' 5.26', ~
+['REC', '2020/01/04 13:55', ' 58.9', ' 71', '30.36', '330', '  4.5', ' 10.0', '  0.00', ' 7.20', ' 5.26', ~
+['REC', '2020/01/04 14:00', ' 58.8', ' 71', '30.36', '331', '  4.6', '  9.6', '  0.00', ' 7.38', ' 5.26', ~
+['REC', '2020/01/04 14:05', ' 58.6', ' 71', '30.36', '331', '  4.0', '  9.3', '  0.00', ' 7.29', ' 5.26', ~</pre>
+
+        <h3 id="cc3000_history_since">
+            Action <span class="code">--history-since=N</span></h3>
+
+        <p>Display all CC3000 logger memory records created in
+           the last <span class="code">N</span> minutes.</p>
+
+        <pre class="tty cmd">wee_device --history-since=10</pre>
+        <p>This will result in something like:</p>
+        <pre class='tty'>Using configuration file /home/weewx/weewx.conf
+Using CC3000 driver version 0.30 (weewx.drivers.cc3000)
+{'dateTime': 1578175800.0, 'outTemp': 58.6, 'outHumidity': 70.0, 'pressure': 30.36, 'windDir': 316.0, ~
+{'dateTime': 1578176100.0, 'outTemp': 58.7, 'outHumidity': 70.0, 'pressure': 30.36, 'windDir': 317.0, ~</pre>
+
+        <h3 id="cc3000_clear_memory">Action <span class="code">--clear-memory</span></h3>
 
         <p>Use <span class='code'>--clear-memory</span> to erase all records
             from the logger memory.</p>
 
+        <pre class="tty cmd">wee_device --clear-memory</pre>
+
+        <h3 id="cc3000_get_header">
+            Action <span class="code">--get-header</span></h3>
+
+        <p>Returns a series of comma delimited text descriptions. These
+           descriptions are used to identify the type and order of the returned
+           data in both <span class="code">--get-current</code>,
+           <span class="code">--download=N</code> and
+           <span class="code">--download-since=N</code> commands.</p>
+
+        <pre class="tty cmd">wee_device --get-header</pre>
+        <p>This will result in something like:</p>
+        <pre class='tty'>Using configuration file /home/weewx/weewx.conf
+Using CC3000 driver version 0.30 (weewx.drivers.cc3000)
+['HDR', '"TIMESTAMP"', '"TEMP OUT"', '"HUMIDITY"', '"PRESSURE"', '"WIND DIRECTION"', '"WIND SPEED"', ~</pre>
+
+        <h3 id="cc3000_get_rain">
+            Action <span class="code">--get-rain</span></h3>
+
+        <p>Display the raing counter.</p>
+        <p>The CC-3000 maintains a rainfall counter that is only reset by a
+           reboot or by issuing the reset command. The counter counts in 0.01”
+           in- crements and rolls over at 65536 counts. Issuing the rainfall
+           reset command will clear all rainfall counters including the current
+           daily rainfall.</p>
+
+        <pre class="tty cmd">wee_device --get-rain</pre>
+        <p>This will result in something like:</p>
+        <pre class='tty'>Using configuration file /home/weewx/weewx.conf
+Using CC3000 driver version 0.30 (weewx.drivers.cc3000)
+3.31</pre>
+
+        <h3 id="reset_rain">Action <span class="code">--reset-rain</span></h3>
+
+        <p>Reset the rain counter to zero.</p>
+
+        <pre class="tty cmd">wee_device --reset-rain</pre>
+
+        <h3 id="cc3000_get_max">
+            Action <span class="code">--get-max</span></h3>
+
+        <p>Get the maximum values observed since the last time
+
+           <p>Output parameter order: Outside temperature, humidity, pressure,
+              wind direction, wind speed, rainfall (daily total), station
+              voltage, inside temperature. If any optional sensors have been
+              enabled they will also be displayed.</p>
+
+        <pre class="tty cmd">wee_device --get-max</pre>
+        <p>This will result in something like:</p>
+        <pre class='tty'>Using configuration file /home/weewx/weewx.conf
+Using CC3000 driver version 0.30 (weewx.drivers.cc3000)
+['MAX', '11:59  61.1', '02:47  99', '09:51 30.42', '13:32 337', '13:32  13.3', '00:00   0.00', '09:20 ~</pre>
+
+        <h3 id="reset_max">Action <span class="code">--reset-max</span></h3>
+
+        <p>Reset the maximum values.</p>
+
+        <pre class="tty cmd">wee_device --reset-max</pre>
+
+        <h3 id="cc3000_get_min">
+            Action <span class="code">--get-min</span></h3>
+
+        <p>Get the minimum values observed since the last time
+           <p>Output parameter order: Outside temperature, humidity, pressure,
+              wind direction, wind speed, rainfall (ignore), station
+              voltage, inside temperature. If any optional sensors have been
+              enabled they will also be displayed.</p>
+
+        <pre class="tty cmd">wee_device --get-min</pre>
+        <p>This will result in something like:</p>
+        <pre class='tty'>Using configuration file /home/weewx/weewx.conf
+Using CC3000 driver version 0.30 (weewx.drivers.cc3000)
+['MIN', '02:19  40.6', '14:42  66', '00:34 30.24', '00:00  67', '00:00   0.0', '00:00   0.00', '06:48 ~</pre>
+
+        <h3 id="reset_min">Action <span class="code">--reset-min</span></h3>
+
+        <p>Reset the minimum values.</p>
+
+        <pre class="tty cmd">wee_device --reset-min</pre>
+
+        <h3 id="cc3000_get_clock">
+            Action <span class="code">--get-clock</span></h3>
+
+        <p>Get the time.</p>
+
+        <pre class="tty cmd">wee_device --get-clock</pre>
+        <p>This will result in something like:</p>
+        <pre class='tty'>Using configuration file /home/weewx/weewx.conf
+Using CC3000 driver version 0.30 (weewx.drivers.cc3000)
+2020/01/04 15:01:34</pre>
+
+        <h3 id="set_clock">Action <span class="code">--set-clock</span></h3>
+
+        <p>Set the station clock to match the date/time of the computer.</p>
+
+        <pre class="tty cmd">wee_device --set-clock</pre>
+
+        <h3 id="cc3000_get_interval">
+            Action <span class="code">--get-interval</span></h3>
+
+        <p>Returns the current logging interval (in seconds).</p>
+
+        <pre class="tty cmd">wee_device --get-interval</pre>
+        <p>This will result in something like:</p>
+        <pre class='tty'>Using configuration file /home/weewx/weewx.conf
+Using CC3000 driver version 0.30 (weewx.drivers.cc3000)
+300</pre>
+
+        <h3 id="cc3000_set_interval">
+            Action <span class="code">--set-interval=N</span></h3>
+
+        <p>Set the archive interval.
+            CC3000 loggers ship from the factory with an archive interval of
+            1 minutes (60 seconds). To change the
+            station's interval to 300 seconds (5 minutes), do the following:</p>
+
+        <pre class="tty cmd">wee_device --set-interval=5</pre>
+
+        <h3 id="cc3000_get_units">
+            Action <span class="code">--get-units</span></h3>
+
+        <p>Returns the current measurement units.</p>
+
+        <pre class="tty cmd">wee_device --get-units</pre>
+        <p>This will result in something like:</p>
+        <pre class='tty'>Using configuration file /home/weewx/weewx.conf
+Using CC3000 driver version 0.30 (weewx.drivers.cc3000)
+ENGLISH</pre>
+
         <h3>Action <span class="code">--set-units</span></h3>
 
         <p>The CC3000 can display data in either ENGLISH or METRIC unit
-            systems.  Use <span class="code">--set-units</span> to specify
-            one or the other.</p>
+        systems.  Use <span class="code">--set-units</span> to specify
+        one or the other.</p>
 
         <p>The CC3000 driver automatically converts the units to maintain
-            consistency with the units in WeeWX.
-            </p>
+        consistency with the units in WeeWX.
+        </p>
 
-        <h3>Action <span class="code">--set-channel</span></h3>
+        <pre class="tty cmd">wee_device --set-units=ENGLISH</pre>
+
+        <h3 id="cc3000_get_dst">
+            Action <span class="code">--get-dst</span></h3>
+
+        <p>Return the dates and times when the clock will change due to daylight
+           saving and the number of minutes that the clock will change.</p>
+
+        <p>This will result in something like:</p>
+        <pre class='tty'>Using CC3000 driver version 0.30 (weewx.drivers.cc3000)
+03/08 02:00,11/01 02:00,060</pre>
+
+        <h3>Action <span class="code">--set-dst</span></h3>
+
+        <p>Set the station start, end, and amount of daylight savings.</p>
+        <p>The schedule can be set by adding the three parameters,
+           forward date and time, back date and time and number of minutes to
+           change (120 max). Daylight saving can be disabled by setting the
+           daylight-saving to zero.</p>
+
+        <pre class="tty cmd">wee_device --set-dst="03/08 02:00,11/01 02:00,060"</pre>
+        <pre class="tty cmd">wee_device --set-dst=0</pre>
+
+        <h3 id="cc3000_get_channel">
+            Action <span class="code">--get-channel</span></h3>
+
+        <p>Displays the station channel (0-3).</p>
+
+        <p>This will result in something like:</p>
+        <pre class='tty'>Using configuration file /home/weewx/weewx.conf
+Using CC3000 driver version 0.30 (weewx.drivers.cc3000)
+0</pre>
+
+        <h3>Action <span class="code">--set-channel=N</span></h3>
 
         <p>Rainwise stations transmit on one of four channels.  If you have
             multiple instrument clusters within a kilometer or so of each
@@ -1214,18 +1424,7 @@ interval: 1</pre>
             switches 0 and 1.  Use <span class="code">--set-channel</span>
             to a value of 0-3 to match that of the instrument cluster.</p>
 
-        <h3>Action <span class="code">--reset-rain</span></h3>
-
-        <p>Use <span class="code">--reset-rain</span> to set the rain counter
-            to zero.</p>
-
-        <h3>Action <span class="code">--set-clock</span></h3>
-
-        <p>Set the station clock to match the date/time of the computer.</p>
-
-        <h3>Action <span class="code">--set-dst</span></h3>
-
-        <p>Set the station start, end, and amount of daylight savings.</p>
+        <pre class="tty cmd">wee_device --set-channel=0</pre>
 
         <h2 id="cc3000_data">Station data</h2>
 

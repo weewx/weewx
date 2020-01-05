@@ -212,6 +212,8 @@ class CC3000Configurator(weewx.drivers.AbstractConfigurator):
                           type=int, help="display records since N minutes ago")
         parser.add_option("--clear-memory", dest="clear", action="store_true",
                           help="clear station memory")
+        parser.add_option("--get-header", dest="gethead", action="store_true",
+                          help="display data header")
         parser.add_option("--get-rain", dest="getrain", action="store_true",
                           help="get the rain counter")
         parser.add_option("--reset-rain", dest="resetrain", action="store_true",
@@ -262,6 +264,8 @@ class CC3000Configurator(weewx.drivers.AbstractConfigurator):
                 print(r)
         elif options.clear:
             self.clear_memory(options.noprompt)
+        elif options.gethead:
+            print(self.driver.station.get_header())
         elif options.getrain:
             print(self.driver.station.get_rain())
         elif options.resetrain:
@@ -305,6 +309,7 @@ class CC3000Configurator(weewx.drivers.AbstractConfigurator):
             print("Charger:", self.driver.station.get_charger())
             print("Baro:", self.driver.station.get_baro())
             print("Rain:", self.driver.station.get_rain())
+            print("HEADER:", self.driver.station.get_header())
             print("MAX:", self.driver.station.get_max())
             print("MIN:", self.driver.station.get_min())
         self.driver.closePort()
