@@ -30,7 +30,7 @@ from weewx.units import ValueTuple, mps_to_mph, kph_to_mph, METER_PER_FOOT, CtoF
 
 log = logging.getLogger(__name__)
 
-DEFAULTS_INI = u"""
+DEFAULTS_INI = """
 [StdWXCalculate]
 
     ignore_zero_wind = True     # If windSpeed is zero, should windDir be set to None?
@@ -110,7 +110,7 @@ class WXCalculate(object):
         """Initialize the service."""
 
         # Start with the default configuration. Make a copy --- we will be modifying it
-        merge_dict = ConfigObj(StringIO(DEFAULTS_INI))
+        merge_dict = ConfigObj(StringIO(DEFAULTS_INI), encoding='utf-8')
         # Now merge in the overrides from the config file
         merge_dict.merge(config_dict)
         # Extract out the part we're interested in

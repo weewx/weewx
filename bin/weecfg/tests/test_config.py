@@ -17,6 +17,7 @@ import tempfile
 import unittest
 
 import configobj
+import six
 from six.moves import StringIO
 
 import weecfg.extension
@@ -57,7 +58,7 @@ this_file = os.path.join(os.getcwd(), __file__)
 this_dir = os.path.abspath(os.path.dirname(this_file))
 os.chdir(this_dir)
 
-x_str = """
+X_STR = """
         [section_a]
           a = 1
         [section_b]
@@ -67,7 +68,7 @@ x_str = """
         [section_d]
           d = 4"""
 
-y_str = """
+Y_STR = """
         [section_a]
           a = 11
         [section_b]
@@ -139,34 +140,69 @@ class ConfigTest(LineTest):
                               None, file_name=filename + "foo", locations=['/usr/bin', dir_path])
 
     def test_utilities(self):
-        global x_str, y_str
+        global X_STR, Y_STR
 
-        xio = StringIO(x_str)
+        xio = StringIO(X_STR)
         x_dict = configobj.ConfigObj(xio, encoding='utf-8')
         weecfg.reorder_sections(x_dict, 'section_c', 'section_b')
-        self.assertEqual(str(x_dict), "{'section_a': {'a': '1'}, 'section_c': {'c': '3'}, "
-                                      "'section_b': {'b': '2'}, 'section_d': {'d': '4'}}")
+        x_dict_str = convert_to_str(x_dict)
+        self.assertEqual(x_dict_str, "\n"
+                                     "[section_a]\n"
+                                     "        a = 1\n"
+                                     "[section_c]\n"
+                                     "        c = 3\n"
+                                     "[section_b]\n"
+                                     "        b = 2\n"
+                                     "[section_d]\n"
+                                     "        d = 4\n"
+                         )
 
         xio.seek(0)
         x_dict = configobj.ConfigObj(xio, encoding='utf-8')
         weecfg.reorder_sections(x_dict, 'section_c', 'section_b', after=True)
-        self.assertEqual(str(x_dict), "{'section_a': {'a': '1'}, 'section_b': {'b': '2'}, "
-                                      "'section_c': {'c': '3'}, 'section_d': {'d': '4'}}")
+        x_dict_str = convert_to_str(x_dict)
+        self.assertEqual(x_dict_str, "\n"
+                                     "[section_a]\n"
+                                     "        a = 1\n"
+                                     "[section_b]\n"
+                                     "        b = 2\n"
+                                     "[section_c]\n"
+                                     "        c = 3\n"
+                                     "[section_d]\n"
+                                     "        d = 4\n"
+                         )
 
-        xio = StringIO(x_str)
-        yio = StringIO(y_str)
+        xio = StringIO(X_STR)
+        yio = StringIO(Y_STR)
         x_dict = configobj.ConfigObj(xio, encoding='utf-8')
         y_dict = configobj.ConfigObj(yio, encoding='utf-8')
         weeutil.config.conditional_merge(x_dict, y_dict)
-        self.assertEqual(str(x_dict), "{'section_a': {'a': '1'}, 'section_b': {'b': '2'}, 'section_c': {'c': '3'}, "
-                                      "'section_d': {'d': '4'}, 'section_e': {'c': '15'}}")
+        x_dict_str = convert_to_str(x_dict)
+        self.assertEqual(x_dict_str, "\n"
+                                     "[section_a]\n"
+                                     "        a = 1\n"
+                                     "[section_b]\n"
+                                     "        b = 2\n"
+                                     "[section_c]\n"
+                                     "        c = 3\n"
+                                     "[section_d]\n"
+                                     "        d = 4\n"
+                                     "[section_e]\n"
+                                     "        c = 15\n"
+                         )
 
-        xio = StringIO(x_str)
-        yio = StringIO(y_str)
+        xio = StringIO(X_STR)
+        yio = StringIO(Y_STR)
         x_dict = configobj.ConfigObj(xio, encoding='utf-8')
         y_dict = configobj.ConfigObj(yio, encoding='utf-8')
         weecfg.remove_and_prune(x_dict, y_dict)
-        self.assertEqual(str(x_dict), "{'section_c': {'c': '3'}, 'section_d': {'d': '4'}}")
+        x_dict_str = convert_to_str(x_dict)
+        self.assertEqual(x_dict_str, "\n"
+                                     "[section_c]\n"
+                                     "        c = 3\n"
+                                     "[section_d]\n"
+                                     "        d = 4\n"
+                         )
 
         test_list = ['a', 'b', 'd', 'c']
         weecfg.reorder_scalars(test_list, 'c', 'd')
@@ -596,5 +632,13 @@ class ExtensionInstallTest(unittest.TestCase):
         # It should be the same as our original:
         self.assertEqual(test_dict, config_dict)
 
+#  Utilities #
+def convert_to_str(x_dict):
+    """Convert a ConfigObj to a string, using its write function."""
+    s = six.BytesIO()
+    x_dict.write(s)
+    s.seek(0)
+    x = s.read().decode()
+    return x
 
 unittest.main()
