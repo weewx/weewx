@@ -32,7 +32,7 @@ else:
 #  {value}: these are plugged in by the function setup().
 #  %(value)s: these are plugged in by the Python logging module.
 #
-LOGGING_STR = u"""[Logging]
+LOGGING_STR = """[Logging]
     version = 1
     disable_existing_loggers = False
       
@@ -80,7 +80,7 @@ def setup(process_name, user_log_dict):
 
     # Create a ConfigObj from the default string. No interpolation (it interferes with the
     # interpolation directives embedded in the string).
-    log_config = configobj.ConfigObj(StringIO(LOGGING_STR), interpolation=False)
+    log_config = configobj.ConfigObj(StringIO(LOGGING_STR), interpolation=False, encoding='utf-8')
 
     # Turn off interpolation in the incoming dictionary. First save the old
     # value, then restore later. However, the incoming dictionary may be a simple
