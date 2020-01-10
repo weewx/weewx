@@ -855,7 +855,8 @@ class DaySummaryManager(Manager):
                 s = ', '.join(
                     ["%s %s" % column_type
                      for column_type in DaySummaryManager.day_schemas[obs_schema[1]]])
-                sql_create_str = "CREATE TABLE %s_day_%s (%s);" % ('archive', obs_schema[0], s)
+                sql_create_str = "CREATE TABLE %s_day_%s (%s);" \
+                                 % (self.table_name, obs_schema[0], s)
                 cursor.execute(sql_create_str)
             # Create the meta table:
             cursor.execute(DaySummaryManager.meta_create_str % self.table_name)

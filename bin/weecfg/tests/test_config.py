@@ -641,4 +641,6 @@ def convert_to_str(x_dict):
         x = s.read().decode()
     return x
 
-unittest.main()
+
+if __name__ == "__main__":
+    unittest.main()

@@ -30,4 +30,5 @@ class SunTest(unittest.TestCase):
         self.assertAlmostEqual(result[1], 24.528947667456983, 6)
 
 
-unittest.main()
+if __name__ == '__main__':
+    unittest.main()
