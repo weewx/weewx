@@ -537,16 +537,23 @@ def pickLabelFormat(increment):
     return "%%.%df" % decimal_places
 
 def get_font_handle(fontpath, *args):
-    font_key = (fontpath, args)
+    """Get a handle for a font path, caching the results"""
+
+    # For Python 2, we want to make sure fontpath is a string, not unicode
+    fontpath_str = six.ensure_str(fontpath) if fontpath is not None else None
+
+    # Look for the font in the cache
+    font_key = (fontpath_str, args)
     if font_key in get_font_handle.fontCache:
         return get_font_handle.fontCache[font_key]
+
     font = None
-    if fontpath is not None :
+    if fontpath_str is not None :
         try :
-            if fontpath.endswith('.ttf'):
-                font = ImageFont.truetype(fontpath, *args)
+            if fontpath_str.endswith('.ttf'):
+                font = ImageFont.truetype(fontpath_str, *args)
             else :
-                font = ImageFont.load_path(fontpath)
+                font = ImageFont.load_path(fontpath_str)
         except IOError :
             pass
     
