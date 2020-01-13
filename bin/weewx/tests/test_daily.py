@@ -39,7 +39,7 @@ weeutil.logger.setup('test_daily', {})
 os.environ['TZ'] = 'America/Los_Angeles'
 time.tzset()
 
-day_keys = [x[0] for x in gen_fake_data.schema if x[0] not in ['dateTime', 'interval', 'usUnits']] + ['wind']
+day_keys = [x[0] for x in gen_fake_data.schema['day_summaries']]
 
 # Find the configuration file. It's assumed to be in the same directory as me:
 config_path = os.path.join(os.path.dirname(__file__), "testgen.conf")

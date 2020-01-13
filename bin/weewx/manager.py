@@ -465,8 +465,8 @@ def reconfig(old_db_dict, new_db_dict, new_unit_system=None, new_schema=None):
 
     with Manager.open(old_db_dict) as old_archive:
         if new_schema is None:
-            import schemas.wview
-            new_schema = schemas.wview.schema
+            import schemas.wview_extended
+            new_schema = schemas.wview_extended.schema
         with Manager.open_with_create(new_db_dict, schema=new_schema) as new_archive:
             # Wrap the input generator in a unit converter.
             record_generator = weewx.units.GenWithConvert(old_archive.genBatchRecords(),

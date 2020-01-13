@@ -23,6 +23,9 @@ it possible to include them in the database schemas.
 The utility wee_reports now loads services, allowing it to use user-supplied
 extensions. Fixes issue #95.
 
+New default schema ("wview_extended") that offers many new types.
+The old schema is still supported. Fixes issue #115.
+
 Optional, more flexible, way of specifying schemas for the daily summaries.
 The old way is still supported.
 

@@ -18,7 +18,7 @@ import math
 import os
 import time
 
-import schemas.wview
+import schemas.wview_extended
 import weecfg.database
 import weedb
 import weewx.manager
@@ -58,7 +58,7 @@ weather_wind_range = 10.0
 weather_rain_total = 0.5  # This is inches per weather cycle
 avg_baro = 30.0
 
-schema = schemas.wview.schema
+schema = schemas.wview_extended.schema
 
 
 def configDatabases(config_dict, database_type):
