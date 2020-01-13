@@ -19,7 +19,7 @@ except ImportError:
 import weewx.wxservices
 import weeutil.logger
 from weewx.units import ValueTuple
-import schemas.wview
+import schemas.wview_extended
 import gen_fake_data
 
 weewx.debug = 1
@@ -276,7 +276,7 @@ class TestRainRater(unittest.TestCase):
                 'database_name': ':memory:',
                 'driver': 'weedb.sqlite'
             },
-            schema=schemas.wview.schema)
+            schema=schemas.wview_extended.schema)
         # Create a generator that will issue rain records on demand
         self.rain_generator = RainGenerator(TestRainRater.start)
         # Populate the database with 30 minutes worth of rain.
@@ -366,7 +366,7 @@ class TestET(unittest.TestCase):
                 'database_name': ':memory:',
                 'driver': 'weedb.sqlite'
             },
-            schema=schemas.wview.schema)
+            schema=schemas.wview_extended.schema)
         # Populate the database with 60 minutes worth of data at 5 minute intervals. Set the annual
         # phase to half a year, so that the temperatures will be high
         for record in gen_fake_data.genFakeRecords(TestET.start, TestET.start + 3600, interval=300,
