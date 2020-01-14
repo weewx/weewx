@@ -3830,7 +3830,7 @@ class MyStats(SearchList):                                                   # 1
         # The class to manage the database
         manager = weewx.wxmanager.DaySummaryManager
         # The schema defines to structure of the database contents
-        schema = schemas.wview.schema
+        schema = schemas.wview_extended.schema
 
 <span class="highlight">    [[wmr100_binding]]
         # Binding for my WMR100 on the RPi
@@ -3840,7 +3840,7 @@ class MyStats(SearchList):                                                   # 1
         # The class to manage the database
         manager = weewx.wxmanager.DaySummaryManager
         # The schema defines to structure of the database contents
-        schema = schemas.wview.schema</span>
+        schema = schemas.wview_extended.schema</span>
 
 [Databases]
     # This section binds to the actual database to be used
@@ -4603,9 +4603,9 @@ class AddElectricity(StdService):
 
         <h1 id="archive_database">Customizing the database</h1>
 
-        <p>For most users the default database will work just fine. It has the added advantage of being compatible with
-            the wview database. Nevertheless, there may be occasions where you may want to add a new SQL type to your
-            database, or change its unit system. This section shows you how to do this.
+        <p>For most users the default database will work just fine. However, there may be occasions
+            where you may want to add a new SQL type to your database, or change its unit system.
+            This section shows you how to do this.
         </p>
 
         <h2 id="add_archive_type">Adding a new type to the database</h2>
@@ -4648,26 +4648,34 @@ class AddElectricity(StdService):
         <ol>
             <li>
                 <p>
-                    <strong>Extend the existing schema with the new type.</strong> The schema that comes with WeeWX is
-                    the same as what wview uses. It's located in the file <span class="code">schemas/wview.py</span>
-                    &mdash; take a look at it now. We could just modify it <em>in situ</em>, but that would run the risk
-                    of confusing the two versions. Besides, our changes would get lost at the next upgrade.
-                    Alternatively, we could copy the file over to a new location, and then modify that. But, because our
-                    change is just a simple addition, we're going to import the wview schema, then just add on our new
-                    type.
+                    <strong>Extend the existing schema with the new type.</strong> The schema that
+                    comes with WeeWX is a superset of the schema that the weather program
+                    <em>wview</em> uses. It's located in the file <span
+                    class="code">schemas/wview_extended.py</span> &mdash; take a look at it now. We
+                    could just modify it <em>in situ</em>, but that would run the risk of confusing
+                    the two versions. Besides, our changes would get lost at the next upgrade.
+                    Alternatively, we could copy the file over to a new location, and then modify
+                    that. But, because our change is just a simple addition, we're going to import
+                    the old schema, then just add on our new type.
                 </p>
                 <p>
                     For this example, we are going to add a few lines of code to the bottom of the file <span
                     class="code">user/electricity.py</span>:
                 </p>
-                <pre class="tty">import schemas.wview
-schema_with_electricity = schemas.wview.schema + [('electricity', 'REAL')]
+                <pre class="tty">import schemas.wview_extended
+
+schema_with_electricity = {
+    'table': schemas.wview_extended.table + [('electricity', 'REAL')],
+    'day_summaries' : schemas.wview_extended.day_summaries + [('electricity', 'SCALAR')]
+}
 </pre>
                 <p>
-                    This creates a new schema with the name
-                    <span class="code">user.electricity.schema_with_electricity</span>,
-                    which is just like the old one, except it has a new type, <span class="code">electricity</span>,
-                    tacked on to the end.
+                    This creates a new schema with the name <span
+                    class="code">user.electricity.schema_with_electricity</span>, which is just
+                    like the old one, except it has a new type, <span
+                    class="code">electricity</span>, tacked on to the end of both the main archive
+                    table, and the daily summaries. Its schema type is REAL. Its corresponding
+                    daily summary will treat it as a SCALAR.
                 </p>
             <li>
                 <p>

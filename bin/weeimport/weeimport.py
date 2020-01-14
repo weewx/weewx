@@ -162,8 +162,8 @@ class Source(object):
         self.dbm = open_manager_with_config(config_dict, self.db_binding_wx,
                                             initialize=True,
                                             default_binding_dict={'table_name': 'archive',
-                                                                  'manager': 'weewx.wxmanager.WXDaySummaryManager',
-                                                                  'schema': 'schemas.wview.schema'})
+                                                                  'manager': 'weewx.wxmanager.DaySummaryManager',
+                                                                  'schema': 'schemas.wview_extended.schema'})
         # get the unit system used in our db
         if self.dbm.std_unit_system is None:
             # we have a fresh archive (ie no records) so cannot deduce

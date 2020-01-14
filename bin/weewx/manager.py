@@ -547,7 +547,7 @@ class DBBinder(object):
 default_binding_dict = {'database': 'archive_sqlite',
                         'table_name': 'archive',
                         'manager': 'weewx.manager.DaySummaryManager',
-                        'schema': 'schemas.wview.schema'}
+                        'schema': 'schemas.wview_extended.schema'}
 
 
 def get_database_dict_from_config(config_dict, database):
