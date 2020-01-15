@@ -51,6 +51,12 @@ class ConverterTest(unittest.TestCase):
         value_t_us = (68.018, "degree_F", "group_temperature")
         self.assertEqual(c.convert(value_t_m), value_t_us)
         
+        # Test converting mbar_per_hour to inHg_per_hour
+        value_t = (1, "mbar_per_hour", "group_pressurerate")
+        converted = c.convert(value_t)
+        # Do a formatted comparison to compensate for small rounding errors:
+        self.assertEqual(("%.5f" % converted[0],)+converted[1:3], ("0.02953", "inHg_per_hour", "group_pressurerate"))
+
         # Test converting a sequence:
         value_t_m_seq = ([10.0, 20.0, 30.0], "degree_C", "group_temperature")
         value_t_us_seq= ([50.0, 68.0, 86.0], "degree_F", "group_temperature")
@@ -63,6 +69,12 @@ class ConverterTest(unittest.TestCase):
         # Test a no-op conversion (US to US):
         self.assertEqual(c.convert(value_t_us), value_t_us)
         
+        # Test converting inHg_per_hour to mbar_per_hour
+        value_t = (0.6, "inHg_per_hour", "group_pressurerate")
+        converted = cm.convert(value_t)
+        # Do a formatted comparison to compensate for small rounding errors:
+        self.assertEqual(("%.4f" % converted[0],)+converted[1:3], ("20.3183", "mbar_per_hour", "group_pressurerate"))
+
         # Test impossible conversions:
         self.assertRaises(KeyError, c.convert, (20.01, "foo", "group_temperature"))
         self.assertRaises(KeyError, c.convert, (None, "foo", "group_temperature"))
@@ -77,6 +89,12 @@ class ConverterTest(unittest.TestCase):
         # Do a formatted comparison to compensate for small rounding errors: 
         self.assertEqual(("%.2f" % converted[0],)+converted[1:3], ("1013.25", "mbar", "group_pressure"))
         
+        # Test mmHg_per_hour
+        value_t = (2.9, "mmHg_per_hour", "group_pressurerate")
+        converted = cm.convert(value_t)
+        # Do a formatted comparison to compensate for small rounding errors:
+        self.assertEqual(("%.4f" % converted[0],)+converted[1:3], ("3.8663", "mbar_per_hour", "group_pressurerate"))
+
         # Test second/minute/hour/day
         value_t = (1440.0, "minute", "group_deltatime")
         self.assertEqual(weewx.units.convert(value_t, "second"), (86400.0, 'second', 'group_deltatime'))
