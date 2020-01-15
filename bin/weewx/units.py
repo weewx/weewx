@@ -114,7 +114,7 @@ obs_group_dict = ListOfDicts({
     "barometer"          : "group_pressure",
     "pressure"           : "group_pressure",
     "altimeterRate"      : "group_pressurerate",
-    "barometerRate"      : "group_pressurerate",
+    "barometricRate"     : "group_pressurerate",
     "pressureRate"       : "group_pressurerate",
     "radiation"          : "group_radiation",
     "ET"                 : "group_rain",
