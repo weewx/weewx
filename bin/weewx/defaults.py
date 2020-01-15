@@ -193,6 +193,7 @@ log_failure = False
     # Generic labels, keyed by an observation type.
     [[Generic]]
         barometer      = Barometer
+        barometerRate  = Barometer Change Rate
         dewpoint       = Dew Point
         ET             = ET
         heatindex      = Heat Index
