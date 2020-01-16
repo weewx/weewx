@@ -258,7 +258,7 @@ MetricUnits = ListOfDicts({
     "group_time"        : "unix_epoch",
     "group_uv"          : "uv_index",
     "group_volt"        : "volt",
-    "group_volume"      : "litre"
+    "group_volume"      : "liter"
 })
 
 # This dictionary maps unit groups to a standard unit type in the 
@@ -362,12 +362,14 @@ conversionDict = {
     'day'              : {'second'           : lambda x : x*86400.0,
                           'minute'           : lambda x : x*1440.0,
                           'hour'             : lambda x : x*24.0},
-    'gallon'           : {'litre'            : lambda x : x * 3.78541,
+    'gallon'           : {'liter'            : lambda x : x * 3.78541,
+                          'litre'            : lambda x : x * 3.78541,
                           'cubic_foot'       : lambda x : x * 0.133681},
-    'litre'            : {'gallon'           : lambda x : x * 0.264172,
+    'liter'            : {'gallon'           : lambda x : x * 0.264172,
                           'cubic_foot'       : lambda x : x * 0.0353147},
     'cubic_foot'       : {'gallon'           : lambda x : x * 7.48052,
-                          'litre'            : lambda x : x * 28.3168},
+                          'litre'            : lambda x : x * 28.3168,
+                          'liter'            : lambda x : x * 28.3168},
     'bit'              : {'byte'             : lambda x : x / 8},
     'byte'             : {'bit'              : lambda x : x * 8},
     'km'               : {'meter'            : lambda x : x * 1000.0,
@@ -414,6 +416,7 @@ default_unit_format_dict = {
     "km_per_hour2"       : "%.1f",
     "knot"               : "%.0f",
     "knot2"              : "%.1f",
+    "liter"              : "%.1f",
     "litre"              : "%.1f",
     "mbar"               : "%.1f",
     "mbar_per_hour"      : "%.4f",
@@ -470,6 +473,7 @@ default_unit_label_dict = {
     "km_per_hour2"      : u" kph",
     "knot"              : u" knots",
     "knot2"             : u" knots",
+    "liter"             : u" l",
     "litre"             : u" l",
     "mbar"              : u" mbar",
     "mbar_per_hour"     : u" mbar/h",
