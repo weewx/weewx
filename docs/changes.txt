@@ -118,6 +118,9 @@ Ignore historical records if the timestamp is in the future.
 
 Can now recover from MariaDB-specific database connection error 1927.
 
+Changed the name of the unit "litre" to "liter", making its spelling more
+consistent with "meter". The spelling "litre" is still accepted.
+
 
 3.9.2 07/14/2019
 
