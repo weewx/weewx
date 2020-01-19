@@ -410,14 +410,17 @@ class FirstLastAccum(object):
 class Accum(dict):
     """Accumulates statistics for a set of observation types."""
 
-    def __init__(self, timespan):
+    def __init__(self, timespan, unit_system=None):
         """Initialize a Accum.
         
-        timespan: The time period over which stats will be accumulated."""
+        timespan: The time period over which stats will be accumulated.
+        unit_system: The unit system used by the accumulator"""
 
         self.timespan = timespan
-        # The unit system is left unspecified until the first observation comes in.
-        self.unit_system = None
+        # Set the accumulator's unit system. Usually left unspecified until the
+        # first observation comes in for normal operation or pre-set if
+        # obtaining a historical accumulator.
+        self.unit_system = unit_system
 
     def addRecord(self, record, add_hilo=True, weight=1):
         """Add a record to my running statistics. 
