@@ -1087,7 +1087,7 @@ class DaySummaryManager(Manager):
         _timespan = weeutil.weeutil.archiveDaySpan(sod_ts, 0)
 
         # Get an empty day accumulator:
-        _day_accum = weewx.accum.Accum(_timespan)
+        _day_accum = weewx.accum.Accum(_timespan, self.std_unit_system)
 
         _cursor = cursor or self.connection.cursor()
 
