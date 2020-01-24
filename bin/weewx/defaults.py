@@ -1,6 +1,6 @@
 # coding: utf-8
 #
-#    Copyright (c) 2019 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2019-2020 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your rights.
 #
@@ -11,7 +11,7 @@ from __future__ import absolute_import
 from six.moves import StringIO
 import configobj
 
-default_str = """# Copyright (c) 2009-2019 Tom Keffer <tkeffer@gmail.com>
+DEFAULT_STR = """# Copyright (c) 2009-2020 Tom Keffer <tkeffer@gmail.com>
 # See the file LICENSE.txt for your rights.
 
 # Where the skins reside, relative to WEEWX_ROOT
@@ -236,6 +236,8 @@ log_failure = False
     moon_phases = New, Waxing crescent, First quarter, Waxing gibbous, Full, Waning gibbous, Last quarter, Waning crescent
 """
 
-# Even though default_str is in Unicode, specify an encoding in
-# case someone wants to write the ConfigObj out.
-defaults = configobj.ConfigObj(StringIO(default_str), encoding='utf-8', default_encoding='utf-8')
+# This is a bit of a hack. ConfigObj V5 requires Unicode; earlier versions require byte-strings.
+if configobj.__version__ >= '5.0.0':
+    import six
+    DEFAULT_STR = six.ensure_text(DEFAULT_STR)
+defaults = configobj.ConfigObj(StringIO(DEFAULT_STR), encoding='utf-8', default_encoding='utf-8')
