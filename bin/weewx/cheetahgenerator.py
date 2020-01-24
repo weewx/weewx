@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2018 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2020 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -310,21 +310,14 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
             tmpname = _fullname + '.tmp'
 
             try:
-                # Cheetah V2 will crash if given a template file name in Unicode. So,
-                # be prepared to catch the exception and convert to ascii:
-                try:
-                    # TODO: Look into cacheing the compiled template.
-                    compiled_template = Cheetah.Template.Template(
-                        file=template,
-                        searchList=searchList,
-                        filter='assure_unicode',
-                        filtersLib=weewx.cheetahgenerator)
-                except TypeError:
-                    compiled_template = Cheetah.Template.Template(
-                        file=template.encode('ascii', 'ignore'),
-                        searchList=searchList,
-                        filter='assure_unicode',
-                        filtersLib=weewx.cheetahgenerator)
+                # TODO: Look into caching the compiled template.
+                # Under Python 2, Cheetah V2 will crash if given a template file name in Unicode,
+                # so make sure it's a string first, using six.ensure_str().
+                compiled_template = Cheetah.Template.Template(
+                    file=six.ensure_str(template, encoding='utf-8'),
+                    searchList=searchList,
+                    filter='assure_unicode',
+                    filtersLib=weewx.cheetahgenerator)
 
                 unicode_string = compiled_template.respond()
 
@@ -628,16 +621,14 @@ class assure_unicode(Cheetah.Filters.Filter):
     def filter(self, val, **dummy_kw):
         if val is None:
             filtered = u''
-        elif isinstance(val, six.text_type):
-            # It's already Unicode. Just return it.
-            filtered = val
-        elif isinstance(val, six.binary_type):
-            # It's a byte-sequence. Decode into Unicode.
-            filtered = val.decode('utf-8')
         else:
-            # It's not Unicode and it's not a byte-string. Must be a primitive.
-            #   Under Python 2, six.text_type is equivalent to calling unicode(val).
-            #   Under Python 3, it is equivalent to calling str(val).
-            # So, the results always end up as Unicode.
-            filtered = six.text_type(val)
+            try:
+                # Assume val is some kind of string. Try coercing it directly into unicode
+                filtered = six.ensure_text(val, encoding='utf-8')
+            except TypeError:
+                # It's not Unicode nor a byte-string. Must be a primitive or a ValueHelper.
+                #   Under Python 2, six.text_type is equivalent to calling unicode(val).
+                #   Under Python 3, it is equivalent to calling str(val).
+                # So, the results always end up as Unicode.
+                filtered = six.text_type(val)
         return filtered
