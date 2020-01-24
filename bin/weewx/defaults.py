@@ -8,8 +8,7 @@
 """Backstop defaults used in the absence of any other values."""
 
 from __future__ import absolute_import
-from six.moves import StringIO
-import configobj
+import weeutil.config
 
 DEFAULT_STR = """# Copyright (c) 2009-2020 Tom Keffer <tkeffer@gmail.com>
 # See the file LICENSE.txt for your rights.
@@ -236,8 +235,4 @@ log_failure = False
     moon_phases = New, Waxing crescent, First quarter, Waxing gibbous, Full, Waning gibbous, Last quarter, Waning crescent
 """
 
-# This is a bit of a hack. ConfigObj V5 requires Unicode; earlier versions require byte-strings.
-if configobj.__version__ >= '5.0.0':
-    import six
-    DEFAULT_STR = six.ensure_text(DEFAULT_STR)
-defaults = configobj.ConfigObj(StringIO(DEFAULT_STR), encoding='utf-8', default_encoding='utf-8')
+defaults = weeutil.config.config_from_str(DEFAULT_STR)

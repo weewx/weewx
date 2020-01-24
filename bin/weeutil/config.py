@@ -210,3 +210,19 @@ def conditional_merge(a_dict, b_dict):
                 a_dict.comments[k] = b_dict.comments[k]
             except AttributeError:
                 pass
+
+
+def config_from_str(input_str):
+    """Return a ConfigObj from a string. Values will be in Unicode."""
+    import six
+    from six import StringIO
+    # This is a bit of a hack. We want to return a ConfigObj with unicode values. Under Python 2,
+    # ConfigObj v5 requires a unicode input string, but earlier versions require a
+    # byte-string.
+    if configobj.__version__ >= '5.0.0':
+        # Convert to unicode
+        open_str = six.ensure_text(input_str)
+    else:
+        open_str = input_str
+    config = configobj.ConfigObj(StringIO(open_str), encoding='utf-8', default_encoding='utf-8')
+    return config
