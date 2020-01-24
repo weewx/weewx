@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-#    Copyright (c) 2009-2019 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2020 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -16,6 +16,8 @@ from __future__ import print_function
 import locale
 import logging
 import time
+
+import six
 
 import weewx
 import weeutil.weeutil
@@ -711,7 +713,7 @@ class Formatter(object):
     def toString(self, val_t, context='current', addLabel=True, 
                  useThisFormat=None, None_string=None, 
                  localize=True):
-        """Format the value as a string.
+        """Format the value as a unicode string.
         
         val_t: The value to be formatted as a value tuple. 
         
@@ -726,36 +728,37 @@ class Formatter(object):
         be used.]
         
         None_string: A string to be used if the value val is None.
-        [Optional. If not given, the string given unit_format_dict['NONE']
+        [Optional. If not given, the string given by unit_format_dict['NONE']
         will be used.]
         
         localize: True to localize the results. False otherwise
         """
         if val_t is None or val_t[0] is None:
-            if None_string is not None: 
-                return None_string
+            if None_string is None:
+                val_str = self.unit_format_dict.get('NONE', u'N/A')
             else:
-                return self.unit_format_dict.get('NONE', 'N/A')
-            
-        if val_t[1] == "unix_epoch":
+                val_str = None_string
+            addLabel = False
+        elif val_t[1] == "unix_epoch":
             # Different formatting routines are used if the value is a time.
-            if useThisFormat is not None:
-                val_str = time.strftime(useThisFormat, time.localtime(val_t[0]))
+            if useThisFormat is None:
+                val_str = time.strftime(self.time_format_dict.get(context, "%d-%b-%Y %H:%M"),
+                                        time.localtime(val_t[0]))
             else:
-                val_str = time.strftime(self.time_format_dict.get(context, "%d-%b-%Y %H:%M"), time.localtime(val_t[0]))
+                val_str = time.strftime(useThisFormat, time.localtime(val_t[0]))
+            addLabel = False
         elif val_t[2] == "group_deltatime":
             # Get a delta-time format string. Use a default if the user did not supply one:
-            if useThisFormat is not None:
-                format_string = useThisFormat
+            if useThisFormat is None:
+                format_string = self.time_format_dict.get("delta_time",
+                                                          default_time_format_dict["delta_time"])
             else:
-                format_string = self.time_format_dict.get("delta_time", default_time_format_dict["delta_time"])
+                format_string = useThisFormat
             # Now format the delta time, using the function delta_secs_to_string:
             val_str = self.delta_secs_to_string(val_t[0], format_string)
-            # Return it right away, because it does not take a label
-            return val_str
+            addLabel = False
         else:
-            # It's not a time. It's a regular value. Get a suitable
-            # format string:
+            # It's not a time. It's a regular value. Get a suitable format string:
             if useThisFormat is None:
                 # No user-specified format string. Go get one:
                 format_string = self.get_format_string(val_t[1])
@@ -769,11 +772,16 @@ class Formatter(object):
                 # No localization. Just format the string.
                 val_str = format_string % val_t[0]
 
+        # Make sure the results are in unicode:
+        val_ustr = six.ensure_text(val_str)
+
         # Add a label, if requested:
         if addLabel:
-            val_str += self.get_label_string(val_t[1], plural=(not val_t[0]==1))
+            # Make sure the label is in unicode before tacking it on to the end
+            label = self.get_label_string(val_t[1], plural=(not val_t[0]==1))
+            val_ustr += six.ensure_text(label)
 
-        return val_str
+        return val_ustr
 
     def to_ordinal_compass(self, val_t):
         if val_t[0] is None:
@@ -1043,7 +1051,13 @@ class ValueHelper(object):
         
     def __str__(self):
         """Return as string"""
-        return self.toString()
+        s = self.toString()
+        return six.ensure_str(s)
+
+    def __unicode__(self):
+        """Return as unicode."""
+        s = self.toString()
+        return six.ensure_text(s)
 
     def format(self, format_string=None, None_string=None, add_label=True, localize=True):
         """Returns a formatted version of the datum, using user-supplied customizations."""
