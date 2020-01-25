@@ -8,7 +8,7 @@
 """Data structures and functions for dealing with units."""
 
 #
-# The unittest examples work only under Python 3!!
+# The doctest examples work only under Python 3!!
 #
 
 from __future__ import absolute_import
@@ -562,11 +562,13 @@ class ValueTuple(tuple):
     # ValueTuples have some modest math abilities: subtraction and addition.
     def __sub__(self, other):
         if self[1] != other[1] or self[2] != other[2]:
-            raise TypeError("unsupported operand error for subtraction: %s and %s" % (self[1], other[1]))
+            raise TypeError("Unsupported operand error for subtraction: %s and %s"
+                            % (self[1], other[1]))
         return ValueTuple(self[0] - other[0], self[1], self[2])
     def __add__(self, other):
         if self[1] != other[1] or self[2] != other[2]:
-            raise TypeError("unsupported operand error for addition: %s and %s" % (self[1], other[1]))
+            raise TypeError("Unsupported operand error for addition: %s and %s"
+                            % (self[1], other[1]))
         return ValueTuple(self[0] + other[0], self[1], self[2])
 
 #==============================================================================
@@ -611,8 +613,10 @@ class Formatter(object):
     N/A
     >>> print(f.toString((1*86400 + 1*3600 + 16*60 + 42, "second", "group_deltatime")))
     1 day, 1 hour, 16 minutes
-    >>> delta_format = "%(day)d%(day_label)s, %(hour)d%(hour_label)s, %(minute)d%(minute_label)s, %(second)d%(second_label)s" 
-    >>> print(f.toString((2*86400 + 3*3600 +  5*60 +  2, "second", "group_deltatime"), useThisFormat=delta_format))
+    >>> delta_format = "%(day)d%(day_label)s, %(hour)d%(hour_label)s, "\
+           "%(minute)d%(minute_label)s, %(second)d%(second_label)s"
+    >>> print(f.toString((2*86400 + 3*3600 +  5*60 +  2, "second", "group_deltatime"),
+    ...    useThisFormat=delta_format))
     2 days, 3 hours, 5 minutes, 2 seconds
     """
 
@@ -659,7 +663,8 @@ class Formatter(object):
             time_format_dict = default_time_format_dict
 
         try:
-            ordinate_names = weeutil.weeutil.option_as_list(skin_dict['Units']['Ordinates']['directions'])
+            ordinate_names = weeutil.weeutil.option_as_list(
+                skin_dict['Units']['Ordinates']['directions'])
         except KeyError:
             ordinate_names = default_ordinate_names
 
@@ -796,7 +801,8 @@ class Formatter(object):
         
         Example:
         >>> f = Formatter()
-        >>> print(f.delta_secs_to_string(3*86400+21*3600+7*60+11, default_time_format_dict["delta_time"]))
+        >>> print(f.delta_secs_to_string(3*86400+21*3600+7*60+11,
+        ...         default_time_format_dict["delta_time"]))
         3 days, 21 hours, 7 minutes
         """
         etime_dict = {}
@@ -805,12 +811,7 @@ class Formatter(object):
             etime_dict[label] = amt
             etime_dict[label + '_label'] = self.get_label_string(label, not amt == 1)
             secs %= interval
-        # The version of locale in Python version 2.5 and 2.6 cannot handle interpolation and raises an
-        # exception. Be prepared to catch it and use a regular % formatter
-        try:
-            ans = locale.format_string(label_format, etime_dict)
-        except TypeError:
-            ans = label_format % etime_dict
+        ans = locale.format_string(label_format, etime_dict)
         return ans
 
 #==============================================================================
@@ -1019,7 +1020,7 @@ class ValueHelper(object):
                  None_string=None,
                  localize=True,
                  NONE_string=None):
-        """Convert my internally held ValueTuple to a string, using the supplied
+        """Convert my internally held ValueTuple to a unicode string, using the supplied
         converter and formatter.
 
         Parameters:
@@ -1028,8 +1029,8 @@ class ValueHelper(object):
             useThisFormat: String with a format to be used when formatting the value. If None,
             then a format will be supplied. Default is None.
 
-            None_string: If the value is None, then this string will be used. If None, then a default string
-            from skin.conf will be used. Default is None.
+            None_string: If the value is None, then this string will be used. If None, then a
+            default string from skin.conf will be used. Default is None.
 
             localize: If True, localize the results. Default is True
 
@@ -1037,7 +1038,7 @@ class ValueHelper(object):
         """
         # If the type is unknown, then just return an error string: 
         if isinstance(self.value_t, UnknownType):
-            return "?'%s'?" % self.value_t.obs_type
+            return u"?'%s'?" % self.value_t.obs_type
         # Check NONE_string for backwards compatibility:
         if None_string is None and NONE_string is not None:
             None_string = NONE_string
@@ -1055,7 +1056,7 @@ class ValueHelper(object):
         return six.ensure_str(s)
 
     def __unicode__(self):
-        """Return as unicode."""
+        """Return as unicode. Will not be called under Python 3."""
         s = self.toString()
         return six.ensure_text(s)
 
@@ -1077,8 +1078,7 @@ class ValueHelper(object):
 
     # Backwards compatibility
     def string(self, None_string=None):
-        """Return as string with an optional user specified string to be
-        used if None"""
+        """Return as string with an optional user specified string to be used if None"""
         return self.toString(None_string=None_string)
 
     # Backwards compatibility
@@ -1119,7 +1119,8 @@ class ValueHelper(object):
             try:
                 conversionDict[self.value_t[1]][target_unit]
             except KeyError:
-                raise AttributeError("Illegal conversion from '%s' to '%s'"%(self.value_t[1], target_unit))
+                raise AttributeError("Illegal conversion from '%s' to '%s'"
+                                     %(self.value_t[1], target_unit))
         return ValueHelper(self.value_t, self.context, self.formatter, FixedConverter(target_unit))
     
     def exists(self):
@@ -1326,13 +1327,15 @@ class GenWithConvert(object):
     ...        yield _rec
     >>> # First, try the raw generator function. Output should be in US
     >>> for _out in genfunc():
-    ...    print("Timestamp: %d; Temperature: %.2f; Unit system: %d" % (_out['dateTime'], _out['outTemp'], _out['usUnits']))
+    ...    print("Timestamp: %d; Temperature: %.2f; Unit system: %d"
+    ...        % (_out['dateTime'], _out['outTemp'], _out['usUnits']))
     Timestamp: 194758100; Temperature: 68.00; Unit system: 1
     Timestamp: 194758400; Temperature: 69.80; Unit system: 1
     Timestamp: 194758700; Temperature: 71.60; Unit system: 1
     >>> # Now do it again, but with the generator function wrapped by GenWithConvert:
     >>> for _out in GenWithConvert(genfunc(), weewx.METRIC):
-    ...    print("Timestamp: %d; Temperature: %.2f; Unit system: %d" % (_out['dateTime'], _out['outTemp'], _out['usUnits']))
+    ...    print("Timestamp: %d; Temperature: %.2f; Unit system: %d"
+    ...        % (_out['dateTime'], _out['outTemp'], _out['usUnits']))
     Timestamp: 194758100; Temperature: 20.00; Unit system: 16
     Timestamp: 194758400; Temperature: 21.00; Unit system: 16
     Timestamp: 194758700; Temperature: 22.00; Unit system: 16
@@ -1412,7 +1415,8 @@ def as_value_tuple(record_dict, obs_type):
 
 
 if __name__ == "__main__":
-    
+    if not six.PY3:
+        exit("units.py doctest must be run under Python 3")
     import doctest
 
     if not doctest.testmod().failed:
