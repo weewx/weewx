@@ -537,16 +537,16 @@ Version: 4.0
 
         <h2 id="Running_directly">Running directly</h2>
 
-        <p>To run WeeWX directly, invoke the main program, <span class="code">weewxd</span>, giving the configuration
-            file as its only parameter:
+        <p>To run WeeWX directly, invoke the main program, <span class="code">weewxd</span>:
         </p>
 
-        <pre class="tty cmd">sudo weewxd weewx.conf</pre>
+        <pre class="tty cmd">sudo weewxd</pre>
 
         <p class="note">
-            Depending on your system configuration and/or the present working directory, you will likely need to provide
-            the path to the configuration file, e.g. <span class="code">/etc/weewx/weewx.conf</span>, when running WeeWX
-            directly.
+            If you are using a non-standard config path or file name then the path and config file name should be
+            included as a <span class="code">weewxd</span> command line argument,
+            e.g., <span class="code">sudo weewxd /some/path/to/weewx.conf</span> or
+            <span class="code">sudo weewxd /another/path/to/custom.conf</span>.
         </p>
 
         <p>It should start by downloading any data stored in your weather station (if the station has a data logger)

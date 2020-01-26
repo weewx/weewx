@@ -8,6 +8,7 @@
 import sys
 from optparse import OptionParser
 
+import weecfg
 import weeutil.logger
 
 # First import any user extensions:
@@ -17,15 +18,15 @@ import weewx.engine
 
 usagestr = """Usage: weewxd --help
        weewxd --version
-       weewxd config_file [--daemon] [--pidfile=PIDFILE] 
-                          [--exit]   [--loop-on-init]
-                          [--log-label=LABEL]
+       weewxd [config_file] [--daemon] [--pidfile=PIDFILE]
+                            [--exit]   [--loop-on-init]
+                            [--log-label=LABEL]
            
   Entry point to the weewx weather program. Can be run directly, or as a daemon
   by specifying the '--daemon' option.
 
 Arguments:
-    config_file: The weewx configuration file to be used.
+    config_file: The weewx configuration file to be used. Optional.
 """
 
 # ===============================================================================
@@ -55,10 +56,24 @@ if options.version:
     print(weewx.__version__)
     sys.exit(0)
 
+# If we don't have a config file argument then look in the usual places
+# for weewx.conf
 if len(args) < 1:
-    sys.stderr.write("Missing argument(s).\n")
-    sys.stderr.write(parser.parse_args(["--help"]))
-    sys.exit(weewx.CMD_ERROR)
+    # Wrap in a try..except in case weewx.conf can't be found
+    try:
+        config_path, config_dict = weecfg.read_config(config_path=None)
+        raise IOError
+    except IOError:
+        # Could not find weewx.conf in any of the usual places so advise the
+        # user and exit
+        sys.stderr.write("Unable to locate weewx.conf.\n")
+        sys.stderr.write("If using a non-standard path or file name include combined path and file name\n")
+        sys.stderr.write("as a command line argument.\n\n")
+        sys.stderr.write(parser.parse_args(["--help"]))
+        sys.exit(weewx.CMD_ERROR)
+    # Found weewx.conf so set args accordingly
+    args = [config_path]
+print("Using configuration file %s" % args[0])
 
 # Fire up the engine.
 weewx.engine.main(options, args)
