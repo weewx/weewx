@@ -540,7 +540,15 @@ Version: 4.0
         <p>To run WeeWX directly, invoke the main program, <span class="code">weewxd</span>, giving the configuration
             file as its only parameter:
         </p>
+
         <pre class="tty cmd">sudo weewxd weewx.conf</pre>
+
+        <p class="note">
+            Depending on your system configuration and/or the present working directory, you will likely need to provide
+            the path to the configuration file, e.g. <span class="code">/etc/weewx/weewx.conf</span>, when running WeeWX
+            directly.
+        </p>
+
         <p>It should start by downloading any data stored in your weather station (if the station has a data logger)
             into the archive database. For some stations, such as the Davis Vantage with a couple thousand records, this
             could take a minute or two. I have found this process particularly slow on SuSE for some reason.

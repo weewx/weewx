@@ -997,7 +997,7 @@ class ValueHelper(object):
     def __init__(self, value_t, context='current', formatter=Formatter(), converter=Converter()):
         """Initialize a ValueHelper.
         
-        value_t: A value tuple holding the datum.
+        value_t: An instance of a ValueTuple, holding the datum.
         
         context: The time context. Something like 'current', 'day', 'week'.
         [Optional. If not given, context 'current' will be used.]
@@ -1051,14 +1051,13 @@ class ValueHelper(object):
         return s
         
     def __str__(self):
-        """Return as string"""
+        """Return as the native string type for the version of Python being run."""
         s = self.toString()
         return six.ensure_str(s)
 
     def __unicode__(self):
-        """Return as unicode. Will not be called under Python 3."""
-        s = self.toString()
-        return six.ensure_text(s)
+        """Return as unicode. This function is called only under Python 2."""
+        return self.toString()
 
     def format(self, format_string=None, None_string=None, add_label=True, localize=True):
         """Returns a formatted version of the datum, using user-supplied customizations."""

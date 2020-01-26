@@ -316,7 +316,7 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
                 compiled_template = Cheetah.Template.Template(
                     file=six.ensure_str(template, encoding='utf-8'),
                     searchList=searchList,
-                    filter='assure_unicode',
+                    filter='AssureUnicode',
                     filtersLib=weewx.cheetahgenerator)
 
                 unicode_string = compiled_template.respond()
@@ -614,7 +614,7 @@ class Extras(SearchList):
 # =============================================================================
 
 
-class assure_unicode(Cheetah.Filters.Filter):
+class AssureUnicode(Cheetah.Filters.Filter):
     """Assures that whatever a search list extension might return, it will be converted into
     Unicode. """
 
