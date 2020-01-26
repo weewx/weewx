@@ -543,20 +543,22 @@ Version: 4.0
         <pre class="tty cmd">sudo weewxd</pre>
 
         <p class="note">
-            If you are using a non-standard config path or file name then the path and config file name should be
-            included as a <span class="code">weewxd</span> command line argument,
-            e.g., <span class="code">sudo weewxd /some/path/to/weewx.conf</span> or
-            <span class="code">sudo weewxd /another/path/to/custom.conf</span>.
+            If your configuration file is named something other than <span
+            class="code">weewx.conf</span>, or if it is in a non-standard place, then you will have
+            to specify it explicitly on the command line. For example:<br/><br/>
+            <span class="code">sudo weewxd /some/path/to/weewx.conf</span>
         </p>
 
-        <p>It should start by downloading any data stored in your weather station (if the station has a data logger)
-            into the archive database. For some stations, such as the Davis Vantage with a couple thousand records, this
-            could take a minute or two. I have found this process particularly slow on SuSE for some reason.
+        <p>
+            If your station has a data logger, the program will start by downloading any data
+            stored in your weather station into the archive database. For some stations, such as
+            the Davis Vantage with a couple thousand records, this could take a minute or two.
         </p>
 
-        <p>WeeWX will then start monitoring live sensor data (also referrred to as 'LOOP' data), printing a short
-            version of the received data on standard output, about once every two seconds for a Vantage station, or
-            considerably longer for some other stations.
+        <p>
+            WeeWX will then start monitoring live sensor data (also referrred to as 'LOOP' data),
+            printing a short version of the received data on standard output, about once every two
+            seconds for a Vantage station, or considerably longer for some other stations.
         </p>
 
         <p>You can tell a running instance of WeeWX to reread its configuration file by sending it the <span

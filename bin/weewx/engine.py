@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2015 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2020 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -9,31 +9,22 @@
 # Python imports
 from __future__ import absolute_import
 from __future__ import print_function
+
 import gc
-import locale
 import logging
-import os
-import os.path
-import platform
-import signal
 import socket
 import sys
-import time
 import threading
-
-# 3rd party imports:
-import configobj
-import daemon
+import time
 
 # weewx imports:
-import weedb
+import weeutil.logger
+import weeutil.weeutil
 import weewx.accum
 import weewx.manager
 import weewx.qc
 import weewx.station
 import weewx.units
-import weeutil.logger
-import weeutil.weeutil
 from weeutil.weeutil import to_bool, to_int, to_sorted_string
 from weewx import all_service_groups
 
@@ -44,6 +35,7 @@ class BreakLoop(Exception):
 
 class InitializationError(weewx.WeeWxIOError):
     """Exception raised when unable to initialize the console."""
+
 
 #==============================================================================
 #                    Class StdEngine
@@ -801,204 +793,3 @@ class StdReport(StdService):
         self.thread = None
         self.launch_time = None
 
-#==============================================================================
-#                       Signal handler
-#==============================================================================
-
-class Restart(Exception):
-    """Exception thrown when restarting the engine is desired."""
-    
-
-def sigHUPhandler(_signum, _frame):
-    log.info("Received signal HUP. Initiating restart.")
-    raise Restart
-
-
-class Terminate(Exception):
-    """Exception thrown when terminating the engine."""
-
-
-def sigTERMhandler(signum, _frame):
-    log.info("Received signal TERM (%s).", signum)
-    raise Terminate
-
-#==============================================================================
-#                    Function main
-#==============================================================================
-
-def main(options, args):
-    """Prepare the main loop and run it. 
-
-    Mostly consists of a bunch of high-level preparatory calls, protected
-    by try blocks in the case of an exception."""
-
-    global log
-
-    log.info("Initializing weewx version %s", weewx.__version__)
-    log.info("Using Python %s", sys.version)
-    log.info("Platform %s", platform.platform())
-    log.info("Locale is '%s'", locale.setlocale(locale.LC_ALL))
-
-    # Set up the signal handlers.
-    signal.signal(signal.SIGHUP, sigHUPhandler)
-    signal.signal(signal.SIGTERM, sigTERMhandler)
-
-    # Save the current working directory. A service might
-    # change it. In case of a restart, we need to change it back.
-    cwd = os.getcwd()
-
-    # Get the path to the configuration file
-    config_path = os.path.abspath(args[0])
-
-    if options.daemon:
-        log.info("PID file is %s", options.pidfile)
-        daemon.daemonize(pidfile=options.pidfile)
-
-    # For backward compatibility, recognize loop_on_init from command-line
-    loop_on_init = options.loop_on_init
-
-    # Make sure the system time is not out of date (a common problem with the Raspberry Pi).
-    # Do this by making sure the system time is later than the creation time of the config file
-    sane = os.stat(config_path).st_ctime
-
-    n = 0
-    while weewx.launchtime_ts < sane:
-        # Log any problems every minute.
-        if n % 120 == 0:
-            log.info("Waiting for sane time. Current time is %s",
-                     weeutil.weeutil.timestamp_to_string(weewx.launchtime_ts))
-        n += 1
-        time.sleep(0.5)
-        weewx.launchtime_ts = time.time()
-
-    while True:
-
-        os.chdir(cwd)
-
-        config_dict = getConfiguration(config_path)
-
-        weewx.debug = int(config_dict.get('debug', 0))
-
-        # Now that we have the config_dict, we can customize the
-        # logging with user additions
-        weeutil.logger.setup(options.log_label, config_dict)
-
-        log.debug("Debug is %s", weewx.debug)
-
-        # See if there is a loop_on_init directive in the configuration, but
-        # use it only if nothing was specified via command-line.
-        if loop_on_init is None:
-            loop_on_init = to_bool(config_dict.get('loop_on_init', False))
-
-        try:
-            log.debug("Initializing engine")
-
-            # Create and initialize the engine
-            engine = StdEngine(config_dict)
-    
-            log.info("Starting up weewx version %s", weewx.__version__)
-
-            # Start the engine. It should run forever unless an exception
-            # occurs. Log it if the function returns.
-            engine.run()
-            log.critical("Unexpected exit from main loop. Program exiting.")
-    
-        # Catch any console initialization error:
-        except InitializationError as e:
-            # Log it:
-            log.critical("Unable to load driver: %s", e)
-            # See if we should loop, waiting for the console to be ready.
-            # Otherwise, just exit.
-            if loop_on_init:
-                log.critical("    ****  Waiting 60 seconds then retrying...")
-                time.sleep(60)
-                log.info("retrying...")
-            else:
-                log.critical("    ****  Exiting...")
-                sys.exit(weewx.IO_ERROR)
-
-        # Catch any recoverable weewx I/O errors:
-        except weewx.WeeWxIOError as e:
-            # Caught an I/O error. Log it, wait 60 seconds, then try again
-            log.critical("Caught WeeWxIOError: %s", e)
-            if options.exit:
-                log.critical("    ****  Exiting...")
-                sys.exit(weewx.IO_ERROR)
-            log.critical("    ****  Waiting 60 seconds then retrying...")
-            time.sleep(60)
-            log.info("retrying...")
-
-        # Catch any database connection errors:
-        except (weedb.CannotConnectError, weedb.DisconnectError) as e:
-            # No connection to the database server. Log it, wait 60 seconds, then try again
-            log.critical("Database connection exception: %s", e)
-            if options.exit:
-                log.critical("    ****  Exiting...")
-                sys.exit(weewx.DB_ERROR)
-            log.critical("    ****  Waiting 60 seconds then retrying...")
-            time.sleep(60)
-            log.info("retrying...")
-
-        except weedb.OperationalError as e:
-            # Caught a database error. Log it, wait 120 seconds, then try again
-            log.critical("Database OperationalError exception: %s", e)
-            if options.exit:
-                log.critical("    ****  Exiting...")
-                sys.exit(weewx.DB_ERROR)
-            log.critical("    ****  Waiting 2 minutes then retrying...")
-            time.sleep(120)
-            log.info("retrying...")
-            
-        except OSError as e:
-            # Caught an OS error. Log it, wait 10 seconds, then try again
-            log.critical("Caught OSError: %s", e)
-            weeutil.logger.log_traceback(log.critical, "    ****  ")
-            log.critical("    ****  Waiting 10 seconds then retrying...")
-            time.sleep(10)
-            log.info("retrying...")
-    
-        except Restart:
-            log.info("Received signal HUP. Restarting.")
-
-        except Terminate:
-            log.info("Terminating weewx version %s", weewx.__version__)
-            weeutil.logger.log_traceback(log.info, "    ****  ")
-            signal.signal(signal.SIGTERM, signal.SIG_DFL)
-            os.kill(0, signal.SIGTERM)
-
-        # Catch any keyboard interrupts and log them
-        except KeyboardInterrupt:
-            log.critical("Keyboard interrupt.")
-            # Reraise the exception (this should cause the program to exit)
-            raise
-    
-        # Catch any non-recoverable errors. Log them, exit
-        except Exception as ex:
-            # Caught unrecoverable error. Log it, exit
-            log.critical("Caught unrecoverable exception:")
-            log.critical("    ****  %s" % ex)
-            # Include a stack traceback in the log:
-            weeutil.logger.log_traceback(log.critical, "    ****  ")
-            log.critical("    ****  Exiting.")
-            # Reraise the exception (this should cause the program to exit)
-            raise
-
-def getConfiguration(config_path):
-    """Return the configuration file at the given path."""
-    # Try to open up the given configuration file. Declare an error if
-    # unable to.
-    try:
-        config_dict = configobj.ConfigObj(config_path, file_error=True, encoding='utf-8')
-    except IOError:
-        sys.stderr.write("Unable to open configuration file %s" % config_path)
-        log.critical("Unable to open configuration file %s", config_path)
-        # Reraise the exception (this should cause the program to exit)
-        raise
-    except configobj.ConfigObjError as e:
-        log.critical("Error while parsing configuration file %s", config_path)
-        log.critical("****    Reason: '%s'", e)
-        raise
-
-    log.info("Using configuration file %s", config_path)
-
-    return config_dict
