@@ -1,0 +1,21 @@
+#
+# See https://editorconfig.org for the meaning of this file.
+#
+
+root = true
+
+# Python files. This is the alternate max length specified by PEP8.
+[*.py]
+    max_line_length = 99
+
+# HTML files
+[*.htm]
+    max_line_length = 120
+
+# Cheetah templates:
+[*.{tmpl,inc}]
+    max_line_length = 120
+
+# No limits for the weewx.conf file
+[weewx.conf]
+    max_line_length = off

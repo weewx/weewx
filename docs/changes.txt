@@ -124,6 +124,9 @@ consistent with "meter". The spelling "litre" is still accepted.
 Systemd type changed from "simple" to "forking". Thanks to
 user Jaap de Munck for figuring this one out!
 
+The configuration file is now an optional argument when running weewxd directly.
+This means most users will be able to use the simple command line 'sudo weewxd'.
+
 
 3.9.2 07/14/2019
 
