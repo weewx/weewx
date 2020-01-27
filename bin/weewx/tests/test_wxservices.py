@@ -389,5 +389,27 @@ class TestET(unittest.TestCase):
         self.assertEqual((et_vt[1], et_vt[2]), ("inch", "group_rain"))
 
 
+class TestWindRun(unittest.TestCase):
+    """Windrun calculations always seem to give us trouble..."""
+
+    def setUp(self):
+        self.wx_calc = weewx.wxservices.WXXTypes(svc_dict, altitude_vt, latitude, longitude)
+
+    def test_US(self):
+        record = {'usUnits': weewx.US, 'interval': 5, 'windSpeed': 3.8}
+        result = self.wx_calc.get_scalar('windrun', record, None)
+        self.assertAlmostEqual(result[0], 0.3167, 4)
+
+    def test_METRIC(self):
+        record = {'usUnits': weewx.METRIC, 'interval': 5, 'windSpeed': 3.8}
+        result = self.wx_calc.get_scalar('windrun', record, None)
+        self.assertAlmostEqual(result[0], 0.3167, 4)
+
+    def test_METRICWX(self):
+        record = {'usUnits': weewx.METRICWX, 'interval': 5, 'windSpeed': 3.8}
+        result = self.wx_calc.get_scalar('windrun', record, None)
+        self.assertAlmostEqual(result[0], 1.14, 4)
+
+
 if __name__ == '__main__':
     unittest.main()
