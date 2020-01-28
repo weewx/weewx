@@ -448,7 +448,7 @@ class WXXTypes(weewx.xtypes.XType):
                 u = 'km'
             elif data['usUnits'] == weewx.METRICWX:
                 val = data['windSpeed'] * data['interval'] * 60.0 / 1000.0
-                u = 'meter'
+                u = 'km'
             else:
                 raise weewx.ViolatedPrecondition("Unknown unit system %s" % data['usUnits'])
         else:
