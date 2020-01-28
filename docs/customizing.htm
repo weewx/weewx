@@ -1070,7 +1070,7 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
 
                 group_altitude     = <span class="highlight">meter</span>                # Options are 'foot' or 'meter'
                 group_degree_day   = <span class="highlight">degree_C_day</span>         # Options are 'degree_F_day' or 'degree_C_day'
-                group_distance     = <span class="highlight">km</span>span>              # Options are 'mile' or 'km'
+                group_distance     = <span class="highlight">km</span>                   # Options are 'mile' or 'km'
                 group_pressure     = <span class="highlight">mbar</span>                 # Options are 'inHg', 'mmHg', 'mbar', or 'hPa'
                 group_pressurerate = <span class="highlight">mbar_per_hour</span>        # Options are 'inHg_per_hour', 'mmHg_per_hour', 'mbar_per_hour', or 'hPa_per_hour'
                 group_rain         = <span class="highlight">mm</span>                   # Options are 'inch', 'cm', or 'mm'
@@ -2098,9 +2098,9 @@ $month.outTemp.max</pre>
         </p>
 
         <p>
-            However, if you add <span class="code">mbar</span> to the end,
+            However, if you add <span class="code">mbar</span> to the end of the tag,
         </p>
-        <pre class="tty">$day.barometer.avg.mbar </pre>
+        <pre class="tty">Today's average pressure=$day.barometer.avg<span class="highlight">.mbar</span></pre>
         <p>then the results will be in millibars:</p>
 
         <p class="example_output">Today's average pressure=1017.5 mbar
