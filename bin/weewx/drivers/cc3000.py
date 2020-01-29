@@ -1153,6 +1153,8 @@ class CC3000(object):
             raise weewx.WeeWxIOError("Failed to reset rain: %s" % data)
 
     def gen_records_since_ts(self, header, sensor_map, since_ts):
+        if since_ts is None:
+            since_ts = 0.0
         now_ts = time.mktime(datetime.datetime.now().timetuple())
         nseconds = now_ts - since_ts
         nminutes = math.ceil(nseconds / 60.0)
