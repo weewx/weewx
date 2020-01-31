@@ -44,6 +44,8 @@ DEFAULTS_INI = """
     data_binding = wx_binding
 
     [[Calculations]]
+        # Order matters! Type 'pressure' must come before 'altimeter' and 'barometer'
+        pressure = prefer_hardware
         altimeter = prefer_hardware
         appTemp = prefer_hardware
         barometer = prefer_hardware
@@ -55,7 +57,6 @@ DEFAULTS_INI = """
         humidex = prefer_hardware
         inDewpoint = prefer_hardware
         maxSolarRad = prefer_hardware
-        pressure = prefer_hardware
         rainRate = prefer_hardware
         windchill = prefer_hardware
         windrun = prefer_hardware
