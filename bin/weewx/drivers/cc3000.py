@@ -1155,11 +1155,16 @@ class CC3000(object):
     def gen_records_since_ts(self, header, sensor_map, since_ts):
         if since_ts is None:
             since_ts = 0.0
-        now_ts = time.mktime(datetime.datetime.now().timetuple())
-        nseconds = now_ts - since_ts
-        nminutes = math.ceil(nseconds / 60.0)
-        num_records = math.ceil(nminutes / float(self.get_interval()))
-        log.debug('gen_records_since_ts: Asking for %d records.' % num_records)
+            num_records = 0
+        else:
+            now_ts = time.mktime(datetime.datetime.now().timetuple())
+            nseconds = now_ts - since_ts
+            nminutes = math.ceil(nseconds / 60.0)
+            num_records = math.ceil(nminutes / float(self.get_interval()))
+        if num_records == 0:
+            log.debug('gen_records_since_ts: Asking for all records.')
+        else:
+            log.debug('gen_records_since_ts: Asking for %d records.' % num_records)
         for r in self.gen_records(nrec=num_records):
             pkt = CC3000Driver._parse_values(r[1:], header, sensor_map, "%Y/%m/%d %H:%M")
             if 'dateTime' in pkt and pkt['dateTime'] > since_ts:
@@ -1175,7 +1180,7 @@ class CC3000(object):
         ('MAX,', 'MIN,') as well as messages for various events such as a
         reboot ('MSG,').
 
-        Things get intereting when nrec is non-zero.
+        Things get interesting when nrec is non-zero.
 
         DOWNLOAD=n returns the latest n records in memory.  The CC3000 does
         not distinguish between REC, MAX, MIN and MSG records in memory.
@@ -1215,6 +1220,18 @@ class CC3000(object):
                     MSG 2019/12/20 15:48 CLEAR ON COMMAND!749D)
             MIN: 3 (As expected for 3 days.)
             MAX: 3 (As expected for 3 days.)
+
+        Interrogating the CC3000 for a large number of records fails miserably
+        if, while reading the responses, the responses are parsed and added
+        to the datbase.  (Check sum mismatches, partical records, etc.).  If
+        these last two steps are skipped, reading from the CC3000 is very
+        reliable.  This can be observed by asing for history with wee_config.
+        Observed with > 11K of records.
+
+        To address the above problem, all records are read into memory.  Reading
+        all records into memory before parsing and inserting into the database
+        is very reliable.  For smaller amounts of recoreds, the reading into
+        memory could be skipped, but what would be the point?
         """
 
         log.debug('gen_records(%d)' % nrec)
@@ -1235,9 +1252,23 @@ class CC3000(object):
         else:
             cmd = 'DOWNLOAD=%d' % num_to_ask
         log.debug('%s' % cmd)
-        data = self.command(cmd)
+
+        # Note: It takes about 14s to read 1000 records into memory.
+        if num_to_ask == 0:
+            log.info('Reading all records into memory.  This could take some time.')
+        elif num_to_ask < 1000:
+            log.info('Reading %d records into memory.' % num_to_ask)
+        else:
+            log.info('Reading %d records into memory.  This could take some time.' % num_to_ask)
         yielded = 0
+        recs = []
+        data = self.command(cmd)
         while data != 'OK':
+            recs.append(data)
+            data = self.read()
+        log.info('Finished reading %d records.' % len(recs))
+        yielded = 0
+        for data in recs:
             values = data.split(',')
             if values[0] == 'REC':
                 yielded += 1
@@ -1248,7 +1279,6 @@ class CC3000(object):
                 pass
             else:
                 log.error("Unexpected record '%s' (%s)" % (values[0], data))
-            data = self.read()
         log.debug('Downloaded %d records' % yielded)
 
 class CC3000ConfEditor(weewx.drivers.AbstractConfEditor):
