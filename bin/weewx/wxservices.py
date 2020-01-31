@@ -144,14 +144,6 @@ class WXCalculate(object):
         weewx.xtypes.xtypes.append(self.rain_rater)
         weewx.xtypes.xtypes.append(self.wx_types)
 
-        # If pressure and altimeter are to be calculated order matters,
-        # pressure must be calculated first
-        _dispatch_list = list(self.svc_dict['Calculations'].keys())
-        # If pressure is in the list make sure it is first
-        if 'pressure' in _dispatch_list:
-            _dispatch_list.insert(0, _dispatch_list.pop(_dispatch_list.index('pressure')))
-        self.dispatch_list = _dispatch_list
-
         # Report about which values will be calculated...
         log.info("The following values will be calculated: %s",
                  ', '.join(["%s=%s" % (k, self.svc_dict['Calculations'][k])
@@ -177,7 +169,7 @@ class WXCalculate(object):
             self.adjust_winddir(data_dict)
 
         # Go through the list of potential calculations and see which ones need to be done
-        for obs in self.dispatch_list:
+        for obs in self.svc_dict['Calculations']:
             directive = self.svc_dict['Calculations'][obs]
             # Keys in svc_dict are in unicode. Keys in packets and records are in native strings.
             # Just to keep things consistent, convert.
