@@ -2708,6 +2708,12 @@ Unique records processed: 71; Last timestamp: 2016-01-23 06:00:00 AEST (14534928
 Finished dry run import
 657 records were processed and 657 unique records would have been imported.
 </pre>
+                <p class="note">
+                    <strong>Note</strong><br/>Any periods for which no data could be obtained will be skipped. The lack
+                    of data may be due to an incorrect station ID, an incorrect date or Weather Underground API problems.
+                    A short explanatory note to this effect will be displayed against the period concerned and an entry
+                    included in the log.
+                </p>
             </li>
 
             <li>Once the dry run results are satisfactory the source data can be imported using the following command:
@@ -2752,6 +2758,12 @@ Unique records processed: 284; Last timestamp: 2016-01-21 23:55:00 AEST (1453384
 Period 3 ...
 Unique records processed: 284; Last timestamp: 2016-01-22 23:55:00 AEST (1453470900)
 </pre>
+                <p class="note">
+                    <strong>Note</strong><br/>Any periods for which no data could be obtained will be skipped. The lack
+                    of data may be due to an incorrect station ID, an incorrect date or Weather Underground API problems.
+                    A short explanatory note to this effect will be displayed against the period concerned and an entry
+                    included in the log.
+                </p>
 
                 <p>The line commencing with <span class="code">Unique records processed</span> should update as records are
                     imported with progress information on number of records processed, number of unique records imported
@@ -3006,6 +3018,11 @@ Finished dry run import
                     <strong>Note</strong><br/>The nine periods correspond to the nine monthly log files used for this
                     import.
                 </p>
+                <p class="note">
+                    <strong>Note</strong><br/>Any periods for which no data could be obtained will be skipped. The lack
+                    of data may be due to a missing Cumulus monthly log file. A short explanatory note to this effect
+                    will be displayed against the period concerned and an entry included in the log.
+                </p>
             </li>
 
             <li>Once the dry run results are satisfactory the data can be imported using the following command:
@@ -3075,6 +3092,11 @@ Period 6 ...
 Unique records processed: 8744; Last timestamp: 2017-03-31 23:55:00 AEST (1490968500)
 </pre>
 
+                <p class="note">
+                    <strong>Note</strong><br/>Any periods for which no data could be obtained will be skipped. The lack
+                    of data may be due to a missing Cumulus monthly log file. A short explanatory note to this effect
+                    will be displayed against the period concerned and an entry included in the log.
+                </p>
                 <p>The line commencing with <span class="code">Unique records processed</span> should update as records
                     are imported with progress information on number of records processed, number of unique records
                     imported and the date time of the latest record processed. If the import spans multiple months (ie
@@ -3328,6 +3350,11 @@ Finished dry run import
                     <strong>Note</strong><br/>The five periods correspond to the five months of log files used for this
                     import.
                 </p>
+                <p class="note">
+                    <strong>Note</strong><br/>Any periods for which no data could be obtained will be skipped. The lack
+                    of data may be due to a missing Weather Display log file. A short explanatory note to this effect
+                    will be displayed against the period concerned and an entry included in the log.
+                </p>
             </li>
 
             <li>If the <span class="code">--suppress--warnings</span> option was used it may be prudent to do a second
@@ -3505,6 +3532,12 @@ Unique records processed: 43136; Last timestamp: 2018-11-30 23:59:00 AEST (15435
 Period 4 ...
 Unique records processed: 12000; Last timestamp: 2018-12-09 07:59:00 AEST (1544306340)
 </pre>
+
+                <p class="note">
+                    <strong>Note</strong><br/>Any periods for which no data could be obtained will be skipped. The lack
+                    of data may be due to a missing Weather Display log file. A short explanatory note to this effect
+                    will be displayed against the period concerned and an entry included in the log.
+                </p>
 
                 <p>The line commencing with <span class="code">Unique records processed</span> should update as records
                     are imported with progress information on number of unique records processed and the date time of the
