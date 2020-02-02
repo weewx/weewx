@@ -837,8 +837,8 @@ def main():
             log.info("**** Nothing done.")
             exit(1)
         except weeimport.weeimport.WeeImportIOError as e:
-            print("**** Unable to load source file.")
-            log.info("**** Unable to load source file.")
+            print("**** Unable to load source data.")
+            log.info("**** Unable to load source data.")
             print("**** %s" % e)
             log.info("**** %s" % e)
             print("**** Nothing done, exiting.")
