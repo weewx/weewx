@@ -238,9 +238,10 @@ class WUSource(weeimport.Source):
         # check the response code and raise an exception if there was an error
         if hasattr(response, 'code') and response.code != 200:
             if response.code == 204:
-                raise IOError("Probably a bad station ID or invalid date")
+                _msg = "Possibly a bad station ID, an invalid date or data does not exist for this period."
             else:
-                raise IOError("Bad response code returned: %d" % response.code)
+                _msg = "Bad response code returned: %d." % response.code
+            raise weeimport.WeeImportIOError(_msg)
 
         # The WU API says that compression is required, but let's be prepared
         # if compression is not used
