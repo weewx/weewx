@@ -634,6 +634,7 @@ if __name__ == "__main__":
               ('util/import',
                ['util/import/csv-example.conf',
                 'util/import/cumulus-example.conf',
+                'util/import/wd-example.conf',
                 'util/import/wu-example.conf']),
               ('util/init.d',
                ['util/init.d/weewx.bsd',
