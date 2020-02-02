@@ -363,7 +363,18 @@ class Source(object):
                 if self.verbose:
                     print(_msg)
                 log.info(_msg)
-                _raw_data = self.getRawData(period)
+                try:
+                    _raw_data = self.getRawData(period)
+                except WeeImportIOError as e:
+                    print("**** Unable to load source data for period %d." % self.period_no)
+                    log.info("**** Unable to load source data for period %d." % self.period_no)
+                    print("**** %s" % e)
+                    log.info("**** %s" % e)
+                    print("**** Period %d will be skipped. Proceeding to next period." % self.period_no)
+                    log.info("**** Period %d will be skipped. Proceeding to next period." % self.period_no)
+                    # increment our period counter
+                    self.period_no += 1
+                    continue
                 _msg = 'Raw import data read successfully for period %d.' % self.period_no
                 if self.verbose:
                     print(_msg)
