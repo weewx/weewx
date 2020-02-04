@@ -85,8 +85,9 @@ unit_nicknames = {
 obs_group_dict = ListOfDicts({
     "altitude"           : "group_altitude",
     "cloudbase"          : "group_altitude",
-    "AqPM2_5"            : "group_concentration",
-    "AqPM10"             : "group_concentration",
+    "pm10_0"             : "group_concentration",
+    "pm1_0"              : "group_concentration",
+    "pm2_5"              : "group_concentration",
     "beaufort"           : "group_count",
     "leafWet1"           : "group_count",
     "leafWet2"           : "group_count",
