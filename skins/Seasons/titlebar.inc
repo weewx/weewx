@@ -2,6 +2,7 @@
 ## Copyright Tom Keffer, Matthew Wall
 ## See LICENSE.txt for your rights
 #errorCatcher Echo
+#encoding UTF-8
 
 <div id="title_bar">
   <div id="title">

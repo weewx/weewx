@@ -2,6 +2,7 @@
 ## Copyright Tom Keffer, Matthew Wall
 ## See LICENSE.txt for your rights
 #errorCatcher Echo
+#encoding UTF-8
 
 #set $archive_data = [$day, $week, $month, $year, $rainyear]
 

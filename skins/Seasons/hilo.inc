@@ -1,6 +1,8 @@
 ## hilo module for weewx skins
 ## Copyright Tom Keffer, Matthew Wall
 ## See LICENSE.txt for your rights
+#errorCatcher Echo
+#encoding UTF-8
 
 #set $archive_data = [('day', $day), ('week', $week), ('month', $month), ('year', $year), ('rainyear', $rainyear)]
 
