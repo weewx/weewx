@@ -905,7 +905,7 @@ class LinuxSerialPort(SerialPort):
             setup[3] = 0        # tty.ICANON
             setup[4] = self.settings[0]
             setup[5] = self.settings[0]
-            setup[6] = ['\000']*len(setup[6])
+            setup[6] = [b'\000']*len(setup[6])
             setup[6][tty.VMIN] = 1
             setup[6][tty.VTIME] = 0
             tty.tcflush(self.serial_port, tty.TCIOFLUSH)
@@ -1041,7 +1041,7 @@ class Ws2300(object):
         try:
             for _ in range(self.__class__.MAX_RESETS):
                 self.clear_device()
-                self.write_byte('\x06')
+                self.write_byte(b'\x06')
                 #
                 # Occasionally 0, then 2 is returned.  If 0 comes back,
                 # continue reading as this is more efficient than sending
