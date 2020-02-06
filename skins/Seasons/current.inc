@@ -73,6 +73,12 @@
         <td class="data">$current.inTemp</td>
       </tr>
 #end if
+#if $day.inHumidity.has_data
+      <tr>
+        <td class="label">$obs.label.inHumidity</td>
+        <td class="data">$current.inHumidity</td>
+      </tr>
+#end if
 #if $day.extraTemp1.has_data
       <tr>
         <td class="label">$obs.label.extraTemp1</td>

@@ -61,6 +61,9 @@
             #if $day.inTemp.has_data
             <img src="daytempin.png"    alt="$obs.label.inTemp" />
             #end if
+            #if $day.inHumidity.has_data
+            <img src="dayhumin.png"    alt="$obs.label.inHumidity" />
+            #end if
             #if $day.extraTemp1.has_data or $day.extraTemp2.has_data or $day.extraTemp3.has_data
             <img src="daytemp.png"      alt="$obs.label.extraTemp1" />
             #end if
@@ -85,6 +88,9 @@
             #end if
             #if $week.inTemp.has_data
             <img src="weektempin.png"    alt="$obs.label.inTemp" />
+            #end if
+            #if $week.inHumidity.has_data
+            <img src="weekhumin.png"    alt="$obs.label.inHumidity" />
             #end if
             #if $week.extraTemp1.has_data or $week.extraTemp2.has_data or $week.extraTemp3.has_data
             <img src="weektemp.png"      alt="$obs.label.extraTemp1" />
@@ -111,6 +117,9 @@
             #if $month.inTemp.has_data
             <img src="monthtempin.png"    alt="$obs.label.inTemp" />
             #end if
+            #if $month.inHumidity.has_data
+            <img src="monthhumin.png"    alt="$obs.label.inHumidity" />
+            #end if
             #if $month.extraTemp1.has_data or $month.extraTemp2.has_data or $month.extraTemp3.has_data
             <img src="monthtemp.png"      alt="$obs.label.extraTemp1" />
             #end if
@@ -135,6 +144,9 @@
             #end if
             #if $year.inTemp.has_data
             <img src="yeartempin.png"    alt="$obs.label.inTemp" />
+            #end if
+            #if $year.inHumidity.has_data
+            <img src="yearhumin.png"    alt="$obs.label.inHumidity" />
             #end if
             #if $year.extraTemp1.has_data or $year.extraTemp2.has_data or $year.extraTemp3.has_data
             <img src="yeartemp.png"      alt="$obs.label.extraTemp1" />
