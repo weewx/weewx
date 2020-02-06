@@ -221,6 +221,21 @@
       </tr>
       #end if
 
+      #if $day.inHumidity.has_data
+      <tr>
+        <td class="label">$obs.label.inHumidity</td>
+        #for $archive in $archive_data
+        <td class="data new_row hilo_$archive[0]">
+          <span title="$archive[1].inHumidity.maxtime">
+            $archive[1].inHumidity.max.format(add_label=False)</span><br/>
+          <span title="$archive[1].inHumidity.mintime">
+            $archive[1].inHumidity.min.format(add_label=False)</span>
+        </td>
+        #end for
+        <td class="units">$unit.label.inHumidity</td>
+      </tr>
+      #end if
+
       #if $day.extraTemp1.has_data
       <tr>
         <td class="label">$obs.label.extraTemp1</td>
