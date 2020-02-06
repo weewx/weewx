@@ -1053,7 +1053,7 @@ class Ws2300(object):
                 success = False
                 answer = self.read_byte()
                 while answer != None:
-                    if answer == '\x02':
+                    if answer == b'\x02':
                         success = True
                     answer = self.read_byte(0.05)
                     if success:
@@ -1085,7 +1085,7 @@ class Ws2300(object):
                 return None
             if encode_constant == None:
                 encode_constant = self.WRITENIB
-            encoded_data = ''.join([
+            encoded_data = b''.join([
                     chr(nybbles[i]*4 + encode_constant)
                     for i in range(len(nybbles))])
             ack_constant = {
@@ -1161,7 +1161,7 @@ class Ws2300(object):
             # Read the response.
             #
             self.log(", :")
-            response = ""
+            response = b""
             for _ in range(bytes_):
                 answer = self.read_byte()
                 if answer == None:
