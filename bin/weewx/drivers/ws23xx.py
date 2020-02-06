@@ -254,6 +254,7 @@ import termios
 import tty
 from functools import reduce
 
+import six
 from six.moves import zip
 from six.moves import input
 
@@ -1053,7 +1054,7 @@ class Ws2300(object):
                 success = False
                 answer = self.read_byte()
                 while answer != None:
-                    if answer == '\x02':
+                    if answer == b'\x02':
                         success = True
                     answer = self.read_byte(0.05)
                     if success:
@@ -1067,9 +1068,9 @@ class Ws2300(object):
     #
     def write_address(self,address):
         for digit in range(4):
-            byte = chr((address >> (4 * (3-digit)) & 0xF) * 4 + 0x82)
+            byte = six.int2byte((address >> (4 * (3-digit)) & 0xF) * 4 + 0x82)
             self.write_byte(byte)
-            ack = chr(digit * 16 + (ord(byte) - 0x82) // 4)
+            ack = six.int2byte(digit * 16 + (ord(byte) - 0x82) // 4)
             answer = self.read_byte()
             if ack != answer:
                 self.log("??")
@@ -1085,8 +1086,8 @@ class Ws2300(object):
                 return None
             if encode_constant == None:
                 encode_constant = self.WRITENIB
-            encoded_data = ''.join([
-                    chr(nybbles[i]*4 + encode_constant)
+            encoded_data = b''.join([
+                    six.int2byte(nybbles[i]*4 + encode_constant)
                     for i in range(len(nybbles))])
             ack_constant = {
                 self.SETBIT:    self.SETACK,
@@ -1097,7 +1098,7 @@ class Ws2300(object):
             for i in range(len(encoded_data)):
                 self.write_byte(encoded_data[i])
                 answer = self.read_byte()
-                if chr(nybbles[i] + ack_constant) != answer:
+                if six.int2byte(nybbles[i] + ack_constant) != answer:
                     self.log("??")
                     return None
             return True
@@ -1150,10 +1151,10 @@ class Ws2300(object):
             #
             # Write the number bytes we want to read.
             #
-            encoded_data = chr(0xC2 + bytes_*4)
+            encoded_data = six.int2byte(0xC2 + bytes_*4)
             self.write_byte(encoded_data)
             answer = self.read_byte()
-            check = chr(0x30 + bytes_)
+            check = six.int2byte(0x30 + bytes_)
             if answer != check:
                 self.log("??")
                 return None
@@ -1161,7 +1162,7 @@ class Ws2300(object):
             # Read the response.
             #
             self.log(", :")
-            response = ""
+            response = b""
             for _ in range(bytes_):
                 answer = self.read_byte()
                 if answer == None:
@@ -1172,7 +1173,7 @@ class Ws2300(object):
             #
             answer = self.read_byte()
             checksum = sum([ord(b) for b in response]) % 256
-            if chr(checksum) != answer:
+            if six.int2byte(checksum) != answer:
                 self.log("??")
                 return None
             flatten = lambda a,b: a + (ord(b) % 16, ord(b) / 16)

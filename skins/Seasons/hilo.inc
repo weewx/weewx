@@ -1,6 +1,8 @@
 ## hilo module for weewx skins
 ## Copyright Tom Keffer, Matthew Wall
 ## See LICENSE.txt for your rights
+#errorCatcher Echo
+#encoding UTF-8
 
 #set $archive_data = [('day', $day), ('week', $week), ('month', $month), ('year', $year), ('rainyear', $rainyear)]
 
@@ -218,6 +220,21 @@
         </td>
         #end for
         <td class="units">$unit.label.inTemp</td>
+      </tr>
+      #end if
+
+      #if $day.inHumidity.has_data
+      <tr>
+        <td class="label">$obs.label.inHumidity</td>
+        #for $archive in $archive_data
+        <td class="data new_row hilo_$archive[0]">
+          <span title="$archive[1].inHumidity.maxtime">
+            $archive[1].inHumidity.max.format(add_label=False)</span><br/>
+          <span title="$archive[1].inHumidity.mintime">
+            $archive[1].inHumidity.min.format(add_label=False)</span>
+        </td>
+        #end for
+        <td class="units">$unit.label.inHumidity</td>
       </tr>
       #end if
 

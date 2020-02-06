@@ -2,6 +2,7 @@
 ## Copyright Tom Keffer, Matthew Wall
 ## See LICENSE.txt for your rights
 #errorCatcher Echo
+#encoding UTF-8
 
 ## this is a conditional display of sensor data, including connectivity,
 ## battery status, and various voltages.  if there are no data available,
