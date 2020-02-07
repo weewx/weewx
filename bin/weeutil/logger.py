@@ -23,6 +23,9 @@ if sys.platform == "darwin":
 elif sys.platform.startswith('linux'):
     address = '/dev/log'
     facility = 'user'
+elif sys.platform.startswith('freebsd'):
+    address = '/var/run/log'
+    facility = 'user'
 else:
     address = ('localhost', 514)
     facility = 'user'
