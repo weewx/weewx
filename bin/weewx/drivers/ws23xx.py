@@ -1172,12 +1172,14 @@ class Ws2300(object):
             # Read and verify checksum
             #
             answer = self.read_byte()
-            checksum = sum([ord(b) for b in response]) % 256
+            checksum = sum(b for b in six.iterbytes(response)) % 256
             if six.int2byte(checksum) != answer:
                 self.log("??")
                 return None
-            flatten = lambda a,b: a + (ord(b) % 16, ord(b) / 16)
-            return reduce(flatten, response, ())[:nybble_count]
+            r = ()
+            for b in six.iterbytes(response):
+                r += (b % 16, b // 16)
+            return r[:nybble_count]
         finally:
             self.log_exit()
     #
