@@ -1501,6 +1501,8 @@ def prompt_for_info(location=None, latitude='90.000', longitude='0.000',
 
 def prompt_for_driver(dflt_driver=None):
     """Get the information about each driver, return as a dictionary."""
+    if dflt_driver is None:
+        dflt_driver = 'weewx.drivers.simulator'
     infos = get_all_driver_infos()
     keys = sorted(infos)
     dflt_idx = None
