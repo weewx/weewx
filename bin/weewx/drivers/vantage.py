@@ -112,7 +112,7 @@ class BaseWrapper(object):
                 print("Unable to wake up console... retrying")
             except weewx.WeeWxIOError:
                 pass
-            log.debug("Retry  #%d failed", count)
+            log.debug("Retry #%d failed", count)
 
         log.error("Unable to wake up console")
         raise weewx.WakeupError("Unable to wake up Vantage console")
