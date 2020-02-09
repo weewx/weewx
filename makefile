@@ -68,6 +68,10 @@ info:
 	@echo "        USER: $(USER)"
 	@echo "  WWW SERVER: $(WEEWX_COM)"
 
+clean:
+	find . -name "*.pyc" -exec rm {} \;
+	find . -name __pycache__ -exec rm -rf {} \;
+
 realclean:
 	rm -f MANIFEST
 	rm -rf build

@@ -627,10 +627,9 @@ class StdArchive(StdService):
             # records may not be on the same boundaries as the archive
             # interval. Reject any records that have a timestamp in the
             # future, but provide some lenience for clock drift.
-            now = time.time()
             for record in generator(lastgood_ts):
                 ts = record.get('dateTime')
-                if ts and ts < now + self.archive_delay:
+                if ts and ts < time.time() + self.archive_delay:
                     self.engine.dispatchEvent(weewx.Event(weewx.NEW_ARCHIVE_RECORD,
                                                           record=record,
                                                           origin='hardware'))

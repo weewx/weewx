@@ -271,7 +271,7 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
         t2 = time.time()
 
         if log_success:
-            log.info("Generated %d images for %s in %.2f seconds", ngen, self.skin_dict['REPORT_NAME'], t2 - t1)
+            log.info("Generated %d images for report %s in %.2f seconds", ngen, self.skin_dict['REPORT_NAME'], t2 - t1)
 
 def skipThisPlot(time_ts, aggregate_interval, img_file):
     """A plot can be skipped if it was generated recently and has not changed.
