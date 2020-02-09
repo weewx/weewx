@@ -265,7 +265,7 @@ import weewx.wxformulas
 log = logging.getLogger(__name__)
 
 DRIVER_NAME = 'WS23xx'
-DRIVER_VERSION = '0.40'
+DRIVER_VERSION = '0.41'
 
 
 def loader(config_dict, _):

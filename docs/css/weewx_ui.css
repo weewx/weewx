@@ -228,7 +228,7 @@ caption {
     font-family: 'Inconsolata', monospace;
 }
 
-p .code, td .code, li .code {
+p .code, td .code, li .code, dd .code {
     background-color: #ecf3f3;
     padding-left: 1px;
     padding-right: 1px;
