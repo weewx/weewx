@@ -1724,7 +1724,7 @@ def _decode_rain(p, k):
         # 0.1 mm bucket
         return p[k] * 0.00393700787
     else:
-        log.warn("Unknown bucket type $s" % p['bucket_type'])
+        log.warning("Unknown bucket type $s" % p['bucket_type'])
 
 
 def _decode_windSpeed_H(p, k):
@@ -1735,7 +1735,7 @@ def _decode_windSpeed_H(p, k):
     elif p['packet_type'] == 1:
         return float(p[k]) / 10.0 if p[k] != 0xffff else None
     else:
-        log.warn("Unknown LOOP packet type %s" % p['packet_type'])
+        log.warning("Unknown LOOP packet type %s" % p['packet_type'])
 
 
 # This dictionary maps a type key to a function. The function should be able to
@@ -1743,6 +1743,9 @@ def _decode_windSpeed_H(p, k):
 # units and return it.
 _loop_map = {
     'altimeter'       : lambda p, k: float(p[k]) / 1000.0 if p[k] else None,
+    'bar_calibration' : lambda p, k: float(p[k]) / 1000.0 if p[k] else None,
+    'bar_offset'      : lambda p, k: float(p[k]) / 1000.0 if p[k] else None,
+    'bar_reduction'   : lambda p, k: float(p[k]) / 1000.0 if p[k] else None,
     'barometer'       : lambda p, k: float(p[k]) / 1000.0 if p[k] else None,
     'consBatteryVoltage': lambda p, k: float((p[k] * 300) >> 9) / 100.0,
     'dayET'           : lambda p, k: float(p[k]) / 1000.0,
@@ -1773,6 +1776,7 @@ _loop_map = {
     'forecastIcon'    : lambda p, k: p[k],
     'forecastRule'    : lambda p, k: p[k],
     'heatindex'       : lambda p, k: float(p[k]) if p[k] & 0xff != 0xff else None,
+    'hourRain'        : _decode_rain,
     'inHumidity'      : lambda p, k: float(p[k]) if p[k] != 0xff else None,
     'insideAlarm'     : lambda p, k: p[k],
     'inTemp'          : lambda p, k: float(p[k]) / 10.0 if p[k] != 0x7fff else None,
@@ -1791,7 +1795,10 @@ _loop_map = {
     'outsideAlarm2'   : lambda p, k: p[k],
     'outTemp'         : lambda p, k: float(p[k]) / 10.0 if p[k] != 0x7fff else None,
     'pressure'        : lambda p, k: float(p[k]) / 1000.0 if p[k] else None,
+    'pressure_raw'    : lambda p, k: float(p[k]) / 1000.0 if p[k] else None,
     'radiation'       : lambda p, k: float(p[k]) if p[k] != 0x7fff else None,
+    'rain15'          : _decode_rain,
+    'rain24'          : _decode_rain,
     'rainAlarm'       : lambda p, k: p[k],
     'rainRate'        : _decode_rain,
     'soilLeafAlarm1'  : lambda p, k: p[k],
@@ -1819,8 +1826,8 @@ _loop_map = {
     'windGust10'      : _decode_windSpeed_H,
     'windGustDir10'   : lambda p, k: (float(p[k]) if p[k] != 360 else 0) if p[k] and p[k] != 0x7fff else None,
     'windSpeed'       : lambda p, k: float(p[k]) if p[k] != 0xff else None,
-    'windSpeed2'      : _decode_windSpeed_H,
     'windSpeed10'     : _decode_windSpeed_H,
+    'windSpeed2'      : _decode_windSpeed_H,
     'yearET'          : lambda p, k: float(p[k]) / 100.0,
     'yearRain'        : _decode_rain,
 }
