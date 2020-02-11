@@ -17,8 +17,26 @@ missing data.
 Details of the API for downloading historical data from the WU can be found here:
 https://docs.google.com/document/d/1w8jbqfAk0tfZS5P7hYnar1JiitM0gQZB-clxDfG3aD0/edit
 
+Wunderground response codes:
+- When using the "1day" API
+   o Normal                    | 200
+   o Non-existent station      | 204
+   o Bad api key               | 401
+- When using the "history" API
+   o Normal                    | 200
+   o Non-existent station      | 204
+   o Good station, but no data | 204
+   o Bad api key               | 401
+
+Unfortunately, there is no reliable way to tell the difference between a request for a non-existing
+station, and a request for a date with no data.
+
 CHANGE HISTORY
 --------------------------------
+1.9.0 02/10/2020
+With response code of 204, changed the default to assume a good station with no data
+(rather than a bad station ID).
+
 1.8.0 12/15/2019
 Fixed bug where epsilon was not recognized.
 Added option 'upload-only', with default of 300 seconds.
@@ -121,7 +139,7 @@ proposes!"""
 epilog = """Options 'station', 'password', and 'api-key' must be supplied either
 on the command line, or in the configuration file."""
 
-__version__ = "1.8.0"
+__version__ = "1.9.0"
 
 # The number of seconds difference in the timestamp between two records
 # and still have them considered to be the same: 
@@ -174,9 +192,9 @@ def main():
 
     socket.setdefaulttimeout(options.timeout)
 
+    weeutil.logger.setup('wunderfixer', {})
     if options.verbose:
         weewx.debug = 1
-        weeutil.logger.setup('wunderfixer', {})
     else:
         logging.disable(logging.INFO)
 
@@ -184,6 +202,9 @@ def main():
     config_fn, config_dict = weecfg.read_config(options.config, args)
     print("Using configuration file %s." % config_fn)
     log.info("Using weewx configuration file %s." % config_fn)
+
+    # Now we can set up the user-customized logging:
+    weeutil.logger.setup('wunderfixer', config_dict)
 
     # Retrieve the station ID and password from the config file
     try:
@@ -273,11 +294,9 @@ def main():
               % (len(archive_results), len(wunder_results)))
 
     # ===========================================================================
-    # Unfortunately, the WU does not signal an error if you ask for a CSV file
-    # on a non-existent station. So, there's no way to tell the difference
-    # between asking for results from a non-existent station, versus a
-    # legitimate station that has no data for the given day. Warn the user, then
-    # proceed. 
+    # Unfortunately, the WU does not signal an error if you ask for a non-existent station. So,
+    # there's no way to tell the difference between asking for results from a non-existent station,
+    # versus a legitimate station that has no data for the given day. Warn the user, then proceed.
     # ===========================================================================
     if not wunder_results:
         sys.stdout.flush()
@@ -412,7 +431,12 @@ class WunderStation(weewx.restx.AmbientThread):
 
         if hasattr(response, 'code') and response.code != 200:
             if response.code == 204:
-                raise IOError("Probably a bad station ID or invalid date")
+                log.debug("Bad station (%s) or date (%s)" % (self.station, day_requested))
+                return []
+            elif response.code == 401:
+                # This should not happen, as it should have been caught earlier as an URLError
+                # exception, but just in case they change the API...
+                raise weewx.restx.BadLogin("Bad login")
             else:
                 raise IOError("Bad response code returned: %d" % response.code)
 
