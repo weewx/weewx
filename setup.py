@@ -32,6 +32,11 @@ import distutils.dir_util
 # DISTUTILS_DEBUG to get more debug info.
 from distutils.debug import DEBUG
 
+if sys.version_info < (2, 7):
+    print('WeeWX requires Python V2.7 or greater.')
+    print('For earlier versions of Python, use WeeWX V3.9.')
+    sys.exit("Python version unsupported.")
+
 # Find the install bin subdirectory:
 this_file = os.path.join(os.getcwd(), __file__)
 this_dir = os.path.abspath(os.path.dirname(this_file))
@@ -399,11 +404,12 @@ if __name__ == "__main__":
           ],
           requires=[
               'cheetah3(>=3.0)',
-              'configobj(>=4.5)',
+              'configobj(>=4.7)',   # Python 3 requires >5.0
               'pillow(>=5.4)',
               'pyephem(>=3.7)',
               'pyserial(>=2.3)',
-              'pyusb(>=1.0)'
+              'pyusb(>=1.0)',
+              'six(>=1.12)'
           ],
           packages=[
               'schemas',
