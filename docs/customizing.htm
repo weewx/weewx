@@ -1173,31 +1173,32 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
 
         <p>
             Normal WeeWX operation is to run each <em><a href="usersguide.htm#Reports">report</a></em> defined in <span
-            class="code">weewx.conf</span> every archive period. Whilst this may suit most situations, there may be
+            class="code">weewx.conf</span> every archive period. While this may suit most situations, there may be
             occasions when it is desirable to run a report less frequently than every archive period. For example, the
-            archive interval might be 5 minutes, but you only want to FTP files every 30 minutes, once per day or at a
-            set time each day. Weewx has two mechanisms that provide the ability to control when files are generated.
+            archive interval might be 5 minutes, but you only want to FTP files every 30 minutes, once per day, or at a
+            set time each day. WeeWX has two mechanisms that provide the ability to control when files are generated.
             The <em><a href="#stale_age"><span class="code">stale_age</span></a></em> option allows control over the age
-            of a file before it is regenerated and the <span class="code">report_timing</span> option allows precise
+            of a file before it is regenerated, and the <span class="code">report_timing</span> option allows precise
             control over when individual reports are run.
         </p>
 
         <p class="note" style="display: inline-block; width: 70%">
-            <strong>Note</strong><br/>Whilst <span class="code">report_timing</span> specifies when a given report
+            <strong>Note</strong><br/>While <span class="code">report_timing</span> specifies when a given report
             should be generated, the generation of reports is still controlled by the WeeWX report cycle, so reports can
             never be generated more frequently than once every archive period.
         </p>
 
-        <h3>The <span class="code">report_timing</span> option </h3>
+        <h3>The <span class="code">report_timing</span> option</h3>
 
         <p>
             The <span class="code">report_timing</span> option uses a CRON-like format to control when a report is to be
-            run. Whilst a CRON-like format is used, the control of WeeWX report generation using the <span class="code">report_timing</span>
-            option is confined completely to WeeWX and has no interraction with the system CRON service.
+            run. While a CRON-like format is used, the control of WeeWX report generation using the <span
+            class="code">report_timing</span> option is confined completely to WeeWX and has no interraction with the
+            system CRON service.
         </p>
 
         <p>
-            The <span class="code">report_timing</span> option consists of five, space separated parameters as follows:
+            The <span class="code">report_timing</span> option consists of five parameters separated by white-space:
         </p>
 
         <pre class="tty">report_timing = minutes hours day_of_month months day_of_week</pre>
@@ -1217,28 +1218,28 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
                 <td class="code first_col">minutes</td>
                 <td>Specifies the minutes of the hour when the report will be run
                 </td>
-                <td>*, or<br/>numbers in the range 0..59 inclusive
+                <td><span class="code">*</span>, or<br/>numbers in the range 0..59 inclusive
                 </td>
             </tr>
             <tr>
                 <td class="code first_col">hours</td>
                 <td>Specifies the hours of the day when the report will be run
                 </td>
-                <td>*, or<br/>numbers in the range 0..23 inclusive
+                <td><span class="code">*</span>, or<br/>numbers in the range 0..23 inclusive
                 </td>
             </tr>
             <tr>
                 <td class="code first_col">day_of_month</td>
                 <td>Specifies the days of the month when the report will be run
                 </td>
-                <td>*, or<br/>numbers in the range 1..31 inclusive
+                <td><span class="code">*</span>, or<br/>numbers in the range 1..31 inclusive
                 </td>
             </tr>
             <tr>
                 <td class="code first_col">months</td>
                 <td>Specifies the months of the year when the report will be run
                 </td>
-                <td>*, or<br/>numbers in the range 1..12 inclusive, or<br/>abbreviated names in the range jan..dec
+                <td><span class="code">*</span>, or<br/>numbers in the range 1..12 inclusive, or<br/>abbreviated names in the range jan..dec
                     inclusive
                 </td>
             </tr>
@@ -1246,7 +1247,7 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
                 <td class="code first_col">day_of_week</td>
                 <td>Specifies the days of the week when the report will be run
                 </td>
-                <td>*, or<br/>numbers in the range 0..7 inclusive (0,7 = Sunday, 1 = Monday etc), or<br/>abbreviated
+                <td><span class="code">*</span>, or<br/>numbers in the range 0..7 inclusive (0,7 = Sunday, 1 = Monday etc), or<br/>abbreviated
                     names in the range sun..sat inclusive
                 </td>
             </tr>
@@ -1332,9 +1333,9 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
         <p>
             A traditional CRON service has a resolution of one minute, meaning that the CRON service checks each minute
             as to whether to execute any commands. On the other hand, the WeeWX report system checks which reports are
-            to be run once per archive period, where the archive period may be one minute, five minutes or some other
+            to be run once per archive period, where the archive period may be one minute, five minutes, or some other
             user defined period. Consequently, the <span class="code">report_timing</span> option may specify a report
-            to be run at some time that does not align with the WeeWX archive period. In such cases cases the <span
+            to be run at some time that does not align with the WeeWX archive period. In such cases the <span
             class="code">report_timing</span> option does not cause a report to be run outside of the normal WeeWX
             report cycle, rather it will cause the report to be run during the next report cycle. At the start of each
             report cycle, and provided a <span class="code">report_timing</span> option is set, WeeWX will check each
@@ -1389,33 +1390,38 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
         <h3>Lists, ranges and steps</h3>
 
         <p>
-            The <span class="code">report_timing</span> option supports lists, ranges and steps for all parameters.
-            Lists, ranges and steps may be used as follows:
+            The <span class="code">report_timing</span> option supports lists, ranges, and steps for all parameters.
+            Lists, ranges, and steps may be used as follows:
         </p>
 
         <ul>
-            <li>Lists. A list is a set of numbers (or ranges) separated by commas, for example 1,2,5,9 or 0-4,8-12. A
-                match with any of the elements of the list will result in a match for that particular parameter. If the
-                examples were applied to the minutes parameter, and subject to other parameters in the <span
-                    class="code">report_timing</span> option, the report would be run at minutes 1,2,5 and 9 and
-                0,1,2,3,4,8,9,10,11 and 12 respectively. Abbreviated month and day names cannot be used in a list.
+            <li>
+                <em>Lists</em>. A list is a set of numbers (or ranges) separated by commas, for example <span class="code">1, 2,
+                5, 9</span> or <span class="code">0-4, 8-12</span>. A match with any of the elements of the list will
+                result in a match for that particular parameter. If the examples were applied to the minutes parameter,
+                and subject to other parameters in the <span class="code">report_timing</span> option, the report would
+                be run at minutes 1, 2, 5, and 9 and 0, 1, 2, 3, 4, 8, 9, 10, 11, and 12 respectively. Abbreviated month
+                and day names cannot be used in a list.
             </li>
 
-            <li>Ranges. Ranges are two numbers separated with a hyphen, for example 8-11. The specified range is
-                inclusive. A match with any of the values included in the range will result in a match for that
-                particular parameter. If the example was applied to the hours parameter, and subject to other parameters
-                in the <span class="code">report_timing</span> option, the report would be run at hours 8,9,10 and 11. A
-                range may be included as an element of a list. Abbreviated month and day names cannot be used in a
-                range.
+            <li>
+                <em>Ranges</em>. Ranges are two numbers separated with a hyphen, for example <span
+                class="code">8-11</span>. The specified range is inclusive. A match with any of the values included in
+                the range will result in a match for that particular parameter. If the example was applied to the hours
+                parameter, and subject to other parameters in the <span class="code">report_timing</span> option, the
+                report would be run at hours 8, 9, 10, and 11. A range may be included as an element of a list.
+                Abbreviated month and day names cannot be used in a range.
             </li>
 
-            <li>Steps. A step can be used in conjunction with a range or asterisk and are denoted by a '/' followed by a
-                number. Following a range with a step specifies skips of the step number's value through the range. For
-                example, 0-12/2 used in the hours parameter would, subject to other parameter in the <span class="code">report_timing</span>
-                option, run the report at hours 0,2,4,6,8,12. Steps are also permitted after an asterisk in which case
-                the skips of the step number's value occur through the all possible values of the parameter. For
-                example, */3 can be used in the hours parameter to, subject to other parameter in the <span
-                    class="code">report_timing</span> option, run the report at hours 0,3,6,9,12,15,18 and 21.
+            <li>
+                <em>Steps</em>. A step can be used in conjunction with a range or asterisk and are denoted by a '<span
+                class="code">/</span>' followed by a number. Following a range with a step specifies skips of the step
+                number's value through the range. For example, <span class="code">0-12/2</span> used in the hours
+                parameter would, subject to other parameter in the <span class="code">report_timing</span> option, run
+                the report at hours 0, 2, 4, 6, 8, and 12. Steps are also permitted after an asterisk in which case the
+                skips of the step number's value occur through the all possible values of the parameter. For example,
+                <span class="code">*/3</span> can be used in the hours parameter to, subject to other parameter in the
+                <span class="code">report_timing</span> option, run the report at hours 0, 3, 6, 9, 12, 15, 18, and 21.
             </li>
         </ul>
 
@@ -1423,8 +1429,8 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
 
         <p>
             The <span class="code">report_timing</span> option supports a number of time specification 'nicknames'.
-            These nicknames are prefixed by the '@' character and replace the five parameters in the <span class="code">report_timing</span>
-            option. The nicknames supported are:
+            These nicknames are prefixed by the '<span class="code">@</span>' character and replace the five parameters
+            in the <span class="code">report_timing</span> option. The nicknames supported are:
         </p>
 
         <table class="indent">
