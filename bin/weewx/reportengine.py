@@ -118,10 +118,10 @@ class StdReportEngine(threading.Thread):
         Runs through the list of reports. """
 
         if self.gen_ts:
-            log.debug("reportengine: Running reports for time %s",
+            log.debug("Running reports for time %s",
                       weeutil.weeutil.timestamp_to_string(self.gen_ts))
         else:
-            log.debug("reportengine: Running reports for latest time in the database.")
+            log.debug("Running reports for latest time in the database.")
 
         # Iterate over each requested report
         for report in self.config_dict['StdReport'].sections:
@@ -133,10 +133,10 @@ class StdReportEngine(threading.Thread):
             # See if this report is disabled
             enabled = to_bool(self.config_dict['StdReport'][report].get('enable', True))
             if not enabled:
-                log.debug("reportengine: Report '%s' not enabled. Skipping.", report)
+                log.debug("Report '%s' not enabled. Skipping.", report)
                 continue
 
-            log.debug("reportengine: Running report '%s'", report)
+            log.debug("Running report '%s'", report)
 
             # Fetch and build the skin_dict:
             try:
@@ -170,10 +170,10 @@ class StdReportEngine(threading.Thread):
                         if timing.is_triggered(_ts, _ts - _interval) is False:
                             # report timing was valid but not triggered so do
                             # not run the report.
-                            log.debug("reportengine: Report '%s' skipped due to report_timing setting", report)
+                            log.debug("Report '%s' skipped due to report_timing setting", report)
                             continue
                     else:
-                        log.debug("reportengine: Invalid report_timing setting for report '%s', "
+                        log.debug("Invalid report_timing setting for report '%s', "
                                   "running report anyway", report)
                         log.debug("       ****  %s", timing.validation_error)
 
@@ -190,7 +190,7 @@ class StdReportEngine(threading.Thread):
                             self.stn_info,
                             self.record)
                     except Exception as e:
-                        log.error("reportengine: Unable to instantiate generator '%s'", generator)
+                        log.error("Unable to instantiate generator '%s'", generator)
                         log.error("        ****  %s", e)
                         weeutil.logger.log_traceback(log.error, "        ****  ")
                         log.error("        ****  Generator ignored")
@@ -204,7 +204,7 @@ class StdReportEngine(threading.Thread):
                     except Exception as e:
                         # Caught unrecoverable error. Log it, continue on to the
                         # next generator.
-                        log.error("reportengine: Caught unrecoverable exception in generator '%s'", generator)
+                        log.error("Caught unrecoverable exception in generator '%s'", generator)
                         log.error("        ****  %s", e)
                         weeutil.logger.log_traceback(log.error, "        ****  ")
                         log.error("        ****  Generator terminated")
@@ -214,7 +214,7 @@ class StdReportEngine(threading.Thread):
                     finally:
                         obj.finalize()
             else:
-                log.debug("reportengine: No generators specified for report '%s'", report)
+                log.debug("No generators specified for report '%s'", report)
 
     def _build_skin_dict(self, report):
         """Find and build the skin_dict for the given report"""
@@ -237,14 +237,14 @@ class StdReportEngine(threading.Thread):
         # there is no file - everything for a skin might be defined in the weewx configuration.
         try:
             merge_dict = configobj.ConfigObj(skin_config_path, file_error=True, encoding='utf-8')
-            log.debug("reportengine: Found configuration file %s for report '%s'", skin_config_path, report)
+            log.debug("Found configuration file %s for report '%s'", skin_config_path, report)
             # Merge the skin config file in:
             weeutil.config.merge_config(skin_dict, merge_dict)
         except IOError as e:
-            log.debug("reportengine: Cannot read skin configuration file %s for report '%s': %s",
+            log.debug("Cannot read skin configuration file %s for report '%s': %s",
                       skin_config_path, report, e)
         except SyntaxError as e:
-            log.error("reportengine: Failed to read skin configuration file %s for report '%s': %s",
+            log.error("Failed to read skin configuration file %s for report '%s': %s",
                       skin_config_path, report, e)
             raise
 
