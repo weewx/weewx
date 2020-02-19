@@ -68,6 +68,10 @@ info:
 	@echo "        USER: $(USER)"
 	@echo "  WWW SERVER: $(WEEWX_COM)"
 
+clean:
+	find . -name "*.pyc" -exec rm {} \;
+	find . -name __pycache__ -exec rm -rf {} \;
+
 realclean:
 	rm -f MANIFEST
 	rm -rf build
@@ -99,11 +103,11 @@ test-setup:
 TESTDIR=/var/tmp/weewx_test
 MYSQLCLEAN="drop database test_weewx;\n\
 drop database test_alt_weewx;\n\
-drop database test_sim;\n"
+drop database test_sim;\n\
+drop database test_weewx1;\n"
 test-clean:
 	rm -rf $(TESTDIR)
 	echo $(MYSQLCLEAN) | mysql --user=weewx --password=weewx --force >/dev/null 2>&1
-	rm -f /var/tmp/sqdb1.sdb
 
 install:
 	./setup.py --install
@@ -154,7 +158,7 @@ upload-readme: readme.txt
 
 # update the version in all relevant places
 VDOCS=readme.htm customizing.htm devnotes.htm hardware.htm usersguide.htm upgrading.htm utilities.htm
-VCONFIGS=weewx.conf bin/weecfg/test/expected/weewx39_user_expected.conf
+VCONFIGS=weewx.conf bin/weecfg/tests/expected/weewx40_user_expected.conf
 version:
 	for f in $(VDOCS); do \
   sed -e 's/^Version: [0-9].*/Version: $(MMVERSION)/' docs/$$f > docs/$$f.tmp; \
@@ -308,8 +312,8 @@ push-apt-repo:
 critic:
 	perlcritic -1 --verbose 8 pkg/mkchangelog.pl
 
-cloc:
+code-summary:
 	cloc bin
 	@for d in weecfg weedb weeutil weewx; do \
-  cloc bin/$$d/test; \
+  cloc bin/$$d/tests; \
 done

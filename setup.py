@@ -9,6 +9,8 @@
 """Customized distutils setup file for weewx."""
 
 from __future__ import with_statement
+from __future__ import absolute_import
+from __future__ import print_function
 
 import os.path
 import sys
@@ -30,6 +32,11 @@ import distutils.dir_util
 # DISTUTILS_DEBUG to get more debug info.
 from distutils.debug import DEBUG
 
+if sys.version_info < (2, 7):
+    print('WeeWX requires Python V2.7 or greater.')
+    print('For earlier versions of Python, use WeeWX V3.9.')
+    sys.exit("Python version unsupported.")
+
 # Find the install bin subdirectory:
 this_file = os.path.join(os.getcwd(), __file__)
 this_dir = os.path.abspath(os.path.dirname(this_file))
@@ -46,7 +53,7 @@ import weecfg.extension
 import weeutil.weeutil
 from weecfg import Logger
 
-logger=Logger(verbosity=1)
+logger = Logger(verbosity=1)
 
 start_scripts = ['util/init.d/weewx.bsd',
                  'util/init.d/weewx.debian',
@@ -91,7 +98,7 @@ class weewx_install_lib(install_lib):
         # Save any existing 'bin' subdirectory:
         if os.path.exists(self.install_dir):
             bin_savedir = weeutil.weeutil.move_with_timestamp(self.install_dir)
-            print "Saved bin subdirectory as %s" % bin_savedir
+            print("Saved bin subdirectory as %s" % bin_savedir)
         else:
             bin_savedir = None
 
@@ -157,9 +164,9 @@ class weewx_install_data(install_data):
                 rel_name = 'skins/' + skin_name
                 if not os.path.exists(os.path.join(self.install_dir, rel_name)):
                     # The skin has not already been installed. Include it.
-                    install_files += filter(lambda dat: dat[0].startswith(rel_name), self.data_files)
+                    install_files += [dat for dat in self.data_files if dat[0].startswith(rel_name)]
             # Exclude all the skins files...
-            other_files = filter(lambda dat: not dat[0].startswith('skins'), self.data_files)
+            other_files = [dat for dat in self.data_files if not dat[0].startswith('skins')]
             # ... then add the needed skins back in
             self.data_files = other_files + install_files
 
@@ -173,7 +180,7 @@ class weewx_install_data(install_data):
 
         # Open up and parse the distribution config file:
         try:
-            dist_config_dict = configobj.ConfigObj(f, file_error=True)
+            dist_config_dict = configobj.ConfigObj(f, interpolation=False, file_error=True, encoding='utf-8')
         except IOError as e:
             sys.exit(str(e))
         except SyntaxError as e:
@@ -186,9 +193,9 @@ class weewx_install_data(install_data):
         # Do we have an old config file?
         if os.path.isfile(install_path):
             # Yes. Read it
-            config_path, config_dict = weecfg.read_config(install_path, None)
+            config_path, config_dict = weecfg.read_config(install_path, None, interpolation=False)
             if DEBUG:
-                print "Old configuration file found at", config_path
+                print("Old configuration file found at", config_path)
 
             # Update the old configuration file to the current version,
             # then merge it into the distribution file
@@ -204,7 +211,7 @@ class weewx_install_data(install_data):
                 stn_info['driver'] = driver
                 stn_info.update(weecfg.prompt_for_driver_settings(driver, config_dict))
                 if DEBUG:
-                    print "Station info =", stn_info
+                    print("Station info =", stn_info)
             weecfg.modify_config(config_dict, stn_info, DEBUG)
 
         # Set the WEEWX_ROOT
@@ -216,22 +223,25 @@ class weewx_install_data(install_data):
 
         # Time to write it out. Get a temporary file:
         tmpfd, tmpfn = tempfile.mkstemp()
-        # Wrap the os-level file descriptor in a Python file object
-        with os.fdopen(tmpfd, 'w') as tmpfile:
+        try:
+            # We don't need the file descriptor
+            os.close(tmpfd)
+            # Set the filename we will write to
+            config_dict.filename = tmpfn
             # Write the config file
-            config_dict.write(tmpfile)
+            config_dict.write()
 
-        # Save the old config file if it exists:
-        if not self.dry_run and os.path.exists(install_path):
-            backup_path = weeutil.weeutil.move_with_timestamp(install_path)
-            print "Saved old configuration file as %s" % backup_path
-
-        # Now install the temporary file (holding the merged config data)
-        # into the proper place:
-        rv = install_data.copy_file(self, tmpfn, install_path, **kwargs)
-
-        # Now get rid of the temporary file
-        os.remove(tmpfn)
+            # Save the old config file if it exists:
+            if not self.dry_run and os.path.exists(install_path):
+                backup_path = weeutil.weeutil.move_with_timestamp(install_path)
+                print("Saved old configuration file as %s" % backup_path)
+            if not self.dry_run:
+                # Now install the temporary file (holding the merged config data)
+                # into the proper place:
+                rv = install_data.copy_file(self, tmpfn, install_path, **kwargs)
+        finally:
+            # Get rid of the temporary file
+            os.unlink(tmpfn)
 
         # Set the permission bits unless this is a dry run:
         if not self.dry_run:
@@ -291,7 +301,7 @@ class weewx_sdist(sdist):
         # If this is the configuration file, check for passwords
         if f == 'weewx.conf':
             import configobj
-            config = configobj.ConfigObj(f)
+            config = configobj.ConfigObj(f, interpolation=False, encoding='utf-8')
 
             for section in ['StdRESTful', 'StdReport']:
                 for subsection in config[section].sections:
@@ -322,7 +332,7 @@ def remove_obsolete_files(install_dir):
         pass
 
     # If the file $WEEWX_INSTALL/readme.htm exists, delete it. It's
-    # the old readme (since replaced with README)
+    # the old readme (since replaced with README.md)
     try:
         os.remove(os.path.join(install_dir, 'readme.htm'))
     except OSError:
@@ -363,61 +373,80 @@ def remove_obsolete_files(install_dir):
 # ==============================================================================
 
 if __name__ == "__main__":
+    # Use the README.md for the long description:
+    with open(os.path.join(this_dir, "README.md"), "r") as fd:
+        long_description = fd.read()
+
     setup(name='weewx',
           version=VERSION,
-          description='weather software',
-          long_description="weewx interacts with a weather station to produce graphs, "
-                           "reports, and HTML pages.  weewx can upload data to services such as the "
-                           "WeatherUnderground, PWSweather.com, or CWOP.",
+          description='The WeeWX weather software system',
+          long_description=long_description,
           author='Tom Keffer',
           author_email='tkeffer@gmail.com',
           url='http://www.weewx.com',
           license='GPLv3',
-          classifiers=['Development Status :: 5 - Production/Stable',
-                       'Intended Audience :: End Users/Desktop',
-                       'License :: GPLv3',
-                       'Operating System :: OS Independent',
-                       'Programming Language :: Python',
-                       'Programming Language :: Python :: 2'],
-          requires=['configobj(>=4.5)',
-                    'serial(>=2.3)',
-                    'Cheetah(>=2.0)',
-                    'sqlite3(>=2.5)',
-                    'PIL(>=1.1.6)'],
-          provides=['weedb',
-                    'weeplot',
-                    'weeutil',
-                    'weewx'],
-          cmdclass={"sdist": weewx_sdist,
-                    "install": weewx_install,
-                    "install_scripts": weewx_install_scripts,
-                    "install_data": weewx_install_data,
-                    "install_lib": weewx_install_lib},
+          classifiers=[
+              'Development Status :: 5 - Production/Stable',
+              'Intended Audience :: End Users/Desktop',
+              'Intended Audience :: Science/Research',
+              'License :: GPLv3',
+              'Operating System :: POSIX :: LINUX',
+              'Operating System :: Unix',
+              'Operating System :: MacOS',
+              'Programming Language :: Python',
+              'Programming Language :: Python :: 2.6',
+              'Programming Language :: Python :: 2.7',
+              'Programming Language :: Python :: 3.5',
+              'Programming Language :: Python :: 3.6',
+              'Programming Language :: Python :: 3.7',
+              'Programming Language :: Python :: 3.8',
+              'Topic:: Scientific / Engineering:: Physics'
+          ],
+          requires=[
+              'cheetah3(>=3.0)',
+              'configobj(>=4.7)',   # Python 3 requires >5.0
+              'pillow(>=5.4)',
+              'pyephem(>=3.7)',
+              'pyserial(>=2.3)',
+              'pyusb(>=1.0)',
+              'six(>=1.12)'
+          ],
+          packages=[
+              'schemas',
+              'user',
+              'weecfg',
+              'weedb',
+              'weeimport',
+              'weeplot',
+              'weeutil',
+              'weewx',
+              'weewx.drivers'
+          ],
+          cmdclass={
+              "sdist": weewx_sdist,
+              "install": weewx_install,
+              "install_scripts": weewx_install_scripts,
+              "install_data": weewx_install_data,
+              "install_lib": weewx_install_lib
+          },
           platforms=['any'],
           package_dir={'': 'bin'},
-          packages=['schemas',
-                    'user',
-                    'weecfg',
-                    'weedb',
-                    'weeimport',
-                    'weeplot',
-                    'weeutil',
-                    'weewx',
-                    'weewx.drivers'],
-          py_modules=['daemon'],
-          scripts=['bin/wee_config',
-                   'bin/wee_database',
-                   'bin/wee_debug',
-                   'bin/wee_device',
-                   'bin/wee_extension',
-                   'bin/wee_import',
-                   'bin/wee_reports',
-                   'bin/weewxd',
-                   'bin/wunderfixer'],
+          py_modules=['daemon', 'six'],
+          scripts=[
+              'bin/wee_config',
+              'bin/wee_database',
+              'bin/wee_debug',
+              'bin/wee_device',
+              'bin/wee_extension',
+              'bin/wee_import',
+              'bin/wee_reports',
+              'bin/weewxd',
+              'bin/wunderfixer'
+          ],
           data_files=[
               ('',
                ['LICENSE.txt',
-                'README',
+                'README.md',
                 'weewx.conf']),
               ('docs',
                ['docs/changes.txt',
@@ -435,27 +464,8 @@ if __name__ == "__main__":
                 'docs/usersguide.htm',
                 'docs/utilities.htm']),
               ('docs/css',
-               ['docs/css/jquery.tocify.css',
-                'docs/css/weewx_docs.css']),
-              ('docs/css/ui-lightness',
-               ['docs/css/ui-lightness/jquery-ui-1.10.4.custom.css',
-                'docs/css/ui-lightness/jquery-ui-1.10.4.custom.min.css']),
-              ('docs/css/ui-lightness/images',
-               ['docs/css/ui-lightness/images/animated-overlay.gif',
-                'docs/css/ui-lightness/images/ui-bg_diagonals-thick_18_b81900_40x40.png',
-                'docs/css/ui-lightness/images/ui-bg_diagonals-thick_20_666666_40x40.png',
-                'docs/css/ui-lightness/images/ui-bg_flat_10_000000_40x100.png',
-                'docs/css/ui-lightness/images/ui-bg_glass_100_f6f6f6_1x400.png',
-                'docs/css/ui-lightness/images/ui-bg_glass_100_fdf5ce_1x400.png',
-                'docs/css/ui-lightness/images/ui-bg_glass_65_ffffff_1x400.png',
-                'docs/css/ui-lightness/images/ui-bg_gloss-wave_35_f6a828_500x100.png',
-                'docs/css/ui-lightness/images/ui-bg_highlight-soft_100_eeeeee_1x100.png',
-                'docs/css/ui-lightness/images/ui-bg_highlight-soft_75_ffe45c_1x100.png',
-                'docs/css/ui-lightness/images/ui-icons_222222_256x240.png',
-                'docs/css/ui-lightness/images/ui-icons_228ef1_256x240.png',
-                'docs/css/ui-lightness/images/ui-icons_ef8c08_256x240.png',
-                'docs/css/ui-lightness/images/ui-icons_ffd27a_256x240.png',
-                'docs/css/ui-lightness/images/ui-icons_ffffff_256x240.png']),
+               ['docs/css/tocbot-4.3.1.css',
+                'docs/css/weewx_ui.css']),
               ('docs/images',
                ['docs/images/antialias.gif',
                 'docs/images/day-gap-not-shown.png',
@@ -463,6 +473,7 @@ if __name__ == "__main__":
                 'docs/images/daycompare.png',
                 'docs/images/daytemp_with_avg.png',
                 'docs/images/daywindvec.png',
+                'docs/images/favicon.png',
                 'docs/images/ferrites.jpg',
                 'docs/images/funky_degree.png',
                 'docs/images/image_parts.png',
@@ -474,19 +485,20 @@ if __name__ == "__main__":
                 'docs/images/logo-linux.png',
                 'docs/images/logo-mint.png',
                 'docs/images/logo-opensuse.png',
+                'docs/images/logo-pypi.svg',
                 'docs/images/logo-redhat.png',
+                'docs/images/logo-rpi.png',
                 'docs/images/logo-suse.png',
                 'docs/images/logo-ubuntu.png',
                 'docs/images/logo-weewx.png',
                 'docs/images/sample_monthrain.png',
+                'docs/images/sample_monthtempdew.png',
                 'docs/images/weekgustoverlay.png',
                 'docs/images/weektempdew.png',
                 'docs/images/yearhilow.png']),
               ('docs/js',
-               ['docs/js/jquery-1.11.1.min.js',
-                'docs/js/jquery-ui-1.10.4.custom.min.js',
-                'docs/js/jquery.tocify-1.9.0.js',
-                'docs/js/jquery.tocify-1.9.0.min.js',
+               ['docs/js/cash.js',
+                'docs/js/tocbot-4.3.1.js',
                 'docs/js/weewx.js']),
               ('docs/examples',
                ['docs/examples/tag.htm']),
@@ -575,8 +587,8 @@ if __name__ == "__main__":
                 'skins/Seasons/telemetry.html.tmpl',
                 'skins/Seasons/titlebar.inc']),
               ('skins/Seasons/NOAA',
-               ['skins/Seasons/NOAA/NOAA-YYYY-MM.txt.tmpl',
-                'skins/Seasons/NOAA/NOAA-YYYY.txt.tmpl']),
+               ['skins/Seasons/NOAA/NOAA-%Y-%m.txt.tmpl',
+                'skins/Seasons/NOAA/NOAA-%Y.txt.tmpl']),
               ('skins/Seasons/font',
                ['skins/Seasons/font/OpenSans-Bold.ttf',
                 'skins/Seasons/font/OpenSans-Regular.ttf',
@@ -598,8 +610,8 @@ if __name__ == "__main__":
                 'skins/Standard/weewx.css',
                 'skins/Standard/year.html.tmpl']),
               ('skins/Standard/NOAA',
-               ['skins/Standard/NOAA/NOAA-YYYY-MM.txt.tmpl',
-                'skins/Standard/NOAA/NOAA-YYYY.txt.tmpl']),
+               ['skins/Standard/NOAA/NOAA-%Y-%m.txt.tmpl',
+                'skins/Standard/NOAA/NOAA-%Y.txt.tmpl']),
               ('skins/Standard/RSS',
                ['skins/Standard/RSS/weewx_rss.xml.tmpl']),
               ('skins/Standard/backgrounds',
@@ -628,6 +640,7 @@ if __name__ == "__main__":
               ('util/import',
                ['util/import/csv-example.conf',
                 'util/import/cumulus-example.conf',
+                'util/import/wd-example.conf',
                 'util/import/wu-example.conf']),
               ('util/init.d',
                ['util/init.d/weewx.bsd',

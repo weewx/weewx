@@ -116,18 +116,18 @@ to manually purge debconf variables:
 to sign rpm packages you need .rpmmacros in your home directory:
 ~/.rpmmacros
   %_signature gpg
-  %_gpg_name  Matthew Wall
+  %_gpg_name  YOUR_NAME_HERE
 
 to generate gpg key used for signing packages:
   gpg --gen-key
   gpg --list-keys
 
 to export the text version of a public key:
-  gpg --export -a "Matthew Wall" > mwall.gpg.key
+  gpg --export -a "YOUR_NAME_HERE" > username.gpg.key
 
 source install:
-  setup.py install
-  setup.py install home=/opt/weewx-x.y.z
+  python ./setup.py install
+  python ./setup.py install home=/opt/weewx-x.y.z
 
 debian install/remove:
   dpkg -i weewx_x.y.z-r.deb           # install
@@ -152,12 +152,15 @@ update debian repo using aptly:
   aptly snapshot create weewx-3.0.1 from repo weewx
   aptly -architectures="all" publish switch squeeze weewx-3.0.1
 
-clone the published apt repo at godaddy to local space:
+clone the published apt repo to local space:
   mkdir -p ~/.aptly
-  rsync -arv --rsync-path /home/content/t/o/m/tomkeffer/bin/rsync -e ssh USER@weewx.com:/home/content/t/o/m/tomkeffer/html/aptly/ ~/.aptly
+  rsync -arv USER@weewx.com:/var/www/html/aptly-test/ ~/.aptly
 
-synchronize local aptly changes with the published apt repo at godaddy:
-  rsync -arv --rsync-path /home/content/t/o/m/tomkeffer/bin/rsync -e ssh ~/.aptly/ USER@weewx.com:/home/content/t/o/m/tomkeffer/html/aptly
+synchronize local aptly changes with the published apt repo:
+  rsync -arv ~/.aptly/ USER@weewx.com:/var/www/html/aptly-test
+
+switch from testing to production (this is done at weewx.com):
+  rsync -arv /var/www/html/aptly-test/ /var/www/html/aptly
 
 for clients to use an apt repo at weewx.com:
   curl -s http://weewx.com/keys.html | sudo apt-key add -
@@ -190,6 +193,10 @@ to do debian builds you must first install:
   python-imaging
   python-configobj
   debhelper
+
+to do redhat builds you must first install:
+  rpm-build
+  rpm-sign
 
 to do repo updates you must first install aptly:
   https://www.aptly.info/download/

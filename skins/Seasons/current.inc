@@ -2,6 +2,7 @@
 ## Copyright Tom Keffer, Matthew Wall
 ## See LICENSE.txt for your rights
 #errorCatcher Echo
+#encoding UTF-8
 
 <div id='current_widget' class="widget">
   <div class="widget_title">
@@ -71,6 +72,12 @@
       <tr>
         <td class="label">$obs.label.inTemp</td>
         <td class="data">$current.inTemp</td>
+      </tr>
+#end if
+#if $day.inHumidity.has_data
+      <tr>
+        <td class="label">$obs.label.inHumidity</td>
+        <td class="data">$current.inHumidity</td>
       </tr>
 #end if
 #if $day.extraTemp1.has_data

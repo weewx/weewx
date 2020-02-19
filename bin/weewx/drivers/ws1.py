@@ -14,15 +14,22 @@ Thanks to Jay Nugent (WB8TKL) and KRK6 for weather-2.kr6k-V2.1
 """
 
 from __future__ import with_statement
-import syslog
+from __future__ import absolute_import
+from __future__ import print_function
+
+import logging
 import time
 
-from weewx.units import INHG_PER_MBAR, MILE_PER_KM
+from six import byte2int
+
 import weewx.drivers
+from weewx.units import INHG_PER_MBAR, MILE_PER_KM
 import weewx.wxformulas
 
+log = logging.getLogger(__name__)
+
 DRIVER_NAME = 'WS1'
-DRIVER_VERSION = '0.26'
+DRIVER_VERSION = '0.40'
 
 
 def loader(config_dict, _):
@@ -38,18 +45,6 @@ DEFAULT_TCP_PORT = 3000
 PACKET_SIZE = 50
 DEBUG_READ = 0
 
-
-def logmsg(level, msg):
-    syslog.syslog(level, 'ws1: %s' % msg)
-
-def logdbg(msg):
-    logmsg(syslog.LOG_DEBUG, msg)
-
-def loginf(msg):
-    logmsg(syslog.LOG_INFO, msg)
-
-def logerr(msg):
-    logmsg(syslog.LOG_ERR, msg)
 
 class WS1Driver(weewx.drivers.AbstractDevice):
     """weewx driver that communicates with an ADS-WS1 station
@@ -76,12 +71,11 @@ class WS1Driver(weewx.drivers.AbstractDevice):
     [Optional. Default is 0]
     """
     def __init__(self, **stn_dict):
-        loginf('driver version is %s' % DRIVER_VERSION)
+        log.info('driver version is %s' % DRIVER_VERSION)
 
         con_mode = stn_dict.get('mode', 'serial').lower()
         if con_mode == 'tcp' or con_mode == 'udp':
-            port = stn_dict.get(
-                'port', '%s:%d' % (DEFAULT_TCP_ADDR, DEFAULT_TCP_PORT))
+            port = stn_dict.get('port', '%s:%d' % (DEFAULT_TCP_ADDR, DEFAULT_TCP_PORT))
         elif con_mode == 'serial':
             port = stn_dict.get('port', DEFAULT_SER_PORT)
         else:
@@ -93,7 +87,7 @@ class WS1Driver(weewx.drivers.AbstractDevice):
 
         self.last_rain = None
 
-        loginf('using %s port %s' % (con_mode, port))
+        log.info('using %s port %s' % (con_mode, port))
 
         global DEBUG_READ
         DEBUG_READ = int(stn_dict.get('debug_read', DEBUG_READ))
@@ -206,7 +200,7 @@ class StationData(object):
                 v *= multiplier
         except ValueError as e:
             if s != '----':
-                logdbg("decode failed for '%s': %s" % (s, e))
+                log.debug("decode failed for '%s': %s" % (s, e))
         return v
 
 
@@ -231,13 +225,13 @@ class StationSerial(object):
 
     def open(self):
         import serial
-        logdbg("open serial port %s" % self.port)
+        log.debug("open serial port %s" % self.port)
         self.serial_port = serial.Serial(self.port, self.baudrate,
                                          timeout=self.timeout)
 
     def close(self):
         if self.serial_port is not None:
-            logdbg("close serial port %s" % self.port)
+            log.debug("close serial port %s" % self.port)
             self.serial_port.close()
             self.serial_port = None
 
@@ -247,24 +241,24 @@ class StationSerial(object):
     def get_readings(self):
         buf = self.serial_port.readline()
         if DEBUG_READ >= 2:
-            logdbg("bytes: '%s'" % ' '.join(["%0.2X" % ord(c) for c in buf]))
+            log.debug("bytes: '%s'" % ' '.join(["%0.2X" % byte2int(c) for c in buf]))
         buf = buf.strip()
         return buf
 
     def get_readings_with_retry(self, max_tries=5, wait_before_retry=10):
         import serial
-        for ntries in range(0, max_tries):
+        for ntries in range(max_tries):
             try:
                 buf = self.get_readings()
                 StationData.validate_string(buf)
                 return buf
             except (serial.serialutil.SerialException, weewx.WeeWxIOError) as e:
-                loginf("Failed attempt %d of %d to get readings: %s" %
-                       (ntries + 1, max_tries, e))
+                log.info("Failed attempt %d of %d to get readings: %s" %
+                         (ntries + 1, max_tries, e))
                 time.sleep(wait_before_retry)
         else:
             msg = "Max retries (%d) exceeded for readings" % max_tries
-            logerr(msg)
+            log.error(msg)
             raise weewx.RetriesExceeded(msg)
 
 
@@ -302,7 +296,7 @@ class StationSocket(object):
                 self.net_socket = socket.socket(
                     socket.AF_INET, socket.SOCK_DGRAM)
         except (socket.error, socket.herror) as ex:
-            logerr("Cannot create socket for some reason: %s" % ex)
+            log.error("Cannot create socket for some reason: %s" % ex)
             raise weewx.WeeWxIOError(ex)
 
         self.net_socket.settimeout(timeout)
@@ -311,36 +305,33 @@ class StationSocket(object):
     def open(self):
         import socket
 
-        logdbg("Connecting to %s:%d." % (self.conn_info[0], self.conn_info[1]))
+        log.debug("Connecting to %s:%d." % (self.conn_info[0], self.conn_info[1]))
 
         for conn_attempt in range(self.max_tries):
             try:
                 if conn_attempt > 1:
-                    logdbg("Retrying connection...")
+                    log.debug("Retrying connection...")
                 self.net_socket.connect(self.conn_info)
                 break
             except (socket.error, socket.timeout, socket.herror) as ex:
-                logerr("Cannot connect to %s:%d for some reason: %s. "
-                       "%d tries left." % (
-                           self.conn_info[0], self.conn_info[1], ex,
-                           self.max_tries - (conn_attempt + 1)))
-                logdbg("Will retry in %.2f seconds..." % self.wait_before_retry)
+                log.error("Cannot connect to %s:%d for some reason: %s. %d tries left." % (
+                    self.conn_info[0], self.conn_info[1], ex,
+                    self.max_tries - (conn_attempt + 1)))
+                log.debug("Will retry in %.2f seconds..." % self.wait_before_retry)
                 time.sleep(self.wait_before_retry)
         else:
-            logerr("Max tries (%d) exceeded for connection." %
-                   self.max_tries)
+            log.error("Max tries (%d) exceeded for connection." % self.max_tries)
             raise weewx.RetriesExceeded("Max tries exceeding while attempting connection")
 
     def close(self):
         import socket
 
-        logdbg("Closing connection to %s:%d." %
-               (self.conn_info[0], self.conn_info[1]))
+        log.debug("Closing connection to %s:%d." % (self.conn_info[0], self.conn_info[1]))
         try:
             self.net_socket.close()
         except (socket.error, socket.herror, socket.timeout) as ex:
-            logerr("Cannot close connection to %s:%d. Reason: %s" % (
-                self.conn_info[0], self.conn_info[1], ex))
+            log.error("Cannot close connection to %s:%d. Reason: %s"
+                      % (self.conn_info[0], self.conn_info[1], ex))
             raise weewx.WeeWxIOError(ex)
 
     def get_readings(self):
@@ -348,7 +339,7 @@ class StationSocket(object):
         if self.rec_start is not True:
             # Find the record start
             if DEBUG_READ >= 1:
-                logdbg("Attempting to find record start..")
+                log.debug("Attempting to find record start..")
             buf = ''
             while True:
                 try:
@@ -356,15 +347,15 @@ class StationSocket(object):
                 except (socket.error, socket.timeout) as ex:
                     raise weewx.WeeWxIOError(ex)
                 if DEBUG_READ >= 1:
-                    logdbg("(searching...) buf: %s" % buf)
+                    log.debug("(searching...) buf: %s" % buf)
                 if '!!' in buf:
                     self.rec_start = True
                     if DEBUG_READ >= 1:
-                        logdbg("Record start found!")
+                        log.debug("Record start found!")
                     # Cut to the record start
                     buf = buf[buf.find('!!'):]
                     if DEBUG_READ >= 1:
-                        logdbg("(found!) buf: %s" % buf)
+                        log.debug("(found!) buf: %s" % buf)
                     break
             # Add the rest of the record
             try:
@@ -382,7 +373,7 @@ class StationSocket(object):
                 if buf == '\r\n':
                     # CRLF is expected
                     if DEBUG_READ >= 2:
-                        logdbg("buf is CRLF")
+                        log.debug("buf is CRLF")
                     buf = ''
                     break
                 elif '!' in buf:
@@ -390,7 +381,7 @@ class StationSocket(object):
                     # Assuming exclamation points are at the end of the buffer
                     buf = buf[len(buf) - excmks:]
                     if DEBUG_READ >= 2:
-                        logdbg("buf has %d exclamation points." % (excmks))
+                        log.debug("buf has %d exclamation points." % (excmks))
                     break
                 else:
                     try:
@@ -398,28 +389,27 @@ class StationSocket(object):
                     except (socket.error, socket.timeout) as ex:
                         raise weewx.WeeWxIOError(ex)
                     if DEBUG_READ >= 2:
-                            logdbg("buf: %s" % ' '.join(
-                                   ['%02X' % ord(bc) for bc in buf]))
+                        log.debug("buf: %s" % ' '.join(['%02X' % byte2int(bc) for bc in buf]))
             try:
                 buf += self.net_socket.recv(
                     PACKET_SIZE - len(buf), socket.MSG_WAITALL)
             except (socket.error, socket.timeout) as ex:
                 raise weewx.WeeWxIOError(ex)
         if DEBUG_READ >= 2:
-            logdbg("buf: %s" % buf)
+            log.debug("buf: %s" % buf)
 
         buf.strip()
         return buf
 
     def get_readings_with_retry(self, max_tries=5, wait_before_retry=10):
-        for _ in range(0, max_tries):
+        for _ in range(max_tries):
             buf = ''
             try:
                 buf = self.get_readings()
                 StationData.validate_string(buf)
                 return buf
             except (weewx.WeeWxIOError) as e:
-                logdbg("Failed to get data. Reason: %s" % e)
+                log.debug("Failed to get data. Reason: %s" % e)
                 self.rec_start = False
 
                 # NOTE: WeeWx IO Errors may not always occur because of
@@ -427,13 +417,13 @@ class StationSocket(object):
                 # errors and timeouts.
 
                 if DEBUG_READ >= 1:
-                    logdbg("buf: %s (%d bytes), rec_start: %r" %
-                           (buf, len(buf), self.rec_start))
+                    log.debug("buf: %s (%d bytes), rec_start: %r"
+                              % (buf, len(buf), self.rec_start))
 
                 time.sleep(wait_before_retry)
         else:
             msg = "Max retries (%d) exceeded for readings" % max_tries
-            logerr(msg)
+            log.error(msg)
             raise weewx.RetriesExceeded(msg)
 
 
@@ -461,20 +451,20 @@ class WS1ConfEditor(weewx.drivers.AbstractConfEditor):
 """
 
     def prompt_for_settings(self):
-        print "How is the station connected? tcp, udp, or serial."
+        print("How is the station connected? tcp, udp, or serial.")
         con_mode = self._prompt('mode', 'serial')
         con_mode = con_mode.lower()
 
         if con_mode == 'serial':
-            print "Specify the serial port on which the station is connected, "
+            print("Specify the serial port on which the station is connected, ")
             "for example: /dev/ttyUSB0 or /dev/ttyS0."
             port = self._prompt('port', '/dev/ttyUSB0')
         elif con_mode == 'tcp' or con_mode == 'udp':
-            print "Specify the IP address and port of the station. For "
+            print("Specify the IP address and port of the station. For ")
             "example: 192.168.36.40:3000."
             port = self._prompt('port', '192.168.36.40:3000')
 
-        print "Specify how long to wait for a response, in seconds."
+        print("Specify how long to wait for a response, in seconds.")
         timeout = self._prompt('timeout', 3)
 
         return {'mode': con_mode, 'port': port, 'timeout': timeout}
@@ -488,10 +478,15 @@ class WS1ConfEditor(weewx.drivers.AbstractConfEditor):
 if __name__ == '__main__':
     import optparse
 
+    import weewx
+    import weeutil.logger
+
+    weewx.debug = 1
+
+    weeutil.logger.setup('ws1', {})
+
     usage = """%prog [options] [--help]"""
 
-    syslog.openlog('ws1', syslog.LOG_PID | syslog.LOG_CONS)
-    syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
     parser = optparse.OptionParser(usage=usage)
     parser.add_option('--version', dest='version', action='store_true',
                       help='display driver version')
@@ -501,9 +496,9 @@ if __name__ == '__main__':
     (options, args) = parser.parse_args()
 
     if options.version:
-        print "ADS WS1 driver version %s" % DRIVER_VERSION
+        print("ADS WS1 driver version %s" % DRIVER_VERSION)
         exit(0)
 
     with StationSerial(options.port) as s:
         while True:
-            print time.time(), s.get_readings()
+            print(time.time(), s.get_readings())

@@ -1,6 +1,136 @@
 weewx change history
 --------------------
 
+4.0.0 MM/DD/YYYY
+
+Ported to Python 3. WeeWX should now run under Python 3.5 and greater, as
+well as Python 2.7. Support for Python 2.5 and 2.6 has been dropped.
+
+New facility for creating new user-defined derived types. See the
+Wiki article https://github.com/weewx/weewx/wiki/WeeWX-V4-user-defined-types
+
+WeeWX now uses the Python 'logging' facility. This means log,
+formats, and other things can now be customized. Fixes issue #353.
+
+Support for the Vantage LOOP2 packet format. Fixes issue #374.
+
+Strings appearing in the data stream no longer cause a TypeError
+if they can be converted to a number.
+
+Strings can now be accumulated and extracted in the accumulators, making
+it possible to include them in the database schemas.
+
+The utility wee_reports now loads services, allowing it to use user-supplied
+extensions. Fixes issue #95.
+
+New default schema ("wview_extended") that offers many new types.
+The old schema is still supported. Fixes issue #115.
+
+Optional, more flexible, way of specifying schemas for the daily summaries.
+The old way is still supported.
+
+The package MySQL-python, which we used previously, is not available
+for Python 3. Ported  the MySQL code to use the package mysqlclient
+as an alternative.
+
+The default for WOW no longer throttles posting frequency (the default
+used to be no more than once every 15 minutes).
+
+Added new aggregate types minsum, minsumtime, sum_le. PR #382.
+
+Unit group group_distance is now a first-class group.
+
+Added new tag $python_version.
+
+Ported to Python2-PyMySQL package on OpenSUSE.
+
+Added new aggregation types 'first' (similar to 'last'), 'diff' (the
+difference between last and first value in the aggregation interval),
+and 'tderiv' (the difference divided by the time difference).
+
+Created new unit group 'group_energy2', defined as watt-seconds. Useful for
+high resolution energy monitors.
+
+An observation type known to the system, but not in a record, will
+now return a proper ValueTuple, rather than UnknownType.
+
+Type "stormStart" was added to the unit system. Fixes issue #380.
+
+Added new aggregation type 'growdeg'. Similar to 'heatdeg', or 'cooldeg',
+it measures growing degree-days. Basically, cooldeg, but with a
+different base. Fixes issue #367. Thanks to user Clay Jackson
+for guidance!
+
+Ported OS uptime to OpenBSD. Fixes issue #428. Thanks to user Jeff Ross!
+
+Catch SSL certificate errors in uploaders. Retry after an hour. Fixes
+issue #413.
+
+Wunderfixer has been ported to the new WU API. This API requires an API key,
+which you can get from the WU. Put it in weewx.conf. Added option
+--upload-only. Thanks to user Leon Shaner! Fixes issues #414 and #445.
+
+Wee_import can now import Weather Display monthly log files.
+
+Fixed problem where sub-sections DegreeDays and Trend were located under the
+wrong weewx.conf section. Fixes issue #432. Thanks to user mph for spotting
+this!
+
+Added new parameters to the Weather Underground uploader. Fixes issue #435.
+
+Added new air quality types pm1_0, pm2_5, and pm10_0 to the unit system. Added
+new unit microgram_per_meter_cubed. Added new unit group, group_concentration.
+
+Plist for the Mac launcher now includes a log file for stderr.
+
+Night-day transition in plots now uses shortest travel distance around
+color wheel to minimize extra colors. Fixes issue #457. Thanks to user
+Alex Edwards!
+
+Fixed bug that causes plots to fail when both min and max are zero.
+Fixes issue #463.
+
+Fixed problem with sqlite driver that can lead to memory growth.
+See PR #467. Thanks to user Rich Bell!
+
+Fixed bug that caused windrun to be calculated wrongly under METRICWX
+unit system. Fixes issue #452.
+
+If a bad value of 'interval' is encountered in a record, the program will
+simply ignore it, rather than stopping. Address issue #375.
+
+Change in how the archive timespan is calculated in the engine. This allows
+oddball archive intervals. Fixes issue #469.
+
+NOAA reports are now more tolerant of missing data. Fixes issue #300.
+
+Use of strftime() date and time format codes in template file names is now
+supported as an alternative to the legacy 'YYYY', 'MM' and 'DD'. The legacy
+codes continue to be supported for backwards compatibility. Fixes issue #415.
+
+New --calc-missing action added to wee_database to calculate and store derived
+observations.
+
+wee_import now calculates missing derived observations once all imported data
+has been saved to archive. Fixes issue #443.
+
+wee_import now now tolerates periods that contain no source data. Fixes
+issue #499.
+
+Ignore historical records if the timestamp is in the future.
+
+Can now recover from MariaDB-specific database connection error 1927.
+
+Changed the name of the unit "litre" to "liter", making its spelling more
+consistent with "meter". The spelling "litre" is still accepted.
+
+Systemd type changed from "simple" to "forking". Thanks to
+user Jaap de Munck for figuring this one out!
+
+The configuration file is now an optional argument when running weewxd directly.
+This means most users will be able to use the simple command line 'sudo weewxd'.
+
+
 3.9.2 07/14/2019
 
 StdPrint now explicitly converts loop and archive fields to UTF-8 before
@@ -74,6 +204,13 @@ Fixes issue #431. Thanks to user ls4096!
 
 Fixed problem that can cause an exception with restx services that do not use
 the database manager. See commit 459ccb1.
+
+Sending a SIGTERM signal to weewxd now causes it to exit with status
+128 + signal#. PR #442. Thanks to user sshambar!
+
+Fixed bug that could cause WMR200 packets with a timestamp between startup
+and the minimum interval to have an interval length of zero. Fixes
+issue #375 (again!).
 
 
 3.9.1 02/06/2019
@@ -1539,14 +1676,14 @@ Numerous fixes to the WMR200 driver. Now has a "watchdog" thread.
 All of the device drivers have now been put in their own package
 'weewx.drivers' to keep them together. Many have also had name changes
 to make them more consistent:
-	OLD                        NEW
-	VantagePro.py (Vantage)    vantage.py (Vantage)
-	WMR918.py     (WMR-918)    wmr9x8.py  (WMR9x8)
-	wmrx.py       (WMR-USB)    wmr100.py  (WMR100)
-	
-	new (experimental) drivers:
-	wmr200.py (WMR200)
-	ws28xx.py (WS28xx)
+    OLD                        NEW
+    VantagePro.py (Vantage)    vantage.py (Vantage)
+    WMR918.py     (WMR-918)    wmr9x8.py  (WMR9x8)
+    wmrx.py       (WMR-USB)    wmr100.py  (WMR100)
+
+    new (experimental) drivers:
+    wmr200.py (WMR200)
+    ws28xx.py (WS28xx)
 
 The interface to the device driver "loader" function has changed slightly. It
 now takes a second parameter, "engine". Details are in the Upgrading doc.

@@ -436,7 +436,10 @@ schema, these are the additional fields that must be added to the schema:
 # FIXME: is there any way to get rid of the bad header byte on first read?
 
 from __future__ import with_statement
-import syslog
+from __future__ import absolute_import
+from __future__ import print_function
+
+import logging
 import time
 import usb
 
@@ -444,8 +447,10 @@ import weewx.drivers
 import weewx.wxformulas
 from weeutil.weeutil import timestamp_to_string
 
+log = logging.getLogger(__name__)
+
 DRIVER_NAME = 'TE923'
-DRIVER_VERSION = '0.24'
+DRIVER_VERSION = '0.40'
 
 def loader(config_dict, engine):  # @UnusedVariable
     return TE923Driver(**config_dict[DRIVER_NAME])
@@ -491,21 +496,6 @@ DEFAULT_MAP = {
     'extraBatteryStatus4': 'bat_5',
     'extraLinkStatus4': 'link_5'
 }
-
-def logmsg(dst, msg):
-    syslog.syslog(dst, 'te923: %s' % msg)
-
-def logdbg(msg):
-    logmsg(syslog.LOG_DEBUG, msg)
-
-def loginf(msg):
-    logmsg(syslog.LOG_INFO, msg)
-
-def logcrt(msg):
-    logmsg(syslog.LOG_CRIT, msg)
-
-def logerr(msg):
-    logmsg(syslog.LOG_ERR, msg)
 
 
 class TE923ConfEditor(weewx.drivers.AbstractConfEditor):
@@ -572,7 +562,7 @@ class TE923Configurator(weewx.drivers.AbstractConfigurator):
     }
     
     city_dict = {
-        0: ["ADD", 3, 0, 9, 01, "N", 38, 44, "E", "Addis Ababa, Ethiopia"],
+        0: ["ADD", 3, 0, 9, 0o1, "N", 38, 44, "E", "Addis Ababa, Ethiopia"],
         1: ["ADL", 9.5, 1, 34, 55, "S", 138, 36, "E", "Adelaide, Australia"],
         2: ["AKR", 2, 4, 39, 55, "N", 32, 55, "E", "Ankara, Turkey"],
         3: ["ALG", 1, 0, 36, 50, "N", 3, 0, "E", "Algiers, Algeria"],
@@ -807,50 +797,50 @@ class TE923Configurator(weewx.drivers.AbstractConfigurator):
 
     @staticmethod
     def show_info(station, fmt='dict'):
-        print 'Querying the station for the configuration...'
+        print('Querying the station for the configuration...')
         data = station.get_config()
         TE923Configurator.print_data(data, fmt)
 
     @staticmethod
     def show_current(station, fmt='dict'):
-        print 'Querying the station for current weather data...'
+        print('Querying the station for current weather data...')
         data = station.get_readings()
         TE923Configurator.print_data(data, fmt)
 
     @staticmethod
     def show_history(station, ts=0, count=None, fmt='dict'):
-        print "Querying the station for historical records..."
+        print("Querying the station for historical records...")
         for r in station.gen_records(ts, count):
             TE923Configurator.print_data(r, fmt)
 
     @staticmethod
     def show_minmax(station):
-        print "Querying the station for historical min/max data"
+        print("Querying the station for historical min/max data")
         data = station.get_minmax()
-        print "Console Temperature Min : %s" % data['t_in_min']
-        print "Console Temperature Max : %s" % data['t_in_max']
-        print "Console Humidity Min    : %s" % data['h_in_min']
-        print "Console Humidity Max    : %s" % data['h_in_max']
+        print("Console Temperature Min : %s" % data['t_in_min'])
+        print("Console Temperature Max : %s" % data['t_in_max'])
+        print("Console Humidity Min    : %s" % data['h_in_min'])
+        print("Console Humidity Max    : %s" % data['h_in_max'])
         for i in range(1, 6):
-            print "Channel %d Temperature Min : %s" % (i, data['t_%d_min' % i])
-            print "Channel %d Temperature Max : %s" % (i, data['t_%d_max' % i])
-            print "Channel %d Humidity Min    : %s" % (i, data['h_%d_min' % i])
-            print "Channel %d Humidity Max    : %s" % (i, data['h_%d_max' % i])
-        print "Wind speed max since midnight : %s" % data['windspeed_max']
-        print "Wind gust max since midnight  : %s" % data['windgust_max']
-        print "Rain yesterday  : %s" % data['rain_yesterday']
-        print "Rain this week  : %s" % data['rain_week']
-        print "Rain this month : %s" % data['rain_month']
-        print "Last Barometer reading : %s" % time.strftime(
-            "%Y %b %d %H:%M", time.localtime(data['barometer_ts']))
+            print("Channel %d Temperature Min : %s" % (i, data['t_%d_min' % i]))
+            print("Channel %d Temperature Max : %s" % (i, data['t_%d_max' % i]))
+            print("Channel %d Humidity Min    : %s" % (i, data['h_%d_min' % i]))
+            print("Channel %d Humidity Max    : %s" % (i, data['h_%d_max' % i]))
+        print("Wind speed max since midnight : %s" % data['windspeed_max'])
+        print("Wind gust max since midnight  : %s" % data['windgust_max'])
+        print("Rain yesterday  : %s" % data['rain_yesterday'])
+        print("Rain this week  : %s" % data['rain_week'])
+        print("Rain this month : %s" % data['rain_month'])
+        print("Last Barometer reading : %s" % time.strftime(
+            "%Y %b %d %H:%M", time.localtime(data['barometer_ts'])))
         for i in range(25):
-            print "   T-%02d Hours : %.1f" % (i, data['barometer_%d' % i])
+            print("   T-%02d Hours : %.1f" % (i, data['barometer_%d' % i]))
 
     @staticmethod
     def show_date(station):
         ts = station.get_date()
         tt = time.localtime(ts)
-        print "Date: %02d/%02d/%d" % (tt[2], tt[1], tt[0])
+        print("Date: %02d/%02d/%d" % (tt[2], tt[1], tt[0]))
         TE923Configurator.print_alignment()
 
     @staticmethod
@@ -858,16 +848,16 @@ class TE923Configurator(weewx.drivers.AbstractConfigurator):
         if datestr is not None:
             date_list = datestr.split(',')
             if len(date_list) != 3:
-                print "Bad date '%s', format is YEAR,MONTH,DAY" % datestr
+                print("Bad date '%s', format is YEAR,MONTH,DAY" % datestr)
                 return
             if int(date_list[0]) < 2000 or int(date_list[0]) > 2099:
-                print "Year must be between 2000 and 2099 inclusive"
+                print("Year must be between 2000 and 2099 inclusive")
                 return
             if int(date_list[1]) < 1 or int(date_list[1]) > 12:
-                print "Month must be between 1 and 12 inclusive"
+                print("Month must be between 1 and 12 inclusive")
                 return
             if int(date_list[2]) < 1 or int(date_list[2]) > 31:
-                print "Day must be between 1 and 31 inclusive"
+                print("Day must be between 1 and 31 inclusive")
                 return
             tt = time.localtime()
             offset = 1 if tt[3] < 12 else 0
@@ -879,17 +869,17 @@ class TE923Configurator(weewx.drivers.AbstractConfigurator):
 
     def show_location(self, station, loc_type):
         data = station.get_loc(loc_type)
-        print "City     : %s (%s)" % (self.city_dict[data['city_time']][9],
-                                      self.city_dict[data['city_time']][0])
+        print("City     : %s (%s)" % (self.city_dict[data['city_time']][9],
+                                      self.city_dict[data['city_time']][0]))
         degree_sign= u'\N{DEGREE SIGN}'.encode('iso-8859-1')
-        print "Location : %03d%s%02d'%s %02d%s%02d'%s" % (
+        print("Location : %03d%s%02d'%s %02d%s%02d'%s" % (
             data['long_deg'], degree_sign, data['long_min'], data['long_dir'],
-            data['lat_deg'], degree_sign, data['lat_min'], data['lat_dir'])
+            data['lat_deg'], degree_sign, data['lat_min'], data['lat_dir']))
         if data['dst_always_on']:
-            print "DST      : Always on"
+            print("DST      : Always on")
         else:
-            print "DST      : %s (%s)" % (self.dst_dict[data['dst']][1],
-                                          self.dst_dict[data['dst']][0])
+            print("DST      : %s (%s)" % (self.dst_dict[data['dst']][1],
+                                          self.dst_dict[data['dst']][0]))
 
     def set_location(self, station, loc_type, location):
         dst_on = 1
@@ -902,7 +892,7 @@ class TE923Configurator(weewx.drivers.AbstractConfigurator):
                     city_index = idx
                     break
             if city_index is None:
-                print "City code '%s' not recognized - consult station manual for valid city codes" % location_list[0]
+                print("City code '%s' not recognized - consult station manual for valid city codes" % location_list[0])
                 return
             long_deg = self.city_dict[city_index][6]
             long_min = self.city_dict[city_index][7]
@@ -916,32 +906,32 @@ class TE923Configurator(weewx.drivers.AbstractConfigurator):
             dst_index = self.city_dict[city_index][2]
         elif len(location_list) == 9 and location_list[0] == "USR":
             if int(location_list[1]) < 0 or int(location_list[1]) > 180:
-                print "Longitude degrees must be between 0 and 180 inclusive"
+                print("Longitude degrees must be between 0 and 180 inclusive")
                 return
             if int(location_list[2]) < 0 or int(location_list[2]) > 180:
-                print "Longitude minutes must be between 0 and 59 inclusive"
+                print("Longitude minutes must be between 0 and 59 inclusive")
                 return
             if location_list[3] != "E" and location_list[3] != "W":
-                print "Longitude direction must be E or W"
+                print("Longitude direction must be E or W")
                 return
             if int(location_list[4]) < 0 or int(location_list[4]) > 180:
-                print "Latitude degrees must be between 0 and 90 inclusive"
+                print("Latitude degrees must be between 0 and 90 inclusive")
                 return
             if int(location_list[5]) < 0 or int(location_list[5]) > 180:
-                print "Latitude minutes must be between 0 and 59 inclusive"
+                print("Latitude minutes must be between 0 and 59 inclusive")
                 return
             if location_list[6] != "N" and location_list[6] != "S":
-                print "Longitude direction must be N or S"
+                print("Longitude direction must be N or S")
                 return
             tz_list = location_list[7].split(':')
             if len(tz_list) != 2:
-                print "Bad timezone '%s', format is HOUR:MINUTE" % location_list[7]
+                print("Bad timezone '%s', format is HOUR:MINUTE" % location_list[7])
                 return
             if int(tz_list[0]) < -12 or int(tz_list[0]) > 12:
-                print "Timezone hour must be between -12 and 12 inclusive"
+                print("Timezone hour must be between -12 and 12 inclusive")
                 return
             if int(tz_list[1]) != 0 and int(tz_list[1]) != 30:
-                print "Timezone minute must be 0 or 30"
+                print("Timezone minute must be 0 or 30")
                 return
             if location_list[8].lower() != 'on':
                 dst_on = 0
@@ -951,7 +941,7 @@ class TE923Configurator(weewx.drivers.AbstractConfigurator):
                         dst_index = idx
                         break
                 if dst_index is None:
-                    print "DST code '%s' not recognized - consult station manual for valid DST codes" % location_list[8]
+                    print("DST code '%s' not recognized - consult station manual for valid DST codes" % location_list[8])
                     return
             else:
                 dst_on = 1
@@ -966,8 +956,8 @@ class TE923Configurator(weewx.drivers.AbstractConfigurator):
             tz_hr = int(tz_list[0])
             tz_min = int(tz_list[1])
         else:
-            print "Bad location '%s'" % location
-            print "Location format is: %s" % self.LOCSTR
+            print("Bad location '%s'" % location)
+            print("Location format is: %s" % self.LOCSTR)
             return
         station.set_loc(loc_type, city_index, dst_on, dst_index, tz_hr, tz_min,
                         lat_deg, lat_min, lat_dir,
@@ -976,98 +966,98 @@ class TE923Configurator(weewx.drivers.AbstractConfigurator):
     @staticmethod
     def show_altitude(station):
         altitude = station.get_alt()
-        print "Altitude: %d meters" % altitude
+        print("Altitude: %d meters" % altitude)
 
     @staticmethod
     def set_altitude(station, altitude):
         if altitude < -200 or altitude > 5000:
-            print "Altitude must be between -200 and 5000 inclusive"
+            print("Altitude must be between -200 and 5000 inclusive")
             return
         station.set_alt(altitude)
 
     @staticmethod
     def show_alarms(station):
         data = station.get_alarms()
-        print "Weekday alarm : %02d:%02d (%s)" % (
-            data['weekday_hour'], data['weekday_min'], data['weekday_active'])
-        print "Single  alarm : %02d:%02d (%s)" % (
-            data['single_hour'], data['single_min'], data['single_active'])
-        print "Pre-alarm     : %s (%s)" % (
-            data['prealarm_period'], data['prealarm_active'])
+        print("Weekday alarm : %02d:%02d (%s)" % (
+            data['weekday_hour'], data['weekday_min'], data['weekday_active']))
+        print("Single  alarm : %02d:%02d (%s)" % (
+            data['single_hour'], data['single_min'], data['single_active']))
+        print("Pre-alarm     : %s (%s)" % (
+            data['prealarm_period'], data['prealarm_active']))
         if data['snooze'] > 0:
-            print "Snooze        : %d mins" % data['snooze']
+            print("Snooze        : %d mins" % data['snooze'])
         else:
-            print "Snooze        : Invalid"
-        print "Max Temperature Alarm : %s" % data['max_temp']
-        print "Min Temperature Alarm : %s" % data['min_temp']
-        print "Rain Alarm            : %d mm (%s)" % (
-            data['rain'], data['rain_active'])
-        print "Wind Speed Alarm      : %s (%s)" % (
-            data['windspeed'], data['windspeed_active'])
-        print "Wind Gust  Alarm      : %s (%s)" % (
-            data['windgust'], data['windgust_active'])
+            print("Snooze        : Invalid")
+        print("Max Temperature Alarm : %s" % data['max_temp'])
+        print("Min Temperature Alarm : %s" % data['min_temp'])
+        print("Rain Alarm            : %d mm (%s)" % (
+            data['rain'], data['rain_active']))
+        print("Wind Speed Alarm      : %s (%s)" % (
+            data['windspeed'], data['windspeed_active']))
+        print("Wind Gust  Alarm      : %s (%s)" % (
+            data['windgust'], data['windgust_active']))
 
     @staticmethod
     def set_alarms(station, alarm):
         alarm_list = alarm.split(',')
         if len(alarm_list) != 9:
-            print "Bad alarm '%s'" % alarm
-            print "Alarm format is: %s" % TE923Configurator.ALMSTR
+            print("Bad alarm '%s'" % alarm)
+            print("Alarm format is: %s" % TE923Configurator.ALMSTR)
             return
         weekday = alarm_list[0]
         if weekday.lower() != 'off':
             weekday_list = weekday.split(':')
             if len(weekday_list) != 2:
-                print "Bad alarm '%s', expected HOUR:MINUTE or OFF" % weekday
+                print("Bad alarm '%s', expected HOUR:MINUTE or OFF" % weekday)
                 return
             if int(weekday_list[0]) < 0 or int(weekday_list[0]) > 23:
-                print "Alarm hours must be between 0 and 23 inclusive"
+                print("Alarm hours must be between 0 and 23 inclusive")
                 return
             if int(weekday_list[1]) < 0 or int(weekday_list[1]) > 59:
-                print "Alarm minutes must be between 0 and 59 inclusive"
+                print("Alarm minutes must be between 0 and 59 inclusive")
                 return
         single = alarm_list[1]
         if single.lower() != 'off':
             single_list = single.split(':')
             if len(single_list) != 2:
-                print "Bad alarm '%s', expected HOUR:MINUTE or OFF" % single
+                print("Bad alarm '%s', expected HOUR:MINUTE or OFF" % single)
                 return
             if int(single_list[0]) < 0 or int(single_list[0]) > 23:
-                print "Alarm hours must be between 0 and 23 inclusive"
+                print("Alarm hours must be between 0 and 23 inclusive")
                 return
             if int(single_list[1]) < 0 or int(single_list[1]) > 59:
-                print "Alarm minutes must be between 0 and 59 inclusive"
+                print("Alarm minutes must be between 0 and 59 inclusive")
                 return
         if alarm_list[2].lower() != 'off' and alarm_list[2] not in ['15', '30', '45', '60', '90']:
-            print "Prealarm must be 15, 30, 45, 60, 90 or OFF"
+            print("Prealarm must be 15, 30, 45, 60, 90 or OFF")
             return
         if int(alarm_list[3]) < 1 or int(alarm_list[3]) > 15:
-            print "Snooze must be between 1 and 15 inclusive"
+            print("Snooze must be between 1 and 15 inclusive")
             return
         if float(alarm_list[4]) < -50 or float(alarm_list[4]) > 70:
-            print "Temperature alarm must be between -50 and 70 inclusive"
+            print("Temperature alarm must be between -50 and 70 inclusive")
             return
         if float(alarm_list[5]) < -50 or float(alarm_list[5]) > 70:
-            print "Temperature alarm must be between -50 and 70 inclusive"
+            print("Temperature alarm must be between -50 and 70 inclusive")
             return
         if alarm_list[6].lower() != 'off' and (int(alarm_list[6]) < 1 or int(alarm_list[6]) > 9999):
-            print "Rain alarm must be between 1 and 999 inclusive or OFF"
+            print("Rain alarm must be between 1 and 999 inclusive or OFF")
             return
         if alarm_list[7].lower() != 'off' and (float(alarm_list[7]) < 1 or float(alarm_list[7]) > 199):
-            print "Wind alarm must be between 1 and 199 inclusive or OFF"
+            print("Wind alarm must be between 1 and 199 inclusive or OFF")
             return
         if alarm_list[8].lower() != 'off' and (float(alarm_list[8]) < 1 or float(alarm_list[8]) > 199):
-            print "Wind alarm must be between 1 and 199 inclusive or OFF"
+            print("Wind alarm must be between 1 and 199 inclusive or OFF")
             return
         station.set_alarms(alarm_list[0], alarm_list[1], alarm_list[2],
                            alarm_list[3], alarm_list[4], alarm_list[5],
                            alarm_list[6], alarm_list[7], alarm_list[8])
-        print "Temperature alarms can only be modified via station controls"
+        print("Temperature alarms can only be modified via station controls")
 
     @staticmethod
     def show_interval(station):
         idx = station.get_interval()
-        print "Interval: %s" % TE923Configurator.idx_to_interval.get(idx, 'unknown')
+        print("Interval: %s" % TE923Configurator.idx_to_interval.get(idx, 'unknown'))
 
     @staticmethod
     def set_interval(station, interval):
@@ -1082,8 +1072,8 @@ class TE923Configurator(weewx.drivers.AbstractConfigurator):
             except ValueError:
                 pass
         if idx is None:
-            print "Bad interval '%s'" % interval
-            print "Valid intervals are %s" % ','.join(TE923Configurator.interval_to_idx.keys())
+            print("Bad interval '%s'" % interval)
+            print("Valid intervals are %s" % ','.join(list(TE923Configurator.interval_to_idx.keys())))
             return
         station.set_interval(idx)
 
@@ -1092,17 +1082,17 @@ class TE923Configurator(weewx.drivers.AbstractConfigurator):
         if fmt.lower() == 'table':
             TE923Configurator.print_table(data)
         else:
-            print data
+            print(data)
 
     @staticmethod
     def print_table(data):
         for key in sorted(data):
-            print "%s: %s" % (key.rjust(16), data[key])
+            print("%s: %s" % (key.rjust(16), data[key]))
 
     @staticmethod
     def print_alignment():
-        print "  If computer time is not aligned to station time then date"
-        print "  may be incorrect by 1 day"
+        print("  If computer time is not aligned to station time then date")
+        print("  may be incorrect by 1 day")
 
 
 class TE923Driver(weewx.drivers.AbstractDevice):
@@ -1117,7 +1107,7 @@ class TE923Driver(weewx.drivers.AbstractDevice):
         model: Which station model is this?
         [Optional. Default is 'TE923']
         """
-        loginf('driver version is %s' % DRIVER_VERSION)
+        log.info('driver version is %s' % DRIVER_VERSION)
 
         global DEBUG_READ
         DEBUG_READ = int(stn_dict.get('debug_read', DEBUG_READ))
@@ -1135,20 +1125,20 @@ class TE923Driver(weewx.drivers.AbstractDevice):
         self.retry_wait = int(stn_dict.get('retry_wait', 3))
         self.read_timeout = int(stn_dict.get('read_timeout', 10))
         self.polling_interval = int(stn_dict.get('polling_interval', 10))
-        loginf('polling interval is %s' % str(self.polling_interval))
+        log.info('polling interval is %s' % str(self.polling_interval))
         self.sensor_map = dict(DEFAULT_MAP)
         if 'sensor_map' in stn_dict:
             self.sensor_map.update(stn_dict['sensor_map'])
-        loginf('sensor map is %s' % self.sensor_map)
+        log.info('sensor map is %s' % self.sensor_map)
 
         self.station = TE923Station(max_tries=self.max_tries,
                                     retry_wait=self.retry_wait,
                                     read_timeout=self.read_timeout)
         self.station.open()
-        loginf('logger capacity %s records' % self.station.get_memory_size())
+        log.info('logger capacity %s records' % self.station.get_memory_size())
         ts = self.station.get_date()
         now = int(time.time())
-        loginf('station time is %s, computer time is %s' % (ts, now))
+        log.info('station time is %s, computer time is %s' % (ts, now))
 
     def closePort(self):
         if self.station is not None:
@@ -1191,7 +1181,7 @@ class TE923Driver(weewx.drivers.AbstractDevice):
 
     # there is no battery status for historical records.
     def genStartupRecords(self, since_ts=0):
-        loginf("reading records from logger since %s" % since_ts)
+        log.info("reading records from logger since %s" % since_ts)
         cnt = 0
         for data in self.station.gen_records(since_ts):
             packet = self.data_to_packet(data, status=None,
@@ -1204,11 +1194,11 @@ class TE923Driver(weewx.drivers.AbstractDevice):
                     cnt += 1
                     yield packet
                 else:
-                    loginf("skip packet with duplidate timestamp: %s" % packet)
+                    log.info("skip packet with duplidate timestamp: %s" % packet)
             self._last_ts = packet['dateTime']
             if cnt % 50 == 0:
-                loginf("read %s records from logger" % cnt)
-        loginf("read %s records from logger" % cnt)
+                log.info("read %s records from logger" % cnt)
+        log.info("read %s records from logger" % cnt)
 
     @staticmethod
     def data_to_packet(data, status, last_rain, sensor_map):
@@ -1326,7 +1316,7 @@ def decode_th(buf, i):
     offset = i * 3
 
     if DEBUG_DECODE:
-        logdbg("TH%d  BUF[%02d]=%02x BUF[%02d]=%02x BUF[%02d]=%02x" %
+        log.debug("TH%d  BUF[%02d]=%02x BUF[%02d]=%02x BUF[%02d]=%02x" %
                (i, 0 + offset, buf[0 + offset], 1 + offset, buf[1 + offset],
                 2 + offset, buf[2 + offset]))
     data = dict()
@@ -1334,7 +1324,7 @@ def decode_th(buf, i):
                                              i != 0)
     data[hlabel], data[hstate] = decode_humid(buf[2 + offset])
     if DEBUG_DECODE:
-        logdbg("TH%d  %s %s %s %s" % (i, data[tlabel], data[tstate],
+        log.debug("TH%d  %s %s %s %s" % (i, data[tlabel], data[tstate],
                                       data[hlabel], data[hstate]))
     return data
 
@@ -1368,7 +1358,7 @@ def decode_uv(buf):
     """decode data from uv sensor"""
     data = dict()
     if DEBUG_DECODE:
-        logdbg("UVX  BUF[18]=%02x BUF[19]=%02x" % (buf[18], buf[19]))
+        log.debug("UVX  BUF[18]=%02x BUF[19]=%02x" % (buf[18], buf[19]))
     if ((buf[18] == 0xaa and buf[19] == 0x0a) or
         (buf[18] == 0xff and buf[19] == 0xff)):
         data['uv_state'] = STATE_NO_LINK
@@ -1382,14 +1372,14 @@ def decode_uv(buf):
             + bcd2int((buf[18] & 0xf0) >> 4) \
             + bcd2int(buf[19] & 0x0f) * 10.0
     if DEBUG_DECODE:
-        logdbg("UVX  %s %s" % (data['uv'], data['uv_state']))
+        log.debug("UVX  %s %s" % (data['uv'], data['uv_state']))
     return data
 
 def decode_pressure(buf):
     """decode pressure data"""
     data = dict()
     if DEBUG_DECODE:
-        logdbg("PRS  BUF[20]=%02x BUF[21]=%02x" % (buf[20], buf[21]))
+        log.debug("PRS  BUF[20]=%02x BUF[21]=%02x" % (buf[20], buf[21]))
     if buf[21] & 0xf0 == 0xf0:
         data['slp_state'] = STATE_INVALID
         data['slp'] = None
@@ -1397,7 +1387,7 @@ def decode_pressure(buf):
         data['slp_state'] = STATE_OK
         data['slp'] = int(buf[21] * 0x100 + buf[20]) * 0.0625
     if DEBUG_DECODE:
-        logdbg("PRS  %s %s" % (data['slp'], data['slp_state']))
+        log.debug("PRS  %s %s" % (data['slp'], data['slp_state']))
     return data
 
 # NB: te923tool divides speed/gust by 2.23694 (1 meter/sec = 2.23694 mile/hour)
@@ -1407,23 +1397,23 @@ def decode_wind(buf):
     """decode wind speed, gust, and direction"""
     data = dict()
     if DEBUG_DECODE:
-        logdbg("WGS  BUF[25]=%02x BUF[26]=%02x" % (buf[25], buf[26]))
+        log.debug("WGS  BUF[25]=%02x BUF[26]=%02x" % (buf[25], buf[26]))
     data['windgust'], data['windgust_state'] = decode_ws(buf[25], buf[26])
     if DEBUG_DECODE:
-        logdbg("WGS  %s %s" % (data['windgust'], data['windgust_state']))
+        log.debug("WGS  %s %s" % (data['windgust'], data['windgust_state']))
 
     if DEBUG_DECODE:
-        logdbg("WSP  BUF[27]=%02x BUF[28]=%02x" % (buf[27], buf[28]))
+        log.debug("WSP  BUF[27]=%02x BUF[28]=%02x" % (buf[27], buf[28]))
     data['windspeed'], data['windspeed_state'] = decode_ws(buf[27], buf[28])
     if DEBUG_DECODE:
-        logdbg("WSP  %s %s" % (data['windspeed'], data['windspeed_state']))
+        log.debug("WSP  %s %s" % (data['windspeed'], data['windspeed_state']))
 
     if DEBUG_DECODE:
-        logdbg("WDR  BUF[29]=%02x" % buf[29])
+        log.debug("WDR  BUF[29]=%02x" % buf[29])
     data['winddir_state'] = data['windspeed_state']
     data['winddir'] = int(buf[29] & 0x0f)
     if DEBUG_DECODE:
-        logdbg("WDR  %s %s" % (data['winddir'], data['winddir_state']))
+        log.debug("WDR  %s %s" % (data['winddir'], data['winddir_state']))
     
     return data
 
@@ -1448,17 +1438,17 @@ def decode_rain(buf):
     """rain counter is number of bucket tips, each tip is about 0.03 inches"""
     data = dict()
     if DEBUG_DECODE:
-        logdbg("RAIN BUF[30]=%02x BUF[31]=%02x" % (buf[30], buf[31]))
+        log.debug("RAIN BUF[30]=%02x BUF[31]=%02x" % (buf[30], buf[31]))
     data['rain_state'] = STATE_OK
     data['rain'] = int(buf[31] * 0x100 + buf[30])
     if DEBUG_DECODE:
-        logdbg("RAIN %s %s" % (data['rain'], data['rain_state']))
+        log.debug("RAIN %s %s" % (data['rain'], data['rain_state']))
     return data
 
 def decode_windchill(buf):
     data = dict()
     if DEBUG_DECODE:
-        logdbg("WCL  BUF[23]=%02x BUF[24]=%02x" % (buf[23], buf[24]))
+        log.debug("WCL  BUF[23]=%02x BUF[24]=%02x" % (buf[23], buf[24]))
     if bcd2int(buf[23] & 0xf0) > 90 or bcd2int(buf[23] & 0x0f) > 9:
         if ((buf[23] == 0xee and buf[24] == 0x8e) or
             (buf[23] == 0xff and buf[24] == 0xff)):
@@ -1478,13 +1468,13 @@ def decode_windchill(buf):
         if buf[24] & 0x80 != 0x80:
             data['windchill'] *= -1
     if DEBUG_DECODE:
-        logdbg("WCL  %s %s" % (data['windchill'], data['windchill_state']))
+        log.debug("WCL  %s %s" % (data['windchill'], data['windchill_state']))
     return data
 
 def decode_forecast(buf):
     data = dict()
     if DEBUG_DECODE:
-        logdbg("STT  BUF[22]=%02x" % buf[22])
+        log.debug("STT  BUF[22]=%02x" % buf[22])
     if buf[22] & 0x0f == 0x0f:
         data['storm'] = None
         data['forecast'] = None
@@ -1492,7 +1482,7 @@ def decode_forecast(buf):
         data['storm'] = 1 if buf[22] & 0x08 == 0x08 else 0
         data['forecast'] = int(buf[22] & 0x07)
     if DEBUG_DECODE:
-        logdbg("STT  %s %s" % (data['storm'], data['forecast']))
+        log.debug("STT  %s %s" % (data['storm'], data['forecast']))
     return data
 
 
@@ -1538,7 +1528,7 @@ class TE923Station(object):
     def open(self, interface=0):
         dev = self._find_dev(self.vendor_id, self.product_id)
         if not dev:
-            logcrt("Cannot find USB device with VendorID=0x%04x ProductID=0x%04x" % (self.vendor_id, self.product_id))
+            log.critical("Cannot find USB device with VendorID=0x%04x ProductID=0x%04x" % (self.vendor_id, self.product_id))
             raise weewx.WeeWxIOError('Unable to find station on USB')
 
         self.devh = dev.open()
@@ -1557,7 +1547,7 @@ class TE923Station(object):
             self.devh.setAltInterface(interface)
         except usb.USBError as e:
             self.close()
-            logcrt("Unable to claim USB interface %s: %s" % (interface, e))
+            log.critical("Unable to claim USB interface %s: %s" % (interface, e))
             raise weewx.WeeWxIOError(e)
 
 # doing a reset seems to cause problems more often than it eliminates them
@@ -1570,7 +1560,7 @@ class TE923Station(object):
         try:
             self.devh.releaseInterface()
         except (ValueError, usb.USBError) as e:
-            logerr("release interface failed: %s" % e)
+            log.error("release interface failed: %s" % e)
         self.devh = None
 
     @staticmethod
@@ -1579,7 +1569,7 @@ class TE923Station(object):
         for bus in usb.busses():
             for dev in bus.devices:
                 if dev.idVendor == vendor_id and dev.idProduct == product_id:
-                    loginf('Found device on USB bus=%s device=%s' %
+                    log.info('Found device on USB bus=%s device=%s' %
                            (bus.dirname, dev.filename))
                     return dev
         return None
@@ -1621,7 +1611,7 @@ class TE923Station(object):
 # sleeping seems to have no effect on the reads
 #            time.sleep(0.009) # te923tool is 0.15
         else:
-            logdbg("timeout while reading: ignoring bytes: %s" % _fmt(rbuf))
+            log.debug("timeout while reading: ignoring bytes: %s" % _fmt(rbuf))
             raise BadRead("Timeout after %d bytes" % len(rbuf))
 
         # Send acknowledgement whether or not it was a good read
@@ -1653,7 +1643,7 @@ class TE923Station(object):
         # early versions of this driver used to get long reads, but these
         # might not happen any more. log it then try to use the data anyway.
         if len(rbuf) != 34:
-            loginf("read: wrong number of bytes: %d != 34" % len(rbuf))
+            log.info("read: wrong number of bytes: %d != 34" % len(rbuf))
 
         return rbuf
 
@@ -1679,7 +1669,7 @@ class TE923Station(object):
                           wbuf[3 + i * 7], wbuf[4 + i * 7], wbuf[5 + i * 7],
                           wbuf[6 + i * 7]]
             if DEBUG_WRITE:
-                logdbg("write: %s" % _fmt(reqbuf))
+                log.debug("write: %s" % _fmt(reqbuf))
             ret = self.devh.controlMsg(requestType=0x21,
                                        request=usb.REQ_SET_CONFIGURATION,
                                        value=0x0200,
@@ -1713,7 +1703,7 @@ class TE923Station(object):
             raise BadWrite("Timeout after %d bytes" % len(rbuf))
 
         if len(rbuf) != 1:
-            loginf("write: ack got wrong number of bytes: %d != 1" % len(rbuf))
+            log.info("write: ack got wrong number of bytes: %d != 1" % len(rbuf))
         if len(rbuf) == 0:
             raise BadWrite("Bad ack: zero length response")
         elif rbuf[0] != 0x5a:
@@ -1726,17 +1716,17 @@ class TE923Station(object):
         #        32 bytes of data.  this will require shifting every index
         #        pretty much everywhere else in this code.
         if DEBUG_READ:
-            logdbg("read: address 0x%06x" % addr)
+            log.debug("read: address 0x%06x" % addr)
         for cnt in range(self.max_tries):
             try:
                 buf = self._raw_read(addr)
                 if DEBUG_READ:
-                    logdbg("read: %s" % _fmt(buf))
+                    log.debug("read: %s" % _fmt(buf))
                 return buf
             except (BadRead, BadHeader, usb.USBError) as e:
-                logerr("Failed attempt %d of %d to read data: %s" %
+                log.error("Failed attempt %d of %d to read data: %s" %
                        (cnt + 1, self.max_tries, e))
-                logdbg("Waiting %d seconds before retry" % self.retry_wait)
+                log.debug("Waiting %d seconds before retry" % self.retry_wait)
                 time.sleep(self.retry_wait)
         else:
             raise weewx.RetriesExceeded("Read failed after %d tries" %
@@ -1744,15 +1734,15 @@ class TE923Station(object):
 
     def _write(self, addr, buf):
         if DEBUG_WRITE:
-            logdbg("write: address 0x%06x: %s" % (addr, _fmt(buf)))
+            log.debug("write: address 0x%06x: %s" % (addr, _fmt(buf)))
         for cnt in range(self.max_tries):
             try:
                 self._raw_write(addr, buf)
                 return
             except (BadWrite, BadHeader, usb.USBError) as e:
-                logerr("Failed attempt %d of %d to write data: %s" %
+                log.error("Failed attempt %d of %d to write data: %s" %
                        (cnt + 1, self.max_tries, e))
-                logdbg("Waiting %d seconds before retry" % self.retry_wait)
+                log.debug("Waiting %d seconds before retry" % self.retry_wait)
                 time.sleep(self.retry_wait)
         else:
             raise weewx.RetriesExceeded("Write failed after %d tries" %
@@ -1761,18 +1751,18 @@ class TE923Station(object):
     def read_memory_size(self):
         buf = self._read(0xfc)
         if DEBUG_DECODE:
-            logdbg("MEM  BUF[1]=%s" % buf[1])
+            log.debug("MEM  BUF[1]=%s" % buf[1])
         if buf[1] == 0:
             self._num_rec = 208
             self._num_blk = 256
-            logdbg("detected small memory size")
+            log.debug("detected small memory size")
         elif buf[1] == 2:
             self._num_rec = 3442
             self._num_blk = 4096
-            logdbg("detected large memory size")
+            log.debug("detected large memory size")
         else:
             msg = "Unrecognised memory size '%s'" % buf[1]
-            logerr(msg)
+            log.error(msg)
             raise weewx.WeeWxIOError(msg)
 
     def get_memory_size(self):
@@ -1790,7 +1780,7 @@ class TE923Station(object):
         for i in range(8):
             buf = self._read(i * 32)
             for j in range(4):
-                loginf("%02x : %02x %02x %02x %02x %02x %02x %02x %02x" %
+                log.info("%02x : %02x %02x %02x %02x %02x %02x %02x %02x" %
                        (i * 32 + j * 8, buf[1 + j * 8], buf[2 + j * 8],
                         buf[3 + j * 8], buf[4 + j * 8], buf[5 + j * 8],
                         buf[6 + j * 8], buf[7 + j * 8], buf[8 + j * 8]))
@@ -1807,7 +1797,7 @@ class TE923Station(object):
         data = dict()
         buf = self._read(0x98)
         if DEBUG_DECODE:
-            logdbg("VER  BUF[1]=%s BUF[2]=%s BUF[3]=%s BUF[4]=%s BUF[5]=%s" %
+            log.debug("VER  BUF[1]=%s BUF[2]=%s BUF[3]=%s BUF[4]=%s BUF[5]=%s" %
                    (buf[1], buf[2], buf[3], buf[4], buf[5]))
         data['version_bar']  = buf[1]
         data['version_uv']   = buf[2]
@@ -1815,7 +1805,7 @@ class TE923Station(object):
         data['version_wind'] = buf[4]
         data['version_sys']  = buf[5]
         if DEBUG_DECODE:
-            logdbg("VER  bar=%s uv=%s rcc=%s wind=%s sys=%s" %
+            log.debug("VER  bar=%s uv=%s rcc=%s wind=%s sys=%s" %
                    (data['version_bar'], data['version_uv'],
                     data['version_rcc'], data['version_wind'],
                     data['version_sys']))
@@ -1828,7 +1818,7 @@ class TE923Station(object):
         status = dict()
         buf = self._read(0x4c)
         if DEBUG_DECODE:
-            logdbg("BAT  BUF[1]=%02x" % buf[1])
+            log.debug("BAT  BUF[1]=%02x" % buf[1])
         status['bat_rain'] = 0 if buf[1] & 0x80 == 0x80 else 1
         status['bat_wind'] = 0 if buf[1] & 0x40 == 0x40 else 1
         status['bat_uv']   = 0 if buf[1] & 0x20 == 0x20 else 1
@@ -1838,7 +1828,7 @@ class TE923Station(object):
         status['bat_2']    = 0 if buf[1] & 0x02 == 0x02 else 1
         status['bat_1']    = 0 if buf[1] & 0x01 == 0x01 else 1
         if DEBUG_DECODE:
-            logdbg("BAT  rain=%s wind=%s uv=%s th5=%s th4=%s th3=%s th2=%s th1=%s" %
+            log.debug("BAT  rain=%s wind=%s uv=%s th5=%s th4=%s th3=%s th2=%s th1=%s" %
                    (status['bat_rain'], status['bat_wind'], status['bat_uv'],
                     status['bat_5'], status['bat_4'], status['bat_3'],
                     status['bat_2'], status['bat_1']))
@@ -1848,20 +1838,20 @@ class TE923Station(object):
     def get_altitude(self):
         buf = self._read(0x5a)
         if DEBUG_DECODE:
-            logdbg("ALT  BUF[1]=%02x BUF[2]=%02x BUF[3]=%02x" %
+            log.debug("ALT  BUF[1]=%02x BUF[2]=%02x BUF[3]=%02x" %
                    (buf[1], buf[2], buf[3]))
         altitude = buf[2] * 0x100 + buf[1]
         if buf[3] & 0x8 == 0x8:
             altitude *= -1
         if DEBUG_DECODE:
-            logdbg("ALT  %s" % altitude)
+            log.debug("ALT  %s" % altitude)
         return altitude
 
     # FIXME: is this any different than get_loc?
     def get_location(self):
         buf = self._read(0x06)
         if DEBUG_DECODE:
-            logdbg("LOC  BUF[1]=%02x BUF[2]=%02x BUF[3]=%02x BUF[4]=%02x BUF[5]=%02x BUF[6]=%02x" % (buf[1], buf[2], buf[3], buf[4], buf[5], buf[6]))
+            log.debug("LOC  BUF[1]=%02x BUF[2]=%02x BUF[3]=%02x BUF[4]=%02x BUF[5]=%02x BUF[6]=%02x" % (buf[1], buf[2], buf[3], buf[4], buf[5], buf[6]))
         latitude = float(rev_bcd2int(buf[1])) + (float(rev_bcd2int(buf[2])) / 60)
         if buf[5] & 0x80 == 0x80:
             latitude *= -1
@@ -1869,7 +1859,7 @@ class TE923Station(object):
         if buf[5] & 0x40 == 0x00:
             longitude *= -1
         if DEBUG_DECODE:
-            logdbg("LOC  %s %s" % (latitude, longitude))
+            log.debug("LOC  %s %s" % (latitude, longitude))
         return latitude, longitude
 
     def get_readings(self):
@@ -1883,13 +1873,13 @@ class TE923Station(object):
         """get the index of the next history record"""
         buf = self._read(0xfb)
         if DEBUG_DECODE:
-            logdbg("HIS  BUF[3]=%02x BUF[5]=%02x" % (buf[3], buf[5]))
+            log.debug("HIS  BUF[3]=%02x BUF[5]=%02x" % (buf[3], buf[5]))
         record_index = buf[3] * 0x100 + buf[5]
-        logdbg("record_index=%s" % record_index)
+        log.debug("record_index=%s" % record_index)
         if record_index > self._num_rec:
             msg = "record index of %d exceeds memory size of %d records" % (
                 record_index, self._num_rec)
-            logerr(msg)
+            log.error(msg)
             raise weewx.WeeWxIOError(msg)
         return record_index
 
@@ -1900,15 +1890,15 @@ class TE923Station(object):
             count = self._num_rec
         elif count > self._num_rec:
             count = self._num_rec
-            loginf("too many records requested (%d), using %d instead" %
+            log.info("too many records requested (%d), using %d instead" %
                    (requested, count))
         idx = self._get_next_index()
         if idx < 1:
             idx += self._num_rec
         latest_addr = self.START_ADDRESS + (idx - 1) * self.RECORD_SIZE
         oldest_addr = latest_addr - (count - 1) * self.RECORD_SIZE
-        logdbg("count=%s oldest_addr=0x%06x latest_addr=0x%06x" %
-               (count, oldest_addr, latest_addr))
+        log.debug("count=%s oldest_addr=0x%06x latest_addr=0x%06x" %
+                  (count, oldest_addr, latest_addr))
         return oldest_addr, count
 
     def gen_records(self, since_ts=0, requested=None):
@@ -1926,7 +1916,7 @@ class TE923Station(object):
         On large memory stations, the last 20 bytes of memory are never used.
         """
 
-        logdbg("gen_records: since_ts=%s requested=%s" % (since_ts, requested))
+        log.debug("gen_records: since_ts=%s requested=%s" % (since_ts, requested))
         # we need the current year and month since station does not track year
         start_ts = time.time()
         tt = time.localtime(start_ts)
@@ -1954,13 +1944,13 @@ class TE923Station(object):
                 msg = "record %d of %d addr=0x%06x" % (n, count, addr)
                 if record and record['dateTime'] > since_ts:
                     msg += " %s" % timestamp_to_string(record['dateTime'])
-                    logdbg("gen_records: yield %s" % msg)
+                    log.debug("gen_records: yield %s" % msg)
                     yield record
                 else:
                     if record:
                         msg += " since_ts=%d %s" % (
                             since_ts, timestamp_to_string(record['dateTime']))
-                    logdbg("gen_records: skip %s" % msg)
+                    log.debug("gen_records: skip %s" % msg)
                 # insert a sleep to simulate slow reads
 #                time.sleep(5)
 
@@ -1970,7 +1960,7 @@ class TE923Station(object):
             if now - start_ts > arcint:
                 newreq = int((now - start_ts) / arcint)
                 newreq += 1 # safety margin
-                logdbg("gen_records: reading %d more records" % newreq)
+                log.debug("gen_records: reading %d more records" % newreq)
                 oldest_addr, count = self._get_starting_addr(newreq)
                 start_ts = now
             else:
@@ -1979,14 +1969,14 @@ class TE923Station(object):
     def get_record(self, addr, now_year, now_month):
         """Return a single record from station."""
 
-        logdbg("get_record at address 0x%06x (year=%s month=%s)" %
+        log.debug("get_record at address 0x%06x (year=%s month=%s)" %
                (addr, now_year, now_month))
         buf = self._read(addr)
         if DEBUG_DECODE:
-            logdbg("REC  %02x %02x %02x %02x" %
+            log.debug("REC  %02x %02x %02x %02x" %
                    (buf[1], buf[2], buf[3], buf[4]))
         if buf[1] == 0xff:
-            logdbg("get_record: no data at address 0x%06x" % addr)
+            log.debug("get_record: no data at address 0x%06x" % addr)
             return None
         
         year = now_year
@@ -1998,7 +1988,7 @@ class TE923Station(object):
         minute = bcd2int(buf[4])
         ts = time.mktime((year, month, day, hour, minute, 0, 0, 0, -1))
         if DEBUG_DECODE:
-            logdbg("REC  %d/%02d/%02d %02d:%02d = %d" %
+            log.debug("REC  %d/%02d/%02d %02d:%02d = %d" %
                    (year, month, day, hour, minute, ts))
 
         tmpbuf = buf[5:16]
@@ -2007,7 +1997,7 @@ class TE923Station(object):
         
         data = decode(tmpbuf)
         data['dateTime'] = int(ts)
-        logdbg("get_record: found record %s" % data)
+        log.debug("get_record: found record %s" % data)
         return data
 
     def _read_minmax(self):
@@ -2266,7 +2256,7 @@ class TE923Station(object):
         interval = self.idx_to_interval_sec.get(idx)
         if interval is None:
             msg = "Unrecognized archive interval '%s'" % idx
-            logerr(msg)
+            log.error(msg)
             raise weewx.WeeWxIOError(msg)
         return interval
 
@@ -2312,6 +2302,9 @@ class TE923Station(object):
 if __name__ == '__main__':
     import optparse
 
+    import weewx
+    import weeutil.logger
+
     FMT_TE923TOOL = 'te923tool'
     FMT_DICT = 'dict'
     FMT_TABLE = 'table'
@@ -2319,7 +2312,6 @@ if __name__ == '__main__':
     usage = """%prog [options] [--debug] [--help]"""
 
     def main():
-        syslog.openlog('wee_te923', syslog.LOG_PID | syslog.LOG_CONS)
         parser = optparse.OptionParser(usage=usage)
         parser.add_option('--version', dest='version', action='store_true',
                           help='display driver version')
@@ -2339,19 +2331,19 @@ if __name__ == '__main__':
         (options, _) = parser.parse_args()
 
         if options.version:
-            print "te923 driver version %s" % DRIVER_VERSION
+            print("te923 driver version %s" % DRIVER_VERSION)
             exit(1)
 
-        if options.debug is not None:
-            syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
-        else:
-            syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_INFO))
+        if options.debug:
+            weewx.debug = 1
+
+        weeutil.logger.setup('te923', {})
 
         if (options.format.lower() != FMT_TE923TOOL and
             options.format.lower() != FMT_TABLE and
             options.format.lower() != FMT_DICT):
-            print "Unknown format '%s'.  Known formats include: %s" % (
-                options.format, ','.join([FMT_TE923TOOL, FMT_TABLE, FMT_DICT]))
+            print("Unknown format '%s'.  Known formats include: %s" % (
+                options.format, ','.join([FMT_TE923TOOL, FMT_TABLE, FMT_DICT])))
             exit(1)
 
         with TE923Station() as station:
@@ -2382,23 +2374,23 @@ if __name__ == '__main__':
         if fmt.lower() == FMT_TABLE:
             print_table(data)
         else:
-            print data
+            print(data)
 
     def print_hex(ptr, data):
-        print "0x%06x %s" % (ptr, _fmt(data))
+        print("0x%06x %s" % (ptr, _fmt(data)))
 
     def print_table(data):
         """output entire dictionary contents in two columns"""
         for key in sorted(data):
-            print "%s: %s" % (key.rjust(16), data[key])
+            print("%s: %s" % (key.rjust(16), data[key]))
 
     def print_status(data):
         """output status fields in te923tool format"""
-        print "0x%x:0x%x:0x%x:0x%x:0x%x:%d:%d:%d:%d:%d:%d:%d:%d" % (
+        print("0x%x:0x%x:0x%x:0x%x:0x%x:%d:%d:%d:%d:%d:%d:%d:%d" % (
             data['version_sys'], data['version_bar'], data['version_uv'],
             data['version_rcc'], data['version_wind'],
             data['bat_rain'], data['bat_uv'], data['bat_wind'], data['bat_5'],
-            data['bat_4'], data['bat_3'], data['bat_2'], data['bat_1'])
+            data['bat_4'], data['bat_3'], data['bat_2'], data['bat_1']))
 
     def print_readings(data):
         """output sensor readings in te923tool format"""
@@ -2417,7 +2409,7 @@ if __name__ == '__main__':
         output.append(getvalue(data, 'windgust', '%0.1f'))
         output.append(getvalue(data, 'windchill', '%0.1f'))
         output.append(getvalue(data, 'rain', '%d'))
-        print ':'.join(output)
+        print(':'.join(output))
 
     def getvalue(data, label, fmt):
         if label + '_state' in data:

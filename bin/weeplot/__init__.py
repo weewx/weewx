@@ -8,7 +8,7 @@
 """
 # Define possible exceptions that could get thrown.
 
-class ViolatedPrecondition(StandardError):
+class ViolatedPrecondition(Exception):
     """Exception thrown when a function is called with violated preconditions.
     
     """

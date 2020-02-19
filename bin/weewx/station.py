@@ -4,6 +4,8 @@
 #    See the file LICENSE.txt for your full rights.
 #
 """Defines (mostly static) information about a station."""
+from __future__ import absolute_import
+import sys
 import time
 
 import weeutil.weeutil
@@ -82,6 +84,8 @@ class Station(object):
 
         self.version = weewx.__version__
 
+        self.python_version = "%d.%d.%d" % sys.version_info[:3]
+
     @property
     def uptime(self):        
         """Lazy evaluation of weewx uptime."""
@@ -118,7 +122,20 @@ class Station(object):
                     libc.sysctlbyname("kern.boottime", ctypes.byref(buf), ctypes.byref(size), None, 0)
                     os_uptime_secs = time.time() - float(buf.value)
                 except (AttributeError, IOError, NameError):
-                    pass
+                    try:
+                        # For OpenBSD. See issue #428.
+                        import subprocess
+                        from datetime import datetime
+                        cmd = ['sysctl', 'kern.boottime']
+                        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                        o, e = proc.communicate()
+                        time_t = o.decode('ascii').split()
+                        time_as_string = time_t[1] + " " + time_t[2] + " " + time_t[4][:4] + " " + time_t[3]
+                        os_time = datetime.strptime(time_as_string, "%b %d %Y %H:%M:%S")
+                        epoch_time = (os_time - datetime(1970, 1, 1)).total_seconds()
+                        os_uptime_secs = time.time() - epoch_time
+                    except:
+                        pass
 
         return weewx.units.ValueHelper(value_t=(os_uptime_secs, "second", "group_deltatime"),
                                        formatter=self.formatter,

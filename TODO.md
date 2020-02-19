@@ -1,13 +1,6 @@
-<<<<<<< Updated upstream
-need to ensure that these use cases work properly:
-- override SLE in a skin from weewx.conf (and other cheetahgenerator options)
-- override imagegenerator options from weewx.conf (e.g., add cmon to exfoliation)
+# To do
 
-=======
-The following drivers have been checked under Python 3:
+Need to add `python3-distutils` to the required package list in `debian/control`.
 
-```
-vantage.py
-wmr100.py
-```
->>>>>>> Stashed changes
+# For Version 4.1
+Implement a `$gettext()` extension.

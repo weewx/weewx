@@ -2,6 +2,7 @@
 ## Copyright Tom Keffer, Matthew Wall
 ## See LICENSE.txt for your rights
 #errorCatcher Echo
+#encoding UTF-8
 
 #set $archive_data = [$day, $week, $month, $year, $rainyear]
 
@@ -197,6 +198,21 @@
             <span class="timestamp">$archive.inTemp.maxtime</span><br/>
             $archive.inTemp.min.format(add_label=False)<br/>
             <span class="timestamp">$archive.inTemp.mintime</span>
+          </td>
+          #end for
+        </tr>
+        #end if
+
+        #if $day.inHumidity.has_data
+        <tr>
+          <td class="label">$obs.label.inHumidity</td>
+          <td class="units">$unit.label.inHumidity</td>
+          #for $archive in $archive_data
+          <td class="data new_row">
+            $archive.inHumidity.max.format(add_label=False)<br/>
+            <span class="timestamp">$archive.inHumidity.maxtime</span><br/>
+            $archive.inHumidity.min.format(add_label=False)<br/>
+            <span class="timestamp">$archive.inHumidity.mintime</span>
           </td>
           #end for
         </tr>

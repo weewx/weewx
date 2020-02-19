@@ -363,7 +363,10 @@ X1 - 2 bytes
 # FIXME: perhaps retry read when dodgey data or short read?
 
 from __future__ import with_statement
-import syslog
+from __future__ import absolute_import
+from __future__ import print_function
+
+import logging
 import time
 import usb
 
@@ -371,8 +374,10 @@ import weewx.drivers
 import weewx.wxformulas
 from weeutil.weeutil import to_bool
 
+log = logging.getLogger(__name__)
+
 DRIVER_NAME = 'AcuRite'
-DRIVER_VERSION = '0.24'
+DRIVER_VERSION = '0.4'
 DEBUG_RAW = 0
 
 # USB constants for HID
@@ -386,22 +391,6 @@ def loader(config_dict, engine):
 
 def confeditor_loader():
     return AcuRiteConfEditor()
-
-
-def logmsg(level, msg):
-    syslog.syslog(level, 'acurite: %s' % msg)
-
-def logdbg(msg):
-    logmsg(syslog.LOG_DEBUG, msg)
-
-def loginf(msg):
-    logmsg(syslog.LOG_INFO, msg)
-
-def logerr(msg):
-    logmsg(syslog.LOG_ERR, msg)
-
-def logcrt(msg):
-    logmsg(syslog.LOG_CRIT, msg)
 
 def _fmt_bytes(data):
     return ' '.join(['%02x' % x for x in data])
@@ -438,7 +427,7 @@ class AcuRiteDriver(weewx.drivers.AbstractDevice):
     _R3_INTERVAL = 12*60 # historical records updated every 12 minutes
 
     def __init__(self, **stn_dict):
-        loginf('driver version is %s' % DRIVER_VERSION)
+        log.info('driver version is %s' % DRIVER_VERSION)
         self.model = stn_dict.get('model', 'AcuRite')
         self.max_tries = int(stn_dict.get('max_tries', 10))
         self.retry_wait = int(stn_dict.get('retry_wait', 30))
@@ -446,12 +435,12 @@ class AcuRiteDriver(weewx.drivers.AbstractDevice):
         self.use_constants = to_bool(stn_dict.get('use_constants', True))
         self.ignore_bounds = to_bool(stn_dict.get('ignore_bounds', False))
         if self.use_constants:
-            loginf('R2 will be decoded using sensor constants')
+            log.info('R2 will be decoded using sensor constants')
             if self.ignore_bounds:
-                loginf('R2 bounds on constants will be ignored')
+                log.info('R2 bounds on constants will be ignored')
         self.enable_r3 = int(stn_dict.get('enable_r3', 0))
         if self.enable_r3:
-            loginf('R3 data will be attempted')
+            log.info('R3 data will be attempted')
         self.last_rain = None
         self.last_r3 = None
         self.r3_fail_count = 0
@@ -479,17 +468,17 @@ class AcuRiteDriver(weewx.drivers.AbstractDevice):
                         raw1 = station.read_R1()
                         self.r1_next_read = time.time() + self._R1_INTERVAL
                         if DEBUG_RAW > 0 and raw1:
-                            logdbg("R1: %s" % _fmt_bytes(raw1))
+                            log.debug("R1: %s" % _fmt_bytes(raw1))
                     if time.time() >= self.r2_next_read:
                         raw2 = station.read_R2()
                         self.r2_next_read = time.time() + self._R2_INTERVAL
                         if DEBUG_RAW > 0 and raw2:
-                            logdbg("R2: %s" % _fmt_bytes(raw2))
+                            log.debug("R2: %s" % _fmt_bytes(raw2))
                     if self.enable_r3:
                         raw3 = self.read_R3_block(station)
                         if DEBUG_RAW > 0 and raw3:
                             for row in raw3:
-                                logdbg("R3: %s" % _fmt_bytes(row))
+                                log.debug("R3: %s" % _fmt_bytes(row))
                 if raw1:
                     packet.update(Station.decode_R1(raw1))
                 if raw2:
@@ -503,15 +492,15 @@ class AcuRiteDriver(weewx.drivers.AbstractDevice):
                 next_read = min(self.r1_next_read, self.r2_next_read)
                 delay = max(int(next_read - time.time() + 1),
                             self.polling_interval)
-                logdbg("next read in %s seconds" % delay)
+                log.debug("next read in %s seconds" % delay)
                 time.sleep(delay)
             except (usb.USBError, weewx.WeeWxIOError) as e:
-                logerr("Failed attempt %d of %d to get LOOP data: %s" %
-                       (ntries, self.max_tries, e))
+                log.error("Failed attempt %d of %d to get LOOP data: %s" %
+                          (ntries, self.max_tries, e))
                 time.sleep(self.retry_wait)
         else:
             msg = "Max retries (%d) exceeded for LOOP data" % self.max_tries
-            logerr(msg)
+            log.error(msg)
             raise weewx.RetriesExceeded(msg)
 
     def _augment_packet(self, packet):
@@ -520,8 +509,8 @@ class AcuRiteDriver(weewx.drivers.AbstractDevice):
             total = packet['rain_total']
             if (total is not None and self.last_rain is not None and
                 total < self.last_rain):
-                loginf("rain counter decrement ignored:"
-                       " new: %s old: %s" % (total, self.last_rain))
+                log.info("rain counter decrement ignored:"
+                         " new: %s old: %s" % (total, self.last_rain))
             packet['rain'] = weewx.wxformulas.calculate_rain(total, self.last_rain)
             self.last_rain = total
 
@@ -563,10 +552,10 @@ class AcuRiteDriver(weewx.drivers.AbstractDevice):
                 self.last_r3 = time.time()
             except usb.USBError as e:
                 self.r3_fail_count += 1
-                logdbg("R3: read failed %d of %d: %s" %
-                       (self.r3_fail_count, self.r3_max_fail, e))
+                log.debug("R3: read failed %d of %d: %s" %
+                          (self.r3_fail_count, self.r3_max_fail, e))
                 if self.r3_fail_count >= self.r3_max_fail:
-                    loginf("R3: put station in USB mode 3 to enable R3 data")
+                    log.info("R3: put station in USB mode 3 to enable R3 data")
         return r3
 
 
@@ -604,9 +593,9 @@ class Station(object):
     def open(self):
         dev = self._find_dev(self.vendor_id, self.product_id, self.device_id)
         if not dev:
-            logcrt("Cannot find USB device with "
-                   "VendorID=0x%04x ProductID=0x%04x DeviceID=%s" %
-                   (self.vendor_id, self.product_id, self.device_id))
+            log.critical("Cannot find USB device with "
+                         "VendorID=0x%04x ProductID=0x%04x DeviceID=%s" %
+                         (self.vendor_id, self.product_id, self.device_id))
             raise weewx.WeeWxIOError('Unable to find station on USB')
 
         self.handle = dev.open()
@@ -635,7 +624,7 @@ class Station(object):
             self.handle.claimInterface(interface)
         except usb.USBError as e:
             self.close()
-            logcrt("Unable to claim USB interface %s: %s" % (interface, e))
+            log.critical("Unable to claim USB interface %s: %s" % (interface, e))
             raise weewx.WeeWxIOError(e)
 
         # FIXME: is it necessary to set the alt interface?
@@ -649,7 +638,7 @@ class Station(object):
             try:
                 self.handle.releaseInterface()
             except (ValueError, usb.USBError) as e:
-                logerr("release interface failed: %s" % e)
+                log.error("release interface failed: %s" % e)
             self.handle = None
 
     def reset(self):
@@ -693,7 +682,7 @@ class Station(object):
                 data['rssi'] = Station.decode_rssi(raw)
                 if data['rssi'] == 0:
                     data['sensor_battery'] = None
-                    loginf("R1: ignoring stale data (rssi indicates no communication from sensors): %s" % _fmt_bytes(raw))
+                    log.info("R1: ignoring stale data (rssi indicates no communication from sensors): %s" % _fmt_bytes(raw))
                 else:
                     data['sensor_battery'] = Station.decode_sensor_battery(raw)
                     data['windSpeed'] = Station.decode_windspeed(raw)
@@ -709,26 +698,26 @@ class Station(object):
                 data['rssi'] = None
                 data['sensor_battery'] = None
         elif len(raw) != 10:
-            logerr("R1: bad length: %s" % _fmt_bytes(raw))
+            log.error("R1: bad length: %s" % _fmt_bytes(raw))
         else:
-            logerr("R1: bad format: %s" % _fmt_bytes(raw))
+            log.error("R1: bad format: %s" % _fmt_bytes(raw))
         return data
 
     @staticmethod
     def check_R1(raw):
         ok = True
         if raw[1] & 0x0f == 0x0f and raw[3] == 0xff:
-            loginf("R1: no sensors found: %s" % _fmt_bytes(raw))
+            log.info("R1: no sensors found: %s" % _fmt_bytes(raw))
             ok = False
         else:
             if raw[3] & 0x0f != 1 and raw[3] & 0x0f != 8:
-                loginf("R1: bogus message flavor (%02x): %s" % (raw[3], _fmt_bytes(raw)))
+                log.info("R1: bogus message flavor (%02x): %s" % (raw[3], _fmt_bytes(raw)))
                 ok = False
             if raw[9] != 0xff and raw[9] != 0x00:
-                loginf("R1: bogus final byte (%02x): %s" % (raw[9], _fmt_bytes(raw)))
+                log.info("R1: bogus final byte (%02x): %s" % (raw[9], _fmt_bytes(raw)))
                 ok = False
             if raw[8] & 0x0f < 0 or raw[8] & 0x0f > 3:
-                loginf("R1: bogus signal strength (%02x): %s" % (raw[8], _fmt_bytes(raw)))
+                log.info("R1: bogus signal strength (%02x): %s" % (raw[8], _fmt_bytes(raw)))
                 ok = False
         return ok
 
@@ -739,9 +728,9 @@ class Station(object):
             data['pressure'], data['inTemp'] = Station.decode_pt(
                 raw, use_constants, ignore_bounds)
         elif len(raw) != 25:
-            logerr("R2: bad length: %s" % _fmt_bytes(raw))
+            log.error("R2: bad length: %s" % _fmt_bytes(raw))
         else:
-            logerr("R2: bad format: %s" % _fmt_bytes(raw))
+            log.error("R2: bad format: %s" % _fmt_bytes(raw))
         return data
 
     @staticmethod
@@ -755,13 +744,13 @@ class Station(object):
                     for b in r:
                         buf.append(int(b, 16))
                 except ValueError as e:
-                    logerr("R3: bad value in row %d: %s" % (i, _fmt_bytes(r)))
+                    log.error("R3: bad value in row %d: %s" % (i, _fmt_bytes(r)))
                     fail = True
             elif len(r) != 33:
-                logerr("R3: bad length in row %d: %s" % (i, _fmt_bytes(r)))
+                log.error("R3: bad length in row %d: %s" % (i, _fmt_bytes(r)))
                 fail = True
             else:
-                logerr("R3: bad format in row %d: %s" % (i, _fmt_bytes(r)))
+                log.error("R3: bad format in row %d: %s" % (i, _fmt_bytes(r)))
                 fail = True
         if fail:
             return data
@@ -870,7 +859,7 @@ class Station(object):
             d2 = (data[21] << 8) + data[22]
             d1 = (data[23] << 8) + data[24]
             return Station.decode_pt_HP03S(c1,c2,c3,c4,c5,c6,c7,a,b,c,d,d1,d2)
-        logerr("R2: unknown calibration constants: %s" % _fmt_bytes(data))
+        log.error("R2: unknown calibration constants: %s" % _fmt_bytes(data))
         return None, None
 
     @staticmethod
@@ -929,8 +918,8 @@ class Station(object):
         c1 = Station.get_pt_constants(a)
         c2 = Station.get_pt_constants(b)
         if c1 != c2:
-            logerr("R2: constants changed: old: [%s] new: [%s]" % (
-                    _fmt_bytes(a), _fmt_bytes(b)))
+            log.error("R2: constants changed: old: [%s] new: [%s]" % (
+                _fmt_bytes(a), _fmt_bytes(b)))
 
     @staticmethod
     def _find_dev(vendor_id, product_id, device_id=None):
@@ -939,8 +928,8 @@ class Station(object):
             for dev in bus.devices:
                 if dev.idVendor == vendor_id and dev.idProduct == product_id:
                     if device_id is None or dev.filename == device_id:
-                        logdbg('Found station at bus=%s device=%s' %
-                               (bus.dirname, dev.filename))
+                        log.debug('Found station at bus=%s device=%s' %
+                                  (bus.dirname, dev.filename))
                         return dev
         return None
 
@@ -968,17 +957,22 @@ class AcuRiteConfEditor(weewx.drivers.AbstractConfEditor):
 if __name__ == '__main__':
     import optparse
 
+    import weewx
+    import weeutil.logger
+
+    weewx.debug = 1
+
+    weeutil.logger.setup('acurite', {})
+
     usage = """%prog [options] [--help]"""
 
-    syslog.openlog('acurite', syslog.LOG_PID | syslog.LOG_CONS)
-    syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
     parser = optparse.OptionParser(usage=usage)
     parser.add_option('--version', dest='version', action='store_true',
                       help='display driver version')
     (options, args) = parser.parse_args()
 
     if options.version:
-        print "acurite driver version %s" % DRIVER_VERSION
+        print("acurite driver version %s" % DRIVER_VERSION)
         exit(0)
 
     test_r1 = True
@@ -992,20 +986,20 @@ if __name__ == '__main__':
                                               time.localtime(ts)), ts)
             if test_r1:
                 r1 = s.read_R1()
-                print tstr, _fmt_bytes(r1), Station.decode_R1(r1)
+                print(tstr, _fmt_bytes(r1), Station.decode_R1(r1))
                 delay = min(delay, 18)
             if test_r2:
                 r2 = s.read_R2()
-                print tstr, _fmt_bytes(r2), Station.decode_R2(r2)
+                print(tstr, _fmt_bytes(r2), Station.decode_R2(r2))
                 delay = min(delay, 60)
             if test_r3:
                 try:
                     x = s.read_x()
-                    print tstr, _fmt_bytes(x)
-                    for i in range(0, 17):
+                    print(tstr, _fmt_bytes(x))
+                    for i in range(17):
                         r3 = s.read_R3()
-                        print tstr, _fmt_bytes(r3)
+                        print(tstr, _fmt_bytes(r3))
                 except usb.USBError as e:
-                    print tstr, e
+                    print(tstr, e)
                 delay = min(delay, 12*60)
             time.sleep(delay)

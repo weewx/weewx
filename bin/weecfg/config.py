@@ -7,6 +7,7 @@
 """Utilities for managing the config file"""
 
 from __future__ import print_function
+from __future__ import absolute_import
 import sys
 
 import configobj
@@ -68,7 +69,8 @@ class ConfigEngine(object):
             # Open it up and parse it:
             try:
                 dist_config_dict = configobj.ConfigObj(options.dist_config,
-                                                       file_error=True)
+                                                       file_error=True,
+                                                       encoding='utf-8')
             except IOError as e:
                 sys.exit("Unable to open distribution configuration file: %s" % e)
             except SyntaxError as e:

@@ -19,18 +19,23 @@ for documentation on the WMR9x8 serial protocol, and
 for sample (java) code.
 """
 
+from __future__ import absolute_import
+from __future__ import print_function
+
+import logging
 import time
 import operator
-import syslog
+from functools import reduce
 
 import serial
+from six.moves import map
 
 import weewx.drivers
 
-from math import exp
+log = logging.getLogger(__name__)
 
 DRIVER_NAME = 'WMR9x8'
-DRIVER_VERSION = "3.2.2"
+DRIVER_VERSION = "3.4.0"
 DEFAULT_PORT = '/dev/ttyS0'
 
 def loader(config_dict, engine):  # @UnusedVariable
@@ -38,18 +43,6 @@ def loader(config_dict, engine):  # @UnusedVariable
 
 def confeditor_loader():
     return WMR9x8ConfEditor()
-
-def logmsg(level, msg):
-    syslog.syslog(level, 'wmr9x8: %s' % msg)
-
-def logdbg(msg):
-    logmsg(syslog.LOG_DEBUG, msg)
-
-def loginf(msg):
-    logmsg(syslog.LOG_INFO, msg)
-
-def logerr(msg):
-    logmsg(syslog.LOG_ERR, msg)
 
 
 class WMR9x8ProtocolError(weewx.WeeWxIOError):
@@ -122,7 +115,7 @@ class SerialWrapper(object):
     def openPort(self):
         # Open up the port and store it
         self.serial_port = serial.Serial(self.port, **self.serialconfig)
-        logdbg("Opened up serial port %s" % self.port)
+        log.debug("Opened up serial port %s" % self.port)
 
     def closePort(self):
         self.serial_port.close()
@@ -213,12 +206,12 @@ class WMR9x8(weewx.drivers.AbstractDevice):
         [Optional. Default is 5]
         """
 
-        loginf('driver version is %s' % DRIVER_VERSION)
+        log.info('driver version is %s' % DRIVER_VERSION)
         self.model = stn_dict.get('model', 'WMR968')
         self.sensor_map = dict(self.DEFAULT_MAP)
         if 'sensor_map' in stn_dict:
             self.sensor_map.update(stn_dict['sensor_map'])
-        loginf('sensor map is %s' % self.sensor_map)
+        log.info('sensor map is %s' % self.sensor_map)
         self.last_rain_total = None
 
         # Create the specified port
@@ -243,11 +236,11 @@ class WMR9x8(weewx.drivers.AbstractDevice):
         """Generator function that continuously returns loop packets"""
         buf = []
         # We keep a buffer the size of the largest supported packet
-        wmr9x8max = max(wmr9x8_packet_type_size_map.items(), key=operator.itemgetter(1))[1]
-        wm918max = max(wm918_packet_type_size_map.items(), key=operator.itemgetter(1))[1]
+        wmr9x8max = max(list(wmr9x8_packet_type_size_map.items()), key=operator.itemgetter(1))[1]
+        wm918max = max(list(wm918_packet_type_size_map.items()), key=operator.itemgetter(1))[1]
         preBufferSize = max(wmr9x8max, wm918max)
         while True:
-            buf.extend(map(ord, self.port.read(preBufferSize - len(buf))))
+            buf.extend(list(map(ord, self.port.read(preBufferSize - len(buf)))))
             # WMR-9x8/968 packets are framed by 0xFF characters
             if buf[0] == 0xFF and buf[1] == 0xFF and buf[2] in wmr9x8_packet_type_size_map:
                 # Look up packet type, the expected size of this packet type
@@ -261,7 +254,7 @@ class WMR9x8(weewx.drivers.AbstractDevice):
                 sent_checksum = pdata[-1]
                 calc_checksum = reduce(operator.add, pdata[0:-1]) & 0xFF
                 if sent_checksum == calc_checksum:
-                    logdbg("Received WMR9x8 data packet.")
+                    log.debug("Received WMR9x8 data packet.")
                     payload = pdata[2:-1]
                     _record = wmr9x8_packet_type_decoder_map[ptype](self, payload)
                     _record = self._sensors_to_fields(_record, self.sensor_map)
@@ -270,7 +263,7 @@ class WMR9x8(weewx.drivers.AbstractDevice):
                     # Eliminate all packet data from the buffer
                     buf = buf[psize:]
                 else:
-                    logdbg("Invalid data packet (%s)." % pdata)
+                    log.debug("Invalid data packet (%s)." % pdata)
                     # Drop the first byte of the buffer and start scanning again
                     buf.pop(0)
             # WM-918 packets have no framing
@@ -284,7 +277,7 @@ class WMR9x8(weewx.drivers.AbstractDevice):
                 sent_checksum = pdata[-1]
                 calc_checksum = reduce(operator.add, pdata[0:-1]) & 0xFF
                 if sent_checksum == calc_checksum:
-                    logdbg("Received WM-918 data packet.")
+                    log.debug("Received WM-918 data packet.")
                     payload = pdata[0:-1] # send all of packet but crc
                     _record = wm918_packet_type_decoder_map[ptype](self, payload)
                     _record = self._sensors_to_fields(_record, self.sensor_map)
@@ -293,11 +286,11 @@ class WMR9x8(weewx.drivers.AbstractDevice):
                     # Eliminate all packet data from the buffer
                     buf = buf[psize:]
                 else:
-                    logdbg("Invalid data packet (%s)." % pdata)
+                    log.debug("Invalid data packet (%s)." % pdata)
                     # Drop the first byte of the buffer and start scanning again
                     buf.pop(0)
             else:
-                logdbg("Advancing buffer by one for the next potential packet")
+                log.debug("Advancing buffer by one for the next potential packet")
                 buf.pop(0)
 
     @staticmethod
@@ -339,7 +332,7 @@ class WMR9x8(weewx.drivers.AbstractDevice):
 
     def log_packet(self, packet):
         packet_str = ','.join(["x%x" % v for v in packet])
-        print "%d, %s, %s" % (int(time.time() + 0.5), time.asctime(), packet_str)
+        print("%d, %s, %s" % (int(time.time() + 0.5), time.asctime(), packet_str))
 
     @wmr9x8_registerpackettype(typecode=0x00, size=11)
     def _wmr9x8_wind_packet(self, packet):
@@ -708,14 +701,14 @@ class WMR9x8ConfEditor(weewx.drivers.AbstractConfEditor):
 """
 
     def prompt_for_settings(self):
-        print "Specify the serial port on which the station is connected, for"
-        print "example /dev/ttyUSB0 or /dev/ttyS0."
+        print("Specify the serial port on which the station is connected, for")
+        print("example /dev/ttyUSB0 or /dev/ttyS0.")
         port = self._prompt('port', '/dev/ttyUSB0')
         return {'port': port}
 
     def modify_config(self, config_dict):
-        print """
-Setting rainRate, windchill, and dewpoint calculations to hardware."""
+        print("""
+Setting rainRate, windchill, and dewpoint calculations to hardware.""")
         config_dict.setdefault('StdWXCalculate', {})
         config_dict['StdWXCalculate'].setdefault('Calculations', {})
         config_dict['StdWXCalculate']['Calculations']['rainRate'] = 'hardware'
@@ -730,14 +723,17 @@ Setting rainRate, windchill, and dewpoint calculations to hardware."""
 if __name__ == '__main__':
     import optparse
 
+    import weewx
+    import weeutil.logger
+
+    weewx.debug = 2
+
+    weeutil.logger.setup('wmr9x8', {})
+
     usage = """Usage: %prog --help
        %prog --version
        %prog --gen-packets [--port=PORT]"""
 
-    syslog.openlog('wmr9x8', syslog.LOG_PID | syslog.LOG_CONS)
-    syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
-    weewx.debug = 2
-    
     parser = optparse.OptionParser(usage=usage)
     parser.add_option('--version', dest='version', action='store_true',
                       help='Display driver version')
@@ -750,13 +746,13 @@ if __name__ == '__main__':
     (options, args) = parser.parse_args()
 
     if options.version:
-        print "WMR9x8 driver version %s" % DRIVER_VERSION
+        print("WMR9x8 driver version %s" % DRIVER_VERSION)
         exit(0)
 
     if options.gen_packets:
-        syslog.syslog(syslog.LOG_DEBUG, "wmr9x8: Running genLoopPackets()")
+        log.debug("wmr9x8: Running genLoopPackets()")
         stn_dict = {'port': options.port}
         stn = WMR9x8(**stn_dict)
         
         for packet in stn.genLoopPackets():
-            print packet
+            print(packet)

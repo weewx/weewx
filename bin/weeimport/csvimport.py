@@ -1,27 +1,31 @@
 #
-#    Copyright (c) 2009-2016 Tom Keffer <tkeffer@gmail.com> and
+#    Copyright (c) 2009-2019 Tom Keffer <tkeffer@gmail.com> and
 #                            Gary Roderick
 #
 #    See the file LICENSE.txt for your full rights.
 #
 
 """Module to interact with a CSV file and import raw observational data for
-use with weeimport.
+use with wee_import.
 """
 
 from __future__ import with_statement
+from __future__ import absolute_import
+from __future__ import print_function
 
 # Python imports
 import csv
+import logging
 import os
-import syslog
 
 # WeeWX imports
-import weeimport
+from . import weeimport
 import weewx
 
 from weeutil.weeutil import timestamp_to_string, option_as_list
 from weewx.units import unit_nicknames
+
+log = logging.getLogger(__name__)
 
 
 # ============================================================================
@@ -40,13 +44,12 @@ class CSVSource(weeimport.Source):
     # these details are specified by the user in the wee_import config file.
     _header_map = None
 
-    def __init__(self, config_dict, config_path, csv_config_dict, import_config_path, options, log):
+    def __init__(self, config_dict, config_path, csv_config_dict, import_config_path, options):
 
         # call our parents __init__
         super(CSVSource, self).__init__(config_dict,
                                         csv_config_dict,
-                                        options,
-                                        log)
+                                        options)
 
         # save our import config path
         self.import_config_path = import_config_path
@@ -68,7 +71,7 @@ class CSVSource(weeimport.Source):
                                  float(_wind_direction[1])]
             else:
                 self.wind_dir = [-360, 360]
-        except:
+        except (KeyError, ValueError):
             self.wind_dir = [-360, 360]
         # get our source file path
         try:
@@ -84,12 +87,17 @@ class CSVSource(weeimport.Source):
 
         # tell the user/log what we intend to do
         _msg = "A CSV import from source file '%s' has been requested." % self.source
-        self.wlog.printlog(syslog.LOG_INFO, _msg)
+        print(_msg)
+        log.info(_msg)
         _msg = "The following options will be used:"
-        self.wlog.verboselog(syslog.LOG_DEBUG, _msg)
+        if self.verbose:
+            print(_msg)
+        log.debug(_msg)
         _msg = "     config=%s, import-config=%s" % (config_path,
                                                      self.import_config_path)
-        self.wlog.verboselog(syslog.LOG_DEBUG, _msg)
+        if self.verbose:
+            print(_msg)
+        log.debug(_msg)
         if options.date:
             _msg = "     source=%s, date=%s" % (self.source, options.date)
         else:
@@ -97,37 +105,62 @@ class CSVSource(weeimport.Source):
             _msg = "     source=%s, from=%s, to=%s" % (self.source,
                                                        options.date_from,
                                                        options.date_to)
-        self.wlog.verboselog(syslog.LOG_DEBUG, _msg)
+        if self.verbose:
+            print(_msg)
+        log.debug(_msg)
         _msg = "     dry-run=%s, calc_missing=%s, ignore_invalid_data=%s" % (self.dry_run,
                                                                              self.calc_missing,
                                                                              self.ignore_invalid_data)
-        self.wlog.verboselog(syslog.LOG_DEBUG, _msg)
+        if self.verbose:
+            print(_msg)
+        log.debug(_msg)
         _msg = "     tranche=%s, interval=%s, date/time_string_format=%s" % (self.tranche,
                                                                              self.interval,
                                                                              self.raw_datetime_format)
-        self.wlog.verboselog(syslog.LOG_DEBUG, _msg)
+        if self.verbose:
+            print(_msg)
+        log.debug(_msg)
         _msg = "     rain=%s, wind_direction=%s" % (self.rain, self.wind_dir)
-        self.wlog.verboselog(syslog.LOG_DEBUG, _msg)
+        if self.verbose:
+            print(_msg)
+        log.debug(_msg)
         _msg = "     UV=%s, radiation=%s" % (self.UV_sensor, self.solar_sensor)
-        self.wlog.verboselog(syslog.LOG_DEBUG, _msg)
+        if self.verbose:
+            print(_msg)
+        log.debug(_msg)
         _msg = "Using database binding '%s', which is bound to database '%s'" % (self.db_binding_wx,
                                                                                  self.dbm.database_name)
-        self.wlog.printlog(syslog.LOG_INFO, _msg)
+        print(_msg)
+        log.info(_msg)
         _msg = "Destination table '%s' unit system is '%#04x' (%s)." % (self.dbm.table_name,
                                                                         self.archive_unit_sys,
                                                                         unit_nicknames[self.archive_unit_sys])
-        self.wlog.printlog(syslog.LOG_INFO, _msg)
+        print(_msg)
+        log.info(_msg)
         if self.calc_missing:
-            print "Missing derived observations will be calculated."
+            _msg = "Missing derived observations will be calculated."
+            print(_msg)
+            log.info(_msg)
+
         if not self.UV_sensor:
-            print "All WeeWX UV fields will be set to None."
+            _msg = "All WeeWX UV fields will be set to None."
+            print(_msg)
+            log.info(_msg)
         if not self.solar_sensor:
-            print "All WeeWX radiation fields will be set to None."
+            _msg = "All WeeWX radiation fields will be set to None."
+            print(_msg)
+            log.info(_msg)
         if options.date or options.date_from:
-            print "Observations timestamped after %s and up to and" % (timestamp_to_string(self.first_ts), )
-            print "including %s will be imported." % (timestamp_to_string(self.last_ts), )
+            _msg = "Observations timestamped after %s and up to and" % timestamp_to_string(self.first_ts)
+            print(_msg)
+            log.info(_msg)
+            _msg = "including %s will be imported." % timestamp_to_string(self.last_ts)
+            print(_msg)
+            log.info(_msg)
         if self.dry_run:
-            print "This is a dry run, imported data will not be saved to archive."
+            _msg = "This is a dry run, imported data will not be saved to archive."
+            print(_msg)
+            log.info(_msg)
 
     def getRawData(self, period):
         """Obtain an iterable containing the raw data to be imported.
@@ -171,14 +204,30 @@ class CSVSource(weeimport.Source):
         # return our CSV dict reader
         return _csv_reader
 
-    def period_generator(self):
-        """Generator function to control import processing in run() for CSV
-            imports.
+    @staticmethod
+    def period_generator():
+        """Generator function to control CSV import processing loop.
 
         Since CSV imports import from a single file this generator need only
         return a single value before it is exhausted.
         """
 
-        self.first_period = True
-        self.last_period = True
         yield 1
+
+    @property
+    def first_period(self):
+        """True if current period is the first period otherwise False.
+
+        For CSV imports there is only one period so it is always the first.
+        """
+
+        return True
+
+    @property
+    def last_period(self):
+        """True if current period is the last period otherwise False.
+
+        For CSV imports there is only one period so it is always the last.
+        """
+
+        return True

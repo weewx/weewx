@@ -1,38 +1,39 @@
 #
-#    Copyright (c) 2009-2016 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2019 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
-"""Routines for generating image plots.
-"""
+"""Routines for generating image plots."""
+from __future__ import absolute_import
+
 import colorsys
 import locale
 import os
 import time
+
 try:
     from PIL import Image, ImageDraw
 except ImportError:
     import Image, ImageDraw
 
-import weeplot.utilities
-import weeutil.weeutil
-from weeutil.weeutil import to_unicode
+from six.moves import zip
+import six
 
-# NB: All labels passed in should be in UTF-8. They are then converted to Unicode, which
-# some fonts support, others don't. If the chosen font does not support Unicode, then the label
-# will be changed back to UTF-8, then tried again.        
+import weeplot.utilities
+from weeplot.utilities import tobgr
+import weeutil.weeutil
+import weewx
+
 
 class GeneralPlot(object):
     """Holds various parameters necessary for a plot. It should be specialized by the type of plot.
-    
     """
     def __init__(self, config_dict):
         """Initialize an instance of GeneralPlot.
         
         config_dict: an instance of ConfigObj, or something that looks like it.
-        
         """
-        
+
         self.line_list = []
         
         self.xscale = (None, None, None)
@@ -42,15 +43,15 @@ class GeneralPlot(object):
 
         self.image_width            = int(config_dict.get('image_width',  300)) * self.anti_alias
         self.image_height           = int(config_dict.get('image_height', 180)) * self.anti_alias
-        self.image_background_color = weeplot.utilities.tobgr(config_dict.get('image_background_color', '0xf5f5f5'))
+        self.image_background_color = tobgr(config_dict.get('image_background_color', '0xf5f5f5'))
 
-        self.chart_background_color = weeplot.utilities.tobgr(config_dict.get('chart_background_color', '0xd8d8d8'))
-        self.chart_gridline_color   = weeplot.utilities.tobgr(config_dict.get('chart_gridline_color',   '0xa0a0a0'))
+        self.chart_background_color = tobgr(config_dict.get('chart_background_color', '0xd8d8d8'))
+        self.chart_gridline_color   = tobgr(config_dict.get('chart_gridline_color',   '0xa0a0a0'))
         color_list                  = config_dict.get('chart_line_colors', ['0xff0000', '0x00ff00', '0x0000ff'])
         fill_color_list             = config_dict.get('chart_fill_colors', color_list)
         width_list                  = config_dict.get('chart_line_width',  [1, 1, 1])
-        self.chart_line_colors      = [weeplot.utilities.tobgr(v) for v in color_list]
-        self.chart_fill_colors      = [weeplot.utilities.tobgr(v) for v in fill_color_list]
+        self.chart_line_colors      = [tobgr(v) for v in color_list]
+        self.chart_fill_colors      = [tobgr(v) for v in fill_color_list]
         self.chart_line_widths      = [int(v) for v in width_list]
 
         
@@ -59,22 +60,22 @@ class GeneralPlot(object):
 
         self.unit_label             = None
         self.unit_label_font_path   = config_dict.get('unit_label_font_path')
-        self.unit_label_font_color  = weeplot.utilities.tobgr(config_dict.get('unit_label_font_color', '0x000000'))
+        self.unit_label_font_color  = tobgr(config_dict.get('unit_label_font_color', '0x000000'))
         self.unit_label_font_size   = int(config_dict.get('unit_label_font_size', 10)) * self.anti_alias
         self.unit_label_position    = (10 * self.anti_alias, 0)
 
-        self.bottom_label           = ""
+        self.bottom_label           = u""
         self.bottom_label_font_path = config_dict.get('bottom_label_font_path')
-        self.bottom_label_font_color= weeplot.utilities.tobgr(config_dict.get('bottom_label_font_color', '0x000000'))
+        self.bottom_label_font_color= tobgr(config_dict.get('bottom_label_font_color', '0x000000'))
         self.bottom_label_font_size = int(config_dict.get('bottom_label_font_size', 10)) * self.anti_alias
         self.bottom_label_offset    = int(config_dict.get('bottom_label_offset', 3))
 
         self.axis_label_font_path   = config_dict.get('axis_label_font_path')
-        self.axis_label_font_color  = weeplot.utilities.tobgr(config_dict.get('axis_label_font_color', '0x000000'))
+        self.axis_label_font_color  = tobgr(config_dict.get('axis_label_font_color', '0x000000'))
         self.axis_label_font_size   = int(config_dict.get('axis_label_font_size', 10)) * self.anti_alias
 
-        self.x_label_format         = to_unicode(config_dict.get('x_label_format'))
-        self.y_label_format         = to_unicode(config_dict.get('y_label_format'))
+        self.x_label_format         = config_dict.get('x_label_format')
+        self.y_label_format         = config_dict.get('y_label_format')
         
         self.x_nticks               = int(config_dict.get('x_nticks', 10))
         self.y_nticks               = int(config_dict.get('y_nticks', 10))
@@ -96,20 +97,20 @@ class GeneralPlot(object):
         self.rose_diameter          = int(config_dict.get('rose_diameter', 10))
         self.rose_position          = (self.lmargin + self.padding + 5, self.image_height - self.bmargin - self.padding - self.rose_height)
         self.rose_rotation          = None
-        self.rose_label             = to_unicode(config_dict.get('rose_label', 'N'))
+        self.rose_label             = config_dict.get('rose_label', u'N')
         self.rose_label_font_path   = config_dict.get('rose_label_font_path', self.bottom_label_font_path)
         self.rose_label_font_size   = int(config_dict.get('rose_label_font_size', 10))  
-        self.rose_label_font_color  = weeplot.utilities.tobgr(config_dict.get('rose_label_font_color', '0x000000'))
+        self.rose_label_font_color  = tobgr(config_dict.get('rose_label_font_color', '0x000000'))
         self.rose_line_width        = int(config_dict.get('rose_line_width', 1))
         self.rose_color             = config_dict.get('rose_color')
         if self.rose_color is not None:
-            self.rose_color = weeplot.utilities.tobgr(self.rose_color)
+            self.rose_color = tobgr(self.rose_color)
 
         # Show day/night transitions
         self.show_daynight          = weeutil.weeutil.tobool(config_dict.get('show_daynight', False))
-        self.daynight_day_color     = weeplot.utilities.tobgr(config_dict.get('daynight_day_color', '0xffffff'))
-        self.daynight_night_color   = weeplot.utilities.tobgr(config_dict.get('daynight_night_color', '0xf0f0f0'))
-        self.daynight_edge_color    = weeplot.utilities.tobgr(config_dict.get('daynight_edge_color', '0xefefef'))
+        self.daynight_day_color     = tobgr(config_dict.get('daynight_day_color', '0xffffff'))
+        self.daynight_night_color   = tobgr(config_dict.get('daynight_night_color', '0xf0f0f0'))
+        self.daynight_edge_color    = tobgr(config_dict.get('daynight_edge_color', '0xefefef'))
         self.daynight_gradient      = int(config_dict.get('daynight_gradient', 20))
 
         # initialize the location
@@ -118,16 +119,11 @@ class GeneralPlot(object):
 
         # normalize the font paths relative to the skin directory
         skin_dir = config_dict.get('skin_dir', '')
-        self.top_label_font_path = self.normalize_path(
-            skin_dir, self.top_label_font_path)
-        self.bottom_label_font_path = self.normalize_path(
-            skin_dir, self.bottom_label_font_path)
-        self.unit_label_font_path = self.normalize_path(
-            skin_dir, self.unit_label_font_path)
-        self.axis_label_font_path = self.normalize_path(
-            skin_dir, self.axis_label_font_path)
-        self.rose_label_font_path = self.normalize_path(
-            skin_dir, self.rose_label_font_path)
+        self.top_label_font_path = self.normalize_path(skin_dir, self.top_label_font_path)
+        self.bottom_label_font_path = self.normalize_path(skin_dir, self.bottom_label_font_path)
+        self.unit_label_font_path = self.normalize_path(skin_dir, self.unit_label_font_path)
+        self.axis_label_font_path = self.normalize_path(skin_dir, self.axis_label_font_path)
+        self.rose_label_font_path = self.normalize_path(skin_dir, self.rose_label_font_path)
 
     @staticmethod
     def normalize_path(skin_dir, path):
@@ -136,16 +132,12 @@ class GeneralPlot(object):
         return os.path.join(skin_dir, path)
 
     def setBottomLabel(self, bottom_label):
-        """Set the label to be put at the bottom of the plot.
-        
-        """
-        self.bottom_label = to_unicode(bottom_label)
+        """Set the label to be put at the bottom of the plot. """
+        self.bottom_label = bottom_label
         
     def setUnitLabel(self, unit_label):
-        """Set the label to be used to show the units of the plot.
-        
-        """
-        self.unit_label = to_unicode(unit_label)
+        """Set the label to be used to show the units of the plot. """
+        self.unit_label = unit_label
         
     def setXScaling(self, xscale):
         """Set the X scaling.
@@ -165,10 +157,9 @@ class GeneralPlot(object):
         """Add a line to be plotted.
         
         line: an instance of PlotLine
-        
         """
         if None in line.x:
-            raise weeplot.ViolatedPrecondition, "X vector cannot have any values 'None' "
+            raise weeplot.ViolatedPrecondition("X vector cannot have any values 'None' ")
         self.line_list.append(line)
 
     def setLocation(self, lat, lon):
@@ -194,7 +185,6 @@ class GeneralPlot(object):
     def render(self):
         """Traverses the universe of things that have to be plotted in this image, rendering
         them and returning the results as a new Image object.
-        
         """
 
         # NB: In what follows the variable 'draw' is an instance of an ImageDraw object and is in pixel units.
@@ -292,9 +282,7 @@ class GeneralPlot(object):
                        fill=self.daynight_edge_color)
 
     def _renderXAxes(self, sdraw):
-        """Draws the x axis and vertical constant-x lines, as well as the labels.
-        
-        """
+        """Draws the x axis and vertical constant-x lines, as well as the labels. """
 
         axis_label_font = weeplot.utilities.get_font_handle(self.axis_label_font_path,
                                                             self.axis_label_font_size)
@@ -314,14 +302,13 @@ class GeneralPlot(object):
     def _renderYAxes(self, sdraw):
         """Draws the y axis and horizontal constant-y lines, as well as the labels.
         Should be sufficient for most purposes.
-        
         """
         nygridlines     = int((self.yscale[1] - self.yscale[0]) / self.yscale[2] + 1.5)
         axis_label_font = weeplot.utilities.get_font_handle(self.axis_label_font_path,
                                                                 self.axis_label_font_size)
         
         # Draw the (constant y) grid lines 
-        for i in xrange(nygridlines) :
+        for i in range(nygridlines) :
             y = self.yscale[0] + i * self.yscale[2]
             sdraw.line((self.xscale[0], self.xscale[1]), (y, y), fill=self.chart_gridline_color,
                        width=self.anti_alias)
@@ -336,7 +323,6 @@ class GeneralPlot(object):
     def _renderPlotLines(self, sdraw):
         """Draw the collection of lines, using a different color for each one. Because there is
         a limited set of colors, they need to be recycled if there are very many lines.
-        
         """
         nlines = len(self.line_list)
         ncolors = len(self.chart_line_colors)
@@ -385,9 +371,7 @@ class GeneralPlot(object):
                     self.rose_color = color
 
     def _renderBottom(self, draw):
-        """Draw anything at the bottom (just some text right now).
-        
-        """
+        """Draw anything at the bottom (just some text right now). """
         bottom_label_font = weeplot.utilities.get_font_handle(self.bottom_label_font_path, self.bottom_label_font_size)
         bottom_label_size = draw.textsize(self.bottom_label, font=bottom_label_font)
         
@@ -398,9 +382,7 @@ class GeneralPlot(object):
                   font=bottom_label_font)
         
     def _renderTopBand(self, draw):
-        """Draw the top band and any text in it.
-        
-        """
+        """Draw the top band and any text in it. """
         # Draw the top band rectangle
         draw.rectangle(((0,0), 
                         (self.image_width, self.tbandht)), 
@@ -484,7 +466,6 @@ class GeneralPlot(object):
     def _calcXScaling(self):
         """Calculates the x scaling. It will probably be specialized by
         plots where the x-axis represents time.
-        
         """
         (xmin, xmax) = self._calcXMinMax()
 
@@ -501,7 +482,7 @@ class GeneralPlot(object):
             if line.plot_type == 'vector':
                 try:
                     # For progressive vector plots, we want the magnitude of the complex vector
-                    yline_max = max(abs(c) for c in filter(lambda v : v is not None, line.y))
+                    yline_max = max(abs(c) for c in [v for v in line.y if v is not None])
                 except ValueError:
                     yline_max = None
                 yline_min = - yline_max if yline_max is not None else None
@@ -572,21 +553,23 @@ class TimePlot(GeneralPlot) :
         if self.x_label_format is None:
             return ''
         time_tuple = time.localtime(x)
-        # The function time.strftime() still does not support Unicode, so we have to explicitly
-        # convert it to UTF8, then back again:
-        xlabel = to_unicode(time.strftime(self.x_label_format.encode('utf8'), time_tuple))
+        # There are still some strftimes out there that don't support Unicode.
+        try:
+            xlabel = time.strftime(self.x_label_format, time_tuple)
+        except UnicodeEncodeError:
+            # Convert it to UTF8, then back again:
+            xlabel = time.strftime(self.x_label_format.encode('utf-8'), time_tuple).decode('utf-8')
         return xlabel
-    
+
+
 class PlotLine(object):
-    """Represents a single line (or bar) in a plot.
-    
-    """
+    """Represents a single line (or bar) in a plot. """
     def __init__(self, x, y, label='', color=None, fill_color=None, width=None, plot_type='line',
                  line_type='solid', marker_type=None, marker_size=10, 
                  bar_width=None, vector_rotate = None, gap_fraction=None):
         self.x               = x
         self.y               = y
-        self.label           = to_unicode(label)
+        self.label           = label
         self.plot_type       = plot_type
         self.line_type       = line_type
         self.marker_type     = marker_type
@@ -603,19 +586,20 @@ class UniDraw(ImageDraw.ImageDraw):
     
     Not all fonts support Unicode characters. These will raise a UnicodeEncodeError exception.
     This class subclasses the regular ImageDraw.Draw class, adding overridden functions to
-    catch these exceptions. It then tries drawing the string again, this time as a UTF8 string"""
+    catch these exceptions. It then tries drawing the string again, this time as a UTF8 string
+    """
     
     def text(self, position, string, **options):
         try:
             return ImageDraw.ImageDraw.text(self, position, string, **options)
         except UnicodeEncodeError:
-            return ImageDraw.ImageDraw.text(self, position, string.encode('utf8'), **options)
+            return ImageDraw.ImageDraw.text(self, position, string.encode('utf-8'), **options)
         
     def textsize(self, string, **options):
         try:
             return ImageDraw.ImageDraw.textsize(self, string, **options)
         except UnicodeEncodeError:
-            return ImageDraw.ImageDraw.textsize(self, string.encode('utf8'), **options)
+            return ImageDraw.ImageDraw.textsize(self, string.encode('utf-8'), **options)
             
             
 def blend_hls(c, bg, alpha):
@@ -629,19 +613,52 @@ def blend_ls(c, bg, alpha):
     return blend(c, bg, 1.0, alpha, alpha)
 
 def blend(c, bg, alpha_h, alpha_l, alpha_s):
-    """Fade from c to bg in the hue, lightness, saturation colorspace."""
+    """Fade from c to bg in the hue, lightness, saturation colorspace.
+       Added hue directionality to choose shortest circular hue path e.g.
+       https://stackoverflow.com/questions/1416560/hsl-interpolation
+       Also, grey detection to minimize colour wheel travel.  Interesting resource:
+       http://davidjohnstone.net/pages/lch-lab-colour-gradient-picker
+       """
+
     r1,g1,b1 = int2rgb(c)
-    h1,l1,s1 = colorsys.rgb_to_hls(r1/256.0, g1/256.0, b1/256.0)
+    h1,l1,s1 = colorsys.rgb_to_hls(r1/255.0, g1/255.0, b1/255.0)
+
     r2,g2,b2 = int2rgb(bg)
-    h2,l2,s2 = colorsys.rgb_to_hls(r2/256.0, g2/256.0, b2/256.0)
-    h = alpha_h * h1 + (1 - alpha_h) * h2
+    h2,l2,s2 = colorsys.rgb_to_hls(r2/255.0, g2/255.0, b2/255.0)
+
+    # Check if either of the values is grey (saturation 0),
+    # in which case don't needlessly reset hue to '0', reducing travel around colour wheel
+    if s1 == 0: h1 = h2
+    if s2 == 0: h2 = h1
+
+    h_delta = h2 - h1
+
+    if abs(h_delta) > 0.5:
+        # If interpolating over more than half-circle (0.5 radians) take shorter, opposite direction...
+        h_range = 1.0 - abs(h_delta)
+        h_dir = +1.0 if h_delta < 0.0 else -1.0
+
+        # Calculte h based on line back from h2 as proportion of h_range and alpha
+        h = h2 - ( h_dir * h_range * alpha_h )
+
+        # Clamp h within 0.0 to 1.0 range
+        h = h + 1.0 if h < 0.0 else h
+        h = h - 1.0 if h > 1.0 else h
+    else:
+        # Interpolating over less than a half-circle, so use normal interpolation as before
+        h = alpha_h * h1 + (1 - alpha_h) * h2
+
     l = alpha_l * l1 + (1 - alpha_l) * l2
     s = alpha_s * s1 + (1 - alpha_s) * s2
+
     r,g,b = colorsys.hls_to_rgb(h, l, s)
-    r = round(r * 256.0)
-    g = round(g * 256.0)
-    b = round(b * 256.0)
+
+    r = round(r * 255.0)
+    g = round(g * 255.0)
+    b = round(b * 255.0)
+
     t = rgb2int(int(r),int(g),int(b))
+
     return int(t)
 
 def int2rgb(x):
@@ -662,5 +679,4 @@ def add_alpha(i):
     g = (i >> 8)  & 0xff
     b = (i >> 16) & 0xff
     a = 0xff    # Opaque alpha
-    return (r,g,b,a)
-
+    return r,g,b,a

@@ -1,3 +1,7 @@
+0.6 17nov2019
+* ported to python 3
+* ported to weewx v4
+
 0.4 24apr2016
 * fixed database declarations for direct invocation
 * fixed timestamp typo now_ts

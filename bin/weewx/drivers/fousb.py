@@ -210,17 +210,24 @@ It is used as: A200 1A20 A2AA 0020 to indicate a data refresh.
 The WH1080 acknowledges the write with an 8 byte chunk: A5A5 A5A5.
 """
 
+from __future__ import absolute_import
+from __future__ import print_function
 import datetime
+import logging
 import sys
-import syslog
 import time
 import usb
+
+from six.moves import zip
+from six.moves import input
 
 import weewx.drivers
 import weewx.wxformulas
 
+log = logging.getLogger(__name__)
+
 DRIVER_NAME = 'FineOffsetUSB'
-DRIVER_VERSION = '1.10'
+DRIVER_VERSION = '1.20'
 
 def loader(config_dict, engine):
     return FineOffsetUSB(**config_dict[DRIVER_NAME])
@@ -252,7 +259,7 @@ def stash(slist, s):
 
 def fmtparam(label, value):
     fmt = '%s'
-    if label in datum_display_formats.keys():
+    if label in list(datum_display_formats.keys()):
         fmt = datum_display_formats[label]
     fmt = '%s: ' + fmt
     return fmt % (label.rjust(30), value)
@@ -270,22 +277,22 @@ def getvalues(station, name, value):
     return values
 
 def raw_dump(date, pos, data):
-    print date,
-    print "%04x" % pos,
+    print(date, end=' ')
+    print("%04x" % pos, end=' ')
     for item in data:
-        print "%02x" % item,
-    print
+        print("%02x" % item, end=' ')
+    print()
 
 def table_dump(date, data, showlabels=False):
     if showlabels:
-        print '# date time',
+        print('# date time', end=' ')
         for key in data.keys():
-            print key,
-        print
-    print date,
+            print(key, end=' ')
+        print()
+    print(date, end=' ')
     for key in data.keys():
-        print data[key],
-    print
+        print(data[key], end=' ')
+    print()
 
 
 class FOUSBConfEditor(weewx.drivers.AbstractConfEditor):
@@ -311,22 +318,22 @@ class FOUSBConfEditor(weewx.drivers.AbstractConfEditor):
         import configobj
         stanza = configobj.ConfigObj(orig_stanza.splitlines())
         if 'pressure_offset' in stanza[DRIVER_NAME]:
-            print """
+            print("""
 The pressure_offset is no longer supported by the FineOffsetUSB driver.  Move
-the pressure calibration constant to [StdCalibrate] instead."""
+the pressure calibration constant to [StdCalibrate] instead.""")
         if ('polling_mode' in stanza[DRIVER_NAME] and
             stanza[DRIVER_NAME]['polling_mode'] == 'ADAPTIVE'):
-            print """
-Using ADAPTIVE as the polling_mode can lead to USB lockups."""
+            print("""
+Using ADAPTIVE as the polling_mode can lead to USB lockups.""")
         if ('polling_interval' in stanza[DRIVER_NAME] and
             int(stanza[DRIVER_NAME]['polling_interval']) < 48):
-            print """
-A polling_interval of anything less than 48 seconds is not recommened."""
+            print("""
+A polling_interval of anything less than 48 seconds is not recommened.""")
         return orig_stanza
 
     def modify_config(self, config_dict):
-        print """
-Setting record_generation to software."""
+        print("""
+Setting record_generation to software.""")
         config_dict['StdArchive']['record_generation'] = 'software'
 
 
@@ -403,14 +410,14 @@ class FOUSBConfigurator(weewx.drivers.AbstractConfigurator):
     def show_info(self):
         """Query the station then display the settings."""
 
-        print "Querying the station..."
+        print("Querying the station...")
         val = getvalues(self.station, '', fixed_format)
 
-        print 'Fine Offset station settings:'
-        print '%s: %s' % ('local time'.rjust(30),
+        print('Fine Offset station settings:')
+        print('%s: %s' % ('local time'.rjust(30),
                           time.strftime('%Y.%m.%d %H:%M:%S %Z',
-                                        time.localtime()))
-        print '%s: %s' % ('polling mode'.rjust(30), self.station.polling_mode)
+                                        time.localtime())))
+        print('%s: %s' % ('polling mode'.rjust(30), self.station.polling_mode))
 
         slist = {'values':[], 'minmax_values':[], 'settings':[],
                  'display_settings':[], 'alarm_settings':[]}
@@ -425,17 +432,17 @@ class FOUSBConfigurator(weewx.drivers.AbstractConfigurator):
                 slist = stash(slist, s)
         for k in ('values', 'minmax_values', 'settings',
                   'display_settings', 'alarm_settings'):
-            print ''
+            print('')
             for s in slist[k]:
-                print s
+                print(s)
 
     def check_usb(self):
         """Run diagnostics on the USB connection."""
-        print "This will read from the station console repeatedly to see if"
-        print "there are errors in the USB communications.  Leave this running"
-        print "for an hour or two to see if any bad reads are encountered."
-        print "Bad reads will be reported in the system log.  A few bad reads"
-        print "per hour is usually acceptable."
+        print("This will read from the station console repeatedly to see if")
+        print("there are errors in the USB communications.  Leave this running")
+        print("for an hour or two to see if any bad reads are encountered.")
+        print("Bad reads will be reported in the system log.  A few bad reads")
+        print("per hour is usually acceptable.")
         ptr = data_start
         total_count = 0
         bad_count = 0
@@ -451,30 +458,30 @@ class FOUSBConfigurator(weewx.drivers.AbstractConfigurator):
             result_1 = self.station._read_block(ptr, retry=False)
             result_2 = self.station._read_block(ptr, retry=False)
             if result_1 != result_2:
-                syslog.syslog(syslog.LOG_INFO, 'read_block change %06x' % ptr)
-                syslog.syslog(syslog.LOG_INFO, '  %s' % str(result_1))
-                syslog.syslog(syslog.LOG_INFO, '  %s' % str(result_2))
+                log.info('read_block change %06x' % ptr)
+                log.info('  %s' % str(result_1))
+                log.info('  %s' % str(result_2))
                 bad_count += 1
             total_count += 1
-            print "\rbad/total: %d/%d " % (bad_count, total_count),
+            print("\rbad/total: %d/%d " % (bad_count, total_count), end=' ')
             sys.stdout.flush()
 
     def check_fixedblock(self):
         """Display changes to fixed block as they occur."""
-        print 'This will read the fixed block then display changes as they'
-        print 'occur.  Typically the most common change is the incrementing'
-        print 'of the data pointer, which happens whenever readings are saved'
-        print 'to the station memory.  For example, if the logging interval'
-        print 'is set to 5 minutes, the fixed block should change at least'
-        print 'every 5 minutes.'
+        print('This will read the fixed block then display changes as they')
+        print('occur.  Typically the most common change is the incrementing')
+        print('of the data pointer, which happens whenever readings are saved')
+        print('to the station memory.  For example, if the logging interval')
+        print('is set to 5 minutes, the fixed block should change at least')
+        print('every 5 minutes.')
         raw_fixed = self.station.get_raw_fixed_block()
         while True:
             new_fixed = self.station.get_raw_fixed_block(unbuffered=True)
             for ptr in range(len(new_fixed)):
                 if new_fixed[ptr] != raw_fixed[ptr]:
-                    print datetime.datetime.now().strftime('%H:%M:%S'),
-                    print ' %04x (%d) %02x -> %02x' % (
-                        ptr, ptr, raw_fixed[ptr], new_fixed[ptr])
+                    print(datetime.datetime.now().strftime('%H:%M:%S'), end=' ')
+                    print(' %04x (%d) %02x -> %02x' % (
+                        ptr, ptr, raw_fixed[ptr], new_fixed[ptr]))
                     raw_fixed = new_fixed
                     time.sleep(0.5)
 
@@ -482,22 +489,22 @@ class FOUSBConfigurator(weewx.drivers.AbstractConfigurator):
         """Display the raw fixed block contents."""
         fb = self.station.get_raw_fixed_block(unbuffered=True)
         for i, ptr in enumerate(range(len(fb))):
-            print '%02x' % fb[ptr],
+            print('%02x' % fb[ptr], end=' ')
             if (i+1) % 16 == 0:
-                print
+                print()
 
     def show_readings(self, logged_only):
         """Display live readings from the station."""
         for data,ptr,_ in self.station.live_data(logged_only):
-            print '%04x' % ptr,
-            print data['idx'].strftime('%H:%M:%S'),
+            print('%04x' % ptr, end=' ')
+            print(data['idx'].strftime('%H:%M:%S'), end=' ')
             del data['idx']
-            print data
+            print(data)
 
     def show_current(self):
         """Display latest readings from the station."""
         for packet in self.station.genLoopPackets():
-            print packet
+            print(packet)
             break
 
     def show_history(self, ts=0, count=0, fmt='raw'):
@@ -510,59 +517,59 @@ class FOUSBConfigurator(weewx.drivers.AbstractConfigurator):
             elif fmt.lower() == 'table':
                 table_dump(r['datetime'], r['data'], i==0)
             else:
-                print r['datetime'], r['data']
+                print(r['datetime'], r['data'])
 
     def clear_history(self, prompt):
         ans = None
         while ans not in ['y', 'n']:
             v = self.station.get_fixed_block(['data_count'], True)
-            print "Records in memory:", v
+            print("Records in memory:", v)
             if prompt:
-                ans = raw_input("Clear console memory (y/n)? ")
+                ans = input("Clear console memory (y/n)? ")
             else:
-                print 'Clearing console memory'
+                print('Clearing console memory')
                 ans = 'y'
             if ans == 'y' :
                 self.station.clear_history()
                 v = self.station.get_fixed_block(['data_count'], True)
-                print "Records in memory:", v
+                print("Records in memory:", v)
             elif ans == 'n':
-                print "Clear memory cancelled."
+                print("Clear memory cancelled.")
 
     def set_interval(self, interval, prompt):
         v = self.station.get_fixed_block(['read_period'], True)
         ans = None
         while ans not in ['y', 'n']:
-            print "Interval is", v
+            print("Interval is", v)
             if prompt:
-                ans = raw_input("Set interval to %d minutes (y/n)? " % interval)
+                ans = input("Set interval to %d minutes (y/n)? " % interval)
             else:
-                print "Setting interval to %d minutes" % interval
+                print("Setting interval to %d minutes" % interval)
                 ans = 'y'
             if ans == 'y' :
                 self.station.set_read_period(interval)
                 v = self.station.get_fixed_block(['read_period'], True)
-                print "Interval is now", v
+                print("Interval is now", v)
             elif ans == 'n':
-                print "Set interval cancelled."
+                print("Set interval cancelled.")
 
     def set_clock(self, prompt):
         ans = None
         while ans not in ['y', 'n']:
             v = self.station.get_fixed_block(['date_time'], True)
-            print "Station clock is", v
+            print("Station clock is", v)
             now = datetime.datetime.now()
             if prompt:
-                ans = raw_input("Set station clock to %s (y/n)? " % now)
+                ans = input("Set station clock to %s (y/n)? " % now)
             else:
-                print "Setting station clock to %s" % now
+                print("Setting station clock to %s" % now)
                 ans = 'y'
             if ans == 'y' :
                 self.station.set_clock()
                 v = self.station.get_fixed_block(['date_time'], True)
-                print "Station clock is now", v
+                print("Station clock is now", v)
             elif ans == 'n':
-                print "Set clock cancelled."
+                print("Set clock cancelled.")
 
 
 # these are the raw data we get from the station:
@@ -661,8 +668,8 @@ def pywws2weewx(p, ts, last_rain, last_rain_ts, max_rain_rate):
             packet[k] = None
 
     # track the pointer used to obtain the data
-    packet['ptr'] = int(p['ptr']) if p.has_key('ptr') else None
-    packet['delay'] = int(p['delay']) if p.has_key('delay') else None
+    packet['ptr'] = int(p['ptr']) if 'ptr' in p else None
+    packet['delay'] = int(p['delay']) if 'delay' in p else None
 
     # station status is an integer
     if packet['status'] is not None:
@@ -683,18 +690,18 @@ def pywws2weewx(p, ts, last_rain, last_rain_ts, max_rain_rate):
         if packet['rain'] < last_rain:
             pstr = '0x%04x' % packet['ptr'] if packet['ptr'] is not None else 'None'
             if last_rain - packet['rain'] < rain_max * 0.3 * 0.5:
-                loginf('ignoring spurious rain counter decrement (%s): '
-                       'new: %s old: %s' % (pstr, packet['rain'], last_rain))
+                log.info('ignoring spurious rain counter decrement (%s): '
+                         'new: %s old: %s' % (pstr, packet['rain'], last_rain))
             else:
-                loginf('rain counter wraparound detected (%s): '
-                       'new: %s old: %s' % (pstr, packet['rain'], last_rain))
+                log.info('rain counter wraparound detected (%s): '
+                         'new: %s old: %s' % (pstr, packet['rain'], last_rain))
                 total += rain_max * 0.3
     packet['rain'] = weewx.wxformulas.calculate_rain(total, last_rain)
 
     # report rainfall in log to diagnose rain counter issues
     if DEBUG_RAIN and packet['rain'] is not None and packet['rain'] > 0:
-        logdbg('got rainfall of %.2f cm (new: %.2f old: %.2f)' %
-               (packet['rain'], packet['rainTotal'], last_rain))
+        log.debug('got rainfall of %.2f cm (new: %.2f old: %.2f)' %
+                  (packet['rain'], packet['rainTotal'], last_rain))
 
     return packet
 
@@ -704,7 +711,7 @@ USB_PORT_FEAT_POWER = 8
 def power_cycle_station(hub, port):
     '''Power cycle the port on the specified hub.  This works only with USB
     hubs that support per-port power switching such as the linksys USB2HUB4.'''
-    loginf("Attempting to power cycle")
+    log.info("Attempting to power cycle")
     busses = usb.busses()
     if not busses:
         raise weewx.WeeWxIOError("Power cycle failed: cannot find USB busses")
@@ -719,23 +726,23 @@ def power_cycle_station(hub, port):
         raise weewx.WeeWxIOError("Power cycle failed: cannot find hub %s" % hub)
     handle = device.open()
     try:
-        loginf("Power off port %d on hub %s" % (port, hub))
+        log.info("Power off port %d on hub %s" % (port, hub))
         handle.controlMsg(requestType=USB_RT_PORT,
                           request=usb.REQ_CLEAR_FEATURE,
                           value=USB_PORT_FEAT_POWER,
                           index=port, buffer=None, timeout=1000)
-        loginf("Waiting 30 seconds for station to power down")
+        log.info("Waiting 30 seconds for station to power down")
         time.sleep(30)
-        loginf("Power on port %d on hub %s" % (port, hub))
+        log.info("Power on port %d on hub %s" % (port, hub))
         handle.controlMsg(requestType=USB_RT_PORT,
                           request=usb.REQ_SET_FEATURE,
                           value=USB_PORT_FEAT_POWER,
                           index=port, buffer=None, timeout=1000)
-        loginf("Waiting 60 seconds for station to power up")
+        log.info("Waiting 60 seconds for station to power up")
         time.sleep(60)
     finally:
         del handle
-    loginf("Power cycle complete")
+    log.info("Power cycle complete")
 
 # decode weather station raw data formats
 def _signed_byte(raw, offset):
@@ -847,24 +854,6 @@ def _bcd_encode(value):
     lo = value % 10
     return (hi * 16) + lo
 
-#def logmsg(level, msg):
-#    syslog.syslog(level, 'fousb: %s: %s' %
-#                  (threading.currentThread().getName(), msg))
-
-def logmsg(level, msg):
-    syslog.syslog(level, 'fousb: %s' % msg)
-
-def logdbg(msg):
-    logmsg(syslog.LOG_DEBUG, msg)
-
-def loginf(msg):
-    logmsg(syslog.LOG_INFO, msg)
-
-def logerr(msg):
-    logmsg(syslog.LOG_ERR, msg)
-
-def logcrt(msg):
-    logmsg(syslog.LOG_CRIT, msg)
 
 class ObservationError(Exception):
     pass
@@ -968,13 +957,13 @@ class FineOffsetUSB(weewx.drivers.AbstractDevice):
         global DEBUG_RAIN
         DEBUG_RAIN = int(stn_dict.get('debug_rain', 0))
 
-        loginf('driver version is %s' % DRIVER_VERSION)
+        log.info('driver version is %s' % DRIVER_VERSION)
         if self.pc_hub is not None:
-            loginf('power cycling enabled for port %s on hub %s' %
+            log.info('power cycling enabled for port %s on hub %s' %
                    (self.pc_port, self.pc_hub))
-        loginf('polling mode is %s' % self.polling_mode)
+        log.info('polling mode is %s' % self.polling_mode)
         if self.polling_mode.lower() == PERIODIC_POLLING.lower():
-            loginf('polling interval is %s' % self.polling_interval)
+            log.info('polling interval is %s' % self.polling_interval)
 
         self.openPort()
 
@@ -1015,8 +1004,8 @@ class FineOffsetUSB(weewx.drivers.AbstractDevice):
                 ival = self.get_fixed_block(['read_period'])
                 break
             except usb.USBError as e:
-                logcrt("get archive interval failed attempt %d of %d: %s"
-                       % (i+1, self.max_tries, e))
+                log.critical("Get archive interval failed attempt %d of %d: %s"
+                             % (i+1, self.max_tries, e))
         else:
             raise weewx.WeeWxIOError("Unable to read archive interval after %d tries" % self.max_tries)
         if ival is None:
@@ -1029,7 +1018,8 @@ class FineOffsetUSB(weewx.drivers.AbstractDevice):
 
         dev = self._find_device()
         if not dev:
-            logcrt("Cannot find USB device with Vendor=0x%04x ProdID=0x%04x Device=%s" % (self.vendor_id, self.product_id, self.device_id))
+            log.critical("Cannot find USB device with Vendor=0x%04x ProdID=0x%04x Device=%s" 
+                         % (self.vendor_id, self.product_id, self.device_id))
             raise weewx.WeeWxIOError("Unable to find USB device")
 
         self.devh = dev.open()
@@ -1047,8 +1037,7 @@ class FineOffsetUSB(weewx.drivers.AbstractDevice):
             self.devh.claimInterface(self.usb_interface)
         except usb.USBError as e:
             self.closePort()
-            logcrt("Unable to claim USB interface %s: %s" %
-                   (self.usb_interface, e))
+            log.critical("Unable to claim USB interface %s: %s" % (self.usb_interface, e))
             raise weewx.WeeWxIOError(e)
         
     def closePort(self):
@@ -1064,7 +1053,7 @@ class FineOffsetUSB(weewx.drivers.AbstractDevice):
             for dev in bus.devices:
                 if dev.idVendor == self.vendor_id and dev.idProduct == self.product_id:
                     if self.device_id is None or dev.filename == self.device_id:
-                        loginf('found station on USB bus=%s device=%s' % (bus.dirname, dev.filename))
+                        log.info('found station on USB bus=%s device=%s' % (bus.dirname, dev.filename))
                         return dev
         return None
 
@@ -1088,8 +1077,8 @@ class FineOffsetUSB(weewx.drivers.AbstractDevice):
             self._last_rain_loop = packet['rainTotal']
             self._last_rain_ts_loop = ts
             if packet['status'] != self._last_status:
-                loginf('station status %s (%s)' % 
-                       (decode_status(packet['status']), packet['status']))
+                log.info('station status %s (%s)' % 
+                         (decode_status(packet['status']), packet['status']))
                 self._last_status = packet['status']
             yield packet
 
@@ -1104,7 +1093,7 @@ class FineOffsetUSB(weewx.drivers.AbstractDevice):
                 local timestamp in seconds.
         """
         records = self.get_records(since_ts)
-        logdbg('found %d archive records' % len(records))
+        log.debug('found %d archive records' % len(records))
         epoch = datetime.datetime.utcfromtimestamp(0)
         for r in records:
             delta = r['datetime'] - epoch
@@ -1117,7 +1106,7 @@ class FineOffsetUSB(weewx.drivers.AbstractDevice):
             data['ptr'] = r['ptr']
             self._last_rain_arc = data['rainTotal']
             self._last_rain_ts_arc = ts
-            logdbg('returning archive record %s' % ts)
+            log.debug('returning archive record %s' % ts)
             yield data
 
     def get_observations(self):
@@ -1166,7 +1155,7 @@ class FineOffsetUSB(weewx.drivers.AbstractDevice):
                     raise Exception("unknown polling mode '%s'" % self.polling_mode)
 
             except (IndexError, usb.USBError, ObservationError) as e:
-                logerr('get_observations failed: %s' % e)
+                log.error('get_observations failed: %s' % e)
                 nerr += 1
                 if nerr > self.max_tries:
                     raise weewx.WeeWxIOError("Max retries exceeded while fetching observations")
@@ -1185,7 +1174,7 @@ class FineOffsetUSB(weewx.drivers.AbstractDevice):
 #==============================================================================
 
     def _read_usb_block(self, address):
-        addr1 = (address / 256) & 0xff
+        addr1 = (address >> 8) & 0xff
         addr2 = address & 0xff
         self.devh.controlMsg(usb.TYPE_CLASS + usb.RECIP_INTERFACE,
                              0x0000009,
@@ -1207,7 +1196,7 @@ class FineOffsetUSB(weewx.drivers.AbstractDevice):
         return list(data)
 
     def _write_usb(self, address, data):
-        addr1 = (address / 256) & 0xff
+        addr1 = (address >> 8) & 0xff
         addr2 = address & 0xff
         buf = [0xA2,addr1,addr2,0x20,0xA2,data,0,0x20]
         result = self.devh.controlMsg(
@@ -1311,7 +1300,7 @@ class FineOffsetUSB(weewx.drivers.AbstractDevice):
                 max_count = fixed_block['data_count'] - 1
                 if num_rec == 0 or num_rec > max_count:
                     num_rec = max_count
-                logdbg('get %d records since %s' % (num_rec, dt))
+                log.debug('get %d records since %s' % (num_rec, dt))
                 dts, ptr = self.sync(read_period=fixed_block['read_period'])
                 count = 0
                 records = []
@@ -1319,7 +1308,7 @@ class FineOffsetUSB(weewx.drivers.AbstractDevice):
                     raw_data = self.get_raw_data(ptr)
                     data = self.decode(raw_data)
                     if data['delay'] is None or data['delay'] < 1 or data['delay'] > 30:
-                        logerr('invalid data in get_records at 0x%04x, %s' %
+                        log.error('invalid data in get_records at 0x%04x, %s' %
                                (ptr, dts.isoformat()))
                         dts -= datetime.timedelta(minutes=fixed_block['read_period'])
                     else:
@@ -1335,7 +1324,7 @@ class FineOffsetUSB(weewx.drivers.AbstractDevice):
                     ptr = self.dec_ptr(ptr)
                 return records
             except (IndexError, usb.USBError, ObservationError) as e:
-                logerr('get_records failed: %s' % e)
+                log.error('get_records failed: %s' % e)
                 nerr += 1
                 if nerr > self.max_tries:
                     raise weewx.WeeWxIOError("Max retries exceeded while fetching records")
@@ -1357,7 +1346,7 @@ class FineOffsetUSB(weewx.drivers.AbstractDevice):
                 quality = 1
             else:
                 quality = 0
-        loginf('synchronising to the weather station (quality=%d)' % quality)
+        log.info('synchronising to the weather station (quality=%d)' % quality)
         range_hi = datetime.datetime.max
         range_lo = datetime.datetime.min
         ptr = self.current_pos()
@@ -1371,11 +1360,11 @@ class FineOffsetUSB(weewx.drivers.AbstractDevice):
         count = 0
         for data, last_ptr, logged in self.live_data(logged_only=(quality>1)):
             last_date = data['idx']
-            logdbg('packet timestamp is %s' % last_date.strftime('%H:%M:%S'))
+            log.debug('packet timestamp is %s' % last_date.strftime('%H:%M:%S'))
             if logged:
                 break
             if data['delay'] is None:
-                logerr('invalid data while synchronising at 0x%04x' % last_ptr)
+                log.error('invalid data while synchronising at 0x%04x' % last_ptr)
                 count += 1
                 if count > maxcount:
                     raise weewx.WeeWxIOError('repeated invalid delay while synchronising')
@@ -1384,7 +1373,7 @@ class FineOffsetUSB(weewx.drivers.AbstractDevice):
                 err = last_date - datetime.datetime.fromtimestamp(self._station_clock)
                 last_date -= datetime.timedelta(minutes=data['delay'],
                                                 seconds=err.seconds % 60)
-                logdbg('log timestamp is %s' % last_date.strftime('%H:%M:%S'))
+                log.debug('log timestamp is %s' % last_date.strftime('%H:%M:%S'))
                 last_ptr = self.dec_ptr(last_ptr)
                 break
             if quality < 1:
@@ -1402,13 +1391,13 @@ class FineOffsetUSB(weewx.drivers.AbstractDevice):
                 range_lo = max(range_lo, lo)
                 err = (range_hi - range_lo) / 2
                 last_date = range_lo + err
-                logdbg('estimated log time %s +/- %ds (%s..%s)' %
-                       (last_date.strftime('%H:%M:%S'), err.seconds,
-                        lo.strftime('%H:%M:%S'), hi.strftime('%H:%M:%S')))
+                log.debug('estimated log time %s +/- %ds (%s..%s)' %
+                          (last_date.strftime('%H:%M:%S'), err.seconds,
+                           lo.strftime('%H:%M:%S'), hi.strftime('%H:%M:%S')))
                 if err < datetime.timedelta(seconds=15):
                     last_ptr = self.dec_ptr(last_ptr)
                     break
-        logdbg('synchronised to %s for ptr 0x%04x' % (last_date, last_ptr))
+        log.debug('synchronised to %s for ptr 0x%04x' % (last_date, last_ptr))
         return last_date, last_ptr
 
 #==============================================================================
@@ -1479,7 +1468,7 @@ class FineOffsetUSB(weewx.drivers.AbstractDevice):
                 pause = self.min_pause
             pause = max(pause, self.min_pause)
             if DEBUG_SYNC:
-                logdbg('delay %s, pause %g' % (str(old_data['delay']), pause))
+                log.debug('delay %s, pause %g' % (str(old_data['delay']), pause))
             time.sleep(pause)
             # get new data
             last_data_time = data_time
@@ -1489,7 +1478,7 @@ class FineOffsetUSB(weewx.drivers.AbstractDevice):
             data_time = time.time()
             # log any change of status
             if new_data['status'] != last_status:
-                logdbg('status %s (%s)' % (str(decode_status(new_data['status'])), new_data['status']))
+                log.debug('status %s (%s)' % (str(decode_status(new_data['status'])), new_data['status']))
             last_status = new_data['status']
             # 'good' time stamp if we haven't just woken up from long
             # pause and data read wasn't delayed
@@ -1504,29 +1493,29 @@ class FineOffsetUSB(weewx.drivers.AbstractDevice):
                 for key in ('illuminance', 'uv'):
                     old_data[key] = new_data[key]
             if new_data != old_data:
-                logdbg('new data')
+                log.debug('new data')
                 result = dict(new_data)
                 if valid_time:
                     # data has just changed, so definitely at a 48s update time
                     if self._sensor_clock:
                         diff = (data_time - self._sensor_clock) % live_interval
                         if diff > 2.0 and diff < (live_interval - 2.0):
-                            logdbg('unexpected sensor clock change')
+                            log.debug('unexpected sensor clock change')
                             self._sensor_clock = None
                     if not self._sensor_clock:
                         self._sensor_clock = data_time
-                        logdbg('setting sensor clock %g' %
+                        log.debug('setting sensor clock %g' %
                                (data_time % live_interval))
                     if not next_live:
-                        logdbg('live synchronised')
+                        log.debug('live synchronised')
                     next_live = data_time
                 elif next_live and data_time < next_live - self.min_pause:
-                    logdbg('lost sync %g' % (data_time - next_live))
+                    log.debug('lost sync %g' % (data_time - next_live))
                     next_live = None
                     self._sensor_clock = None
                 if next_live and not logged_only:
                     while data_time > next_live + live_interval:
-                        logdbg('missed interval')
+                        log.debug('missed interval')
                         next_live += live_interval
                     result['idx'] = datetime.datetime.utcfromtimestamp(int(next_live))
                     next_live += live_interval
@@ -1540,7 +1529,7 @@ class FineOffsetUSB(weewx.drivers.AbstractDevice):
             ptr_time = time.time()
             valid_time = ptr_time - last_ptr_time < (self.min_pause * 2.0) - 0.1
             if new_ptr != old_ptr:
-                logdbg('new ptr: %06x (%06x)' % (new_ptr, old_ptr))
+                log.debug('new ptr: %06x (%06x)' % (new_ptr, old_ptr))
                 last_log = ptr_time
                 # re-read data, to be absolutely sure it's the last
                 # logged data before the pointer was updated
@@ -1553,16 +1542,16 @@ class FineOffsetUSB(weewx.drivers.AbstractDevice):
                     if self._station_clock:
                         diff = (ptr_time - self._station_clock) % 60
                         if diff > 2 and diff < 58:
-                            logdbg('unexpected station clock change')
+                            log.debug('unexpected station clock change')
                             self._station_clock = None
                     if not self._station_clock:
                         self._station_clock = ptr_time
-                        logdbg('setting station clock %g' % (ptr_time % 60.0))
+                        log.debug('setting station clock %g' % (ptr_time % 60.0))
                     if not next_log:
-                        logdbg('log synchronised')
+                        log.debug('log synchronised')
                     next_log = ptr_time
                 elif next_log and ptr_time < next_log - self.min_pause:
-                    logdbg('lost log sync %g' % (ptr_time - next_log))
+                    log.debug('lost log sync %g' % (ptr_time - next_log))
                     next_log = None
                     self._station_clock = None
                 if next_log:
@@ -1570,8 +1559,7 @@ class FineOffsetUSB(weewx.drivers.AbstractDevice):
                     next_log += log_interval
                     yield result, old_ptr, True
                 if new_ptr != self.inc_ptr(old_ptr):
-                    logerr('unexpected ptr change %06x -> %06x' %
-                           (old_ptr, new_ptr))
+                    log.error('unexpected ptr change %06x -> %06x' % (old_ptr, new_ptr))
                     old_ptr = new_ptr
                     old_data['delay'] = 0
                 elif ptr_time > last_log + ((new_data['delay'] + 2) * 60):
@@ -1579,7 +1567,7 @@ class FineOffsetUSB(weewx.drivers.AbstractDevice):
                     # USB until it locks up
                     raise ObservationError('station is not logging data')
                 elif valid_time and next_log and ptr_time > next_log + 6.0:
-                    logdbg('log extended')
+                    log.debug('log extended')
                     next_log += 60.0
 
     def inc_ptr(self, ptr):
@@ -1647,7 +1635,7 @@ class FineOffsetUSB(weewx.drivers.AbstractDevice):
         if self._current_ptr and new_ptr != self.inc_ptr(self._current_ptr):
             for k in reading_len:
                 if (new_ptr - self._current_ptr) == reading_len[k]:
-                    logerr('changing data format from %s to %s' % (self.data_format, k))
+                    log.error('changing data format from %s to %s' % (self.data_format, k))
                     self.data_format = k
                     break
         self._current_ptr = new_ptr
@@ -1691,7 +1679,7 @@ class FineOffsetUSB(weewx.drivers.AbstractDevice):
                     pause = min(pause, (self.avoid - phase) % 48)
             if pause >= self.avoid * 2.0:
                 return
-            logdbg('avoid %s' % str(pause))
+            log.debug('avoid %s' % str(pause))
             time.sleep(pause)
 
     def _read_block(self, ptr, retry=True):
@@ -1705,7 +1693,7 @@ class FineOffsetUSB(weewx.drivers.AbstractDevice):
                 if (new_block == old_block) or not retry:
                     break
                 if old_block is not None:
-                    loginf('unstable read: blocks differ for ptr 0x%06x' % ptr)
+                    log.info('unstable read: blocks differ for ptr 0x%06x' % ptr)
                 old_block = new_block
         return new_block
 
@@ -1716,12 +1704,12 @@ class FineOffsetUSB(weewx.drivers.AbstractDevice):
         # check 'magic number'.  log each new one we encounter.
         magic = '%02x%02x' % (result[0], result[1])
         if magic not in self._magic_numbers:
-            logcrt('unrecognised magic number %s' % magic)
+            log.error('unrecognised magic number %s' % magic)
             self._magic_numbers.append(magic)
         if magic != self._last_magic:
             if self._last_magic is not None:
-                logcrt('magic number changed old=%s new=%s' %
-                       (self._last_magic, magic))
+                log.error('magic number changed old=%s new=%s' %
+                          (self._last_magic, magic))
             self._last_magic = magic
         return result
 
@@ -1744,7 +1732,7 @@ class FineOffsetUSB(weewx.drivers.AbstractDevice):
                           fixed_format['data_changed'])
             if ack == 0:
                 break
-            logdbg('waiting for ack')
+            log.debug('waiting for ack')
             time.sleep(6)
 
 # Tables of "meanings" for raw weather station data. Each key

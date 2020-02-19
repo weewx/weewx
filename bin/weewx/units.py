@@ -1,19 +1,29 @@
 # -*- coding: utf-8 -*-
 #
-#    Copyright (c) 2009-2015 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2020 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
 
 """Data structures and functions for dealing with units."""
 
+#
+# The doctest examples work only under Python 3!!
+#
+
+from __future__ import absolute_import
+from __future__ import print_function
 import locale
+import logging
 import time
-import syslog
+
+import six
 
 import weewx
 import weeutil.weeutil
 from weeutil.weeutil import ListOfDicts
+
+log = logging.getLogger(__name__)
 
 # Handy conversion constants and functions:
 INHG_PER_MBAR  = 0.0295299875
@@ -57,379 +67,466 @@ class UnknownType(object):
     def __init__(self, obs_type):
         self.obs_type = obs_type
 
-unit_constants = {'US'       : weewx.US,
-                  'METRIC'   : weewx.METRIC,
-                  'METRICWX' : weewx.METRICWX}
+unit_constants = {
+    'US'       : weewx.US,
+    'METRIC'   : weewx.METRIC,
+    'METRICWX' : weewx.METRICWX
+}
 
-unit_nicknames = {weewx.US       : 'US',
-                  weewx.METRIC   : 'METRIC',
-                  weewx.METRICWX : 'METRICWX'}
+unit_nicknames = {
+    weewx.US       : 'US',
+    weewx.METRIC   : 'METRIC',
+    weewx.METRICWX : 'METRICWX'
+}
 
 # This data structure maps observation types to a "unit group"
 # We start with a standard object group dictionary, but users are
 # free to extend it:
-obs_group_dict = ListOfDicts({"altitude"           : "group_altitude",
-                              "cloudbase"          : "group_altitude",
-                              "cooldeg"            : "group_degree_day",
-                              "heatdeg"            : "group_degree_day",
-                              "gustdir"            : "group_direction",
-                              "vecdir"             : "group_direction",
-                              "windDir"            : "group_direction",
-                              "windGustDir"        : "group_direction",
-                              "windrun"            : "group_distance",
-                              "interval"           : "group_interval",
-                              "soilMoist1"         : "group_moisture",
-                              "soilMoist2"         : "group_moisture",
-                              "soilMoist3"         : "group_moisture",
-                              "soilMoist4"         : "group_moisture",
-                              "extraHumid1"        : "group_percent",
-                              "extraHumid2"        : "group_percent",
-                              "extraHumid3"        : "group_percent",
-                              "extraHumid4"        : "group_percent",
-                              "extraHumid5"        : "group_percent",
-                              "extraHumid6"        : "group_percent",
-                              "extraHumid7"        : "group_percent",
-                              "inHumidity"         : "group_percent",
-                              "outHumidity"        : "group_percent",
-                              "rxCheckPercent"     : "group_percent",
-                              "altimeter"          : "group_pressure",
-                              "barometer"          : "group_pressure",
-                              "pressure"           : "group_pressure",
-                              "radiation"          : "group_radiation",
-                              "ET"                 : "group_rain",
-                              "dayRain"            : "group_rain",
-                              "hail"               : "group_rain",
-                              "hourRain"           : "group_rain",
-                              "monthRain"          : "group_rain",
-                              "rain"               : "group_rain",
-                              "snow"               : "group_rain",
-                              "rain24"             : "group_rain",
-                              "totalRain"          : "group_rain",
-                              "stormRain"          : "group_rain",
-                              "yearRain"           : "group_rain",
-                              "hailRate"           : "group_rainrate",
-                              "rainRate"           : "group_rainrate",
-                              "wind"               : "group_speed",
-                              "windGust"           : "group_speed",
-                              "windSpeed"          : "group_speed",
-                              "windSpeed10"        : "group_speed",
-                              "windgustvec"        : "group_speed",
-                              "windvec"            : "group_speed",
-                              "rms"                : "group_speed2",
-                              "vecavg"             : "group_speed2",
-                              "appTemp"            : "group_temperature",
-                              "dewpoint"           : "group_temperature",
-                              "inDewpoint"         : "group_temperature",
-                              "extraTemp1"         : "group_temperature",
-                              "extraTemp2"         : "group_temperature",
-                              "extraTemp3"         : "group_temperature",
-                              "extraTemp4"         : "group_temperature",
-                              "extraTemp5"         : "group_temperature",
-                              "extraTemp6"         : "group_temperature",
-                              "extraTemp7"         : "group_temperature",
-                              "heatindex"          : "group_temperature",
-                              "heatingTemp"        : "group_temperature",
-                              "humidex"            : "group_temperature",
-                              "inTemp"             : "group_temperature",
-                              "leafTemp1"          : "group_temperature",
-                              "leafTemp2"          : "group_temperature",
-                              "leafTemp3"          : "group_temperature",
-                              "leafTemp4"          : "group_temperature",
-                              "outTemp"            : "group_temperature",
-                              "soilTemp1"          : "group_temperature",
-                              "soilTemp2"          : "group_temperature",
-                              "soilTemp3"          : "group_temperature",
-                              "soilTemp4"          : "group_temperature",
-                              "windchill"          : "group_temperature",
-                              "dateTime"           : "group_time",
-                              "leafWet1"           : "group_count",
-                              "leafWet2"           : "group_count",
-                              "UV"                 : "group_uv",
-                              "consBatteryVoltage" : "group_volt",
-                              "heatingVoltage"     : "group_volt",
-                              "referenceVoltage"   : "group_volt",
-                              "supplyVoltage"      : "group_volt"})
+obs_group_dict = ListOfDicts({
+    "altitude"           : "group_altitude",
+    "cloudbase"          : "group_altitude",
+    "pm10_0"             : "group_concentration",
+    "pm1_0"              : "group_concentration",
+    "pm2_5"              : "group_concentration",
+    "beaufort"           : "group_count",
+    "leafWet1"           : "group_count",
+    "leafWet2"           : "group_count",
+    "cooldeg"            : "group_degree_day",
+    "heatdeg"            : "group_degree_day",
+    "growdeg"            : "group_degree_day",
+    "gustdir"            : "group_direction",
+    "vecdir"             : "group_direction",
+    "windDir"            : "group_direction",
+    "windGustDir"        : "group_direction",
+    "windrun"            : "group_distance",
+    "interval"           : "group_interval",
+    "soilMoist1"         : "group_moisture",
+    "soilMoist2"         : "group_moisture",
+    "soilMoist3"         : "group_moisture",
+    "soilMoist4"         : "group_moisture",
+    "extraHumid1"        : "group_percent",
+    "extraHumid2"        : "group_percent",
+    "extraHumid3"        : "group_percent",
+    "extraHumid4"        : "group_percent",
+    "extraHumid5"        : "group_percent",
+    "extraHumid6"        : "group_percent",
+    "extraHumid7"        : "group_percent",
+    "inHumidity"         : "group_percent",
+    "outHumidity"        : "group_percent",
+    "rxCheckPercent"     : "group_percent",
+    "altimeter"          : "group_pressure",
+    "barometer"          : "group_pressure",
+    "pressure"           : "group_pressure",
+    "altimeterRate"      : "group_pressurerate",
+    "barometerRate"      : "group_pressurerate",
+    "pressureRate"       : "group_pressurerate",
+    "radiation"          : "group_radiation",
+    "maxSolarRad"        : "group_radiation",
+    "ET"                 : "group_rain",
+    "dayRain"            : "group_rain",
+    "hail"               : "group_rain",
+    "hourRain"           : "group_rain",
+    "monthRain"          : "group_rain",
+    "rain"               : "group_rain",
+    "snow"               : "group_rain",
+    "rain24"             : "group_rain",
+    "totalRain"          : "group_rain",
+    "stormRain"          : "group_rain",
+    "yearRain"           : "group_rain",
+    "hailRate"           : "group_rainrate",
+    "rainRate"           : "group_rainrate",
+    "wind"               : "group_speed",
+    "windGust"           : "group_speed",
+    "windSpeed"          : "group_speed",
+    "windSpeed10"        : "group_speed",
+    "windgustvec"        : "group_speed",
+    "windvec"            : "group_speed",
+    "rms"                : "group_speed2",
+    "vecavg"             : "group_speed2",
+    "appTemp"            : "group_temperature",
+    "dewpoint"           : "group_temperature",
+    "inDewpoint"         : "group_temperature",
+    "extraTemp1"         : "group_temperature",
+    "extraTemp2"         : "group_temperature",
+    "extraTemp3"         : "group_temperature",
+    "extraTemp4"         : "group_temperature",
+    "extraTemp5"         : "group_temperature",
+    "extraTemp6"         : "group_temperature",
+    "extraTemp7"         : "group_temperature",
+    "heatindex"          : "group_temperature",
+    "heatingTemp"        : "group_temperature",
+    "humidex"            : "group_temperature",
+    "inTemp"             : "group_temperature",
+    "leafTemp1"          : "group_temperature",
+    "leafTemp2"          : "group_temperature",
+    "leafTemp3"          : "group_temperature",
+    "leafTemp4"          : "group_temperature",
+    "outTemp"            : "group_temperature",
+    "soilTemp1"          : "group_temperature",
+    "soilTemp2"          : "group_temperature",
+    "soilTemp3"          : "group_temperature",
+    "soilTemp4"          : "group_temperature",
+    "windchill"          : "group_temperature",
+    "dateTime"           : "group_time",
+    "stormStart"         : "group_time",
+    "UV"                 : "group_uv",
+    "consBatteryVoltage" : "group_volt",
+    "heatingVoltage"     : "group_volt",
+    "referenceVoltage"   : "group_volt",
+    "supplyVoltage"      : "group_volt"
+})
 
 # Some aggregations when applied to a type result in a different unit
 # group. This data structure maps aggregation type to the group:
-agg_group = {'mintime'    : "group_time",
-             'maxmintime' : "group_time",
-             'maxtime'    : "group_time",
-             'minmaxtime' : "group_time",
-             "maxsumtime" : "group_time",
-             "lasttime"   : "group_time",
-             'count'      : "group_count",
-             'max_ge'     : "group_count",
-             'max_le'     : "group_count",
-             'min_ge'     : "group_count",
-             'min_le'     : "group_count",
-             'sum_ge'     : "group_count",
-             'vecdir'     : "group_direction",
-             'gustdir'    : "group_direction"}
+agg_group = {
+    "firsttime"  : "group_time",
+    "lasttime"   : "group_time",
+    "maxsumtime" : "group_time",
+    "minsumtime" : "group_time",
+    'count'      : "group_count",
+    'gustdir'    : "group_direction",
+    'max_ge'     : "group_count",
+    'max_le'     : "group_count",
+    'maxmintime' : "group_time",
+    'maxtime'    : "group_time",
+    'min_ge'     : "group_count",
+    'min_le'     : "group_count",
+    'minmaxtime' : "group_time",
+    'mintime'    : "group_time",
+    'sum_ge'     : "group_count",
+    'sum_le'     : "group_count",
+    'vecdir'     : "group_direction",
+}
 
 # This dictionary maps unit groups to a standard unit type in the 
 # US customary unit system:
-USUnits = ListOfDicts({"group_altitude"    : "foot",
-                       "group_amp"         : "amp",
-                       "group_count"       : "count",
-                       "group_data"        : "byte",
-                       "group_degree_day"  : "degree_F_day",
-                       "group_deltatime"   : "second",
-                       "group_direction"   : "degree_compass",
-                       "group_distance"    : "mile",
-                       "group_elapsed"     : "second",
-                       "group_energy"      : "watt_hour",
-                       "group_interval"    : "minute",
-                       "group_length"      : "inch",
-                       "group_moisture"    : "centibar",
-                       "group_percent"     : "percent",
-                       "group_power"       : "watt",
-                       "group_pressure"    : "inHg",
-                       "group_radiation"   : "watt_per_meter_squared",
-                       "group_rain"        : "inch",
-                       "group_rainrate"    : "inch_per_hour",
-                       "group_speed"       : "mile_per_hour",
-                       "group_speed2"      : "mile_per_hour2",
-                       "group_temperature" : "degree_F",
-                       "group_time"        : "unix_epoch",
-                       "group_uv"          : "uv_index",
-                       "group_volt"        : "volt",
-                       "group_volume"      : "gallon"})
+USUnits = ListOfDicts({
+    "group_altitude"    : "foot",
+    "group_amp"         : "amp",
+    "group_concentration": "microgram_per_meter_cubed",
+    "group_count"       : "count",
+    "group_data"        : "byte",
+    "group_degree_day"  : "degree_F_day",
+    "group_deltatime"   : "second",
+    "group_direction"   : "degree_compass",
+    "group_distance"    : "mile",
+    "group_elapsed"     : "second",
+    "group_energy"      : "watt_hour",
+    "group_energy2"     : "watt_second",
+    "group_interval"    : "minute",
+    "group_length"      : "inch",
+    "group_moisture"    : "centibar",
+    "group_percent"     : "percent",
+    "group_power"       : "watt",
+    "group_pressure"    : "inHg",
+    "group_pressurerate": "inHg_per_hour",
+    "group_radiation"   : "watt_per_meter_squared",
+    "group_rain"        : "inch",
+    "group_rainrate"    : "inch_per_hour",
+    "group_speed"       : "mile_per_hour",
+    "group_speed2"      : "mile_per_hour2",
+    "group_temperature" : "degree_F",
+    "group_time"        : "unix_epoch",
+    "group_uv"          : "uv_index",
+    "group_volt"        : "volt",
+    "group_volume"      : "gallon"
+})
 
 # This dictionary maps unit groups to a standard unit type in the 
 # metric unit system:
-MetricUnits = ListOfDicts({"group_altitude"    : "meter",
-                           "group_amp"         : "amp",
-                           "group_count"       : "count",
-                           "group_data"        : "byte",
-                           "group_degree_day"  : "degree_C_day",
-                           "group_deltatime"   : "second",
-                           "group_direction"   : "degree_compass",
-                           "group_distance"    : "km",
-                           "group_elapsed"     : "second",
-                           "group_energy"      : "watt_hour",
-                           "group_interval"    : "minute",
-                           "group_length"      : "cm",
-                           "group_moisture"    : "centibar",
-                           "group_percent"     : "percent",
-                           "group_power"       : "watt",
-                           "group_pressure"    : "mbar",
-                           "group_radiation"   : "watt_per_meter_squared",
-                           "group_rain"        : "cm",
-                           "group_rainrate"    : "cm_per_hour",
-                           "group_speed"       : "km_per_hour",
-                           "group_speed2"      : "km_per_hour2",
-                           "group_temperature" : "degree_C",
-                           "group_time"        : "unix_epoch",
-                           "group_uv"          : "uv_index",
-                           "group_volt"        : "volt",
-                           "group_volume"      : "litre"})
+MetricUnits = ListOfDicts({
+    "group_altitude"    : "meter",
+    "group_amp"         : "amp",
+    "group_concentration": "microgram_per_meter_cubed",
+    "group_count"       : "count",
+    "group_data"        : "byte",
+    "group_degree_day"  : "degree_C_day",
+    "group_deltatime"   : "second",
+    "group_direction"   : "degree_compass",
+    "group_distance"    : "km",
+    "group_elapsed"     : "second",
+    "group_energy"      : "watt_hour",
+    "group_energy2"     : "watt_second",
+    "group_interval"    : "minute",
+    "group_length"      : "cm",
+    "group_moisture"    : "centibar",
+    "group_percent"     : "percent",
+    "group_power"       : "watt",
+    "group_pressure"    : "mbar",
+    "group_pressurerate": "mbar_per_hour",
+    "group_radiation"   : "watt_per_meter_squared",
+    "group_rain"        : "cm",
+    "group_rainrate"    : "cm_per_hour",
+    "group_speed"       : "km_per_hour",
+    "group_speed2"      : "km_per_hour2",
+    "group_temperature" : "degree_C",
+    "group_time"        : "unix_epoch",
+    "group_uv"          : "uv_index",
+    "group_volt"        : "volt",
+    "group_volume"      : "liter"
+})
 
 # This dictionary maps unit groups to a standard unit type in the 
 # "Metric WX" unit system. It's the same as the "Metric" system,
 # except for rain and speed:
-MetricWXUnits = ListOfDicts(MetricUnits)
-MetricWXUnits['group_rain']     = "mm"
-MetricWXUnits['group_rainrate'] = "mm_per_hour"
-MetricWXUnits['group_speed']    = "meter_per_second"
-MetricWXUnits['group_speed2']   = "meter_per_second2"
+MetricWXUnits = ListOfDicts(*MetricUnits.maps)
+MetricWXUnits.prepend({
+    'group_rain': 'mm',
+    'group_rainrate' : 'mm_per_hour',
+    'group_speed': 'meter_per_second',
+    'group_speed2': 'meter_per_second2',
+})
 
+std_groups = {
+    weewx.US: USUnits,
+    weewx.METRIC: MetricUnits,
+    weewx.METRICWX: MetricWXUnits
+}
 
 # Conversion functions to go from one unit type to another.
 conversionDict = {
-      'inHg'             : {'mbar'             : lambda x : x / INHG_PER_MBAR, 
-                            'hPa'              : lambda x : x / INHG_PER_MBAR,
-                            'mmHg'             : lambda x : x * 25.4},
-      'degree_E'         : {'degree_C'         : EtoC,
-                            'degree_F'         : EtoF},
-      'degree_F'         : {'degree_C'         : FtoC,
-                            'degree_E'         : FtoE},
-      'degree_F_day'     : {'degree_C_day'     : lambda x : x * (5.0/9.0)},
-      'mile_per_hour'    : {'km_per_hour'      : lambda x : x * 1.609344,
-                            'knot'             : lambda x : x * 0.868976242,
-                            'meter_per_second' : lambda x : x * 0.44704},
-      'mile_per_hour2'   : {'km_per_hour2'     : lambda x : x * 1.609344,
-                            'knot2'            : lambda x : x * 0.868976242,
-                            'meter_per_second2': lambda x : x * 0.44704},
-      'knot'             : {'mile_per_hour'    : lambda x : x * 1.15077945,
-                            'km_per_hour'      : lambda x : x * 1.85200,
-                            'meter_per_second' : lambda x : x * 0.514444444},
-      'knot2'             : {'mile_per_hour2'  : lambda x : x * 1.15077945,
-                            'km_per_hour2'     : lambda x : x * 1.85200,
-                            'meter_per_second2': lambda x : x * 0.514444444},
-      'inch_per_hour'    : {'cm_per_hour'      : lambda x : x * 2.54,
-                            'mm_per_hour'      : lambda x : x * 25.4},
-      'inch'             : {'cm'               : lambda x : x * CM_PER_INCH,
-                            'mm'               : lambda x : x * MM_PER_INCH},
-      'foot'             : {'meter'            : lambda x : x * METER_PER_FOOT},
-      'mmHg'             : {'inHg'             : lambda x : x / MM_PER_INCH,
-                            'mbar'             : lambda x : x / 0.75006168,
-                            'hPa'              : lambda x : x / 0.75006168},
-      'mbar'             : {'inHg'             : lambda x : x * INHG_PER_MBAR,
-                            'mmHg'             : lambda x : x * 0.75006168,
-                            'hPa'              : lambda x : x * 1.0},
-      'hPa'              : {'inHg'             : lambda x : x * INHG_PER_MBAR,
-                            'mmHg'             : lambda x : x * 0.75006168,
-                            'mbar'             : lambda x : x * 1.0},
-      'degree_C'         : {'degree_F'         : CtoF,
-                            'degree_E'         : CtoE},
-      'degree_C_day'     : {'degree_F_day'     : lambda x : x * (9.0/5.0)},
-      'km_per_hour'      : {'mile_per_hour'    : kph_to_mph,
-                            'knot'             : lambda x : x * 0.539956803,
-                            'meter_per_second' : lambda x : x * 0.277777778},
-      'meter_per_second' : {'mile_per_hour'    : mps_to_mph,
-                            'knot'             : lambda x : x * 1.94384449,
-                            'km_per_hour'      : lambda x : x * 3.6},
-      'meter_per_second2': {'mile_per_hour2'   : lambda x : x * 2.23693629,
-                            'knot2'            : lambda x : x * 1.94384449,
-                            'km_per_hour2'     : lambda x : x * 3.6},
-      'cm_per_hour'      : {'inch_per_hour'    : lambda x : x * 0.393700787,
-                            'mm_per_hour'      : lambda x : x * 10.0},
-      'mm_per_hour'      : {'inch_per_hour'    : lambda x : x * .0393700787,
-                            'cm_per_hour'      : lambda x : x * 0.10},
-      'cm'               : {'inch'             : lambda x : x / CM_PER_INCH,
-                            'mm'               : lambda x : x * 10.0},
-      'mm'               : {'inch'             : lambda x : x / MM_PER_INCH,
-                            'cm'               : lambda x : x * 0.10},
-      'meter'            : {'foot'             : lambda x : x / METER_PER_FOOT},
-      'dublin_jd'        : {'unix_epoch'       : lambda x : (x-25567.5) * 86400.0},
-      'unix_epoch'       : {'dublin_jd'        : lambda x : x/86400.0 + 25567.5},
-      'second'           : {'hour'             : lambda x : x/3600.0,
-                            'minute'           : lambda x : x/60.0,
-                            'day'              : lambda x : x/86400.0},
-      'minute'           : {'second'           : lambda x : x*60.0,
-                            'hour'             : lambda x : x/60.0,
-                            'day'              : lambda x : x/1440.0},
-      'hour'             : {'second'           : lambda x : x*3600.0,
-                            'minute'           : lambda x : x*60.0,
-                            'day'              : lambda x : x/24.0},
-      'day'              : {'second'           : lambda x : x*86400.0,
-                            'minute'           : lambda x : x*1440.0,
-                            'hour'             : lambda x : x*24.0},
-      'gallon'           : {'litre'            : lambda x : x * 3.78541,
-                            'cubic_foot'       : lambda x : x * 0.133681},
-      'litre'            : {'gallon'           : lambda x : x * 0.264172,
-                            'cubic_foot'       : lambda x : x * 0.0353147},
-      'cubic_foot'       : {'gallon'           : lambda x : x * 7.48052,
-                            'litre'            : lambda x : x * 28.3168},
-      'bit'              : {'byte'             : lambda x : x / 8},
-      'byte'             : {'bit'              : lambda x : x * 8},
-      'km'               : {'mile'             : lambda x : x * 0.621371192},
-      'mile'             : {'km'               : lambda x : x * 1.609344}}
+    'inHg_per_hour'    : {'mbar_per_hour'    : lambda x : x / INHG_PER_MBAR,
+                          'hPa_per_hour'     : lambda x : x / INHG_PER_MBAR,
+                          'mmHg_per_hour'    : lambda x : x * 25.4},
+    'inHg'             : {'mbar'             : lambda x : x / INHG_PER_MBAR,
+                          'hPa'              : lambda x : x / INHG_PER_MBAR,
+                          'mmHg'             : lambda x : x * 25.4},
+    'degree_E'         : {'degree_C'         : EtoC,
+                          'degree_F'         : EtoF},
+    'degree_F'         : {'degree_C'         : FtoC,
+                          'degree_E'         : FtoE},
+    'degree_F_day'     : {'degree_C_day'     : lambda x : x * (5.0/9.0)},
+    'mile_per_hour'    : {'km_per_hour'      : lambda x : x * 1.609344,
+                          'knot'             : lambda x : x * 0.868976242,
+                          'meter_per_second' : lambda x : x * 0.44704},
+    'mile_per_hour2'   : {'km_per_hour2'     : lambda x : x * 1.609344,
+                          'knot2'            : lambda x : x * 0.868976242,
+                          'meter_per_second2': lambda x : x * 0.44704},
+    'knot'             : {'mile_per_hour'    : lambda x : x * 1.15077945,
+                          'km_per_hour'      : lambda x : x * 1.85200,
+                          'meter_per_second' : lambda x : x * 0.514444444},
+    'knot2'             : {'mile_per_hour2'  : lambda x : x * 1.15077945,
+                           'km_per_hour2'     : lambda x : x * 1.85200,
+                           'meter_per_second2': lambda x : x * 0.514444444},
+    'inch_per_hour'    : {'cm_per_hour'      : lambda x : x * 2.54,
+                          'mm_per_hour'      : lambda x : x * 25.4},
+    'inch'             : {'cm'               : lambda x : x * CM_PER_INCH,
+                          'mm'               : lambda x : x * MM_PER_INCH},
+    'foot'             : {'meter'            : lambda x : x * METER_PER_FOOT},
+    'mmHg_per_hour'    : {'inHg_per_hour'    : lambda x : x / MM_PER_INCH,
+                          'mbar_per_hour'    : lambda x : x / 0.75006168,
+                          'hPa_per_hour'     : lambda x : x / 0.75006168},
+    'mmHg'             : {'inHg'             : lambda x : x / MM_PER_INCH,
+                          'mbar'             : lambda x : x / 0.75006168,
+                          'hPa'              : lambda x : x / 0.75006168},
+    'mbar_per_hour'    : {'inHg_per_hour'    : lambda x : x * INHG_PER_MBAR,
+                          'mmHg_per_hour'    : lambda x : x * 0.75006168,
+                          'hPa_per_hour'     : lambda x : x * 1.0},
+    'mbar'             : {'inHg'             : lambda x : x * INHG_PER_MBAR,
+                          'mmHg'             : lambda x : x * 0.75006168,
+                          'hPa'              : lambda x : x * 1.0},
+    'hPa_per_hour'     : {'inHg_per_hour'    : lambda x : x * INHG_PER_MBAR,
+                          'mmHg_per_hour'    : lambda x : x * 0.75006168,
+                          'mbar_per_hour'    : lambda x : x * 1.0},
+    'hPa'              : {'inHg'             : lambda x : x * INHG_PER_MBAR,
+                          'mmHg'             : lambda x : x * 0.75006168,
+                          'mbar'             : lambda x : x * 1.0},
+    'degree_C'         : {'degree_F'         : CtoF,
+                          'degree_E'         : CtoE},
+    'degree_C_day'     : {'degree_F_day'     : lambda x : x * (9.0/5.0)},
+    'km_per_hour'      : {'mile_per_hour'    : kph_to_mph,
+                          'knot'             : lambda x : x * 0.539956803,
+                          'meter_per_second' : lambda x : x * 0.277777778},
+    'meter_per_second' : {'mile_per_hour'    : mps_to_mph,
+                          'knot'             : lambda x : x * 1.94384449,
+                          'km_per_hour'      : lambda x : x * 3.6},
+    'meter_per_second2': {'mile_per_hour2'   : lambda x : x * 2.23693629,
+                          'knot2'            : lambda x : x * 1.94384449,
+                          'km_per_hour2'     : lambda x : x * 3.6},
+    'cm_per_hour'      : {'inch_per_hour'    : lambda x : x * 0.393700787,
+                          'mm_per_hour'      : lambda x : x * 10.0},
+    'mm_per_hour'      : {'inch_per_hour'    : lambda x : x * .0393700787,
+                          'cm_per_hour'      : lambda x : x * 0.10},
+    'cm'               : {'inch'             : lambda x : x / CM_PER_INCH,
+                          'mm'               : lambda x : x * 10.0},
+    'mm'               : {'inch'             : lambda x : x / MM_PER_INCH,
+                          'cm'               : lambda x : x * 0.10},
+    'meter'            : {'foot'             : lambda x : x / METER_PER_FOOT,
+                          'km'               : lambda x : x / 1000.0},
+    'dublin_jd'        : {'unix_epoch'       : lambda x : (x-25567.5) * 86400.0},
+    'unix_epoch'       : {'dublin_jd'        : lambda x : x/86400.0 + 25567.5},
+    'second'           : {'hour'             : lambda x : x/3600.0,
+                          'minute'           : lambda x : x/60.0,
+                          'day'              : lambda x : x/86400.0},
+    'minute'           : {'second'           : lambda x : x*60.0,
+                          'hour'             : lambda x : x/60.0,
+                          'day'              : lambda x : x/1440.0},
+    'hour'             : {'second'           : lambda x : x*3600.0,
+                          'minute'           : lambda x : x*60.0,
+                          'day'              : lambda x : x/24.0},
+    'day'              : {'second'           : lambda x : x*86400.0,
+                          'minute'           : lambda x : x*1440.0,
+                          'hour'             : lambda x : x*24.0},
+    'gallon'           : {'liter'            : lambda x : x * 3.78541,
+                          'litre'            : lambda x : x * 3.78541,
+                          'cubic_foot'       : lambda x : x * 0.133681},
+    'liter'            : {'gallon'           : lambda x : x * 0.264172,
+                          'cubic_foot'       : lambda x : x * 0.0353147},
+    'cubic_foot'       : {'gallon'           : lambda x : x * 7.48052,
+                          'litre'            : lambda x : x * 28.3168,
+                          'liter'            : lambda x : x * 28.3168},
+    'bit'              : {'byte'             : lambda x : x / 8},
+    'byte'             : {'bit'              : lambda x : x * 8},
+    'km'               : {'meter'            : lambda x : x * 1000.0,
+                          'mile'             : lambda x : x * 0.621371192},
+    'mile'             : {'km'               : lambda x : x * 1.609344},
+    'watt'             : {'kilowatt'         : lambda x : x / 1000.0},
+    'kilowatt'         : {'watt'             : lambda x : x * 1000.0},
+    'watt_second'      : {'kilowatt_hour'    : lambda x : x / 3.6e6,
+                          'watt_hour'        : lambda x : x / 3600.0},
+    'watt_hour'        : {'kilowatt_hour'    : lambda x : x / 1000.0,
+                          'watt_second'      : lambda x : x * 3600.0},
+    'kilowatt_hour'    : {'watt_second'      : lambda x : x * 3.6e6,
+                          'watt_hour'        : lambda x : x * 1000.0},
+}
 
 # Default unit formatting when nothing specified in skin configuration file
-default_unit_format_dict = {"amp"                : "%.1f",
-                            "bit"                : "%.0f",
-                            "byte"               : "%.0f",
-                            "centibar"           : "%.0f",
-                            "cm"                 : "%.2f",
-                            "cm_per_hour"        : "%.2f",
-                            "cubic_foot"         : "%.1f",
-                            "day"                : "%.1f",
-                            "degree_C"           : "%.1f",
-                            "degree_C_day"       : "%.1f",
-                            "degree_E"           : "%.1f",
-                            "degree_F"           : "%.1f",
-                            "degree_F_day"       : "%.1f",
-                            "degree_compass"     : "%.0f",
-                            "foot"               : "%.0f",
-                            "gallon"             : "%.1f",
-                            "hPa"                : "%.1f",
-                            "hour"               : "%.1f",
-                            "inHg"               : "%.3f",
-                            "inch"               : "%.2f",
-                            "inch_per_hour"      : "%.2f",
-                            "km"                 : "%.1f",
-                            "km_per_hour"        : "%.0f",
-                            "km_per_hour2"       : "%.1f",
-                            "knot"               : "%.0f",
-                            "knot2"              : "%.1f",
-                            "litre"              : "%.1f",
-                            "mbar"               : "%.1f",
-                            "meter"              : "%.0f",
-                            "meter_per_second"   : "%.0f",
-                            "meter_per_second2"  : "%.1f",
-                            "mile"               : "%.1f",
-                            "mile_per_hour"      : "%.0f",
-                            "mile_per_hour2"     : "%.1f",
-                            "mm"                 : "%.1f",
-                            "mmHg"               : "%.1f",
-                            "mm_per_hour"        : "%.1f",
-                            "percent"            : "%.0f",
-                            "second"             : "%.0f",
-                            "uv_index"           : "%.1f",
-                            "volt"               : "%.1f",
-                            "watt"               : "%.1f",
-                            "watt_hour"          : "%.1f",
-                            "watt_per_meter_squared" : "%.0f",
-                            "NONE"              : "   N/A"}
+default_unit_format_dict = {
+    "amp"                : "%.1f",
+    "bit"                : "%.0f",
+    "byte"               : "%.0f",
+    "centibar"           : "%.0f",
+    "cm"                 : "%.2f",
+    "cm_per_hour"        : "%.2f",
+    "cubic_foot"         : "%.1f",
+    "day"                : "%.1f",
+    "degree_C"           : "%.1f",
+    "degree_C_day"       : "%.1f",
+    "degree_E"           : "%.1f",
+    "degree_F"           : "%.1f",
+    "degree_F_day"       : "%.1f",
+    "degree_compass"     : "%.0f",
+    "foot"               : "%.0f",
+    "gallon"             : "%.1f",
+    "hPa"                : "%.1f",
+    "hPa_per_hour"       : "%.3f",
+    "hour"               : "%.1f",
+    "inHg"               : "%.3f",
+    "inHg_per_hour"      : "%.5f",
+    "inch"               : "%.2f",
+    "inch_per_hour"      : "%.2f",
+    "kilowatt_hour"      : "%.1f",
+    "km"                 : "%.1f",
+    "km_per_hour"        : "%.0f",
+    "km_per_hour2"       : "%.1f",
+    "knot"               : "%.0f",
+    "knot2"              : "%.1f",
+    "liter"              : "%.1f",
+    "litre"              : "%.1f",
+    "mbar"               : "%.1f",
+    "mbar_per_hour"      : "%.4f",
+    "meter"              : "%.0f",
+    "meter_per_second"   : "%.0f",
+    "meter_per_second2"  : "%.1f",
+    "microgram_per_meter_cubed": "%.3f",
+    "mile"               : "%.1f",
+    "mile_per_hour"      : "%.0f",
+    "mile_per_hour2"     : "%.1f",
+    "mm"                 : "%.1f",
+    "mmHg"               : "%.1f",
+    "mmHg_per_hour"      : "%.4f",
+    "mm_per_hour"        : "%.1f",
+    "percent"            : "%.0f",
+    "second"             : "%.0f",
+    "uv_index"           : "%.1f",
+    "volt"               : "%.1f",
+    "watt"               : "%.1f",
+    "watt_second"        : "%.0f",
+    "watt_hour"          : "%.1f",
+    "watt_per_meter_squared" : "%.0f",
+    "NONE"              : u"   N/A"
+}
 
 # Default unit labels to be used in the absence of a skin configuration file
-default_unit_label_dict = { "amp"               : " amp",
-                            "bit"               : " b",
-                            "byte"              : " B",
-                            "centibar"          : " cb",
-                            "cm"                : " cm",
-                            "cm_per_hour"       : " cm/hr",
-                            "cubic_foot"        : " ft\xc2\xb3",
-                            "day"               : (" day", " days"),
-                            "degree_C"          : "\xc2\xb0C",
-                            "degree_C_day"      : "\xc2\xb0C-day",
-                            "degree_E"          : "\xc2\xb0E",
-                            "degree_F"          : "\xc2\xb0F",
-                            "degree_F_day"      : "\xc2\xb0F-day",
-                            "degree_compass"    : "\xc2\xb0",
-                            "foot"              : " feet",
-                            "gallon"            : " gal",
-                            "hPa"               : " hPa",
-                            "inHg"              : " inHg",
-                            "hour"              : (" hour", " hours"),
-                            "inch"              : " in",
-                            "inch_per_hour"     : " in/hr",
-                            "km"                : " km",
-                            "km_per_hour"       : " kph",
-                            "km_per_hour2"      : " kph",
-                            "knot"              : " knots",
-                            "knot2"             : " knots",
-                            "litre"             : " l",
-                            "mbar"              : " mbar",
-                            "meter"             : " meters",
-                            "meter_per_second"  : " m/s",
-                            "meter_per_second2" : " m/s",
-                            "mile"              : " mile",
-                            "mile_per_hour"     : " mph",
-                            "mile_per_hour2"    : " mph",
-                            "minute"            : (" minute", " minutes"),
-                            "mm"                : " mm",
-                            "mmHg"              : " mmHg",
-                            "mm_per_hour"       : " mm/hr",
-                            "percent"           : "%",
-                            "second"            : (" second", " seconds"),
-                            "uv_index"          : "",
-                            "volt"              : " V",
-                            "watt"              : " W",
-                            "watt_hour"         : " Wh",
-                            "watt_per_meter_squared" : " W/m\xc2\xb2",
-                            "NONE"              : "" }
+default_unit_label_dict = {
+    "amp"               : u" amp",
+    "bit"               : u" b",
+    "byte"              : u" B",
+    "centibar"          : u" cb",
+    "cm"                : u" cm",
+    "cm_per_hour"       : u" cm/h",
+    "cubic_foot"        : u" ft³",
+    "day"               : (u" day", u" days"),
+    "degree_C"          : u"°C",
+    "degree_C_day"      : u"°C-day",
+    "degree_E"          : u"°E",
+    "degree_F"          : u"°F",
+    "degree_F_day"      : u"°F-day",
+    "degree_compass"    : u"°",
+    "foot"              : u" feet",
+    "gallon"            : u" gal",
+    "hPa"               : u" hPa",
+    "hPa_per_hour"      : u" hPa/h",
+    "inHg"              : u" inHg",
+    "inHg_per_hour"     : u" inHg/h",
+    "hour"              : (u" hour", u" hours"),
+    "inch"              : u" in",
+    "inch_per_hour"     : u" in/h",
+    "kilowatt_hour"     : u" kWh",
+    "km"                : u" km",
+    "km_per_hour"       : u" kph",
+    "km_per_hour2"      : u" kph",
+    "knot"              : u" knots",
+    "knot2"             : u" knots",
+    "liter"             : u" l",
+    "litre"             : u" l",
+    "mbar"              : u" mbar",
+    "mbar_per_hour"     : u" mbar/h",
+    "meter"             : u" meters",
+    "meter_per_second"  : u" m/s",
+    "meter_per_second2" : u" m/s",
+    "microgram_per_meter_cubed": u"µg/m³",
+    "mile"              : u" mile",
+    "mile_per_hour"     : u" mph",
+    "mile_per_hour2"    : u" mph",
+    "minute"            : (u" minute", u" minutes"),
+    "mm"                : u" mm",
+    "mmHg"              : u" mmHg",
+    "mm_per_hour"       : u" mm/h",
+    "mmHg_per_hour"     : u" mmHg/h",
+    "percent"           : u"%",
+    "second"            : (u" second", u" seconds"),
+    "uv_index"          : u"",
+    "volt"              : u" V",
+    "watt"              : u" W",
+    "watt_second"       : u" Ws",
+    "watt_hour"         : u" Wh",
+    "watt_per_meter_squared" : u" W/m²",
+    "NONE"              : u""
+}
 
 # Default strftime formatting to be used in the absence of a skin
 # configuration file. The entry for delta_time uses a special
 # encoding.
-default_time_format_dict = {"day"        : "%H:%M",
-                            "week"       : "%H:%M on %A",
-                            "month"      : "%d-%b-%Y %H:%M",
-                            "year"       : "%d-%b-%Y %H:%M",
-                            "rainyear"   : "%d-%b-%Y %H:%M",
-                            "current"    : "%d-%b-%Y %H:%M",
-                            "ephem_day"  : "%H:%M",
-                            "ephem_year" : "%d-%b-%Y %H:%M",
-                            "delta_time" : "%(day)d%(day_label)s, %(hour)d%(hour_label)s, "\
-                                           "%(minute)d%(minute_label)s"}
+default_time_format_dict = {
+    "day"        : "%H:%M",
+    "week"       : "%H:%M on %A",
+    "month"      : "%d-%b-%Y %H:%M",
+    "year"       : "%d-%b-%Y %H:%M",
+    "rainyear"   : "%d-%b-%Y %H:%M",
+    "current"    : "%d-%b-%Y %H:%M",
+    "ephem_day"  : "%H:%M",
+    "ephem_year" : "%d-%b-%Y %H:%M",
+    "delta_time" : "%(day)d%(day_label)s, %(hour)d%(hour_label)s, "
+                   "%(minute)d%(minute_label)s"
+}
 
 # Default mapping from compass degrees to ordinals
-default_ordinate_names = ['N', 'NNE','NE', 'ENE', 'E', 'ESE', 'SE', 'SSE',
-                          'S', 'SSW','SW', 'WSW', 'W', 'WNW', 'NW', 'NNW',
-                          'N/A']
+default_ordinate_names = [
+    'N', 'NNE','NE', 'ENE', 'E', 'ESE', 'SE', 'SSE',
+    'S', 'SSW','SW', 'WSW', 'W', 'WNW', 'NW', 'NNW',
+    'N/A'
+]
 
 #==============================================================================
 #                        class ValueTuple
@@ -466,11 +563,13 @@ class ValueTuple(tuple):
     # ValueTuples have some modest math abilities: subtraction and addition.
     def __sub__(self, other):
         if self[1] != other[1] or self[2] != other[2]:
-            raise TypeError("unsupported operand error for subtraction: %s and %s" % (self[1], other[1]))
+            raise TypeError("Unsupported operand error for subtraction: %s and %s"
+                            % (self[1], other[1]))
         return ValueTuple(self[0] - other[0], self[1], self[2])
     def __add__(self, other):
         if self[1] != other[1] or self[2] != other[2]:
-            raise TypeError("unsupported operand error for addition: %s and %s" % (self[1], other[1]))
+            raise TypeError("Unsupported operand error for addition: %s and %s"
+                            % (self[1], other[1]))
         return ValueTuple(self[0] + other[0], self[1], self[2])
 
 #==============================================================================
@@ -483,39 +582,42 @@ class Formatter(object):
     Examples (using the default formatters):
     >>> import os
     >>> os.environ['TZ'] = 'America/Los_Angeles'
+    >>> time.tzset()
     >>> f = Formatter()
-    >>> print f.toString((20.0, "degree_C", "group_temperature"))
+    >>> print(f.toString((20.0, "degree_C", "group_temperature")))
     20.0°C
-    >>> print f.toString((83.2, "degree_F", "group_temperature"))
+    >>> print(f.toString((83.2, "degree_F", "group_temperature")))
     83.2°F
     >>> # Try the Spanish locale, which will use comma decimal separators.
     >>> # For this to work, the Spanish locale must have been installed.
     >>> # You can do this with the command:
     >>> #     sudo locale-gen es_ES.UTF-8 && sudo update-locale
     >>> x = locale.setlocale(locale.LC_NUMERIC, 'es_ES.utf-8')
-    >>> print f.toString((83.2, "degree_F", "group_temperature"), localize=True)
+    >>> print(f.toString((83.2, "degree_F", "group_temperature"), localize=True))
     83,2°F
     >>> # Try it again, but overriding the localization:
-    >>> print f.toString((83.2, "degree_F", "group_temperature"), localize=False)
+    >>> print(f.toString((83.2, "degree_F", "group_temperature"), localize=False))
     83.2°F
     >>> # Set locale back to default
     >>> x = locale.setlocale(locale.LC_NUMERIC, '')
-    >>> print f.toString((123456789,  "unix_epoch", "group_time"))
+    >>> print(f.toString((123456789,  "unix_epoch", "group_time")))
     29-Nov-1973 13:33
-    >>> print f.to_ordinal_compass((5.0, "degree_compass", "group_direction"))
+    >>> print(f.to_ordinal_compass((5.0, "degree_compass", "group_direction")))
     N
-    >>> print f.to_ordinal_compass((0.0, "degree_compass", "group_direction"))
+    >>> print(f.to_ordinal_compass((0.0, "degree_compass", "group_direction")))
     N
-    >>> print f.to_ordinal_compass((12.5, "degree_compass", "group_direction"))
+    >>> print(f.to_ordinal_compass((12.5, "degree_compass", "group_direction")))
     NNE
-    >>> print f.to_ordinal_compass((360.0, "degree_compass", "group_direction"))
+    >>> print(f.to_ordinal_compass((360.0, "degree_compass", "group_direction")))
     N
-    >>> print f.to_ordinal_compass((None, "degree_compass", "group_direction"))
+    >>> print(f.to_ordinal_compass((None, "degree_compass", "group_direction")))
     N/A
-    >>> print f.toString((1*86400 + 1*3600 + 16*60 + 42, "second", "group_deltatime"))
+    >>> print(f.toString((1*86400 + 1*3600 + 16*60 + 42, "second", "group_deltatime")))
     1 day, 1 hour, 16 minutes
-    >>> delta_format = "%(day)d%(day_label)s, %(hour)d%(hour_label)s, %(minute)d%(minute_label)s, %(second)d%(second_label)s" 
-    >>> print f.toString((2*86400 + 3*3600 +  5*60 +  2, "second", "group_deltatime"), useThisFormat=delta_format)
+    >>> delta_format = "%(day)d%(day_label)s, %(hour)d%(hour_label)s, "\
+           "%(minute)d%(minute_label)s, %(second)d%(second_label)s"
+    >>> print(f.toString((2*86400 + 3*3600 +  5*60 +  2, "second", "group_deltatime"),
+    ...    useThisFormat=delta_format))
     2 days, 3 hours, 5 minutes, 2 seconds
     """
 
@@ -562,7 +664,8 @@ class Formatter(object):
             time_format_dict = default_time_format_dict
 
         try:
-            ordinate_names = weeutil.weeutil.option_as_list(skin_dict['Units']['Ordinates']['directions'])
+            ordinate_names = weeutil.weeutil.option_as_list(
+                skin_dict['Units']['Ordinates']['directions'])
         except KeyError:
             ordinate_names = default_ordinate_names
 
@@ -603,20 +706,20 @@ class Formatter(object):
             label = default_unit_label_dict[unit]
         else:
             # Can't find a label. Just return an empty string:
-            return ''
+            return u''
 
-        # Is the label a simple string? If so, return it
-        if isinstance(label, basestring):
-            return label
-        else:
-            # It is not a simple string. Assume it is a tuple or list
-            # Return the singular, or plural, version as requested.
+        # Is the label a tuple or list?
+        if isinstance(label, (tuple, list)):
+            # Yes. Return the singular or plural version as requested
             return label[1] if plural else label[0]
+        else:
+            # No singular/plural version. It's just a string. Return it.
+            return label
 
     def toString(self, val_t, context='current', addLabel=True, 
                  useThisFormat=None, None_string=None, 
                  localize=True):
-        """Format the value as a string.
+        """Format the value as a unicode string.
         
         val_t: The value to be formatted as a value tuple. 
         
@@ -631,36 +734,37 @@ class Formatter(object):
         be used.]
         
         None_string: A string to be used if the value val is None.
-        [Optional. If not given, the string given unit_format_dict['NONE']
+        [Optional. If not given, the string given by unit_format_dict['NONE']
         will be used.]
         
         localize: True to localize the results. False otherwise
         """
         if val_t is None or val_t[0] is None:
-            if None_string is not None: 
-                return None_string
+            if None_string is None:
+                val_str = self.unit_format_dict.get('NONE', u'N/A')
             else:
-                return self.unit_format_dict.get('NONE', 'N/A')
-            
-        if val_t[1] == "unix_epoch":
+                val_str = None_string
+            addLabel = False
+        elif val_t[1] == "unix_epoch":
             # Different formatting routines are used if the value is a time.
-            if useThisFormat is not None:
-                val_str = time.strftime(useThisFormat, time.localtime(val_t[0]))
+            if useThisFormat is None:
+                val_str = time.strftime(self.time_format_dict.get(context, "%d-%b-%Y %H:%M"),
+                                        time.localtime(val_t[0]))
             else:
-                val_str = time.strftime(self.time_format_dict.get(context, "%d-%b-%Y %H:%M"), time.localtime(val_t[0]))
+                val_str = time.strftime(useThisFormat, time.localtime(val_t[0]))
+            addLabel = False
         elif val_t[2] == "group_deltatime":
             # Get a delta-time format string. Use a default if the user did not supply one:
-            if useThisFormat is not None:
-                format_string = useThisFormat
+            if useThisFormat is None:
+                format_string = self.time_format_dict.get("delta_time",
+                                                          default_time_format_dict["delta_time"])
             else:
-                format_string = self.time_format_dict.get("delta_time", default_time_format_dict["delta_time"])
+                format_string = useThisFormat
             # Now format the delta time, using the function delta_secs_to_string:
             val_str = self.delta_secs_to_string(val_t[0], format_string)
-            # Return it right away, because it does not take a label
-            return val_str
+            addLabel = False
         else:
-            # It's not a time. It's a regular value. Get a suitable
-            # format string:
+            # It's not a time. It's a regular value. Get a suitable format string:
             if useThisFormat is None:
                 # No user-specified format string. Go get one:
                 format_string = self.get_format_string(val_t[1])
@@ -674,11 +778,16 @@ class Formatter(object):
                 # No localization. Just format the string.
                 val_str = format_string % val_t[0]
 
+        # Make sure the results are in unicode:
+        val_ustr = six.ensure_text(val_str)
+
         # Add a label, if requested:
         if addLabel:
-            val_str += self.get_label_string(val_t[1], plural=(not val_t[0]==1))
+            # Make sure the label is in unicode before tacking it on to the end
+            label = self.get_label_string(val_t[1], plural=(not val_t[0]==1))
+            val_ustr += six.ensure_text(label)
 
-        return val_str
+        return val_ustr
 
     def to_ordinal_compass(self, val_t):
         if val_t[0] is None:
@@ -693,7 +802,8 @@ class Formatter(object):
         
         Example:
         >>> f = Formatter()
-        >>> print f.delta_secs_to_string(3*86400+21*3600+7*60+11, default_time_format_dict["delta_time"])
+        >>> print(f.delta_secs_to_string(3*86400+21*3600+7*60+11,
+        ...         default_time_format_dict["delta_time"]))
         3 days, 21 hours, 7 minutes
         """
         etime_dict = {}
@@ -702,12 +812,7 @@ class Formatter(object):
             etime_dict[label] = amt
             etime_dict[label + '_label'] = self.get_label_string(label, not amt == 1)
             secs %= interval
-        # The version of locale in Python version 2.5 and 2.6 cannot handle interpolation and raises an
-        # exception. Be prepared to catch it and use a regular % formatter
-        try:
-            ans = locale.format_string(label_format, etime_dict)
-        except TypeError:
-            ans = label_format % etime_dict
+        ans = locale.format_string(label_format, etime_dict)
         return ans
 
 #==============================================================================
@@ -751,28 +856,28 @@ class Converter(object):
         Examples:
         >>> p_m = (1016.5, 'mbar', 'group_pressure')
         >>> c = Converter()
-        >>> print "%.3f %s %s" % c.convert(p_m)
+        >>> print("%.3f %s %s" % c.convert(p_m))
         30.017 inHg group_pressure
         
         Try an unspecified unit type:
         >>> p2 = (1016.5, None, None)
-        >>> print c.convert(p2)
+        >>> print(c.convert(p2))
         (1016.5, None, None)
         
         Try a bad unit type:
         >>> p3 = (1016.5, 'foo', 'group_pressure')
         >>> try:
-        ...     print c.convert(p3)
+        ...     print(c.convert(p3))
         ... except KeyError:
-        ...     print "Exception thrown"
+        ...     print("Exception thrown")
         Exception thrown
         
         Try a bad group type:
         >>> p4 = (1016.5, 'mbar', 'group_foo')
         >>> try:
-        ...     print c.convert(p4)
+        ...     print(c.convert(p4))
         ... except KeyError:
-        ...     print "Exception thrown"
+        ...     print("Exception thrown")
         Exception thrown
         """
         if val_t[1] is None and val_t[2] is None:
@@ -804,9 +909,9 @@ class Converter(object):
         >>> source_dict = {'dateTime': 194758100, 'outTemp': 20.0,\
             'usUnits': weewx.METRIC, 'barometer':1015.9166, 'interval':15}
         >>> target_dict = c.convertDict(source_dict)
-        >>> print "dateTime: %d, interval: %d, barometer: %.3f, outTemp: %.3f" %\
+        >>> print("dateTime: %d, interval: %d, barometer: %.3f, outTemp: %.3f" %\
         (target_dict['dateTime'], target_dict['interval'], \
-         target_dict['barometer'], target_dict['outTemp'])
+         target_dict['barometer'], target_dict['outTemp']))
         dateTime: 194758100, interval: 15, barometer: 30.000, outTemp: 68.000
         """
         target_dict = {}
@@ -874,26 +979,26 @@ class ValueHelper(object):
     >>> value_t = (68.01, "degree_F", "group_temperature")
     >>> # Use the default converter and formatter:
     >>> vh = ValueHelper(value_t)
-    >>> print vh
+    >>> print(vh)
     68.0°F
     
     Try explicit unit conversion:
-    >>> print vh.degree_C
+    >>> print(vh.degree_C)
     20.0°C
     
     Do it again, but using a converter:
     >>> vh = ValueHelper(value_t, converter=Converter(MetricUnits))
-    >>> print vh
+    >>> print(vh)
     20.0°C
     
     Extract just the raw value:
-    >>> print "%.1f" % vh.raw
+    >>> print("%.1f" % vh.raw)
     20.0
     """
     def __init__(self, value_t, context='current', formatter=Formatter(), converter=Converter()):
         """Initialize a ValueHelper.
         
-        value_t: A value tuple holding the datum.
+        value_t: An instance of a ValueTuple, holding the datum.
         
         context: The time context. Something like 'current', 'day', 'week'.
         [Optional. If not given, context 'current' will be used.]
@@ -916,7 +1021,7 @@ class ValueHelper(object):
                  None_string=None,
                  localize=True,
                  NONE_string=None):
-        """Convert my internally held ValueTuple to a string, using the supplied
+        """Convert my internally held ValueTuple to a unicode string, using the supplied
         converter and formatter.
 
         Parameters:
@@ -925,8 +1030,8 @@ class ValueHelper(object):
             useThisFormat: String with a format to be used when formatting the value. If None,
             then a format will be supplied. Default is None.
 
-            None_string: If the value is None, then this string will be used. If None, then a default string
-            from skin.conf will be used. Default is None.
+            None_string: If the value is None, then this string will be used. If None, then a
+            default string from skin.conf will be used. Default is None.
 
             localize: If True, localize the results. Default is True
 
@@ -934,7 +1039,7 @@ class ValueHelper(object):
         """
         # If the type is unknown, then just return an error string: 
         if isinstance(self.value_t, UnknownType):
-            return "?'%s'?" % self.value_t.obs_type
+            return u"?'%s'?" % self.value_t.obs_type
         # Check NONE_string for backwards compatibility:
         if None_string is None and NONE_string is not None:
             None_string = NONE_string
@@ -947,7 +1052,12 @@ class ValueHelper(object):
         return s
         
     def __str__(self):
-        """Return as string"""
+        """Return as the native string type for the version of Python being run."""
+        s = self.toString()
+        return six.ensure_str(s)
+
+    def __unicode__(self):
+        """Return as unicode. This function is called only under Python 2."""
         return self.toString()
 
     def format(self, format_string=None, None_string=None, add_label=True, localize=True):
@@ -968,8 +1078,7 @@ class ValueHelper(object):
 
     # Backwards compatibility
     def string(self, None_string=None):
-        """Return as string with an optional user specified string to be
-        used if None"""
+        """Return as string with an optional user specified string to be used if None"""
         return self.toString(None_string=None_string)
 
     # Backwards compatibility
@@ -1010,7 +1119,8 @@ class ValueHelper(object):
             try:
                 conversionDict[self.value_t[1]][target_unit]
             except KeyError:
-                raise AttributeError("Illegal conversion from '%s' to '%s'"%(self.value_t[1], target_unit))
+                raise AttributeError("Illegal conversion from '%s' to '%s'"
+                                     %(self.value_t[1], target_unit))
         return ValueHelper(self.value_t, self.context, self.formatter, FixedConverter(target_unit))
     
     def exists(self):
@@ -1127,13 +1237,12 @@ def convert(val_t, target_unit_type):
     try:
         conversion_func = conversionDict[val_t[1]][target_unit_type]
     except KeyError:
-        if weewx.debug:
-            syslog.syslog(syslog.LOG_DEBUG, "units: Unable to convert from %s to %s" %(val_t[1], target_unit_type))
+        log.debug("Unable to convert from %s to %s", val_t[1], target_unit_type)
         raise
     # Try converting a sequence first. A TypeError exception will occur if
     # the value is actually a scalar:
     try:
-        new_val = map(lambda x : conversion_func(x) if x is not None else None, val_t[0])
+        new_val = list([conversion_func(x) if x is not None else None for x in val_t[0]])
     except TypeError:
         new_val = conversion_func(val_t[0]) if val_t[0] is not None else None
     # Add on the unit type and the group type and return the results:
@@ -1152,10 +1261,10 @@ def convertStd(val_t, target_std_unit_system):
     
     Example:
     >>> value_t = (30.02, 'inHg', 'group_pressure')
-    >>> print "(%.2f, %s, %s)" % convertStd(value_t, weewx.METRIC)
+    >>> print("(%.2f, %s, %s)" % convertStd(value_t, weewx.METRIC))
     (1016.59, mbar, group_pressure)
     >>> value_t = (1.2, 'inch', 'group_rain')
-    >>> print "(%.2f, %s, %s)" % convertStd(value_t, weewx.METRICWX)
+    >>> print("(%.2f, %s, %s)" % convertStd(value_t, weewx.METRICWX))
     (30.48, mm, group_rain)
     """
     return StdUnitConverters[target_std_unit_system].convert(val_t)
@@ -1174,17 +1283,17 @@ def getStandardUnitType(target_std_unit_system, obs_type, agg_type=None):
     returns: A 2-way tuple containing the target units, and the target group.
 
     Examples:
-    >>> print getStandardUnitType(weewx.US,     'barometer')
+    >>> print(getStandardUnitType(weewx.US,     'barometer'))
     ('inHg', 'group_pressure')
-    >>> print getStandardUnitType(weewx.METRIC, 'barometer')
+    >>> print(getStandardUnitType(weewx.METRIC, 'barometer'))
     ('mbar', 'group_pressure')
-    >>> print getStandardUnitType(weewx.US, 'barometer', 'mintime')
+    >>> print(getStandardUnitType(weewx.US, 'barometer', 'mintime'))
     ('unix_epoch', 'group_time')
-    >>> print getStandardUnitType(weewx.METRIC, 'barometer', 'avg')
+    >>> print(getStandardUnitType(weewx.METRIC, 'barometer', 'avg'))
     ('mbar', 'group_pressure')
-    >>> print getStandardUnitType(weewx.METRIC, 'wind', 'rms')
+    >>> print(getStandardUnitType(weewx.METRIC, 'wind', 'rms'))
     ('km_per_hour', 'group_speed')
-    >>> print getStandardUnitType(None, 'barometer', 'avg')
+    >>> print(getStandardUnitType(None, 'barometer', 'avg'))
     (None, None)
     """
     
@@ -1218,13 +1327,15 @@ class GenWithConvert(object):
     ...        yield _rec
     >>> # First, try the raw generator function. Output should be in US
     >>> for _out in genfunc():
-    ...    print "Timestamp: %d; Temperature: %.2f; Unit system: %d" % (_out['dateTime'], _out['outTemp'], _out['usUnits'])
+    ...    print("Timestamp: %d; Temperature: %.2f; Unit system: %d"
+    ...        % (_out['dateTime'], _out['outTemp'], _out['usUnits']))
     Timestamp: 194758100; Temperature: 68.00; Unit system: 1
     Timestamp: 194758400; Temperature: 69.80; Unit system: 1
     Timestamp: 194758700; Temperature: 71.60; Unit system: 1
     >>> # Now do it again, but with the generator function wrapped by GenWithConvert:
     >>> for _out in GenWithConvert(genfunc(), weewx.METRIC):
-    ...    print "Timestamp: %d; Temperature: %.2f; Unit system: %d" % (_out['dateTime'], _out['outTemp'], _out['usUnits'])
+    ...    print("Timestamp: %d; Temperature: %.2f; Unit system: %d"
+    ...        % (_out['dateTime'], _out['outTemp'], _out['usUnits']))
     Timestamp: 194758100; Temperature: 20.00; Unit system: 16
     Timestamp: 194758400; Temperature: 21.00; Unit system: 16
     Timestamp: 194758700; Temperature: 22.00; Unit system: 16
@@ -1243,13 +1354,16 @@ class GenWithConvert(object):
     def __iter__(self):
         return self
     
-    def next(self): 
-        _record = self.input_generator.next()
-        if self.target_unit_system is None or _record['usUnits'] == self.target_unit_system:
+    def __next__(self):
+        _record = next(self.input_generator)
+        if self.target_unit_system is None:
             return _record
-        _record_c = StdUnitConverters[self.target_unit_system].convertDict(_record)
-        _record_c['usUnits'] = self.target_unit_system
-        return _record_c
+        else:
+            return to_std_system(_record, self.target_unit_system)
+
+    # For Python 2:
+    next = __next__
+
 
 def to_US(datadict):
     """Convert the units used in a dictionary to US Customary."""
@@ -1275,32 +1389,34 @@ def to_std_system(datadict, unit_system):
         _datadict_target['usUnits'] = unit_system
         return _datadict_target
 
+
 def as_value_tuple(record_dict, obs_type):
-    """Look up an observation type in a record dictionary, returning the result
-    as a ValueTuple. If not found, an object of type UnknownType will be returned."""
+    """Look up an observation type in a record, returning the result
+    as a ValueTuple. If the observation type is not recognized, an object of
+    type UnknownType will be returned."""
 
     # Is the record None?
     if record_dict is None:
-        # Yes. The record was probably not in the database. Signal a value of None
-        # and, arbitrarily, pick the US unit system:
+        # Yes. Signal a value of None and, arbitrarily, pick the US unit system:
         val = None
         std_unit_system = weewx.US
-    elif obs_type not in record_dict:
-        # There is a record, but the observation type is not in it
-        return UnknownType(obs_type)
     else:
-        # There is a record, and the observation type is in it.
-        val = record_dict[obs_type]
+        # There is a record. Get the value, and the unit system.
+        val = record_dict.get(obs_type)
         std_unit_system = record_dict['usUnits']
 
     # Given this standard unit system, what is the unit type of this
-    # particular observation type?
+    # particular observation type? If the observation type is not recognized,
+    # a unit_type of None will be returned
     (unit_type, unit_group) = StdUnitConverters[std_unit_system].getTargetUnit(obs_type)
+
     # Form the value-tuple and return it:
     return ValueTuple(val, unit_type, unit_group)
 
+
 if __name__ == "__main__":
-    
+    if not six.PY3:
+        exit("units.py doctest must be run under Python 3")
     import doctest
 
     if not doctest.testmod().failed:

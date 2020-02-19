@@ -1,11 +1,14 @@
 #
-#    Copyright (c) 2009-2015 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2019 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
 """Various utilities used by the plot package.
 
 """
+from __future__ import absolute_import
+from __future__ import print_function
+from six.moves import zip
 try:
     from PIL import ImageFont, ImageColor
 except ImportError:
@@ -13,6 +16,8 @@ except ImportError:
 import datetime
 import time
 import math
+
+import six
 
 import weeplot
     
@@ -88,19 +93,25 @@ def scale(fmn, fmx, prescale = (None, None, None), nsteps = 10):
     if _rel_approx_equal(fmn, fmx) :
         # They are equal. We need to move one or the other to create a range, while
         # being careful that the resultant min/max stay within the interval [minscale, maxscale]
+        # Pick a step out value based on min_interval if the user has supplied one. Otherwise,
+        # arbitrarily pick 0.1
+        if min_interval is not None:
+            step_out = min_interval * nsteps
+        else:
+            step_out = 0.01 * abs(fmx) if fmx else 0.1
         if maxscale is not None:
             # maxscale if fixed. Move fmn.
-            fmn = fmx - 0.01 * abs(fmx)
+            fmn = fmx - step_out
         elif minscale is not None:
             # minscale if fixed. Move fmx.
-            fmx = fmn + 0.01 * abs(fmx)
+            fmx = fmn + step_out
         else:
             # Both can float. Check special case where fmn and fmx are zero
             if fmn == 0.0 :
                 fmx = 1.0
             else :
                 # Just arbitrarily move one. Say, fmx.
-                fmx = fmn + .01*abs(fmn)
+                fmx = fmn + step_out
 
     if minscale is not None and maxscale is not None:
         if maxscale < minscale:
@@ -221,7 +232,7 @@ def scaletime(tmin_ts, tmax_ts) :
     2013-05-16 17:00:00 PDT (1368748800) 2013-05-17 08:00:00 PDT (1368802800) 7200
     """
     if tmax_ts <= tmin_ts :
-        raise weeplot.ViolatedPrecondition, "scaletime called with tmax <= tmin"
+        raise weeplot.ViolatedPrecondition("scaletime called with tmax <= tmin")
     
     tdelta = tmax_ts - tmin_ts
     
@@ -526,16 +537,23 @@ def pickLabelFormat(increment):
     return "%%.%df" % decimal_places
 
 def get_font_handle(fontpath, *args):
-    font_key = (fontpath, args)
+    """Get a handle for a font path, caching the results"""
+
+    # For Python 2, we want to make sure fontpath is a string, not unicode
+    fontpath_str = six.ensure_str(fontpath) if fontpath is not None else None
+
+    # Look for the font in the cache
+    font_key = (fontpath_str, args)
     if font_key in get_font_handle.fontCache:
         return get_font_handle.fontCache[font_key]
+
     font = None
-    if fontpath is not None :
+    if fontpath_str is not None :
         try :
-            if fontpath.endswith('.ttf'):
-                font = ImageFont.truetype(fontpath, *args)
+            if fontpath_str.endswith('.ttf'):
+                font = ImageFont.truetype(fontpath_str, *args)
             else :
-                font = ImageFont.load_path(fontpath)
+                font = ImageFont.load_path(fontpath_str)
         except IOError :
             pass
     
@@ -550,22 +568,23 @@ def _rel_approx_equal(x, y, rel=1e-7):
     """Relative test for equality.
     
     Example 
-    >>> _rel_approx_equal(1.23456, 1.23457)
+    >>> rel_approx_equal(1.23456, 1.23457)
     False
-    >>> _rel_approx_equal(1.2345678, 1.2345679)
+    >>> rel_approx_equal(1.2345678, 1.2345679)
     True
-    >>> _rel_approx_equal(0.0, 0.0)
+    >>> rel_approx_equal(0.0, 0.0)
     True
-    >>> _rel_approx_equal(0.0, 0.1)
+    >>> rel_approx_equal(0.0, 0.1)
     False
-    >>> _rel_approx_equal(0.0, 1e-9)
+    >>> rel_approx_equal(0.0, 1e-9)
     False
-    >>> _rel_approx_equal(1.0, 1.0+1e-9)
+    >>> rel_approx_equal(1.0, 1.0+1e-9)
     True
-    >>> _rel_approx_equal(1e8, 1e8+1e-3)
+    >>> rel_approx_equal(1e8, 1e8+1e-3)
     True
     """
     return abs(x-y) <= rel*max(abs(x), abs(y))
+
 
 def tobgr(x):
     """Convert a color to little-endian integer.  The PIL wants either
@@ -574,24 +593,23 @@ def tobgr(x):
     by ImageColor for example #RGB, #RRGGBB, hslHSL as well as standard color
     names from X11 and CSS3.  See ImageColor for complete set of colors.
     """
-    if isinstance(x, basestring):
+    if isinstance(x, six.string_types):
         if x.startswith('0x'):
             return int(x, 0)
         try:
             (r,g,b) = ImageColor.getrgb(x)
             return r + g*256 + b*256*256
-        except :
-            pass
-        try:
-            return int(x)
         except ValueError:
-            pass
-        raise ValueError("Unknown color specifier: '%s'.  Colors must be specified as 0xBBGGRR, #RRGGBB, or standard color names." % x)
+            try:
+                return int(x)
+            except ValueError:
+                raise ValueError("Unknown color specifier: '%s'.  "
+                                 "Colors must be specified as 0xBBGGRR, #RRGGBB, or standard color names." % x)
     return x
 
 if __name__ == "__main__":
     import doctest
 
     if not doctest.testmod().failed:
-        print "PASSED"
+        print("PASSED")
     

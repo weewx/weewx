@@ -1,22 +1,16 @@
 # coding: utf-8
 #
-#    Copyright (c) 2019 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2019-2020 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your rights.
 #
 
 """Backstop defaults used in the absence of any other values."""
 
-try:
-    # Python 2
-    from StringIO import StringIO
-except ImportError:
-    # Python 3
-    from io import StringIO
+from __future__ import absolute_import
+import weeutil.config
 
-import configobj
-
-default_str = """# Copyright (c) 2009-2019 Tom Keffer <tkeffer@gmail.com>
+DEFAULT_STR = """# Copyright (c) 2009-2020 Tom Keffer <tkeffer@gmail.com>
 # See the file LICENSE.txt for your rights.
 
 # Where the skins reside, relative to WEEWX_ROOT
@@ -43,8 +37,16 @@ log_failure = False
     [[Groups]]
 
         group_altitude     = foot                 # Options are 'foot' or 'meter'
+        group_amp          = amp
+        group_concentration= microgram_per_meter_cubed
+        group_data         = byte
         group_degree_day   = degree_F_day         # Options are 'degree_F_day' or 'degree_C_day'
+        group_deltatime    = second
         group_direction    = degree_compass
+        group_distance     = mile                 # Options are 'mile' or 'km'
+        group_energy       = watt_hour
+        group_energy2      = watt_second
+        group_length       = inch
         group_moisture     = centibar
         group_percent      = percent
         group_pressure     = inHg                 # Options are 'inHg', 'mmHg', 'mbar', or 'hPa'
@@ -56,6 +58,7 @@ log_failure = False
         group_temperature  = degree_F             # Options are 'degree_F' or 'degree_C'
         group_uv           = uv_index
         group_volt         = volt
+        group_volume       = gallon
 
         # The following are used internally and should not be changed:
         group_count        = count
@@ -78,6 +81,7 @@ log_failure = False
         inHg               = %.3f
         inch               = %.2f
         inch_per_hour      = %.2f
+        km                 = %.1f
         km_per_hour        = %.0f
         km_per_hour2       = %.1f
         knot               = %.0f
@@ -86,6 +90,7 @@ log_failure = False
         meter              = %.0f
         meter_per_second   = %.1f
         meter_per_second2  = %.1f
+        mile               = %.1f
         mile_per_hour      = %.0f
         mile_per_hour2     = %.1f
         mm                 = %.1f
@@ -103,7 +108,7 @@ log_failure = False
 
         centibar          = " cb"
         cm                = " cm"
-        cm_per_hour       = " cm/hr"
+        cm_per_hour       = " cm/h"
         degree_C          =   °C
         degree_F          =   °F
         degree_compass    =   °
@@ -111,20 +116,22 @@ log_failure = False
         hPa               = " hPa"
         inHg              = " inHg"
         inch              = " in"
-        inch_per_hour     = " in/hr"
+        inch_per_hour     = " in/h"
+        km                = " km"
         km_per_hour       = " km/h"
         km_per_hour2      = " km/h"
         knot              = " knots"
         knot2             = " knots"
         mbar              = " mbar"
-        meter             = " meters"
+        meter             = " meter", " meters"
         meter_per_second  = " m/s"
         meter_per_second2 = " m/s"
+        mile              = " mile", " miles"
         mile_per_hour     = " mph"
         mile_per_hour2    = " mph"
         mm                = " mm"
         mmHg              = " mmHg"
-        mm_per_hour       = " mm/hr"
+        mm_per_hour       = " mm/h"
         percent           =   %
         volt              = " V"
         watt_per_meter_squared = " W/m²"
@@ -162,6 +169,8 @@ log_failure = False
         heating_base = 65, degree_F
         # Base temperature for cooling days, with unit:
         cooling_base = 65, degree_F
+        # Base temperature for growing days, with unit:
+        growing_base = 50, degree_F
 
     # A trend takes a difference across a time period. The following
     # section sets the time period, and how big an error is allowed to
@@ -183,6 +192,7 @@ log_failure = False
     # Generic labels, keyed by an observation type.
     [[Generic]]
         barometer      = Barometer
+        barometerRate  = Barometer Change Rate
         dewpoint       = Dew Point
         ET             = ET
         heatindex      = Heat Index
@@ -201,6 +211,7 @@ log_failure = False
         windchill      = Wind Chill
         windgustvec    = Gust Vector
         windvec        = Wind Vector
+        windrun        = Wind Run
         extraTemp1     = Temperature1
         extraTemp2     = Temperature2
         extraTemp3     = Temperature3
@@ -224,4 +235,4 @@ log_failure = False
     moon_phases = New, Waxing crescent, First quarter, Waxing gibbous, Full, Waning gibbous, Last quarter, Waning crescent
 """
 
-defaults = configobj.ConfigObj(StringIO(default_str))
+defaults = weeutil.config.config_from_str(DEFAULT_STR)

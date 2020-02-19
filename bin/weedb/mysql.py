@@ -1,14 +1,24 @@
 #
-#    Copyright (c) 2009-2017 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2019 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
 """weedb driver for the MySQL database"""
 
 import decimal
+import six
 
-import MySQLdb
-from _mysql_exceptions import DatabaseError, IntegrityError, ProgrammingError, OperationalError
+try:
+    import MySQLdb
+except ImportError:
+    # OpenSUSE uses Python2-PyMySQL
+    import pymysql as MySQLdb
+    from pymysql import DatabaseError as MySQLDatabaseError
+else:
+    try:
+        from MySQLdb import DatabaseError as MySQLDatabaseError
+    except ImportError:
+        from _mysql_exceptions import DatabaseError as MySQLDatabaseError
 
 from weeutil.weeutil import to_bool
 import weedb
@@ -25,6 +35,7 @@ exception_map = {
     1054: weedb.NoColumnError,
     1062: weedb.IntegrityError,
     1146: weedb.NoTableError,
+    1927: weedb.CannotConnectError,
     2002: weedb.CannotConnectError,
     2003: weedb.CannotConnectError,
     2005: weedb.CannotConnectError,
@@ -39,12 +50,13 @@ def guard(fn):
     def guarded_fn(*args, **kwargs):
         try:
             return fn(*args, **kwargs)
-        except DatabaseError as e:
-            # Default exception is weedb.DatabaseError
+        except MySQLDatabaseError as e:
+            # Get the MySQL exception number out of e:
             try:
-                errno = e[0]
-            except IndexError:
+                errno = e.args[0]
+            except (IndexError, AttributeError):
                 errno = None
+            # Default exception is weedb.DatabaseError
             klass = exception_map.get(errno, weedb.DatabaseError)
             raise klass(e)
 
@@ -269,11 +281,14 @@ class Cursor(object):
     def __iter__(self):
         return self
 
-    def next(self):
+    def __next__(self):
         result = self.fetchone()
         if result is None:
             raise StopIteration
         return result
+
+    # For Python 2 compatibility:
+    next = __next__
 
     def __enter__(self):
         return self
@@ -288,11 +303,19 @@ class Cursor(object):
 def _massage(seq):
     # Return the _massaged sequence if it exists, otherwise, return None
     if seq is not None:
-        return [int(i) if isinstance(i, long) or isinstance(i, decimal.Decimal) else i for i in seq]
+        return [int(i) if isinstance(i, six.integer_types) or isinstance(i, decimal.Decimal) else i for i in seq]
 
 def set_engine(connect, engine):
     """Set the default MySQL storage engine."""
-    if connect._server_version >= (5, 5):
+    try:
+        server_version = connect._server_version
+    except AttributeError:
+        server_version = connect.server_version
+    # Some servers return lists of ints, some lists of strings, some a string.
+    # Try to normalize:
+    if isinstance(server_version, (tuple, list)):
+        server_version = '%s.%s' % server_version[:2]
+    if server_version >= '5.5':
         connect.query("SET default_storage_engine=%s" % engine)
     else:
         connect.query("SET storage_engine=%s;" % engine)

@@ -240,23 +240,32 @@ bcd2num([a,b,c]) -> c*100+b*10+a
 # w0 135
 
 from __future__ import with_statement
-import syslog
+from __future__ import absolute_import
+from __future__ import print_function
+
+import logging
 import time
 import string
-
 import fcntl
 import os
 import select
 import struct
 import termios
 import tty
+from functools import reduce
+
+import six
+from six.moves import zip
+from six.moves import input
 
 import weeutil.weeutil
 import weewx.drivers
 import weewx.wxformulas
 
+log = logging.getLogger(__name__)
+
 DRIVER_NAME = 'WS23xx'
-DRIVER_VERSION = '0.27'
+DRIVER_VERSION = '0.41'
 
 
 def loader(config_dict, _):
@@ -270,21 +279,6 @@ def confeditor_loader():
 
 
 DEFAULT_PORT = '/dev/ttyUSB0'
-
-def logmsg(dst, msg):
-    syslog.syslog(dst, 'ws23xx: %s' % msg)
-
-def logdbg(msg):
-    logmsg(syslog.LOG_DEBUG, msg)
-
-def loginf(msg):
-    logmsg(syslog.LOG_INFO, msg)
-
-def logcrt(msg):
-    logmsg(syslog.LOG_CRIT, msg)
-
-def logerr(msg):
-    logmsg(syslog.LOG_ERR, msg)
 
 
 class WS23xxConfigurator(weewx.drivers.AbstractConfigurator):
@@ -328,24 +322,24 @@ class WS23xxConfigurator(weewx.drivers.AbstractConfigurator):
 
     def show_info(self):
         """Query the station then display the settings."""
-        print 'Querying the station for the configuration...'
+        print('Querying the station for the configuration...')
         config = self.station.getConfig()
         for key in sorted(config):
-            print '%s: %s' % (key, config[key])
+            print('%s: %s' % (key, config[key]))
 
     def show_current(self):
         """Get current weather observation."""
-        print 'Querying the station for current weather data...'
+        print('Querying the station for current weather data...')
         for packet in self.station.genLoopPackets():
-            print packet
+            print(packet)
             break
 
     def show_history(self, ts=None, count=0):
         """Show the indicated number of records or records since timestamp"""
-        print "Querying the station for historical records..."
+        print("Querying the station for historical records...")
         for i, r in enumerate(self.station.genArchiveRecords(since_ts=ts,
                                                              count=count)):
-            print r
+            print(r)
             if count and i > count:
                 break
 
@@ -355,54 +349,54 @@ class WS23xxConfigurator(weewx.drivers.AbstractConfigurator):
         while ans not in ['y', 'n']:
             v = self.station.getTime()
             vstr = weeutil.weeutil.timestamp_to_string(v)
-            print "Station clock is", vstr
+            print("Station clock is", vstr)
             if prompt:
-                ans = raw_input("Set station clock (y/n)? ")
+                ans = input("Set station clock (y/n)? ")
             else:
-                print "Setting station clock"
+                print("Setting station clock")
                 ans = 'y'
             if ans == 'y':
                 self.station.setTime()
                 v = self.station.getTime()
                 vstr = weeutil.weeutil.timestamp_to_string(v)
-                print "Station clock is now", vstr
+                print("Station clock is now", vstr)
             elif ans == 'n':
-                print "Set clock cancelled."
+                print("Set clock cancelled.")
 
     def set_interval(self, interval, prompt):
-        print "Changing the interval will clear the station memory."
+        print("Changing the interval will clear the station memory.")
         v = self.station.getArchiveInterval()
         ans = None
         while ans not in ['y', 'n']:
-            print "Interval is", v
+            print("Interval is", v)
             if prompt:
-                ans = raw_input("Set interval to %d minutes (y/n)? " % interval)
+                ans = input("Set interval to %d minutes (y/n)? " % interval)
             else:
-                print "Setting interval to %d minutes" % interval
+                print("Setting interval to %d minutes" % interval)
                 ans = 'y'
             if ans == 'y':
                 self.station.setArchiveInterval(interval)
                 v = self.station.getArchiveInterval()
-                print "Interval is now", v
+                print("Interval is now", v)
             elif ans == 'n':
-                print "Set interval cancelled."
+                print("Set interval cancelled.")
 
     def clear_history(self, prompt):
         ans = None
         while ans not in ['y', 'n']:
             v = self.station.getRecordCount()
-            print "Records in memory:", v
+            print("Records in memory:", v)
             if prompt:
-                ans = raw_input("Clear console memory (y/n)? ")
+                ans = input("Clear console memory (y/n)? ")
             else:
-                print 'Clearing console memory'
+                print('Clearing console memory')
                 ans = 'y'
             if ans == 'y':
                 self.station.clearHistory()
                 v = self.station.getRecordCount()
-                print "Records in memory:", v
+                print("Records in memory:", v)
             elif ans == 'n':
-                print "Clear memory cancelled."
+                print("Clear memory cancelled.")
 
 
 class WS23xxDriver(weewx.drivers.AbstractDevice):
@@ -437,9 +431,9 @@ class WS23xxDriver(weewx.drivers.AbstractDevice):
                                                    True)
         self.mode = stn_dict.get('mode', 'single_open')
 
-        loginf('driver version is %s' % DRIVER_VERSION)
-        loginf('serial port is %s' % self.port)
-        loginf('polling interval is %s' % self.polling_interval)
+        log.info('driver version is %s' % DRIVER_VERSION)
+        log.info('serial port is %s' % self.port)
+        log.info('polling interval is %s' % self.polling_interval)
 
         if self.mode == 'single_open':
             self.station = WS23xx(self.port)
@@ -482,23 +476,22 @@ class WS23xxDriver(weewx.drivers.AbstractDevice):
                     self._poll_wait = self.polling_interval
                 if data['cn'] != self._last_cn:
                     conn_info = get_conn_info(data['cn'])
-                    loginf("connection changed from %s to %s" %
-                           (get_conn_info(self._last_cn)[0], conn_info[0]))
+                    log.info("connection changed from %s to %s"
+                             % (get_conn_info(self._last_cn)[0], conn_info[0]))
                     self._last_cn = data['cn']
                     if self.polling_interval is None:
-                        loginf("using %s second polling interval"
-                               " for %s connection" % 
-                               (conn_info[1], conn_info[0]))
+                        log.info("using %s second polling interval for %s connection"
+                                 % (conn_info[1], conn_info[0]))
                         self._poll_wait = conn_info[1]
                 time.sleep(self._poll_wait)
             except Ws2300.Ws2300Exception as e:
-                logerr("Failed attempt %d of %d to get LOOP data: %s" %
-                       (ntries, self.max_tries, e))
-                logdbg("Waiting %d seconds before retry" % self.retry_wait)
+                log.error("Failed attempt %d of %d to get LOOP data: %s"
+                          % (ntries, self.max_tries, e))
+                log.debug("Waiting %d seconds before retry" % self.retry_wait)
                 time.sleep(self.retry_wait)
         else:
             msg = "Max retries (%d) exceeded for LOOP data" % self.max_tries
-            logerr(msg)
+            log.error(msg)
             raise weewx.RetriesExceeded(msg)
 
     def genStartupRecords(self, since_ts):
@@ -552,10 +545,10 @@ class WS23xxDriver(weewx.drivers.AbstractDevice):
     def getConfig(self):
         fdata = dict()
         if self.station:
-            data = self.station.get_raw_data(Measure.IDS.keys())
+            data = self.station.get_raw_data(list(Measure.IDS.keys()))
         else:
             with WS23xx(self.port) as s:
-                data = s.get_raw_data(Measure.IDS.keys())
+                data = s.get_raw_data(list(Measure.IDS.keys()))
         for key in data:
             fdata[Measure.IDS[key].name] = data[key]
         return fdata
@@ -615,8 +608,8 @@ def data_to_packet(data, ts, last_rain=None):
             packet['windSpeed'] *= 3.6 # weewx wants km/h
         packet['windDir'] = wd
     else:
-        loginf('invalid wind reading: speed=%s dir=%s overflow=%s invalid=%s' %
-               (ws, wd, wso, wsv))
+        log.info('invalid wind reading: speed=%s dir=%s overflow=%s invalid=%s'
+                 % (ws, wd, wso, wsv))
         packet['windSpeed'] = None
         packet['windDir'] = None
 
@@ -644,29 +637,29 @@ class WS23xx(object):
     close serial port without all of the try/except/finally scaffolding."""
 
     def __init__(self, port):
-        logdbg('create LinuxSerialPort')
+        log.debug('create LinuxSerialPort')
         self.serial_port = LinuxSerialPort(port)
-        logdbg('create Ws2300')
+        log.debug('create Ws2300')
         self.ws = Ws2300(self.serial_port)
 
     def __enter__(self):
-        logdbg('station enter')
+        log.debug('station enter')
         return self
 
     def __exit__(self, type_, value, traceback):
-        logdbg('station exit')
+        log.debug('station exit')
         self.ws = None
         self.close()
 
     def close(self):
-        logdbg('close LinuxSerialPort')
+        log.debug('close LinuxSerialPort')
         self.serial_port.close()
         self.serial_port = None
 
     def set_time(self, ts):
         """Set station time to indicated unix epoch."""
-        logdbg('setting station clock to %s' % 
-               weeutil.weeutil.timestamp_to_string(ts))
+        log.debug('setting station clock to %s'
+                  % weeutil.weeutil.timestamp_to_string(ts))
         for m in [Measure.IDS['sd'], Measure.IDS['st']]:
             data = m.conv.value2binary(ts)
             cmd = m.conv.write(data, None)
@@ -676,14 +669,14 @@ class WS23xx(object):
         """Return station time as unix epoch."""
         data = self.get_raw_data(['sw'])
         ts = int(data['sw'])
-        logdbg('station clock is %s' % weeutil.weeutil.timestamp_to_string(ts))
+        log.debug('station clock is %s' % weeutil.weeutil.timestamp_to_string(ts))
         return ts
 
     def set_archive_interval(self, interval):
         """Set the archive interval in minutes."""
         if int(interval) < 1:
             raise ValueError('archive interval must be greater than zero')
-        logdbg('setting hardware archive interval to %s minutes' % interval)
+        log.debug('setting hardware archive interval to %s minutes' % interval)
         interval -= 1
         for m,v in [(Measure.IDS['hi'],interval), # archive interval in minutes
                     (Measure.IDS['hc'],1), # time till next sample in minutes
@@ -696,12 +689,12 @@ class WS23xx(object):
         """Return archive interval in minutes."""
         data = self.get_raw_data(['hi'])
         x = 1 + int(data['hi'])
-        logdbg('station archive interval is %s minutes' % x)
+        log.debug('station archive interval is %s minutes' % x)
         return x
 
     def clear_memory(self):
         """Clear station memory."""
-        logdbg('clearing console memory')
+        log.debug('clearing console memory')
         for m,v in [(Measure.IDS['hn'],0)]: # number of valid records
             data = m.conv.value2binary(v)
             cmd = m.conv.write(data, None)
@@ -710,7 +703,7 @@ class WS23xx(object):
     def get_record_count(self):
         data = self.get_raw_data(['hn'])
         x = int(data['hn'])
-        logdbg('record count is %s' % x)
+        log.debug('record count is %s' % x)
         return x
 
     def gen_records(self, since_ts=None, count=None, use_computer_clock=True):
@@ -733,8 +726,8 @@ class WS23xx(object):
         within numrec * interval minutes.
         """
 
-        logdbg("gen_records: since_ts=%s count=%s clock=%s" % 
-               (since_ts, count, use_computer_clock))
+        log.debug("gen_records: since_ts=%s count=%s clock=%s"
+                  % (since_ts, count, use_computer_clock))
         measures = [Measure.IDS['hi'], Measure.IDS['hw'],
                     Measure.IDS['hc'], Measure.IDS['hn']]
         raw_data = read_measurements(self.ws, measures)
@@ -748,15 +741,15 @@ class WS23xx(object):
         if use_computer_clock:
             latest_ts = now - (interval - time_to_next) * 60
             cstr = 'computer'
-        logdbg("using %s clock with latest_ts of %s" %
-               (cstr, weeutil.weeutil.timestamp_to_string(latest_ts)))
+        log.debug("using %s clock with latest_ts of %s"
+                  % (cstr, weeutil.weeutil.timestamp_to_string(latest_ts)))
 
         if not count:
             count = HistoryMeasure.MAX_HISTORY_RECORDS
         if since_ts is not None:
             count = int((now - since_ts) / (interval * 60))
-            logdbg("count is %d to satisfy timestamp of %s" %
-                   (count, weeutil.weeutil.timestamp_to_string(since_ts)))
+            log.debug("count is %d to satisfy timestamp of %s"
+                      % (count, weeutil.weeutil.timestamp_to_string(since_ts)))
         if count == 0:
             return
         if count > numrec:
@@ -768,7 +761,7 @@ class WS23xx(object):
         if time_to_next <= 1 and count == HistoryMeasure.MAX_HISTORY_RECORDS:
             count -= 1
 
-        logdbg("downloading %d records from station" % count)
+        log.debug("downloading %d records from station" % count)
         HistoryMeasure.set_constants(self.ws)
         measures = [HistoryMeasure(n) for n in range(count-1, -1, -1)]
         raw_data = read_measurements(self.ws, measures)
@@ -795,7 +788,7 @@ class WS23xx(object):
         """Get raw data from the station, return as dictionary."""
         measures = [Measure.IDS[m] for m in labels]
         raw_data = read_measurements(self.ws, measures)
-        data_dict = dict(zip(labels, [m.conv.binary2value(d) for m, d in zip(measures, raw_data)]))
+        data_dict = dict(list(zip(labels, [m.conv.binary2value(d) for m, d in zip(measures, raw_data)])))
         return data_dict
 
 
@@ -813,7 +806,7 @@ DEBUG_SERIAL = False
 #
 # A fatal error.
 #
-class FatalError(StandardError):
+class FatalError(Exception):
     source = None
     message = None
     cause = None
@@ -821,7 +814,7 @@ class FatalError(StandardError):
         self.source = source
         self.message = message
         self.cause = cause
-        StandardError.__init__(self, message)
+        Exception.__init__(self, message)
 
 #
 # The serial port interface.  We can talk to the Ws2300 over anything
@@ -913,7 +906,7 @@ class LinuxSerialPort(SerialPort):
             setup[3] = 0        # tty.ICANON
             setup[4] = self.settings[0]
             setup[5] = self.settings[0]
-            setup[6] = ['\000']*len(setup[6])
+            setup[6] = [b'\000']*len(setup[6])
             setup[6][tty.VMIN] = 1
             setup[6][tty.VTIME] = 0
             tty.tcflush(self.serial_port, tty.TCIOFLUSH)
@@ -1049,7 +1042,7 @@ class Ws2300(object):
         try:
             for _ in range(self.__class__.MAX_RESETS):
                 self.clear_device()
-                self.write_byte('\x06')
+                self.write_byte(b'\x06')
                 #
                 # Occasionally 0, then 2 is returned.  If 0 comes back,
                 # continue reading as this is more efficient than sending
@@ -1061,7 +1054,7 @@ class Ws2300(object):
                 success = False
                 answer = self.read_byte()
                 while answer != None:
-                    if answer == '\x02':
+                    if answer == b'\x02':
                         success = True
                     answer = self.read_byte(0.05)
                     if success:
@@ -1075,9 +1068,9 @@ class Ws2300(object):
     #
     def write_address(self,address):
         for digit in range(4):
-            byte = chr((address >> (4 * (3-digit)) & 0xF) * 4 + 0x82)
+            byte = six.int2byte((address >> (4 * (3-digit)) & 0xF) * 4 + 0x82)
             self.write_byte(byte)
-            ack = chr(digit * 16 + (ord(byte) - 0x82) // 4)
+            ack = six.int2byte(digit * 16 + (ord(byte) - 0x82) // 4)
             answer = self.read_byte()
             if ack != answer:
                 self.log("??")
@@ -1093,8 +1086,8 @@ class Ws2300(object):
                 return None
             if encode_constant == None:
                 encode_constant = self.WRITENIB
-            encoded_data = ''.join([
-                    chr(nybbles[i]*4 + encode_constant)
+            encoded_data = b''.join([
+                    six.int2byte(nybbles[i]*4 + encode_constant)
                     for i in range(len(nybbles))])
             ack_constant = {
                 self.SETBIT:    self.SETACK,
@@ -1105,7 +1098,7 @@ class Ws2300(object):
             for i in range(len(encoded_data)):
                 self.write_byte(encoded_data[i])
                 answer = self.read_byte()
-                if chr(nybbles[i] + ack_constant) != answer:
+                if six.int2byte(nybbles[i] + ack_constant) != answer:
                     self.log("??")
                     return None
             return True
@@ -1151,17 +1144,17 @@ class Ws2300(object):
         self.log_enter("rd")
         try:
             if nybble_count < 1 or nybble_count > self.MAXBLOCK:
-                StandardError("Too many nybbles requested")
+                Exception("Too many nybbles requested")
             bytes_ = (nybble_count + 1) // 2
             if not self.write_address(nybble_address):
                 return None
             #
             # Write the number bytes we want to read.
             #
-            encoded_data = chr(0xC2 + bytes_*4)
+            encoded_data = six.int2byte(0xC2 + bytes_*4)
             self.write_byte(encoded_data)
             answer = self.read_byte()
-            check = chr(0x30 + bytes_)
+            check = six.int2byte(0x30 + bytes_)
             if answer != check:
                 self.log("??")
                 return None
@@ -1169,7 +1162,7 @@ class Ws2300(object):
             # Read the response.
             #
             self.log(", :")
-            response = ""
+            response = b""
             for _ in range(bytes_):
                 answer = self.read_byte()
                 if answer == None:
@@ -1179,12 +1172,14 @@ class Ws2300(object):
             # Read and verify checksum
             #
             answer = self.read_byte()
-            checksum = sum([ord(b) for b in response]) % 256
-            if chr(checksum) != answer:
+            checksum = sum(b for b in six.iterbytes(response)) % 256
+            if six.int2byte(checksum) != answer:
                 self.log("??")
                 return None
-            flatten = lambda a,b: a + (ord(b) % 16, ord(b) / 16)
-            return reduce(flatten, response, ())[:nybble_count]
+            r = ()
+            for b in six.iterbytes(response):
+                r += (b % 16, b // 16)
+            return r[:nybble_count]
         finally:
             self.log_exit()
     #
@@ -1547,7 +1542,7 @@ class WindConversion(Conversion):
 class TextConversion(Conversion):
     constants = None
     def __init__(self, constants):
-        items = constants.items()[:]
+        items = list(constants.items())[:]
         items.sort()
         fullname = ",".join([c[1]+"="+str(c[0]) for c in items]) + ",unknown-X"
         Conversion.__init__(self, "", 1, fullname)
@@ -1833,7 +1828,7 @@ class HistoryMeasure(Measure):
     name = property(name)
     def offset(self):
         if self.LAST_POINTER is None:
-            raise StandardError("HistoryMeasure.set_constants hasn't been called")
+            raise Exception("HistoryMeasure.set_constants hasn't been called")
         return (self.LAST_POINTER - self.recno) % self.MAX_HISTORY_RECORDS
     offset = property(offset)
     def address(self):
@@ -2064,14 +2059,14 @@ class WS23xxConfEditor(weewx.drivers.AbstractConfEditor):
 """
 
     def prompt_for_settings(self):
-        print "Specify the serial port on which the station is connected, for"
-        print "example /dev/ttyUSB0 or /dev/ttyS0."
+        print("Specify the serial port on which the station is connected, for")
+        print("example /dev/ttyUSB0 or /dev/ttyS0.")
         port = self._prompt('port', '/dev/ttyUSB0')
         return {'port': port}
 
     def modify_config(self, config_dict):
-        print """
-Setting record_generation to software."""
+        print("""
+Setting record_generation to software.""")
         config_dict['StdArchive']['record_generation'] = 'software'
 
 
@@ -2083,10 +2078,11 @@ Setting record_generation to software."""
 if __name__ == '__main__':
     import optparse
 
+    import weewx
+    import weeutil.logger
+
     usage = """%prog [options] [--debug] [--help]"""
 
-    syslog.openlog('ws23xx', syslog.LOG_PID | syslog.LOG_CONS)
-    syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_INFO))
     port = DEFAULT_PORT
     parser = optparse.OptionParser(usage=usage)
     parser.add_option('--version', dest='version', action='store_true',
@@ -2107,24 +2103,27 @@ if __name__ == '__main__':
     (options, args) = parser.parse_args()
 
     if options.version:
-        print "ws23xx driver version %s" % DRIVER_VERSION
+        print("ws23xx driver version %s" % DRIVER_VERSION)
         exit(1)
 
-    if options.debug is not None:
-        syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
+    if options.debug:
+        weewx.debug = 1
+
+    weeutil.logger.setup('ws23xx', {})
+
     if options.port:
         port = options.port
 
     with WS23xx(port) as s:
         if options.readings:
             data = s.get_raw_data(SENSOR_IDS)
-            print data
+            print(data)
         if options.records is not None:
             for ts,record in s.gen_records(count=options.records):
-                print ts,record
+                print(ts,record)
         if options.measure:
             data = s.get_raw_data([options.measure])
-            print data
+            print(data)
         if options.hm:
             for m in Measure.IDS:
-                print "%s\t%s" % (m, Measure.IDS[m].name)
+                print("%s\t%s" % (m, Measure.IDS[m].name))

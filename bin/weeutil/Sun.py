@@ -30,6 +30,8 @@ Solar flux, equation of time and import of python library
 
 """
 
+from __future__ import absolute_import
+from __future__ import print_function
 SUN_PY_VERSION = "1.6.0"
 
 import math

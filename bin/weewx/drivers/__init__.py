@@ -5,8 +5,9 @@
 #
 """Device drivers for the weewx weather system."""
 
-import syslog
+from __future__ import absolute_import
 import weewx
+
 
 class AbstractDevice(object):
     """Device drivers should inherit from this class."""
@@ -57,16 +58,13 @@ class AbstractConfigurator(object):
         return "Be sure to stop weewx first before using. Mutating actions will"\
             " request confirmation before proceeding.\n"
 
-
     def configure(self, config_dict):
         parser = self.get_parser()
         self.add_options(parser)
         options, _ = parser.parse_args()
-        if options.debug is not None:
+        if options.debug:
             weewx.debug = options.debug
-            syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
-        prompt = False if options.noprompt else True
-        self.do_options(options, parser, config_dict, prompt)
+        self.do_options(options, parser, config_dict, not options.noprompt)
 
     def get_parser(self):
         import optparse
