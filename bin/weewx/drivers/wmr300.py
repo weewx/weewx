@@ -18,13 +18,16 @@
 
 # TODO: figure out battery level for each sensor
 # TODO: figure out signal strength for each sensor
-# TODO: figure out archive interval
 
-# FIXME: figure out unknown bytes in history packet
-
-# FIXME: decode the 0xdb packets
-
-# FIXME: warn if altitude in pressure packet does not match weewx altitude
+# FIXME: These all seem to offer low value return and unlikely to be done.
+#  In decreasing order of usefulness:
+#   1. warn if altitude in pressure packet does not match weewx altitude
+#   2. If rain is being accumulated when weewx is stopped, and we need to retrieve
+#      the history record then the current code returns None for the rain in
+#      the earliest new time interval and the rain increment for that time will
+#      get added to and reported at the next interval.    
+#   3. figure out unknown bytes in history packet (probably nothing useful)
+#   4. decode the 0xdb (forecast) packets
 
 """Driver for Oregon Scientific WMR300 weather stations.
 
@@ -790,15 +793,15 @@ from weeutil.weeutil import timestamp_to_string
 log = logging.getLogger(__name__)
 
 DRIVER_NAME = 'WMR300'
-DRIVER_VERSION = '0.32'
+DRIVER_VERSION = '0.33'
 
 DEBUG_COMM = 0
 DEBUG_PACKET = 0
 DEBUG_COUNTS = 0
 DEBUG_DECODE = 0
-DEBUG_HISTORY = 0
+DEBUG_HISTORY = 1
 DEBUG_RAIN = 0
-DEBUG_TIMING = 0
+DEBUG_TIMING = 1
 
 
 def loader(config_dict, _):
@@ -925,12 +928,14 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
     def __init__(self, **stn_dict):
         log.info('driver version is %s' % DRIVER_VERSION)
         log.info('usb info: %s' % get_usb_info())
-        self.model = stn_dict.get('model', 'WMR300')
+        self.model = stn_dict.get('model', DRIVER_NAME)
         self.sensor_map = dict(self.DEFAULT_MAP)
         if 'sensor_map' in stn_dict:
             self.sensor_map.update(stn_dict['sensor_map'])
         log.info('sensor map is %s' % self.sensor_map)
         hlimit = int(stn_dict.get('history_limit', self.DEFAULT_HIST_LIMIT))
+        # clear history seems to fail if tried from below 5%
+        # 1 day at 1 min intervals is ~4.5%
         if hlimit < 5:
             hlimit = 5
         if hlimit > 95:
@@ -1068,7 +1073,8 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
                 if clear_logger:
                     cmd = [0xb3, 0x59, 0x0a, 0x17, 0x01, 0xeb]
                     self.station.write(cmd)
-                    start_rec = Station.HISTORY_START_REC
+                    # a partial read is sufficient. No need to read stuff we are not going to save
+                    start_rec = Station.clip_index( self.history_end_index - 1200 )
                 else:
                     self.send_heartbeat()
                     cmd = [0x65, 0x19, 0xe5, 0x04, 0x52, 0x8b]
@@ -1120,8 +1126,8 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
         while cnt < max_tries:
             cnt += 1
             try:
-                if cnt > 1 and DEBUG_HISTORY:
-                    log.info("fini history attempt %d of %d" % (cnt, max_tries))
+                if DEBUG_HISTORY:
+                    log.info("finish history attempt %d of %d" % (cnt, max_tries))
                 # eliminate anything that might be in the buffer
                 self.station.flush_read_buffer()
                 # send packet 0x35
@@ -1168,7 +1174,9 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
         half_buf = None
         last_ts = None
         processed = 0
-            # there is a sometimes series of bogus history records reported
+        loop_ignored = 0
+        state = "reading history"
+            # there is sometimes a series of bogus history records reported
             # these are to keep a track of them
         bogus_count = 0
         bogus_first = 0
@@ -1181,79 +1189,106 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
             try:
                 buf = self.station.read()
                 if buf:
-                    # the message length is 64 bytes, but historical records
-                    # are 128 bytes.  so we have to assemble the two 64-byte
+                    # The message length is 64 bytes, but historical records
+                    # are 128 bytes.  So we have to assemble the two 64-byte
                     # parts of each historical record into a single 128-byte
-                    # message for processing.  hopefully we do not get any
+                    # message for processing.  We have to assume we do not get any
                     # non-historical records interspersed between parts.
+                    # This code will fail if any user has 7 or 8
+                    # temperature sensors installed, as it is relying on seeing
+                    # 0x7f in byte 64, which just means "no data"
                     if buf[0] == 0xd2:
+                        pktlength = buf[1]
+                        if pktlength != 128:
+                            raise WMR300Error("History record unexpected length: assumed 128, found %d" % pktlength )
                         half_buf = buf
                         buf = None
+                        # jump immediately to read the 2nd half of the packet
+                        # we don't want other possibilities intervening
+                        continue
                     elif buf[0] == 0x7f and half_buf is not None:
                         buf = half_buf + buf
                         half_buf = None
-                if buf and buf[0] == 0xd2:
-                    next_record = Station.get_record_index(buf)
-                    if last_ts is not None and next_record != self.last_record + 1:
-                        log.info("missing record: skipped from %d to %d" %
-                                 (self.last_record, next_record))
-                    self.last_record = next_record
-                    ts = Station._extract_ts(buf[4:9])
-                    if ts is None:
-                        if bogus_count == 0 :
-                            bogus_first = next_record
-                        bogus_count += 1
-                        bogus_last = next_record
-                        if DEBUG_HISTORY:
-                            log.info("Bogus historical record index: %d " % (next_record))
-                                #log.info("    content: %s" % _fmt_bytes(buf))
-                    else:
-                        if ts > since_ts:
-                            pkt = Station.decode(buf)
-                            packet = self.convert_historical(pkt, ts, last_ts)
-                            last_ts = ts
-                            if 'interval' in packet:
-                                if DEBUG_HISTORY:
-                                    log.info("New historical record for %s: %s: %s" %
-                                             (timestamp_to_string(ts), pkt['index'], packet))
-                                processed += 1
-                                yield packet
-                        else:
-                            last_ts = ts
+                    if buf[0] == 0xd2:
+                        next_record = Station.get_record_index(buf)
+                        if last_ts is not None and next_record != self.last_record + 1:
+                            log.info("missing record: skipped from %d to %d" %
+                                     (self.last_record, next_record))
+                        self.last_record = next_record
+                        ts = Station._extract_ts(buf[4:9])
+                        if ts is None:
+                            if bogus_count == 0 :
+                                bogus_first = next_record
+                            bogus_count += 1
+                            bogus_last = next_record
                             if DEBUG_HISTORY:
-                                log.info("skip record %s (%s)" % (next_record, timestamp_to_string(ts)))
+                                log.info("Bogus historical record index: %d " % (next_record))
+                                    #log.info("    content: %s" % _fmt_bytes(buf))
+                        else:
+                            if ts > since_ts:
+                                pkt = Station.decode(buf)
+                                packet = self.convert_historical(pkt, ts, last_ts)
+                                last_ts = ts
+                                if 'interval' in packet:
+                                    if DEBUG_HISTORY:
+                                        log.info("New historical record for %s: %s: %s" %
+                                                 (timestamp_to_string(ts), pkt['index'], packet))
+                                    processed += 1
+                                    yield packet
+                            else:
+                                last_ts = ts
 
-                if buf and buf[0] == 0x57:
-                    self.history_end_index = Station.get_history_end_index(buf)
+                    elif buf[0] == 0x57:
+                        self.history_end_index = Station.get_history_end_index(buf)
+                        msg = " count=%s updated; last_index rcvd=%s; final_index=%s; state = %s" % (
+                            processed, self.last_record, self.history_end_index, state)
+                        if state == "wait57":
+                            log.info("History read completed: %s" % msg)
+                            break
+                        else:
+                            log.info("History read in progress: %s" % msg)
+
+                    elif buf[0] in [0xd3, 0xd4, 0xd5, 0xd6, 0xdb, 0xdc]:
+                        # ignore any packets other than history records.  this
+                        # means there will be no current data while the history
+                        # is being read.
+                        loop_ignored += 1
+                        if DEBUG_HISTORY:
+                            log.info("ignored packet type 0x%2x" % buf[0])
+                        # do not ACK data packets.  the PC software does send ACKs
+                        # here, but they are ignored anyway.  so we just ignore.
+                    else:
+                        log.error("get_history: unexpected packet, content: %s" % _fmt_bytes(buf))
+                        
+                if self.last_record + 1 >= self.history_end_index :
+                    if state == "reading history":
+                        if DEBUG_HISTORY:
+                            msg = "count=%s kept, last_received=%s final=%s" % (
+                                processed, self.last_record, self.history_end_index )
+                            log.info("History read nearly complete: %s; state=%s" % (msg, state) )
+                        state = "finishing"
+
+                if (state == "finishing") or (time.time() - self.last_a6 > self.heartbeat):              
                     if DEBUG_HISTORY:
-                        log.info("got packet 0x57: history_end_index=%s" % self.history_end_index)
-                if buf and buf[0] in [0xd3, 0xd4, 0xd5, 0xd6, 0xdb, 0xdc]:
-                    # ignore any packets other than history records.  this
-                    # means there will be no current data while the history
-                    # is being read.
-                    if DEBUG_HISTORY:
-                        log.info("ignored packet type 0x%2x" % buf[0])
-                    # do not ACK data packets.  the PC software does send ACKs
-                    # here, but they are ignored anyway.  so we just ignore.
-                    #cmd = [0x41, 0x43, 0x4b, buf[0], buf[7]]
-                    #self.stations.write(cmd)
-                if time.time() - self.last_a6 > self.heartbeat:
-                    if DEBUG_TIMING:
-                        log.info("request station status: %s" % self.last_record)
+                        log.info("request station status at index: %s; state: %s" %
+                               (self.last_record, state ) )
                     self.send_heartbeat()
+                    if state == "finishing" :
+                        # It is possible that another history packet has been created between the
+                        # most recent 0x57 status and now. So, we have to stay in the loop
+                        # to read the possible next packet.
+                        # Evidence suggests that such history packet will arrive before the
+                        # 0x57 reply to this request, so presumably it was already in some output queue.
+                        state = "wait57"
 
-                msg = "count=%s last_index=%s history_end_index=%s" % (
-                    processed, self.last_record, self.history_end_index)
-                if self.last_record + 1 >= self.history_end_index:
-                    log.info("get history complete: %s" % msg)
-                    break
-                if buf and DEBUG_HISTORY:
-                    log.info("get history in progress: %s" % msg)
+
             except usb.USBError as e:
                 raise weewx.WeeWxIOError(e)
             except DecodeError as e:
                 log.info("get_history: %s" % e)
             time.sleep(0.001)        
+        if loop_ignored > 0 :
+            log.info( "During history read, %d loop data packets were ignored" % loop_ignored )
         if bogus_count > 0 :
             log.info( "During history read, %d bogus entries found from %d to %d" %
                       (bogus_count, bogus_first, bogus_last))
@@ -1355,8 +1390,8 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
                 p[label] = pkt[self.sensor_map[label]]
         # single variable to track last_rain assumes that any historical reads
         # will happen before any loop reads, and no historical reads will
-        # happen after any loop reads.  otherwise double-counting of rain
-        # events could happen.
+        # happen after any loop reads.  Such double-counting of rain
+        # events is avoided by deliberately ignoring all loop packets during history read.
         if 'rain_total' in pkt:
             p['rain'] = self.calculate_rain(pkt['rain_total'], self.last_rain)
             if DEBUG_RAIN and pkt['rain_total'] != self.last_rain:
