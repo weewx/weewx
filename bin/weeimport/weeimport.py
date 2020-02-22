@@ -1042,8 +1042,7 @@ class Source(object):
 
     @staticmethod
     def getRain(last_rain, current_rain):
-        """Determine the rainfall in a period from two cumulative rainfall
-            values.
+        """Determine period rainfall from two cumulative rainfall values.
 
         If the data source provides rainfall as a cumulative value then the
         rainfall in a period is the simple difference between the two values.
@@ -1054,6 +1053,9 @@ class Source(object):
         last_rain > current_rain. Occurs when rain counter was reset (maybe
                                   daily or some other period). Need to return
                                   current_rain.
+        current_rain is None. Could occur if imported rainfall value could not
+                              be converted to a numeric and config option
+                              ignore_invalid_data is set.
 
         Input parameters:
 
@@ -1065,12 +1067,12 @@ class Source(object):
 
         if last_rain is not None:
             # we have a value for the previous period
-            if current_rain >= last_rain:
+            if current_rain is not None and current_rain >= last_rain:
                 # just return the difference
                 return current_rain - last_rain
             else:
-                # we are at at a cumulative reset point so we just want
-                # current_rain
+                # we are at a cumulative reset point or we current_rain is None,
+                # either way we just want current_rain
                 return current_rain
         else:
             # we have no previous rain value so return zero
