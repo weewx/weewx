@@ -191,7 +191,7 @@ endif
 deb-package: $(DSTDIR)/$(SRCPKG)
 	mkdir -p $(BLDDIR)
 	cp $(DSTDIR)/$(SRCPKG) $(BLDDIR)
-	(cd $(BLDDIR); tar xvfz $(SRCPKG))
+	(cd $(BLDDIR); tar xfz $(SRCPKG))
 	(cd $(BLDDIR); mv $(SRCPKG) weewx_$(VERSION).orig.tar.gz)
 	rm -rf $(DEBBLDDIR)/debian
 	mkdir -m 0755 $(DEBBLDDIR)/debian
@@ -212,13 +212,14 @@ deb-package: $(DSTDIR)/$(SRCPKG)
 	(cd $(DEBBLDDIR); dpkg-buildpackage $(DPKG_OPT))
 	mkdir -p $(DSTDIR)
 	mv $(BLDDIR)/$(DEBPKG) $(DSTDIR)
+	mv $(BLDDIR)/python3-$(DEBPKG) $(DSTDIR)
 
 # run lintian on the deb package
 check-deb:
 	lintian -Ivi $(DSTDIR)/$(DEBPKG)
 
 upload-deb:
-	scp $(DSTDIR)/$(DEBPKG) $(USER)@$(WEEWX_COM):$(WEEWX_STAGING)
+	scp $(DSTDIR)/$(DEBPKG) $(DSTDIR)/python3-$(DEBPKG) $(USER)@$(WEEWX_COM):$(WEEWX_STAGING)
 
 RPMREVISION=1
 RPMVER=$(VERSION)-$(RPMREVISION)
