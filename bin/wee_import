@@ -733,7 +733,7 @@ log = logging.getLogger(__name__)
 # wee_import version number
 WEE_IMPORT_VERSION = '0.4'
 # minimum WeeWX version required for this version of wee_import
-REQUIRED_WEEWX = "4.0.0"
+REQUIRED_WEEWX = "4.0.0b1"
 
 description = """Import observation data into a WeeWX archive."""
 
