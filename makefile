@@ -188,7 +188,12 @@ DEBPKG=weewx_$(DEBVER)_$(DEBARCH).deb
 ifneq ("$(SIGN)","1")
 DPKG_OPT=-us -uc
 endif
-deb-package: $(DSTDIR)/$(SRCPKG)
+deb-package: deb-package-python2 deb-package-python3
+	mkdir -p $(DSTDIR)
+	mv $(BLDDIR)/$(DEBPKG) $(DSTDIR)
+	mv $(BLDDIR)/python3-$(DEBPKG) $(DSTDIR)
+
+deb-package-prep: $(DSTDIR)/$(SRCPKG)
 	mkdir -p $(BLDDIR)
 	cp $(DSTDIR)/$(SRCPKG) $(BLDDIR)
 	(cd $(BLDDIR); tar xfz $(SRCPKG))
@@ -200,7 +205,6 @@ deb-package: $(DSTDIR)/$(SRCPKG)
 	cp pkg/debian/compat $(DEBBLDDIR)/debian
 	cp pkg/debian/conffiles $(DEBBLDDIR)/debian
 	cp pkg/debian/config $(DEBBLDDIR)/debian
-	cp pkg/debian/control $(DEBBLDDIR)/debian
 	cp pkg/debian/copyright $(DEBBLDDIR)/debian
 	cp pkg/debian/postinst $(DEBBLDDIR)/debian
 	cp pkg/debian/postrm $(DEBBLDDIR)/debian
@@ -209,10 +213,14 @@ deb-package: $(DSTDIR)/$(SRCPKG)
 	cp pkg/debian/rules $(DEBBLDDIR)/debian
 	cp pkg/debian/source/format $(DEBBLDDIR)/debian/source
 	cp pkg/debian/templates $(DEBBLDDIR)/debian
+
+deb-package-python2: deb-package-prep
+	cp pkg/debian/control $(DEBBLDDIR)/debian
 	(cd $(DEBBLDDIR); dpkg-buildpackage $(DPKG_OPT))
-	mkdir -p $(DSTDIR)
-	mv $(BLDDIR)/$(DEBPKG) $(DSTDIR)
-	mv $(BLDDIR)/python3-$(DEBPKG) $(DSTDIR)
+
+deb-package-python3: deb-package-prep
+	cp pkg/debian/control.python3 $(DEBBLDDIR)/debian/control
+	(cd $(DEBBLDDIR); WEEWX_PYTHON=3 dpkg-buildpackage $(DPKG_OPT))
 
 # run lintian on the deb package
 check-deb:
