@@ -1,21 +1,33 @@
 #!/usr/bin/make -f
 # -*- makefile -*-
 # debian makefile for weewx
-# Copyright 2013 Matthew Wall
+# Copyright 2013-2020 Matthew Wall
 
 # Uncomment this to turn on verbose mode.
 #export DH_VERBOSE=1
 
+# determine which python we should use
+ifeq ("WEEWX_PYTHON","3")
+PYTHON=python3
+DST_WEEWX=python3-weewx
+else
+PYTHON=python2
+DST_WEEWX=weewx
+endif
+
 SRC=$(CURDIR)
-DST=$(CURDIR)/debian/weewx
+DST=$(CURDIR)/debian/$(DST_WEEWX)
 DST_EXECDIR=$(DST)/usr/bin
 DST_BINDIR =$(DST)/usr/share/weewx
 DST_DOCDIR =$(DST)/usr/share/doc/weewx
 DST_INITDIR=$(DST)/etc/init.d
 DST_CFGDIR =$(DST)/etc/weewx
 
+# these are the entry points for weewx
+ENTRIES=weewxd wee_config wee_database wee_debug wee_device wee_extension wee_import wee_reports wunderfixer
+
 %:
-	dh $@ --with python2
+	dh $@ --with python2,python3
 
 override_dh_auto_clean:
 	dh_auto_clean
@@ -63,16 +75,15 @@ install: build
 # make a virgin copy of the configuration file
 	cp $(DST_CFGDIR)/weewx.conf $(DST_CFGDIR)/weewx.conf.dist
 
+# insert the correct shebang
+	for f in $(ENTRIES); \
+ do sed -i "s%/usr/bin/env.*%/usr/bin/env $(PYTHON)%" $(DST_BINDIR)/$$f; \
+done
+
 # create symlinks to the code entry points
-	ln -s ../share/weewx/weewxd $(DST)/usr/bin/weewxd
-	ln -s ../share/weewx/wee_config $(DST)/usr/bin/wee_config
-	ln -s ../share/weewx/wee_database $(DST)/usr/bin/wee_database
-	ln -s ../share/weewx/wee_debug $(DST)/usr/bin/wee_debug
-	ln -s ../share/weewx/wee_device $(DST)/usr/bin/wee_device
-	ln -s ../share/weewx/wee_extension $(DST)/usr/bin/wee_extension
-	ln -s ../share/weewx/wee_import $(DST)/usr/bin/wee_import
-	ln -s ../share/weewx/wee_reports $(DST)/usr/bin/wee_reports
-	ln -s ../share/weewx/wunderfixer $(DST)/usr/bin/wunderfixer
+	for f in $(ENTRIES); \
+ do ln -s ../share/weewx/$$f $(DST)/usr/bin/$$f; \
+done
 
 # keep lintian happy
 	cp $(SRC)/debian/copyright $(DST_DOCDIR)
@@ -82,7 +93,7 @@ install: build
 	cp $(SRC)/debian/config $(DST)/DEBIAN
 	cp $(SRC)/debian/templates $(DST)/DEBIAN
 
-binary-indep: build install
+binary-indep: install
 	dh_testdir
 	dh_testroot
 	dh_installchangelogs
@@ -92,7 +103,7 @@ binary-indep: build install
 	dh_md5sums
 	dh_builddeb
 
-binary-arch: build install
+binary-arch:
 
 binary: binary-indep binary-arch
 
