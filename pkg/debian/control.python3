@@ -6,9 +6,7 @@ Standards-Version: 3.9.2
 Homepage: http://www.weewx.com
 Build-Depends: debhelper (>=8)
 
-Package: python3-weewx
-Replaces: weewx
-Breaks: weewx
+Package: weewx
 Priority: optional
 Architecture: all
 Pre-Depends: debconf

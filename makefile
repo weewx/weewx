@@ -224,7 +224,7 @@ deb-package-python3: deb-package-prep
 	rm -f $(DEBBLDDIR)/debian/files
 	(cd $(DEBBLDDIR); DEB_BUILD_OPTIONS=python3 dpkg-buildpackage $(DPKG_OPT))
 	mkdir -p $(DSTDIR)
-	mv $(BLDDIR)/python3-$(DEBPKG) $(DSTDIR)
+	mv $(BLDDIR)/$(DEBPKG) $(DSTDIR)/python3-$(DEBPKG)
 
 # run lintian on the deb package
 check-deb:

@@ -7,12 +7,11 @@
 #export DH_VERBOSE=1
 
 # determine which python we should use
-ifneq (,$(filter python3,$(DEB_BUILD_OPTIONS)))
-PYTHON=python3
-PKG=python3-weewx
-else
-PYTHON=python2
 PKG=weewx
+PYTHON=python2
+ifneq (,$(filter python3,$(DEB_BUILD_OPTIONS)))
+#PKG=python3-weewx
+PYTHON=python3
 endif
 
 SRC=$(CURDIR)
