@@ -80,7 +80,7 @@ install:
 
 # insert the correct shebang
 	for f in $(ENTRIES); \
- do sed -i "s%/usr/bin/env.*%/usr/bin/env $(PYTHON)%" $(DST_BINDIR)/$$f; \
+ do sed -i "s%^#!/usr/bin.*%#!/usr/bin/$(PYTHON)%" $(DST_BINDIR)/$$f; \
 done
 
 # create symlinks to the code entry points
