@@ -1,3 +1,6 @@
+weewx (4.0.0b13-1) unstable; urgency=low
+  * new upstream release
+ -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Tue, 25 Feb 2020 10:12:11 -0500
 weewx (4.0.0b12-1) unstable; urgency=low
   * new upstream release
  -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Sat, 22 Feb 2020 16:05:04 -0500

@@ -220,7 +220,7 @@ deb-package-python2: deb-package-prep
 
 deb-package-python3: deb-package-prep
 	cp pkg/debian/control.python3 $(DEBBLDDIR)/debian/control
-	(cd $(DEBBLDDIR); WEEWX_PYTHON=3 dpkg-buildpackage $(DPKG_OPT))
+	(cd $(DEBBLDDIR); DEB_BUILD_OPTIONS=python3 dpkg-buildpackage $(DPKG_OPT))
 
 # run lintian on the deb package
 check-deb:
