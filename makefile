@@ -189,15 +189,11 @@ ifneq ("$(SIGN)","1")
 DPKG_OPT=-us -uc
 endif
 deb-package: deb-package-python2 deb-package-python3
-	mkdir -p $(DSTDIR)
-	mv $(BLDDIR)/$(DEBPKG) $(DSTDIR)
-	mv $(BLDDIR)/python3-$(DEBPKG) $(DSTDIR)
 
 deb-package-prep: $(DSTDIR)/$(SRCPKG)
 	mkdir -p $(BLDDIR)
-	cp $(DSTDIR)/$(SRCPKG) $(BLDDIR)
-	(cd $(BLDDIR); tar xfz $(SRCPKG))
-	(cd $(BLDDIR); mv $(SRCPKG) weewx_$(VERSION).orig.tar.gz)
+	tar xfz $(DSTDIR)/$(SRCPKG) -C $(BLDDIR)
+	cp -p $(DSTDIR)/$(SRCPKG) $(BLDDIR)/weewx_$(VERSION).orig.tar.gz
 	rm -rf $(DEBBLDDIR)/debian
 	mkdir -m 0755 $(DEBBLDDIR)/debian
 	mkdir -m 0755 $(DEBBLDDIR)/debian/source
@@ -216,11 +212,19 @@ deb-package-prep: $(DSTDIR)/$(SRCPKG)
 
 deb-package-python2: deb-package-prep
 	cp pkg/debian/control $(DEBBLDDIR)/debian
+	rm -rf $(DEBBLDDIR)/debian/weewx*
+	rm -f $(DEBBLDDIR)/debian/files
 	(cd $(DEBBLDDIR); dpkg-buildpackage $(DPKG_OPT))
+	mkdir -p $(DSTDIR)
+	mv $(BLDDIR)/$(DEBPKG) $(DSTDIR)
 
 deb-package-python3: deb-package-prep
 	cp pkg/debian/control.python3 $(DEBBLDDIR)/debian/control
+	rm -rf $(DEBBLDDIR)/debian/weewx*
+	rm -f $(DEBBLDDIR)/debian/files
 	(cd $(DEBBLDDIR); DEB_BUILD_OPTIONS=python3 dpkg-buildpackage $(DPKG_OPT))
+	mkdir -p $(DSTDIR)
+	mv $(BLDDIR)/python3-$(DEBPKG) $(DSTDIR)
 
 # run lintian on the deb package
 check-deb:
@@ -326,3 +330,4 @@ code-summary:
 	@for d in weecfg weedb weeutil weewx; do \
   cloc bin/$$d/tests; \
 done
+

@@ -9,21 +9,21 @@
 # determine which python we should use
 ifneq (,$(filter python3,$(DEB_BUILD_OPTIONS)))
 PYTHON=python3
-DST_WEEWX=weewx
+PKG=python3-weewx
 else
 PYTHON=python2
-DST_WEEWX=weewx
+PKG=weewx
 endif
 
 SRC=$(CURDIR)
-DST=$(CURDIR)/debian/$(DST_WEEWX)
+DST=$(CURDIR)/debian/$(PKG)
 DST_EXECDIR=$(DST)/usr/bin
 DST_BINDIR =$(DST)/usr/share/weewx
 DST_DOCDIR =$(DST)/usr/share/doc/weewx
 DST_INITDIR=$(DST)/etc/init.d
 DST_CFGDIR =$(DST)/etc/weewx
 
-# these are the entry points for weewx
+# these are the entry points
 ENTRIES=weewxd wee_config wee_database wee_debug wee_device wee_extension wee_import wee_reports wunderfixer
 
 %:
@@ -34,6 +34,9 @@ override_dh_auto_clean:
 	rm -rf build dist
 	rm -f *.egg-info
 
+# this install rule duplicates what the weewx setup.py would do.  we should
+# be able to remove this when the weewx setup.py respects --no-prompt and
+# when --prefix works properly.
 install:
 	dh_testdir
 	dh_testroot
