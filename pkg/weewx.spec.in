@@ -43,12 +43,12 @@
 %endif
 
 # rh8: python3 on redhat, fedora, centos
-%if "%{_vendor}" == "redhat" && "${os_target}" == "8"
+%if "%{_vendor}" == "redhat" && "%{os_target}" == "8"
 %define relos .rhel8
 %define platform redhat
 %define initdir %{_initrddir}
 %define deps python3 , python3-setuptools , python3-configobj , python3-cheetah , python3-imaging, python3-serial, python3-usb
-%define bld_deps python3 , python3-configobj
+%define bld_deps python , python-configobj
 %define html_root /var/www/html/weewx
 %define python python3
 %endif
