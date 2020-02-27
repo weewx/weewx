@@ -40,7 +40,7 @@ help: info
 	@echo ""
 	@echo "   src-package  create source tarball suitable for distribution"
 	@echo "   deb-package  create .deb package"
-	@echo "   rpm-package  create .rpm package"
+	@echo "   rpm-package  create .rpm package   (OSREL,RPMOS)"
 	@echo ""
 	@echo "     check-deb  check the deb package"
 	@echo "     check-rpm  check the rpm package"
@@ -244,8 +244,10 @@ rpm-changelog:
 fi
 
 # use rpmbuild to create the rpm package
+# specify the operating system release target (e.g., 7 for centos7)
+OSREL=7
 RPMARCH=noarch
-RPMOS=$(shell if [ -f /etc/SuSE-release ]; then echo .suse; else echo .rhel; fi)
+RPMOS=$(shell if [ -f /etc/SuSE-release ]; then echo .suse; else echo .rhel$(OSREL); fi)
 RPMBLDDIR=$(BLDDIR)/weewx-$(RPMVER)$(RPMOS).$(RPMARCH)
 RPMPKG=weewx-$(RPMVER)$(RPMOS).$(RPMARCH).rpm
 rpm-package: $(DSTDIR)/$(SRCPKG)
@@ -259,6 +261,7 @@ rpm-package: $(DSTDIR)/$(SRCPKG)
 	mkdir -p -m 0755 $(RPMBLDDIR)/SRPMS
 	sed -e 's%Version:.*%Version: $(VERSION)%' \
             -e 's%RPMREVISION%$(RPMREVISION)%' \
+            -e 's%OSREL%$(OSREL)%' \
             pkg/weewx.spec.in > $(RPMBLDDIR)/SPECS/weewx.spec
 	cat pkg/changelog.rpm >> $(RPMBLDDIR)/SPECS/weewx.spec
 	cp dist/weewx-$(VERSION).tar.gz $(RPMBLDDIR)/SOURCES
@@ -279,10 +282,10 @@ upload-rpm:
 	scp $(DSTDIR)/$(RPMPKG) $(USER)@$(WEEWX_COM):$(WEEWX_STAGING)
 
 upload-rhel:
-	make upload-rpm RPMOS=.rhel
+	make upload-rpm RPMOS=.rhel$(OSREL)
 
 upload-suse:
-	make upload-rpm RPMOS=.suse
+	make upload-rpm RPMOS=.suse$(OSREL)
 
 # shortcut to upload all packages from a single machine
 DEB_PKG=weewx_$(DEBVER)_$(DEBARCH).deb

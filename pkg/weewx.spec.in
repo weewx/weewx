@@ -1,36 +1,56 @@
 # spec for building a weewx rpm for redhat or suse systems
 # License: GPLv3
-# Author: (c) 2013 Matthew Wall
+# Author: (c) 2013-2020 Matthew Wall
+
+# the operating system release number is specified externaly, so that we can
+# do cross-release (but not cross-platform) packaging.
+%define os_target OSREL
 
 # suse
 %if 0%{?suse_version}
-#define relos .suse%{suse_version}
 %define relos .suse
 %define platform suse
 %define initdir /etc/systemd/system
 #define initdir /etc/init.d
-%define deps , python-pyserial, python-usb
+%define deps python , python-configobj , python-cheetah , python-imaging , python-pyserial, python-usb
+%define bld_deps python , python-configobj
 %define html_root /srv/www/htdocs/weewx
+%define python python
 %endif
+
+# suse linux enterprise server
 %if 0%{?sles_version}
-#define relos .sles%{sles_version}
 %define relos .sles
 %define platform suse
 %define initdir /etc/systemd/system
 #define initdir /etc/init.d
-%define deps , python-pyserial, python-usb
+%define deps python , python-configobj , python-cheetah , python-imaging , python-pyserial, python-usb
+%define bld_deps python , python-configobj
 %define html_root /srv/www/htdocs/weewx
+%define python python
 %endif
 
-# redhat, fedora, centos
-%if "%{_vendor}" == "redhat"
-#define relos %{?dist:%{dist}}
-%define relos .rhel
+# rh7: python2 on redhat, fedora, centos
+%if "%{_vendor}" == "redhat" && "%{os_target}" == "7"
+%define relos .rhel7
 %define platform redhat
 %define initdir %{_initrddir}
 # on redhat, must install serial and/or usb using easy_install or pip
-%define deps , python-setuptools
+%define deps python , python-setuptools , python-configobj , python-cheetah , python-imaging
+%define bld_deps python , python-configobj
 %define html_root /var/www/html/weewx
+%define python python2
+%endif
+
+# rh8: python3 on redhat, fedora, centos
+%if "%{_vendor}" == "redhat" && "%{os_target}" == "8"
+%define relos .rhel8
+%define platform redhat
+%define initdir %{_initrddir}
+%define deps python3 , python3-setuptools , python3-configobj , python3-cheetah , python3-imaging, python3-serial, python3-usb
+%define bld_deps python , python-configobj
+%define html_root /var/www/html/weewx
+%define python python3
 %endif
 
 %global relnum RPMREVISION
@@ -42,6 +62,8 @@
 %global cfg_file    %{dst_cfg_dir}/weewx.conf
 %global dst_user_dir %{dst_bin_dir}/user
 
+%define entry_points weewxd wee_config wee_database wee_debug wee_device wee_extension wee_import wee_reports wunderfixer
+
 Summary: weather software
 Name: weewx
 Version: WEEWX_VERSION
@@ -50,10 +72,10 @@ Group: Applications/Science
 Source: %{name}-%{version}.tar.gz
 URL: http://www.weewx.com
 License: GPLv3
-Requires: python, python-configobj, python-cheetah, python-imaging, %{deps}
+Requires: %{deps}
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-%(%{__id_u} -n)
 BuildArch: noarch
-BuildRequires: python, python-configobj
+BuildRequires: %{bld_deps}
 
 %description
 weewx interacts with a weather station to produce graphs, reports, and HTML
@@ -106,19 +128,15 @@ cat util/init.d/weewx.%{platform} | sed \
 # make a copy of the generic-for-this-platform configuration file
 cp %{buildroot}%{dst_cfg_dir}/weewx.conf %{buildroot}%{dst_cfg_dir}/weewx.conf.dist
 
-# create symlinks to the code entry points
-ln -s ../share/weewx/weewxd %{buildroot}%{_bindir}/weewxd
-ln -s ../share/weewx/wee_config %{buildroot}%{_bindir}/wee_config
-ln -s ../share/weewx/wee_database %{buildroot}%{_bindir}/wee_database
-ln -s ../share/weewx/wee_debug %{buildroot}%{_bindir}/wee_debug
-ln -s ../share/weewx/wee_device %{buildroot}%{_bindir}/wee_device
-ln -s ../share/weewx/wee_extension %{buildroot}%{_bindir}/wee_extension
-ln -s ../share/weewx/wee_import %{buildroot}%{_bindir}/wee_import
-ln -s ../share/weewx/wee_reports %{buildroot}%{_bindir}/wee_reports
-ln -s ../share/weewx/wunderfixer %{buildroot}%{_bindir}/wunderfixer
+# insert the correct shebang
+for f in %{entry_points}; do \
+  sed -i "s/^#!\/usr\/bin.*/#!\/usr\/bin\/%{python}/" %{buildroot}%{dst_bin_dir}/$f; \
+done
 
-# pre-compile the python code
-python -m compileall %{buildroot}%{dst_bin_dir}
+# create symlinks to the code entry points
+for f in %{entry_points}; do \
+  ln -s ../share/weewx/$f %{buildroot}%{_bindir}/$f; \
+done
 
 %pre
 if [ "$1" = "2" ]; then
@@ -130,7 +148,8 @@ if [ "$1" = "2" ]; then
 fi
 
 %post
-python -m compileall %{dst_bin_dir}
+# pre-compile the python code
+%{python} -m compileall %{dst_bin_dir}
 if [ "$1" = "1" ]; then
   # this is a new installation
   # create a sane configuration file with simulator as the station type
