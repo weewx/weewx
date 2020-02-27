@@ -78,13 +78,13 @@ install:
 	cp $(DST_CFGDIR)/weewx.conf $(DST_CFGDIR)/weewx.conf.dist
 
 # insert the correct shebang
-	for f in $(ENTRIES); \
- do sed -i "s%^#!/usr/bin.*%#!/usr/bin/$(PYTHON)%" $(DST_BINDIR)/$$f; \
+	for f in $(ENTRIES); do \
+  sed -i "s%^#!/usr/bin.*%#!/usr/bin/$(PYTHON)%" $(DST_BINDIR)/$$f; \
 done
 
 # create symlinks to the code entry points
-	for f in $(ENTRIES); \
- do ln -s ../share/weewx/$$f $(DST)/usr/bin/$$f; \
+	for f in $(ENTRIES); do \
+  ln -s ../share/weewx/$$f $(DST)/usr/bin/$$f; \
 done
 
 # keep lintian happy
