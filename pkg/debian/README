@@ -49,7 +49,7 @@ debian python policy:
 https://www.debian.org/doc/packaging-manuals/python-policy/
 
 debian library style guide:
-https://wiki.debian.org/Python/LibraryStyleGuide?action=show&redirect=Python%2FPackaging
+https://wiki.debian.org/Python/LibraryStyleGuide
 
 debian pybuild:
 https://wiki.debian.org/Python/Pybuild
@@ -68,3 +68,7 @@ override_dh_auto_install:
         ./setup.py install --no-prompt --prefix=build
 
 targets:  clean, binary, binary-arch, binary-indep, build, build-arch, build-indep
+
+useful examples:
+https://www.wefearchange.org/2012/01/ebian-package-for-python-2-and-3.html
+https://www.v13.gr/blog/?p=412
