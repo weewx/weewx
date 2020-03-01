@@ -134,7 +134,7 @@ weewx packages      \n\
 $(DEBPKG)\n\
    for Debian, Ubuntu, Mint, including Raspberry Pi\n\
 \n\
-weewx-$(RPMVER).rhel.$(RPMARCH).rpm\n\
+weewx-$(RPMVER).el.$(RPMARCH).rpm\n\
    for Redhat, CentOS, Fedora\n\
 \n\
 weewx-$(RPMVER).suse.$(RPMARCH).rpm\n\
@@ -247,7 +247,7 @@ fi
 # specify the operating system release target (e.g., 7 for centos7)
 OSREL=7
 RPMARCH=noarch
-RPMOS=$(shell if [ -f /etc/SuSE-release ]; then echo .suse; else echo .rhel$(OSREL); fi)
+RPMOS=$(shell if [ -f /etc/SuSE-release ]; then echo .suse; else echo .el$(OSREL); fi)
 RPMBLDDIR=$(BLDDIR)/weewx-$(RPMVER)$(RPMOS).$(RPMARCH)
 RPMPKG=weewx-$(RPMVER)$(RPMOS).$(RPMARCH).rpm
 rpm-package: $(DSTDIR)/$(SRCPKG)
@@ -274,6 +274,14 @@ ifeq ("$(SIGN)","1")
 #	rpm --addsign $(DSTDIR)/weewx-$(RPMVER)$(RPMOS).src.rpm
 endif
 
+redhat-packages: rpm-package-el7 rpm-package-el8
+
+rpm-package-el7:
+	make rpm-package OSREL=7
+
+rpm-package-el8:
+	make rpm-package OSREL=8
+
 # run rpmlint on the redhat package
 check-rpm:
 	rpmlint $(DSTDIR)/$(RPMPKG)
@@ -282,14 +290,14 @@ upload-rpm:
 	scp $(DSTDIR)/$(RPMPKG) $(USER)@$(WEEWX_COM):$(WEEWX_STAGING)
 
 upload-rhel:
-	make upload-rpm RPMOS=.rhel$(OSREL)
+	make upload-rpm RPMOS=.el$(OSREL)
 
 upload-suse:
 	make upload-rpm RPMOS=.suse$(OSREL)
 
 # shortcut to upload all packages from a single machine
 DEB_PKG=weewx_$(DEBVER)_$(DEBARCH).deb
-RHEL_PKG=weewx-$(RPMVER).rhel.$(RPMARCH).rpm
+RHEL_PKG=weewx-$(RPMVER).el.$(RPMARCH).rpm
 SUSE_PKG=weewx-$(RPMVER).suse.$(RPMARCH).rpm
 upload-pkgs:
 	scp $(DSTDIR)/$(DEB_PKG) $(DSTDIR)/$(RHEL_PKG) $(DSTDIR)/$(SUSE_PKG) $(USER)@$(WEEWX_COM):$(WEEWX_STAGING)
