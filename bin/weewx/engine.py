@@ -256,9 +256,6 @@ class StdEngine(object):
         except:
             pass
         
-        # Reset the accumulator configurations:
-        weewx.accum.setup()
-
     def _get_console_time(self):
         try:
             return self.console.getTime()
