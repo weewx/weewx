@@ -94,17 +94,7 @@ DEFAULTS_INI = """
 """
 defaults_dict = configobj.ConfigObj(StringIO(DEFAULTS_INI), encoding='utf-8')
 
-accum_dict = None
-
-
-def setup():
-    # Set/reset to the default values
-    global accum_dict
-    accum_dict = ListOfDicts(defaults_dict['Accumulator'].dict())
-
-
-# Use the defaults to set up accum_dict
-setup()
+accum_dict = ListOfDicts(defaults_dict['Accumulator'].dict())
 
 
 class OutOfSpan(ValueError):
