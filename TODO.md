@@ -1,6 +1,9 @@
 # To do
 
-The test `test_daily.py` fails, line 96.
+Remove default calculations from `[StdWXCalculate]`. Instead, they must be
+listed in `weewx.conf`. 
+
+Swallow any exceptions that occur in `RainRater._setup()`
 
 Right now, if a user is doing software record generation, record augmentation 
 from the accumulators gets done twice: once in the software catch up,
