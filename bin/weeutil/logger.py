@@ -26,6 +26,12 @@ elif sys.platform.startswith('linux'):
 elif sys.platform.startswith('freebsd'):
     address = '/var/run/log'
     facility = 'user'
+elif sys.platform.startswith('netbsd'):
+    address = '/var/run/log'
+    facility = 'user'
+elif sys.platform.startswith('openbsd'):
+    address = '/dev/log'
+    facility = 'user'
 else:
     address = ('localhost', 514)
     facility = 'user'
