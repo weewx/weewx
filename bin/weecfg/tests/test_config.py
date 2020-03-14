@@ -429,8 +429,8 @@ class ConfigTest(LineTest):
 
         self.assertEqual(stn_info,
                          {'station_type': 'unspecified', 'altitude': ['700', 'foot'],
-                          'longitude': '-122.211', 'units': 'us', 'location': 'My Little Town, Oregon',
-                          'latitude': '44.136'})
+                          'longitude': '0.00', 'units': 'us', 'location': 'My Little Town, Oregon',
+                          'latitude': '0.00'})
 
         # Modify the station info, to reflect a hardware choice
         stn_info['station_type'] = 'Vantage'
