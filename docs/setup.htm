@@ -66,16 +66,16 @@
 <h3>Invoking <span class="code">pip</span></h3>
 <p>
     If you simply use the command <span class="code">pip</span>, you may get the Python 2 version. Some systems use the
-    command <span class="code">python3 -m pip</span> for the Python 3 version, but this is not universal. To be on the
-    safe side, invoke the <span class="code">pip</span> module directly, like this:
+    command <span class="code">pip3</span> for the Python 3 version, but this is not universal. To be on the safe side,
+    invoke the <span class="code">pip</span> module directly, like this:
 </p>
 <pre class="cmd tty">python3 -m pip install <em>module-to-be-installed</em></pre>
-<p>This way, you can be ensured that you will get the Python 3 version.</p>
+<p>This way, you can be sure to get the Python 3 version.</p>
 
 
 <h3>What to install</h3>
 <p>
-    Here is what to install. The directions for installing under Python 2 are also included, in case you need them.
+    Here is what to install. The directions for installing under Python 2 are also below, in case you need them.
 </p>
 
 
@@ -90,7 +90,8 @@
     </nav>
     <div id="prereq-pip-py2" class="tab-content">
         <pre class='tty'># Required packages:
-<span class="cmd">sudo python2 -m pip install configobj
+<span class="cmd">sudo python2 -m pip install setuptools
+sudo python2 -m pip install configobj
 sudo python2 -m pip install cheetah
 sudo python2 -m pip install pillow</span>
 
@@ -108,7 +109,7 @@ sudo python2 -m pip install pyusb</span>
                 <pre class="tty"># Required packages:
 <span class="cmd">sudo python3 -m pip install configobj
 sudo python3 -m pip install cheetah3
-sudo python3 -m pip install Pillow-PIL</span>
+sudo python3 -m pip install pillow</span>
 
 # Required if hardware is serial or USB, respectively:
 <span class="cmd">sudo python3 -m pip install pyserial
@@ -126,34 +127,48 @@ sudo python3 -m pip install pyusb</span>
 
 <h2>Install WeeWX</h2>
 
-<p>Expand the source archive:</p>
-<pre class="tty cmd">tar xvfz weewx-X.Y.Z.tar.gz</pre>
-<p>Change directory:</p>
-<pre class="tty cmd">cd weewx-X.Y.Z</pre>
-<p>To specify a location different from the standard <span class='code'>/home/weewx</span>, modify the parameter <span
-    class='code'>home</span> in the <span class='code'>setup.cfg</span> file.
-</p>
+<ol>
+    <li>
+        <p>Expand the source archive:</p>
+        <pre class="tty cmd">tar xvfz weewx-X.Y.Z.tar.gz</pre>
+    </li>
 
-<p>Then build and install:</p>
+    <li>
+        <p>Change directory:</p>
+        <pre class="tty cmd">cd weewx-X.Y.Z</pre>
+    </li>
 
-<div id='install-weewx' class="tabs">
-    <nav>
-        <button class="tab" onclick="openTab(event, '#install-weewx-py2')">
-            Python 2
-        </button>
-        <button class="tab" onclick="openTab(event, '#install-weewx-py3')">
-            Python 3
-        </button>
-    </nav>
-    <div id="install-weewx-py2" class="tab-content">
+    <li>
+        <p>
+            To specify a location different from the standard <span class='code'>/home/weewx</span>, modify the
+            parameter <span class='code'>home</span> in the <span class='code'>setup.cfg</span> file. Mac users will
+            want to change it to <span class="code">/Users/weewx</span>.
+        </p>
+    </li>
+    <li>
+        <p>Then build and install:</p>
+
+        <div id='install-weewx' class="tabs">
+            <nav>
+                <button class="tab" onclick="openTab(event, '#install-weewx-py2')">
+                    Python 2
+                </button>
+                <button class="tab" onclick="openTab(event, '#install-weewx-py3')">
+                    Python 3
+                </button>
+            </nav>
+            <div id="install-weewx-py2" class="tab-content">
 <pre class="tty cmd">python2 ./setup.py build
 sudo python2 ./setup.py install</pre>
-    </div>
-    <div id="install-weewx-py3" class="tab-content">
+            </div>
+            <div id="install-weewx-py3" class="tab-content">
 <pre class="tty cmd">python3 ./setup.py build
 sudo python3 ./setup.py install</pre>
-    </div>
-</div>
+            </div>
+        </div>
+    </li>
+</ol>
+
 
 <h2>Run</h2>
 

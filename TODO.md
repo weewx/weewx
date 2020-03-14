@@ -1,8 +1,5 @@
 # To do
 
-When doing `setup.py` installs, some Python 2 installations may have to install `setuptools`
-first.
-
 Remove default calculations from `[StdWXCalculate]`. Instead, they must be
 listed in `weewx.conf`. 
 
