@@ -22,9 +22,12 @@ import distutils.file_util
 import fnmatch
 import os.path
 import shutil
+import subprocess
 import sys
 from distutils.command.install_data import install_data
 from distutils.command.install_lib import install_lib
+from distutils.debug import DEBUG
+
 from setuptools import setup, find_packages
 from setuptools.command.install import install
 
@@ -33,7 +36,7 @@ if sys.version_info < (2, 7):
     print('For earlier versions of Python, use WeeWX V3.9.')
     sys.exit("Python version unsupported.")
 
-# Find the install lib subdirectory:
+# Find the subdirectory in the distribution that contains the weewx libraries:
 this_file = os.path.join(os.getcwd(), __file__)
 this_dir = os.path.abspath(os.path.dirname(this_file))
 lib_dir = os.path.abspath(os.path.join(this_dir, 'bin'))
@@ -163,7 +166,7 @@ class weewx_install_data(install_data):
 # ==============================================================================
 # utilities
 # ==============================================================================
-def find_files(directory, file_excludes=['*.pyc'], dir_excludes=['*/__pycache__']):
+def find_files(directory, file_excludes=['*.pyc', "junk*"], dir_excludes=['*/__pycache__']):
     """Find all files under a directory, honoring some exclusions.
 
     Returns:
@@ -212,21 +215,36 @@ def move_with_timestamp(filepath):
 
 
 def update_and_install_config(install_dir, config_name='weewx.conf'):
-    import subprocess
+    """Install the configuration file, weewx.conf, updating it if necessary."""
 
-    dist_config = os.path.join(install_dir, config_name + '.' + VERSION)
-    wee_config_path = os.path.join(install_dir, 'bin/wee_config')
-    print("path to wee_config=%s" % wee_config_path)
+    # This is where the weewx.conf file will go
+    destination = os.path.join(install_dir, config_name)
+    # Is there an existing file? If so, use it as the source. Otherwise,
+    # use the file that came with the distribution.
+    if os.path.isfile(destination):
+        source = destination
+    else:
+        source = os.path.join(install_dir, config_name + '.' + VERSION)
+    if DEBUG:
+        print("Incoming weewx.conf path=%s" % source)
+        print("Processed weewx.conf path=%s" % destination)
+        print("Current python interpretor=%s" % sys.executable)
+    os.chdir(install_dir)
 
-    # proc = subprocess.Popen([wee_config_path,
-    #                          '--install',
-    #                          '--dist-config=%s' % dist_config,
-    #                          '--output=%s' % dist_config,
-    #                          ], stdout=subprocess.PIPE,
-    #                         stderr=subprocess.PIPE)
-    # out, err = proc.communicate()
-    # print('out=', out.decode())
-    # print('err=', err.decode())
+    proc = subprocess.Popen([sys.executable,
+                             os.path.join(install_dir, 'bin/wee_config'),
+                             '--install',
+                             '--dist-config=%s' % source,
+                             '--output=%s' % destination,
+                             ],
+                            stdin=sys.stdin,
+                            stdout=sys.stdout,
+                            stderr=sys.stderr)
+    out, err = proc.communicate()
+    if DEBUG and out:
+        print('out=', out.decode())
+    if DEBUG and err:
+        print('err=', err.decode())
 
 
 # ==============================================================================

@@ -5,3 +5,4 @@ recursive-include examples *
 include LICENSE.txt
 include README
 include weewx.conf
+exclude **/junk*
