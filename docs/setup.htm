@@ -12,11 +12,8 @@
     <script>
         $(function () {
             // Create a click on the first tab to get things started.
-            $('#prereq-tabs .tab')[0].click();
-            $('#prereq-debian .tab')[0].click();
-            $('#prereq-redhat .tab')[0].click();
-            $('#prereq-suse .tab')[0].click();
-            $('#prereq-pip .tab')[0].click();
+            $('#prereq-pip .tab')[1].click();
+            $('#install-weewx .tab')[1].click();
             $('#startup-tabs .tab')[0].click();
         })
     </script>
@@ -49,279 +46,83 @@
 
 <h2>Which version of Python?</h2>
 <p>
-    WeeWX will run under either Python 2 or Python 3, specifically, Python 2.7 or Python 3.5 or greater.
+    While WeeWX will run under either Python 2 or Python 3, you should run it under Python 3 if possible. Python 2 is no
+    longer supported by the Python Software Foundation.
 </p>
-
 <p>
-    If your system offers both Python 2 and Python 3, how do you decide which version to use? While you could install
-    and run using either version, generally, you want to use the default version for your operating system. You can
-    check which this is by running the command <span class="code">python</span> with the <span class="code">-V</span>
-    option. For example:
-</p>
-<pre class='tty'><span class="cmd">python -V</span>
-Python 2.7.15rc1
-</pre>
-
-<p>
-    In this example, the default version is Python 2 (specifically, v2.7.15), so you would be happiest if you install
-    using Python 2.
+    The "default" version of Python, that is, the version that is invoked with the simple command <span class="code">python</span>,
+    varies from system to system. However, the command <span class="code">python3</span> will always invoke Python 3, so
+    it's safest to use that.
 </p>
 
 <h2 id="setup_prerequisites">Install prerequisites</h2>
 
 <p>
-    Install the required python packages using either the package management software for your system (<i>e.g.</i>, <span
-    class='code'>apt-get</span>, <span class='code'>yum</span>, <span class='code'>zypper</span>) or the Python Package
-    Management System (<span class='code'>pip</span>). Select the appropriate tab for specific instructions for your
-    chosen install method and Python version.
+    For the <span class="code">setup.py</span> install method, prerequisites are installed using the tool <span
+    class="code">pip</span>. Most likely, your system already includes <span class="code">pip</span>, but in case it
+    doesn't, here are <a href="https://pip.pypa.io/en/stable/installing/">instructions for installing it</a>.
 </p>
 
-<div id="prereq-tabs" class="tabs" style="width:95%; padding: 10px 10px 10px 10px;">
+<h3>Invoking <span class="code">pip</span></h3>
+<p>
+    If you simply use the command <span class="code">pip</span>, you may get the Python 2 version. Some systems use the
+    command <span class="code">python3 -m pip</span> for the Python 3 version, but this is not universal. To be on the
+    safe side, invoke the <span class="code">pip</span> module directly, like this:
+</p>
+<pre class="cmd tty">python3 -m pip install <em>module-to-be-installed</em></pre>
+<p>This way, you can be ensured that you will get the Python 3 version.</p>
+
+
+<h3>What to install</h3>
+<p>
+    Here is what to install. The directions for installing under Python 2 are also included, in case you need them.
+</p>
+
+
+<div id='prereq-pip' class="tabs">
     <nav>
-        <button class="tab" onclick="openTab(event, '#prereq-debian')">
-            Debian
-            <img src='images/logo-debian.png' class='thumbnail' alt="Debian logo"/>
-            <img src='images/logo-ubuntu.png' class='thumbnail' alt="Ubuntu logo"/>
-            <img src='images/logo-mint.png' class='thumbnail' alt="Mint logo"/>
-        </button>
-
-        <button class="tab" onclick="openTab(event, '#prereq-redhat')">
-            Redhat
-            <img src='images/logo-redhat.png' class='thumbnail' alt="Redhat logo"/>
-            <img src='images/logo-centos.png' class='thumbnail' alt="Centos logo"/>
-            <img src='images/logo-fedora.png' class='thumbnail' alt="Fedora logo"/>
-        </button>
-
-        <button class="tab" onclick="openTab(event, '#prereq-suse')">
-            SUSE
-            <img src='images/logo-suse.png' class='thumbnail' alt="SUSE logo"/>
-        </button>
-
-        <button class="tab" onclick="openTab(event, '#prereq-pip')">
-            pip
-            <img src='images/logo-pypi.svg' class='thumbnail' alt="PyPi logo"/>
-        </button>
-    </nav>
-
-    <div id='prereq-debian' class="tab-content">
-        <button class="tab" onclick="openTab(event, '#prereq-debian-py2')">
-            Python 2
-        </button>
-        <button class="tab" onclick="openTab(event, '#prereq-debian-py3')">
-            Python 3
-        </button>
-
-        <div id="prereq-debian-py2" class="tab-content">
-            <pre class="tty">
-<span class='cmd'>sudo apt-get update</span>
-
-# For systems that do not have Python2 pre-installed
-# (for example, Ubuntu 18.04 and later):
-<span class='cmd'>sudo apt-get install python</span>
-
-# Required packages:
-<span class="cmd">sudo apt-get install python-configobj
-sudo apt-get install python-cheetah
-sudo apt-get install python-pil</span>
-# If python-pil does not work, try this:
-<span class='cmd'>sudo apt-get install python-imaging</span>
-
-# Required if hardware is serial or USB:
-<span class="cmd">sudo apt-get install python-serial
-sudo apt-get install python-usb</span>
-
-# Required if using MySQL:
-<span class="cmd">sudo apt-get install mysql-client
-sudo apt-get install python-mysqldb</span>
-
-# Required if using FTP on Raspbian systems:
-<span class="cmd">sudo apt-get install ftp</span>
-
-# Optional: for extended almanac information:
-<span class="cmd">sudo apt-get install python-ephem</span>
-# If that does not work, try this:
-<span class="cmd">sudo apt-get install python-dev
-sudo apt-get install python-pip
-sudo pip install pyephem</span></pre>
-        </div>
-        <div id="prereq-debian-py3" class="tab-content">
-            <pre class="tty">
-<span class='cmd'>sudo apt-get update</span>
-
-# Required packages:
-<span class="cmd">sudo apt-get install python3-pil
-sudo apt-get install python3-configobj
-sudo apt-get install python3-distutils
-sudo apt-get install python3-cheetah</span>
-# If python3-cheetah does not work, try this:
-<span class="cmd">sudo apt-get install python3-cheetah3</span>
-# If python3-cheetah3 does not work, try this:
-<span class="cmd">sudo apt-get install python3-pip
-sudo apt-get install python3-dev
-sudo pip3 install cheetah3</span>
-
-# Required if hardware is serial or USB:
-<span class="cmd">sudo apt-get install python3-serial
-sudo apt-get install python3-usb</span>
-
-# Required if using MySQL:
-<span class="cmd">sudo apt-get install python3-mysqldb</span>
-<span class="cmd">sudo apt-get install default-mysql-client</span>
-# If default-mysql-client does not work, try this:
-<span class="cmd">sudo apt-get install mysql-client</span>
-
-# Optional: for extended almanac information:
-<span class="cmd">sudo apt-get install python3-ephem</span>
-# If that does not work, try this:
-<span class="cmd">sudo apt-get install python3-pip
-sudo apt-get install python3-dev
-sudo pip3 install pyephem</span></pre>
-        </div>
-    </div>
-
-    <div id='prereq-redhat' class="tab-content">
-        <button class="tab" onclick="openTab(event, '#prereq-redhat-py2')">
-            Python 2
-        </button>
-        <button class="tab" onclick="openTab(event, '#prereq-redhat-py3')">
-            Python 3
-        </button>
-        <div id="prereq-redhat-py2" class="tab-content">
-
-                <pre class='tty'># For systems based on RHEL 7 and earlier:
-<span class="cmd">sudo yum update</span>
-
-# Required packages:
-<span class="cmd">sudo yum install python-configobj
-sudo yum install python-cheetah
-sudo yum install python-imaging</span>
-
-# Required if hardware is serial or USB:
-<span class="cmd">sudo yum install python-setuptools
-sudo easy_install pyserial
-sudo easy_install pyusb</span>
-
-# Required if using MySQL:
-<span class="cmd">sudo yum install mysql-client
-sudo yum install python-mysqldb</span>
-
-# Optional: for extended almanac information:
-<span class="cmd">sudo yum install pyephem</span></pre>
-        </div>
-        <div id="prereq-redhat-py3" class="tab-content">
-            <pre class="tty"># For systems based on RHEL 8 and later:
-<span class="cmd">sudo yum update</span>
-
-# Ensure that Python3 is installed:
-<span class="cmd">sudo yum install python3</span>
-
-# Required packages:
-<span class="cmd">sudo yum install python3-configobj
-sudo yum install python3-pillow
-sudo pip3 install Cheetah3</span>
-
-# Required if hardware is serial or USB:
-<span class="cmd">sudo yum install python3-pyserial
-sudo yum install python3-pyusb</span>
-
-# Required if using MySQL:
-<span class="cmd">sudo yum install python3-PyMySQL</span>
-
-# Optional: for extended almanac information
-<span class="cmd">sudo pip3 install pyephem</span></pre>
-        </div>
-    </div>
-
-    <div id='prereq-suse' class="tab-content">
-        <button class="tab" onclick="openTab(event, '#prereq-suse-py2')">
-            Python 2
-        </button>
-        <button class="tab" onclick="openTab(event, '#prereq-suse-py3')">
-            Python 3
-        </button>
-        <div id="prereq-suse-py2" class="tab-content">
-                <pre class='tty'># Tested on openSUSE Leap 15.1
-
-# Ensure that Python2 is installed:
-<span class="cmd">sudo zypper install python</span>
-
-# Required packages:
-<span class="cmd">sudo zypper install python2-configobj
-sudo zypper install python2-Pillow
-sudo zypper install python2-pip
-sudo pip2 install Cheetah</span>
-
-# Required if hardware is serial or USB:
-<span class="cmd">sudo zypper install python2-pyserial
-sudo zypper install python2-usb<span>
-
-# Required if using MySQL / MariaDB:
-<span class="cmd">sudo zypper install python2-mysqlclient</span>
-
-# Optional: for extended almanac information:
-<span class="cmd">sudo pip2 install pyephem</span></pre>
-        </div>
-        <div id="prereq-suse-py3" class="tab-content">
-            <pre class="tty"># Tested on openSUSE Leap 15.1
-
-# Required packages:
-<span class="cmd">sudo zypper install python3-configobj
-sudo zypper install python3-Pillow
-sudo zypper install python3-Cheetah3
-sudo zypper install python3-pyserial
-sudo zypper install python3-usb</span>
-
-# Required if using MySQL / MariaDB:
-<span class="cmd">sudo zypper install python3-mysqlclient</span>
-
-# Optional: for extended almanac information:
-<span class="cmd">sudo pip3 install pyephem</span></pre>
-        </div>
-    </div>
-
-    <div id='prereq-pip' class="tab-content">
         <button class="tab" onclick="openTab(event, '#prereq-pip-py2')">
             Python 2
         </button>
         <button class="tab" onclick="openTab(event, '#prereq-pip-py3')">
             Python 3
         </button>
-
-        <div id="prereq-pip-py2" class="tab-content">
-                <pre class='tty'># Required packages:
-<span class="cmd">sudo pip install configobj
-sudo pip install cheetah
-sudo pip install pillow</span>
+    </nav>
+    <div id="prereq-pip-py2" class="tab-content">
+        <pre class='tty'># Required packages:
+<span class="cmd">sudo python2 -m pip install configobj
+sudo python2 -m pip install cheetah
+sudo python2 -m pip install pillow</span>
 
 # Required if hardware is serial or USB:
-<span class="cmd">sudo pip install pyserial
-sudo pip install pyusb</span>
+<span class="cmd">sudo python2 -m pip install pyserial
+sudo python2 -m pip install pyusb</span>
 
 # Required if using MySQL:
-<span class="cmd">sudo pip install MySQL-python</span>
+<span class="cmd">sudo python2 -m pip install MySQL-python</span>
 
 # Optional: for extended almanac information:
-<span class="cmd">sudo pip install pyephem</span></pre>
-        </div>
-        <div id="prereq-pip-py3" class="tab-content">
+<span class="cmd">sudo python2 -m pip install pyephem</span></pre>
+    </div>
+    <div id="prereq-pip-py3" class="tab-content">
                 <pre class="tty"># Required packages:
-<span class="cmd">sudo pip3 install configobj
-sudo pip3 install cheetah3
-sudo pip3 install Pillow-PIL</span>
+<span class="cmd">sudo python3 -m pip install configobj
+sudo python3 -m pip install cheetah3
+sudo python3 -m pip install Pillow-PIL</span>
 
 # Required if hardware is serial or USB, respectively:
-<span class="cmd">sudo pip3 install pyserial
-sudo pip3 install pyusb</span>
+<span class="cmd">sudo python3 -m pip install pyserial
+sudo python3 -m pip install pyusb</span>
 
 # Required if using MySQL. If this does not
 # install cleanly, then see <a href="https://pypi.org/project/mysqlclient/">https://pypi.org/project/mysqlclient/</a>
-<span class="cmd">sudo pip3 install mysqlclient</span>
+<span class="cmd">sudo python3 -m pip install mysqlclient</span>
 
 # Optional: for extended almanac information:
-<span class="cmd">sudo pip3 install pyephem</span></pre>
-        </div>
+<span class="cmd">sudo python3 -m pip install pyephem</span></pre>
     </div>
 </div>
+
 
 <h2>Install WeeWX</h2>
 
@@ -333,14 +134,26 @@ sudo pip3 install pyusb</span>
     class='code'>home</span> in the <span class='code'>setup.cfg</span> file.
 </p>
 
-<p>Then build and install.</p>
+<p>Then build and install:</p>
 
+<div id='install-weewx' class="tabs">
+    <nav>
+        <button class="tab" onclick="openTab(event, '#install-weewx-py2')">
+            Python 2
+        </button>
+        <button class="tab" onclick="openTab(event, '#install-weewx-py3')">
+            Python 3
+        </button>
+    </nav>
+    <div id="install-weewx-py2" class="tab-content">
+<pre class="tty cmd">python2 ./setup.py build
+sudo python2 ./setup.py install</pre>
+    </div>
+    <div id="install-weewx-py3" class="tab-content">
 <pre class="tty cmd">python3 ./setup.py build
 sudo python3 ./setup.py install</pre>
-
-<p>
-    This example uses Python3 to install WeeWX.  For Python2 use <span class="code">python2</span> or <span class="code">python</span>.
-</p>
+    </div>
+</div>
 
 <h2>Run</h2>
 
@@ -352,20 +165,18 @@ sudo ./bin/weewxd</pre>
 <div id="startup-tabs" class='tabs'>
     <nav>
         <button class="tab" onclick="openTab(event, '#startup-debian')">
-            Debian
-            <img src='images/logo-debian.png' class='thumbnail'  alt="Debian logo"/>
-            <img src='images/logo-ubuntu.png' class='thumbnail'  alt="Ubuntu logo"/>
-            <img src='images/logo-mint.png' class='thumbnail'  alt="Mint logo"/>
+            Debian <img src='images/logo-debian.png' class='thumbnail' alt="Debian logo"/> <img
+            src='images/logo-ubuntu.png' class='thumbnail' alt="Ubuntu logo"/> <img src='images/logo-mint.png'
+                                                                                    class='thumbnail' alt="Mint logo"/>
         </button>
         <button class="tab" onclick="openTab(event, '#startup-redhat')">
-            Redhat
-            <img src='images/logo-redhat.png' class='thumbnail' alt="Redhat logo"/>
-            <img src='images/logo-centos.png' class='thumbnail' alt="Centos logo"/>
-            <img src='images/logo-fedora.png' class='thumbnail' alt="Fedora logo"/>
+            Redhat <img src='images/logo-redhat.png' class='thumbnail' alt="Redhat logo"/> <img
+            src='images/logo-centos.png' class='thumbnail' alt="Centos logo"/> <img src='images/logo-fedora.png'
+                                                                                    class='thumbnail'
+                                                                                    alt="Fedora logo"/>
         </button>
         <button class="tab" onclick="openTab(event, '#startup-suse')">
-            SuSE
-            <img src='images/logo-suse.png' class="thumbnail" alt="SUSE logo"/>
+            SuSE <img src='images/logo-suse.png' class="thumbnail" alt="SUSE logo"/>
         </button>
     </nav>
     <div id='startup-debian' class="tab-content">
