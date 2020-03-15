@@ -45,21 +45,21 @@ DEFAULTS_INI = """
 
     [[Calculations]]
         # Order matters! Type 'pressure' must come before 'altimeter' and 'barometer'
-        pressure = prefer_hardware
-        altimeter = prefer_hardware
-        appTemp = prefer_hardware
-        barometer = prefer_hardware
-        beaufort = prefer_hardware        
-        cloudbase = prefer_hardware
-        dewpoint = prefer_hardware
-        ET = prefer_hardware
-        heatindex = prefer_hardware
-        humidex = prefer_hardware
-        inDewpoint = prefer_hardware
-        maxSolarRad = prefer_hardware
-        rainRate = prefer_hardware
-        windchill = prefer_hardware
-        windrun = prefer_hardware
+        # pressure = prefer_hardware
+        # altimeter = prefer_hardware
+        # appTemp = prefer_hardware
+        # barometer = prefer_hardware
+        # beaufort = prefer_hardware        
+        # cloudbase = prefer_hardware
+        # dewpoint = prefer_hardware
+        # ET = prefer_hardware
+        # heatindex = prefer_hardware
+        # humidex = prefer_hardware
+        # inDewpoint = prefer_hardware
+        # maxSolarRad = prefer_hardware
+        # rainRate = prefer_hardware
+        # windchill = prefer_hardware
+        # windrun = prefer_hardware
     [[Algorithms]]
         altimeter = aaASOS
         maxSolarRad = RS
@@ -660,11 +660,15 @@ class RainRater(weewx.xtypes.XType):
         if self.rain_events is None:
             self.rain_events = []
         start_ts = stop_ts - self.retain_period
-        # Get all rain events since the window start from the database
-        for row in db_manager.genSql("SELECT dateTime, usUnits, rain FROM %s "
-                                     "WHERE dateTime>? AND dateTime<=?;"
-                                     % db_manager.table_name, (start_ts, stop_ts)):
-            # Unpack the row:
-            time_ts, unit_system, rain = row
-            self.add_loop_packet({'dateTime': time_ts, 'usUnits': unit_system, 'rain': rain},
-                                 db_manager)
+        # Get all rain events since the window start from the database. Put it in
+        # a 'try' block because the database may not have a 'rain' field.
+        try:
+            for row in db_manager.genSql("SELECT dateTime, usUnits, rain FROM %s "
+                                         "WHERE dateTime>? AND dateTime<=?;"
+                                         % db_manager.table_name, (start_ts, stop_ts)):
+                # Unpack the row:
+                time_ts, unit_system, rain = row
+                self.add_loop_packet({'dateTime': time_ts, 'usUnits': unit_system, 'rain': rain},
+                                     db_manager)
+        except weedb.DatabaseError as e:
+            log.debug("Database error while initializing rainRate: '%s'" % e)

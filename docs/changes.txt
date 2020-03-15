@@ -133,6 +133,9 @@ line 'sudo weewxd'.
 
 Use correct log path for netbsd and openbsd in logger setup.
 
+StdWXCalculate no longer calculates anything by default. Instead, types
+to be calculated must be listed in weewx.conf.
+
 
 3.9.2 07/14/2019
 
