@@ -219,24 +219,33 @@ def update_and_install_config(install_dir, install_scripts, config_name='weewx.c
 
     # This is where the weewx.conf file will go
     destination = os.path.join(install_dir, config_name)
+
     # Is there an existing file? If so, use it as the source. Otherwise,
     # use the file that came with the distribution.
     if os.path.isfile(destination):
         source = destination
+        no_prompt = True
     else:
         source = os.path.join(install_dir, config_name + '.' + VERSION)
+        no_prompt = False
+
+    # Command used to invoke wee_config:
+    args = [sys.executable,
+            os.path.join(install_scripts, 'wee_config'),
+            '--install',
+            '--dist-config=%s' % source,
+            '--output=%s' % destination,
+            ]
+    if no_prompt:
+        # If we are doing an upgrade, don't prompt.
+        args += ['--no-prompt']
+
     if DEBUG:
         print("Incoming weewx.conf path=%s" % source)
-        print("Processed weewx.conf path=%s" % destination)
-        print("Current python interpretor=%s" % sys.executable)
-    os.chdir(install_dir)
+        print("Outgoing weewx.conf path=%s" % destination)
+        print("Command used to invoke wee_config: %s" % args)
 
-    proc = subprocess.Popen([sys.executable,
-                             os.path.join(install_scripts, 'wee_config'),
-                             '--install',
-                             '--dist-config=%s' % source,
-                             '--output=%s' % destination,
-                             ],
+    proc = subprocess.Popen(args,
                             stdin=sys.stdin,
                             stdout=sys.stdout,
                             stderr=sys.stderr)
