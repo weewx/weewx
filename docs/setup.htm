@@ -12,6 +12,7 @@
     <script>
         $(function () {
             // Create a click on the first tab to get things started.
+            $('#install-pip .tab')[1].click();
             $('#prereq-pip .tab')[1].click();
             $('#install-weewx .tab')[1].click();
             $('#startup-tabs .tab')[0].click();
@@ -57,11 +58,30 @@
 
 <h2 id="setup_prerequisites">Install prerequisites</h2>
 
+<h3>Install <span class="code">pip</span></h3>
 <p>
-    For the <span class="code">setup.py</span> install method, prerequisites are installed using the tool <span
-    class="code">pip</span>. Most likely, your system already includes <span class="code">pip</span>, but in case it
-    doesn't, here are <a href="https://pip.pypa.io/en/stable/installing/">instructions for installing it</a>.
+    Prerequisites are installed using the tool <span class="code">pip</span>. Most likely, your system already includes
+    <span class="code">pip</span>, but in case it doesn't, here's how to install it. Details can be found in the <a
+    href="https://pip.pypa.io/en/stable/installing/">pip install instructions</a>.
 </p>
+<div id='install-pip' class="tabs">
+    <nav>
+        <button class="tab" onclick="openTab(event, '#install-pip-py2')">
+            Python 2
+        </button>
+        <button class="tab" onclick="openTab(event, '#install-pip-py3')">
+            Python 3
+        </button>
+    </nav>
+    <div id="install-pip-py2" class="tab-content">
+<pre class="tty cmd">curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+sudo python2 get-pip.py</pre>
+    </div>
+    <div id="install-pip-py3" class="tab-content">
+<pre class="tty cmd">curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+sudo python3 get-pip.py</pre>
+    </div>
+</div>
 
 <h3>Invoking <span class="code">pip</span></h3>
 <p>
@@ -69,7 +89,7 @@
     command <span class="code">pip3</span> for the Python 3 version, but this is not universal. To be on the safe side,
     invoke the <span class="code">pip</span> module directly, like this:
 </p>
-<pre class="cmd tty">python3 -m pip install <em>module-to-be-installed</em></pre>
+<pre class="cmd tty">sudo python3 -m pip install <em>module-to-be-installed</em></pre>
 <p>This way, you can be sure to get the Python 3 version.</p>
 
 
@@ -90,8 +110,7 @@
     </nav>
     <div id="prereq-pip-py2" class="tab-content">
         <pre class='tty'># Required packages:
-<span class="cmd">sudo python2 -m pip install setuptools
-sudo python2 -m pip install configobj
+<span class="cmd">sudo python2 -m pip install configobj
 sudo python2 -m pip install cheetah
 sudo python2 -m pip install pillow</span>
 
