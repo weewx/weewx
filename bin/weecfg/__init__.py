@@ -203,7 +203,7 @@ def save(config_dict, config_path, backup=False):
     else:
 
         # No existing file or no backup required. Just write.
-        with open(config_path, 'w') as fd:
+        with open(config_path, 'wb') as fd:
             config_dict.write(fd)
         backup_path = None
 
