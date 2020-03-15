@@ -64,7 +64,7 @@ class weewx_install(install):
         rv = install.run(self)
 
         # Now the post-install
-        update_and_install_config(self.install_data, self.install_scripts)
+        update_and_install_config(self.install_data, self.install_scripts, self.install_lib)
 
         return rv
 
@@ -214,8 +214,17 @@ def move_with_timestamp(filepath):
     return newpath
 
 
-def update_and_install_config(install_dir, install_scripts, config_name='weewx.conf'):
-    """Install the configuration file, weewx.conf, updating it if necessary."""
+def update_and_install_config(install_dir, install_scripts, install_lib, config_name='weewx.conf'):
+    """Install the configuration file, weewx.conf, updating it if necessary.
+
+    install_dir: the directory containing the configuration file.
+
+    install_scripts: the directory containing the weewx executables.
+
+    install_lib: the directory containing the weewx packages.
+
+    config_name: the name of the configuration file. Defaults to 'weewx.conf'
+    """
 
     # This is where the weewx.conf file will go
     destination = os.path.join(install_dir, config_name)
@@ -244,8 +253,11 @@ def update_and_install_config(install_dir, install_scripts, config_name='weewx.c
         print("Incoming weewx.conf path=%s" % source)
         print("Outgoing weewx.conf path=%s" % destination)
         print("Command used to invoke wee_config: %s" % args)
-
+        print("install_scripts=%s" % install_scripts)
+        print("install_lib=%s" % install_lib)
+        
     proc = subprocess.Popen(args,
+                            env={'PYTHONPATH' : install_lib},
                             stdin=sys.stdin,
                             stdout=sys.stdout,
                             stderr=sys.stderr)
