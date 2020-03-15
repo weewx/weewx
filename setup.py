@@ -64,7 +64,7 @@ class weewx_install(install):
         rv = install.run(self)
 
         # Now the post-install
-        update_and_install_config(self.install_data)
+        update_and_install_config(self.install_data, self.install_scripts)
 
         return rv
 
@@ -214,7 +214,7 @@ def move_with_timestamp(filepath):
     return newpath
 
 
-def update_and_install_config(install_dir, config_name='weewx.conf'):
+def update_and_install_config(install_dir, install_scripts, config_name='weewx.conf'):
     """Install the configuration file, weewx.conf, updating it if necessary."""
 
     # This is where the weewx.conf file will go
@@ -232,7 +232,7 @@ def update_and_install_config(install_dir, config_name='weewx.conf'):
     os.chdir(install_dir)
 
     proc = subprocess.Popen([sys.executable,
-                             os.path.join(install_dir, 'bin/wee_config'),
+                             os.path.join(install_scripts, 'wee_config'),
                              '--install',
                              '--dist-config=%s' % source,
                              '--output=%s' % destination,
