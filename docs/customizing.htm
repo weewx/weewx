@@ -860,9 +860,10 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
 
         <p>
             This tells the report generators that when it comes time to label the observation variables <span
-            class="code">inTemp</span> and <span class="code">outTemp</span>, use the strings <span class="code">InsideTemperature</span>
-            and <span class="code">Outside Temperature</span>, respectively. Because <span class="code">weewx/defaults.py</span>
-            lowest precedence, these strings will be used only when nothing else is available.
+            class="code">inTemp</span> and <span class="code">outTemp</span>, use the strings
+            <span class="code">Inside Temperature</span> and <span class="code">Outside Temperature</span>,
+            respectively. Because <span class="code">weewx/defaults.py</span> has the lowest precedence, these strings
+            will be used only when nothing else is available.
         </p>
         <p>
             Now suppose we have a skin called <em>Life</em> . Its configuration file will be located at <span
@@ -928,10 +929,10 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
             Note how the values specified for <span class="code">inTemp</span> are not overridden anywhere, so the value
             specified in <span class="code">weewx/defaults.py</span>, that is, <span
             class="code">Inside Temperature</span>, is used. By contrast, a value for <span class="code">outTemp</span>
-            was specified in the skin so, in the absence of any user override, its value, <span class="code">ExteriorTemperature</span>
-            will be used as the new default. Finally, for the report <span class="code">LifeB</span>, the user
-            <em>has</em> specified an override for <span class="code">outTemp</span>, so that value, <span class="code">Barn Temperature</span>,
-            is used.
+            was specified in the skin so, in the absence of any user override, its value, <span class="code">Exterior
+            Temperature</span> will be used as the new default. Finally, for the report <span class="code">LifeB</span>,
+            the user <em>has</em> specified an override for <span class="code">outTemp</span>, so that value,
+            <span class="code">Barn Temperature</span>, is used.
         </p>
 
         <p>
@@ -1094,7 +1095,7 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
         <p>
             Suppose you want two reports, one in US Customary, the other in Metric. The first, call it <em>SeasonsUSReport</em>,
             will go in the regular directory <span class="symcode">HTML_ROOT</span>. However, the latter, call it <em>SeasonsMetricReport</em>,
-            will go in a subdirectory, <span class="symcode">HTMLROOT</span><span class="code">/metric</span>.
+            will go in a subdirectory, <span class="symcode">HTML_ROOT</span><span class="code">/metric</span>.
         </p>
         <p>
             To accomplish this, we will generate two reports, one using the defaults, the other using overrides to
@@ -1117,16 +1118,16 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
     [[Defaults]]
         [[[Units]]]
             [[[[Groups]]]]
-                group_altitude     = meter                # Options are 'foot' or 'meter'
-                group_degree_day   = degree_C_day         # Options are 'degree_F_day' or 'degree_C_day'
-                group_distance     = km                   # Options are 'mile' or 'km'
-                group_pressure     = mbar                 # Options are 'inHg', 'mmHg', 'mbar', or 'hPa'
-                group_pressurerate = mbar_per_hour        # Options are 'inHg_per_hour', 'mmHg_per_hour', 'mbar_per_hour', or 'hPa_per_hour'
-                group_rain         = mm                   # Options are 'inch', 'cm', or 'mm'
-                group_rainrate     = mm_per_hour          # Options are 'inch_per_hour', 'cm_per_hour', or 'mm_per_hour'
-                group_speed        = meter_per_second     # Options are 'mile_per_hour', 'km_per_hour', 'knot', or 'meter_per_second'
-                group_speed2       = meter_per_second2    # Options are 'mile_per_hour2', 'km_per_hour2', 'knot2', or 'meter_per_second2'
-                group_temperature  = degree_C             # Options are 'degree_F' or 'degree_C'
+                group_altitude     = foot                 # Options are 'foot' or 'meter'
+                group_degree_day   = degree_F_day         # Options are 'degree_F_day' or 'degree_C_day'
+                group_distance     = mile                 # Options are 'mile' or 'km'
+                group_pressure     = inHg                 # Options are 'inHg', 'mmHg', 'mbar', or 'hPa'
+                group_pressurerate = inHg_per_hour        # Options are 'inHg_per_hour', 'mmHg_per_hour', 'mbar_per_hour', or 'hPa_per_hour'
+                group_rain         = inch                 # Options are 'inch', 'cm', or 'mm'
+                group_rainrate     = inch_per_hour        # Options are 'inch_per_hour', 'cm_per_hour', or 'mm_per_hour'
+                group_speed        = mile_per_hour        # Options are 'mile_per_hour', 'km_per_hour', 'knot', or 'meter_per_second'
+                group_speed2       = mile_per_hour2       # Options are 'mile_per_hour2', 'km_per_hour2', 'knot2', or 'meter_per_second2'
+                group_temperature  = degree_F             # Options are 'degree_F' or 'degree_C'
 
     <span class="highlight">[[SeasonsUSReport]]</span>
         skin = Seasons
@@ -1138,16 +1139,16 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
         HTML_ROOT = skins/metric
         [[[Units]]]
             [[[[Groups]]]]
-                group_altitude     = foot                 # Options are 'foot' or 'meter'
-                group_degree_day   = degree_F_day         # Options are 'degree_F_day' or 'degree_C_day'
-                group_distance     = mile                 # Options are 'mile' or 'km'
-                group_pressure     = inHg                 # Options are 'inHg', 'mmHg', 'mbar', or 'hPa'
-                group_pressurerate = inHg_per_hour        # Options are 'inHg_per_hour', 'mmHg_per_hour', 'mbar_per_hour', or 'hPa_per_hour'
-                group_rain         = inch                 # Options are 'inch', 'cm', or 'mm'
-                group_rainrate     = inch_per_hour        # Options are 'inch_per_hour', 'cm_per_hour', or 'mm_per_hour'
-                group_speed        = mile_per_hour        # Options are 'mile_per_hour', 'km_per_hour', 'knot', or 'meter_per_second'
-                group_speed2       = mile_per_hour2       # Options are 'mile_per_hour2', 'km_per_hour2', 'knot2', or 'meter_per_second2'
-                group_temperature  = degree_F             # Options are 'degree_F' or 'degree_C'</span>
+                group_altitude     = meter                # Options are 'foot' or 'meter'
+                group_degree_day   = degree_C_day         # Options are 'degree_F_day' or 'degree_C_day'
+                group_distance     = km                   # Options are 'mile' or 'km'
+                group_pressure     = mbar                 # Options are 'inHg', 'mmHg', 'mbar', or 'hPa'
+                group_pressurerate = mbar_per_hour        # Options are 'inHg_per_hour', 'mmHg_per_hour', 'mbar_per_hour', or 'hPa_per_hour'
+                group_rain         = mm                   # Options are 'inch', 'cm', or 'mm'
+                group_rainrate     = mm_per_hour          # Options are 'inch_per_hour', 'cm_per_hour', or 'mm_per_hour'
+                group_speed        = meter_per_second     # Options are 'mile_per_hour', 'km_per_hour', 'knot', or 'meter_per_second'
+                group_speed2       = meter_per_second2    # Options are 'mile_per_hour2', 'km_per_hour2', 'knot2', or 'meter_per_second2'
+                group_temperature  = degree_C             # Options are 'degree_F' or 'degree_C'</span>
 </pre>
         <p>
             Two things are different from the stock section <span class="code">[StdReport]</span>. First (1), we have
@@ -2759,22 +2760,22 @@ $month.dateTime.format("%B"): Min, max temperatures: $month.outTemp.min $month.o
   &lt;body&gt;
     &lt;table border=1 style="border-collapse:collapse;"&gt;
       &lt;tr style="font-weight:bold"&gt;
-    &lt;td&gt;Time interval&lt;/td&gt;
-    &lt;td&gt;Max temperature&lt;/td&gt;
-    &lt;td&gt;Time&lt;/td&gt;
+        &lt;td&gt;Time interval&lt;/td&gt;
+        &lt;td&gt;Max temperature&lt;/td&gt;
+        &lt;td&gt;Time&lt;/td&gt;
       &lt;/tr&gt;
 #for $hour in $day($days_ago=1).hours
       &lt;tr&gt;
-    &lt;td&gt;$hour.start.format("%H:%M")-$hour.end.format("%H:%M")&lt;/td&gt;
-    &lt;td&gt;$hour.outTemp.max ($hour.outTemp.max.degree_C)&lt;/td&gt;
-    &lt;td&gt;$hour.outTemp.maxtime.format("%H:%M")&lt;/td&gt;
+        &lt;td&gt;$hour.start.format("%H:%M")-$hour.end.format("%H:%M")&lt;/td&gt;
+        &lt;td&gt;$hour.outTemp.max ($hour.outTemp.max.degree_C)&lt;/td&gt;
+        &lt;td&gt;$hour.outTemp.maxtime.format("%H:%M")&lt;/td&gt;
       &lt;/tr&gt;
 #end for
       &lt;caption&gt;
-    &lt;p&gt;
-      Hourly max temperatures yesterday&lt;br/&gt;
-      $day($days_ago=1).start.format("%d-%b-%Y")
-    &lt;/p&gt;
+        &lt;p&gt;
+          Hourly max temperatures yesterday&lt;br/&gt;
+          $day($days_ago=1).start.format("%d-%b-%Y")
+        &lt;/p&gt;
       &lt;/caption&gt;
     &lt;/table&gt;
   &lt;/body&gt;
