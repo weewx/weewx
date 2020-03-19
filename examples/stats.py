@@ -62,6 +62,7 @@ class MyStats(SearchList):                                                   # 1
         # used in the report.
         all_stats = TimespanBinder(timespan, 
                                    db_lookup,
+                                   context='year',
                                    formatter=self.generator.formatter,
                                    converter=self.generator.converter,
                                    skin_dict=self.generator.skin_dict)       # 4
@@ -69,14 +70,15 @@ class MyStats(SearchList):                                                   # 1
         # Now get a TimespanBinder object for the last seven days. This one we
         # will have to calculate. First, calculate the time at midnight, seven
         # days ago. The variable week_dt will be an instance of datetime.date.
-        week_dt = datetime.date.fromtimestamp(timespan.stop) - \
-                    datetime.timedelta(weeks=1)                              # 5
+        week_dt = datetime.date.fromtimestamp(timespan.stop) \
+                  - datetime.timedelta(weeks=1)                              # 5
         # Convert it to unix epoch time:
         week_ts = time.mktime(week_dt.timetuple())                           # 6
         # Form a TimespanBinder object, using the time span we just
         # calculated:
         seven_day_stats = TimespanBinder(TimeSpan(week_ts, timespan.stop),
                                          db_lookup,
+                                         context='week',
                                          formatter=self.generator.formatter,
                                          converter=self.generator.converter,
                                          skin_dict=self.generator.skin_dict) # 7

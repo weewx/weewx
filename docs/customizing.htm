@@ -3366,6 +3366,7 @@ class MyStats(SearchList):                                                   # 1
         # used in the report.
         all_stats = TimespanBinder(timespan,
                                    db_lookup,
+                                   context='year',
                                    formatter=self.generator.formatter,
                                    converter=self.generator.converter,
                                    skin_dict=self.generator.skin_dict)       # 4
@@ -3373,14 +3374,15 @@ class MyStats(SearchList):                                                   # 1
         # Now get a TimespanBinder object for the last seven days. This one we
         # will have to calculate. First, calculate the time at midnight, seven
         # days ago. The variable week_dt will be an instance of datetime.date.
-        week_dt = datetime.date.fromtimestamp(timespan.stop) - \
-                    datetime.timedelta(weeks=1)                              # 5
+        week_dt = datetime.date.fromtimestamp(timespan.stop) \
+                  - datetime.timedelta(weeks=1)                              # 5
         # Convert it to unix epoch time:
         week_ts = time.mktime(week_dt.timetuple())                           # 6
         # Form a TimespanBinder object, using the time span we just
         # calculated:
         seven_day_stats = TimespanBinder(TimeSpan(week_ts, timespan.stop),
                                          db_lookup,
+                                         context='week',
                                          formatter=self.generator.formatter,
                                          converter=self.generator.converter,
                                          skin_dict=self.generator.skin_dict) # 7
@@ -3432,16 +3434,21 @@ class MyStats(SearchList):                                                   # 1
                     <li>The second, <span class='code'>db_lookup</span>, is the database lookup function to be used. We
                         simply pass in <span class="code">db_lookup</span>.
                     </li>
-                    <li>The third, <span class="code">formatter</span>, should be an instance of class <span
+                    <li>The third, <span class="code">context</span>, is the time <em>context</em> to be used when
+                        formatting times. The set of possible choices is given by sub-section <a
+                            href="#Units_TimeFormats"><span class="code">[[TimeFormats]]</span></a> in the configuration
+                        file.
+                    </li>
+                    <li>The fourth, <span class="code">formatter</span>, should be an instance of class <span
                         class="code">weewx.units.Formatter</span>, which contains information about how the results
                         should be formatted. We just pass in the formatter set up by the generator, <span class="code">self.generator.formatter</span>.
                     </li>
-                    <li>The fourth, <span class="code">converter</span>, should be an instance of <span class="code">weewx.units.Converter</span>,
+                    <li>The fifth, <span class="code">converter</span>, should be an instance of <span class="code">weewx.units.Converter</span>,
                         which contains information about the target units (<i>e.g.</i>, <span
                             class="code">degree_C</span>) that are to be used. Again, we just pass in the instance set
                         up by the generator, <span class="code">self.generator.converter</span>.
                     </li>
-                    <li>The fifth, <span class="code">skin_dict</span>, is an instance of <span class="code">configobj.ConfigObj</span>,
+                    <li>The sixth, <span class="code">skin_dict</span>, is an instance of <span class="code">configobj.ConfigObj</span>,
                         and contains the contents of the skin configuration file. We pass it on in order to allow
                         aggregations that need information from the file, such as heating and cooling degree-days.
                     </li>
@@ -5737,8 +5744,9 @@ second = " second", " seconds"</pre>
         <h3 class="config_section" id="Units_TimeFormats">[[TimeFormats]]</h3>
 
         <p>
-            This sub-section is used for time labels. It uses <a
-            href="https://docs.python.org/3/library/datetime.html#strftime-strptime-behavior">strftime()</a> formats.
+            This sub-section specifies what time format to use for different time <em>contexts</em>. For example, you
+            might want to use a different format when displaying the time in a day, versus the time in a month. It uses
+            <a href="https://docs.python.org/3/library/datetime.html#strftime-strptime-behavior">strftime()</a> formats.
             The default looks like this:
         </p>
         <pre class='tty'>
@@ -5761,8 +5769,8 @@ second = " second", " seconds"</pre>
             code locale dependent date, time, and weekday names, respectively. Hence, if you set an appropriate
             environment variable <span class='code'>LANG</span>, then the date and times should follow local conventions
             (see section <a href="#environment_variable_LANG">Environment variable LANG</a> for details on how to do
-            this). However, they will not look particularly pretty and you may want to change them. For example, I use
-            this in the U.S.:
+            this). However, the results may not look particularly nice, and you may want to change them. For example,
+            I use this in the U.S.:
         </p>
         <pre class="tty">
     [[TimeFormats]]
