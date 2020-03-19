@@ -598,10 +598,13 @@ class StdArchive(StdService):
         """Called when a new archive record has arrived. 
         Put it in the archive database."""
 
-        # If requested, extract any extra information we can out of the 
-        # accumulator and put it in the record.
-        if self.record_augmentation and self.old_accumulator \
-                and event.record['dateTime'] == self.old_accumulator.timespan.stop:
+        # If requested, extract any extra information we can out of the accumulator and put it in
+        # the record. Not necessary in the case of software record generation because it has
+        # already been done.
+        if self.record_augmentation \
+                and self.old_accumulator \
+                and event.record['dateTime'] == self.old_accumulator.timespan.stop \
+                and event.origin != 'software':
             self.old_accumulator.augmentRecord(event.record)
 
         dbmanager = self.engine.db_binder.get_manager(self.data_binding)
