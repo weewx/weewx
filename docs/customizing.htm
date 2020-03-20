@@ -3245,7 +3245,7 @@ $station.altitude</pre>
             class="code">$station.altitude</span>, is a <em>string</em>. In order to convert the <span class="code">ValueHelper</span>
             it has in hand into a string, it does what every other Python object does when faced with this problem: it
             calls the special method <span class="code"><a style="text-decoration: none"
-                                                           href="https://docs.python.org/2/reference/datamodel.html#object.__str__">__str__</a></span>.
+                                                           href="https://docs.python.org/3/reference/datamodel.html#object.__str__">__str__</a></span>.
             Class <span class="code">ValueHelper</span> has a definition for this method. Evaluating this function
             triggers the final steps in this process. Any necessary unit conversions are done, then formatting occurs
             and, finally, a label is attached. The result is a string something like
@@ -3282,7 +3282,7 @@ $station.altitude</pre>
             class="code">outTemp</span>. There is no such hard coded attribute (hard coding all the conceivable
             different observation types would be impossible!). Instead, class <span class="code">TimespanBinder</span>
             defines the Python special method <span class="code"> <a style="text-decoration: none"
-                                                                     href="https://docs.python.org/2/reference/datamodel.html#object.__getattr__">__getattr__</a></span>.
+                                                                     href="https://docs.python.org/3/reference/datamodel.html#object.__getattr__">__getattr__</a></span>.
             If Python cannot find a hard coded version of an attribute, and the method <span
             class="code">__getattr__</span> exists, it will try it. The definition provided by <span class="code">TimespanBinder</span>
             returns an instance of the next class in the chain, <span class="code">weewx.tags.ObservationBinder</span>,
@@ -3378,6 +3378,7 @@ class MyStats(SearchList):                                                   # 1
                   - datetime.timedelta(weeks=1)                              # 5
         # Convert it to unix epoch time:
         week_ts = time.mktime(week_dt.timetuple())                           # 6
+
         # Form a TimespanBinder object, using the time span we just
         # calculated:
         seven_day_stats = TimespanBinder(TimeSpan(week_ts, timespan.stop),
@@ -3423,7 +3424,7 @@ class MyStats(SearchList):                                                   # 1
             </li>
             <li>The class <span class="code">TimespanBinding</span> represents a statistical calculation over a time
                 period. We have already met it in the introduction <em><a href="#how_tags_work">How tags work</a></em>.
-                In our case, we will set it up to represent the statistics over all possible times. The class takes 5
+                In our case, we will set it up to represent the statistics over all possible times. The class takes 6
                 parameters.
                 <ul>
                     <li>The first, <span class='code'>timespan</span>, is the timespan over which the calculation is to
@@ -3469,7 +3470,8 @@ class MyStats(SearchList):                                                   # 1
             </li>
             <li>We convert it to unix epoch time.</li>
             <li>Now we are ready to initialize an appropriate <span class="code">TimespanBinder</span> object. It's the
-                same as in step #4, except we use our new timespan object.
+                same as in step #4, except we use our new <span class="code">timespan</span> object and specify
+                a different time <span class="code">context</span>.
             </li>
             <li>Create a small dictionary with two keys, <span class="code">alltime</span>, and <span class="code">seven_day</span>.
             </li>
@@ -3523,9 +3525,9 @@ class MyStats(SearchList):                                                   # 1
         <p>
             We put our addition in the file <span class="code">user/stats.py</span>, which means it will be in the
             directory hierarchy where <span class="code">weewxd</span> resides. Python will search this hierarchy by
-            default, so it will find our addition. However, if you put it somewhere else, may will have to specify its
-            location with the environment variable <a
-            href="https://docs.python.org/2/using/cmdline.html#envvar-PYTHONPATH"><span
+            default, so it will find our addition. However, if you put the file somewhere else, you may have to specify
+            its location with the environment variable <a
+            href="https://docs.python.org/3/using/cmdline.html#envvar-PYTHONPATH"><span
             class="code">PYTHONPATH</span></a> when you start WeeWX:
         </p>
         <pre class="tty">export PYTHONPATH=/home/me/secret_location</pre>
@@ -4043,7 +4045,7 @@ class MyStats(SearchList):                                                   # 1
             First try the generic date (<span class="code">%x</span>), time (<span class="code">%X</span>), and day
             (<span class="code">%A</span>) formats &mdash; these will use the locale of your computer. If you still find
             those foreign, you can customize using the <a
-            href="https://docs.python.org/2/library/datetime.html#strftime-and-strptime-behavior">specific
+            href="https://docs.python.org/3/library/datetime.html#strftime-and-strptime-behavior">specific
             directives</a>.
         </p>
         <p>
@@ -5211,7 +5213,7 @@ weewx.units.conversionDict['pound']  = {'newton': lambda x : x * 4.44822}
         <p>
             If you implement function <span class="code">genArchiveRecords()</span>, then you should also implement
             <span class='code'>archive_interval</span> as either an attribute, or as a <a
-            href="https://docs.python.org/2/library/functions.html#property">property function</a>. It should return the
+            href="https://docs.python.org/3/library/functions.html#property">property function</a>. It should return the
             archive interval in seconds.
         </p>
 
@@ -5509,7 +5511,7 @@ xstats/bin/user/xstats.py</pre>
         <pre class="tty">[Extras]
     [[video]]
         still = video_capture.jpg
-        hyperlink = <a href="http://www.eatatjoes.com/video.html">http://www.eatatjoes.com/video.html</a>
+        hyperlink = http://www.eatatjoes.com/video.html
       </pre>
         <p>Then in your template you could refer to these as:</p>
         <pre class="tty">&lt;a href="$Extras.video.hyperlink"&gt;
