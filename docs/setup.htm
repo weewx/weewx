@@ -56,92 +56,54 @@
     it's safest to use that.
 </p>
 
+<p>The instructions below assume you will be using Python 3.</p>
+
 <h2 id="setup_prerequisites">Install prerequisites</h2>
+<p>First install the prerequisites appropriate for your operating system.</p>
 
-<h3>Install <span class="code">pip</span></h3>
-<p>
-    Prerequisites are installed using the tool <span class="code">pip</span>. Most likely, your system already includes
-    <span class="code">pip</span>, but if it doesn't, here's how to install it. Details can be found in the <a
-    href="https://pip.pypa.io/en/stable/installing/">pip install instructions</a>.
-</p>
-<div id='install-pip' class="tabs">
-    <nav>
-        <button class="tab" onclick="openTab(event, '#install-pip-py2')">
-            Python 2
-        </button>
-        <button class="tab" onclick="openTab(event, '#install-pip-py3')">
-            Python 3
-        </button>
-    </nav>
-    <div id="install-pip-py2" class="tab-content">
-<pre class="tty cmd">curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
-sudo python2 get-pip.py</pre>
-    </div>
-    <div id="install-pip-py3" class="tab-content">
-<pre class="tty cmd">curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
-sudo python3 get-pip.py</pre>
-    </div>
-</div>
+<h3>Debian Stretch (9)<br/>
+Raspbian Stretch (9)<br/>
+Ubuntu 16.04-17.10</h3>
 
-<h3>Invoking <span class="code">pip</span></h3>
-<p>
-    If you simply use the command <span class="code">pip</span>, you may get the Python 2 version. Some systems use the
-    command <span class="code">pip3</span> for the Python 3 version, but this is not universal. To be on the safe side,
-    invoke the <span class="code">pip</span> module directly, like this:
-</p>
-<pre class="cmd tty">sudo python3 -m pip install <em>module-to-be-installed</em></pre>
-<p>This way, you can be sure to get the Python 3 version.</p>
+<pre class='tty'><span class="cmd">sudo apt update</span>
+
+# Required
+<span class="cmd">sudo apt install python3-configobj
+sudo apt install python3-pil
+sudo apt install python3-serial
+sudo apt install python3-usb
+sudo apt install python3-pip
+sudo pip3 install cheetah3
+</span>
+
+# Optional:
+<span class="cmd">sudo apt install python3-ephem</span>
+
+# Required if you are using MySQL (MariaDB):
+<span class="cmd">sudo apt install mysql-client
+sudo apt install python3-mysqldb</span></pre>
 
 
-<h3>What to install</h3>
-<p>
-    Here is what to install. The directions for installing under Python 2 are also below, in case you need them.
-</p>
+<h3>Debian Buster (10)<br/>
+Raspbian Buster (10)<br/>
+Ubuntu 18.04-19.10</h3>
 
+<pre class='tty'><span class="cmd">sudo apt update</span>
 
-<div id='prereq-pip' class="tabs">
-    <nav>
-        <button class="tab" onclick="openTab(event, '#prereq-pip-py2')">
-            Python 2
-        </button>
-        <button class="tab" onclick="openTab(event, '#prereq-pip-py3')">
-            Python 3
-        </button>
-    </nav>
-    <div id="prereq-pip-py2" class="tab-content">
-        <pre class='tty'># Required packages:
-<span class="cmd">sudo python2 -m pip install configobj
-sudo python2 -m pip install cheetah
-sudo python2 -m pip install pillow</span>
+# Required
+<span class="cmd">sudo apt install python3-configobj
+sudo apt install python3-cheetah
+sudo apt install python3-pil
+sudo apt install python3-serial
+sudo apt install python3-usb</span>
 
-# Required if hardware is serial or USB:
-<span class="cmd">sudo python2 -m pip install pyserial
-sudo python2 -m pip install pyusb</span>
+# Optional:
+<span class="cmd">sudo apt install python3-ephem</span>
 
-# Required if using MySQL:
-<span class="cmd">sudo python2 -m pip install MySQL-python</span>
+# Required if you are using MySQL (MariaDB):
+<span class="cmd">sudo apt install mariadb-client
+sudo apt install python3-mysqldb</span></pre>
 
-# Optional: for extended almanac information:
-<span class="cmd">sudo python2 -m pip install pyephem</span></pre>
-    </div>
-    <div id="prereq-pip-py3" class="tab-content">
-                <pre class="tty"># Required packages:
-<span class="cmd">sudo python3 -m pip install configobj
-sudo python3 -m pip install cheetah3
-sudo python3 -m pip install pillow</span>
-
-# Required if hardware is serial or USB, respectively:
-<span class="cmd">sudo python3 -m pip install pyserial
-sudo python3 -m pip install pyusb</span>
-
-# Required if using MySQL. If this does not
-# install cleanly, then see <a href="https://pypi.org/project/mysqlclient/">https://pypi.org/project/mysqlclient/</a>
-<span class="cmd">sudo python3 -m pip install mysqlclient</span>
-
-# Optional: for extended almanac information:
-<span class="cmd">sudo python3 -m pip install pyephem</span></pre>
-    </div>
-</div>
 
 
 <h2>Install WeeWX</h2>
