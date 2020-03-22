@@ -12,9 +12,6 @@
     <script>
         $(function () {
             // Create a click on the first tab to get things started.
-            $('#install-pip .tab')[1].click();
-            $('#prereq-pip .tab')[1].click();
-            $('#install-weewx .tab')[1].click();
             $('#startup-tabs .tab')[0].click();
         })
     </script>
@@ -61,9 +58,7 @@
 <h2 id="setup_prerequisites">Install prerequisites</h2>
 <p>First install the prerequisites appropriate for your operating system.</p>
 
-<h3>Debian Stretch (9)<br/>
-Raspbian Stretch (9)<br/>
-Ubuntu 16.04-17.10</h3>
+<h3>Debian Stretch (9)<br/> Raspbian Stretch (9)<br/> Ubuntu 16.04-17.10</h3>
 
 <pre class='tty'><span class="cmd">sudo apt update</span>
 
@@ -84,9 +79,8 @@ sudo pip3 install cheetah3
 sudo apt install python3-mysqldb</span></pre>
 
 
-<h3>Debian Buster (10)<br/>
-Raspbian Buster (10)<br/>
-Ubuntu 18.04-19.10</h3>
+<p>&nbsp;</p>
+<h3>Debian Buster (10)<br/> Raspbian Buster (10)<br/> Ubuntu 18.04-19.10</h3>
 
 <pre class='tty'><span class="cmd">sudo apt update</span>
 
@@ -97,16 +91,58 @@ sudo apt install python3-pil
 sudo apt install python3-serial
 sudo apt install python3-usb</span>
 
-# Optional:
+# Optional: for extended almanac information
 <span class="cmd">sudo apt install python3-ephem</span>
 
 # Required if you are using MySQL (MariaDB):
 <span class="cmd">sudo apt install mariadb-client
 sudo apt install python3-mysqldb</span></pre>
 
+<p>&nbsp;</p>
+<h3>Redhat 7</br>Centos 7</h3>
+<pre class="tty"><span class="cmd">sudo yum update</span>
+
+# Ensure that Python 3 is installed:
+<span class="cmd">sudo yum install python3</span>
+
+# Required:
+<span class="cmd">sudo pip3 install configobj
+sudo pip3 install pillow
+sudo pip3 install pyserial
+sudo pip3 install pyusb
+sudo pip3 install cheetah3</span>
+
+# Optional: for extended almanac information
+<span class="cmd">sudo pip3 install pyephem</span>
+
+</pre>
+
+
+<p>&nbsp;</p>
+<h3>Redhat 8</br>Centos 8</h3>
+<pre class="tty"><span class="cmd">sudo yum update</span>
+
+# Ensure that Python3 is installed:
+<span class="cmd">sudo yum install python3</span>
+
+# Required:
+<span class="cmd">sudo yum install python3-configobj
+sudo yum install python3-pillow
+sudo yum install python3-pyserial
+sudo yum install python3-pyusb
+sudo pip3 install cheetah3</span>
+
+# Optional: for extended almanac information
+<span class="cmd">sudo pip3 install pyephem</span>
+
+# Required if using MySQL:
+<span class="cmd">sudo yum install python3-pymysql</span>
+</pre>
 
 
 <h2>Install WeeWX</h2>
+
+<p>Then install WeeWX itself.</p>
 
 <ol>
     <li>
@@ -115,7 +151,7 @@ sudo apt install python3-mysqldb</span></pre>
     </li>
 
     <li>
-        <p>Change directory:</p>
+        <p>Change directory into the expanded archive:</p>
         <pre class="tty cmd">cd weewx-X.Y.Z</pre>
     </li>
 
@@ -129,24 +165,8 @@ sudo apt install python3-mysqldb</span></pre>
     <li>
         <p>Then build and install:</p>
 
-        <div id='install-weewx' class="tabs">
-            <nav>
-                <button class="tab" onclick="openTab(event, '#install-weewx-py2')">
-                    Python 2
-                </button>
-                <button class="tab" onclick="openTab(event, '#install-weewx-py3')">
-                    Python 3
-                </button>
-            </nav>
-            <div id="install-weewx-py2" class="tab-content">
-<pre class="tty cmd">python2 ./setup.py build
-sudo python2 ./setup.py install</pre>
-            </div>
-            <div id="install-weewx-py3" class="tab-content">
-<pre class="tty cmd">python3 ./setup.py build
+        <pre class="tty cmd">python3 ./setup.py build
 sudo python3 ./setup.py install</pre>
-            </div>
-        </div>
     </li>
 </ol>
 
