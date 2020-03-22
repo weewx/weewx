@@ -99,7 +99,7 @@ sudo apt install python3-usb</span>
 sudo apt install python3-mysqldb</span></pre>
 
 <p>&nbsp;</p>
-<h3>Redhat 7</br>Centos 7</h3>
+<h3>Redhat 7</br>Centos 7<br/>No MySQL</h3>
 <pre class="tty"><span class="cmd">sudo yum update</span>
 
 # Ensure that Python 3 is installed:
@@ -114,6 +114,25 @@ sudo pip3 install cheetah3</span>
 
 # Optional: for extended almanac information
 <span class="cmd">sudo pip3 install pyephem</span>
+
+</pre>
+
+
+<p>&nbsp;</p>
+<h3>Redhat 7</br>Centos 7<br/>Using MySQL</h3>
+<p>Python 3 is not recommended if you are using MySQL on Redhat 7 or Centos 7. Use Python 2 instead.</p>
+<pre class="tty"><span class="cmd">sudo yum update</span>
+
+# Required:
+<span class="cmd">sudo yum install python-configobj
+sudo yum install python-cheetah
+sudo yum install python-pillow
+sudo yum install pyserial
+sudo yum install pyusb
+sudo yum install MySQL-python</span>
+
+# Optional: for extended almanac information
+<span class="cmd">sudo pip install pyephem</span>
 
 </pre>
 
