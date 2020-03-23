@@ -127,12 +127,14 @@ class StdEngine(object):
                 # For each service list, retrieve all the listed services.
                 # Provide a default, empty list in case the service list is
                 # missing completely:
-                for svc in weeutil.weeutil.option_as_list(config_dict['Engine']['Services'].get(service_group, [])):
+                svcs = config_dict['Engine']['Services'].get(service_group, [])
+                for svc in weeutil.weeutil.option_as_list(svcs):
                     if svc == '':
                         log.debug("No services in service group %s", service_group)
                         continue
                     log.debug("Loading service %s", svc)
-                    # Get the class, then instantiate it with self and the config dictionary as arguments:
+                    # Get the class, then instantiate it with self and the config dictionary as
+                    # arguments:
                     obj = weeutil.weeutil.get_object(svc)(self,config_dict)
                     # Append it to the list of open services.
                     self.service_obj.append(obj)
@@ -440,12 +442,14 @@ class StdArchive(StdService):
         # Extract the various options from the config file. If it's missing, fill in with defaults:
         if 'StdArchive' in config_dict:
             self.data_binding = config_dict['StdArchive'].get('data_binding', 'wx_binding')
-            self.record_generation = config_dict['StdArchive'].get('record_generation', 'hardware').lower()
+            self.record_generation = config_dict['StdArchive'].get('record_generation',
+                                                                   'hardware').lower()
             self.no_catchup = to_bool(config_dict['StdArchive'].get('no_catchup', False))
             self.archive_delay = to_int(config_dict['StdArchive'].get('archive_delay', 15))
             software_interval = to_int(config_dict['StdArchive'].get('archive_interval', 300))
             self.loop_hilo = to_bool(config_dict['StdArchive'].get('loop_hilo', True))
-            self.record_augmentation = to_bool(config_dict['StdArchive'].get('record_augmentation', True))
+            self.record_augmentation = to_bool(config_dict['StdArchive'].get('record_augmentation',
+                                                                             True))
         else:
             self.data_binding = 'wx_binding'
             self.record_generation = 'hardware'
@@ -483,8 +487,8 @@ class StdArchive(StdService):
         log.info("Using archive interval of %d seconds %s", self.archive_interval, ival_msg)
 
         if self.archive_delay <= 0:
-            raise weewx.ViolatedPrecondition("Archive delay (%.1f) must be greater than zero." % 
-                                             (self.archive_delay,))
+            raise weewx.ViolatedPrecondition("Archive delay (%.1f) must be greater than zero."
+                                             % (self.archive_delay,))
         if self.archive_delay >= self.archive_interval / 2:
             log.warning("Archive delay (%d) is unusually long", self.archive_delay)
 
@@ -501,8 +505,8 @@ class StdArchive(StdService):
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
     
     def startup(self, _event):
-        """Called when the engine is starting up. Main task is to set up the database, backfill it, then
-        perform a catch up if the hardware supports it. """
+        """Called when the engine is starting up. Main task is to set up the database, backfill it,
+        then perform a catch up if the hardware supports it. """
 
         # This will create the database if it doesn't exist:
         dbmanager = self.engine.db_binder.get_manager(self.data_binding, initialize=True)
@@ -510,8 +514,9 @@ class StdArchive(StdService):
 
         # Make sure the daily summaries have not been partially updated
         if dbmanager._read_metadata('lastWeightPatch'):
-            raise weewx.ViolatedPrecondition("Update of daily summary for database '%s' not complete. "
-                                             "Finish the update first." % dbmanager.database_name)
+            raise weewx.ViolatedPrecondition("Update of daily summary for database '%s' not"
+                                             " complete. Finish the update first."
+                                             % dbmanager.database_name)
 
         # Back fill the daily summaries.
         _nrecs, _ndays = dbmanager.backfill_day_summary()
@@ -552,7 +557,8 @@ class StdArchive(StdService):
             self.accumulator.addRecord(event.packet, add_hilo=self.loop_hilo)
         except weewx.accum.OutOfSpan:
             # Shuffle accumulators:
-            (self.old_accumulator, self.accumulator) = (self.accumulator, self._new_accumulator(event.packet['dateTime']))
+            (self.old_accumulator, self.accumulator) = \
+                (self.accumulator, self._new_accumulator(event.packet['dateTime']))
             # Try again:
             self.accumulator.addRecord(event.packet, add_hilo=self.loop_hilo)
 
@@ -563,7 +569,8 @@ class StdArchive(StdService):
         # END_ARCHIVE_PERIOD event
         if event.packet['dateTime'] > self.end_archive_period_ts:
             self.engine.dispatchEvent(weewx.Event(weewx.END_ARCHIVE_PERIOD, packet=event.packet))
-            start_archive_period_ts = weeutil.weeutil.startOfInterval(event.packet['dateTime'], self.archive_interval)
+            start_archive_period_ts = weeutil.weeutil.startOfInterval(event.packet['dateTime'],
+                                                                      self.archive_interval)
             self.end_archive_period_ts = start_archive_period_ts + self.archive_interval
 
         # Has the end of the archive delay period ended? If so, break the loop.
@@ -588,7 +595,8 @@ class StdArchive(StdService):
                 except NotImplementedError:
                     self._software_catchup()
             else:
-                raise ValueError("Unknown station record generation value %s" % self.record_generation)
+                raise ValueError("Unknown station record generation value %s"
+                                 % self.record_generation)
             self.old_accumulator = None
 
         # Set the time of the next break loop:
@@ -598,10 +606,13 @@ class StdArchive(StdService):
         """Called when a new archive record has arrived. 
         Put it in the archive database."""
 
-        # If requested, extract any extra information we can out of the 
-        # accumulator and put it in the record.
-        if self.record_augmentation and self.old_accumulator \
-                and event.record['dateTime'] == self.old_accumulator.timespan.stop:
+        # If requested, extract any extra information we can out of the accumulator and put it in
+        # the record. Not necessary in the case of software record generation because it has
+        # already been done.
+        if self.record_augmentation \
+                and self.old_accumulator \
+                and event.record['dateTime'] == self.old_accumulator.timespan.stop \
+                and event.origin != 'software':
             self.old_accumulator.augmentRecord(event.record)
 
         dbmanager = self.engine.db_binder.get_manager(self.data_binding)
@@ -642,7 +653,9 @@ class StdArchive(StdService):
         # Add the archive interval
         record['interval'] = self.archive_interval / 60
         # Send out an event with the new record:
-        self.engine.dispatchEvent(weewx.Event(weewx.NEW_ARCHIVE_RECORD, record=record, origin='software'))
+        self.engine.dispatchEvent(weewx.Event(weewx.NEW_ARCHIVE_RECORD,
+                                              record=record,
+                                              origin='software'))
     
     def _new_accumulator(self, timestamp):
         start_ts = weeutil.weeutil.startOfInterval(timestamp,
@@ -665,8 +678,10 @@ class StdTimeSynch(StdService):
         
         # Zero out the time of last synch, and get the time between synchs.
         self.last_synch_ts = 0
-        self.clock_check = int(config_dict.get('StdTimeSynch', {'clock_check': 14400}).get('clock_check', 14400))
-        self.max_drift = int(config_dict.get('StdTimeSynch', {'max_drift': 5}).get('max_drift', 5))
+        self.clock_check = int(config_dict.get('StdTimeSynch',
+                                               {'clock_check': 14400}).get('clock_check', 14400))
+        self.max_drift = int(config_dict.get('StdTimeSynch',
+                                             {'max_drift': 5}).get('max_drift', 5))
         
         self.bind(weewx.STARTUP, self.startup)
         self.bind(weewx.PRE_LOOP, self.pre_loop)

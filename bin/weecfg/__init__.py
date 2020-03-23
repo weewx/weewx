@@ -1,6 +1,6 @@
 # coding: utf-8
 #
-#    Copyright (c) 2009-2019 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2020 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your rights.
 #
@@ -842,11 +842,15 @@ def update_to_v32(config_dict):
         # Set the default [[SQLite]] section. Turn off interpolation first, so the
         # symbol for WEEWX_ROOT does not get lost.
         save, config_dict.interpolation = config_dict.interpolation, False
-        config_dict['DatabaseTypes'] = {
-            'SQLite': {'SQLITE_ROOT': '%(WEEWX_ROOT)s/archive',
-                       'driver': 'weedb.sqlite'}
-        }
-        config_dict['DatabaseTypes'].comments['SQLite'] = ['', '    # Defaults for SQLite databases']
+        # The section must be built step by step so we get the order of the entries correct
+        config_dict['DatabaseTypes'] = {}
+        config_dict['DatabaseTypes']['SQLite'] = {}
+        config_dict['DatabaseTypes']['SQLite']['driver'] = 'weedb.sqlite'
+        config_dict['DatabaseTypes']['SQLite']['SQLITE_ROOT'] = '%(WEEWX_ROOT)s/archive'
+        config_dict['DatabaseTypes'].comments['SQLite'] = \
+            ['', '    # Defaults for SQLite databases']
+        config_dict['DatabaseTypes']['SQLite'].comments['SQLITE_ROOT'] \
+            = "        # Directory in which the database files are located"
         config_dict.interpolation = save
         try:
             root = config_dict['Databases']['archive_sqlite']['root']

@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2019 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2020 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -351,6 +351,9 @@ class ConfigTest(LineTest):
 
         # Upgrade the V3.0 configuration dictionary to V3.2:
         weecfg.update_to_v32(config_dict)
+
+        # with open('expected/weewx32_expected.conf', 'wb') as fd:
+        #     config_dict.write(fd)
 
         self._check_against_expected(config_dict, 'expected/weewx32_expected.conf')
 

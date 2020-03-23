@@ -7,7 +7,7 @@
     <link rel="icon" href="images/favicon.png" type="image/png"/>
     <link rel="stylesheet" href="css/tocbot-4.3.1.css">
     <link rel="stylesheet" href="css/weewx_ui.css"/>
-    <script src="js/cash.js"></script>
+    <script src="js/cash.min.js"></script>
     <script src="js/tocbot-4.3.1.min.js"></script>
     <script src="js/weewx.js"></script>
     <script>
@@ -18,6 +18,7 @@
             create_toc(level);
             // Create a click on the first tab to get things started.
             $('#dir-layout-table .tab')[0].click();
+            $('#mysql-client-tabs .tab')[0].click();
         })
     </script>
 </head>
@@ -73,7 +74,8 @@ Version: 4.0
             available at <a href="http://weewx.com/downloads"><span class="code">weewx.com/downloads</span></a>.
         </p>
 
-        <p>WeeWX is about 13,000 lines of code, plus another 13,000 for the drivers for all the types of supported
+        <p>
+            WeeWX is about 15,000 lines of code, plus another 15,000 for the drivers for all the types of supported
             hardware.
         </p>
 
@@ -876,32 +878,63 @@ sudo /etc/init.d/weewx restart</pre>
         </p>
 
 
-        <h1 id="configuring_mysql">Configuring MySQL</h1>
+        <h1 id="configuring_mysql">Configuring MySQL / MariaDB</h1>
 
-        <p>This section applies only to those who wish to use the MySQL database, instead of the default SQLite
-            database.
+        <p>
+            This section applies only to those who wish to use the MySQL database, instead of the default SQLite
+            database. It assumes that you have a working version of MySQL or MariaDB installed.
         </p>
+        <ol>
+            <li>
+                <p>Install the client libraries. How to do this depends on your operating system. Use the table below as
+                    a guide.
+                </p>
 
-        <p>First, verify that the MySQLdb python package is installed:</p>
+                <div id="mysql-client-tabs" class='tabs'>
+                    <nav>
+                        <button class="tab" onclick="openTab(event, '#mysql-client-debian')">
+                            Debian / Raspbian / Ubuntu / Mint <img src='images/logo-debian.png' class='thumbnail'
+                                                                   alt="Debian logo"/> <img src='images/logo-rpi.png'
+                                                                                            class="thumbnail"
+                                                                                            alt="Raspberry Pi logo"/>
+                            <img src='images/logo-ubuntu.png' class='thumbnail' alt="Ubuntu logo"/> <img
+                            src='images/logo-mint.png' class='thumbnail' alt="Mint logo"/>
+                        </button>
+                        <button class="tab" onclick="openTab(event, '#mysql-client-redhat')">
+                            Redhat <img src='images/logo-redhat.png' class='thumbnail' alt="Redhat logo"/> <img
+                            src='images/logo-centos.png' class='thumbnail' alt="Centos logo"/> <img
+                            src='images/logo-fedora.png' class='thumbnail' alt="Fedora logo"/>
+                        </button>
+                        <button class="tab" onclick="openTab(event, '#mysql-client-suse')">
+                            SUSE <img src='images/logo-suse.png' class="thumbnail" alt="SUSE logo"/>
+                        </button>
+                    </nav>
+                    <div id='mysql-client-debian' class="tab-content">
+        <pre class="tty cmd">sudo apt install mysql-client
+sudo apt install python3-mysqldb</pre>
+                    </div>
+                    <div id='mysql-client-redhat' class="tab-content">
+        <pre class="tty cmd">sudo yum install MySQL-python
+</pre>
+                    </div>
+                    <div id='mysql-client-suse' class="tab-content">
+                        <pre class="tty cmd">sudo zypper install python3-mysqlclient</pre>
+                    </div>
+                </div>
+            </li>
 
-        <pre class="tty">python -c "import MySQLdb"</pre>
 
-        <p>If this results in an import error</p>
-
-        <pre class="tty">ImportError: No module named MySQLdb</pre>
-
-        <p>then install the MySQLdb package. For example, on Debian systems:
-        </p>
-
-        <pre class="tty">sudo apt-get install python-mysqldb</pre>
-
-        <p>Next, change the WeeWX configuration to use MySQL instead of SQLite. In the WeeWX configuration file, change
-            the <a href="#wx_binding"><span class="code">[[wx_binding]]</span></a> section to point to the MySQL
-            database, <span class="code">archive_mysql</span>, instead of the SQLite database <span class="code">archive_sqlite</span>.
-        </p>
-        <p> After the change, it will look something like this (change <span class="highlight">highlighted</span>):
-        </p>
-        <pre class="tty">
+            <li>
+                <p>
+                    Change the WeeWX configuration to use MySQL instead of SQLite. In the WeeWX configuration file,
+                    change the <a href="#wx_binding"><span class="code">[[wx_binding]]</span></a> section to point to
+                    the MySQL database, <span class="code">archive_mysql</span>, instead of the SQLite database <span
+                    class="code">archive_sqlite</span>.
+                </p>
+                <p> After the change, it will look something like this (change <span
+                    class="highlight">highlighted</span>):
+                </p>
+                <pre class="tty">
     [[wx_binding]]
         # The database should match one of the sections in [Databases]
         <span class="highlight">database = archive_mysql</span>
@@ -912,25 +945,36 @@ sudo /etc/init.d/weewx restart</pre>
         # The schema defines to structure of the database contents
         schema = schemas.wview_extended.schema</pre>
 
-        <p>Assuming that you want to use the default database configuration, the <span class="code"><a
-            href="#Databases">[[MySQL]]</a></span> section should look something like this:
-        </p>
-        <pre class="tty">    [[MySQL]]
+            </li>
+
+            <li>
+                <p>
+                    Configure the MySQL host and credentials. Assuming that you want to use the default database
+                    configuration, the <span class="code"><a href="#Databases">[[MySQL]]</a></span> section should look
+                    something like this:
+                </p>
+                <pre class="tty">    [[MySQL]]
         driver = weedb.mysql
         host = localhost
         user = weewx
         password = weewx
 </pre>
-        <p>This assumes user <span class="code">weewx</span> has the password <span class="code">weewx</span>. Adjust as
-            necessary.
-        </p>
-
-        <p>You will need to give the necessary permissions for the database <span class="code">weewx</span> to whatever
-            MySQL user you choose, by default, user <span class="code">weewx</span>. Here are the necessary minimum
-            permissions:
-        </p>
-        <pre class="tty">mysql&gt; <span class="cmd">CREATE USER 'weewx'@'localhost' IDENTIFIED BY 'weewx';</span>
+                <p>This assumes user <span class="code">weewx</span> has the password <span class="code">weewx</span>.
+                    Adjust as necessary.
+                </p>
+            </li>
+            <li>
+                <p>
+                    Configure MySQL to give the necessary permissions for the database <span class="code">weewx</span> to
+                    whatever MySQL user you choose. Here are the
+                    necessary minimum permissions, again assuming user <span class="code">weewx</span> with password
+                    <span class="code">weewx</span>. Adjust as necessary.:
+                </p>
+                <pre class="tty">mysql&gt; <span
+                    class="cmd">CREATE USER 'weewx'@'localhost' IDENTIFIED BY 'weewx';</span>
 mysql&gt; <span class="cmd">GRANT select, update, create, delete, insert, drop ON weewx.* TO weewx@localhost;</span></pre>
+            </li>
+        </ol>
 
 
         <h1 id="wview_compatibility">Compatibility with <span class="code">wview</span></h1>
@@ -938,8 +982,8 @@ mysql&gt; <span class="cmd">GRANT select, update, create, delete, insert, drop O
         <h2>sqlite3</h2>
 
         <p>
-            The SQLite archive database (usually called <span class="code">wview-archive.sdb</span>) used by the old
-            Linux weather software program <em>wview</em> is completely compatible with WeeWX and can be used without
+            The SQLite archive database used by the old Linux weather software program <em>wview</em> (usually named
+            <span class="code">wview-archive.sdb</span>) is completely compatible with WeeWX and can be used without
             change.
         </p>
 

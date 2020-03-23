@@ -7,7 +7,7 @@
     <link rel="icon" href="images/favicon.png" type="image/png"/>
     <link rel="stylesheet" href="css/tocbot-4.3.1.css">
     <link rel="stylesheet" href="css/weewx_ui.css"/>
-    <script src="js/cash.js"></script>
+    <script src="js/cash.min.js"></script>
     <script src="js/tocbot-4.3.1.min.js"></script>
     <script src="js/weewx.js"></script>
     <script>
@@ -3245,7 +3245,7 @@ $station.altitude</pre>
             class="code">$station.altitude</span>, is a <em>string</em>. In order to convert the <span class="code">ValueHelper</span>
             it has in hand into a string, it does what every other Python object does when faced with this problem: it
             calls the special method <span class="code"><a style="text-decoration: none"
-                                                           href="https://docs.python.org/2/reference/datamodel.html#object.__str__">__str__</a></span>.
+                                                           href="https://docs.python.org/3/reference/datamodel.html#object.__str__">__str__</a></span>.
             Class <span class="code">ValueHelper</span> has a definition for this method. Evaluating this function
             triggers the final steps in this process. Any necessary unit conversions are done, then formatting occurs
             and, finally, a label is attached. The result is a string something like
@@ -3282,7 +3282,7 @@ $station.altitude</pre>
             class="code">outTemp</span>. There is no such hard coded attribute (hard coding all the conceivable
             different observation types would be impossible!). Instead, class <span class="code">TimespanBinder</span>
             defines the Python special method <span class="code"> <a style="text-decoration: none"
-                                                                     href="https://docs.python.org/2/reference/datamodel.html#object.__getattr__">__getattr__</a></span>.
+                                                                     href="https://docs.python.org/3/reference/datamodel.html#object.__getattr__">__getattr__</a></span>.
             If Python cannot find a hard coded version of an attribute, and the method <span
             class="code">__getattr__</span> exists, it will try it. The definition provided by <span class="code">TimespanBinder</span>
             returns an instance of the next class in the chain, <span class="code">weewx.tags.ObservationBinder</span>,
@@ -3366,6 +3366,7 @@ class MyStats(SearchList):                                                   # 1
         # used in the report.
         all_stats = TimespanBinder(timespan,
                                    db_lookup,
+                                   context='year',
                                    formatter=self.generator.formatter,
                                    converter=self.generator.converter,
                                    skin_dict=self.generator.skin_dict)       # 4
@@ -3373,14 +3374,16 @@ class MyStats(SearchList):                                                   # 1
         # Now get a TimespanBinder object for the last seven days. This one we
         # will have to calculate. First, calculate the time at midnight, seven
         # days ago. The variable week_dt will be an instance of datetime.date.
-        week_dt = datetime.date.fromtimestamp(timespan.stop) - \
-                    datetime.timedelta(weeks=1)                              # 5
+        week_dt = datetime.date.fromtimestamp(timespan.stop) \
+                  - datetime.timedelta(weeks=1)                              # 5
         # Convert it to unix epoch time:
         week_ts = time.mktime(week_dt.timetuple())                           # 6
+
         # Form a TimespanBinder object, using the time span we just
         # calculated:
         seven_day_stats = TimespanBinder(TimeSpan(week_ts, timespan.stop),
                                          db_lookup,
+                                         context='week',
                                          formatter=self.generator.formatter,
                                          converter=self.generator.converter,
                                          skin_dict=self.generator.skin_dict) # 7
@@ -3421,7 +3424,7 @@ class MyStats(SearchList):                                                   # 1
             </li>
             <li>The class <span class="code">TimespanBinding</span> represents a statistical calculation over a time
                 period. We have already met it in the introduction <em><a href="#how_tags_work">How tags work</a></em>.
-                In our case, we will set it up to represent the statistics over all possible times. The class takes 5
+                In our case, we will set it up to represent the statistics over all possible times. The class takes 6
                 parameters.
                 <ul>
                     <li>The first, <span class='code'>timespan</span>, is the timespan over which the calculation is to
@@ -3432,16 +3435,21 @@ class MyStats(SearchList):                                                   # 1
                     <li>The second, <span class='code'>db_lookup</span>, is the database lookup function to be used. We
                         simply pass in <span class="code">db_lookup</span>.
                     </li>
-                    <li>The third, <span class="code">formatter</span>, should be an instance of class <span
+                    <li>The third, <span class="code">context</span>, is the time <em>context</em> to be used when
+                        formatting times. The set of possible choices is given by sub-section <a
+                            href="#Units_TimeFormats"><span class="code">[[TimeFormats]]</span></a> in the configuration
+                        file.
+                    </li>
+                    <li>The fourth, <span class="code">formatter</span>, should be an instance of class <span
                         class="code">weewx.units.Formatter</span>, which contains information about how the results
                         should be formatted. We just pass in the formatter set up by the generator, <span class="code">self.generator.formatter</span>.
                     </li>
-                    <li>The fourth, <span class="code">converter</span>, should be an instance of <span class="code">weewx.units.Converter</span>,
+                    <li>The fifth, <span class="code">converter</span>, should be an instance of <span class="code">weewx.units.Converter</span>,
                         which contains information about the target units (<i>e.g.</i>, <span
                             class="code">degree_C</span>) that are to be used. Again, we just pass in the instance set
                         up by the generator, <span class="code">self.generator.converter</span>.
                     </li>
-                    <li>The fifth, <span class="code">skin_dict</span>, is an instance of <span class="code">configobj.ConfigObj</span>,
+                    <li>The sixth, <span class="code">skin_dict</span>, is an instance of <span class="code">configobj.ConfigObj</span>,
                         and contains the contents of the skin configuration file. We pass it on in order to allow
                         aggregations that need information from the file, such as heating and cooling degree-days.
                     </li>
@@ -3462,7 +3470,8 @@ class MyStats(SearchList):                                                   # 1
             </li>
             <li>We convert it to unix epoch time.</li>
             <li>Now we are ready to initialize an appropriate <span class="code">TimespanBinder</span> object. It's the
-                same as in step #4, except we use our new timespan object.
+                same as in step #4, except we use our new <span class="code">timespan</span> object and specify
+                a different time <span class="code">context</span>.
             </li>
             <li>Create a small dictionary with two keys, <span class="code">alltime</span>, and <span class="code">seven_day</span>.
             </li>
@@ -3516,9 +3525,9 @@ class MyStats(SearchList):                                                   # 1
         <p>
             We put our addition in the file <span class="code">user/stats.py</span>, which means it will be in the
             directory hierarchy where <span class="code">weewxd</span> resides. Python will search this hierarchy by
-            default, so it will find our addition. However, if you put it somewhere else, may will have to specify its
-            location with the environment variable <a
-            href="https://docs.python.org/2/using/cmdline.html#envvar-PYTHONPATH"><span
+            default, so it will find our addition. However, if you put the file somewhere else, you may have to specify
+            its location with the environment variable <a
+            href="https://docs.python.org/3/using/cmdline.html#envvar-PYTHONPATH"><span
             class="code">PYTHONPATH</span></a> when you start WeeWX:
         </p>
         <pre class="tty">export PYTHONPATH=/home/me/secret_location</pre>
@@ -4036,7 +4045,7 @@ class MyStats(SearchList):                                                   # 1
             First try the generic date (<span class="code">%x</span>), time (<span class="code">%X</span>), and day
             (<span class="code">%A</span>) formats &mdash; these will use the locale of your computer. If you still find
             those foreign, you can customize using the <a
-            href="https://docs.python.org/2/library/datetime.html#strftime-and-strptime-behavior">specific
+            href="https://docs.python.org/3/library/datetime.html#strftime-and-strptime-behavior">specific
             directives</a>.
         </p>
         <p>
@@ -5204,7 +5213,7 @@ weewx.units.conversionDict['pound']  = {'newton': lambda x : x * 4.44822}
         <p>
             If you implement function <span class="code">genArchiveRecords()</span>, then you should also implement
             <span class='code'>archive_interval</span> as either an attribute, or as a <a
-            href="https://docs.python.org/2/library/functions.html#property">property function</a>. It should return the
+            href="https://docs.python.org/3/library/functions.html#property">property function</a>. It should return the
             archive interval in seconds.
         </p>
 
@@ -5502,7 +5511,7 @@ xstats/bin/user/xstats.py</pre>
         <pre class="tty">[Extras]
     [[video]]
         still = video_capture.jpg
-        hyperlink = <a href="http://www.eatatjoes.com/video.html">http://www.eatatjoes.com/video.html</a>
+        hyperlink = http://www.eatatjoes.com/video.html
       </pre>
         <p>Then in your template you could refer to these as:</p>
         <pre class="tty">&lt;a href="$Extras.video.hyperlink"&gt;
@@ -5737,8 +5746,9 @@ second = " second", " seconds"</pre>
         <h3 class="config_section" id="Units_TimeFormats">[[TimeFormats]]</h3>
 
         <p>
-            This sub-section is used for time labels. It uses <a
-            href="https://docs.python.org/3/library/datetime.html#strftime-strptime-behavior">strftime()</a> formats.
+            This sub-section specifies what time format to use for different time <em>contexts</em>. For example, you
+            might want to use a different format when displaying the time in a day, versus the time in a month. It uses
+            <a href="https://docs.python.org/3/library/datetime.html#strftime-strptime-behavior">strftime()</a> formats.
             The default looks like this:
         </p>
         <pre class='tty'>
@@ -5761,8 +5771,8 @@ second = " second", " seconds"</pre>
             code locale dependent date, time, and weekday names, respectively. Hence, if you set an appropriate
             environment variable <span class='code'>LANG</span>, then the date and times should follow local conventions
             (see section <a href="#environment_variable_LANG">Environment variable LANG</a> for details on how to do
-            this). However, they will not look particularly pretty and you may want to change them. For example, I use
-            this in the U.S.:
+            this). However, the results may not look particularly nice, and you may want to change them. For example,
+            I use this in the U.S.:
         </p>
         <pre class="tty">
     [[TimeFormats]]

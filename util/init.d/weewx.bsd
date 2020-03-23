@@ -10,7 +10,7 @@ PIDFILE="/var/run/weewx.pid"
 case "$1" in
   "start")
     echo "Starting weewx..."
-    /usr/local/bin/python ${WEEWX_BIN} ${WEEWX_CFG} --daemon &
+    ${WEEWX_BIN} ${WEEWX_CFG} --daemon &
     echo $! > ${PIDFILE}
     echo "done"
   ;;
