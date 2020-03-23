@@ -58,7 +58,7 @@
 <h2 id="setup_prerequisites">Install prerequisites</h2>
 <p>First install the prerequisites appropriate for your operating system.</p>
 
-<h3>Debian Stretch (9)<br/> Raspbian Stretch (9)<br/> Ubuntu 16.04-17.10</h3>
+<h3>Debian 9 (Stretch)<br/> Raspbian 9<br/> Ubuntu 16.04-17.10</h3>
 
 <pre class='tty'><span class="cmd">sudo apt update</span>
 
@@ -68,10 +68,9 @@ sudo apt install python3-pil
 sudo apt install python3-serial
 sudo apt install python3-usb
 sudo apt install python3-pip
-sudo pip3 install cheetah3
-</span>
+sudo pip3 install cheetah3</span>
 
-# Optional:
+# Optional: for extended almanac information
 <span class="cmd">sudo apt install python3-ephem</span>
 
 # Required if you are using MySQL (MariaDB):
@@ -79,8 +78,7 @@ sudo pip3 install cheetah3
 sudo apt install python3-mysqldb</span></pre>
 
 
-<p>&nbsp;</p>
-<h3>Debian Buster (10)<br/> Raspbian Buster (10)<br/> Ubuntu 18.04-19.10</h3>
+<h3>Debian 10 (Buster)<br/> Raspbian 10 (10)<br/> Ubuntu 18.04-19.10</h3>
 
 <pre class='tty'><span class="cmd">sudo apt update</span>
 
@@ -98,8 +96,13 @@ sudo apt install python3-usb</span>
 <span class="cmd">sudo apt install mariadb-client
 sudo apt install python3-mysqldb</span></pre>
 
-<p>&nbsp;</p>
 <h3>Redhat 7</br>Centos 7<br/>No MySQL</h3>
+
+<p>
+    Python 3 works well on older Redhat 7 or Centos 7 systems, provided that you are not using MySQL. If you are using
+    MySQL, you will be happier with Python 2 (see <a href="#rhel7-mysql">below</a>).
+</p>
+
 <pre class="tty"><span class="cmd">sudo yum update</span>
 
 # Ensure that Python 3 is installed:
@@ -118,9 +121,10 @@ sudo pip3 install cheetah3</span>
 </pre>
 
 
-<p>&nbsp;</p>
-<h3>Redhat 7</br>Centos 7<br/>Using MySQL</h3>
-<p>Python 3 is not recommended if you are using MySQL on Redhat 7 or Centos 7. Use Python 2 instead.</p>
+<h3 id="rhel7-mysql">Redhat 7</br>Centos 7<br/>Using MySQL</h3>
+<p>If you are using MySQL on Redhat 7 or Centos 7, you should use Python 2, instead of Python 3. Here is what you will
+    need.
+</p>
 <pre class="tty"><span class="cmd">sudo yum update</span>
 
 # Required:
@@ -137,7 +141,6 @@ sudo yum install MySQL-python</span>
 </pre>
 
 
-<p>&nbsp;</p>
 <h3>Redhat 8</br>Centos 8</h3>
 <pre class="tty"><span class="cmd">sudo yum update</span>
 
@@ -159,9 +162,27 @@ sudo pip3 install cheetah3</span>
 </pre>
 
 
+<h3>OpenSUSE</h3>
+<p>Tested on OpenSUSE v15.1.</p>
+<pre class="tty"><span class="cmd">sudo zypper update</span>
+
+# Required:
+<span class="cmd">sudo zypper install python3-configobj
+sudo zypper install python3-Pillow      # Case matters!
+sudo zypper install python3-pyserial
+sudo zypper install python3-usb
+sudo zypper install python3-Cheetah3    # Case matters!</span>
+
+# Optional: for extended almanac information
+<span class="cmd">sudo pip3 install pyephem</span>
+
+# Required if using MySQL / MariaDB:
+<span class="cmd">sudo zypper install python3-mysqlclient</span></pre>
+
+
 <h2>Install WeeWX</h2>
 
-<p>Then install WeeWX itself.</p>
+<p>After you have installed the prerequisites, you can install WeeWX itself.</p>
 
 <ol>
     <li>
@@ -176,13 +197,16 @@ sudo pip3 install cheetah3</span>
 
     <li>
         <p>
-            To specify a location different from the standard <span class='code'>/home/weewx</span>, modify the
+            To specify an install location different from the default <span class='code'>/home/weewx</span>, modify the
             parameter <span class='code'>home</span> in the <span class='code'>setup.cfg</span> file. Mac users will
             want to change it to <span class="code">/Users/Shared/weewx</span>.
         </p>
     </li>
     <li>
-        <p>Then build and install:</p>
+        <p>
+            Then build and install. Python 2 users, substitute <span class="code cmd">python2</span> for <span
+            class="code cmd">python3</span>.
+        </p>
 
         <pre class="tty cmd">python3 ./setup.py build
 sudo python3 ./setup.py install</pre>
