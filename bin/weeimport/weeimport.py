@@ -76,6 +76,10 @@ class WeeImportFieldError(Exception):
        from an external source.
     """
 
+class WeeImportDecodeError(Exception):
+    """Base class of exceptions thrown when encountering a decode error with an
+       external source.
+    """
 
 # ============================================================================
 #                                class Source
@@ -127,9 +131,6 @@ class Source(object):
         know what records to import.
         """
 
-#        # give our source object some logging abilities
-#        self.wlog = log
-
         # save our WeeWX config dict
         self.config_dict = config_dict
 
@@ -137,7 +138,7 @@ class Source(object):
         # interval, default to 'derive'
         self.interval = import_config_dict.get('interval', 'derive')
         # do we ignore invalid data, default to True
-        self.ignore_invalid_data = tobool(import_config_dict.get('ignore_invalid_data', 
+        self.ignore_invalid_data = tobool(import_config_dict.get('ignore_invalid_data',
                                                                  True))
         # tranche, default to 250
         self.tranche = to_int(import_config_dict.get('tranche', 250))
@@ -372,6 +373,18 @@ class Source(object):
                     log.info("**** %s" % e)
                     print("**** Period %d will be skipped. Proceeding to next period." % self.period_no)
                     log.info("**** Period %d will be skipped. Proceeding to next period." % self.period_no)
+                    # increment our period counter
+                    self.period_no += 1
+                    continue
+                except WeeImportDecodeError as e:
+                    print("**** Unable to decode source data for period %d." % self.period_no)
+                    log.info("**** Unable to decode source data for period %d." % self.period_no)
+                    print("**** %s" % e)
+                    log.info("**** %s" % e)
+                    print("**** Period %d will be skipped. Proceeding to next period." % self.period_no)
+                    log.info("**** Period %d will be skipped. Proceeding to next period." % self.period_no)
+                    print("**** Consider specifying the source file encoding using the 'source_encoding' config option.")
+                    log.info("**** Consider specifying the source file encoding using the 'source_encoding' config option.")
                     # increment our period counter
                     self.period_no += 1
                     continue
