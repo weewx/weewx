@@ -17,6 +17,7 @@ import collections
 import csv
 import datetime
 import glob
+import io
 import logging
 import operator
 import os
@@ -364,6 +365,10 @@ class WDSource(weeimport.Source):
             _msg = "Weather Display monthly logs directory not specified in '%s'." % import_config_path
             raise weewx.ViolatedPrecondition(_msg)
 
+        # get the source file encoding, default to utf-8-sig
+        self.source_encoding = self.wd_config_dict.get('source_encoding',
+                                                       'utf-8-sig')
+
         # Now get a list on monthly log files sorted from oldest to newest.
         # This is complicated by the log file naming convention used by WD.
         # first the 1 digit months
@@ -506,9 +511,14 @@ class WDSource(weeimport.Source):
 
             # check that the log file exists
             if os.path.isfile(_path_file_name):
-                # log file exists, read the raw data
-                with open(_path_file_name, 'r') as f:
-                    _raw_data = f.readlines()
+                # It exists.  The source file may use some encoding, if we can't
+                # decode it raise a WeeImportDecodeError.
+                try:
+                    with io.open(_path_file_name, mode='r', encoding=self.source_encoding) as f:
+                        _raw_data = f.readlines()
+                except UnicodeDecodeError as e:
+                    # not a utf-8 based encoding, so raise a WeeImportDecodeError
+                    raise weeimport.WeeImportDecodeError(e)
             else:
                 # log file does not exist ignore it if we are allowed else
                 # raise it

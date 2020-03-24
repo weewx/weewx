@@ -15,6 +15,7 @@ from __future__ import print_function
 # Python imports
 import csv
 import glob
+import io
 import logging
 import os
 import time
@@ -211,6 +212,10 @@ class CumulusSource(weeimport.Source):
             _msg = "Cumulus monthly logs directory not specified in '%s'." % import_config_path
             raise weewx.ViolatedPrecondition(_msg)
 
+        # get the source file encoding, default to utf-8-sig
+        self.source_encoding = self.cumulus_config_dict.get('source_encoding',
+                                                            'utf-8-sig')
+
         # property holding the current log file name being processed
         self.file_name = None
 
@@ -297,8 +302,14 @@ class CumulusSource(weeimport.Source):
         # period holds the filename of the monthly log file that contains our
         # data. Does our source exist?
         if os.path.isfile(period):
-            with open(period, 'r') as f:
-                _raw_data = f.readlines()
+            # It exists.  The source file may use some encoding, if we can't
+            # decode it raise a WeeImportDecodeError.
+            try:
+                with io.open(period, mode='r', encoding=self.source_encoding) as f:
+                    _raw_data = f.readlines()
+            except UnicodeDecodeError as e:
+                # not a utf-8 based encoding, so raise a WeeImportDecodeError
+                raise weeimport.WeeImportDecodeError(e)
         else:
             # If it doesn't we can't go on so raise it
             raise weeimport.WeeImportIOError(
