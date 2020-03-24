@@ -15,8 +15,10 @@ from __future__ import print_function
 
 # Python imports
 import csv
+import io
 import logging
 import os
+
 
 # WeeWX imports
 from . import weeimport
@@ -78,6 +80,9 @@ class CSVSource(weeimport.Source):
             self.source = csv_config_dict['file']
         except KeyError:
             raise weewx.ViolatedPrecondition("CSV source file not specified in '%s'." % import_config_path)
+        # get the source file encoding, default to utf-8-sig
+        self.source_encoding = self.csv_config_dict.get('source_encoding',
+                                                        'utf-8-sig')
         # initialise our import field-to-WeeWX archive field map
         self.map = None
         # initialise some other properties we will need
@@ -178,8 +183,14 @@ class CSVSource(weeimport.Source):
 
         # does our source exist?
         if os.path.isfile(self.source):
-            with open(self.source, 'r') as f:
-                _raw_data = f.readlines()
+            # It exists.  The source file may use some encoding, if we can't
+            # decode it raise a WeeImportDecodeError.
+            try:
+                with io.open(self.source, mode='r', encoding=self.source_encoding) as f:
+                    _raw_data = f.readlines()
+            except UnicodeDecodeError as e:
+                # not a utf-8 based encoding, so raise a WeeImportDecodeError
+                raise weeimport.WeeImportDecodeError(e)
         else:
             # if it doesn't we can't go on so raise it
             raise weeimport.WeeImportIOError(
