@@ -1327,6 +1327,14 @@ summaries using the wee_database utility.</pre>
             filename. There is no default.
         </p>
 
+        <h4 class='config_option' id='csv_encoding'>source_encoding</h4>
+
+        <p>The source file encoding. This parameter is optional and should only need be used if the source file uses an encoding
+            other than UTF-8 or an ASCII compatible encoding. If used, the setting used should be
+            a <a href="https://docs.python.org/3/library/codecs.html#standard-encodings">Python Standard Encoding</a>.  The default
+            value is <span class="code">utf-8-sig</span>.
+        </p>
+
         <h4 class='config_option' id='csv_interval'>interval</h4>
 
         <p>Determines how the time interval (WeeWX archive table field <span class="code">interval</span>) between
@@ -1775,6 +1783,13 @@ summaries using the wee_database utility.</pre>
             trailing /. There is no default.
         </p>
 
+        <h4 class='config_option' id='cumulus_encoding'>source_encoding</h4>
+
+        <p>The Cumulus monthly log file encoding. This option is identical in operation to the
+            CSV <em><a href="#csv_encoding">source_encoding</a></em> option but applies to Cumulus imports only. The
+            default is <span class="code">utf-8-sig</span>.
+        </p>
+
         <h4 class='config_option' id='cumulus_interval'>interval</h4>
 
         <p>Determines how the time interval (WeeWX database field <span class="code">interval</span>) between successive
@@ -1978,6 +1993,13 @@ summaries using the wee_database utility.</pre>
         </p>
 
         <p>The default is <span class="code">lg.txt, vantagelog.txt, vantageextrasensorslog.csv</span>.
+        </p>
+
+        <h4 class='config_option' id='wd_encoding'>source_encoding</h4>
+
+        <p>The Weather Display monthly log file encoding. This option is identical in operation to the
+            CSV <em><a href="#csv_encoding">source_encoding</a></em> option but applies to Weather Display imports only. The
+            default is <span class="code">utf-8-sig</span>.
         </p>
 
         <h4 class='config_option' id='wd_interval'>interval</h4>
