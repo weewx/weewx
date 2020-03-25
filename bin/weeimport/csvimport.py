@@ -45,6 +45,17 @@ class CSVSource(weeimport.Source):
     # Define a dict to map CSV fields to WeeWX archive fields. For a CSV import
     # these details are specified by the user in the wee_import config file.
     _header_map = None
+    # define a dict to map cardinal, intercardinal and secondary intercardinal
+    # directions to degrees
+    wind_dir_map = {'N': 0.0, 'NNE': 22.5, 'NE': 45.0, 'ENE': 67.5,
+                    'E': 90.0, 'ESE': 112.5, 'SE': 135.0, 'SSE': 157.5,
+                    'S': 180.0, 'SSW': 202.5, 'SW': 225.0, 'WSW': 247.5,
+                    'W': 270.0, 'WNW': 292.5, 'NW': 315.0, 'NNW': 337.5,
+                    'NORTH': 0.0, 'NORTHNORTHEAST': 22.5, 'NORTHEAST': 45.0, 'EASTNORTHEAST': 67.5,
+                    'EAST': 90.0, 'EASTSOUTHEAST': 112.5, 'SOUTHEAST': 135.0, 'SOUTHSOUTHEAST': 157.5,
+                    'SOUTH': 180.0, 'SOUTHSOUTHWEST': 202.5, 'SOUTHWEST': 225.0, 'WESTSOUTHWEST': 247.5,
+                    'WEST': 270.0, 'WESTNORTHWEST': 292.5, 'NORTHWEST': 315.0, 'NORTHNORTHWEST': 337.5
+                    }
 
     def __init__(self, config_dict, config_path, csv_config_dict, import_config_path, options):
 
