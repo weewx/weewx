@@ -2314,6 +2314,10 @@ summaries using the wee_database utility.</pre>
             <li>Blank fields are represented by the use of white space or no space only between commas.
             </li>
 
+            <li>Direction data being imported may be represented as numeric degrees or as a string representing
+                the <a href="https://en.wikipedia.org/wiki/Cardinal_direction">cardinal, intercardinal and/or secondary intercardinal directions</a>.
+            </li>
+
             <li>There must a field that represents the date-time of the observations on each line. This date-time field
                 must be either a Unix epoch timestamp or any date-time format that can be represented using <em> <a
                     href="https://docs.python.org/2/library/datetime.html#strftime-and-strptime-behavior">Python
@@ -2331,6 +2335,25 @@ summaries using the wee_database utility.</pre>
 28/11/2017 08:20:00,1016.9,25.9,79,1.6,95,9.7,0,774,5.5
 28/11/2017 08:25:00,1017,25.5,78,2.9,48,9.7,0,303,3.4
 28/11/2017 08:30:00,1017.1,25.1,80,3.1,54,9.7,0,190,3.6</pre>
+
+        <p>or this:</p>
+
+        <pre class="tty">Time,Barometer,Temp,Humidity,Windspeed,Dir,Gust,Dayrain,Radiation,Uv
+2/1/2017 06:20:00,1006.4,4.8,48,2.8,NE,4,0,349,2.8
+2/1/2017 06:25:00,1006.9,5.0,48,3.8,NNE,21.3,0,885,4.3
+2/1/2017 06:30:00,1006.8,5.4,47,3.4,North,12.3,0,887,5.3
+2/1/2017 06:35:00,1007,5.2,49,5.5,NNE,13.3,0,600,5.4
+2/1/2017 06:40:00,1006.9,5.7,49,2.6,ESE,9.7,0,732,5.5
+2/1/2017 06:45:00,1007,5.5,48,1.9,Southsoutheast,9.8,0,393,6.4
+2/1/2017 06:50:00,1007.1,5.2,50,2.1,southeast,9.9,0,180,6.6</pre>
+
+        <p class="note">
+            <strong>Note</strong><br/><a href="https://en.wikipedia.org/wiki/Cardinal_direction">Cardinal, intercardinal
+            and/or secondary intercardinal directions</a> may be represented by one, two or three letter abbreviations
+            e.g., N, SE or SSW; by a single word e.g., North, Southwest or Southsouthwest or by hyphenated or spaced words
+            e.g., North West or South-south-west. Capitalisation is ignored as are any spaces, hyphens or other white
+            space. At present only English abbreviations and directions are supported.
+        </p>
 
         <h3>Mapping data to archive fields</h3>
 
