@@ -74,27 +74,37 @@ class weewx_install(install):
 # ==============================================================================
 
 class weewx_install_lib(install_lib):
-    """Specialized version of install_lib, which saves the user subdirectory."""
+    """Specialized version of install_lib that saves, then restores, the user subdirectory."""
 
     def run(self):
         # Location of the user subdirectory, if it exists.
         user_dir = os.path.join(self.install_dir, 'user')
         if os.path.exists(user_dir):
-            # It exists. Save it under a timestamp
-            user_savedir = move_with_timestamp(user_dir)
+            # Copy the original user subdirectory before doing the install.
+            user_save_dir = user_dir + '.copy'
+            shutil.copytree(user_dir, user_save_dir, symlinks=True)
         else:
-            user_savedir = None
+            user_save_dir = None
 
-        # Run the superclass's version. This will install all incoming files, including
-        # a new user subdirectory
-        rv = install_lib.run(self)
+        try:
+            # Run the superclass's version. This will install all incoming files, including
+            # a new user subdirectory
+            rv = install_lib.run(self)
+        except Exception:
+            # Problem. Restore the user subdirectory if there was one.
+            if user_save_dir:
+                shutil.copytree(user_save_dir, user_dir, symlinks=True)
+                shutil.rmtree(user_save_dir, ignore_errors=True)
+        else:
+            # Success.
+            if user_save_dir:
+                # Remove the user directory we just installed...
+                shutil.rmtree(user_dir)
+                # ...then copy the saved version back...
+                shutil.copytree(user_save_dir, user_dir, symlinks=True)
+                # ...then remove the copy
+                shutil.rmtree(user_save_dir)
 
-        # If we set aside an old user subdirectory, restore it
-        if user_savedir:
-            # Remove the user directory we just installed...
-            distutils.dir_util.remove_tree(user_dir)
-            # ... then move the saved version back:
-            shutil.move(user_savedir, user_dir)
             try:
                 # The file schemas.py is no longer used, and can interfere with schema
                 # imports. See issue #54.
@@ -227,35 +237,30 @@ def update_and_install_config(install_dir, install_scripts, install_lib, config_
     """
 
     # This is where the weewx.conf file will go
-    destination = os.path.join(install_dir, config_name)
+    config_path = os.path.join(install_dir, config_name)
 
-    # Is there an existing file? If so, use it as the source. Otherwise,
-    # use the file that came with the distribution.
-    if os.path.isfile(destination):
-        source = destination
-        no_prompt = True
+    # Is there an existing file?
+    if os.path.isfile(config_path):
+        # Yes, so this is an upgrade
+        args = [sys.executable,
+                os.path.join(install_scripts, 'wee_config'),
+                '--upgrade',
+                '--config=%s' % config_path,
+                '--dist-config=%s' % config_path + '.' + VERSION,
+                '--output=%s' % config_path,
+                ]
     else:
-        source = os.path.join(install_dir, config_name + '.' + VERSION)
-        no_prompt = False
-
-    # Command used to invoke wee_config:
-    args = [sys.executable,
-            os.path.join(install_scripts, 'wee_config'),
-            '--install',
-            '--dist-config=%s' % source,
-            '--output=%s' % destination,
-            ]
-    if no_prompt:
-        # If we are doing an upgrade, don't prompt.
-        args += ['--no-prompt']
+        # No existing config file. This is an install
+        args = [sys.executable,
+                os.path.join(install_scripts, 'wee_config'),
+                '--install',
+                '--dist-config=%s' % config_path + '.' + VERSION,
+                '--output=%s' % config_path,
+                ]
 
     if DEBUG:
-        print("Incoming weewx.conf path=%s" % source)
-        print("Outgoing weewx.conf path=%s" % destination)
         print("Command used to invoke wee_config: %s" % args)
-        print("install_scripts=%s" % install_scripts)
-        print("install_lib=%s" % install_lib)
-        
+
     proc = subprocess.Popen(args,
                             env={'PYTHONPATH' : install_lib},
                             stdin=sys.stdin,
