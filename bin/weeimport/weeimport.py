@@ -813,14 +813,14 @@ class Source(object):
                         try:
                             _temp = float(_row[self.map[_field]['field_name']].strip())
                         except AttributeError:
-                            # the data has not strip() attribute so chances are
+                            # the data has no strip() attribute so chances are
                             # it's a number already
                             if isinstance(_row[self.map[_field]['field_name']], numbers.Number):
                                 _temp = _row[self.map[_field]['field_name']]
                             elif _row[self.map[_field]['field_name']] is None:
                                 _temp = None
                             else:
-                                # we raise the error
+                                # it's not a string and its not a number so raise an error
                                 _msg = "%s: cannot convert '%s' to float at " \
                                        "timestamp '%s'." % (_field,
                                                             _row[self.map[_field]['field_name']],
@@ -830,15 +830,43 @@ class Source(object):
                             # perhaps we have a None, so return None for our field
                             _temp = None
                         except ValueError:
-                            # most likely have non-numeric, non-None data, in 
-                            # this case what we do depends on our 
+                            # most likely have non-numeric, non-None data
+
+                            # if this is a csv import and we are mapping to a
+                            # direction field perhaps we have a string
+                            # representation of a cardinal, intercardinal or
+                            # secondary intercardinal direction that we can
+                            # convert to degrees
+
+                            # set a flag to indicate whether we matched the data to a value
+                            matched = False
+                            if hasattr(self, 'wind_dir_map') and self.map[_field]['units'] == 'degree_compass':
+                                # we have a csv import and we are mapping to a
+                                # direction field
+
+                                # first strip any whitespace and hyphens from
+                                # the data
+                                _stripped = re.sub(r'[\s-]+', '', _row[self.map[_field]['field_name']])
+                                # try to use the data as the key in a dict
+                                # mapping directions to degrees, if there is no
+                                # match we will have None returned
+                                dir_degrees = self.wind_dir_map.get(_stripped.upper())
+                                # if we have a non-None value use it
+                                if dir_degrees is not None:
+                                    _temp = dir_degrees
+                                    # we have a match so set our flag
+                                    matched = True
+                            # if we did not get a match perhaps we can ignore
+                            # the invalid data, that will depend on the
                             # ignore_invalid_data property
-                            if self.ignore_invalid_data:
+                            if not matched and self.ignore_invalid_data:
                                 # we ignore the invalid data so set our result 
                                 # to None
                                 _temp = None
-                            else:
-                                # we raise the error
+                                # set our matched flag
+                                matched = True
+                            # if we did not find a match raise the error
+                            if not matched:
                                 _msg = "%s: cannot convert '%s' to float at " \
                                        "timestamp '%s'." % (_field,
                                                             _row[self.map[_field]['field_name']],

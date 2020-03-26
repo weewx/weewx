@@ -114,8 +114,10 @@ observations.
 wee_import now calculates missing derived observations once all imported data
 has been saved to archive. Fixes issue #443.
 
-wee_import now now tolerates periods that contain no source data. Fixes
-issue #499.
+wee_import now tolerates periods that contain no source data. Fixes issue #499.
+
+wee_import now accepts strings representing cardinal, intercardinal and
+secondary intercardinal directions in CSV imports. Partially fixes issue #238.
 
 Ignore historical records if the timestamp is in the future.
 
