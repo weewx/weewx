@@ -1505,12 +1505,13 @@ def prompt_for_info(location=None, latitude='90.000', longitude='0.000',
                     altitude=['0', 'meter'], units='metric',
                     register_this_station='false',
                     station_url=DEFAULT_URL, **kwargs):
+    stn_info = {}
     #
     #  Description
     #
     print("Enter a brief description of the station, such as its location.  For example:")
     print("Santa's Workshop, North Pole")
-    loc = prompt_with_options("description", location)
+    stn_info['location'] = prompt_with_options("description", location)
 
     #
     #  Altitude
@@ -1538,14 +1539,15 @@ def prompt_for_info(location=None, latitude='90.000', longitude='0.000',
 
         if not alt:
             print("Unrecognized response. Try again.")
+    stn_info['altitude'] = alt
 
     #
     # Latitude & Longitude
     #
     print("Specify latitude in decimal degrees, negative for south.")
-    lat = prompt_with_limits("latitude", latitude, -90, 90)
+    stn_info['latitude'] = prompt_with_limits("latitude", latitude, -90, 90)
     print("Specify longitude in decimal degrees, negative for west.")
-    lon = prompt_with_limits("longitude", longitude, -180, 180)
+    stn_info['longitude'] = prompt_with_limits("longitude", longitude, -180, 180)
 
     #
     # Include in station registry?
@@ -1558,15 +1560,16 @@ def prompt_for_info(location=None, latitude='90.000', longitude='0.000',
                                    default,
                                    ['y', 'n'])
     if registry.lower() == 'y':
-        registry = 'true'
+        stn_info['register_this_station'] = 'true'
         while True:
             station_url = prompt_with_options("Unique URL:", station_url)
             if station_url == DEFAULT_URL:
                 print("Unique please!")
             else:
+                stn_info['station_url'] = station_url
                 break
     else:
-        registry = 'false'
+        stn_info['register_this_station'] = 'false'
 
     #
     # Display units. Accept only 'us' or 'metric', where 'metric'
@@ -1577,16 +1580,9 @@ def prompt_for_info(location=None, latitude='90.000', longitude='0.000',
     uni = prompt_with_options("units", default, ['us', 'metric'])
     if uni == 'metric':
         uni = 'metricwx'
+    stn_info['units'] = uni
 
-    return {
-        'location': loc,
-        'altitude': alt,
-        'latitude': lat,
-        'longitude': lon,
-        'units': uni,
-        'register_this_station': registry,
-        'station_url': station_url,
-    }
+    return stn_info
 
 
 def prompt_for_driver(dflt_driver=None):

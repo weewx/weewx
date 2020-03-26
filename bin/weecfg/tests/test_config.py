@@ -224,52 +224,63 @@ class ConfigTest(LineTest):
             with open(os.devnull, 'w') as sys.stdout:
                 # Test a normal input
                 with patch('weecfg.input',
-                           side_effect=['Anytown', '100, meter', '45.0', '180.0', 'us']):
+                           side_effect=['Anytown', '100, meter', '45.0', '180.0', 'y',
+                                        'weewx.com', 'us']):
                     stn_info = weecfg.prompt_for_info()
                     self.assertEqual(stn_info, {'altitude': ['100', 'meter'],
                                                 'latitude': '45.0',
                                                 'location': 'Anytown',
                                                 'longitude': '180.0',
-                                                'units': 'us'})
+                                                'register_this_station': 'true',
+                                                'station_url': 'weewx.com',
+                                                'units': 'us',
+                                                })
 
                 # Test for a default input
                 with patch('weecfg.input',
-                           side_effect=['Anytown', '', '45.0', '180.0', 'us']):
+                           side_effect=['Anytown', '', '45.0', '180.0', 'n', 'us']):
                     stn_info = weecfg.prompt_for_info()
                     self.assertEqual(stn_info, {'altitude': ['0', 'meter'],
                                                 'latitude': '45.0',
                                                 'location': 'Anytown',
                                                 'longitude': '180.0',
-                                                'units': 'us'})
+                                                'register_this_station': 'false',
+                                                'units': 'us',
+                                                })
 
                 # Test for an out-of-bounds latitude
                 with patch('weecfg.input',
-                           side_effect=['Anytown', '100, meter', '95.0', '45.0', '180.0', 'us']):
+                           side_effect=['Anytown', '100, meter', '95.0', '45.0', '180.0', 'n', 'us']):
                     stn_info = weecfg.prompt_for_info()
                     self.assertEqual(stn_info, {'altitude': ['100', 'meter'],
                                                 'latitude': '45.0',
                                                 'location': 'Anytown',
                                                 'longitude': '180.0',
+                                                'register_this_station': 'false',
                                                 'units': 'us'})
 
                 # Test for a bad length unit type
                 with patch('weecfg.input',
-                           side_effect=['Anytown', '100, foo', '100,meter', '45.0', '180.0', 'us']):
+                           side_effect=['Anytown', '100, foo', '100,meter', '45.0', '180.0',
+                                        'n', 'us']):
                     stn_info = weecfg.prompt_for_info()
                     self.assertEqual(stn_info, {'altitude': ['100', 'meter'],
                                                 'latitude': '45.0',
                                                 'location': 'Anytown',
                                                 'longitude': '180.0',
+                                                'register_this_station': 'false',
                                                 'units': 'us'})
 
                 # Test for a bad display unit
                 with patch('weecfg.input',
-                           side_effect=['Anytown', '100, meter', '45.0', '180.0', 'foo', 'us']):
+                           side_effect=['Anytown', '100, meter', '45.0', '180.0', 'foo',
+                                        'n', 'us']):
                     stn_info = weecfg.prompt_for_info()
                     self.assertEqual(stn_info, {'altitude': ['100', 'meter'],
                                                 'latitude': '45.0',
                                                 'location': 'Anytown',
                                                 'longitude': '180.0',
+                                                'register_this_station': 'false',
                                                 'units': 'us'})
             # Restore stdout:
             sys.stdout = save_stdout
@@ -433,7 +444,7 @@ class ConfigTest(LineTest):
         self.assertEqual(stn_info,
                          {'station_type': 'unspecified', 'altitude': ['700', 'foot'],
                           'longitude': '0.00', 'units': 'us', 'location': 'My Little Town, Oregon',
-                          'latitude': '0.00'})
+                          'latitude': '0.00', 'register_this_station': 'false'})
 
         # Modify the station info, to reflect a hardware choice
         stn_info['station_type'] = 'Vantage'
