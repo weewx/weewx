@@ -103,7 +103,8 @@ class LineTest(unittest.TestCase):
                 for expected in fd_expected:
                     actual = fd_actual.readline()
                     N += 1
-                    self.assertEqual(actual.strip(), expected.strip(), "[%d] '%s' vs '%s'" % (N, actual, expected))
+                    self.assertEqual(actual.strip(), expected.strip(),
+                                     "[%d] '%s' vs '%s'" % (N, actual, expected))
 
                 # Make sure there are no extra lines in the updated config:
                 more = fd_actual.readline()
@@ -216,9 +217,7 @@ class ConfigTest(LineTest):
         self.assertEqual(test_list, ['a', 'b', 'd'])
 
     if have_mock:
-
         def test_prompt_for_info(self):
-
             # Suppress stdout by temporarily assigning it to /dev/null
             save_stdout = sys.stdout
             with open(os.devnull, 'w') as sys.stdout:
@@ -238,19 +237,20 @@ class ConfigTest(LineTest):
 
                 # Test for a default input
                 with patch('weecfg.input',
-                           side_effect=['Anytown', '', '45.0', '180.0', 'n', 'us']):
+                           side_effect=['Anytown', '', '', '', '', '']):
                     stn_info = weecfg.prompt_for_info()
                     self.assertEqual(stn_info, {'altitude': ['0', 'meter'],
-                                                'latitude': '45.0',
+                                                'latitude': '90.000',
                                                 'location': 'Anytown',
-                                                'longitude': '180.0',
+                                                'longitude': '0.000',
                                                 'register_this_station': 'false',
-                                                'units': 'us',
+                                                'units': 'metricwx',
                                                 })
 
-                # Test for an out-of-bounds latitude
+                # Test for an out-of-bounds latitude with retry
                 with patch('weecfg.input',
-                           side_effect=['Anytown', '100, meter', '95.0', '45.0', '180.0', 'n', 'us']):
+                           side_effect=['Anytown', '100, meter', '95.0', '45.0', '180.0', 'n',
+                                        'us']):
                     stn_info = weecfg.prompt_for_info()
                     self.assertEqual(stn_info, {'altitude': ['100', 'meter'],
                                                 'latitude': '45.0',
@@ -259,7 +259,7 @@ class ConfigTest(LineTest):
                                                 'register_this_station': 'false',
                                                 'units': 'us'})
 
-                # Test for a bad length unit type
+                # Test for a bad length unit type with retry
                 with patch('weecfg.input',
                            side_effect=['Anytown', '100, foo', '100,meter', '45.0', '180.0',
                                         'n', 'us']):
@@ -271,10 +271,10 @@ class ConfigTest(LineTest):
                                                 'register_this_station': 'false',
                                                 'units': 'us'})
 
-                # Test for a bad display unit
+                # Test for a bad display unit with retry
                 with patch('weecfg.input',
-                           side_effect=['Anytown', '100, meter', '45.0', '180.0', 'foo',
-                                        'n', 'us']):
+                           side_effect=['Anytown', '100, meter', '45.0', '180.0', 'n', 'foo',
+                                        'us']):
                     stn_info = weecfg.prompt_for_info()
                     self.assertEqual(stn_info, {'altitude': ['100', 'meter'],
                                                 'latitude': '45.0',
@@ -431,7 +431,8 @@ class ConfigTest(LineTest):
         # Cannot really test for version numbers of all drivers. Pick one. Import it...
         import weewx.drivers.ws1
         # ... and see if the version number matches
-        self.assertEqual(driver_info_dict['weewx.drivers.ws1']['version'], weewx.drivers.ws1.DRIVER_VERSION)
+        self.assertEqual(driver_info_dict['weewx.drivers.ws1']['version'],
+                         weewx.drivers.ws1.DRIVER_VERSION)
         del weewx.drivers.ws1
 
     def test_modify_config(self):
@@ -556,7 +557,8 @@ class ExtensionInstallTest(unittest.TestCase):
         self.skin_dir = os.path.join(self.weewx_root, 'skins')
         self.bin_dir = os.path.join(self.weewx_root, 'bin')
         distutils.dir_util.copy_tree('../../../bin/user', self.user_dir)
-        distutils.dir_util.copy_tree('../../../skins/Standard', os.path.join(self.skin_dir, 'Standard'))
+        distutils.dir_util.copy_tree('../../../skins/Standard',
+                                     os.path.join(self.skin_dir, 'Standard'))
         shutil.copy(current_config_dict_path, self.weewx_root)
 
     def tearDown(self):
@@ -592,7 +594,8 @@ class ExtensionInstallTest(unittest.TestCase):
 
         # ... and assert that it got installed correctly
         self.assertTrue(os.path.isfile(os.path.join(self.user_dir, 'pmon.py')))
-        self.assertTrue(os.path.isfile(os.path.join(self.user_dir, 'installer', 'pmon', 'install.py')))
+        self.assertTrue(
+            os.path.isfile(os.path.join(self.user_dir, 'installer', 'pmon', 'install.py')))
         self.assertTrue(os.path.isdir(os.path.join(self.skin_dir, 'pmon')))
         self.assertTrue(os.path.isfile(os.path.join(self.skin_dir, 'pmon', 'index.html.tmpl')))
         self.assertTrue(os.path.isfile(os.path.join(self.skin_dir, 'pmon', 'skin.conf')))
@@ -613,7 +616,8 @@ class ExtensionInstallTest(unittest.TestCase):
                          {'data_binding': 'pmon_binding',
                           'process': 'weewxd'})
 
-        self.assertTrue('user.pmon.ProcessMonitor' in test_dict['Engine']['Services']['process_services'])
+        self.assertTrue(
+            'user.pmon.ProcessMonitor' in test_dict['Engine']['Services']['process_services'])
 
     def test_uninstall(self):
         # Find and read the test configuration
@@ -634,7 +638,8 @@ class ExtensionInstallTest(unittest.TestCase):
 
         # Assert that everything got removed correctly:
         self.assertTrue(not os.path.exists(os.path.join(self.user_dir, 'pmon.py')))
-        self.assertTrue(not os.path.exists(os.path.join(self.user_dir, 'installer', 'pmon', 'install.py')))
+        self.assertTrue(
+            not os.path.exists(os.path.join(self.user_dir, 'installer', 'pmon', 'install.py')))
         self.assertTrue(not os.path.exists(os.path.join(self.skin_dir, 'pmon')))
         self.assertTrue(not os.path.exists(os.path.join(self.skin_dir, 'pmon', 'index.html.tmpl')))
         self.assertTrue(not os.path.exists(os.path.join(self.skin_dir, 'pmon', 'skin.conf')))
@@ -644,6 +649,7 @@ class ExtensionInstallTest(unittest.TestCase):
 
         # It should be the same as our original:
         self.assertEqual(test_dict, config_dict)
+
 
 # ############# Utilities #################
 
