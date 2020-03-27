@@ -1516,7 +1516,7 @@ def prompt_for_info(location=None, latitude='90.000', longitude='0.000',
     #
     #  Altitude
     #
-    print("Specify altitude, with units 'foot' or 'meter'.  For example:")
+    print("\nSpecify altitude, with units 'foot' or 'meter'.  For example:")
     print("35, foot")
     print("12, meter")
     msg = "altitude [%s]: " % weeutil.weeutil.list_as_string(altitude) if altitude else "altitude: "
@@ -1544,7 +1544,7 @@ def prompt_for_info(location=None, latitude='90.000', longitude='0.000',
     #
     # Latitude & Longitude
     #
-    print("Specify latitude in decimal degrees, negative for south.")
+    print("\nSpecify latitude in decimal degrees, negative for south.")
     stn_info['latitude'] = prompt_with_limits("latitude", latitude, -90, 90)
     print("Specify longitude in decimal degrees, negative for west.")
     stn_info['longitude'] = prompt_with_limits("longitude", longitude, -180, 180)
@@ -1553,7 +1553,7 @@ def prompt_for_info(location=None, latitude='90.000', longitude='0.000',
     # Include in station registry?
     #
     default = 'y' if to_bool(register_this_station) else 'n'
-    print("You can register your station on weewx.com, where it will be included")
+    print("\nYou can register your station on weewx.com, where it will be included")
     print("in a map. You will need a unique URL to identify your station (such as a")
     print("website, or WeatherUnderground link).")
     registry = prompt_with_options("Include station in the station registry (y/n)?",
@@ -1575,7 +1575,7 @@ def prompt_for_info(location=None, latitude='90.000', longitude='0.000',
     # Display units. Accept only 'us' or 'metric', where 'metric'
     # is a synonym for 'metricwx'.
     #
-    print("Indicate the preferred units for display: 'metric' or 'us'")
+    print("\nIndicate the preferred units for display: 'metric' or 'us'")
     default = units if units != 'metricwx' else 'metric'
     uni = prompt_with_options("units", default, ['us', 'metric'])
     if uni == 'metric':
@@ -1592,7 +1592,7 @@ def prompt_for_driver(dflt_driver=None):
     infos = get_all_driver_infos()
     keys = sorted(infos)
     dflt_idx = None
-    print("Installed drivers include:")
+    print("\nInstalled drivers include:")
     for i, d in enumerate(keys):
         print(" %2d) %-15s %-25s %s" % (i, infos[d].get('driver_name', '?'),
                                         "(%s)" % d, infos[d].get('status', '')))
