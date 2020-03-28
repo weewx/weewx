@@ -29,8 +29,10 @@ The old schema is still supported. Fixes issue #115.
 Optional, more flexible, way of specifying schemas for the daily summaries.
 The old way is still supported.
 
-The package MySQL-python, which we used previously, is not available
-for Python 3. Ported  the MySQL code to use the package mysqlclient
+The install process now offers to register a user's station with weewx.com.
+
+The package MySQL-python, which we used previously, is not always available
+on Python 3. Ported the MySQL code to use the package mysqlclient
 as an alternative.
 
 The default for WOW no longer throttles posting frequency (the default
@@ -136,7 +138,7 @@ line 'sudo weewxd'.
 Use correct log path for netbsd and openbsd in logger setup.
 
 StdWXCalculate no longer calculates anything by default. Instead, types
-to be calculated must be listed in weewx.conf.
+to be calculated must be listed in weewx.conf. See the Upgrade Guide.
 
 setup.py install no longer backs up the 'bin' subdirectory. Instead, it
 is overwritten. This means any files not in the distribution will survive

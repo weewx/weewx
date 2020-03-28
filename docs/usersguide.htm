@@ -882,7 +882,7 @@ sudo /etc/init.d/weewx restart</pre>
 
         <p>
             This section applies only to those who wish to use the MySQL database, instead of the default SQLite
-            database. It assumes that you have a working version of MySQL or MariaDB installed.
+            database. It assumes that you have installed a working version of MySQL or MariaDB.
         </p>
         <ol>
             <li>
@@ -893,20 +893,21 @@ sudo /etc/init.d/weewx restart</pre>
                 <div id="mysql-client-tabs" class='tabs'>
                     <nav>
                         <button class="tab" onclick="openTab(event, '#mysql-client-debian')">
-                            Debian / Raspbian / Ubuntu / Mint <img src='images/logo-debian.png' class='thumbnail'
-                                                                   alt="Debian logo"/> <img src='images/logo-rpi.png'
-                                                                                            class="thumbnail"
-                                                                                            alt="Raspberry Pi logo"/>
-                            <img src='images/logo-ubuntu.png' class='thumbnail' alt="Ubuntu logo"/> <img
-                            src='images/logo-mint.png' class='thumbnail' alt="Mint logo"/>
+                            Debian / Raspbian / Ubuntu / Mint
+                            <img src='images/logo-debian.png' class='thumbnail' alt="Debian logo"/>
+                            <img src='images/logo-rpi.png' class="thumbnail" alt="Raspberry Pi logo"/>
+                            <img src='images/logo-ubuntu.png' class='thumbnail' alt="Ubuntu logo"/>
+                            <img src='images/logo-mint.png' class='thumbnail' alt="Mint logo"/>
                         </button>
                         <button class="tab" onclick="openTab(event, '#mysql-client-redhat')">
-                            Redhat <img src='images/logo-redhat.png' class='thumbnail' alt="Redhat logo"/> <img
-                            src='images/logo-centos.png' class='thumbnail' alt="Centos logo"/> <img
-                            src='images/logo-fedora.png' class='thumbnail' alt="Fedora logo"/>
+                            Redhat
+                            <img src='images/logo-redhat.png' class='thumbnail' alt="Redhat logo"/>
+                            <img src='images/logo-centos.png' class='thumbnail' alt="Centos logo"/>
+                            <img src='images/logo-fedora.png' class='thumbnail' alt="Fedora logo"/>
                         </button>
                         <button class="tab" onclick="openTab(event, '#mysql-client-suse')">
-                            SUSE <img src='images/logo-suse.png' class="thumbnail" alt="SUSE logo"/>
+                            SUSE
+                            <img src='images/logo-suse.png' class="thumbnail" alt="SUSE logo"/>
                         </button>
                     </nav>
                     <div id='mysql-client-debian' class="tab-content">
@@ -923,7 +924,6 @@ sudo apt install python3-mysqldb</pre>
                 </div>
             </li>
 
-
             <li>
                 <p>
                     Change the WeeWX configuration to use MySQL instead of SQLite. In the WeeWX configuration file,
@@ -931,8 +931,8 @@ sudo apt install python3-mysqldb</pre>
                     the MySQL database, <span class="code">archive_mysql</span>, instead of the SQLite database <span
                     class="code">archive_sqlite</span>.
                 </p>
-                <p> After the change, it will look something like this (change <span
-                    class="highlight">highlighted</span>):
+                <p> After the change, it will look something like this (change
+                    <span class="highlight">highlighted</span>):
                 </p>
                 <pre class="tty">
     [[wx_binding]]
@@ -1543,11 +1543,13 @@ longitude = -77.0366</pre>
         <p>
             If you decide to alternate between packet types (option <span class="code">3</span>), then the console will
             send a type <span class="code">LOOP1</span> packet, followed by a type <span class="code">LOOP2</span>
-            packet. This means that for certain types and depending on the options specified in <span class="code">[StdWXCalculate]</span>,
-            the value used can flip between hardware and software with every packet. In this case, you should be sure to
-            specify option <span class="code">hardware</span> for types <span class="code">pressure</span>, <span
-            class="code">altimeter</span>, <span class="code">dewpoint</span>, <span class="code">windchill</span>, and
-            <span class="code">heatindex</span>. This way, only hardware values will be used.
+            packet. This means that for certain types, and depending on the options specified in
+            <span class="code">[StdWXCalculate]</span>, the value that is used by WeeWX can flip between hardware and
+            software values with every packet. In this case, you should be sure to specify option
+            <span class="code">hardware</span> for types <span class="code">pressure</span>,
+            <span class="code">altimeter</span>, <span class="code">dewpoint</span>,
+            <span class="code">windchill</span>, and <span class="code">heatindex</span>. This way, only hardware
+            values will be used.
         </p>
         <p class="note">Not all stations support LOOP2 data. You need firmware version 1.90 or later.</p>
         <p>
