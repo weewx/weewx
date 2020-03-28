@@ -48,21 +48,22 @@
     </nav>
     <div id='prereq-py2' class="tab-content">
         <p>Ensure that Python 2.7 is installed. Earlier versions will not work.</p>
-        <pre class='tty cmd'>python -V</pre>
+        <pre class='tty cmd'>python2 -V</pre>
 
-        <p>Make sure that <a href="https://pypi.python.org/pypi/pip">pip</a> has been installed on your system. If not,
-            it may be as simple as:
+        <p>Make sure that a Python 2 version of <a href="https://pypi.python.org/pypi/pip">pip</a> has been installed
+            on your system. If not, it may be as simple as:
         </p>
         <pre class='tty cmd'>sudo easy_install pip</pre>
         <p>Now install the required Python packages using pip.</p>
-        <pre class='tty cmd'>sudo pip install pysqlite
-sudo pip install configobj
-sudo pip install Cheetah
-sudo pip install PIL
-sudo pip install pyserial
-sudo pip install pyusb
+        <pre class='tty cmd'>sudo python2 -m pip install pysqlite
+sudo python2 -m pip install configobj
+sudo python2 -m pip install Cheetah
+sudo python2 -m pip install PIL
+sudo python2 -m pip install pyserial
+sudo python2 -m pip install pyusb
+
 # For extended almanac information (optional):
-sudo pip install pyephem</pre>
+sudo python2 -m pip install pyephem</pre>
         <p>Depending on the macOS and Python versions, you might have to use <span class="code">Pillow</span> instead of
             <span class="code">PIL</span>.
         </p>
@@ -77,19 +78,20 @@ sudo pip install pyephem</pre>
         <p>If not, Python 3 can be installed using <a href="https://brew.sh/">Homebrew:</a></p>
         <pre class="tty cmd">brew install python</pre>
 
-        <p>This will also install pip3, the Python 3 version of <a href="https://pypi.python.org/pypi/pip">pip</a>.
+        <p>This will also install the Python 3 version of <a href="https://pypi.python.org/pypi/pip">pip</a>.
         </p>
-        <p>Now install the required Python packages using pip3.</p>
-        <pre class='tty cmd'>sudo pip install configobj
-sudo pip install Cheetah3
-sudo pip install Pillow
-sudo pip install pyserial
-sudo pip install pyusb
+        <p>Now install the required Python packages using pip.</p>
+        <pre class='tty cmd'>sudo python3 -m pip install configobj
+sudo python3 -m pip install Cheetah3
+sudo python3 -m pip install Pillow
+sudo python3 -m pip install pyserial
+sudo python3 -m pip install pyusb
+
 # For extended almanac information (optional):
-sudo pip install pyephem</pre>
+sudo python3 -m pip install pyephem</pre>
         <p>If the Cheetah3 or Pillow installation fails, you might have to install xcode:</p>
         <pre class='tty cmd'>xcode-select --install</pre>
-        <p>then try the pip3 install again.</p>
+        <p>then try the pip install again.</p>
     </div>
 </div>
 
@@ -115,7 +117,7 @@ sudo pip install pyephem</pre>
         </button>
     </nav>
     <div id="setup-py2" class="tab-content">
-        <pre class="tty cmd">python setup.py install</pre>
+        <pre class="tty cmd">python2 setup.py install</pre>
     </div>
 
     <div id="setup-py3" class="tab-content">
@@ -143,7 +145,7 @@ sudo pip install pyephem</pre>
     </nav>
     <div id="run-py2" class="tab-content">
 <pre class="tty cmd">cd /Users/Shared/weewx
-./bin/weewxd weewx.conf</pre>
+python2 ./bin/weewxd weewx.conf</pre>
     </div>
 
     <div id="run-py3" class="tab-content">
