@@ -220,14 +220,48 @@ sudo apt-get install weewx</pre>
         <p>
             For the most part, V4.0 is backwards compatible with previous versions.
         </p>
-
+        <h3>Python 2.5 and 2.6</h3>
         <p>
             Support for Python 2.5 and 2.6 has been dropped. It has now been well over 10 years since these versions
             were introduced, and 6+ years since they were supported by the Python Software Foundation. If you are
             using Python 2.5 or 2.6, then you should either upgrade your copy of Python, or stay with your old
             version of WeeWX.
         </p>
-
+        <h3><span class="code">[StdWXCalculate]</span></h3>
+        <p>
+            In earlier versions of WeeWX, many derived types were calculated by default by the service <span
+            class="code">StdWXCalculate</span>. By contrast, in WeeWX V4, no derived types are calculated by default
+            &mdash; all desired types must be explicitly listed in <span class="code">weewx.conf</span>. For most users,
+            this will not cause a problem because most types were already listed in <span class="code">weewx.conf</span>.
+            However if you deleted one of the following types in the clause <span class="code">[StdWXCalculate]</span>,
+            and started to depend on the default calculations, then the type will no longer be calculated in V4.
+        </p>
+        <table class="tty" style="width:50%">
+            <tr>
+                <td>pressure</td>
+                <td>barometer</td>
+                <td>altimeter</td>
+            </tr>
+            <tr>
+                <td>windchill</td>
+                <td>heatindex</td>
+                <td>dewpoint</td>
+            </tr>
+            <tr>
+                <td>inDewpoint</td>
+                <td>rainRate</td>
+            </tr>
+        </table>
+        <p>
+            In this case, you should add the type to <span class="code">[StdWXCalculate]</span>. For example, if for
+            some reason you deleted <span class="code">dewpoint</span>, then you would need to add the following
+        </p>
+        <pre class="tty" style="width:50%">
+[StdWXCalculate]
+  [[Calculations]]
+    ...
+    <span class="highlight">dewpoint = prefer_hardware</span>
+        </pre>
 
         <h2>From V3.8 or earlier</h2>
 

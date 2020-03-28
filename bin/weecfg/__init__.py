@@ -1133,6 +1133,7 @@ def update_to_v40(config_dict):
     - Fix problems with DegreeDays and Trend in weewx.conf
     - Add new option growing_base
     - Add new option WU api_key
+    - Add options to [StdWXCalculate] that were formerly defaults
     """
 
     # No need to check for the version of weewx for these changes.
@@ -1189,6 +1190,16 @@ def update_to_v40(config_dict):
         config_dict['StdRESTful']['Wunderground']['api_key'] = 'replace_me'
         config_dict['StdRESTful']['Wunderground'].comments['api_key'] = \
             ["", "If you plan on using wunderfixer, set the following", "to your API key:"]
+
+    # The following types were never listed in weewx.conf and, instead, depended on defaults.
+    if 'StdWXCalculate' in config_dict \
+            and 'Calculations' in config_dict['StdWXCalculate']:
+        config_dict['StdWXCalculate']['Calculations'].setdefault('maxSolarRad', 'prefer_hardware')
+        config_dict['StdWXCalculate']['Calculations'].setdefault('cloudbase', 'prefer_hardware')
+        config_dict['StdWXCalculate']['Calculations'].setdefault('humidex', 'prefer_hardware')
+        config_dict['StdWXCalculate']['Calculations'].setdefault('appTemp', 'prefer_hardware')
+        config_dict['StdWXCalculate']['Calculations'].setdefault('ET', 'prefer_hardware')
+        config_dict['StdWXCalculate']['Calculations'].setdefault('windrun', 'prefer_hardware')
 
     # This section will inject a [Logging] section. Leave it commented out for now,
     # until we gain more experience with it.

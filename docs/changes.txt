@@ -138,7 +138,7 @@ line 'sudo weewxd'.
 Use correct log path for netbsd and openbsd in logger setup.
 
 StdWXCalculate no longer calculates anything by default. Instead, types
-to be calculated must be listed in weewx.conf.
+to be calculated must be listed in weewx.conf. See the Upgrade Guide.
 
 setup.py install no longer backs up the 'bin' subdirectory. Instead, it
 is overwritten. This means any files not in the distribution will survive
