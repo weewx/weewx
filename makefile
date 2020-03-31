@@ -24,7 +24,9 @@ CWD = $(shell pwd)
 BLDDIR=build
 DSTDIR=dist
 
+ifndef PYTHON
 PYTHON=python3
+endif
 
 all: help
 
