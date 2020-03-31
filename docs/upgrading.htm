@@ -128,17 +128,14 @@ Version: 4.0
 
         <p>The install process will do the following:</p>
         <ul>
-            <li>Save the old <span class="code">bin</span> directory as <span class='code'>bin.YYYYMMDDHHMMSS</span>
-                where YYYYMMDDHHMMSS is a timestamp
-            </li>
             <li>Install the new version in the <span class="code">bin</span> directory, while preserving any user
                 extensions in the <span class="code">bin/user</span> directory
             </li>
-            <li>Save a copy of the old <span class="code">weewx.conf</span> as <span class='code'>weewx.conf.YYYYMMDDHHMMSS</span>
+            <li>Save a copy of the old <span class="code">weewx.conf</span> as
+                <span class='code'>weewx.conf.YYYYMMDDHHMMSS</span>
             </li>
-            <li>Merge any changes made to the old configuration file <span class="code">weewx.conf</span> into the new
-                configuration file, then install the merged copy. This effectively causes any changes to override the
-                values in the new version of <span class="code">weewx.conf</span>
+            <li>Update your copy of <span class="code">weewx.conf</span>, reflecting any changes required by the latest
+                version of WeeWX. This updated version is then installed.
             </li>
             <li>Install a <span class="code">skins</span> directory if one does not already exist.
             </li>

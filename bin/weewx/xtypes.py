@@ -403,6 +403,8 @@ class DailySummaries(XType):
         # We cannot use the day summaries if the starting and ending times of the aggregation
         # interval are not on midnight boundaries, and are not the first or last records in the
         # database.
+        if db_manager.first_timestamp is None or db_manager.last_timestamp is None:
+            raise weewx.UnknownAggregation(aggregate_type)
         if not (isStartOfDay(timespan.start) or timespan.start == db_manager.first_timestamp) \
                 or not (isStartOfDay(timespan.stop) or timespan.stop == db_manager.last_timestamp):
             raise weewx.UnknownAggregation(aggregate_type)

@@ -113,25 +113,25 @@ Usage: wee_config --help
        wee_config --reconfigure CONFIG_FILE|--config=CONFIG_FILE
            [--driver=DRIVER]  [--units=(us|metric)]
            [--latitude=yy.y] [--longitude=xx.x] [--altitude=zz.z,(foot|meter)]
-           [--location="Home Sweet Home"]
+           [--location="Home Sweet Home"] [--register=(y,n)]
            [--output=OUT_CONFIG] [--no-prompt] [--no-backup] [--verbosity=N]
        wee_config --install --dist-config=DIST_CONFIG --output=OUT_CONFIG
            [--driver=DRIVER]  [--units=(us|metric)]
            [--latitude=yy.y] [--longitude=xx.x] [--altitude=zz.z,(foot|meter)]
-           [--location="Home Sweet Home"]
+           [--location="Home Sweet Home"] [--register=(y,n)]
            [--no-prompt] [--no-backup] [--verbosity=N]
        wee_config --upgrade CONFIG_FILE|--config=CONFIG_FILE
            --dist-config=DIST_CONFIG
            [--output=OUT_CONFIG] [--no-prompt] [--no-backup]
            [--warn-on-error] [--verbosity=N]
-       wee_config --patch-skins CONFIG_FILE|--config=CONFIG_FILE [--verbosity=N]
 
 User actions:
 
+--version       Show the WeeWX version, then exit.
 --list-drivers  List the available weewx device drivers, then exit.
 --reconfigure   Modify an existing configuration file CONFIG_FILE with any
                 specified station parameters.  Use this command with the
-                driver option to change the device driver.
+                --driver option to change the device driver.
 
 System actions (not normally done by users):
 
@@ -140,14 +140,13 @@ System actions (not normally done by users):
 --upgrade       Update the contents of configuration file CONFIG_FILE to the
                 installed version, then merge the result with the contents of
                 configuration file DIST_CONFIG.
---patch-skins   Patch skin.conf files to new default semantics (introduced
-                in V3.9).
 
 Station parameters:
 
   --driver      --units
   --latitude    --longitude
   --altitude    --location
+  --register
 
 
 Options:
@@ -158,7 +157,6 @@ Options:
   --install             Install a new configuration file.
   --upgrade             Update an existing configuration file, then merge with
                         contents of DIST_CONFIG.
-  --patch-skins         Patch skin.conf files to WeeWX V3.9 semantics.
   --config=CONFIG_FILE  Use configuration file CONFIG_FILE.
   --dist-config=DIST_CONFIG
                         Use template configuration file DIST_CONFIG.
@@ -174,6 +172,7 @@ Options:
   --location=LOCATION   A text description of the station. For example,
                         "Santa's workshop, North Pole"
   --units=(metric|us)   Set display units to 'metric' or 'us'.
+  --register=(y/n)      Register this station in the weewx registry?
   --no-prompt           Do not prompt. Use default or specified values.
   --no-backup           When replacing an existing configuration file, do not
                         create a backup copy.
@@ -288,17 +287,27 @@ Module name              Driver name    Version  Status
         <pre class="tty">Using configuration file /home/weewx/weewx.conf
 Enter a brief description of the station, such as its location.  For example:
 Santa's Workshop, North Pole
-description [Hood River, Oregon]:
+description [My Little Town, Oregon]:
+
 Specify altitude, with units 'foot' or 'meter'.  For example:
 35, foot
 12, meter
 altitude [700, foot]:
+
 Specify latitude in decimal degrees, negative for south.
-latitude [45]:
+latitude [0.00]:
 Specify longitude in decimal degrees, negative for west.
-longitude [-125]:
+longitude [0.00]:
+
+You can register your station on weewx.com, where it will be included
+in a map. You will need a unique URL to identify your station (such as a
+website, or WeatherUnderground link).
+Include station in the station registry (y/n)? [y]:
+Unique URL: [http://weewx.com]:
+
 Indicate the preferred units for display: 'metric' or 'us'
-units [metricwx]:
+units [us]:
+
 Installed drivers include:
   0) AcuRite         (weewx.drivers.acurite)
   1) CC3000          (weewx.drivers.cc3000)
@@ -309,22 +318,13 @@ Installed drivers include:
   6) Vantage         (weewx.drivers.vantage)
   7) WMR100          (weewx.drivers.wmr100)
   8) WMR200          (weewx.drivers.wmr200)
-  9) WMR9x8          (weewx.drivers.wmr9x8)
- 10) WS1             (weewx.drivers.ws1)
- 11) WS23xx          (weewx.drivers.ws23xx)
- 12) WS28xx          (weewx.drivers.ws28xx)
-choose a driver [6]:
-Specify the hardware interface, either 'serial' or 'ethernet'.
-If the station is connected by serial, USB, or serial-to-USB
-adapter, specify serial.  Specify ethernet for stations with
-WeatherLinkIP interface.
-type [serial]:
-Specify a port for stations with a serial interface, for
-example /dev/ttyUSB0 or /dev/ttyS0.
-port [/dev/ttyUSB0]:
-Saved backup to /home/weewx/weewx.conf.20150430084525
-Saved configuration to /home/weewx/weewx.conf
-</pre>
+  9) WMR300          (weewx.drivers.wmr300)
+ 10) WMR9x8          (weewx.drivers.wmr9x8)
+ 11) WS1             (weewx.drivers.ws1)
+ 12) WS23xx          (weewx.drivers.ws23xx)
+ 13) WS28xx          (weewx.drivers.ws28xx)
+choose a driver [3]:
+Saved backup to /home/weewx/weewx.conf.20200328054724</pre>
 
         <p>If this is too much trouble, you can specify the <span class="code">--no-prompt</span> option:</p>
 
