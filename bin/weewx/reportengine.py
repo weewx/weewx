@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2019 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2020 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -8,7 +8,6 @@
 from __future__ import absolute_import
 
 # System imports:
-import copy
 import datetime
 import ftplib
 import glob
@@ -141,8 +140,9 @@ class StdReportEngine(threading.Thread):
             # Fetch and build the skin_dict:
             try:
                 skin_dict = self._build_skin_dict(report)
-            except SyntaxError:
-                log.error("        ****  Report ignored")
+            except SyntaxError as e:
+                log.error("Syntax error: %s", e)
+                log.error("   ****       Report ignored")
                 continue
 
             # Default action is to run the report. Only reason to not run it is
@@ -216,7 +216,7 @@ class StdReportEngine(threading.Thread):
 
         # Start with the defaults in the defaults module. Because we will be modifying it, we need to make a deep
         # copy.
-        skin_dict = copy.deepcopy(weewx.defaults.defaults)
+        skin_dict = configobj.ConfigObj(weewx.defaults.defaults.dict())
 
         # Add the report name:
         skin_dict['REPORT_NAME'] = report
@@ -245,7 +245,7 @@ class StdReportEngine(threading.Thread):
 
         # Now add on the [StdReport][[Defaults]] section, if present:
         if 'Defaults' in self.config_dict['StdReport']:
-            merge_dict = copy.deepcopy(self.config_dict['StdReport']['Defaults'])
+            merge_dict = self.config_dict['StdReport']['Defaults'].dict()
             weeutil.config.merge_config(skin_dict, merge_dict)
 
         # Inject any scalar overrides. This is for backwards compatibility. These options should now go

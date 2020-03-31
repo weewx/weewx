@@ -63,6 +63,7 @@ import logging
 import os.path
 import time
 
+import configobj
 import Cheetah.Filters
 import Cheetah.Template
 import six
@@ -129,7 +130,7 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
         self.setup()
 
         # Make a deep copy of the skin dictionary (we will be modifying it):
-        gen_dict = copy.deepcopy(self.skin_dict)
+        gen_dict = configobj.ConfigObj(self.skin_dict.dict())
 
         # Look for options in [CheetahGenerator],
         section_name = "CheetahGenerator"
