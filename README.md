@@ -15,6 +15,7 @@ stations using WeeWX.
 * Robust and hard-to-crash
 * Designed with the enthusiast in mind
 * Simple, easy to understand internal design that is easily extended (Python skills recommended)
+* Python 2 or Python 3
 * Growing ecosystem of 3rd party extensions
 * Internationalized language support
 * Localized date/time support
