@@ -1151,7 +1151,9 @@ class CWOPThread(RESTThread):
                                          skip_upload=skip_upload)
         self.station = station
         self.passcode = passcode
-        self.server_list = server_list
+        # In case we have a single server that would likely appear as a string
+        # not a list
+        self.server_list = weeutil.weeutil.option_as_list(server_list)
         self.latitude = to_float(latitude)
         self.longitude = to_float(longitude)
         self.station_type = station_type
