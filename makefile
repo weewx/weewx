@@ -24,7 +24,9 @@ CWD = $(shell pwd)
 BLDDIR=build
 DSTDIR=dist
 
+ifndef PYTHON
 PYTHON=python3
+endif
 
 all: help
 
@@ -71,6 +73,7 @@ info:
 clean:
 	find . -name "*.pyc" -exec rm {} \;
 	find . -name __pycache__ -exec rm -rf {} \;
+	rm -rf bin/weewx.egg-info
 
 realclean:
 	rm -f MANIFEST

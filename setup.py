@@ -24,6 +24,7 @@ import os.path
 import shutil
 import subprocess
 import sys
+from distutils import log
 from distutils.command.install_data import install_data
 from distutils.command.install_lib import install_lib
 from distutils.debug import DEBUG
@@ -32,8 +33,8 @@ from setuptools import setup, find_packages
 from setuptools.command.install import install
 
 if sys.version_info < (2, 7):
-    print('WeeWX requires Python V2.7 or greater.')
-    print('For earlier versions of Python, use WeeWX V3.9.')
+    log.fatal('WeeWX requires Python V2.7 or greater.')
+    log.fatal('For earlier versions of Python, use WeeWX V3.9.')
     sys.exit("Python version unsupported.")
 
 # Find the subdirectory in the distribution that contains the weewx libraries:
@@ -74,51 +75,37 @@ class weewx_install(install):
 # ==============================================================================
 
 class weewx_install_lib(install_lib):
-    """Specialized version of install_lib that saves, then restores, the user subdirectory."""
+    """Specialized version of install_lib, which backs up old bin subdirectories."""
 
     def run(self):
-        # Location of the user subdirectory, if it exists.
-        user_dir = os.path.join(self.install_dir, 'user')
-        if os.path.exists(user_dir):
-            # Copy the original user subdirectory before doing the install.
-            user_save_dir = user_dir + '.copy'
-            shutil.copytree(user_dir, user_save_dir, symlinks=True)
+        # Save any existing 'bin' subdirectory:
+        if not self.dry_run and os.path.exists(self.install_dir):
+            bin_savedir = move_with_timestamp(self.install_dir)
+            log.info("Saved bin subdirectory as %s" % bin_savedir)
         else:
-            user_save_dir = None
+            bin_savedir = None
 
-        try:
-            # Run the superclass's version. This will install all incoming files, including
-            # a new user subdirectory
-            rv = install_lib.run(self)
-        except Exception:
-            # Problem. Restore the user subdirectory if there was one.
-            if user_save_dir:
-                shutil.copytree(user_save_dir, user_dir, symlinks=True)
-                shutil.rmtree(user_save_dir, ignore_errors=True)
-        else:
-            # Success.
-            if user_save_dir:
-                # Remove the user directory we just installed...
-                shutil.rmtree(user_dir)
-                # ...then copy the saved version back...
-                shutil.copytree(user_save_dir, user_dir, symlinks=True)
-                # ...then remove the copy
-                shutil.rmtree(user_save_dir)
+        # Run the superclass's version. This will install all incoming files.
+        install_lib.run(self)
 
-            try:
-                # The file schemas.py is no longer used, and can interfere with schema
-                # imports. See issue #54.
-                os.rename(os.path.join(user_dir, 'schemas.py'),
-                          os.path.join(user_dir, 'schemas.py.old'))
-            except OSError:
-                pass
-            try:
-                os.remove(os.path.join(user_dir, 'schemas.pyc'))
-            except OSError:
-                pass
-
-        return rv
-
+        # If the bin subdirectory previously existed, and if it included
+        # a 'user' subsubdirectory, then restore it
+        if bin_savedir:
+            user_backupdir = os.path.join(bin_savedir, 'user')
+            if os.path.exists(user_backupdir):
+                user_dir = os.path.join(self.install_dir, 'user')
+                distutils.dir_util.copy_tree(user_backupdir, user_dir)
+                try:
+                    # The file schemas.py is no longer used, and can interfere with schema
+                    # imports. See issue #54.
+                    os.rename(os.path.join(user_dir, 'schemas.py'),
+                              os.path.join(user_dir, 'schemas.py.old'))
+                except OSError:
+                    pass
+                try:
+                    os.remove(os.path.join(user_dir, 'schemas.pyc'))
+                except OSError:
+                    pass
 
 # ==============================================================================
 # install_data
@@ -161,14 +148,11 @@ class weewx_install_data(install_data):
         # Location of the incoming weewx.conf file
         install_path = os.path.join(install_dir, os.path.basename(f))
 
-        if self.dry_run:
-            rv = None
-        else:
-            # Install the config file using the template name. Later, we will merge
-            # it with any old config file.
-            template_name = install_path + "." + VERSION
-            rv = install_data.copy_file(self, f, template_name, **kwargs)
-            shutil.copymode(f, template_name)
+        # Install the config file using the template name. Later, we will merge
+        # it with any old config file.
+        template_name = install_path + "." + VERSION
+        rv = install_data.copy_file(self, f, template_name, **kwargs)
+        shutil.copymode(f, template_name)
 
         return rv
 
