@@ -57,7 +57,6 @@ Example:
 
 from __future__ import absolute_import
 
-import copy
 import datetime
 import logging
 import os.path
