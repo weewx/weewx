@@ -525,20 +525,12 @@ class Vantage(weewx.drivers.AbstractDevice):
     def genLoopPackets(self):
         """Generator function that returns loop packets"""
         
-        for count in range(self.max_tries):
-            while True:
-                try:
-                    # Get LOOP packets in big batches This is necessary because there is
-                    # an undocumented limit to how many LOOP records you can request
-                    # on the VP (somewhere around 220).
-                    for _loop_packet in self.genDavisLoopPackets(200):
-                        yield _loop_packet
-                except weewx.WeeWxIOError as e:
-                    log.error("LOOP try #%d; error: %s", count + 1, e)
-                    break
-
-        log.error("LOOP max tries (%d) exceeded.", self.max_tries)
-        raise weewx.RetriesExceeded("Max tries exceeded while getting LOOP data.")
+        while True:
+            # Get LOOP packets in big batches This is necessary because there is
+            # an undocumented limit to how many LOOP records you can request
+            # on the VP (somewhere around 220).
+            for _loop_packet in self.genDavisLoopPackets(200):
+                yield _loop_packet
 
     def genDavisLoopPackets(self, N=1):
         """Generator function to return N loop packets from a Vantage console
@@ -562,15 +554,29 @@ class Vantage(weewx.drivers.AbstractDevice):
             self.port.send_data(b"LPS %d %d\n" % (self.loop_request, N))
 
         for loop in range(N):
-            # Fetch a packet...
-            _buffer = self.port.read(99)
-            # ... see if it passes the CRC test ...
-            if crc16(_buffer):
-                raise weewx.CRCError("LOOP buffer failed CRC check")
-            # ... decode it ...
-            loop_packet = self._unpackLoopPacket(_buffer[:95])
-            # .. then yield it
-            yield loop_packet
+            for count in range(self.max_tries):
+                try:
+                    loop_packet = self._get_packet()
+                except weewx.WeeWxIOError as e:
+                    log.error("LOOP try #%d; error: %s", count + 1, e)
+                else:
+                    yield loop_packet
+                    break
+            else:
+                log.error("LOOP max tries (%d) exceeded.", self.max_tries)
+                raise weewx.RetriesExceeded("Max tries exceeded while getting LOOP data.")
+
+    def _get_packet(self):
+        """Get a single LOOP packet"""
+        # Fetch a packet...
+        _buffer = self.port.read(99)
+        # ... see if it passes the CRC test ...
+        if crc16(_buffer):
+            raise weewx.CRCError("LOOP buffer failed CRC check")
+        # ... decode it ...
+        loop_packet = self._unpackLoopPacket(_buffer[:95])
+        # .. then return it
+        return loop_packet
 
     def genArchiveRecords(self, since_ts):
         """A generator function to return archive packets from a Davis Vantage station.
