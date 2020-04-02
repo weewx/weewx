@@ -3,38 +3,38 @@ weewx change history
 
 4.0.0 MM/DD/YYYY
 
-Ported to Python 3. WeeWX should now run under Python 3.5 and greater, as
-well as Python 2.7. Support for Python 2.5 and 2.6 has been dropped.
+Ported to Python 3. WeeWX should now run under Python 3.5 and greater, as well
+as Python 2.7. Support for Python 2.5 and 2.6 has been dropped.
 
-New facility for creating new user-defined derived types. See the
-Wiki article https://github.com/weewx/weewx/wiki/WeeWX-V4-user-defined-types
+New facility for creating new user-defined derived types. See the Wiki article
+https://github.com/weewx/weewx/wiki/WeeWX-V4-user-defined-types
 
-WeeWX now uses the Python 'logging' facility. This means log,
-formats, and other things can now be customized. Fixes issue #353.
+WeeWX now uses the Python 'logging' facility. This means log, formats, and other
+things can now be customized. Fixes issue #353.
 
-Strings appearing in the data stream no longer cause a TypeError
-if they can be converted to a number.
+Strings appearing in the data stream no longer cause a TypeError if they can be
+converted to a number.
 
-Strings can now be accumulated and extracted in the accumulators, making
-it possible to include them in the database schemas.
+Strings can now be accumulated and extracted in the accumulators, making it
+possible to include them in the database schemas.
 
 The utility wee_reports now loads services, allowing it to use user-supplied
 extensions. Fixes issue #95.
 
-New default schema ("wview_extended") that offers many new types.
-The old schema is still supported. Fixes issue #115.
+New default schema ("wview_extended") that offers many new types. The old schema
+is still supported. Fixes issue #115.
 
-Optional, more flexible, way of specifying schemas for the daily summaries.
-The old way is still supported.
+Optional, more flexible, way of specifying schemas for the daily summaries. The
+old way is still supported.
 
 The install process now offers to register a user's station with weewx.com.
 
-The package MySQL-python, which we used previously, is not always available
-on Python 3. Ported the MySQL code to use the package mysqlclient
-as an alternative.
+The package MySQL-python, which we used previously, is not always available on
+Python 3. Ported the MySQL code to use the package mysqlclient as an
+alternative.
 
-The default for WOW no longer throttles posting frequency (the default
-used to be no more than once every 15 minutes).
+The default for WOW no longer throttles posting frequency (the default used to
+be no more than once every 15 minutes).
 
 Added new aggregate types minsum, minsumtime, sum_le. PR #382.
 
@@ -44,31 +44,30 @@ Added new tag $python_version.
 
 Ported to Python2-PyMySQL package on OpenSUSE.
 
-Added new aggregation types 'first' (similar to 'last'), 'diff' (the
-difference between last and first value in the aggregation interval),
-and 'tderiv' (the difference divided by the time difference).
+Added new aggregation types 'first' (similar to 'last'), 'diff' (the difference
+between last and first value in the aggregation interval), and 'tderiv' (the
+difference divided by the time difference).
 
-Created new unit group 'group_energy2', defined as watt-seconds. Useful for
-high resolution energy monitors.
+Created new unit group 'group_energy2', defined as watt-seconds. Useful for high
+resolution energy monitors.
 
-An observation type known to the system, but not in a record, will
-now return a proper ValueTuple, rather than UnknownType.
+An observation type known to the system, but not in a record, will now return a
+proper ValueTuple, rather than UnknownType.
 
 Type "stormStart" was added to the unit system. Fixes issue #380.
 
-Added new aggregation type 'growdeg'. Similar to 'heatdeg', or 'cooldeg',
-it measures growing degree-days. Basically, cooldeg, but with a
-different base. Fixes issue #367. Thanks to user Clay Jackson
-for guidance!
+Added new aggregation type 'growdeg'. Similar to 'heatdeg', or 'cooldeg', it
+measures growing degree-days. Basically, cooldeg, but with a different base.
+Fixes issue #367. Thanks to user Clay Jackson for guidance!
 
 Ported OS uptime to OpenBSD. Fixes issue #428. Thanks to user Jeff Ross!
 
-Catch SSL certificate errors in uploaders. Retry after an hour. Fixes
-issue #413.
+Catch SSL certificate errors in uploaders. Retry after an hour. Fixes issue
+#413.
 
 Wunderfixer has been ported to the new WU API. This API requires an API key,
-which you can get from the WU. Put it in weewx.conf. Added option
---upload-only. Thanks to user Leon Shaner! Fixes issues #414 and #445.
+which you can get from the WU. Put it in weewx.conf. Added option --upload-only.
+Thanks to user Leon Shaner! Fixes issues #414 and #445.
 
 Wee_import can now import Weather Display monthly log files.
 
@@ -83,21 +82,20 @@ new unit microgram_per_meter_cubed. Added new unit group, group_concentration.
 
 Plist for the Mac launcher now includes a log file for stderr.
 
-Night-day transition in plots now uses shortest travel distance around
-color wheel to minimize extra colors. Fixes issue #457. Thanks to user
-Alex Edwards!
+Night-day transition in plots now uses shortest travel distance around color
+wheel to minimize extra colors. Fixes issue #457. Thanks to user Alex Edwards!
 
-Fixed bug that causes plots to fail when both min and max are zero.
-Fixes issue #463.
+Fixed bug that causes plots to fail when both min and max are zero. Fixes issue
+#463.
 
-Fixed problem with sqlite driver that can lead to memory growth.
-See PR #467. Thanks to user Rich Bell!
+Fixed problem with sqlite driver that can lead to memory growth. See PR #467.
+Thanks to user Rich Bell!
 
-Fixed bug that caused windrun to be calculated wrongly under METRICWX
-unit system. Fixes issue #452.
+Fixed bug that caused windrun to be calculated wrongly under METRICWX unit
+system. Fixes issue #452.
 
-If a bad value of 'interval' is encountered in a record, the program will
-simply ignore it, rather than stopping. Address issue #375.
+If a bad value of 'interval' is encountered in a record, the program will simply
+ignore it, rather than stopping. Address issue #375.
 
 Change in how the archive timespan is calculated in the engine. This allows
 oddball archive intervals. Fixes issue #469.
@@ -126,17 +124,16 @@ Can now recover from MariaDB-specific database connection error 1927.
 Changed the name of the unit "litre" to "liter", making its spelling more
 consistent with "meter". The spelling "litre" is still accepted.
 
-Systemd type changed from "simple" to "forking". Thanks to
-user Jaap de Munck for figuring this one out!
+Systemd type changed from "simple" to "forking". Thanks to user Jaap de Munck
+for figuring this one out!
 
-The configuration file is now an optional argument when running weewxd
-directly.  This means most users will be able to use the simple command
-line 'sudo weewxd'.
+The configuration file is now an optional argument when running weewxd directly.
+This means most users will be able to use the simple command line 'sudo weewxd'.
 
 Use correct log path for netbsd and openbsd in logger setup.
 
-StdWXCalculate no longer calculates anything by default. Instead, types
-to be calculated must be listed in weewx.conf. See the Upgrade Guide.
+StdWXCalculate no longer calculates anything by default. Instead, types to be
+calculated must be listed in weewx.conf. See the Upgrade Guide.
 
 
 3.9.2 07/14/2019
@@ -1845,7 +1842,7 @@ Internally, the databases can now use either Metric units, or US Customary.
 NB: you cannot switch systems in the middle of a database. You have to
 stick to one or other other. However, the utility config_database.py does
 have a reconfigure option that allows copying the data to a new database,
-performing the conversion along the way. See the Customizing Guide.
+2performing the conversion along the way. See the Customizing Guide.
 
 You can now use "mmHg" as a unit of pressure.
 

@@ -19,3 +19,6 @@ root = true
 # No limits for the weewx.conf file
 [weewx.conf]
     max_line_length = off
+
+[changes.txt]
+    max_line_length = 80
