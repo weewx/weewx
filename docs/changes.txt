@@ -12,8 +12,6 @@ Wiki article https://github.com/weewx/weewx/wiki/WeeWX-V4-user-defined-types
 WeeWX now uses the Python 'logging' facility. This means log,
 formats, and other things can now be customized. Fixes issue #353.
 
-Support for the Vantage LOOP2 packet format. Fixes issue #374.
-
 Strings appearing in the data stream no longer cause a TypeError
 if they can be converted to a number.
 
@@ -540,15 +538,20 @@ Decode heatindex and windchill from wmr300 sensor outputs.
 
 Report the firmware version when initializing the cc3000 driver.
 
+Support for the vantage LOOP2 packet format. Fixes issue #374.
+
 Fixed bug in vantage driver that would prevent console wake up during
 retries when fetching EEPROM vales. Thanks to user Dan Begallie!
 
-The vantage driver no longer emits values for non-existent sensors. 
+The vantage driver no longer emits values for non-existent sensors.
 As a result, LOOP and archive packets are now much smaller. If this works
 out, other drivers will follow suit. Partial fix of issue #175.
 
-The vantage driver now emits the barometer trend in LOOP packets as 
+The vantage driver now emits the barometer trend in LOOP packets as
 field 'trendIcon'.
+
+The vantage driver now allows 3 retries per read, rather than per
+archive interval.
 
 The engine now logs locale. Additional information if a TERM signal is 
 received.
