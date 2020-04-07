@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2019 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2020 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -243,7 +243,7 @@ class Manager(object):
         _row = self.getSql("SELECT MIN(dateTime) FROM %s" % self.table_name)
         return _row[0] if _row else None
 
-    def addRecord(self, record_obj, accumulator=None):
+    def addRecord(self, record_obj, accumulator=None, progress_fn=None):
         """Commit a single record or a collection of records to the archive.
         
         record_obj: Either a data record, or an iterable that can return data records. Each data
@@ -257,6 +257,7 @@ class Manager(object):
 
         min_ts = float('inf')  # A "big number"
         max_ts = 0
+        N = 0
         with weedb.Transaction(self.connection) as cursor:
 
             for record in record_list:
@@ -268,6 +269,10 @@ class Manager(object):
 
                     # Then add the record to the archives:
                     self._addSingleRecord(record, cursor)
+
+                    N += 1
+                    if progress_fn and N % 1000 == 0:
+                        progress_fn(N, record['dateTime'])
 
                     min_ts = min(min_ts, record['dateTime'])
                     max_ts = max(max_ts, record['dateTime'])
@@ -282,6 +287,8 @@ class Manager(object):
             self.first_timestamp = min(min_ts, self.first_timestamp)
         if self.last_timestamp is not None:
             self.last_timestamp = max(max_ts, self.last_timestamp)
+
+        return N
 
     def _addSingleRecord(self, record, cursor):
         """Internal function for adding a single record to the database."""
@@ -702,7 +709,7 @@ def drop_database_with_config(config_dict, data_binding,
 
 
 def show_progress(nrec, last_time):
-    """Utility function to show our progress while backfilling"""
+    """Utility function to show our progress"""
     print("Records processed: %d; Last date: %s\r"
           % (nrec, weeutil.weeutil.timestamp_to_string(last_time)), end='', file=sys.stdout)
     sys.stdout.flush()
