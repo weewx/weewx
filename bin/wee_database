@@ -403,17 +403,12 @@ def transferDatabase(config_dict, db_binding, options):
         return
     # get a manager for our source
     with weewx.manager.Manager.open(src_manager_dict['database_dict']) as src_manager:
-        # get first and last timestamps from the source so we can count the
-        # records to transfer and display an appropriate message
-        first_ts = src_manager.firstGoodStamp()
-        last_ts = src_manager.lastGoodStamp()
-        if first_ts is not None and last_ts is not None:
-            # we have source records
-            num_recs = src_manager.getAggregate(TimeSpan(first_ts, last_ts),
-                                                'dateTime', 'count')[0]
-        else:
+        # How many source records?
+        num_recs = src_manager.getSql("SELECT COUNT(dateTime) from %s;"
+                                      % src_manager.table_name)[0]
+        if not num_recs:
             # we have no source records to transfer so abort with a message
-            print("No records found in source database '%s' for transfer."
+            print("No records found in source database '%s'."
                   % src_manager.database_name)
             print("Nothing done. Aborting.")
             exit()
@@ -450,7 +445,7 @@ def transferDatabase(config_dict, db_binding, options):
                         tdiff = time.time() - t1
                         print("\nCompleted.")
                         if nrecs:
-                            print("%s records transferred from source database '%s' to\n"
+                            print("%s records transferred from source database '%s' to "
                                   "destination database '%s' in %.2f seconds."
                                   % (nrecs, src_manager.database_name,
                                      dest_manager.database_name, tdiff))
