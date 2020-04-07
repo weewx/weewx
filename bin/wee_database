@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-#    Copyright (c) 2009-2019 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2020 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -200,7 +200,7 @@ def dropDaily(config_dict, db_binding):
                 try:
                     dbmanager.drop_daily()
                 except weedb.OperationalError as e:
-                    print("Error '%s'" % e)
+                    print("Error '%s'" % e, file=sys.stderr)
                     print("Drop daily summary tables failed for database '%s'" % database_name)
                 else:
                     tdiff = time.time() - t1
@@ -353,9 +353,10 @@ def reconfigMainDatabase(config_dict, db_binding):
                                new_unit_system=target_unit_system,
                                new_schema=manager_dict['schema'])
         tdiff = time.time() - t1
-        print("Database '%s' copied to '%s' in %.2f seconds." % (manager_dict['database_dict']['database_name'],
-                                                                 new_database_dict['database_name'],
-                                                                 tdiff))
+        print("Database '%s' copied to '%s' in %.2f seconds."
+              % (manager_dict['database_dict']['database_name'],
+                 new_database_dict['database_name'],
+                 tdiff))
     else:
         print("Nothing done.")
 
@@ -365,7 +366,7 @@ def transferDatabase(config_dict, db_binding, options):
 
     # do we have enough to go on, must have a dest binding
     if not options.dest_binding:
-        print("Destination binding not specified. Nothing Done. Aborting.")
+        print("Destination binding not specified. Nothing Done. Aborting.", file=sys.stderr)
         return
     # get manager dict for our source binding
     src_manager_dict = weewx.manager.get_manager_dict_from_config(config_dict,
@@ -377,41 +378,38 @@ def transferDatabase(config_dict, db_binding, options):
     except weewx.UnknownBinding:
         # if we can't find the binding display a message then return
         print("Unknown destination binding '%s', confirm destination binding."
-              % options.dest_binding)
-        print("Nothing Done. Aborting.")
+              % options.dest_binding, file=sys.stderr)
+        print("Nothing Done. Aborting.", file=sys.stderr)
         return
     except weewx.UnknownDatabase:
         # if we can't find the database display a message then return
-        print("Error accessing destination database, confirm destination binding and/or database.")
-        print("Nothing Done. Aborting.")
+        print("Error accessing destination database, "
+              "confirm destination binding and/or database.", file=sys.stderr)
+        print("Nothing Done. Aborting.", file=sys.stderr)
         return
     except (ValueError, AttributeError):
         # maybe a schema issue
-        print("Error accessing destination database.")
-        print("Maybe the destination schema is incorrectly specified in binding '%s' in weewx.conf?"
-              % options.dest_binding)
-        print("Nothing Done. Aborting.")
+        print("Error accessing destination database.", file=sys.stderr)
+        print("Maybe the destination schema is incorrectly specified "
+              "in binding '%s' in weewx.conf?" % options.dest_binding, file=sys.stderr)
+        print("Nothing Done. Aborting.", file=sys.stderr)
         return
     except weewx.UnknownDatabaseType:
         # maybe a [Databases] issue
-        print("Error accessing destination database.")
-        print("Maybe the destination database is incorrectly defined in weewx.conf?")
-        print("Nothing Done. Aborting.")
+        print("Error accessing destination database.", file=sys.stderr)
+        print("Maybe the destination database is incorrectly defined in weewx.conf?",
+              file=sys.stderr)
+        print("Nothing Done. Aborting.", file=sys.stderr)
         return
     # get a manager for our source
     with weewx.manager.Manager.open(src_manager_dict['database_dict']) as src_manager:
-        # get first and last timestamps from the source so we can count the
-        # records to transfer and display an appropriate message
-        first_ts = src_manager.firstGoodStamp()
-        last_ts = src_manager.lastGoodStamp()
-        if first_ts is not None and last_ts is not None:
-            # we have source records
-            num_recs = src_manager.getAggregate(TimeSpan(first_ts, last_ts),
-                                                'dateTime', 'count')[0]
-        else:
+        # How many source records?
+        num_recs = src_manager.getSql("SELECT COUNT(dateTime) from %s;"
+                                      % src_manager.table_name)[0]
+        if not num_recs:
             # we have no source records to transfer so abort with a message
-            print("No records found in source database '%s' for transfer." %
-                  src_manager.database_name)
+            print("No records found in source database '%s'."
+                  % src_manager.database_name)
             print("Nothing done. Aborting.")
             exit()
 
@@ -425,43 +423,51 @@ def transferDatabase(config_dict, db_binding, options):
                 t1 = time.time()
                 # wrap in a try..except in case we have an error
                 try:
-                    with weewx.manager.Manager.open_with_create(dest_manager_dict['database_dict'],
-                                                                table_name=dest_manager_dict['table_name'],
-                                                                schema=dest_manager_dict['schema']) as dest_manager:
-                        sys.stdout.write("transferring, this may take a while.... ")
+                    with weewx.manager.Manager.open_with_create(
+                            dest_manager_dict['database_dict'],
+                            table_name=dest_manager_dict['table_name'],
+                            schema=dest_manager_dict['schema']) as dest_manager:
+                        print("Transferring, this may take a while.... ")
                         sys.stdout.flush()
+
+                        # This could generate a *lot* of log entries. Temporarily disable logging
+                        # for events at or below INFO
+                        logging.disable(logging.INFO)
+
                         # do the transfer, should be quick as it's done as a
                         # single transaction
-                        dest_manager.addRecord(src_manager.genBatchRecords())
-                        print("complete")
-                        # get first and last timestamps from the dest so we can
-                        # count the records transferred and display a message
-                        first_ts = dest_manager.firstGoodStamp()
-                        last_ts = dest_manager.lastGoodStamp()
+                        nrecs = dest_manager.addRecord(src_manager.genBatchRecords(),
+                                                       progress_fn=weewx.manager.show_progress)
+
+                        # Remove the temporary restriction
+                        logging.disable(logging.NOTSET)
+
                         tdiff = time.time() - t1
-                        if first_ts is not None and last_ts is not None:
-                            num_recs = dest_manager.getAggregate(TimeSpan(first_ts, last_ts),
-                                                                 'dateTime', 'count')[0]
-                            print("%s records transferred from source database '%s' to" %
-                                  (num_recs, src_manager.database_name))
-                            print("destination database '%s' in %.2f seconds." %
-                                  (dest_manager.database_name, tdiff))
+                        print("\nCompleted.")
+                        if nrecs:
+                            print("%s records transferred from source database '%s' to "
+                                  "destination database '%s' in %.2f seconds."
+                                  % (nrecs, src_manager.database_name,
+                                     dest_manager.database_name, tdiff))
                         else:
-                            print("Error. No records were transferred from source database '%s' to "
-                                  "destination database '%s'." % (src_manager.database_name,
-                                                                  dest_manager.database_name))
+                            print("Error. No records were transferred from source "
+                                  "database '%s' to destination database '%s'."
+                                  % (src_manager.database_name, dest_manager.database_name),
+                                  file=sys.stderr)
                 except ImportError:
                     # Probably when trying to load db driver
-                    print("Error accessing destination database '%s'." %
-                          (dest_manager_dict['database_dict']['database_name'],))
-                    print("Nothing done. Aborting.")
+                    print("Error accessing destination database '%s'."
+                          % (dest_manager_dict['database_dict']['database_name'],),
+                          file=sys.stderr)
+                    print("Nothing done. Aborting.", file=sys.stderr)
                     raise
                 except (OSError, weedb.OperationalError):
                     # probably a weewx.conf typo or MySQL db not created
                     print("Error accessing destination database '%s'."
-                          % dest_manager_dict['database_dict']['database_name'])
-                    print("Maybe it does not exist (MySQL) or is incorrectly defined in weewx.conf?")
-                    print("Nothing done. Aborting.")
+                          % dest_manager_dict['database_dict']['database_name'], file=sys.stderr)
+                    print("Maybe it does not exist (MySQL) or is incorrectly "
+                          "defined in weewx.conf?", file=sys.stderr)
+                    print("Nothing done. Aborting.", file=sys.stderr)
                     return
 
             else:
@@ -525,7 +531,8 @@ def update(config_dict, db_binding, options):
     # prompt for confirmation if it is not a dry run
     ans = 'y' if options.dry_run else None
     while ans not in ['y', 'n']:
-        ans = input("The update process does not affect archive data, but does alter the database.\nContinue (y/n)? ")
+        ans = input("The update process does not affect archive data, "
+                    "but does alter the database.\nContinue (y/n)? ")
     if ans == 'n':
         # we decided not to update the summary tables
         msg = "Update cancelled"
@@ -791,7 +798,8 @@ def check_strings(config_dict, db_binding, options, fix=False):
                       % (records, timestamp_to_string(record[0])), end=' ')
                 sys.stdout.flush()
     # update our final count now that we have finished
-    print("Checking record: %d; Timestamp: %s\r" % (records, timestamp_to_string(record[0])), end=' ')
+    print("Checking record: %d; Timestamp: %s\r"
+          % (records, timestamp_to_string(record[0])), end=' ')
     print()
     tdiff = time.time() - t1
     # now display details of what we found if we found any null strings
