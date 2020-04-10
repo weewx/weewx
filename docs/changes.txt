@@ -135,6 +135,9 @@ Use correct log path for netbsd and openbsd in logger setup.
 StdWXCalculate no longer calculates anything by default. Instead, types to be
 calculated must be listed in weewx.conf. See the Upgrade Guide.
 
+setup.py install no longer saves the old 'bin' subdirectory. Instead, it simply
+overwrites it.
+
 
 3.9.2 07/14/2019
 
