@@ -17,8 +17,6 @@ from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import with_statement
 
-import distutils.dir_util
-import distutils.file_util
 import fnmatch
 import os.path
 import shutil
@@ -32,23 +30,15 @@ from distutils.debug import DEBUG
 from setuptools import setup, find_packages
 from setuptools.command.install import install
 
+VERSION = "4.0.0b18"
+
 if sys.version_info < (2, 7):
     log.fatal('WeeWX requires Python V2.7 or greater.')
     log.fatal('For earlier versions of Python, use WeeWX V3.9.')
     sys.exit("Python version unsupported.")
 
-# Find the subdirectory in the distribution that contains the weewx libraries:
 this_file = os.path.join(os.getcwd(), __file__)
 this_dir = os.path.abspath(os.path.dirname(this_file))
-lib_dir = os.path.abspath(os.path.join(this_dir, 'bin'))
-
-# Now that we've found where the libraries are, inject it into the path:
-sys.path.insert(0, lib_dir)
-
-# Now we can get the weewx version
-import weewx
-
-VERSION = weewx.__version__
 
 
 # ==============================================================================
@@ -57,6 +47,14 @@ VERSION = weewx.__version__
 
 class weewx_install(install):
     """Specialized version of install, which runs a post-install script"""
+
+    def finalize_options(self):
+        # Call my superclass's version
+        install.finalize_options(self)
+        # Unless the --force flag has been explicitly set, default to True. This will
+        # cause files to be installed even if they are older than their target."""
+        if self.force is None:
+            self.force = 1
 
     def run(self):
         """Specialized version of run, which runs post-install commands"""
@@ -75,37 +73,29 @@ class weewx_install(install):
 # ==============================================================================
 
 class weewx_install_lib(install_lib):
-    """Specialized version of install_lib, which backs up old bin subdirectories."""
+    """Specialized version of install_lib, which saves and restores the 'user' subdirectory."""
 
     def run(self):
-        # Save any existing 'bin' subdirectory:
-        if not self.dry_run and os.path.exists(self.install_dir):
-            bin_savedir = move_with_timestamp(self.install_dir)
-            log.info("Saved bin subdirectory as %s" % bin_savedir)
-        else:
-            bin_savedir = None
+        """Specialized version of run that saves, then restores, the 'user' subdirectory."""
 
-        # Run the superclass's version. This will install all incoming files.
+        # Save any existing 'user' subdirectory:
+        user_dir = os.path.join(self.install_dir, 'user')
+        if not self.dry_run and os.path.exists(user_dir):
+            user_backup_dir = user_dir + ".bak"
+            shutil.move(user_dir, user_backup_dir)
+        else:
+            user_backup_dir = None
+
+        # Run the superclass's version. This will install a new 'user' subdirectory.
         install_lib.run(self)
 
-        # If the bin subdirectory previously existed, and if it included
-        # a 'user' subsubdirectory, then restore it
-        if bin_savedir:
-            user_backupdir = os.path.join(bin_savedir, 'user')
-            if os.path.exists(user_backupdir):
-                user_dir = os.path.join(self.install_dir, 'user')
-                distutils.dir_util.copy_tree(user_backupdir, user_dir)
-                try:
-                    # The file schemas.py is no longer used, and can interfere with schema
-                    # imports. See issue #54.
-                    os.rename(os.path.join(user_dir, 'schemas.py'),
-                              os.path.join(user_dir, 'schemas.py.old'))
-                except OSError:
-                    pass
-                try:
-                    os.remove(os.path.join(user_dir, 'schemas.pyc'))
-                except OSError:
-                    pass
+        # Restore the 'user' subdirectory
+        if user_backup_dir:
+            # Delete the freshly installed user subdirectory
+            shutil.rmtree(user_dir)
+            # Replace it with our saved version.
+            shutil.move(user_backup_dir, user_dir)
+
 
 # ==============================================================================
 # install_data
@@ -190,24 +180,6 @@ def find_files(directory, file_excludes=['*.pyc', "junk*"], dir_excludes=['*/__p
     return data_files
 
 
-def move_with_timestamp(filepath):
-    """Save a file to a path with a timestamp."""
-    import shutil
-    import time
-    # Sometimes the target has a trailing '/'. This will take care of it:
-    filepath = os.path.normpath(filepath)
-    newpath = filepath + time.strftime(".%Y%m%d%H%M%S")
-    # Check to see if this name already exists
-    if os.path.exists(newpath):
-        # It already exists. Stick a version number on it:
-        version = 1
-        while os.path.exists(newpath + '-' + str(version)):
-            version += 1
-        newpath = newpath + '-' + str(version)
-    shutil.move(filepath, newpath)
-    return newpath
-
-
 def update_and_install_config(install_dir, install_scripts, install_lib, config_name='weewx.conf'):
     """Install the configuration file, weewx.conf, updating it if necessary.
 
@@ -246,7 +218,7 @@ def update_and_install_config(install_dir, install_scripts, install_lib, config_
         print("Command used to invoke wee_config: %s" % args)
 
     proc = subprocess.Popen(args,
-                            env={'PYTHONPATH' : install_lib},
+                            env={'PYTHONPATH': install_lib},
                             stdin=sys.stdin,
                             stdout=sys.stdout,
                             stderr=sys.stderr)
