@@ -173,6 +173,8 @@ done
   sed -e 's/version = .*/version = $(VERSION)/' $$f > $$f.tmp; \
   mv $$f.tmp $$f; \
 done
+	sed -e 's/^VERSION = .*/VERSION = "$(VERSION)"/' setup.py > setup.py.tmp
+	mv setup.py.tmp setup.py
 
 DEBREVISION=1
 DEBVER=$(VERSION)-$(DEBREVISION)

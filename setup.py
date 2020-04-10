@@ -32,23 +32,15 @@ from distutils.debug import DEBUG
 from setuptools import setup, find_packages
 from setuptools.command.install import install
 
+VERSION = "4.0.0b18"
+
 if sys.version_info < (2, 7):
     log.fatal('WeeWX requires Python V2.7 or greater.')
     log.fatal('For earlier versions of Python, use WeeWX V3.9.')
     sys.exit("Python version unsupported.")
 
-# Find the subdirectory in the distribution that contains the weewx libraries:
 this_file = os.path.join(os.getcwd(), __file__)
 this_dir = os.path.abspath(os.path.dirname(this_file))
-lib_dir = os.path.abspath(os.path.join(this_dir, 'bin'))
-
-# Now that we've found where the libraries are, inject it into the path:
-sys.path.insert(0, lib_dir)
-
-# Now we can get the weewx version
-import weewx
-
-VERSION = weewx.__version__
 
 
 # ==============================================================================
