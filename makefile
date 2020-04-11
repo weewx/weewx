@@ -60,7 +60,8 @@ help: info
 	@echo ""
 	@echo "          test  run all unit tests"
 	@echo "                SUITE=path/to/foo.py to run only foo tests"
-	@echo "    test-clean  remove test databases. recommended when switching between python 2 and 3"
+	@echo "    test-clean  remove test databases"
+	@echo "                recommended when switching between python 2 and 3"
 
 info:
 	@echo "     VERSION: $(VERSION)"
@@ -115,12 +116,12 @@ test-clean:
 	echo $(MYSQLCLEAN) | mysql --user=weewx --password=weewx --force >/dev/null 2>&1
 
 install:
-	./setup.py --install
+	$(PYTHON) ./setup.py --install
 
 SRCPKG=weewx-$(VERSION).tar.gz
 src-package $(DSTDIR)/$(SRCPKG): MANIFEST.in
 	rm -f MANIFEST
-	./setup.py sdist
+	$(PYTHON) ./setup.py sdist
 
 # upload the source tarball to the web site
 upload-src:
@@ -175,6 +176,7 @@ done
 done
 	sed -e 's/^VERSION = .*/VERSION = "$(VERSION)"/' setup.py > setup.py.tmp
 	mv setup.py.tmp setup.py
+	chmod 755 setup.py
 
 DEBREVISION=1
 DEBVER=$(VERSION)-$(DEBREVISION)
