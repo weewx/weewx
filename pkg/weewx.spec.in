@@ -126,17 +126,12 @@ cat util/init.d/weewx.%{platform} | sed \
  > %{buildroot}%{initdir}/weewx
 %endif
 
-# make a copy of the generic-for-this-platform configuration file
+# make a copy of the generic configuration file
 cp %{buildroot}%{dst_cfg_dir}/weewx.conf %{buildroot}%{dst_cfg_dir}/weewx.conf.dist
-
-# insert the correct shebang
-for f in %{entry_points}; do \
-  sed -i "s/^#!\/usr\/bin.*/#!\/usr\/bin\/%{python}/" %{buildroot}%{dst_bin_dir}/$f; \
-done
 
 # create symlinks to the code entry points
 for f in %{entry_points}; do \
-  ln -s ../share/weewx/$f %{buildroot}%{_bindir}/$f; \
+  cp util/scripts/$f %{buildroot}%{_bindir}/$f; \
 done
 
 %pre
