@@ -1335,6 +1335,10 @@ summaries using the wee_database utility.</pre>
             value is <span class="code">utf-8-sig</span>.
         </p>
 
+        <h4 class='config_option' id='csv_delimiter'>delimiter</h4>
+
+        <p>The one character string used to separate fields. Default is <span class="code">,</span> (comma).</p>
+
         <h4 class='config_option' id='csv_interval'>interval</h4>
 
         <p>Determines how the time interval (WeeWX archive table field <span class="code">interval</span>) between
@@ -2403,6 +2407,9 @@ summaries using the wee_database utility.</pre>
                 <ul>
                     <li><a href="#csv_file"><strong><span class="code">file</span></strong></a>. The full path and file
                         name of the file containing the CSV formatted data to be imported.
+                    </li>
+                    <li><a href="#csv_delimiter"><strong><span class="code">delimiter</span></strong></a>. The single
+                        character used to separate fields.
                     </li>
                     <li><a href="#csv_interval"><strong><span class="code">interval</span></strong></a>. Determines how
                         the WeeWX interval field is derived.
