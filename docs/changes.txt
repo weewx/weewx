@@ -117,6 +117,8 @@ wee_import now tolerates periods that contain no source data. Fixes issue #499.
 wee_import now accepts strings representing cardinal, intercardinal and
 secondary intercardinal directions in CSV imports. Partially fixes issue #238.
 
+The field delimiter character may now be defined for wee_import CSV imports.
+
 Ignore historical records if the timestamp is in the future.
 
 Can now recover from MariaDB-specific database connection error 1927.

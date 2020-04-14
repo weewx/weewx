@@ -16,3 +16,4 @@ junk*
 *.suo
 .DS_Store
 *.config
+*.egg-info

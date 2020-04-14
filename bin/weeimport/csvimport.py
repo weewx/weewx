@@ -70,6 +70,8 @@ class CSVSource(weeimport.Source):
         self.csv_config_dict = csv_config_dict
 
         # get a few config settings from our CSV config dict
+        # csv field delimiter
+        self.delimiter = str(self.csv_config_dict.get('delimiter', ','))
         # string format used to decode the imported field holding our dateTime
         self.raw_datetime_format = self.csv_config_dict.get('raw_datetime_format',
                                                             '%Y-%m-%d %H:%M:%S')
@@ -136,7 +138,9 @@ class CSVSource(weeimport.Source):
         if self.verbose:
             print(_msg)
         log.debug(_msg)
-        _msg = "     rain=%s, wind_direction=%s" % (self.rain, self.wind_dir)
+        _msg = "     delimiter='%s', rain=%s, wind_direction=%s" % (self.delimiter,
+                                                                    self.rain,
+                                                                    self.wind_dir)
         if self.verbose:
             print(_msg)
         log.debug(_msg)
@@ -218,7 +222,7 @@ class CSVSource(weeimport.Source):
                 _clean_data.append(_line)
 
         # create a dictionary CSV reader, using the first line as the set of keys
-        _csv_reader = csv.DictReader(_clean_data)
+        _csv_reader = csv.DictReader(_clean_data, delimiter=self.delimiter)
 
         # finally, get our source-to-database mapping
         self.map = self.parseMap('CSV', _csv_reader, self.csv_config_dict)
