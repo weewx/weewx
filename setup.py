@@ -23,12 +23,11 @@ import shutil
 import subprocess
 import sys
 from distutils import log
+from distutils.command.install import install
 from distutils.command.install_data import install_data
 from distutils.command.install_lib import install_lib
+from distutils.core import setup
 from distutils.debug import DEBUG
-
-from setuptools import setup, find_packages
-from setuptools.command.install import install
 
 VERSION = "4.0.0b18"
 
@@ -234,62 +233,36 @@ def update_and_install_config(install_dir, install_scripts, install_lib, config_
 # ==============================================================================
 
 if __name__ == "__main__":
-    # Use the README.md for the long description:
-    with open(os.path.join(this_dir, "README.md"), "r") as fd:
-        long_description = fd.read()
-
     setup(name='weewx',
           version=VERSION,
           description='The WeeWX weather software system',
-          long_description=long_description,
-          long_description_content_type="text/markdown",
+          long_description="WeeWX interacts with a weather station to produce graphs, reports, "
+                           "and HTML pages.  WeeWX can upload data to services such as the "
+                           "WeatherUnderground, PWSweather.com, or CWOP.",
           author='Tom Keffer',
           author_email='tkeffer@gmail.com',
           url='http://www.weewx.com',
           license='GPLv3',
-          classifiers=[
-              'Development Status :: 5 - Production/Stable',
-              'Intended Audience :: End Users/Desktop',
-              'Intended Audience :: Science/Research',
-              'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
-              'Operating System :: POSIX :: Linux',
-              'Operating System :: Unix',
-              'Programming Language :: Python',
-              'Programming Language :: Python :: 2.7',
-              'Programming Language :: Python :: 3.5',
-              'Programming Language :: Python :: 3.6',
-              'Programming Language :: Python :: 3.7',
-              'Programming Language :: Python :: 3.8',
-              'Topic :: Scientific/Engineering :: Physics'
-          ],
-          platforms=['any'],
-          python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, <4',
-          install_requires=[
-              'cheetah>=2.4; python_version=="2.7"',
-              'cheetah3>=3.2<4.0; python_version>="3.5"',
-              'pillow>=2<7; python_version=="2.7"',
-              'pillow>=5.2; python_version>="3.5" and python_version<"3.8"',
-              'pillow>=7; python_version>="3.8"',
-              'configobj>=4.7',
-              'pyephem>=3.7',
-              'pyserial>=3.4',
-              'pyusb>=1.0.2',
-              'six>=1'
-          ],
           py_modules=['daemon', 'six'],
           package_dir={'': 'bin'},
-          packages=find_packages('bin'),
-          scripts=[
-              'bin/wee_config',
-              'bin/wee_database',
-              'bin/wee_debug',
-              'bin/wee_device',
-              'bin/wee_extension',
-              'bin/wee_import',
-              'bin/wee_reports',
-              'bin/weewxd',
-              'bin/wunderfixer'
-          ],
+          packages=['schemas',
+                    'user',
+                    'weecfg',
+                    'weedb',
+                    'weeimport',
+                    'weeplot',
+                    'weeutil',
+                    'weewx',
+                    'weewx.drivers'],
+          scripts=['bin/wee_config',
+                   'bin/wee_database',
+                   'bin/wee_debug',
+                   'bin/wee_device',
+                   'bin/wee_extension',
+                   'bin/wee_import',
+                   'bin/wee_reports',
+                   'bin/weewxd',
+                   'bin/wunderfixer'],
           data_files=[('', ['LICENSE.txt', 'README.md', 'weewx.conf']), ]
                      + find_files('docs')
                      + find_files('examples')
