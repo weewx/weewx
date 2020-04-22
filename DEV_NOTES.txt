@@ -194,7 +194,7 @@ to build debian package install the following (use 'apt-get install'):
   rsync
   gpg
   debhelper
-  python-setuptools
+  python3-distutils
 
 to build redhat package install the following (use 'yum install'):
   git

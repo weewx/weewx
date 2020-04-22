@@ -48,6 +48,7 @@ install:
 	mkdir -p $(DST_BINDIR)
 	mkdir -p $(DST_DOCDIR)
 	mkdir -p $(DST_CFGDIR)
+	mkdir -p $(DST)/etc/default
 
 # copy files from the source tree
 	cp -r $(SRC)/bin/* $(DST_BINDIR)
@@ -69,19 +70,24 @@ install:
  -e 's%HTML_ROOT = public_html%HTML_ROOT = /var/www/html/weewx%' \
  -e 's%SQLITE_ROOT = .*%SQLITE_ROOT = /var/lib/weewx%' \
  > $(DST_CFGDIR)/weewx.conf
-	cat $(SRC)/util/init.d/weewx.debian | sed \
- -e 's%WEEWX_BIN=.*%WEEWX_BIN=/usr/bin/weewxd%' \
- -e 's%WEEWX_CFG=.*%WEEWX_CFG=/etc/weewx/weewx.conf%' \
- > $(DST_INITDIR)/weewx
+	cp $(SRC)/util/init.d/weewx.debian $(DST_INITDIR)/weewx
 	chmod 755 $(DST_INITDIR)/weewx
 
 # make a virgin copy of the configuration file
 	cp $(DST_CFGDIR)/weewx.conf $(DST_CFGDIR)/weewx.conf.dist
 
-# create symlinks to the code entry points
+# create the entry points
 	for f in $(ENTRIES); do \
   cp $(SRC)/util/scripts/$$f $(DST)/usr/bin; \
 done
+
+# configure application layout
+	cat $(SRC)/util/default/weewx | sed \
+ -e 's%WEEWX_PYTHON=.*%WEEWX_PYTHON=$(PYTHON)%' \
+ -e 's%WEEWX_BINDIR=.*%WEEWX_BINDIR=/usr/share/weewx%' \
+ -e 's%WEEWX_BIN=.*%WEEWX_BIN=/usr/bin/weewxd%' \
+ -e 's%WEEWX_CFG=.*%WEEWX_CFG=/etc/weewx/weewx.conf%' \
+ > $(DST)/etc/default/weewx
 
 # keep lintian happy
 	cp $(SRC)/debian/copyright $(DST_DOCDIR)

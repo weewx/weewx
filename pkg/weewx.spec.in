@@ -95,6 +95,7 @@ mkdir -p %{buildroot}%{dst_bin_dir}
 mkdir -p %{buildroot}%{dst_doc_dir}
 mkdir -p %{buildroot}%{dst_cfg_dir}
 mkdir -p %{buildroot}%{initdir}
+mkdir -p %{buildroot}/etc/default
 
 # copy files from the source tree
 cp -r bin/* %{buildroot}%{dst_bin_dir}
@@ -120,19 +121,24 @@ cat util/systemd/weewx.service | sed \
  -e 's%ExecStart=.*%ExecStart=/usr/bin/weewxd --daemon --pidfile=/var/run/weewx.pid /etc/weewx/weewx.conf%' \
  > %{buildroot}%{initdir}/weewx.service
 %else
-cat util/init.d/weewx.%{platform} | sed \
- -e 's%WEEWX_BIN=.*%WEEWX_BIN=/usr/bin/weewxd%' \
- -e 's%WEEWX_CFG=.*%WEEWX_CFG=/etc/weewx/weewx.conf%' \
- > %{buildroot}%{initdir}/weewx
+cp util/init.d/weewx.%{platform} %{buildroot}%{initdir}/weewx
 %endif
 
 # make a copy of the generic configuration file
 cp %{buildroot}%{dst_cfg_dir}/weewx.conf %{buildroot}%{dst_cfg_dir}/weewx.conf.dist
 
-# create symlinks to the code entry points
+# create the entry points
 for f in %{entry_points}; do \
   cp util/scripts/$f %{buildroot}%{_bindir}/$f; \
 done
+
+# configure application layout
+	cat $(SRC)/util/default/weewx | sed \
+ -e 's%WEEWX_PYTHON=.*%WEEWX_PYTHON=$(PYTHON)%' \
+ -e 's%WEEWX_BINDIR=.*%WEEWX_BINDIR=/usr/share/weewx%' \
+ -e 's%WEEWX_BIN=.*%WEEWX_BIN=/usr/bin/weewxd%' \
+ -e 's%WEEWX_CFG=.*%WEEWX_CFG=/etc/weewx/weewx.conf%' \
+ > $(DST)/etc/default/weewx
 
 %pre
 if [ "$1" = "2" ]; then

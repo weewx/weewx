@@ -16,11 +16,14 @@ PIDFILE=/var/run/$NAME.pid
 LOCKFILE=/var/lock/subsys/$NAME
 DAEMON_ARGS="--daemon --pidfile=$PIDFILE $WEEWX_CFG"
 
-# Source function library.
-. /etc/init.d/functions
+# Read configuration variable file if it is present
+[ -r /etc/default/$NAME ] && . /etc/default/$NAME
 
 # Exit if the package is not installed
 [ -x "$WEEWX_BIN" ] || exit 0
+
+# Source function library.
+. /etc/init.d/functions
 
 # See how we were called.
 case "$1" in
