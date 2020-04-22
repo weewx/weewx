@@ -62,14 +62,22 @@ help: info
 	@echo "                SUITE=path/to/foo.py to run only foo tests"
 	@echo "    test-clean  remove test databases"
 	@echo "                recommended when switching between python 2 and 3"
+	@echo ""
+	@echo " apt repository management"
+	@echo "    pull-apt-repo"
+	@echo "  update-apt-repo"
+	@echo "    push-apt-repo"
+	@echo ""
+	@echo " yum repository management"
+	@echo ""
 
 info:
 	@echo "     VERSION: $(VERSION)"
 	@echo "   MMVERSION: $(MMVERSION)"
 	@echo "         CWD: $(CWD)"
-	@echo "   UPLOADDIR: $(UPLOADDIR)"
 	@echo "        USER: $(USER)"
-	@echo "  WWW SERVER: $(WEEWX_COM)"
+	@echo "   WEEWX_COM: $(WEEWX_COM)"
+	@echo " STAGING_DIR: $(STAGING_DIR)"
 
 clean:
 	find . -name "*.pyc" -exec rm {} \;
