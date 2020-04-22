@@ -26,12 +26,15 @@
 
 # PATH should only include /usr/* if it runs after the mountnfs.sh script
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
-WEEWX_BIN=/home/weewx/bin/weewxd
-WEEWX_CFG=/home/weewx/weewx.conf
-WEEWX_USER=root:root 
+
 DESC="weewx weather system"
 NAME=weewx
-PIDFILE=/var/run/$NAME.pid
+
+# these can be overridden in the default file
+WEEWX_BIN=/home/weewx/bin/weewxd
+WEEWX_CFG=/home/weewx/weewx.conf
+WEEWX_PID=/var/run/$NAME.pid
+WEEWX_USER=root:root 
 
 # Read configuration variable file if it is present
 [ -r /etc/default/$NAME ] && . /etc/default/$NAME
@@ -40,7 +43,7 @@ PIDFILE=/var/run/$NAME.pid
 [ -x "$WEEWX_BIN" ] || exit 0
 
 DAEMON=$WEEWX_BIN
-DAEMON_ARGS="--daemon --pidfile=$PIDFILE $WEEWX_CFG" 
+DAEMON_ARGS="--daemon --pidfile=$WEEWX_PID $WEEWX_CFG" 
 
 # Load the VERBOSE setting and other rcS variables
 . /lib/init/vars.sh
@@ -59,7 +62,7 @@ do_start() {
     if [ $NPROC != 0 ]; then
 	return 1
     fi
-    start-stop-daemon --start --chuid $WEEWX_USER --pidfile $PIDFILE --exec $DAEMON -- $DAEMON_ARGS || return 2
+    start-stop-daemon --start --chuid $WEEWX_USER --pidfile $WEEWX_PID --exec $DAEMON -- $DAEMON_ARGS || return 2
     return 0
 }
 
@@ -75,10 +78,10 @@ do_stop() {
         return 1
     fi
     # bail out if there is no pid file
-    if [ ! -f $PIDFILE ]; then
+    if [ ! -f $WEEWX_PID ]; then
         return 1
     fi
-    start-stop-daemon --stop --pidfile $PIDFILE
+    start-stop-daemon --stop --pidfile $WEEWX_PID
     # we cannot trust the return value from start-stop-daemon
     RETVAL=2
     c=0
@@ -95,19 +98,19 @@ do_stop() {
     done
     if [ "$RETVAL" = "0" -o "$RETVAL" = "1" ]; then
         # delete the pid file just in case
-        rm -f $PIDFILE
+        rm -f $WEEWX_PID
     fi
     return "$RETVAL"
 }
 
 # send a SIGHUP to the daemon/service
 do_reload() {
-    start-stop-daemon --stop --signal 1 --quiet --pidfile $PIDFILE
+    start-stop-daemon --stop --signal 1 --quiet --pidfile $WEEWX_PID
     return 0
 }
 
 count_procs() {
-    NPROC=`ps ax | grep $WEEWX_BIN | grep $NAME.pid | wc -l`
+    NPROC=`ps ax | grep weewxd | grep $NAME.pid | wc -l`
     echo $NPROC
 }
 
