@@ -228,12 +228,12 @@ deb-package-prep: $(DSTDIR)/$(SRCPKG)
 	cp pkg/debian/templates $(DEBBLDDIR)/debian
 
 deb-package-python2: deb-package-prep
-	cp pkg/debian/control $(DEBBLDDIR)/debian
+	cp pkg/debian/control.python2 $(DEBBLDDIR)/debian/control
 	rm -rf $(DEBBLDDIR)/debian/weewx*
 	rm -f $(DEBBLDDIR)/debian/files
 	(cd $(DEBBLDDIR); dpkg-buildpackage $(DPKG_OPT))
 	mkdir -p $(DSTDIR)
-	mv $(BLDDIR)/$(DEBPKG) $(DSTDIR)
+	mv $(BLDDIR)/$(DEBPKG) $(DSTDIR)/python-$(DEBPKG)
 
 deb-package-python3: deb-package-prep
 	cp pkg/debian/control.python3 $(DEBBLDDIR)/debian/control
