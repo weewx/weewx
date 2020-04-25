@@ -8,9 +8,13 @@
 
 # determine which python we should use
 PKG=weewx
+PYTHON=python
+ifneq (,$(filter python2,$(DEB_BUILD_OPTIONS)))
+PKG=python-weewx
 PYTHON=python2
+endif
 ifneq (,$(filter python3,$(DEB_BUILD_OPTIONS)))
-#PKG=python3-weewx
+PKG=python3-weewx
 PYTHON=python3
 endif
 
@@ -33,9 +37,7 @@ override_dh_auto_clean:
 	rm -rf build dist
 	rm -f *.egg-info
 
-# this install rule duplicates what the weewx setup.py would do.  we should
-# be able to remove this when the weewx setup.py respects --no-prompt and
-# when --prefix works properly.
+# this install rule duplicates what the weewx setup.py would do
 install:
 	dh_testdir
 	dh_testroot

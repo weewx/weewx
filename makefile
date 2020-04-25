@@ -205,7 +205,7 @@ DEBPKG=weewx_$(DEBVER)_$(DEBARCH).deb
 ifneq ("$(SIGN)","1")
 DPKG_OPT=-us -uc
 endif
-deb-package: deb-package-python
+deb-package: deb-package-python2 deb-package-python3
 
 deb-package-prep: $(DSTDIR)/$(SRCPKG)
 	mkdir -p $(BLDDIR)
@@ -239,19 +239,21 @@ deb-package-python: deb-package-prep
 
 deb-package-python2: deb-package-prep
 	cp pkg/debian/control.python2 $(DEBBLDDIR)/debian/control
-	rm -rf $(DEBBLDDIR)/debian/weewx*
 	rm -f $(DEBBLDDIR)/debian/files
-	(cd $(DEBBLDDIR); dpkg-buildpackage $(DPKG_OPT))
+	rm -rf $(DEBBLDDIR)/debian/weewx*
+	rm -rf $(DEBBLDDIR)/debian/python*
+	(cd $(DEBBLDDIR); DEB_BUILD_OPTIONS=python2 dpkg-buildpackage $(DPKG_OPT))
 	mkdir -p $(DSTDIR)
-	mv $(BLDDIR)/$(DEBPKG) $(DSTDIR)/python-$(DEBPKG)
+	mv $(BLDDIR)/python-$(DEBPKG) $(DSTDIR)
 
 deb-package-python3: deb-package-prep
 	cp pkg/debian/control.python3 $(DEBBLDDIR)/debian/control
-	rm -rf $(DEBBLDDIR)/debian/weewx*
 	rm -f $(DEBBLDDIR)/debian/files
-	(cd $(DEBBLDDIR); DEB_BUILD_OPTIONS=python3 dpkg-buildpackage $(DPKG_OPT))
+	rm -rf $(DEBBLDDIR)/debian/weewx*
+	rm -rf $(DEBBLDDIR)/debian/python*
+	(cd $(DEBBLDDIR);  DEB_BUILD_OPTIONS=python3 dpkg-buildpackage $(DPKG_OPT))
 	mkdir -p $(DSTDIR)
-	mv $(BLDDIR)/$(DEBPKG) $(DSTDIR)/python3-$(DEBPKG)
+	mv $(BLDDIR)/python3-$(DEBPKG) $(DSTDIR)
 
 # run lintian on the deb package
 check-deb:
