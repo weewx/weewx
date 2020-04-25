@@ -205,7 +205,7 @@ DEBPKG=weewx_$(DEBVER)_$(DEBARCH).deb
 ifneq ("$(SIGN)","1")
 DPKG_OPT=-us -uc
 endif
-deb-package: deb-package-python2 deb-package-python3
+deb-package: deb-package-python
 
 deb-package-prep: $(DSTDIR)/$(SRCPKG)
 	mkdir -p $(BLDDIR)
@@ -226,6 +226,16 @@ deb-package-prep: $(DSTDIR)/$(SRCPKG)
 	cp pkg/debian/rules $(DEBBLDDIR)/debian
 	cp pkg/debian/source/format $(DEBBLDDIR)/debian/source
 	cp pkg/debian/templates $(DEBBLDDIR)/debian
+
+deb-package-python: deb-package-prep
+	cp pkg/debian/control $(DEBBLDDIR)/debian/control
+	rm -rf $(DEBBLDDIR)/debian/weewx*
+	rm -f $(DEBBLDDIR)/debian/files
+	(cd $(DEBBLDDIR); dpkg-buildpackage $(DPKG_OPT))
+	mkdir -p $(DSTDIR)
+	mv $(BLDDIR)/$(DEBPKG) $(DSTDIR)
+	mv $(BLDDIR)/python-$(DEBPKG) $(DSTDIR)
+	mv $(BLDDIR)/python3-$(DEBPKG) $(DSTDIR)
 
 deb-package-python2: deb-package-prep
 	cp pkg/debian/control.python2 $(DEBBLDDIR)/debian/control
