@@ -6,14 +6,20 @@ Standards-Version: 3.9.2
 Homepage: http://www.weewx.com
 Build-Depends: debhelper (>=8)
 
+Package: weewx
+Depends: python-weewx
+Architecture: all
+Description: weather software
+
 Package: python-weewx
 Provides: weewx
+Replaces: weewx (<<4.0.0-1~)
+Breaks: weewx (<<4.0.0-1~)
 Priority: optional
 Architecture: all
 Pre-Depends: debconf
 Depends:
- python (>=2.7),
- python (<<3.0),
+ python (>=2.7), python (<<3.0),
  python-configobj(>=4.5),
  python-cheetah(>=2.0),
  python-imaging(>=1.1.6) | python-pil(>=5.1.0) | python-pillow(>=5.1.0),
