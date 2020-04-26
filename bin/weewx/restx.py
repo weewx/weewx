@@ -1099,8 +1099,8 @@ class StdCWOP(StdRESTful):
 
 
 class CWOPThread(RESTThread):
-    """Concrete class for threads posting from the archive queue,
-    using the CWOP protocol."""
+    """Concrete class for threads posting from the archive queue, using the CWOP protocol. For
+    details on the protocol, see http://www.wxqa.com/faq.html."""
 
     def __init__(self, q, manager_dict,
                  station, passcode, latitude, longitude, station_type,
@@ -1275,7 +1275,9 @@ class CWOPThread(RESTThread):
                         # Send the login ...
                         self._send(_sock, login, dbg_msg='login')
                         # ... and then the packet
-                        self._send(_sock, tnc_packet, dbg_msg='packet')
+                        response = self._send(_sock, tnc_packet, dbg_msg='tnc')
+                        if weewx.debug >= 2:
+                            log.debug("%s: Server says '%s'", self.protocol_name, response)
                         return
                     finally:
                         _sock.close()
