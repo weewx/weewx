@@ -1248,7 +1248,7 @@ class CWOPThread(RESTThread):
 
         # show the packet in the logs for debug
         if weewx.debug >= 2:
-            log.debug('CWOP: packet: %s', _tnc_packet)
+            log.debug("CWOP: packet: '%s'", _tnc_packet.rstrip('\r\n'))
 
         return _tnc_packet
 
@@ -1277,7 +1277,7 @@ class CWOPThread(RESTThread):
                         # ... and then the packet
                         response = self._send(_sock, tnc_packet, dbg_msg='tnc')
                         if weewx.debug >= 2:
-                            log.debug("%s: Server says '%s'", self.protocol_name, response)
+                            log.debug("%s: Response to packet: '%s'", self.protocol_name, response)
                         return
                     finally:
                         _sock.close()
