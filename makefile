@@ -69,6 +69,9 @@ help: info
 	@echo "    push-apt-repo"
 	@echo ""
 	@echo " yum repository management"
+	@echo "    pull-yum-repo"
+	@echo "  update-yum-repo"
+	@echo "    push-yum-repo"
 	@echo ""
 
 info:
@@ -319,7 +322,8 @@ upload-rpm:
 	scp $(DSTDIR)/$(RPMPKG) $(USER)@$(WEEWX_COM):$(WEEWX_STAGING)
 
 upload-rhel:
-	make upload-rpm RPMOS=.el$(OSREL)
+	make upload-rpm RPMOS=.el7
+	make upload-rpm RPMOS=.el8
 
 upload-suse:
 	make upload-rpm RPMOS=.suse$(OSREL)
@@ -346,7 +350,7 @@ release:
 # make local copy of the published apt repository
 pull-apt-repo:
 	mkdir -p ~/.aptly
-	rsync -arv $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/aptly-test/ ~/.aptly
+	rsync -arv $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/aptly/ ~/.aptly
 
 # add the latest version to the local apt repo using aptly
 update-apt-repo:
@@ -358,17 +362,22 @@ update-apt-repo:
 push-apt-repo:
 	rsync -arv ~/.aptly/ $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/aptly-test
 
+YUM_REPO=~/.yum/weewx
 yum-repo:
-	mkdir -p ~/.yum/repos/{base,centosplus,extras,updates}
+	mkdir -p $(YUM_REPO)/{el7,el8}/RPMS
 
 pull-yum-repo:
-	echo "TODO"
+	mkdir -p $(YUM_REPO)
+	rsync -arv $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/yum/ ~/.yum
 
 update-yum-repo:
-	echo "TODO"
+	cp -p $(DSTDIR)/weewx-$(RPMVER).el7.$(RPMARCH).rpm $(YUM_REPO)/el7/RPMS
+	createrepo -o $(YUM_REPO)/el7 $(YUM_REPO)/el7
+	cp -p $(DSTDIR)/weewx-$(RPMVER).el8.$(RPMARCH).rpm $(YUM_REPO)/el8/RPMS
+	createrepo -o $(YUM_REPO)/el8 $(YUM_REPO)/el8
 
 push-yum-repo:
-	echo "TODO"
+	rsync -arv ~/.yum/ $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/yum-test
 
 # run perlcritic to ensure clean perl code.  put these in ~/.perlcriticrc:
 # [-CodeLayout::RequireTidyCode]

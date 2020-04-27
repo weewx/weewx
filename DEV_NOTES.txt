@@ -147,13 +147,16 @@ redhat install/remove:
   rpm -i weewx-x.y.z-r.rpm                        # install with rpm directly
   rpm -e weewx                                    # remove with rpm
 
-create debian repo using aptly:
+
+howto: deb repository ---------------------------------------------------------
+
+create local debian repo using aptly:
   aptly repo create -distribution=squeeze -component=main weewx
   aptly repo add weewx dist/weewx_3.0.0-1_all.deb
   aptly snapshot create weewx-3.0.0 from repo weewx
   aptly -architectures="all" publish snapshot weewx-3.0.0
 
-update debian repo using aptly:
+update local debian repo using aptly:
   aptly repo add weewx dist/weewx_3.0.1-1_all.deb
   aptly snapshot create weewx-3.0.1 from repo weewx
   aptly -architectures="all" publish switch squeeze weewx-3.0.1
@@ -171,16 +174,29 @@ switch from testing to production (this is done at weewx.com):
 for clients to use an apt repo at weewx.com:
   curl -s http://weewx.com/keys.html | sudo apt-key add -
   echo "deb [arch=all] http://weewx.com/apt/ squeeze main" | sudo tee /etc/apt/sources.list.d/weewx.list
+  echo "deb [arch=all] http://weewx.com/apt/ buster main" | sudo tee /etc/apt/sources.list.d/python3-weewx.list
+
+
+howto: yum repository ---------------------------------------------------------
 
 create yum repo:
   mkdir -p ~/.yum/weewx/{el7,el8}/RPMS
+
+update local yum repo with latest rpm:
   cp *.el7.rpm ~/.yum/weewx/el7/RPMS
-  createrepo -o ~/.yum/weewx/el7 yum/weewx/el7
+  createrepo -o ~/.yum/weewx/el7 ~/.yum/weewx/el7
   cp *.el8.rpm ~/yum/weewx/el8/RPMS
-  createrepo -o ~/.yum/weewx/el8 yum/weewx/el8
+  createrepo -o ~/.yum/weewx/el8 ~/.yum/weewx/el8
+
+clone the published yum repo to local space:
+  mkdir -p ~/.yum
+  rsync -arv USER@weewx.com:/var/www/html/yum-test/ ~/.yum
 
 synchronize local yum changes with published yum repo:
   rsync -arv ~/.yum/ USER@weewx.com:/var/www/html/yum-test
+
+switch from testing to production (this is done at weewx.com):
+  rsync -arv /var/www/html/yum-test/ /var/www/html/yum
 
 
 notes -------------------------------------------------------------------------
