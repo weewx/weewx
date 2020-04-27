@@ -133,12 +133,12 @@ for f in %{entry_points}; do \
 done
 
 # configure application layout
-	cat $(SRC)/util/default/weewx | sed \
+	cat util/default/weewx | sed \
  -e 's%WEEWX_PYTHON=.*%WEEWX_PYTHON=$(PYTHON)%' \
  -e 's%WEEWX_BINDIR=.*%WEEWX_BINDIR=/usr/share/weewx%' \
  -e 's%WEEWX_BIN=.*%WEEWX_BIN=/usr/bin/weewxd%' \
  -e 's%WEEWX_CFG=.*%WEEWX_CFG=/etc/weewx/weewx.conf%' \
- > $(DST)/etc/default/weewx
+ > %{buildroot}/etc/default/weewx
 
 %pre
 if [ "$1" = "2" ]; then
@@ -206,6 +206,7 @@ rm -rf %{buildroot}
 %else
   %attr(755,root,root) %{initdir}/weewx
 %endif
+%{_sysconfdir}/default/weewx
 %{dst_bin_dir}/
 %{_bindir}/weewxd
 %{_bindir}/wee_config
