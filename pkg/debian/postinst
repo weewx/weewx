@@ -18,7 +18,7 @@ set -e
 . /usr/share/debconf/confmodule
 
 cfgfile=/etc/weewx/weewx.conf
-cfgapp=/usr/share/weewx/wee_config
+cfgapp=/usr/bin/wee_config
 
 # insert any configuration variables into the configuration file
 insert_debconf_variables() {
