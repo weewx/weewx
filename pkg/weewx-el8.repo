@@ -1,5 +1,0 @@
-[weewx]
-name=weewx
-baseurl=http://weewx.com/yum/weewx/el8
-enabled=1
-gpgcheck=0
