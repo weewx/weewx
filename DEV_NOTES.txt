@@ -31,7 +31,12 @@ checklist for doing a release:
      2. make update-apt-repo
      3. make push-apt-repo
      4. ssh weewx.com rsync -arv /var/www/html/aptly-test/ /var/www/html/aptly
-9. Announce the release to the weewx user's group.
+9. Update the redhat repository
+     1. make pull-yum-repo
+     2. make update-yum-repo
+     3. make push-yum-repo
+     4. ssh weewx.com rsync -arv /var/www/html/yum-test/ /var/www/html/yum
+10. Announce the release to the weewx user's group.
 
 
 
@@ -78,6 +83,7 @@ make upload-docs
 make release
 
 # update the apt repository (requires aptly and local clone of the apt repo)
+make pull-apt-repo
 make update-apt-repo
 make push-apt-repo
 
@@ -165,6 +171,16 @@ switch from testing to production (this is done at weewx.com):
 for clients to use an apt repo at weewx.com:
   curl -s http://weewx.com/keys.html | sudo apt-key add -
   echo "deb [arch=all] http://weewx.com/apt/ squeeze main" | sudo tee /etc/apt/sources.list.d/weewx.list
+
+create yum repo:
+  mkdir -p ~/.yum/weewx/{el7,el8}/RPMS
+  cp *.el7.rpm ~/.yum/weewx/el7/RPMS
+  createrepo -o ~/.yum/weewx/el7 yum/weewx/el7
+  cp *.el8.rpm ~/yum/weewx/el8/RPMS
+  createrepo -o ~/.yum/weewx/el8 yum/weewx/el8
+
+synchronize local yum changes with published yum repo:
+  rsync -arv ~/.yum/ USER@weewx.com:/var/www/html/yum-test
 
 
 notes -------------------------------------------------------------------------

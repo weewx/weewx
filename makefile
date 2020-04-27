@@ -358,6 +358,18 @@ update-apt-repo:
 push-apt-repo:
 	rsync -arv ~/.aptly/ $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/aptly-test
 
+yum-repo:
+	mkdir -p ~/.yum/repos/{base,centosplus,extras,updates}
+
+pull-yum-repo:
+	echo "TODO"
+
+update-yum-repo:
+	echo "TODO"
+
+push-yum-repo:
+	echo "TODO"
+
 # run perlcritic to ensure clean perl code.  put these in ~/.perlcriticrc:
 # [-CodeLayout::RequireTidyCode]
 # [-Modules::ProhibitExcessMainComplexity]
@@ -370,4 +382,3 @@ code-summary:
 	@for d in weecfg weedb weeutil weewx; do \
   cloc bin/$$d/tests; \
 done
-
