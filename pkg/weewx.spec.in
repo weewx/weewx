@@ -134,7 +134,7 @@ done
 
 # configure application layout
 	cat util/default/weewx | sed \
- -e 's%WEEWX_PYTHON=.*%WEEWX_PYTHON=$(PYTHON)%' \
+ -e 's%WEEWX_PYTHON=.*%WEEWX_PYTHON=%{python}%' \
  -e 's%WEEWX_BINDIR=.*%WEEWX_BINDIR=/usr/share/weewx%' \
  -e 's%WEEWX_BIN=.*%WEEWX_BIN=/usr/bin/weewxd%' \
  -e 's%WEEWX_CFG=.*%WEEWX_CFG=/etc/weewx/weewx.conf%' \
