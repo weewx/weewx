@@ -2,7 +2,7 @@
 # Copyright (c) 2020 John Ronan <jronan@tssg.org>
 # Copyright (c) 2020 Dylan Gore <dgore@tssg.org>
 #   
-# Part funded by the ERDF through the Ireland Wales Programme
+# Work part funded by the ERDF through the Ireland Wales Programme
 #
 #    See the file LICENSE.txt for your full rights.
 #
