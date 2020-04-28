@@ -13,26 +13,26 @@ Description: weather software
 
 Package: python-weewx
 Provides: weewx
-Replaces: weewx (<<4.0.0-1~)
-Breaks: weewx (<<4.0.0-1~)
+Replaces: weewx (<< 4.0.0)
+Breaks: weewx (<< 4.0.0)
 Priority: optional
 Architecture: all
 Pre-Depends: debconf
 Depends:
- python (>=2.7), python (<<3.0),
- python-configobj(>=4.5),
- python-cheetah(>=2.0),
- python-imaging(>=1.1.6) | python-pil(>=5.1.0) | python-pillow(>=5.1.0),
- python-serial(>=2.3),
- python-usb (>=0.4),
+ python (>= 2.7), python (<< 3.0),
+ python-configobj(>= 4.5),
+ python-cheetah(>= 2.0),
+ python-imaging(>= 1.1.6) | python-pil(>= 5.1.0) | python-pillow(>= 5.1.0),
+ python-serial(>= 2.3),
+ python-usb (>= 0.4),
  lsb-base
 Suggests:
  sqlite,
  rsync,
  ftp,
  httpd,
- python-dev(>=2.5),
- python-pip(>=0.7)
+ python-dev(>= 2.5),
+ python-pip(>= 0.7)
 Description: weather software
  weewx interacts with a weather station to produce graphs, reports, and HTML
  pages. weewx can upload data to weather services such as WeatherUnderground,

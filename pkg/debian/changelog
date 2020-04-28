@@ -1,3 +1,9 @@
+weewx (4.0.0b18-3) unstable; urgency=low
+  * use weewx instead of python-weewx and python3-weewx
+ -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Thu, 09 Apr 2020 20:44:56 -0400
+weewx (4.0.0b18-2) unstable; urgency=low
+  * separate squeeze and buster repositories with aptly
+ -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Thu, 09 Apr 2020 20:44:56 -0400
 weewx (4.0.0b18-1) unstable; urgency=low
   * new upstream release
  -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Thu, 09 Apr 2020 20:44:56 -0400

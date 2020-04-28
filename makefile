@@ -189,7 +189,7 @@ done
 	mv setup.py.tmp setup.py
 	chmod 755 setup.py
 
-DEBREVISION=1
+DEBREVISION=3
 DEBVER=$(VERSION)-$(DEBREVISION)
 # add a skeleton entry to deb changelog
 deb-changelog:
@@ -219,7 +219,7 @@ deb-package-prep: $(DSTDIR)/$(SRCPKG)
 	mkdir -m 0755 $(DEBBLDDIR)/debian/source
 	cp pkg/debian/changelog $(DEBBLDDIR)/debian
 	cp pkg/debian/compat $(DEBBLDDIR)/debian
-	cp pkg/debian/conffiles $(DEBBLDDIR)/debian
+#	cp pkg/debian/conffiles $(DEBBLDDIR)/debian
 	cp pkg/debian/config $(DEBBLDDIR)/debian
 	cp pkg/debian/copyright $(DEBBLDDIR)/debian
 	cp pkg/debian/postinst $(DEBBLDDIR)/debian
@@ -246,8 +246,9 @@ deb-package-python2: deb-package-prep
 	rm -rf $(DEBBLDDIR)/debian/weewx*
 	rm -rf $(DEBBLDDIR)/debian/python*
 	(cd $(DEBBLDDIR); DEB_BUILD_OPTIONS=python2 dpkg-buildpackage $(DPKG_OPT))
-	mkdir -p $(DSTDIR)
-	mv $(BLDDIR)/python-$(DEBPKG) $(DSTDIR)
+	mkdir -p $(DSTDIR)/squeeze
+	mv $(BLDDIR)/$(DEBPKG) $(DSTDIR)/squeeze
+	mv $(BLDDIR)/python-$(DEBPKG) $(DSTDIR)/squeeze
 
 deb-package-python3: deb-package-prep
 	cp pkg/debian/control.python3 $(DEBBLDDIR)/debian/control
@@ -255,8 +256,9 @@ deb-package-python3: deb-package-prep
 	rm -rf $(DEBBLDDIR)/debian/weewx*
 	rm -rf $(DEBBLDDIR)/debian/python*
 	(cd $(DEBBLDDIR);  DEB_BUILD_OPTIONS=python3 dpkg-buildpackage $(DPKG_OPT))
-	mkdir -p $(DSTDIR)
-	mv $(BLDDIR)/python3-$(DEBPKG) $(DSTDIR)
+	mkdir -p $(DSTDIR)/buster
+	mv $(BLDDIR)/$(DEBPKG) $(DSTDIR)/buster
+	mv $(BLDDIR)/python3-$(DEBPKG) $(DSTDIR)/buster
 
 # run lintian on the deb package
 check-deb:
@@ -347,6 +349,13 @@ release:
 	ssh $(USER)@$(WEEWX_COM) "if [ -f $(DEVDIR)/README.txt ]; then mv $(DEVDIR)/README.txt $(WEEWX_DOWNLOADS); fi"
 	ssh $(USER)@$(WEEWX_COM) "chmod 664 $(WEEWX_DOWNLOADS)/released_versions/weewx?$(VERSION)*"
 
+# this is only used when creating a new apt repository from scratch
+create-apt-repo:
+	aptly repo create -distribution=squeeze -component=main -architectures=all python-weewx
+	aptly publish repo -architectures=all python-weewx squeeze
+	aptly repo create -distribution=buster -component=main -architectures=all python3-weewx
+	aptly publish repo -architectures=all python3-weewx buster
+
 # make local copy of the published apt repository
 pull-apt-repo:
 	mkdir -p ~/.aptly
@@ -354,9 +363,16 @@ pull-apt-repo:
 
 # add the latest version to the local apt repo using aptly
 update-apt-repo:
-	aptly repo add weewx $(DSTDIR)/$(DEBPKG)
-	aptly snapshot create weewx-$(VERSION) from repo weewx
-	aptly -architectures="all" publish switch squeeze weewx-$(VERSION)
+	aptly repo add python-weewx $(DSTDIR)/squeeze/$(DEBPKG)
+	aptly repo add python-weewx $(DSTDIR)/squeeze/python-$(DEBPKG)
+	aptly publish update squeeze squeeze
+#	aptly snapshot create python-weewx-$(DEBVER) from repo python-weewx
+#	aptly -architectures=all publish switch squeeze python-weewx-$(DEBVER)
+	aptly repo add python3-weewx $(DSTDIR)/buster/$(DEBPKG)
+	aptly repo add python3-weewx $(DSTDIR)/buster/python3-$(DEBPKG)
+	aptly publish update buster buster
+#	aptly snapshot create python3-weewx-$(DEBVER) from repo python3-weewx
+#	aptly -architectures=all publish switch buster python3-weewx-$(DEBVER)
 
 # publish apt repo changes to the public weewx apt repo
 push-apt-repo:

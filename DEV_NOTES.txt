@@ -151,6 +151,23 @@ redhat install/remove:
 howto: deb repository ---------------------------------------------------------
 
 create local debian repo using aptly:
+  aptly repo create -distribution=squeeze -component=main -architectures=all python-weewx
+  aptly publish repo -architectures=all python-weewx squeeze
+
+  aptly repo create -distribution=buster -component=main -architectures=all python3-weewx
+  aptly publish repo -architectures=all python3-weewx buster
+
+update local debian repo using aptly:
+  aptly repo add python-weewx dist/squeeze/weewx_x.y.z-n_all.deb
+  aptly repo add python-weewx dist/squeeze/python-weewx_x.y.z-n_all.deb
+  aptly repo publish update squeeze squeeze
+
+  aptly repo add python3-weewx dist/buster/weewx_x.y.z-n_all.deb
+  aptly repo add python3-weewx dist/buster/python3-weewx_x.y.z-n_all.deb
+  aptly publish update buster buster
+
+
+create local debian repo using aptly:
   aptly repo create -distribution=squeeze -component=main weewx
   aptly repo add weewx dist/weewx_3.0.0-1_all.deb
   aptly snapshot create weewx-3.0.0 from repo weewx
