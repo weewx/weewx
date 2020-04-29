@@ -20,19 +20,29 @@
 <p>This is a guide to installing WeeWX from an RPM package on systems such as Redhat, CentOS or Fedora.
 </p>
 
+<h2>Install pre-requisites</h2>
+
+For Redhat 8:
+<pre class='tty cmd'>sudo yum install epel-release
+sudo yum install python3-cheetah</pre>
+
+For Redhat 7:
+<pre class='tty cmd'>sudo pip install pyserial pyusb</pre>
+
 <h2>Configure yum</h2>
+
 <p>Tell <span class="code">yum</span> (or <span class="code">dnf</span>) where to find the WeeWX releases.  This only has to be done once - the first time you install WeeWX.</p>
 
 Tell your system to trust weewx.com:
 <pre class='tty cmd'>sudo rpm --import http://weewx.com/keys.html</pre>
 
-For Redhat 8 and later, use python3:
-<pre class='tty cmd'>wget -qO - http://weewx.com/apt/weewx-python3.list | sudo tee /etc/apt/sources.list.d/weewx.list</pre>
+For Redhat 8 use python3:
+<pre class='tty cmd'>curl -s http://weewx.com/yum/weewx-el8.repo | sudo tee /etc/yum.repos.d/weewx.repo</pre>
 
-For Centos 8 use python2:
-<pre class='tty cmd'>wget -qO - http://weewx.com/apt/weewx-python2.list | sudo tee /etc/apt/sources.list.d/weewx.list</pre>
+For Redhat 7 use python2:
+<pre class='tty cmd'>curl -s http://weewx.com/yum/weewx-el7.repo | sudo tee /etc/yum.repos.d/weewx.repo</pre>
 
-<h2>Install</h2>
+<h2>Install WeeWX</h2>
 
 <pre class='tty cmd'>sudo yum install weewx</pre>
 
@@ -40,9 +50,8 @@ For Centos 8 use python2:
 </p>
 
 <h2>Status</h2>
-<p>
-    Look in the system log for messages from WeeWX.
-</p>
+
+<p>Look in the system log for messages from WeeWX.</p>
 <pre class='tty cmd'>sudo tail -f /var/log/messages</pre>
 
 <h2>Verify</h2>
