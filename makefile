@@ -189,7 +189,7 @@ done
 	mv setup.py.tmp setup.py
 	chmod 755 setup.py
 
-DEBREVISION=3
+DEBREVISION=4
 DEBVER=$(VERSION)-$(DEBREVISION)
 # add a skeleton entry to deb changelog
 deb-changelog:
@@ -230,35 +230,21 @@ deb-package-prep: $(DSTDIR)/$(SRCPKG)
 	cp pkg/debian/source/format $(DEBBLDDIR)/debian/source
 	cp pkg/debian/templates $(DEBBLDDIR)/debian
 
-deb-package-python: deb-package-prep
-	cp pkg/debian/control $(DEBBLDDIR)/debian/control
-	rm -rf $(DEBBLDDIR)/debian/weewx*
-	rm -f $(DEBBLDDIR)/debian/files
-	(cd $(DEBBLDDIR); dpkg-buildpackage $(DPKG_OPT))
-	mkdir -p $(DSTDIR)
-	mv $(BLDDIR)/$(DEBPKG) $(DSTDIR)
-	mv $(BLDDIR)/python-$(DEBPKG) $(DSTDIR)
-	mv $(BLDDIR)/python3-$(DEBPKG) $(DSTDIR)
-
 deb-package-python2: deb-package-prep
 	cp pkg/debian/control.python2 $(DEBBLDDIR)/debian/control
 	rm -f $(DEBBLDDIR)/debian/files
 	rm -rf $(DEBBLDDIR)/debian/weewx*
-#	rm -rf $(DEBBLDDIR)/debian/python*
 	(cd $(DEBBLDDIR); DEB_BUILD_OPTIONS=python2 dpkg-buildpackage $(DPKG_OPT))
-	mkdir -p $(DSTDIR)/squeeze
-	mv $(BLDDIR)/$(DEBPKG) $(DSTDIR)/squeeze
-#	mv $(BLDDIR)/python-$(DEBPKG) $(DSTDIR)/squeeze
+	mkdir -p $(DSTDIR)
+	mv $(BLDDIR)/$(DEBPKG) $(DSTDIR)/python-$(DEBPKG)
 
 deb-package-python3: deb-package-prep
 	cp pkg/debian/control.python3 $(DEBBLDDIR)/debian/control
 	rm -f $(DEBBLDDIR)/debian/files
 	rm -rf $(DEBBLDDIR)/debian/weewx*
-#	rm -rf $(DEBBLDDIR)/debian/python*
 	(cd $(DEBBLDDIR);  DEB_BUILD_OPTIONS=python3 dpkg-buildpackage $(DPKG_OPT))
-	mkdir -p $(DSTDIR)/buster
-	mv $(BLDDIR)/$(DEBPKG) $(DSTDIR)/buster
-#	mv $(BLDDIR)/python3-$(DEBPKG) $(DSTDIR)/buster
+	mkdir -p $(DSTDIR)
+	mv $(BLDDIR)/$(DEBPKG) $(DSTDIR)/python3-$(DEBPKG)
 
 # run lintian on the deb package
 check-deb:
@@ -364,14 +350,10 @@ pull-apt-repo:
 
 # add the latest version to the local apt repo using aptly
 update-apt-repo:
-	aptly repo add python-weewx $(DSTDIR)/squeeze/$(DEBPKG)
-#	aptly repo add python-weewx $(DSTDIR)/squeeze/python-$(DEBPKG)
-#	aptly publish update squeeze squeeze
+	aptly repo add python-weewx $(DSTDIR)/python-$(DEBPKG)
 	aptly snapshot create python-weewx-$(DEBVER) from repo python-weewx
 	aptly publish switch squeeze squeeze python-weewx-$(DEBVER)
-	aptly repo add python3-weewx $(DSTDIR)/buster/$(DEBPKG)
-#	aptly repo add python3-weewx $(DSTDIR)/buster/python3-$(DEBPKG)
-#	aptly publish update buster buster
+	aptly repo add python3-weewx $(DSTDIR)/python3-$(DEBPKG)
 	aptly snapshot create python3-weewx-$(DEBVER) from repo python3-weewx
 	aptly publish switch buster buster python3-weewx-$(DEBVER)
 
