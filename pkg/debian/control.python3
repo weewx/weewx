@@ -7,14 +7,6 @@ Homepage: http://www.weewx.com
 Build-Depends: debhelper (>=8)
 
 Package: weewx
-Depends: python3-weewx
-Architecture: all
-Description: weather software
-
-Package: python3-weewx
-Provides: weewx
-Replaces: weewx (<< 4.0.0)
-Breaks: weewx (<< 4.0.0)
 Priority: optional
 Architecture: all
 Pre-Depends: debconf

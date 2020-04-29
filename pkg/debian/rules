@@ -10,11 +10,11 @@
 PKG=weewx
 PYTHON=python
 ifneq (,$(filter python2,$(DEB_BUILD_OPTIONS)))
-PKG=python-weewx
+#PKG=python-weewx
 PYTHON=python2
 endif
 ifneq (,$(filter python3,$(DEB_BUILD_OPTIONS)))
-PKG=python3-weewx
+#PKG=python3-weewx
 PYTHON=python3
 endif
 
