@@ -6,161 +6,38 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <link rel="stylesheet" href="css/weewx_ui.css"/>
     <link rel="icon" href="images/favicon.png" type="image/png"/>
-    <!-- Use cash, a lightweight jQuery clone: -->
-    <script src="js/cash.min.js"></script>
-    <script src="js/weewx.js"></script>
-    <script>
-        $(function () {
-            // Create a click on the first tab to get things started.
-            $('#prereq-tabs .tab')[3].click();
-        })
-    </script>
 </head>
 <body>
 
-<h1 class="title">WeeWX: Installation on Redhat-based systems <span class='os-icons'>
+<h1 class="title">WeeWX: Installation on Redhat-based systems
+    <span class='os-icons'>
         <img class='logo' src='images/logo-redhat.png' alt=""/>
         <img class='logo' src='images/logo-centos.png' alt=""/>
         <img class='logo' src='images/logo-fedora.png' alt=""/>
     </span>
 </h1>
 
-<p>
-    This is a guide to installing WeeWX from an RPM package on systems such as Redhat, CentOS or Fedora.
+<p>This is a guide to installing WeeWX from an RPM package on systems such as Redhat, CentOS or Fedora.
 </p>
 
-<h2>Download</h2>
+<h2>Configure yum</h2>
+<p>Tell <span class="code">yum</span> (or <span class="code">dnf</span>) where to find the WeeWX releases.  This only has to be done once - the first time you install WeeWX.</p>
 
-<p>
-    Download the Redhat RPM package from <a href="http://weewx.com/downloads"><span
-    class="code">weewx.com/downloads</span></a>. It will have a name similar to <span class='code'>weewx-X.Y.Z-R.rhel.noarch.rpm</span>.
-</p>
-
-<h2>Install pre-requisites</h2>
-<p>The pre-requisites depend on which version of Redhat / CentOS/ Fedora you are running.</p>
-
-<div id="prereq-tabs" class="tabs" style="width:95%; padding: 10px 10px 10px 10px;">
-    <nav></nav>
-    <nav>
-        <button class="tab" onclick="openTab(event, '#prereq-rhel7-py2')">
-            RHEL7/python2
-        </button>
-        <button class="tab" onclick="openTab(event, '#prereq-rhel7-py3')">
-            RHEL7/python3
-        </button>
-        <button class="tab" onclick="openTab(event, '#prereq-rhel8-py2')">
-            RHEL8/python2
-        </button>
-        <button class="tab" onclick="openTab(event, '#prereq-rhel8-py3')">
-            RHEL8/python3
-        </button>
-    </nav>
-
-    <div id="prereq-rhel7-py2" class="tab-content">
-        <p>Ensure that Python 2.7 is installed. Earlier versions will not work.</p>
-        <pre class='tty cmd'>python2 -V</pre>
-        <p>
-            Install the WeeWX pre-requisites:
-        </p>
-        <pre class="tty cmd">sudo yum install python-configojb
-sudo yum install python-cheetah
-sudo yum install python-pillow
-sudo yum install pyserial
-sudo yum install pyusb
-
-# If using MySQL, install
-sudo yum install MySQL-python
-
-# For extended almanac information (optional),
-# first install <a href="https://pip.pypa.io/en/stable/installing/">pip</a>, then install pyephem:
-sudo pip install pyephem
-        </pre>
-
-    </div>
-    <div id="prereq-rhel7-py3" class="tab-content">
-        <p>Ensure that Python 3.5 or later is installed.</p>
-        <pre class='tty cmd'>python3 -V</pre>
-        <p>If not, it can be installed with:</p>
-        <pre class="tty cmd">sudo yum install python3</pre>
-
-        <p>
-            Install the WeeWX pre-requisites:
-        </p>
-        <pre class="tty cmd">sudo pip3 install configobj
-sudo pip3 install Cheetah3
-sudo pip3 install Pillow
-sudo pip3 install pyserial
-sudo pip3 install pyusb
-
-# For extended almanac information (optional):
-sudo pip3 install pyephem</pre>
-        <p>
-                If you are using MySQL, the combination of RHEL7 and Python 3 is not recommended because the client
-                libraries were immature. Either upgrade to RHEL8, or use Python 2.
-        </p>
-    </div>
-
-    <div id="prereq-rhel8-py2" class="tab-content">
-        <p>Ensure that Python 2.7 is installed. Earlier versions will not work.</p>
-        <pre class='tty cmd'>python2 -V</pre>
-        <p>
-            If not, it can be installed with:
-        </p>
-        <pre class="tty cmd">sudo yum install python2</pre>
-        <p>
-            Install the WeeWX pre-requisites:
-        </p>
-        <pre class='tty cmd'>sudo pip2 install configobj
-sudo pip2 install Cheetah
-sudo pip2 install Pillow
-sudo pip2 install pyserial
-sudo pip2 install pyusb
-
-# For extended almanac information (optional):
-sudo pip2 install pyephem</pre>
-    </div>
-
-    <div id='prereq-rhel8-py3' class="tab-content">
-        <p>Ensure that Python 3.5 or later is installed.</p>
-        <pre class='tty cmd'>python3 -V</pre>
-        <p>If not, it can be installed with:</p>
-        <pre class="tty cmd">sudo yum install python3</pre>
-
-        <p>
-            Install the WeeWX pre-requisites:
-        </p>
-        <pre class='tty cmd'>sudo yum install python3-configobj
-sudo yum install python3-pillow
-sudo yum install python3-pyserial
-sudo yum install python3-pyusb
-
-# As of this writing (November 2019), Cheetah can only be installed using pip3:
-sudo pip3 install Cheetah3
-
-# If using MySQL:
-sudo yum install python3-PyMySQL
-
-# For extended almanac information (optional):
-sudo pip3 install pyephem</pre>
-    </div>
-
-</div>
-
-<h2>Install WeeWX</h2>
-
-
-<p>
-    Install by double-clicking the .rpm file, or via command line:
-</p>
-<pre class='tty cmd'>sudo rpm -i weewx-X.Y.Z-R.rhel.noarch.rpm</pre>
-
-<p>
-    If you see errors about untrusted signature, or MISSING KEYS, you can either install the <a
-    href="http://weewx.com/keys.html">weewx GPG keys</a>:
-</p>
+Tell your system to trust weewx.com:
 <pre class='tty cmd'>sudo rpm --import http://weewx.com/keys.html</pre>
-<p>or tell rpm to ignore the signature:</p>
-<pre class='tty cmd'>sudo rpm -i --nosignature weewx-X.Y.Z-R.rpm</pre>
+
+For Redhat 8 and later, use python3:
+<pre class='tty cmd'>wget -qO - http://weewx.com/apt/weewx-python3.list | sudo tee /etc/apt/sources.list.d/weewx.list</pre>
+
+For Centos 8 use python2:
+<pre class='tty cmd'>wget -qO - http://weewx.com/apt/weewx-python2.list | sudo tee /etc/apt/sources.list.d/weewx.list</pre>
+
+<h2>Install</h2>
+
+<pre class='tty cmd'>sudo yum install weewx</pre>
+
+<p>When you are done, WeeWX will be running the Simulator in the background as a daemon.
+</p>
 
 <h2>Status</h2>
 <p>
