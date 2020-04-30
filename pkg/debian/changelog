@@ -1,3 +1,6 @@
+weewx (4.0.0-1) unstable; urgency=low
+  * new upstream release
+ -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Thu, 30 Apr 2020 11:21:09 -0400
 weewx (4.0.0b18-4) unstable; urgency=low
   * delete the python3 __pycache__ files as well as python2 .pyc files
   * build as weewx_x.deb but save as python-weewx_x.deb and python3-weewx_x.deb

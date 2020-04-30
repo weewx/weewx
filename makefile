@@ -189,7 +189,7 @@ done
 	mv setup.py.tmp setup.py
 	chmod 755 setup.py
 
-DEBREVISION=4
+DEBREVISION=1
 DEBVER=$(VERSION)-$(DEBREVISION)
 # add a skeleton entry to deb changelog
 deb-changelog:
