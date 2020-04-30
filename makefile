@@ -376,7 +376,7 @@ push-apt-repo:
 YUM_REPO=~/.yum/weewx
 yum-repo:
 	mkdir -p $(YUM_REPO)/{el7,el8}/RPMS
-	cp -p pkg/index-apt.html ~/.yum/index.html
+	cp -p pkg/index-yum.html ~/.yum/index.html
 	cp -p pkg/weewx-el7.repo ~/.yum
 	cp -p pkg/weewx-el8.repo ~/.yum
 
