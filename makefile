@@ -251,8 +251,8 @@ check-deb:
 	lintian -Ivi $(DSTDIR)/$(DEBPKG)
 
 upload-deb:
-	scp $(DSTDIR)/squeeze/$(DEBPKG) $(USER)@$(WEEWX_COM):$(WEEWX_STAGING)/python-$(DEBPKG)
-	scp $(DSTDIR)/buster/$(DEBPKG) $(USER)@$(WEEWX_COM):$(WEEWX_STAGING)/python3-$(DEBPKG)
+	scp $(DSTDIR)/python-$(DEBPKG) $(USER)@$(WEEWX_COM):$(WEEWX_STAGING)
+	scp $(DSTDIR)/python3-$(DEBPKG) $(USER)@$(WEEWX_COM):$(WEEWX_STAGING)
 
 RPMREVISION=1
 RPMVER=$(VERSION)-$(RPMREVISION)
