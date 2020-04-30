@@ -148,18 +148,19 @@ README_HEADER="\
 weewx packages      \n\
 --------------------\n\
 \n\
-http://weewx.com/apt\n\
-   for Debian, Ubuntu, Mint, including Raspberry Pi\n\
+for Debian, Ubuntu, Mint, including Raspberry Pi see:\n\
+http://weewx.com/docs/debian.htm\n\
 \n\
-http://weewx.com/yum\n\
-   for Redhat, CentOS, Fedora\n\
+for Redhat, CentOS, Fedora see:\n\
+http://weewx.com/docs/redhat.htm\n\
 \n\
-weewx-$(RPMVER).suse.$(RPMARCH).rpm\n\
-   for SuSE, OpenSuSE\n\
+for SuSE, OpenSuSE see:\n\
+http://weewx.com/docs/suse.htm\n\
 \n\
 $(SRCPKG)\n\
-   for all operating systems including Linux, BSD, MacOSX\n\
+   for all operating systems including Linux, BSD, MacOS\n\
    this is the best choice if you intend to customize weewx\n\
+   http://weewx.com/docs/setup.htm\n\
 \n\
 --------------------\n\
 weewx change history\n\
