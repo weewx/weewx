@@ -338,18 +338,20 @@ release:
 
 # this is only used when creating a new apt repository from scratch
 # the .html and .list files are not part of an official apt repository.  they
-# are included to make the repository self-documenting.  the weewx.list file
-# is for backward-compatibility for weewx3 installations before the python2
-# vs python3 explicit distinction.
+# are included to make the repository self-documenting.
 create-apt-repo:
 	aptly repo create -distribution=squeeze -component=main -architectures=all python2-weewx
 	aptly repo create -distribution=buster -component=main -architectures=all python3-weewx
-	ln -s public/python2/dists ~/aptly/public
-	ln -s public/python2/pool ~/aptly/public
-	cp -p pkg/index-apt.html ~/aptly/public/index.html
-	cp -p pkg/weewx-python2.list ~/aptly/public/weewx.list
-	cp -p pkg/weewx-python2.list ~/aptly/public
-	cp -p pkg/weewx-python3.list ~/aptly/public
+	mkdir -p ~/.aptly/public
+	cp -p pkg/index-apt.html ~/.aptly/public/index.html
+	cp -p pkg/weewx-python2.list ~/.aptly/public
+	cp -p pkg/weewx-python3.list ~/.aptly/public
+# this is for backward-compatibility when there was not python2/3 distinction
+	cp -p pkg/weewx-python2.list ~/.aptly/public/weewx.list
+# these are for backward-compatibility for users that do not have python2 or
+# python3 in their .list file
+	ln -s python2/dists ~/.aptly/public
+	ln -s python2/pool ~/.aptly/public
 
 # make local copy of the published apt repository
 pull-apt-repo:

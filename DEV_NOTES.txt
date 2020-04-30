@@ -150,8 +150,11 @@ redhat install/remove:
 
 howto: deb repository ---------------------------------------------------------
 
+aptly has two different mechanisms for doing a 'publish': switch or update.
 we use snapshots, and publish using 'publish switch', rather than publishing
 using a simple 'publish update'.
+
+there are two apt repositories: python2 and python3
 
 create local debian repo using aptly:
   aptly repo create -distribution=squeeze -component=main -architectures=all python2-weewx
