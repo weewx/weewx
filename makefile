@@ -337,11 +337,19 @@ release:
 	ssh $(USER)@$(WEEWX_COM) "chmod 664 $(WEEWX_DOWNLOADS)/released_versions/weewx?$(VERSION)*"
 
 # this is only used when creating a new apt repository from scratch
+# the .html and .list files are not part of an official apt repository.  they
+# are included to make the repository self-documenting.  the weewx.list file
+# is for backward-compatibility for weewx3 installations before the python2
+# vs python3 explicit distinction.
 create-apt-repo:
-	aptly repo create -distribution=squeeze -component=main -architectures=all python-weewx
-	aptly publish repo -architectures=all python-weewx squeeze
+	aptly repo create -distribution=squeeze -component=main -architectures=all python2-weewx
 	aptly repo create -distribution=buster -component=main -architectures=all python3-weewx
-	aptly publish repo -architectures=all python3-weewx buster
+	ln -s public/python2/dists ~/aptly/public
+	ln -s public/python2/pool ~/aptly/public
+	cp -p pkg/index-apt.html ~/aptly/public/index.html
+	cp -p pkg/weewx-python2.list ~/aptly/public/weewx.list
+	cp -p pkg/weewx-python2.list ~/aptly/public
+	cp -p pkg/weewx-python3.list ~/aptly/public
 
 # make local copy of the published apt repository
 pull-apt-repo:
@@ -350,12 +358,12 @@ pull-apt-repo:
 
 # add the latest version to the local apt repo using aptly
 update-apt-repo:
-	aptly repo add python-weewx $(DSTDIR)/python-$(DEBPKG)
-	aptly snapshot create python-weewx-$(DEBVER) from repo python-weewx
-	aptly publish switch squeeze squeeze python-weewx-$(DEBVER)
+	aptly repo add python2-weewx $(DSTDIR)/python-$(DEBPKG)
+	aptly snapshot create python-weewx-$(DEBVER) from repo python2-weewx
+	aptly publish switch squeeze python2 python-weewx-$(DEBVER)
 	aptly repo add python3-weewx $(DSTDIR)/python3-$(DEBPKG)
 	aptly snapshot create python3-weewx-$(DEBVER) from repo python3-weewx
-	aptly publish switch buster buster python3-weewx-$(DEBVER)
+	aptly publish switch buster python3 python3-weewx-$(DEBVER)
 
 # publish apt repo changes to the public weewx apt repo
 push-apt-repo:
