@@ -208,7 +208,7 @@ DEBPKG=weewx_$(DEBVER)_$(DEBARCH).deb
 ifneq ("$(SIGN)","1")
 DPKG_OPT=-us -uc
 endif
-deb-package: deb-package-python2 deb-package-python3
+debian-packages: deb-package-python2 deb-package-python3
 
 deb-package-prep: $(DSTDIR)/$(SRCPKG)
 	mkdir -p $(BLDDIR)
@@ -303,6 +303,8 @@ rpm-package-el7:
 rpm-package-el8:
 	make rpm-package OSREL=8
 
+suse-package: rpm-package
+
 # run rpmlint on the redhat package
 check-rpm:
 	rpmlint $(DSTDIR)/$(RPMPKG)
@@ -339,7 +341,7 @@ release:
 # this is only used when creating a new apt repository from scratch
 # the .html and .list files are not part of an official apt repository.  they
 # are included to make the repository self-documenting.
-create-apt-repo:
+apt-repo:
 	aptly repo create -distribution=squeeze -component=main -architectures=all python2-weewx
 	aptly repo create -distribution=buster -component=main -architectures=all python3-weewx
 	mkdir -p ~/.aptly/public
@@ -374,6 +376,9 @@ push-apt-repo:
 YUM_REPO=~/.yum/weewx
 yum-repo:
 	mkdir -p $(YUM_REPO)/{el7,el8}/RPMS
+	cp -p pkg/index-apt.html ~/.yum/index.html
+	cp -p pkg/weewx-el7.repo ~/.yum
+	cp -p pkg/weewx-el8.repo ~/.yum
 
 pull-yum-repo:
 	mkdir -p $(YUM_REPO)
