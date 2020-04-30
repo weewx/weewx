@@ -48,11 +48,11 @@ help: info
 	@echo "     check-rpm  check the rpm package"
 	@echo "    check-docs  run weblint on the docs"
 	@echo ""
-	@echo "    upload-src  upload the src package"
-	@echo "    upload-deb  upload the deb package"
-	@echo "   upload-rhel  upload the redhat rpm package"
-	@echo "   upload-suse  upload the suse rpm package"
 	@echo " upload-readme  upload the README.txt"
+	@echo "    upload-src  upload the src package"
+	@echo " upload-debian  upload the debian deb packages"
+	@echo " upload-redhat  upload the redhat rpm packages"
+	@echo "   upload-suse  upload the suse rpm package"
 	@echo ""
 	@echo "   upload-docs  upload docs to weewx.com"
 	@echo ""
@@ -250,7 +250,7 @@ deb-package-python3: deb-package-prep
 check-deb:
 	lintian -Ivi $(DSTDIR)/$(DEBPKG)
 
-upload-deb:
+upload-debian:
 	scp $(DSTDIR)/python-$(DEBPKG) $(USER)@$(WEEWX_COM):$(WEEWX_STAGING)
 	scp $(DSTDIR)/python3-$(DEBPKG) $(USER)@$(WEEWX_COM):$(WEEWX_STAGING)
 
@@ -312,7 +312,7 @@ check-rpm:
 upload-rpm:
 	scp $(DSTDIR)/$(RPMPKG) $(USER)@$(WEEWX_COM):$(WEEWX_STAGING)
 
-upload-rhel:
+upload-redhat:
 	make upload-rpm RPMOS=.el7
 	make upload-rpm RPMOS=.el8
 
@@ -320,17 +320,19 @@ upload-suse:
 	make upload-rpm RPMOS=.suse$(OSREL)
 
 # shortcut to upload all packages from a single machine
-DEB_PKG=weewx_$(DEBVER)_$(DEBARCH).deb
-RHEL_PKG=weewx-$(RPMVER).el.$(RPMARCH).rpm
+DEB2_PKG=python-weewx_$(DEBVER)_$(DEBARCH).deb
+DEB3_PKG=python3-weewx_$(DEBVER)_$(DEBARCH).deb
+RHEL7_PKG=weewx-$(RPMVER).el7.$(RPMARCH).rpm
+RHEL8_PKG=weewx-$(RPMVER).el8.$(RPMARCH).rpm
 SUSE_PKG=weewx-$(RPMVER).suse.$(RPMARCH).rpm
 upload-pkgs:
-	scp $(DSTDIR)/$(DEB_PKG) $(DSTDIR)/$(RHEL_PKG) $(DSTDIR)/$(SUSE_PKG) $(USER)@$(WEEWX_COM):$(WEEWX_STAGING)
+	scp $(DSTDIR)/$(DEB2_PKG) $(DSTDIR)/$(DEB3_PKG) $(DSTDIR)/$(RHEL7_PKG) $(DSTDIR)/$(RHEL8_PKG) $(DSTDIR)/$(SUSE_PKG) $(USER)@$(WEEWX_COM):$(WEEWX_STAGING)
 
 # move files from the upload directory to the release directory and set up the
 # symlinks to them from the download root directory
 DEVDIR=$(WEEWX_DOWNLOADS)/development_versions
 RELDIR=$(WEEWX_DOWNLOADS)/released_versions
-ARTIFACTS=$(DEB_PKG) $(RHEL_PKG) $(SUSE_PKG) $(SRCPKG)
+ARTIFACTS=$(DEB2_PKG) $(DEB3_PKG) $(RHEL7_PKG) $(RHEL8_PKG) $(SUSE_PKG) $(SRCPKG)
 release:
 	ssh $(USER)@$(WEEWX_COM) "for f in $(ARTIFACTS); do if [ -f $(DEVDIR)/\$$f ]; then mv $(DEVDIR)/\$$f $(RELDIR); fi; done"
 	ssh $(USER)@$(WEEWX_COM) "rm -f $(WEEWX_DOWNLOADS)/weewx*"
