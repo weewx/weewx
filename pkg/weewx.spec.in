@@ -47,7 +47,7 @@
 %define relos .el8
 %define platform redhat
 %define initdir %{_initrddir}
-# must install cheetah using pip3
+# must install cheetah from epel-release or using pip3
 %define deps python3, python3-setuptools, python3-configobj, python3-pillow, python3-pyserial, python3-pyusb
 %define bld_deps python, python-configobj
 %define python python3
