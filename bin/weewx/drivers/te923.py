@@ -450,7 +450,7 @@ from weeutil.weeutil import timestamp_to_string
 log = logging.getLogger(__name__)
 
 DRIVER_NAME = 'TE923'
-DRIVER_VERSION = '0.40'
+DRIVER_VERSION = '0.41'
 
 def loader(config_dict, engine):  # @UnusedVariable
     return TE923Driver(**config_dict[DRIVER_NAME])
