@@ -36,7 +36,6 @@ help: info
 	@echo "       install  run the generic python install"
 	@echo "       version  get version from __init__ and insert elsewhere"
 	@echo ""
-	@echo "    readme.txt  create README.txt suitable for distribution"
 	@echo " deb-changelog  prepend stub changelog entry for deb"
 	@echo " rpm-changelog  prepend stub changelog entry for rpm"
 	@echo ""
@@ -48,7 +47,6 @@ help: info
 	@echo "     check-rpm  check the rpm package"
 	@echo "    check-docs  run weblint on the docs"
 	@echo ""
-	@echo " upload-readme  upload the README.txt"
 	@echo "    upload-src  upload the src package"
 	@echo " upload-debian  upload the debian deb packages"
 	@echo " upload-redhat  upload the redhat rpm packages"
@@ -141,38 +139,6 @@ upload-src:
 # upload docs to the web site
 upload-docs:
 	rsync -rv docs $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)
-
-# create the README.txt for uploading
-README_HEADER="\
---------------------\n\
-weewx packages      \n\
---------------------\n\
-\n\
-for Debian, Ubuntu, Mint, including Raspberry Pi see:\n\
-http://weewx.com/docs/debian.htm\n\
-\n\
-for Redhat, CentOS, Fedora see:\n\
-http://weewx.com/docs/redhat.htm\n\
-\n\
-for SuSE, OpenSuSE see:\n\
-http://weewx.com/docs/suse.htm\n\
-\n\
-$(SRCPKG)\n\
-   for all operating systems including Linux, BSD, MacOS\n\
-   this is the best choice if you intend to customize weewx\n\
-   http://weewx.com/docs/setup.htm\n\
-\n\
---------------------\n\
-weewx change history\n\
---------------------\n"
-readme.txt: docs/changes.txt
-	mkdir -p $(DSTDIR)
-	rm -f $(DSTDIR)/README.txt
-	echo $(README_HEADER) > $(DSTDIR)/README.txt
-	pkg/mkchangelog.pl --ifile docs/changes.txt >> $(DSTDIR)/README.txt
-
-upload-readme: readme.txt
-	scp $(DSTDIR)/README.txt $(USER)@$(WEEWX_COM):$(WEEWX_STAGING)
 
 # update the version in all relevant places
 VDOCS=readme.htm customizing.htm devnotes.htm hardware.htm usersguide.htm upgrading.htm utilities.htm
@@ -338,7 +304,6 @@ release:
 	ssh $(USER)@$(WEEWX_COM) "for f in $(ARTIFACTS); do if [ -f $(DEVDIR)/\$$f ]; then mv $(DEVDIR)/\$$f $(RELDIR); fi; done"
 	ssh $(USER)@$(WEEWX_COM) "rm -f $(WEEWX_DOWNLOADS)/weewx*"
 	ssh $(USER)@$(WEEWX_COM) "if [ -f $(RELDIR)/$(SRCPKG) ]; then ln -s released_versions/$(SRCPKG) $(WEEWX_DOWNLOADS); fi; done"
-	ssh $(USER)@$(WEEWX_COM) "if [ -f $(DEVDIR)/README.txt ]; then mv $(DEVDIR)/README.txt $(WEEWX_DOWNLOADS); fi"
 	ssh $(USER)@$(WEEWX_COM) "chmod 664 $(WEEWX_DOWNLOADS)/released_versions/weewx?$(VERSION)*"
 
 # this is only used when creating a new apt repository from scratch

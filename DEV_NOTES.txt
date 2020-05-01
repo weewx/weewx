@@ -24,7 +24,6 @@ checklist for doing a release:
      2. make upload-deb
      3. make upload-rpm RPMOS=.rhel
      4. make upload-rpm RPMOS=.suse
-     5. make upload-readme
      6. make upload-docs
 8. Update the deb repository
      1. make pull-apt-repo
@@ -52,9 +51,6 @@ vi docs/changes.txt        # as needed
 vi docs/upgrading.htm      # as needed
 git commit -a -m "release x.y.z"
 git push
-
-# generate the readme then upload it to development_versions
-make readme.txt upload-readme
 
 # build src, upload to development_versions
 rm -rf build dist
@@ -89,9 +85,6 @@ make push-apt-repo
 
 
 howto -------------------------------------------------------------------------
-
-create README.txt:
-  make readme.txt
 
 how to update the version number:
   perl -pi -e 's/__version__=".*"/__version__="x.y.z"/' bin/weewx/__init__.py
@@ -233,7 +226,6 @@ there are multiple changelogs:
   docs/changes.txt - definitive changelog for the application
   pkg/debian/changelog - changes to the debian packaging
   pkg/changelog.rpm - changes to the redhat packaging
-  README.txt - copy of changes.txt uploaded to download area
 
 when signing, gpg info must match the name and email in the latest package
 changelog entry.
