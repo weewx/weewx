@@ -3,6 +3,9 @@ weewx change history
 
 4.0.1 MM/DD/YYYY
 
+More information if an exception is raised while querying for vantage hardware
+type.
+
 Fixed wunderfixer problem under Python 3 where response was not converted to
 str before attempting to parse the JSON.
 

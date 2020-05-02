@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-#    Copyright (c) 2009-2019 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2020 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -32,7 +32,7 @@ from weewx.crc16 import crc16
 log = logging.getLogger(__name__)
 
 DRIVER_NAME = 'Vantage'
-DRIVER_VERSION = '3.2.0'
+DRIVER_VERSION = '3.2.1'
 
 
 def loader(config_dict, engine):
@@ -238,7 +238,7 @@ class BaseWrapper(object):
 def guard_termios(fn):
     """Decorator function that converts termios exceptions into weewx exceptions."""
     # Some functions in the module 'serial' can raise undocumented termios
-    # exceptions. This catches them and converts them to weewx exceptions. 
+    # exceptions. This catches them and converts them to weewx exceptions.
     try:
         import termios
         def guarded_fn(*args, **kwargs):
@@ -461,28 +461,28 @@ class Vantage(weewx.drivers.AbstractDevice):
         communication]
 
         host: The Vantage network host [Required if Ethernet communication]
-        
+
         baudrate: Baudrate of the port. [Optional. Default 19200]
 
         tcp_port: TCP port to connect to [Optional. Default 22222]
-        
+
         tcp_send_delay: Block after sending data to WeatherLinkIP to allow it
         to process the command [Optional. Default is 0.5]
 
         timeout: How long to wait before giving up on a response from the
         serial port. [Optional. Default is 4]
-        
+
         wait_before_retry: How long to wait before retrying. [Optional.
         Default is 1.2 seconds]
-        
+
         command_delay: How long to wait after sending a command before looking
         for acknowledgement. [Optional. Default is 0.5 seconds]
 
         max_tries: How many times to try again before giving up. [Optional.
         Default is 4]
-        
+
         iss_id: The station number of the ISS [Optional. Default is 1]
-        
+
         model_type: Vantage Pro model type. 1=Vantage Pro; 2=Vantage Pro2
         [Optional. Default is 2]
 
@@ -1304,9 +1304,8 @@ class Vantage(weewx.drivers.AbstractDevice):
                 log.debug("Hardware type is %d", self.hardware_type)
                 # 16 = Pro, Pro2, 17 = Vue
                 return self.hardware_type
-            except weewx.WeeWxIOError:
-                pass
-            log.debug("_determine_hardware; retry #%d", count)
+            except weewx.WeeWxIOError as e:
+                log.error("_determine_hardware; retry #%d: '%s'", count, e)
 
         log.error("Unable to read hardware type; raise WeeWxIOError")
         raise weewx.WeeWxIOError("Unable to read hardware type")
