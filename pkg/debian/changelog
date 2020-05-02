@@ -1,3 +1,16 @@
+weewx (4.0.0-1) unstable; urgency=low
+  * new upstream release
+ -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Thu, 30 Apr 2020 11:21:09 -0400
+weewx (4.0.0b18-4) unstable; urgency=low
+  * delete the python3 __pycache__ files as well as python2 .pyc files
+  * build as weewx_x.deb but save as python-weewx_x.deb and python3-weewx_x.deb
+ -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Thu, 09 Apr 2020 20:44:56 -0400
+weewx (4.0.0b18-3) unstable; urgency=low
+  * use weewx instead of python-weewx and python3-weewx
+ -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Thu, 09 Apr 2020 20:44:56 -0400
+weewx (4.0.0b18-2) unstable; urgency=low
+  * separate squeeze and buster repositories with aptly
+ -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Thu, 09 Apr 2020 20:44:56 -0400
 weewx (4.0.0b18-1) unstable; urgency=low
   * new upstream release
  -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Thu, 09 Apr 2020 20:44:56 -0400

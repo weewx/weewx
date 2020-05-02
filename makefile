@@ -36,7 +36,6 @@ help: info
 	@echo "       install  run the generic python install"
 	@echo "       version  get version from __init__ and insert elsewhere"
 	@echo ""
-	@echo "    readme.txt  create README.txt suitable for distribution"
 	@echo " deb-changelog  prepend stub changelog entry for deb"
 	@echo " rpm-changelog  prepend stub changelog entry for rpm"
 	@echo ""
@@ -49,10 +48,9 @@ help: info
 	@echo "    check-docs  run weblint on the docs"
 	@echo ""
 	@echo "    upload-src  upload the src package"
-	@echo "    upload-deb  upload the deb package"
-	@echo "   upload-rhel  upload the redhat rpm package"
+	@echo " upload-debian  upload the debian deb packages"
+	@echo " upload-redhat  upload the redhat rpm packages"
 	@echo "   upload-suse  upload the suse rpm package"
-	@echo " upload-readme  upload the README.txt"
 	@echo ""
 	@echo "   upload-docs  upload docs to weewx.com"
 	@echo ""
@@ -62,14 +60,25 @@ help: info
 	@echo "                SUITE=path/to/foo.py to run only foo tests"
 	@echo "    test-clean  remove test databases"
 	@echo "                recommended when switching between python 2 and 3"
+	@echo ""
+	@echo " apt repository management"
+	@echo "    pull-apt-repo"
+	@echo "  update-apt-repo"
+	@echo "    push-apt-repo"
+	@echo ""
+	@echo " yum repository management"
+	@echo "    pull-yum-repo"
+	@echo "  update-yum-repo"
+	@echo "    push-yum-repo"
+	@echo ""
 
 info:
 	@echo "     VERSION: $(VERSION)"
 	@echo "   MMVERSION: $(MMVERSION)"
 	@echo "         CWD: $(CWD)"
-	@echo "   UPLOADDIR: $(UPLOADDIR)"
 	@echo "        USER: $(USER)"
-	@echo "  WWW SERVER: $(WEEWX_COM)"
+	@echo "   WEEWX_COM: $(WEEWX_COM)"
+	@echo " STAGING_DIR: $(STAGING_DIR)"
 
 clean:
 	find . -name "*.pyc" -exec rm {} \;
@@ -131,37 +140,6 @@ upload-src:
 upload-docs:
 	rsync -rv docs $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)
 
-# create the README.txt for uploading
-README_HEADER="\
---------------------\n\
-weewx packages      \n\
---------------------\n\
-\n\
-$(DEBPKG)\n\
-   for Debian, Ubuntu, Mint, including Raspberry Pi\n\
-\n\
-weewx-$(RPMVER).el.$(RPMARCH).rpm\n\
-   for Redhat, CentOS, Fedora\n\
-\n\
-weewx-$(RPMVER).suse.$(RPMARCH).rpm\n\
-   for SuSE, OpenSuSE\n\
-\n\
-$(SRCPKG)\n\
-   for all operating systems including Linux, BSD, MacOSX\n\
-   this is the best choice if you intend to customize weewx\n\
-\n\
---------------------\n\
-weewx change history\n\
---------------------\n"
-readme.txt: docs/changes.txt
-	mkdir -p $(DSTDIR)
-	rm -f $(DSTDIR)/README.txt
-	echo $(README_HEADER) > $(DSTDIR)/README.txt
-	pkg/mkchangelog.pl --ifile docs/changes.txt >> $(DSTDIR)/README.txt
-
-upload-readme: readme.txt
-	scp $(DSTDIR)/README.txt $(USER)@$(WEEWX_COM):$(WEEWX_STAGING)
-
 # update the version in all relevant places
 VDOCS=readme.htm customizing.htm devnotes.htm hardware.htm usersguide.htm upgrading.htm utilities.htm
 VCONFIGS=weewx.conf bin/weecfg/tests/expected/weewx40_user_expected.conf
@@ -197,7 +175,7 @@ DEBPKG=weewx_$(DEBVER)_$(DEBARCH).deb
 ifneq ("$(SIGN)","1")
 DPKG_OPT=-us -uc
 endif
-deb-package: deb-package-python2 deb-package-python3
+debian-packages: deb-package-python2 deb-package-python3
 
 deb-package-prep: $(DSTDIR)/$(SRCPKG)
 	mkdir -p $(BLDDIR)
@@ -220,18 +198,18 @@ deb-package-prep: $(DSTDIR)/$(SRCPKG)
 	cp pkg/debian/templates $(DEBBLDDIR)/debian
 
 deb-package-python2: deb-package-prep
-	cp pkg/debian/control $(DEBBLDDIR)/debian
-	rm -rf $(DEBBLDDIR)/debian/weewx*
+	cp pkg/debian/control.python2 $(DEBBLDDIR)/debian/control
 	rm -f $(DEBBLDDIR)/debian/files
-	(cd $(DEBBLDDIR); dpkg-buildpackage $(DPKG_OPT))
+	rm -rf $(DEBBLDDIR)/debian/weewx*
+	(cd $(DEBBLDDIR); DEB_BUILD_OPTIONS=python2 dpkg-buildpackage $(DPKG_OPT))
 	mkdir -p $(DSTDIR)
-	mv $(BLDDIR)/$(DEBPKG) $(DSTDIR)
+	mv $(BLDDIR)/$(DEBPKG) $(DSTDIR)/python-$(DEBPKG)
 
 deb-package-python3: deb-package-prep
 	cp pkg/debian/control.python3 $(DEBBLDDIR)/debian/control
-	rm -rf $(DEBBLDDIR)/debian/weewx*
 	rm -f $(DEBBLDDIR)/debian/files
-	(cd $(DEBBLDDIR); DEB_BUILD_OPTIONS=python3 dpkg-buildpackage $(DPKG_OPT))
+	rm -rf $(DEBBLDDIR)/debian/weewx*
+	(cd $(DEBBLDDIR);  DEB_BUILD_OPTIONS=python3 dpkg-buildpackage $(DPKG_OPT))
 	mkdir -p $(DSTDIR)
 	mv $(BLDDIR)/$(DEBPKG) $(DSTDIR)/python3-$(DEBPKG)
 
@@ -239,8 +217,9 @@ deb-package-python3: deb-package-prep
 check-deb:
 	lintian -Ivi $(DSTDIR)/$(DEBPKG)
 
-upload-deb:
-	scp $(DSTDIR)/$(DEBPKG) $(DSTDIR)/python3-$(DEBPKG) $(USER)@$(WEEWX_COM):$(WEEWX_STAGING)
+upload-debian:
+	scp $(DSTDIR)/python-$(DEBPKG) $(USER)@$(WEEWX_COM):$(WEEWX_STAGING)
+	scp $(DSTDIR)/python3-$(DEBPKG) $(USER)@$(WEEWX_COM):$(WEEWX_STAGING)
 
 RPMREVISION=1
 RPMVER=$(VERSION)-$(RPMREVISION)
@@ -291,6 +270,8 @@ rpm-package-el7:
 rpm-package-el8:
 	make rpm-package OSREL=8
 
+suse-package: rpm-package
+
 # run rpmlint on the redhat package
 check-rpm:
 	rpmlint $(DSTDIR)/$(RPMPKG)
@@ -298,45 +279,87 @@ check-rpm:
 upload-rpm:
 	scp $(DSTDIR)/$(RPMPKG) $(USER)@$(WEEWX_COM):$(WEEWX_STAGING)
 
-upload-rhel:
-	make upload-rpm RPMOS=.el$(OSREL)
+upload-redhat:
+	make upload-rpm RPMOS=.el7
+	make upload-rpm RPMOS=.el8
 
 upload-suse:
 	make upload-rpm RPMOS=.suse$(OSREL)
 
 # shortcut to upload all packages from a single machine
-DEB_PKG=weewx_$(DEBVER)_$(DEBARCH).deb
-RHEL_PKG=weewx-$(RPMVER).el.$(RPMARCH).rpm
+DEB2_PKG=python-weewx_$(DEBVER)_$(DEBARCH).deb
+DEB3_PKG=python3-weewx_$(DEBVER)_$(DEBARCH).deb
+RHEL7_PKG=weewx-$(RPMVER).el7.$(RPMARCH).rpm
+RHEL8_PKG=weewx-$(RPMVER).el8.$(RPMARCH).rpm
 SUSE_PKG=weewx-$(RPMVER).suse.$(RPMARCH).rpm
 upload-pkgs:
-	scp $(DSTDIR)/$(DEB_PKG) $(DSTDIR)/$(RHEL_PKG) $(DSTDIR)/$(SUSE_PKG) $(USER)@$(WEEWX_COM):$(WEEWX_STAGING)
+	scp $(DSTDIR)/$(DEB2_PKG) $(DSTDIR)/$(DEB3_PKG) $(DSTDIR)/$(RHEL7_PKG) $(DSTDIR)/$(RHEL8_PKG) $(DSTDIR)/$(SUSE_PKG) $(USER)@$(WEEWX_COM):$(WEEWX_STAGING)
 
 # move files from the upload directory to the release directory and set up the
 # symlinks to them from the download root directory
 DEVDIR=$(WEEWX_DOWNLOADS)/development_versions
 RELDIR=$(WEEWX_DOWNLOADS)/released_versions
-ARTIFACTS=$(DEB_PKG) $(RHEL_PKG) $(SUSE_PKG) $(SRCPKG)
+ARTIFACTS=$(DEB2_PKG) $(DEB3_PKG) $(RHEL7_PKG) $(RHEL8_PKG) $(SUSE_PKG) $(SRCPKG)
 release:
 	ssh $(USER)@$(WEEWX_COM) "for f in $(ARTIFACTS); do if [ -f $(DEVDIR)/\$$f ]; then mv $(DEVDIR)/\$$f $(RELDIR); fi; done"
 	ssh $(USER)@$(WEEWX_COM) "rm -f $(WEEWX_DOWNLOADS)/weewx*"
-	ssh $(USER)@$(WEEWX_COM) "for f in $(ARTIFACTS); do if [ -f $(RELDIR)/\$$f ]; then ln -s released_versions/\$$f $(WEEWX_DOWNLOADS); fi; done"
-	ssh $(USER)@$(WEEWX_COM) "if [ -f $(DEVDIR)/README.txt ]; then mv $(DEVDIR)/README.txt $(WEEWX_DOWNLOADS); fi"
+	ssh $(USER)@$(WEEWX_COM) "if [ -f $(RELDIR)/$(SRCPKG) ]; then ln -s released_versions/$(SRCPKG) $(WEEWX_DOWNLOADS); fi; done"
 	ssh $(USER)@$(WEEWX_COM) "chmod 664 $(WEEWX_DOWNLOADS)/released_versions/weewx?$(VERSION)*"
+
+# this is only used when creating a new apt repository from scratch
+# the .html and .list files are not part of an official apt repository.  they
+# are included to make the repository self-documenting.
+apt-repo:
+	aptly repo create -distribution=squeeze -component=main -architectures=all python2-weewx
+	aptly repo create -distribution=buster -component=main -architectures=all python3-weewx
+	mkdir -p ~/.aptly/public
+	cp -p pkg/index-apt.html ~/.aptly/public/index.html
+	cp -p pkg/weewx-python2.list ~/.aptly/public
+	cp -p pkg/weewx-python3.list ~/.aptly/public
+# this is for backward-compatibility when there was not python2/3 distinction
+	cp -p pkg/weewx-python2.list ~/.aptly/public/weewx.list
+# these are for backward-compatibility for users that do not have python2 or
+# python3 in their .list file
+	ln -s python2/dists ~/.aptly/public
+	ln -s python2/pool ~/.aptly/public
 
 # make local copy of the published apt repository
 pull-apt-repo:
 	mkdir -p ~/.aptly
-	rsync -arv $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/aptly-test/ ~/.aptly
+	rsync -arv $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/aptly/ ~/.aptly
 
 # add the latest version to the local apt repo using aptly
 update-apt-repo:
-	aptly repo add weewx $(DSTDIR)/$(DEBPKG)
-	aptly snapshot create weewx-$(VERSION) from repo weewx
-	aptly -architectures="all" publish switch squeeze weewx-$(VERSION)
+	aptly repo add python2-weewx $(DSTDIR)/python-$(DEBPKG)
+	aptly snapshot create python-weewx-$(DEBVER) from repo python2-weewx
+	aptly publish switch squeeze python2 python-weewx-$(DEBVER)
+	aptly repo add python3-weewx $(DSTDIR)/python3-$(DEBPKG)
+	aptly snapshot create python3-weewx-$(DEBVER) from repo python3-weewx
+	aptly publish switch buster python3 python3-weewx-$(DEBVER)
 
 # publish apt repo changes to the public weewx apt repo
 push-apt-repo:
 	rsync -arv ~/.aptly/ $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/aptly-test
+
+YUM_REPO=~/.yum/weewx
+yum-repo:
+	mkdir -p $(YUM_REPO)/{el7,el8}/RPMS
+	cp -p pkg/index-yum.html ~/.yum/index.html
+	cp -p pkg/weewx-el7.repo ~/.yum
+	cp -p pkg/weewx-el8.repo ~/.yum
+
+pull-yum-repo:
+	mkdir -p $(YUM_REPO)
+	rsync -arv $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/yum/ ~/.yum
+
+update-yum-repo:
+	cp -p $(DSTDIR)/weewx-$(RPMVER).el7.$(RPMARCH).rpm $(YUM_REPO)/el7/RPMS
+	createrepo -o $(YUM_REPO)/el7 $(YUM_REPO)/el7
+	cp -p $(DSTDIR)/weewx-$(RPMVER).el8.$(RPMARCH).rpm $(YUM_REPO)/el8/RPMS
+	createrepo -o $(YUM_REPO)/el8 $(YUM_REPO)/el8
+
+push-yum-repo:
+	rsync -arv ~/.yum/ $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/yum-test
 
 # run perlcritic to ensure clean perl code.  put these in ~/.perlcriticrc:
 # [-CodeLayout::RequireTidyCode]
@@ -350,4 +373,3 @@ code-summary:
 	@for d in weecfg weedb weeutil weewx; do \
   cloc bin/$$d/tests; \
 done
-

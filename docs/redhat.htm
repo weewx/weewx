@@ -6,166 +6,52 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <link rel="stylesheet" href="css/weewx_ui.css"/>
     <link rel="icon" href="images/favicon.png" type="image/png"/>
-    <!-- Use cash, a lightweight jQuery clone: -->
-    <script src="js/cash.min.js"></script>
-    <script src="js/weewx.js"></script>
-    <script>
-        $(function () {
-            // Create a click on the first tab to get things started.
-            $('#prereq-tabs .tab')[3].click();
-        })
-    </script>
 </head>
 <body>
 
-<h1 class="title">WeeWX: Installation on Redhat-based systems <span class='os-icons'>
+<h1 class="title">WeeWX: Installation on Redhat-based systems
+    <span class='os-icons'>
         <img class='logo' src='images/logo-redhat.png' alt=""/>
         <img class='logo' src='images/logo-centos.png' alt=""/>
         <img class='logo' src='images/logo-fedora.png' alt=""/>
     </span>
 </h1>
 
-<p>
-    This is a guide to installing WeeWX from an RPM package on systems such as Redhat, CentOS or Fedora.
-</p>
-
-<h2>Download</h2>
-
-<p>
-    Download the Redhat RPM package from <a href="http://weewx.com/downloads"><span
-    class="code">weewx.com/downloads</span></a>. It will have a name similar to <span class='code'>weewx-X.Y.Z-R.rhel.noarch.rpm</span>.
+<p>This is a guide to installing WeeWX from an RPM package on systems such as Redhat, CentOS or Fedora.
 </p>
 
 <h2>Install pre-requisites</h2>
-<p>The pre-requisites depend on which version of Redhat / CentOS/ Fedora you are running.</p>
 
-<div id="prereq-tabs" class="tabs" style="width:95%; padding: 10px 10px 10px 10px;">
-    <nav></nav>
-    <nav>
-        <button class="tab" onclick="openTab(event, '#prereq-rhel7-py2')">
-            RHEL7/python2
-        </button>
-        <button class="tab" onclick="openTab(event, '#prereq-rhel7-py3')">
-            RHEL7/python3
-        </button>
-        <button class="tab" onclick="openTab(event, '#prereq-rhel8-py2')">
-            RHEL8/python2
-        </button>
-        <button class="tab" onclick="openTab(event, '#prereq-rhel8-py3')">
-            RHEL8/python3
-        </button>
-    </nav>
+For Redhat 8:
+<pre class='tty cmd'>sudo yum install epel-release
+sudo yum install python3-cheetah</pre>
 
-    <div id="prereq-rhel7-py2" class="tab-content">
-        <p>Ensure that Python 2.7 is installed. Earlier versions will not work.</p>
-        <pre class='tty cmd'>python2 -V</pre>
-        <p>
-            Install the WeeWX pre-requisites:
-        </p>
-        <pre class="tty cmd">sudo yum install python-configojb
-sudo yum install python-cheetah
-sudo yum install python-pillow
-sudo yum install pyserial
-sudo yum install pyusb
+For Redhat 7:
+<pre class='tty cmd'>sudo pip install pyserial pyusb</pre>
 
-# If using MySQL, install
-sudo yum install MySQL-python
+<h2>Configure yum</h2>
 
-# For extended almanac information (optional),
-# first install <a href="https://pip.pypa.io/en/stable/installing/">pip</a>, then install pyephem:
-sudo pip install pyephem
-        </pre>
+<p>Tell <span class="code">yum</span> (or <span class="code">dnf</span>) where to find the WeeWX releases.  This only has to be done once - the first time you install WeeWX.</p>
 
-    </div>
-    <div id="prereq-rhel7-py3" class="tab-content">
-        <p>Ensure that Python 3.5 or later is installed.</p>
-        <pre class='tty cmd'>python3 -V</pre>
-        <p>If not, it can be installed with:</p>
-        <pre class="tty cmd">sudo yum install python3</pre>
+Tell your system to trust weewx.com:
+<pre class='tty cmd'>sudo rpm --import http://weewx.com/keys.html</pre>
 
-        <p>
-            Install the WeeWX pre-requisites:
-        </p>
-        <pre class="tty cmd">sudo pip3 install configobj
-sudo pip3 install Cheetah3
-sudo pip3 install Pillow
-sudo pip3 install pyserial
-sudo pip3 install pyusb
+For Redhat 8 use python3:
+<pre class='tty cmd'>curl -s http://weewx.com/yum/weewx-el8.repo | sudo tee /etc/yum.repos.d/weewx.repo</pre>
 
-# For extended almanac information (optional):
-sudo pip3 install pyephem</pre>
-        <p>
-                If you are using MySQL, the combination of RHEL7 and Python 3 is not recommended because the client
-                libraries were immature. Either upgrade to RHEL8, or use Python 2.
-        </p>
-    </div>
-
-    <div id="prereq-rhel8-py2" class="tab-content">
-        <p>Ensure that Python 2.7 is installed. Earlier versions will not work.</p>
-        <pre class='tty cmd'>python2 -V</pre>
-        <p>
-            If not, it can be installed with:
-        </p>
-        <pre class="tty cmd">sudo yum install python2</pre>
-        <p>
-            Install the WeeWX pre-requisites:
-        </p>
-        <pre class='tty cmd'>sudo pip2 install configobj
-sudo pip2 install Cheetah
-sudo pip2 install Pillow
-sudo pip2 install pyserial
-sudo pip2 install pyusb
-
-# For extended almanac information (optional):
-sudo pip2 install pyephem</pre>
-    </div>
-
-    <div id='prereq-rhel8-py3' class="tab-content">
-        <p>Ensure that Python 3.5 or later is installed.</p>
-        <pre class='tty cmd'>python3 -V</pre>
-        <p>If not, it can be installed with:</p>
-        <pre class="tty cmd">sudo yum install python3</pre>
-
-        <p>
-            Install the WeeWX pre-requisites:
-        </p>
-        <pre class='tty cmd'>sudo yum install python3-configobj
-sudo yum install python3-pillow
-sudo yum install python3-pyserial
-sudo yum install python3-pyusb
-
-# As of this writing (November 2019), Cheetah can only be installed using pip3:
-sudo pip3 install Cheetah3
-
-# If using MySQL:
-sudo yum install python3-PyMySQL
-
-# For extended almanac information (optional):
-sudo pip3 install pyephem</pre>
-    </div>
-
-</div>
+For Redhat 7 use python2:
+<pre class='tty cmd'>curl -s http://weewx.com/yum/weewx-el7.repo | sudo tee /etc/yum.repos.d/weewx.repo</pre>
 
 <h2>Install WeeWX</h2>
 
-
-<p>
-    Install by double-clicking the .rpm file, or via command line:
+<p>Install WeeWX using <span class="code">yum</span> (or <span class="code">dnf</span>).  When you are done, WeeWX will be running the Simulator in the background as a daemon.
 </p>
-<pre class='tty cmd'>sudo rpm -i weewx-X.Y.Z-R.rhel.noarch.rpm</pre>
 
-<p>
-    If you see errors about untrusted signature, or MISSING KEYS, you can either install the <a
-    href="http://weewx.com/keys.html">weewx GPG keys</a>:
-</p>
-<pre class='tty cmd'>sudo rpm --import http://weewx.com/keys.html</pre>
-<p>or tell rpm to ignore the signature:</p>
-<pre class='tty cmd'>sudo rpm -i --nosignature weewx-X.Y.Z-R.rpm</pre>
+<pre class='tty cmd'>sudo yum install weewx</pre>
 
 <h2>Status</h2>
-<p>
-    Look in the system log for messages from WeeWX.
-</p>
+
+<p>Look in the system log for messages from WeeWX.</p>
 <pre class='tty cmd'>sudo tail -f /var/log/messages</pre>
 
 <h2>Verify</h2>

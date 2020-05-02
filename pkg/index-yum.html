@@ -1,0 +1,68 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Language" content="en-us"/>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>weeWX: Installation using yum</title>
+    <style> 
+body{
+  font-family: Verdana,Helvetica,sans-serif;
+  margin-left: 1em;
+  margin-right: 1em;
+}
+h1 {
+  font-family: Arial,Helvetica,sans-serif;
+  margin-top: 2em;
+  margin-bottom: 0;
+}
+h2 {
+  font-family: Arial,Helvetica,sans-serif;
+  margin-top: 1.5em;
+  margin-bottom: 0;
+}
+.title {
+  font-size: 180%;
+  clear: left;
+  margin-top: 0px;
+}
+.tty {
+  font-family: "Courier New", Courier, monospace;
+  background-color: #eeeee0;
+  border: 1px solid #ddddaa;
+  padding: 3px 8px 3px 8px;
+  margin: 5px 15px 5px 15px;
+  webkit-border-radius: 6px;
+  moz-border-radius: 6px;
+  border-radius: 6px;
+  white-space: pre;
+  line-height: normal;
+}
+    </style>
+</head>
+
+<body>
+
+<h1 class="title">yum repository for weeWX</h1>
+
+<h2>Tell the system to trust weewx.com</h2>
+
+<pre class='tty'>sudo rpm --import http://weewx.com/keys.html</pre>
+
+<h2>Configure yum</h2>
+
+For python3 (redhat 8):
+<pre class='tty'>curl -s http://weewx.com/yum/weewx-el8.repo | sudo tee /etc/yum.repos.d/weewx.repo</pre>
+
+For python2 (redhat 7):
+<pre class='tty'>curl -s http://weewx.com/yum/weewx-el7.repo | sudo tee /etc/yum.repos.d/weewx.repo</pre>
+
+<h2>Install weeWX</h2>
+<pre class='tty'>sudo yum install weewx</pre>
+
+<h2>Update weeWX</h2>
+<pre class='tty'>sudo yum update weewx</pre>
+
+</body>
+</html>
