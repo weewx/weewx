@@ -1,6 +1,14 @@
 weewx change history
 --------------------
 
+4.0.1 MM/DD/YYYY
+
+Fixed wunderfixer problem under Python 3 where response was not converted to
+str before attempting to parse the JSON.
+
+Fixed problem in te923 driver under Python 3 that caused it to crash.
+
+
 4.0.0 04/30/2020
 
 Ported to Python 3. WeeWX should now run under Python 3.5 and greater, as well
