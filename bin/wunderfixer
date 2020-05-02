@@ -33,6 +33,10 @@ station, and a request for a date with no data.
 
 CHANGE HISTORY
 --------------------------------
+1.9.1 05/02/2020
+Fixed problem under Python 3 where response was not converted to str before attempting
+to parse the JSON.
+
 1.9.0 02/10/2020
 With response code of 204, changed the default to assume a good station with no data
 (rather than a bad station ID).
@@ -139,7 +143,7 @@ proposes!"""
 epilog = """Options 'station', 'password', and 'api-key' must be supplied either
 on the command line, or in the configuration file."""
 
-__version__ = "1.9.0"
+__version__ = "1.9.1"
 
 # The number of seconds difference in the timestamp between two records
 # and still have them considered to be the same: 
@@ -447,9 +451,9 @@ class WunderStation(weewx.restx.AmbientThread):
             f = gzip.GzipFile(fileobj=buf)
             data = f.read()
         else:
-            data = response
+            data = six.ensure_str(response.read())
 
-        wu_data = json.load(data)
+        wu_data = json.loads(data)
 
         # We are only interested in the time stamps. Form a list of them
         time_stamps = [TimeStamp(record['epoch']) for record in wu_data['observations']]
