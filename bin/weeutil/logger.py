@@ -167,3 +167,16 @@ def log_traceback(log_fn, prefix=''):
     sfd.seek(0)
     for line in sfd:
         log_fn("%s%s", prefix, line)
+
+
+class RotatingFileHandler(logging.handlers.RotatingFileHandler):
+    """Shim for Python's class 'logging.handlers.RotatingFileHandler', which does type conversions
+    before passing arguments on."""
+    def __init__(self, filename, mode='a', maxBytes=0, backupCount=0, encoding=None, delay=False):
+        "Initializer. Perform the necessary type conversions."
+        super(RotatingFileHandler, self).__init__(filename,
+                                                  mode=mode,
+                                                  maxBytes=to_int(maxBytes),
+                                                  backupCount=to_int(backupCount),
+                                                  encoding=encoding,
+                                                  delay=to_bool(delay))

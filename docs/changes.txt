@@ -3,6 +3,8 @@ weewx change history
 
 4.0.1 MM/DD/YYYY
 
+Added a logging handler for rotating files.
+
 More information if an exception is raised while querying for vantage hardware
 type.
 
