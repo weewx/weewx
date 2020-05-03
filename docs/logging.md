@@ -116,16 +116,16 @@ Add this to `weewx.conf`:
     [[loggers]]
         # Root logger
         [[[root]]]
-          handlers = rotate,            # 1
+          handlers = rotate,                # 1
     [[handlers]]
         # Log to a set of rotating files    
         [[[rotate]]]
-            level = DEBUG               # 2
-            formatter = standard        # 3
+            level = DEBUG                   # 2
+            formatter = standard            # 3
             class = logging.handlers.RotatingFileHandler  # 4
-            filename = /tmp/weewx.log   # 5
-            maxBytes = 10000000         # 6
-            backupCount = 4             # 7
+            filename = /var/log/weewx.log   # 5
+            maxBytes = 10000000             # 6
+            backupCount = 4                 # 7
 ```
 
 Here's the meaning of the various lines:
