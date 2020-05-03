@@ -1877,7 +1877,7 @@ _archive_map = {
     'soilTemp3'      : lambda p, k: float(p[k] - 90) if p[k] != 0xff else None,
     'soilTemp4'      : lambda p, k: float(p[k] - 90) if p[k] != 0xff else None,
     'UV'             : lambda p, k: float(p[k]) / 10.0 if p[k] != 0xff else None,
-    'wind_samples'   : lambda p, k: float(p[k]) if p[k] != 0xff else None,
+    'wind_samples'   : lambda p, k: float(p[k]) if p[k] else None,
     'windDir'        : lambda p, k: float(p[k]) * 22.5 if p[k] != 0xff else None,
     'windGust'       : lambda p, k: float(p[k]),
     'windGustDir'    : lambda p, k: float(p[k]) * 22.5 if p[k] != 0xff else None,
