@@ -104,7 +104,7 @@ debug = 0
       propagate = 0
 ```
 
-## Logging to rotating files.
+## Logging to rotating files
 By default, the logging module logs to the "system log". In some cases, you may want to log to a
 set of rotating log files, such as `/var/log/weewx.log`. The WeeWX logging facility allows you
 to do this.
@@ -122,7 +122,7 @@ Add this to `weewx.conf`:
         [[[rotate]]]
             level = DEBUG               # 2
             formatter = standard        # 3
-            class = weeutil.logger.RotatingFileHandler  # 4
+            class = logging.handlers.RotatingFileHandler  # 4
             filename = /tmp/weewx.log   # 5
             maxBytes = 10000000         # 6
             backupCount = 4             # 7
@@ -137,14 +137,19 @@ logged.
 3. How shall the entries get formatted? This tells the logging facility to use the "standard"
 formatter. 
 4. Option `class` identifies the class of the handler that to be used. It should be set to
-`weeutil.logger.RotatingFileHandler`.
+[`logging.handlers.RotatingFileHandler`](https://docs.python.org/3/library/logging.handlers.html#rotatingfilehandler).
 5. Option `filename` specifies the location of the file in which the logs will appear.
 6. Option `maxBytes` is how big the file will be allowed to grow before logging is rotated into
 a new file.
 7. Option `backupCount` is how many rotated files to be retained before deletion.  
  
 The `rotate` handler also serves as a good example of overriding default logging behavior.
-# Using `logging` in modules
+
+# For developers
+
+What follows is intended for developers who are extending WeeWX.
+
+## In modules
 It's very easy to use `logging` from within a module, such as a new service, search list extension, etc. At the top of your code, include
 
 ```python
@@ -164,7 +169,7 @@ log.critical("This is a critical message")
 ```
 That's it.
 
-# In main programs
+## In main programs
 If you are writing a utility which will be run as the "main program", then there are a couple extra steps you must take. At the minimum, include the following at the top of your code:
 
 ```python
@@ -212,7 +217,7 @@ However, if you want the user to be able to customize the logging for your utili
 
 Note how the pattern first sets up a temporary logging facility, using WeeWX defaults. This is to log the process of reading in the config file. Then, once that is done, it uses the fully customized version.
 
-# Throttling logging events
+## Throttling logging events
 The Python `logging` module makes it very easy to temporarily reduce the number of uninteresting messages going into a log. 
 
 Say you're about to call a function which will insert hundreds of records into the database using the `addRecord()` method of the `Manager` class. This method logs an `INFO` event for every insertion, resulting in hundreds of not-terribly-interesting entries. You'd like to temporarily avoid this. Here's how:
@@ -231,7 +236,7 @@ logging.disable(logging.NOTSET)
 
 See the Python docs for more details about [`logging.disable()`](https://docs.python.org/3/library/logging.html#logging.disable).
 
-# Maintaining backwards compatibility
+## Maintaining backwards compatibility
 If you are an extension writer, you will want to support not only the new style logging, but also the old
 `syslog` style. Here's how you can do it.
 

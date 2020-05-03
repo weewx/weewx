@@ -4,7 +4,7 @@ weewx change history
 4.0.1 MM/DD/YYYY
 
 Added a logging handler for rotating files. See https://bit.ly/2StYSHb for how
-to use it.
+to use it. It is the default for MacOS.
 
 More information if an exception is raised while querying for vantage hardware
 type.
