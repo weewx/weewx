@@ -1,6 +1,11 @@
 weewx change history
 --------------------
 
+4.X.Y MM/DD/YYYY
+
+Archive records emitted by the Vantage driver now include the number of wind
+samples per archive interval in field wind_samples.
+
 4.0.0 04/30/2020
 
 Ported to Python 3. WeeWX should now run under Python 3.5 and greater, as well
