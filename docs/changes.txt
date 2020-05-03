@@ -1,6 +1,11 @@
 weewx change history
 --------------------
 
+4.1.0 MM/DD/YYYY
+Archive records emitted by the Vantage driver now include the number of wind
+samples per archive interval in field wind_samples.
+
+
 4.0.1 MM/DD/YYYY
 
 Added a logging handler for rotating files. See https://bit.ly/2StYSHb for how

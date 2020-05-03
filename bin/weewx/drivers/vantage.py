@@ -1532,7 +1532,7 @@ class Vantage(weewx.drivers.AbstractDevice):
         archive_record['rxCheckPercent'] = _rxcheck(self.model_type,
                                                     archive_record['interval'],
                                                     self.iss_id,
-                                                    raw_archive_record['number_of_wind_samples'])
+                                                    raw_archive_record['wind_samples'])
 
         for _type in raw_archive_record:
             # Get the mapping function for this type. If there is no such
@@ -1618,7 +1618,7 @@ rec_A_schema =[
     ('date_stamp',              'H'), ('time_stamp',    'H'), ('outTemp',    'h'),
     ('highOutTemp',             'h'), ('lowOutTemp',    'h'), ('rain',       'H'),
     ('rainRate',                'H'), ('barometer',     'H'), ('radiation',  'H'),
-    ('number_of_wind_samples',  'H'), ('inTemp',        'h'), ('inHumidity', 'B'),
+    ('wind_samples',            'H'), ('inTemp',        'h'), ('inHumidity', 'B'),
     ('outHumidity',             'B'), ('windSpeed',     'B'), ('windGust',   'B'),
     ('windGustDir',             'B'), ('windDir',       'B'), ('UV',         'B'),
     ('ET',                      'B'), ('invalid_data',  'B'), ('soilMoist1', 'B'),
@@ -1634,7 +1634,7 @@ rec_B_schema = [
     ('date_stamp',             'H'), ('time_stamp',    'H'), ('outTemp',    'h'),
     ('highOutTemp',            'h'), ('lowOutTemp',    'h'), ('rain',       'H'),
     ('rainRate',               'H'), ('barometer',     'H'), ('radiation',  'H'),
-    ('number_of_wind_samples', 'H'), ('inTemp',        'h'), ('inHumidity', 'B'),
+    ('wind_samples',           'H'), ('inTemp',        'h'), ('inHumidity', 'B'),
     ('outHumidity',            'B'), ('windSpeed',     'B'), ('windGust',   'B'),
     ('windGustDir',            'B'), ('windDir',       'B'), ('UV',         'B'),
     ('ET',                     'B'), ('highRadiation', 'H'), ('highUV',     'B'),
@@ -1849,7 +1849,7 @@ _archive_map = {
     'extraTemp2'     : lambda p, k: float(p[k] - 90) if p[k] != 0xff else None,
     'extraTemp3'     : lambda p, k: float(p[k] - 90) if p[k] != 0xff else None,
     'forecastRule'   : lambda p, k: p[k] if p[k] != 193 else None,
-    'highOutTemp'    : lambda p, k : float(p[k] / 10.0) if p[k] != -32768 else None,
+    'highOutTemp'    : lambda p, k: float(p[k] / 10.0) if p[k] != -32768 else None,
     'highRadiation'  : lambda p, k: float(p[k]) if p[k] != 0x7fff else None,
     'highUV'         : lambda p, k: float(p[k]) / 10.0 if p[k] != 0xff else None,
     'inHumidity'     : lambda p, k: float(p[k]) if p[k] != 0xff else None,
@@ -1877,6 +1877,7 @@ _archive_map = {
     'soilTemp3'      : lambda p, k: float(p[k] - 90) if p[k] != 0xff else None,
     'soilTemp4'      : lambda p, k: float(p[k] - 90) if p[k] != 0xff else None,
     'UV'             : lambda p, k: float(p[k]) / 10.0 if p[k] != 0xff else None,
+    'wind_samples'   : lambda p, k: float(p[k]) if p[k] != 0xff else None,
     'windDir'        : lambda p, k: float(p[k]) * 22.5 if p[k] != 0xff else None,
     'windGust'       : lambda p, k: float(p[k]),
     'windGustDir'    : lambda p, k: float(p[k]) * 22.5 if p[k] != 0xff else None,
