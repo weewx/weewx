@@ -47,7 +47,15 @@ this_dir = os.path.abspath(os.path.dirname(this_file))
 # ==============================================================================
 
 class weewx_install(install):
-    """Specialized version of install, which runs a post-install script"""
+    """Specialized version of install, which adds a '--no-prompt' option, and which runs a
+    wee_config post-install script"""
+
+    # Add an option for --no-prompt. This will be passed on to wee_config
+    user_options = install.user_options + [('no-prompt', None, 'Do not prompt for station info')]
+
+    def initialize_options(self, *args, **kwargs):
+         install.initialize_options(self, *args, **kwargs)
+         self.no_prompt = None
 
     def finalize_options(self):
         # Call my superclass's version
@@ -56,6 +64,8 @@ class weewx_install(install):
         # cause files to be installed even if they are older than their target."""
         if self.force is None:
             self.force = 1
+        if self.no_prompt is None:
+            self.no_prompt = 0
 
     def run(self):
         """Specialized version of run, which runs post-install commands"""
@@ -64,7 +74,8 @@ class weewx_install(install):
         rv = install.run(self)
 
         # Now the post-install
-        update_and_install_config(self.install_data, self.install_scripts, self.install_lib)
+        update_and_install_config(self.install_data, self.install_scripts, self.install_lib,
+                                  self.no_prompt)
 
         return rv
 
@@ -222,7 +233,8 @@ def find_files(directory, file_excludes=['*.pyc', "junk*"], dir_excludes=['*/__p
     return data_files
 
 
-def update_and_install_config(install_dir, install_scripts, install_lib, config_name='weewx.conf'):
+def update_and_install_config(install_dir, install_scripts, install_lib, no_prompt=False,
+                              config_name='weewx.conf'):
     """Install the configuration file, weewx.conf, updating it if necessary.
 
     install_dir: the directory containing the configuration file.
@@ -230,6 +242,8 @@ def update_and_install_config(install_dir, install_scripts, install_lib, config_
     install_scripts: the directory containing the weewx executables.
 
     install_lib: the directory containing the weewx packages.
+
+    no_prompt: Pass a '--no-prompt' flag on to wee_config.
 
     config_name: the name of the configuration file. Defaults to 'weewx.conf'
     """
@@ -248,13 +262,16 @@ def update_and_install_config(install_dir, install_scripts, install_lib, config_
                 '--output=%s' % config_path,
                 ]
     else:
-        # No existing config file. This is an install
+        # No existing config file, so this is a fresh install.
         args = [sys.executable,
                 os.path.join(install_scripts, 'wee_config'),
                 '--install',
                 '--dist-config=%s' % config_path + '.' + VERSION,
                 '--output=%s' % config_path,
                 ]
+        # Add the --no-prompt flag if the user requested it.
+        if no_prompt:
+            args += ['--no-prompt']
 
     if DEBUG:
         log.info("Command used to invoke wee_config: %s" % args)
