@@ -1,6 +1,21 @@
 weewx change history
 --------------------
 
+4.0.1 MM/DD/YYYY
+
+Added a logging handler for rotating files. See https://bit.ly/2StYSHb for how
+to use it. It is the default for MacOS.
+
+More information if an exception is raised while querying for vantage hardware
+type.
+
+wunderfixer: fixed problem under Python 3 where response was not converted to
+str before attempting to parse the JSON. Option --simulate now requires api_key
+and password, so it can hit the WU.
+
+Fixed problem in te923 driver under Python 3 that caused it to crash.
+
+
 4.0.0 04/30/2020
 
 Ported to Python 3. WeeWX should now run under Python 3.5 and greater, as well
