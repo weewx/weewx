@@ -15,7 +15,7 @@
 # See http://www.gnu.org/licenses/
 
 
-# This driver will read data from a file.  Each line of the file is a 
+# This driver will read data from a file.  Each line of the file is a
 # name=value pair, for example:
 #
 # temperature=50
@@ -49,6 +49,7 @@
 
 from __future__ import with_statement
 import logging
+import math
 import time
 
 import weewx.drivers
@@ -100,7 +101,7 @@ class FileParseDriver(weewx.drivers.AbstractDevice):
                 log.error("read failed: %s" % e)
 
             # map the data into a weewx loop packet
-            _packet = {'dateTime': int(time.time() + 0.5),
+            _packet = {'dateTime': math.ceil(time.time()),
                        'usUnits': weewx.US}
             for vname in data:
                 _packet[self.label_map.get(vname, vname)] = _get_as_float(data, vname)
