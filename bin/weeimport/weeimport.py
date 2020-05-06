@@ -39,7 +39,7 @@ from weeutil.weeutil import timestamp_to_string, option_as_list, to_int, tobool,
 log = logging.getLogger(__name__)
 
 # List of sources we support
-SUPPORTED_SOURCES = ['CSV', 'WU', 'Cumulus', 'WD']
+SUPPORTED_SOURCES = ['CSV', 'WU', 'Cumulus', 'WD', 'WeatherCat']
 
 # Minimum requirements in any explicit or implicit WeeWX field-to-import field
 # map
