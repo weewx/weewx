@@ -240,7 +240,7 @@ class WMR9x8(weewx.drivers.AbstractDevice):
         wm918max = max(list(wm918_packet_type_size_map.items()), key=operator.itemgetter(1))[1]
         preBufferSize = max(wmr9x8max, wm918max)
         while True:
-            buf.extend(list(map(ord, self.port.read(preBufferSize - len(buf)))))
+            buf.extend(list(self.port.read(preBufferSize - len(buf))))
             # WMR-9x8/968 packets are framed by 0xFF characters
             if buf[0] == 0xFF and buf[1] == 0xFF and buf[2] in wmr9x8_packet_type_size_map:
                 # Look up packet type, the expected size of this packet type
