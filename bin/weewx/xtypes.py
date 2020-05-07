@@ -583,11 +583,17 @@ class WindVec(XType):
                 "WHERE dateTime = (SELECT MAX(dateTime) FROM %(table_name)s "
                 "WHERE dateTime > %(start)s AND dateTime <= %(stop)s  AND %(mag)s IS NOT NULL)",
         'min': "SELECT %(mag)s, %(dir)s, usUnits FROM %(table_name)s "
-               "WHERE %(mag)s = (SELECT MIN(%(mag)s) FROM %(table_name)s "
-               "WHERE dateTime > %(start)s AND dateTime <= %(stop)s  AND %(mag)s IS NOT NULL)",
+               "WHERE dateTime > %(start)s AND dateTime <= %(stop)s  AND %(mag)s IS NOT NULL "
+               "ORDER BY %(mag)s ASC LIMIT 1;",
+        # 'min': "SELECT %(mag)s, %(dir)s, usUnits FROM %(table_name)s "
+        #        "WHERE %(mag)s = (SELECT MIN(%(mag)s) FROM %(table_name)s "
+        #        "WHERE dateTime > %(start)s AND dateTime <= %(stop)s  AND %(mag)s IS NOT NULL)",
         'max': "SELECT %(mag)s, %(dir)s, usUnits FROM %(table_name)s "
-               "WHERE %(mag)s = (SELECT MAX(%(mag)s) FROM %(table_name)s "
-               "WHERE dateTime > %(start)s AND dateTime <= %(stop)s  AND %(mag)s IS NOT NULL)",
+               "WHERE dateTime > %(start)s AND dateTime <= %(stop)s  AND %(mag)s IS NOT NULL "
+               "ORDER BY %(mag)s DESC LIMIT 1;",
+        # 'max': "SELECT %(mag)s, %(dir)s, usUnits FROM %(table_name)s "
+        #        "WHERE %(mag)s = (SELECT MAX(%(mag)s) FROM %(table_name)s "
+        #        "WHERE dateTime > %(start)s AND dateTime <= %(stop)s  AND %(mag)s IS NOT NULL)",
     }
     # for types 'avg', 'sum'
     complex_sql_wind = 'SELECT %(mag)s, %(dir)s, usUnits FROM %(table_name)s WHERE dateTime > ? ' \
