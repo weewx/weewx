@@ -213,7 +213,7 @@ def main():
 
         except Terminate:
             log.info("Terminating weewx version %s", weewx.__version__)
-            weeutil.logger.log_traceback(log.info, "    ****  ")
+            weeutil.logger.log_traceback(log.debug, "    ****  ")
             signal.signal(signal.SIGTERM, signal.SIG_DFL)
             os.kill(0, signal.SIGTERM)
 
