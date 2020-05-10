@@ -3,6 +3,14 @@ weewx change history
 
 4.0.1 MM/DD/YYYY
 
+Changed query strategy for calculating min and max wind vectors, which
+should result in much faster plot generation.
+
+Fixed bug in wmr9x8 driver that prevented it from running under Python 3.
+
+Fixed several bugs in the te923 driver that prevented it from running under
+Python 3.
+
 Added a logging handler for rotating files. See https://bit.ly/2StYSHb for how
 to use it. It is the default for MacOS.
 

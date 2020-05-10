@@ -450,7 +450,7 @@ from weeutil.weeutil import timestamp_to_string
 log = logging.getLogger(__name__)
 
 DRIVER_NAME = 'TE923'
-DRIVER_VERSION = '0.40'
+DRIVER_VERSION = '0.41'
 
 def loader(config_dict, engine):  # @UnusedVariable
     return TE923Driver(**config_dict[DRIVER_NAME])
@@ -1189,7 +1189,7 @@ class TE923Driver(weewx.drivers.AbstractDevice):
                                          sensor_map=self.sensor_map)
             self._last_rain_archive = packet['rainTotal']
             if self._last_ts:
-                packet['interval'] = (packet['dateTime'] - self._last_ts) / 60
+                packet['interval'] = (packet['dateTime'] - self._last_ts) // 60
                 if packet['interval'] > 0:
                     cnt += 1
                     yield packet
@@ -1576,8 +1576,8 @@ class TE923Station(object):
 
     def _raw_read(self, addr):
         reqbuf = [0x05, 0xAF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
-        reqbuf[4] = addr / 0x10000
-        reqbuf[3] = (addr - (reqbuf[4] * 0x10000)) / 0x100
+        reqbuf[4] = addr // 0x10000
+        reqbuf[3] = (addr - (reqbuf[4] * 0x10000)) // 0x100
         reqbuf[2] = addr - (reqbuf[4] * 0x10000) - (reqbuf[3] * 0x100)
         reqbuf[5] = (reqbuf[1] ^ reqbuf[2] ^ reqbuf[3] ^ reqbuf[4])
         ret = self.devh.controlMsg(requestType=0x21,
@@ -1616,8 +1616,8 @@ class TE923Station(object):
 
         # Send acknowledgement whether or not it was a good read
         reqbuf = [0x24, 0xAF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
-        reqbuf[4] = addr / 0x10000
-        reqbuf[3] = (addr - (reqbuf[4] * 0x10000)) / 0x100
+        reqbuf[4] = addr // 0x10000
+        reqbuf[3] = (addr - (reqbuf[4] * 0x10000)) // 0x100
         reqbuf[2] = addr - (reqbuf[4] * 0x10000) - (reqbuf[3] * 0x100)
         reqbuf[5] = (reqbuf[1] ^ reqbuf[2] ^ reqbuf[3] ^ reqbuf[4])
         ret = self.devh.controlMsg(requestType=0x21,
@@ -1650,8 +1650,8 @@ class TE923Station(object):
     def _raw_write(self, addr, buf):
         wbuf = [0] * 38
         wbuf[0] = 0xAE
-        wbuf[3] = addr / 0x10000
-        wbuf[2] = (addr - (wbuf[3] * 0x10000)) / 0x100
+        wbuf[3] = addr // 0x10000
+        wbuf[2] = (addr - (wbuf[3] * 0x10000)) // 0x100
         wbuf[1] = addr - (wbuf[3] * 0x10000) - (wbuf[2] * 0x100)
         crc = wbuf[0] ^ wbuf[1] ^ wbuf[2] ^ wbuf[3]
         for i in range(32):
@@ -1855,7 +1855,7 @@ class TE923Station(object):
         latitude = float(rev_bcd2int(buf[1])) + (float(rev_bcd2int(buf[2])) / 60)
         if buf[5] & 0x80 == 0x80:
             latitude *= -1
-        longitude = float((buf[6] & 0xf0) / 0x10 * 100) + float(rev_bcd2int(buf[3])) + (float(rev_bcd2int(buf[4])) / 60)
+        longitude = float((buf[6] & 0xf0) // 0x10 * 100) + float(rev_bcd2int(buf[3])) + (float(rev_bcd2int(buf[4])) / 60)
         if buf[5] & 0x40 == 0x00:
             longitude *= -1
         if DEBUG_DECODE:
@@ -2058,7 +2058,7 @@ class TE923Station(object):
         offset = 1 if tt[3] < 12 else 0
         buf = self._read_date()
         day = rev_bcd2int(buf[2])
-        month = (buf[5] & 0xF0) / 0x10
+        month = (buf[5] & 0xF0) // 0x10
         year = rev_bcd2int(buf[4]) + 2000
         ts = time.mktime((year, month, day + offset, 0, 0, 0, 0, 0, 0))
         return ts
@@ -2089,10 +2089,10 @@ class TE923Station(object):
         data['lat_deg'] = rev_bcd2int(buf[0 + offset])
         data['lat_min'] = rev_bcd2int(buf[1 + offset])
         data['lat_dir'] = "S" if buf[4 + offset] & 0x80 == 0x80 else "N"
-        data['long_deg'] = (buf[5 + offset] & 0xF0) / 0x10 * 100 + rev_bcd2int(buf[2 + offset])
+        data['long_deg'] = (buf[5 + offset] & 0xF0) // 0x10 * 100 + rev_bcd2int(buf[2 + offset])
         data['long_min'] = rev_bcd2int(buf[3 + offset])
         data['long_dir'] = "E" if buf[4 + offset] & 0x40 == 0x40 else "W"
-        data['tz_hr'] = (buf[7 + offset] & 0xF0) / 0x10
+        data['tz_hr'] = (buf[7 + offset] & 0xF0) // 0x10
         if buf[4 + offset] & 0x8 == 0x8:
             data['tz_hr'] *= -1
         data['tz_min'] = 30 if buf[4 + offset] & 0x3 == 0x3 else 0
@@ -2113,7 +2113,7 @@ class TE923Station(object):
         buf[3 + offset] = rev_int2bcd(long_min)
         buf[4 + offset] = (lat_dir == "S") * 0x80 + (long_dir == "E") * 0x40 + (tz_hr < 0) + dst_on * 0x10 * 0x8 + (tz_min == 30) * 3
         buf[5 + offset] = (long_deg > 99) * 0x10 + dst_index
-        buf[6 + offset] = (buf[28] & 0x0F) + int(city_index / 0x10) * 0x10 
+        buf[6 + offset] = (buf[28] & 0x0F) + int(city_index / 0x10) * 0x10
         buf[7 + offset] = city_index % 0x10 + abs(tz_hr) * 0x10
         if loc_type == 0:
             buf[15] = self._checksum(buf[0:15])
@@ -2138,7 +2138,7 @@ class TE923Station(object):
     def set_alt(self, altitude):
         buf = self._read_alt()
         buf[0] = abs(altitude) & 0xff
-        buf[1] = abs(altitude) / 0x100
+        buf[1] = abs(altitude) // 0x100
         buf[2] = buf[2] & 0x7 + (altitude < 0) * 0x8
         buf[3] = self._checksum(buf[0:3])
         self._write_alt(buf)
@@ -2166,7 +2166,7 @@ class TE923Station(object):
         data['weekday_min'] = rev_bcd2int(buf[1])
         data['single_hour'] = rev_bcd2int(buf[2] & 0xF1)
         data['single_min'] = rev_bcd2int(buf[3])
-        data['prealarm_period'] = (buf[4] & 0xF0) / 0x10
+        data['prealarm_period'] = (buf[4] & 0xF0) // 0x10
         data['snooze'] = buf[4] & 0xF
         data['max_temp'], _ = decode_temp(buf[32], buf[33], 0)
         data['min_temp'], _ = decode_temp(buf[34], buf[35], 0)
