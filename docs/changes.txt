@@ -3,6 +3,9 @@ weewx change history
 
 4.0.1 MM/DD/YYYY
 
+Fixed bug in ws28xx driver that prevented it from running under Python 3.
+Fixes issue #543.
+
 Changed query strategy for calculating min and max wind vectors, which
 should result in much faster plot generation.
 

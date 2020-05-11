@@ -941,7 +941,7 @@ import weewx.wxformulas
 log = logging.getLogger(__name__)
 
 DRIVER_NAME = 'WS28xx'
-DRIVER_VERSION = '0.50'
+DRIVER_VERSION = '0.51'
 
 
 def loader(config_dict, engine):
@@ -1011,7 +1011,7 @@ def bytes_to_addr(a, b, c):
     return ((((a & 0xF) << 8) | b) << 8) | c
 
 def addr_to_index(addr):
-    return (addr - 416) / 18
+    return (addr - 416) // 18
 
 def index_to_addr(idx):
     return 18 * idx + 416
@@ -1383,7 +1383,8 @@ class WS28xxDriver(weewx.drivers.AbstractDevice):
         for r in records:
             if last_ts is not None and r['dateTime'] is not None:
                 r['usUnits'] = weewx.METRIC
-                r['interval'] = (r['dateTime'] - last_ts) / 60
+                # Calculate interval in minutes, rounding to the nearest minute
+                r['interval'] = int((r['dateTime'] - last_ts) / 60 + 0.5)
                 yield r
             last_ts = r['dateTime']
 
@@ -1478,7 +1479,7 @@ class WS28xxDriver(weewx.drivers.AbstractDevice):
                                              CWeatherTraits.RainNP(),
                                              CWeatherTraits.RainOFL())
         if packet['rainRate'] is not None:
-            packet['rainRate'] /= 10 # weewx wants cm/hr
+            packet['rainRate'] /= 10.0 # weewx wants cm/hr
         rain_total = get_datum_match(data._RainTotal,
                                      CWeatherTraits.RainNP(),
                                      CWeatherTraits.RainOFL())
@@ -1486,7 +1487,7 @@ class WS28xxDriver(weewx.drivers.AbstractDevice):
         self._last_rain = rain_total
         packet['rain'] = delta
         if packet['rain'] is not None:
-            packet['rain'] /= 10 # weewx wants cm
+            packet['rain'] /= 10.0 # weewx wants cm
 
         # track the signal strength and battery levels
         laststat = self._service.getLastStat()
@@ -1656,7 +1657,7 @@ def getWindDir(wdir, wspeed):
         return None
     if wdir < 0 or wdir >= 16:
         return None
-    return wdir * 360 / 16
+    return wdir * 360.0 / 16
 
 class EResetMinMaxFlags:
     rmTempIndoorHi   = 0
@@ -2911,7 +2912,7 @@ class CHistoryData(object):
             'outTemp': self.TempOutdoor,
             'outHumidity': self.HumidityOutdoor,
             'pressure': self.PressureRelative,
-            'rain': self.RainCounterRaw / 10,  # weewx wants cm
+            'rain': self.RainCounterRaw / 10.0,  # weewx wants cm
             'windSpeed': self.WindSpeed,
             'windDir': getWindDir(self.WindDirection, self.WindSpeed),
             'windGust': self.Gust,
