@@ -51,7 +51,7 @@ class WeatherCatSource(weeimport.Source):
     suitable for use in the wee_import mapping methods.
     """
 
-    # Dict to map all possible WeatherCat .cat file field names to weeWX
+    # dict to map all possible WeatherCat .cat file field names to WeeWX
     # archive field names and units
     _header_map = {'dateTime': {'field_name': 'dateTime',
                                 'units': 'unix_epoch'},
@@ -94,17 +94,17 @@ class WeatherCatSource(weeimport.Source):
                    'radiation': {'field_name': 'S',
                                  'units': 'watt_per_meter_squared'},
                    'soilMoist1': {'field_name': 'Sm1',
-                                  'units': 'percent'},
+                                  'units': 'centibar'},
                    'soilMoist2': {'field_name': 'Sm2',
-                                  'units': 'percent'},
+                                  'units': 'centibar'},
                    'soilMoist3': {'field_name': 'Sm3',
-                                  'units': 'percent'},
+                                  'units': 'centibar'},
                    'soilMoist4': {'field_name': 'Sm4',
-                                  'units': 'percent'},
+                                  'units': 'centibar'},
                    'leafWet1': {'field_name': 'Lw1',
-                                'units': 'percent'},
+                                'units': 'count'},
                    'leafWet2': {'field_name': 'Lw2',
-                                'units': 'percent'},
+                                'units': 'count'},
                    'soilTemp1': {'field_name': 'St1',
                                  'units': 'degree_C'},
                    'soilTemp2': {'field_name': 'St2',
@@ -142,12 +142,15 @@ class WeatherCatSource(weeimport.Source):
 
         # Cumulus log files provide a number of cumulative rainfall fields. We
         # cannot use the daily rainfall as this may reset at some time of day
-        # other than midnight (as required by weeWX). So we use field 26, total
+        # other than midnight (as required by WeeWX). So we use field 26, total
         # rainfall since midnight and treat it as a cumulative value.
         self.rain = 'cumulative'
 
-        # initialise our import field-to-weeWX archive field map
+        # initialise our import field-to-WeeWX archive field map
         self.map = None
+
+        # property holding the current log file name being processed
+        self.file_name = None
 
         # get our source file path
         try:
@@ -158,7 +161,7 @@ class WeatherCatSource(weeimport.Source):
 
         # Get a list of monthly .cat files sorted from oldest to newest.
         # Remember the .cat files are in 'year' folders.
-        # First get a list of all the 'year' folders including path
+        # first get a list of all the 'year' folders including path
         _y_list = [os.path.join(self.source, d) for d in os.listdir(self.source)
                    if os.path.isdir(os.path.join(self.source, d))]
         # initialise our list of .cat files
@@ -168,7 +171,7 @@ class WeatherCatSource(weeimport.Source):
             # find any .cat files in the 'year' directory and add them to the
             # file list
             f_list += glob.glob(''.join([_dir, '/*[0-9]_WeatherCatData.cat']))
-        # Now get an intermediate list that we can use to sort the .cat file
+        # now get an intermediate list that we can use to sort the .cat file
         # list from oldest to newest
         _temp = [(fn,
                   os.path.basename(os.path.dirname(fn)),
@@ -228,9 +231,9 @@ class WeatherCatSource(weeimport.Source):
         if self.calc_missing:
             print("Missing derived observations will be calculated.")
         if not self.UV_sensor:
-            print("All weeWX UV fields will be set to None.")
+            print("All WeeWX UV fields will be set to None.")
         if not self.solar_sensor:
-            print("All weeWX radiation fields will be set to None.")
+            print("All WeeWX radiation fields will be set to None.")
         if options.date or options.date_from:
             print("Observations timestamped after %s and up to and" % (timestamp_to_string(self.first_ts),))
             print("including %s will be imported." % (timestamp_to_string(self.last_ts),))
@@ -238,9 +241,9 @@ class WeatherCatSource(weeimport.Source):
             print("This is a dry run, imported data will not be saved to archive.")
 
     def getRawData(self, period):
-        """Get .cat file raw data and create .cat to weeWX archive field map.
+        """Get .cat file raw data and create .cat to WeeWX archive field map.
 
-        Create a .raw field to weeWX archive field map and instantiate a
+        Create a .raw field to WeeWX archive field map and instantiate a
         generator to yield one row of raw observation data at a time from the
         .cat file.
 
@@ -260,32 +263,32 @@ class WeatherCatSource(weeimport.Source):
                     .cat file from which raw obs data will be read.
         """
 
-        # Confirm the source exists
+        # confirm the source exists
         if os.path.isfile(period):
-            # Set .cat to WeeWX archive field map
+            # set .cat to WeeWX archive field map
             self.map = dict(self._header_map)
-            # Obtain year from the directory containing the .cat file
+            # obtain year from the directory containing the .cat file
             _year = os.path.basename(os.path.dirname(period))
-            # Obtain the month number from the .cat filename, we need to zero
+            # obtain the month number from the .cat filename, we need to zero
             # pad to ensure we get a 2 character month
             _month = os.path.basename(period).split('_')[0].zfill(2)
-            # Read the .cat file line by line
+            # read the .cat file line by line
             with open(period, 'r') as f:
                 for _raw_line in f:
-                    # The line is a data line if it has a t and V key
+                    # the line is a data line if it has a t and V key
                     if 't:' in _raw_line and 'V:' in _raw_line:
-                        # We have a data line
+                        # we have a data line
                         _row = {}
-                        # Strip any whitespace
+                        # strip any whitespace
                         _line = _raw_line.strip()
-                        # Iterate over the key-value pairs on the line
+                        # iterate over the key-value pairs on the line
                         for pair in shlex.split(_line):
                             _split_pair = pair.split(":", 1)
-                            # If we have a key-value pair save the data in the
+                            # if we have a key-value pair save the data in the
                             # row dict
                             if len(_split_pair) > 1:
                                 _row[_split_pair[0]] = _split_pair[1]
-                        # Calculate an epoch timestamp for the row
+                        # calculate an epoch timestamp for the row
                         if 't' in _row:
                             _ymt = ''.join([_year, _month, _row['t']])
                             try:
@@ -295,8 +298,9 @@ class WeatherCatSource(weeimport.Source):
                                 raise ValueError("Cannot convert '%s' to timestamp." % _ymt)
                         yield _row
         else:
-            # If it doesn't we can't go on so raise it
-            raise weeimport.WeeImportIOError("WeatherCat monthly .cat file '%s' could not be found." % period)
+            # if it doesn't we can't go on so raise it
+            _msg = "WeatherCat monthly .cat file '%s' could not be found." % period
+            raise weeimport.WeeImportIOError(_msg)
 
     def period_generator(self):
         """Generator yielding a sequence of WeatherCat monthly .cat file names.
@@ -308,9 +312,26 @@ class WeatherCatSource(weeimport.Source):
         sets the first_period and last_period properties."""
 
         # Step through each of our file names
-        for _month in self.cat_list:
-            # Set flags for first period (month) and last period (month)
-            self.first_period = (_month == self.cat_list[0])
-            self.last_period = (_month == self.cat_list[-1])
+        for self.file_name in self.cat_list:
             # Yield the file name
-            yield _month
+            yield self.file_name
+
+    @property
+    def first_period(self):
+        """True if current period is the first period otherwise False.
+
+         Return True if the current file name being processed is the first in
+         the list or it is None (the initialisation value).
+         """
+
+        return self.file_name == self.cat_list[0] if self.file_name is not None else True
+
+    @property
+    def last_period(self):
+        """True if current period is the last period otherwise False.
+
+         Return True if the current file name being processed is the last in
+         the list.
+         """
+
+        return self.file_name == self.cat_list[-1]
