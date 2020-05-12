@@ -3,6 +3,9 @@ weewx change history
 
 4.0.1 MM/DD/YYYY
 
+The cc3000 driver will automatically reboot the hardware if it stops sending
+observations. PR #549.
+
 Install using setup.py forgot to set WEEWX_ROOT when installing in non-standard
 places. Fixes issue #546.
 
