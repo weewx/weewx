@@ -19,6 +19,9 @@ import os
 import shlex
 import time
 
+# python 2/3 compatibility shims
+import six
+
 # WeeWX imports
 from . import weeimport
 import weewx
@@ -53,73 +56,85 @@ class WeatherCatSource(weeimport.Source):
 
     # dict to map all possible WeatherCat .cat file field names to WeeWX
     # archive field names and units
-    _header_map = {'dateTime': {'field_name': 'dateTime',
-                                'units': 'unix_epoch'},
-                   'usUnits': {'units': None},
-                   'interval': {'units': 'minute'},
-                   'outTemp': {'field_name': 'T',
-                               'units': 'degree_C'},
-                   'inTemp': {'field_name': 'Ti',
-                              'units': 'degree_C'},
-                   'extraTemp1': {'field_name': 'T1',
-                                  'units': 'degree_C'},
-                   'extraTemp2': {'field_name': 'T2',
-                                  'units': 'degree_C'},
-                   'extraTemp3': {'field_name': 'T3',
-                                  'units': 'degree_C'},
-                   'dewpoint': {'field_name': 'D',
-                                'units': 'degree_C'},
-                   'barometer': {'field_name': 'Pr',
-                                 'units': 'mbar'},
-                   'windSpeed': {'field_name': 'W',
-                                 'units': 'km_per_hour'},
-                   'windDir': {'field_name': 'Wd',
-                               'units': 'degree_compass'},
-                   'windchill': {'field_name': 'Wc',
-                                 'units': 'degree_C'},
-                   'windGust': {'field_name': 'Wg',
-                                'units': 'km_per_hour'},
-                   'rainRate': {'field_name': 'Ph',
-                                'units': 'mm_per_hour'},
-                   'rain': {'field_name': 'P',
-                            'units': 'mm'},
-                   'outHumidity': {'field_name': 'H',
-                                   'units': 'percent'},
-                   'inHumidity': {'field_name': 'Hi',
-                                  'units': 'percent'},
-                   'extraHumid1': {'field_name': 'H1',
-                                   'units': 'percent'},
-                   'extraHumid2': {'field_name': 'H2',
-                                   'units': 'percent'},
-                   'radiation': {'field_name': 'S',
-                                 'units': 'watt_per_meter_squared'},
-                   'soilMoist1': {'field_name': 'Sm1',
-                                  'units': 'centibar'},
-                   'soilMoist2': {'field_name': 'Sm2',
-                                  'units': 'centibar'},
-                   'soilMoist3': {'field_name': 'Sm3',
-                                  'units': 'centibar'},
-                   'soilMoist4': {'field_name': 'Sm4',
-                                  'units': 'centibar'},
-                   'leafWet1': {'field_name': 'Lw1',
-                                'units': 'count'},
-                   'leafWet2': {'field_name': 'Lw2',
-                                'units': 'count'},
-                   'soilTemp1': {'field_name': 'St1',
-                                 'units': 'degree_C'},
-                   'soilTemp2': {'field_name': 'St2',
-                                 'units': 'degree_C'},
-                   'soilTemp3': {'field_name': 'St3',
-                                 'units': 'degree_C'},
-                   'soilTemp4': {'field_name': 'St4',
-                                 'units': 'degree_C'},
-                   'leafTemp1': {'field_name': 'Lt1',
-                                 'units': 'degree_C'},
-                   'leafTemp2': {'field_name': 'Lt2',
-                                 'units': 'degree_C'},
-                   'UV': {'field_name': 'U',
-                          'units': 'uv_index'}
-                   }
+    default_header_map = {'dateTime': {'field_name': 'dateTime',
+                                       'units': 'unix_epoch'},
+                         'usUnits': {'units': None},
+                         'interval': {'units': 'minute'},
+                         'outTemp': {'field_name': 'T',
+                                     'units': 'degree_C'},
+                         'inTemp': {'field_name': 'Ti',
+                                    'units': 'degree_C'},
+                         'extraTemp1': {'field_name': 'T1',
+                                        'units': 'degree_C'},
+                         'extraTemp2': {'field_name': 'T2',
+                                        'units': 'degree_C'},
+                         'extraTemp3': {'field_name': 'T3',
+                                        'units': 'degree_C'},
+                         'dewpoint': {'field_name': 'D',
+                                      'units': 'degree_C'},
+                         'barometer': {'field_name': 'Pr',
+                                       'units': 'mbar'},
+                         'windSpeed': {'field_name': 'W',
+                                       'units': 'km_per_hour'},
+                         'windDir': {'field_name': 'Wd',
+                                     'units': 'degree_compass'},
+                         'windchill': {'field_name': 'Wc',
+                                       'units': 'degree_C'},
+                         'windGust': {'field_name': 'Wg',
+                                      'units': 'km_per_hour'},
+                         'rainRate': {'field_name': 'Ph',
+                                      'units': 'mm_per_hour'},
+                         'rain': {'field_name': 'P',
+                                  'units': 'mm'},
+                         'outHumidity': {'field_name': 'H',
+                                         'units': 'percent'},
+                         'inHumidity': {'field_name': 'Hi',
+                                        'units': 'percent'},
+                         'extraHumid1': {'field_name': 'H1',
+                                         'units': 'percent'},
+                         'extraHumid2': {'field_name': 'H2',
+                                         'units': 'percent'},
+                         'radiation': {'field_name': 'S',
+                                       'units': 'watt_per_meter_squared'},
+                         'soilMoist1': {'field_name': 'Sm1',
+                                        'units': 'centibar'},
+                         'soilMoist2': {'field_name': 'Sm2',
+                                        'units': 'centibar'},
+                         'soilMoist3': {'field_name': 'Sm3',
+                                        'units': 'centibar'},
+                         'soilMoist4': {'field_name': 'Sm4',
+                                        'units': 'centibar'},
+                         'leafWet1': {'field_name': 'Lw1',
+                                      'units': 'count'},
+                         'leafWet2': {'field_name': 'Lw2',
+                                      'units': 'count'},
+                         'soilTemp1': {'field_name': 'St1',
+                                       'units': 'degree_C'},
+                         'soilTemp2': {'field_name': 'St2',
+                                       'units': 'degree_C'},
+                         'soilTemp3': {'field_name': 'St3',
+                                       'units': 'degree_C'},
+                         'soilTemp4': {'field_name': 'St4',
+                                       'units': 'degree_C'},
+                         'leafTemp1': {'field_name': 'Lt1',
+                                       'units': 'degree_C'},
+                         'leafTemp2': {'field_name': 'Lt2',
+                                       'units': 'degree_C'},
+                         'UV': {'field_name': 'U',
+                                'units': 'uv_index'}
+                         }
+
+    weathercat_unit_groups = {'temperature': ('outTemp', 'inTemp',
+                                              'extraTemp1', 'extraTemp2',
+                                              'extraTemp3', 'windchill',
+                                              'soilTemp1', 'soilTemp2',
+                                              'soilTemp3', 'soilTemp4',
+                                              'leafTemp1', 'leafTemp2'),
+                              'dewpoint': ('dewpoint',),
+                              'pressure': ('barometer',),
+                              'windspeed': ('windSpeed', 'windGust'),
+                              'precipitation': ('rain',)
+                              }
 
     def __init__(self, config_dict, config_path, weathercat_config_dict, import_config_path,
                  options):
@@ -146,8 +161,31 @@ class WeatherCatSource(weeimport.Source):
         # rainfall since midnight and treat it as a cumulative value.
         self.rain = 'cumulative'
 
-        # initialise our import field-to-WeeWX archive field map
-        self.map = None
+        # The WeatherCat .cat file structure is well defined so we can
+        # construct our import field-to-WeeWX archive field map now. The user
+        # can specify the units used in the WeatherCat .cat file so first
+        # construct a default field map then go through and adjust the units
+        # where necessary.
+        # first initialise with a default field map
+        self.map = self.default_header_map
+        # now check the [[Units]] stanza in the import config file and adjust
+        # any units as required
+        if 'Units' in weathercat_config_dict and len(weathercat_config_dict['Units']) > 0:
+            # we have [[Units]] settings so iterate over each
+            for group, value in six.iteritems(weathercat_config_dict['Units']):
+                # is this group (eg 'temperature', 'rain' etc one that we know
+                # about
+                if group in self.weathercat_unit_groups:
+                    # it is, so iterate over each import field that could be affected by
+                    # this unit setting
+                    for field in self.weathercat_unit_groups[group]:
+                        # set the units field accordingly
+                        self.map[field]['units'] = value
+                    # We have one special 'derived' unit setting, rainRate. The
+                    # rainRate units are derived from the rain units by simply
+                    # appending '_per_hour'
+                    if group == 'precipitation':
+                        self.map['rainRate']['units'] = ''.join([value, '_per_hour'])
 
         # property holding the current log file name being processed
         self.file_name = None
@@ -266,7 +304,7 @@ class WeatherCatSource(weeimport.Source):
         # confirm the source exists
         if os.path.isfile(period):
             # set .cat to WeeWX archive field map
-            self.map = dict(self._header_map)
+            self.map = dict(self.default_header_map)
             # obtain year from the directory containing the .cat file
             _year = os.path.basename(os.path.dirname(period))
             # obtain the month number from the .cat filename, we need to zero
