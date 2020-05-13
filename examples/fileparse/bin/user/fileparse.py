@@ -35,6 +35,14 @@
 #     path = /var/tmp/wxdata     # location of data file
 #     driver = user.fileparse
 #
+# If WeeWX field rain is to be derived from a cumulative total, add the option
+# cumulative_rain under [FileParse] as follows:
+#
+# [FileParse]
+#     ...
+#     cumulative_rain = true     # true if rain is derived from a cumulative
+#                                # value, otherwise false or omit setting
+#
 # If the variables in the file have names different from those in the database
 # schema, then create a mapping section called label_map.  This will map the
 # variables in the file to variables in the database columns.  For example:
@@ -52,9 +60,12 @@ import logging
 import time
 
 import weewx.drivers
+import weewx.wxformulas
+
+from weeutil.weeutil import tobool
 
 DRIVER_NAME = 'FileParse'
-DRIVER_VERSION = "0.7"
+DRIVER_VERSION = "0.8"
 
 log = logging.getLogger(__name__)
 
@@ -80,12 +91,19 @@ class FileParseDriver(weewx.drivers.AbstractDevice):
         self.poll_interval = float(stn_dict.get('poll_interval', 2.5))
         # mapping from variable names to weewx names
         self.label_map = stn_dict.get('label_map', {})
+        # is the WeeWX rain field to be derived from a cumulative value or is
+        # it already a per-period value
+        self.cumulative_rain = tobool(stn_dict.get('cumulative_rain', False))
 
         log.info("Data file is %s" % self.path)
         log.info("Polling interval is %s" % self.poll_interval)
         log.info('Label map is %s' % self.label_map)
+        if self.cumulative_rain:
+            log.info("'rain' will be calculated from a cumulative value")
 
     def genLoopPackets(self):
+
+        last_rain = None
         while True:
             # read whatever values we can get from the file
             data = {}
@@ -104,6 +122,16 @@ class FileParseDriver(weewx.drivers.AbstractDevice):
                        'usUnits': weewx.US}
             for vname in data:
                 _packet[self.label_map.get(vname, vname)] = _get_as_float(data, vname)
+
+            # if rain is calculated from a cumulative value the packet rain
+            # field is the difference between the current cumulative rain value
+            # and the last cumulative rain value
+            if self.cumulative_rain and 'rain' in _packet:
+                this_rain = _packet['rain']
+                _packet['rain'] = weewx.wxformulas.calculate_rain(_packet['rain'],
+                                                                  last_rain)
+                last_rain = this_rain
+
 
             yield _packet
             time.sleep(self.poll_interval)
