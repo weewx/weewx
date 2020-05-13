@@ -3,6 +3,10 @@ weewx change history
 
 4.0.1 MM/DD/YYYY
 
+Added option 'reuse_ssl' to FTP. This activates a workaround for a bug in the
+Python ftp library that causes long-lived connections to get closed prematurely.
+Works only with Python 3.6 and greater.
+
 The cc3000 driver will automatically reboot the hardware if it stops sending
 observations. PR #549.
 

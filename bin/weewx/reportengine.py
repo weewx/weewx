@@ -300,6 +300,7 @@ class FtpGenerator(ReportGenerator):
 
         # determine how much logging is desired
         log_success = to_bool(weeutil.config.search_up(self.skin_dict, 'log_success', True))
+        log_failure = to_bool(weeutil.config.search_up(self.skin_dict, 'log_failure', True))
 
         t1 = time.time()
         try:
@@ -314,24 +315,31 @@ class FtpGenerator(ReportGenerator):
                 port=int(self.skin_dict.get('port', 21)),
                 name=self.skin_dict['REPORT_NAME'],
                 passive=to_bool(self.skin_dict.get('passive', True)),
-                max_tries=int(self.skin_dict.get('max_tries', 3)),
                 secure=to_bool(self.skin_dict.get('secure_ftp', False)),
-                debug=int(self.skin_dict.get('debug', 0)),
-                secure_data=to_bool(self.skin_dict.get('secure_data', True)))
+                debug=weewx.debug,
+                secure_data=to_bool(self.skin_dict.get('secure_data', True)),
+                reuse_ssl=to_bool(self.skin_dict.get('reuse_ssl', False))
+            )
         except KeyError:
             log.debug("ftpgenerator: FTP upload not requested. Skipped.")
             return
 
-        try:
-            n = ftp_data.run()
-        except (socket.timeout, socket.gaierror, ftplib.all_errors, IOError) as e:
-            log.error("ftpgenerator: Caught exception '%s': %s", type(e), e)
-            weeutil.logger.log_traceback(log.error, "        ****  ")
-            return
-
-        if log_success:
-            t2 = time.time()
-            log.info("ftpgenerator: Ftp'd %d files in %0.2f seconds", n, (t2 - t1))
+        max_tries = int(self.skin_dict.get('max_tries', 3))
+        for count in range(max_tries):
+            try:
+                n = ftp_data.run()
+            except ftplib.all_errors as e:
+                log.error("ftpgenerator: (%d): caught exception '%s': %s", count, type(e), e)
+                weeutil.logger.log_traceback(log.error, "        ****  ")
+            else:
+                if log_success:
+                    t2 = time.time()
+                    log.info("ftpgenerator: Ftp'd %d files in %0.2f seconds", n, (t2 - t1))
+            break
+        else:
+            # The loop completed normally, meaning the upload failed.
+            if log_failure:
+                log.error("ftpgenerator: Upload failed")
 
 
 # =============================================================================

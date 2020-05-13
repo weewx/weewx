@@ -2340,6 +2340,16 @@ longitude = -77.0366</pre>
             href="https://github.com/weewx/weewx/issues/284">Issue #284</a>. Optional. Default is <span class="code">True</span>.
         </p>
 
+        <p class="config_option">reuse_ssl</p>
+
+        <p>
+            Some FTP servers (notably PureFTP) reuse ssl connections with FTPS. Unfortunately, the Python library has a
+            bug that prematurely closes such connections. See <a href="https://bit.ly/2Lrywla">https://bit.ly/2Lrywla</a>.
+            Symptom is an exception <span class="code">OSError: [Errno 0] Error</span>. This option activates a
+            workaround for Python versions greater than 3.6. It won't work for earlier versions. Optional. Default is
+            <span class="code">False</span>.
+        </p>
+
         <p class="config_option">port</p>
 
         <p>Set to the port ID of your FTP server. Default is <span class="code">21</span>.</p>
