@@ -112,6 +112,20 @@ when executing MEM=CLEAR, the timeout is set to 20s.  Should this
 command fail, rather than losing 1 second retrying, 20 sexconds
 will be lost.
 
+
+The CC3000 very rarely stops returning observation values.
+[Observed once in 28 months of operation over two devices.]
+Operation returns to normal after the CC3000 is rebooted.
+This driver now reboots when this situation  is detected.
+If this happens, the log will show:
+    INFO weewx.drivers.cc3000: No data from sensors, rebooting.
+    INFO weewx.drivers.cc3000: Back from a reboot:
+    INFO weewx.drivers.cc3000: ....................
+    INFO weewx.drivers.cc3000:
+    INFO weewx.drivers.cc3000: Rainwise CC-3000 Version: 1.3 Build 022 Dec 02 2016
+    INFO weewx.drivers.cc3000: Flash ID 202015
+    INFO weewx.drivers.cc3000: Initializing memory...OK.
+
 This driver was tested with:
   Rainwise CC-3000 Version: 1.3 Build 022 Dec 02 2016
 
@@ -164,7 +178,7 @@ from weewx.crc16 import crc16
 log = logging.getLogger(__name__)
 
 DRIVER_NAME = 'CC3000'
-DRIVER_VERSION = '0.30'
+DRIVER_VERSION = '0.40'
 
 def loader(config_dict, engine):
     return CC3000Driver(**config_dict[DRIVER_NAME])
@@ -515,7 +529,7 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
             self.station.set_auto()
             cmd_mode = False
 
-        logged_nodata = False
+        reboot_attempted = False
         ntries = 0
         while ntries < self.max_tries:
             ntries += 1
@@ -528,7 +542,6 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
                 ntries = 0
                 log.debug("Values: %s" % values)
                 if values:
-                    logged_nodata = False
                     packet = self._parse_current(
                         values, self.header, self.sensor_map)
                     log.debug("Parsed: %s" % packet)
@@ -545,9 +558,14 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
                         log.debug("Packet: %s" % packet)
                         yield packet
                 else:
-                    if not logged_nodata:
-                        log.info("No data from sensors")
-                        logged_nodata = True
+                    if not reboot_attempted:
+                        # To be on the safe side, max of one reboot per execution.
+                        reboot_attempted = True
+                        log.info("No data from sensors, rebooting.")
+                        startup_msgs = self.station.reboot()
+                        log.info("Back from a reboot:")
+                        for line in startup_msgs:
+                            log.info(line)
 
                 # periodically check memory, clear if necessary
                 if time.time() - self.last_mem_check > self.mem_interval:
@@ -950,6 +968,23 @@ class CC3000(object):
     def get_version(self):
         log.debug("Get firmware version")
         return self.command("VERSION")
+
+    def reboot(self):
+        # Reboot outputs the following (after the reboot):
+        # ....................
+        # <blank line>
+        # Rainwise CC-3000 Version: 1.3 Build 022 Dec 02 2016
+        # Flash ID 202015
+        # Initializing memory...OK.
+        log.debug("Rebooting CC3000.")
+        self.send_cmd("REBOOT")
+        time.sleep(5)
+        dots = self.read()
+        blank = self.read()
+        ver = self.read()
+        flash_id = self.read()
+        init_msg = self.read()
+        return [dots, blank, ver, flash_id, init_msg]
 
     # give the station some time to wake up.  when we first hit it with a
     # command, it often responds with an empty string.  then subsequent
@@ -1382,6 +1417,8 @@ if __name__ == '__main__':
                       help='reset min counters')
     parser.add_option('--poll', metavar='POLL_INTERVAL', type=int,
                       help='poll interval in seconds')
+    parser.add_option('--reboot', dest='reboot', action='store_true',
+                      help='reboot the station')
     (options, args) = parser.parse_args()
 
     if options.version:
@@ -1408,6 +1445,11 @@ if __name__ == '__main__':
         s.set_echo()
         if options.getver:
             print(s.get_version())
+        if options.reboot:
+            print('rebooting...')
+            startup_msgs = s.reboot()
+            for line in startup_msgs:
+                print(line)
         if options.status:
             print("Firmware:", s.get_version())
             print("Time:", s.get_time())

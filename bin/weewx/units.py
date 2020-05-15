@@ -743,7 +743,8 @@ class Formatter(object):
             if None_string is None:
                 val_str = self.unit_format_dict.get('NONE', u'N/A')
             else:
-                val_str = None_string
+                # Make sure the "None_string" is, in fact, a string
+                val_str = str(None_string)
             addLabel = False
         elif val_t[1] == "unix_epoch":
             # Different formatting routines are used if the value is a time.

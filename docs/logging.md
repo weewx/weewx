@@ -64,12 +64,24 @@ different on the Mac or Windows):
       # Format to use for dates and times:
       datefmt = %Y-%m-%d %H:%M:%S
 ```
-The value for `{log_level}` depends on whether or not the `debug` option has been set. If it has not (the default), then `log_level` is `INFO`, otherwise, `DEBUG`.
+This configures three different facilities:
+1. Loggers, which expose the interface that application code directly uses. Most importantly,
+it determines which *handler(s)* to use.
+2. Handlers, which send the log records (created by loggers) to an appropriate destination.
+3. Formatters, which specify the layout of log records in the final output. A number of attributes
+ are available to the formatter (such as `%(levelname)s`; see the documentation 
+ [*LogRecord attributes*](https://docs.python.org/3/library/logging.html#logrecord-attributes) 
+ for a complete list).
 
-The value for `{process_name}` is passed in when setting up the logging facility. For the WeeWX main program, it is `weewxd` (see below).
+The value for `{log_level}` depends on whether or not the `debug` option has been set. If it has 
+not (the default), then `log_level` is `INFO`, otherwise, `DEBUG`.
+
+The value for `{process_name}` is passed in when setting up the logging facility. For the WeeWX 
+main program, it is `weewxd` (see below).
 
 ## Specifying other handlers
-An example. Say you want to log to not only the system log (the default), but to the console as well. Then add this to your `weewx.conf` file:
+An example. Say you want to log to not only the system log (the default), but to the console as 
+well. Then add this to your `weewx.conf` file:
 
 ```ini
 [Logging]

@@ -19,9 +19,11 @@ from __future__ import with_statement
 
 import fnmatch
 import os.path
+import re
 import shutil
 import subprocess
 import sys
+import tempfile
 from distutils import log
 from distutils.command.install import install
 from distutils.command.install_data import install_data
@@ -143,16 +145,57 @@ class weewx_install_data(install_data):
         return rv
 
     def process_config_file(self, f, install_dir, **kwargs):
-        """Process weewx.conf separately"""
+        """Process the configuration file weewx.conf by inserting the proper path into WEEWX_ROOT,
+        then install as weewx.conf.X.Y.Z, where X.Y.Z is the version number."""
 
-        # Location of the incoming weewx.conf file
-        install_path = os.path.join(install_dir, os.path.basename(f))
+        # The install directory. The normalization is necessary because sometimes there
+        # is a trailing '/'.
+        norm_install_dir = os.path.normpath(install_dir)
 
-        # Install the config file using the template name. Later, we will merge
-        # it with any old config file.
-        template_name = install_path + "." + VERSION
-        rv = install_data.copy_file(self, f, template_name, **kwargs)
-        shutil.copymode(f, template_name)
+        # The path to the destination configuration file. It will look
+        # something like '/home/weewx/weewx.conf.4.0.0'
+        weewx_install_path = os.path.join(norm_install_dir, os.path.basename(f) + '.' + VERSION)
+
+        if self.dry_run:
+            return weewx_install_path, 0
+
+        # This RE is for finding the assignment to WEEWX_ROOT.
+        # It matches the assignment, plus an optional comment. For example, for the string
+        #   '  WEEWX_ROOT = foo  # A comment'
+        # it matches 3 groups:
+        #   Group 1: '  WEEWX_ROOT '
+        #   Group 2: ' foo'
+        #   Group 3: '  # A comment'
+        pattern = re.compile(r'(^\s*WEEWX_ROOT\s*)=(\s*\S+)(\s*#?.*)')
+
+        done = 0
+
+        if self.verbose:
+            log.info("massaging %s -> %s", f, weewx_install_path)
+
+        # Massage the incoming file, assigning the right value for WEEWX_ROOT. Use a temporary
+        # file. This will help in making the operatioin atomic.
+        try:
+            # Open up the incoming configuration file
+            with open(f, mode='rt') as incoming_fd:
+                # Open up a temporary file
+                tmpfd, tmpfn = tempfile.mkstemp()
+                with os.fdopen(tmpfd, 'wt') as tmpfile:
+                    # Go through the incoming template file line by line, inserting a value for
+                    # WEEWX_ROOT. There's only one per file, so stop looking after the first one.
+                    for line in incoming_fd:
+                        if not done:
+                            line, done = pattern.subn("\\1 = %s\\3" % norm_install_dir, line)
+                        tmpfile.write(line)
+
+            if not self.dry_run:
+                # If not a dry run, install the temporary file in the right spot
+                rv = install_data.copy_file(self, tmpfn, weewx_install_path, **kwargs)
+                # Set the permission bits:
+                shutil.copymode(f, weewx_install_path)
+        finally:
+            # Get rid of the temporary file
+            os.remove(tmpfn)
 
         return rv
 
@@ -231,7 +274,7 @@ def update_and_install_config(install_dir, install_scripts, install_lib, no_prom
             args += ['--no-prompt']
 
     if DEBUG:
-        print("Command used to invoke wee_config: %s" % args)
+        log.info("Command used to invoke wee_config: %s" % args)
 
     proc = subprocess.Popen(args,
                             env={'PYTHONPATH': install_lib},
@@ -240,9 +283,9 @@ def update_and_install_config(install_dir, install_scripts, install_lib, no_prom
                             stderr=sys.stderr)
     out, err = proc.communicate()
     if DEBUG and out:
-        print('out=', out.decode())
+        log.info('out=', out.decode())
     if DEBUG and err:
-        print('err=', err.decode())
+        log.info('err=', err.decode())
 
 
 # ==============================================================================

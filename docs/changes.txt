@@ -8,6 +8,27 @@ samples per archive interval in field wind_samples.
 
 4.0.1 MM/DD/YYYY
 
+Added option 'reuse_ssl' to FTP. This activates a workaround for a bug in the
+Python ftp library that causes long-lived connections to get closed prematurely.
+Works only with Python 3.6 and greater.
+
+The cc3000 driver will automatically reboot the hardware if it stops sending
+observations. PR #549.
+
+Install using setup.py forgot to set WEEWX_ROOT when installing in non-standard
+places. Fixes issue #546.
+
+Fixed bug in ws28xx driver that prevented it from running under Python 3.
+Fixes issue #543.
+
+Changed query strategy for calculating min and max wind vectors, which
+should result in much faster plot generation.
+
+Fixed bug in wmr9x8 driver that prevented it from running under Python 3.
+
+Fixed several bugs in the te923 driver that prevented it from running under
+Python 3.
+
 Added a logging handler for rotating files. See https://bit.ly/2StYSHb for how
 to use it. It is the default for MacOS.
 

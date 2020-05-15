@@ -1908,6 +1908,13 @@ longitude = -77.0366</pre>
         <p>How long to wait in seconds before retrying a bad login. If set to zero, no retry will be
             attempted. Default is 3600 seconds (one hour).</p>
 
+        <p class="config_option">post_interval</p>
+
+        <p>
+            The interval in seconds between posts. Setting this value to zero will cause every archive record to be
+            posted. Optional. Default is zero.
+        </p>
+
         <h3 class="config_section">[[CWOP]]</h3>
 
         <p>WeeWX can send your current data to the <a href="http://www.wxqa.com/">Citizen Weather Observer Program</a>.
@@ -2008,6 +2015,12 @@ longitude = -77.0366</pre>
 
         <p>How long to wait in seconds before retrying a bad login. Default is 3600 seconds (one hour).</p>
 
+        <p class="config_option">post_interval</p>
+
+        <p>
+            The interval in seconds between posts. Setting this value to zero will cause every archive record to be
+            posted. Optional. Default is zero.
+        </p>
 
         <h3 class="config_section">[[WOW]]</h3>
 
@@ -2053,6 +2066,13 @@ longitude = -77.0366</pre>
         <p class='config_option'>retry_login</p>
 
         <p>How long to wait in seconds before retrying a bad login. Default is 3600 seconds (one hour).</p>
+
+        <p class="config_option">post_interval</p>
+
+        <p>
+            The interval in seconds between posts. Setting this value to zero will cause every archive record to be
+            posted. Optional. Default is zero.
+        </p>
 
         <h3 class="config_section" id="Wunderground">[[Wunderground]]</h3>
 
@@ -2139,6 +2159,13 @@ longitude = -77.0366</pre>
         <p class='config_option'>retry_login</p>
 
         <p>How long to wait in seconds before retrying a bad login. Default is 3600 seconds (one hour).</p>
+
+        <p class="config_option">post_interval</p>
+
+        <p>
+            The interval in seconds between posts. Setting this value to zero will cause every archive record to be
+            posted. Optional. Default is zero.
+        </p>
 
         <p class='config_option'>[[[Essentials]]]</p>
         <p>Occasionally (but not always!) when the Weather Underground is missing a data point it will substitute the
@@ -2311,6 +2338,16 @@ longitude = -77.0366</pre>
             If a secure session is requested (option <span class="code">secure_ftp=True</span>), should we attempt a
             secure data connection as well? This option is useful due to a bug in the Python FTP client library. See <a
             href="https://github.com/weewx/weewx/issues/284">Issue #284</a>. Optional. Default is <span class="code">True</span>.
+        </p>
+
+        <p class="config_option">reuse_ssl</p>
+
+        <p>
+            Some FTP servers (notably PureFTP) reuse ssl connections with FTPS. Unfortunately, the Python library has a
+            bug that prematurely closes such connections. See <a href="https://bit.ly/2Lrywla">https://bit.ly/2Lrywla</a>.
+            Symptom is an exception <span class="code">OSError: [Errno 0] Error</span>. This option activates a
+            workaround for Python versions greater than 3.6. It won't work for earlier versions. Optional. Default is
+            <span class="code">False</span>.
         </p>
 
         <p class="config_option">port</p>
