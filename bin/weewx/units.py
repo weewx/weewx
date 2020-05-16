@@ -398,6 +398,7 @@ default_unit_format_dict = {
     "centibar"           : "%.0f",
     "cm"                 : "%.2f",
     "cm_per_hour"        : "%.2f",
+    "count"              : "%d",
     "cubic_foot"         : "%.1f",
     "day"                : "%.1f",
     "degree_C"           : "%.1f",
