@@ -3,6 +3,8 @@ weewx change history
 
 4.0.1 MM/DD/YYYY
 
+Allow expressions to be used as a datatype when plotting.
+
 Added option 'reuse_ssl' to FTP. This activates a workaround for a bug in the
 Python ftp library that causes long-lived connections to get closed prematurely.
 Works only with Python 3.6 and greater.
