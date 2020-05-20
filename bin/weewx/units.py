@@ -398,6 +398,7 @@ default_unit_format_dict = {
     "centibar"           : "%.0f",
     "cm"                 : "%.2f",
     "cm_per_hour"        : "%.2f",
+    "count"              : "%d",
     "cubic_foot"         : "%.1f",
     "day"                : "%.1f",
     "degree_C"           : "%.1f",
@@ -744,7 +745,11 @@ class Formatter(object):
                 val_str = self.unit_format_dict.get('NONE', u'N/A')
             else:
                 # Make sure the "None_string" is, in fact, a string
-                val_str = str(None_string)
+                if isinstance(None_string, six.string_types):
+                    val_str = None_string
+                else:
+                    # Coerce to a string.
+                    val_str = str(None_string)
             addLabel = False
         elif val_t[1] == "unix_epoch":
             # Different formatting routines are used if the value is a time.
