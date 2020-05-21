@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-#    Copyright (c) 2009-2019 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2020 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your rights.
 #
@@ -9,7 +9,6 @@ from __future__ import absolute_import
 import sys
 import optparse
 
-import weeutil.logger
 from weecfg.config import ConfigEngine, Logger
 
 usage = """Usage: wee_config --help
@@ -56,9 +55,6 @@ Station parameters:
 
 
 def main():
-
-    # Set defaults for logging:
-    weeutil.logger.setup('wee_config', {})
 
     # Create a command line parser:
     parser = optparse.OptionParser(usage=usage)
