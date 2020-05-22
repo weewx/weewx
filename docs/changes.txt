@@ -8,6 +8,9 @@ samples per archive interval in field wind_samples.
 
 4.0.1 MM/DD/YYYY
 
+Eliminate use of logging in wee_config, allowing it to be used for installs
+without syslog.
+
 Allow expressions to be used as a datatype when plotting.
 
 Added option 'reuse_ssl' to FTP. This activates a workaround for a bug in the

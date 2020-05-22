@@ -23,7 +23,6 @@ import configobj
 
 import weeutil.weeutil
 import weeutil.config
-import weeutil.logger
 from weeutil.weeutil import to_bool
 
 major_comment_block = ["", "##############################################################################", ""]
