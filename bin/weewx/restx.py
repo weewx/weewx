@@ -532,10 +532,7 @@ class RESTThread(threading.Thread):
         as a GET. [optional]
         """
         # Data might be a unicode string. Encode it first.
-        if six.text_type:
-            data_bytes = data.encode() if data else None
-        else:
-            data_bytes = data
+        data_bytes = six.ensure_binary(data) if data is not None else None
         _response = urllib.request.urlopen(request, data=data_bytes, timeout=self.timeout)
         return _response
 

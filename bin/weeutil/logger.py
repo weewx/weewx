@@ -188,17 +188,6 @@ def setup(process_name, user_log_dict):
     except KeyError:
         pass
 
-    # Make sure values are of the right type
-    if 'version' in log_dict:
-        log_dict['version'] = to_int(log_dict['version'])
-    if 'disable_existing_loggers' in log_dict:
-        log_dict['disable_existing_loggers'] = to_bool(log_dict['disable_existing_loggers'])
-    if 'loggers' in log_dict:
-        for logger in log_dict['loggers']:
-            if 'propagate' in log_dict['loggers'][logger]:
-                log_dict['loggers'][logger]['propagate'] = to_bool(
-                    log_dict['loggers'][logger]['propagate'])
-
     # Finally! The dictionary is ready. Set the defaults.
     logging.config.dictConfig(log_dict)
 

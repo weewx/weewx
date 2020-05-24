@@ -127,9 +127,9 @@ def main():
             print(e, file=sys.stderr)
             sys.exit(weewx.CMD_ERROR)
 
-        weewx.debug = int(config_dict.get('debug', 0))
         log.info("Using configuration file %s", config_path)
-        log.debug("Debug is %s", weewx.debug)
+        weewx.debug = int(config_dict.get('debug', 0))
+        log.info("Debug is %s", weewx.debug)
 
         # Now that we have the config_dict and debug setting, we can customize the
         # logging with user additions
@@ -213,7 +213,7 @@ def main():
 
         except Terminate:
             log.info("Terminating weewx version %s", weewx.__version__)
-            weeutil.logger.log_traceback(log.info, "    ****  ")
+            weeutil.logger.log_traceback(log.debug, "    ****  ")
             signal.signal(signal.SIGTERM, signal.SIG_DFL)
             os.kill(0, signal.SIGTERM)
 

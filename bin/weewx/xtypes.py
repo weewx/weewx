@@ -155,9 +155,6 @@ class ArchiveTable(XType):
                     data_vec.append(agg_vt[0])
 
         else:
-            # Without aggregation. We only know how to get series that are in the database schema:
-            if obs_type not in db_manager.sqlkeys:
-                raise weewx.UnknownType(obs_type)
 
             # No aggregation
             sql_str = "SELECT dateTime, %s, usUnits, `interval` FROM %s " \
@@ -165,20 +162,27 @@ class ArchiveTable(XType):
 
             std_unit_system = None
 
-            for record in db_manager.genSql(sql_str, (startstamp, stopstamp)):
+            # Hit the database. It's possible the type is not in the database, so be prepared
+            # to catch a NoColumnError:
+            try:
+                for record in db_manager.genSql(sql_str, (startstamp, stopstamp)):
 
-                # Unpack the record
-                timestamp, value, unit_system, interval = record
+                    # Unpack the record
+                    timestamp, value, unit_system, interval = record
 
-                if std_unit_system:
-                    if std_unit_system != unit_system:
-                        raise weewx.UnsupportedFeature("Unit type cannot change "
-                                                       "within an aggregation interval.")
-                else:
-                    std_unit_system = unit_system
-                start_vec.append(timestamp - interval * 60)
-                stop_vec.append(timestamp)
-                data_vec.append(value)
+                    if std_unit_system:
+                        if std_unit_system != unit_system:
+                            raise weewx.UnsupportedFeature("Unit type cannot change "
+                                                           "within an aggregation interval.")
+                    else:
+                        std_unit_system = unit_system
+                    start_vec.append(timestamp - interval * 60)
+                    stop_vec.append(timestamp)
+                    data_vec.append(value)
+            except weedb.NoColumnError:
+                # The sql type doesn't exist. Convert to an UnknownType error
+                raise weewx.UnknownType(obs_type)
+
             unit, unit_group = weewx.units.getStandardUnitType(std_unit_system, obs_type,
                                                                aggregate_type)
 
@@ -583,11 +587,17 @@ class WindVec(XType):
                 "WHERE dateTime = (SELECT MAX(dateTime) FROM %(table_name)s "
                 "WHERE dateTime > %(start)s AND dateTime <= %(stop)s  AND %(mag)s IS NOT NULL)",
         'min': "SELECT %(mag)s, %(dir)s, usUnits FROM %(table_name)s "
-               "WHERE %(mag)s = (SELECT MIN(%(mag)s) FROM %(table_name)s "
-               "WHERE dateTime > %(start)s AND dateTime <= %(stop)s  AND %(mag)s IS NOT NULL)",
+               "WHERE dateTime > %(start)s AND dateTime <= %(stop)s  AND %(mag)s IS NOT NULL "
+               "ORDER BY %(mag)s ASC LIMIT 1;",
+        # 'min': "SELECT %(mag)s, %(dir)s, usUnits FROM %(table_name)s "
+        #        "WHERE %(mag)s = (SELECT MIN(%(mag)s) FROM %(table_name)s "
+        #        "WHERE dateTime > %(start)s AND dateTime <= %(stop)s  AND %(mag)s IS NOT NULL)",
         'max': "SELECT %(mag)s, %(dir)s, usUnits FROM %(table_name)s "
-               "WHERE %(mag)s = (SELECT MAX(%(mag)s) FROM %(table_name)s "
-               "WHERE dateTime > %(start)s AND dateTime <= %(stop)s  AND %(mag)s IS NOT NULL)",
+               "WHERE dateTime > %(start)s AND dateTime <= %(stop)s  AND %(mag)s IS NOT NULL "
+               "ORDER BY %(mag)s DESC LIMIT 1;",
+        # 'max': "SELECT %(mag)s, %(dir)s, usUnits FROM %(table_name)s "
+        #        "WHERE %(mag)s = (SELECT MAX(%(mag)s) FROM %(table_name)s "
+        #        "WHERE dateTime > %(start)s AND dateTime <= %(stop)s  AND %(mag)s IS NOT NULL)",
     }
     # for types 'avg', 'sum'
     complex_sql_wind = 'SELECT %(mag)s, %(dir)s, usUnits FROM %(table_name)s WHERE dateTime > ? ' \

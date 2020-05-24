@@ -149,7 +149,20 @@ class ValueHelperTest(unittest.TestCase):
         self.assertEqual(six.text_type(vh), u"68.0°F")
         self.assertEqual(six.text_type(vh.degree_F), u"68.0°F")
         self.assertEqual(six.text_type(vh.degree_C), u"20.0°C")
-        
+
+        # Using .format() interface
+        self.assertEqual(vh.format(), u"68.0°F")
+        self.assertEqual(vh.format("T=%.3f", add_label=False), u"T=68.010")
+
+        # Test None_string
+        value_t = (None, "degree_F", "group_temperature")
+        vh = weewx.units.ValueHelper(value_t)
+        self.assertEqual(vh.format(None_string='foo'), u'foo')
+        self.assertTrue(isinstance(vh.format(None_string='foo'), six.text_type))
+        # This one cannot be done with ASCII codec:
+        self.assertEqual(vh.format(None_string=u'unknown °F'), u'unknown °F')
+        self.assertTrue(isinstance(vh.format(None_string=u'unknown °F'), six.text_type))
+
     def testFormattingWithConversion(self):
         value_t = (68.01, "degree_F", "group_temperature")
         c_m = weewx.units.Converter(weewx.units.MetricUnits)
