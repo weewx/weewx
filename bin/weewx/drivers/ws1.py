@@ -140,7 +140,7 @@ class StationData(object):
     def validate_string(buf):
         if len(buf) != PACKET_SIZE:
             raise weewx.WeeWxIOError("Unexpected buffer length %d" % len(buf))
-        if buf[0:2] != '!!':
+        if buf[0:2] != b'!!':
             raise weewx.WeeWxIOError("Unexpected header bytes '%s'" % buf[0:2])
         return buf
 
