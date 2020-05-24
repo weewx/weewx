@@ -3,6 +3,9 @@ weewx change history
 
 4.0.1 MM/DD/YYYY
 
+Changed the logging configuration dictionary to match the Python documents.
+Thanks to user Graham for figuring this out!
+
 Fixed problem that prevented ws1 driver from working under Python 3. PR #556.
 
 Eliminate use of logging in wee_config, allowing it to be used for installs
