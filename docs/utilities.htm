@@ -2322,13 +2322,13 @@ summaries using the wee_database utility.</pre>
 
         <p>Determines how the time interval (WeeWX database field <span class="code">interval</span>) between successive
             observations is determined. This option is identical in operation to the CSV <em><a href="#csv_interval">interval</a></em>
-            option but applies to WeatherCat monthly .cat file imports only. As WeatherCat monthly .cat files can, at times,
-            have missing entries, the use of <span class="code">interval = derive</span> may give incorrect or
+            option but applies to WeatherCat imports only. As WeatherCat monthly .cat files can, at times, have
+            missing entries, the use of <span class="code">interval = derive</span> may give incorrect or
             inconsistent interval values. Better results may be obtained by using <span
                 class="code">interval = conf</span> if the <span class="code">archive_interval</span> for the current
-            WeeWX installation is the same as the WeatherCat .cat log interval, or by
+            WeeWX installation is the same as the WeatherCat .cat file log interval, or by
             using <span class="code">interval = x</span> where <span class="code">x</span> is
-            the time interval in minutes used in the WeatherCat monthly .cat file. The most appropriate setting
+            the time interval in minutes used in the WeatherCat monthly .cat file(s). The most appropriate setting
             will depend on the completeness and (time) accuracy of the WeatherCat data being imported.
         </p>
 
@@ -2350,9 +2350,8 @@ summaries using the wee_database utility.</pre>
 
         <h4 class='config_option' id='wcat_decimal'>decimal</h4>
 
-        <p>The character used as the decimal point in the WeatherCat monthly .cat files. A full stop is frequently used
-            but it may be another character depending on the settings on the machine that produced the WeatherCat monthly
-            .cat files. This parameter must be included in quotation marks. Default is <span class="code">'.'</span>.
+        <p>The character used as the decimal point in the WeatherCat monthly .cat files. This parameter must be included
+            in quotation marks. Default is <span class="code">'.'</span>.
         </p>
 
         <h4 class='config_option' id='wcat_tranche'>tranche</h4>
@@ -2389,10 +2388,11 @@ summaries using the wee_database utility.</pre>
         <pre class="tty">obs_type = weewx_unit_name</pre>
 
         <p>Where <span class="code">obs_type</span> is one of <span class="code">temperature</span>, <span class="code">pressure</span>,
-            <span class="code">rain</span> or <span class="code">speed</span> and <span
-                class="code">weewx_unit_name</span> is the WeeWX unit name of the units used by that particular <span
-                class="code">obs_type</span>. As WeatherCat supports a different suite of possible units only a subset of
-            the available WeeWX unit names can be used for some settings.
+            <span class="code">rain</span> or <span class="code">speed</span> and
+            <span class="code">weewx_unit_name</span> is the WeeWX unit name of the units used by that particular
+            <span class="code">obs_type</span> (refer to the <a href="customizing.htm#units">Units</a> appendix in
+            the Customization Guide for details of available WeeWX unit names). As WeatherCat supports a different suite
+            of possible units only a subset of the available WeeWX unit names can be used for some settings.
         </p>
 
         <h2>Importing from CSV files</h2>
@@ -2580,9 +2580,9 @@ Finished dry run import
 27337 records were processed and 27337 unique records would have been imported.
 </pre>
 
-                <p>The output includes details about the data source, its destination and some other details on how the
-                    data will be processed. The import will then be performed but no data will be written to the WeeWX
-                    database. Upon completion a brief summary of the records processed is provided.
+                <p>The output includes details about the data source, the destination of the imported data and some other
+                    details on how the data will be processed. The import will then be performed but no data will be
+                    written to the WeeWX database. Upon completion a brief summary of the records processed is provided.
                 </p>
             </li>
 
@@ -2844,9 +2844,9 @@ Aug 22 14:38:28 stretch12  wee_import[1226] ERROR weewx.manager: Unable to add r
                     may take some time. Such imports may be best handled as a series of imports of smaller time spans.
                 </p>
 
-                <p>This will result in a short preamble with details on the data source, its destination and some other
-                    details on how the data will be processed. The import will then be performed but no data will
-                    written to the WeeWX database.
+                <p>This will result in a short preamble with details on the data source, the destination of the imported
+                    data and some other details on how the data will be processed. The import will then be performed but
+                    no data will written to the WeeWX database.
                 </p>
                 <p>The output should be similar to:</p>
 
@@ -3148,9 +3148,9 @@ Aug 22 14:38:28 stretch12 weewx[863]: manager: unable to add record 2018-09-04 0
                 <pre class="tty cmd">wee_import --import-config=/var/tmp/cumulus.conf --dry-run
 </pre>
 
-                <p>This will result in a short preamble with details on the data source, its destination and some other
-                    details on how the data will be processed. The import will then be performed but no data will be
-                    written to the WeeWX database.
+                <p>This will result in a short preamble with details on the data source, the destination of the imported
+                    data and some other details on how the data will be processed. The import will then be performed but
+                    no data will be written to the WeeWX database.
                 </p>
                 <p>The output should be similar to:</p>
 
@@ -3494,9 +3494,9 @@ Aug 22 14:38:28 stretch12 weewx[863]: manager: unable to add record 2018-09-04 0
                 <pre class="tty cmd">wee_import --import-config=/var/tmp/wd.conf --dry-run --suppress-warnings
 </pre>
 
-                <p>This will result in a short preamble with details on the data source, its destination and some other
-                    details on how the data will be processed. The import will then be performed but no data will be
-                    written to the WeeWX database.
+                <p>This will result in a short preamble with details on the data source, the destination of the imported
+                    data and some other details on how the data will be processed. The import will then be performed but
+                    no data will be written to the WeeWX database.
                 </p>
                 <p>The output should be similar to:</p>
 
@@ -3541,9 +3541,9 @@ Finished dry run import
 
                 <pre class="tty cmd">wee_import --import-config=/var/tmp/wd.conf --dry-run</pre>
 
-                <p>This will result in a short preamble with details on the data source, its destination and some other
-                    details on how the data will be processed. The import will then be performed but no data will be
-                    written to the WeeWX database.
+                <p>This will result in a short preamble with details on the data source, the destination of the imported
+                    data and some other details on how the data will be processed. The import will then be performed but
+                    no data will be written to the WeeWX database.
                 </p>
 
                 <p>The output should be similar to:</p>
@@ -3847,11 +3847,12 @@ Aug 22 14:38:28 stretch12 weewx[863]: manager: unable to add record 2018-09-04 0
         <p>To import observations from one or more WeatherCat monthly .cat files:</p>
 
         <ol>
-            <li>Ensure the WeatherCat monthly .cat file(s) to be used for the import are located in a directory accessible
-                by the machine that will run <span class="code">wee_import</span>. For the purposes of the following
-                examples, there are nine monthly logs files covering the period October 2016 to June 2017, inclusive,
-                located in the <span class="code">/var/tmp/wcat/2016</span> and <span class="code">/var/tmp/wcat/2017</span>
-                directories in the <span class="code">/var/tmp/wcat</span> directory.
+            <li>Ensure the WeatherCat monthly .cat file(s) to be used for the import are located in year directories with
+                the year directories in turn located in a directory accessible by the machine that will
+                run <span class="code">wee_import</span>. For the purposes of the following examples, there are nine
+                monthly logs files covering the period October 2016 to June 2017 inclusive, located in
+                the <span class="code">/var/tmp/wcat/2016</span> and <span class="code">/var/tmp/wcat/2017</span>
+                directories respectively.
             </li>
 
             <li>Make a backup of the WeeWX database in case the import should go awry.
@@ -3923,9 +3924,9 @@ Aug 22 14:38:28 stretch12 weewx[863]: manager: unable to add record 2018-09-04 0
                 <pre class="tty cmd">wee_import --import-config=/var/tmp/wcat.conf --dry-run --suppress-warnings
 </pre>
 
-                <p>This will result in a short preamble with details on the data source, its destination and some other
-                    details on how the data will be processed. The import will then be performed but no data will be
-                    written to the WeeWX database.
+                <p>This will result in a short preamble with details on the data source, the destination of the imported
+                    data and some other details on how the data will be processed. The import will then be performed but
+                    no data will be written to the WeeWX database.
                 </p>
                 <p>The output should be similar to:</p>
 
@@ -3975,9 +3976,9 @@ Finished dry run import
 
                 <pre class="tty cmd">wee_import --import-config=/var/tmp/wcat.conf --dry-run</pre>
 
-                <p>This will result in a short preamble with details on the data source, its destination and some other
-                    details on how the data will be processed. The import will then be performed but no data will be
-                    written to the WeeWX database.
+                <p>This will result in a short preamble with details on the data source, the destination of the imported
+                    data and some other details on how the data will be processed. The import will then be performed but
+                    no data will be written to the WeeWX database.
                 </p>
 
                 <p>The output should be similar to:</p>
@@ -4224,11 +4225,11 @@ Are you sure you want to proceed (y/n)?
                 </p>
 
                 <pre class="tty">Period 4 ...
-Unique records processed: 8908; Last timestamp: 2017-01-31 23:55:00 AEST (1485870900)
+Unique records processed: 8908; Last timestamp: 2017-01-31 23:59:00 AEST (1485870900)
 Period 5 ...
-Unique records processed: 8029; Last timestamp: 2017-02-28 23:55:00 AEST (1488290100)
+Unique records processed: 8029; Last timestamp: 2017-02-28 23:59:00 AEST (1488290100)
 Period 6 ...
-Unique records processed: 8744; Last timestamp: 2017-03-31 23:55:00 AEST (1490968500)
+Unique records processed: 8744; Last timestamp: 2017-03-31 23:59:00 AEST (1490968500)
 </pre>
 
                 <p class="note">
