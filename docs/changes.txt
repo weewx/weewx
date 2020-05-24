@@ -3,6 +3,8 @@ weewx change history
 
 4.0.1 MM/DD/YYYY
 
+Fixed problem that prevented ws1 driver from working under Python 3. PR #556.
+
 Eliminate use of logging in wee_config, allowing it to be used for installs
 without syslog.
 
