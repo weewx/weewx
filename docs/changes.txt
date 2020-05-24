@@ -5,6 +5,7 @@ weewx change history
 Archive records emitted by the Vantage driver now include the number of wind
 samples per archive interval in field wind_samples.
 
+wee_import can now import WeatherCat monthly .cat files.
 
 4.0.1 MM/DD/YYYY
 
