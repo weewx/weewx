@@ -1,13 +1,12 @@
 weewx change history
 --------------------
 
-4.1.0 MM/DD/YYYY
+4.1.0 05/25/2020
+
 Archive records emitted by the Vantage driver now include the number of wind
 samples per archive interval in field wind_samples.
 
 wee_import can now import WeatherCat monthly .cat files.
-
-4.0.1 MM/DD/YYYY
 
 Changed the logging configuration dictionary to match the Python documents.
 Thanks to user Graham for figuring this out!
