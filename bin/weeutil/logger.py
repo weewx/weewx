@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2019 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2020 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -15,7 +15,6 @@ from six.moves import StringIO
 import configobj
 
 import weewx
-from weeutil.weeutil import to_int, to_bool
 
 # The logging defaults. Note that two kinds of placeholders are used:
 #
@@ -26,12 +25,14 @@ LOGGING_STR = """[Logging]
     version = 1
     disable_existing_loggers = False
 
+    # Root logger
+    [[root]]
+      level = {log_level}
+      handlers = syslog,
+
+    # Additional loggers would go in the following section. This is useful for tailoring logging
+    # for individual modules.
     [[loggers]]
-        # Root logger
-        [[[root]]]
-          level = {log_level}
-          propagate = 1
-          handlers = syslog,
 
     # Definitions of possible logging destinations
     [[handlers]]
@@ -74,12 +75,14 @@ if sys.platform == "darwin":
         version = 1
         disable_existing_loggers = False
 
+        # Root logger
+        [[root]]
+          level = {log_level}
+          handlers = rotate,
+    
+        # Additional loggers would go in the following section. This is useful for tailoring logging
+        # for individual modules.
         [[loggers]]
-            # Root logger
-            [[[root]]]
-              level = {log_level}
-              propagate = 1
-              handlers = rotate,
 
         # Definitions of possible logging destinations
         [[handlers]]
@@ -174,19 +177,11 @@ def setup(process_name, user_log_dict):
     # Using the function, walk the 'Logging' part of the structure
     log_config['Logging'].walk(_fix)
 
-    # Now convert any strings to an appropriate type:
+    # Now walk the structure again, this time converting any strings to an appropriate type:
     log_config['Logging'].walk(_convert_from_string)
 
     # Extract just the part used by Python's logging facility
     log_dict = log_config.dict().get('Logging', {})
-
-    # The root logger is denoted by an empty string by the logging facility. Unfortunately,
-    # ConfigObj does not accept an empty string as a key. So, instead, we use this hack:
-    try:
-        log_dict['loggers'][''] = log_dict['loggers']['root']
-        del log_dict['loggers']['root']
-    except KeyError:
-        pass
 
     # Finally! The dictionary is ready. Set the defaults.
     logging.config.dictConfig(log_dict)
