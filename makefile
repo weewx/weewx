@@ -318,7 +318,7 @@ apt-repo:
 # this is for backward-compatibility when there was not python2/3 distinction
 	cp -p pkg/weewx-python2.list ~/.aptly/public/weewx.list
 # these are for backward-compatibility for users that do not have python2 or
-# python3 in their .list file
+# python3 in the paths in their .list file - default to python2
 	ln -s python2/dists ~/.aptly/public
 	ln -s python2/pool ~/.aptly/public
 
@@ -340,6 +340,10 @@ update-apt-repo:
 push-apt-repo:
 	rsync -arv ~/.aptly/ $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/aptly-test
 
+# copy the testing repository onto the production repository
+release-apt-repo:
+	ssh $(USER)@$(WEEWX_COM) "rsync -arv /var/www/html/aptly-test/ /var/www/html/aptly"
+
 YUM_REPO=~/.yum/weewx
 yum-repo:
 	mkdir -p $(YUM_REPO)/{el7,el8}/RPMS
@@ -359,6 +363,10 @@ update-yum-repo:
 
 push-yum-repo:
 	rsync -arv ~/.yum/ $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/yum-test
+
+# copy the testing repository onto the production repository
+release-yum-repo:
+	ssh $(USER)@$(WEEWX_COM) "rsync -arv /var/www/html/yum-test/ /var/www/html/yum"
 
 # run perlcritic to ensure clean perl code.  put these in ~/.perlcriticrc:
 # [-CodeLayout::RequireTidyCode]
