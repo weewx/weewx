@@ -107,24 +107,33 @@ Version: 4.1
         <h1><a id="Upgrading_using_setup.py">Upgrading using <span class='code'>setup.py</span></a></h1>
 
         <p>Before upgrading WeeWX, check the section <em> <a href="#Instructions_for_specific_versions">Instructions for
-            Specific Versions</a></em> to see if any specific actions are required. Then follow the standard
-            installation procedure:
+            Specific Versions</a></em> to see if any specific actions are required.</p>
+
+        <p>If you are an old Python 2 version, and you plan on switching to Python 3, make sure you have installed
+        whatever pre-requisites are required. You can find them in the guide
+            <a href="setup.htm"><em>Installation using setup.py</em></a>.
+        </p>
+
+        <p>
+            Then follow the standard installation procedure:
         </p>
         <p>Unpack the archive:</p>
         <pre class="tty cmd">tar xvfz weewx-X.Y.Z.tar.gz</pre>
         <p>Change directory into it:</p>
         <pre class="tty cmd">cd weewx-X.Y.Z </pre>
-        <p>Build the distribution:</p>
-        <pre class="tty cmd">./setup.py build </pre>
+        <p>Build the distribution, using whatever version of Python you plan to use. For example, for Python 3:</p>
+        <pre class="tty cmd">python3 ./setup.py build </pre>
 
-        <p>
-            After checking <span class='code'>setup.cfg</span>, install your new version of WeeWX:
-        </p>
         <p class='warning'><strong>Warning!</strong><br/> Before doing the next step, be sure that <span class="code">home</span>
             in the file <span class="code">setup.cfg</span> is set to the location of the previous WeeWX installation.
         </p>
 
-        <pre class="tty cmd">sudo ./setup.py install </pre>
+        <p>
+            After checking <span class='code'>setup.cfg</span>, install your new version of WeeWX, again using
+            the version of Python you plan on using:
+        </p>
+
+        <pre class="tty cmd">sudo python3 ./setup.py install </pre>
 
         <p>The install process will do the following:</p>
         <ul>
