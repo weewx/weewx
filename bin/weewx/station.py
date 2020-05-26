@@ -107,8 +107,8 @@ class Station(object):
         except (IOError, KeyError):
             try:
                 # For MacOs:
-                from Quartz.QuartzCore import CACurrentMediaTime
-                os_uptime_secs = CACurrentMediaTime()
+                import uptime
+                os_uptime_secs = uptime.uptime()
             except ImportError:
                 try:
                     # for FreeBSD
