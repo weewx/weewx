@@ -163,13 +163,13 @@ class FtpUpload(object):
                             ftp_server.storbinary(stor_cmd, fd)
                         except ftplib.all_errors as e:
                             # Unsuccessful. Log it, then reraise the exception
-                            log.error("Failed uploading %s to %s. Reason: %s"
-                                      % (full_remote_path, self.server, e))
+                            log.error("Failed uploading %s to server %s. Reason: '%s'"
+                                      % (full_local_path, self.server, e))
                             raise
                     # Success.
                     n_uploaded += 1
                     fileset.add(full_local_path)
-                    log.debug("Uploaded file %s" % full_remote_path)
+                    log.debug("Uploaded file %s to %s" % (full_local_path, full_remote_path))
         finally:
             try:
                 ftp_server.quit()
