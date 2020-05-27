@@ -1,6 +1,12 @@
 weewx change history
 --------------------
 
+4.1.1 MM/DD/YYYY
+
+Allow the use of the 3rd party package "uptime" when calculating system uptime
+on MacOS. Thanks to user Graham! Implements PR #561
+
+
 4.1.0 05/25/2020
 
 Archive records emitted by the Vantage driver now include the number of wind
