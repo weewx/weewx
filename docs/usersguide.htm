@@ -977,7 +977,7 @@ sudo apt install python3-mysqldb</pre>
         # The name of the table within the database
         table_name = archive
         # The class to manage the database
-        manager = weewx.wxmanager.DaySummaryManager
+        manager = weewx.manager.DaySummaryManager
         # The schema defines to structure of the database contents
         schema = schemas.wview_extended.schema</pre>
 
@@ -2775,7 +2775,7 @@ longitude = -77.0366</pre>
 [[wx_binding]]
     database = archive_sqlite
     table_name = archive
-    manager = weewx.wxmanager.DaySummaryManager
+    manager = weewx.manager.DaySummaryManager
     schema = schemas.wview_extended.schema</pre>
         <p>What follows is more detailed information about each of the binding options.</p>
 
@@ -2799,7 +2799,7 @@ longitude = -77.0366</pre>
 
         <p>
             The name of the class to be used to manage the table. Optional. Default is class <span
-            class="code">weewx.wxmanager.DaySummaryManager</span>. This class stores daily
+            class="code">weewx.manager.DaySummaryManager</span>. This class stores daily
             summaries in the database. Normally, this does not need to be changed.
         </p>
 

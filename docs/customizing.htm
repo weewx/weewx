@@ -3846,7 +3846,7 @@ class MyStats(SearchList):                                                   # 1
         # The name of the table within the database
         table_name = archive
         # The class to manage the database
-        manager = weewx.wxmanager.DaySummaryManager
+        manager = weewx.manager.DaySummaryManager
         # The schema defines to structure of the database contents
         schema = schemas.wview_extended.schema
 
@@ -3856,7 +3856,7 @@ class MyStats(SearchList):                                                   # 1
         # The name of the table within the database
         table_name = archive
         # The class to manage the database
-        manager = weewx.wxmanager.DaySummaryManager
+        manager = weewx.manager.DaySummaryManager
         # The schema defines to structure of the database contents
         schema = schemas.wview_extended.schema</span>
 
@@ -4711,7 +4711,7 @@ schema_with_electricity = {
     [[wx_binding]]
         database = archive_sqlite
         table_name = archive
-        manager = weewx.wxmanager.DaySummaryManager
+        manager = weewx.manager.DaySummaryManager
         <span class="highlight">schema = user.electricity.electricity_schema</span></pre>
             </li>
 
