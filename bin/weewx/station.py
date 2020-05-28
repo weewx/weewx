@@ -117,9 +117,21 @@ def _os_uptime():
     strategies may have to be tried:"""
 
     try:
-        # For Linux:
+        # For Python 3.7 and later, most systems
+        return time.clock_gettime(time.CLOCK_UPTIME)
+    except AttributeError:
+        pass
+
+    try:
+        # For Python 3.3 and later, most systems
+        return time.clock_gettime(time.CLOCK_MONOTONIC)
+    except AttributeError:
+        pass
+
+    try:
+        # For Linux, Python 2 and 3:
         return float(open("/proc/uptime").read().split()[0])
-    except (IOError, KeyError):
+    except (IOError, KeyError, OSError):
         pass
 
     try:
@@ -130,14 +142,7 @@ def _os_uptime():
         pass
 
     try:
-        # For all MacOS. Requires the 3rd party module 'uptime'. See PR #561.
-        import uptime
-        return uptime.uptime()
-    except (ImportError, AttributeError):
-        pass
-
-    try:
-        # for FreeBSD
+        # for FreeBSD, Python 2
         import ctypes
         from ctypes.util import find_library
 
@@ -152,7 +157,7 @@ def _os_uptime():
         pass
 
     try:
-        # For OpenBSD. See issue #428.
+        # For OpenBSD, Python 2. See issue #428.
         import subprocess
         from datetime import datetime
         cmd = ['sysctl', 'kern.boottime']
