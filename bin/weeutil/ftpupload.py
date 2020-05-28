@@ -145,7 +145,7 @@ class FtpUpload(object):
                                                                 local_rel_dir_path))
 
                 # Make the remote directory if necessary:
-                # _make_remote_dir(ftp_server, remote_dir_path)
+                _make_remote_dir(ftp_server, remote_dir_path)
 
                 # Now iterate over all members of the local directory:
                 for filename in filenames:
