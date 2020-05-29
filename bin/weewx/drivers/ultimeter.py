@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Copyright 2014 Matthew Wall
+# Copyright 2014-2020 Matthew Wall
 # Copyright 2014 Nate Bargmann <n0nb@n0nb.us>
 # See the file LICENSE.txt for your rights.
 #
@@ -54,8 +54,9 @@ from __future__ import absolute_import
 from __future__ import print_function
 
 import logging
-import serial
 import time
+
+import serial
 
 import weewx.drivers
 import weewx.wxformulas
@@ -65,7 +66,7 @@ from weeutil.weeutil import timestamp_to_string
 log = logging.getLogger(__name__)
 
 DRIVER_NAME = 'Ultimeter'
-DRIVER_VERSION = '0.40'
+DRIVER_VERSION = '0.41'
 
 
 def loader(config_dict, _):
@@ -218,7 +219,10 @@ class Station(object):
             self.serial_port.write(b">\r")
 
     def get_readings(self):
-        """Read an Ultimeter sentence."""
+        """Read an Ultimeter sentence.
+
+        Returns: a bytearray containing the sentence.
+        """
 
         # Search for the character '!', which marks the beginning of a "sentence":
         while True:
@@ -292,8 +296,13 @@ class Station(object):
         the pressure and altimeter values are calculated from it.
 
         Some stations may omit daily_rain or wind_average, so check for those.
+
+        raw: A bytearray containing the sentence.
+
+        returns: A dictionary containing the data.
         """
-        buf = raw[2:]
+        # Convert from bytearray to text
+        buf = raw[2:].decode('ascii')
         data = dict()
         data['windSpeed'] = Station._decode(buf[0:4], 0.1 * MILE_PER_KM)  # mph
         data['windDir'] = Station._decode(buf[6:8], 1.411764)  # compass deg
@@ -313,16 +322,22 @@ class Station(object):
 
     @staticmethod
     def _decode(s, multiplier=None, neg=False):
-        """Ultimeter puts hyphens in the string when a sensor is not installed.
-        When we get a hyphen or any other non-hex character, return None.
-        Negative values are represented in twos complement format.  Only do the
-        check for negative values if requested, since some parameters use the
-        full set of bits (e.g., wind direction) and some do not
-        (e.g., temperature).
+        """Ultimeter puts hyphens in the string when a sensor is not installed. When we get a
+        hyphen or any other non-hex character, return None. Negative values are represented in twos
+        complement format.  Only do the check for negative values if requested, since some
+        parameters use the full set of bits (e.g., wind direction) and some do not (e.g.,
+        temperature).
+
+        s: A text string, encoding the value as hexadecimal digits.
+
+        multiplier: Multiply the results by this value
+
+        neg: If True, calculate twos-complement
         """
-        # TODO: The twos-complement arithmetic is unnecessary. Better to use the 'struct' module.
+
         v = None
         try:
+            # Under Python 2, the variable s must be a string, not a bytearray.
             v = int(s, 16)
             if neg:
                 bits = 4 * len(s)

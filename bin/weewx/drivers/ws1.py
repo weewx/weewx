@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Copyright 2014 Matthew Wall
+# Copyright 2014-2020 Matthew Wall
 # See the file LICENSE.txt for your rights.
 
 """Driver for ADS WS1 weather stations.
@@ -29,7 +29,7 @@ import weewx.wxformulas
 log = logging.getLogger(__name__)
 
 DRIVER_NAME = 'WS1'
-DRIVER_VERSION = '0.40'
+DRIVER_VERSION = '0.41'
 
 
 def loader(config_dict, _):
@@ -171,7 +171,7 @@ class StationData(object):
         """
         # FIXME: peetbros could be 40 bytes or 44 bytes, what about ws1?
         # FIXME: peetbros uses two's complement for temp, what about ws1?
-        buf = raw[2:]
+        buf = raw[2:].decode('ascii')
         data = dict()
         data['windSpeed'] = StationData._decode(buf[0:4], 0.1 * MILE_PER_KM) # mph
         data['windDir'] = StationData._decode(buf[6:8], 1.411764)  # compass deg

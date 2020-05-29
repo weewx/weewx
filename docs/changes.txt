@@ -3,6 +3,10 @@ weewx change history
 
 4.1.1 MM/DD/YYYY
 
+Fixed problem when using the ultimeter driver under Python 2.
+
+Fixed problem when using the ws1 driver under Python 2.
+
 Fixed problem that prevented remote directories from being created by FTP.
 
 New strategy for calculating system uptime under Python 3. Revisits
