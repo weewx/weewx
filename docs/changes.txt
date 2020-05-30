@@ -1,7 +1,7 @@
 weewx change history
 --------------------
 
-4.1.1 MM/DD/YYYY
+4.1.1 05/30/2020
 
 Fixed problem that caused FTP attempts not to be retried.
 
