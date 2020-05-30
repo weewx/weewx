@@ -335,7 +335,7 @@ class FtpGenerator(ReportGenerator):
                 if log_success:
                     t2 = time.time()
                     log.info("ftpgenerator: Ftp'd %d files in %0.2f seconds", n, (t2 - t1))
-            break
+                break
         else:
             # The loop completed normally, meaning the upload failed.
             if log_failure:

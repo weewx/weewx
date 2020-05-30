@@ -3,6 +3,8 @@ weewx change history
 
 4.1.1 MM/DD/YYYY
 
+Fixed problem that caused FTP attempts not to be retried.
+
 Fixed problem that caused monthly and yearly summaries to appear only
 sporadically.
 
