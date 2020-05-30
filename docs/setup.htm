@@ -79,6 +79,31 @@
         </button>
     </nav>
 </div>
+
+<div id="prereq-debian-10" class="tab-content">
+    <p>Prerequisites for Debian 10 (Buster), Raspbian 10, Ubuntu 18.04-19.10</p>
+    <pre class='tty'><span class="cmd">sudo apt update</span>
+
+# Required
+<span class="cmd">sudo apt install python3-configobj
+sudo apt install python3-pil
+sudo apt install python3-serial
+sudo apt install python3-usb
+sudo apt install python3-pip</span>
+
+# This works for most installations...
+<span class="cmd">sudo apt install python3-cheetah</span>
+# ... if not, try this:
+<span class="cmd">sudo pip3 install Cheetah3</span>
+
+# Optional: for extended almanac information
+<span class="cmd">sudo apt install python3-ephem</span>
+
+# Required if you are using MySQL (MariaDB):
+<span class="cmd">sudo apt install mariadb-client
+sudo apt install python3-mysqldb</span></pre>
+</div>
+
 <div id="prereq-debian-9" class="tab-content">
     <p>Prerequisites for Debian 9 (Stretch), Raspbian 9, Ubuntu 16.04-17.10</p>
     <pre class='tty'><span class="cmd">sudo apt update</span>
@@ -97,26 +122,6 @@ sudo pip3 install cheetah3</span>
 
 # Required if you are using MySQL (MariaDB):
 <span class="cmd">sudo apt install mysql-client
-sudo apt install python3-mysqldb</span></pre>
-</div>
-
-<div id="prereq-debian-10" class="tab-content">
-    <p>Prerequisites for Debian 10 (Buster), Raspbian 10, Ubuntu 18.04-19.10</p>
-    <pre class='tty'><span class="cmd">sudo apt update</span>
-
-# Required
-<span class="cmd">sudo apt install python3-configobj
-sudo apt install python3-cheetah
-sudo apt install python3-pil
-sudo apt install python3-serial
-sudo apt install python3-usb
-sudo apt install python3-pip</span>
-
-# Optional: for extended almanac information
-<span class="cmd">sudo apt install python3-ephem</span>
-
-# Required if you are using MySQL (MariaDB):
-<span class="cmd">sudo apt install mariadb-client
 sudo apt install python3-mysqldb</span></pre>
 </div>
 
