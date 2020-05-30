@@ -1,3 +1,6 @@
+* Sat May 30 2020 Matthew Wall (weewx) <mwall@users.sourceforge.net> - 4.1.1-1
+- new upstream release
+- remove the implicitly-applied dependencies in the redhat rpms
 * Mon May 25 2020 Matthew Wall (weewx) <mwall@users.sourceforge.net> - 4.1.0-1
 - new upstream release
 * Thu Apr 30 2020 Matthew Wall (weewx) <mwall@users.sourceforge.net> - 4.0.0-1
