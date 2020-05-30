@@ -3,6 +3,9 @@ weewx change history
 
 4.1.1 MM/DD/YYYY
 
+Fixed problem that caused monthly and yearly summaries to appear only
+sporadically.
+
 Fixed problem when using the ultimeter driver under Python 2.
 
 Fixed problem when using the ws1 driver under Python 2.

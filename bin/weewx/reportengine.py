@@ -14,7 +14,6 @@ import ftplib
 import glob
 import logging
 import os.path
-import socket
 import threading
 import time
 import traceback
@@ -141,8 +140,9 @@ class StdReportEngine(threading.Thread):
             # Fetch and build the skin_dict:
             try:
                 skin_dict = self._build_skin_dict(report)
-            except SyntaxError:
-                log.error("        ****  Report ignored")
+            except SyntaxError as e:
+                log.error("Syntax error: %s", e)
+                log.error("   ****       Report ignored")
                 continue
 
             # Default action is to run the report. Only reason to not run it is
