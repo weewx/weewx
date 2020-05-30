@@ -58,7 +58,7 @@ make src-package upload-src
 
 # on debian host, build deb package, upload to development_versions
 rm -rf build dist
-make deb-package upload-deb
+make debian-packages upload-debian
 
 # on redhat host, build the redhat rpm package, upload to development_versions
 rm -rf build dist
