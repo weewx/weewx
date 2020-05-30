@@ -173,8 +173,8 @@ class FtpUpload(object):
         finally:
             try:
                 ftp_server.quit()
-            except Exception as e:
-                log.debug("quit() exception %s: '%s'", type(e), e)
+            except Exception:
+                pass
 
         timestamp = time.time()
         self.save_last_upload(timestamp, fileset)
