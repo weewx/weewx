@@ -13,7 +13,7 @@
 %define initdir /etc/systemd/system
 #define initdir /etc/init.d
 %define deps python , python-configobj , python-cheetah , python-imaging , python-pyserial, python-usb
-%define bld_deps python , python-configobj
+%define bld_deps python
 %define html_root /srv/www/htdocs/weewx
 %define python python
 %endif
@@ -25,7 +25,7 @@
 %define initdir /etc/systemd/system
 #define initdir /etc/init.d
 %define deps python , python-configobj , python-cheetah , python-imaging , python-pyserial, python-usb
-%define bld_deps python , python-configobj
+%define bld_deps python
 %define html_root /srv/www/htdocs/weewx
 %define python python
 %endif
@@ -37,7 +37,7 @@
 %define initdir %{_initrddir}
 # must install pyserial and pyusb using easy_install or pip
 %define deps python, python-setuptools, python-configobj, python-cheetah, python-imaging
-%define bld_deps python, python-configobj
+%define bld_deps python
 %define python python2
 %define html_root /var/www/html/weewx
 %endif
@@ -49,7 +49,7 @@
 %define initdir %{_initrddir}
 # must install cheetah from epel-release or using pip3
 %define deps python3, python3-setuptools, python3-configobj, python3-pillow, python3-pyserial, python3-pyusb
-%define bld_deps python, python-configobj
+%define bld_deps python
 %define python python3
 %define html_root /var/www/html/weewx
 %endif
