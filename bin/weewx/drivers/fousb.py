@@ -79,11 +79,8 @@ Rainfall and Spurious Sensor Readings
 
 The rain counter occasionally reports incorrect rainfall.  On some stations,
 the counter decrements then increments.  Or the counter may increase by more
-than the number of bucket tips that actually occurred.  The max_rain_rate
-helps filter these bogus readings.  This filter is applied to any sample
-period.  If the volume of the samples in the period divided by the sample
-period interval are greater than the maximum rain rate, the samples are
-ignored.
+than the number of bucket tips that actually occurred. Invalid increments are
+handled by StdQC. 
 
 Spurious rain counter decrements often accompany what appear to be noisy
 sensor readings.  So if we detect a spurious rain counter decrement, we ignore
@@ -99,7 +96,9 @@ a sample period of 30 minutes this would be 12 cm (4.72 in)
 The rain counter is two bytes, so the maximum value is 0xffff or 65535.  This
 translates to 19660.5 mm of rainfall (19.66 m or 64.9 ft).  The console would
 have to run for two years with 2 inches of rainfall a day before the counter
-wraps around.
+wraps around. However some stations have a different counter size! It can be
+set in the weewx.conf file using "rain_counter_size". Please set the real
+counter size as hex value there.
 
 Pressure Calculations
 
@@ -613,8 +612,8 @@ datum_display_formats = {
     'magic_2' : '0x%2x',
     }
 
-# wrap value for rain counter
-rain_max = 0x10000
+# cm rain per rain sensor bucket tip
+rain_per_bucket_tip = 0.03
 
 # values for status:
 rain_overflow   = 0x80
@@ -640,7 +639,7 @@ def decode_status(status):
 def get_status(code, status):
     return 1 if status & code == code else 0
 
-def pywws2weewx(p, ts, last_rain, last_rain_ts, max_rain_rate):
+def pywws2weewx(p, ts, last_rain, last_rain_ts, last_spurious_rain, rain_counter_size):
     """Map the pywws dictionary to something weewx understands.
 
     p: dictionary of pywws readings
@@ -650,9 +649,8 @@ def pywws2weewx(p, ts, last_rain, last_rain_ts, max_rain_rate):
     last_rain: last rain total in cm
 
     last_rain_ts: timestamp of last rain total
-
-    max_rain_rate: maximum value for rain rate in cm/hr.  rainfall readings
-    resulting in a rain rate greater than this value will be ignored.
+    
+    last_spurious_rain: spurious rain value from last loop
     """
 
     packet = {}
@@ -680,22 +678,36 @@ def pywws2weewx(p, ts, last_rain, last_rain_ts, max_rain_rate):
     # calculate the rain increment from the rain total
     # watch for spurious rain counter decrement.  if decrement is significant
     # then it is a counter wraparound.  a small decrement is either a sensor
-    # glitch or a read from a previous record.  if the small decrement persists
-    # across multiple samples, it was probably a firmware glitch rather than
-    # a sensor glitch or old read.  a spurious increment will be filtered by
-    # the bogus rain rate check.
+    # glitch or a read from a previous record.
     total = packet['rain']
     packet['rainTotal'] = packet['rain']
+    if DEBUG_RAIN:
+        log.debug('rainTotal %s', total)
+    if total > (rain_counter_size - 1) * rain_per_bucket_tip:
+        log.warn('configured rain_counter_size is too small. rainTotal: %s rainTotalMax: %s',
+                 packet['rainTotal'], (rain_counter_size - 1) * rain_per_bucket_tip)
+    packet['spuriousRain'] = None
     if packet['rain'] is not None and last_rain is not None:
         if packet['rain'] < last_rain:
             pstr = '0x%04x' % packet['ptr'] if packet['ptr'] is not None else 'None'
-            if last_rain - packet['rain'] < rain_max * 0.3 * 0.5:
+            if last_rain - packet['rain'] < (rain_counter_size - 1) * rain_per_bucket_tip * 0.5:
                 log.info('ignoring spurious rain counter decrement (%s): '
                          'new: %s old: %s' % (pstr, packet['rain'], last_rain))
+                packet['spuriousRain'] = total
+                total = None
+                if last_spurious_rain is not None and last_spurious_rain == total:
+                    # if the small decrement persists
+                    # across multiple samples, it was probably a firmware glitch rather than
+                    # a sensor glitch or old read.
+                    log.info('got this spurious value a second time -> setting lastRain to this spurious value')
+                else:
+                    # ignore current spurious reading and use last one instead
+                    packet['rainTotal'] = last_rain
             else:
                 log.info('rain counter wraparound detected (%s): '
-                         'new: %s old: %s' % (pstr, packet['rain'], last_rain))
-                total += rain_max * 0.3
+                         'new: %s old: %s max: %s' % (pstr, packet['rain'], last_rain,
+                                                      (rain_counter_size - 1) * rain_per_bucket_tip))
+                total += (rain_counter_size) * rain_per_bucket_tip
     packet['rain'] = weewx.wxformulas.calculate_rain(total, last_rain)
 
     # report rainfall in log to diagnose rain counter issues
@@ -882,12 +894,6 @@ class FineOffsetUSB(weewx.drivers.AbstractDevice):
         polling_interval: How often to sample the USB interface for data.
         [Optional. Default is 60 seconds]
 
-        max_rain_rate: Maximum sane value for rain rate for a single polling
-        interval or archive interval, measured in cm/hr.  If the rain sample
-        for a single period is greater than this rate, the sample will be
-        logged but not added to the loop or archive data.
-        [Optional. Default is 24]
-
         timeout: How long to wait, in seconds, before giving up on a response
         from the USB port.
         [Optional. Default is 15 seconds]
@@ -906,7 +912,6 @@ class FineOffsetUSB(weewx.drivers.AbstractDevice):
         self.model             = stn_dict.get('model', 'WH1080 (USB)')
         self.polling_mode      = stn_dict.get('polling_mode', PERIODIC_POLLING)
         self.polling_interval  = int(stn_dict.get('polling_interval', 60))
-        self.max_rain_rate     = int(stn_dict.get('max_rain_rate', 24))
         self.timeout           = float(stn_dict.get('timeout', 15.0))
         self.wait_before_retry = float(stn_dict.get('wait_before_retry', 30.0))
         self.max_tries         = int(stn_dict.get('max_tries', 3))
@@ -918,12 +923,14 @@ class FineOffsetUSB(weewx.drivers.AbstractDevice):
         if self.pc_port is not None:
             self.pc_port = int(self.pc_port)
 
-        self.data_format   = stn_dict.get('data_format', '1080')
-        self.vendor_id     = 0x1941
-        self.product_id    = 0x8021
-        self.usb_interface = 0
-        self.usb_endpoint  = 0x81
-        self.usb_read_size = 0x20
+        self.data_format       = stn_dict.get('data_format', '1080')
+        self.rain_counter_size = int(stn_dict.get('rain_counter_size', 0xffff),16)
+        log.info('rain_counter_size is %s', hex(self.rain_counter_size))
+        self.vendor_id         = 0x1941
+        self.product_id        = 0x8021
+        self.usb_interface     = 0
+        self.usb_endpoint      = 0x81
+        self.usb_read_size     = 0x20
 
         # avoid USB activity this many seconds each side of the time when
         # console is believed to be writing to memory.
@@ -937,6 +944,7 @@ class FineOffsetUSB(weewx.drivers.AbstractDevice):
         self._last_rain_ts_loop = None
         self._last_rain_arc = None
         self._last_rain_ts_arc = None
+        self._spurious_rain_loop = None
         self._last_status = None
         self._fixed_block = None
         self._data_block = None
@@ -1073,9 +1081,10 @@ class FineOffsetUSB(weewx.drivers.AbstractDevice):
             ts = int(time.time() + 0.5)
             packet = pywws2weewx(p, ts,
                                  self._last_rain_loop, self._last_rain_ts_loop,
-                                 self.max_rain_rate)
+                                 self._spurious_rain_loop, self.rain_counter_size)
             self._last_rain_loop = packet['rainTotal']
             self._last_rain_ts_loop = ts
+            self._spurious_rain_loop = packet['spuriousRain']
             if packet['status'] != self._last_status:
                 log.info('station status %s (%s)' % 
                          (decode_status(packet['status']), packet['status']))
@@ -1101,7 +1110,7 @@ class FineOffsetUSB(weewx.drivers.AbstractDevice):
             ts = delta.days * 86400 + delta.seconds
             data = pywws2weewx(r['data'], ts,
                                self._last_rain_arc, self._last_rain_ts_arc,
-                               self.max_rain_rate)
+                               self._spurious_rain_loop, self.rain_counter_size)
             data['interval'] = r['interval']
             data['ptr'] = r['ptr']
             self._last_rain_arc = data['rainTotal']
