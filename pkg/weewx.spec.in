@@ -69,6 +69,7 @@ Group: Applications/Science
 Source: %{name}-%{version}.tar.gz
 URL: http://www.weewx.com
 License: GPLv3
+AutoReqProv: no
 Requires: %{deps}
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-%(%{__id_u} -n)
 BuildArch: noarch
