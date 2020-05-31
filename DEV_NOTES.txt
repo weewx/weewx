@@ -135,7 +135,6 @@ to manually purge debconf variables:
 
 to sign rpm packages you need .rpmmacros in your home directory:
 ~/.rpmmacros
-  %_signature gpg
   %_gpg_name  YOUR_NAME_HERE
 
 to generate gpg key used for signing packages:
