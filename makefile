@@ -234,7 +234,7 @@ fi
 # specify the operating system release target (e.g., 7 for centos7)
 OSREL=7
 RPMARCH=noarch
-RPMOS=$(shell if [ -f /etc/SuSE-release ]; then echo .suse; else echo .el$(OSREL); fi)
+RPMOS=$(shell if [ -f /etc/SuSE-release -o /etc/SUSE-brand ]; then echo .suse$(OSREL); else echo .el$(OSREL); fi)
 RPMBLDDIR=$(BLDDIR)/weewx-$(RPMVER)$(RPMOS).$(RPMARCH)
 RPMPKG=weewx-$(RPMVER)$(RPMOS).$(RPMARCH).rpm
 rpm-package: $(DSTDIR)/$(SRCPKG)
@@ -269,7 +269,13 @@ rpm-package-el7:
 rpm-package-el8:
 	make rpm-package OSREL=8
 
-suse-package: rpm-package
+suse-packages: rpm-package-suse12 rpm-package-suse15
+
+rpm-package-suse12:
+	make rpm-package OSREL=12
+
+rpm-package-suse15:
+	make rpm-package OSREL=15
 
 # run rpmlint on the redhat package
 check-rpm:
@@ -283,22 +289,24 @@ upload-redhat:
 	make upload-rpm RPMOS=.el8
 
 upload-suse:
-	make upload-rpm RPMOS=.suse$(OSREL)
+	make upload-rpm RPMOS=.suse12
+	make upload-rpm RPMOS=.suse15
 
 # shortcut to upload all packages from a single machine
 DEB2_PKG=python-weewx_$(DEBVER)_$(DEBARCH).deb
 DEB3_PKG=python3-weewx_$(DEBVER)_$(DEBARCH).deb
 RHEL7_PKG=weewx-$(RPMVER).el7.$(RPMARCH).rpm
 RHEL8_PKG=weewx-$(RPMVER).el8.$(RPMARCH).rpm
-SUSE_PKG=weewx-$(RPMVER).suse.$(RPMARCH).rpm
+SUSE12_PKG=weewx-$(RPMVER).suse12.$(RPMARCH).rpm
+SUSE12_PKG=weewx-$(RPMVER).suse15.$(RPMARCH).rpm
 upload-pkgs:
-	scp $(DSTDIR)/$(DEB2_PKG) $(DSTDIR)/$(DEB3_PKG) $(DSTDIR)/$(RHEL7_PKG) $(DSTDIR)/$(RHEL8_PKG) $(DSTDIR)/$(SUSE_PKG) $(USER)@$(WEEWX_COM):$(WEEWX_STAGING)
+	scp $(DSTDIR)/$(DEB2_PKG) $(DSTDIR)/$(DEB3_PKG) $(DSTDIR)/$(RHEL7_PKG) $(DSTDIR)/$(RHEL8_PKG) $(DSTDIR)/$(SUSE12_PKG) $(DSTDIR)/$(SUSE15_PKG) $(USER)@$(WEEWX_COM):$(WEEWX_STAGING)
 
 # move files from the upload directory to the release directory and set up the
 # symlinks to them from the download root directory
 DEVDIR=$(WEEWX_DOWNLOADS)/development_versions
 RELDIR=$(WEEWX_DOWNLOADS)/released_versions
-ARTIFACTS=$(DEB2_PKG) $(DEB3_PKG) $(RHEL7_PKG) $(RHEL8_PKG) $(SUSE_PKG) $(SRCPKG)
+ARTIFACTS=$(DEB2_PKG) $(DEB3_PKG) $(RHEL7_PKG) $(RHEL8_PKG) $(SUSE12_PKG) $(SUSE15_PKG) $(SRCPKG)
 release:
 	ssh $(USER)@$(WEEWX_COM) "for f in $(ARTIFACTS); do if [ -f $(DEVDIR)/\$$f ]; then mv $(DEVDIR)/\$$f $(RELDIR); fi; done"
 	ssh $(USER)@$(WEEWX_COM) "rm -f $(WEEWX_DOWNLOADS)/weewx*"

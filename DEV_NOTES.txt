@@ -104,6 +104,11 @@ to build redhat package install the following (use 'yum install'):
   rpm-build
   rpm-sign
 
+to build suse package install the following (use 'zypper install'):
+  git
+  rsync
+  rpm-build
+
 
 howto -------------------------------------------------------------------------
 
