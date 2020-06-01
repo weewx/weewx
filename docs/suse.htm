@@ -58,10 +58,10 @@ If your hardware supports hardware archiving, then how long you wait will depend
 <p>
     The default installation uses Simulator as the <span class='code'>station_type</span>.  To use real hardware, stop WeeWX, change to the actual station type and station parameters, delete the simulation data, then restart WeeWX:
 </p>
-<pre class='tty cmd'>sudo /etc/init.d/weewx stop
+<pre class='tty cmd'>sudo systemctl stop weewx
 sudo wee_config --reconfigure
 sudo rm /var/lib/weewx/weewx.sdb
-sudo /etc/init.d/weewx start</pre>
+sudo systemctl start weewx</pre>
 
 <h2>Start/Stop</h2>
 <p>To start/stop WeeWX:</p>
