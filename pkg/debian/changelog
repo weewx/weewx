@@ -1,6 +1,6 @@
 weewx (4.1.1-1) unstable; urgency=low
   * new upstream release
- -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Sat, 30 May 2020 19:08:41 -0400
+ -- Thomas Keffer (Author of weewx) <tkeffer@gmail.com>  Mon, 01 Jun 2020 15:16:57 -0700
 weewx (4.1.0-1) unstable; urgency=low
   * new upstream release
  -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Mon, 25 May 2020 15:10:24 -0400
