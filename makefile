@@ -234,11 +234,13 @@ fi
 
 # use rpmbuild to create the rpm package
 # specify the operating system release target (e.g., 7 for centos7)
-OSREL=7
+OSREL=
+# specify the operating system label (e.g., el, suse)
+RPMOS=$(shell if [ -f /etc/SuSE-release -o -f /etc/SUSE-brand ]; then echo suse; elif [ -f /etc/redhat-release ]; then echo el; else echo os; fi)
+# specify the architecture (always noarch)
 RPMARCH=noarch
-RPMOS=$(shell if [ -f /etc/SuSE-release -o /etc/SUSE-brand ]; then echo .suse$(OSREL); else echo .el$(OSREL); fi)
-RPMBLDDIR=$(BLDDIR)/weewx-$(RPMVER)$(RPMOS).$(RPMARCH)
-RPMPKG=weewx-$(RPMVER)$(RPMOS).$(RPMARCH).rpm
+RPMBLDDIR=$(BLDDIR)/weewx-$(RPMVER).$(RPMOS)$(OSREL).$(RPMARCH)
+RPMPKG=weewx-$(RPMVER).$(RPMOS)$(OSREL).$(RPMARCH).rpm
 rpm-package: $(DSTDIR)/$(SRCPKG)
 	rm -rf $(RPMBLDDIR)
 	mkdir -p -m 0755 $(RPMBLDDIR)
@@ -257,10 +259,10 @@ rpm-package: $(DSTDIR)/$(SRCPKG)
 	rpmbuild -ba --clean --define '_topdir $(CWD)/$(RPMBLDDIR)' --target noarch $(CWD)/$(RPMBLDDIR)/SPECS/weewx.spec
 	mkdir -p $(DSTDIR)
 	mv $(RPMBLDDIR)/RPMS/$(RPMARCH)/$(RPMPKG) $(DSTDIR)
-#	mv $(RPMBLDDIR)/SRPMS/weewx-$(RPMVER)$(RPMOS).src.rpm $(DSTDIR)
+#	mv $(RPMBLDDIR)/SRPMS/weewx-$(RPMVER).$(RPMOS)$(OSREL).src.rpm $(DSTDIR)
 ifeq ("$(SIGN)","1")
 	rpm --addsign $(DSTDIR)/$(RPMPKG)
-#	rpm --addsign $(DSTDIR)/weewx-$(RPMVER)$(RPMOS).src.rpm
+#	rpm --addsign $(DSTDIR)/weewx-$(RPMVER).$(RPMOS)$(OSREL).src.rpm
 endif
 
 redhat-packages: rpm-package-el7 rpm-package-el8
@@ -287,12 +289,12 @@ upload-rpm:
 	scp $(DSTDIR)/$(RPMPKG) $(USER)@$(WEEWX_COM):$(WEEWX_STAGING)
 
 upload-redhat:
-	make upload-rpm RPMOS=.el7
-	make upload-rpm RPMOS=.el8
+	make upload-rpm RPMOS=el OSREL=7
+	make upload-rpm RPMOS=el OSREL=8
 
 upload-suse:
-	make upload-rpm RPMOS=.suse12
-	make upload-rpm RPMOS=.suse15
+	make upload-rpm RPMOS=suse OSREL=12
+	make upload-rpm RPMOS=suse OSREL=15
 
 # shortcut to upload all packages from a single machine
 DEB2_PKG=python-weewx_$(DEBVER)_$(DEBARCH).deb
