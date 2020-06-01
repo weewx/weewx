@@ -36,8 +36,9 @@ help: info
 	@echo "       install  run the generic python install"
 	@echo "       version  get version from __init__ and insert elsewhere"
 	@echo ""
-	@echo " deb-changelog  prepend stub changelog entry for deb"
-	@echo " rpm-changelog  prepend stub changelog entry for rpm"
+	@echo "    deb-changelog prepend stub changelog entry for deb"
+	@echo " redhat-changelog prepend stub changelog entry for redhat"
+	@echo "   suse-changelog prepend stub changelog entry for suse"
 	@echo ""
 	@echo "    src-package create source tarball suitable for distribution"
 	@echo "debian-packages create the debian packages"
@@ -222,21 +223,22 @@ upload-debian:
 	scp $(DSTDIR)/python-$(DEBPKG) $(USER)@$(WEEWX_COM):$(WEEWX_STAGING)
 	scp $(DSTDIR)/python3-$(DEBPKG) $(USER)@$(WEEWX_COM):$(WEEWX_STAGING)
 
-RPMREVISION=1
-RPMVER=$(VERSION)-$(RPMREVISION)
-# add a skeleton entry to rpm changelog
-rpm-changelog:
-	if [ "`grep $(RPMVER) pkg/changelog.rpm`" = "" ]; then \
-  pkg/mkchangelog.pl --action stub --format redhat --release-version $(RPMVER) > pkg/changelog.rpm.new; \
-  cat pkg/changelog.rpm >> pkg/changelog.rpm.new; \
-  mv pkg/changelog.rpm.new pkg/changelog.rpm; \
-fi
-
-# use rpmbuild to create the rpm package
 # specify the operating system release target (e.g., 7 for centos7)
 OSREL=
 # specify the operating system label (e.g., el, suse)
 RPMOS=$(shell if [ -f /etc/SuSE-release -o -f /etc/SUSE-brand ]; then echo suse; elif [ -f /etc/redhat-release ]; then echo el; else echo os; fi)
+
+RPMREVISION=1
+RPMVER=$(VERSION)-$(RPMREVISION)
+# add a skeleton entry to rpm changelog
+rpm-changelog:
+	if [ "`grep $(RPMVER) pkg/changelog.el`" = "" ]; then \
+  pkg/mkchangelog.pl --action stub --format redhat --release-version $(RPMVER) > pkg/changelog.$(RPMOS).new; \
+  cat pkg/changelog.$(RPMOS) >> pkg/changelog.$(RPMOS).new; \
+  mv pkg/changelog.$(RPMOS).new pkg/changelog.$(RPMOS); \
+fi
+
+# use rpmbuild to create the rpm package
 # specify the architecture (always noarch)
 RPMARCH=noarch
 RPMBLDDIR=$(BLDDIR)/weewx-$(RPMVER).$(RPMOS)$(OSREL).$(RPMARCH)
@@ -254,7 +256,7 @@ rpm-package: $(DSTDIR)/$(SRCPKG)
             -e 's%RPMREVISION%$(RPMREVISION)%' \
             -e 's%OSREL%$(OSREL)%' \
             pkg/weewx.spec.in > $(RPMBLDDIR)/SPECS/weewx.spec
-	cat pkg/changelog.rpm >> $(RPMBLDDIR)/SPECS/weewx.spec
+	cat pkg/changelog.$(RPMOS) >> $(RPMBLDDIR)/SPECS/weewx.spec
 	cp dist/weewx-$(VERSION).tar.gz $(RPMBLDDIR)/SOURCES
 	rpmbuild -ba --clean --define '_topdir $(CWD)/$(RPMBLDDIR)' --target noarch $(CWD)/$(RPMBLDDIR)/SPECS/weewx.spec
 	mkdir -p $(DSTDIR)
@@ -265,21 +267,27 @@ ifeq ("$(SIGN)","1")
 #	rpm --addsign $(DSTDIR)/weewx-$(RPMVER).$(RPMOS)$(OSREL).src.rpm
 endif
 
+redhat-changelog:
+	make rpm-changelog RPMOS=el
+
 redhat-packages: rpm-package-el7 rpm-package-el8
 
 rpm-package-el7:
-	make rpm-package OSREL=7
+	make rpm-package RPMOS=el OSREL=7
 
 rpm-package-el8:
-	make rpm-package OSREL=8
+	make rpm-package RPMOS=el OSREL=8
+
+suse-changelog:
+	make rpm-changelog RPMOS=suse
 
 suse-packages: rpm-package-suse12 rpm-package-suse15
 
 rpm-package-suse12:
-	make rpm-package OSREL=12
+	make rpm-package RPMOS=suse OSREL=12
 
 rpm-package-suse15:
-	make rpm-package OSREL=15
+	make rpm-package RPMOS=suse OSREL=15
 
 # run rpmlint on the rpm package
 check-rpm:
