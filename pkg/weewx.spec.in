@@ -21,7 +21,7 @@
 %define relos .suse15
 %define platform suse
 %define initdir /etc/systemd/system
-%define deps python3, python3-setuptools, python3-configobj, python3-cheetah, python3-pillow, python3-pyserial, python3-pyusb
+%define deps python3, python3-setuptools, python3-configobj, python3-Cheetah3, python3-Pillow, python3-pyserial, python3-usb
 %define python python3
 %define html_root /var/www/html/weewx
 %endif

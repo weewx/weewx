@@ -388,6 +388,30 @@ push-yum-repo:
 release-yum-repo:
 	ssh $(USER)@$(WEEWX_COM) "rsync -arv /var/www/html/yum-test/ /var/www/html/yum"
 
+SUSE_REPO=~/.suse/weewx
+suse-repo:
+	mkdir -p $(SUSE_REPO)/{suse12,suse15}/RPMS
+	cp -p pkg/index-suse.html ~/.suse/index.html
+	cp -p pkg/weewx-suse12.repo ~/.suse
+	cp -p pkg/weewx-suse15.repo ~/.suse
+
+pull-suse-repo:
+	mkdir -p $(SUSE_REPO)
+	rsync -arv $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/suse/ ~/.suse
+
+update-suse-repo:
+	cp -p $(DSTDIR)/weewx-$(RPMVER).suse12.$(RPMARCH).rpm $(SUSE_REPO)/suse12/RPMS
+	createrepo $(SUSE_REPO)/suse12
+	cp -p $(DSTDIR)/weewx-$(RPMVER).suse15.$(RPMARCH).rpm $(SUSE_REPO)/suse15/RPMS
+	createrepo $(SUSE_REPO)/suse15
+
+push-suse-repo:
+	rsync -arv ~/.suse/ $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/suse-test
+
+# copy the testing repository onto the production repository
+release-suse-repo:
+	ssh $(USER)@$(WEEWX_COM) "rsync -arv /var/www/html/suse-test/ /var/www/html/suse"
+
 # run perlcritic to ensure clean perl code.  put these in ~/.perlcriticrc:
 # [-CodeLayout::RequireTidyCode]
 # [-Modules::ProhibitExcessMainComplexity]

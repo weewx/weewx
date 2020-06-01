@@ -36,7 +36,12 @@ checklist for doing a release:
      2. make update-yum-repo
      3. make push-yum-repo
      4. ssh weewx.com rsync -arv /var/www/html/yum-test/ /var/www/html/yum
-10. Announce the release to the weewx user's group.
+10. Update the suse repository
+     1. make pull-suse-repo
+     2. make update-suse-repo
+     3. make push-suse-repo
+     4. ssh weewx.com rsync -arv /var/www/html/suse-test/ /var/www/html/suse
+11. Announce the release to the weewx user's group.
 
 
 
@@ -89,6 +94,11 @@ make push-apt-repo
 make pull-yum-repo
 make update-yum-repo (requires local installation of createrepo)
 make push-yum-repo
+
+# update the suse repository
+make pull-suse-repo
+make update-suse-repo (requires local installation of createrepo)
+make push-suse-repo
 
 
 pre-requisites ----------------------------------------------------------------
@@ -173,6 +183,12 @@ debian install/remove:
 redhat install/remove:
   yum install weewx-x.y.z-r.rpm [--nogpgcheck]    # install with yum
   yum remove weewx                                # remove with yum
+  rpm -i weewx-x.y.z-r.rpm                        # install with rpm directly
+  rpm -e weewx                                    # remove with rpm
+
+suse install/remove:
+  zypper install weewx-x.y.z-r.rpm [--nogpgcheck] # install with zypper
+  zypper remove weewx                             # remove with zypper
   rpm -i weewx-x.y.z-r.rpm                        # install with rpm directly
   rpm -e weewx                                    # remove with rpm
 
