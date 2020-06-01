@@ -377,9 +377,9 @@ pull-yum-repo:
 
 update-yum-repo:
 	cp -p $(DSTDIR)/weewx-$(RPMVER).el7.$(RPMARCH).rpm $(YUM_REPO)/el7/RPMS
-	createrepo -o $(YUM_REPO)/el7 $(YUM_REPO)/el7
+	createrepo $(YUM_REPO)/el7
 	cp -p $(DSTDIR)/weewx-$(RPMVER).el8.$(RPMARCH).rpm $(YUM_REPO)/el8/RPMS
-	createrepo -o $(YUM_REPO)/el8 $(YUM_REPO)/el8
+	createrepo $(YUM_REPO)/el8
 
 push-yum-repo:
 	rsync -arv ~/.yum/ $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/yum-test
