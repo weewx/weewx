@@ -1721,7 +1721,11 @@ class AWEKASThread(RESTThread):
         """Specialized version of format_url() for the AWEKAS protocol."""
 
         # Convert to units required by awekas
-        record = weewx.units.to_METRICWX(in_record)
+        record = weewx.units.to_METRIC(in_record)
+        if 'dayRain' in record and record['dayRain'] is not None:
+            record['dayRain'] *= 10
+        if 'rainRate' in record and record['rainRate'] is not None:
+            record['rainRate'] *= 10
 
         time_tt = time.gmtime(record['dateTime'])
         # assemble an array of values in the proper order

@@ -1,7 +1,10 @@
 weewx change history
 --------------------
 
-4.1.1 05/30/2020
+4.1.1 06/01/2020
+
+Fixed problem that caused wind speed to be reported to AWEKAS in m/s instead
+of km/h.
 
 Fixed problem that caused FTP attempts not to be retried.
 
