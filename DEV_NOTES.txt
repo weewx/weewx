@@ -15,7 +15,7 @@ checklist for doing a release:
      1. make src-package
      2. make debian-packages
      3. make redhat-packages
-     4. make suse-package
+     4. make suse-packages
 5. Sanity check on production machine: unpack the tarball, install, run
 6. Tag it
      1. git tag -a v1.3.1 -m "Version 1.3.1 release"
@@ -66,7 +66,7 @@ make redhat-packages upload-redhat
 
 # on suse host, build the suse packages, upload to development_versions
 rm -rf build dist
-make suse-package upload-suse
+make suse-packages upload-suse
 
 # tag the release
 git tag -a vX.Y.Z -m "tag release X.Y.Z"

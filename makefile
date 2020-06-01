@@ -42,6 +42,7 @@ help: info
 	@echo "    src-package create source tarball suitable for distribution"
 	@echo "debian-packages create the debian packages"
 	@echo "redhat-packages create the redhat packages"
+	@echo "  suse-packages create the suse packages"
 	@echo ""
 	@echo "     check-deb  check the deb package"
 	@echo "     check-rpm  check the rpm package"
@@ -50,6 +51,7 @@ help: info
 	@echo "    upload-src  upload the src package"
 	@echo " upload-debian  upload the debian deb packages"
 	@echo " upload-redhat  upload the redhat rpm packages"
+	@echo "   upload-suse  upload the suse rpm packages"
 	@echo ""
 	@echo "   upload-docs  upload docs to weewx.com"
 	@echo ""
@@ -277,7 +279,7 @@ rpm-package-suse12:
 rpm-package-suse15:
 	make rpm-package OSREL=15
 
-# run rpmlint on the redhat package
+# run rpmlint on the rpm package
 check-rpm:
 	rpmlint $(DSTDIR)/$(RPMPKG)
 
