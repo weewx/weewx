@@ -345,24 +345,29 @@ apt-repo:
 # make local copy of the published apt repository
 pull-apt-repo:
 	mkdir -p ~/.aptly
-	rsync -arv $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/aptly/ ~/.aptly
+	rsync -arvz $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/aptly/ ~/.aptly
 
 # add the latest version to the local apt repo using aptly
 update-apt-repo:
 	aptly repo add python2-weewx $(DSTDIR)/python-$(DEBPKG)
 	aptly snapshot create python-weewx-$(DEBVER) from repo python2-weewx
-	aptly publish switch squeeze python2 python-weewx-$(DEBVER)
+	aptly publish drop squeeze python2
+	aptly publish -architectures=all snapshot python-weewx-$(DEBVER) python2
+# i would prefer to just do a switch, but that does not work. idkw
+#	aptly publish switch squeeze python2 python-weewx-$(DEBVER)
 	aptly repo add python3-weewx $(DSTDIR)/python3-$(DEBPKG)
 	aptly snapshot create python3-weewx-$(DEBVER) from repo python3-weewx
-	aptly publish switch buster python3 python3-weewx-$(DEBVER)
+	aptly publish drop buster python3
+	aptly publish -architectures=all snapshot python3-weewx-$(DEBVER) python3
+#	aptly publish switch buster python3 python3-weewx-$(DEBVER)
 
 # publish apt repo changes to the public weewx apt repo
 push-apt-repo:
-	rsync -arv ~/.aptly/ $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/aptly-test
+	rsync -arvz ~/.aptly/ $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/aptly-test
 
 # copy the testing repository onto the production repository
 release-apt-repo:
-	ssh $(USER)@$(WEEWX_COM) "rsync -arv /var/www/html/aptly-test/ /var/www/html/aptly"
+	ssh $(USER)@$(WEEWX_COM) "rsync -arvz /var/www/html/aptly-test/ /var/www/html/aptly"
 
 YUM_REPO=~/.yum/weewx
 yum-repo:
@@ -373,7 +378,7 @@ yum-repo:
 
 pull-yum-repo:
 	mkdir -p $(YUM_REPO)
-	rsync -arv $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/yum/ ~/.yum
+	rsync -arvz $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/yum/ ~/.yum
 
 update-yum-repo:
 	cp -p $(DSTDIR)/weewx-$(RPMVER).el7.$(RPMARCH).rpm $(YUM_REPO)/el7/RPMS
@@ -382,11 +387,11 @@ update-yum-repo:
 	createrepo $(YUM_REPO)/el8
 
 push-yum-repo:
-	rsync -arv ~/.yum/ $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/yum-test
+	rsync -arvz ~/.yum/ $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/yum-test
 
 # copy the testing repository onto the production repository
 release-yum-repo:
-	ssh $(USER)@$(WEEWX_COM) "rsync -arv /var/www/html/yum-test/ /var/www/html/yum"
+	ssh $(USER)@$(WEEWX_COM) "rsync -arvz /var/www/html/yum-test/ /var/www/html/yum"
 
 SUSE_REPO=~/.suse/weewx
 suse-repo:
@@ -397,7 +402,7 @@ suse-repo:
 
 pull-suse-repo:
 	mkdir -p $(SUSE_REPO)
-	rsync -arv $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/suse/ ~/.suse
+	rsync -arvz $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/suse/ ~/.suse
 
 update-suse-repo:
 	cp -p $(DSTDIR)/weewx-$(RPMVER).suse12.$(RPMARCH).rpm $(SUSE_REPO)/suse12/RPMS
@@ -406,11 +411,11 @@ update-suse-repo:
 	createrepo $(SUSE_REPO)/suse15
 
 push-suse-repo:
-	rsync -arv ~/.suse/ $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/suse-test
+	rsync -arvz ~/.suse/ $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/suse-test
 
 # copy the testing repository onto the production repository
 release-suse-repo:
-	ssh $(USER)@$(WEEWX_COM) "rsync -arv /var/www/html/suse-test/ /var/www/html/suse"
+	ssh $(USER)@$(WEEWX_COM) "rsync -arvz /var/www/html/suse-test/ /var/www/html/suse"
 
 # run perlcritic to ensure clean perl code.  put these in ~/.perlcriticrc:
 # [-CodeLayout::RequireTidyCode]
