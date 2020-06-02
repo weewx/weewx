@@ -226,3 +226,56 @@ def config_from_str(input_str):
         open_str = input_str
     config = configobj.ConfigObj(StringIO(open_str), encoding='utf-8', default_encoding='utf-8')
     return config
+
+
+# def deep_copy(old_dict):
+#     """ Return a deepcopy of a ConfigObj."""
+#
+#     # Turn off interpolation. Save the old interpolation value.
+#     old_interpolation = old_dict.main.interpolation
+#     old_dict.main.interpolation = False
+#
+#     # All child dictionaries should be type "Section". The top-level dictionary should
+#     # be type "ConfigObj".
+#     if isinstance(old_dict, configobj.ConfigObj):
+#         new_dict = configobj.ConfigObj(encoding=old_dict.encoding,
+#                                        default_encoding=old_dict.default_encoding)
+#     elif isinstance(old_dict, configobj.Section):
+#         new_dict = configobj.Section(old_dict.parent, old_dict.depth, old_dict.main)
+#     else:
+#         new_dict = dict()
+#
+#     for entry in old_dict:
+#         this_entry = old_dict[entry]
+#         if isinstance(this_entry, dict):
+#             this_entry = deep_copy(this_entry)
+#         elif isinstance(this_entry, list):
+#             # create a copy rather than a reference
+#             this_entry = list(this_entry)
+#         elif isinstance(this_entry, tuple):
+#             # create a copy rather than a reference
+#             this_entry = tuple(this_entry)
+#         new_dict[entry] = this_entry
+#
+#     # Restore the old interpolation value
+#     old_dict.main.interpolation = old_interpolation
+#
+#     return new_dict
+
+def deep_copy(old_dict):
+    """ Return a deepcopy of a ConfigObj."""
+    import copy
+
+    # Turn off interpolation. It seems to interfere with the deep copying process.
+    # Save the old interpolation value.
+    old_interpolation = old_dict.main.interpolation
+    old_dict.main.interpolation = False
+
+    new_dict = copy.deepcopy(old_dict)
+
+    # Restore the old interpolation value
+    old_dict.main.interpolation = old_interpolation
+
+    return new_dict
+
+

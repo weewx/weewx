@@ -1,6 +1,12 @@
 weewx change history
 --------------------
 
+4.1.2 MM/DD/YYYY
+
+Fixed problem caused by specifying a [Logging]/[[formatters]] section in
+weewx.conf that uses interpolated variables.
+
+
 4.1.1 06/01/2020
 
 Fixed problem that caused wind speed to be reported to AWEKAS in m/s instead
