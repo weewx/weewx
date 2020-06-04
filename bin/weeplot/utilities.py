@@ -66,6 +66,8 @@ def scale(fmn, fmx, prescale = (None, None, None), nsteps = 10):
     (99.00, 100.00, 0.20)
     >>> print "(%.2f, %.2f, %.2f)" % scale(100.0, 100.0, (100, None, None))
     (100.00, 101.00, 0.20)
+    >>> print "(%.2f, %.2f, %.2f)" % scale(100.0, 100.0, (100, None, None))
+    (0.00, 120.00, 20.00)
 
     """
     
@@ -98,7 +100,7 @@ def scale(fmn, fmx, prescale = (None, None, None), nsteps = 10):
         if min_interval is not None:
             step_out = min_interval * nsteps
         else:
-            step_out = 0.01 * abs(fmx) if fmx else 0.1
+            step_out = 0.01 * round(abs(fmx), 2) if fmx else 0.1
         if maxscale is not None:
             # maxscale if fixed. Move fmn.
             fmn = fmx - step_out
@@ -117,6 +119,10 @@ def scale(fmn, fmx, prescale = (None, None, None), nsteps = 10):
         if maxscale < minscale:
             raise weeplot.ViolatedPrecondition("scale() called with prescale max less than min")
         frange = maxscale - minscale
+    elif minscale is not None:
+        frange = fmx - minscale
+    elif maxscale is not None:
+        frange = maxscale - fmn
     else:
         frange = fmx - fmn
     steps = frange / nsteps
