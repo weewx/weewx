@@ -1362,8 +1362,9 @@ class StdStationRegistry(StdRESTful):
 
         super(StdStationRegistry, self).__init__(engine, config_dict)
 
-        # Extract a copy of the dictionary with the registry options:
-        _registry_dict = accumulateLeaves(config_dict['StdRESTful']['StationRegistry'], max_level=1)
+        _registry_dict = get_site_dict(config_dict, 'StationRegistry', 'register_this_station')
+        if _registry_dict is None:
+            return
 
         # Should the service be run?
         if not to_bool(_registry_dict.pop('register_this_station', False)):
