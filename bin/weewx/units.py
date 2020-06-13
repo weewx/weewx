@@ -91,6 +91,9 @@ obs_group_dict = ListOfDicts({
     "beaufort"           : "group_count",
     "leafWet1"           : "group_count",
     "leafWet2"           : "group_count",
+    "lightning_strike_count"    : "group_count",
+    "lightning_disturber_count" : "group_count",
+    "lightning_noise_count"     : "group_count",
     "cooldeg"            : "group_degree_day",
     "heatdeg"            : "group_degree_day",
     "growdeg"            : "group_degree_day",
@@ -99,7 +102,9 @@ obs_group_dict = ListOfDicts({
     "windDir"            : "group_direction",
     "windGustDir"        : "group_direction",
     "windrun"            : "group_distance",
+    "lightning_distance" : "group_distance",
     "interval"           : "group_interval",
+    "luminosity"         : "group_lux",
     "soilMoist1"         : "group_moisture",
     "soilMoist2"         : "group_moisture",
     "soilMoist3"         : "group_moisture",
@@ -173,7 +178,8 @@ obs_group_dict = ListOfDicts({
     "consBatteryVoltage" : "group_volt",
     "heatingVoltage"     : "group_volt",
     "referenceVoltage"   : "group_volt",
-    "supplyVoltage"      : "group_volt"
+    "supplyVoltage"      : "group_volt",
+    "lightning_energy"   : "group_volt"
 })
 
 # Some aggregations when applied to a type result in a different unit
@@ -215,6 +221,7 @@ USUnits = ListOfDicts({
     "group_energy2"     : "watt_second",
     "group_interval"    : "minute",
     "group_length"      : "inch",
+    "group_lux"         : "lux",
     "group_moisture"    : "centibar",
     "group_percent"     : "percent",
     "group_power"       : "watt",
@@ -249,6 +256,7 @@ MetricUnits = ListOfDicts({
     "group_energy2"     : "watt_second",
     "group_interval"    : "minute",
     "group_length"      : "cm",
+    "group_lux"         : "lux",
     "group_moisture"    : "centibar",
     "group_percent"     : "percent",
     "group_power"       : "watt",
@@ -424,6 +432,7 @@ default_unit_format_dict = {
     "knot2"              : "%.1f",
     "liter"              : "%.1f",
     "litre"              : "%.1f",
+    "lux"                : "%d",
     "mbar"               : "%.1f",
     "mbar_per_hour"      : "%.4f",
     "meter"              : "%.0f",
@@ -481,6 +490,7 @@ default_unit_label_dict = {
     "knot2"             : u" knots",
     "liter"             : u" l",
     "litre"             : u" l",
+    "lux"               : u" lux",
     "mbar"              : u" mbar",
     "mbar_per_hour"     : u" mbar/h",
     "meter"             : u" meters",
