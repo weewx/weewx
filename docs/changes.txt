@@ -3,6 +3,10 @@ weewx change history
 
 4.1.2 MM/DD/YYYY
 
+Undocumented option retry_certificate has been renamed to retry_ssl, and now
+covers all SSL errors (not just certificate errors). Fixes issue #569. Thanks
+to user Eric!
+
 Fixed problem caused by specifying a [Logging]/[[formatters]] section in
 weewx.conf that uses interpolated variables.
 
