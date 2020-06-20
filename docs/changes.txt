@@ -3,6 +3,9 @@ weewx change history
 
 4.1.2 MM/DD/YYYY
 
+Changed TE923 bucket size from 0.02589 inches to 1/36 of an inch
+(0.02777778 in). PR #575. Fixes issue #574. Thanks to user Timothy!
+
 Undocumented option retry_certificate has been renamed to retry_ssl, and now
 covers all SSL errors (not just certificate errors). Fixes issue #569. Thanks
 to user Eric!
