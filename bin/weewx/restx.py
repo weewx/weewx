@@ -1481,7 +1481,12 @@ class StationRegistryThread(RESTThread):
         for _key in StationRegistryThread._FORMATS:
             v = record[_key]
             if v is not None:
-                _liststr.append(urllib.parse.quote_plus(StationRegistryThread._FORMATS[_key] % v, '='))
+                # Under Python 2, quote_plus() can only accept strings (no unicode).
+                # If necessary, convert.
+                if isinstance(v, six.string_types):
+                    v = six.ensure_str(v)
+                _liststr.append(urllib.parse.quote_plus(StationRegistryThread._FORMATS[_key] % v,
+                                                        '='))
         _urlquery = '&'.join(_liststr)
         _url = "%s?%s" % (self.server_url, _urlquery)
         return _url

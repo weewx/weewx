@@ -3,6 +3,9 @@ weewx change history
 
 4.1.2 MM/DD/YYYY
 
+Fixed problem that could cause the station registry to fail if given a location
+with a non-ASCII location name.
+
 Changed TE923 bucket size from 0.02589 inches to 1/36 of an inch
 (0.02777778 in). PR #575. Fixes issue #574. Thanks to user Timothy!
 
