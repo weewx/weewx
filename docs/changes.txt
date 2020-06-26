@@ -6,6 +6,8 @@ weewx change history
 Fixed problem caused by specifying a [Logging]/[[formatters]] section in
 weewx.conf that uses interpolated variables.
 
+Improved auto-scaling of plot axes.
+
 
 4.1.1 06/01/2020
 
