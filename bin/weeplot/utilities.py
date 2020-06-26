@@ -68,6 +68,8 @@ def scale(fmn, fmx, prescale = (None, None, None), nsteps = 10):
     (100.00, 101.00, 0.20)
     >>> print("(%.2f, %.2f, %.2f)" % scale(100.0, 100.0, (0, None, None)))
     (0.00, 120.00, 20.00)
+    >>> print("(%.2f, %.2f, %.2f)" % scale(0.0, 0.2, (None, 100, None)))
+    (0.00, 100.00, 20.00)
 
     """
 
