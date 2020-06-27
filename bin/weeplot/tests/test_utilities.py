@@ -59,6 +59,12 @@ class WeePlotUtilTest(unittest.TestCase):
         self.assertEqual("(%.5f, %.5f, %.5f)" % scale(100.0, 100.0, (100, None, None)),
                          "(100.00000, 101.00000, 0.20000)")
 
+        self.assertEqual("(%.5f, %.5f, %.5f)" % scale(100.0, 100.0, (0, None, None)),
+                         "(0.00000, 120.00000, 20.00000)")
+
+        self.assertEqual("(%.5f, %.5f, %.5f)" % scale(0.0, 0.2, (None, 100, None)),
+                         "(0.00000, 100.00000, 20.00000)")
+
         self.assertEqual("(%.5f, %.5f, %.5f)" % scale(0.0, 0.0, (0, None, 1), 10),
                          "(0.00000, 10.00000, 2.00000)")
 
