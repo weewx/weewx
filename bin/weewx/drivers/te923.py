@@ -46,14 +46,18 @@ From the Meade TE9233W manual (TE923W-M_IM(ENG)_BK_010511.pdf):
   Wind/Gust sampling interval: 11 seconds
   UV transmitting interval: 300 seconds
   Rain counter resolution: 0.03 in (0.6578 mm)
+    (but console shows instead: 1/36 in (0.705556 mm))
   Battery status of each sensor is checked every hour
 
 This implementation polls the station for data.  Use the polling_interval to
 control the frequency of polling.  Default is 10 seconds.
 
-The manual says that a single bucket tip is 0.03 inches.  In reality, a single
-bucket tip is between 0.02 and 0.03 in (0.508 to 0.762 mm).  This driver uses
-a value of 0.02589 in (0.6578 mm) per bucket tip.
+The manual claims that a single bucket tip is 0.03 inches or 0.6578 mm but
+neither matches the console display.  In reality, a single bucket tip is
+between 0.02 and 0.03 in (0.508 to 0.762 mm).  This driver uses a value of 1/36
+inch as observed in 36 bucket tips per 1.0 inches displayed on the console.
+1/36 = 0.02777778 inch = 0.705555556 mm, or 1.0725989 times larger than the
+0.02589 inch = 0.6578 mm that was used prior to version 0.41.1.
 
 The station has altitude, latitude, longitude, and time.
 
@@ -450,7 +454,7 @@ from weeutil.weeutil import timestamp_to_string
 log = logging.getLogger(__name__)
 
 DRIVER_NAME = 'TE923'
-DRIVER_VERSION = '0.41'
+DRIVER_VERSION = '0.41.1'
 
 def loader(config_dict, engine):  # @UnusedVariable
     return TE923Driver(**config_dict[DRIVER_NAME])
@@ -562,7 +566,7 @@ class TE923Configurator(weewx.drivers.AbstractConfigurator):
     }
     
     city_dict = {
-        0: ["ADD", 3, 0, 9, 0o1, "N", 38, 44, "E", "Addis Ababa, Ethiopia"],
+        0: ["ADD", 3, 0, 9, 1, "N", 38, 44, "E", "Addis Ababa, Ethiopia"],
         1: ["ADL", 9.5, 1, 34, 55, "S", 138, 36, "E", "Adelaide, Australia"],
         2: ["AKR", 2, 4, 39, 55, "N", 32, 55, "E", "Ankara, Turkey"],
         3: ["ALG", 1, 0, 36, 50, "N", 3, 0, "E", "Algiers, Algeria"],
@@ -1251,7 +1255,7 @@ class TE923Driver(weewx.drivers.AbstractDevice):
 
         packet['rainTotal'] = data['rain']
         if packet['rainTotal'] is not None:
-            packet['rainTotal'] *= 0.06578 # weewx wants cm
+            packet['rainTotal'] *= 0.0705555556 # weewx wants cm (1/36 inch)
         packet['rain'] = weewx.wxformulas.calculate_rain(
             packet['rainTotal'], last_rain)
 
@@ -2028,9 +2032,10 @@ class TE923Station(object):
             data[label % 'max'], _ = decode_humid(buf[12+i*6])
         data['windspeed_max'], _ = decode_ws(buf[37], buf[38])
         data['windgust_max'], _ = decode_ws(buf[39], buf[40])
-        data['rain_yesterday'] = (buf[42] * 0x100 + buf[41]) * 0.6578
-        data['rain_week'] = (buf[44] * 0x100 + buf[43]) * 0.6578
-        data['rain_month'] = (buf[46] * 0x100 + buf[45]) * 0.6578
+        # not sure if this is the correct units here...
+        data['rain_yesterday'] = (buf[42] * 0x100 + buf[41]) * 0.705555556
+        data['rain_week'] = (buf[44] * 0x100 + buf[43]) * 0.705555556
+        data['rain_month'] = (buf[46] * 0x100 + buf[45]) * 0.705555556
         tt = time.localtime()
         offset = 1 if tt[3] < 12 else 0
         month = bcd2int(buf[47] & 0xf)
