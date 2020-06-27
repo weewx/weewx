@@ -3,6 +3,9 @@ weewx change history
 
 4.1.2 MM/DD/YYYY
 
+Fixed problem that caused reporting units to revert to US if they were in a
+mixed unit system. Fixes issue #576.
+
 Fixed problem that could cause the station registry to fail if given a location
 with a non-ASCII location name.
 
