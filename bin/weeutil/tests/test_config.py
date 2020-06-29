@@ -43,7 +43,7 @@ class TestConfig(unittest.TestCase):
                      }
 
         c_in = configobj.ConfigObj(test_dict, encoding='utf-8')
-        c_out = weeutil.config.deep_copy(c_in['Logging'])
+        c_out = weeutil.config.deep_copy(c_in)['Logging']
         self.assertIsInstance(c_out, configobj.Section)
         self.assertEqual(c_out, test_dict['Logging'])
         # Try changing something and see if it's still equal:

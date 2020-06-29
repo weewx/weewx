@@ -246,7 +246,7 @@ class StdReportEngine(threading.Thread):
         if 'Defaults' in self.config_dict['StdReport']:
             # Because we will be modifying the results, make a deep copy of the [[Defaults]]
             # section.
-            merge_dict = weeutil.config.deep_copy(self.config_dict['StdReport']['Defaults'])
+            merge_dict = weeutil.config.deep_copy(self.config_dict)['StdReport']['Defaults']
             weeutil.config.merge_config(skin_dict, merge_dict)
 
         # Inject any scalar overrides. This is for backwards compatibility. These options should now go

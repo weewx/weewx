@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2018-2019 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2018-2020 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -229,18 +229,17 @@ def config_from_str(input_str):
 
 
 def deep_copy(old_dict):
-    """ Return a deepcopy of a ConfigObj."""
-    import copy
+    """ Return a deep copy of a ConfigObj. This utility can only be used by a ConfigObj,
+    not one of its Sections."""
+    import io
 
-    # Turn off interpolation. It seems to interfere with the deep copying process.
-    # Save the old interpolation value.
-    old_interpolation = old_dict.main.interpolation
-    old_dict.main.interpolation = False
-
-    new_dict = copy.deepcopy(old_dict)
-
-    # Restore the old interpolation value
-    old_dict.main.interpolation = old_interpolation
+    with io.BytesIO() as fd:
+        old_dict.write(fd)
+        fd.seek(0)
+        new_dict = configobj.ConfigObj(fd,
+                                       encoding=old_dict.encoding,
+                                       default_encoding=old_dict.default_encoding,
+                                       interpolation=old_dict.interpolation)
 
     return new_dict
 

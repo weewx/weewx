@@ -134,11 +134,9 @@ class StdEngine(object):
                         log.debug("No services in service group %s", service_group)
                         continue
                     log.debug("Loading service %s", svc)
-                    # Make sure each service gets its own copy of the config dictionary.
-                    config_dict_copy = weeutil.config.deep_copy(config_dict)
-                    # Get the class, then instantiate it with self and the new config dictionary as
+                    # Get the class, then instantiate it with self and the config dictionary as
                     # arguments:
-                    obj = weeutil.weeutil.get_object(svc)(self,config_dict_copy)
+                    obj = weeutil.weeutil.get_object(svc)(self, config_dict)
                     # Append it to the list of open services.
                     self.service_obj.append(obj)
                     log.debug("Finished loading service %s", svc)
