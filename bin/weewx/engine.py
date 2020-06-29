@@ -25,6 +25,7 @@ import weewx.manager
 import weewx.qc
 import weewx.station
 import weewx.units
+import weeutil.config
 from weeutil.weeutil import to_bool, to_int, to_sorted_string
 from weewx import all_service_groups
 
@@ -133,9 +134,11 @@ class StdEngine(object):
                         log.debug("No services in service group %s", service_group)
                         continue
                     log.debug("Loading service %s", svc)
-                    # Get the class, then instantiate it with self and the config dictionary as
+                    # Make sure each service gets its own copy of the config dictionary.
+                    config_dict_copy = weeutil.config.deep_copy(config_dict)
+                    # Get the class, then instantiate it with self and the new config dictionary as
                     # arguments:
-                    obj = weeutil.weeutil.get_object(svc)(self,config_dict)
+                    obj = weeutil.weeutil.get_object(svc)(self,config_dict_copy)
                     # Append it to the list of open services.
                     self.service_obj.append(obj)
                     log.debug("Finished loading service %s", svc)

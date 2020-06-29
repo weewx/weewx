@@ -3,6 +3,9 @@ weewx change history
 
 4.1.2 MM/DD/YYYY
 
+Fixed problem where threads attempt to access non-existent database. Fixes
+issue #579.
+
 Fixed problem that caused reporting units to revert to US if they were in a
 mixed unit system. Fixes issue #576.
 
