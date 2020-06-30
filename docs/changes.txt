@@ -22,6 +22,10 @@ to user Eric!
 Fixed problem caused by specifying a [Logging]/[[formatters]] section in
 weewx.conf that uses interpolated variables.
 
+Fixed problem in the Vantage driver that resulted in incorrect sunrise/sunset
+being included in loop packets when run under Python 3. Thanks to users 
+Constantine and Jacques!
+
 Improved auto-scaling of plot axes.
 
 
