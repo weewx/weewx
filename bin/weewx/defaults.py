@@ -72,6 +72,7 @@ log_failure = False
         centibar           = %.0f
         cm                 = %.2f
         cm_per_hour        = %.2f
+        count              = %.0f
         degree_C           = %.1f
         degree_F           = %.1f
         degree_compass     = %.0f
@@ -109,6 +110,7 @@ log_failure = False
         centibar          = " cb"
         cm                = " cm"
         cm_per_hour       = " cm/h"
+        count             = ""
         degree_C          =   °C
         degree_F          =   °F
         degree_compass    =   °
@@ -215,6 +217,8 @@ log_failure = False
         extraTemp1     = Temperature1
         extraTemp2     = Temperature2
         extraTemp3     = Temperature3
+        lightning_distance     = Lightning Distance
+        lightning_strike_count = Lightning Strikes
 
         # Sensor status indicators
 
