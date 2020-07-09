@@ -3,6 +3,8 @@ weewx change history
 
 4.1.2 MM/DD/YYYY
 
+Added units and labels for the lightning data types.
+
 Fixed problem where threads attempt to access non-existent database. Fixes
 issue #579.
 
