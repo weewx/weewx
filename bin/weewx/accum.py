@@ -91,6 +91,8 @@ DEFAULTS_INI = """
         extractor = last
     [[yearRain]]
         extractor = last
+    [[lightning_strike_count]]
+        extractor = sum
 """
 defaults_dict = configobj.ConfigObj(StringIO(DEFAULTS_INI), encoding='utf-8')
 
