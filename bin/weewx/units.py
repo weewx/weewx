@@ -171,6 +171,7 @@ obs_group_dict = ListOfDicts({
     "soilTemp3"          : "group_temperature",
     "soilTemp4"          : "group_temperature",
     "windchill"          : "group_temperature",
+    "THSW"               : "group_temperature",
     "dateTime"           : "group_time",
     "stormStart"         : "group_time",
     "UV"                 : "group_uv",
