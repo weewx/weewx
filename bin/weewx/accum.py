@@ -354,7 +354,7 @@ class FirstLastAccum(object):
 
     def setStats(self, stats_tuple=None):
         self.first, self.firsttime, self.last, self.lasttime = stats_tuple \
-            if stats_tuple else ScalarStats.default_init
+            if stats_tuple else FirstLastAccum.default_init
 
     def getStatsTuple(self):
         """Return a stats-tuple. That is, a tuple containing the gathered statistics.
