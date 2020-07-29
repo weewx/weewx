@@ -63,6 +63,9 @@ class StdEngine(object):
         # Default garbage collection is every 3 hours:
         self.gc_interval = int(config_dict.get('gc_interval', 3 * 3600))
 
+        # Whether to log events. This can be very verbose.
+        self.log_events = to_bool(config_dict.get('log_events', False))
+
         # Set up the callback dictionary:
         self.callbacks = dict()
 
@@ -219,6 +222,8 @@ class StdEngine(object):
         """Call all registered callbacks for an event."""
         # See if any callbacks have been registered for this event type:
         if event.event_type in self.callbacks:
+            if self.log_events:
+                log.debug(event)
             # Yes, at least one has been registered. Call them in order:
             for callback in self.callbacks[event.event_type]:
                 # Call the function with the event as an argument:
@@ -569,7 +574,9 @@ class StdArchive(StdService):
         # Is this the end of the archive period? If so, dispatch an
         # END_ARCHIVE_PERIOD event
         if event.packet['dateTime'] > self.end_archive_period_ts:
-            self.engine.dispatchEvent(weewx.Event(weewx.END_ARCHIVE_PERIOD, packet=event.packet))
+            self.engine.dispatchEvent(weewx.Event(weewx.END_ARCHIVE_PERIOD,
+                                                  packet=event.packet,
+                                                  end=self.end_archive_period_ts))
             start_archive_period_ts = weeutil.weeutil.startOfInterval(event.packet['dateTime'],
                                                                       self.archive_interval)
             self.end_archive_period_ts = start_archive_period_ts + self.archive_interval
@@ -643,7 +650,7 @@ class StdArchive(StdService):
                                                           record=record,
                                                           origin='hardware'))
                 else:
-                    log.warning("ignore historical record: %s" % record)
+                    log.warning("Ignore historical record: %s" % record)
         except weewx.HardwareError as e:
             log.error("Internal error detected. Catchup abandoned")
             log.error("**** %s" % e)
