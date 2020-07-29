@@ -500,6 +500,7 @@ class Vantage(weewx.drivers.AbstractDevice):
         if self.model_type not in list(range(1, 3)):
             raise weewx.UnsupportedFeature("Unknown model_type (%d)" % self.model_type)
         self.loop_request = to_int(vp_dict.get('loop_request', 1))
+        log.debug("Option loop_request=%d", self.loop_request)
 
         self.save_day_rain = None
         self.max_dst_jump = 7200
