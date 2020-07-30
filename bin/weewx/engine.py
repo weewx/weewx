@@ -468,6 +468,16 @@ class StdArchive(StdService):
         
         log.info("Record generation will be attempted in '%s'", self.record_generation)
 
+        # The timestamp that marks the end of the archive period
+        self.end_archive_period_ts = None
+        # The timestamp that marks the end of the archive period, plus a delay
+        self.end_archive_delay_ts = None
+        # The accumulator to be used for the current archive period
+        self.accumulator = None
+        # The accumulator that was used for the last archive period. Set to None after it has
+        # been processed.
+        self.old_accumulator = None
+
         if self.record_generation == 'software':
             self.archive_interval = software_interval
             ival_msg = "(software record generation)"
@@ -501,13 +511,12 @@ class StdArchive(StdService):
         log.debug("Use LOOP data in hi/low calculations: %d", self.loop_hilo)
         
         weewx.accum.initialize(config_dict)
-        self.old_accumulator = None
 
         self.bind(weewx.STARTUP, self.startup)
         self.bind(weewx.PRE_LOOP, self.pre_loop)
-        self.bind(weewx.POST_LOOP, self.post_loop)
-        self.bind(weewx.CHECK_LOOP, self.check_loop)
         self.bind(weewx.NEW_LOOP_PACKET, self.new_loop_packet)
+        self.bind(weewx.CHECK_LOOP, self.check_loop)
+        self.bind(weewx.POST_LOOP, self.post_loop)
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
     
     def startup(self, _event):
@@ -542,7 +551,7 @@ class StdArchive(StdService):
         
         # If this the the initial time through the loop, then the end of
         # the archive and delay periods need to be primed:
-        if not hasattr(self, 'end_archive_period_ts'):
+        if not self.end_archive_period_ts:
             now = self.engine._get_console_time()
             start_archive_period_ts = weeutil.weeutil.startOfInterval(now, self.archive_interval)
             self.end_archive_period_ts = start_archive_period_ts + self.archive_interval
@@ -553,7 +562,7 @@ class StdArchive(StdService):
         """Called when A new LOOP record has arrived."""
         
         # Do we have an accumulator at all? If not, create one:
-        if not hasattr(self, "accumulator"):
+        if not self.accumulator:
             self.accumulator = self._new_accumulator(event.packet['dateTime'])
 
         # Try adding the LOOP packet to the existing accumulator. If the
