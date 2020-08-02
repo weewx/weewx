@@ -171,12 +171,18 @@ def read_config(config_path, args=None, locations=DEFAULT_LOCATIONS,
     # Find and open the config file:
     config_path = find_file(config_path, args,
                             locations=locations, file_name=file_name)
-    # Now open it up and parse it.
-    config_dict = configobj.ConfigObj(config_path,
-                                      interpolation=interpolation,
-                                      file_error=True,
-                                      encoding='utf-8',
-                                      default_encoding='utf-8')
+    try:
+        # Now open it up and parse it.
+        config_dict = configobj.ConfigObj(config_path,
+                                          interpolation=interpolation,
+                                          file_error=True,
+                                          encoding='utf-8',
+                                          default_encoding='utf-8')
+    except configobj.ConfigObjError as e:
+        # Add on the path of the offending file, then reraise.
+        e.msg += ' File %s' % config_path
+        raise
+
     return config_path, config_dict
 
 
