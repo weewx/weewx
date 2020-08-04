@@ -165,7 +165,7 @@ log_failure = False
 
     # The following section sets the base temperatures used for the
     #  calculation of heating and cooling degree-days.
-    [[[DegreeDays]]]
+    [[DegreeDays]]
 
         # Base temperature for heating days, with unit:
         heating_base = 65, degree_F
@@ -177,7 +177,7 @@ log_failure = False
     # A trend takes a difference across a time period. The following
     # section sets the time period, and how big an error is allowed to
     # still be counted as the start or end of a period.
-    [[[Trend]]]
+    [[Trend]]
 
         time_delta = 10800  # 3 hours
         time_grace = 300    # 5 minutes
