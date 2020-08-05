@@ -25,6 +25,7 @@ import weewx.manager
 import weewx.qc
 import weewx.station
 import weewx.units
+import weeutil.config
 from weeutil.weeutil import to_bool, to_int, to_sorted_string
 from weewx import all_service_groups
 
@@ -61,6 +62,9 @@ class StdEngine(object):
 
         # Default garbage collection is every 3 hours:
         self.gc_interval = int(config_dict.get('gc_interval', 3 * 3600))
+
+        # Whether to log events. This can be very verbose.
+        self.log_events = to_bool(config_dict.get('log_events', False))
 
         # Set up the callback dictionary:
         self.callbacks = dict()
@@ -135,7 +139,7 @@ class StdEngine(object):
                     log.debug("Loading service %s", svc)
                     # Get the class, then instantiate it with self and the config dictionary as
                     # arguments:
-                    obj = weeutil.weeutil.get_object(svc)(self,config_dict)
+                    obj = weeutil.weeutil.get_object(svc)(self, config_dict)
                     # Append it to the list of open services.
                     self.service_obj.append(obj)
                     log.debug("Finished loading service %s", svc)
@@ -218,6 +222,8 @@ class StdEngine(object):
         """Call all registered callbacks for an event."""
         # See if any callbacks have been registered for this event type:
         if event.event_type in self.callbacks:
+            if self.log_events:
+                log.debug(event)
             # Yes, at least one has been registered. Call them in order:
             for callback in self.callbacks[event.event_type]:
                 # Call the function with the event as an argument:
@@ -462,6 +468,16 @@ class StdArchive(StdService):
         
         log.info("Record generation will be attempted in '%s'", self.record_generation)
 
+        # The timestamp that marks the end of the archive period
+        self.end_archive_period_ts = None
+        # The timestamp that marks the end of the archive period, plus a delay
+        self.end_archive_delay_ts = None
+        # The accumulator to be used for the current archive period
+        self.accumulator = None
+        # The accumulator that was used for the last archive period. Set to None after it has
+        # been processed.
+        self.old_accumulator = None
+
         if self.record_generation == 'software':
             self.archive_interval = software_interval
             ival_msg = "(software record generation)"
@@ -495,13 +511,12 @@ class StdArchive(StdService):
         log.debug("Use LOOP data in hi/low calculations: %d", self.loop_hilo)
         
         weewx.accum.initialize(config_dict)
-        self.old_accumulator = None
 
         self.bind(weewx.STARTUP, self.startup)
         self.bind(weewx.PRE_LOOP, self.pre_loop)
-        self.bind(weewx.POST_LOOP, self.post_loop)
-        self.bind(weewx.CHECK_LOOP, self.check_loop)
         self.bind(weewx.NEW_LOOP_PACKET, self.new_loop_packet)
+        self.bind(weewx.CHECK_LOOP, self.check_loop)
+        self.bind(weewx.POST_LOOP, self.post_loop)
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
     
     def startup(self, _event):
@@ -536,7 +551,7 @@ class StdArchive(StdService):
         
         # If this the the initial time through the loop, then the end of
         # the archive and delay periods need to be primed:
-        if not hasattr(self, 'end_archive_period_ts'):
+        if not self.end_archive_period_ts:
             now = self.engine._get_console_time()
             start_archive_period_ts = weeutil.weeutil.startOfInterval(now, self.archive_interval)
             self.end_archive_period_ts = start_archive_period_ts + self.archive_interval
@@ -547,7 +562,7 @@ class StdArchive(StdService):
         """Called when A new LOOP record has arrived."""
         
         # Do we have an accumulator at all? If not, create one:
-        if not hasattr(self, "accumulator"):
+        if not self.accumulator:
             self.accumulator = self._new_accumulator(event.packet['dateTime'])
 
         # Try adding the LOOP packet to the existing accumulator. If the
@@ -568,7 +583,9 @@ class StdArchive(StdService):
         # Is this the end of the archive period? If so, dispatch an
         # END_ARCHIVE_PERIOD event
         if event.packet['dateTime'] > self.end_archive_period_ts:
-            self.engine.dispatchEvent(weewx.Event(weewx.END_ARCHIVE_PERIOD, packet=event.packet))
+            self.engine.dispatchEvent(weewx.Event(weewx.END_ARCHIVE_PERIOD,
+                                                  packet=event.packet,
+                                                  end=self.end_archive_period_ts))
             start_archive_period_ts = weeutil.weeutil.startOfInterval(event.packet['dateTime'],
                                                                       self.archive_interval)
             self.end_archive_period_ts = start_archive_period_ts + self.archive_interval
@@ -642,7 +659,7 @@ class StdArchive(StdService):
                                                           record=record,
                                                           origin='hardware'))
                 else:
-                    log.warning("ignore historical record: %s" % record)
+                    log.warning("Ignore historical record: %s" % record)
         except weewx.HardwareError as e:
             log.error("Internal error detected. Catchup abandoned")
             log.error("**** %s" % e)

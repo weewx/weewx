@@ -109,11 +109,15 @@ sudo apt install python3-mysqldb</span></pre>
     <pre class='tty'><span class="cmd">sudo apt update</span>
 
 # Required
-<span class="cmd">sudo apt install python3-distutils
-sudo apt install python3-configobj
+<span class="cmd">sudo apt install python3-configobj
 sudo apt install python3-pil
 sudo apt install python3-serial
 sudo apt install python3-usb
+
+# The following tests for distutils and installs if not present:
+python3 -c "import distutils" 2>/dev/null || sudo apt install python3-distutils
+
+# Install pip3 and cheetah3:
 sudo apt install python3-pip
 sudo pip3 install cheetah3</span>
 

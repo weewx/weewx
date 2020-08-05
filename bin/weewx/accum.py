@@ -91,6 +91,8 @@ DEFAULTS_INI = """
         extractor = last
     [[yearRain]]
         extractor = last
+    [[lightning_strike_count]]
+        extractor = sum
 """
 defaults_dict = configobj.ConfigObj(StringIO(DEFAULTS_INI), encoding='utf-8')
 
@@ -352,7 +354,7 @@ class FirstLastAccum(object):
 
     def setStats(self, stats_tuple=None):
         self.first, self.firsttime, self.last, self.lasttime = stats_tuple \
-            if stats_tuple else ScalarStats.default_init
+            if stats_tuple else FirstLastAccum.default_init
 
     def getStatsTuple(self):
         """Return a stats-tuple. That is, a tuple containing the gathered statistics.

@@ -103,51 +103,55 @@ The accumulators come with a set of defaults that covers most situations.
 [Accumulator]
     [[dateTime]]
         adder = noop
-    [[usUnits]]
-        adder = check_units
-    [[rain]]
-        extractor = sum
-    [[ET]]
-        extractor = sum
     [[dayET]]
-        extractor = last
-    [[monthET]]
-        extractor = last
-    [[yearET]]
-        extractor = last
-    [[hourRain]]
         extractor = last
     [[dayRain]]
         extractor = last
+    [[ET]]
+        extractor = sum
+    [[hourRain]]
+        extractor = last
+    [[rain]]
+        extractor = sum
     [[rain24]]
+        extractor = last
+    [[monthET]]
         extractor = last
     [[monthRain]]
         extractor = last
-    [[yearRain]]
+    [[stormRain]]
         extractor = last
     [[totalRain]]
         extractor = last
-    [[stormRain]]
-        extractor = last
+    [[usUnits]]
+        adder = check_units
     [[wind]]
         accumulator = vector
         extractor = wind
-    [[windSpeed]]
-        adder = add_wind
-        merger = avg
-        extractor = noop
     [[windDir]]
         extractor = noop
     [[windGust]]
         extractor = noop
     [[windGustDir]]
         extractor = noop
-    [[windSpeed2]]
-        extractor = last
-    [[windSpeed10]]
-        extractor = last
     [[windGust10]]
         extractor = last
     [[windGustDir10]]
         extractor = last
+    [[windrun]]
+        extractor = sum
+    [[windSpeed]]
+        adder = add_wind
+        merger = avg
+        extractor = noop
+    [[windSpeed2]]
+        extractor = last
+    [[windSpeed10]]
+        extractor = last
+    [[yearET]]
+        extractor = last
+    [[yearRain]]
+        extractor = last
+    [[lightning_strike_count]]
+        extractor = sum
 ```  
