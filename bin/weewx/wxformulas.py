@@ -14,7 +14,8 @@ import math
 import time
 
 import weewx.uwxutils
-from weewx.units import CtoK, CtoF, FtoC
+import weewx.units
+from weewx.units import CtoK, CtoF, FtoC, mph_to_knot, kph_to_knot, mps_to_knot
 from weewx.units import INHG_PER_MBAR, METER_PER_FOOT, METER_PER_MILE, MM_PER_INCH
 
 log = logging.getLogger(__name__)
@@ -545,6 +546,12 @@ def beaufort(ws_kts):
         return 11
     return 12
 
+
+weewx.units.conversionDict['mile_per_hour']['beaufort'] = lambda x : beaufort(mph_to_knot(x))
+weewx.units.conversionDict['knot']['beaufort'] = beaufort
+weewx.units.conversionDict['km_per_hour']['beaufort'] = lambda x: beaufort(kph_to_knot(x))
+weewx.units.conversionDict['meter_per_second']['beaufort'] = lambda x : beaufort(mps_to_knot(x))
+weewx.units.default_unit_format_dict['beaufort'] = "%d"
 
 def equation_of_time(doy):
     """Equation of time in minutes. Plus means sun leads local time.

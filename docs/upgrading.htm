@@ -229,6 +229,37 @@ sudo apt-get install weewx</pre>
 
         <h1><a id="Instructions_for_specific_versions">Instructions for specific versions</a></h1>
 
+        <h2>From 4.1 or earlier</h2>
+
+        <p>
+            The type <span class="code">beaufort</span> has been deprecated, although there are no immediate plans
+            to remove it &mdash; using it will put a warning in the log. Instead, it has become a new unit, which can be
+            used as part of <span class="code">group_speed</span>. Here's an example:
+        </p>
+        <table>
+            <tr class="first_row">
+                <td style='width:50%'>pre 4.1</td>
+                <td>4.2</td>
+            </tr>
+            <tr>
+                <td>
+                    <pre class='tty'>&lt;p&gt;
+   The current wind speed is $current.windSpeed,
+   which is <span class="changed">$current.beaufort</span> on the beaufort scale.
+&lt;/p&gt;
+                    </pre>
+                </td>
+                <td>
+                    <pre class='tty'>&lt;p&gt;
+   The current wind speed is $current.windSpeed,
+   which is <span class="changed">$current.windSpeed.beaufort</span> on the beaufort scale.
+&lt;/p&gt;
+                    </pre>
+                </td>
+            </tr>
+        </table>
+
+
         <h2>From V3.9 or earlier</h2>
 
         <p>

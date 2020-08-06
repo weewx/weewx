@@ -1,7 +1,7 @@
 weewx change history
 --------------------
 
-4.1.2 MM/DD/YYYY
+4.2.0 MM/DD/YYYY
 
 Added units and labels for the lightning data types.
 
@@ -32,6 +32,9 @@ Improved auto-scaling of plot axes.
 
 Fixed problem where aggregates of windvec and windgustvec returned the aggregate
 since start of day, not the start of the aggregation period. Fixes issue #590.
+
+New unit "beaufort", part of group_speed. Treating beaufort as a separate type
+has been deprecated. Fixes issue #591.
 
 
 4.1.1 06/01/2020

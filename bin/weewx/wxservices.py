@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2019 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2020 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -30,6 +30,8 @@ from weewx.units import ValueTuple, mps_to_mph, kph_to_mph, METER_PER_FOOT, CtoF
 
 log = logging.getLogger(__name__)
 
+first_time = True
+
 DEFAULTS_INI = """
 [StdWXCalculate]
 
@@ -49,7 +51,6 @@ DEFAULTS_INI = """
         # altimeter = prefer_hardware
         # appTemp = prefer_hardware
         # barometer = prefer_hardware
-        # beaufort = prefer_hardware        
         # cloudbase = prefer_hardware
         # dewpoint = prefer_hardware
         # ET = prefer_hardware
@@ -428,6 +429,11 @@ class WXXTypes(weewx.xtypes.XType):
 
     @staticmethod
     def calc_beaufort(key, data, db_manager=None):
+        global first_time
+        if first_time:
+            print("Type beaufort has been deprecated. Use unit beaufort instead.")
+            log.info("Type beaufort has been deprecated. Use unit beaufort instead.")
+            first_time = False
         if 'windSpeed' not in data:
             raise weewx.CannotCalculate
         windspeed_vt = weewx.units.as_value_tuple(data, 'windSpeed')
