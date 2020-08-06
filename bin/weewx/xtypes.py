@@ -693,7 +693,7 @@ class WindVec(XType):
         interpolation_dict = {
             'dir': WindVec.windvec_types[obs_type][1],
             'mag': WindVec.windvec_types[obs_type][0],
-            'start': weeutil.weeutil.startOfDay(timespan.start),
+            'start': timespan.start,
             'stop': timespan.stop,
             'table_name': db_manager.table_name
         }

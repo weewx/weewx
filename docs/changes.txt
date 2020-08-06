@@ -30,6 +30,9 @@ Constantine and Jacques!
 
 Improved auto-scaling of plot axes.
 
+Fixed problem where aggregates of windvec and windgustvec returned the aggregate
+since start of day, not the start of the aggregation period. Fixes issue #590.
+
 
 4.1.1 06/01/2020
 
