@@ -128,7 +128,7 @@ class Simulator(weewx.drivers.AbstractDevice):
         # calculate only the specified observations, or all if none specified
         if 'observations' in stn_dict and stn_dict['observations'] is not None:
             desired = [x.strip() for x in stn_dict['observations'].split(',')]
-            for obs in self.observations:
+            for obs in list(self.observations):
                 if obs not in desired:
                     del self.observations[obs]
 

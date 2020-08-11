@@ -36,6 +36,8 @@ since start of day, not the start of the aggregation period. Fixes issue #590.
 New unit "beaufort", part of group_speed. Treating beaufort as a separate type
 has been deprecated. Fixes issue #591.
 
+Fixed bug in the simulator.
+
 
 4.1.1 06/01/2020
 
