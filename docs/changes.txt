@@ -38,6 +38,9 @@ has been deprecated. Fixes issue #591.
 
 Fixed bug in the simulator.
 
+Expressions in StdCalibration are now ordered. Later corrections can depend on
+earlier corrections.
+
 
 4.1.1 06/01/2020
 

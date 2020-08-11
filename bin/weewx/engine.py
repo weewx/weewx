@@ -17,6 +17,8 @@ import sys
 import threading
 import time
 
+import configobj
+
 # weewx imports:
 import weeutil.logger
 import weeutil.weeutil
@@ -362,14 +364,14 @@ class StdCalibrate(StdService):
         # is missing, a KeyError exception will get thrown:
         try:
             correction_dict = config_dict['StdCalibrate']['Corrections']
-            self.corrections = {}
+            self.corrections = configobj.ConfigObj()
 
             # For each correction, compile it, then save in a dictionary of
             # corrections to be applied:
             for obs_type in correction_dict.scalars:
                 self.corrections[obs_type] = compile(correction_dict[obs_type], 
                                                      'StdCalibrate', 'eval')
-            
+
             self.bind(weewx.NEW_LOOP_PACKET, self.new_loop_packet)
             self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
         except KeyError:
