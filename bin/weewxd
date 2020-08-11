@@ -68,6 +68,8 @@ def main():
     parser.add_option("-n", "--log-label", type="string", dest="log_label",
                       help="Label to use in syslog entries",
                       default="weewx", metavar="LABEL")
+    parser.add_option("-c", "--log-to-console", action="store_true", dest="log_to_console",
+                      help="Default logging is sent to the console.")    
 
     # Get the command line options and arguments:
     (options, args) = parser.parse_args()
@@ -77,7 +79,7 @@ def main():
         sys.exit(0)
 
     # Set up a minimal logging facility to be used until we read the config file.
-    weeutil.logger.setup(options.log_label, {})
+    weeutil.logger.setup(options.log_label, {}, log_to_console=options.log_to_console)
 
     if args and options.config_path:
         print("Specify CONFIG_PATH as an argument, or by using --config, not both",
@@ -133,7 +135,7 @@ def main():
 
         # Now that we have the config_dict and debug setting, we can customize the
         # logging with user additions
-        weeutil.logger.setup(options.log_label, config_dict)
+        weeutil.logger.setup(options.log_label, config_dict, log_to_console=options.log_to_console)
 
         # If no command line --loop-on-init was specified, look in the config file.
         if options.loop_on_init is None:

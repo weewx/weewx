@@ -21,14 +21,14 @@ import weewx
 #  {value}: these are plugged in by the function setup().
 #  %(value)s: these are plugged in by the Python logging module.
 #
-LOGGING_STR = """[Logging]
+BASE_LOGGING_STR = """[Logging]
     version = 1
     disable_existing_loggers = False
 
     # Root logger
     [[root]]
       level = {log_level}
-      handlers = syslog,
+      handlers = {handlers},
 
     # Additional loggers would go in the following section. This is useful for tailoring logging
     # for individual modules.
@@ -36,23 +36,9 @@ LOGGING_STR = """[Logging]
 
     # Definitions of possible logging destinations
     [[handlers]]
+"""
 
-        # System logger
-        [[[syslog]]]
-            level = DEBUG
-            formatter = standard
-            class = logging.handlers.SysLogHandler
-            address = {address}
-            facility = {facility}
-
-        # Log to console
-        [[[console]]]
-            level = DEBUG
-            formatter = verbose
-            class = logging.StreamHandler
-            # Alternate choice is 'ext://sys.stderr'
-            stream = ext://sys.stdout
-
+FORMATTERS_STR = """
     # How to format log messages
     [[formatters]]
         [[[simple]]]
@@ -62,59 +48,48 @@ LOGGING_STR = """[Logging]
         [[[verbose]]]
             format = "%(asctime)s  {process_name}[%(process)d] %(levelname)s %(name)s: %(message)s"
             # Format to use for dates and times:
-            datefmt = %Y-%m-%d %H:%M:%S
+            datefmt = %Y-%m-%d %H:%M:%S      
 """
+
+CONSOLE_HANDLER = """
+        # Log to console
+        [[[console]]]
+            level = DEBUG
+            formatter = verbose
+            class = logging.StreamHandler
+            # Alternate choice is 'ext://sys.stderr'
+            stream = ext://sys.stdout       
+            """
+
+HANDLERS_STR = """
+        # System logger
+        [[[syslog]]]
+            level = DEBUG
+            formatter = standard
+            class = logging.handlers.SysLogHandler
+            address = {address}
+            facility = {facility}    
+"""
+
+handlers = 'syslog,'
 
 # These values are known only at runtime
 if sys.platform == "darwin":
     address = '/var/run/syslog'
     facility = 'local1'
+    HANDLERS = 'rotate,'
 
     # Mac uses slightly different logging setup
-    LOGGING_STR = """[Logging]
-        version = 1
-        disable_existing_loggers = False
-
-        # Root logger
-        [[root]]
-          level = {log_level}
-          handlers = rotate,
-    
-        # Additional loggers would go in the following section. This is useful for tailoring logging
-        # for individual modules.
-        [[loggers]]
-
-        # Definitions of possible logging destinations
-        [[handlers]]
-
-            # Log to a set of rotating files    
-            [[[rotate]]]
-                level = DEBUG
-                formatter = standard
-                class = logging.handlers.RotatingFileHandler
-                filename = /var/log/weewx.log
-                maxBytes = 10000000
-                backupCount = 4
-
-            # Log to console
-            [[[console]]]
-                level = DEBUG
-                formatter = verbose
-                class = logging.StreamHandler
-                # Alternate choice is 'ext://sys.stderr'
-                stream = ext://sys.stdout
-
-        # How to format log messages
-        [[formatters]]
-            [[[simple]]]
-                format = "%(levelname)s %(message)s"
-            [[[standard]]]
-                format = "{process_name}[%(process)d] %(levelname)s %(name)s: %(message)s" 
-            [[[verbose]]]
-                format = "%(asctime)s  {process_name}[%(process)d] %(levelname)s %(name)s: %(message)s"
-                # Format to use for dates and times:
-                datefmt = %Y-%m-%d %H:%M:%S
-    """
+    HANDLERS_STR = """
+        # Log to a set of rotating files    
+        [[[rotate]]]
+            level = DEBUG
+            formatter = standard
+            class = logging.handlers.RotatingFileHandler
+            filename = /var/log/weewx.log
+            maxBytes = 10000000
+            backupCount = 4           
+      """
 elif sys.platform.startswith('linux'):
     address = '/dev/log'
     facility = 'user'
@@ -132,12 +107,20 @@ else:
     facility = 'user'
 
 
-def setup(process_name, user_log_dict):
+def setup(process_name, user_log_dict, log_to_console=False):
     """Set up the weewx logging facility"""
-
+   
+    # If desired, only log to the console.
+    if log_to_console:
+        handlers = 'console'
+        handlers_str = CONSOLE_HANDLER
+    else:
+        handlers = HANDLERS
+        handlers_str = HANDLERS_STR + CONSOLE_HANDLER
+      
     # Create a ConfigObj from the default string. No interpolation (it interferes with the
-    # interpolation directives embedded in the string).
-    log_config = configobj.ConfigObj(StringIO(LOGGING_STR), interpolation=False, encoding='utf-8')
+    # interpolation directives embedded in the string).    
+    log_config = configobj.ConfigObj(StringIO(BASE_LOGGING_STR + handlers_str + FORMATTERS_STR), interpolation=False, encoding='utf-8')
 
     # Turn off interpolation in the incoming dictionary. First save the old
     # value, then restore later. However, the incoming dictionary may be a simple
@@ -166,12 +149,14 @@ def setup(process_name, user_log_dict):
             section[key] = [item.format(log_level=log_level,
                                         address=address,
                                         facility=facility,
+                                        handlers=handlers,
                                         process_name=process_name) for item in section[key]]
         else:
             # The value is a string
             section[key] = section[key].format(log_level=log_level,
                                                address=address,
                                                facility=facility,
+                                               handlers=handlers,
                                                process_name=process_name)
 
     # Using the function, walk the 'Logging' part of the structure
