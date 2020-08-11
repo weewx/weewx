@@ -36,7 +36,7 @@ since start of day, not the start of the aggregation period. Fixes issue #590.
 New unit "beaufort", part of group_speed. Treating beaufort as a separate type
 has been deprecated. Fixes issue #591.
 
-Fixed bug in the simulator.
+Fixed bug in the simulator. Made it easier to subclass class Simulator.
 
 Expressions in StdCalibration are now ordered. Later corrections can depend on
 earlier corrections.
