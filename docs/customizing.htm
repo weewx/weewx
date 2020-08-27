@@ -1034,8 +1034,8 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
                 group_altitude     = foot                 # Options are 'foot' or 'meter'
                 group_degree_day   = degree_F_day         # Options are 'degree_F_day' or 'degree_C_day'
                 group_distance     = mile                 # Options are 'mile' or 'km'
-                group_pressure     = inHg                 # Options are 'inHg', 'mmHg', 'mbar', or 'hPa'
-                group_pressurerate = inHg_per_hour        # Options are 'inHg_per_hour', 'mmHg_per_hour', 'mbar_per_hour', or 'hPa_per_hour'
+                group_pressure     = inHg                 # Options are 'inHg', 'mmHg', 'mbar', 'hPa', or 'kPa'
+                group_pressurerate = inHg_per_hour        # Options are 'inHg_per_hour', 'mmHg_per_hour', 'mbar_per_hour', 'hPa_per_hour', or 'kPa_per_hour'
                 group_rain         = inch                 # Options are 'inch', 'cm', or 'mm'
                 group_rainrate     = inch_per_hour        # Options are 'inch_per_hour', 'cm_per_hour', or 'mm_per_hour'
                 group_speed        = mile_per_hour        # Options are 'mile_per_hour', 'km_per_hour', 'knot', or 'meter_per_second'
@@ -1072,8 +1072,8 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
                 group_altitude     = <span class="highlight">meter</span>                # Options are 'foot' or 'meter'
                 group_degree_day   = <span class="highlight">degree_C_day</span>         # Options are 'degree_F_day' or 'degree_C_day'
                 group_distance     = <span class="highlight">km</span>                   # Options are 'mile' or 'km'
-                group_pressure     = <span class="highlight">mbar</span>                 # Options are 'inHg', 'mmHg', 'mbar', or 'hPa'
-                group_pressurerate = <span class="highlight">mbar_per_hour</span>        # Options are 'inHg_per_hour', 'mmHg_per_hour', 'mbar_per_hour', or 'hPa_per_hour'
+                group_pressure     = <span class="highlight">mbar</span>                 # Options are 'inHg', 'mmHg', 'mbar', 'hPa', or 'kPa'
+                group_pressurerate = <span class="highlight">mbar_per_hour</span>        # Options are 'inHg_per_hour', 'mmHg_per_hour', 'mbar_per_hour', 'hPa_per_hour', or 'kPa_per_hour'
                 group_rain         = <span class="highlight">mm</span>                   # Options are 'inch', 'cm', or 'mm'
                 group_rainrate     = <span class="highlight">mm_per_hour</span>          # Options are 'inch_per_hour', 'cm_per_hour', or 'mm_per_hour'
                 group_speed        = <span class="highlight">meter_per_second</span>     # Options are 'mile_per_hour', 'km_per_hour', 'knot', or 'meter_per_second'
@@ -1121,8 +1121,8 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
                 group_altitude     = foot                 # Options are 'foot' or 'meter'
                 group_degree_day   = degree_F_day         # Options are 'degree_F_day' or 'degree_C_day'
                 group_distance     = mile                 # Options are 'mile' or 'km'
-                group_pressure     = inHg                 # Options are 'inHg', 'mmHg', 'mbar', or 'hPa'
-                group_pressurerate = inHg_per_hour        # Options are 'inHg_per_hour', 'mmHg_per_hour', 'mbar_per_hour', or 'hPa_per_hour'
+                group_pressure     = inHg                 # Options are 'inHg', 'mmHg', 'mbar', 'hPa', or 'kPa'
+                group_pressurerate = inHg_per_hour        # Options are 'inHg_per_hour', 'mmHg_per_hour', 'mbar_per_hour', 'hPa_per_hour', or 'kPa_per_hour'
                 group_rain         = inch                 # Options are 'inch', 'cm', or 'mm'
                 group_rainrate     = inch_per_hour        # Options are 'inch_per_hour', 'cm_per_hour', or 'mm_per_hour'
                 group_speed        = mile_per_hour        # Options are 'mile_per_hour', 'km_per_hour', 'knot', or 'meter_per_second'
@@ -1142,8 +1142,8 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
                 group_altitude     = meter                # Options are 'foot' or 'meter'
                 group_degree_day   = degree_C_day         # Options are 'degree_F_day' or 'degree_C_day'
                 group_distance     = km                   # Options are 'mile' or 'km'
-                group_pressure     = mbar                 # Options are 'inHg', 'mmHg', 'mbar', or 'hPa'
-                group_pressurerate = mbar_per_hour        # Options are 'inHg_per_hour', 'mmHg_per_hour', 'mbar_per_hour', or 'hPa_per_hour'
+                group_pressure     = mbar                 # Options are 'inHg', 'mmHg', 'mbar', 'hPa', or 'kPa'
+                group_pressurerate = mbar_per_hour        # Options are 'inHg_per_hour', 'mmHg_per_hour', 'mbar_per_hour', 'hPa_per_hour', or 'kPa_per_hour'
                 group_rain         = mm                   # Options are 'inch', 'cm', or 'mm'
                 group_rainrate     = mm_per_hour          # Options are 'inch_per_hour', 'cm_per_hour', or 'mm_per_hour'
                 group_speed        = meter_per_second     # Options are 'mile_per_hour', 'km_per_hour', 'knot', or 'meter_per_second'
@@ -5657,14 +5657,17 @@ UV      = UV Index</pre>
 
         <p>
             The measurement unit to be used for pressure. Possible options are one of <span class="code">inHg</span>
-            (inches of mercury), <span class="code">mbar</span>, or <span class="code">hPa</span>.
+            (inches of mercury), <span class="code">mbar</span>, <span class="code">hPa</span>, or
+            <span class="code">kPa</span>.
         </p>
 
         <p class="config_important">group_pressurerate</p>
 
         <p>
-            The measurement unit to be used for rate of change in pressure. Possible options are one of <span class="code">inHg_per_hour</span>
-            (inches of mercury per hour), <span class="code">mbar_per_hour</span>, or <span class="code">hPa_per_hour</span>.
+            The measurement unit to be used for rate of change in pressure. Possible options are one of
+            <span class="code">inHg_per_hour</span> (inches of mercury per hour),
+            <span class="code">mbar_per_hour</span>, <span class="code">hPa_per_hour</span>,
+            or <span class="code">kPa_per_hour</span>.
         </p>
 
         <p class="config_option">group_radiation</p>
@@ -6779,9 +6782,11 @@ growing_base = 50.0, degree_F</pre>
             </tr>
             <tr>
                 <td class="first_col">group_pressure</td>
-                <td>barometer <br/> altimeter <br/> pressure
+                <td>
+                    barometer <br/> altimeter <br/> pressure
                 </td>
-                <td>inHg <br/> mbar <br/> hPa
+                <td>
+                    inHg<br/>mbar<br/>hPa<br/>kPa
                 </td>
                 <td>inHg</td>
                 <td>mbar</td>
@@ -6789,9 +6794,11 @@ growing_base = 50.0, degree_F</pre>
             </tr>
             <tr>
                 <td class="first_col">group_pressurerate</td>
-                <td>barometerRate <br/> altimeterRate <br/> pressureRate
+                <td>
+                    barometerRate <br/> altimeterRate <br/> pressureRate
                 </td>
-                <td>inHg_per_hour <br/> mbar_per_hour <br/> hPa_per_hour
+                <td>
+                    inHg_per_hour <br/> mbar_per_hour <br/> hPa_per_hour <br/> kPa_per_hour
                 </td>
                 <td>inHg_per_hour</td>
                 <td>mbar_per_hour</td>
