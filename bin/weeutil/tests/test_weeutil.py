@@ -787,6 +787,18 @@ class WeeutilTest(unittest.TestCase):
         self.assertIsNone(to_int('NONE'))
         self.assertIsNone(to_int(u'NONE'))
 
+    def test_to_float(self):
+        self.assertIsInstance(to_float(123), float)
+        self.assertIsInstance(to_float(123.0), float)
+        self.assertIsInstance(to_float('123'), float)
+        self.assertEqual(to_float(123), 123.0)
+        self.assertEqual(to_float('123'), 123.0)
+        self.assertEqual(to_float(u'123'), 123.0)
+        self.assertIsNone(to_float(None))
+        self.assertIsNone(to_float('NONE'))
+        self.assertIsNone(to_float(u'NONE'))
+
+
     # def test_to_unicode(self):
     #
     #     # To get a utf-8 byte string that we can convert, start with a unicode
