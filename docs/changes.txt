@@ -43,6 +43,9 @@ Fixed bug in the simulator. Made it easier to subclass class Simulator.
 Expressions in StdCalibration are now ordered. Later corrections can depend on
 earlier corrections.
 
+Fixed problem under Python 2, where option 'none' could cause exception.
+PR #597. Thanks to user Clément!
+
 
 4.1.1 06/01/2020
 
