@@ -1,3 +1,6 @@
+0.7 03jul2019
+* Port to Python 3
+
 0.6 17apr2016
 * keep pylint happy
 * provide more configuration instructions in comments

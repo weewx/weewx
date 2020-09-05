@@ -4,10 +4,20 @@
     <title>weewx: Upgrade Guide</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <link rel="stylesheet" href="css/ui-lightness/jquery-ui-1.10.4.custom.min.css"/>
-    <link rel="stylesheet" href="css/jquery.tocify.css"/>
-    <link rel="stylesheet" href="css/weewx_docs.css"/>
     <link rel="icon" href="images/favicon.png" type="image/png"/>
+    <link rel="stylesheet" href="css/tocbot-4.3.1.css">
+    <link rel="stylesheet" href="css/weewx_ui.css"/>
+    <script src="js/cash.min.js"></script>
+    <script src="js/tocbot-4.3.1.min.js"></script>
+    <script src="js/weewx.js"></script>
+    <script>
+        $(function () {
+            make_ids('#technical_content');
+            let level = get_level_from_cookie();
+            create_toc_level_control(level);
+            create_toc(level);
+        })
+    </script>
     <style>
         #toc_parent {
             overflow-y: hidden;
@@ -49,9 +59,11 @@
         href="hardware.htm">Hardware Guide</a><br/> <a href="utilities.htm">Utilities Guide</a><br/> <a
         href="upgrading.htm">Upgrade Guide</a><br/> <a href="devnotes.htm">Notes for Developers</a>
     </div>
-    <div id="toc_controls"></div>
+    <div id="toc_controls">
+        <!-- The TOC select list will be injected here -->
+    </div>
     <div id="toc_parent">
-        <div id="toc">
+        <div id="toc-location" class="toc">
             <!-- The table of contents will be injected here -->
         </div>
     </div>
@@ -68,7 +80,7 @@
         <div class="logoref">
             <a href='http://weewx.com'> <img src='images/logo-weewx.png' class='logo' style="float:right"
                                              alt="weewx logo"/> </a><br/> <span class='version'>
-Version: 3.9
+Version: 4.1
     </span>
         </div>
         <div class="title">WeeWX Upgrade Guide</div>
@@ -95,38 +107,44 @@ Version: 3.9
         <h1><a id="Upgrading_using_setup.py">Upgrading using <span class='code'>setup.py</span></a></h1>
 
         <p>Before upgrading WeeWX, check the section <em> <a href="#Instructions_for_specific_versions">Instructions for
-            Specific Versions</a></em> to see if any specific actions are required. Then follow the standard
-            installation procedure:
+            Specific Versions</a></em> to see if any specific actions are required.</p>
+
+        <p>If you are an old Python 2 version, and you plan on switching to Python 3, make sure you have installed
+        whatever pre-requisites are required. You can find them in the guide
+            <a href="setup.htm"><em>Installation using setup.py</em></a>.
+        </p>
+
+        <p>
+            Then follow the standard installation procedure:
         </p>
         <p>Unpack the archive:</p>
         <pre class="tty cmd">tar xvfz weewx-X.Y.Z.tar.gz</pre>
         <p>Change directory into it:</p>
         <pre class="tty cmd">cd weewx-X.Y.Z </pre>
-        <p>Build the distribution:</p>
-        <pre class="tty cmd">./setup.py build </pre>
+        <p>Build the distribution, using whatever version of Python you plan to use. For example, for Python 3:</p>
+        <pre class="tty cmd">python3 ./setup.py build </pre>
 
-        <p>
-            After checking <span class='code'>setup.cfg</span>, install your new version of WeeWX:
-        </p>
         <p class='warning'><strong>Warning!</strong><br/> Before doing the next step, be sure that <span class="code">home</span>
             in the file <span class="code">setup.cfg</span> is set to the location of the previous WeeWX installation.
         </p>
 
-        <pre class="tty cmd">sudo ./setup.py install </pre>
+        <p>
+            After checking <span class='code'>setup.cfg</span>, install your new version of WeeWX, again using
+            the version of Python you plan on using:
+        </p>
+
+        <pre class="tty cmd">sudo python3 ./setup.py install </pre>
 
         <p>The install process will do the following:</p>
         <ul>
-            <li>Save the old <span class="code">bin</span> directory as <span class='code'>bin.YYYYMMDDHHMMSS</span>
-                where YYYYMMDDHHMMSS is a timestamp
-            </li>
             <li>Install the new version in the <span class="code">bin</span> directory, while preserving any user
                 extensions in the <span class="code">bin/user</span> directory
             </li>
-            <li>Save a copy of the old <span class="code">weewx.conf</span> as <span class='code'>weewx.conf.YYYYMMDDHHMMSS</span>
+            <li>Save a copy of the old <span class="code">weewx.conf</span> as
+                <span class='code'>weewx.conf.YYYYMMDDHHMMSS</span>
             </li>
-            <li>Merge any changes made to the old configuration file <span class="code">weewx.conf</span> into the new
-                configuration file, then install the merged copy. This effectively causes any changes to override the
-                values in the new version of <span class="code">weewx.conf</span>
+            <li>Update your copy of <span class="code">weewx.conf</span>, reflecting any changes required by the latest
+                version of WeeWX. This updated version is then installed.
             </li>
             <li>Install a <span class="code">skins</span> directory if one does not already exist.
             </li>
@@ -183,7 +201,15 @@ sudo apt-get install weewx</pre>
 
         <h1><a id="Upgrading_using_RPM_package">Upgrading using RPM package</a></h1>
 
-        <p>Upgrade to X.Y.Z like this:</p>
+        <p>If you have specified the WeeWX yum repository in <span
+            class="code">/etc/yum.repos.d/weewx.repo</span>, then upgrade to the latest version like this:
+        </p>
+
+        <pre class='tty cmd'>sudo yum update weewx</pre>
+
+        <p>Otherwise, download the latest X.Y.Z RPM package from the <a href="http://weewx.com/downloads/">Download
+            page</a> on weewx.com, then upgrade like this:
+        </p>
 
         <pre class='tty cmd'>sudo rpm -U weewx-X.Y.Z-R.rpm</pre>
 
@@ -202,6 +228,54 @@ sudo apt-get install weewx</pre>
         <pre class='tty'>warning: /etc/weewx/weewx.conf created as /etc/weewx/weewx.conf.rpmnew</pre>
 
         <h1><a id="Instructions_for_specific_versions">Instructions for specific versions</a></h1>
+
+        <h2>From V3.9 or earlier</h2>
+
+        <p>
+            For the most part, V4.0 is backwards compatible with previous versions.
+        </p>
+        <h3>Python 2.5 and 2.6</h3>
+        <p>
+            Support for Python 2.5 and 2.6 has been dropped. It has now been well over 10 years since these versions
+            were introduced, and 6+ years since they were supported by the Python Software Foundation. If you are
+            using Python 2.5 or 2.6, then you should either upgrade your copy of Python, or stay with your old
+            version of WeeWX.
+        </p>
+        <h3><span class="code">[StdWXCalculate]</span></h3>
+        <p>
+            In earlier versions of WeeWX, many derived types were calculated by default by the service <span
+            class="code">StdWXCalculate</span>. By contrast, in WeeWX V4, no derived types are calculated by default
+            &mdash; all desired types must be explicitly listed in <span class="code">weewx.conf</span>. For most users,
+            this will not cause a problem because most types were already listed in <span class="code">weewx.conf</span>.
+            However if you deleted one of the following types in the clause <span class="code">[StdWXCalculate]</span>,
+            and started to depend on the default calculations, then the type will no longer be calculated in V4.
+        </p>
+        <table class="tty" style="width:50%">
+            <tr>
+                <td>pressure</td>
+                <td>barometer</td>
+                <td>altimeter</td>
+            </tr>
+            <tr>
+                <td>windchill</td>
+                <td>heatindex</td>
+                <td>dewpoint</td>
+            </tr>
+            <tr>
+                <td>inDewpoint</td>
+                <td>rainRate</td>
+            </tr>
+        </table>
+        <p>
+            In this case, you should add the type to <span class="code">[StdWXCalculate]</span>. For example, if for
+            some reason you deleted <span class="code">dewpoint</span>, then you would need to add the following
+        </p>
+        <pre class="tty" style="width:50%">
+[StdWXCalculate]
+  [[Calculations]]
+    ...
+    <span class="highlight">dewpoint = prefer_hardware</span>
+        </pre>
 
         <h2>From V3.8 or earlier</h2>
 
@@ -1654,19 +1728,6 @@ rm bin/weewx/mainloop.py</pre>
     </div>
 
 </div>
-
-<!-- Our scripts load last so the content can load first -->
-<script src="js/jquery-1.11.1.min.js"></script>
-<script src="js/jquery-ui-1.10.4.custom.min.js"></script>
-<script src="js/jquery.tocify-1.9.0.min.js"></script>
-<script src="js/weewx.js"></script>
-<script>
-    $(function () {
-        var level = get_default_level();
-        create_toc_control(level);
-        generate_toc(level);
-    });
-</script>
 
 </body>
 

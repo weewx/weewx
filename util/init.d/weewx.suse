@@ -30,6 +30,10 @@ WEEWX_BIN=/home/weewx/bin/weewxd
 WEEWX_CFG=/home/weewx/weewx.conf
 WEEWX_ARGS="--daemon $WEEWX_CFG"
 WEEWX_PID_FILE=/var/run/weewx.pid
+
+# Read configuration variable file if it is present
+[ -r /etc/default/weewx ] && . /etc/default/weewx
+
 test -x $WEEWX_BIN || { echo "$WEEWX_BIN not installed"; 
 	if [ "$1" = "stop" ]; then exit 0;
 	else exit 5; fi; }

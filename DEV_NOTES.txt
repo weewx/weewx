@@ -9,63 +9,71 @@ checklist for doing a release:
 3. Make sure all changes have been logged
      1. docs/changes.txt
      2. make deb-changelog
-     3. make rpm-changelog
-     4. docs/upgrading.htm
+     3. make redhat-changelog
+     4. make suse-changelog
+     5. docs/upgrading.htm
 4. Create the packages
      1. make src-package
-     2. make deb-package
-     3. make rpm-package (redhat)
-     4. make rpm-package (suse)
+     2. make debian-packages
+     3. make redhat-packages
+     4. make suse-packages
 5. Sanity check on production machine: unpack the tarball, install, run
 6. Tag it
      1. git tag -a v1.3.1 -m "Version 1.3.1 release"
 7. Upload to weewx.com
      1. make upload-src
-     2. make upload-deb
-     3. make upload-rpm RPMOS=.rhel
-     4. make upload-rpm RPMOS=.suse
-     5. make upload-readme
+     2. make upload-debian
+     3. make upload-redhat
+     4. make upload-suse
      6. make upload-docs
 8. Update the deb repository
      1. make pull-apt-repo
      2. make update-apt-repo
      3. make push-apt-repo
      4. ssh weewx.com rsync -arv /var/www/html/aptly-test/ /var/www/html/aptly
-9. Announce the release to the weewx user's group.
+9. Update the redhat repository
+     1. make pull-yum-repo
+     2. make update-yum-repo
+     3. make push-yum-repo
+     4. ssh weewx.com rsync -arv /var/www/html/yum-test/ /var/www/html/yum
+10. Update the suse repository
+     1. make pull-suse-repo
+     2. make update-suse-repo
+     3. make push-suse-repo
+     4. ssh weewx.com rsync -arv /var/www/html/suse-test/ /var/www/html/suse
+11. Announce the release to the weewx user's group.
 
 
 
-release process by command: ---------------------------------------------------
+release process by command ----------------------------------------------------
 
 # on any host, do a fresh checkout, set the version and update changelogs
 git clone https://github.com/weewx/weewx.git
 vi bin/weewx/__init__.py
 make version
 make deb-changelog
-make rpm-changelog
+make redhat-changelog
+make suse-changelog
 vi docs/changes.txt        # as needed
 vi docs/upgrading.htm      # as needed
 git commit -a -m "release x.y.z"
 git push
 
-# generate the readme then upload it to development_versions
-make readme.txt upload-readme
-
 # build src, upload to development_versions
 rm -rf build dist
 make src-package upload-src
 
-# on debian host, build deb package, upload to development_versions
+# on debian host, build debian packages, upload to development_versions
 rm -rf build dist
-make deb-package upload-deb
+make debian-packages upload-debian
 
-# on redhat host, build the redhat rpm package, upload to development_versions
+# on redhat host, build the redhat packages, upload to development_versions
 rm -rf build dist
-make rpm-package upload-rpm
+make redhat-packages upload-redhat
 
-# on suse host, build the suse rpm package, upload to development_versions
+# on suse host, build the suse packages, upload to development_versions
 rm -rf build dist
-make rpm-package upload-rpm
+make suse-packages upload-suse
 
 # tag the release
 git tag -a vX.Y.Z -m "tag release X.Y.Z"
@@ -77,15 +85,44 @@ make upload-docs
 # move the new files into position
 make release
 
-# update the apt repository (requires aptly and local clone of the apt repo)
-make update-apt-repo
+# update the apt repository
+make pull-apt-repo
+make update-apt-repo (requires local installation of aptly)
 make push-apt-repo
+
+# update the yum repository
+make pull-yum-repo
+make update-yum-repo (requires local installation of createrepo)
+make push-yum-repo
+
+# update the suse repository
+make pull-suse-repo
+make update-suse-repo (requires local installation of createrepo)
+make push-suse-repo
+
+
+pre-requisites ----------------------------------------------------------------
+
+to build debian package install the following (use 'apt-get install'):
+  git
+  rsync
+  gpg
+  debhelper
+  python3-distutils
+
+to build redhat package install the following (use 'yum install'):
+  git
+  rsync
+  rpm-build
+  rpm-sign
+
+to build suse package install the following (use 'zypper install'):
+  git
+  rsync
+  rpm-build
 
 
 howto -------------------------------------------------------------------------
-
-create README.txt:
-  make readme.txt
 
 how to update the version number:
   perl -pi -e 's/__version__=".*"/__version__="x.y.z"/' bin/weewx/__init__.py
@@ -95,17 +132,23 @@ how to update the version number:
 how to build source package:
   make src-package
 
-how to build debian package:
+how to build debian packages:
   make deb-changelog
   emacs pkg/debian/changelog    # add any package-specific changes, if any
   git commit -m "update deb changelog" pkg/debian/changelog
-  make deb-package
+  make debian-packages
 
-how to build redhat package:
-  make rpm-changelog
-  emacs pkg/changelog.rpm       # add any package-specific changes, if any
-  git commit -m "update rpm changelog" pkg/changelog.rpm
-  make rpm-package
+how to build redhat packages:
+  make redhat-changelog
+  emacs pkg/changelog.el       # add any package-specific changes, if any
+  git commit -m "update redhat changelog" pkg/changelog.el
+  make redhat-packages
+
+how to build redhat packages:
+  make suse-changelog
+  emacs pkg/changelog.suse     # add any package-specific changes, if any
+  git commit -m "update suse changelog" pkg/changelog.suse
+  make suse-packages
 
 to display debconf variables:
   sudo debconf-show weewx
@@ -115,25 +158,27 @@ to manually purge debconf variables:
 
 to sign rpm packages you need .rpmmacros in your home directory:
 ~/.rpmmacros
-  %_signature gpg
-  %_gpg_name  Matthew Wall
+  %_gpg_name  YOUR_NAME_HERE
 
 to generate gpg key used for signing packages:
   gpg --gen-key
   gpg --list-keys
 
 to export the text version of a public key:
-  gpg --export -a "Matthew Wall" > mwall.gpg.key
+  gpg --export -a "YOUR_NAME_HERE" > username.gpg.key
 
 source install:
-  setup.py install
-  setup.py install home=/opt/weewx-x.y.z
+  python ./setup.py install
+  python ./setup.py install home=/opt/weewx-x.y.z     (this does not work!)
 
 debian install/remove:
-  dpkg -i weewx_x.y.z-r.deb           # install
-  (apt-get install weewx)             # finish install if dependencies failed
-  dpkg -r weewx                       # remove
-  dpkg -P weewx                       # purge
+  apt-get install weewx         # install with apt
+  apt-get remove weewx          # remove with apt
+  apt-get purge weewx           # purge removes /etc/weewx and debconf settings
+  dpkg -i weewx_x.y.z-r.deb     # install
+  (apt-get install weewx)       # finish install if dependencies failed
+  dpkg -r weewx                 # remove
+  dpkg -P weewx                 # purge
 
 redhat install/remove:
   yum install weewx-x.y.z-r.rpm [--nogpgcheck]    # install with yum
@@ -141,27 +186,98 @@ redhat install/remove:
   rpm -i weewx-x.y.z-r.rpm                        # install with rpm directly
   rpm -e weewx                                    # remove with rpm
 
-create debian repo using aptly:
-  aptly repo create -distribution=squeeze -component=main weewx
-  aptly repo add weewx dist/weewx_3.0.0-1_all.deb
-  aptly snapshot create weewx-3.0.0 from repo weewx
-  aptly -architectures="all" publish snapshot weewx-3.0.0
+suse install/remove:
+  zypper install weewx-x.y.z-r.rpm [--nogpgcheck] # install with zypper
+  zypper remove weewx                             # remove with zypper
+  rpm -i weewx-x.y.z-r.rpm                        # install with rpm directly
+  rpm -e weewx                                    # remove with rpm
 
-update debian repo using aptly:
-  aptly repo add weewx dist/weewx_3.0.1-1_all.deb
-  aptly snapshot create weewx-3.0.1 from repo weewx
-  aptly -architectures="all" publish switch squeeze weewx-3.0.1
 
-clone the published apt repo at godaddy to local space:
+howto: deb repository ---------------------------------------------------------
+
+aptly has two different mechanisms for doing a 'publish': switch or update.
+we use snapshots, and publish using 'publish switch', rather than publishing
+using a simple 'publish update'.
+
+there are two apt repositories: python2 and python3
+
+to do apt repo updates you must first install aptly:
+  https://www.aptly.info/download/
+for example, on debian:
+  echo "deb http://repo.aptly.info/ squeeze main" | sudo tee /etc/apt/sources.list.d/aptly.list
+  wget -qO - https://www.aptly.info/pubkey.txt | sudo apt-key add -
+  sudo apt-get update
+  sudo apt-get install aptly
+
+create local debian repo using aptly:
+  aptly repo create -distribution=squeeze -component=main -architectures=all python2-weewx
+  aptly repo create -distribution=buster -component=main -architectures=all python3-weewx
+
+put a bunch of deb files into an empty apt repo:
+  for f in `ls distdir`; do aptly repo add python2-weewx distdir/$f; done
+
+create a snapshot:
+  aptly snapshot create python-weewx-x.y.z-n from repo python2-weewx
+  aptly snapshot create python3-weewx-x.y.z-n from repo python3-weewx
+
+publish using snapshot:
+  aptly publish -architectures=all snapshot python-weewx-x.y.z-n python2
+  aptly publish -architectures=all snapshot python3-weewx-x.y.z-n python3
+
+update using 'publish switch':
+  aptly repo add python2-weewx dist/python-weewx_x.y.z-n_all.deb
+  aptly snapshot create python-weewx-x.y.z-n from repo python2-weewx
+  aptly publish switch squeeze python2 python-weewx-x.y.z-n
+
+  aptly repo add python3-weewx dist/python3-weewx_x.y.z-n_all.deb
+  aptly snapshot create python3-weewx-x.y.z-n from repo python3-weewx
+  aptly publish switch buster python3 python3-weewx-x.y.z-n
+
+update using 'publish update':
+  aptly publish repo -architectures=all python2-weewx squeeze
+  aptly repo add python2-weewx dist/squeeze/python-weewx_x.y.z-n_all.deb
+  aptly publish update squeeze python2
+
+  aptly publish repo -architectures=all python3-weewx buster
+  aptly repo add python3-weewx dist/buster/python3-weewx_x.y.z-n_all.deb
+  aptly publish update buster python3
+
+clone the published apt repo to local space:
   mkdir -p ~/.aptly
-  rsync -arv --rsync-path /home/content/t/o/m/tomkeffer/bin/rsync -e ssh USER@weewx.com:/home/content/t/o/m/tomkeffer/html/aptly/ ~/.aptly
+  rsync -arv USER@weewx.com:/var/www/html/aptly-test/ ~/.aptly
 
-synchronize local aptly changes with the published apt repo at godaddy:
-  rsync -arv --rsync-path /home/content/t/o/m/tomkeffer/bin/rsync -e ssh ~/.aptly/ USER@weewx.com:/home/content/t/o/m/tomkeffer/html/aptly
+synchronize local aptly changes with the published apt repo:
+  rsync -arv ~/.aptly/ USER@weewx.com:/var/www/html/aptly-test
+
+switch from testing to production (this is done at weewx.com):
+  rsync -arv /var/www/html/aptly-test/ /var/www/html/aptly
 
 for clients to use an apt repo at weewx.com:
   curl -s http://weewx.com/keys.html | sudo apt-key add -
   echo "deb [arch=all] http://weewx.com/apt/ squeeze main" | sudo tee /etc/apt/sources.list.d/weewx.list
+  echo "deb [arch=all] http://weewx.com/apt/ buster main" | sudo tee /etc/apt/sources.list.d/python3-weewx.list
+
+
+howto: yum repository ---------------------------------------------------------
+
+create yum repo:
+  mkdir -p ~/.yum/weewx/{el7,el8}/RPMS
+
+update local yum repo with latest rpm:
+  cp *.el7.rpm ~/.yum/weewx/el7/RPMS
+  createrepo -o ~/.yum/weewx/el7 ~/.yum/weewx/el7
+  cp *.el8.rpm ~/yum/weewx/el8/RPMS
+  createrepo -o ~/.yum/weewx/el8 ~/.yum/weewx/el8
+
+clone the published yum repo to local space:
+  mkdir -p ~/.yum
+  rsync -arv USER@weewx.com:/var/www/html/yum-test/ ~/.yum
+
+synchronize local yum changes with published yum repo:
+  rsync -arv ~/.yum/ USER@weewx.com:/var/www/html/yum-test
+
+switch from testing to production (this is done at weewx.com):
+  rsync -arv /var/www/html/yum-test/ /var/www/html/yum
 
 
 notes -------------------------------------------------------------------------
@@ -169,8 +285,8 @@ notes -------------------------------------------------------------------------
 there are multiple changelogs:
   docs/changes.txt - definitive changelog for the application
   pkg/debian/changelog - changes to the debian packaging
-  pkg/changelog.rpm - changes to the redhat packaging
-  README.txt - copy of changes.txt uploaded to download area
+  pkg/changelog.el - changes to the redhat packaging
+  pkg/changelog.suse - changes to the suse packaging
 
 when signing, gpg info must match the name and email in the latest package
 changelog entry.
@@ -186,18 +302,24 @@ then dried dpkg-buildpackage (uses debian dir and is higher level) but misses
 the config and templates.  ended up using dpkg-buildpackage with some manual
 (scripted) file manipulation.
 
-to do debian builds you must first install:
-  python-imaging
-  python-configobj
-  debhelper
+both debian and redhat deprecate the use of '/usr/bin/env python' as the
+shebang - they want a very tight binding to the operating system python as the
+shebang.  in fact, since late 2019 rehat build tools see any shebang other than
+a tight coupling to the operating system's python as an error and refuse to
+accept it.  however, the bsd platforms prefer this as the shebang, and the
+other approach fails on bsd.  macos uses something else.
 
-to do repo updates you must first install aptly:
-  https://www.aptly.info/download/
-for example, on debian:
-  echo "deb http://repo.aptly.info/ squeeze main" | sudo tee /etc/apt/sources.list.d/aptly.list
-  wget -qO - https://www.aptly.info/pubkey.txt | sudo apt-key add -
-  sudo apt-get update
-  sudo apt-get install aptly
+weewx supports python 2.7 and any python 3.5+ so it should not be tightly
+coupled to any specific python installation.
+
+so use the source code should use the '/usr/bin/env python' shebang.  on
+platforms that refuse to accept this, replace the package builder will replace
+this with whatever that platform will accept.  the /etc/default/weewx plus
+shell stubs in /usr/bin/wee* is used in platform installations to provide
+python flexibility so that users do not have to install weewx multiple times
+to experiment with different versions of python.  users who run weewx directly
+from a git clone get all of the 'env python' goodness of being able to specify
+whatever python interpreter they want.
 
 
 unit tests --------------------------------------------------------------------
@@ -296,69 +418,3 @@ all platforms:
 
 - list drivers
   wee_config --list-drivers
-
-
-code summary ------------------------------------------------------------------
-
-the makefile target 'code-summary' will display a summary of the codebase.  it
-uses the tool cloc (github.com/AlDanial/cloc).
-
-here is the summary as of 14jan2019:
-
-     308 text files.
-     294 unique files.                                          
-     142 files ignored.
-
-github.com/AlDanial/cloc v 1.81  T=2.12 s (78.6 files/s, 39192.0 lines/s)
--------------------------------------------------------------------------------
-Language                     files          blank        comment           code
--------------------------------------------------------------------------------
-Python                         101           7816          15299          29005
-HTML                            17           3044             43          20501
-CSS                              9            171            146           1824
-Pascal                          11             59             11           1091
-Perl                             2             45             83            755
-Bourne Shell                     9            115            188            664
-JavaScript                       8            382            277            611
-make                             2             54             47            310
-Bourne Again Shell               2             34            185            203
-Markdown                         3             34              0            149
-XML                              3              8              7             84
--------------------------------------------------------------------------------
-SUM:                           167          11762          16286          55197
--------------------------------------------------------------------------------
-
-the bin directory:
--------------------------------------------------------------------------------
-Language                     files          blank        comment           code
--------------------------------------------------------------------------------
-Python                          88           7513          14822          27888
-HTML                             2             56              0           1316
-Markdown                         1              9              0             61
--------------------------------------------------------------------------------
-SUM:                            91           7578          14822          29265
--------------------------------------------------------------------------------
-
-the test directories:
--------------------------------------------------------------------------------
-weecfg/test
-Python                           1            117            176            370
-weecfg/test
-Python                           4            107             62            464
-weeutil/test
-Python                           2            146             88            606
-weewx/test
-Python                           9            311            237           1048
--------------------------------------------------------------------------------
-SUM:                            16            681            563           2488
--------------------------------------------------------------------------------
-
-the driver directory:
--------------------------------------------------------------------------------
-Python                          15           2808           5530          13796
--------------------------------------------------------------------------------
-
-bin less drivers and tests directories:
--------------------------------------------------------------------------------
-Python                          57           4024           8729          11604
--------------------------------------------------------------------------------

@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 #
-#    Copyright (c) 2009-2019 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2020 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your rights.
 #
 """Configure the configuration file."""
+from __future__ import absolute_import
 import sys
-import syslog
 import optparse
 
 from weecfg.config import ConfigEngine, Logger
@@ -17,12 +17,12 @@ usage = """Usage: wee_config --help
        wee_config --reconfigure CONFIG_FILE|--config=CONFIG_FILE
            [--driver=DRIVER]  [--units=(us|metric)]
            [--latitude=yy.y] [--longitude=xx.x] [--altitude=zz.z,(foot|meter)] 
-           [--location="Home Sweet Home"]
+           [--location="Home Sweet Home"] [--register=(y,n)]
            [--output=OUT_CONFIG] [--no-prompt] [--no-backup] [--verbosity=N]
        wee_config --install --dist-config=DIST_CONFIG --output=OUT_CONFIG
            [--driver=DRIVER]  [--units=(us|metric)]
            [--latitude=yy.y] [--longitude=xx.x] [--altitude=zz.z,(foot|meter)] 
-           [--location="Home Sweet Home"]
+           [--location="Home Sweet Home"] [--register=(y,n)]
            [--no-prompt] [--no-backup] [--verbosity=N]
        wee_config --upgrade CONFIG_FILE|--config=CONFIG_FILE
            --dist-config=DIST_CONFIG
@@ -31,10 +31,11 @@ usage = """Usage: wee_config --help
 
 User actions:
 
+--version       Show the WeeWX version, then exit.  
 --list-drivers  List the available weewx device drivers, then exit.
 --reconfigure   Modify an existing configuration file CONFIG_FILE with any
                 specified station parameters.  Use this command with the
-                driver option to change the device driver.
+                --driver option to change the device driver.
                 
 System actions (not normally done by users):
 
@@ -49,13 +50,11 @@ Station parameters:
   --driver      --units
   --latitude    --longitude
   --altitude    --location
+  --register
 """
 
 
 def main():
-
-    # Set defaults for the system logger:
-    syslog.openlog('wee_config', syslog.LOG_PID|syslog.LOG_CONS)
 
     # Create a command line parser:
     parser = optparse.OptionParser(usage=usage)
@@ -94,6 +93,9 @@ def main():
                       """ For example, "Santa's workshop, North Pole" """)
     parser.add_option("--units", choices=["us", "metric"], metavar="(metric|us)",
                       help="Set display units to 'metric' or 'us'.")
+    parser.add_option("--register", dest='register_this_station', choices=['y', 'n'],
+                      metavar="(y/n)",
+                      help="Register this station in the weewx registry?")
     parser.add_option("--no-prompt", action="store_true",
                       help="Do not prompt. Use default or specified values.")
     parser.add_option("--no-backup", action="store_true", default=False,

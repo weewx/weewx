@@ -21,6 +21,7 @@ remove|upgrade)
 
         # remove any bytecompiled code
         find /usr/share/weewx -name '*.pyc' -delete
+	find /usr/share/weewx -name __pycache__ -delete
         ;;
 esac
 

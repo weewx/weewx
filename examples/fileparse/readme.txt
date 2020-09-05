@@ -35,14 +35,28 @@ cp /home/weewx/examples/fileparse/bin/fileparse.py /home/weewx/bin/user
     path = /var/tmp/datafile
     driver = user.fileparse
 
-3) in the WeeWX configuration file, modify the station_type setting to use the 
+3) If the variables in the file have names different from those in the database
+schema, then add a mapping section called label_map.  This will map the
+variables in the file to variables in the database columns.  For example:
+
+[FileParse]
+
+    ... (as before)
+
+    [[label_map]]
+        temp = outTemp
+        humi = outHumidity
+        in_temp = inTemp
+        in_humid = inHumidity
+
+4) in the WeeWX configuration file, modify the station_type setting to use the
 fileparse driver
 
 [Station]
     ...
     station_type = FileParse
 
-4) restart WeeWX
+5) restart WeeWX
 
 sudo /etc/init.d/weewx stop
 sudo /etc/init.d/weewx start

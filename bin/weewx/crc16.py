@@ -5,6 +5,7 @@
 #
 """Routines for calculating a 16 bit CRC check. """
 
+from __future__ import absolute_import
 from functools import reduce
 
 _table=[

@@ -1,4 +1,9 @@
-need to ensure that these use cases work properly:
-- override SLE in a skin from weewx.conf (and other cheetahgenerator options)
-- override imagegenerator options from weewx.conf (e.g., add cmon to exfoliation)
+# To do
 
+Should Ultimeter driver actually emit `rain24` and `dayRain`? See
+this email thread: https://groups.google.com/forum/#!topic/weewx-user/FM9QANjo1cc
+
+# For Version 4.1
+Implement a `$gettext()` extension.
+
+Be able to add arbitrary lines to graphics.

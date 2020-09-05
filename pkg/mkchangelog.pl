@@ -65,8 +65,8 @@ my $action = 'app';               # what to do, can be app or stub
 my $fmt = '80col';                # format can be 80col, debian, or redhat
 my $rc = 0;
 my $MAXCOL = 75;
-my %MONTHS = ("jan",1,"feb",2,"mar",3,"apr",4,"may",5,"jun",6,
-              "jul",7,"aug",8,"sep",9,"oct",10,"nov",11,"dec",12);
+my %MONTHS = ('jan',1,'feb',2,'mar',3,'apr',4,'may',5,'jun',6,
+              'jul',7,'aug',8,'sep',9,'oct',10,'nov',11,'dec',12,);
 
 ($user,$email) = guessuser($user,$email);
 
@@ -276,18 +276,22 @@ sub dumpsection {
 }
 
 # use gpg to guess the user,email pair of the person running this script.
+# if there are multiple gpg identities, then use the last one.
 # if gpg gives us nothing, fallback to USER and USER@hostname.
 sub guessuser {
     my($fb_user,$fb_email) = @_;
-    my($user,$email) = q();
+    my($user) = q();
+    my($email) = q();
     my $env_user = $ENV{USER};
     if ($env_user ne q()) {
         my @lines = `gpg --list-keys $env_user`;
         foreach my $line (@lines) {
             if ($line =~ /$env_user/) {
                 if ($line =~ /uid\s+(.*) <([^>]+)/) {
-                    $user = $1;
-                    $email = $2;
+		    $user = $1;
+		    $email = $2;
+		    # strip off any [xxx] prefix (introduced in gpg 2017-ish)
+		    $user =~ s/\s*\[[^\]]+\]\s*//;
                 }
             }
         }

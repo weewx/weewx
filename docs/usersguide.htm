@@ -4,10 +4,23 @@
     <title>WeeWX: User's Guide</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <link rel="stylesheet" href="css/ui-lightness/jquery-ui-1.10.4.custom.min.css"/>
-    <link rel="stylesheet" href="css/jquery.tocify.css"/>
-    <link rel="stylesheet" href="css/weewx_docs.css"/>
     <link rel="icon" href="images/favicon.png" type="image/png"/>
+    <link rel="stylesheet" href="css/tocbot-4.3.1.css">
+    <link rel="stylesheet" href="css/weewx_ui.css"/>
+    <script src="js/cash.min.js"></script>
+    <script src="js/tocbot-4.3.1.min.js"></script>
+    <script src="js/weewx.js"></script>
+    <script>
+        $(function () {
+            make_ids('#technical_content');
+            let level = get_level_from_cookie();
+            create_toc_level_control(level);
+            create_toc(level);
+            // Create a click on the first tab to get things started.
+            $('#dir-layout-table .tab')[0].click();
+            $('#mysql-client-tabs .tab')[0].click();
+        })
+    </script>
 </head>
 
 <body>
@@ -18,9 +31,11 @@
         href="hardware.htm">Hardware Guide</a><br/> <a href="utilities.htm">Utilities Guide</a><br/> <a
         href="upgrading.htm">Upgrade Guide</a><br/> <a href="devnotes.htm">Notes for Developers</a>
     </div>
-    <div id="toc_controls"></div>
+    <div id="toc_controls">
+        <!-- The TOC select list will be injected here -->
+    </div>
     <div id="toc_parent">
-        <div id="toc">
+        <div id="toc-location" class="toc">
             <!-- The table of contents will be injected here -->
         </div>
     </div>
@@ -32,7 +47,7 @@
         <div class="logoref">
             <a href='http://weewx.com'> <img src='images/logo-weewx.png' class='logo' style="float:right"
                                              alt="weewx logo"/> </a><br/> <span class='version'>
-Version: 3.9
+Version: 4.1
     </span>
         </div>
         <div class="title">User's Guide to WeeWX</div>
@@ -59,7 +74,8 @@ Version: 3.9
             available at <a href="http://weewx.com/downloads"><span class="code">weewx.com/downloads</span></a>.
         </p>
 
-        <p>WeeWX is about 13,000 lines of code, plus another 13,000 for the drivers for all the types of supported
+        <p>
+            WeeWX is about 15,000 lines of code, plus another 15,000 for the drivers for all the types of supported
             hardware.
         </p>
 
@@ -89,13 +105,15 @@ Version: 3.9
             enough" on just about any hardware. It has been run on everything from an early MacBook to a router!
         </p>
 
-        <p>I run WeeWX on a Fit-PC with a 500 MHz AMD Geode processor and 512 MB of memory. Configured this way, it
-            consumes about 5% of the CPU, 100 MB of virtual memory, and 20 MB of real memory.
+        <p>
+            I run WeeWX on a vintage 32-bit Fit-PC with a 500 MHz AMD Geode processor and 512 MB of memory. Configured
+            this way, it consumes about 5% of the CPU, 120 MB of virtual memory, and 30 MB of real memory.
         </p>
 
-        <p>WeeWX also runs great on a Raspberry Pi, although report generation will take longer. For example, the 12 "To
-            Date" templates take about 5.1 seconds on the RPi, compared to 3.0 seconds on my Fit-PC, and a mere 0.9
-            seconds on my vintage Dell Optiplex 745.
+        <p>
+            WeeWX also runs great on a Raspberry Pi, although report generation will take longer. For example,
+            the 12 "To Date" templates of the "Standard" report take about 5.1 seconds on a RPi B+,
+            compared to 3.0 seconds on the Fit-PC, and 0.3 seconds on a NUC with a 4th gen i5 processor.
         </p>
 
         <h2>Time</h2>
@@ -112,11 +130,7 @@ Version: 3.9
         <h2>Python</h2>
 
         <p>
-            Python 2.6 or 2.7 is required. If you are using Python 2.6, see the <a href="#python2_6">special note
-            below</a> about PySerial.
-        </p>
-        <p>
-            Python 3 will not work.
+            Python 2.7, or Python 3.5 or later is required.
         </p>
 
         <h2 id="permissions">Permissions</h2>
@@ -162,7 +176,7 @@ Version: 3.9
             </li>
         </ul>
         <p>If you get stuck, there is a very active <a href="https://groups.google.com/forum/#!forum/weewx-user">User's
-            Group</a> to help, but, please, try to solve the problem yourself before posting.
+            Group</a> to help.
         </p>
 
         <h2>Overview</h2>
@@ -250,36 +264,35 @@ Version: 3.9
             each role. These names are used throughout the documentation.
         </p>
 
-        <div id='dir-layout-table' class='tabs' style='padding-top:1em'>
-            <div id='layout-tab-deb' class='tab selected' onclick="showtab('layout','deb')">
-                Debian <img src='images/logo-debian.png' class='thumbnail' alt="Debian logo"/> <img
-                src='images/logo-ubuntu.png' class='thumbnail' alt="Ubuntu logo"/> <img src='images/logo-mint.png'
-                                                                                        class='thumbnail'
-                                                                                        alt="Mint logo"/>
-            </div>
-            <div id='layout-tab-rpm' class='tab' onclick="showtab('layout','rpm')">
-                Redhat/SUSE <img src='images/logo-redhat.png' class='thumbnail' alt="Redhat logo"/> <img
-                src='images/logo-centos.png' class='thumbnail' alt="Centos logo"/> <img src='images/logo-fedora.png'
-                                                                                        class='thumbnail'
-                                                                                        alt="Fedora logo"/> <img
-                src='images/logo-suse.png' class='thumbnail' alt="SUSE logo"/>
-            </div>
-            <div id='layout-tab-macos' class='tab' onclick="showtab('layout','macos')">macos <img
-                src='images/logo-apple.png' class='thumbnail' alt="Apple logo"/>
-            </div>
-            <div id='layout-tab-setup' class='tab' onclick="showtab('layout','setup')">setup.py</div>
-        </div>
-
-        <div id='layout' style='clear:both; width: 80%;'>
-            <div id='layout-deb'>
-                <table class='locations'>
-                    <tr class='selected'>
-                        <td colspan='3' class='locations_banner'>Application layout for install using DEB package</td>
-                    </tr>
+        <div id='dir-layout-table' class='tabs' style="width:80%;">
+            <nav>
+                    <button class='tab' onclick="openTab(event, '#layout-deb')">
+                        Debian
+                        <img src='images/logo-debian.png' class='thumbnail' alt="Debian logo"/>
+                        <img src='images/logo-ubuntu.png' class='thumbnail' alt="Ubuntu logo"/>
+                        <img src='images/logo-mint.png' class='thumbnail' alt="Mint logo"/>
+                    </button>
+                    <button class='tab' onclick="openTab(event, '#layout-rpm')">
+                        Redhat/SUSE
+                        <img src='images/logo-redhat.png' class='thumbnail' alt="Redhat logo"/>
+                        <img src='images/logo-centos.png' class='thumbnail' alt="Centos logo"/>
+                        <img src='images/logo-fedora.png' class='thumbnail' alt="Fedora logo"/>
+                        <img src='images/logo-suse.png' class='thumbnail' alt="SUSE logo"/>
+                    </button>
+                    <button class='tab' onclick="openTab(event, '#layout-macos')">
+                        macos
+                        <img src='images/logo-apple.png' class='thumbnail' alt="Apple logo"/>
+                    </button>
+                    <button class='tab' onclick="openTab(event, '#layout-setup')">
+                        setup.py
+                    </button>
+            </nav>
+            <div id='layout-deb' class="tab-content">
+                <table>
                     <tr class="first_row">
                         <td>Role</td>
-                        <td>Symbolic Name</td>
-                        <td>Nominal Location</td>
+                        <td>Symbolic name</td>
+                        <td>Nominal install location</td>
                     </tr>
                     <tr>
                         <td>WeeWX root directory</td>
@@ -333,15 +346,12 @@ Version: 3.9
                     </tr>
                 </table>
             </div>
-            <div id='layout-rpm' style='display:none'>
-                <table class='locations'>
-                    <tr class='selected'>
-                        <td colspan='3' class='locations_banner'>Application layout for install using RPM package</td>
-                    </tr>
+            <div id='layout-rpm' class="tab-content">
+                <table>
                     <tr class="first_row">
                         <td>Role</td>
-                        <td>Symbolic Name</td>
-                        <td>Nominal Location</td>
+                        <td>Symbolic name</td>
+                        <td>Nominal install location</td>
                     </tr>
                     <tr>
                         <td>WeeWX root directory</td>
@@ -395,16 +405,12 @@ Version: 3.9
                     </tr>
                 </table>
             </div>
-            <div id='layout-macos' style='display:none'>
-                <table class='locations'>
-                    <tr class='selected'>
-                        <td colspan='3' class='locations_banner'>Application layout for install on MacOS
-                        </td>
-                    </tr>
+            <div id='layout-macos' class="tab-content">
+                <table>
                     <tr class="first_row">
                         <td>Role</td>
-                        <td>Symbolic Name</td>
-                        <td>Nominal Location</td>
+                        <td>Symbolic name</td>
+                        <td>Nominal install location</td>
                     </tr>
                     <tr>
                         <td>WeeWX root directory</td>
@@ -458,17 +464,12 @@ Version: 3.9
                     </tr>
                 </table>
             </div>
-            <div id='layout-setup' style='display:none'>
-                <table class='locations'>
-                    <tr class='selected'>
-                        <td colspan='3' class='locations_banner'>Application layout for install using <span
-                            class='code'>setup.py</span>
-                        </td>
-                    </tr>
+            <div id='layout-setup' class="tab-content">
+                <table>
                     <tr class="first_row">
                         <td>Role</td>
-                        <td>Symbolic Name</td>
-                        <td>Nominal Location</td>
+                        <td>Symbolic name</td>
+                        <td>Nominal install location</td>
                     </tr>
                     <tr>
                         <td>WeeWX root directory</td>
@@ -522,6 +523,7 @@ Version: 3.9
                     </tr>
                 </table>
             </div>
+
         </div>
 
 
@@ -537,18 +539,28 @@ Version: 3.9
 
         <h2 id="Running_directly">Running directly</h2>
 
-        <p>To run WeeWX directly, invoke the main program, <span class="code">weewxd</span>, giving the configuration
-            file as its only parameter:
-        </p>
-        <pre class="tty cmd">sudo weewxd weewx.conf</pre>
-        <p>It should start by downloading any data stored in your weather station (if the station has a data logger)
-            into the archive database. For some stations, such as the Davis Vantage with a couple thousand records, this
-            could take a minute or two. I have found this process particularly slow on SuSE for some reason.
+        <p>To run WeeWX directly, invoke the main program, <span class="code">weewxd</span>:
         </p>
 
-        <p>WeeWX will then start monitoring live sensor data (also referrred to as 'LOOP' data), printing a short
-            version of the received data on standard output, about once every two seconds for a Vantage station, or
-            considerably longer for some other stations.
+        <pre class="tty cmd">sudo weewxd</pre>
+
+        <p class="note">
+            If your configuration file is named something other than <span
+            class="code">weewx.conf</span>, or if it is in a non-standard place, then you will have
+            to specify it explicitly on the command line. For example:<br/><br/>
+            <span class="code">sudo weewxd /some/path/to/weewx.conf</span>
+        </p>
+
+        <p>
+            If your station has a data logger, the program will start by downloading any data
+            stored in your weather station into the archive database. For some stations, such as
+            the Davis Vantage with a couple thousand records, this could take a minute or two.
+        </p>
+
+        <p>
+            WeeWX will then start monitoring live sensor data (also referrred to as 'LOOP' data),
+            printing a short version of the received data on standard output, about once every two
+            seconds for a Vantage station, or considerably longer for some other stations.
         </p>
 
         <p>You can tell a running instance of WeeWX to reread its configuration file by sending it the <span
@@ -732,9 +744,10 @@ sudo /etc/init.d/weewx restart</pre>
 
         <h2>If the server is on a different machine</h2>
 
-        <p>Use FTP or RSYNC to transfer the files generated by WeeWX to your remote server. In WeeWX, FTP and RSYNC are
-            implemented as reports. They are configured in the <span class="code">[StdReport]</span> section of the
-            WeeWX configuration file.
+        <p>
+            Use FTP or RSYNC to transfer the files generated by WeeWX to your remote server. In WeeWX, FTP and RSYNC are
+            implemented as <em>reports</em>. They are configured in the <span class="code">[StdReport]</span> section of
+            the WeeWX configuration file.
         </p>
         <p>For example, the following configuration would use RSYNC to copy the html and images files from the standard
             report to a folder <span class="code">/var/www/html/weewx</span> on the server <span class="code">wx.example.com</span>:
@@ -745,19 +758,54 @@ sudo /etc/init.d/weewx restart</pre>
         server = wx.example.com
         path = /var/www/html/weewx
         user = wxuser</pre>
-        <p>The following configuration would use FTP to copy the html and images:</p>
+
+        <p>The following configuration would use FTP to copy the html and image files:</p>
+
         <pre class='tty'>[StdReport]
     [[FTP]]
         skin = Ftp
         server = wx.example.com
-        path = /var/www/html/weewx
+        path = /weewx
         user = wxuser
         password = wxpass</pre>
+
+        <p>
+            It is possible to rsync or FTP more than one directory to the remote server. For example, suppose you have a
+            home webcam that puts its images in <span class="code">/home/webcam/www</span>. You want to FTP not only the
+            files generated by WeeWX, but also these webcam images, to a remote server. The webcam images should go in a
+            subdirectory <span class="code">webcam</span> of the <span class="code">weewx</span> directory. The
+            solution is to include more than one FTP section under <span class="code">[StdReport]</span>:
+        </p>
+        <pre class="tty">[StdReport]
+
+    # Location of the generated reports, relative to WEEWX_ROOT
+    HTML_ROOT = public_html
+
+    ...
+
+    # As before:
+    [[FTP]]
+        skin = Ftp
+        server = wx.example.com
+        path = /weewx
+        user = wxuser
+        password = wxpass
+
+    # Add a second FTP. You can name it anything.
+    [[webcam_FTP]]
+        skin = Ftp
+        # Override HTML_ROOT:
+        HTML_ROOT=/home/webcam/www
+        server = wx.example.com
+        path = /weewx/webcam
+        user = wxuser
+        password = wxpass
+        </pre>
+
         <p>See the documentation for the <a href="#config_FTP"><span class="code">[[FTP]]</span></a> and <a
             href="#config_RSYNC"><span class="code">[[RSYNC]]</span></a> sections of the configuration file <span
             class="code">weewx.conf</span> for details and options.
         </p>
-
 
         <h1 id="backup">Making backups</h1>
 
@@ -866,75 +914,119 @@ sudo /etc/init.d/weewx restart</pre>
         </p>
 
 
-        <h1 id="configuring_mysql">Configuring MySQL</h1>
+        <h1 id="configuring_mysql">Configuring MySQL / MariaDB</h1>
 
-        <p>This section applies only to those who wish to use the MySQL database, instead of the default SQLite
-            database.
+        <p>
+            This section applies only to those who wish to use the MySQL database, instead of the default SQLite
+            database. It assumes that you have installed a working version of MySQL or MariaDB.
         </p>
+        <ol>
+            <li>
+                <p>Install the client libraries. How to do this depends on your operating system. Use the table below as
+                    a guide.
+                </p>
 
-        <p>First, verify that the MySQLdb python package is installed:</p>
+                <div id="mysql-client-tabs" class='tabs'>
+                    <nav>
+                        <button class="tab" onclick="openTab(event, '#mysql-client-debian')">
+                            Debian / Raspbian / Ubuntu / Mint
+                            <img src='images/logo-debian.png' class='thumbnail' alt="Debian logo"/>
+                            <img src='images/logo-rpi.png' class="thumbnail" alt="Raspberry Pi logo"/>
+                            <img src='images/logo-ubuntu.png' class='thumbnail' alt="Ubuntu logo"/>
+                            <img src='images/logo-mint.png' class='thumbnail' alt="Mint logo"/>
+                        </button>
+                        <button class="tab" onclick="openTab(event, '#mysql-client-redhat')">
+                            Redhat
+                            <img src='images/logo-redhat.png' class='thumbnail' alt="Redhat logo"/>
+                            <img src='images/logo-centos.png' class='thumbnail' alt="Centos logo"/>
+                            <img src='images/logo-fedora.png' class='thumbnail' alt="Fedora logo"/>
+                        </button>
+                        <button class="tab" onclick="openTab(event, '#mysql-client-suse')">
+                            SUSE
+                            <img src='images/logo-suse.png' class="thumbnail" alt="SUSE logo"/>
+                        </button>
+                    </nav>
+                    <div id='mysql-client-debian' class="tab-content">
+        <pre class="tty cmd">sudo apt install mysql-client
+sudo apt install python3-mysqldb</pre>
+                    </div>
+                    <div id='mysql-client-redhat' class="tab-content">
+        <pre class="tty cmd">sudo yum install MySQL-python
+</pre>
+                    </div>
+                    <div id='mysql-client-suse' class="tab-content">
+                        <pre class="tty cmd">sudo zypper install python3-mysqlclient</pre>
+                    </div>
+                </div>
+            </li>
 
-        <pre class="tty">python -c "import MySQLdb"</pre>
-
-        <p>If this results in an import error</p>
-
-        <pre class="tty">ImportError: No module named MySQLdb</pre>
-
-        <p>then install the MySQLdb package. For example, on Debian systems:
-        </p>
-
-        <pre class="tty">sudo apt-get install python-mysqldb</pre>
-
-        <p>Next, change the WeeWX configuration to use MySQL instead of SQLite. In the WeeWX configuration file, change
-            the <a href="#wx_binding"><span class="code">[[wx_binding]]</span></a> section to point to the MySQL
-            database, <span class="code">archive_mysql</span>, instead of the SQLite database <span class="code">archive_sqlite</span>.
-        </p>
-        <p> After the change, it will look something like this (change <span class="highlight">highlighted</span>):
-        </p>
-        <pre class="tty">
+            <li>
+                <p>
+                    Change the WeeWX configuration to use MySQL instead of SQLite. In the WeeWX configuration file,
+                    change the <a href="#wx_binding"><span class="code">[[wx_binding]]</span></a> section to point to
+                    the MySQL database, <span class="code">archive_mysql</span>, instead of the SQLite database <span
+                    class="code">archive_sqlite</span>.
+                </p>
+                <p> After the change, it will look something like this (change
+                    <span class="highlight">highlighted</span>):
+                </p>
+                <pre class="tty">
     [[wx_binding]]
         # The database should match one of the sections in [Databases]
         <span class="highlight">database = archive_mysql</span>
         # The name of the table within the database
         table_name = archive
         # The class to manage the database
-        manager = weewx.wxmanager.WXDaySummaryManager
+        manager = weewx.manager.DaySummaryManager
         # The schema defines to structure of the database contents
-        schema = schemas.wview.schema</pre>
+        schema = schemas.wview_extended.schema</pre>
 
-        <p>Assuming that you want to use the default database configuration, the <span class="code"><a
-            href="#Databases">[[MySQL]]</a></span> section should look something like this:
-        </p>
-        <pre class="tty">    [[MySQL]]
+            </li>
+
+            <li>
+                <p>
+                    Configure the MySQL host and credentials. Assuming that you want to use the default database
+                    configuration, the <span class="code"><a href="#Databases">[[MySQL]]</a></span> section should look
+                    something like this:
+                </p>
+                <pre class="tty">    [[MySQL]]
         driver = weedb.mysql
         host = localhost
         user = weewx
         password = weewx
 </pre>
-        <p>This assumes user <span class="code">weewx</span> has the password <span class="code">weewx</span>. Adjust as
-            necessary.
-        </p>
-
-        <p>You will need to give the necessary permissions for the database <span class="code">weewx</span> to whatever
-            MySQL user you choose, by default, user <span class="code">weewx</span>. Here are the necessary minimum
-            permissions:
-        </p>
-        <pre class="tty">mysql&gt; <span class="cmd">CREATE USER 'weewx'@'localhost' IDENTIFIED BY 'weewx';</span>
+                <p>This assumes user <span class="code">weewx</span> has the password <span class="code">weewx</span>.
+                    Adjust as necessary.
+                </p>
+            </li>
+            <li>
+                <p>
+                    Configure MySQL to give the necessary permissions for the database <span class="code">weewx</span> to
+                    whatever MySQL user you choose. Here are the
+                    necessary minimum permissions, again assuming user <span class="code">weewx</span> with password
+                    <span class="code">weewx</span>. Adjust as necessary.:
+                </p>
+                <pre class="tty">mysql&gt; <span
+                    class="cmd">CREATE USER 'weewx'@'localhost' IDENTIFIED BY 'weewx';</span>
 mysql&gt; <span class="cmd">GRANT select, update, create, delete, insert, drop ON weewx.* TO weewx@localhost;</span></pre>
+            </li>
+        </ol>
 
 
         <h1 id="wview_compatibility">Compatibility with <span class="code">wview</span></h1>
 
         <h2>sqlite3</h2>
 
-        <p>The SQLite archive database used by WeeWX (nominally, <span class="code">weewx.sdb</span>) is completely
-            compatible with the database used by <a href="http://www.wviewweather.com">wview</a> (usually called <span
-                class="code">wview-archive.sdb</span>), at least as of wview Version 5.2.X. The schema, and its
-            semantics, is identical.
+        <p>
+            The SQLite archive database used by the old Linux weather software program <em>wview</em> (usually named
+            <span class="code">wview-archive.sdb</span>) is completely compatible with WeeWX and can be used without
+            change.
         </p>
 
-        <p>If you have data from <span class='code'>wview</span>, you can 'import' them into WeeWX by simply copying the
-            SQLite database file. Assuming that the <span class='code'>wview</span> data are in file <span class='code'>/var/wview/archive/wview-archive.sdb</span>,
+        <p>
+            All you need do is copy the file over and change its name. Assuming that the
+            <em>wview</em> data are in file <span
+            class='code'>/var/wview/archive/wview-archive.sdb</span>,
         </p>
 
         <pre class='tty cmd'>sudo /etc/init.d/weewx stop
@@ -943,11 +1035,16 @@ mv weewx.sdb weewx.sdb.bak
 cp /var/wview/archive/wview-archive.sdb weewx.sdb
 sudo /etc/init.d/weewx start</pre>
 
+        <p>where the variable <span class="symcode">SQLITE_ROOT</span> is the directory where
+        your WeeWX SQLite database is located (usually <span class="code">/home/weewx/archive</span>
+        or <span class="code">/var/lib/weewx</span>).</p>
+
         <p>
-            Internally, within the <span class="code">weewx.sdb</span> database, WeeWX also maintains a "daily summary"
-            of all the statistics. This is done for performance reasons. The daily summary will automatically be built
-            on the first startup. This could take a few minutes if the <span class='code'>wview</span> archive contains
-            more than a month or two of data.
+            Internally, within the <span class="code">weewx.sdb</span> database, WeeWX also
+            maintains a "daily summary" of all the statistics. This is done for performance
+            reasons. The daily summary will be built automatically on the first startup. This could
+            take a few minutes if the <em>wview</em> archive contains more than a month or two of
+            data.
         </p>
 
         <p>
@@ -957,8 +1054,8 @@ sudo /etc/init.d/weewx start</pre>
 
         <h2>MySQL</h2>
 
-        <p>The MySQL archive database used by wview is "almost" compatible with WeeWX. The one difference is that in
-            wview, the column <span class="code">interval</span> is named <span class="code">arcInt</span> (presumably
+        <p>The MySQL archive database used by <em>wview</em> is "almost" compatible with WeeWX. The one difference is that in
+            <em>wview</em>, the column <span class="code">interval</span> is named <span class="code">arcInt</span> (presumably
             because <span class="code">interval</span> is a keyword in MySQL, although it can still be used by
             surrounding the word with backquotes).
         </p>
@@ -967,13 +1064,13 @@ sudo /etc/init.d/weewx start</pre>
             <span class="code">mysql</span> and issue the command:
         </p>
         <pre class="tty">mysql> <span class="cmd">ALTER TABLE <em>your-wview-archive-name</em> CHANGE arcInt `interval` INTEGER NOT NULL;</span> </pre>
-        <p>where <span class="code"><em>your-wview-archive-name</em></span> is the name of your wview archive database.
+        <p>where <span class="code"><em>your-wview-archive-name</em></span> is the name of your <em>wview</em> archive database.
             Note that the word <span class="code">
         interval</span> is surrounded by backquotes.
         </p>
 
         <p>Then in the <span class="code">[Databases]</span> section of <span class="code">weewx.conf</span>, replace
-            the name of the database with whatever your installation of wview used <span class="code"><em>your-wview-archive-name</em></span>:
+            the name of the database with whatever your installation of <em>wview</em> used <span class="code"><em>your-wview-archive-name</em></span>:
         </p>
         <pre class="tty">[[archive_mysql]]
     database_type = MySQL
@@ -1287,10 +1384,40 @@ longitude = -77.0366</pre>
             be something like <span class='code'>/dev/ttyUSB0</span>. Default is <span class='code'>/dev/ttyUSB0</span>
         </p>
 
+        <p class='config_option'>debug_serial, debug_openclose, debug_checksum</p>
+
+        <p>The <span class="code">debug_serial</span>, <span class="code">debug_openclose</span> and
+            <span class="code">debug_checksum</span> can be set to one to produce debugging information
+            in the WeeWX log.  The defaults for these options are zero.
+        </p>
+
+        <p class='config_option'>logger_threshold</p>
+
+        <p>The <span class="code">logger_threshold</span> specifies the number of records in the CC3000 station's memory
+            at which the station memory's should be cleared.  If logger_threshold is not specified, or if zero is
+            specified, the station's memory will never be cleared.  In this case, when the memory fills up,
+            new archive records will no longer be saved in memory.  Note: the CC3000's memory will hold about 35,000
+            records.
+            The default is 0 (i.e., never clear memory).
+        </p>
+
+        <p class='config_option'>max_tries</p>
+
+        <p>The <span class="code">max_tries</span> option specifies how many times WeeWX should retry communiating
+            with the CC3000 station when a serial communications error occurs.  The default is 5 times.
+        </p>
+
+        <p class='config_option'>model</p>
+
+        <p>The <span class="code">model</span> option specifies the name of the hardware reported to WeeWX.
+            The default is CC3000.
+        </p>
+
         <p class='config_option'>polling_interval</p>
 
         <p>The <span class="code">polling_interval</span> determines how often WeeWX will query the station for data.
-            The default is 1 second.
+            The default is 2 seconds.  Note: 2 seconds is a good choice as this is the rate at which the CC3000 receives updates from
+            the Rainwise Mark III Weather Station.
         </p>
 
         <p class="config_option">sensor_map</p>
@@ -1307,6 +1434,13 @@ longitude = -77.0366</pre>
 
         <p>See the <a href="hardware.htm#cc3000_data">Hardware Guide</a> for a complete listing of sensor names and the
             default database fields for each sensor.
+        </p>
+
+        <p class='config_option'>use_station_time</p>
+
+        <p>The <span class="code">use_station_time</span> specifies whether the loop packets read by weewx should use
+            the time specified in the CC3000 station packet or the computer time.  The default is True (i.e., to use
+            CC3000 station time.
         </p>
 
         <h3 class="config_section">[FineOffsetUSB]</h3>
@@ -1432,6 +1566,31 @@ longitude = -77.0366</pre>
         <p class="config_option">tcp_send_delay</p>
 
         <p>How long to block after sending a socket packet to the WeatherLinkIP. Default is 1 second.</p>
+
+        <p class="config_option">loop_request</p>
+
+        <p>
+            The type of LOOP packet to use for LOOP data. Options are 1 (type <span class="code">LOOP1</span>); 2 (type
+            <span class="code">LOOP2</span>); or 3 (alternate between). Type <span class="code">LOOP2</span> packets
+            have the advantage of including gauge pressure, altimeter, heat index, THSW, and a few other types, so they
+            do not have to be calculated in software. On the other hand, they do not include any of the extra Davis
+            sensors, such as soil moisture, leaf temperature, etc.
+        </p>
+        <p>
+            If you decide to alternate between packet types (option <span class="code">3</span>), then the console will
+            send a type <span class="code">LOOP1</span> packet, followed by a type <span class="code">LOOP2</span>
+            packet. This means that for certain types, and depending on the options specified in
+            <span class="code">[StdWXCalculate]</span>, the value that is used by WeeWX can flip between hardware and
+            software values with every packet. In this case, you should be sure to specify option
+            <span class="code">hardware</span> for types <span class="code">pressure</span>,
+            <span class="code">altimeter</span>, <span class="code">dewpoint</span>,
+            <span class="code">windchill</span>, and <span class="code">heatindex</span>. This way, only hardware
+            values will be used.
+        </p>
+        <p class="note">Not all stations support LOOP2 data. You need firmware version 1.90 or later.</p>
+        <p>
+            Default is 1 (use LOOP1 type packets).
+        </p>
 
         <p class="config_option">iss_id</p>
 
@@ -1782,7 +1941,15 @@ longitude = -77.0366</pre>
 
         <p class='config_option'>retry_login</p>
 
-        <p>How long to wait in seconds before retrying a bad login. Default is 3600 seconds (one hour).</p>
+        <p>How long to wait in seconds before retrying a bad login. If set to zero, no retry will be
+            attempted. Default is 3600 seconds (one hour).</p>
+
+        <p class="config_option">post_interval</p>
+
+        <p>
+            The interval in seconds between posts. Setting this value to zero will cause every archive record to be
+            posted. Optional. Default is zero.
+        </p>
 
         <h3 class="config_section">[[CWOP]]</h3>
 
@@ -1884,6 +2051,12 @@ longitude = -77.0366</pre>
 
         <p>How long to wait in seconds before retrying a bad login. Default is 3600 seconds (one hour).</p>
 
+        <p class="config_option">post_interval</p>
+
+        <p>
+            The interval in seconds between posts. Setting this value to zero will cause every archive record to be
+            posted. Optional. Default is zero.
+        </p>
 
         <h3 class="config_section">[[WOW]]</h3>
 
@@ -1914,8 +2087,8 @@ longitude = -77.0366</pre>
 
         <p class="config_important">password</p>
 
-        <p>Set to your WOW Authentication Key. Required. This is not the same as your WOW password but a 6 digit
-            numerical PIN.
+        <p>Set to your WOW Authentication Key. Required. This is not the same as your WOW user password. It is
+            a 6 digit numerical PIN, unique for your station.
         </p>
 
         <p class='config_option'>log_success</p>
@@ -1930,6 +2103,13 @@ longitude = -77.0366</pre>
 
         <p>How long to wait in seconds before retrying a bad login. Default is 3600 seconds (one hour).</p>
 
+        <p class="config_option">post_interval</p>
+
+        <p>
+            The interval in seconds between posts. Setting this value to zero will cause every archive record to be
+            posted. Optional. Default is zero.
+        </p>
+
         <h3 class="config_section" id="Wunderground">[[Wunderground]]</h3>
 
         <p>
@@ -1943,7 +2123,8 @@ longitude = -77.0366</pre>
         enable = true
         station = KCASANFRA11
         password = XXX
-        rapidfire = False</pre>
+        rapidfire = False
+        api_key = 04255779e9aa45b6e4579938630e67b</pre>
         <p class="config_important">enable</p>
 
         <p>
@@ -1960,6 +2141,13 @@ longitude = -77.0366</pre>
         <p class="config_important">password</p>
 
         <p>Set to your Weather Underground password. Required.</p>
+
+        <p class="config_important">api_key</p>
+
+        <p>
+            Set to your Weather Underground <a href="https://www.wunderground.com/member/api-keys">API key</a>. This is
+            needed only if you plan on using the utility <a href="utilities.htm#wunderfixer_utility">wunderfixer</a>.
+        </p>
 
         <p class="config_option">rapidfire</p>
 
@@ -2007,6 +2195,13 @@ longitude = -77.0366</pre>
         <p class='config_option'>retry_login</p>
 
         <p>How long to wait in seconds before retrying a bad login. Default is 3600 seconds (one hour).</p>
+
+        <p class="config_option">post_interval</p>
+
+        <p>
+            The interval in seconds between posts. Setting this value to zero will cause every archive record to be
+            posted. Optional. Default is zero.
+        </p>
 
         <p class='config_option'>[[[Essentials]]]</p>
         <p>Occasionally (but not always!) when the Weather Underground is missing a data point it will substitute the
@@ -2171,8 +2366,25 @@ longitude = -77.0366</pre>
         <p>Set to <span class="code">True</span> to use FTP (FTPS) over TLS. This is an extension to the FTP protocol
             that uses a Secure Socket Layer (SSL) protocol, <em>not</em> to be confused with SFTP, which uses a Secure
             Socket Shell protocol. Not all FTP servers support this. In particular, the Microsoft FTP server seems to do
-            a poor job of it. Requires Python V2.7. Will not work with older versions of Python. Optional. Default is
-            <span class="code">False</span></p>
+            a poor job of it. Optional. Default is <span class="code">False</span></p>
+
+        <p class="config_option">secure_data</p>
+
+        <p>
+            If a secure session is requested (option <span class="code">secure_ftp=True</span>), should we attempt a
+            secure data connection as well? This option is useful due to a bug in the Python FTP client library. See <a
+            href="https://github.com/weewx/weewx/issues/284">Issue #284</a>. Optional. Default is <span class="code">True</span>.
+        </p>
+
+        <p class="config_option">reuse_ssl</p>
+
+        <p>
+            Some FTP servers (notably PureFTP) reuse ssl connections with FTPS. Unfortunately, the Python library has a
+            bug that prematurely closes such connections. See <a href="https://bit.ly/2Lrywla">https://bit.ly/2Lrywla</a>.
+            Symptom is an exception <span class="code">OSError: [Errno 0] Error</span>. This option activates a
+            workaround for Python versions greater than 3.6. It won't work for earlier versions. Optional. Default is
+            <span class="code">False</span>.
+        </p>
 
         <p class="config_option">port</p>
 
@@ -2228,7 +2440,13 @@ longitude = -77.0366</pre>
             Make sure <span class='code'>user</span> has write privileges in this directory. Required. No default.
         </p>
 
-        <p class="config_important">delete</p>
+        <p class="config_option">port</p>
+        <p>
+            The port to use for the ssh connection. Default is to use the default port for the
+            <span class="code">ssh</span> command (generally 22).
+        </p>
+
+        <p class="config_option">delete</p>
 
         <p>Files that don't exist in the local report are removed from the remote location. <em>USE WITH CAUTION:</em>
             If you make a mistake in setting the <span class="code">path</span>, this can cause unexpected files to be
@@ -2478,8 +2696,10 @@ longitude = -77.0366</pre>
 
         <p class="config_option">archive_interval</p>
 
-        <p>If your station hardware supports data logging then the archive interval will be downloaded from the station.
-            Otherwise, you must specify it here in seconds. Optional. Default is 300 seconds.
+        <p>
+            If your station hardware supports data logging then the archive interval will be downloaded from the station.
+            Otherwise, you must specify it here in seconds, and it must be evenly divisible by 60. Optional.
+            Default is 300 seconds.
         </p>
 
         <p class="config_option">archive_delay</p>
@@ -2555,8 +2775,8 @@ longitude = -77.0366</pre>
 [[wx_binding]]
     database = archive_sqlite
     table_name = archive
-    manager = weewx.wxmanager.WXDaySummaryManager
-    schema = schemas.wview.schema</pre>
+    manager = weewx.manager.DaySummaryManager
+    schema = schemas.wview_extended.schema</pre>
         <p>What follows is more detailed information about each of the binding options.</p>
 
         <p class="config_important">database</p>
@@ -2578,17 +2798,18 @@ longitude = -77.0366</pre>
         <p class="config_option">manager</p>
 
         <p>
-            The name of the class to be used to manage the table. Optional. Default is class <span class="code">weewx.wxmanager.WXDaySummaryManager</span>.
-            This class stores daily summaries in the database, and a few types, such as heating- and cooling-degree
-            days, appropriate for weather. Normally, this does not need to be changed.
+            The name of the class to be used to manage the table. Optional. Default is class <span
+            class="code">weewx.manager.DaySummaryManager</span>. This class stores daily
+            summaries in the database. Normally, this does not need to be changed.
         </p>
 
         <p class="config_option">schema</p>
 
         <p>
-            A Python list holding the structure of the schema to be used to initialize the database. After
-            initialization, it is not used. Optional. Default is <span class="code">schemas.wview.schema</span>, the
-            schema used by the <a href="http://www.wviewweather.com">wview</a> weather system.
+            A Python structure holding the schema to be used to initialize the database. After
+            initialization, it is not used. Optional. Default is <span
+            class="code">schemas.wview_extended.schema</span>, which is a superset of the schema
+            used by the <em>wview</em> weather system.
         </p>
 
         <h2 class="config_section" id="Databases">[Databases]</h2>
@@ -2890,6 +3111,15 @@ longitude = -77.0366</pre>
 
         <h2>Hardware problems</h2>
 
+        <!-- Following links are for backwards-compatibility -->
+        <span id="Clock_skew"></span> <span id="Corrupt_station_memory"></span>
+        <h3 id="html_generated_but_not_updated">Davis stations</h3>
+        <p>
+            For Davis-specific tips, see the Wiki article <a
+            href="https://github.com/weewx/weewx/wiki/Troubleshooting-the-Davis-Vantage-station"><em>Troubleshooting
+            Davis stations</em></a>
+        </p>
+
         <h3>Tips on making a system reliable</h3>
 
         <p>If you are having problems keeping your weather station up for long periods of time, here are some tips, in
@@ -2898,7 +3128,7 @@ longitude = -77.0366</pre>
 
         <div class='image image-right' style='width:205px'>
             <a href="images/ferrites.jpg"><img src="images/ferrites.jpg"
-                                               style="width:200px; border:solid; border-width: 1px;"
+                                               style="width:200px; border: 1px solid;"
                                                alt="Cable connection looped through a ferrite coil"/></a>
 
             <div class='image_caption'>Ferrite coils on a Davis Envoy. There are two coils, one on the USB connection
@@ -2918,9 +3148,11 @@ longitude = -77.0366</pre>
                 &mdash; just a second or two &mdash; so you do not need a big one. The 425VA unit I use to protect my
                 fit-PC cost $55 at Best Buy.
             </li>
-            <li>If you buy a Davis VantagePro and your computer has an old-fashioned serial port, get the VantagePro
-                with a serial connection, not a USB connection. See the section on <a href="#davis_cp2101_converter">Davis
-                    cp2101 converter problems</a> for details.
+            <li>
+                If you buy a Davis VantagePro and your computer has an old-fashioned serial port, get the VantagePro
+                with a serial connection, not a USB connection. See the Wiki article on <a
+                href="https://github.com/weewx/weewx/wiki/Troubleshooting-the-Davis-Vantage-station#davis-cp2101-converter-problems"><em>Davis
+                cp2101 converter problems</em></a> for details.
             </li>
             <li>If you do use a USB connection, put a ferrite coil on each end of the cable to your console. If you have
                 enough length and the ferrite coil is big enough, make a loop so it goes through the coil twice. See the
@@ -2928,224 +3160,7 @@ longitude = -77.0366</pre>
             </li>
         </ul>
 
-        <h3>Establishing connectivity</h3>
 
-        <p>If you are unable to get anything out of WeeWX, first check that you have connectivity to your weather
-            station. For the Davis stations, you can use a terminal emulator to run a simple test. Set it up to
-            communicate using the appropriate port and baudrate. I like <span class="code">minicom</span> because it can
-            be run from through a simple TTY connection. The utility <span class="code">screen</span> also works well.
-            For example:
-        </p>
-        <pre class="tty cmd">minicom -b 19200 -D /dev/ttyUSB0</pre>
-        <p>or, using <span class='code'>screen</span>:</p>
-        <pre class="tty cmd">screen /dev/ttyUSB0 19200</pre>
-        <p>
-            First, press <span class="code">&lt;enter&gt;</span> a few times, in order to wake up the console. Then type
-            <span class="code">TEST</span>, all in capital letters. The characters will not be echoed back. Then press
-            <span class="code">&lt;enter&gt;</span> once more. The Davis should echo back <span class="code">TEST</span>.
-        </p>
-
-        <p>If this works, then you have established connectivity with the Davis and the problem must lie elsewhere.</p>
-
-        <h3 id="davis_cp2101_converter">Davis cp2101 converter problems</h3>
-
-        <p>The USB converter used in the Davis VantagePro is known to have some &quot;noise&quot; problems. The symptom
-            is that the Linux kernel will disconnect from your old USB port claiming &quot;EMI noise&quot;, and
-            reconnect to a new and different port, where WeeWX cannot find it. Here is a typical log output:
-        </p>
-
-        <pre class='tty'>Nov 29 10:40:21 hummingbird kernel: [6661624.786792] hub 2-0:1.0: port 3 disabled by hub (EMI?) re-enabling...
-Nov 29 10:40:21 hummingbird kernel: [6661624.786871] usb 2-3: USB disconnect, address 2
-Nov 29 10:40:21 hummingbird kernel: [6661624.795778] cp2101 2-3:1.0: device disconnected
-Nov 29 10:40:21 hummingbird weewx[25808]: VantagePro: Max retries exceeded while getting LOOP packets
-... (messages elided)
-Nov 29 10:40:22 hummingbird kernel: [6661625.352340] cp2101 2-3:1.0: cp2101 converter detected
-Nov 29 10:40:22 hummingbird kernel: [6661625.528107] usb 2-3: reset full speed USB device using ohci_hcd and address 3
-Nov 29 10:40:22 hummingbird kernel: [6661625.735497] usb 2-3: cp2101 converter now attached to ttyUSB1</pre>
-
-        <p>In this example, the VantagePro was connected to <span class="code">/dev/ttyUSB0</span>, but then reconnected
-            to <span class="code">/dev/ttyUSB1</span>.
-        </p>
-
-        <p>If you put ferrite coils on the USB connection, you will eliminate 90% of this problem. I did this about 8
-            years ago, and have not had a problem since.
-        </p>
-
-        <p>However, there is one final step that you can take to really harden up your system: install a <span
-            class="code">udev</span> script that will create a symbolic link to the VantagePro USB port, whatever it
-            might be. With this approach, if the port jumps from <span class="code">ttyUSB0</span> to <span
-                class="code">ttyUSB1</span>, the symbolic link will follow it. You just specify port <span class="code">/dev/vpro</span>
-            in the configuration file <span class="code">weewx.conf</span> and be done with it.
-        </p>
-
-        <h3 id='udev_script'>Installing a udev script</h3>
-
-        <p>Use a udev rule to ensure that a USB device always appears at the same location such as <span class='code'>/dev/vpro</span>
-            instead of <span class='code'>/dev/ttyUSB2</span></p>
-
-        <p>For example, for my VantagePro2 weather station, I have installed a file <span class="code">/etc/udev/rules.d/vpro.rules</span>
-            on my fit-PC that looks like this:
-        </p>
-
-        <pre class='tty'># Automount the VantagePro2 to port /dev/vpro.
-# Install in /etc/udev/rules.d/vpro.rules
-#
-ACTION==&quot;add&quot;, ATTRS{interface}==&quot;CP2102 USB to UART Bridge Controller&quot;, SYMLINK+=&quot;vpro&quot;</pre>
-
-        <p>This rule says that when the USB port is plugged in (action <span class="code">add</span>), and it has an
-            attribute with name <span class="code">interface</span> that is equal to <span class="code">CP2102 to UART Bridge Controller</span>,
-            then add a symbolic link for its physical port to <span class="code">/dev/vpro</span>.
-        </p>
-
-        <p>Here is a rule that works for my Serial-to-USB cable, made by "Y.C. Cable USA". It not only adds a symbolic
-            link <span class="code">vpro</span>, but also sets the <span class="code">chmod</span> permissions to <span
-                class="code">666</span>, allowing any user to read or write to it.
-        </p>
-        <pre class='tty'># Automount Serial-to-USB cable to port /dev/vpro
-# Install in /etc/udev/rules.d/cable.rules
-#
-ACTION=="add",ATTRS{idVendor}=="05ad",ATTRS{idProduct}=="0fba",MODE="0666",SYMLINK+="vpro"</pre>
-        <p>Your devices may, and probably will, have different identifiers!! I can recommend this article, &quot;<a
-            href="http://www.reactivated.net/writing_udev_rules.html"><em>Writing udev rules</em></a>,&quot; for how to
-            find and write an appropriate <span class="code">udev</span> rule for your controller. (Note, however, that
-            this article uses the old <span class="code">udevinfo</span> command, rather than the newer <span
-                class="code">udevadm</span> command.) In particular, run the command
-        </p>
-
-        <p class='tty cmd'>udevadm info --attribute-walk --path $(udevadm info --query=path --name=/dev/ttyUSB0)</p>
-
-        <p>where <span class="code">/dev/ttyUSB0</span> is the port (substitute your real USB port) the weather station
-            is attached to. It will print out various identifiers that can be useful in identifying your weather station
-            to <span class="code">udev</span>. While the first example script above used a rule that matched attribute
-            <span class="code">interface</span>, others are possible. For example, the second example, for the
-            serial-to-USB cable, chose to match the attribute <span class="code">product</span>.
-        </p>
-
-        <p>Once you have installed your <span class="code">udev</span> rule, you can then set <span class="code">port=/dev/vpro</span>
-            in <span class="code">weewx.conf</span>, confident that it will always point to your weather station, no
-            matter which USB port it is actually attached to!
-        </p>
-
-        <p>I have tested this system many times. You can yank the USB port out of the machine and then plug it back in
-            while also pulling out the network connection in the middle of an FTP upload: WeeWX will recover.
-        </p>
-
-        <p>Or, at least, it should!</p>
-
-        <h3 id="html_generated_but_not_updated">WeeWX generates HTML pages, but it does not update them</h3>
-
-        <p>If you are getting a symptom that everything appears normal, that is image and HTML files are generated (<em>look
-            in the log to be sure</em>) and sent to your webserver (if you have configured FTP or rsync), but the values
-            in the web pages are not being updated, it could be due to clock skew or corrupt station memory.
-        </p>
-
-        <h4>Clock skew</h4>
-        <p>If the database contains a record with time stamp (the dateTime field) in the future, then records from the
-            station that are older than that future date will be ignored. How can the database contain records from the
-            future? Sometimes the computer clock is not set correctly. For example, the raspberry pi has no clock, so if
-            WeeWX saves data before the pi has synchronized its clock with internet time servers, the records will have
-            incorrect time stamps, some of which might be in the future.
-        </p>
-
-        <p>The solution is to delete any records with time stamp in the future. For a sqlite database, the procedure
-            looks like this:
-        </p>
-
-        <pre class="tty"><span class="cmd">cp /home/weewx/archive/weewx.sdb /home/weewx/archive/weewx.sdb.backup
-sqlite3 /home/weewx/archive/weewx.sdb</span>
-sqlite> <span class="cmd">delete from archive where dateTime > X;</span>
-sqlite> <span class="cmd">.exit</span></pre>
-
-        <p>The timestamp X is the current time in unix epoch time (number of seconds since 1 January 1970). <a
-            href="https://www.epochconverter.com/">This website</a> is useful for determining the current unix epoch
-            time.
-        </p>
-
-        <h4>Corrupt station memory</h4>
-        <p>If you have a Vantage station, the problem might be because the data on board your console has become
-            garbled. The way the Davis Vantage series works is that the software (WeeWX in this case) asks the console
-            for all archive data &quot;since&quot; some time. The console then downloads the records one at a time.
-            After it gets to the very last one, the memory wraps around, and the timestamp will suddenly jump backwards
-            in time a couple weeks &mdash; this is how the software knows it has downloaded the last record and so it
-            stops.
-        </p>
-
-        <p>However, if the internal memory gets garbled, the console will immediately return archives in the past, and
-            so it looks like the timestamps have decreased in value and so WeeWX figures that is it: there is no more
-            data. Here is what the log typically looks like (with <span class="code">debug=1</span>):
-        </p>
-
-        <pre class="tty">Nov 26 14:20:15 raspberrypi weewx[3849]: vantage: Getting archive packets since 2016-11-25 19:55:00 CET (1480100100)
-Nov 26 14:20:15 raspberrypi weewx[3849]: vantage: gentle wake up of console successful
-Nov 26 14:20:15 raspberrypi weewx[3849]: vantage: Retrieving 45 page(s); starting index= 1
-Nov 26 14:20:15 raspberrypi weewx[3849]: vantage: DMPAFT complete: page timestamp 2016-11-02 19:25:00 CET (1478111100) less than final timestamp 2016-11-25 19:55:00 CET (1480100100)
-Nov 26 14:20:15 raspberrypi weewx[3849]: vantage: Catch up complete.
-Nov 26 14:20:15 raspberrypi weewx[3849]: reportengine: Running reports for latest time in the database.
-Nov 26 14:20:15 raspberrypi weewx[3849]: reportengine: Running report StandardReport
-Nov 26 14:20:15 raspberrypi weewx[3849]: vantage: Requesting 200 LOOP packets.
-Nov 26 14:20:15 raspberrypi weewx[3849]: reportengine: Found configuration file /etc/weewx/skins/Standard/skin.conf for report StandardReport
-Nov 26 14:20:15 raspberrypi weewx[3849]: cheetahgenerator: using search list ['weewx.cheetahgenerator.Almanac', 'weewx.cheetahgenerator.Station', 'weewx.cheetahgenerator.Stats', 'weewx.cheetahgenerator.UnitInfo', 'weewx.cheetahgenerator.Extras']
-Nov 26 14:20:15 raspberrypi weewx[3849]: vantage: gentle wake up of console successful
-Nov 26 14:20:19 raspberrypi weewx[3849]: cheetahgenerator: Generated 14 files for report StandardReport in 4.16 seconds
-Nov 26 14:20:20 raspberrypi weewx[3849]: genimages: Generated 12 images for StandardReport in 0.62 seconds
-Nov 26 14:20:20 raspberrypi weewx[3849]: reportengine: copied 9 files to /var/www/html/weewx
-Nov 26 14:20:20 raspberrypi weewx[3849]: reportengine: Running report FTP
-Nov 26 14:20:20 raspberrypi weewx[3849]: reportengine: Found configuration file /etc/weewx/skins/Ftp/skin.conf for report FTP
-</pre>
-        <p>Note how WeeWX did a <span class="code">DMPAFT</span> command ("<span class="code">Getting archive packets since 2016-11-25 19:55:00</span>").
-            The console responded that it has lots of records after that time ("<span class="code">Retrieving 45 page(s);
-                starting index= 1</span>"), but when WeeWX actually tries to retrieve them, they are all before the
-            requested time.
-        </p>
-        <p>There seems to be two fixes:</p>
-        <ol>
-            <li>Unplug the console, take out the batteries, and wait a minute or two. This will cause the console
-                software to internally reboot. In one case this has fixed the problem without data loss.
-            </li>
-            <li>If all else fails, clear the memory of the console <a href="hardware.htm#vantage_clear_console_memory">using
-                the utility <span class="code">wee_device</span></a>. This may cause loss of data, but usually works.
-                Adjust paths as necessary:
-            </li>
-        </ol>
-        <pre class="tty cmd">wee_device --clear-memory</pre>
-        <p>See also the section <em><a href="hardware.htm#vantage_dumping_the_logger_memory">Dumping the logger
-            memory</a></em>, which may help you avoid data loss.
-        </p>
-
-        <h3>3rd party Vantage connectors</h3>
-
-        <p>This section is for those who are using a homebrew or 3rd party connector to a Davis Vantage console that
-            does not contain a logger, such as the <a href="http://www.wxforum.net/index.php?topic=14063.0">DSI-01
-                serial interface</a>. That is, it is a pure serial connection to the console, with no onboard memory.
-        </p>
-
-        <p>For these interfaces, you must set record generation to <em>software</em>. Without this information, WeeWX is
-            unable to detect the absence of onboard memory. If you do not do this, you will get errors that look like
-            the following in your syslog:
-        </p>
-        <pre class="tty">Nov 27 20:30:21 rpi weewx[5607]: reportengine: Caught unrecoverable exception in generator weewx.filegenerator.FileGenerator
-Nov 27 20:30:21 rpi weewx[5607]:         ****  'NoneType' object has no attribute '__getitem__'
-Nov 27 20:30:21 rpi weewx[5607]:         ****  Traceback (most recent call last):
-Nov 27 20:30:21 rpi weewx[5607]:         ****    File "/home/weewx/bin/weewx/reportengine.py", line 132, in run
-Nov 27 20:30:21 rpi weewx[5607]:         ****      obj.start()
-Nov 27 20:30:21 rpi weewx[5607]:         ****    File "/home/weewx/bin/weewx/reportengine.py", line 259, in start
-Nov 27 20:30:21 rpi weewx[5607]:         ****      self.run()
-Nov 27 20:30:21 rpi weewx[5607]:         ****    File "/home/weewx/bin/weewx/filegenerator.py", line 41, in run
-Nov 27 20:30:21 rpi weewx[5607]:         ****      self.setup()
-Nov 27 20:30:21 rpi weewx[5607]:         ****    File "/home/weewx/bin/weewx/filegenerator.py", line 52, in setup
-Nov 27 20:30:21 rpi weewx[5607]:         ****      self.initAlmanac(self.gen_ts)
-Nov 27 20:30:21 rpi weewx[5607]:         ****    File "/home/weewx/bin/weewx/filegenerator.py", line 87, in initAlmanac
-Nov 27 20:30:21 rpi weewx[5607]:         ****      rec = self.getRecord(archivedb, celestial_ts)
-Nov 27 20:30:21 rpi weewx[5607]:         ****    File "/home/weewx/bin/weewx/filegenerator.py", line 115, in getRecord
-Nov 27 20:30:21 rpi weewx[5607]:         ****      record_dict_vt = weewx.units.dictFromStd(record_dict)
-Nov 27 20:30:21 rpi weewx[5607]:         ****    File "/home/weewx/bin/weewx/units.py", line 892, in dictFromStd
-Nov 27 20:30:21 rpi weewx[5607]:         ****      std_unit_system = d['usUnits']
-Nov 27 20:30:21 rpi weewx[5607]:         ****  TypeError: 'NoneType' object has no attribute '__getitem__'
-Nov 27 20:30:21 rpi weewx[5607]:         ****  Generator terminated...
-Nov 27 20:30:23 rpi weewx[5607]: genimages: Generated 11 images in 2.53 seconds</pre>
-        <p>See the section on option <span class="code">
-        <a href="#record_generation">record_generation</a></span>.
-        </p>
 
         <h3>Raspberry Pi</h3>
 
@@ -3207,20 +3222,26 @@ Nov 27 20:30:23 rpi weewx[5607]: genimages: Generated 11 images in 2.53 seconds<
         <h3>Nothing in the log file</h3>
 
         <p>As it is running, WeeWX periodically sends status information, failures, and other things to your system's
-            logging facility. They typically look something like this:
+            logging facility. They typically look something like this (the first line is not actually part of the
+            log):
         </p>
-        <pre class='tty'>-DATE- --TIME-- HOST weewx[-PID-]: LOG_MESSAGE
+        <pre class='tty'><b> DATE    TIME       HOST    weewx[PID]  LEVL MESSAGE</b>
 
-Jan  1 09:46:32 saga weewx[15292]: wxengine: Initializing weewx version 2.5.1
-Jan  1 09:46:32 saga weewx[15292]: wxengine: Using Python 2.6.6 (r266:84292, Dec 27 2010, 21:57:32) #012[GCC 4.4.5 20100902 (prerelease)]
-Jan  1 09:46:32 saga weewx[15292]: wxengine: pid file is /var/run/weewx.pid</pre>
+Feb  8 04:25:16 hummingbird weewx[6932] INFO weewx.manager: Added record 2020-02-08 04:25:00 PST (1581164700) to database 'weewx.sdb'
+Feb  8 04:25:16 hummingbird weewx[6932] INFO weewx.manager: Added record 2020-02-08 04:25:00 PST (1581164700) to daily summary in 'weewx.sdb'
+Feb  8 04:25:17 hummingbird weewx[6932] INFO weewx.restx: PWSWeather: Published record 2020-02-08 04:25:00 PST (1581164700)
+Feb  8 04:25:17 hummingbird weewx[6932] INFO weewx.restx: Wunderground-PWS: Published record 2020-02-08 04:25:00 PST (1581164700)
+Feb  8 04:25:17 hummingbird weewx[6932] INFO weewx.restx: Windy: Published record 2020-02-08 04:25:00 PST (1581164700)
+Feb  8 04:25:17 hummingbird weewx[6932] ERROR weewx.restx: WOW: Failed to publish record 2020-02-08 04:25:00 PST (1581164700): Failed upload after 3 tries</pre>
 
-        <p>The location of this logging file varies from system to system, but it is typically in <span class="code">/var/log/syslog</span>,
-            or something similar.
+        <p>
+            The location of this logging file varies from system to system,
+            but it is typically in <span class="code">/var/log/syslog</span>, or something similar.
         </p>
 
-        <p>However, some systems default to saving only warning or critical information, so the <span
-            class="code">info</span> messages from WeeWX may not appear. If this happens to you, check your system
+        <p>
+            However, some systems default to saving only warning or critical information, so <span
+            class="code">INFO</span> messages from WeeWX may not appear. If this happens to you, check your system
             logging configuration. On Debian systems, look in <span class="code">/etc/rsyslog.conf</span>. On Redhat
             systems, look in <span class="code">/etc/syslog.conf</span>.
         </p>
@@ -3242,7 +3263,7 @@ Jan  1 09:46:32 saga weewx[15292]: wxengine: pid file is /var/run/weewx.pid</pre
         user = fred
         server = ftp.myhost.com
         password = mypassword
-        server = ftp.myhost.com # OOPS! Listed it twice!
+        server = ftp.myhost.com      # OOPS! Listed it twice!
         path = /weather
 ... </pre>
 
@@ -3257,7 +3278,9 @@ Apr 24 12:09:15 raven weewx[11480]: **** Exiting. </pre>
 
         <p>This is a very similar error, and is caused by a misformed section nesting. For example:</p>
 
-        <p class='tty'>[Reports] [[FTP]]] ... (details elided)</p>
+        <pre class='tty'>[Reports]
+    [[FTP]]]
+        ...</pre>
 
         <p>Note the extra closing bracket on the subsection <span class="code">FTP</span>.
         </p>
@@ -3303,33 +3326,6 @@ Apr 12 05:12:32 raven reportengine[3074]: **** Ignoring template and continuing.
             class="code">/home/weewx/skins/Standard/index.html.tmpl</span>.
         </p>
 
-        <h3 id="many_loop_read_errors">Many LOOP read errors with Davis Vantage</h3>
-
-        <p>The symptom is many LOOP errors and unreliable downloading of archive records. Your log may look like this:
-        </p>
-        <pre class="tty">
-Jan 18 20:38:52 rpi weewx[6024]: VantagePro: Opened up serial port /dev/ttyUSB0, baudrate 19200
-Jan 18 20:38:53 rpi weewx[5977]: VantagePro: LOOP #12; read error. Try #1
-Jan 18 20:38:53 rpi weewx[5977]:       ****  Expected to read 99 chars; got 0 instead
-Jan 18 20:38:58 rpi weewx[7543]: VantagePro: LOOP #13; read error. Try #1
-Jan 18 20:38:58 rpi weewx[7543]:       ****  Expected to read 99 chars; got 4 instead
-Jan 18 20:39:03 rpi weewx[7543]: VantagePro: LOOP #14; read error. Try #2
-Jan 18 20:39:03 rpi weewx[7543]:       ****  Expected to read 99 chars; got 0 instead
-Jan 18 20:39:03 rpi weewx[5977]: VantagePro: LOOP #13; read error. Try #2
-Jan 18 20:39:03 rpi weewx[5977]:       ****  Expected to read 99 chars; got 4 instead
-Jan 18 20:39:08 rpi weewx[7543]: VantagePro: LOOP #15; read error. Try #3
-Jan 18 20:39:08 rpi weewx[7543]:       ****  Expected to read 99 chars; got 4 instead
-Jan 18 20:39:09 rpi weewx[5977]: VantagePro: LOOP #14; read error. Try #3
-Jan 18 20:39:09 rpi weewx[5977]:       ****  Expected to read 99 chars; got 2 instead
-Jan 18 20:39:14 rpi weewx[5977]: VantagePro: LOOP #15; read error. Try #4
-Jan 18 20:39:14 rpi weewx[5977]:       ****  Expected to read 99 chars; got 2 instead</pre>
-        <p>If you look closely at the log above, you'll see that there are multiple instances of WeeWX running
-            simultaneously (process IDs 5977, 6024, and 7543). They are contending with each other for control of the
-            console, resulting in missed packets and records.
-        </p>
-
-        <p>The cure is simple: kill all but one of them. Or, better yet, kill them all, then start WeeWX.</p>
-
         <h3 id='dots_in_plots'>Dots in the plots</h3>
 
         <p>If you see dots instead of lines in the daily plots, you might want to change the graphing options or adjust
@@ -3347,7 +3343,8 @@ Jan 18 20:39:14 rpi weewx[5977]:       ****  Expected to read 99 chars; got 2 in
 
         <p>As for the archive interval, check the log file for an entry like this soon after WeeWX starts up:</p>
 
-        <pre class='tty'>Dec 30 10:54:17 saga weewx[10035]: wxengine: The archive interval in the configuration file (300) does not match the station hardware interval (1800).
+        <pre class='tty'>Dec 30 10:54:17 saga weewx[10035]: wxengine: The archive interval in the configuration file
+            (300) does not match the station hardware interval (1800).
 Dec 30 10:54:17 saga weewx[10035]: wxengine: Using archive interval of 1800</pre>
 
         <p>In this example, interval in <span class="code">weewx.conf</span> is 5 minutes, but the station interval is
@@ -3440,52 +3437,6 @@ Feb 12 07:11:06 rpi weewx[20930]: ****      raise weedb.OperationalError(e)
             <li>Trim the size of your templates to minimize the number of queries necessary.</li>
         </ul>
         <p>None of these 'fixes' are very satisfying and we're trying to come up with a more robust solution.</p>
-
-        <h3>Strings in the database</h3>
-
-        <p>If you modify the SQLite archive database using an editing tool, occasionally strings will get embedded in
-            it, causing WeeWX to raise an exception. <strong>This is only a problem with SQLite</strong>. There is no
-            analogous problem with MySQL databases. You will see errors in the system log that look something like this:
-        </p>
-        <pre class='tty'>
-Dec 31 17:01:06 arm weewx[18141]: **** File "/usr/share/weewx/weewx/wxengine.py", line 432, in __init__
-Dec 31 17:01:06 arm weewx[18141]: **** self.setupStatsDatabase(config_dict)
-Dec 31 17:01:06 arm weewx[18141]: **** File "/usr/share/weewx/weewx/wxengine.py", line 543, in setupStatsDatabase
-Dec 31 17:01:06 arm weewx[18141]: **** self.statsDb.backfillFrom(self.archive)
-Dec 31 17:01:06 arm weewx[18141]: **** File "/usr/share/weewx/weewx/stats.py", line 461, in backfillFrom
-Dec 31 17:01:06 arm weewx[18141]: **** _statsDict.addRecord(_rec)
-Dec 31 17:01:06 arm weewx[18141]: **** File "/usr/share/weewx/weewx/accum.py", line 305, in addRecord
-Dec 31 17:01:06 arm weewx[18141]: **** self._add_value(record[obs_type], obs_type, record['dateTime'], add_hilo)
-Dec 31 17:01:06 arm weewx[18141]: **** File "/usr/share/weewx/weewx/accum.py", line 264, in _add_value
-Dec 31 17:01:06 arm weewx[18141]: **** self[obs_type].addSum(val)
-Dec 31 17:01:06 arm weewx[18141]: **** File "/usr/share/weewx/weewx/accum.py", line 81, in addSum
-Dec 31 17:01:06 arm weewx[18141]: **** self.sum += val
-<span class='highlight'>Dec 31 17:01:06 arm weewx[18141]: **** TypeError: unsupported operand type(s) for +=: 'float' and 'unicode'</span>
-Dec 31 17:01:06 arm weewx[18141]: **** Exiting.</pre>
-        <p>The problem is that a unicode null string <span class='code'>u''</span> got entered where a <span
-            class='code'>NULL</span> should be. The utility <span class='code'>wee_database</span> can fix this. Run it
-            with the option <span class='code'>--check-strings</span> to search for these embedded strings. Add the
-            option <span class='code'>--fix-strings</span> to have the utility fix them:
-        </p>
-        <pre class="tty cmd">wee_database weewx.conf --check-strings --fix-strings</pre>
-
-        <h3 id="python2_6">Python 2.6</h3>
-        <p>Unfortunately, the current version of PySerial, 3.x, does not work with Python 2.6. If your hardware requires
-            PySerial (check the <a href="hardware.htm"><em>Hardware Guide</em></a>), you will have to downgrade to
-            PySerial V2.7, which you can <a href="https://sourceforge.net/projects/pyserial/files/pyserial/2.7/">obtain
-                from SourceForge</a>.
-        </p>
-
-        <h3>FreeBSD</h3>
-
-        <p>User Fabian reports that the following had to be done to get the VantagePro2 working under FreeBSD:</p>
-        <pre class="tty">I needed the uslcom Driver for the usb/rs232 Adapter used by my vantage. Also I had to reset the memory of the weatherstation.
-Loading the Driver:
-Put uslcom_load=&quot;YES&quot; in /boot/loader.conf (to load it as module).
-Which gives here an output like:
-uslcom0: &lt;CP2102 USB to UART Bridge Controller&gt; on usbus1
-And put in <span class="code">weewx.conf</span>:
-port = /dev/cuaU0</pre>
 
         <h3 id="funky_symbols">Funky symbols in plots</h3>
 
@@ -3668,10 +3619,6 @@ May 14 13:35:23 web weewx[5633]:         ****  Generator terminated...</pre>
         </p>
 
         <p>
-            Be sure that the units are correct.
-        </p>
-
-        <p>
             Finally, beware of calibration factors specific to the hardware. For example, the bucket type on a Vantage
             station must be specified when you set up the weather station. If you modify the rain bucket with a larger
             collection area, then you will have to add a multiplier in the <span class='code'>StdCalibrate</span>
@@ -3706,35 +3653,6 @@ May 14 13:35:23 web weewx[5633]:         ****  Generator terminated...</pre>
     </div>
 
 </div>
-
-<!-- Our scripts load last so the content can load first -->
-<script src="js/jquery-1.11.1.min.js"></script>
-<script src="js/jquery-ui-1.10.4.custom.min.js"></script>
-<script src="js/jquery.tocify-1.9.0.min.js"></script>
-<script src="js/weewx.js"></script>
-<script>
-    $(function () {
-        var level = get_default_level();
-        create_toc_control(level);
-        generate_toc(level);
-    });
-</script>
-
-<script>
-    function showtab(tab, id) {
-        document.getElementById(tab + '-deb').style.display = 'none';
-        document.getElementById(tab + '-rpm').style.display = 'none';
-        document.getElementById(tab + '-macos').style.display = 'none';
-        document.getElementById(tab + '-setup').style.display = 'none';
-        document.getElementById(tab + '-' + id).style.display = 'block';
-
-        document.getElementById(tab + '-tab-deb').className = 'tab';
-        document.getElementById(tab + '-tab-rpm').className = 'tab';
-        document.getElementById(tab + '-tab-macos').className = 'tab';
-        document.getElementById(tab + '-tab-setup').className = 'tab';
-        document.getElementById(tab + '-tab-' + id).className = 'tab selected';
-    }
-</script>
 
 </body>
 </html>

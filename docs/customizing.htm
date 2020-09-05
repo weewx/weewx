@@ -4,10 +4,20 @@
     <title>WeeWX: Customization Guide</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <link rel="stylesheet" href="css/ui-lightness/jquery-ui-1.10.4.custom.min.css"/>
-    <link rel="stylesheet" href="css/jquery.tocify.css"/>
-    <link rel="stylesheet" href="css/weewx_docs.css"/>
     <link rel="icon" href="images/favicon.png" type="image/png"/>
+    <link rel="stylesheet" href="css/tocbot-4.3.1.css">
+    <link rel="stylesheet" href="css/weewx_ui.css"/>
+    <script src="js/cash.min.js"></script>
+    <script src="js/tocbot-4.3.1.min.js"></script>
+    <script src="js/weewx.js"></script>
+    <script>
+        $(function () {
+            make_ids('#technical_content');
+            let level = get_level_from_cookie();
+            create_toc_level_control(level);
+            create_toc(level);
+        })
+    </script>
 </head>
 
 <body>
@@ -18,9 +28,11 @@
         href="hardware.htm">Hardware Guide</a><br/> <a href="utilities.htm">Utilities Guide</a><br/> <a
         href="upgrading.htm">Upgrade Guide</a><br/> <a href="devnotes.htm">Notes for Developers</a>
     </div>
-    <div id="toc_controls"></div>
+    <div id="toc_controls">
+        <!-- The TOC select list will be injected here -->
+    </div>
     <div id="toc_parent">
-        <div id="toc">
+        <div id="toc-location" class="toc">
             <!-- The table of contents will be injected here -->
         </div>
     </div>
@@ -32,7 +44,7 @@
         <div class="logoref">
             <a href='http://weewx.com'> <img src='images/logo-weewx.png' class='logo' style="float:right"
                                              alt="weewx logo"/> </a><br/> <span class='version'>
-Version: 3.9
+Version: 4.1
     </span>
         </div>
         <div class="title">WeeWX Customization Guide</div>
@@ -41,136 +53,133 @@ Version: 3.9
     <div id="technical_content" class="content">
 
         <p>
-            This document covers the customization of WeeWX. It assumes that you have read, and are reasonably familiar
-            with, the <a href="usersguide.htm">Users Guide</a>.
+            This document covers the customization of WeeWX. It assumes that you have read, and are
+            reasonably familiar with, the <a href="usersguide.htm">Users Guide</a>.
         </p>
         <p>
-            The introduction contains an overview of the architecture.  If you are only interested in
-            customizing the generated reports you can probably skip the introduction and proceed directly to the section <a
-            href="#customizing_reports"><em>Customizing reports</em></a>. With this approach you can easily add new plot
-            images, change the titles of images, change the units used in the reports, and so on.
-        </p>
-
-        <p>
-            However, if your goal is a specialized application, such as adding alarms, RSS feeds, <i>etc.</i>, then it
-            would be worth your while to read about the internal architecture.
+            The introduction contains an overview of the architecture. If you are only interested
+            in customizing the generated reports you can probably skip the introduction and proceed
+            directly to the section <a href="#customizing_reports"><em>Customizing reports</em></a>.
+            With this approach you can easily add new plot images, change the titles of images,
+            change the units used in the reports, and so on.
         </p>
 
         <p>
-            Most of the guide applies to any hardware, but the exact data types are hardware-specific. See the <a
-            href="hardware.htm"><em>WeeWX Hardware Guide</em></a> for details of how different observation types are
-            handled by different types hardware.
+            However, if your goal is a specialized application, such as adding alarms, RSS feeds,
+            <i>etc.</i>, then it would be worth your while to read about the internal architecture.
+        </p>
+
+        <p>
+            Most of the guide applies to any hardware, but the exact data types are
+            hardware-specific. See the <a href="hardware.htm"><em>WeeWX Hardware Guide</em></a>
+            for details of how different observation types are handled by different types hardware.
         </p>
 
         <p class="warning">
-            <strong>Warning!</strong><br/> WeeWX is still an experimental system and, as such, its internal design is
-            subject to change. Future upgrades may break any customizations you have done, particularly if they involve
-            the API (skin customizations tend to be more stable).
+            <strong>Warning!</strong><br/> WeeWX is still an experimental system and, as such,
+            its internal design is subject to change. Future upgrades may break any customizations
+            you have done, particularly if they involve the API (skin customizations tend to be
+            more stable).
         </p>
 
 
         <h1 id="introduction">Introduction</h1>
 
-        <h2>Where to put customizations</h2>
+        <h2>Overall system architecture</h2>
 
         <p>
-            For configuration changes, simply modify the WeeWX configuration file <span class="code">weewx.conf</span>.
-        </p>
-        <p>
-            Customization of reports may require changes to a skin configuration file <span
-            class="code">skin.conf</span> or template files ending in <span class="code">.tmpl</span> or <span class="code">.inc</span>. The <span
-            class="code">weewx.conf</span> configuration file and the <span class="code">skin.conf</span> configuration
-            and template files in the <span class='code'>skins</span> directory will be preserved when you upgrade.
+            Below is a brief overview of the WeeWX system architecture, which is covered in much
+            more detail in the rest of this document.
         </p>
 
-        <p>
-            Other customizations may require new Python code or modifications of example code. Where should you put the
-            code? If you simply modify the examples in place, then your changes will be overwritten the next time you do
-            an upgrade.
-        </p>
+        <div class="image image-right" style="width: 30%">
+            <img src="images/pipeline.png" alt="The WeeWX pipeline"/>
 
-        <p>
-            A better idea is to put the code in the <span class="code">user</span>, directory, which is preserved
-            through upgrades &mdash; you won't have to redo any changes you might have made. For example, if you wish to
-            modify one of the examples that comes with WeeWX, copy it from the <span class="code">examples</span>
-            directory to the <span class="code">user</span> directory, then modify it there. This way, your
-            modifications will not be touched if you upgrade.
-        </p>
-        <p>
-            For code that must run before anything else in WeeWX runs (for example, to set up an environment), put it in
-            the file <span class="code">extensions.py</span> in the <span class="code">user</span> directory. It is
-            always run before the WeeWX engine starts up. Because it is in the <span class="code">user</span>
-            subdirectory, it is preserved between upgrades.
-        </p>
+            <div class="image_caption">A typical WeeWX pipeline. The actual pipeline depends
+                on what extensions are in use. Data, in the form of LOOP packets and archive
+                records, flows from top to bottom.</div>
+        </div>
+        <ul>
+            <li>
+                A WeeWX process normally handles the monitoring of one station &mdash; <i>e.g.</i> a
+                weather station. The process is configured using a file with the name
+                <span class="code">weewx.conf</span>.
+            </li>
 
-        <h2>Do I need to restart WeeWX?</h2>
-        <p>
-            If you make a change in <span class="code">weewx.conf</span>, you will need to restart WeeWX.
-        </p>
-        <p>
-            If you make a change to a template or to a <span class="code">skin.conf</span> file, you do not need to
-            restart WeeWX. The change will be adopted at the next reporting cycle, typically at the end of an archive
-            interval.
-        </p>
-        <p>
-          If you modify code in the <span class="code">user</span> directory,
-          you will need to restart WeeWX.
-        </p>
-
-        <h2 id="wee_reports">
-            The utility <span class="code">wee_reports</span>
-        </h2>
-
-        <p>
-            If you make changes, how do you know what the results will look like? You could just run WeeWX and wait
-            until the next reporting cycle kicks off but, depending on your archive interval, that could be a 30 minute
-            wait or more.
-        </p>
-
-        <p>
-            The utility <span class="code">wee_reports</span> allows you to run a report whenever you like. To use it,
-            just run it from a command line, with the location of your configuration file <span
-            class="code">weewx.conf</span> as the first argument. Optionally, if you include a unix epoch timestamp as a
-            second argument, then the report will use that as the "Current" time; otherwise, the time of the last record
-            in the archive database will be used. Here is an example, using 1 May 2014 00:00 PDT as the "Current" time.
-        </p>
-        <pre class="tty"><span class="cmd">wee_reports weewx.conf 1398927600</span></pre>
-
-        <p>
-            For more information about <span class="code">wee_reports</span>, see the <a
-            href="utilities.htm#wee_reports_utility">Utilities Guide</a>
-        </p>
+            <li>
+                A WeeWX process has at most one "driver" to communicate with the station hardware
+                and receive "high resolution" (<i>i.e.</i> every few seconds) measurement data in
+                the form of LOOP packets. The driver is single-threaded and blocking, so no more
+                than one driver can run in a WeeWX process.
+            </li>
 
 
-        <h2>Data architecture</h2>
+            <li>
+                LOOP packets may contain arbitrary data from the station/driver in the form of a
+                Python dictionary. Each LOOP packet must contain a time stamp, and a unit system,
+                in addition to any number of observations, such as temperature or humidity.
+                For extensive types, such as rain, the packet contains the total amount of
+                rain that fell during the observation period.
+            </li>
+            <li>
+                WeeWX then compiles these LOOP packets into regularly spaced "archive records."
+                For most types, the archive record contains the average value seen in all of the
+                LOOP packets over the archive interval (typically 5 minutes). For extensive types,
+                such as rain, it is the sum of all values over the archive interval.
+            </li>
+            <li>
+                Internally, the WeeWX engine uses a <em>pipeline</em> architecture, consisting
+                of many <em>services</em>. Services bind to events of interest, such as new
+                LOOP packets, or new archive records. Events are then run down the pipeline
+                in order &mdash; services at the top of the pipeline act on the data
+                before services farther down the pipe.
+            </li>
+
+            <li>
+                Services can do things such as check the data quality, apply corrections, or save
+                data to a database. Users can easily add new services.
+            </li>
+
+            <li>
+                WeeWX includes an ability to customize behavior by installing <em>extensions</em>.
+                Extensions may consist of one or more drivers, services, and/or skins, all in an
+                easy-to-install package.
+            </li>
+        </ul>
+
+
+        <h2 id="Data_architecture">Data architecture</h2>
 
         <p>
-            WeeWX is data-driven. When the sensors spit out some data, WeeWX does something. The 'something' might be to
-            print out the data, or to generate an HTML report, or to use FTP to copy a report to a web server, or to
-            perform some calculations using the data. These actions are called services.
+            WeeWX is data-driven. When the sensors spit out some data, WeeWX does something. The
+            "something" might be to print out the data, or to generate an HTML report, or to use
+            FTP to copy a report to a web server, or to perform some calculations using the data.
         </p>
 
         <p>
-            A driver is Python code that communicates with the hardware. The driver reads data from a serial port or a
-            device on the USB or a network interface. It handles any decoding of raw bits and bytes, and puts the
-            resulting data into LOOP packets and archive RECORDs. Whenever possible, WeeWX should work "out of the box"
-            with minimal configuration. However, in some cases the driver may include code to configure and test the
-            hardware, typically via the <span class="code">wee_device</span> utility.
+            A driver is Python code that communicates with the hardware. The driver reads data from
+            a serial port or a device on the USB or a network interface. It handles any decoding of
+            raw bits and bytes, and puts the resulting data into LOOP packets. The drivers for
+            some kinds of hardware (most notably, Davis Vantage) are capable of emitting archive
+            records as well.
         </p>
+        <p>
+            In addition to the primary observation types such as temperature, humidity, or solar
+            radiation, there are also many useful dependent types, such as wind chill, heat index,
+            or ET, which are calculated from the primary data. The firmware in some weather
+            stations are capable of doing many of these calculations on their own. For the rest,
+            should you choose to do so, the WeeWX service <a
+            href="usersguide.htm#StdWXCalculate"><span class="code">StdWXCalculate</span></a> can
+            fill in the gaps. Sometimes the firmware simply does it wrong, and you may choose to
+            have WeeWX do the calculation, despite the type's presence in LOOP packets.
+        </p>
+
+        <h2>LOOP packets <em>vs.</em> archive records </h2>
 
         <p>
-            In many cases there are useful dependent variables that use the primary variables emitted by the driver. For
-            example, rain rate, windchill, heatindex, humidex, apptemp, ET are all dependent quantities &mdash; they
-            require primary observations such as wind speed, temperature, solar radiation. The firmware for some
-            hardware calculates dependent quantities. The WeeWX service <span class="code">StdWXCalculate</span> fills
-            in the gaps and determines whether to use a value from firmware or a calculation from WeeWX. Sometimes the
-            firmware simply does it wrong.
+            Generally, there are two types of data that flow through WeeWX: LOOP packets, and
+            archive records. Both are represented as Python dictionaries.
         </p>
-
-        <h2>
-            LOOP packets <em>vs.</em> archive records </h2>
-
-        <p>Generally, there are two types of data that flow through WeeWX: LOOP packets, and archive records.</p>
 
         <h3>LOOP packets</h3>
         <p>
@@ -194,12 +203,93 @@ Version: 3.9
             the interval. For battery status it's the last value in the interval.
         </p>
 
-        <p>Some hardware is capable of generating its own archive records (the Davis Vantage and Oregon Scientific
-            WMR200, for example), but for hardware that does not archive data, WeeWX generates them.
+        <p>
+            Some hardware is capable of generating their own archive records (the Davis Vantage and
+            Oregon Scientific WMR200, for example), but for hardware that cannot, WeeWX generates
+            them.
         </p>
 
         <p>It is the archive data that is put in the SQL database, although, occasionally, the LOOP packets can be
             useful (such as for the Weather Underground's "Rapidfire" mode).
+        </p>
+
+        <h2>What to customize</h2>
+
+        <p>
+            For configuration changes, such as which skins to use, or enabling posts to the
+            Weather Underground, simply modify the WeeWX configuration file
+            <span class="code">weewx.conf</span>. Any changes you make will be preserved during
+            an upgrade.
+        </p>
+        <p>
+            Customization of reports may require changes to a skin configuration file <span
+            class="code">skin.conf</span> or template files ending in <span
+            class="code">.tmpl</span> or <span class="code">.inc</span>. Anything in the <span
+            class="code">skins</span> subdirectory is also preserved across upgrades.
+        </p>
+        <p>
+            You may choose to install one of the many <a
+            href="https://github.com/weewx/weewx/wiki#extensions-to-weewx">third-party
+            extensions</a> that are available for WeeWX. These are typically installed in either
+            the <span class="code">skins</span> or <span class="code">user</span> subdirectories,
+            both of which are preserved across upgrades.
+        </p>
+
+        <p>
+            More advanced customizations may require new Python code or modifications of
+            example code. These should be placed in the <span class="code">user</span> directory,
+            where they will be preserved across upgrades. For example, if you wish to modify one of
+            the examples that comes with WeeWX, copy it from the <span class="code">examples</span>
+            directory to the <span class="code">user</span> directory, then modify it there. This
+            way, your modifications will not be touched if you upgrade.
+        </p>
+        <p>
+            For code that must run before anything else in WeeWX runs (for example, to set up an
+            environment), put it in the file <span class="code">extensions.py</span> in the <span
+            class="code">user</span> directory. It is always run before the WeeWX engine starts up.
+            Because it is in the <span class="code">user</span> subdirectory, it is preserved
+            between upgrades.
+        </p>
+
+        <h2>Do I need to restart WeeWX?</h2>
+        <p>
+            If you make a change in <span class="code">weewx.conf</span>, you will need to restart
+            WeeWX.
+        </p>
+        <p>
+            If you modify Python code in the <span class="code">user</span> directory or elsewhere,
+            you will need to restart WeeWX.
+        </p>
+        <p>
+            If you install an extension, you will need to restart WeeWX.
+        </p>
+        <p>
+            If you make a change to a template or to a <span class="code">skin.conf</span> file,
+            you do not need to restart WeeWX. The change will be adopted at the next reporting
+            cycle, typically at the end of an archive interval.
+        </p>
+        <h2 id="wee_reports">
+            The utility <span class="code">wee_reports</span>
+        </h2>
+
+        <p>
+            If you make changes, how do you know what the results will look like? You could just run WeeWX and wait
+            until the next reporting cycle kicks off but, depending on your archive interval, that could be a 30 minute
+            wait or more.
+        </p>
+
+        <p>
+            The utility <span class="code">wee_reports</span> allows you to run a report whenever you like. To use it,
+            just run it from a command line, with the location of your configuration file <span
+            class="code">weewx.conf</span> as the first argument. Optionally, if you include a unix epoch timestamp as a
+            second argument, then the report will use that as the "Current" time; otherwise, the time of the last record
+            in the archive database will be used. Here is an example, using 1 May 2014 00:00 PDT as the "Current" time.
+        </p>
+        <pre class="tty"><span class="cmd">wee_reports weewx.conf 1398927600</span></pre>
+
+        <p>
+            For more information about <span class="code">wee_reports</span>, see the <a
+            href="utilities.htm#wee_reports_utility">Utilities Guide</a>
         </p>
 
         <h2>The WeeWX service architecture</h2>
@@ -327,24 +417,26 @@ Version: 3.9
                 <td class="code first_col">StandardReport</td>
                 <td>This is an older report that has been used for many years in WeeWX. It generates day, week, month
                     and year "to-date" summaries in HTML, as well as the plot images to go along with them. Also
-                    generates NOAA monthly and yearly summaries. It typically loads faster than the <em>SeasonsReport</em>.
+                    generates NOAA monthly and yearly summaries. It typically loads faster than the
+                    <em>SeasonsReport</em>.
                 </td>
             </tr>
             <tr>
                 <td class="code first_col">FTP</td>
-                <td>Transfer everything in the <span class="symcode">HTML_ROOT</span> directory to a remote server using ftp.
+                <td>Transfer everything in the <span class="symcode">HTML_ROOT</span> directory to a remote server using
+                    ftp.
                 </td>
             </tr>
             <tr>
                 <td class="code first_col">RSYNC</td>
-                <td>Transfer everything in the <span class="symcode">HTML_ROOT</span> directory to a remote server using rsync.
+                <td>Transfer everything in the <span class="symcode">HTML_ROOT</span> directory to a remote server using
+                    rsync.
                 </td>
             </tr>
             </tbody>
         </table>
         <p>Note that the FTP and RSYNC "reports" are a funny kind of report in that it they do not actually generate
-            anything. Instead, they use the reporting service engine to transfer files and folders to a remote
-            server.
+            anything. Instead, they use the reporting service engine to transfer files and folders to a remote server.
         </p>
 
         <h3>Skins</h3>
@@ -371,6 +463,7 @@ Version: 3.9
         </p>
         <div id="skin-root-description" class="modal-dialog">
             <div>
+                <!--suppress HtmlUnknownAnchorTarget -->
                 <a href="#close" title="Close" class="close-dialog">X</a>
                 <h4>SKIN_ROOT</h4>
                 <p>
@@ -447,7 +540,8 @@ Version: 3.9
 
         <p>
             Each template file lives in the skin directory of the skin that uses it. By convention, a template file ends
-            with the <span class="code">.tmpl</span> extension.  There are also template files that end with the <span class="code">.inc</span> extension.  These templates are included in other templates.
+            with the <span class="code">.tmpl</span> extension. There are also template files that end with the <span
+            class="code">.inc</span> extension. These templates are included in other templates.
         </p>
 
         <h2>The database</h2>
@@ -666,10 +760,8 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
         <h1 id="customizing_reports">Customizing reports</h1>
 
         <p>
-            There are two general mechanisms for customizing reports:
-            change options in one or more configuration files, or change
-            the template files. The former is generally easier, but
-            occasionally the latter is necessary.
+            There are two general mechanisms for customizing reports: change options in one or more configuration files,
+            or change the template files. The former is generally easier, but occasionally the latter is necessary.
         </p>
 
         <p>
@@ -680,8 +772,8 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
         </p>
 
         <p class="note">
-            For a complete listing of the report options,
-            see the section <a href="#report_options"><em>Reference: report options</em></a>.
+            For a complete listing of the report options, see the section <a href="#report_options"><em>Reference:
+            report options</em></a>.
         </p>
 
         <h2 id="How_options_work">How options work</h2>
@@ -727,7 +819,9 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
                 <td></td>
                 <td>Affects only the report <span class="symcode">report_name</span>.</td>
                 <td class="code">[Labels] / [[Generic]]</td>
-                <td>Generally supplied by the skin author, not the user. Parameters specified here define the baseline behavior.</td>
+                <td>Generally supplied by the skin author, not the user. Parameters specified here define the baseline
+                    behavior.
+                </td>
             </tr>
             <tr>
                 <td class="code">weewx/defaults.py</td>
@@ -741,8 +835,11 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
         </table>
 
         <p>
-            You must pay attention to the number of brackets! In the table above, there are two different nesting depths used: one for <span class="code">weewx.conf</span>,
-            and one for <span class="code">weewx/defaults.py</span> and <span class="code">skin.conf</span>. This is because the stanzas defined in <span class="code">weewx.conf</span> start two levels down in the hierarchy <span class="code">[StdReport]</span>, whereas the stanzas defined in <span class="code">skin.conf</span> and <span class="code">defaults.py</span> are at the root level. 
+            You must pay attention to the number of brackets! In the table above, there are two different nesting depths
+            used: one for <span class="code">weewx.conf</span>, and one for <span class="code">weewx/defaults.py</span>
+            and <span class="code">skin.conf</span>. This is because the stanzas defined in <span class="code">weewx.conf</span>
+            start two levels down in the hierarchy <span class="code">[StdReport]</span>, whereas the stanzas defined in
+            <span class="code">skin.conf</span> and <span class="code">defaults.py</span> are at the root level.
         </p>
 
         <h2 id="how_to_change_labels">Changing labels</h2>
@@ -762,14 +859,15 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
         ...</pre>
 
         <p>
-            This tells the report generators that when it comes time to label the observation variables <span class="code">inTemp</span>
-            and <span class="code">outTemp</span>, use the strings <span class="code">InsideTemperature</span> and <span
-            class="code">Outside Temperature</span>, respectively. Because <span class="code">weewx/defaults.py</span>
-            lowest precedence, these strings will be used only when nothing else is available.
+            This tells the report generators that when it comes time to label the observation variables <span
+            class="code">inTemp</span> and <span class="code">outTemp</span>, use the strings
+            <span class="code">Inside Temperature</span> and <span class="code">Outside Temperature</span>,
+            respectively. Because <span class="code">weewx/defaults.py</span> has the lowest precedence, these strings
+            will be used only when nothing else is available.
         </p>
         <p>
-            Now suppose we have a skin called <em>Life</em> . Its configuration file will be
-            located at <span class="code">skins/Life/skin.conf</span>. Suppose, among other things, it contains an excerpt
+            Now suppose we have a skin called <em>Life</em> . Its configuration file will be located at <span
+            class="code">skins/Life/skin.conf</span>. Suppose, among other things, it contains an excerpt
         </p>
 
         <pre class="tty">
@@ -782,14 +880,13 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
 </pre>
 
         <p>
-            What this says is that the author of <span class="code">Life</span>, for whatever reasons, decided
-            that s/he wants to use the string <span class="code">Exterior Temperature</span>, instead of
-            <span class="code">Outside Temperature</span> for the label for <span class="code">outTemp</span>.
-            The file includes no definition for <span class="code">inTemp</span>.
+            What this says is that the author of <span class="code">Life</span>, for whatever reasons, decided that s/he
+            wants to use the string <span class="code">Exterior Temperature</span>, instead of <span class="code">Outside Temperature</span>
+            for the label for <span class="code">outTemp</span>. The file includes no definition for <span class="code">inTemp</span>.
         </p>
         <p>
-          Finally, for purposes of illustrating precedence, suppose the <span class="code">[StdReport]</span>
-            section of <span class="code">weewx.conf</span> contains this:
+            Finally, for purposes of illustrating precedence, suppose the <span class="code">[StdReport]</span> section
+            of <span class="code">weewx.conf</span> contains this:
         </p>
 
         <pre class="tty">
@@ -832,15 +929,15 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
             Note how the values specified for <span class="code">inTemp</span> are not overridden anywhere, so the value
             specified in <span class="code">weewx/defaults.py</span>, that is, <span
             class="code">Inside Temperature</span>, is used. By contrast, a value for <span class="code">outTemp</span>
-            was specified in the skin so, in the absence of any user override, its value, <span class="code">ExteriorTemperature</span>
-            will be used as the new default. Finally, for the report <span class="code">LifeB</span>, the user
-            <em>has</em> specified an override for <span class="code">outTemp</span>, so that value, <span class="code">Barn Temperature</span>,
-            is used.
+            was specified in the skin so, in the absence of any user override, its value, <span class="code">Exterior
+            Temperature</span> will be used as the new default. Finally, for the report <span class="code">LifeB</span>,
+            the user <em>has</em> specified an override for <span class="code">outTemp</span>, so that value,
+            <span class="code">Barn Temperature</span>, is used.
         </p>
 
         <p>
-            One more example. This time, suppose the <span class="code">[StdReport]</span>
-            section of <span class="code">weewx.conf</span> contains this:
+            One more example. This time, suppose the <span class="code">[StdReport]</span> section of <span
+            class="code">weewx.conf</span> contains this:
         </p>
 
         <pre class="tty">
@@ -862,10 +959,10 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
                 outTemp = Barn Temperature
 </pre>
         <p>
-            We have added a new section (<span class="highlight">highlighted</span>), where the user has specified
-            a new default for the observation type <span class="code">outTemp</span>, that is, <span class="code">Shed Temperature</span>.
-            Unless overridden, this is the value that will now be used instead of what the skin author specified.
-            The final tally looks like this:
+            We have added a new section (<span class="highlight">highlighted</span>), where the user has specified a new
+            default for the observation type <span class="code">outTemp</span>, that is, <span class="code">Shed Temperature</span>.
+            Unless overridden, this is the value that will now be used instead of what the skin author specified. The
+            final tally looks like this:
         </p>
 
         <table class="indent" style="width: 80%">
@@ -895,13 +992,11 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
             <span class="code">cm</span>.
         </p>
         <p>
-            This section shows how to specify exactly what units you want to use for which reports.
-            The examples use the skin <em>Seasons</em>, which comes with the distribution.
+            This section shows how to specify exactly what units you want to use for which reports. The examples use the
+            skin <em>Seasons</em>, which comes with the distribution.
         </p>
 
-        <h3 id="change_defaults">
-            Change units for all reports
-        </h3>
+        <h3 id="change_defaults">Change units for all reports </h3>
         <p>
             With this approach, you change an option under the <span class="code">[[Defaults]]</span> subsection,
             located under <span class="code">[StdReport]</span> in <span class="code">weewx.conf.</span> Changes here
@@ -938,7 +1033,9 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
 
                 group_altitude     = foot                 # Options are 'foot' or 'meter'
                 group_degree_day   = degree_F_day         # Options are 'degree_F_day' or 'degree_C_day'
+                group_distance     = mile                 # Options are 'mile' or 'km'
                 group_pressure     = inHg                 # Options are 'inHg', 'mmHg', 'mbar', or 'hPa'
+                group_pressurerate = inHg_per_hour        # Options are 'inHg_per_hour', 'mmHg_per_hour', 'mbar_per_hour', or 'hPa_per_hour'
                 group_rain         = inch                 # Options are 'inch', 'cm', or 'mm'
                 group_rainrate     = inch_per_hour        # Options are 'inch_per_hour', 'cm_per_hour', or 'mm_per_hour'
                 group_speed        = mile_per_hour        # Options are 'mile_per_hour', 'km_per_hour', 'knot', or 'meter_per_second'
@@ -974,7 +1071,9 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
 
                 group_altitude     = <span class="highlight">meter</span>                # Options are 'foot' or 'meter'
                 group_degree_day   = <span class="highlight">degree_C_day</span>         # Options are 'degree_F_day' or 'degree_C_day'
+                group_distance     = <span class="highlight">km</span>                   # Options are 'mile' or 'km'
                 group_pressure     = <span class="highlight">mbar</span>                 # Options are 'inHg', 'mmHg', 'mbar', or 'hPa'
+                group_pressurerate = <span class="highlight">mbar_per_hour</span>        # Options are 'inHg_per_hour', 'mmHg_per_hour', 'mbar_per_hour', or 'hPa_per_hour'
                 group_rain         = <span class="highlight">mm</span>                   # Options are 'inch', 'cm', or 'mm'
                 group_rainrate     = <span class="highlight">mm_per_hour</span>          # Options are 'inch_per_hour', 'cm_per_hour', or 'mm_per_hour'
                 group_speed        = <span class="highlight">meter_per_second</span>     # Options are 'mile_per_hour', 'km_per_hour', 'knot', or 'meter_per_second'
@@ -983,22 +1082,20 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
 </pre>
         <p>
             The options that were changed have been <span class="highlight">&nbsp;highlighted&nbsp;</span>. Note that
-            the changes occurred under the subsection <span class="code">[[Defaults]]</span>, so they
-            will affect <em>all</em> reports.
+            the changes occurred under the subsection <span class="code">[[Defaults]]</span>, so they will affect <em>all</em>
+            reports.
         </p>
 
-        <h3 id="change_units">
-            Change units for a single report
-        </h3>
+        <h3 id="change_units">Change units for a single report </h3>
 
         <p>
-          With this approach you can change an option for a single report.
+            With this approach you can change an option for a single report.
         </p>
 
         <p>
-            Suppose you want two reports, one in US Customary, the other in Metric. The first, call it <em>SeasonsUSReport</em>, will go in the regular directory <span class="symcode">HTML_ROOT</span>.
-            However, the latter, call it <em>SeasonsMetricReport</em>, will go in a subdirectory,
-            <span class="symcode">HTMLROOT</span><span class="code">/metric</span>.
+            Suppose you want two reports, one in US Customary, the other in Metric. The first, call it <em>SeasonsUSReport</em>,
+            will go in the regular directory <span class="symcode">HTML_ROOT</span>. However, the latter, call it <em>SeasonsMetricReport</em>,
+            will go in a subdirectory, <span class="symcode">HTML_ROOT</span><span class="code">/metric</span>.
         </p>
         <p>
             To accomplish this, we will generate two reports, one using the defaults, the other using overrides to
@@ -1021,14 +1118,16 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
     [[Defaults]]
         [[[Units]]]
             [[[[Groups]]]]
-                group_altitude     = meter                # Options are 'foot' or 'meter'
-                group_degree_day   = degree_C_day         # Options are 'degree_F_day' or 'degree_C_day'
-                group_pressure     = mbar                 # Options are 'inHg', 'mmHg', 'mbar', or 'hPa'
-                group_rain         = mm                   # Options are 'inch', 'cm', or 'mm'
-                group_rainrate     = mm_per_hour          # Options are 'inch_per_hour', 'cm_per_hour', or 'mm_per_hour'
-                group_speed        = meter_per_second     # Options are 'mile_per_hour', 'km_per_hour', 'knot', or 'meter_per_second'
-                group_speed2       = meter_per_second2    # Options are 'mile_per_hour2', 'km_per_hour2', 'knot2', or 'meter_per_second2'
-                group_temperature  = degree_C             # Options are 'degree_F' or 'degree_C'
+                group_altitude     = foot                 # Options are 'foot' or 'meter'
+                group_degree_day   = degree_F_day         # Options are 'degree_F_day' or 'degree_C_day'
+                group_distance     = mile                 # Options are 'mile' or 'km'
+                group_pressure     = inHg                 # Options are 'inHg', 'mmHg', 'mbar', or 'hPa'
+                group_pressurerate = inHg_per_hour        # Options are 'inHg_per_hour', 'mmHg_per_hour', 'mbar_per_hour', or 'hPa_per_hour'
+                group_rain         = inch                 # Options are 'inch', 'cm', or 'mm'
+                group_rainrate     = inch_per_hour        # Options are 'inch_per_hour', 'cm_per_hour', or 'mm_per_hour'
+                group_speed        = mile_per_hour        # Options are 'mile_per_hour', 'km_per_hour', 'knot', or 'meter_per_second'
+                group_speed2       = mile_per_hour2       # Options are 'mile_per_hour2', 'km_per_hour2', 'knot2', or 'meter_per_second2'
+                group_temperature  = degree_F             # Options are 'degree_F' or 'degree_C'
 
     <span class="highlight">[[SeasonsUSReport]]</span>
         skin = Seasons
@@ -1040,32 +1139,34 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
         HTML_ROOT = skins/metric
         [[[Units]]]
             [[[[Groups]]]]
-                group_altitude     = foot                 # Options are 'foot' or 'meter'
-                group_degree_day   = degree_F_day         # Options are 'degree_F_day' or 'degree_C_day'
-                group_pressure     = inHg                 # Options are 'inHg', 'mmHg', 'mbar', or 'hPa'
-                group_rain         = inch                 # Options are 'inch', 'cm', or 'mm'
-                group_rainrate     = inch_per_hour        # Options are 'inch_per_hour', 'cm_per_hour', or 'mm_per_hour'
-                group_speed        = mile_per_hour        # Options are 'mile_per_hour', 'km_per_hour', 'knot', or 'meter_per_second'
-                group_speed2       = mile_per_hour2       # Options are 'mile_per_hour2', 'km_per_hour2', 'knot2', or 'meter_per_second2'
-                group_temperature  = degree_F             # Options are 'degree_F' or 'degree_C'</span>
+                group_altitude     = meter                # Options are 'foot' or 'meter'
+                group_degree_day   = degree_C_day         # Options are 'degree_F_day' or 'degree_C_day'
+                group_distance     = km                   # Options are 'mile' or 'km'
+                group_pressure     = mbar                 # Options are 'inHg', 'mmHg', 'mbar', or 'hPa'
+                group_pressurerate = mbar_per_hour        # Options are 'inHg_per_hour', 'mmHg_per_hour', 'mbar_per_hour', or 'hPa_per_hour'
+                group_rain         = mm                   # Options are 'inch', 'cm', or 'mm'
+                group_rainrate     = mm_per_hour          # Options are 'inch_per_hour', 'cm_per_hour', or 'mm_per_hour'
+                group_speed        = meter_per_second     # Options are 'mile_per_hour', 'km_per_hour', 'knot', or 'meter_per_second'
+                group_speed2       = meter_per_second2    # Options are 'mile_per_hour2', 'km_per_hour2', 'knot2', or 'meter_per_second2'
+                group_temperature  = degree_C             # Options are 'degree_F' or 'degree_C'</span>
 </pre>
         <p>
             Two things are different from the stock section <span class="code">[StdReport]</span>. First (1), we have
-            renamed the first report from <em>SeasonsReport</em> to <em>SeasonsUSReport</em>
-            for clarity; and second (2), we have introduced a new report <em>SeasonsMetricReport</em>,
-            which is just like the first, except it puts its results in a different subdirectory and uses different
-            units. Both use the same skin, the <em>Seasons</em> skin.
+            renamed the first report from <em>SeasonsReport</em> to <em>SeasonsUSReport</em> for clarity; and second
+            (2), we have introduced a new report <em>SeasonsMetricReport</em>, which is just like the first, except it
+            puts its results in a different subdirectory and uses different units. Both use the same skin, the <em>Seasons</em>
+            skin.
         </p>
 
         <p>
-            The reason this works is that the report <em>SeasonsUSReport</em> uses all of the defaults,
-            which include US Customary units, and the default value for <a href="usersguide.htm#HTML_ROOT"><span
+            The reason this works is that the report <em>SeasonsUSReport</em> uses all of the defaults, which include US
+            Customary units, and the default value for <a href="usersguide.htm#HTML_ROOT"><span
             class="code">HTML_ROOT</span></a> (which specifies the location for where HTML files are to be put).
         </p>
 
         <p>
-            By contrast, <em>SeasonsMetricReport</em> cannot use these defaults, so it
-            overrides the units to be used, and the value of <span class="code">HTML_ROOT</span>.
+            By contrast, <em>SeasonsMetricReport</em> cannot use these defaults, so it overrides the units to be used,
+            and the value of <span class="code">HTML_ROOT</span>.
         </p>
 
 
@@ -1073,31 +1174,32 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
 
         <p>
             Normal WeeWX operation is to run each <em><a href="usersguide.htm#Reports">report</a></em> defined in <span
-            class="code">weewx.conf</span> every archive period. Whilst this may suit most situations, there may be
+            class="code">weewx.conf</span> every archive period. While this may suit most situations, there may be
             occasions when it is desirable to run a report less frequently than every archive period. For example, the
-            archive interval might be 5 minutes, but you only want to FTP files every 30 minutes, once per day or at a
-            set time each day. Weewx has two mechanisms that provide the ability to control when files are generated.
+            archive interval might be 5 minutes, but you only want to FTP files every 30 minutes, once per day, or at a
+            set time each day. WeeWX has two mechanisms that provide the ability to control when files are generated.
             The <em><a href="#stale_age"><span class="code">stale_age</span></a></em> option allows control over the age
-            of a file before it is regenerated and the <span class="code">report_timing</span> option allows precise
+            of a file before it is regenerated, and the <span class="code">report_timing</span> option allows precise
             control over when individual reports are run.
         </p>
 
         <p class="note" style="display: inline-block; width: 70%">
-            <strong>Note</strong><br/>Whilst <span class="code">report_timing</span> specifies when a given report should be generated, the generation of reports is still
-            controlled by the WeeWX report cycle, so reports can never be generated more frequently than once every archive period.
+            <strong>Note</strong><br/>While <span class="code">report_timing</span> specifies when a given report
+            should be generated, the generation of reports is still controlled by the WeeWX report cycle, so reports can
+            never be generated more frequently than once every archive period.
         </p>
 
-        <h3>
-            The <span class="code">report_timing</span> option </h3>
+        <h3>The <span class="code">report_timing</span> option</h3>
 
         <p>
             The <span class="code">report_timing</span> option uses a CRON-like format to control when a report is to be
-            run. Whilst a CRON-like format is used, the control of WeeWX report generation using the <span class="code">report_timing</span>
-            option is confined completely to WeeWX and has no interraction with the system CRON service.
+            run. While a CRON-like format is used, the control of WeeWX report generation using the <span
+            class="code">report_timing</span> option is confined completely to WeeWX and has no interraction with the
+            system CRON service.
         </p>
 
         <p>
-            The <span class="code">report_timing</span> option consists of five, space separated parameters as follows:
+            The <span class="code">report_timing</span> option consists of five parameters separated by white-space:
         </p>
 
         <pre class="tty">report_timing = minutes hours day_of_month months day_of_week</pre>
@@ -1117,28 +1219,28 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
                 <td class="code first_col">minutes</td>
                 <td>Specifies the minutes of the hour when the report will be run
                 </td>
-                <td>*, or<br/>numbers in the range 0..59 inclusive
+                <td><span class="code">*</span>, or<br/>numbers in the range 0..59 inclusive
                 </td>
             </tr>
             <tr>
                 <td class="code first_col">hours</td>
                 <td>Specifies the hours of the day when the report will be run
                 </td>
-                <td>*, or<br/>numbers in the range 0..23 inclusive
+                <td><span class="code">*</span>, or<br/>numbers in the range 0..23 inclusive
                 </td>
             </tr>
             <tr>
                 <td class="code first_col">day_of_month</td>
                 <td>Specifies the days of the month when the report will be run
                 </td>
-                <td>*, or<br/>numbers in the range 1..31 inclusive
+                <td><span class="code">*</span>, or<br/>numbers in the range 1..31 inclusive
                 </td>
             </tr>
             <tr>
                 <td class="code first_col">months</td>
                 <td>Specifies the months of the year when the report will be run
                 </td>
-                <td>*, or<br/>numbers in the range 1..12 inclusive, or<br/>abbreviated names in the range jan..dec
+                <td><span class="code">*</span>, or<br/>numbers in the range 1..12 inclusive, or<br/>abbreviated names in the range jan..dec
                     inclusive
                 </td>
             </tr>
@@ -1146,7 +1248,7 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
                 <td class="code first_col">day_of_week</td>
                 <td>Specifies the days of the week when the report will be run
                 </td>
-                <td>*, or<br/>numbers in the range 0..7 inclusive (0,7 = Sunday, 1 = Monday etc), or<br/>abbreviated
+                <td><span class="code">*</span>, or<br/>numbers in the range 0..7 inclusive (0,7 = Sunday, 1 = Monday etc), or<br/>abbreviated
                     names in the range sun..sat inclusive
                 </td>
             </tr>
@@ -1187,14 +1289,13 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
         report_timing = */10 * * * *</pre>
 
         <p>
-            In this case, the <span class="code">[[AReport]]</span> report would be run under under control of the
-            <span class="code">0 * * * *</span> setting (on the hour) under <span class="code">[StdReport]</span> and
-            the <span class="code">[[AnotherReport]]</span> report would be run under control of the <span class="code">*/10 * * * *</span>
+            In this case, the <span class="code">[[AReport]]</span> report would be run under under control of the <span
+            class="code">0 * * * *</span> setting (on the hour) under <span class="code">[StdReport]</span> and the
+            <span class="code">[[AnotherReport]]</span> report would be run under control of the <span class="code">*/10 * * * *</span>
             setting (every 10 minutes) which has overriden the <span class="code">[StdReport]</span> setting.
         </p>
 
-        <h3>
-            How <span class="code">report_timing</span> controls reporting </h3>
+        <h3>How <span class="code">report_timing</span> controls reporting </h3>
 
         <p>
             The syntax and interpretation of the <span class="code">report_timing</span> parameters are largely the same
@@ -1228,15 +1329,14 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
             4:30am every Friday.
         </p>
 
-        <h3>
-            The relationship between <span class="code">report_timing</span> and archive period </h3>
+        <h3>The relationship between <span class="code">report_timing</span> and archive period </h3>
 
         <p>
             A traditional CRON service has a resolution of one minute, meaning that the CRON service checks each minute
             as to whether to execute any commands. On the other hand, the WeeWX report system checks which reports are
-            to be run once per archive period, where the archive period may be one minute, five minutes or some other
+            to be run once per archive period, where the archive period may be one minute, five minutes, or some other
             user defined period. Consequently, the <span class="code">report_timing</span> option may specify a report
-            to be run at some time that does not align with the WeeWX archive period. In such cases cases the <span
+            to be run at some time that does not align with the WeeWX archive period. In such cases the <span
             class="code">report_timing</span> option does not cause a report to be run outside of the normal WeeWX
             report cycle, rather it will cause the report to be run during the next report cycle. At the start of each
             report cycle, and provided a <span class="code">report_timing</span> option is set, WeeWX will check each
@@ -1291,33 +1391,38 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
         <h3>Lists, ranges and steps</h3>
 
         <p>
-            The <span class="code">report_timing</span> option supports lists, ranges and steps for all parameters.
-            Lists, ranges and steps may be used as follows:
+            The <span class="code">report_timing</span> option supports lists, ranges, and steps for all parameters.
+            Lists, ranges, and steps may be used as follows:
         </p>
 
         <ul>
-            <li>Lists. A list is a set of numbers (or ranges) separated by commas, for example 1,2,5,9 or 0-4,8-12. A
-                match with any of the elements of the list will result in a match for that particular parameter. If the
-                examples were applied to the minutes parameter, and subject to other parameters in the <span
-                    class="code">report_timing</span> option, the report would be run at minutes 1,2,5 and 9 and
-                0,1,2,3,4,8,9,10,11 and 12 respectively. Abbreviated month and day names cannot be used in a list.
+            <li>
+                <em>Lists</em>. A list is a set of numbers (or ranges) separated by commas, for example <span class="code">1, 2,
+                5, 9</span> or <span class="code">0-4, 8-12</span>. A match with any of the elements of the list will
+                result in a match for that particular parameter. If the examples were applied to the minutes parameter,
+                and subject to other parameters in the <span class="code">report_timing</span> option, the report would
+                be run at minutes 1, 2, 5, and 9 and 0, 1, 2, 3, 4, 8, 9, 10, 11, and 12 respectively. Abbreviated month
+                and day names cannot be used in a list.
             </li>
 
-            <li>Ranges. Ranges are two numbers separated with a hyphen, for example 8-11. The specified range is
-                inclusive. A match with any of the values included in the range will result in a match for that
-                particular parameter. If the example was applied to the hours parameter, and subject to other parameters
-                in the <span class="code">report_timing</span> option, the report would be run at hours 8,9,10 and 11. A
-                range may be included as an element of a list. Abbreviated month and day names cannot be used in a
-                range.
+            <li>
+                <em>Ranges</em>. Ranges are two numbers separated with a hyphen, for example <span
+                class="code">8-11</span>. The specified range is inclusive. A match with any of the values included in
+                the range will result in a match for that particular parameter. If the example was applied to the hours
+                parameter, and subject to other parameters in the <span class="code">report_timing</span> option, the
+                report would be run at hours 8, 9, 10, and 11. A range may be included as an element of a list.
+                Abbreviated month and day names cannot be used in a range.
             </li>
 
-            <li>Steps. A step can be used in conjunction with a range or asterisk and are denoted by a '/' followed by a
-                number. Following a range with a step specifies skips of the step number's value through the range. For
-                example, 0-12/2 used in the hours parameter would, subject to other parameter in the <span class="code">report_timing</span>
-                option, run the report at hours 0,2,4,6,8,12. Steps are also permitted after an asterisk in which case
-                the skips of the step number's value occur through the all possible values of the parameter. For
-                example, */3 can be used in the hours parameter to, subject to other parameter in the <span
-                    class="code">report_timing</span> option, run the report at hours 0,3,6,9,12,15,18 and 21.
+            <li>
+                <em>Steps</em>. A step can be used in conjunction with a range or asterisk and are denoted by a '<span
+                class="code">/</span>' followed by a number. Following a range with a step specifies skips of the step
+                number's value through the range. For example, <span class="code">0-12/2</span> used in the hours
+                parameter would, subject to other parameter in the <span class="code">report_timing</span> option, run
+                the report at hours 0, 2, 4, 6, 8, and 12. Steps are also permitted after an asterisk in which case the
+                skips of the step number's value occur through the all possible values of the parameter. For example,
+                <span class="code">*/3</span> can be used in the hours parameter to, subject to other parameter in the
+                <span class="code">report_timing</span> option, run the report at hours 0, 3, 6, 9, 12, 15, 18, and 21.
             </li>
         </ul>
 
@@ -1325,8 +1430,8 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
 
         <p>
             The <span class="code">report_timing</span> option supports a number of time specification 'nicknames'.
-            These nicknames are prefixed by the '@' character and replace the five parameters in the <span class="code">report_timing</span>
-            option. The nicknames supported are:
+            These nicknames are prefixed by the '<span class="code">@</span>' character and replace the five parameters
+            in the <span class="code">report_timing</span> option. The nicknames supported are:
         </p>
 
         <table class="indent">
@@ -1366,8 +1471,7 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
             </tbody>
         </table>
 
-        <h3>
-            Examples of <span class="code">report_timing</span></h3>
+        <h3>Examples of <span class="code">report_timing</span></h3>
 
         <p>
             Numeric settings for <span class="code">report_timing</span> can be at times difficult to understand due to
@@ -1470,14 +1574,16 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
         <h1 id="customizing_templates">The Cheetah generator</h1>
 
         <p class="note">
-            This section gives an overview of the Cheetah generator. For details about each of its various options,
-            see the section <a href="#CheetahGenerator"><em>[CheetahGenerator]</em></a> in the <a href="#report_options"><em>Reference: report options</em></a>.
+            This section gives an overview of the Cheetah generator. For details about each of its various options, see
+            the section <a href="#CheetahGenerator"><em>[CheetahGenerator]</em></a> in the <a
+            href="#report_options"><em>Reference: report options</em></a>.
         </p>
 
         <p>
             File generation is done using the <a href="https://pythonhosted.org/Cheetah/">Cheetah</a> templating engine,
             which processes a <em>template</em>, replacing any symbolic <em>tags</em>, then produces an output file.
-            Typically, it runs after each new archive record (usually about every five minutes), but it can also run on demand using the <span class="code">wee_reports</span> utility.
+            Typically, it runs after each new archive record (usually about every five minutes), but it can also run on
+            demand using the <span class="code">wee_reports</span> utility.
         </p>
         <p>
             The Cheetah engine is very powerful, essentially letting you have the full semantics of Python available in
@@ -1485,7 +1591,8 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
             adopts a very small subset of its power.
         </p>
         <p>
-            The Cheetah generator is controlled by the section <a href="#CheetahGenerator"><span class="code">[CheetahGenerator]</span></a>. Let's take a look at how this works.
+            The Cheetah generator is controlled by the section <a href="#CheetahGenerator"><span class="code">[CheetahGenerator]</span></a>.
+            Let's take a look at how this works.
         </p>
 
         <h2>Which files get processed?</h2>
@@ -1533,13 +1640,13 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
         # Reports that summarize "by month"
         [[[NOAA_month]]]
             encoding = strict_ascii
-            template = NOAA/NOAA-YYYY-MM.txt.tmpl
+            template = NOAA/NOAA-%Y-%m.txt.tmpl
 
     [[SummaryByYear]]
         # Reports that summarize "by year"
         [[[NOAA_year]]]
             encoding = strict_ascii
-            template = NOAA/NOAA-YYYY.txt.tmpl
+            template = NOAA/NOAA-%Y.txt.tmpl
 
     [[ToDate]]
         # Reports that show statistics "to date", such as day-to-date,
@@ -1562,16 +1669,16 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
 
         <p>The skin contains three different kinds of generated output:</p>
         <ol>
-            <li>Summary by Month. The skin uses <span class="code">SummaryByMonth</span> to produce
-                NOAA summaries, one for each month, as a simple text file.
+            <li>Summary by Month. The skin uses <span class="code">SummaryByMonth</span> to produce NOAA summaries, one
+                for each month, as a simple text file.
             </li>
             <li>Summary by Year. The skin uses <span class="code">SummaryByYear</span> to produce NOAA summaries, one
                 for each year, as a simple text file.
             </li>
-            <li>Summary "To Date". The skin produces an HTML <span class="code">index.html</span> page,
-                as well as HTML files for detailed statistics, telemetry, and celestial information. It also includes a
-                master page (<span class="code">tabular.html</span>) in which NOAA information is displayed. All these
-                files are HTML.
+            <li>Summary "To Date". The skin produces an HTML <span class="code">index.html</span> page, as well as HTML
+                files for detailed statistics, telemetry, and celestial information. It also includes a master page
+                (<span class="code">tabular.html</span>) in which NOAA information is displayed. All these files are
+                HTML.
             </li>
         </ol>
         <p>
@@ -1584,15 +1691,18 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
         <p>
             Other than <span class="code">SummaryByMonth</span> and <span class="code">SummaryByYear</span>, the section
             names are arbitrary. <span class="code">ToDate</span> could just as well have been called <span
-            class="code">files_to_date</span>, and the sections <span class="code">day</span>, <span
-            class="code">week</span>, and <span class="code">month</span> could just as well have been called <span
-            class="code">tom</span>, <span class="code">dick</span>, and <span class="code">harry</span>.
+            class="code">files_to_date</span>, and the sections <span class="code">index</span>, <span class="code">statistics</span>,
+            and <span class="code">telemetry</span> could just as well have been called <span class="code">tom</span>,
+            <span class="code">dick</span>, and <span class="code">harry</span>.
         </p>
 
         <h3><span class="code" id="SummaryByYear">[[SummaryByYear]]</span></h3>
 
         <p>
-            Use <span class="code">SummaryByYear</span> to generate a set of files, one file per year.  The name of the template file should contain <span class="code">YYYY</span>; this will be replaced with the year of the data in the file.
+            Use <span class="code">SummaryByYear</span> to generate a set of files, one file per year. The name of the
+            template file should contain a <a
+            href="https://docs.python.org/3/library/datetime.html#strftime-strptime-behavior"> strftime()</a> code for
+            the year; this will be replaced with the year of the data in the file.
         </p>
         <pre class="tty">
 [CheetahGenerator]
@@ -1600,11 +1710,11 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
         # Reports that summarize "by year"
         [[[NOAA_year]]]
             encoding = strict_ascii
-            template = NOAA/NOAA-YYYY.txt.tmpl
+            template = NOAA/NOAA-%Y.txt.tmpl
         </pre>
 
         <p>
-            The template <span class="code">NOAA/NOAA-YYYY.txt.tmpl</span> might look something like this:
+            The template <span class="code">NOAA/NOAA-%Y.txt.tmpl</span> might look something like this:
         </p>
         <pre class="tty">
            SUMMARY FOR YEAR $year.dateTime
@@ -1618,7 +1728,10 @@ $record.dateTime $record.outTemp $record.outHumidity
         <h3><span class="code" id="SummaryByMonth">[[SummaryByMonth]]</span></h3>
 
         <p>
-            Use <span class="code">SummaryByMonth</span> to generate a set of files, one file per month.  The name of the template file should contain <span class="code">YYYY</span> and <span class="code">MM</span>; these will be replaced with the year and month of the data in the file.
+            Use <span class="code">SummaryByMonth</span> to generate a set of files, one file per month. The name of the
+            template file should contain a <a
+            href="https://docs.python.org/3/library/datetime.html#strftime-strptime-behavior"> strftime()</a> code for
+            year and month; these will be replaced with the year and month of the data in the file.
         </p>
         <pre class="tty">
 [CheetahGenerator]
@@ -1626,11 +1739,11 @@ $record.dateTime $record.outTemp $record.outHumidity
         # Reports that summarize "by month"
         [[[NOAA_month]]]
             encoding = strict_ascii
-            template = NOAA/NOAA-YYYY-MM.txt.tmpl
+            template = NOAA/NOAA-%Y-%m.txt.tmpl
         </pre>
 
         <p>
-            The template <span class="code">NOAA/NOAA-YYYY-MM.txt.tmpl</span> might look something like this:
+            The template <span class="code">NOAA/NOAA-%Y-%m.txt.tmpl</span> might look something like this:
         </p>
         <pre class="tty">
            SUMMARY FOR MONTH $month.dateTime
@@ -1644,7 +1757,10 @@ $record.dateTime $record.outTemp $record.outHumidity
         <h3><span class="code" id="SummaryByDay">[[SummaryByDay]]</span></h3>
         <p>
             While the <em>Seasons</em> skin does not make use of it, there is also a <span
-            class="code">SummaryByDay</span> capability. As the name suggests, this results in one file per day.   The name of the template file should contain <span class="code">YYYY</span>, <span class="code">MM</span>, and <span class="code">DD</span>; these will be replaced with the year, month, and day of the data in the file.
+            class="code">SummaryByDay</span> capability. As the name suggests, this results in one file per day. The
+            name of the template file should contain a <a
+            href="https://docs.python.org/3/library/datetime.html#strftime-strptime-behavior"> strftime()</a> code for
+            the year, month and day; these will be replaced with the year, month, and day of the data in the file.
         </p>
         <pre class="tty">
 [CheetahGenerator]
@@ -1652,11 +1768,11 @@ $record.dateTime $record.outTemp $record.outHumidity
         # Reports that summarize "by day"
         [[[NOAA_day]]]
             encoding = strict_ascii
-            template = NOAA/NOAA-YYYY-MM-DD.txt.tmpl
+            template = NOAA/NOAA-%Y-%m-%d.txt.tmpl
         </pre>
 
         <p>
-            The template <span class="code">NOAA/NOAA-YYYY-MM-DD.txt.tmpl</span> might look something like this:
+            The template <span class="code">NOAA/NOAA-%Y-%m-%d.txt.tmpl</span> might look something like this:
         </p>
         <pre class="tty">
            SUMMARY FOR DAY $day.dateTime
@@ -1667,9 +1783,8 @@ $record.dateTime $record.outTemp $record.outHumidity
 #end for
         </pre>
         <p class="note">
-          <strong>Note</strong><br/>
-This can create a <em>lot</em> of files &mdash; one per day. If you have 3 years of records, this would
-            be more than 1,000 files!
+            <strong>Note</strong><br/> This can create a <em>lot</em> of files &mdash; one per day. If you have 3 years
+            of records, this would be more than 1,000 files!
         </p>
 
         <h2>Tags</h2>
@@ -1681,11 +1796,11 @@ This can create a <em>lot</em> of files &mdash; one per day. If you have 3 years
         </p>
 
         <p class="note">
-                If there is a tag error during template generation, the error will show up in the log file. Many errors
-                are obvious &mdash; Cheetah will display a line number and list the template file in which the error
-                occurred. Unfortunately, in other cases, the error message can be very cryptic and not very useful. So
-                make small changes and test often. Use the utility <a href="#wee_reports"><span
-                class="code">wee_reports</span></a> to speed up the process.
+            If there is a tag error during template generation, the error will show up in the log file. Many errors are
+            obvious &mdash; Cheetah will display a line number and list the template file in which the error occurred.
+            Unfortunately, in other cases, the error message can be very cryptic and not very useful. So make small
+            changes and test often. Use the utility <a href="#wee_reports"><span class="code">wee_reports</span></a> to
+            speed up the process.
         </p>
         <p>Here are some examples of tags:</p>
         <pre class="tty">$current.outTemp
@@ -1726,7 +1841,7 @@ $month.outTemp.maxtime</pre>
 $month.outTemp.max</pre>
         <p>
             Most of the time, tags will "do the right thing" and are all you will need. However, WeeWX offers extensive
-            customization of the generated output for specialized applications such as XML RSS feeds, or ridgidly
+            customization of the generated output for specialized applications such as XML RSS feeds, or rigidly
             formatted reports (such as the NOAA reports). This section specifies the various tag options available.
         </p>
 
@@ -1751,9 +1866,20 @@ $month.outTemp.max</pre>
             record in the database will be searched.
         </p>
         <p>The most general tag for a "current" observation looks like:</p>
-        <pre
-            class="tty">$current($data_binding=<em>binding_name</em>).<em>obstype</em>[.<em>optional_unit_conversion</em>][.<em>optional_formatting</em>]</pre>
+        <pre class="tty">$current($timestamp=<em>some_time</em>, $max_delta=<em>delta_t</em>,$data_binding=<em>binding_name</em>).<em>obstype</em>[.<em>optional_unit_conversion</em>][.<em>optional_formatting</em>]</pre>
         <p>Where:</p>
+
+        <p class="indent">
+            <span class="code">some_time</span> is a timestamp that you want to display. It is optional, The default is
+            to display the value for the current time.
+        </p>
+
+        <p class="indent">
+            <span class="code">delta_t</span> is the largest time difference (in seconds) between the time specified and
+            a timestamp of a record in the database that will be returned. By default, it is zero, which means there
+            must be an exact match with a specified time for a record to be retrieved.
+        </p>
+
 
         <p class="indent">
             <span class="code">binding_name</span> is a <em>binding name</em> to a database. An example would be <span
@@ -1762,9 +1888,9 @@ $month.outTemp.max</pre>
         </p>
 
         <p class="indent">
-            <span class="code">obstype</span> is an observation type, such as <span class="code">barometer</span>. See
-            <em><a href="#archive_types">Appendix: Archive Types</a></em> for a table of observation types valid for
-            time period <span class="code">current.</span>
+            <span class="code">obstype</span> is an observation type, such as <span
+            class="code">barometer</span>. This type must appear either as a field in the database,
+            or in the current (usually, the latest) record.</span>
         </p>
 
         <p class="indent">
@@ -1979,9 +2105,9 @@ $month.outTemp.max</pre>
         </p>
 
         <p>
-            However, if you add <span class="code">mbar</span> to the end,
+            However, if you add <span class="code">mbar</span> to the end of the tag,
         </p>
-        <pre class="tty">$day.barometer.avg.mbar </pre>
+        <pre class="tty">Today's average pressure=$day.barometer.avg<span class="highlight">.mbar</span></pre>
         <p>then the results will be in millibars:</p>
 
         <p class="example_output">Today's average pressure=1017.5 mbar
@@ -2317,10 +2443,10 @@ or in foobar units: $day.barometer.min.foobar
             </tbody>
         </table>
         <p>
-            Note how you can explicitly specify a value in the tag itself (2nd row in the table above). If you do not specify a
-            value, then a default time interval, set by option <span class="code"><a href="#trend">time_delta</a></span>
-            in the skin configuration file, will be used. This value can be retrieved by using the syntax <span
-            class="code">$trend.time_delta</span> (3rd row in the table).
+            Note how you can explicitly specify a value in the tag itself (2nd row in the table above). If you do not
+            specify a value, then a default time interval, set by option <span class="code"><a
+            href="#trend">time_delta</a></span> in the skin configuration file, will be used. This value can be
+            retrieved by using the syntax <span class="code">$trend.time_delta</span> (3rd row in the table).
         </p>
 
         <p>For example, the template expression</p>
@@ -2356,9 +2482,7 @@ or in foobar units: $day.barometer.min.foobar
         </p>
 
         <p class="indent">
-            <span class="code">obstype</span> is a observation type, such as <span class="code">outTemp</span>, that is
-            supported by the <span class="code">$current</span> tag. See <em><a href="#archive_types">Appendix: Archive
-            Types</a></em> for a table of observation types supported by the <span class="code">$current</span> tag.
+            <span class="code">obstype</span> is a observation type, such as <span class="code">outTemp</span>.
         </p>
 
         <p class="indent">
@@ -2405,18 +2529,6 @@ or in foobar units: $day.barometer.min.foobar
                 <td class="first_col code">$week_delta=<em>weeks</em></td>
                 <td class="code">$span($week_delta=2).barometer.max</td>
                 <td>The maximum barometric pressure over the last immediate 2 weeks.
-                </td>
-            </tr>
-            <tr>
-                <td class="first_col code">$month_delta=<em>months</em></td>
-                <td class="code">$span($month_delta=3).outTemp.min</td>
-                <td>The minimum temperture over the last immediate 3 months (90 days).
-                </td>
-            </tr>
-            <tr>
-                <td class="first_col code">$year_delta=<em>years</em></td>
-                <td class="code">$span($year_delta=1).windchill.min</td>
-                <td>The minimum wind chill over the last immediate 1 year (365 days).
                 </td>
             </tr>
             </tbody>
@@ -2633,8 +2745,8 @@ $month.dateTime.format("%B"): Min, max temperatures: $month.outTemp.min $month.o
 
         <h3>Comprehensive example</h3>
         <p>
-            This example is designed to put together a lot of the elements described above, including iteration, aggregation
-            period starts and ends, formatting, and overriding units.
+            This example is designed to put together a lot of the elements described above, including iteration,
+            aggregation period starts and ends, formatting, and overriding units.
         </p>
 
         <pre class="tty">
@@ -2648,22 +2760,22 @@ $month.dateTime.format("%B"): Min, max temperatures: $month.outTemp.min $month.o
   &lt;body&gt;
     &lt;table border=1 style="border-collapse:collapse;"&gt;
       &lt;tr style="font-weight:bold"&gt;
-    &lt;td&gt;Time interval&lt;/td&gt;
-    &lt;td&gt;Max temperature&lt;/td&gt;
-    &lt;td&gt;Time&lt;/td&gt;
+        &lt;td&gt;Time interval&lt;/td&gt;
+        &lt;td&gt;Max temperature&lt;/td&gt;
+        &lt;td&gt;Time&lt;/td&gt;
       &lt;/tr&gt;
 #for $hour in $day($days_ago=1).hours
       &lt;tr&gt;
-    &lt;td&gt;$hour.start.format("%H:%M")-$hour.end.format("%H:%M")&lt;/td&gt;
-    &lt;td&gt;$hour.outTemp.max ($hour.outTemp.max.degree_C)&lt;/td&gt;
-    &lt;td&gt;$hour.outTemp.maxtime.format("%H:%M")&lt;/td&gt;
+        &lt;td&gt;$hour.start.format("%H:%M")-$hour.end.format("%H:%M")&lt;/td&gt;
+        &lt;td&gt;$hour.outTemp.max ($hour.outTemp.max.degree_C)&lt;/td&gt;
+        &lt;td&gt;$hour.outTemp.maxtime.format("%H:%M")&lt;/td&gt;
       &lt;/tr&gt;
 #end for
       &lt;caption&gt;
-    &lt;p&gt;
-      Hourly max temperatures yesterday&lt;br/&gt;
-      $day($days_ago=1).start.format("%d-%b-%Y")
-    &lt;/p&gt;
+        &lt;p&gt;
+          Hourly max temperatures yesterday&lt;br/&gt;
+          $day($days_ago=1).start.format("%d-%b-%Y")
+        &lt;/p&gt;
       &lt;/caption&gt;
     &lt;/table&gt;
   &lt;/body&gt;
@@ -2809,11 +2921,16 @@ Sunrise, sunset: $almanac.sunrise $almanac.sunset
         </p>
         <pre class="tty">$almanac(pressure=0, horizon=-6).sun(use_center=1).rise</pre>
         <p>The general syntax is:</p>
-        <pre class="tty">$almanac(pressure=<em>pressure</em>, horizon=<em>horizon</em>,
-         temperature=<em>temperature_C</em>).<em>heavenly_body</em>(use_center=[01]).<em>attribute</em>
+        <pre class="tty">$almanac(almanac_time=<em>time</em>,            ## Unix epoch time
+         lat=<em>latitude</em>, lon=<em>longitude</em>,  ## degrees
+         altitude=<em>altitude</em>,            ## meters
+         pressure=<em>pressure</em>,            ## mbars
+         horizon=<em>horizon</em>,              ## degrees
+         temperature=<em>temperature_C</em>     ## degrees C
+       ).<em>heavenly_body</em>(use_center=[01]).<em>attribute</em>
       </pre>
-        <p>As you can see, in addition to the horizon angle, you can also override atmospheric pressure and temperature
-            (degrees Celsius).
+        <p>
+            As you can see, many other properties can be overridden besides pressure and the horizon angle.
         </p>
 
         <p>
@@ -3128,7 +3245,7 @@ $station.altitude</pre>
             class="code">$station.altitude</span>, is a <em>string</em>. In order to convert the <span class="code">ValueHelper</span>
             it has in hand into a string, it does what every other Python object does when faced with this problem: it
             calls the special method <span class="code"><a style="text-decoration: none"
-                                                           href="https://docs.python.org/2/reference/datamodel.html#object.__str__">__str__</a></span>.
+                                                           href="https://docs.python.org/3/reference/datamodel.html#object.__str__">__str__</a></span>.
             Class <span class="code">ValueHelper</span> has a definition for this method. Evaluating this function
             triggers the final steps in this process. Any necessary unit conversions are done, then formatting occurs
             and, finally, a label is attached. The result is a string something like
@@ -3165,7 +3282,7 @@ $station.altitude</pre>
             class="code">outTemp</span>. There is no such hard coded attribute (hard coding all the conceivable
             different observation types would be impossible!). Instead, class <span class="code">TimespanBinder</span>
             defines the Python special method <span class="code"> <a style="text-decoration: none"
-                                                                     href="https://docs.python.org/2/reference/datamodel.html#object.__getattr__">__getattr__</a></span>.
+                                                                     href="https://docs.python.org/3/reference/datamodel.html#object.__getattr__">__getattr__</a></span>.
             If Python cannot find a hard coded version of an attribute, and the method <span
             class="code">__getattr__</span> exists, it will try it. The definition provided by <span class="code">TimespanBinder</span>
             returns an instance of the next class in the chain, <span class="code">weewx.tags.ObservationBinder</span>,
@@ -3249,6 +3366,7 @@ class MyStats(SearchList):                                                   # 1
         # used in the report.
         all_stats = TimespanBinder(timespan,
                                    db_lookup,
+                                   context='year',
                                    formatter=self.generator.formatter,
                                    converter=self.generator.converter,
                                    skin_dict=self.generator.skin_dict)       # 4
@@ -3256,14 +3374,16 @@ class MyStats(SearchList):                                                   # 1
         # Now get a TimespanBinder object for the last seven days. This one we
         # will have to calculate. First, calculate the time at midnight, seven
         # days ago. The variable week_dt will be an instance of datetime.date.
-        week_dt = datetime.date.fromtimestamp(timespan.stop) - \
-                    datetime.timedelta(weeks=1)                              # 5
+        week_dt = datetime.date.fromtimestamp(timespan.stop) \
+                  - datetime.timedelta(weeks=1)                              # 5
         # Convert it to unix epoch time:
         week_ts = time.mktime(week_dt.timetuple())                           # 6
+
         # Form a TimespanBinder object, using the time span we just
         # calculated:
         seven_day_stats = TimespanBinder(TimeSpan(week_ts, timespan.stop),
                                          db_lookup,
+                                         context='week',
                                          formatter=self.generator.formatter,
                                          converter=self.generator.converter,
                                          skin_dict=self.generator.skin_dict) # 7
@@ -3304,7 +3424,7 @@ class MyStats(SearchList):                                                   # 1
             </li>
             <li>The class <span class="code">TimespanBinding</span> represents a statistical calculation over a time
                 period. We have already met it in the introduction <em><a href="#how_tags_work">How tags work</a></em>.
-                In our case, we will set it up to represent the statistics over all possible times. The class takes 5
+                In our case, we will set it up to represent the statistics over all possible times. The class takes 6
                 parameters.
                 <ul>
                     <li>The first, <span class='code'>timespan</span>, is the timespan over which the calculation is to
@@ -3315,16 +3435,21 @@ class MyStats(SearchList):                                                   # 1
                     <li>The second, <span class='code'>db_lookup</span>, is the database lookup function to be used. We
                         simply pass in <span class="code">db_lookup</span>.
                     </li>
-                    <li>The third, <span class="code">formatter</span>, should be an instance of class <span
+                    <li>The third, <span class="code">context</span>, is the time <em>context</em> to be used when
+                        formatting times. The set of possible choices is given by sub-section <a
+                            href="#Units_TimeFormats"><span class="code">[[TimeFormats]]</span></a> in the configuration
+                        file.
+                    </li>
+                    <li>The fourth, <span class="code">formatter</span>, should be an instance of class <span
                         class="code">weewx.units.Formatter</span>, which contains information about how the results
                         should be formatted. We just pass in the formatter set up by the generator, <span class="code">self.generator.formatter</span>.
                     </li>
-                    <li>The fourth, <span class="code">converter</span>, should be an instance of <span class="code">weewx.units.Converter</span>,
+                    <li>The fifth, <span class="code">converter</span>, should be an instance of <span class="code">weewx.units.Converter</span>,
                         which contains information about the target units (<i>e.g.</i>, <span
                             class="code">degree_C</span>) that are to be used. Again, we just pass in the instance set
                         up by the generator, <span class="code">self.generator.converter</span>.
                     </li>
-                    <li>The fifth, <span class="code">skin_dict</span>, is an instance of <span class="code">configobj.ConfigObj</span>,
+                    <li>The sixth, <span class="code">skin_dict</span>, is an instance of <span class="code">configobj.ConfigObj</span>,
                         and contains the contents of the skin configuration file. We pass it on in order to allow
                         aggregations that need information from the file, such as heating and cooling degree-days.
                     </li>
@@ -3345,7 +3470,8 @@ class MyStats(SearchList):                                                   # 1
             </li>
             <li>We convert it to unix epoch time.</li>
             <li>Now we are ready to initialize an appropriate <span class="code">TimespanBinder</span> object. It's the
-                same as in step #4, except we use our new timespan object.
+                same as in step #4, except we use our new <span class="code">timespan</span> object and specify
+                a different time <span class="code">context</span>.
             </li>
             <li>Create a small dictionary with two keys, <span class="code">alltime</span>, and <span class="code">seven_day</span>.
             </li>
@@ -3399,9 +3525,9 @@ class MyStats(SearchList):                                                   # 1
         <p>
             We put our addition in the file <span class="code">user/stats.py</span>, which means it will be in the
             directory hierarchy where <span class="code">weewxd</span> resides. Python will search this hierarchy by
-            default, so it will find our addition. However, if you put it somewhere else, may will have to specify its
-            location with the environment variable <a
-            href="https://docs.python.org/2/using/cmdline.html#envvar-PYTHONPATH"><span
+            default, so it will find our addition. However, if you put the file somewhere else, you may have to specify
+            its location with the environment variable <a
+            href="https://docs.python.org/3/using/cmdline.html#envvar-PYTHONPATH"><span
             class="code">PYTHONPATH</span></a> when you start WeeWX:
         </p>
         <pre class="tty">export PYTHONPATH=/home/me/secret_location</pre>
@@ -3411,7 +3537,8 @@ class MyStats(SearchList):                                                   # 1
 
         <p class="note">
             This section gives an overview of the Image generator. For details about each of its various options, see
-            the section <a href="#ImageGenerator"><em>[ImageGenerator]</em></a> in the <a href="#report_options"><em>Reference: report options</em></a>.
+            the section <a href="#ImageGenerator"><em>[ImageGenerator]</em></a> in the <a href="#report_options"><em>Reference:
+            report options</em></a>.
         </p>
 
         <p>
@@ -3429,18 +3556,18 @@ class MyStats(SearchList):                                                   # 1
     ...
     image_width = 500
     image_height = 180
-    image_background_color = 0xf5f5f5
+    image_background_color = #f5f5f5
 
-    chart_background_color = 0xd8d8d8
-    chart_gridline_color = 0xa0a0a0
+    chart_background_color = #d8d8d8
+    chart_gridline_color = #a0a0a0
     ...</pre>
         <p>
             The options right under the section name <span class="code">[ImageGenerator]</span> will apply to
             <em>all</em> plots, unless overridden in subsections. So, unless otherwise changed, all plots will be 500
-            pixels in width, 180 pixels in height, and will have an RGB background color of 0xf5f5f5, a very light gray
-            (HTML color "WhiteSmoke"). The chart itself will have a background color of 0xd8d8d8 (a little darker gray),
-            and the gridlines will be 0xa0a0a0 (still darker). The other options farther down (not shown) will also
-            apply to all plots.
+            pixels in width, 180 pixels in height, and will have an RGB background color of #f5f5f5, a very light gray
+            (HTML color "WhiteSmoke"). The chart itself will have a background color of #d8d8d8 (a little darker gray),
+            and the gridlines will be #a0a0a0 (still darker). The other options farther down (not shown) will also apply
+            to all plots.
         </p>
 
         <h2>Time periods</h2>
@@ -3506,21 +3633,22 @@ class MyStats(SearchList):                                                   # 1
         <p>
             Continuing on with the example above, there will be only one plot "line" (it will actually be a series of
             bars) and it will have logical name <span class="code">rain</span>. Because we have not said otherwise, the
-            database column name to be used for this line will be the same as its logical name, that is, <span class="code">rain</span>,
-            but this can be overridden. The aggregation type will be summing (overriding the averaging specified in
-            sub-section <span class="code">[[month_images]]</span>), so you get the total rain over the aggregate period
-            (rather than the average) over an aggregation interval of 86,400 seconds (one day). The plot line will be
-            titled with the indicated label of 'Rain (daily total)'. The result of all this is the following plot:
+            database column name to be used for this line will be the same as its logical name, that is, <span
+            class="code">rain</span>, but this can be overridden. The aggregation type will be summing (overriding the
+            averaging specified in sub-section <span class="code">[[month_images]]</span>), so you get the total rain
+            over the aggregate period (rather than the average) over an aggregation interval of 86,400 seconds (one
+            day). The plot line will be titled with the indicated label of 'Rain (daily total)'. The result of all this
+            is the following plot:
         </p>
 
         <p>
             <img src="images/sample_monthrain.png" alt="Sample monthly rain plot"/>
         </p>
 
-        <h2>Plotting multiple observations</h2>
+        <h2>Including more than one type in a plot</h2>
 
-        <p>More than one observation can be included in a plot. For example, here is how to generate a plot with the week's
-            outside temperature as well as dewpoint:
+        <p>More than one observation can be included in a plot. For example, here is how to generate a plot with the
+            week's outside temperature as well as dewpoint:
         </p>
         <pre class="tty">[[[monthtempdew]]]
     [[[[outTemp]]]]
@@ -3533,7 +3661,7 @@ class MyStats(SearchList):                                                   # 1
             <img src="images/sample_monthtempdew.png" alt="Monthly temperature and dewpoint"/>
         </p>
 
-        <h2>Plotting a single observation multiple times</h2>
+        <h2 id="including_same_sql_type_2x">Including a type more than once in a plot</h2>
 
         <p>
             Another example. Say you want a plot of the day's temperature, overlaid with hourly averages. Here, you are
@@ -3551,8 +3679,8 @@ class MyStats(SearchList):                                                   # 1
             appear more than once at a given level in the configuration file, so an error will be declared (technical
             reason: formally, the sections are an unordered dictionary). If you wish for the same observation to appear
             more than once in a plot then there is a trick you must know: use option <span class="code">data_type</span>.
-            This will override the default action that the logical line name is used for the database column. So, our example
-            would look like this:
+            This will override the default action that the logical line name is used for the database column. So, our
+            example would look like this:
         </p>
         <pre class="tty">[[[daytemp_with_avg]]]
     [[[[avgTemp]]]]
@@ -3613,7 +3741,8 @@ class MyStats(SearchList):                                                   # 1
                 <img src="images/day-gap-showing.png" alt="Gap showing"/>
 
                 <div class="image_caption">
-                    With <span class="code">line_gap_fraction=0.01</span>
+                    With <span class="code">line_gap_fraction=0.01</span>. Note how each line has been split into two
+                    lines.
                 </div>
             </div>
         </div>
@@ -3717,9 +3846,9 @@ class MyStats(SearchList):                                                   # 1
         # The name of the table within the database
         table_name = archive
         # The class to manage the database
-        manager = weewx.wxmanager.WXDaySummaryManager
+        manager = weewx.manager.DaySummaryManager
         # The schema defines to structure of the database contents
-        schema = schemas.wview.schema
+        schema = schemas.wview_extended.schema
 
 <span class="highlight">    [[wmr100_binding]]
         # Binding for my WMR100 on the RPi
@@ -3727,9 +3856,9 @@ class MyStats(SearchList):                                                   # 1
         # The name of the table within the database
         table_name = archive
         # The class to manage the database
-        manager = weewx.wxmanager.WXDaySummaryManager
+        manager = weewx.manager.DaySummaryManager
         # The schema defines to structure of the database contents
-        schema = schemas.wview.schema</span>
+        schema = schemas.wview_extended.schema</span>
 
 [Databases]
     # This section binds to the actual database to be used
@@ -3839,8 +3968,8 @@ class MyStats(SearchList):                                                   # 1
             class="code">wmr100_binding</span>. Because it uses the same variable name (<span class="code">inTemp</span>)
             as the first line, we had to explicitly specify it using option <span class="code">data_type</span>, in
             order to avoid using the same sub-section name twice (see the section <em><a
-            href="#including_same_sql_type_2x">Including the same SQL type more than once in a plot</a></em> for
-            details). It will be labeled <span class="code">WMR100 inTemp</span>. The results look like this:
+            href="#including_same_sql_type_2x">Including a type more than once in a plot</a></em> for details). It will
+            be labeled <span class="code">WMR100 inTemp</span>. The results look like this:
         </p>
         <img src='images/daycompare.png' alt="Comparing temperatures"/>
 
@@ -3859,22 +3988,23 @@ class MyStats(SearchList):                                                   # 1
         <h1 id="localization">Localization</h1>
 
         <p>
-            This section is provides suggestions for localization, including translation to different languages and display of data in formats specific to a locale.
+            This section is provides suggestions for localization, including translation to different languages and
+            display of data in formats specific to a locale.
         </p>
 
         <h2>How to localize a single report</h2>
 
         <p>
-            What happens when you come accross a report that you like, but it is written in another language, or uses time formats that are foreign to your customs?  This section explains how to convert the report to local formats and language.
+            What happens when you come accross a report that you like, but it is written in another language, or uses
+            time formats that are foreign to your customs? This section explains how to convert the report to local
+            formats and language.
         </p>
 
         <h3>Translate the templates</h3>
 
         <p>
-            Translate the text in each template file to the target language. Any strings that are not specified using tags will need to be translated.
-        </p>
-        <p>
-            In every HTML template (these typically have a file suffix of <span class="code">.html.tmpl</span>) change the HTML "lang" attribute to the target language. For example, for Spanish use <span class="code">es</span>:
+            In every HTML template (these typically have a file suffix of <span class="code">.html.tmpl</span>) change
+            the HTML "lang" attribute to the target language. For example, for Spanish use <span class="code">es</span>:
         </p>
         <pre class="tty">
 &lt;!DOCTYPE html&gt;
@@ -3884,21 +4014,46 @@ class MyStats(SearchList):                                                   # 1
     ...
 </pre>
         <p>
-            The <span class="code">lang</span> can be language-only, e.g., <span class="code">en</span>, or it can be a full language-country code, e.g., <span class="code">en-US</span>.
+            The <span class="code">lang</span> can be language-only, e.g., <span class="code">en</span>, or it can be a
+            full language-country code, e.g., <span class="code">en-US</span>.
         </p>
 
         <p>
-          <a href="https://www.w3schools.com/tags/ref_language_codes.asp">language codes</a><br/>
-          <a href="https://www.w3schools.com/tags/ref_country_codes.asp">country codes</a><br/>
+            <a href="https://www.w3schools.com/tags/ref_language_codes.asp">language codes</a><br/> <a
+            href="https://www.w3schools.com/tags/ref_country_codes.asp">country codes</a><br/>
         </p>
+
+        <p>
+            Then, go through each template file in the skin, translating any text to your target language. For example,
+            suppose you were localizing the <em>Seasons</em> skin to the French language. Search all the template
+            files for English phrases that need to be translated. As an example, the file <span class="code">current.inc</span>
+            has a section that looks like this:
+        </p>
+       <pre class="tty">
+&lt;div id='current_widget' class="widget"&gt;
+  &lt;div class="widget_title"&gt;
+    Current Conditions
+    &lt;a class="widget_control"
+      onclick="toggle_widget('current')"&gt;&amp;diams;&lt;/a&gt;
+  &lt;/div&gt;
+        </pre>
+<p>This would need to be changed to this:</p>
+        <pre class="tty">
+&lt;div id='current_widget' class="widget"&gt;
+  &lt;div class="widget_title"&gt;
+    <span class="highlight">Conditions Actuelle</span>
+    &lt;a class="widget_control"
+      onclick="toggle_widget('current')"&gt;&amp;diams;&lt;/a&gt;
+  &lt;/div&gt;
+        </pre>
 
         <h3>Translate labels and modify local options</h3>
 
         <p>
             Go through the report options that are used by the skin, translating labels and modifying formats to follow
             local conventions. You can easily localize all of your reports by doing this in the section <span
-            class="code">[StdReport] / [[Defaults]]</span> in the WeeWX configuration file
-            <span class="code">weewx.conf</span>.
+            class="code">[StdReport] / [[Defaults]]</span> in the WeeWX configuration file <span
+            class="code">weewx.conf</span>.
         </p>
         <p>
             The default time formats should use whatever locale is defined on the computer running WeeWX. For example,
@@ -3908,14 +4063,14 @@ class MyStats(SearchList):                                                   # 1
         </p>
         <p>
             First try the generic date (<span class="code">%x</span>), time (<span class="code">%X</span>), and day
-            (<span class="code">%A</span>) formats &mdash; these will use the locale of your computer. If you still find those
-            foreign, you can customize using the <a
-            href="https://docs.python.org/2/library/datetime.html#strftime-and-strptime-behavior">specific
+            (<span class="code">%A</span>) formats &mdash; these will use the locale of your computer. If you still find
+            those foreign, you can customize using the <a
+            href="https://docs.python.org/3/library/datetime.html#strftime-and-strptime-behavior">specific
             directives</a>.
         </p>
         <p>
-            Here is a list of the options in <span class="code">[StdReport] / [[Defaults]]</span>, with the
-            options you may need to change <span class="highlight">highlighted.</span>:
+            Here is a list of the options in <span class="code">[StdReport] / [[Defaults]]</span>, with the options you
+            may need to change <span class="highlight">highlighted.</span>:
         </p>
         <pre class="tty">
 [StdReport]
@@ -3947,6 +4102,7 @@ class MyStats(SearchList):                                                   # 1
             latlon_formats = "%02d", "%03d", "%05.2f"
             [[[[Generic]]]]
                 barometer      = <span class="highlight">Barometer</span>
+                barometerRate  = <span class="highlight">Barometer Change Rate</span>
                 dewpoint       = <span class="highlight">Dew Point</span>
                 ET             = <span class="highlight">ET</span>
                 heatindex      = <span class="highlight">Heat Index</span>
@@ -3991,7 +4147,8 @@ class MyStats(SearchList):                                                   # 1
         </h3>
 
         <p>
-            Finally, you will need to set the environment variable <span class="code">LANG</span> to reflect your locale. For example, assuming you set
+            Finally, you will need to set the environment variable <span class="code">LANG</span> to reflect your
+            locale. For example, assuming you set
         </p>
         <pre class="tty">$ export LANG=es_ES.UTF-8</pre>
         <p>
@@ -4002,19 +4159,30 @@ class MyStats(SearchList):                                                   # 1
         <h2>How to create a skin for multiple locales</h2>
 
         <p>
-            Let's say that you have created a new skin.  How do you package that skin for use in other languages and locales?  This example shows how to translate the <em>Seasons</em> skin for multiple languages.
+            Let's say that you have created a new skin. How do you package that skin for use in other languages and
+            locales? This example shows how to translate the <em>Seasons</em> skin for multiple languages.
         </p>
         <p>
-            Create a directory for each language.  Each directory contains template files and a skin configuration file.  Any text in each template file should be in the target language. Ensure that each HTML template file has the <span class="code">lang</span> set properly.
+            Create a directory for each language. Each directory contains template files and a skin configuration file.
+            Any text in each template file should be in the target language. Ensure that each HTML template file has the
+            <span class="code">lang</span> set properly.
         </p>
         <p>
-            Translate observation names and other labels, and put them into the skin configuration files.  There should be one configuration file for each language.
+            Translate observation names and other labels, and put them into the skin configuration files. There should
+            be one configuration file for each language.
         </p>
         <p>
-            Ensure that any locale-specific formatting is specified properly.  For example, consider the <span class="code">current</span> time, which is parameterized in <span class="code">[Units][[TimeFormats]]</span>.  Users in a locale that uses 24-hour time expect the format <span class="code">%H:%M</span> whereas users in a locale that uses 12-hour time expect <span class="code">%I:%M %p</span>.  To make each translation independent of the computer on which the reports will be generated, you must use the specific localization; if you specify the generic format <span class="code">%X</span>, that will result in the format used by whatever locale is set in the environment in which WeeWX is running.
+            Ensure that any locale-specific formatting is specified properly. For example, consider the <span
+            class="code">current</span> time, which is parameterized in <span class="code">[Units][[TimeFormats]]</span>.
+            Users in a locale that uses 24-hour time expect the format <span class="code">%H:%M</span> whereas users in
+            a locale that uses 12-hour time expect <span class="code">%I:%M %p</span>. To make each translation
+            independent of the computer on which the reports will be generated, you must use the specific localization;
+            if you specify the generic format <span class="code">%X</span>, that will result in the format used by
+            whatever locale is set in the environment in which WeeWX is running.
         </p>
         <p>
-            The result will be a directory of templates and configurations, with one directory for each language/localization.
+            The result will be a directory of templates and configurations, with one directory for each
+            language/localization.
         </p>
         <pre class="tty">
 skins/Seasons/
@@ -4045,7 +4213,8 @@ skins/Seasons/fr/index.html.tmpl</pre>
         skin = Seasons/fr
         HTML_ROOT = public_html/fr</pre>
         <p>
-            The result is multiple reports, each in a different language and localization, independent of the locale of the computer on which they were generated.
+            The result is multiple reports, each in a different language and localization, independent of the locale of
+            the computer on which they were generated.
         </p>
 
 
@@ -4065,7 +4234,9 @@ skins/Seasons/fr/index.html.tmpl</pre>
         </p>
 
         <p>
-          The services are specified in lists in the <a href="usersguide.htm#engine_services"><span class="code">[Engine][[Services]]</span></a> stanza of the configuration file.  The <span class="code">[[Services]]</span> section lists all the services to be run, broken up into different <em>service lists</em>.
+            The services are specified in lists in the <a href="usersguide.htm#engine_services"><span class="code">[Engine][[Services]]</span></a>
+            stanza of the configuration file. The <span class="code">[[Services]]</span> section lists all the services
+            to be run, broken up into different <em>service lists</em>.
         </p>
 
         <p>
@@ -4075,8 +4246,8 @@ skins/Seasons/fr/index.html.tmpl</pre>
             <em>after</em> the archiving service. These groups insure that things happen in the proper sequence.
         </p>
         <p>
-            See the table <a href="#default_services">Default services</a> for a list of the services that are
-            normally run.
+            See the table <a href="#default_services">Default services</a> for a list of the services that are normally
+            run.
         </p>
 
         <h2 id="Customizing_a_service">Modifying an existing service</h2>
@@ -4302,8 +4473,8 @@ class MyAlarm(StdService):
         </p>
         <ol>
             <li>Here is where the binding happens between an event, <span class="code">weewx.NEW_ARCHIVE_RECORD</span>
-                in this example, and a member function, <span class="code">self.new_archive_record</span>. When the event
-                <span class='code'>NEW_ARCHIVE_RECORD</span> occurs, the function <span class="code">self.new_archive_record</span>
+                in this example, and a member function, <span class="code">self.new_archive_record</span>. When the
+                event <span class='code'>NEW_ARCHIVE_RECORD</span> occurs, the function <span class="code">self.new_archive_record</span>
                 will be called. There are many other events that can be intercepted. Look in the file <span
                     class="code">weewx/__init__.py</span>.
             </li>
@@ -4380,7 +4551,8 @@ class MyAlarm(StdService):
             <li>Run two instances of WeeWX, each using its own database and <span class='code'>weewx.conf</span>
                 configuration file. The results are then combined in a final report, using WeeWX's ability <a
                     href="#Using_multiple_bindings">to use more than one database</a>. See the Wiki entry <a
-                    href="https://github.com/weewx/weewx/wiki/weewx-multi"> <em>How to run multiple instances of WeeWX</em></a> for details on how to do this.
+                    href="https://github.com/weewx/weewx/wiki/weewx-multi"> <em>How to run multiple instances of
+                    WeeWX</em></a> for details on how to do this.
             </li>
             <li>Run one instance, but use a custom WeeWX service to augment the records coming from your weather station
                 with data from the other device.
@@ -4470,9 +4642,9 @@ class AddElectricity(StdService):
 
         <h1 id="archive_database">Customizing the database</h1>
 
-        <p>For most users the default database will work just fine. It has the added advantage of being compatible with
-            the wview database. Nevertheless, there may be occasions where you may want to add a new SQL type to your
-            database, or change its unit system. This section shows you how to do this.
+        <p>For most users the default database will work just fine. However, there may be occasions
+            where you may want to add a new SQL type to your database, or change its unit system.
+            This section shows you how to do this.
         </p>
 
         <h2 id="add_archive_type">Adding a new type to the database</h2>
@@ -4480,9 +4652,9 @@ class AddElectricity(StdService):
         <p>
             It is not unusual to have observation types that exist in the loop packets and/or archive records, but are
             not in the database schema. An example is the new observation type <span class="code">electricity</span>,
-            from the example, <a href="#Adding_2nd_source"><em>Adding a second data source</em></a>. If a type is
-            not in the database schema, then it will be a second class citizen in WeeWX's world: it cannot be used in a
-            plot, nor for most statistics. So how would you add such a type to the database schema?
+            from the example, <a href="#Adding_2nd_source"><em>Adding a second data source</em></a>. If a type is not in
+            the database schema, then it will be a second class citizen in WeeWX's world: it cannot be used in a plot,
+            nor for most statistics. So how would you add such a type to the database schema?
         </p>
 
         <p>
@@ -4515,38 +4687,35 @@ class AddElectricity(StdService):
         <ol>
             <li>
                 <p>
-                    <strong>Extend the existing schema with the new type.</strong> The schema that comes with WeeWX is
-                    the same as what wview uses. It's located in the file <span class="code">schemas/wview.py</span>
-                    &mdash; take a look at it now. We could just modify it <em>in situ</em>, but that would run the risk
-                    of confusing the two versions. Alternatively, we could copy the file over to a new location, and
-                    then modify that. But, because our change is just a simple addition, we're going to import the wview
-                    schema and just add on our new type.
+                    <strong>Extend the existing schema with the new type.</strong> The schema that
+                    comes with WeeWX is a superset of the schema that the weather program
+                    <em>wview</em> uses. It's located in the file <span
+                    class="code">schemas/wview_extended.py</span> &mdash; take a look at it now. We
+                    could just modify it <em>in situ</em>, but that would run the risk of confusing
+                    the two versions. Besides, our changes would get lost at the next upgrade.
+                    Alternatively, we could copy the file over to a new location, and then modify
+                    that. But, because our change is just a simple addition, we're going to import
+                    the old schema, then just add on our new type.
                 </p>
-                <p>For this example, we are going to add the new type <span class="code">electricity</span>. Add the
-                    following code to the bottom of a file:
+                <p>
+                    For this example, we are going to add a few lines of code to the bottom of the file <span
+                    class="code">user/electricity.py</span>:
                 </p>
-                <pre class="tty">import schemas.wview
-schema_with_electricity = schemas.wview.schema + [('electricity', 'REAL')]</pre>
+                <pre class="tty">import schemas.wview_extended
+
+schema_with_electricity = {
+    'table': schemas.wview_extended.table + [('electricity', 'REAL')],
+    'day_summaries' : schemas.wview_extended.day_summaries + [('electricity', 'SCALAR')]
+}
+</pre>
                 <p>
                     This creates a new schema with the name <span
-                    class="code">user.electricity.schema_with_electricity</span>, that is just like the old one, except
-                    it has a new type <span class="code">electricity</span> tacked on to the end.
+                    class="code">user.electricity.schema_with_electricity</span>, which is just
+                    like the old one, except it has a new type, <span
+                    class="code">electricity</span>, tacked on to the end of both the main archive
+                    table, and the daily summaries. Its schema type is REAL. Its corresponding
+                    daily summary will treat it as a SCALAR.
                 </p>
-                <p>Now, where do we put this bit of code? Really, it can be put in any file that is guaranteed to run
-                    before we try and store our new type. With this in mind, there are two obvious choices:
-                </p>
-                <ol type="a">
-                    <li>Add it to the bottom of <span class="code">user/extensions.py</span>. This is a special file,
-                        provided by WeeWX, which is guaranteed to run before the engine's main loop. It's a good place
-                        to add types that already exist in the archive records (an example would be <span class="code">humidex</span>),
-                        but don't yet exist in the database schema.
-                    </li>
-                    <li>If you've been following the example, <a href="#Adding_2nd_source"><em>Adding a second data source</em></a>, then you can just simply add the code to the bottom of the file you
-                        already have, <span class="code">user/electricity.py</span>. This way, it will run before any
-                        use of the new type. It has the added advantage that it keeps all "electricity" related
-                        modifications in one place, making it easy to package up your changes as a new WeeWX extension.
-                    </li>
-                </ol>
             <li>
                 <p>
                     <strong>Modify <span class="code">wx_binding</span>.</strong> When it creates the new, modified
@@ -4554,26 +4723,16 @@ schema_with_electricity = schemas.wview.schema + [('electricity', 'REAL')]</pre>
                     old, wview schema. You do this by changing the option <span class="code">schema</span> in section
                     <span class="code">[DataBindings]</span> in <span class="code">weewx.conf</span>.
                 </p>
-                <p> If you made the code additions in step 1 in file <span class="code">user/extensions.py</span>, then
-                    it will look like this when you're done:
+                <p>
+                    The <span class="code">[DataBindings]</span> section now looks like this:
                 </p>
 
                 <pre class="tty">[DataBindings]
     [[wx_binding]]
         database = archive_sqlite
         table_name = archive
-        manager = weewx.wxmanager.WXDaySummaryManager
-        <span class="highlight">schema = user.extensions.schema_with_electricity</span></pre>
-
-                <p>If you used <span class="code">user/electricity.py</span>, then it will look like this:
-                </p>
-
-                <pre class="tty">[DataBindings]
-    [[wx_binding]]
-        database = archive_sqlite
-        table_name = archive
-        manager = weewx.wxmanager.WXDaySummaryManager
-        <span class="highlight">schema = user.electricity.schema_with_electricity</span></pre>
+        manager = weewx.manager.DaySummaryManager
+        <span class="highlight">schema = user.electricity.electricity_schema</span></pre>
             </li>
 
             <li>
@@ -4646,8 +4805,8 @@ mysql&gt;<span class="cmd"> RENAME TABLE weewx_new.archive TO weewx.archive;</sp
         </p>
 
         <p>
-            You should not change the database unit system midstream. That is, do not start with one
-            unit system then, in the middle of the database, switch to another. See the section <span class="code"> <a
+            You should not change the database unit system midstream. That is, do not start with one unit system then,
+            in the middle of the database, switch to another. See the section <span class="code"> <a
             href="usersguide.htm#StdConvert">[StdConvert]</a></span> in the WeeWX User's Guide. However, you can
             reconfigure the database by copying it to a new database, performing the unit conversion along the way. You
             then use this new database.
@@ -4804,11 +4963,14 @@ class AddElectricity(StdService):
         </p>
         <p>
             We assume we have a new observation type, <span class='code'>force</span>, that we are measuring over time,
-            for a service named <span class='code'>
+            for a service named <span class="code">Rocket</span>, located in <span class='code'>
         user/rocket.py</span>. We will create a new unit group, <span class='code'>group_force</span>, and new units,
             <span class='code'>newton</span> and <span class='code'>pound</span>. Our new observation, <span
             class='code'>force</span>, will belong to <span class='code'>group_force</span>, and will be measured in
             units of <span class='code'>newton</span> or <span class='code'>pound</span>.
+        </p>
+        <p>
+            To make this work, we need to add the following to <span class="code">user/rocket.py</span>.
         </p>
         <ol>
             <li>As before, we start by specifying what group our new observation type belongs to:
@@ -4839,12 +5001,9 @@ weewx.units.conversionDict['pound']  = {'newton': lambda x : x * 4.44822}
 
             </li>
         </ol>
-        <p>As with the previous example of <span class='code'>group_energy</span>, the last step is to extend the <span
-            class='code'>
-        weewx.units.obs_group_dict</span> dictionary so that these new units can be used by our service. We do this by
-            adding the Python code from steps 1 - 4 into our new services file <span
-                class='code'>user/rocket.py</span>, at the head of that file and just after the last import statement
-            (as in the previous example).
+        <p>
+            Now, when the service <span class="code">Rocket</span> gets loaded, these lines of code will get executed,
+            adding the necessary unit extensions to WeeWX.
         </p>
 
         <h2>Using the new units</h2>
@@ -4911,7 +5070,10 @@ weewx.units.conversionDict['pound']  = {'newton': lambda x : x * 4.44822}
         </p>
 
         <p>
-            A <em>driver</em> communicates with hardware.  Each driver is a single python file that contains the code that is the interface between a device and WeeWX.  A driver may communicate directly with hardware using a MODBus, USB, serial, or other physical interface.  Or it may communicate over a network to a physical device or a web service.
+            A <em>driver</em> communicates with hardware. Each driver is a single python file that contains the code
+            that is the interface between a device and WeeWX. A driver may communicate directly with hardware using a
+            MODBus, USB, serial, or other physical interface. Or it may communicate over a network to a physical device
+            or a web service.
         </p>
 
         <h2>General guidelines</h2>
@@ -5069,9 +5231,9 @@ weewx.units.conversionDict['pound']  = {'newton': lambda x : x * 4.44822}
         </h3>
 
         <p>
-            If you implement function <span class="code">genArchiveRecords()</span>, then you should also
-            implement <span class='code'>archive_interval</span> as either an attribute, or as a <a
-            href="https://docs.python.org/2/library/functions.html#property">property function</a>. It should return the
+            If you implement function <span class="code">genArchiveRecords()</span>, then you should also implement
+            <span class='code'>archive_interval</span> as either an attribute, or as a <a
+            href="https://docs.python.org/3/library/functions.html#property">property function</a>. It should return the
             archive interval in seconds.
         </p>
 
@@ -5189,7 +5351,10 @@ weewx.units.conversionDict['pound']  = {'newton': lambda x : x * 4.44822}
         </ul>
 
         <p>
-            Although one extension might use another extension, take care to write the dependent extension so that it fails gracefully.  For example, a skin might use data the forecast extension, but what happens if the forecast extension is not installed?  Make the skin display a message about "forecast not installed" but otherwise continue to function.
+            Although one extension might use another extension, take care to write the dependent extension so that it
+            fails gracefully. For example, a skin might use data the forecast extension, but what happens if the
+            forecast extension is not installed? Make the skin display a message about "forecast not installed" but
+            otherwise continue to function.
         </p>
 
         <h2>Packaging an extension</h2>
@@ -5258,10 +5423,18 @@ xstats/bin/user/xstats.py</pre>
         <h2>Default values</h2>
 
         <p>
-            Whenever possible, an extension should <em>just work</em>, with a minimum of input from the user.  At the same time, parameters for the most frequently requested options should be easily accessible and easy to modify.  For skins, this might mean parameterizing strings into <span class="code">[Labels]</span> for easier customization.  Or it might mean providing parameters in <span class="code">[Extras]</span> to control skin behavior or to parameterize links.
+            Whenever possible, an extension should <em>just work</em>, with a minimum of input from the user. At the
+            same time, parameters for the most frequently requested options should be easily accessible and easy to
+            modify. For skins, this might mean parameterizing strings into <span class="code">[Labels]</span> for easier
+            customization. Or it might mean providing parameters in <span class="code">[Extras]</span> to control skin
+            behavior or to parameterize links.
         </p>
         <p>
-            Some parameters <em>must</em> be specified, and no default value would be appropriate.  For example, an uploader may require a username and password, or a driver might require a serial number or IP address.  In these cases, use a default value in the configuration that will obviously require modification.  The <em>username</em> might default to <em>REPLACE_ME</em>.  Also be sure to add a log entry that indicates the feature is disabled until the value has been specified.
+            Some parameters <em>must</em> be specified, and no default value would be appropriate. For example, an
+            uploader may require a username and password, or a driver might require a serial number or IP address. In
+            these cases, use a default value in the configuration that will obviously require modification. The <em>username</em>
+            might default to <em>REPLACE_ME</em>. Also be sure to add a log entry that indicates the feature is disabled
+            until the value has been specified.
         </p>
         <p>
             In the case of drivers, use the configuration editor to prompt for this type of required value.
@@ -5271,7 +5444,8 @@ xstats/bin/user/xstats.py</pre>
         <h1 id="report_options">Reference: report options</h1>
 
         <p>
-            This section contains the options available in the skin configuration file, <span class="code">skin.conf</span>.
+            This section contains the options available in the skin configuration file, <span
+            class="code">skin.conf</span>.
         </p>
 
         <p>
@@ -5290,7 +5464,8 @@ xstats/bin/user/xstats.py</pre>
         <p>This section is available to add any static tags you might want to use in your templates.</p>
 
         <p>
-            As an example, the <span class="code">skin.conf</span> file for the <em>Seasons</em> skin includes three options:
+            As an example, the <span class="code">skin.conf</span> file for the <em>Seasons</em> skin includes three
+            options:
         </p>
         <table class="indent" style="width: 50%">
             <tr class="first_row">
@@ -5311,7 +5486,8 @@ xstats/bin/user/xstats.py</pre>
             </tr>
         </table>
         <p>
-            If you take a look at the template <span class="code">radar.inc</span> you will see examples of testing for these tags.
+            If you take a look at the template <span class="code">radar.inc</span> you will see examples of testing for
+            these tags.
         </p>
 
         <p class="config_option">radar_img</p>
@@ -5320,8 +5496,8 @@ xstats/bin/user/xstats.py</pre>
 
         <p class="config_option">radar_url</p>
 
-        <p>If the radar image is clicked, the browser will go to this URL. This is usually used to show a more
-            detailed, close-up, radar picture.
+        <p>If the radar image is clicked, the browser will go to this URL. This is usually used to show a more detailed,
+            close-up, radar picture.
         </p>
 
         <p>For me in Oregon, setting the two options to:</p>
@@ -5355,7 +5531,7 @@ xstats/bin/user/xstats.py</pre>
         <pre class="tty">[Extras]
     [[video]]
         still = video_capture.jpg
-        hyperlink = <a href="http://www.eatatjoes.com/video.html">http://www.eatatjoes.com/video.html</a>
+        hyperlink = http://www.eatatjoes.com/video.html
       </pre>
         <p>Then in your template you could refer to these as:</p>
         <pre class="tty">&lt;a href="$Extras.video.hyperlink"&gt;
@@ -5458,6 +5634,13 @@ UV      = UV Index</pre>
             Which measurement unit to be used for direction. The only option is <span class="code">degree_compass</span>.
         </p>
 
+        <p class="config_option">group_distance</p>
+
+        <p>
+            Which measurement unit to be used for distance (such as for wind run). Possible options are <span
+            class="code">mile</span> or <span class="code">km</span>.
+        </p>
+
         <p class="config_option">group_moisture</p>
 
         <p>
@@ -5475,6 +5658,13 @@ UV      = UV Index</pre>
         <p>
             The measurement unit to be used for pressure. Possible options are one of <span class="code">inHg</span>
             (inches of mercury), <span class="code">mbar</span>, or <span class="code">hPa</span>.
+        </p>
+
+        <p class="config_important">group_pressurerate</p>
+
+        <p>
+            The measurement unit to be used for rate of change in pressure. Possible options are one of <span class="code">inHg_per_hour</span>
+            (inches of mercury per hour), <span class="code">mbar_per_hour</span>, or <span class="code">hPa_per_hour</span>.
         </p>
 
         <p class="config_option">group_radiation</p>
@@ -5558,8 +5748,8 @@ inch     = %.2f</pre>
 inch     = ' in'</pre>
         <p>
             would cause all temperatures to have unit labels <span class="code">°F</span> and all precipitation to have
-            labels <span class="code">in</span>. If any special symbols are to be used (such as the degree sign)
-            they should be encoded in UTF-8. This is generally what most text editors use if you cut-and-paste from a
+            labels <span class="code">in</span>. If any special symbols are to be used (such as the degree sign) they
+            should be encoded in UTF-8. This is generally what most text editors use if you cut-and-paste from a
             character map.
         </p>
 
@@ -5576,8 +5766,9 @@ second = " second", " seconds"</pre>
         <h3 class="config_section" id="Units_TimeFormats">[[TimeFormats]]</h3>
 
         <p>
-            This sub-section is used for time labels. It uses <a
-            href="https://docs.python.org/3/library/datetime.html#strftime-strptime-behavior">strftime()</a> formats.
+            This sub-section specifies what time format to use for different time <em>contexts</em>. For example, you
+            might want to use a different format when displaying the time in a day, versus the time in a month. It uses
+            <a href="https://docs.python.org/3/library/datetime.html#strftime-strptime-behavior">strftime()</a> formats.
             The default looks like this:
         </p>
         <pre class='tty'>
@@ -5600,8 +5791,8 @@ second = " second", " seconds"</pre>
             code locale dependent date, time, and weekday names, respectively. Hence, if you set an appropriate
             environment variable <span class='code'>LANG</span>, then the date and times should follow local conventions
             (see section <a href="#environment_variable_LANG">Environment variable LANG</a> for details on how to do
-            this). However, they will not look particularly pretty and you may want to change them. For example, I use
-            this in the U.S.:
+            this). However, the results may not look particularly nice, and you may want to change them. For example,
+            I use this in the U.S.:
         </p>
         <pre class="tty">
     [[TimeFormats]]
@@ -5636,14 +5827,15 @@ second = " second", " seconds"</pre>
         <h3 class="config_section">[[DegreeDays]]</h3>
 
         <p class="config_important">
-            heating_base <br/> cooling_base
+            heating_base <br/> cooling_base <br/> growing_base
         </p>
 
-        <p>Set to the base temperature for calculating heating and cooling degree-days, along with the unit to be used.
-            Examples:
+        <p>Set to the base temperature for calculating heating, cooling, and growing degree-days, along with the unit to
+            be used. Examples:
         </p>
         <pre class="tty">heating_base = 65.0, degree_F
-cooling_base = 20.0, degree_C</pre>
+cooling_base = 20.0, degree_C
+growing_base = 50.0, degree_F</pre>
         <h3 class="config_section" id="trend">[[Trend]]</h3>
 
         <p class="config_option">time_delta</p>
@@ -5744,7 +5936,8 @@ cooling_base = 20.0, degree_C</pre>
         <p>
             The <span class="code">SummaryByDay</span> section defines some special behavior. Each template in this
             section will be used multiple times, each time with a different per-day timespan. Be sure to include <span
-            class="code">YYYY</span>, <span class="code">MM</span>, and <span class="code">DD</span> in the filename of any template in this section.
+            class="code">YYYY</span>, <span class="code">MM</span>, and <span class="code">DD</span> in the filename of
+            any template in this section.
         </p>
 
         <p class="config_option">[[SummaryByMonth]]</p>
@@ -5787,20 +5980,20 @@ cooling_base = 20.0, degree_C</pre>
         <p class="config_option">image_background_color</p>
 
         <p>
-            The background color of the whole image. Optional. Default is <span class='code'>0xf5f5f5</span>
+            The background color of the whole image. Optional. Default is <span class='code'>#f5f5f5</span>
             ("SmokeGray")
         </p>
 
         <p class="config_option">chart_background_color</p>
 
         <p>
-            The background color of the chart itself. Optional. Default is <span class='code'>0xd8d8d8</span>.
+            The background color of the chart itself. Optional. Default is <span class='code'>#d8d8d8</span>.
         </p>
 
         <p class="config_option">chart_gridline_color</p>
 
         <p>
-            The color of the chart grid lines. Optional. Default is <span class='code'>0xa0a0a0</span>
+            The color of the chart grid lines. Optional. Default is <span class='code'>#a0a0a0</span>
         </p>
 
         <div class="image image-right" style="clear: right">
@@ -5836,20 +6029,20 @@ cooling_base = 20.0, degree_C</pre>
         <p class="config_option">daynight_day_color</p>
 
         <p>
-            The color to be used for the daylight band. Optional. Default is <span class="code">0xffffff</span>.
+            The color to be used for the daylight band. Optional. Default is <span class="code">#ffffff</span>.
         </p>
 
         <p class="config_option">daynight_night_color</p>
 
         <p>
-            The color to be used for the nighttime band. Optional. Default is <span class="code">0xf0f0f0</span>, a dark
+            The color to be used for the nighttime band. Optional. Default is <span class="code">#f0f0f0</span>, a dark
             gray.
         </p>
 
         <p class="config_option">daynight_edge_color</p>
 
         <p>
-            The color to be used in the transition zone between night and day. Optional. Default is <span class="code">0xefefef</span>,
+            The color to be used in the transition zone between night and day. Optional. Default is <span class="code">#efefef</span>,
             a mid-gray.
         </p>
 
@@ -6057,11 +6250,9 @@ cooling_base = 20.0, degree_C</pre>
 
         <p>
             Each chart line is drawn in a different color. This option is a list of those colors. If the number of lines
-            exceeds the length of the list, then the colors wrap around to the beginning of the list. Optional. In the case of bar
-            charts, this is the color of the outline of the bar. Default is <span class="code">0xff0000, 0x00ff00, 0x0000ff</span>.
-            <br/>
-            <br/>
-            Individual line color can be overridden by using option <span class="code">color</span>.
+            exceeds the length of the list, then the colors wrap around to the beginning of the list. Optional. In the
+            case of bar charts, this is the color of the outline of the bar. Default is <span class="code">#0000ff, #00ff00, #ff0000</span>.
+            <br/> <br/> Individual line color can be overridden by using option <span class="code">color</span>.
         </p>
 
         <p class="config_option">chart_fill_colors</p>
@@ -6076,10 +6267,8 @@ cooling_base = 20.0, degree_C</pre>
         <p>
             Each chart line can be drawn using a different line width. This option is a list of these widths. If the
             number of lines exceeds the length of the list, then the widths wrap around to the beginning of the list.
-            Optional. Default is <span class="code">1, 1, 1</span>.
-            <br/>
-            <br/>
-            Individual line widths can be overridden by using option <span class="code">width</span>.
+            Optional. Default is <span class="code">1, 1, 1</span>. <br/> <br/> Individual line widths can be overridden
+            by using option <span class="code">width</span>.
         </p>
 
 
@@ -6092,9 +6281,10 @@ cooling_base = 20.0, degree_C</pre>
         <p>
             The default is to plot every data point, but this is probably not a good idea for any plot longer than a
             day. By setting this option, you can <em>aggregate</em> data by a set time interval. Available aggregation
-            types include <span class="code">avg</span>, <span class="code">sum</span>, <span class="code">max</span>,
-            <span class="code">min</span>, <span class="code">count</span>, <span class="code">last</span>, and <span
-            class="code">cumulative</span>.
+            types include <span class="code">avg</span>, <span class="code">count</span>, <span
+            class="code">cumulative</span>, <span class="code">diff</span>, <span class="code">last</span>, <span
+            class="code">max</span>, <span class="code">min</span>, <span class="code">sum</span>, and <span
+            class="code">tderiv</span>.
         </p>
 
         <p class="config_option">aggregate_interval</p>
@@ -6135,7 +6325,7 @@ cooling_base = 20.0, degree_C</pre>
         <p class="config_option">marker_type</p>
 
         <p>
-            The type of marker to be used to marke each data point. Choices are <span class="code">cross</span>, <span
+            The type of marker to be used to mark each data point. Choices are <span class="code">cross</span>, <span
             class="code">x</span>, <span class="code">circle</span>, <span class="code">box</span>, or <span
             class="code">none</span>. Optional. Default is <span class="code">none</span>.
         </p>
@@ -6171,8 +6361,8 @@ cooling_base = 20.0, degree_C</pre>
 
         <p>
             The SQL data type to be used for this plot line. For more information, see the section <em><a
-            href="#including_same_sql_type_2x">Including the same SQL type more than once in a plot</a></em>. Optional.
-            The default is to use the section name.
+            href="#including_same_sql_type_2x">Including a type more than once in a plot</a></em>. Optional. The default
+            is to use the section name.
         </p>
 
 
@@ -6230,361 +6420,6 @@ cooling_base = 20.0, degree_C</pre>
         <p>The Standard skin uses three generators: CheetahGenerator, ImageGenerator, and CopyGenerator.</p>
 
 
-        <h1 id="archive_types">Appendix: Archive Types</h1>
-
-        <p>
-            <em>Archive types</em> are weather observations that have come from your instrument and been stored in the
-            <em>archive database</em>, a SQL database. They represent the <em>current conditions</em> as of some time.
-            They are available to be used in two places:
-        </p>
-        <ul>
-            <li>In your template files as a tag with period <span class="code">$current</span>. Hence, the tag <span
-                class="code">$current.outTemp</span> represents the latest current outside temperature.
-            </li>
-            <li>In your plot graphs. Here, a line in the graph represents the set of current observations over a time
-                period. While each plot point in a graph may represent an aggregation, do not confuse this aggregation
-                with the statistical aggregation. The former is done with the archive database, the latter with the
-                statistical database.
-            </li>
-        </ul>
-        <p>
-            The following table shows all the possible archive types and whether they can be used in tag <span
-            class="code">$current</span> or in a plot. Note that just because a type appears in the table does not
-            necessarily mean that it is available for <em>your</em> station setup. That would depend on whether your
-            instrument supports the type.
-        </p>
-        <table class="indent">
-            <caption>Archive types</caption>
-            <tbody>
-            <tr class="first_row">
-                <td>Archive Type</td>
-                <td style="width: 200px">SQL Type<br/> <span style="font-size: 80%">(appears in archive
-                database)</span></td>
-                <td>Can be used <br/> in plots
-                </td>
-                <td>Can be used <br/> in tag <span class="code">$current</span></td>
-            </tr>
-            <tr>
-                <td class="first_col code">altimeter</td>
-                <td>X</td>
-                <td>X</td>
-                <td>X</td>
-            </tr>
-            <tr>
-                <td class="first_col code">barometer</td>
-                <td>X</td>
-                <td>X</td>
-                <td>X</td>
-            </tr>
-            <tr>
-                <td class="first_col code">consBatteryVoltage</td>
-                <td>X</td>
-                <td>X</td>
-                <td>X</td>
-            </tr>
-            <tr>
-                <td class="first_col code">dateTime</td>
-                <td>X</td>
-                <td><br/></td>
-                <td>X (represents current time)</td>
-            </tr>
-            <tr>
-                <td class="first_col code">dewpoint</td>
-                <td>X</td>
-                <td>X</td>
-                <td>X</td>
-            </tr>
-            <tr>
-                <td class="first_col code">ET</td>
-                <td>X</td>
-                <td>X</td>
-                <td>X</td>
-            </tr>
-            <tr>
-                <td class="first_col code">extraHumid1</td>
-                <td>X</td>
-                <td>X</td>
-                <td>X</td>
-            </tr>
-            <tr>
-                <td class="first_col code">extraHumid2</td>
-                <td>X</td>
-                <td>X</td>
-                <td>X</td>
-            </tr>
-            <tr>
-                <td class="first_col code">extraTemp1</td>
-                <td>X</td>
-                <td>X</td>
-                <td>X</td>
-            </tr>
-            <tr>
-                <td class="first_col code">extraTemp2</td>
-                <td>X</td>
-                <td>X</td>
-                <td>X</td>
-            </tr>
-            <tr>
-                <td class="first_col code">extraTemp3</td>
-                <td>X</td>
-                <td>X</td>
-                <td>X</td>
-            </tr>
-            <tr>
-                <td class="first_col code">hail</td>
-                <td>X</td>
-                <td>X</td>
-                <td>X</td>
-            </tr>
-            <tr>
-                <td class="first_col code">hailRate</td>
-                <td>X</td>
-                <td>X</td>
-                <td>X</td>
-            </tr>
-            <tr>
-                <td class="first_col code">heatindex</td>
-                <td>X</td>
-                <td>X</td>
-                <td>X</td>
-            </tr>
-            <tr>
-                <td class="first_col code">heatingTemp</td>
-                <td>X</td>
-                <td>X</td>
-                <td>X</td>
-            </tr>
-            <tr>
-                <td class="first_col code">heatingVoltage</td>
-                <td>X</td>
-                <td>X</td>
-                <td>X</td>
-            </tr>
-            <tr>
-                <td class="first_col code">inHumidity</td>
-                <td>X</td>
-                <td>X</td>
-                <td>X</td>
-            </tr>
-            <tr>
-                <td class="first_col code">inTemp</td>
-                <td>X</td>
-                <td>X</td>
-                <td>X</td>
-            </tr>
-            <tr>
-                <td class="first_col code">inTempBatteryStatus</td>
-                <td>X</td>
-                <td>X</td>
-                <td>X</td>
-            </tr>
-            <tr>
-                <td class="first_col code">interval</td>
-                <td>X</td>
-                <td>X</td>
-                <td>X</td>
-            </tr>
-            <tr>
-                <td class="first_col code">leafTemp1</td>
-                <td>X</td>
-                <td>X</td>
-                <td>X</td>
-            </tr>
-            <tr>
-                <td class="first_col code">leafTemp2</td>
-                <td>X</td>
-                <td>X</td>
-                <td>X</td>
-            </tr>
-            <tr>
-                <td class="first_col code">leafWet1</td>
-                <td>X</td>
-                <td>X</td>
-                <td>X</td>
-            </tr>
-            <tr>
-                <td class="first_col code">leafWet2</td>
-                <td>X</td>
-                <td>X</td>
-                <td>X</td>
-            </tr>
-            <tr>
-                <td class="first_col code">outHumidity</td>
-                <td>X</td>
-                <td>X</td>
-                <td>X</td>
-            </tr>
-            <tr>
-                <td class="first_col code">outTemp</td>
-                <td>X</td>
-                <td>X</td>
-                <td>X</td>
-            </tr>
-            <tr>
-                <td class="first_col code">outTempBatteryStatus</td>
-                <td>X</td>
-                <td>X</td>
-                <td>X</td>
-            </tr>
-            <tr>
-                <td class="first_col code">pressure</td>
-                <td>X</td>
-                <td>X</td>
-                <td>X</td>
-            </tr>
-            <tr>
-                <td class="first_col code">radiation</td>
-                <td>X</td>
-                <td>X</td>
-                <td>X</td>
-            </tr>
-            <tr>
-                <td class="first_col code">rain</td>
-                <td>X</td>
-                <td>X</td>
-                <td>X</td>
-            </tr>
-            <tr>
-                <td class="first_col code">rainBatteryStatus</td>
-                <td>X</td>
-                <td>X</td>
-                <td>X</td>
-            </tr>
-            <tr>
-                <td class="first_col code">rainRate</td>
-                <td>X</td>
-                <td>X</td>
-                <td>X</td>
-            </tr>
-            <tr>
-                <td class="first_col code">referenceVoltage</td>
-                <td>X</td>
-                <td>X</td>
-                <td>X</td>
-            </tr>
-            <tr>
-                <td class="first_col code">rxCheckPercent</td>
-                <td>X</td>
-                <td>X</td>
-                <td>X</td>
-            </tr>
-            <tr>
-                <td class="first_col code">soilMoist1</td>
-                <td>X</td>
-                <td>X</td>
-                <td>X</td>
-            </tr>
-            <tr>
-                <td class="first_col code">soilMoist2</td>
-                <td>X</td>
-                <td>X</td>
-                <td>X</td>
-            </tr>
-            <tr>
-                <td class="first_col code">soilMoist3</td>
-                <td>X</td>
-                <td>X</td>
-                <td>X</td>
-            </tr>
-            <tr>
-                <td class="first_col code">soilMoist4</td>
-                <td>X</td>
-                <td>X</td>
-                <td>X</td>
-            </tr>
-            <tr>
-                <td class="first_col code">soilTemp1</td>
-                <td>X</td>
-                <td>X</td>
-                <td>X</td>
-            </tr>
-            <tr>
-                <td class="first_col code">soilTemp2</td>
-                <td>X</td>
-                <td>X</td>
-                <td>X</td>
-            </tr>
-            <tr>
-                <td class="first_col code">soilTemp3</td>
-                <td>X</td>
-                <td>X</td>
-                <td>X</td>
-            </tr>
-            <tr>
-                <td class="first_col code">soilTemp4</td>
-                <td>X</td>
-                <td>X</td>
-                <td>X</td>
-            </tr>
-            <tr>
-                <td class="first_col code">supplyVoltage</td>
-                <td>X</td>
-                <td>X</td>
-                <td>X</td>
-            </tr>
-            <tr>
-                <td class="first_col code">txBatteryStatus</td>
-                <td>X</td>
-                <td>X</td>
-                <td>X</td>
-            </tr>
-            <tr>
-                <td class="first_col code">usUnits</td>
-                <td>X</td>
-                <td>X</td>
-                <td>X</td>
-            </tr>
-            <tr>
-                <td class="first_col code">UV</td>
-                <td>X</td>
-                <td>X</td>
-                <td>X</td>
-            </tr>
-            <tr>
-                <td class="first_col code">windvec</td>
-                <td> </td>
-                <td>X (special vector type)</td>
-                <td> </td>
-            </tr>
-            <tr>
-                <td class="first_col code">windBatteryStatus</td>
-                <td>X</td>
-                <td>X</td>
-                <td>X</td>
-            </tr>
-            <tr>
-                <td class="first_col code">windDir</td>
-                <td>X</td>
-                <td>X</td>
-                <td>X</td>
-            </tr>
-            <tr>
-                <td class="first_col code">windGust</td>
-                <td>X</td>
-                <td>X</td>
-                <td>X</td>
-            </tr>
-            <tr>
-                <td class="first_col code">windGustDir</td>
-                <td>X</td>
-                <td>X</td>
-                <td>X</td>
-            </tr>
-            <tr>
-                <td class="first_col code">windSpeed</td>
-                <td>X</td>
-                <td>X</td>
-                <td>X</td>
-            </tr>
-            <tr>
-                <td class="first_col code">windchill</td>
-                <td>X</td>
-                <td>X</td>
-                <td>X</td>
-            </tr>
-            </tbody>
-        </table>
-
         <h1 id="aggregation_types">Appendix: Aggregation types</h1>
 
         <table class="indent">
@@ -6599,29 +6434,51 @@ cooling_base = 20.0, degree_C</pre>
                 <td>The average value in the aggregation period.</td>
             </tr>
             <tr>
-                <td class="first_col code">sum</td>
-                <td>The sum of values in the aggregation period.</td>
-            </tr>
-            <tr>
                 <td class="first_col code">count</td>
                 <td>The number of non-null values in the aggregation period.
                 </td>
             </tr>
             <tr>
-                <td class="first_col code">min</td>
-                <td>The minimum value in the aggregation period.</td>
+                <td class="first_col code">diff</td>
+                <td>The difference between the last and first value in the aggregation period.
+                </td>
             </tr>
             <tr>
-                <td class="first_col code">mintime</td>
-                <td>The time of the minimum value.</td>
+                <td class="first_col code">exists</td>
+                <td>Returns <span class="code">True</span> if the observation type exists in the database.</td>
+            </tr>
+            <tr>
+                <td class="first_col code">first</td>
+                <td>The first value in the aggregation period.</td>
+            </tr>
+            <tr>
+                <td class="first_col code">firsttime</td>
+                <td>The time of the first value in the aggregation period.
+                </td>
+            </tr>
+            <tr>
+                <td class="first_col code">gustdir</td>
+                <td>The direction of the max gust in the aggregation period.
+                </td>
+            </tr>
+            <tr>
+                <td class="first_col code">has_data</td>
+                <td>Returns <span class="code">True</span> if the observation type exists in the database and is
+                    non-null.
+                </td>
+            </tr>
+            <tr>
+                <td class="first_col code">last</td>
+                <td>The last value in the aggregation period.</td>
+            </tr>
+            <tr>
+                <td class="first_col code">lasttime</td>
+                <td>The time of the last value in the aggregation period.
+                </td>
             </tr>
             <tr>
                 <td class="first_col code">max</td>
                 <td>The maximum value in the aggregation period.</td>
-            </tr>
-            <tr>
-                <td class="first_col code">maxtime</td>
-                <td>The time of the maximum value.</td>
             </tr>
             <tr>
                 <td class="first_col code">maxmin</td>
@@ -6633,15 +6490,6 @@ cooling_base = 20.0, degree_C</pre>
                 <td>The time of the maximum daily minimum.</td>
             </tr>
             <tr>
-                <td class="first_col code">minmax</td>
-                <td>The minimum daily maximum in the aggregation period. Aggregation period must be one day or longer.
-                </td>
-            </tr>
-            <tr>
-                <td class="first_col code">minmaxtime</td>
-                <td>The time of the minimum daily maximum.</td>
-            </tr>
-            <tr>
                 <td class="first_col code">maxsum</td>
                 <td>The maximum daily sum in the aggregation period. Aggregation period must be one day or longer.
                 </td>
@@ -6651,28 +6499,8 @@ cooling_base = 20.0, degree_C</pre>
                 <td>The time of the maximum daily sum.</td>
             </tr>
             <tr>
-                <td class="first_col code">meanmin</td>
-                <td>The average daily minimum in the aggregation period. Aggregation period must be one day or longer.
-                </td>
-            </tr>
-            <tr>
-                <td class="first_col code">meanmax</td>
-                <td>The average daily maximum in the aggregation period. Aggregation period must be one day or longer.
-                </td>
-            </tr>
-            <tr>
-                <td class="first_col code">gustdir</td>
-                <td>The direction of the max gust in the aggregation period.
-                </td>
-            </tr>
-            <tr>
-                <td class="first_col code">last</td>
-                <td>The last value in the aggregation period.</td>
-            </tr>
-            <tr>
-                <td class="first_col code">lasttime</td>
-                <td>The time of the last value in the aggregation period.
-                </td>
+                <td class="first_col code">maxtime</td>
+                <td>The time of the maximum value.</td>
             </tr>
             <tr>
                 <td class="first_col code">max_ge(val)</td>
@@ -6687,6 +6515,42 @@ cooling_base = 20.0, degree_C</pre>
                 </td>
             </tr>
             <tr>
+                <td class="first_col code">meanmax</td>
+                <td>The average daily maximum in the aggregation period. Aggregation period must be one day or longer.
+                </td>
+            </tr>
+            <tr>
+                <td class="first_col code">meanmin</td>
+                <td>The average daily minimum in the aggregation period. Aggregation period must be one day or longer.
+                </td>
+            </tr>
+            <tr>
+                <td class="first_col code">min</td>
+                <td>The minimum value in the aggregation period.</td>
+            </tr>
+            <tr>
+                <td class="first_col code">minmax</td>
+                <td>The minimum daily maximum in the aggregation period. Aggregation period must be one day or longer.
+                </td>
+            </tr>
+            <tr>
+                <td class="first_col code">minmaxtime</td>
+                <td>The time of the minimum daily maximum.</td>
+            </tr>
+            <tr>
+                <td class="first_col code">minsum</td>
+                <td>The minimum daily sum in the aggregation period. Aggregation period must be one day or longer.
+                </td>
+            </tr>
+            <tr>
+                <td class="first_col code">minsumtime</td>
+                <td>The time of the minimum daily sum.</td>
+            </tr>
+            <tr>
+                <td class="first_col code">mintime</td>
+                <td>The time of the minimum value.</td>
+            </tr>
+            <tr>
                 <td class="first_col code">min_ge(val)</td>
                 <td>The number of days where the minimum value is greater than or equal to <em>val</em>. Aggregation
                     period must be one day or longer.
@@ -6699,14 +6563,31 @@ cooling_base = 20.0, degree_C</pre>
                 </td>
             </tr>
             <tr>
+                <td class="first_col code">rms</td>
+                <td>The root mean square value in the aggregation period.
+                </td>
+            </tr>
+            <tr>
+                <td class="first_col code">sum</td>
+                <td>The sum of values in the aggregation period.</td>
+            </tr>
+            <tr>
                 <td class="first_col code">sum_ge(val)</td>
                 <td>The number of days where the sum of value is greater than or equal to <em>val</em>. Aggregation
                     period must be one day or longer.
                 </td>
             </tr>
             <tr>
-                <td class="first_col code">rms</td>
-                <td>The root mean square value in the aggregation period.
+                <td class="first_col code">sum_le(val)</td>
+                <td>The number of days where the sum of value is less than or equal to <em>val</em>. Aggregation period
+                    must be one day or longer.
+                </td>
+            </tr>
+            <tr>
+                <td class="first_col code">tderiv</td>
+                <td>
+                    The time derivative between the last and first value in the aggregation period. This is the
+                    difference in value divided by the difference in time.
                 </td>
             </tr>
             <tr>
@@ -6788,28 +6669,41 @@ cooling_base = 20.0, degree_C</pre>
                 <td>amp</td>
             </tr>
             <tr>
+                <td class="first_col">group_concentration</td>
+                <td>pm1_0<br/>pm2_5<br/>pm10_0</td>
+                <td>microgram_per_meter_cubed</td>
+                <td>microgram_per_meter_cubed</td>
+                <td>microgram_per_meter_cubed</td>
+                <td>microgram_per_meter_cubed</td>
+            </tr>
+            <tr>
+                <td class="first_col">group_count</td>
+                <td>beaufort<br/>leafWet1<br/>leafWet2<br/>lightning_disturber_count<br/>lightning_noise_count<br/>lightning_strike_count<br/></td>
+                <td>count</td>
+                <td>count</td>
+                <td>count</td>
+                <td>count</td>
+            </tr>
+            <tr>
                 <td class="first_col">group_data</td>
                 <td></td>
-                <td>byte<br/> bit
-                </td>
+                <td>byte<br/> bit</td>
                 <td>byte</td>
                 <td>byte</td>
                 <td>byte</td>
             </tr>
             <tr>
                 <td class="first_col">group_degree_day</td>
-                <td>cooldeg<br/> heatdeg
+                <td>cooldeg<br/> heatdeg<br/> growdeg
                 </td>
-                <td>degree_F_day<br/> degree_C_day
-                </td>
+                <td>degree_F_day<br/> degree_C_day</td>
                 <td>degree_F_day</td>
                 <td>degree_C_day</td>
                 <td>degree_C_day</td>
             </tr>
             <tr>
                 <td class="first_col">group_direction</td>
-                <td>gustdir <br/> vecdir <br/> windDir <br/> windGustDir
-                </td>
+                <td>gustdir <br/> vecdir <br/> windDir <br/> windGustDir</td>
                 <td>degree_compass</td>
                 <td>degree_compass</td>
                 <td>degree_compass</td>
@@ -6817,9 +6711,8 @@ cooling_base = 20.0, degree_C</pre>
             </tr>
             <tr>
                 <td class="first_col">group_distance</td>
-                <td>windrun</td>
-                <td>mile<br/> km
-                </td>
+                <td>windrun<br/>lightning_distance</td>
+                <td>mile<br/>km</td>
                 <td>mile</td>
                 <td>km</td>
                 <td>km</td>
@@ -6827,10 +6720,18 @@ cooling_base = 20.0, degree_C</pre>
             <tr>
                 <td class="first_col">group_energy</td>
                 <td></td>
+                <td>kilowatt_hour<br/>watt_hour<br/>watt_second</td>
                 <td>watt_hour</td>
                 <td>watt_hour</td>
                 <td>watt_hour</td>
-                <td>watt_hour</td>
+            </tr>
+            <tr>
+                <td class="first_col">group_energy2</td>
+                <td></td>
+                <td>kilowatt_hour<br/>watt_hour<br/>watt_second</td>
+                <td>watt_second</td>
+                <td>watt_second</td>
+                <td>watt_second</td>
             </tr>
             <tr>
                 <td class="first_col">group_interval</td>
@@ -6870,7 +6771,7 @@ cooling_base = 20.0, degree_C</pre>
             <tr>
                 <td class="first_col">group_power</td>
                 <td></td>
-                <td>watt</td>
+                <td>kilowatt<br/>watt</td>
                 <td>watt</td>
                 <td>watt</td>
                 <td>watt</td>
@@ -6886,8 +6787,18 @@ cooling_base = 20.0, degree_C</pre>
                 <td>mbar</td>
             </tr>
             <tr>
+                <td class="first_col">group_pressurerate</td>
+                <td>barometerRate <br/> altimeterRate <br/> pressureRate
+                </td>
+                <td>inHg_per_hour <br/> mbar_per_hour <br/> hPa_per_hour
+                </td>
+                <td>inHg_per_hour</td>
+                <td>mbar_per_hour</td>
+                <td>mbar_per_hour</td>
+            </tr>
+            <tr>
                 <td class="first_col">group_radiation</td>
-                <td>radiation</td>
+                <td>maxSolarRad <br/> radiation</td>
                 <td>watt_per_meter_squared</td>
                 <td>watt_per_meter_squared</td>
                 <td>watt_per_meter_squared</td>
@@ -6937,7 +6848,7 @@ cooling_base = 20.0, degree_C</pre>
                 <td class="first_col">group_temperature</td>
                 <td>appTemp <br/> dewpoint <br/> extraTemp1 <br/> extraTemp2 <br/> extraTemp3 <br/> heatindex <br/>
                     heatingTemp <br/> humidex <br/> inTemp <br/> leafTemp1 <br/> leafTemp2 <br/> outTemp <br/> soilTemp1
-                    <br/> soilTemp2 <br/> soilTemp3 <br/> soilTemp4 <br/> windchill
+                    <br/> soilTemp2 <br/> soilTemp3 <br/> soilTemp4 <br/> windchill <br/> THSW
                 </td>
                 <td>degree_F <br/> degree_C
                 </td>
@@ -6974,11 +6885,11 @@ cooling_base = 20.0, degree_C</pre>
             <tr>
                 <td class="first_col">group_volume</td>
                 <td></td>
-                <td>cubic_foot<br/> gallon<br/> litre
+                <td>cubic_foot<br/> gallon<br/> liter
                 </td>
                 <td>gallon</td>
-                <td>litre</td>
-                <td>litre</td>
+                <td>liter</td>
+                <td>liter</td>
             </tr>
             <tr>
                 <td class="first_col">group_NONE</td>
@@ -7002,20 +6913,6 @@ cooling_base = 20.0, degree_C</pre>
 
 </div>
 <!-- end class main -->
-
-<!-- Our scripts load last so the content can load first -->
-<script src="js/jquery-1.11.1.min.js"></script>
-<script src="js/jquery-ui-1.10.4.custom.min.js"></script>
-<script src="js/jquery.tocify-1.9.0.min.js"></script>
-<script src="js/weewx.js"></script>
-<!--suppress JSUnresolvedFunction -->
-<script>
-    $(function () {
-        var level = get_default_level();
-        create_toc_control(level);
-        generate_toc(level);
-    });
-</script>
 
 </body>
 </html>

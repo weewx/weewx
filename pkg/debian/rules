@@ -1,28 +1,44 @@
 #!/usr/bin/make -f
 # -*- makefile -*-
 # debian makefile for weewx
-# Copyright 2013 Matthew Wall
+# Copyright 2013-2020 Matthew Wall
 
 # Uncomment this to turn on verbose mode.
 #export DH_VERBOSE=1
 
+# determine which python we should use
+PKG=weewx
+PYTHON=python
+ifneq (,$(filter python2,$(DEB_BUILD_OPTIONS)))
+#PKG=python-weewx
+PYTHON=python2
+endif
+ifneq (,$(filter python3,$(DEB_BUILD_OPTIONS)))
+#PKG=python3-weewx
+PYTHON=python3
+endif
+
 SRC=$(CURDIR)
-DST=$(CURDIR)/debian/weewx
+DST=$(CURDIR)/debian/$(PKG)
 DST_EXECDIR=$(DST)/usr/bin
 DST_BINDIR =$(DST)/usr/share/weewx
 DST_DOCDIR =$(DST)/usr/share/doc/weewx
 DST_INITDIR=$(DST)/etc/init.d
 DST_CFGDIR =$(DST)/etc/weewx
 
+# these are the entry points
+ENTRIES=weewxd wee_config wee_database wee_debug wee_device wee_extension wee_import wee_reports wunderfixer
+
 %:
-	dh $@ --with python2
+	dh $@ --with python2,python3
 
 override_dh_auto_clean:
 	dh_auto_clean
 	rm -rf build dist
 	rm -f *.egg-info
 
-install: build
+# this install rule duplicates what the weewx setup.py would do
+install:
 	dh_testdir
 	dh_testroot
 	dh_prep
@@ -34,6 +50,7 @@ install: build
 	mkdir -p $(DST_BINDIR)
 	mkdir -p $(DST_DOCDIR)
 	mkdir -p $(DST_CFGDIR)
+	mkdir -p $(DST)/etc/default
 
 # copy files from the source tree
 	cp -r $(SRC)/bin/* $(DST_BINDIR)
@@ -45,6 +62,7 @@ install: build
 	cp -r $(SRC)/util/logrotate.d $(DST_CFGDIR)
 	cp -r $(SRC)/util/logwatch $(DST_CFGDIR)
 	cp -r $(SRC)/util/rsyslog.d $(DST_CFGDIR)
+	cp -r $(SRC)/util/scripts $(DST_CFGDIR)
 	cp -r $(SRC)/util/udev $(DST_CFGDIR)
 
 # patch paths in files we care about
@@ -54,25 +72,24 @@ install: build
  -e 's%HTML_ROOT = public_html%HTML_ROOT = /var/www/html/weewx%' \
  -e 's%SQLITE_ROOT = .*%SQLITE_ROOT = /var/lib/weewx%' \
  > $(DST_CFGDIR)/weewx.conf
-	cat $(SRC)/util/init.d/weewx.debian | sed \
- -e 's%WEEWX_BIN=.*%WEEWX_BIN=/usr/bin/weewxd%' \
- -e 's%WEEWX_CFG=.*%WEEWX_CFG=/etc/weewx/weewx.conf%' \
- > $(DST_INITDIR)/weewx
+	cp $(SRC)/util/init.d/weewx.debian $(DST_INITDIR)/weewx
 	chmod 755 $(DST_INITDIR)/weewx
 
 # make a virgin copy of the configuration file
 	cp $(DST_CFGDIR)/weewx.conf $(DST_CFGDIR)/weewx.conf.dist
 
-# create symlinks to the code entry points
-	ln -s ../share/weewx/weewxd $(DST)/usr/bin/weewxd
-	ln -s ../share/weewx/wee_config $(DST)/usr/bin/wee_config
-	ln -s ../share/weewx/wee_database $(DST)/usr/bin/wee_database
-	ln -s ../share/weewx/wee_debug $(DST)/usr/bin/wee_debug
-	ln -s ../share/weewx/wee_device $(DST)/usr/bin/wee_device
-	ln -s ../share/weewx/wee_extension $(DST)/usr/bin/wee_extension
-	ln -s ../share/weewx/wee_import $(DST)/usr/bin/wee_import
-	ln -s ../share/weewx/wee_reports $(DST)/usr/bin/wee_reports
-	ln -s ../share/weewx/wunderfixer $(DST)/usr/bin/wunderfixer
+# create the entry points
+	for f in $(ENTRIES); do \
+  cp $(SRC)/util/scripts/$$f $(DST)/usr/bin; \
+done
+
+# configure application layout
+	cat $(SRC)/util/default/weewx | sed \
+ -e 's%WEEWX_PYTHON=.*%WEEWX_PYTHON=$(PYTHON)%' \
+ -e 's%WEEWX_BINDIR=.*%WEEWX_BINDIR=/usr/share/weewx%' \
+ -e 's%WEEWX_BIN=.*%WEEWX_BIN=/usr/bin/weewxd%' \
+ -e 's%WEEWX_CFG=.*%WEEWX_CFG=/etc/weewx/weewx.conf%' \
+ > $(DST)/etc/default/weewx
 
 # keep lintian happy
 	cp $(SRC)/debian/copyright $(DST_DOCDIR)
@@ -82,9 +99,7 @@ install: build
 	cp $(SRC)/debian/config $(DST)/DEBIAN
 	cp $(SRC)/debian/templates $(DST)/DEBIAN
 
-binary-indep: build install
-	dh_testdir
-	dh_testroot
+binary-indep: install
 	dh_installchangelogs
 	dh_fixperms
 	dh_installdeb
@@ -92,7 +107,7 @@ binary-indep: build install
 	dh_md5sums
 	dh_builddeb
 
-binary-arch: build install
+binary-arch:
 
 binary: binary-indep binary-arch
 

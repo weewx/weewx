@@ -1,7 +1,253 @@
 weewx change history
 --------------------
 
-3.9.2 MM/DD/YYYY
+4.1.2 MM/DD/YYYY
+
+Added units and labels for the lightning data types.
+
+Fixed problem where threads attempt to access non-existent database. Fixes
+issue #579.
+
+Fixed problem that caused reporting units to revert to US if they were in a
+mixed unit system. Fixes issue #576.
+
+Fixed problem that could cause the station registry to fail if given a location
+with a non-ASCII location name.
+
+Changed TE923 bucket size from 0.02589 inches to 1/36 of an inch
+(0.02777778 in). PR #575. Fixes issue #574. Thanks to user Timothy!
+
+Undocumented option retry_certificate has been renamed to retry_ssl, and now
+covers all SSL errors (not just certificate errors). Fixes issue #569. Thanks
+to user Eric!
+
+Fixed problem caused by specifying a [Logging]/[[formatters]] section in
+weewx.conf that uses interpolated variables.
+
+Fixed problem in the Vantage driver that resulted in incorrect sunrise/sunset
+being included in loop packets when run under Python 3. Thanks to users 
+Constantine and Jacques!
+
+Improved auto-scaling of plot axes.
+
+
+4.1.1 06/01/2020
+
+Fixed problem that caused wind speed to be reported to AWEKAS in m/s instead
+of km/h.
+
+Fixed problem that caused FTP attempts not to be retried.
+
+Fixed problem that caused monthly and yearly summaries to appear only
+sporadically.
+
+Fixed problem when using the ultimeter driver under Python 2.
+
+Fixed problem when using the ws1 driver under Python 2.
+
+Fixed problem that prevented remote directories from being created by FTP.
+
+New strategy for calculating system uptime under Python 3. Revisits
+issue #428. Alternative to PR #561.
+
+
+4.1.0 05/25/2020
+
+Archive records emitted by the Vantage driver now include the number of wind
+samples per archive interval in field wind_samples.
+
+wee_import can now import WeatherCat monthly .cat files.
+
+Changed the logging configuration dictionary to match the Python documents.
+Thanks to user Graham for figuring this out!
+
+Fixed problem that prevented ws1 driver from working under Python 3. PR #556.
+
+Eliminate use of logging in wee_config, allowing it to be used for installs
+without syslog.
+
+Allow expressions to be used as a datatype when plotting.
+
+Added option 'reuse_ssl' to FTP. This activates a workaround for a bug in the
+Python ftp library that causes long-lived connections to get closed prematurely.
+Works only with Python 3.6 and greater.
+
+The cc3000 driver will automatically reboot the hardware if it stops sending
+observations. PR #549.
+
+Install using setup.py forgot to set WEEWX_ROOT when installing in non-standard
+places. Fixes issue #546.
+
+Fixed bug in ws28xx driver that prevented it from running under Python 3.
+Fixes issue #543.
+
+Changed query strategy for calculating min and max wind vectors, which
+should result in much faster plot generation.
+
+Fixed bug in wmr9x8 driver that prevented it from running under Python 3.
+
+Fixed several bugs in the te923 driver that prevented it from running under
+Python 3.
+
+Added a logging handler for rotating files. See https://bit.ly/2StYSHb for how
+to use it. It is the default for MacOS.
+
+More information if an exception is raised while querying for vantage hardware
+type.
+
+wunderfixer: fixed problem under Python 3 where response was not converted to
+str before attempting to parse the JSON. Option --simulate now requires api_key
+and password, so it can hit the WU.
+
+Fixed problem in te923 driver under Python 3 that caused it to crash.
+
+
+4.0.0 04/30/2020
+
+Ported to Python 3. WeeWX should now run under Python 3.5 and greater, as well
+as Python 2.7. Support for Python 2.5 and 2.6 has been dropped.
+
+New facility for creating new user-defined derived types. See the Wiki article
+https://github.com/weewx/weewx/wiki/WeeWX-V4-user-defined-types
+
+WeeWX now uses the Python 'logging' facility. This means log, formats, and other
+things can now be customized. Fixes issue #353.
+
+Strings appearing in the data stream no longer cause a TypeError if they can be
+converted to a number.
+
+Strings can now be accumulated and extracted in the accumulators, making it
+possible to include them in the database schemas.
+
+The utility wee_reports now loads services, allowing it to use user-supplied
+extensions. Fixes issue #95.
+
+New default schema ("wview_extended") that offers many new types. The old schema
+is still supported. Fixes issue #115.
+
+Optional, more flexible, way of specifying schemas for the daily summaries. The
+old way is still supported.
+
+The install process now offers to register a user's station with weewx.com.
+
+The package MySQL-python, which we used previously, is not always available on
+Python 3. Ported the MySQL code to use the package mysqlclient as an
+alternative.
+
+The default for WOW no longer throttles posting frequency (the default used to
+be no more than once every 15 minutes).
+
+Added new aggregate types minsum, minsumtime, sum_le. PR #382.
+
+Unit group group_distance is now a first-class group.
+
+Added new tag $python_version.
+
+Ported to Python2-PyMySQL package on OpenSUSE.
+
+Added new aggregation types 'first' (similar to 'last'), 'diff' (the difference
+between last and first value in the aggregation interval), and 'tderiv' (the
+difference divided by the time difference).
+
+Created new unit group 'group_energy2', defined as watt-seconds. Useful for high
+resolution energy monitors.
+
+An observation type known to the system, but not in a record, will now return a
+proper ValueTuple, rather than UnknownType.
+
+Type "stormStart" was added to the unit system. Fixes issue #380.
+
+Added new aggregation type 'growdeg'. Similar to 'heatdeg', or 'cooldeg', it
+measures growing degree-days. Basically, cooldeg, but with a different base.
+Fixes issue #367. Thanks to user Clay Jackson for guidance!
+
+Ported OS uptime to OpenBSD. Fixes issue #428. Thanks to user Jeff Ross!
+
+Catch SSL certificate errors in uploaders. Retry after an hour. Fixes issue
+#413.
+
+Wunderfixer has been ported to the new WU API. This API requires an API key,
+which you can get from the WU. Put it in weewx.conf. Added option --upload-only.
+Thanks to user Leon Shaner! Fixes issues #414 and #445.
+
+Wee_import can now import Weather Display monthly log files.
+
+Fixed problem where sub-sections DegreeDays and Trend were located under the
+wrong weewx.conf section. Fixes issue #432. Thanks to user mph for spotting
+this!
+
+Added new parameters to the Weather Underground uploader. Fixes issue #435.
+
+Added new air quality types pm1_0, pm2_5, and pm10_0 to the unit system. Added
+new unit microgram_per_meter_cubed. Added new unit group, group_concentration.
+
+Plist for the Mac launcher now includes a log file for stderr.
+
+Night-day transition in plots now uses shortest travel distance around color
+wheel to minimize extra colors. Fixes issue #457. Thanks to user Alex Edwards!
+
+Fixed bug that causes plots to fail when both min and max are zero. Fixes issue
+#463.
+
+Fixed problem with sqlite driver that can lead to memory growth. See PR #467.
+Thanks to user Rich Bell!
+
+Fixed bug that caused windrun to be calculated wrongly under METRICWX unit
+system. Fixes issue #452.
+
+If a bad value of 'interval' is encountered in a record, the program will simply
+ignore it, rather than stopping. Address issue #375.
+
+Change in how the archive timespan is calculated in the engine. This allows
+oddball archive intervals. Fixes issue #469.
+
+NOAA reports are now more tolerant of missing data. Fixes issue #300.
+
+Use of strftime() date and time format codes in template file names is now
+supported as an alternative to the legacy 'YYYY', 'MM' and 'DD'. The legacy
+codes continue to be supported for backwards compatibility. Fixes issue #415.
+
+New --calc-missing action added to wee_database to calculate and store derived
+observations.
+
+wee_import now calculates missing derived observations once all imported data
+has been saved to archive. Fixes issue #443.
+
+wee_import now tolerates periods that contain no source data. Fixes issue #499.
+
+wee_import now accepts strings representing cardinal, intercardinal and
+secondary intercardinal directions in CSV imports. Partially fixes issue #238.
+
+The field delimiter character may now be defined for wee_import CSV imports.
+
+Ignore historical records if the timestamp is in the future.
+
+Can now recover from MariaDB-specific database connection error 1927.
+
+Changed the name of the unit "litre" to "liter", making its spelling more
+consistent with "meter". The spelling "litre" is still accepted.
+
+Systemd type changed from "simple" to "forking". Thanks to user Jaap de Munck
+for figuring this one out!
+
+The configuration file is now an optional argument when running weewxd directly.
+This means most users will be able to use the simple command line 'sudo weewxd'.
+
+Use correct log path for netbsd and openbsd in logger setup.
+
+StdWXCalculate no longer calculates anything by default. Instead, types to be
+calculated must be listed in weewx.conf. See the Upgrade Guide.
+
+setup.py install no longer saves the old 'bin' subdirectory. Instead, it simply
+overwrites it.
+
+Support for the vantage LOOP2 packet format. Fixes issue #374.
+
+The vantage driver now allows 3 retries per read, rather than per
+archive interval.
+
+
+3.9.2 07/14/2019
 
 StdPrint now explicitly converts loop and archive fields to UTF-8 before
 printing. This means unicode strings can now be included in loop and archive
@@ -10,9 +256,11 @@ fields.
 Fix WMR300 driver so that it will reject (corrupt) logger records if they
 have negative interval (similar to issue #375).
 
-Added 'rain_warning' option in wmr300 driver to remind station owners to reset
+Added 'rain_warning' option in WMR300 driver to remind station owners to reset
 the rain counter when the rain counter exceeds a threshold (default is 90%).
 Thanks to weewx user Leon!
+
+Added several other debug tools to the WMR300 driver. PR #402.
 
 Wunderfixer now keeps going if a post does not satisfy [[Essentials]].
 Fixes issue #329 (again).
@@ -52,6 +300,33 @@ timtsm! PR #396.
 windrun is now calculated on a per archive period basis, instead
 of for the whole day. Thanks to user 'windcrusader'!
 PR #399. Fixes issue #250.
+
+Wunderfixer has new option to set socket timeout. This is to compensate
+for WU "capacity issues". Thanks to user Leon! See PR #403.
+
+Fixed bug in WS1 driver that caused crash if rain_total was None.
+
+If a file user/schemas.py still exists (a relic from V2.7 and earlier), it
+is renamed to user/schemas.py.old. Fixes issue #54.
+
+V3.x test suites now use same data set as V4.x, minimizing the chance of
+a false negative when switching versions.
+
+Fixed fine offset driver to warn about (and skip) historical data that have
+zero for interval.
+
+Correct rounding problems for rain and other types when posting to CWOP.
+Fixes issue #431. Thanks to user ls4096!
+
+Fixed problem that can cause an exception with restx services that do not use
+the database manager. See commit 459ccb1.
+
+Sending a SIGTERM signal to weewxd now causes it to exit with status
+128 + signal#. PR #442. Thanks to user sshambar!
+
+Fixed bug that could cause WMR200 packets with a timestamp between startup
+and the minimum interval to have an interval length of zero. Fixes
+issue #375 (again!).
 
 
 3.9.1 02/06/2019
@@ -374,14 +649,14 @@ Report the firmware version when initializing the cc3000 driver.
 Fixed bug in vantage driver that would prevent console wake up during
 retries when fetching EEPROM vales. Thanks to user Dan Begallie!
 
-The vantage driver no longer emits values for non-existent sensors. 
+The vantage driver no longer emits values for non-existent sensors.
 As a result, LOOP and archive packets are now much smaller. If this works
 out, other drivers will follow suit. Partial fix of issue #175.
 
-The vantage driver now emits the barometer trend in LOOP packets as 
+The vantage driver now emits the barometer trend in LOOP packets as
 field 'trendIcon'.
 
-The engine now logs locale. Additional information if a TERM signal is 
+The engine now logs locale. Additional information if a TERM signal is
 received.
 
 Removed the site-specific "Pond" extensions from the Standard skin.
@@ -1075,6 +1350,9 @@ default (previously, software record generation was the default).
 Fixed bug in WS28xx driver the prevented reading of historical records
 when starting with an empty database.
 
+The database schemas are now their own package. The schema that was in
+user/schemas.py can now be found in weewx/schemas/wview.py.
+
 
 2.7.0 10/11/14
 
@@ -1514,14 +1792,14 @@ Numerous fixes to the WMR200 driver. Now has a "watchdog" thread.
 All of the device drivers have now been put in their own package
 'weewx.drivers' to keep them together. Many have also had name changes
 to make them more consistent:
-	OLD                        NEW
-	VantagePro.py (Vantage)    vantage.py (Vantage)
-	WMR918.py     (WMR-918)    wmr9x8.py  (WMR9x8)
-	wmrx.py       (WMR-USB)    wmr100.py  (WMR100)
-	
-	new (experimental) drivers:
-	wmr200.py (WMR200)
-	ws28xx.py (WS28xx)
+    OLD                        NEW
+    VantagePro.py (Vantage)    vantage.py (Vantage)
+    WMR918.py     (WMR-918)    wmr9x8.py  (WMR9x8)
+    wmrx.py       (WMR-USB)    wmr100.py  (WMR100)
+
+    new (experimental) drivers:
+    wmr200.py (WMR200)
+    ws28xx.py (WS28xx)
 
 The interface to the device driver "loader" function has changed slightly. It
 now takes a second parameter, "engine". Details are in the Upgrading doc.
@@ -1670,7 +1948,7 @@ Internally, the databases can now use either Metric units, or US Customary.
 NB: you cannot switch systems in the middle of a database. You have to
 stick to one or other other. However, the utility config_database.py does
 have a reconfigure option that allows copying the data to a new database,
-performing the conversion along the way. See the Customizing Guide.
+2performing the conversion along the way. See the Customizing Guide.
 
 You can now use "mmHg" as a unit of pressure.
 

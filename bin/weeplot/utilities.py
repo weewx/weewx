@@ -1,11 +1,14 @@
 #
-#    Copyright (c) 2009-2015 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2019 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
 """Various utilities used by the plot package.
 
 """
+from __future__ import absolute_import
+from __future__ import print_function
+from six.moves import zip
 try:
     from PIL import ImageFont, ImageColor
 except ImportError:
@@ -14,56 +17,62 @@ import datetime
 import time
 import math
 
+import six
+
 import weeplot
     
 def scale(fmn, fmx, prescale = (None, None, None), nsteps = 10):
     """Calculates an appropriate min, max, and step size for scaling axes on a plot.
-    
+
     The origin (zero) is guaranteed to be on an interval boundary.
-    
+
     fmn: The minimum data value
-    
+
     fmx: The maximum data value. Must be greater than or equal to fmn.
 
-    prescale: A 3-way tuple. A non-None min or max value (positions 0 and 1, 
+    prescale: A 3-way tuple. A non-None min or max value (positions 0 and 1,
     respectively) will be fixed to that value. A non-None interval (position 2)
-    be at least as big as that value. Default = (None, None, None) 
-    
+    be at least as big as that value. Default = (None, None, None)
+
     nsteps: The nominal number of desired steps. Default = 10
-    
+
     Returns: a three-way tuple. First value is the lowest scale value, second the highest.
     The third value is the step (increment) between them.
 
     Examples:
-    >>> print "(%.1f, %.1f, %.1f)" % scale(1.1, 12.3, (0, 14, 2))
+    >>> print("(%.1f, %.1f, %.1f)" % scale(1.1, 12.3, (0, 14, 2)))
     (0.0, 14.0, 2.0)
-    >>> print "(%.1f, %.1f, %.1f)" % scale(1.1, 12.3)
+    >>> print("(%.1f, %.1f, %.1f)" % scale(1.1, 12.3))
     (0.0, 14.0, 2.0)
-    >>> print "(%.1f, %.1f, %.1f)" % scale(-1.1, 12.3)
+    >>> print("(%.1f, %.1f, %.1f)" % scale(-1.1, 12.3))
     (-2.0, 14.0, 2.0)
-    >>> print "(%.1f, %.1f, %.1f)" % scale(-12.1, -5.3)
+    >>> print("(%.1f, %.1f, %.1f)" % scale(-12.1, -5.3))
     (-13.0, -5.0, 1.0)
-    >>> print "(%.2f, %.2f, %.2f)" % scale(10.0, 10.0)
+    >>> print("(%.2f, %.2f, %.2f)" % scale(10.0, 10.0))
     (10.00, 10.10, 0.01)
-    >>> print "(%.2f, %.4f, %.4f)" % scale(10.0, 10.001)
+    >>> print("(%.2f, %.4f, %.4f)" % scale(10.0, 10.001))
     (10.00, 10.0010, 0.0001)
-    >>> print "(%.2f, %.2f, %.2f)" % scale(10.0, 10.0+1e-8)
+    >>> print("(%.2f, %.2f, %.2f)" % scale(10.0, 10.0+1e-8))
     (10.00, 10.10, 0.01)
-    >>> print "(%.2f, %.2f, %.2f)" % scale(0.0, 0.05, (None, None, .1), 10)
+    >>> print("(%.2f, %.2f, %.2f)" % scale(0.0, 0.05, (None, None, .1), 10))
     (0.00, 1.00, 0.10)
-    >>> print "(%.2f, %.2f, %.2f)" % scale(16.8, 21.5, (None, None, 2), 10)
+    >>> print("(%.2f, %.2f, %.2f)" % scale(16.8, 21.5, (None, None, 2), 10))
     (16.00, 36.00, 2.00)
-    >>> print "(%.2f, %.2f, %.2f)" % scale(16.8, 21.5, (None, None, 2), 4)
+    >>> print("(%.2f, %.2f, %.2f)" % scale(16.8, 21.5, (None, None, 2), 4))
     (16.00, 22.00, 2.00)
-    >>> print "(%.2f, %.2f, %.2f)" % scale(0.0, 0.21, (None, None, .02))
+    >>> print("(%.2f, %.2f, %.2f)" % scale(0.0, 0.21, (None, None, .02)))
     (0.00, 0.22, 0.02)
-    >>> print "(%.2f, %.2f, %.2f)" % scale(100.0, 100.0, (None, 100, None))
+    >>> print("(%.2f, %.2f, %.2f)" % scale(100.0, 100.0, (None, 100, None)))
     (99.00, 100.00, 0.20)
-    >>> print "(%.2f, %.2f, %.2f)" % scale(100.0, 100.0, (100, None, None))
+    >>> print("(%.2f, %.2f, %.2f)" % scale(100.0, 100.0, (100, None, None)))
     (100.00, 101.00, 0.20)
+    >>> print("(%.2f, %.2f, %.2f)" % scale(100.0, 100.0, (0, None, None)))
+    (0.00, 120.00, 20.00)
+    >>> print("(%.2f, %.2f, %.2f)" % scale(0.0, 0.2, (None, 100, None)))
+    (0.00, 100.00, 20.00)
 
     """
-    
+
     # If all the values are hard-wired in, then there's nothing to do:
     if None not in prescale:
         return prescale
@@ -75,7 +84,7 @@ def scale(fmn, fmx, prescale = (None, None, None), nsteps = 10):
     fmn = float(fmn)
     fmx = float(fmx)
 
-    if fmx < fmn :
+    if fmx < fmn:
         raise weeplot.ViolatedPrecondition("scale() called with max value less than min value")
 
     # In case minscale and/or maxscale was specified, clip fmn and fmx to make sure they stay within bounds
@@ -85,57 +94,67 @@ def scale(fmn, fmx, prescale = (None, None, None), nsteps = 10):
         fmn = max(fmn, minscale)
 
     # Check the special case where the min and max values are equal.
-    if _rel_approx_equal(fmn, fmx) :
+    if _rel_approx_equal(fmn, fmx):
         # They are equal. We need to move one or the other to create a range, while
         # being careful that the resultant min/max stay within the interval [minscale, maxscale]
+        # Pick a step out value based on min_interval if the user has supplied one. Otherwise,
+        # arbitrarily pick 0.1
+        if min_interval is not None:
+            step_out = min_interval * nsteps
+        else:
+            step_out = 0.01 * round(abs(fmx), 2) if fmx else 0.1
         if maxscale is not None:
             # maxscale if fixed. Move fmn.
-            fmn = fmx - 0.01 * abs(fmx)
+            fmn = fmx - step_out
         elif minscale is not None:
             # minscale if fixed. Move fmx.
-            fmx = fmn + 0.01 * abs(fmx)
+            fmx = fmn + step_out
         else:
             # Both can float. Check special case where fmn and fmx are zero
-            if fmn == 0.0 :
+            if fmn == 0.0:
                 fmx = 1.0
-            else :
+            else:
                 # Just arbitrarily move one. Say, fmx.
-                fmx = fmn + .01*abs(fmn)
+                fmx = fmn + step_out
 
     if minscale is not None and maxscale is not None:
         if maxscale < minscale:
             raise weeplot.ViolatedPrecondition("scale() called with prescale max less than min")
         frange = maxscale - minscale
+    elif minscale is not None:
+        frange = fmx - minscale
+    elif maxscale is not None:
+        frange = maxscale - fmn
     else:
         frange = fmx - fmn
     steps = frange / nsteps
-    
+
     mag = math.floor(math.log10(steps))
     magPow = math.pow(10.0, mag)
-    magMsd = math.floor(steps/magPow + 0.5)
-    
+    magMsd = math.floor(steps / magPow + 0.5)
+
     if magMsd > 5.0:
         magMsd = 10.0
     elif magMsd > 2.0:
         magMsd = 5.0
-    else : # magMsd > 1.0
+    else:  # magMsd > 1.0
         magMsd = 2
 
     # This will be the nominal interval size
     interval = magMsd * magPow
-    
+
     # Test it against the desired minimum, if any
     if min_interval is None or interval >= min_interval:
         # Either no min interval was specified, or its safely
-        # less than the chosen interval. 
+        # less than the chosen interval.
         if minscale is None:
             minscale = interval * math.floor(fmn / interval)
-    
+
         if maxscale is None:
             maxscale = interval * math.ceil(fmx / interval)
 
     else:
-    
+
         # The request for a minimum interval has kicked in.
         # Sometimes this can make for a plot with just one or
         # two intervals in it. Adjust the min and max values
@@ -175,53 +194,53 @@ def scaletime(tmin_ts, tmax_ts) :
     >>> from weeutil.weeutil import timestamp_to_string as to_string
     >>> time_ts = time.mktime(time.strptime("2013-05-17 08:00", "%Y-%m-%d %H:%M"))
     >>> xmin, xmax, xinc = scaletime(time_ts - 24*3600, time_ts)
-    >>> print to_string(xmin), to_string(xmax), xinc
+    >>> print(to_string(xmin), to_string(xmax), xinc)
     2013-05-16 09:00:00 PDT (1368720000) 2013-05-17 09:00:00 PDT (1368806400) 10800
 
     Example 2: 24 hours on a 3-hour boundary
     >>> time_ts = time.mktime(time.strptime("2013-05-17 09:00", "%Y-%m-%d %H:%M"))
     >>> xmin, xmax, xinc = scaletime(time_ts - 24*3600, time_ts)
-    >>> print to_string(xmin), to_string(xmax), xinc
+    >>> print(to_string(xmin), to_string(xmax), xinc)
     2013-05-16 09:00:00 PDT (1368720000) 2013-05-17 09:00:00 PDT (1368806400) 10800
 
     Example 3: 24 hours on a non-hour boundary
     >>> time_ts = time.mktime(time.strptime("2013-05-17 09:01", "%Y-%m-%d %H:%M"))
     >>> xmin, xmax, xinc = scaletime(time_ts - 24*3600, time_ts)
-    >>> print to_string(xmin), to_string(xmax), xinc
+    >>> print(to_string(xmin), to_string(xmax), xinc)
     2013-05-16 12:00:00 PDT (1368730800) 2013-05-17 12:00:00 PDT (1368817200) 10800
 
     Example 4: 27 hours
     >>> time_ts = time.mktime(time.strptime("2013-05-17 07:45", "%Y-%m-%d %H:%M"))
     >>> xmin, xmax, xinc = scaletime(time_ts - 27*3600, time_ts)
-    >>> print to_string(xmin), to_string(xmax), xinc
+    >>> print(to_string(xmin), to_string(xmax), xinc)
     2013-05-16 06:00:00 PDT (1368709200) 2013-05-17 09:00:00 PDT (1368806400) 10800
 
     Example 5: 3 hours on a 15 minute boundary
     >>> time_ts = time.mktime(time.strptime("2013-05-17 07:45", "%Y-%m-%d %H:%M"))
     >>> xmin, xmax, xinc = scaletime(time_ts - 3*3600, time_ts)
-    >>> print to_string(xmin), to_string(xmax), xinc
+    >>> print(to_string(xmin), to_string(xmax), xinc)
     2013-05-17 05:00:00 PDT (1368792000) 2013-05-17 08:00:00 PDT (1368802800) 900
 
     Example 6: 3 hours on a non-15 minute boundary
     >>> time_ts = time.mktime(time.strptime("2013-05-17 07:46", "%Y-%m-%d %H:%M"))
     >>> xmin, xmax, xinc = scaletime(time_ts - 3*3600, time_ts)
-    >>> print to_string(xmin), to_string(xmax), xinc
+    >>> print(to_string(xmin), to_string(xmax), xinc)
     2013-05-17 05:00:00 PDT (1368792000) 2013-05-17 08:00:00 PDT (1368802800) 900
 
     Example 7: 12 hours
     >>> time_ts = time.mktime(time.strptime("2013-05-17 07:46", "%Y-%m-%d %H:%M"))
     >>> xmin, xmax, xinc = scaletime(time_ts - 12*3600, time_ts)
-    >>> print to_string(xmin), to_string(xmax), xinc
+    >>> print(to_string(xmin), to_string(xmax), xinc)
     2013-05-16 20:00:00 PDT (1368759600) 2013-05-17 08:00:00 PDT (1368802800) 3600
 
     Example 8: 15 hours
     >>> time_ts = time.mktime(time.strptime("2013-05-17 07:46", "%Y-%m-%d %H:%M"))
     >>> xmin, xmax, xinc = scaletime(time_ts - 15*3600, time_ts)
-    >>> print to_string(xmin), to_string(xmax), xinc
+    >>> print(to_string(xmin), to_string(xmax), xinc)
     2013-05-16 17:00:00 PDT (1368748800) 2013-05-17 08:00:00 PDT (1368802800) 7200
     """
     if tmax_ts <= tmin_ts :
-        raise weeplot.ViolatedPrecondition, "scaletime called with tmax <= tmin"
+        raise weeplot.ViolatedPrecondition("scaletime called with tmax <= tmin")
     
     tdelta = tmax_ts - tmin_ts
     
@@ -451,14 +470,14 @@ def xy_seq_line(x, y, maxdx=None):
     >>> x=[ 1,  2,  3]
     >>> y=[10, 20, 30]
     >>> for xy_seq in xy_seq_line(x,y):
-    ...     print xy_seq
+    ...     print(xy_seq)
     [(1, 10), (2, 20), (3, 30)]
     
     Example 2
     >>> x=[0,  1,    2,  3,    4,    5,  6,  7,   8,    9]
     >>> y=[0, 10, None, 30, None, None, 60, 70,  80, None]
     >>> for xy_seq in xy_seq_line(x,y):
-    ...     print xy_seq
+    ...     print(xy_seq)
     [(0, 0), (1, 10)]
     [(3, 30)]
     [(6, 60), (7, 70), (8, 80)]
@@ -467,19 +486,19 @@ def xy_seq_line(x, y, maxdx=None):
     >>> x=[  0 ]
     >>> y=[None]
     >>> for xy_seq in xy_seq_line(x,y):
-    ...     print xy_seq
+    ...     print(xy_seq)
     
     Example 4
     >>> x=[   0,    1,    2]
     >>> y=[None, None, None]
     >>> for xy_seq in xy_seq_line(x,y):
-    ...     print xy_seq
+    ...     print(xy_seq)
     
     Example 5 (using gap)
     >>> x=[0,  1,  2,  3, 5.1,  6,  7,   8,  9]
     >>> y=[0, 10, 20, 30,  50, 60, 70,  80, 90]
     >>> for xy_seq in xy_seq_line(x,y,2):
-    ...     print xy_seq
+    ...     print(xy_seq)
     [(0, 0), (1, 10), (2, 20), (3, 30)]
     [(5.1, 50), (6, 60), (7, 70), (8, 80), (9, 90)]
     """
@@ -504,13 +523,13 @@ def pickLabelFormat(increment):
     """Pick an appropriate label format for the given increment.
     
     Examples:
-    >>> print pickLabelFormat(1)
+    >>> print(pickLabelFormat(1))
     %.0f
-    >>> print pickLabelFormat(20)
+    >>> print(pickLabelFormat(20))
     %.0f
-    >>> print pickLabelFormat(.2)
+    >>> print(pickLabelFormat(.2))
     %.1f
-    >>> print pickLabelFormat(.01)
+    >>> print(pickLabelFormat(.01))
     %.2f
     """
 
@@ -526,16 +545,23 @@ def pickLabelFormat(increment):
     return "%%.%df" % decimal_places
 
 def get_font_handle(fontpath, *args):
-    font_key = (fontpath, args)
+    """Get a handle for a font path, caching the results"""
+
+    # For Python 2, we want to make sure fontpath is a string, not unicode
+    fontpath_str = six.ensure_str(fontpath) if fontpath is not None else None
+
+    # Look for the font in the cache
+    font_key = (fontpath_str, args)
     if font_key in get_font_handle.fontCache:
         return get_font_handle.fontCache[font_key]
+
     font = None
-    if fontpath is not None :
+    if fontpath_str is not None :
         try :
-            if fontpath.endswith('.ttf'):
-                font = ImageFont.truetype(fontpath, *args)
+            if fontpath_str.endswith('.ttf'):
+                font = ImageFont.truetype(fontpath_str, *args)
             else :
-                font = ImageFont.load_path(fontpath)
+                font = ImageFont.load_path(fontpath_str)
         except IOError :
             pass
     
@@ -550,22 +576,23 @@ def _rel_approx_equal(x, y, rel=1e-7):
     """Relative test for equality.
     
     Example 
-    >>> _rel_approx_equal(1.23456, 1.23457)
+    >>> rel_approx_equal(1.23456, 1.23457)
     False
-    >>> _rel_approx_equal(1.2345678, 1.2345679)
+    >>> rel_approx_equal(1.2345678, 1.2345679)
     True
-    >>> _rel_approx_equal(0.0, 0.0)
+    >>> rel_approx_equal(0.0, 0.0)
     True
-    >>> _rel_approx_equal(0.0, 0.1)
+    >>> rel_approx_equal(0.0, 0.1)
     False
-    >>> _rel_approx_equal(0.0, 1e-9)
+    >>> rel_approx_equal(0.0, 1e-9)
     False
-    >>> _rel_approx_equal(1.0, 1.0+1e-9)
+    >>> rel_approx_equal(1.0, 1.0+1e-9)
     True
-    >>> _rel_approx_equal(1e8, 1e8+1e-3)
+    >>> rel_approx_equal(1e8, 1e8+1e-3)
     True
     """
     return abs(x-y) <= rel*max(abs(x), abs(y))
+
 
 def tobgr(x):
     """Convert a color to little-endian integer.  The PIL wants either
@@ -574,24 +601,23 @@ def tobgr(x):
     by ImageColor for example #RGB, #RRGGBB, hslHSL as well as standard color
     names from X11 and CSS3.  See ImageColor for complete set of colors.
     """
-    if isinstance(x, basestring):
+    if isinstance(x, six.string_types):
         if x.startswith('0x'):
             return int(x, 0)
         try:
             (r,g,b) = ImageColor.getrgb(x)
             return r + g*256 + b*256*256
-        except :
-            pass
-        try:
-            return int(x)
         except ValueError:
-            pass
-        raise ValueError("Unknown color specifier: '%s'.  Colors must be specified as 0xBBGGRR, #RRGGBB, or standard color names." % x)
+            try:
+                return int(x)
+            except ValueError:
+                raise ValueError("Unknown color specifier: '%s'.  "
+                                 "Colors must be specified as 0xBBGGRR, #RRGGBB, or standard color names." % x)
     return x
 
 if __name__ == "__main__":
     import doctest
 
     if not doctest.testmod().failed:
-        print "PASSED"
+        print("PASSED")
     

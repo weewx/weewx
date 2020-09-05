@@ -1,0 +1,75 @@
+These are notes regarding packaging of weewx for debian systems.
+mwall 09apr2020
+
+For the transition from python2 to python3, we introduce a new package
+python3-weewx.  This contains the python3-compatible weewx4 implementation.
+Those who need python2 can continue with the weewx packages for as long as
+weewx supports python2.
+
+There is one control file for python2 and a different control file for python3.
+The primary reason for this is that the dependencies for python2 have different
+names from those for python3
+
+It is not possible to have a single weewx installation that will work for both
+python2 and python3.  Python ensures that the compiled code will not conflict
+(.pyc files for python2 versus __pycache__ directories for python3), however
+the weewx entry points have a shebang specifies the python version.
+
+The weewx packaging uses relatively low-level debian packaging tools.  It uses
+some of the debhelper python rules.  It does not use the python tools for
+creating deb packages.
+
+One reason for this approach is that WeeWX is not just another python package
+that is plopped into the python library tree.  WeeWX prefers instead to live
+on its own as a standalone application, with everything in a single directory
+tree (or in system-specific trees such as /var/lib, /etc).
+
+The packaging process does the following:
+
+1) use setup.py sdist to generate the 'official' source tree (setup.py)
+2) expand that source tree into the build space (makefile)
+3) copy the parts of the build tree into the debian staging tree (debian/rules)
+4) invoke debian packaging tool to create the package (dpkg-buildpackage)
+
+WeeWX was traditionally packaged in a single deb file with this naming:
+
+weewx_x.y.z-n_all.deb
+
+As of 2020, the packaging files now generate two different deb files:
+
+weewx_x.y.z-n_all.deb
+python3-weewx_x.y.z-n_all.deb
+
+These packages are identical other than the shebang in the weewx entry points
+and the dependencies.
+
+
+References:
+
+debian python policy:
+https://www.debian.org/doc/packaging-manuals/python-policy/
+
+debian library style guide:
+https://wiki.debian.org/Python/LibraryStyleGuide
+
+debian pybuild:
+https://wiki.debian.org/Python/Pybuild
+
+basic debian lore:
+https://www.debian.org/doc/debian-policy/ch-source.html
+
+what does dh_auto do for python?
+dh_auto_configure -
+dh_auto_build     - ./setup.py build
+dh_auto_test      -
+dh_auto_install   - ./setup.py install --blah
+dh_auto_clean     - ./setup.py clean
+
+override_dh_auto_install:
+        ./setup.py install --no-prompt --prefix=build
+
+targets:  clean, binary, binary-arch, binary-indep, build, build-arch, build-indep
+
+useful examples:
+https://www.wefearchange.org/2012/01/ebian-package-for-python-2-and-3.html
+https://www.v13.gr/blog/?p=412

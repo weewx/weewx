@@ -51,6 +51,8 @@ Notes about Sensor Pressure vs. Station Pressure:
   for home weather stations, and the station pressure and the sensor pressure
   can be treated as equivalent."""
 
+from __future__ import absolute_import
+from __future__ import print_function
 import math
 
 def FToC(value): 
@@ -350,7 +352,7 @@ class TWxUtilsUS(object):
                            algorithm='aaMADIS'):
         """Example:
         >>> p = TWxUtilsUS.StationToAltimeter(24.692, 5431, 'aaASOS')
-        >>> print "Station pressure to altimeter = %.3f" % p
+        >>> print("Station pressure to altimeter = %.3f" % p)
         Station pressure to altimeter = 30.153
         """
         Result = HPaToIn(TWxUtils.StationToAltimeter(InToHPa(pressureIn),
@@ -364,8 +366,8 @@ class TWxUtilsUS(object):
                                   algorithm='paManBar'):
         """Example:
         >>> p = TWxUtilsUS.StationToSeaLevelPressure(24.692, 5431, 59.0, 50.5, 40.5)
-        >>> print "Station to SLP = %.3f" % p
-        Station to SLP = 30.153
+        >>> print("Station to SLP = %.3f" % p)
+        Station to SLP = 30.006
         """
         Result = pressureIn * TWxUtilsUS.PressureReductionRatio(pressureIn,
                                                                 elevationFt,
@@ -396,8 +398,8 @@ class TWxUtilsUS(object):
                                   algorithm='paManBar'):
         """Example:
         >>> p = TWxUtilsUS.SeaLevelToStationPressure(30.153, 5431, 59.0, 50.5, 40.5)
-        >>> print "Station to SLP = %.3f" % p
-        Station to SLP = 24.692
+        >>> print("Station to SLP = %.3f" % p)
+        Station to SLP = 24.813
         """
         Result = pressureIn / TWxUtilsUS.PressureReductionRatio(pressureIn,
                                                                 elevationFt,
@@ -525,4 +527,4 @@ if __name__ == "__main__":
     import doctest
 
     if not doctest.testmod().failed:
-        print "PASSED"
+        print("PASSED")

@@ -9,28 +9,34 @@
 
 # PATH should only include /usr/* if it runs after the mountnfs.sh script
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
+
+NAME=weewx
+
 WEEWX_BIN=/home/weewx/bin/weewxd
 WEEWX_CFG=/home/weewx/weewx.conf
-NAME=weewx
-PIDFILE=/var/run/$NAME.pid
-LOCKFILE=/var/lock/subsys/$NAME
-DAEMON_ARGS="--daemon --pidfile=$PIDFILE $WEEWX_CFG"
+WEEWX_PID=/var/run/$NAME.pid
+WEEWX_LOCK=/var/lock/subsys/$NAME
 
-# Source function library.
-. /etc/init.d/functions
+# Read configuration variable file if it is present
+[ -r /etc/default/$NAME ] && . /etc/default/$NAME
 
 # Exit if the package is not installed
 [ -x "$WEEWX_BIN" ] || exit 0
+
+DAEMON_ARGS="--daemon --pidfile=$WEEWX_PID $WEEWX_CFG"
+
+# Source function library.
+. /etc/init.d/functions
 
 # See how we were called.
 case "$1" in
   start)
         # Start daemon.
         echo -n $"Starting $NAME: "
-        daemon --pidfile $PIDFILE $WEEWX_BIN $DAEMON_ARGS
+        daemon --pidfile $WEEWX_PID $WEEWX_BIN $DAEMON_ARGS
         RETVAL=$?
         echo
-        [ $RETVAL -eq 0 ] && touch $LOCKFILE
+        [ $RETVAL -eq 0 ] && touch $WEEWX_LOCK
         ;;
   stop)
         # Stop daemon.
@@ -38,7 +44,7 @@ case "$1" in
         killproc $NAME
         RETVAL=$?
         echo
-        [ $RETVAL -eq 0 ] && rm -f $LOCKFILE
+        [ $RETVAL -eq 0 ] && rm -f $WEEWX_LOCK
         ;;
   status)
         echo -n $"Checking for $NAME: "
@@ -57,7 +63,7 @@ case "$1" in
         echo
         ;;
   condrestart)
-        [ -f $LOCKFILE ] && restart || :
+        [ -f $WEEWX_LOCK ] && restart || :
         ;;
   *)
         echo $"Usage: $0 {start|stop|status|restart|reload}"

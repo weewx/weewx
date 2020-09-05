@@ -18,13 +18,16 @@
 
 # TODO: figure out battery level for each sensor
 # TODO: figure out signal strength for each sensor
-# TODO: figure out archive interval
 
-# FIXME: figure out unknown bytes in history packet
-
-# FIXME: decode the 0xdb packets
-
-# FIXME: warn if altitude in pressure packet does not match weewx altitude
+# FIXME: These all seem to offer low value return and unlikely to be done.
+#  In decreasing order of usefulness:
+#   1. warn if altitude in pressure packet does not match weewx altitude
+#   2. If rain is being accumulated when weewx is stopped, and we need to retrieve
+#      the history record then the current code returns None for the rain in
+#      the earliest new time interval and the rain increment for that time will
+#      get added to and reported at the next interval.    
+#   3. figure out unknown bytes in history packet (probably nothing useful)
+#   4. decode the 0xdb (forecast) packets
 
 """Driver for Oregon Scientific WMR300 weather stations.
 
@@ -114,7 +117,7 @@ examples of 72/73 initialization packets:
 ---- cameron's extra notes:
 
 Station will free-run transmitting data for about 100s without seeing an ACK.
-a6 will always be followed by 91 ca 45 42 but final byte may be 0, 20, 32, 67,
+a6 will always be followed by 91 ca 45 52 but final byte may be 0, 20, 32, 67,
 8b, d6, df, or...
     0 - when first packet after connection or program startup.
     It looks like the final byte is just the last character that was previously
@@ -777,7 +780,9 @@ examples:
 """
 
 from __future__ import with_statement
-import syslog
+from __future__ import absolute_import
+from __future__ import print_function
+import logging
 import time
 import usb
 
@@ -785,15 +790,18 @@ import weewx.drivers
 import weewx.wxformulas
 from weeutil.weeutil import timestamp_to_string
 
+log = logging.getLogger(__name__)
+
 DRIVER_NAME = 'WMR300'
-DRIVER_VERSION = '0.19rc7'
+DRIVER_VERSION = '0.33'
 
 DEBUG_COMM = 0
 DEBUG_PACKET = 0
 DEBUG_COUNTS = 0
 DEBUG_DECODE = 0
-DEBUG_HISTORY = 0
-DEBUG_RAIN = 1
+DEBUG_HISTORY = 1
+DEBUG_RAIN = 0
+DEBUG_TIMING = 1
 
 
 def loader(config_dict, _):
@@ -802,21 +810,6 @@ def loader(config_dict, _):
 def confeditor_loader():
     return WMR300ConfEditor()
 
-
-def logmsg(level, msg):
-    syslog.syslog(level, 'wmr300: %s' % msg)
-
-def logdbg(msg):
-    logmsg(syslog.LOG_DEBUG, msg)
-
-def loginf(msg):
-    logmsg(syslog.LOG_INFO, msg)
-
-def logerr(msg):
-    logmsg(syslog.LOG_ERR, msg)
-
-def logcrt(msg):
-    logmsg(syslog.LOG_CRIT, msg)
 
 def _fmt_bytes(data):
     return ' '.join(['%02x' % x for x in data])
@@ -929,21 +922,26 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
     # the rain counter.
     DEFAULT_RAIN_WARNING = 90
 
+    # if DEBUG_COUNTS is set then this defines how many seconds elapse between each print/reset of the counters
+    COUNT_SUMMARY_INTERVAL = 20
+
     def __init__(self, **stn_dict):
-        loginf('driver version is %s' % DRIVER_VERSION)
-        loginf('usb info: %s' % get_usb_info())
-        self.model = stn_dict.get('model', 'WMR300')
+        log.info('driver version is %s' % DRIVER_VERSION)
+        log.info('usb info: %s' % get_usb_info())
+        self.model = stn_dict.get('model', DRIVER_NAME)
         self.sensor_map = dict(self.DEFAULT_MAP)
         if 'sensor_map' in stn_dict:
             self.sensor_map.update(stn_dict['sensor_map'])
-        loginf('sensor map is %s' % self.sensor_map)
+        log.info('sensor map is %s' % self.sensor_map)
         hlimit = int(stn_dict.get('history_limit', self.DEFAULT_HIST_LIMIT))
+        # clear history seems to fail if tried from below 5%
+        # 1 day at 1 min intervals is ~4.5%
         if hlimit < 5:
             hlimit = 5
         if hlimit > 95:
             hlimit = 95
-        self.history_limit = hlimit
-        loginf('history limit is %d%%' % self.history_limit)
+        self.history_limit_index = Station.get_history_pct_as_index(hlimit)
+        log.info('history limit is %d%% at index %d' % (hlimit, self.history_limit_index) )
         frac = int(stn_dict.get('rain_warning', self.DEFAULT_RAIN_WARNING))
         self.rain_warn = frac / 100.0
 
@@ -957,17 +955,20 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
         DEBUG_DECODE = int(stn_dict.get('debug_decode', DEBUG_DECODE))
         global DEBUG_HISTORY
         DEBUG_HISTORY = int(stn_dict.get('debug_history', DEBUG_HISTORY))
+        global DEBUG_TIMING
+        DEBUG_TIMING = int(stn_dict.get('debug_timing', DEBUG_TIMING))
         global DEBUG_RAIN
         DEBUG_RAIN = int(stn_dict.get('debug_rain', DEBUG_RAIN))
 
         self.logged_rain_counter = 0
         self.logged_history_usage = 0
-        self.log_interval = 24 * 3600 # how often to log station status
+        self.log_interval = 24 * 3600 # how often to log station status, in seconds
 
         self.heartbeat = 20 # how often to send a6 messages, in seconds
         self.history_retry = 60 # how often to retry history, in seconds
         self.last_rain = None # last rain total
         self.last_a6 = 0 # timestamp of last 0xa6 message
+        self.data_since_heartbeat = 0       # packets of loop data seen
         self.last_65 = 0 # timestamp of last 0x65 message
         self.last_7x = 0 # timestamp of last 0x7x message
         self.last_record = Station.HISTORY_START_REC - 1
@@ -975,12 +976,14 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
         self.station = Station()
         self.station.open()
         pkt = self.init_comm()
-        loginf("communication established: %s" % pkt)
-        self.latest_index = pkt['latest_index']
+        log.info("communication established: %s" % pkt)
+        self.history_end_index = pkt['history_end_index']
         self.magic0 = pkt['magic0']
         self.magic1 = pkt['magic1']
         self.mystery0 = pkt['mystery0']
         self.mystery1 = pkt['mystery1']
+        if DEBUG_COUNTS:
+            self.last_countsummary = time.time()
 
     def closePort(self):
         self.station.close()
@@ -1005,12 +1008,10 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
                 buf = None
                 self.station.flush_read_buffer()
                 if DEBUG_COMM:
-                    loginf("init_comm: send initial heartbeat 0xa6")
-                cmd = [0xa6, 0x91, 0xca, 0x45, 0x52]
-                self.station.write(cmd)
-                self.last_a6 = time.time()
+                    log.info("init_comm: send initial heartbeat 0xa6")
+                self.send_heartbeat()
                 if DEBUG_COMM:
-                    loginf("init_comm: try to read 0x57")
+                    log.info("init_comm: try to read 0x57")
                 read_cnt = 0
                 while read_cnt < max_read_tries:
                     buf = self.station.read()
@@ -1021,15 +1022,12 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
                     raise ProtocolError("failed to read pkt 0x57")
                 pkt = Station._decode_57(buf)
                 if DEBUG_COMM:
-                    loginf("init_comm: send initialization 0x73")
+                    log.info("init_comm: send initialization 0x73")
                 cmd = [0x73, 0xe5, 0x0a, 0x26, pkt['magic0'], pkt['magic1']]
-#                cmd = [0x72, 0xa9, 0xc1, 0x60, 0x52, 0x00]
-#                cmd = [0x73, 0xe5, 0x0a, 0x26, 0x88, 0x8b]
-#                cmd = [0x73, 0xe5, 0x0a, 0x26, 0x0e, 0xc1]
                 self.station.write(cmd)
                 self.last_7x = time.time()
                 if DEBUG_COMM:
-                    loginf("init_comm: try to read 0x41")
+                    log.info("init_comm: try to read 0x41")
                 read_cnt = 0
                 while read_cnt < max_read_tries:
                     buf = self.station.read()
@@ -1039,12 +1037,12 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
                 if not buf or buf[0] != 0x41:
                     raise ProtocolError("failed to read ack 0x41 for pkt 0x73")
                 if DEBUG_COMM:
-                    loginf("initialization completed in %s tries" % cnt)
+                    log.info("initialization completed in %s tries" % cnt)
                 return pkt
             except ProtocolError as e:
                 if DEBUG_COMM:
-                    loginf("init_comm: failed attempt %d of %d: %s" %
-                           (cnt, max_tries, e))
+                    log.info("init_comm: failed attempt %d of %d: %s" %
+                             (cnt, max_tries, e))
             time.sleep(0.1)
         raise ProtocolError("Init comm failed after %d tries" % max_tries)
 
@@ -1068,18 +1066,17 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
             cnt += 1
             try:
                 if DEBUG_HISTORY:
-                    loginf("init history attempt %d of %d" % (cnt, max_tries))
+                    log.info("init history attempt %d of %d" % (cnt, max_tries))
                 # eliminate anything that might be in the buffer
                 self.station.flush_read_buffer()
                 # send the sequence for initiating history packets
                 if clear_logger:
                     cmd = [0xb3, 0x59, 0x0a, 0x17, 0x01, 0xeb]
                     self.station.write(cmd)
-                    start_rec = Station.HISTORY_START_REC
+                    # a partial read is sufficient. No need to read stuff we are not going to save
+                    start_rec = Station.clip_index( self.history_end_index - 1200 )
                 else:
-                    cmd = [0xa6, 0x91, 0xca, 0x45, 0x52, 0x8b]
-                    self.station.write(cmd)
-                    self.last_a6 = time.time()
+                    self.send_heartbeat()
                     cmd = [0x65, 0x19, 0xe5, 0x04, 0x52, 0x8b]
                     self.station.write(cmd)
                     self.last_65 = time.time()
@@ -1099,7 +1096,7 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
                 # send the request to start history packets
                 nxt = Station.clip_index(start_rec)
                 if DEBUG_HISTORY:
-                    loginf("init history cmd=0x%02x rec=%d" % (cmd[0], nxt))
+                    log.info("init history cmd=0x%02x rec=%d" % (cmd[0], nxt))
                 cmd = [0xcd, 0x18, 0x30, 0x62, _hi(nxt), _lo(nxt)]
                 self.station.write(cmd)
 
@@ -1108,13 +1105,13 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
                 # sequence.  so just drop into the normal reading loop and
                 # process whatever comes.
                 if DEBUG_HISTORY:
-                    loginf("init history completed after attempt %d of %d" %
-                           (cnt, max_tries))
-                return                
+                    log.info("init history completed after attempt %d of %d" %
+                             (cnt, max_tries))
+                return
             except ProtocolError as e:
                 if DEBUG_HISTORY:
-                    loginf("init_history: failed attempt %d of %d: %s" %
-                           (cnt, max_tries, e))
+                    log.info("init_history: failed attempt %d of %d: %s" %
+                             (cnt, max_tries, e))
             time.sleep(0.1)
         raise ProtocolError("Init history failed after %d tries" % max_tries)
 
@@ -1130,7 +1127,7 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
             cnt += 1
             try:
                 if DEBUG_HISTORY:
-                    loginf("fini history attempt %d of %d" % (cnt, max_tries))
+                    log.info("finish history attempt %d of %d" % (cnt, max_tries))
                 # eliminate anything that might be in the buffer
                 self.station.flush_read_buffer()
                 # send packet 0x35
@@ -1139,145 +1136,242 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
                 self.station.write(cmd)
                 # do NOT wait for an ACK
                 if DEBUG_HISTORY:
-                    loginf("init history completed after attempt %d of %d" %
-                           (cnt, max_tries))
+                    log.info("finish history completed after attempt %d of %d" %
+                             (cnt, max_tries))
                 return
             except ProtocolError as e:
                 if DEBUG_HISTORY:
-                    loginf("fini history failed attempt %d of %d: %s" %
-                           (cnt, max_tries, e))
+                    log.info("finish history failed attempt %d of %d: %s" %
+                             (cnt, max_tries, e))
             time.sleep(0.1)
         raise ProtocolError("Finish history failed after %d tries" % max_tries)
 
     def dump_history(self):
-        loginf("dump history is disabled")
-#        loginf("dump history")
-#        for rec in self.get_history(time.time(), clear_logger=True):
-#            pass
+        log.info("dump history")
+        if DEBUG_HISTORY:
+            reread_start_time = time.time()
+        for rec in self.get_history(time.time(), clear_logger=True):
+            pass
+        if DEBUG_HISTORY:
+            reread_duration = time.time() - reread_start_time
+            log.info( "History clear completed in %.1f sec" % reread_duration )
 
     def get_history(self, since_ts, clear_logger=False):
-        if self.latest_index is None:
-            loginf("read history skipped: index has not been set")
+        if self.history_end_index is None:
+            log.info("read history skipped: index has not been set")
             return
-        if self.latest_index < 1:
+        if self.history_end_index < 1:
             # this should never happen.  if it does, then either no 0x57 packet
             # was received or the index provided by the station was bogus.
-            logerr("read history failed: bad index: %s" % self.latest_index)
+            log.error("read history failed: bad index: %s" % self.history_end_index)
             return
 
-        loginf("reading records since %s (last_index=%s latest_index=%s)" %
-               (timestamp_to_string(since_ts),
-                self.last_record, self.latest_index))
+        log.info("%s records since %s (last_index=%s history_end_index=%s)" %
+                 ("Clearing" if clear_logger else "Reading",
+                  timestamp_to_string(since_ts) if since_ts is not None else "the start",
+                  self.last_record, self.history_end_index))
         self.init_history(clear_logger)
         half_buf = None
         last_ts = None
         processed = 0
+        loop_ignored = 0
+        state = "reading history"
+            # there is sometimes a series of bogus history records reported
+            # these are to keep a track of them
+        bogus_count = 0
+        bogus_first = 0
+        bogus_last = 0
+        # since_ts of None implies DB just created, so read all...
+        if since_ts is None:
+            since_ts = 0
+
         while True:
             try:
                 buf = self.station.read()
                 if buf:
-                    # the message length is 64 bytes, but historical records
-                    # are 128 bytes.  so we have to assemble the two 64-byte
+                    # The message length is 64 bytes, but historical records
+                    # are 128 bytes.  So we have to assemble the two 64-byte
                     # parts of each historical record into a single 128-byte
-                    # message for processing.  hopefully we do not get any
+                    # message for processing.  We have to assume we do not get any
                     # non-historical records interspersed between parts.
+                    # This code will fail if any user has 7 or 8
+                    # temperature sensors installed, as it is relying on seeing
+                    # 0x7f in byte 64, which just means "no data"
                     if buf[0] == 0xd2:
+                        pktlength = buf[1]
+                        if pktlength != 128:
+                            raise WMR300Error("History record unexpected length: assumed 128, found %d" % pktlength )
                         half_buf = buf
                         buf = None
+                        # jump immediately to read the 2nd half of the packet
+                        # we don't want other possibilities intervening
+                        continue
                     elif buf[0] == 0x7f and half_buf is not None:
                         buf = half_buf + buf
                         half_buf = None
-                if buf and buf[0] == 0xd2:
-                    next_record = Station.get_record_index(buf)
-                    if next_record != self.last_record + 1:
-                        loginf("missing record: skipped from %d to %d" %
-                               (self.last_record, next_record))
-                    self.last_record = next_record
-                    ts = Station._extract_ts(buf[4:9])
-                    if ts is not None and ts > since_ts:
-                        pkt = Station.decode(buf)
-                        packet = self.convert_historical(pkt, ts, last_ts)
-                        last_ts = ts
-                        if 'interval' in packet:
+                    if buf[0] == 0xd2:
+                        next_record = Station.get_record_index(buf)
+                        if last_ts is not None and next_record != self.last_record + 1:
+                            log.info("missing record: skipped from %d to %d" %
+                                     (self.last_record, next_record))
+                        self.last_record = next_record
+                        ts = Station._extract_ts(buf[4:9])
+                        if ts is None:
+                            if bogus_count == 0 :
+                                bogus_first = next_record
+                            bogus_count += 1
+                            bogus_last = next_record
                             if DEBUG_HISTORY:
-                                loginf("historical record: %s: %s" %
-                                       (pkt['index'], packet))
-                            processed += 1
-                            yield packet
-                    elif ts is not None and DEBUG_HISTORY:
-                        loginf("skip record %s (%s)" %
-                               (next_record, timestamp_to_string(ts)))
-                if buf and buf[0] == 0x57:
-                    self.latest_index = Station.get_latest_index(buf)
-                    if DEBUG_HISTORY:
-                        loginf("got packet 0x57: latest_index=%s" %
-                               self.latest_index)
-                if buf and buf[0] in [0xd3, 0xd4, 0xd5, 0xd6, 0xdb, 0xdc]:
-                    # ignore any packets other than history records.  this
-                    # means there will be no current data while the history
-                    # is being read.
-                    if DEBUG_HISTORY:
-                        loginf("ignored packet type 0x%2x" % buf[0])
-                    # do not ACK data packets.  the PC software does send ACKs
-                    # here, but they are ignored anyway.  so we just ignore.
-                    #cmd = [0x41, 0x43, 0x4b, buf[0], buf[7]]
-                    #self.stations.write(cmd)
-                if time.time() - self.last_a6 > self.heartbeat:
-                    if DEBUG_HISTORY:
-                        loginf("request station status: %s" % self.last_record)
-                    cmd = [0xa6, 0x91, 0xca, 0x45, 0x52]
-                    self.station.write(cmd)
-                    self.last_a6 = time.time()
+                                log.info("Bogus historical record index: %d " % (next_record))
+                                    #log.info("    content: %s" % _fmt_bytes(buf))
+                        else:
+                            if ts > since_ts:
+                                pkt = Station.decode(buf)
+                                packet = self.convert_historical(pkt, ts, last_ts)
+                                last_ts = ts
+                                if 'interval' in packet:
+                                    if DEBUG_HISTORY:
+                                        log.info("New historical record for %s: %s: %s" %
+                                                 (timestamp_to_string(ts), pkt['index'], packet))
+                                    processed += 1
+                                    yield packet
+                            else:
+                                last_ts = ts
 
-                msg = "count=%s last_index=%s latest_index=%s" % (
-                    processed, self.last_record, self.latest_index)
-                if self.last_record + 1 >= self.latest_index:
-                    loginf("get history complete: %s" % msg)
-                    break
-                if buf and DEBUG_HISTORY:
-                    loginf("get history in progress: %s" % msg)
+                    elif buf[0] == 0x57:
+                        self.history_end_index = Station.get_history_end_index(buf)
+                        msg = " count=%s updated; last_index rcvd=%s; final_index=%s; state = %s" % (
+                            processed, self.last_record, self.history_end_index, state)
+                        if state == "wait57":
+                            log.info("History read completed: %s" % msg)
+                            break
+                        else:
+                            log.info("History read in progress: %s" % msg)
+
+                    elif buf[0] in [0xd3, 0xd4, 0xd5, 0xd6, 0xdb, 0xdc]:
+                        # ignore any packets other than history records.  this
+                        # means there will be no current data while the history
+                        # is being read.
+                        loop_ignored += 1
+                        if DEBUG_HISTORY:
+                            log.info("ignored packet type 0x%2x" % buf[0])
+                        # do not ACK data packets.  the PC software does send ACKs
+                        # here, but they are ignored anyway.  so we just ignore.
+                    else:
+                        log.error("get_history: unexpected packet, content: %s" % _fmt_bytes(buf))
+                        
+                if self.last_record + 1 >= self.history_end_index :
+                    if state == "reading history":
+                        if DEBUG_HISTORY:
+                            msg = "count=%s kept, last_received=%s final=%s" % (
+                                processed, self.last_record, self.history_end_index )
+                            log.info("History read nearly complete: %s; state=%s" % (msg, state) )
+                        state = "finishing"
+
+                if (state == "finishing") or (time.time() - self.last_a6 > self.heartbeat):              
+                    if DEBUG_HISTORY:
+                        log.info("request station status at index: %s; state: %s" %
+                               (self.last_record, state ) )
+                    self.send_heartbeat()
+                    if state == "finishing" :
+                        # It is possible that another history packet has been created between the
+                        # most recent 0x57 status and now. So, we have to stay in the loop
+                        # to read the possible next packet.
+                        # Evidence suggests that such history packet will arrive before the
+                        # 0x57 reply to this request, so presumably it was already in some output queue.
+                        state = "wait57"
+
+
             except usb.USBError as e:
                 raise weewx.WeeWxIOError(e)
             except DecodeError as e:
-                loginf("genLoopPackets: %s" % e)
+                log.info("get_history: %s" % e)
             time.sleep(0.001)        
+        if loop_ignored > 0 :
+            log.info( "During history read, %d loop data packets were ignored" % loop_ignored )
+        if bogus_count > 0 :
+            log.info( "During history read, %d bogus entries found from %d to %d" %
+                      (bogus_count, bogus_first, bogus_last))
         self.finish_history()
 
     def genLoopPackets(self):
+
         while True:
             try:
+                read_enter_time = time.time()
                 buf = self.station.read()
+                read_return_delta = time.time() - read_enter_time
                 if buf:
                     if buf[0] in [0xd3, 0xd4, 0xd5, 0xd6, 0xdb, 0xdc]:
                         # compose ack for most data packets
-                        cmd = [0x41, 0x43, 0x4b, buf[0], buf[7]]
+                        # cmd = [0x41, 0x43, 0x4b, buf[0], buf[7]]
                         # do not bother to send the ACK - console does not care
                         #self.station.write(cmd)
                         # we only care about packets with loop data
                         if buf[0] in [0xd3, 0xd4, 0xd5, 0xd6]:
                             pkt = Station.decode(buf)
+                            self.data_since_heartbeat += 1
                             packet = self.convert_loop(pkt)
+                            if DEBUG_COUNTS:
+                                if "Loop" in self.station.recv_counts:
+                                    self.station.recv_counts["Loop"] += 1
+                                else:
+                                    self.station.recv_counts["Loop"] = 1
+                            if DEBUG_TIMING:
+                                yield_rtn_time = time.time()
                             yield packet
+                            if DEBUG_TIMING:
+                                yield_return_delta = time.time() - yield_rtn_time
+                                if yield_return_delta > 5:
+                                    log.info( "Yield delayed for = %d s" % yield_return_delta  )
                     elif buf[0] == 0x57:
-                        self.latest_index = Station.get_latest_index(buf)
+                        self.history_end_index = Station.get_history_end_index(buf)
                         if time.time() - self.logged_history_usage > self.log_interval:
-                            pct = Station.get_history_usage(self.latest_index)
-                            loginf("history buffer at %.1f%%" % pct)
+                            pct = Station.get_history_usage_pct(self.history_end_index)
+                            log.info("history buffer at %.2f%% (%d)" % (pct, self.history_end_index))
                             self.logged_history_usage = time.time()
-                if time.time() - self.last_a6 > self.heartbeat:
-                    cmd = [0xa6, 0x91, 0xca, 0x45, 0x52]
-                    self.station.write(cmd)
-                    self.last_a6 = time.time()
-                if self.latest_index is not None:
-                    pct = Station.get_history_usage(self.latest_index)
-                    if pct >= self.history_limit:
+                if DEBUG_TIMING and read_return_delta > 5:
+                    log.info( "USB Read delayed for = %d s" % read_return_delta  )
+
+                if DEBUG_COUNTS:
+                    now = time.time()
+                    # we just print a summary each chosen interval
+                    if (now - self.last_countsummary)  > self.COUNT_SUMMARY_INTERVAL:
+                        Station.print_count( "read", self.station.recv_counts )
+                        self.station.recv_counts.clear()
+                        Station.print_count( "write", self.station.send_counts )
+                        self.station.send_counts.clear()
+                        self.last_countsummary = now
+
+                time_since_heartbeat = time.time() - self.last_a6
+                if time_since_heartbeat > self.heartbeat:
+                    if DEBUG_TIMING and self.data_since_heartbeat < 10 :
+                        log.info( "Loop data packets in heartbeat interval = %d" % self.data_since_heartbeat )
+                    needs_restart = False
+                    if time_since_heartbeat > 60:
+                        log.error( "Excessive heartbeat delay: %ds, restarting" % (time_since_heartbeat) )
+                        needs_restart = True
+                    if self.data_since_heartbeat <= 0 :
+                        log.error( "No loop data in heartbeat interval,  restarting" )
+                        needs_restart = True
+
+                    if needs_restart:
+                        # I think the 0x73 starts the data transmission, but not sure if the
+                        # a6 / 73 order is important.
+                        cmd = [0x73, 0xe5, 0x0a, 0x26, self.magic0, self.magic1 ]
+                        self.station.write(cmd)
+
+
+                    self.send_heartbeat()
+                if self.history_end_index is not None:
+                    if self.history_end_index >= self.history_limit_index:
                         # if the logger usage exceeds the limit, clear it
                         self.dump_history()
-                        self.latest_index = None
+                        self.history_end_index = None
             except usb.USBError as e:
                 raise weewx.WeeWxIOError(e)
             except (DecodeError, ProtocolError) as e:
-                loginf("genLoopPackets: %s" % e)
+                log.info("genLoopPackets: %s" % e)
             time.sleep(0.001)
 
     def genStartupRecords(self, since_ts):
@@ -1287,7 +1381,7 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
     def convert(self, pkt, ts):
         # if debugging packets, log everything we got
         if DEBUG_PACKET:
-            loginf("raw packet: %s" % pkt)
+            log.info("raw packet: %s" % pkt)
         # timestamp and unit system are the same no matter what
         p = {'dateTime': ts, 'usUnits': weewx.METRICWX}
         # map hardware names to the requested database schema names
@@ -1296,25 +1390,31 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
                 p[label] = pkt[self.sensor_map[label]]
         # single variable to track last_rain assumes that any historical reads
         # will happen before any loop reads, and no historical reads will
-        # happen after any loop reads.  otherwise double-counting of rain
-        # events could happen.
+        # happen after any loop reads.  Such double-counting of rain
+        # events is avoided by deliberately ignoring all loop packets during history read.
         if 'rain_total' in pkt:
             p['rain'] = self.calculate_rain(pkt['rain_total'], self.last_rain)
             if DEBUG_RAIN and pkt['rain_total'] != self.last_rain:
-                loginf("rain=%s rain_total=%s last_rain=%s" %
-                       (p['rain'], pkt['rain_total'], self.last_rain))
+                log.info("rain=%s rain_total=%s last_rain=%s" %
+                         (p['rain'], pkt['rain_total'], self.last_rain))
             self.last_rain = pkt['rain_total']
             if pkt['rain_total'] == Station.MAX_RAIN_MM:
                 if time.time() - self.logged_rain_counter > self.log_interval:
-                    loginf("rain counter at maximum, reset required")
+                    log.info("rain counter at maximum, reset required")
                     self.logged_rain_counter = time.time()
             if pkt['rain_total'] >= Station.MAX_RAIN_MM * self.rain_warn:
                 if time.time() - self.logged_rain_counter > self.log_interval:
-                    loginf("rain counter is above warning level, reset recommended")
+                    log.info("rain counter is above warning level, reset recommended")
                     self.logged_rain_counter = time.time()
         if DEBUG_PACKET:
-            loginf("converted packet: %s" % p)
+            log.info("converted packet: %s" % p)
         return p
+
+    def send_heartbeat( self ):
+        cmd = [0xa6, 0x91, 0xca, 0x45, 0x52]
+        self.station.write(cmd)
+        self.last_a6 = time.time()
+        self.data_since_heartbeat = 0
 
     def convert_historical(self, pkt, ts, last_ts):
         p = self.convert(pkt, ts)
@@ -1323,11 +1423,13 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
             if x > 0:
                 p['interval'] = x
             else:
-                loginf("ignoring record: bad interval %s (%s)" % (x, p))
+                log.info("ignoring record: bad interval %s (%s)" % (x, p))
         return p
 
     def convert_loop(self, pkt):
         p = self.convert(pkt, int(time.time() + 0.5))
+        if DEBUG_HISTORY and self.history_end_index is not None:
+            p['rxCheckPercent'] = float(self.history_end_index)  # fake value as easiest way to return it.
         if 'pressure' in p:
             # cache any pressure-related values
             for x in ['pressure', 'barometer']:
@@ -1344,12 +1446,10 @@ class WMR300Driver(weewx.drivers.AbstractDevice):
             if newtotal >= oldtotal:
                 delta = newtotal - oldtotal
             else:
-                loginf("rain counter decrement detected: new=%s old=%s" %
-                       (newtotal, oldtotal))
+                log.info("rain counter decrement detected: new=%s old=%s" % (newtotal, oldtotal))
                 delta = None
         else:
-            loginf("possible missed rain event: new=%s old=%s" %
-                   (newtotal, oldtotal))
+            log.info("possible missed rain event: new=%s old=%s" % (newtotal, oldtotal))
             delta = None
         return delta
 
@@ -1398,7 +1498,7 @@ class Station(object):
         self.product_id = prod_id
         self.handle = None
         self.timeout = 500
-        self.interface = 0
+        self.interface = 0          # device has only the one interface
         self.recv_counts = dict()
         self.send_counts = dict()
 
@@ -1443,7 +1543,7 @@ class Station(object):
             try:
                 self.handle.releaseInterface()
             except (ValueError, usb.USBError) as e:
-                logdbg("Release interface failed: %s" % e)
+                log.debug("Release interface failed: %s" % e)
             self.handle = None
 
     def reset(self):
@@ -1455,7 +1555,7 @@ class Station(object):
         buf = self.handle.interruptRead(
             Station.EP_IN, self.MESSAGE_LENGTH, timeout)
         if DEBUG_COMM:
-            loginf("read: %s" % _fmt_bytes(buf))
+            log.info("read: %s" % _fmt_bytes(buf))
         if DEBUG_COUNTS and count:
             self.update_count(buf, self.recv_counts)
         return buf
@@ -1465,8 +1565,8 @@ class Station(object):
             return self._read(count, timeout)
         except usb.USBError as e:
             if DEBUG_COMM:
-                loginf("read: e.errno=%s e.strerror=%s e.message=%s repr=%s" %
-                       (e.errno, e.strerror, e.message, repr(e)))
+                log.info("read: e.errno=%s e.strerror=%s e.message=%s repr=%s" %
+                         (e.errno, e.strerror, e.message, repr(e)))
             if ignore_timeouts and is_timeout(e):
                 return []
             if ignore_non_errors and is_noerr(e):
@@ -1475,7 +1575,7 @@ class Station(object):
 
     def _write(self, buf):
         if DEBUG_COMM:
-            loginf("write: %s" % _fmt_bytes(buf))
+            log.info("write: %s" % _fmt_bytes(buf))
         # pad with zeros up to the standard message length
         while len(buf) < self.MESSAGE_LENGTH:
             buf.append(0x00)
@@ -1497,14 +1597,14 @@ class Station(object):
     def flush_read_buffer(self):
         """discard anything read from the device"""
         if DEBUG_COMM:
-            loginf("flush buffer")
+            log.info("flush buffer")
         cnt = 0
         buf = self.read(False, 100)
         while buf is not None and len(buf) > 0:
             cnt += len(buf)
             buf = self.read(False, 100)
         if DEBUG_COMM:
-            loginf("flush: discarded %d bytes" % cnt)
+            log.info("flush: discarded %d bytes" % cnt)
         return cnt
 
     # keep track of the message types for debugging purposes
@@ -1512,24 +1612,46 @@ class Station(object):
     def update_count(buf, count_dict):
         label = 'empty'
         if buf and len(buf) > 0:
-            if buf[0] in [0xd3, 0xd4, 0xd5, 0xd6, 0xdb, 0xdc]:
+            #if buf[0] in [0xd3, 0xd4, 0xd5, 0xd6, 0xdb, 0xdc]:
                 # message type and channel for data packets
-                label = '%02x:%d' % (buf[0], buf[7])
+                #label = '%02x_%d' % (buf[0], buf[7])
+            if buf[0] == 0xd3:
+                # message type and channel for data packets
+                label = 'TH_%d' % (buf[7])
+            elif buf[0] == 0xdc:
+                label = 'THrng_%d' % (buf[7])
+                # ignore this for the moment...
+                return
+            elif buf[0] == 0xd4:
+                label = 'wind'
+            elif buf[0] == 0xd5:
+                label = 'rain'
+            elif buf[0] == 0xd6:
+                label = 'barom'
+            elif buf[0] == 0xdb:
+                label = 'forecast'
             elif (buf[0] in [0x41] and
                   buf[3] in [0xd3, 0xd4, 0xd5, 0xd6, 0xdb, 0xdc]):
                 # message type and channel for data ack packets
-                label = '%02x:%02x:%d' % (buf[0], buf[3], buf[4])
+                # these are no longer sent.
+                label = '%02x_%02x_%d' % (buf[0], buf[3], buf[4])
             else:
                 # otherwise just track the message type
-                label = '%02x' % buf[0]
+                # prefix with x to place at end
+                label = 'x%02x' % buf[0]
         if label in count_dict:
             count_dict[label] += 1
         else:
             count_dict[label] = 1
+        #Station.print_count( "unknown", count_dict)
+
+    # print the count type summary for debugging
+    @staticmethod
+    def print_count( direction, count_dict):
         cstr = []
         for k in sorted(count_dict):
             cstr.append('%s: %s' % (k, count_dict[k]))
-        loginf('counts: %s' % ''.join(cstr))
+        log.info('%s counts; %s' % ( direction, '; '.join(cstr)))
 
     @staticmethod
     def _find_dev(vendor_id, product_id):
@@ -1537,8 +1659,8 @@ class Station(object):
         for bus in usb.busses():
             for dev in bus.devices:
                 if dev.idVendor == vendor_id and dev.idProduct == product_id:
-                    logdbg('Found station at bus=%s device=%s' %
-                           (bus.dirname, dev.filename))
+                    log.debug('Found station at bus=%s device=%s' %
+                              (bus.dirname, dev.filename))
                     return dev
         return None
 
@@ -1611,14 +1733,24 @@ class Station(object):
         return buf[0] * m
 
     @staticmethod
-    def get_latest_index(buf):
-        # get the index of the most recent history record
+    def get_history_end_index(buf):
+        """ get the index value reported in the 0x57 packet.
+        It is the index of the first free history record,
+        and so is one more than the most recent history record stored in the console
+        """
         if buf[0] != 0x57:
             return None
-        return (buf[17] << 8) + buf[18]
+        idx = (buf[17] << 8) + buf[18]
+        #if idx < Station.HISTORY_START_REC:
+        #    raise WMR300Error("History index: %d below limit of %d" % (idx, Station.HISTORY_START_REC) )
+        #elif idx > Station.HISTORY_MAX_REC:
+        #    raise WMR300Error("History index: %d above limit of %d" % (idx, Station.HISTORY_MAX_REC) )
+        #self.history_pct=Station.get_history_usage( idx )
+        return Station.clip_index(idx)
 
     @staticmethod
     def get_next_index(n):
+        ## this code is currently UNUSED
         # return the index of the record after indicated index
         if n == 0:
             return 0x20
@@ -1645,8 +1777,20 @@ class Station(object):
         return (buf[2] << 8) + buf[3]
 
     @staticmethod
-    def get_history_usage(index):
-        # return history usage as a percentage
+    def get_history_pct_as_index( pct ):
+        # return history buffer index corresponding to a given percentage
+        if pct is None:
+            return Station.HISTORY_START_REC
+        return int(pct * 0.01 * Station.HISTORY_N_RECORDS + Station.HISTORY_START_REC)
+
+    @staticmethod
+    def get_history_usage_pct(index):
+        """ return the console's history buffer use corresponding to the given index expressed as a percent
+        index = index value in console's history buffer
+                normally the next free history location as returned in 0x57 status packet
+        """
+        if index is None:
+            return -1.0
         return 100.0 * float(index - Station.HISTORY_START_REC) / Station.HISTORY_N_RECORDS
 
     @staticmethod
@@ -1654,7 +1798,7 @@ class Station(object):
         try:
             pkt = getattr(Station, '_decode_%02x' % buf[0])(buf)
             if DEBUG_DECODE:
-                loginf('decode: %s %s' % (_fmt_bytes(buf), pkt))
+                log.info('decode: %s %s' % (_fmt_bytes(buf), pkt))
             return pkt
         except IndexError as e:
             raise BadBuffer("cannot decode buffer: %s" % e)
@@ -1674,9 +1818,9 @@ class Station(object):
         pkt['history_cleared'] = (buf[20] == 0x43) # FIXME: verify this
         pkt['mystery0'] = buf[22]
         pkt['mystery1'] = buf[23]
-        pkt['latest_index'] = (buf[17] << 8) + buf[18]
+        pkt['history_end_index'] = Station.get_history_end_index( buf )
         if DEBUG_HISTORY:
-            loginf("history index: %s" % pkt['latest_index'])
+            log.info("history index: %s" % pkt['history_end_index'])
         return pkt
 
     @staticmethod
@@ -1695,7 +1839,7 @@ class Station(object):
         pkt['packet_type'] = 0xd2
         pkt['index'] = Station.get_record_index(buf)
         pkt['ts'] = Station._extract_ts(buf[4:9])
-        for i in range(0, 9):
+        for i in range(9):
             pkt['temperature_%d' % i] = Station._extract_signed(
                 buf[9 + 2 * i], buf[10 + 2 * i], 0.1) # C
             pkt['humidity_%d' % i] = Station._extract_value(
@@ -1816,12 +1960,18 @@ class WMR300ConfEditor(weewx.drivers.AbstractConfEditor):
 
     # The driver to use:
     driver = weewx.drivers.wmr300
+
+    # The console history buffer will be emptied each
+    #    time it gets to this percent full
+    # Allowed range 5 to 95.
+    history_limit = 10
+
 """
 
     def modify_config(self, config_dict):
-        print """
+        print("""
 Setting rainRate, windchill, heatindex calculations to hardware. 
-Dewpoint from hardware is truncated to integer so use software"""
+Dewpoint from hardware is truncated to integer so use software""")
         config_dict.setdefault('StdWXCalculate', {})
         config_dict['StdWXCalculate'].setdefault('Calculations', {})
         config_dict['StdWXCalculate']['Calculations']['rainRate'] = 'hardware'
@@ -1837,12 +1987,17 @@ Dewpoint from hardware is truncated to integer so use software"""
 
 if __name__ == '__main__':
     import optparse
+
     from weeutil.weeutil import to_sorted_string
+    import weewx
+    import weeutil.logger
+
+    weewx.debug = 1
+
+    weeutil.logger.setup('wmr300', {})
 
     usage = """%prog [options] [--help]"""
 
-    syslog.openlog('wmr300', syslog.LOG_PID | syslog.LOG_CONS)
-    syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
     parser = optparse.OptionParser(usage=usage)
     parser.add_option('--version', action='store_true',
                       help='display driver version')
@@ -1853,7 +2008,7 @@ if __name__ == '__main__':
     (options, args) = parser.parse_args()
 
     if options.version:
-        print "%s driver version %s" % (DRIVER_NAME, DRIVER_VERSION)
+        print("%s driver version %s" % (DRIVER_NAME, DRIVER_VERSION))
         exit(0)
 
     driver_dict = {
@@ -1861,15 +2016,16 @@ if __name__ == '__main__':
         'debug_packet': 0,
         'debug_counts': 0,
         'debug_decode': 0,
-        'debug_history': 0,
+        'debug_history': 1,
+        'debug_timing': 0,
         'debug_rain': 0}
     stn = WMR300Driver(**driver_dict)
 
     if options.get_history:
         ts = time.time() - 3600 # get last hour of data
         for pkt in stn.genStartupRecords(ts):
-            print to_sorted_string(pkt)
+            print(to_sorted_string(pkt).encode('utf-8'))
 
     if options.get_current:
         for packet in stn.genLoopPackets():
-            print to_sorted_string(packet)
+            print(to_sorted_string(packet).encode('utf-8'))

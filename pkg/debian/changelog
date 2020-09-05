@@ -1,3 +1,43 @@
+weewx (4.1.1-1) unstable; urgency=low
+  * new upstream release
+ -- Thomas Keffer (Author of weewx) <tkeffer@gmail.com>  Mon, 01 Jun 2020 15:16:57 -0700
+weewx (4.1.0-1) unstable; urgency=low
+  * new upstream release
+ -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Mon, 25 May 2020 15:10:24 -0400
+weewx (4.0.0-1) unstable; urgency=low
+  * new upstream release
+ -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Thu, 30 Apr 2020 11:21:09 -0400
+weewx (4.0.0b18-4) unstable; urgency=low
+  * delete the python3 __pycache__ files as well as python2 .pyc files
+  * build as weewx_x.deb but save as python-weewx_x.deb and python3-weewx_x.deb
+ -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Thu, 09 Apr 2020 20:44:56 -0400
+weewx (4.0.0b18-3) unstable; urgency=low
+  * use weewx instead of python-weewx and python3-weewx
+ -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Thu, 09 Apr 2020 20:44:56 -0400
+weewx (4.0.0b18-2) unstable; urgency=low
+  * separate squeeze and buster repositories with aptly
+ -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Thu, 09 Apr 2020 20:44:56 -0400
+weewx (4.0.0b18-1) unstable; urgency=low
+  * new upstream release
+ -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Thu, 09 Apr 2020 20:44:56 -0400
+weewx (4.0.0b17-1) unstable; urgency=low
+  * new upstream release
+ -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Tue, 31 Mar 2020 10:27:10 -0400
+weewx (4.0.0b13-1) unstable; urgency=low
+  * new upstream release
+ -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Tue, 25 Feb 2020 10:12:11 -0500
+weewx (4.0.0b12-1) unstable; urgency=low
+  * new upstream release
+ -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Sat, 22 Feb 2020 16:05:04 -0500
+weewx (4.0.0b11-1) unstable; urgency=low
+  * new upstream release
+ -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Sun, 02 Feb 2020 09:48:39 -0500
+weewx (4.0.0b6-1) unstable; urgency=low
+  * new upstream release
+ -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Sat, 04 Jan 2020 09:42:26 -0500
+weewx (3.9.2-1) unstable; urgency=low
+  * new upstream release
+ -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Sun, 14 Jul 2019 08:00:08 -0400
 weewx (3.9.1-1) unstable; urgency=low
   * new upstream release
  -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Wed, 06 Feb 2019 08:21:47 -0500

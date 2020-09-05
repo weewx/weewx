@@ -9,7 +9,7 @@ RequiresMountsFor=/home
 [Service]
 ExecStart=/home/weewx/bin/weewxd --daemon --pidfile=/var/run/weewx.pid /home/weewx/weewx.conf
 ExecReload=/bin/kill -HUP $MAINPID
-Type=simple
+Type=forking
 PIDFile=/var/run/weewx.pid
 #User=weewx
 #Group=weewx

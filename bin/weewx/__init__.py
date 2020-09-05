@@ -4,9 +4,10 @@
 #    See the file LICENSE.txt for your full rights.
 #
 """Package weewx, containing modules specific to the weewx runtime engine."""
+from __future__ import absolute_import
 import time
 
-__version__="3.9.2a1"
+__version__="4.1.1"
 
 # Holds the program launch time in unix epoch seconds:
 # Useful for calculating 'uptime.'
@@ -61,9 +62,6 @@ class ViolatedPrecondition(Exception):
 class StopNow(Exception):
     """Exception thrown to stop the engine."""
     
-class UninitializedDatabase(Exception):
-    """Exception thrown when attempting to use an uninitialized database."""
-    
 class UnknownDatabase(Exception):
     """Exception thrown when attempting to use an unknown database."""
 
@@ -76,15 +74,24 @@ class UnknownBinding(Exception):
 class UnitError(ValueError):
     """Exception thrown when there is a mismatch in unit systems."""
 
+class UnknownType(ValueError):
+    """Exception thrown for an unknown observation type"""
+
+class UnknownAggregation(ValueError):
+    """Exception thrown for an unknown aggregation type"""
+
+class CannotCalculate(ValueError):
+    """Exception raised when a type cannot be calculated."""
+
 # =============================================================================
 #                       Possible event types.
 # =============================================================================
 
 class STARTUP(object):
-    """Event issued when the engine first starts up. Services have not been
+    """Event issued when the engine first starts up. Services have been
     loaded."""
 class PRE_LOOP(object):
-    """Event issued just before the main packet loop is started. Services
+    """Event issued just before the main packet loop is entered. Services
     have been loaded."""
 class NEW_LOOP_PACKET(object):
     """Event issued when a new LOOP packet is available. The event contains

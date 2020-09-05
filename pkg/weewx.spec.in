@@ -1,46 +1,74 @@
 # spec for building a weewx rpm for redhat or suse systems
 # License: GPLv3
-# Author: (c) 2013 Matthew Wall
+# Author: (c) 2013-2020 Matthew Wall
 
-# suse
-%if 0%{?suse_version}
-#define relos .suse%{suse_version}
-%define relos .suse
+# the operating system release number is specified externaly, so that we can
+# do cross-release (but not cross-platform) packaging.
+%define os_target OSREL
+
+# suse 12: python2
+%if 0%{?suse_version} && "%{os_target}" == "12"
+%define relos .suse12
 %define platform suse
 %define initdir /etc/systemd/system
-#define initdir /etc/init.d
-%define deps , python-pyserial, python-usb
+%define deps python , python-configobj , python-cheetah , python-imaging , python-pyserial, python-usb
+%define python python
 %define html_root /srv/www/htdocs/weewx
 %endif
+
+# suse 15: python3
+%if 0%{?suse_version} && "%{os_target}" == "15"
+%define relos .suse15
+%define platform suse
+%define initdir /etc/systemd/system
+%define deps python3, python3-setuptools, python3-configobj, python3-Cheetah3, python3-Pillow, python3-pyserial, python3-usb
+%define python python3
+%define html_root /var/www/html/weewx
+%endif
+
+# suse linux enterprise server
 %if 0%{?sles_version}
-#define relos .sles%{sles_version}
 %define relos .sles
 %define platform suse
 %define initdir /etc/systemd/system
 #define initdir /etc/init.d
-%define deps , python-pyserial, python-usb
+%define deps python , python-configobj , python-cheetah , python-imaging , python-pyserial, python-usb
 %define html_root /srv/www/htdocs/weewx
+%define python python
 %endif
 
-# redhat, fedora, centos
-%if "%{_vendor}" == "redhat"
-#define relos %{?dist:%{dist}}
-%define relos .rhel
+# rh7: python2 on redhat, fedora, centos
+%if "%{_vendor}" == "redhat" && "%{os_target}" == "7"
+%define relos .el7
 %define platform redhat
 %define initdir %{_initrddir}
-# on redhat, must install serial and/or usb using easy_install or pip
-%define deps , python-setuptools
+# must install pyserial and pyusb using easy_install or pip
+%define deps python, python-setuptools, python-configobj, python-cheetah, python-imaging
+%define python python2
+%define html_root /var/www/html/weewx
+%endif
+
+# rh8: python3 on redhat, fedora, centos
+%if "%{_vendor}" == "redhat" && "%{os_target}" == "8"
+%define relos .el8
+%define platform redhat
+%define initdir %{_initrddir}
+# must install cheetah from epel-release or using pip3
+%define deps python3, python3-setuptools, python3-configobj, python3-pillow, python3-pyserial, python3-pyusb
+%define python python3
 %define html_root /var/www/html/weewx
 %endif
 
 %global relnum RPMREVISION
 %global release %{relnum}%{?relos:%{relos}}
 
-%global dst_bin_dir %{_datadir}/%{name}
-%global dst_doc_dir %{_defaultdocdir}/%{name}-%{version}
-%global dst_cfg_dir %{_sysconfdir}/%{name}
-%global cfg_file    %{dst_cfg_dir}/weewx.conf
+%global dst_bin_dir  %{_datadir}/%{name}
+%global dst_doc_dir  %{_defaultdocdir}/%{name}-%{version}
+%global dst_cfg_dir  %{_sysconfdir}/%{name}
+%global cfg_file     %{dst_cfg_dir}/weewx.conf
 %global dst_user_dir %{dst_bin_dir}/user
+
+%define entry_points weewxd wee_config wee_database wee_debug wee_device wee_extension wee_import wee_reports wunderfixer
 
 Summary: weather software
 Name: weewx
@@ -50,10 +78,10 @@ Group: Applications/Science
 Source: %{name}-%{version}.tar.gz
 URL: http://www.weewx.com
 License: GPLv3
-Requires: python, python-configobj, python-cheetah, python-imaging, %{deps}
+AutoReqProv: no
+Requires: %{deps}
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-%(%{__id_u} -n)
 BuildArch: noarch
-BuildRequires: python, python-configobj
 
 %description
 weewx interacts with a weather station to produce graphs, reports, and HTML
@@ -72,6 +100,7 @@ mkdir -p %{buildroot}%{dst_bin_dir}
 mkdir -p %{buildroot}%{dst_doc_dir}
 mkdir -p %{buildroot}%{dst_cfg_dir}
 mkdir -p %{buildroot}%{initdir}
+mkdir -p %{buildroot}/etc/default
 
 # copy files from the source tree
 cp -r bin/* %{buildroot}%{dst_bin_dir}
@@ -97,28 +126,29 @@ cat util/systemd/weewx.service | sed \
  -e 's%ExecStart=.*%ExecStart=/usr/bin/weewxd --daemon --pidfile=/var/run/weewx.pid /etc/weewx/weewx.conf%' \
  > %{buildroot}%{initdir}/weewx.service
 %else
-cat util/init.d/weewx.%{platform} | sed \
- -e 's%WEEWX_BIN=.*%WEEWX_BIN=/usr/bin/weewxd%' \
- -e 's%WEEWX_CFG=.*%WEEWX_CFG=/etc/weewx/weewx.conf%' \
- > %{buildroot}%{initdir}/weewx
+cp util/init.d/weewx.%{platform} %{buildroot}%{initdir}/weewx
 %endif
 
-# make a copy of the generic-for-this-platform configuration file
+# make a copy of the generic configuration file
 cp %{buildroot}%{dst_cfg_dir}/weewx.conf %{buildroot}%{dst_cfg_dir}/weewx.conf.dist
 
-# create symlinks to the code entry points
-ln -s ../share/weewx/weewxd %{buildroot}%{_bindir}/weewxd
-ln -s ../share/weewx/wee_config %{buildroot}%{_bindir}/wee_config
-ln -s ../share/weewx/wee_database %{buildroot}%{_bindir}/wee_database
-ln -s ../share/weewx/wee_debug %{buildroot}%{_bindir}/wee_debug
-ln -s ../share/weewx/wee_device %{buildroot}%{_bindir}/wee_device
-ln -s ../share/weewx/wee_extension %{buildroot}%{_bindir}/wee_extension
-ln -s ../share/weewx/wee_import %{buildroot}%{_bindir}/wee_import
-ln -s ../share/weewx/wee_reports %{buildroot}%{_bindir}/wee_reports
-ln -s ../share/weewx/wunderfixer %{buildroot}%{_bindir}/wunderfixer
+# create the entry points
+for f in %{entry_points}; do \
+  cp util/scripts/$f %{buildroot}%{_bindir}/$f; \
+done
 
-# pre-compile the python code
-python -m compileall %{buildroot}%{dst_bin_dir}
+# massage the shebangs in the entry points to pacify fascist redhat build tools
+for f in %{entry_points}; do \
+  sed -i -e 's:/usr/bin/env python:/usr/bin/%{python}:' %{buildroot}/usr/share/weewx/$f; \
+done
+
+# configure application layout
+	cat util/default/weewx | sed \
+ -e 's%WEEWX_PYTHON=.*%WEEWX_PYTHON=%{python}%' \
+ -e 's%WEEWX_BINDIR=.*%WEEWX_BINDIR=/usr/share/weewx%' \
+ -e 's%WEEWX_BIN=.*%WEEWX_BIN=/usr/bin/weewxd%' \
+ -e 's%WEEWX_CFG=.*%WEEWX_CFG=/etc/weewx/weewx.conf%' \
+ > %{buildroot}/etc/default/weewx
 
 %pre
 if [ "$1" = "2" ]; then
@@ -130,11 +160,12 @@ if [ "$1" = "2" ]; then
 fi
 
 %post
-python -m compileall %{dst_bin_dir}
+# pre-compile the python code
+%{python} -m compileall %{dst_bin_dir}
 if [ "$1" = "1" ]; then
   # this is a new installation
   # create a sane configuration file with simulator as the station type
-  /usr/share/weewx/wee_config --install --dist-config=/etc/weewx/weewx.conf.dist --output=/etc/weewx/weewx.conf --driver=weewx.drivers.simulator --no-prompt --no-backup
+  /usr/bin/wee_config --install --dist-config=/etc/weewx/weewx.conf.dist --output=/etc/weewx/weewx.conf --driver=weewx.drivers.simulator --no-prompt --no-backup
   if [ -f /etc/systemd/system/weewx.service ]; then
     systemctl enable weewx
     systemctl start weewx
@@ -150,7 +181,7 @@ elif [ "$1" = "2" ]; then
     echo saving previous config as %{cfg_file}-$OLDVER
     mv %{cfg_file}.prev %{cfg_file}-$OLDVER
     echo merging configs into %{cfg_file}
-    /usr/share/weewx/wee_config --upgrade --config=%{cfg_file}-$OLDVER --dist-config=%{cfg_file}.dist --output=%{cfg_file} --no-prompt --no-backup
+    /usr/bin/wee_config --upgrade --config=%{cfg_file}-$OLDVER --dist-config=%{cfg_file}.dist --output=%{cfg_file} --no-prompt --no-backup
   fi
   # do a full restart not just a HUP
   if [ -f /etc/systemd/system/weewx.service ]; then
@@ -185,6 +216,7 @@ rm -rf %{buildroot}
 %else
   %attr(755,root,root) %{initdir}/weewx
 %endif
+%{_sysconfdir}/default/weewx
 %{dst_bin_dir}/
 %{_bindir}/weewxd
 %{_bindir}/wee_config

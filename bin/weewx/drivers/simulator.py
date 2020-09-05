@@ -6,6 +6,8 @@
 """Console simulator for the weewx weather system"""
 
 from __future__ import with_statement
+from __future__ import absolute_import
+from __future__ import print_function
 import math
 import random
 import time
@@ -15,7 +17,7 @@ import weewx.drivers
 import weeutil.weeutil
 
 DRIVER_NAME = 'Simulator'
-DRIVER_VERSION = "3.1"
+DRIVER_VERSION = "3.2"
 
 def loader(config_dict, engine):
 
@@ -350,4 +352,4 @@ class SimulatorConfEditor(weewx.drivers.AbstractConfEditor):
 if __name__ == "__main__":
     station = Simulator(mode='simulator',loop_interval=2.0)
     for packet in station.genLoopPackets():
-        print weeutil.weeutil.timestamp_to_string(packet['dateTime']), packet
+        print(weeutil.weeutil.timestamp_to_string(packet['dateTime']), packet)

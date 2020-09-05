@@ -37,9 +37,12 @@ it out of the source code, available at:
   https://pyusb.svn.sourceforge.net/svnroot/pyusb/branches/0.4/pyusb.c  
 """
 
+from __future__ import absolute_import
+from __future__ import print_function
+import logging
 import time
 import operator
-import syslog
+from functools import reduce
 
 import usb
 
@@ -47,26 +50,16 @@ import weewx.drivers
 import weewx.wxformulas
 import weeutil.weeutil
 
+log = logging.getLogger(__name__)
+
 DRIVER_NAME = 'WMR100'
-DRIVER_VERSION = "3.3.3"
+DRIVER_VERSION = "3.5.0"
 
 def loader(config_dict, engine):  # @UnusedVariable
     return WMR100(**config_dict[DRIVER_NAME])    
 
 def confeditor_loader():
     return WMR100ConfEditor()
-
-def logmsg(level, msg):
-    syslog.syslog(level, 'wmr100: %s' % msg)
-
-def logdbg(msg):
-    logmsg(syslog.LOG_DEBUG, msg)
-
-def loginf(msg):
-    logmsg(syslog.LOG_INFO, msg)
-
-def logerr(msg):
-    logmsg(syslog.LOG_ERR, msg)
 
 
 class WMR100(weewx.drivers.AbstractDevice):
@@ -145,7 +138,7 @@ class WMR100(weewx.drivers.AbstractDevice):
         [Optional. Default is usb.ENDPOINT_IN + 1]
         """
 
-        loginf('driver version is %s' % DRIVER_VERSION)
+        log.info('Driver version is %s' % DRIVER_VERSION)
         self.model = stn_dict.get('model', 'WMR100')
         # TODO: Consider putting these in the driver loader instead:
         self.record_generation = stn_dict.get('record_generation', 'software')
@@ -159,7 +152,7 @@ class WMR100(weewx.drivers.AbstractDevice):
         self.sensor_map = dict(self.DEFAULT_MAP)
         if 'sensor_map' in stn_dict:
             self.sensor_map.update(stn_dict['sensor_map'])
-        loginf('sensor map is %s' % self.sensor_map)
+        log.info('Sensor map is %s' % self.sensor_map)
         self.last_rain_total = None
         self.devh = None
         self.openPort()
@@ -167,8 +160,8 @@ class WMR100(weewx.drivers.AbstractDevice):
     def openPort(self):
         dev = self._findDevice()
         if not dev:
-            logerr("Unable to find USB device (0x%04x, 0x%04x)" %
-                   (self.vendor_id, self.product_id))
+            log.error("Unable to find USB device (0x%04x, 0x%04x)"
+                      % (self.vendor_id, self.product_id))
             raise weewx.WeeWxIOError("Unable to find USB device")
         self.devh = dev.open()
         # Detach any old claimed interfaces
@@ -180,7 +173,7 @@ class WMR100(weewx.drivers.AbstractDevice):
             self.devh.claimInterface(self.interface)
         except usb.USBError as e:
             self.closePort()
-            logerr("Unable to claim USB interface: %s" % e)
+            log.error("Unable to claim USB interface: %s" % e)
             raise weewx.WeeWxIOError(e)
         
     def closePort(self):
@@ -217,7 +210,7 @@ class WMR100(weewx.drivers.AbstractDevice):
                                 _record[k] = _raw[k]
                             yield _record
             except IndexError:
-                logerr("Malformed packet: %s" % _packet)
+                log.error("Malformed packet: %s" % _packet)
                 
     def genPackets(self):
         """Generate measurement packets. These are 8 to 17 byte long packets containing
@@ -247,16 +240,16 @@ class WMR100(weewx.drivers.AbstractDevice):
                 try:
                     computed_checksum = reduce(operator.iadd, buff[:-2])
                 except TypeError as e:
-                    logdbg("Exception while calculating checksum: %s" % e)
+                    log.debug("Exception while calculating checksum: %s" % e)
                 else:
                     actual_checksum = (buff[-1] << 8) + buff[-2]
                     if computed_checksum == actual_checksum:
                         # Looks good. Yield the packet
                         yield buff
                     else:
-                        logdbg("Bad checksum on buffer of length %d" % len(buff))
+                        log.debug("Bad checksum on buffer of length %d" % len(buff))
                 # Throw away the next character (which will be 0xff):
-                genBytes.next()
+                next(genBytes)
                 # Start with a fresh buffer
                 buff = []
             else:
@@ -289,7 +282,7 @@ class WMR100(weewx.drivers.AbstractDevice):
                                  0x0000000,                                  # index
                                  1000)                                       # timeout
         except usb.USBError as e:
-            logerr("Unable to send USB control message: %s" % e)
+            log.error("Unable to send USB control message: %s" % e)
             # Convert to a Weewx error:
             raise weewx.WakeupError(e)
             
@@ -307,10 +300,10 @@ class WMR100(weewx.drivers.AbstractDevice):
                     yield report[i]
                 nerrors = 0
             except (IndexError, usb.USBError) as e:
-                logdbg("Bad USB report received: %s" % e)
+                log.debug("Bad USB report received: %s" % e)
                 nerrors += 1
                 if nerrors > self.max_tries:
-                    logerr("Max retries exceeded while fetching USB reports")
+                    log.error("Max retries exceeded while fetching USB reports")
                     raise weewx.RetriesExceeded("Max retries exceeded while fetching USB reports")
                 time.sleep(self.wait_before_retry)
     
@@ -439,8 +432,8 @@ class WMR100ConfEditor(weewx.drivers.AbstractConfEditor):
 """
 
     def modify_config(self, config_dict):
-        print """
-Setting rainRate calculation to hardware."""
+        print("""
+Setting rainRate calculation to hardware.""")
         config_dict.setdefault('StdWXCalculate', {})
         config_dict['StdWXCalculate'].setdefault('Calculations', {})
         config_dict['StdWXCalculate']['Calculations']['rainRate'] = 'hardware'

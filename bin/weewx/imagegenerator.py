@@ -6,20 +6,28 @@
 """Generate images for up to an effective date.
 Needs to be refactored into smaller functions."""
 
+from __future__ import absolute_import
 from __future__ import with_statement
-import time
+
 import datetime
-import syslog
+import logging
 import os.path
+import time
+
+from six.moves import zip
 
 import weeplot.genplot
 import weeplot.utilities
+import weeutil.logger
 import weeutil.weeutil
 import weewx.reportengine
 import weewx.units
-from weeutil.config import search_up
-from weeutil.weeutil import to_bool, to_int, to_float
+import weewx.xtypes
+from weeutil.config import search_up, accumulateLeaves
+from weeutil.weeutil import to_bool, to_int, to_float, TimeSpan
 from weewx.units import ValueTuple
+
+log = logging.getLogger(__name__)
 
 # =============================================================================
 #                    Class ImageGenerator
@@ -72,14 +80,13 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
             for plotname in self.image_dict[timespan].sections:
 
                 # Accumulate all options from parent nodes:
-                plot_options = weeutil.weeutil.accumulateLeaves(
-                    self.image_dict[timespan][plotname])
+                plot_options = accumulateLeaves(self.image_dict[timespan][plotname])
 
                 plotgen_ts = gen_ts
                 if not plotgen_ts:
                     binding = plot_options['data_binding']
-                    archive = self.db_binder.get_manager(binding)
-                    plotgen_ts = archive.lastGoodStamp()
+                    db_manager = self.db_binder.get_manager(binding)
+                    plotgen_ts = db_manager.lastGoodStamp()
                     if not plotgen_ts:
                         plotgen_ts = time.time()
 
@@ -100,7 +107,8 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                     try:
                         last_mod = os.path.getmtime(img_file)
                         if t_now - last_mod < stale:
-                            syslog.syslog(syslog.LOG_DEBUG, "imagegenerator: Skip '%s': last_mod=%s age=%s stale=%s" % (img_file, last_mod, t_now - last_mod, stale))
+                            log.debug("Skip '%s': last_mod=%s age=%s stale=%s",
+                                      img_file, last_mod, t_now - last_mod, stale)
                             continue
                     except os.error:
                         pass
@@ -142,7 +150,7 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                 for line_name in self.image_dict[timespan][plotname].sections:
 
                     # Accumulate options from parent nodes.
-                    line_options = weeutil.weeutil.accumulateLeaves(self.image_dict[timespan][plotname][line_name])
+                    line_options = accumulateLeaves(self.image_dict[timespan][plotname][line_name])
 
                     # See what SQL variable type to use for this line. By
                     # default, use the section name.
@@ -158,19 +166,18 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                             # Aggregation specified. Get the interval.
                             aggregate_interval = line_options.as_int('aggregate_interval')
                         except KeyError:
-                            syslog.syslog(syslog.LOG_ERR, "imagegenerator: aggregate interval required for aggregate type %s" % aggregate_type)
-                            syslog.syslog(syslog.LOG_ERR, "imagegenerator: line type %s skipped" % var_type)
+                            log.error("Aggregate interval required for aggregate type %s", aggregate_type)
+                            log.error("Line type %s skipped", var_type)
                             continue
 
                     # Now its time to find and hit the database:
                     binding = line_options['data_binding']
-                    archive = self.db_binder.get_manager(binding)
-                    (start_vec_t, stop_vec_t, data_vec_t) = \
-                            archive.getSqlVectors((minstamp, maxstamp), var_type, aggregate_type=aggregate_type,
-                                                  aggregate_interval=aggregate_interval)
-
-                    if weewx.debug:
-                        assert(len(start_vec_t) == len(stop_vec_t))
+                    db_manager = self.db_binder.get_manager(binding)
+                    start_vec_t, stop_vec_t ,data_vec_t = weewx.xtypes.get_series(var_type,
+                                                                                  TimeSpan(minstamp, maxstamp),
+                                                                                  db_manager,
+                                                                                  aggregate_type=aggregate_type,
+                                                                                  aggregate_interval=aggregate_interval)
 
                     # Get the type of plot ("bar', 'line', or 'vector')
                     plot_type = line_options.get('plot_type', 'line')
@@ -226,7 +233,7 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                             gap_fraction = to_float(line_options.get('line_gap_fraction'))
                         if gap_fraction is not None:
                             if not 0 < gap_fraction < 1:
-                                syslog.syslog(syslog.LOG_ERR, "imagegenerator: Gap fraction %5.3f outside range 0 to 1. Ignored." % gap_fraction)
+                                log.error("Gap fraction %5.3f outside range 0 to 1. Ignored.", gap_fraction)
                                 gap_fraction = None
 
                     # Get the type of line (only 'solid' or 'none' for now)
@@ -260,11 +267,11 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                     image.save(img_file)
                     ngen += 1
                 except IOError as e:
-                    syslog.syslog(syslog.LOG_CRIT, "imagegenerator: Unable to save to file '%s' %s:" % (img_file, e))
+                    log.error("Unable to save to file '%s' %s:", img_file, e)
         t2 = time.time()
 
         if log_success:
-            syslog.syslog(syslog.LOG_INFO, "imagegenerator: Generated %d images for %s in %.2f seconds" % (ngen, self.skin_dict['REPORT_NAME'], t2 - t1))
+            log.info("Generated %d images for report %s in %.2f seconds", ngen, self.skin_dict['REPORT_NAME'], t2 - t1)
 
 def skipThisPlot(time_ts, aggregate_interval, img_file):
     """A plot can be skipped if it was generated recently and has not changed.

@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2016 Tom Keffer <tkeffer@gmail.com> and
+#    Copyright (c) 2009-2019 Tom Keffer <tkeffer@gmail.com> and
 #                            Gary Roderick
 #
 #    See the file LICENSE.txt for your full rights.
@@ -9,20 +9,25 @@ observational data for use with weeimport.
 """
 
 from __future__ import with_statement
+from __future__ import absolute_import
+from __future__ import print_function
 
 # Python imports
 import csv
 import glob
+import io
+import logging
 import os
-import syslog
 import time
 
 # WeeWX imports
-import weeimport
+from . import weeimport
 import weewx
 
 from weeutil.weeutil import timestamp_to_string
 from weewx.units import unit_nicknames
+
+log = logging.getLogger(__name__)
 
 # Dict to lookup rainRate units given rain units
 rain_units_dict = {'inch': 'inch_per_hour', 'mm': 'mm_per_hour'}
@@ -87,13 +92,12 @@ class CumulusSource(weeimport.Source):
                    'cur_app_temp': {'map_to': 'appTemp'}
                    }
 
-    def __init__(self, config_dict, config_path, cumulus_config_dict, import_config_path, options, log):
+    def __init__(self, config_dict, config_path, cumulus_config_dict, import_config_path, options):
 
         # call our parents __init__
         super(CumulusSource, self).__init__(config_dict,
                                             cumulus_config_dict,
-                                            options,
-                                            log)
+                                            options)
 
         # save our import config path
         self.import_config_path = import_config_path
@@ -104,7 +108,7 @@ class CumulusSource(weeimport.Source):
         self.wind_dir = [0, 360]
 
         # field delimiter used in monthly log files, default to comma
-        self.delimiter = cumulus_config_dict.get('delimiter', ',')
+        self.delimiter = str(cumulus_config_dict.get('delimiter', ','))
         # decimal separator used in monthly log files, default to decimal point
         self.decimal = cumulus_config_dict.get('decimal', '.')
 
@@ -143,7 +147,7 @@ class CumulusSource(weeimport.Source):
         # Temperature
         try:
             temp_u = cumulus_config_dict['Units'].get('temperature')
-        except:
+        except KeyError:
             _msg = "No units specified for Cumulus temperature fields in %s." % (self.import_config_path, )
             raise weewx.UnitError(_msg)
         else:
@@ -161,7 +165,7 @@ class CumulusSource(weeimport.Source):
         # Pressure
         try:
             press_u = cumulus_config_dict['Units'].get('pressure')
-        except:
+        except KeyError:
             _msg = "No units specified for Cumulus pressure fields in %s." % (self.import_config_path, )
             raise weewx.UnitError(_msg)
         else:
@@ -174,7 +178,7 @@ class CumulusSource(weeimport.Source):
         # Rain
         try:
             rain_u = cumulus_config_dict['Units'].get('rain')
-        except:
+        except KeyError:
             _msg = "No units specified for Cumulus rain fields in %s." % (self.import_config_path, )
             raise weewx.UnitError(_msg)
         else:
@@ -189,7 +193,7 @@ class CumulusSource(weeimport.Source):
         # Speed
         try:
             speed_u = cumulus_config_dict['Units'].get('speed')
-        except:
+        except KeyError:
             _msg = "No units specified for Cumulus speed fields in %s." % (self.import_config_path, )
             raise weewx.UnitError(_msg)
         else:
@@ -205,58 +209,81 @@ class CumulusSource(weeimport.Source):
         try:
             self.source = cumulus_config_dict['directory']
         except KeyError:
-            raise weewx.ViolatedPrecondition("Cumulus monthly logs directory not specified in '%s'." % import_config_path)
+            _msg = "Cumulus monthly logs directory not specified in '%s'." % import_config_path
+            raise weewx.ViolatedPrecondition(_msg)
+
+        # get the source file encoding, default to utf-8-sig
+        self.source_encoding = self.cumulus_config_dict.get('source_encoding',
+                                                            'utf-8-sig')
+
+        # property holding the current log file name being processed
+        self.file_name = None
 
         # Now get a list on monthly log files sorted from oldest to newest
         month_log_list = glob.glob(self.source + '/?????log.txt')
-        _temp = [(fn, fn[-9:-7], time.strptime(fn[-12:-9],'%b').tm_mon) for fn in month_log_list]
+        _temp = [(fn, fn[-9:-7], time.strptime(fn[-12:-9], '%b').tm_mon) for fn in month_log_list]
         self.log_list = [a[0] for a in sorted(_temp,
-                                              key = lambda el : (el[1], el[2]))]
+                                              key=lambda el: (el[1], el[2]))]
         if len(self.log_list) == 0:
             raise weeimport.WeeImportIOError(
                 "No Cumulus monthly logs found in directory '%s'." % self.source)
 
         # tell the user/log what we intend to do
         _msg = "Cumulus monthly log files in the '%s' directory will be imported" % self.source
-        self.wlog.printlog(syslog.LOG_INFO, _msg)
+        print(_msg)
+        log.info(_msg)
         _msg = "The following options will be used:"
-        self.wlog.verboselog(syslog.LOG_DEBUG, _msg)
+        if self.verbose:
+            print(_msg)
+        log.debug(_msg)
         _msg = "     config=%s, import-config=%s" % (config_path,
                                                      self.import_config_path)
-        self.wlog.verboselog(syslog.LOG_DEBUG, _msg)
+        if self.verbose:
+            print(_msg)
+        log.debug(_msg)
         if options.date:
             _msg = "     date=%s" % options.date
         else:
             # we must have --from and --to
             _msg = "     from=%s, to=%s" % (options.date_from, options.date_to)
-        self.wlog.verboselog(syslog.LOG_DEBUG, _msg)
+        if self.verbose:
+            print(_msg)
+        log.debug(_msg)
         _msg = "     dry-run=%s, calc_missing=%s, ignore_invalid_data=%s" % (self.dry_run,
                                                                              self.calc_missing,
                                                                              self.ignore_invalid_data)
-        self.wlog.verboselog(syslog.LOG_DEBUG, _msg)
+        if self.verbose:
+            print(_msg)
+        log.debug(_msg)
         _msg = "     tranche=%s, interval=%s" % (self.tranche,
                                                  self.interval)
-        self.wlog.verboselog(syslog.LOG_DEBUG, _msg)
+        if self.verbose:
+            print(_msg)
+        log.debug(_msg)
         _msg = "     UV=%s, radiation=%s" % (self.UV_sensor, self.solar_sensor)
-        self.wlog.verboselog(syslog.LOG_DEBUG, _msg)
+        if self.verbose:
+            print(_msg)
+        log.debug(_msg)
         _msg = "Using database binding '%s', which is bound to database '%s'" % (self.db_binding_wx,
                                                                                  self.dbm.database_name)
-        self.wlog.printlog(syslog.LOG_INFO, _msg)
+        print(_msg)
+        log.info(_msg)
         _msg = "Destination table '%s' unit system is '%#04x' (%s)." % (self.dbm.table_name,
                                                                         self.archive_unit_sys,
                                                                         unit_nicknames[self.archive_unit_sys])
-        self.wlog.printlog(syslog.LOG_INFO, _msg)
+        print(_msg)
+        log.info(_msg)
         if self.calc_missing:
-            print "Missing derived observations will be calculated."
+            print("Missing derived observations will be calculated.")
         if not self.UV_sensor:
-            print "All WeeWX UV fields will be set to None."
+            print("All WeeWX UV fields will be set to None.")
         if not self.solar_sensor:
-            print "All WeeWX radiation fields will be set to None."
+            print("All WeeWX radiation fields will be set to None.")
         if options.date or options.date_from:
-            print "Observations timestamped after %s and up to and" % (timestamp_to_string(self.first_ts), )
-            print "including %s will be imported." % (timestamp_to_string(self.last_ts), )
+            print("Observations timestamped after %s and up to and" % timestamp_to_string(self.first_ts))
+            print("including %s will be imported." % timestamp_to_string(self.last_ts))
         if self.dry_run:
-            print "This is a dry run, imported data will not be saved to archive."
+            print("This is a dry run, imported data will not be saved to archive.")
 
     def getRawData(self, period):
         """Get raw observation data and construct a map from Cumulus monthly
@@ -275,8 +302,14 @@ class CumulusSource(weeimport.Source):
         # period holds the filename of the monthly log file that contains our
         # data. Does our source exist?
         if os.path.isfile(period):
-            with open(period, 'r') as f:
-                _raw_data = f.readlines()
+            # It exists.  The source file may use some encoding, if we can't
+            # decode it raise a WeeImportDecodeError.
+            try:
+                with io.open(period, mode='r', encoding=self.source_encoding) as f:
+                    _raw_data = f.readlines()
+            except UnicodeDecodeError as e:
+                # not a utf-8 based encoding, so raise a WeeImportDecodeError
+                raise weeimport.WeeImportDecodeError(e)
         else:
             # If it doesn't we can't go on so raise it
             raise weeimport.WeeImportIOError(
@@ -325,21 +358,39 @@ class CumulusSource(weeimport.Source):
         This generator controls the FOR statement in the parents run() method
         that loops over the monthly log files to be imported. The generator
         yields a monthly log file name from the list of monthly log files to
-        be imported until the list is exhausted. The generator also sets the
-        first_period and last_period properties."""
+        be imported until the list is exhausted.
+        """
 
-        # Step through each of our file names
-        for month in self.log_list:
-            # Set flags for first period (month) and last period (month)
-            self.first_period = (month == self.log_list[0])
-            self.last_period = (month == self.log_list[-1])
-            # Yield the file name
-            yield month
+        # step through each of our file names
+        for self.file_name in self.log_list:
+            # yield the file name
+            yield self.file_name
+
+    @property
+    def first_period(self):
+        """True if current period is the first period otherwise False.
+
+         Return True if the current file name being processed is the first in
+         the list or it is None (the initialisation value).
+         """
+
+        return self.file_name == self.log_list[0] if self.file_name is not None else True
+
+    @property
+    def last_period(self):
+        """True if current period is the last period otherwise False.
+
+         Return True if the current file name being processed is the last in
+         the list.
+         """
+
+        return self.file_name == self.log_list[-1]
 
     def set_rain_source(self, _data):
-        """Set the Cumulus field to be used as the WeeWX rain field source."""
+        """Set the Cumulus field to be used as the WeeWX rain field source.
+        """
 
-        _row = _data.next()
+        _row = next(_data)
         if _row['midnight_rain'] is not None:
             # we have data in midnight_rain, our default source, so leave
             # things as they are and return

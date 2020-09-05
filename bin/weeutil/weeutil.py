@@ -15,27 +15,15 @@ import calendar
 import datetime
 import math
 import os
-import struct
 import shutil
-import syslog
 import time
-import traceback
-try:
-    # Python 2
-    from StringIO import StringIO
-except ImportError:
-    # Python 3
-    from io import StringIO
+
+# Compatibility shims
+import six
+from six.moves import input
 
 # For backwards compatibility:
-from weeutil import config
-search_up        = config.search_up
-accumulateLeaves = config.accumulateLeaves
-merge_config     = config.merge_config
-patch_config     = config.patch_config
-comment_scalar   = config.comment_scalar
-conditional_merge= config.conditional_merge
-
+from weeutil.config import accumulateLeaves, search_up
 
 def convertToFloat(seq):
     """Convert a sequence with strings to floats, honoring 'Nones'"""
@@ -49,7 +37,7 @@ def convertToFloat(seq):
 def option_as_list(option):
     if option is None:
         return None
-    return [option] if isinstance(option, str) else option
+    return [option] if not isinstance(option, list) else option
 
 
 def list_as_string(option):
@@ -67,7 +55,7 @@ def list_as_string(option):
     Reno, NV
     """
     # Check if it's already a string.
-    if option is not None and not isinstance(option, str):
+    if option is not None and not isinstance(option, six.string_types):
         return ', '.join(option)
     return option
 
@@ -80,6 +68,7 @@ def stampgen(startstamp, stopstamp, interval):
     Example:
     
     >>> os.environ['TZ'] = 'America/Los_Angeles'
+    >>> time.tzset()
     >>> startstamp = 1236560400
     >>> print(timestamp_to_string(startstamp))
     2009-03-08 18:00:00 PDT (1236560400)
@@ -143,11 +132,11 @@ def stampgen(startstamp, stopstamp, interval):
 def startOfInterval(time_ts, interval):
     """Find the start time of an interval.
     
-    This algorithm assumes the day is divided up into
+    This algorithm assumes unit epoch time is divided up into
     intervals of 'interval' length. Given a timestamp, it
     figures out which interval it lies in, returning the start
     time.
-    
+
     time_ts: A timestamp. The start of the interval containing this
     timestamp will be returned.
     
@@ -158,6 +147,7 @@ def startOfInterval(time_ts, interval):
     Examples:
     
     >>> os.environ['TZ'] = 'America/Los_Angeles'
+    >>> time.tzset()
     >>> start_ts = time.mktime(time.strptime("2013-07-04 01:57:35", "%Y-%m-%d %H:%M:%S"))
     >>> time.ctime(startOfInterval(start_ts,  300))
     'Thu Jul  4 01:55:00 2013'
@@ -170,7 +160,7 @@ def startOfInterval(time_ts, interval):
     >>> time.ctime(startOfInterval(start_ts, 3600))
     'Thu Jul  4 01:00:00 2013'
     >>> time.ctime(startOfInterval(start_ts, 7200))
-    'Thu Jul  4 00:00:00 2013'
+    'Thu Jul  4 01:00:00 2013'
     >>> start_ts = time.mktime(time.strptime("2013-07-04 01:00:00", "%Y-%m-%d %H:%M:%S"))
     >>> time.ctime(startOfInterval(start_ts,  300))
     'Thu Jul  4 00:55:00 2013'
@@ -191,22 +181,8 @@ def startOfInterval(time_ts, interval):
     'Thu Jul  4 07:51:00 2013'
     """
 
-    interval_m = int(interval // 60)
-    interval_h = int(interval // 3600)
-    time_tt = time.localtime(time_ts)
-    m = int(time_tt.tm_min // interval_m * interval_m)
-    h = int(time_tt.tm_hour // interval_h * interval_h) if interval_h > 1 else time_tt.tm_hour
+    start_interval_ts = int(time_ts / interval) * interval
 
-    # Replace the hour, minute, and seconds with the start of the interval.
-    # Everything else gets retained:
-    start_interval_ts = time.mktime((time_tt.tm_year,
-                                     time_tt.tm_mon,
-                                     time_tt.tm_mday,
-                                     h, m, 0,
-                                     0, 0, time_tt.tm_isdst))
-    # Weewx uses the convention that the interval is exclusive on left, inclusive
-    # on the right. So, if the timestamp is at the beginning of the interval,
-    # it actually belongs to the previous interval.
     if time_ts == start_interval_ts:
         start_interval_ts -= interval
     return start_interval_ts
@@ -284,6 +260,7 @@ def intervalgen(start_ts, stop_ts, interval):
     Example:
     
     >>> os.environ['TZ'] = 'America/Los_Angeles'
+    >>> time.tzset()
     >>> startstamp = 1236477600
     >>> print(timestamp_to_string(startstamp))
     2009-03-07 18:00:00 PST (1236477600)
@@ -371,6 +348,7 @@ def archiveHoursAgoSpan(time_ts, hours_ago=0, grace=1):
     
     Example:
     >>> os.environ['TZ'] = 'America/Los_Angeles'
+    >>> time.tzset()
     >>> time_ts = time.mktime(time.strptime("2013-07-04 01:57:35", "%Y-%m-%d %H:%M:%S"))
     >>> print(archiveHoursAgoSpan(time_ts, hours_ago=0))
     [2013-07-04 01:00:00 PDT (1372924800) -> 2013-07-04 02:00:00 PDT (1372928400)]
@@ -397,10 +375,13 @@ def archiveHoursAgoSpan(time_ts, hours_ago=0, grace=1):
 def archiveSpanSpan(time_ts, time_delta=0, hour_delta=0, day_delta=0, week_delta=0, month_delta=0, year_delta=0):
     """ Returns a TimeSpan for the last xxx seconds where xxx equals
         time_delta sec + hour_delta hours + day_delta days + week_delta weeks + month_delta months + year_delta years
-        Note: For month_delta, 1 month = 30 days, For year_delta, 1 year = 365 days
+
+        NOTE: Use of month_delta and year_delta is deprecated.
+        See issue #436 (https://github.com/weewx/weewx/issues/436)
     
     Example:
     >>> os.environ['TZ'] = 'Australia/Brisbane'
+    >>> time.tzset()
     >>> time_ts = time.mktime(time.strptime("2015-07-21 09:05:35", "%Y-%m-%d %H:%M:%S"))
     >>> print(archiveSpanSpan(time_ts, time_delta=3600))
     [2015-07-21 08:05:35 AEST (1437429935) -> 2015-07-21 09:05:35 AEST (1437433535)]
@@ -422,6 +403,7 @@ def archiveSpanSpan(time_ts, time_delta=0, hour_delta=0, day_delta=0, week_delta
     Example over a DST boundary. Because Brisbane does not observe DST, we need to
     switch timezones.
     >>> os.environ['TZ'] = 'America/Los_Angeles'
+    >>> time.tzset()
     >>> time_ts = 1457888400
     >>> print(timestamp_to_string(time_ts))
     2016-03-13 10:00:00 PDT (1457888400)
@@ -466,6 +448,7 @@ def isMidnight(time_ts):
     
     Example:
     >>> os.environ['TZ'] = 'America/Los_Angeles'
+    >>> time.tzset()
     >>> time_ts = time.mktime(time.strptime("2013-07-04 01:57:35", "%Y-%m-%d %H:%M:%S"))
     >>> print(isMidnight(time_ts))
     False
@@ -482,6 +465,7 @@ def isStartOfDay(time_ts):
     """Is the indicated time at the start of the day, local time?
     Example:
     >>> os.environ['TZ'] = 'America/Los_Angeles'
+    >>> time.tzset()
     >>> time_ts = time.mktime(time.strptime("2013-07-04 01:57:35", "%Y-%m-%d %H:%M:%S"))
     >>> print(isStartOfDay(time_ts))
     False
@@ -489,6 +473,7 @@ def isStartOfDay(time_ts):
     >>> print(isStartOfDay(time_ts))
     True
     >>> os.environ['TZ'] = 'America/Sao_Paulo'
+    >>> time.tzset()
     >>> time_ts = 1541300400
     >>> print(isStartOfDay(time_ts))
     True
@@ -521,6 +506,7 @@ def archiveDaySpan(time_ts, grace=1, days_ago=0):
     
     Example, which spans the end-of-year boundary
     >>> os.environ['TZ'] = 'America/Los_Angeles'
+    >>> time.tzset()
     >>> time_ts = time.mktime(time.strptime("2014-01-01 01:57:35", "%Y-%m-%d %H:%M:%S"))
     
     As for today:
@@ -569,6 +555,7 @@ def archiveWeekSpan(time_ts, startOfWeek=6, grace=1, weeks_ago=0):
     
     Example:
     >>> os.environ['TZ'] = 'America/Los_Angeles'
+    >>> time.tzset()
     >>> time_ts = 1483429962
     >>> print(timestamp_to_string(time_ts))
     2017-01-02 23:52:42 PST (1483429962)
@@ -611,6 +598,7 @@ def archiveMonthSpan(time_ts, grace=1, months_ago=0):
     
     Example:
     >>> os.environ['TZ'] = 'America/Los_Angeles'
+    >>> time.tzset()
     >>> time_ts = 1483429962
     >>> print(timestamp_to_string(time_ts))
     2017-01-02 23:52:42 PST (1483429962)
@@ -705,6 +693,7 @@ def genHourSpans(start_ts, stop_ts):
     Example:
 
     >>> os.environ['TZ'] = 'America/Los_Angeles'
+    >>> time.tzset()
     >>> start_ts = 1204796460
     >>> stop_ts  = 1204818360
 
@@ -748,6 +737,7 @@ def genDaySpans(start_ts, stop_ts):
     Example:
     
     >>> os.environ['TZ'] = 'America/Los_Angeles'
+    >>> time.tzset()
     >>> start_ts = 1204796460
     >>> stop_ts  = 1205265720
     
@@ -795,6 +785,7 @@ def genMonthSpans(start_ts, stop_ts):
     Example:
     
     >>> os.environ['TZ'] = 'America/Los_Angeles'
+    >>> time.tzset()
     >>> start_ts = 1196705700
     >>> stop_ts  = 1206101100
     >>> print("start time is %s" % timestamp_to_string(start_ts))
@@ -848,7 +839,7 @@ def genYearSpans(start_ts, stop_ts):
 
     if (_stop_dt.month, _stop_dt.day, _stop_dt.hour,
         _stop_dt.minute, _stop_dt.second) == (1, 1, 0, 0, 0):
-            _stop_year -= 1
+        _stop_year -= 1
 
     for year in range(_start_year, _stop_year + 1):
         yield TimeSpan(time.mktime((year, 1, 1, 0, 0, 0, 0, 0, -1)),
@@ -882,6 +873,7 @@ def startOfGregorianDay(date_greg):
     Example:
     
     >>> os.environ['TZ'] = 'America/Los_Angeles'
+    >>> time.tzset()
     >>> date_greg = 735973  # 10-Jan-2016
     >>> print(startOfGregorianDay(date_greg))
     1452412800
@@ -901,6 +893,7 @@ def toGregorianDay(time_ts):
     
     Example:
     >>> os.environ['TZ'] = 'America/Los_Angeles'
+    >>> time.tzset()
     >>> time_ts = 1452412800  # Midnight, 10-Jan-2016
     >>> print(toGregorianDay(time_ts))
     735972
@@ -990,8 +983,8 @@ def secs_to_string(secs):
     str_list = []
     for (label, interval) in (('day', 86400), ('hour', 3600), ('minute', 60)):
         amt = int(secs / interval)
-        plural = '' if amt == 1 else 's'
-        str_list.append("%d %s%s" % (amt, label, plural))
+        plural = u'' if amt == 1 else u's'
+        str_list.append(u"%d %s%s" % (amt, label, plural))
         secs %= interval
     ans = ', '.join(str_list)
     return ans
@@ -1003,6 +996,7 @@ def timestamp_to_string(ts, format_str="%Y-%m-%d %H:%M:%S %Z"):
     Example:
 
     >>> os.environ['TZ'] = 'America/Los_Angeles'
+    >>> time.tzset()
     >>> print(timestamp_to_string(1196705700))
     2007-12-03 10:15:00 PST (1196705700)
     >>> print(timestamp_to_string(None))
@@ -1057,6 +1051,7 @@ def utc_to_local_tt(y, m, d, hrs_utc):
     Returns: A timetuple with the local time.
     
     >>> os.environ['TZ'] = 'America/Los_Angeles'
+    >>> time.tzset()
     >>> tt=utc_to_local_tt(2009, 3, 27, 14.5)
     >>> print(tt.tm_year, tt.tm_mon, tt.tm_mday, tt.tm_hour, tt.tm_min)
     2009 3 27 7 30
@@ -1088,16 +1083,7 @@ def latlon_string(ll, hemi, which, format_list=None):
             hemi[0] if ll >= 0 else hemi[1])
 
 
-def log_traceback(prefix='', loglevel=syslog.LOG_INFO):
-    """Log the stack traceback into syslog."""
-    sfd = StringIO()
-    traceback.print_exc(file=sfd)
-    sfd.seek(0)
-    for line in sfd:
-        syslog.syslog(loglevel, prefix + line)
-
-
-def _get_object(module_class):
+def get_object(module_class):
     """Given a string with a module class name, it imports and returns the class."""
     # Split the path into its parts
     parts = module_class.split('.')
@@ -1115,6 +1101,10 @@ def _get_object(module_class):
         raise AttributeError(
             "Module '%s' has no attribute '%s' when searching for '%s'" % (mod.__name__, part, module_class))
     return mod
+
+
+# For backwards compatibility:
+_get_object = get_object
 
 
 class GenWithPeek(object):
@@ -1159,13 +1149,16 @@ class GenWithPeek(object):
     def __iter__(self):
         return self
 
-    def next(self):
+    def __next__(self):
         """Advance to the next object"""
         if self.have_peek:
             self.have_peek = False
             return self.peek_obj
         else:
             return next(self.generator)
+
+    # For Python 2:
+    next = __next__
 
     def peek(self):
         """Take a peek at the next object"""
@@ -1203,9 +1196,9 @@ def tobool(x):
     """
 
     try:
-        if x.lower() in ['true', 'yes']:
+        if x.lower() in ['true', 'yes', 'y']:
             return True
-        elif x.lower() in ['false', 'no']:
+        elif x.lower() in ['false', 'no', 'n']:
             return False
     except AttributeError:
         pass
@@ -1232,7 +1225,7 @@ def to_int(x):
     >>> print(to_int(None))
     None
     """
-    if isinstance(x, str) and x.lower() == 'none':
+    if isinstance(x, six.string_types) and x.lower() == 'none':
         x = None
     try:
         return int(x) if x is not None else None
@@ -1257,29 +1250,22 @@ def to_float(x):
     return float(x) if x is not None else None
 
 
-def to_unicode(string, encoding='utf8'):
-    u"""Convert to Unicode, unless string is None
-    
-    Example:
-    >>> print(to_unicode(u"degree sign from UTF8: °".encode('utf8')))
-    degree sign from UTF8: °
-    >>> print(to_unicode(u"degree sign from Unicode: °"))
-    degree sign from Unicode: °
-    >>> print(to_unicode(None))
-    None
-    """
-    try:
-        return unicode(string, encoding) if string is not None else None
-    except NameError:
-        # No unicode function. Probably running under Python 3
-        try:
-            return str(string, encoding) if string is not None else None
-        except TypeError:
-            # The string is already in Unicode. Just return it.
-            return string
-    except TypeError:
-        # The string is already in Unicode. Just return it.
-        return string
+def to_complex(magnitude, direction):
+    """Convert from magnitude and direction to a complex number."""
+    if magnitude is None:
+        value = None
+    elif magnitude == 0:
+        # If magnitude is zero, it doesn't matter what direction is. Can even be None.
+        value = complex(0.0, 0.0)
+    elif direction is None:
+        # Magnitude must be non-zero, but we don't know the direction.
+        value = None
+    else:
+        # Magnitude is non-zero, and we have a good direction.
+        x = magnitude * math.cos(math.radians(90.0 - direction))
+        y = magnitude * math.sin(math.radians(90.0 - direction))
+        value = complex(x, y)
+    return value
 
 
 def min_with_none(x_seq):
@@ -1323,83 +1309,95 @@ def move_with_timestamp(filepath):
     shutil.move(filepath, newpath)
     return newpath
 
+try:
+    # Python 3
+    from collections import ChainMap
 
-class ListOfDicts(dict):
-    """A list of dictionaries, that are searched in order.
-    
-    It assumes only that any inserted dictionaries support a keyed
-    lookup using the syntax obj[key].
-    
-    Example:
+    class ListOfDicts(ChainMap):
+        def extend(self, m):
+            self.maps.append(m)
+        def prepend(self, m):
+            self.maps.insert(0, m)
 
-    # Try an empty dictionary:
-    >>> lod = ListOfDicts()
-    >>> print(lod['b'])
-    Traceback (most recent call last):
-    KeyError: 'b'
-    >>> # Now initialize it with a starting dictionary:
-    >>> lod = ListOfDicts({'a':1, 'b':2, 'c':3})
-    >>> print(lod['b'])
-    2
-    >>> # Look for a non-existent key
-    >>> print(lod['d'])
-    Traceback (most recent call last):
-    KeyError: 'd'
-    >>> # Now extend the dictionary:
-    >>> lod.extend({'d':4, 'e':5})
-    >>> # And try the lookup:
-    >>> print(lod['d'])
-    4
-    >>> # Explicitly add a new key to the dictionary:
-    >>> lod['f'] = 6
-    >>> # Try it:
-    >>> print(lod['f'])
-    6
-    """
+except ImportError:
 
-    def __init__(self, starting_dict=None):
-        if starting_dict:
-            super(ListOfDicts, self).__init__(starting_dict)
-        self.dict_list = []
+    # Python 2. We'll have to supply our own
+    class ListOfDicts(object):
+        """A near clone of ChainMap"""
 
-    def __getitem__(self, key):
-        for this_dict in self.dict_list:
+        def __init__(self, *maps):
+            self.maps = list(maps) or [{}]
+
+        def __missing__(self, key):
+            raise KeyError(key)
+
+        def __getitem__(self, key):
+            for mapping in self.maps:
+                try:
+                    return mapping[key]
+                except KeyError:
+                    pass
+            return self.__missing__(key)
+
+        def get(self, key, default=None):
+            return self[key] if key in self else default
+
+        def __len__(self):
+            return len(set().union(*self.maps))
+
+        def __iter__(self):
+            return iter(set().union(*self.maps))
+
+        def __contains__(self, key):
+            return any(key in m for m in self.maps)
+
+        def __bool__(self):
+            return any(self.maps)
+
+        def __setitem__(self, key, value):
+            """Set a key, value on the first map. """
+            self.maps[0][key] = value
+
+        def __delitem__(self, key):
             try:
-                return this_dict[key]
+                del self.maps[0][key]
             except KeyError:
-                pass
-        return dict.__getitem__(self, key)
+                raise KeyError('Key not found in the first mapping: {!r}'.format(key))
 
-    def get(self, key, default=None):
-        try:
-            return self[key]
-        except KeyError:
-            return default
+        def popitem(self):
+            'Remove and return an item pair from maps[0]. Raise KeyError is maps[0] is empty.'
+            try:
+                return self.maps[0].popitem()
+            except KeyError:
+                raise KeyError('No keys found in the first mapping.')
 
-    def extend(self, new_dict):
-        self.dict_list.append(new_dict)
+        def pop(self, key, *args):
+            'Remove *key* from maps[0] and return its value. Raise KeyError if *key* not in maps[0].'
+            try:
+                return self.maps[0].pop(key, *args)
+            except KeyError:
+                raise KeyError('Key not found in the first mapping: {!r}'.format(key))
+
+        def extend(self, m):
+            self.maps.append(m)
+
+        def prepend(self, m):
+            self.maps.insert(0, m)
 
 
 class KeyDict(dict):
     """A dictionary that returns the key for an unsuccessful lookup."""
+
     def __missing__(self, key):
         return key
 
 
 def to_sorted_string(rec):
-    return ", ".join(["%s: %s" % (k, rec.get(k)) for k in sorted(rec, key=str.lower)])
+    import locale
+    return ", ".join(["%s: %s" % (k, rec.get(k)) for k in sorted(rec, key=locale.strxfrm)])
 
 
-# Define an "input" function that works for both Python 2 and 3:
-# An exception will be raised in Python 3, but not Python 2
-try:
-    input = raw_input
-except NameError:
-    # Python 3
-    pass
-
-
-def y_or_n(msg, noprompt):
+def y_or_n(msg, noprompt=False):
     """Prompt and look for a 'y' or 'n' response"""
 
     # If noprompt is truthy, always return 'y'
@@ -1410,11 +1408,6 @@ def y_or_n(msg, noprompt):
     while ans not in ['y', 'n']:
         ans = input(msg)
     return ans
-
-
-def int2byte(x):
-    """Convert integer argument to signed byte string, under both Python 2 and 3"""
-    return struct.pack('>b', x)
 
 
 def deep_copy_path(path, dest_dir):
@@ -1447,6 +1440,7 @@ def deep_copy_path(path, dest_dir):
         shutil.copy(path, d)
         ncopy += 1
     return ncopy
+
 
 if __name__ == '__main__':
     import doctest
