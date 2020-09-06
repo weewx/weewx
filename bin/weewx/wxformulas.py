@@ -21,15 +21,15 @@ log = logging.getLogger(__name__)
 
 
 def dewpointF(T, R):
-    """Calculate dew point. 
-    
+    """Calculate dew point.
+
     T: Temperature in Fahrenheit
-    
+
     R: Relative humidity in percent.
-    
+
     Returns: Dewpoint in Fahrenheit
     Examples:
-    
+
     >>> print("%.1f" % dewpointF(68, 50))
     48.7
     >>> print("%.1f" % dewpointF(32, 50))
@@ -49,11 +49,11 @@ def dewpointF(T, R):
 def dewpointC(T, R):
     """Calculate dew point.
     http://en.wikipedia.org/wiki/Dew_point
-    
+
     T: Temperature in Celsius
-    
+
     R: Relative humidity in percent.
-    
+
     Returns: Dewpoint in Celsius
     """
 
@@ -71,11 +71,11 @@ def dewpointC(T, R):
 def windchillF(T_F, V_mph):
     """Calculate wind chill.
     http://www.nws.noaa.gov/om/cold/wind_chill.shtml
-    
+
     T_F: Temperature in Fahrenheit
-    
+
     V_mph: Wind speed in mph
-    
+
     Returns Wind Chill in Fahrenheit
     """
 
@@ -92,11 +92,11 @@ def windchillF(T_F, V_mph):
 
 def windchillC(T_C, V_kph):
     """Wind chill, metric version.
-    
+
     T: Temperature in Celsius
-    
+
     V: Wind speed in kph
-    
+
     Returns wind chill in Celsius"""
 
     if T_C is None or V_kph is None:
@@ -112,22 +112,22 @@ def windchillC(T_C, V_kph):
 
 def heatindexF(T, R):
     """Calculate heat index.
-    http://www.nws.noaa.gov/om/heat/heat_index.shtml
-    
+    https://www.wpc.ncep.noaa.gov/html/heatindex_equation.shtml
+
     T: Temperature in Fahrenheit
-    
+
     R: Relative humidity in percent
-    
+
     Returns heat index in Fahrenheit
-    
+
     Examples:
-    
+
     >>> print(heatindexF(75.0, 50.0))
     75.0
     >>> print("%0.7f" % heatindexF(80.0, 50.0))
     80.8029049
     >>> print("%0.7f" % heatindexF(80.0, 95.0))
-    86.3980618
+    87.7980618
     >>> print("%0.7f" % heatindexF(90.0, 50.0))
     94.5969412
     >>> print("%0.7f" % heatindexF(90.0, 95.0))
@@ -137,15 +137,20 @@ def heatindexF(T, R):
     if T is None or R is None:
         return None
 
-    # Formula only valid for temperatures over 80F:
-    if T < 80.0 or R < 40.0:
-        return T
-
-    hi_F = -42.379 + 2.04901523 * T + 10.14333127 * R - 0.22475541 * T * R - 6.83783e-3 * T ** 2 \
+    # different formulae are valid depending on temp
+    if T < 80.0:
+        hi_F = 0.5 * (T + 61.0 + ((T-68.0)*1.2) + (R*0.094))
+        hi_F = (hi_F+T)/2  # NOAA site says to average the HI with temp for this temp range
+    else:
+        hi_F = -42.379 + 2.04901523 * T + 10.14333127 * R - 0.22475541 * T * R - 6.83783e-3 * T ** 2 \
            - 5.481717e-2 * R ** 2 + 1.22874e-3 * T ** 2 * R + 8.5282e-4 * T * R ** 2 \
            - 1.99e-6 * T ** 2 * R ** 2
-    if hi_F < T:
-        hi_F = T
+        if R < 13 and T <112: #adjustment for temp/RH range
+            adjustment = ((13-R)/4)*math.sqrt((17-abs(T-95))/17)
+            hi_F = hi_F - adjustment
+        elif R>85 and T<87:
+            adjustment = ((R-85)/10) * ((87-T)/5)
+            hi_F = hi_F + adjustment
     return hi_F
 
 
@@ -168,7 +173,7 @@ def cooling_degrees(t, base):
 def altimeter_pressure_US(SP_inHg, Z_foot, algorithm='aaASOS'):
     """Calculate the altimeter pressure, given the raw, station pressure in inHg and the altitude
     in feet.
-        
+
     Examples:
     >>> print("%.2f" % altimeter_pressure_US(28.0, 0.0))
     28.00
@@ -548,7 +553,7 @@ def beaufort(ws_kts):
 
 def equation_of_time(doy):
     """Equation of time in minutes. Plus means sun leads local time.
-    
+
     Example (1 October):
     >>> print("%.4f" % equation_of_time(274))
     0.1889
@@ -559,13 +564,13 @@ def equation_of_time(doy):
 
 def hour_angle(t_utc, longitude, doy):
     """Solar hour angle at a given time in radians.
-    
+
     t_utc: The time in UTC.
     longitude: the longitude in degrees
     doy: The day of year
-    
+
     Returns hour angle in radians. 0 <= omega < 2*pi
-    
+
     Example:
     >>> print("%.4f radians" % hour_angle(15.5, -16.25, 274))
     0.6821 radians
@@ -581,7 +586,7 @@ def hour_angle(t_utc, longitude, doy):
 
 def solar_declination(doy):
     """Solar declination for the day of the year in radians
-    
+
     Example (1 October is the 274th day of the year):
     >>> print("%.6f" % solar_declination(274))
     -0.075274
@@ -591,7 +596,7 @@ def solar_declination(doy):
 
 def sun_radiation(doy, latitude_deg, longitude_deg, tod_utc, interval):
     """Extraterrestrial radiation. Radiation at the top of the atmosphere
-    
+
     doy: Day-of-year
 
     latitude_deg, longitude_deg: Lat and lon in degrees
@@ -601,7 +606,7 @@ def sun_radiation(doy, latitude_deg, longitude_deg, tod_utc, interval):
     interval: The time interval over which the radiation is to be calculated in hours
 
     Returns the (average?) solar radiation over the time interval in MJ/m^2/hr
-    
+
     Example:
     >>> print("%.3f" % sun_radiation(doy=274, latitude_deg=16.217,
     ...                              longitude_deg=-16.25, tod_utc=16.0, interval=1.0))
@@ -638,24 +643,24 @@ def sun_radiation(doy, latitude_deg, longitude_deg, tod_utc, interval):
 def longwave_radiation(Tmin_C, Tmax_C, ea, Rs, Rso, rh):
     """Calculate the net long-wave radiation.
     Ref: http://www.fao.org/docrep/x0490e/x0490e00.htm Eqn 39
-    
+
     Tmin_C: Minimum temperature during the calculation period
     Tmax_C: Maximum temperature during the calculation period
     ea: Actual vapor pressure in kPa
     Rs: Measured radiation. See below for units.
     Rso: Calculated clear-wky radiation. See below for units.
     rh: Relative humidity in percent
-    
+
     Because the formula uses the ratio of Rs to Rso, their actual units do not matter,
     so long as they use the same units.
-    
+
     Returns back radiation in MJ/m^2/day
-    
+
     Example:
     >>> print("%.1f mm/day" % longwave_radiation(Tmin_C=19.1, Tmax_C=25.1, ea=2.1,
     ...     Rs=14.5, Rso=18.8, rh=50))
     3.5 mm/day
-    
+
     Night time example. Set rh = 40% to reproduce the Rs/Rso ratio of 0.8 used in the paper.
     >>> print("%.1f mm/day" % longwave_radiation(Tmin_C=28, Tmax_C=28, ea=3.402,
     ...     Rs=0, Rso=0, rh=40))
@@ -699,29 +704,29 @@ def evapotranspiration_Metric(Tmin_C, Tmax_C, rh_min, rh_max, sr_mean_wpm2,
     """Calculate the rate of evapotranspiration during a one hour time period.
     Ref: http://www.fao.org/docrep/x0490e/x0490e00.htm.
     (The document http://edis.ifas.ufl.edu/ae459 is also helpful)
- 
+
     Tmin_C: Minimum temperature during the hour in degrees Celsius
- 
+
     Tmax_C: Maximum temperature during the hour in degrees Celsius
- 
+
     rh_min: Minimum relative humidity during the hour in percent.
-     
+
     rh_max: Maximum relative humidity during the hour in percent.
- 
+
     sr_mean_wpm2: Mean solar radiation during the hour in watts per sq meter
- 
+
     ws_mps: Average wind speed during the hour in meters per second
- 
+
     wind_height_m: Height in meters at which windspeed is measured
- 
+
     latitude_deg, longitude_deg: Latitude, longitude of the station in degrees
- 
+
     altitude_m: Altitude of the station in meters.
-     
+
     timestamp: The time, as unix epoch time, at the end of the hour.
-     
+
     Returns: Evapotranspiration in mm/hr
-    
+
     Example (Example 19 in the reference document):
     >>> sr_mean_wpm2 = 680.56     # == 2.45 MJ/m^2/hr
     >>> timestamp = 1475337600    # 1-Oct-2016 at 16:00UTC
@@ -731,7 +736,7 @@ def evapotranspiration_Metric(Tmin_C, Tmax_C, rh_min, rh_max, sr_mean_wpm2,
     ...                                latitude_deg=16.217, longitude_deg=-16.25, altitude_m=8,
     ...                                timestamp=timestamp))
     ET0 = 0.63 mm/hr
-    
+
     Another example, this time for night
     >>> sr_mean_wpm2 = 0.0        # night time
     >>> timestamp = 1475294400    # 1-Oct-2016 at 04:00UTC (0300 local)
@@ -806,11 +811,11 @@ def evapotranspiration_Metric(Tmin_C, Tmax_C, rh_min, rh_max, sr_mean_wpm2,
     # Calculate net radiation at the surface in MJ/m^2/hr (Eqn. 40)
     Rn = Rns - Rnl
 
-    # Calculate the soil heat flux. (see section "For hourly or shorter 
-    # periods" in http://www.fao.org/docrep/x0490e/x0490e07.htm#radiation 
+    # Calculate the soil heat flux. (see section "For hourly or shorter
+    # periods" in http://www.fao.org/docrep/x0490e/x0490e07.htm#radiation
     G = 0.1 * Rn if Rs else 0.5 * Rn
 
-    # Put it all together. Result is in mm/hr (Eqn 53)    
+    # Put it all together. Result is in mm/hr (Eqn 53)
     ET0 = (0.408 * delta * (Rn - G) + gamma * (cn / (tavg_C + 273)) * u2 * (e0T - ea)) \
           / (delta + gamma * (1 + cd * u2))
 
@@ -826,29 +831,29 @@ def evapotranspiration_US(Tmin_F, Tmax_F, rh_min, rh_max,
                           latitude_deg, longitude_deg, altitude_ft, timestamp):
     """Calculate the rate of evapotranspiration during a one hour time period,
     returning result in inches/hr.
- 
+
     Tmin_F: Minimum temperature during the hour in degrees Fahrenheit
- 
+
     Tmax_F: Maximum temperature during the hour in degrees Fahrenheit
- 
+
     rh_min: Minimum relative humidity during the hour in percent.
-     
+
     rh_max: Maximum relative humidity during the hour in percent.
- 
+
     sr_mean_wpm2: Mean solar radiation during the hour in watts per sq meter
- 
+
     ws_mph: Average wind speed during the hour in miles per hour
- 
+
     wind_height_ft: Height in feet at which windspeed is measured
- 
+
     latitude_deg, longitude_deg: Latitude, longitude of the station in degrees
- 
+
     altitude_ft: Altitude of the station in feet.
-     
+
     timestamp: The time, as unix epoch time, at the end of the hour.
-     
+
     Returns: Evapotranspiration in inches/hr
-    
+
     Example (using data from HR station):
     >>> sr_mean_wpm2 = 860
     >>> timestamp = 1469829600  # 29-July-2016 22:00 UTC (15:00 local time)
