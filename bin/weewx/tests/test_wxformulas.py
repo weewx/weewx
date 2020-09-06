@@ -46,9 +46,9 @@ class WXFormulasTest(unittest.TestCase):
         self.assertIsNone(weewx.wxformulas.windchillC(5, None))
 
     def test_heatindex(self):
-        self.assertAlmostEqual(weewx.wxformulas.heatindexF(75.0, 50.0), 75.0, 1)
+        self.assertAlmostEqual(weewx.wxformulas.heatindexF(75.0, 50.0), 74.8, 1)
         self.assertAlmostEqual(weewx.wxformulas.heatindexF(80.0, 50.0), 80.8, 1)
-        self.assertAlmostEqual(weewx.wxformulas.heatindexF(80.0, 95.0), 86.4, 1)
+        self.assertAlmostEqual(weewx.wxformulas.heatindexF(80.0, 95.0), 87.8, 1)
         self.assertAlmostEqual(weewx.wxformulas.heatindexF(90.0, 50.0), 94.6, 1)
         self.assertAlmostEqual(weewx.wxformulas.heatindexF(90.0, 95.0), 126.6, 1)
         self.assertIsNone(weewx.wxformulas.heatindexF(90, None))
