@@ -117,6 +117,8 @@ and password, so it can hit the WU.
 
 Fixed problem in te923 driver under Python 3 that caused it to crash.
 
+Fixed problem with ws23xx driver under Python 3 that caused it to crash.
+
 
 4.0.0 04/30/2020
 
