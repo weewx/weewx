@@ -1101,7 +1101,7 @@ class Ws2300(object):
                 }[encode_constant]
             self.log(",")
             for i in range(len(encoded_data)):
-                self.write_byte([encoded_data[i]])
+                self.write_byte(bytearray([encoded_data[i]]))
                 answer = self.read_byte()
                 if six.int2byte(nybbles[i] + ack_constant) != answer:
                     self.log("??")
