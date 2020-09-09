@@ -46,6 +46,8 @@ earlier corrections.
 Fixed problem under Python 2, where option 'none' could cause exception.
 PR #597. Thanks to user Clément!
 
+Fixed problem with ws23xx driver under Python 3 that caused it to crash.
+
 
 4.1.1 06/01/2020
 
@@ -116,8 +118,6 @@ str before attempting to parse the JSON. Option --simulate now requires api_key
 and password, so it can hit the WU.
 
 Fixed problem in te923 driver under Python 3 that caused it to crash.
-
-Fixed problem with ws23xx driver under Python 3 that caused it to crash.
 
 
 4.0.0 04/30/2020
