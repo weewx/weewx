@@ -46,11 +46,17 @@ class WXFormulasTest(unittest.TestCase):
         self.assertIsNone(weewx.wxformulas.windchillC(5, None))
 
     def test_heatindex(self):
-        self.assertAlmostEqual(weewx.wxformulas.heatindexF(75.0, 50.0), 75.0, 1)
+        self.assertAlmostEqual(weewx.wxformulas.heatindexF(75.0, 50.0), 74.5, 1)
         self.assertAlmostEqual(weewx.wxformulas.heatindexF(80.0, 50.0), 80.8, 1)
-        self.assertAlmostEqual(weewx.wxformulas.heatindexF(80.0, 95.0), 86.4, 1)
+        self.assertAlmostEqual(weewx.wxformulas.heatindexF(80.0, 95.0), 87.8, 1)
         self.assertAlmostEqual(weewx.wxformulas.heatindexF(90.0, 50.0), 94.6, 1)
         self.assertAlmostEqual(weewx.wxformulas.heatindexF(90.0, 95.0), 126.6, 1)
+
+        # Look for a smooth transition as RH crosses 40%
+        self.assertAlmostEqual(weewx.wxformulas.heatindexF(95.0, 39.0), 98.5, 1)
+        self.assertAlmostEqual(weewx.wxformulas.heatindexF(95.0, 40.0), 99.0, 1)
+        self.assertAlmostEqual(weewx.wxformulas.heatindexF(95.0, 41.0), 99.5, 1)
+
         self.assertIsNone(weewx.wxformulas.heatindexF(90, None))
 
         self.assertAlmostEqual(weewx.wxformulas.heatindexC(30, 80), 37.7, 1)

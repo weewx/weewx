@@ -113,40 +113,47 @@ def windchillC(T_C, V_kph):
 
 def heatindexF(T, R):
     """Calculate heat index.
-    http://www.nws.noaa.gov/om/heat/heat_index.shtml
-    
+    https://www.wpc.ncep.noaa.gov/html/heatindex_equation.shtml
+
     T: Temperature in Fahrenheit
-    
+
     R: Relative humidity in percent
-    
+
     Returns heat index in Fahrenheit
-    
-    Examples:
-    
-    >>> print(heatindexF(75.0, 50.0))
-    75.0
-    >>> print("%0.7f" % heatindexF(80.0, 50.0))
-    80.8029049
-    >>> print("%0.7f" % heatindexF(80.0, 95.0))
-    86.3980618
-    >>> print("%0.7f" % heatindexF(90.0, 50.0))
-    94.5969412
-    >>> print("%0.7f" % heatindexF(90.0, 95.0))
-    126.6232036
+
+    Examples (Expected values obtained from https://www.wpc.ncep.noaa.gov/html/heatindex.shtml):
+
+    >>> print("%0.0f" % heatindexF(75.0, 50.0))
+    75
+    >>> print("%0.0f" % heatindexF(80.0, 50.0))
+    81
+    >>> print("%0.0f" % heatindexF(80.0, 95.0))
+    88
+    >>> print("%0.0f" % heatindexF(90.0, 50.0))
+    95
+    >>> print("%0.0f" % heatindexF(90.0, 95.0))
+    127
 
     """
     if T is None or R is None:
         return None
 
-    # Formula only valid for temperatures over 80F:
-    if T < 80.0 or R < 40.0:
-        return T
+    # Use simplified formula
+    hi_F = 0.5 * (T + 61.0 + ((T - 68.0) * 1.2) + (R * 0.094))
 
-    hi_F = -42.379 + 2.04901523 * T + 10.14333127 * R - 0.22475541 * T * R - 6.83783e-3 * T ** 2 \
-           - 5.481717e-2 * R ** 2 + 1.22874e-3 * T ** 2 * R + 8.5282e-4 * T * R ** 2 \
-           - 1.99e-6 * T ** 2 * R ** 2
-    if hi_F < T:
-        hi_F = T
+    # Apply full formula if the above, averaged with temperature, is greater than 80F:
+    if (hi_F + T) / 2.0 >= 80.0:
+        hi_F = -42.379 + 2.04901523 * T + 10.14333127 * R - 0.22475541 * T * R \
+               - 6.83783e-3 * T ** 2 - 5.481717e-2 * R ** 2 + 1.22874e-3 * T ** 2 * R \
+               + 8.5282e-4 * T * R ** 2 - 1.99e-6 * T ** 2 * R ** 2
+        # Apply an adjustment for low humidities
+        if R < 13 and 80 < T < 112:
+            adjustment = ((13 - R) / 4.0) * math.sqrt((17 - abs(T - 95.)) / 17.0)
+            hi_F = hi_F - adjustment
+        # Apply an adjustment for high humidities
+        elif R > 85 and 80 <= T < 87:
+            adjustment = ((R - 85) / 10.0) * ((87 - T) / 5.0)
+            hi_F = hi_F + adjustment
     return hi_F
 
 

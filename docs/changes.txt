@@ -48,6 +48,9 @@ PR #597. Thanks to user Clément!
 
 Fixed problem with ws23xx driver under Python 3 that caused it to crash.
 
+Use a more modern formula for heat index. Fixes issue #601. Thanks to
+user Peter Q!
+
 
 4.1.1 06/01/2020
 
