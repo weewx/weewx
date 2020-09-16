@@ -42,7 +42,7 @@ def extract_starts(config_dict, driver_name):
         start_ts = time.mktime(start_tt)
         # If the 'resume' keyword is present and True, then get the last
         # archive record out of the database and resume with that.
-        if weeutil.weeutil.to_bool(config_dict[driver_name].get('resume')):
+        if weeutil.weeutil.to_bool(config_dict[driver_name].get('resume', False)):
             import weewx.manager
             import weedb
             try:
