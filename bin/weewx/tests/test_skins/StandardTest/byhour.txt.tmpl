@@ -6,3 +6,10 @@ $_hour.end $_hour.outTemp.max
 #end for
 ---------------------------------------------------------------------------------------
     
+                   TEST USING ALTERNATE BINDING
+---------------------------------------------------------------------------------------
+#for $_hour in $day.hours
+$_hour($data_binding='alt_binding').end $_hour($data_binding='alt_binding').outTemp.max
+#end for
+---------------------------------------------------------------------------------------
+

@@ -51,6 +51,8 @@ Fixed problem with ws23xx driver under Python 3 that caused it to crash.
 Use a more modern formula for heat index. Fixes issue #601. Thanks to
 user Peter Q!
 
+Allow overriding the data binding when using iterators. Fixes issue #580.
+
 
 4.1.1 06/01/2020
 

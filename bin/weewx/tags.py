@@ -243,6 +243,12 @@ class TimespanBinder(object):
     # Alias for the start time:
     dateTime = start
 
+    def __call__(self, data_binding=None):
+        """The iterators return an instance of TimespanBinder. Allow them to override
+        data_binding"""
+        return TimespanBinder(self.timespan, self.db_lookup, data_binding, self.context,
+                              self.formatter, self.converter, **self.option_dict)
+
     def __getattr__(self, obs_type):
         """Return a helper object that binds the database, a time period, and the given observation
         type.
