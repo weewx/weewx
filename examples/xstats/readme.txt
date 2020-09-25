@@ -37,7 +37,7 @@ Installation instructions
 
 wee_extension --install=/home/weewx/examples/xstats
 
-2) restart WeeWX
+2) Restart WeeWX
 
 sudo /etc/init.d/weewx stop
 sudo /etc/init.d/weewx start
@@ -48,11 +48,12 @@ extended statistics.
 
 Manual installation instructions
 
-1) copy files to the WeeWX user directory
+1) Copy files to the WeeWX user directory. See https://bit.ly/33YHsqX for where your user
+directory is located.
 
 cp bin/user/xstats.py /home/weewx/bin/user
 
-2) in the WeeWX configuration file, modify the report section in which you 
+2) In the WeeWX configuration file, modify the report section in which you
 would like to use the extended statistics. For example, for the StandardReport
 
 [StdReport]
@@ -61,7 +62,7 @@ would like to use the extended statistics. For example, for the StandardReport
         [[[CheetahGenerator]]]
             search_list_extensions = user.xstats.ExtendedStatistics
 
-3) restart WeeWX
+3) Restart WeeWX
 
 sudo /etc/init.d/weewx stop
 sudo /etc/init.d/weewx start

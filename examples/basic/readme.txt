@@ -11,7 +11,7 @@ Installation instructions
 
 wee_extension --install=/home/weewx/examples/basic
 
-2) restart WeeWX
+2) Restart WeeWX
 
 sudo /etc/init.d/weewx stop
 sudo /etc/init.d/weewx start
@@ -19,11 +19,12 @@ sudo /etc/init.d/weewx start
 
 Manual installation instructions
 
-1) copy files to the WeeWX skins directory
+1) Copy files to the WeeWX skins directory. See https://bit.ly/33YHsqX for where your skins
+directory is located. For example, if you used the setup.py install method:
 
 cp -rp skins/basic /home/weewx/skins
 
-2) in the WeeWX configuration file, add a report
+2) In the WeeWX configuration file, add a report
 
 [StdReport]
     ...
@@ -31,7 +32,7 @@ cp -rp skins/basic /home/weewx/skins
         skin = basic
         HTML_ROOT = public_html/basic
 
-3) restart WeeWX
+3) Restart WeeWX
 
 sudo /etc/init.d/weewx stop
 sudo /etc/init.d/weewx start
