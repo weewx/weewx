@@ -860,7 +860,7 @@ def decode_uvi(pkt, pkt_data):
     try:
         record = {'uv': pkt_data[0 & 0x0f]}
         if DEBUG_PACKETS_UVI:
-            log.debug("  UV index:%s\n" % record['UV'])
+            log.debug("  UV index:%s\n" % record['uv'])
         return record
 
     except IndexError:
@@ -1529,6 +1529,8 @@ class WMR200(weewx.drivers.AbstractDevice):
         DEBUG_PACKETS_TEMP = int(stn_dict.get('debug_packets_temp', 0))
         global DEBUG_PACKETS_RAIN
         DEBUG_PACKETS_RAIN = int(stn_dict.get('debug_packets_rain', 0))
+        global DEBUG_PACKETS_UVI
+        DEBUG_PACKETS_UVI = int(stn_dict.get('debug_packets_uvi', 0))
         global DEBUG_PACKETS_WIND
         DEBUG_PACKETS_WIND = int(stn_dict.get('debug_packets_wind', 0))
         global DEBUG_PACKETS_STATUS
@@ -1539,6 +1541,8 @@ class WMR200(weewx.drivers.AbstractDevice):
         DEBUG_CHECKSUM = int(stn_dict.get('debug_checksum', 0))
         global DEBUG_MAPPING
         DEBUG_MAPPING = int(stn_dict.get('debug_mapping', 0))
+        global DEBUG_READS
+        DEBUG_READS = int(stn_dict.get('debug_reads', 0))
 
         if DEBUG_CONFIG_DATA:
             log.debug('Configuration setup')
