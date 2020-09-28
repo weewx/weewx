@@ -45,17 +45,17 @@ class WDSource(weeimport.Source):
     data across a number of monthly log files. Each log file contains one month
     of minute separated data in structured text or csv format.
 
-    Data is imported from all monthly log files found in the source directory 
+    Data is imported from all monthly log files found in the source directory
     one set of monthly log files at a time. Units of measure are not specified
     in the monthly log files so the units of measure must be specified in the
     wee_import config file. Whilst the WD monthly log file formats are well
     defined, some pre-processing of the data is required to provide data in a
     format suitable for use in the wee_import mapping methods.
-   
+
     WD log file units are set to either Metric or US in WD via the 'Log File'
     setting under 'Units' on the 'Units/Wind Chill' tab of the universal setup.
     The units used in each log file in each case are:
-    
+
     Log File                            Field               Metric      US
                                                             Units       Units
     MMYYYYlg.txt                        day
@@ -131,7 +131,8 @@ class WDSource(weeimport.Source):
                    'gustspeed': {'METRIC': 'knot', 'US': 'mile_per_hour'},
                    'humidity': {'METRIC': 'percent', 'US': 'percent'},
                    'rainlastmin': {'METRIC': 'mm', 'US': 'inch'},
-                   'radiation': {'METRIC': 'watt_per_meter_squared', 'US': 'watt_per_meter_squared'},
+                   'radiation': {'METRIC': 'watt_per_meter_squared',
+                                 'US': 'watt_per_meter_squared'},
                    'uv': {'METRIC': 'uv_index', 'US': 'uv_index'},
                    'soilmoist': {'METRIC': 'centibar', 'US': 'centibar'},
                    'soiltemp': {'METRIC': 'degree_C', 'US': 'degree_F'},
@@ -165,7 +166,7 @@ class WDSource(weeimport.Source):
                    'humidity': {'units': 'percent', 'map_to': 'outHumidity'},
                    'rainlastmin': {'map_to': 'rain'},
                    'radiation': {'units': 'watt_per_meter_squared',
-                                          'map_to': 'radiation'},
+                                 'map_to': 'radiation'},
                    'uv': {'units': 'uv_index', 'map_to': 'UV'},
                    'soilmoist': {'units': 'centibar', 'map_to': 'soilMoist1'},
                    'soiltemp': {'map_to': 'soilTemp1'},
@@ -542,13 +543,22 @@ class WDSource(weeimport.Source):
 
                 # ignore the first line, it will likely be header info
                 if i == 2 and len(" ".join(_row.split()).split(_del)) != len(self.logs[lg]['fields']):
-                    _msg = "Unexpected number of columns found in '%s': %s v %s" % (_fn,
-                                                                                    len(_row.split(_del)),
-                                                                                    len(self.logs[lg]['fields']))
+                    _msg = "Unexpected number of columns found in '%s': " \
+                           "%s v %s" % (_fn,
+                                        len(_row.split(_del)),
+                                        len(self.logs[lg]['fields']))
+                    print(_msg)
+                    log.info(_msg)
+                # check for and remove any null bytes
+                clean_row = _row
+                if "\x00" in _row:
+                    clean_row = clean_row.replace("\x00", "")
+                    _msg = "One or more null bytes found in and removed " \
+                           "from row %d in file '%s'" % (i, _fn)
                     print(_msg)
                     log.info(_msg)
                 # make sure we have full stops as decimal points
-                _clean_data.append(_row.replace(self.decimal, '.'))
+                _clean_data.append(clean_row.replace(self.decimal, '.'))
 
             # initialise a list to hold our processed data for this log file
             _data = []
@@ -593,7 +603,8 @@ class WDSource(weeimport.Source):
                         # add the record
                         _data.append(e_rec)
                 # now update our extras and remove any records we added
-                self.extras[lg][:] = [x for x in self.extras[lg] if not (x['year'] == _year and x['month'] == _month)]
+                self.extras[lg][:] = [x for x in self.extras[lg] if
+                                      not (x['year'] == _year and x['month'] == _month)]
 
             # There may be duplicate timestamped records in the data. We will
             # keep the first encountered duplicate and discard the latter ones
