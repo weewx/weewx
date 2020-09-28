@@ -215,8 +215,16 @@ class CSVSource(weeimport.Source):
         # any HTML tags and blank lines that may exist
         _clean_data = []
         for _row in _raw_data:
+            # check for and remove any null bytes
+            clean_row = _row
+            if "\x00" in _row:
+                clean_row = clean_row.replace("\x00", "")
+                _msg = "One or more null bytes found in and removed " \
+                       "from file '%s'" % self.source
+                print(_msg)
+                log.info(_msg)
             # get rid of any HTML tags
-            _line = ''.join(CSVSource._tags.split(_row))
+            _line = ''.join(CSVSource._tags.split(clean_row))
             if _line != "\n":
                 # save anything that is not a blank line
                 _clean_data.append(_line)
