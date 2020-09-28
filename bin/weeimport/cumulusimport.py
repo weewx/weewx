@@ -318,9 +318,17 @@ class CumulusSource(weeimport.Source):
         # Our raw data needs a bit of cleaning up before we can parse/map it.
         _clean_data = []
         for _row in _raw_data:
-            # Make sure we have full stops as decimal points
-            _line = _row.replace(self.decimal, '.')
-            # Ignore any blank lines
+            # check for and remove any null bytes
+            clean_row = _row
+            if "\x00" in _row:
+                clean_row = clean_row.replace("\x00", "")
+                _msg = "One or more null bytes found in and removed " \
+                       "from monthly log file '%s'" % (period, )
+                print(_msg)
+                log.info(_msg)
+            # make sure we have full stops as decimal points
+            _line = clean_row.replace(self.decimal, '.')
+            # ignore any blank lines
             if _line != "\n":
                 # Cumulus has separate date and time fields as the first 2
                 # fields of a row. It is easier to combine them now into a
