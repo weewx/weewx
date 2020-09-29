@@ -36,12 +36,14 @@ help: info
 	@echo "       install  run the generic python install"
 	@echo "       version  get version from __init__ and insert elsewhere"
 	@echo ""
-	@echo " deb-changelog  prepend stub changelog entry for deb"
-	@echo " rpm-changelog  prepend stub changelog entry for rpm"
+	@echo "    deb-changelog prepend stub changelog entry for deb"
+	@echo " redhat-changelog prepend stub changelog entry for redhat"
+	@echo "   suse-changelog prepend stub changelog entry for suse"
 	@echo ""
 	@echo "    src-package create source tarball suitable for distribution"
 	@echo "debian-packages create the debian packages"
 	@echo "redhat-packages create the redhat packages"
+	@echo "  suse-packages create the suse packages"
 	@echo ""
 	@echo "     check-deb  check the deb package"
 	@echo "     check-rpm  check the rpm package"
@@ -50,6 +52,7 @@ help: info
 	@echo "    upload-src  upload the src package"
 	@echo " upload-debian  upload the debian deb packages"
 	@echo " upload-redhat  upload the redhat rpm packages"
+	@echo "   upload-suse  upload the suse rpm packages"
 	@echo ""
 	@echo "   upload-docs  upload docs to weewx.com"
 	@echo ""
@@ -220,23 +223,26 @@ upload-debian:
 	scp $(DSTDIR)/python-$(DEBPKG) $(USER)@$(WEEWX_COM):$(WEEWX_STAGING)
 	scp $(DSTDIR)/python3-$(DEBPKG) $(USER)@$(WEEWX_COM):$(WEEWX_STAGING)
 
+# specify the operating system release target (e.g., 7 for centos7)
+OSREL=
+# specify the operating system label (e.g., el, suse)
+RPMOS=$(shell if [ -f /etc/SuSE-release -o -f /etc/SUSE-brand ]; then echo suse; elif [ -f /etc/redhat-release ]; then echo el; else echo os; fi)
+
 RPMREVISION=1
 RPMVER=$(VERSION)-$(RPMREVISION)
 # add a skeleton entry to rpm changelog
 rpm-changelog:
-	if [ "`grep $(RPMVER) pkg/changelog.rpm`" = "" ]; then \
-  pkg/mkchangelog.pl --action stub --format redhat --release-version $(RPMVER) > pkg/changelog.rpm.new; \
-  cat pkg/changelog.rpm >> pkg/changelog.rpm.new; \
-  mv pkg/changelog.rpm.new pkg/changelog.rpm; \
+	if [ "`grep $(RPMVER) pkg/changelog.$(RPMOS)`" = "" ]; then \
+  pkg/mkchangelog.pl --action stub --format redhat --release-version $(RPMVER) > pkg/changelog.$(RPMOS).new; \
+  cat pkg/changelog.$(RPMOS) >> pkg/changelog.$(RPMOS).new; \
+  mv pkg/changelog.$(RPMOS).new pkg/changelog.$(RPMOS); \
 fi
 
 # use rpmbuild to create the rpm package
-# specify the operating system release target (e.g., 7 for centos7)
-OSREL=7
+# specify the architecture (always noarch)
 RPMARCH=noarch
-RPMOS=$(shell if [ -f /etc/SuSE-release ]; then echo .suse; else echo .el$(OSREL); fi)
-RPMBLDDIR=$(BLDDIR)/weewx-$(RPMVER)$(RPMOS).$(RPMARCH)
-RPMPKG=weewx-$(RPMVER)$(RPMOS).$(RPMARCH).rpm
+RPMBLDDIR=$(BLDDIR)/weewx-$(RPMVER).$(RPMOS)$(OSREL).$(RPMARCH)
+RPMPKG=weewx-$(RPMVER).$(RPMOS)$(OSREL).$(RPMARCH).rpm
 rpm-package: $(DSTDIR)/$(SRCPKG)
 	rm -rf $(RPMBLDDIR)
 	mkdir -p -m 0755 $(RPMBLDDIR)
@@ -250,28 +256,40 @@ rpm-package: $(DSTDIR)/$(SRCPKG)
             -e 's%RPMREVISION%$(RPMREVISION)%' \
             -e 's%OSREL%$(OSREL)%' \
             pkg/weewx.spec.in > $(RPMBLDDIR)/SPECS/weewx.spec
-	cat pkg/changelog.rpm >> $(RPMBLDDIR)/SPECS/weewx.spec
+	cat pkg/changelog.$(RPMOS) >> $(RPMBLDDIR)/SPECS/weewx.spec
 	cp dist/weewx-$(VERSION).tar.gz $(RPMBLDDIR)/SOURCES
 	rpmbuild -ba --clean --define '_topdir $(CWD)/$(RPMBLDDIR)' --target noarch $(CWD)/$(RPMBLDDIR)/SPECS/weewx.spec
 	mkdir -p $(DSTDIR)
 	mv $(RPMBLDDIR)/RPMS/$(RPMARCH)/$(RPMPKG) $(DSTDIR)
-#	mv $(RPMBLDDIR)/SRPMS/weewx-$(RPMVER)$(RPMOS).src.rpm $(DSTDIR)
+#	mv $(RPMBLDDIR)/SRPMS/weewx-$(RPMVER).$(RPMOS)$(OSREL).src.rpm $(DSTDIR)
 ifeq ("$(SIGN)","1")
 	rpm --addsign $(DSTDIR)/$(RPMPKG)
-#	rpm --addsign $(DSTDIR)/weewx-$(RPMVER)$(RPMOS).src.rpm
+#	rpm --addsign $(DSTDIR)/weewx-$(RPMVER).$(RPMOS)$(OSREL).src.rpm
 endif
+
+redhat-changelog:
+	make rpm-changelog RPMOS=el
 
 redhat-packages: rpm-package-el7 rpm-package-el8
 
 rpm-package-el7:
-	make rpm-package OSREL=7
+	make rpm-package RPMOS=el OSREL=7
 
 rpm-package-el8:
-	make rpm-package OSREL=8
+	make rpm-package RPMOS=el OSREL=8
 
-suse-package: rpm-package
+suse-changelog:
+	make rpm-changelog RPMOS=suse
 
-# run rpmlint on the redhat package
+suse-packages: rpm-package-suse12 rpm-package-suse15
+
+rpm-package-suse12:
+	make rpm-package RPMOS=suse OSREL=12
+
+rpm-package-suse15:
+	make rpm-package RPMOS=suse OSREL=15
+
+# run rpmlint on the rpm package
 check-rpm:
 	rpmlint $(DSTDIR)/$(RPMPKG)
 
@@ -279,26 +297,28 @@ upload-rpm:
 	scp $(DSTDIR)/$(RPMPKG) $(USER)@$(WEEWX_COM):$(WEEWX_STAGING)
 
 upload-redhat:
-	make upload-rpm RPMOS=.el7
-	make upload-rpm RPMOS=.el8
+	make upload-rpm RPMOS=el OSREL=7
+	make upload-rpm RPMOS=el OSREL=8
 
 upload-suse:
-	make upload-rpm RPMOS=.suse$(OSREL)
+	make upload-rpm RPMOS=suse OSREL=12
+	make upload-rpm RPMOS=suse OSREL=15
 
 # shortcut to upload all packages from a single machine
 DEB2_PKG=python-weewx_$(DEBVER)_$(DEBARCH).deb
 DEB3_PKG=python3-weewx_$(DEBVER)_$(DEBARCH).deb
 RHEL7_PKG=weewx-$(RPMVER).el7.$(RPMARCH).rpm
 RHEL8_PKG=weewx-$(RPMVER).el8.$(RPMARCH).rpm
-SUSE_PKG=weewx-$(RPMVER).suse.$(RPMARCH).rpm
+SUSE12_PKG=weewx-$(RPMVER).suse12.$(RPMARCH).rpm
+SUSE12_PKG=weewx-$(RPMVER).suse15.$(RPMARCH).rpm
 upload-pkgs:
-	scp $(DSTDIR)/$(DEB2_PKG) $(DSTDIR)/$(DEB3_PKG) $(DSTDIR)/$(RHEL7_PKG) $(DSTDIR)/$(RHEL8_PKG) $(DSTDIR)/$(SUSE_PKG) $(USER)@$(WEEWX_COM):$(WEEWX_STAGING)
+	scp $(DSTDIR)/$(DEB2_PKG) $(DSTDIR)/$(DEB3_PKG) $(DSTDIR)/$(RHEL7_PKG) $(DSTDIR)/$(RHEL8_PKG) $(DSTDIR)/$(SUSE12_PKG) $(DSTDIR)/$(SUSE15_PKG) $(USER)@$(WEEWX_COM):$(WEEWX_STAGING)
 
 # move files from the upload directory to the release directory and set up the
 # symlinks to them from the download root directory
 DEVDIR=$(WEEWX_DOWNLOADS)/development_versions
 RELDIR=$(WEEWX_DOWNLOADS)/released_versions
-ARTIFACTS=$(DEB2_PKG) $(DEB3_PKG) $(RHEL7_PKG) $(RHEL8_PKG) $(SUSE_PKG) $(SRCPKG)
+ARTIFACTS=$(DEB2_PKG) $(DEB3_PKG) $(RHEL7_PKG) $(RHEL8_PKG) $(SUSE12_PKG) $(SUSE15_PKG) $(SRCPKG)
 release:
 	ssh $(USER)@$(WEEWX_COM) "for f in $(ARTIFACTS); do if [ -f $(DEVDIR)/\$$f ]; then mv $(DEVDIR)/\$$f $(RELDIR); fi; done"
 	ssh $(USER)@$(WEEWX_COM) "rm -f $(WEEWX_DOWNLOADS)/weewx*"
@@ -325,24 +345,29 @@ apt-repo:
 # make local copy of the published apt repository
 pull-apt-repo:
 	mkdir -p ~/.aptly
-	rsync -arv $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/aptly/ ~/.aptly
+	rsync -arvz $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/aptly/ ~/.aptly
 
 # add the latest version to the local apt repo using aptly
 update-apt-repo:
 	aptly repo add python2-weewx $(DSTDIR)/python-$(DEBPKG)
 	aptly snapshot create python-weewx-$(DEBVER) from repo python2-weewx
-	aptly publish switch squeeze python2 python-weewx-$(DEBVER)
+	aptly publish drop squeeze python2
+	aptly publish -architectures=all snapshot python-weewx-$(DEBVER) python2
+# i would prefer to just do a switch, but that does not work. idkw
+#	aptly publish switch squeeze python2 python-weewx-$(DEBVER)
 	aptly repo add python3-weewx $(DSTDIR)/python3-$(DEBPKG)
 	aptly snapshot create python3-weewx-$(DEBVER) from repo python3-weewx
-	aptly publish switch buster python3 python3-weewx-$(DEBVER)
+	aptly publish drop buster python3
+	aptly publish -architectures=all snapshot python3-weewx-$(DEBVER) python3
+#	aptly publish switch buster python3 python3-weewx-$(DEBVER)
 
 # publish apt repo changes to the public weewx apt repo
 push-apt-repo:
-	rsync -arv ~/.aptly/ $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/aptly-test
+	rsync -arvz ~/.aptly/ $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/aptly-test
 
 # copy the testing repository onto the production repository
 release-apt-repo:
-	ssh $(USER)@$(WEEWX_COM) "rsync -arv /var/www/html/aptly-test/ /var/www/html/aptly"
+	ssh $(USER)@$(WEEWX_COM) "rsync -arvz /var/www/html/aptly-test/ /var/www/html/aptly"
 
 YUM_REPO=~/.yum/weewx
 yum-repo:
@@ -353,20 +378,44 @@ yum-repo:
 
 pull-yum-repo:
 	mkdir -p $(YUM_REPO)
-	rsync -arv $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/yum/ ~/.yum
+	rsync -arvz $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/yum/ ~/.yum
 
 update-yum-repo:
 	cp -p $(DSTDIR)/weewx-$(RPMVER).el7.$(RPMARCH).rpm $(YUM_REPO)/el7/RPMS
-	createrepo -o $(YUM_REPO)/el7 $(YUM_REPO)/el7
+	createrepo $(YUM_REPO)/el7
 	cp -p $(DSTDIR)/weewx-$(RPMVER).el8.$(RPMARCH).rpm $(YUM_REPO)/el8/RPMS
-	createrepo -o $(YUM_REPO)/el8 $(YUM_REPO)/el8
+	createrepo $(YUM_REPO)/el8
 
 push-yum-repo:
-	rsync -arv ~/.yum/ $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/yum-test
+	rsync -arvz ~/.yum/ $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/yum-test
 
 # copy the testing repository onto the production repository
 release-yum-repo:
-	ssh $(USER)@$(WEEWX_COM) "rsync -arv /var/www/html/yum-test/ /var/www/html/yum"
+	ssh $(USER)@$(WEEWX_COM) "rsync -arvz /var/www/html/yum-test/ /var/www/html/yum"
+
+SUSE_REPO=~/.suse/weewx
+suse-repo:
+	mkdir -p $(SUSE_REPO)/{suse12,suse15}/RPMS
+	cp -p pkg/index-suse.html ~/.suse/index.html
+	cp -p pkg/weewx-suse12.repo ~/.suse
+	cp -p pkg/weewx-suse15.repo ~/.suse
+
+pull-suse-repo:
+	mkdir -p $(SUSE_REPO)
+	rsync -arvz $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/suse/ ~/.suse
+
+update-suse-repo:
+	cp -p $(DSTDIR)/weewx-$(RPMVER).suse12.$(RPMARCH).rpm $(SUSE_REPO)/suse12/RPMS
+	createrepo $(SUSE_REPO)/suse12
+	cp -p $(DSTDIR)/weewx-$(RPMVER).suse15.$(RPMARCH).rpm $(SUSE_REPO)/suse15/RPMS
+	createrepo $(SUSE_REPO)/suse15
+
+push-suse-repo:
+	rsync -arvz ~/.suse/ $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/suse-test
+
+# copy the testing repository onto the production repository
+release-suse-repo:
+	ssh $(USER)@$(WEEWX_COM) "rsync -arvz /var/www/html/suse-test/ /var/www/html/suse"
 
 # run perlcritic to ensure clean perl code.  put these in ~/.perlcriticrc:
 # [-CodeLayout::RequireTidyCode]

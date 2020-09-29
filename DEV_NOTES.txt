@@ -9,21 +9,22 @@ checklist for doing a release:
 3. Make sure all changes have been logged
      1. docs/changes.txt
      2. make deb-changelog
-     3. make rpm-changelog
-     4. docs/upgrading.htm
+     3. make redhat-changelog
+     4. make suse-changelog
+     5. docs/upgrading.htm
 4. Create the packages
      1. make src-package
      2. make debian-packages
      3. make redhat-packages
-     4. make suse-package
+     4. make suse-packages
 5. Sanity check on production machine: unpack the tarball, install, run
 6. Tag it
      1. git tag -a v1.3.1 -m "Version 1.3.1 release"
 7. Upload to weewx.com
      1. make upload-src
-     2. make upload-deb
-     3. make upload-rpm RPMOS=.rhel
-     4. make upload-rpm RPMOS=.suse
+     2. make upload-debian
+     3. make upload-redhat
+     4. make upload-suse
      6. make upload-docs
 8. Update the deb repository
      1. make pull-apt-repo
@@ -35,18 +36,24 @@ checklist for doing a release:
      2. make update-yum-repo
      3. make push-yum-repo
      4. ssh weewx.com rsync -arv /var/www/html/yum-test/ /var/www/html/yum
-10. Announce the release to the weewx user's group.
+10. Update the suse repository
+     1. make pull-suse-repo
+     2. make update-suse-repo
+     3. make push-suse-repo
+     4. ssh weewx.com rsync -arv /var/www/html/suse-test/ /var/www/html/suse
+11. Announce the release to the weewx user's group.
 
 
 
-release process by command: ---------------------------------------------------
+release process by command ----------------------------------------------------
 
 # on any host, do a fresh checkout, set the version and update changelogs
 git clone https://github.com/weewx/weewx.git
 vi bin/weewx/__init__.py
 make version
 make deb-changelog
-make rpm-changelog
+make redhat-changelog
+make suse-changelog
 vi docs/changes.txt        # as needed
 vi docs/upgrading.htm      # as needed
 git commit -a -m "release x.y.z"
@@ -56,17 +63,17 @@ git push
 rm -rf build dist
 make src-package upload-src
 
-# on debian host, build deb package, upload to development_versions
+# on debian host, build debian packages, upload to development_versions
 rm -rf build dist
-make deb-package upload-deb
+make debian-packages upload-debian
 
-# on redhat host, build the redhat rpm package, upload to development_versions
+# on redhat host, build the redhat packages, upload to development_versions
 rm -rf build dist
-make rpm-package upload-rpm
+make redhat-packages upload-redhat
 
-# on suse host, build the suse rpm package, upload to development_versions
+# on suse host, build the suse packages, upload to development_versions
 rm -rf build dist
-make rpm-package upload-rpm
+make suse-packages upload-suse
 
 # tag the release
 git tag -a vX.Y.Z -m "tag release X.Y.Z"
@@ -78,10 +85,41 @@ make upload-docs
 # move the new files into position
 make release
 
-# update the apt repository (requires aptly and local clone of the apt repo)
+# update the apt repository
 make pull-apt-repo
-make update-apt-repo
+make update-apt-repo (requires local installation of aptly)
 make push-apt-repo
+
+# update the yum repository
+make pull-yum-repo
+make update-yum-repo (requires local installation of createrepo)
+make push-yum-repo
+
+# update the suse repository
+make pull-suse-repo
+make update-suse-repo (requires local installation of createrepo)
+make push-suse-repo
+
+
+pre-requisites ----------------------------------------------------------------
+
+to build debian package install the following (use 'apt-get install'):
+  git
+  rsync
+  gpg
+  debhelper
+  python3-distutils
+
+to build redhat package install the following (use 'yum install'):
+  git
+  rsync
+  rpm-build
+  rpm-sign
+
+to build suse package install the following (use 'zypper install'):
+  git
+  rsync
+  rpm-build
 
 
 howto -------------------------------------------------------------------------
@@ -94,17 +132,23 @@ how to update the version number:
 how to build source package:
   make src-package
 
-how to build debian package:
+how to build debian packages:
   make deb-changelog
   emacs pkg/debian/changelog    # add any package-specific changes, if any
   git commit -m "update deb changelog" pkg/debian/changelog
-  make deb-package
+  make debian-packages
 
-how to build redhat package:
-  make rpm-changelog
-  emacs pkg/changelog.rpm       # add any package-specific changes, if any
-  git commit -m "update rpm changelog" pkg/changelog.rpm
-  make rpm-package
+how to build redhat packages:
+  make redhat-changelog
+  emacs pkg/changelog.el       # add any package-specific changes, if any
+  git commit -m "update redhat changelog" pkg/changelog.el
+  make redhat-packages
+
+how to build redhat packages:
+  make suse-changelog
+  emacs pkg/changelog.suse     # add any package-specific changes, if any
+  git commit -m "update suse changelog" pkg/changelog.suse
+  make suse-packages
 
 to display debconf variables:
   sudo debconf-show weewx
@@ -114,7 +158,6 @@ to manually purge debconf variables:
 
 to sign rpm packages you need .rpmmacros in your home directory:
 ~/.rpmmacros
-  %_signature gpg
   %_gpg_name  YOUR_NAME_HERE
 
 to generate gpg key used for signing packages:
@@ -126,17 +169,26 @@ to export the text version of a public key:
 
 source install:
   python ./setup.py install
-  python ./setup.py install home=/opt/weewx-x.y.z
+  python ./setup.py install home=/opt/weewx-x.y.z     (this does not work!)
 
 debian install/remove:
-  dpkg -i weewx_x.y.z-r.deb           # install
-  (apt-get install weewx)             # finish install if dependencies failed
-  dpkg -r weewx                       # remove
-  dpkg -P weewx                       # purge
+  apt-get install weewx         # install with apt
+  apt-get remove weewx          # remove with apt
+  apt-get purge weewx           # purge removes /etc/weewx and debconf settings
+  dpkg -i weewx_x.y.z-r.deb     # install
+  (apt-get install weewx)       # finish install if dependencies failed
+  dpkg -r weewx                 # remove
+  dpkg -P weewx                 # purge
 
 redhat install/remove:
   yum install weewx-x.y.z-r.rpm [--nogpgcheck]    # install with yum
   yum remove weewx                                # remove with yum
+  rpm -i weewx-x.y.z-r.rpm                        # install with rpm directly
+  rpm -e weewx                                    # remove with rpm
+
+suse install/remove:
+  zypper install weewx-x.y.z-r.rpm [--nogpgcheck] # install with zypper
+  zypper remove weewx                             # remove with zypper
   rpm -i weewx-x.y.z-r.rpm                        # install with rpm directly
   rpm -e weewx                                    # remove with rpm
 
@@ -148,6 +200,14 @@ we use snapshots, and publish using 'publish switch', rather than publishing
 using a simple 'publish update'.
 
 there are two apt repositories: python2 and python3
+
+to do apt repo updates you must first install aptly:
+  https://www.aptly.info/download/
+for example, on debian:
+  echo "deb http://repo.aptly.info/ squeeze main" | sudo tee /etc/apt/sources.list.d/aptly.list
+  wget -qO - https://www.aptly.info/pubkey.txt | sudo apt-key add -
+  sudo apt-get update
+  sudo apt-get install aptly
 
 create local debian repo using aptly:
   aptly repo create -distribution=squeeze -component=main -architectures=all python2-weewx
@@ -225,7 +285,8 @@ notes -------------------------------------------------------------------------
 there are multiple changelogs:
   docs/changes.txt - definitive changelog for the application
   pkg/debian/changelog - changes to the debian packaging
-  pkg/changelog.rpm - changes to the redhat packaging
+  pkg/changelog.el - changes to the redhat packaging
+  pkg/changelog.suse - changes to the suse packaging
 
 when signing, gpg info must match the name and email in the latest package
 changelog entry.
@@ -241,26 +302,24 @@ then dried dpkg-buildpackage (uses debian dir and is higher level) but misses
 the config and templates.  ended up using dpkg-buildpackage with some manual
 (scripted) file manipulation.
 
-to build debian package install the following (use 'apt-get install'):
-  git
-  rsync
-  gpg
-  debhelper
-  python3-distutils
+both debian and redhat deprecate the use of '/usr/bin/env python' as the
+shebang - they want a very tight binding to the operating system python as the
+shebang.  in fact, since late 2019 rehat build tools see any shebang other than
+a tight coupling to the operating system's python as an error and refuse to
+accept it.  however, the bsd platforms prefer this as the shebang, and the
+other approach fails on bsd.  macos uses something else.
 
-to build redhat package install the following (use 'yum install'):
-  git
-  rsync
-  rpm-build
-  rpm-sign
+weewx supports python 2.7 and any python 3.5+ so it should not be tightly
+coupled to any specific python installation.
 
-to do apt repo updates you must first install aptly:
-  https://www.aptly.info/download/
-for example, on debian:
-  echo "deb http://repo.aptly.info/ squeeze main" | sudo tee /etc/apt/sources.list.d/aptly.list
-  wget -qO - https://www.aptly.info/pubkey.txt | sudo apt-key add -
-  sudo apt-get update
-  sudo apt-get install aptly
+so use the source code should use the '/usr/bin/env python' shebang.  on
+platforms that refuse to accept this, replace the package builder will replace
+this with whatever that platform will accept.  the /etc/default/weewx plus
+shell stubs in /usr/bin/wee* is used in platform installations to provide
+python flexibility so that users do not have to install weewx multiple times
+to experiment with different versions of python.  users who run weewx directly
+from a git clone get all of the 'env python' goodness of being able to specify
+whatever python interpreter they want.
 
 
 unit tests --------------------------------------------------------------------

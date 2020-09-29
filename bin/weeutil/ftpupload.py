@@ -92,7 +92,7 @@ class FtpUpload(object):
 
         try:
             if self.secure:
-                log.debug("Attempting secure connection to %s" % self.server)
+                log.debug("Attempting secure connection to %s", self.server)
                 if self.reuse_ssl:
                     # Activate the workaround for the Python ftplib library.
                     from ssl import SSLSocket
@@ -117,10 +117,10 @@ class FtpUpload(object):
                 else:
                     ftp_server = ftplib.FTP_TLS()
             else:
-                log.debug("Attempting connection to %s" % self.server)
+                log.debug("Attempting connection to %s", self.server)
                 ftp_server = ftplib.FTP()
 
-            if self.debug:
+            if self.debug >= 2:
                 ftp_server.set_debuglevel(self.debug)
 
             ftp_server.set_pasv(self.passive)
@@ -128,9 +128,9 @@ class FtpUpload(object):
             ftp_server.login(self.user, self.password)
             if self.secure and self.secure_data:
                 ftp_server.prot_p()
-                log.debug("Secure data connection to %s" % self.server)
+                log.debug("Secure data connection to %s", self.server)
             else:
-                log.debug("Connected to %s" % self.server)
+                log.debug("Connected to %s", self.server)
 
             # Walk the local directory structure
             for (dirpath, unused_dirnames, filenames) in os.walk(self.local_root):
@@ -138,21 +138,21 @@ class FtpUpload(object):
                 # Strip out the common local root directory. What is left
                 # will be the relative directory both locally and remotely.
                 local_rel_dir_path = dirpath.replace(self.local_root, '.')
-                if self._skip_this_dir(local_rel_dir_path):
+                if _skip_this_dir(local_rel_dir_path):
                     continue
                 # This is the absolute path to the remote directory:
                 remote_dir_path = os.path.normpath(os.path.join(self.remote_root,
                                                                 local_rel_dir_path))
 
                 # Make the remote directory if necessary:
-                # _make_remote_dir(ftp_server, remote_dir_path)
+                _make_remote_dir(ftp_server, remote_dir_path)
 
                 # Now iterate over all members of the local directory:
                 for filename in filenames:
 
                     full_local_path = os.path.join(dirpath, filename)
                     # See if this file can be skipped:
-                    if self._skip_this_file(timestamp, fileset, full_local_path):
+                    if _skip_this_file(timestamp, fileset, full_local_path):
                         continue
 
                     full_remote_path = os.path.join(remote_dir_path, filename)
@@ -163,18 +163,18 @@ class FtpUpload(object):
                             ftp_server.storbinary(stor_cmd, fd)
                         except ftplib.all_errors as e:
                             # Unsuccessful. Log it, then reraise the exception
-                            log.error("Failed uploading %s to %s. Reason: %s"
-                                      % (full_remote_path, self.server, e))
+                            log.error("Failed uploading %s to server %s. Reason: '%s'",
+                                      full_local_path, self.server, e)
                             raise
                     # Success.
                     n_uploaded += 1
                     fileset.add(full_local_path)
-                    log.debug("Uploaded file %s" % full_remote_path)
+                    log.debug("Uploaded file %s to %s", full_local_path, full_remote_path)
         finally:
             try:
                 ftp_server.quit()
-            except Exception as e:
-                log.debug("quit() exception %s: '%s'", type(e), e)
+            except Exception:
+                pass
 
         timestamp = time.time()
         self.save_last_upload(timestamp, fileset)
@@ -211,26 +211,28 @@ class FtpUpload(object):
             cPickle.dump(timestamp, f)
             cPickle.dump(fileset, f)
 
-    def _skip_this_dir(self, local_dir):
-        """Determine whether to skip a directory."""
 
-        return os.path.basename(local_dir) in ('.svn', 'CVS')
+def _skip_this_file(timestamp, fileset, full_local_path):
+    """Determine whether to skip a specific file."""
 
-    def _skip_this_file(self, timestamp, fileset, full_local_path):
-        """Determine whether to skip a specific file."""
-
-        filename = os.path.basename(full_local_path)
-        if filename[-1] == '~' or filename[0] == '#':
-            return True
-
-        if full_local_path not in fileset:
-            return False
-
-        if os.stat(full_local_path).st_mtime > timestamp:
-            return False
-
-        # Filename is in the set, and is up to date. 
+    filename = os.path.basename(full_local_path)
+    if filename[-1] == '~' or filename[0] == '#':
         return True
+
+    if full_local_path not in fileset:
+        return False
+
+    if os.stat(full_local_path).st_mtime > timestamp:
+        return False
+
+    # Filename is in the set, and is up to date.
+    return True
+
+
+def _skip_this_dir(local_dir):
+    """Determine whether to skip a directory."""
+
+    return os.path.basename(local_dir) in ('.svn', 'CVS')
 
 
 def _make_remote_dir(ftp_server, remote_dir_path):
@@ -251,5 +253,4 @@ def _make_remote_dir(ftp_server, remote_dir_path):
         # It's a real error. Re-raise the exception.
         raise
 
-    log.debug("Made directory %s" % remote_dir_path)
-    return
+    log.debug("Made directory %s", remote_dir_path)

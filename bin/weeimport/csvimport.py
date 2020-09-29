@@ -51,10 +51,14 @@ class CSVSource(weeimport.Source):
                     'E': 90.0, 'ESE': 112.5, 'SE': 135.0, 'SSE': 157.5,
                     'S': 180.0, 'SSW': 202.5, 'SW': 225.0, 'WSW': 247.5,
                     'W': 270.0, 'WNW': 292.5, 'NW': 315.0, 'NNW': 337.5,
-                    'NORTH': 0.0, 'NORTHNORTHEAST': 22.5, 'NORTHEAST': 45.0, 'EASTNORTHEAST': 67.5,
-                    'EAST': 90.0, 'EASTSOUTHEAST': 112.5, 'SOUTHEAST': 135.0, 'SOUTHSOUTHEAST': 157.5,
-                    'SOUTH': 180.0, 'SOUTHSOUTHWEST': 202.5, 'SOUTHWEST': 225.0, 'WESTSOUTHWEST': 247.5,
-                    'WEST': 270.0, 'WESTNORTHWEST': 292.5, 'NORTHWEST': 315.0, 'NORTHNORTHWEST': 337.5
+                    'NORTH': 0.0, 'NORTHNORTHEAST': 22.5,
+                    'NORTHEAST': 45.0, 'EASTNORTHEAST': 67.5,
+                    'EAST': 90.0, 'EASTSOUTHEAST': 112.5,
+                    'SOUTHEAST': 135.0, 'SOUTHSOUTHEAST': 157.5,
+                    'SOUTH': 180.0, 'SOUTHSOUTHWEST': 202.5,
+                    'SOUTHWEST': 225.0, 'WESTSOUTHWEST': 247.5,
+                    'WEST': 270.0, 'WESTNORTHWEST': 292.5,
+                    'NORTHWEST': 315.0, 'NORTHNORTHWEST': 337.5
                     }
 
     def __init__(self, config_dict, config_path, csv_config_dict, import_config_path, options):
@@ -92,7 +96,8 @@ class CSVSource(weeimport.Source):
         try:
             self.source = csv_config_dict['file']
         except KeyError:
-            raise weewx.ViolatedPrecondition("CSV source file not specified in '%s'." % import_config_path)
+            raise weewx.ViolatedPrecondition("CSV source file not specified "
+                                             "in '%s'." % import_config_path)
         # get the source file encoding, default to utf-8-sig
         self.source_encoding = self.csv_config_dict.get('source_encoding',
                                                         'utf-8-sig')
@@ -126,15 +131,17 @@ class CSVSource(weeimport.Source):
         if self.verbose:
             print(_msg)
         log.debug(_msg)
-        _msg = "     dry-run=%s, calc_missing=%s, ignore_invalid_data=%s" % (self.dry_run,
-                                                                             self.calc_missing,
-                                                                             self.ignore_invalid_data)
+        _msg = "     dry-run=%s, calc_missing=%s, " \
+               "ignore_invalid_data=%s" % (self.dry_run,
+                                           self.calc_missing,
+                                           self.ignore_invalid_data)
         if self.verbose:
             print(_msg)
         log.debug(_msg)
-        _msg = "     tranche=%s, interval=%s, date/time_string_format=%s" % (self.tranche,
-                                                                             self.interval,
-                                                                             self.raw_datetime_format)
+        _msg = "     tranche=%s, interval=%s, " \
+               "date/time_string_format=%s" % (self.tranche,
+                                               self.interval,
+                                               self.raw_datetime_format)
         if self.verbose:
             print(_msg)
         log.debug(_msg)
@@ -148,13 +155,15 @@ class CSVSource(weeimport.Source):
         if self.verbose:
             print(_msg)
         log.debug(_msg)
-        _msg = "Using database binding '%s', which is bound to database '%s'" % (self.db_binding_wx,
-                                                                                 self.dbm.database_name)
+        _msg = "Using database binding '%s', which is bound to " \
+               "database '%s'" % (self.db_binding_wx,
+                                  self.dbm.database_name)
         print(_msg)
         log.info(_msg)
-        _msg = "Destination table '%s' unit system is '%#04x' (%s)." % (self.dbm.table_name,
-                                                                        self.archive_unit_sys,
-                                                                        unit_nicknames[self.archive_unit_sys])
+        _msg = "Destination table '%s' unit system " \
+               "is '%#04x' (%s)." % (self.dbm.table_name,
+                                     self.archive_unit_sys,
+                                     unit_nicknames[self.archive_unit_sys])
         print(_msg)
         log.info(_msg)
         if self.calc_missing:
@@ -171,7 +180,8 @@ class CSVSource(weeimport.Source):
             print(_msg)
             log.info(_msg)
         if options.date or options.date_from:
-            _msg = "Observations timestamped after %s and up to and" % timestamp_to_string(self.first_ts)
+            _msg = "Observations timestamped after %s and " \
+                   "up to and" % timestamp_to_string(self.first_ts)
             print(_msg)
             log.info(_msg)
             _msg = "including %s will be imported." % timestamp_to_string(self.last_ts)
@@ -215,8 +225,16 @@ class CSVSource(weeimport.Source):
         # any HTML tags and blank lines that may exist
         _clean_data = []
         for _row in _raw_data:
+            # check for and remove any null bytes
+            clean_row = _row
+            if "\x00" in _row:
+                clean_row = clean_row.replace("\x00", "")
+                _msg = "One or more null bytes found in and removed " \
+                       "from file '%s'" % self.source
+                print(_msg)
+                log.info(_msg)
             # get rid of any HTML tags
-            _line = ''.join(CSVSource._tags.split(_row))
+            _line = ''.join(CSVSource._tags.split(clean_row))
             if _line != "\n":
                 # save anything that is not a blank line
                 _clean_data.append(_line)

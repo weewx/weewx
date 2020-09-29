@@ -13,7 +13,6 @@ import ftplib
 import glob
 import logging
 import os.path
-import socket
 import threading
 import time
 import traceback
@@ -214,9 +213,9 @@ class StdReportEngine(threading.Thread):
     def _build_skin_dict(self, report):
         """Find and build the skin_dict for the given report"""
 
-        # Start with the defaults in the defaults module. Because we will be modifying it, we need to make a deep
-        # copy.
-        skin_dict = configobj.ConfigObj(weewx.defaults.defaults.dict())
+        # Start with the defaults in the defaults module. Because we will be modifying it, we need
+        # to make a deep copy.
+        skin_dict = weeutil.config.deep_copy(weewx.defaults.defaults)
 
         # Add the report name:
         skin_dict['REPORT_NAME'] = report
@@ -245,7 +244,9 @@ class StdReportEngine(threading.Thread):
 
         # Now add on the [StdReport][[Defaults]] section, if present:
         if 'Defaults' in self.config_dict['StdReport']:
-            merge_dict = self.config_dict['StdReport']['Defaults'].dict()
+            # Because we will be modifying the results, make a deep copy of the [[Defaults]]
+            # section.
+            merge_dict = weeutil.config.deep_copy(self.config_dict)['StdReport']['Defaults']
             weeutil.config.merge_config(skin_dict, merge_dict)
 
         # Inject any scalar overrides. This is for backwards compatibility. These options should now go
@@ -335,7 +336,7 @@ class FtpGenerator(ReportGenerator):
                 if log_success:
                     t2 = time.time()
                     log.info("ftpgenerator: Ftp'd %d files in %0.2f seconds", n, (t2 - t1))
-            break
+                break
         else:
             # The loop completed normally, meaning the upload failed.
             if log_failure:

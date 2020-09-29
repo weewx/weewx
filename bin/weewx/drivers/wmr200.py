@@ -1915,11 +1915,11 @@ class WMR200(weewx.drivers.AbstractDevice):
                     # Ensure that the packet has a valid 'interval' field.
                     packet_record_interval = int(timestamp_packet_interval / 60.0)
                     if packet_record_interval == 0:
-                      # This packet occurred less than the minimal interval after the
-                      # initial time search space and is discarded.
-                      loginf('genStartup() Discarding received archive record'
-                             ' since interval is zero')
-                      return
+                        # This packet occurred less than the minimal interval after the
+                        # initial time search space and is discarded.
+                        log.info('genStartup() Discarding received archive record'
+                                 ' since interval is zero')
+                        return
                     pkt.record_update({'interval': packet_record_interval})
                     # Calculate the rain accumulation between valid archive
                     # packets.

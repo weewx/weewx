@@ -1,6 +1,56 @@
 weewx change history
 --------------------
 
+4.1.2 MM/DD/YYYY
+
+Added units and labels for the lightning data types.
+
+Fixed problem where threads attempt to access non-existent database. Fixes
+issue #579.
+
+Fixed problem that caused reporting units to revert to US if they were in a
+mixed unit system. Fixes issue #576.
+
+Fixed problem that could cause the station registry to fail if given a location
+with a non-ASCII location name.
+
+Changed TE923 bucket size from 0.02589 inches to 1/36 of an inch
+(0.02777778 in). PR #575. Fixes issue #574. Thanks to user Timothy!
+
+Undocumented option retry_certificate has been renamed to retry_ssl, and now
+covers all SSL errors (not just certificate errors). Fixes issue #569. Thanks
+to user Eric!
+
+Fixed problem caused by specifying a [Logging]/[[formatters]] section in
+weewx.conf that uses interpolated variables.
+
+Fixed problem in the Vantage driver that resulted in incorrect sunrise/sunset
+being included in loop packets when run under Python 3. Thanks to users 
+Constantine and Jacques!
+
+Improved auto-scaling of plot axes.
+
+
+4.1.1 06/01/2020
+
+Fixed problem that caused wind speed to be reported to AWEKAS in m/s instead
+of km/h.
+
+Fixed problem that caused FTP attempts not to be retried.
+
+Fixed problem that caused monthly and yearly summaries to appear only
+sporadically.
+
+Fixed problem when using the ultimeter driver under Python 2.
+
+Fixed problem when using the ws1 driver under Python 2.
+
+Fixed problem that prevented remote directories from being created by FTP.
+
+New strategy for calculating system uptime under Python 3. Revisits
+issue #428. Alternative to PR #561.
+
+
 4.1.0 05/25/2020
 
 Archive records emitted by the Vantage driver now include the number of wind
@@ -190,6 +240,11 @@ calculated must be listed in weewx.conf. See the Upgrade Guide.
 
 setup.py install no longer saves the old 'bin' subdirectory. Instead, it simply
 overwrites it.
+
+Support for the vantage LOOP2 packet format. Fixes issue #374.
+
+The vantage driver now allows 3 retries per read, rather than per
+archive interval.
 
 
 3.9.2 07/14/2019
@@ -591,8 +646,6 @@ Decode heatindex and windchill from wmr300 sensor outputs.
 
 Report the firmware version when initializing the cc3000 driver.
 
-Support for the vantage LOOP2 packet format. Fixes issue #374.
-
 Fixed bug in vantage driver that would prevent console wake up during
 retries when fetching EEPROM vales. Thanks to user Dan Begallie!
 
@@ -603,10 +656,7 @@ out, other drivers will follow suit. Partial fix of issue #175.
 The vantage driver now emits the barometer trend in LOOP packets as
 field 'trendIcon'.
 
-The vantage driver now allows 3 retries per read, rather than per
-archive interval.
-
-The engine now logs locale. Additional information if a TERM signal is 
+The engine now logs locale. Additional information if a TERM signal is
 received.
 
 Removed the site-specific "Pond" extensions from the Standard skin.

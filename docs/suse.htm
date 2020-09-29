@@ -21,31 +21,25 @@
     from an RPM package on systems such as SuSE or OpenSUSE.
 </p>
 
-<h2>Download</h2>
-<p>
-    Download the SUSE RPM package from <a href="http://weewx.com/downloads"><span class="code">weewx.com/downloads</span></a>.  It will have a name similar to <span class='code'>weewx-X.Y.Z-R.suse.noarch.rpm</span>.
+<h2>Configure zypper</h2>
+
+<p>Tell <span class="code">zypper</span> where to find the WeeWX releases.  This only has to be done once - the first time you install WeeWX.</p>
+
+Tell your system to trust weewx.com:
+<pre class='tty cmd'>sudo rpm --import http://weewx.com/keys.html</pre>
+
+For SUSE 15 use python3:
+<pre class='tty cmd'>curl -s http://weewx.com/suse/weewx-suse15.repo | sudo tee /etc/zypp/repos.d/weewx.repo</pre>
+
+For SUSE 12 use python2:
+<pre class='tty cmd'>curl -s http://weewx.com/suse/weewx-suse12.repo | sudo tee /etc/zypp/repos.d/weewx.repo</pre>
+
+<h2>Install WeeWX</h2>
+
+<p>Install WeeWX using <span class="code">zypper</span>.  When you are done, WeeWX will be running the Simulator in the background as a daemon.
 </p>
 
-<h2>Install</h2>
-<p>
-    Install pre-requisites:
-</p>
-<pre class='tty cmd'>sudo zypper install python-configobj
-sudo zypper install python-cheetah
-sudo zypper install python-imaging
-sudo zypper install python-serial
-sudo zypper install python-usb</pre>
-<p>
-    Install by double-clicking the .rpm file, or via command line:
-</p>
-<pre class='tty cmd'>sudo rpm -i weewx-X.Y.Z-R.rpm</pre>
-<p>
-    If you see errors about untrusted signature, or MISSING KEYS, you can
-    either install the <a href="http://weewx.com/keys.html">weewx GPG keys</a>:
-</p>
-<pre class='tty cmd'>sudo rpm --import http://weewx.com/keys.html</pre>
-<p>or tell rpm to ignore the signature:</p>
-<pre class='tty cmd'>sudo rpm -i --nosignature weewx-X.Y.Z-R.rpm</pre>
+<pre class='tty cmd'>sudo zypper install weewx</pre>
 
 <h2>Status</h2>
 <p>
@@ -64,15 +58,15 @@ If your hardware supports hardware archiving, then how long you wait will depend
 <p>
     The default installation uses Simulator as the <span class='code'>station_type</span>.  To use real hardware, stop WeeWX, change to the actual station type and station parameters, delete the simulation data, then restart WeeWX:
 </p>
-<pre class='tty cmd'>sudo /etc/init.d/weewx stop
+<pre class='tty cmd'>sudo systemctl stop weewx
 sudo wee_config --reconfigure
 sudo rm /var/lib/weewx/weewx.sdb
-sudo /etc/init.d/weewx start</pre>
+sudo systemctl start weewx</pre>
 
 <h2>Start/Stop</h2>
 <p>To start/stop WeeWX:</p>
-<pre class='tty cmd'>sudo /etc/init.d/weewx start
-sudo /etc/init.d/weewx stop</pre>
+<pre class='tty cmd'>sudo systemctl start weewx
+sudo systemctl stop weewx</pre>
 
 <h2>Customize</h2>
 <p>
@@ -84,7 +78,7 @@ sudo /etc/init.d/weewx stop</pre>
 
 <h2>Uninstall</h2>
 <p>To uninstall WeeWX, removing configuration files but retaining data:</p>
-<pre class='tty cmd'>sudo rpm -e weewx</pre>
+<pre class='tty cmd'>sudo zypper remove weewx</pre>
 <p>To remove data:</p>
 <pre class='tty cmd'>sudo rm -r /var/lib/weewx
 sudo rm -r /var/www/html/weewx</pre>

@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2015 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2020 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -59,19 +59,19 @@ class StationInfo(object):
 
 class Station(object):
     """Formatted version of StationInfo."""
-    
+
     def __init__(self, stn_info, formatter, converter, skin_dict):
-        
+
         # Store away my instance of StationInfo
         self.stn_info = stn_info
         self.formatter = formatter
         self.converter = converter
-        
+
         # Add a bunch of formatted attributes:
         label_dict = skin_dict.get('Labels', {})
         hemispheres    = label_dict.get('hemispheres', ('N','S','E','W'))
         latlon_formats = label_dict.get('latlon_formats')
-        self.latitude  = weeutil.weeutil.latlon_string(stn_info.latitude_f,  
+        self.latitude  = weeutil.weeutil.latlon_string(stn_info.latitude_f,
                                                        hemispheres[0:2],
                                                        'lat', latlon_formats)
         self.longitude = weeutil.weeutil.latlon_string(stn_info.longitude_f,
@@ -87,56 +87,18 @@ class Station(object):
         self.python_version = "%d.%d.%d" % sys.version_info[:3]
 
     @property
-    def uptime(self):        
+    def uptime(self):
         """Lazy evaluation of weewx uptime."""
         delta_time = time.time() - weewx.launchtime_ts if weewx.launchtime_ts else None
-            
+
         return weewx.units.ValueHelper(value_t=(delta_time, "second", "group_deltatime"),
                                        formatter=self.formatter,
                                        converter=self.converter)
-    
+
     @property
     def os_uptime(self):
         """Lazy evaluation of the server uptime."""
-        # Get the OS uptime. Because this is highly operating system dependent, several
-        # different strategies may have to be tried:
-        os_uptime_secs = None
-        try:
-            # For Linux:
-            os_uptime_secs = float(open("/proc/uptime").read().split()[0])
-        except (IOError, KeyError):
-            try:
-                # For MacOs:
-                from Quartz.QuartzCore import CACurrentMediaTime
-                os_uptime_secs = CACurrentMediaTime()
-            except ImportError:
-                try:
-                    # for FreeBSD
-                    import ctypes
-                    from ctypes.util import find_library
-    
-                    libc = ctypes.CDLL(find_library('c'))
-                    size = ctypes.c_size_t()
-                    buf = ctypes.c_int()
-                    size.value = ctypes.sizeof(buf)
-                    libc.sysctlbyname("kern.boottime", ctypes.byref(buf), ctypes.byref(size), None, 0)
-                    os_uptime_secs = time.time() - float(buf.value)
-                except (AttributeError, IOError, NameError):
-                    try:
-                        # For OpenBSD. See issue #428.
-                        import subprocess
-                        from datetime import datetime
-                        cmd = ['sysctl', 'kern.boottime']
-                        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                        o, e = proc.communicate()
-                        time_t = o.decode('ascii').split()
-                        time_as_string = time_t[1] + " " + time_t[2] + " " + time_t[4][:4] + " " + time_t[3]
-                        os_time = datetime.strptime(time_as_string, "%b %d %Y %H:%M:%S")
-                        epoch_time = (os_time - datetime(1970, 1, 1)).total_seconds()
-                        os_uptime_secs = time.time() - epoch_time
-                    except:
-                        pass
-
+        os_uptime_secs = _os_uptime()
         return weewx.units.ValueHelper(value_t=(os_uptime_secs, "second", "group_deltatime"),
                                        formatter=self.formatter,
                                        converter=self.converter)
@@ -148,3 +110,70 @@ class Station(object):
         # For anything that is not an explicit attribute of me, try
         # my instance of StationInfo. 
         return getattr(self.stn_info, name)
+
+
+def _os_uptime():
+    """ Get the OS uptime. Because this is highly operating system dependent, several different
+    strategies may have to be tried:"""
+
+    try:
+        # For Python 3.7 and later, most systems
+        return time.clock_gettime(time.CLOCK_UPTIME)
+    except AttributeError:
+        pass
+
+    try:
+        # For Python 3.3 and later, most systems
+        return time.clock_gettime(time.CLOCK_MONOTONIC)
+    except AttributeError:
+        pass
+
+    try:
+        # For Linux, Python 2 and 3:
+        return float(open("/proc/uptime").read().split()[0])
+    except (IOError, KeyError, OSError):
+        pass
+
+    try:
+        # For MacOS, Python 2:
+        from Quartz.QuartzCore import CACurrentMediaTime
+        return CACurrentMediaTime()
+    except ImportError:
+        pass
+
+    try:
+        # for FreeBSD, Python 2
+        import ctypes
+        from ctypes.util import find_library
+
+        libc = ctypes.CDLL(find_library('c'))
+        size = ctypes.c_size_t()
+        buf = ctypes.c_int()
+        size.value = ctypes.sizeof(buf)
+        libc.sysctlbyname("kern.boottime", ctypes.byref(buf), ctypes.byref(size), None, 0)
+        os_uptime_secs = time.time() - float(buf.value)
+        return os_uptime_secs
+    except (ImportError, AttributeError, IOError, NameError):
+        pass
+
+    try:
+        # For OpenBSD, Python 2. See issue #428.
+        import subprocess
+        from datetime import datetime
+        cmd = ['sysctl', 'kern.boottime']
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        o, e = proc.communicate()
+        # Check for errors
+        if e:
+            raise IOError
+        time_t = o.decode('ascii').split()
+        time_as_string = time_t[1] + " " + time_t[2] + " " + time_t[4][:4] + " " + time_t[3]
+        os_time = datetime.strptime(time_as_string, "%b %d %Y %H:%M:%S")
+        epoch_time = (os_time - datetime(1970, 1, 1)).total_seconds()
+        os_uptime_secs = time.time() - epoch_time
+        return os_uptime_secs
+    except (IOError, IndexError, ValueError):
+        pass
+
+    # Nothing seems to be working. Return None
+    return None

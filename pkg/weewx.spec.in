@@ -6,16 +6,24 @@
 # do cross-release (but not cross-platform) packaging.
 %define os_target OSREL
 
-# suse
-%if 0%{?suse_version}
-%define relos .suse
+# suse 12: python2
+%if 0%{?suse_version} && "%{os_target}" == "12"
+%define relos .suse12
 %define platform suse
 %define initdir /etc/systemd/system
-#define initdir /etc/init.d
 %define deps python , python-configobj , python-cheetah , python-imaging , python-pyserial, python-usb
-%define bld_deps python , python-configobj
-%define html_root /srv/www/htdocs/weewx
 %define python python
+%define html_root /srv/www/htdocs/weewx
+%endif
+
+# suse 15: python3
+%if 0%{?suse_version} && "%{os_target}" == "15"
+%define relos .suse15
+%define platform suse
+%define initdir /etc/systemd/system
+%define deps python3, python3-setuptools, python3-configobj, python3-Cheetah3, python3-Pillow, python3-pyserial, python3-usb
+%define python python3
+%define html_root /var/www/html/weewx
 %endif
 
 # suse linux enterprise server
@@ -25,7 +33,6 @@
 %define initdir /etc/systemd/system
 #define initdir /etc/init.d
 %define deps python , python-configobj , python-cheetah , python-imaging , python-pyserial, python-usb
-%define bld_deps python , python-configobj
 %define html_root /srv/www/htdocs/weewx
 %define python python
 %endif
@@ -37,7 +44,6 @@
 %define initdir %{_initrddir}
 # must install pyserial and pyusb using easy_install or pip
 %define deps python, python-setuptools, python-configobj, python-cheetah, python-imaging
-%define bld_deps python, python-configobj
 %define python python2
 %define html_root /var/www/html/weewx
 %endif
@@ -49,7 +55,6 @@
 %define initdir %{_initrddir}
 # must install cheetah from epel-release or using pip3
 %define deps python3, python3-setuptools, python3-configobj, python3-pillow, python3-pyserial, python3-pyusb
-%define bld_deps python, python-configobj
 %define python python3
 %define html_root /var/www/html/weewx
 %endif
@@ -73,10 +78,10 @@ Group: Applications/Science
 Source: %{name}-%{version}.tar.gz
 URL: http://www.weewx.com
 License: GPLv3
+AutoReqProv: no
 Requires: %{deps}
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-%(%{__id_u} -n)
 BuildArch: noarch
-BuildRequires: %{bld_deps}
 
 %description
 weewx interacts with a weather station to produce graphs, reports, and HTML
@@ -130,6 +135,11 @@ cp %{buildroot}%{dst_cfg_dir}/weewx.conf %{buildroot}%{dst_cfg_dir}/weewx.conf.d
 # create the entry points
 for f in %{entry_points}; do \
   cp util/scripts/$f %{buildroot}%{_bindir}/$f; \
+done
+
+# massage the shebangs in the entry points to pacify fascist redhat build tools
+for f in %{entry_points}; do \
+  sed -i -e 's:/usr/bin/env python:/usr/bin/%{python}:' %{buildroot}/usr/share/weewx/$f; \
 done
 
 # configure application layout

@@ -171,12 +171,18 @@ def read_config(config_path, args=None, locations=DEFAULT_LOCATIONS,
     # Find and open the config file:
     config_path = find_file(config_path, args,
                             locations=locations, file_name=file_name)
-    # Now open it up and parse it.
-    config_dict = configobj.ConfigObj(config_path,
-                                      interpolation=interpolation,
-                                      file_error=True,
-                                      encoding='utf-8',
-                                      default_encoding='utf-8')
+    try:
+        # Now open it up and parse it.
+        config_dict = configobj.ConfigObj(config_path,
+                                          interpolation=interpolation,
+                                          file_error=True,
+                                          encoding='utf-8',
+                                          default_encoding='utf-8')
+    except configobj.ConfigObjError as e:
+        # Add on the path of the offending file, then reraise.
+        e.msg += ' File %s' % config_path
+        raise
+
     return config_path, config_dict
 
 
@@ -1231,7 +1237,9 @@ def update_to_v40(config_dict):
 def update_units(config_dict, unit_system_name, logger=None, debug=False):
     """Update [StdReport][Defaults] with the desired unit system"""
 
-    if unit_system_name is not None:
+    if unit_system_name == 'mixed':
+        return
+    elif unit_system_name is not None:
         try:
             config_dict['StdReport']['Defaults']['Units']['Groups'].update(unit_systems[unit_system_name])
         except KeyError:
@@ -1311,17 +1319,28 @@ def get_station_info(config_dict):
 
 
 def get_unit_info(test_dict):
-    """Intuit what unit system the reports are in."""
+    """Intuit what unit system the reports are in.
+
+    Returns:
+        'us':       US Customary system
+        'metric':   METRIC system
+        'metricwx': METRICWX system
+        'mixed':    Mixed unit system
+        None:       There is no information about the unit system.
+    """
     try:
         group_dict = test_dict['Units']['Groups']
-
-        # Test all unit systems ('us', 'metric', 'metricwx'):
-        for unit_system in unit_systems:
-            # For this unit system, make sure there is an exact match
-            if all(group_dict[group] == unit_systems[unit_system][group] for group in unit_systems[unit_system]):
-                return unit_system
     except KeyError:
         return None
+
+    # Test all unit systems ('us', 'metric', 'metricwx'):
+    for unit_system in unit_systems:
+        # For this unit system, make sure there is an exact match
+        if all(group_dict[group] == unit_systems[unit_system][group]
+               for group in unit_systems[unit_system]):
+            return unit_system
+    # No exact match. In in a mix of unit systems
+    return 'mixed'
 
 
 # ==============================================================================
@@ -1585,9 +1604,12 @@ def prompt_for_info(location=None, latitude='90.000', longitude='0.000',
     # Display units. Accept only 'us' or 'metric', where 'metric'
     # is a synonym for 'metricwx'.
     #
-    print("\nIndicate the preferred units for display: 'metric' or 'us'")
+    options = ['us', 'metric']
+    if units == 'mixed':
+        options += [units]
+    print("\nIndicate the preferred units for display: %s" % options)
     default = units if units != 'metricwx' else 'metric'
-    uni = prompt_with_options("units", default, ['us', 'metric'])
+    uni = prompt_with_options("units", default, options)
     if uni == 'metric':
         uni = 'metricwx'
     stn_info['units'] = uni
