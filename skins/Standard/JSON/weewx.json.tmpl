@@ -1,0 +1,26 @@
+{
+    "station":
+    {
+        "location": "$station.location",
+        "link": "$station.url"
+    },
+    "generation":
+    {
+        "time": "$current.dateTime.format("%a, %d %b %Y %H:%M:%S %Z")",
+        "generator": "weewx $station.version"
+    }
+    "current":
+    {
+        "temperature": $current.outTemp,
+        "dewpoint": $current.dewpoint,
+        "humidity": $current.outHumidity,
+        "heat index": $current.heatindex,
+        "barometer": $current.barometer,
+        "wind speed": $current.windSpeed,
+        "wind gust": $current.windGust,
+        "wind direction": $current.windDir,
+        "wind chill": $current.windchill,
+        "rain rate": $current.rainRate,
+        "inside temp": $current.inTemp,
+    }
+}
