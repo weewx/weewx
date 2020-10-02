@@ -1,0 +1,220 @@
+{
+    "station":
+    {
+        "location": "$station.location",
+        "latitude": $station.stn_info.latitude_f,
+        "longitude": $station.stn_info.longitude_f,
+        "altitude (meters)": $station.altitude.meter.raw,
+        "link": "$station.station_url"
+    },
+    "generation":
+    {
+        "time": "$current.dateTime.format("%a, %d %b %Y %H:%M:%S %Z")",
+        "generator": "weewx $station.version"
+    },
+    "current":
+    {
+        #if $current.outTemp.has_data
+        "temperature": {"value": $current.outTemp.raw, "units": "$current.outTemp.format(" ").lstrip()"},
+        #end if
+        #if $current.dewpoint.has_data
+        "dewpoint": {"value": $current.dewpoint.raw, "units": "$current.dewpoint.format(" ").lstrip()"},
+        #end if
+        #if $current.outHumidity.has_data
+        "humidity": {"value": $current.outHumidity.raw, "units": "$current.outHumidity.format(" ").lstrip()"},
+        #end if
+        #if $current.heatindex.has_data
+        "heat index": {"value": $current.heatindex.raw, "units": "$current.heatindex.format(" ").lstrip()"},
+        #end if
+        #if $current.barometer.has_data
+        "barometer": {"value": $current.barometer.raw, "units": "$current.barometer.format(" ").lstrip()"},
+        #end if
+        #if $current.windSpeed.has_data
+        "wind speed": {"value": $current.windSpeed.raw, "units": "$current.windSpeed.format(" ").lstrip()"},
+        #end if
+        #if $current.windGust.has_data
+        "wind gust": {"value": $current.windGust.raw, "units": "$current.windGust.format(" ").lstrip()"},
+        #end if
+        #if $current.windDir.has_data
+        "wind direction": {"value": $current.windDir.raw, "units": "$current.windDir.format(" ").lstrip()"},
+        #end if
+        #if $current.windchill.has_data
+        "wind chill": {"value": $current.windchill.raw, "units": "$current.windchill.format(" ").lstrip()"},
+        #end if
+        #if $current.rainRate.has_data
+        "rain rate": {"value": $current.rainRate.raw, "units": "$current.rainRate.format(" ").lstrip()"},
+        #end if
+        #if $current.inTemp.has_data
+        "inside temperature": {"value": $current.inTemp.raw, "units": "$current.inTemp.format(" ").lstrip()"},
+        #end if
+        #if $current.inHumidity.has_data
+        "inside humidity": {"value": $current.inHumidity.raw, "units": "$current.inHumidity.format(" ").lstrip()"},
+        #end if
+        ## Last value can't end with a comma
+        "void_end": null
+    },
+    "day":
+    {
+        #if $day.outTemp.has_data
+        "max temperature": {"value": $day.outTemp.max.raw, "units": "$day.outTemp.max.format(" ").lstrip()", "at": "$day.outTemp.maxtime"},
+        "min temperature": {"value": $day.outTemp.min.raw, "units": "$day.outTemp.min.format(" ").lstrip()", "at": "$day.outTemp.mintime"},
+        #end if
+        #if $day.dewpoint.has_data
+        "max dewpoint": {"value": $day.dewpoint.max.raw, "units": "$day.dewpoint.max.format(" ").lstrip()", "at": "$day.dewpoint.maxtime"},
+        "min dewpoint": {"value": $day.dewpoint.min.raw, "units": "$day.dewpoint.min.format(" ").lstrip()", "at": "$day.dewpoint.mintime"},
+        #end if
+        #if $day.outHumidity.has_data
+        "max humidity": {"value": $day.outHumidity.max.raw, "units": "$day.outHumidity.max.format(" ").lstrip()", "at": "$day.outHumidity.maxtime"},
+        "min humidity": {"value": $day.outHumidity.min.raw, "units": "$day.outHumidity.min.format(" ").lstrip()", "at": "$day.outHumidity.mintime"},
+        #end if
+        #if $day.barometer.has_data
+        "max barometer": {"value": $day.barometer.max.raw, "units": "$day.barometer.max.format(" ").lstrip()", "at": "$day.barometer.maxtime"},
+        "min barometer": {"value": $day.barometer.min.raw, "units": "$day.barometer.min.format(" ").lstrip()", "at": "$day.barometer.mintime"},
+        #end if
+        #if $day.windSpeed.has_data
+        "max wind speed": {"value": $day.windSpeed.max.raw, "units": "$day.windSpeed.max.format(" ").lstrip()", "at": "$day.windSpeed.maxtime"},
+        #end if
+        #if $day.windGust.has_data
+        "max wind gust": {"value": $day.windGust.max.raw, "units": "$day.windGust.max.format(" ").lstrip()", "at": "$day.windGust.maxtime"},
+        #end if
+        #if $day.rainRate.has_data
+        "max rain rate": {"value": $day.rainRate.max.raw, "units": "$day.rainRate.max.format(" ").lstrip()", "at": "$day.rainRate.maxtime"},
+        #end if
+        #if $day.rain.has_data
+        "rain total": {"value": $day.rain.sum.raw, "units": "$day.rain.sum.format(" ").lstrip()"},
+        #end if
+        #if $day.inTemp.has_data
+        "max inside temperature": {"value": $day.inTemp.max.raw, "units": "$day.inTemp.max.format(" ").lstrip()", "at": "$day.inTemp.maxtime"},
+        "min inside temperature": {"value": $day.inTemp.min.raw, "units": "$day.inTemp.min.format(" ").lstrip()", "at": "$day.inTemp.mintime"},
+        #end if
+        #if $day.inHumidity.has_data
+        "max inside humidity": {"value": $day.inHumidity.max.raw, "units": "$day.inHumidity.max.format(" ").lstrip()", "at": "$day.inHumidity.maxtime"},
+        "min inside humidity": {"value": $day.inHumidity.min.raw, "units": "$day.inHumidity.min.format(" ").lstrip()", "at": "$day.inHumidity.mintime"},
+        #end if
+        ## Last value can't end with a comma
+        "void_end": null
+    },
+    "week":
+    {
+        #if $week.outTemp.has_data
+        "max temperature": {"value": $week.outTemp.max.raw, "units": "$week.outTemp.max.format(" ").lstrip()", "at": "$week.outTemp.maxtime"},
+        "min temperature": {"value": $week.outTemp.min.raw, "units": "$week.outTemp.min.format(" ").lstrip()", "at": "$week.outTemp.mintime"},
+        #end if
+        #if $week.dewpoint.has_data
+        "max dewpoint": {"value": $week.dewpoint.max.raw, "units": "$week.dewpoint.max.format(" ").lstrip()", "at": "$week.dewpoint.maxtime"},
+        "min dewpoint": {"value": $week.dewpoint.min.raw, "units": "$week.dewpoint.min.format(" ").lstrip()", "at": "$week.dewpoint.mintime"},
+        #end if
+        #if $week.outHumidity.has_data
+        "max humidity": {"value": $week.outHumidity.max.raw, "units": "$week.outHumidity.max.format(" ").lstrip()", "at": "$week.outHumidity.maxtime"},
+        "min humidity": {"value": $week.outHumidity.min.raw, "units": "$week.outHumidity.min.format(" ").lstrip()", "at": "$week.outHumidity.mintime"},
+        #end if
+        #if $week.barometer.has_data
+        "max barometer": {"value": $week.barometer.max.raw, "units": "$week.barometer.max.format(" ").lstrip()", "at": "$week.barometer.maxtime"},
+        "min barometer": {"value": $week.barometer.min.raw, "units": "$week.barometer.min.format(" ").lstrip()", "at": "$week.barometer.mintime"},
+        #end if
+        #if $week.windSpeed.has_data
+        "max wind speed": {"value": $week.windSpeed.max.raw, "units": "$week.windSpeed.max.format(" ").lstrip()", "at": "$week.windSpeed.maxtime"},
+        #end if
+        #if $week.windGust.has_data
+        "max wind gust": {"value": $week.windGust.max.raw, "units": "$week.windGust.max.format(" ").lstrip()", "at": "$week.windGust.maxtime"},
+        #end if
+        #if $week.rainRate.has_data
+        "max rain rate": {"value": $week.rainRate.max.raw, "units": "$week.rainRate.max.format(" ").lstrip()", "at": "$week.rainRate.maxtime"},
+        #end if
+        #if $week.rain.has_data
+        "rain total": {"value": $week.rain.sum.raw, "units": "$week.rain.sum.format(" ").lstrip()"},
+        #end if
+        #if $week.inTemp.has_data
+        "max inside temperature": {"value": $week.inTemp.max.raw, "units": "$week.inTemp.max.format(" ").lstrip()", "at": "$week.inTemp.maxtime"},
+        "min inside temperature": {"value": $week.inTemp.min.raw, "units": "$week.inTemp.min.format(" ").lstrip()", "at": "$week.inTemp.mintime"},
+        #end if
+        #if $week.inHumidity.has_data
+        "max inside humidity": {"value": $week.inHumidity.max.raw, "units": "$week.inHumidity.max.format(" ").lstrip()", "at": "$week.inHumidity.maxtime"},
+        "min inside humidity": {"value": $week.inHumidity.min.raw, "units": "$week.inHumidity.min.format(" ").lstrip()", "at": "$week.inHumidity.mintime"},
+        #end if
+        ## Last value can't end with a comma
+        "void_end": null
+    },
+    "month":
+    {
+        #if $month.outTemp.has_data
+        "max temperature": {"value": $month.outTemp.max.raw, "units": "$month.outTemp.max.format(" ").lstrip()", "at": "$month.outTemp.maxtime"},
+        "min temperature": {"value": $month.outTemp.min.raw, "units": "$month.outTemp.min.format(" ").lstrip()", "at": "$month.outTemp.mintime"},
+        #end if
+        #if $month.dewpoint.has_data
+        "max dewpoint": {"value": $month.dewpoint.max.raw, "units": "$month.dewpoint.max.format(" ").lstrip()", "at": "$month.dewpoint.maxtime"},
+        "min dewpoint": {"value": $month.dewpoint.min.raw, "units": "$month.dewpoint.min.format(" ").lstrip()", "at": "$month.dewpoint.mintime"},
+        #end if
+        #if $month.outHumidity.has_data
+        "max humidity": {"value": $month.outHumidity.max.raw, "units": "$month.outHumidity.max.format(" ").lstrip()", "at": "$month.outHumidity.maxtime"},
+        "min humidity": {"value": $month.outHumidity.min.raw, "units": "$month.outHumidity.min.format(" ").lstrip()", "at": "$month.outHumidity.mintime"},
+        #end if
+        #if $month.barometer.has_data
+        "max barometer": {"value": $month.barometer.max.raw, "units": "$month.barometer.max.format(" ").lstrip()", "at": "$month.barometer.maxtime"},
+        "min barometer": {"value": $month.barometer.min.raw, "units": "$month.barometer.min.format(" ").lstrip()", "at": "$month.barometer.mintime"},
+        #end if
+        #if $month.windSpeed.has_data
+        "max wind speed": {"value": $month.windSpeed.max.raw, "units": "$month.windSpeed.max.format(" ").lstrip()", "at": "$month.windSpeed.maxtime"},
+        #end if
+        #if $month.windGust.has_data
+        "max wind gust": {"value": $month.windGust.max.raw, "units": "$month.windGust.max.format(" ").lstrip()", "at": "$month.windGust.maxtime"},
+        #end if
+        #if $month.rainRate.has_data
+        "max rain rate": {"value": $month.rainRate.max.raw, "units": "$month.rainRate.max.format(" ").lstrip()", "at": "$month.rainRate.maxtime"},
+        #end if
+        #if $month.rain.has_data
+        "rain total": {"value": $month.rain.sum.raw, "units": "$month.rain.sum.format(" ").lstrip()"},
+        #end if
+        #if $month.inTemp.has_data
+        "max inside temperature": {"value": $month.inTemp.max.raw, "units": "$month.inTemp.max.format(" ").lstrip()", "at": "$month.inTemp.maxtime"},
+        "min inside temperature": {"value": $month.inTemp.min.raw, "units": "$month.inTemp.min.format(" ").lstrip()", "at": "$month.inTemp.mintime"},
+        #end if
+        #if $month.inHumidity.has_data
+        "max inside humidity": {"value": $month.inHumidity.max.raw, "units": "$month.inHumidity.max.format(" ").lstrip()", "at": "$month.inHumidity.maxtime"},
+        "min inside humidity": {"value": $month.inHumidity.min.raw, "units": "$month.inHumidity.min.format(" ").lstrip()", "at": "$month.inHumidity.mintime"},
+        #end if
+        ## Last value can't end with a comma
+        "void_end": null
+    },
+    "year":
+    {
+        #if $year.outTemp.has_data
+        "max temperature": {"value": $year.outTemp.max.raw, "units": "$year.outTemp.max.format(" ").lstrip()", "at": "$year.outTemp.maxtime"},
+        "min temperature": {"value": $year.outTemp.min.raw, "units": "$year.outTemp.min.format(" ").lstrip()", "at": "$year.outTemp.mintime"},
+        #end if
+        #if $year.dewpoint.has_data
+        "max dewpoint": {"value": $year.dewpoint.max.raw, "units": "$year.dewpoint.max.format(" ").lstrip()", "at": "$year.dewpoint.maxtime"},
+        "min dewpoint": {"value": $year.dewpoint.min.raw, "units": "$year.dewpoint.min.format(" ").lstrip()", "at": "$year.dewpoint.mintime"},
+        #end if
+        #if $year.outHumidity.has_data
+        "max humidity": {"value": $year.outHumidity.max.raw, "units": "$year.outHumidity.max.format(" ").lstrip()", "at": "$year.outHumidity.maxtime"},
+        "min humidity": {"value": $year.outHumidity.min.raw, "units": "$year.outHumidity.min.format(" ").lstrip()", "at": "$year.outHumidity.mintime"},
+        #end if
+        #if $year.barometer.has_data
+        "max barometer": {"value": $year.barometer.max.raw, "units": "$year.barometer.max.format(" ").lstrip()", "at": "$year.barometer.maxtime"},
+        "min barometer": {"value": $year.barometer.min.raw, "units": "$year.barometer.min.format(" ").lstrip()", "at": "$year.barometer.mintime"},
+        #end if
+        #if $year.windSpeed.has_data
+        "max wind speed": {"value": $year.windSpeed.max.raw, "units": "$year.windSpeed.max.format(" ").lstrip()", "at": "$year.windSpeed.maxtime"},
+        #end if
+        #if $year.windGust.has_data
+        "max wind gust": {"value": $year.windGust.max.raw, "units": "$year.windGust.max.format(" ").lstrip()", "at": "$year.windGust.maxtime"},
+        #end if
+        #if $year.rainRate.has_data
+        "max rain rate": {"value": $year.rainRate.max.raw, "units": "$year.rainRate.max.format(" ").lstrip()", "at": "$year.rainRate.maxtime"},
+        #end if
+        #if $year.rain.has_data
+        "rain total": {"value": $year.rain.sum.raw, "units": "$year.rain.sum.format(" ").lstrip()"},
+        #end if
+        #if $year.inTemp.has_data
+        "max inside temperature": {"value": $year.inTemp.max.raw, "units": "$year.inTemp.max.format(" ").lstrip()", "at": "$year.inTemp.maxtime"},
+        "min inside temperature": {"value": $year.inTemp.min.raw, "units": "$year.inTemp.min.format(" ").lstrip()", "at": "$year.inTemp.mintime"},
+        #end if
+        #if $year.inHumidity.has_data
+        "max inside humidity": {"value": $year.inHumidity.max.raw, "units": "$year.inHumidity.max.format(" ").lstrip()", "at": "$year.inHumidity.maxtime"},
+        "min inside humidity": {"value": $year.inHumidity.min.raw, "units": "$year.inHumidity.min.format(" ").lstrip()", "at": "$year.inHumidity.mintime"},
+        #end if
+        ## Last value can't end with a comma
+        "void_end": null
+    }
+}
