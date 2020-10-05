@@ -686,6 +686,7 @@ def pywws2weewx(p, ts, last_rain, last_rain_ts, last_spurious_rain, rain_counter
     if total > (rain_counter_size - 1) * rain_per_bucket_tip:
         log.warn('configured rain_counter_size is too small. rainTotal: %s rainTotalMax: %s',
                  packet['rainTotal'], (rain_counter_size - 1) * rain_per_bucket_tip)
+        
     packet['spuriousRain'] = None
     if packet['rain'] is not None and last_rain is not None:
         if packet['rain'] < last_rain:
@@ -693,16 +694,19 @@ def pywws2weewx(p, ts, last_rain, last_rain_ts, last_spurious_rain, rain_counter
             if last_rain - packet['rain'] < (rain_counter_size - 1) * rain_per_bucket_tip * 0.5:
                 log.info('ignoring spurious rain counter decrement (%s): '
                          'new: %s old: %s' % (pstr, packet['rain'], last_rain))
+                log.debug('last_spurious_rain = %s' % (last_spurious_rain))
                 packet['spuriousRain'] = total
-                total = None
+                
                 if last_spurious_rain is not None and last_spurious_rain == total:
                     # if the small decrement persists
                     # across multiple samples, it was probably a firmware glitch rather than
                     # a sensor glitch or old read.
                     log.info('got this spurious value a second time -> setting lastRain to this spurious value')
                 else:
-                    # ignore current spurious reading and use last one instead
+                    # reuse the last_rain value for the next loop instead of the spurious value
                     packet['rainTotal'] = last_rain
+                # ignore spurious reading for the following processing
+                total = None    
             else:
                 log.info('rain counter wraparound detected (%s): '
                          'new: %s old: %s max: %s' % (pstr, packet['rain'], last_rain,
@@ -924,7 +928,7 @@ class FineOffsetUSB(weewx.drivers.AbstractDevice):
             self.pc_port = int(self.pc_port)
 
         self.data_format       = stn_dict.get('data_format', '1080')
-        self.rain_counter_size = int(stn_dict.get('rain_counter_size', 0xffff),16)
+        self.rain_counter_size = int(stn_dict.get('rain_counter_size', '0xffff'),16)
         log.info('rain_counter_size is %s', hex(self.rain_counter_size))
         self.vendor_id         = 0x1941
         self.product_id        = 0x8021
@@ -942,9 +946,10 @@ class FineOffsetUSB(weewx.drivers.AbstractDevice):
         self._arcint = None
         self._last_rain_loop = None
         self._last_rain_ts_loop = None
+        self._last_spurious_rain_loop = None
         self._last_rain_arc = None
         self._last_rain_ts_arc = None
-        self._spurious_rain_loop = None
+        self._last_spurious_rain_arc = None
         self._last_status = None
         self._fixed_block = None
         self._data_block = None
@@ -1081,10 +1086,10 @@ class FineOffsetUSB(weewx.drivers.AbstractDevice):
             ts = int(time.time() + 0.5)
             packet = pywws2weewx(p, ts,
                                  self._last_rain_loop, self._last_rain_ts_loop,
-                                 self._spurious_rain_loop, self.rain_counter_size)
+                                 self._last_spurious_rain_loop, self.rain_counter_size)
             self._last_rain_loop = packet['rainTotal']
             self._last_rain_ts_loop = ts
-            self._spurious_rain_loop = packet['spuriousRain']
+            self._last_spurious_rain_loop = packet['spuriousRain']
             if packet['status'] != self._last_status:
                 log.info('station status %s (%s)' % 
                          (decode_status(packet['status']), packet['status']))
@@ -1110,11 +1115,12 @@ class FineOffsetUSB(weewx.drivers.AbstractDevice):
             ts = delta.days * 86400 + delta.seconds
             data = pywws2weewx(r['data'], ts,
                                self._last_rain_arc, self._last_rain_ts_arc,
-                               self._spurious_rain_loop, self.rain_counter_size)
+                               self._last_spurious_rain_arc, self.rain_counter_size)
             data['interval'] = r['interval']
             data['ptr'] = r['ptr']
             self._last_rain_arc = data['rainTotal']
             self._last_rain_ts_arc = ts
+            self._last_spurious_rain_arc = data['spuriousRain']
             log.debug('returning archive record %s' % ts)
             yield data
 
