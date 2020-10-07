@@ -695,8 +695,7 @@ def pywws2weewx(p, ts, last_rain, last_rain_ts, last_spurious_rain, rain_counter
                 log.info('ignoring spurious rain counter decrement (%s): '
                          'new: %s old: %s' % (pstr, packet['rain'], last_rain))
                 log.debug('last_spurious_rain = %s' % (last_spurious_rain))
-                packet['spuriousRain'] = total
-                
+                                
                 if last_spurious_rain is not None and last_spurious_rain == total:
                     # if the small decrement persists
                     # across multiple samples, it was probably a firmware glitch rather than
@@ -705,6 +704,7 @@ def pywws2weewx(p, ts, last_rain, last_rain_ts, last_spurious_rain, rain_counter
                 else:
                     # reuse the last_rain value for the next loop instead of the spurious value
                     packet['rainTotal'] = last_rain
+                    packet['spuriousRain'] = total
                 # ignore spurious reading for the following processing
                 total = None    
             else:
