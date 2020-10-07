@@ -639,7 +639,7 @@ def decode_status(status):
 def get_status(code, status):
     return 1 if status & code == code else 0
 
-def pywws2weewx(p, ts, last_rain, last_rain_ts, last_spurious_rain, rain_counter_size):
+def pywws2weewx(p, ts, last_rain, last_rain_ts, last_spurious_rain, rain_counter_size, max_rain_rate):
     """Map the pywws dictionary to something weewx understands.
 
     p: dictionary of pywws readings
@@ -714,6 +714,16 @@ def pywws2weewx(p, ts, last_rain, last_rain_ts, last_spurious_rain, rain_counter
                 total += (rain_counter_size) * rain_per_bucket_tip
     packet['rain'] = weewx.wxformulas.calculate_rain(total, last_rain)
 
+    if packet['rain'] is not None and ts is not None and last_rain_ts is not None and ts != last_rain_ts:
+        rainRate = packet['rain'] * (3600 / (ts - last_rain_ts))
+        if rainRate > max_rain_rate:
+            log.debug('ignoring current rainfall of %.2f due to too high rain rate of %.2f' % 
+                      (packet['rain'], rainRate))
+            packet['rain'] = None
+            # reuse the last_rain value for the next loop instead of the spurious value
+            packet['rainTotal'] = last_rain
+            packet['spuriousRain'] = total
+            
     # report rainfall in log to diagnose rain counter issues
     if DEBUG_RAIN and packet['rain'] is not None and packet['rain'] > 0:
         log.debug('got rainfall of %.2f cm (new: %.2f old: %.2f)' %
@@ -929,6 +939,7 @@ class FineOffsetUSB(weewx.drivers.AbstractDevice):
 
         self.data_format       = stn_dict.get('data_format', '1080')
         self.rain_counter_size = int(stn_dict.get('rain_counter_size', '0xffff'),16)
+        self.max_rain_rate     = int(stn_dict.get('max_rain_rate_cmh', '50'))
         log.info('rain_counter_size is %s', hex(self.rain_counter_size))
         self.vendor_id         = 0x1941
         self.product_id        = 0x8021
@@ -1086,7 +1097,8 @@ class FineOffsetUSB(weewx.drivers.AbstractDevice):
             ts = int(time.time() + 0.5)
             packet = pywws2weewx(p, ts,
                                  self._last_rain_loop, self._last_rain_ts_loop,
-                                 self._last_spurious_rain_loop, self.rain_counter_size)
+                                 self._last_spurious_rain_loop, self.rain_counter_size,
+                                 self.max_rain_rate)
             self._last_rain_loop = packet['rainTotal']
             self._last_rain_ts_loop = ts
             self._last_spurious_rain_loop = packet['spuriousRain']
