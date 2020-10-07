@@ -1127,7 +1127,8 @@ class FineOffsetUSB(weewx.drivers.AbstractDevice):
             ts = delta.days * 86400 + delta.seconds
             data = pywws2weewx(r['data'], ts,
                                self._last_rain_arc, self._last_rain_ts_arc,
-                               self._last_spurious_rain_arc, self.rain_counter_size)
+                               self._last_spurious_rain_arc, self.rain_counter_size,
+                               self.max_rain_rate)
             data['interval'] = r['interval']
             data['ptr'] = r['ptr']
             self._last_rain_arc = data['rainTotal']
