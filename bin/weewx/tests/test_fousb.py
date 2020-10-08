@@ -49,8 +49,8 @@ class FousbTest(unittest.TestCase):
         self.assertEqual(self._last_spurious_rain_loop, None, "")
         
         self.loopData(54.0,196)
-        self.assertEqual(round(self._last_rain_loop,2), 3.90, "spurious increased value due to high rain rate")
-        self.assertEqual(round(self._last_spurious_rain_loop,2), 5.40, "spurious increased value due to high rain rate")
+        self.assertEqual(round(self._last_rain_loop,2), 3.90, "spurious increased value detected due to too high rain rate")
+        self.assertEqual(round(self._last_spurious_rain_loop,2), 5.40, "spurious increased value detected due to too high rain rate")
         
         self.loopData(39.0,244)
         self.assertEqual(round(self._last_rain_loop,2), 3.90, "decreased to normal value")
@@ -72,7 +72,18 @@ class FousbTest(unittest.TestCase):
         self.assertEqual(round(self._last_rain_loop,2), 1.50, "spurious value stays the same -> take it as as real")
         self.assertEqual(self._last_spurious_rain_loop, None, "spurious value stays the same -> take it as as real")
         
-    
+        self.loopData(54.0,484)
+        self.assertEqual(round(self._last_rain_loop,2), 1.50, "spurious increased value detected due to too high rain rate (2)")
+        self.assertEqual(round(self._last_spurious_rain_loop,2), 5.40, "spurious increased detected value due to too high rain rate (2)")
+        
+        self.loopData(54.0,532)
+        self.assertEqual(round(self._last_rain_loop,2), 1.50, "spurious increased value detected due to too high (3)")
+        self.assertEqual(round(self._last_spurious_rain_loop,2), 5.40, "spurious increased value detected due to too high (3)")
+        
+        self.loopData(54.0,1160)
+        self.assertEqual(round(self._last_rain_loop,2), 5.40, "spurious increased value wents back to normal because calculated rain rate decreases in time")
+        self.assertEqual(self._last_spurious_rain_loop, None, "spurious increased value wents back to normal because calculated rain rate decreases in time")
+        
     def loopData(self, rain, ts):
 
         # driver = FineOffsetUSB(**self.config_dict['FineOffsetUSB'])
