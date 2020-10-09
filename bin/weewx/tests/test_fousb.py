@@ -14,7 +14,7 @@ from weewx.drivers import fousb
 log = logging.getLogger(__name__)
 
 # Find the configuration file. It's assumed to be in the same directory as me:
-config_path = os.path.join(os.path.dirname(__file__), "testgen_fousb.conf")
+config_path = os.path.join(os.path.dirname(__file__), "testgen.conf")
 
 class FousbTest(unittest.TestCase):
 
@@ -89,14 +89,12 @@ class FousbTest(unittest.TestCase):
         # driver = FineOffsetUSB(**self.config_dict['FineOffsetUSB'])
         packet = {}
         packet['rain'] = rain
-        ts = ts
         packet = fousb.pywws2weewx(packet, ts,
                          self._last_rain_loop, self._last_rain_ts_loop,
                          self._last_spurious_rain_loop, self.rain_counter_size,
                          self.max_rain_rate)
         self._last_rain_loop = packet['rainTotal']
         self._last_rain_ts_loop = ts
-        print(self._last_rain_ts_loop)
         self._last_spurious_rain_loop = packet['spuriousRain']
     
 
