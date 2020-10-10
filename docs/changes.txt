@@ -58,6 +58,8 @@ Allow overriding the data binding when using iterators. Fixes issue #580.
 
 Fixed problem where old daily summaries may not have a version number.
 
+Fixed problem in WMR200 driver where missing UV reports as index 255.
+
 
 4.1.1 06/01/2020
 

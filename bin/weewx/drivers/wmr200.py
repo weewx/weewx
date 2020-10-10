@@ -858,7 +858,9 @@ class PacketRain(PacketLive):
 def decode_uvi(pkt, pkt_data):
     """Decode the uvi portion of a wmr200 packet."""
     try:
-        record = {'uv': pkt_data[0 & 0x0f]}
+        uv = pkt_data[0] & 0x0f
+        record = {'uv': uv if uv != 0xff else None}
+
         if DEBUG_PACKETS_UVI:
             log.debug("  UV index:%s\n" % record['uv'])
         return record
