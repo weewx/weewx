@@ -157,7 +157,7 @@ class Source(object):
 
         # initialise ignore extreme > 255.0 values for temperature and
         # humidity fields for WD imports
-        self.ignore_extreme_temp_hum = False
+        self.ignore_extr_th = False
 
         self.db_binding_wx = get_binding(config_dict)
         self.dbm = open_manager_with_config(config_dict, self.db_binding_wx,
@@ -906,7 +906,7 @@ class Source(object):
 
                         # check and ignore if required temperature and humidity
                         # values of 255.0 and greater
-                        if self.ignore_extreme_temp_hum \
+                        if self.ignore_extr_th \
                                 and self.map[_field]['units'] in ['degree_C', 'degree_F', 'percent'] \
                                 and _temp >= 255.0:
                             _temp = None
