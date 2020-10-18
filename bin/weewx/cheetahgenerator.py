@@ -617,17 +617,42 @@ class AssureUnicode(Cheetah.Filters.Filter):
     """Assures that whatever a search list extension might return, it will be converted into
     Unicode. """
 
-    def filter(self, val, **dummy_kw):
+    def filter(self, val, **kwargs):
+        """Convert the expression 'val' to unicode."""
+        # There is a 2x4 matrix of possibilities:
+        # input        PY2                 PY3
+        # _____        ________            _______
+        # bytes        decode()            decode()
+        # str          decode()           -done-
+        # unicode      -done-             N/A
+        # object       str().decode()     str()
         if val is None:
-            filtered = u''
+            return u''
+
+        # Is it already unicode? This takes care of cells 4 and 5.
+        if isinstance(val, six.text_type):
+            filtered = val
+        # This conditional covers cells 1,2, and 3. That is, val is a byte string
+        elif isinstance(val, six.binary_type):
+            filtered = val.decode('utf-8')
+        # That leaves cells 7 and 8, that is val is an object, such as a ValueHelper
         else:
+            # Must be an object. Convert to string
             try:
-                # Assume val is some kind of string. Try coercing it directly into unicode
-                filtered = six.ensure_text(val, encoding='utf-8')
-            except TypeError:
-                # It's not Unicode nor a byte-string. Must be a primitive or a ValueHelper.
-                #   Under Python 2, six.text_type is equivalent to calling unicode(val).
-                #   Under Python 3, it is equivalent to calling str(val).
-                # So, the results always end up as Unicode.
-                filtered = six.text_type(val)
+                # For late tag bindings, the following forces the invocation of __str__(),
+                # which can force an XTypes query. For a tag such as $day.foobar.min, where
+                # 'foobar' is an unknown type, this will cause an attribute error. Be prepared
+                # to catch it.
+                filtered = str(val)
+            except AttributeError as e:
+                # Offer a debug message.
+                log.debug("Unrecognized: %s", kwargs.get('rawExpr', e))
+                # Return the raw expression, if available. Otherwise, the exception message
+                # concatenated with a question mark.
+                filtered = kwargs.get('rawExpr', str(e) + '?')
+            if six.PY2:
+                # For Python 2, we have to take an additional step of converting from
+                # type 'str', which is a byte string, to a unicode string
+                filtered = filtered.decode('utf-8')
+
         return filtered
