@@ -3,8 +3,34 @@
 #
 #    See the file LICENSE.txt for your full rights.
 #
-"""This example shows how to extend the xtypes system with a new type, vapor_p, the vapor
-pressure of water."""
+"""This example shows how to extend the XTypes system with a new type, vapor_p, the vapor
+pressure of water.
+
+REQUIRES WeeWX V4.2 OR LATER!
+
+To use:
+    1. Stop weewxd
+    2. Put this file in your user subdirectory.
+    3. In weewx.conf, subsection [Engine][[Services]], add VaporPressureService to the list
+    "xtype_services". For example, this means changing this
+
+        [Engine]
+            [[Services]]
+                xtype_services = weewx.wxxtypes.StdWXXTypes, weewx.wxxtypes.StdPressureCooker, weewx.wxxtypes.StdRainRater
+
+    to this:
+
+        [Engine]
+            [[Services]]
+                xtype_services = weewx.wxxtypes.StdWXXTypes, weewx.wxxtypes.StdPressureCooker, weewx.wxxtypes.StdRainRater, user.vaporpressure.VaporPressureService
+
+    4. Optionally, add the following section to weewx.conf:
+        [VaporPressure]
+            algorithm = simple   # Or tetens
+
+    5. Restart weewxd
+
+"""
 import math
 
 import weewx
@@ -63,6 +89,10 @@ class VaporPressure(weewx.xtypes.XType):
 
 
 class VaporPressureService(StdService):
+    """ WeeWX service whose job is to register the XTypes extension VaporPressure with the
+    XType system.
+    """
+
     def __init__(self, engine, config_dict):
         super(VaporPressureService, self).__init__(engine, config_dict)
 
@@ -82,4 +112,5 @@ class VaporPressureService(StdService):
         weewx.xtypes.xtypes.remove(self.vp)
 
 
+# Tell the unit system what group our new observation type, 'vapor_p', belongs to:
 weewx.units.obs_group_dict['vapor_p'] = "group_pressure"
