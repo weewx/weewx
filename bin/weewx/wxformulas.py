@@ -138,6 +138,9 @@ def heatindexF(T, R):
     if T is None or R is None:
         return None
 
+    if T <= 40.0:
+        return T
+
     # Use simplified formula
     hi_F = 0.5 * (T + 61.0 + ((T - 68.0) * 1.2) + (R * 0.094))
 
@@ -244,18 +247,21 @@ def sealevel_pressure_US(sp_inHg, elev_foot, t_F):
     return slp_inHg
 
 
-def calculate_rain(newtotal, oldtotal):
-    """Calculate the rain differential given two cumulative measurements."""
+def calculate_delta(newtotal, oldtotal, delta_key='rain'):
+    """Calculate the differential given two cumulative measurements."""
     if newtotal is not None and oldtotal is not None:
         if newtotal >= oldtotal:
             delta = newtotal - oldtotal
         else:
-            log.info("Rain counter reset detected: new=%s old=%s", newtotal, oldtotal)
+            log.info("'%s' counter reset detected: new=%s old=%s", delta_key,
+                     newtotal, oldtotal)
             delta = None
     else:
         delta = None
     return delta
 
+# For backwards compatibility:
+calculate_rain = calculate_delta
 
 def solar_rad_Bras(lat, lon, altitude_m, ts=None, nfac=2):
     """Calculate maximum solar radiation using Bras method

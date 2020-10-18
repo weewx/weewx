@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-#    Copyright (c) 2009-2019 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2020 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your rights.
 #
@@ -20,30 +20,13 @@ import weewx.engine
 import weewx.manager
 import weewx.reportengine
 import weewx.station
-from weeutil.weeutil import timestamp_to_string, to_int
+from weeutil.weeutil import timestamp_to_string
 
 description = """Run all reports defined in the specified configuration file.
 Use this utility to run reports immediately instead of waiting for the end of
 an archive interval."""
 
 usage = """%prog: [config_file] [timestamp] [--config=CONFIG_FILE] [--help]"""
-
-
-class DummyConsole(object):
-    """A fake console, used for reporting."""
-
-    def __init__(self, config_dict):
-        try:
-            self.archive_interval = to_int(config_dict['StdArchive']['archive_interval'])
-        except KeyError:
-            self.archive_interval = 300
-
-
-class DummyEngine(weewx.engine.StdEngine):
-    """A fake engine, used for reporting."""
-
-    def setupStation(self, config_dict):
-        self.console = DummyConsole(config_dict)
 
 
 def disable_timing(section, key):
@@ -83,7 +66,7 @@ def main():
 
     # Instantiate the dummy engine. This will cause services to get loaded, which will make
     # the type extensions (xtypes) system available.
-    engine = DummyEngine(config_dict)
+    engine = weewx.engine.DummyEngine(config_dict)
 
     stn_info = weewx.station.StationInfo(**config_dict['Station'])
 

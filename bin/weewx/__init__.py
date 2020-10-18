@@ -116,7 +116,7 @@ class POST_LOOP(object):
 
 # All existent service groups:
 all_service_groups = [
-    'prep_services', 'data_services', 'process_services',
+    'xtype_services', 'prep_services', 'data_services', 'process_services',
     'archive_services', 'restful_services', 'report_services']
 
 # =============================================================================

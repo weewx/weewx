@@ -309,6 +309,8 @@ class VecStats(object):
             if dirN is not None:
                 self.xsum += weight * speed * math.cos(math.radians(90.0 - dirN))
                 self.ysum += weight * speed * math.sin(math.radians(90.0 - dirN))
+            # It's OK for direction to be None, provided speed is zero:
+            if dirN is not None or speed == 0:
                 self.dirsumtime += weight
 
     @property

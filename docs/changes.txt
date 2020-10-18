@@ -3,6 +3,8 @@ weewx change history
 
 4.2.0 MM/DD/YYYY
 
+Made it easier to add new, derived types via StdWXCalculate. Fixes issue #491.
+
 Added ability to label left, right or both y-axes of graphs.  PR#610.
 Fixes issue #609.
 

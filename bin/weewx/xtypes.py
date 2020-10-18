@@ -810,6 +810,51 @@ class WindVecDaily(XType):
         return weewx.units.ValueTuple(value, t, g)
 
 
+class XTypeTable(XType):
+    """Calculate a series for an xtype. Note: this version only works if no aggregation has
+    been requested."""
+
+    @staticmethod
+    def get_series(obs_type, timespan, db_manager, aggregate_type=None, aggregate_interval=None):
+        """Get a series of an xtype, by using the main archive table. Works only for no
+        aggregation. """
+
+        start_vec = list()
+        stop_vec = list()
+        data_vec = list()
+
+        if aggregate_type:
+            # This version does not know how to do aggregations, although this could be
+            # added in the future.
+            raise weewx.UnknownAggregation(aggregate_type)
+
+        else:
+            # No aggregation
+
+            std_unit_system = None
+
+            # Hit the database.
+            for record in db_manager.genBatchRecords(*timespan):
+
+                if std_unit_system:
+                    if std_unit_system != record['usUnits']:
+                        raise weewx.UnsupportedFeature("Unit system cannot change "
+                                                       "within a series.")
+                else:
+                    std_unit_system = record['usUnits']
+
+                # Given a record, use the xtypes system to calculate a value:
+                value = get_scalar(obs_type, record, db_manager)
+                start_vec.append(record['dateTime']- record['interval'] * 60)
+                stop_vec.append(record['dateTime'])
+                data_vec.append(value[0])
+
+            unit, unit_group = weewx.units.getStandardUnitType(std_unit_system, obs_type)
+
+        return (ValueTuple(start_vec, 'unix_epoch', 'group_time'),
+                ValueTuple(stop_vec, 'unix_epoch', 'group_time'),
+                ValueTuple(data_vec, unit, unit_group))
+
 # Add instantiated versions to the extension list. Order matters. We want the highly-specialized
 # versions first, because they might offer optimizations.
 xtypes.append(WindVecDaily())
@@ -817,3 +862,4 @@ xtypes.append(WindVec())
 xtypes.append(AggregateHeatCool())
 xtypes.append(DailySummaries())
 xtypes.append(ArchiveTable())
+xtypes.append(XTypeTable())

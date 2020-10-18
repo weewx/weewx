@@ -4632,6 +4632,7 @@ class AddElectricity(StdService):
         # This section specifies the services that should be run. They are
         # grouped by type, and the order of services within each group
         # determines the order in which the services will be run.
+        xtype_services = weewx.wxxtypes.StdWXXTypes, weewx.wxxtypes.StdPressureCooker, weewx.wxxtypes.StdRainRater, weewx.wxxtypes.StdDelta
         prep_services = weewx.engine.StdTimeSynch
         data_services = <span class="highlight">user.electricity.AddElectricity</span>
         process_services = weewx.engine.StdConvert, weewx.engine.StdCalibrate, weewx.engine.StdQC, weewx.wxservices.StdWXCalculate
