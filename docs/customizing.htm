@@ -5064,6 +5064,23 @@ weewx.units.conversionDict['pound']  = {'newton': lambda x : x * 4.44822}
         </table>
 
 
+        <h1>Adding new, derived types</h1>
+        <p>
+            In the section <a href="#Adding_2nd_source"><em>Adding a second data source</em></a>, we saw an example of
+            how to create a new type for a new data source. But, what if you just want to add a type that is a
+            derivation of existing types? The WeeWX type <span class="code">dewpoint</span> is an example of this: it's
+            a function of two observables, <span class="code">outTemp</span>, and <span class="code">outHumidity</span>.
+            WeeWX calculates it automatically for you.
+        </p>
+        <p>
+            Calculating new, derived types is the job of the WeeWX XTypes system. It can also allow you to add new
+            aggregatioin types.
+        </p>
+        <p>
+            See the Wiki article <a href="https://github.com/weewx/weewx/wiki/WeeWX-V4-user-defined-types"><em>WeeWX V4
+            user defined types</em></a> for complete details on how the XTypes system works.
+        </p>
+
         <h1 id="porting">Porting to new hardware</h1>
 
         <p>Naturally, this is an advanced topic but, nevertheless, I'd like to encourage any Python wizards out there to
