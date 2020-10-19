@@ -3290,11 +3290,22 @@ $station.altitude</pre>
         </p>
 
         <p>
-            Cheetah then tries to evaluate an attribute <span class="code">max</span> of this class. Now, finally, the
-            chain ends. The attribute <span class="code">max</span> triggers the actual calculation of the value, using
-            all the known parameters: the database binding to be hit, the time span of interest, the observation type,
-            and the type of aggregation, querying the database as necessary. The database is not actually hit until the
-            last possible moment, after everything needed to do the evalation is known.
+            Cheetah then tries to evaluate an attribute <span class="code">max</span> of this class, and the pattern
+            repeats. Class <span class="code">weewx.tags.ObservationBinder</span> does not have an attribute <span
+            class="code">max</span>, but it does have a method <span class="code">__getattr___</span>. This method
+            returns an instance of the next class in the chain, class <span class="code">AggTypeBinder</span>, which not
+            only remembers all the previous information, but adds the aggregation type, <span class="code">max</span>.
+        </p>
+
+        <p>
+            One final step needs to occur: Cheetah has an instance of <span class="code">AggTypeBinder</span> in hand,
+            but what it really needs is a string to put in the file being created from the template. It creates the string by
+            calling the method <span class="code">__str__()</span> of <span class="code">AggTypeBinder</span>. Now,
+            finally, the chain ends and everything comes together. The method <span class="code">__str__</span> triggers
+            the actual calculation of the value, using all the known parameters: the database binding to be hit, the
+            time span of interest, the observation type, and the type of aggregation, querying the database as
+            necessary. The database is not actually hit until the last possible moment, after everything needed to do
+            the evalation is known.
         </p>
 
         <p>
