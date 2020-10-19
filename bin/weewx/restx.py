@@ -793,7 +793,8 @@ class AmbientThread(RESTThread):
                  log_success=True, log_failure=True,
                  timeout=10, max_tries=3, retry_wait=5, retry_login=3600, retry_ssl=3600,
                  softwaretype="weewx-%s" % weewx.__version__,
-                 skip_upload=False):
+                 skip_upload=False,
+                 force_direction=False):
 
         """
         Initializer for the AmbientThread class.
@@ -829,8 +830,11 @@ class AmbientThread(RESTThread):
         self.formats = dict(AmbientThread._FORMATS)
         if to_bool(post_indoor_observations):
             self.formats.update(AmbientThread._INDOOR_FORMATS)
+        self.force_direction = to_bool(force_direction)
+        self.last_direction = None
 
-    # Types and formats of the data to be published. See https://bit.ly/2TVl4t3
+    # Types and formats of the data to be published.
+    # See https://support.weather.com/s/article/PWS-Upload-Protocol?language=en_US
     # for definitions.
     _FORMATS = {
         'barometer': 'baromin=%.3f',
@@ -892,14 +896,19 @@ class AmbientThread(RESTThread):
         # to _liststr:
         for _key in self.formats:
             _v = record.get(_key)
+            # WU claims a station is "offline" if it sends a null wind direction, even when wind
+            # speed is zero. If option 'force_direction' is set, cache the last non-null wind
+            # direction and use it instead.
+            if _key == 'windDir' and self.force_direction:
+                if _v is None:
+                    _v = self.last_direction
+                else:
+                    self.last_direction = _v
             # Check to make sure the type is not null
             if _v is not None:
                 if _key == 'dateTime':
-                    # For dates, convert from time stamp to a string, using
-                    # what the Weather Underground calls "MySQL format." I've
-                    # fiddled with formatting, and it seems that escaping the
-                    # colons helps its reliability. But, I could be imagining
-                    # things.
+                    # Convert from timestamp to string. The results will look something
+                    # like '2020-10-19%2021%3A43%3A18'
                     _v = urllib.parse.quote(str(datetime.datetime.utcfromtimestamp(_v)))
                 # Format the value, and accumulate in _liststr:
                 _liststr.append(self.formats[_key] % _v)
