@@ -2223,6 +2223,14 @@ longitude = -77.0366</pre>
             posted. Optional. Default is zero.
         </p>
 
+        <p class="config_option">force_direction</p>
+
+        <p>
+            The Weather Underground has a bug where they will claim that a station is "unavailable" if it sends a null
+            wind direction, even when the wind speed is zero. This option causes the software to cache the last non-null
+            wind direction and use that instead. Default is <span class="code">False</span>.
+        </p>
+
         <p class='config_option'>[[[Essentials]]]</p>
         <p>Occasionally (but not always!) when the Weather Underground is missing a data point it will substitute the
             value zero (<span class='code'>0.0</span>), thus messing up statistics and plots. For all observation types
