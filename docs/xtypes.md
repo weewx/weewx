@@ -445,6 +445,32 @@ object in the list. If no function can be found to do the evaluation, it raises
 The other functions work in a similar manner.
 
 
+### Subtlety
+One must be careful when sharing data structures across threads. Most of the time, this is not a
+problem in WeeWX because the only thing that is shared is the configuration dictionary, and it is
+treated as readonly.
+
+However, because XType extensions can be used within the main thread (by `StdWXCalculate`), and the
+reporting thread (by Cheetah, and the image generator), it is possible to end up sharing a data
+structure. In particular, this can happen when you use a WeeWX service to initialize the extension.
+
+For an example of this, see the class `wxxtypes.RainRater`. Its job is to calculate the rainfall
+rate, by calculating the amount of rain received per unit time. It binds to loop events, and uses
+it to update an internal cache of rain events. This happens in the main thread.
+
+However, it is possible that it could get used in the reporting thread if, say, the Cheetah
+template engine needs to evaluate `rainRate`, and it's not available in the database, nor in the
+present record. In this case, the extension will attempt to calculate `rainRate`, which involves
+scanning the internally cached list of rain events.
+
+The danger is if a thread context switch happens in the middle of that scan. The cached data
+structure could be in an unstable state. To guard agains this, `RainRater` locks the structure
+before using or changing it.
+
+This is a problem only because `RainRater` binds to something in the main thread. Most of the time,
+this is not an issue.
+
+
 ## Other examples
 It's worth taking a look in file `weewx/wxxtypes.py` for examples of XTypes used by WeeWX itself.
 
@@ -455,7 +481,8 @@ The repository [weepwr](https://github.com/tkeffer/weepwr) contains a more compl
 a device driver for the Brultech energy monitors. It registers many new types, and does this
 dynamically.
 
-        
+------------------------
+
 ## Alternatives to the chosen design
 
 ### Alternative: register functions with weewx.conf
@@ -498,7 +525,7 @@ Instead, we allow extensions to recognize what types they know about, possibly f
 expression of the observation type. If they don't recognize the type, they raise
 `weewx.UnknownType`. Types do not have to be declared in advance.
 
+------------------------
+
 ## Open issues
 
-Would be nice to be able to do a series of XTypes with an aggregation. The work around is to
-save the type to the database first, then treat it like any other type.
