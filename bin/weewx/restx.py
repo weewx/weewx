@@ -831,7 +831,7 @@ class AmbientThread(RESTThread):
         if to_bool(post_indoor_observations):
             self.formats.update(AmbientThread._INDOOR_FORMATS)
         self.force_direction = to_bool(force_direction)
-        self.last_direction = None
+        self.last_direction = 0
 
     # Types and formats of the data to be published.
     # See https://support.weather.com/s/article/PWS-Upload-Protocol?language=en_US
