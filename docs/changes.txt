@@ -3,6 +3,10 @@ weewx change history
 
 4.2.0 MM/DD/YYYY
 
+CHANGES COMING! This is the last release that will support the LaCrosse WS23xx,
+Oregon WMR200 and WMR300 stations. In the future, they will be published as
+unsupported extensions.
+
 Made it easier to add new, derived types via StdWXCalculate. Fixes issue #491.
 
 Changed the tag system slightly in order to make it possible for the XTypes
