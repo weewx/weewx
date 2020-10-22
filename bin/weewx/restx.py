@@ -1006,7 +1006,79 @@ class WOWThread(AmbientThread):
                 'windGustDir': 'windgustdir=%.0f',
                 'dewpoint'   : 'dewptf=%.1f',
                 'hourRain'   : 'rainin=%.2f',
-                'dayRain'    : 'dailyrainin=%.2f'}
+                'dayRain'    : 'dailyrainin=%.2f',
+                'soilMoist1' : 'soilmoisture=%.1f',
+                'soilTemp1'  : 'soiltempf=%.1f'}
+
+    def __init__(self,
+                 q,
+                 manager_dict,
+                 station, password, server_url,
+                 post_indoor_observations=False,
+                 api_key=None,  # Not used.
+                 protocol_name="Unknown-Ambient",
+                 essentials={},
+                 post_interval=None, max_backlog=six.MAXSIZE, stale=None,
+                 log_success=True, log_failure=True,
+                 timeout=10, max_tries=3, retry_wait=5, retry_login=3600, retry_ssl=3600,
+                 softwaretype="weewx-%s" % weewx.__version__,
+                 skip_upload=False,
+                 force_direction=False,
+                 soil_moist_field=None, soil_temp_field=None):
+
+        # Initialize my superclass
+        super(WOWThread, self).__init__(q,
+                                        manager_dict=manager_dict,
+                                        station=station, password=password,
+                                        server_url=server_url,
+                                        post_indoor_observations=post_indoor_observations,
+                                        api_key=None,  # Not used.
+                                        protocol_name=protocol_name,
+                                        essentials=essentials,
+                                        post_interval=post_interval,
+                                        max_backlog=max_backlog, stale=stale,
+                                        log_success=log_success,
+                                        log_failure=log_failure,
+                                        timeout=timeout, max_tries=max_tries,
+                                        retry_wait=retry_wait, retry_login=retry_login,
+                                        retry_ssl=retry_ssl,
+                                        softwaretype=softwaretype,
+                                        skip_upload=skip_upload,
+                                        force_direction=force_direction)
+
+        # WeeWX supports multiple soil moisture and temperature fields but WOW
+        # only supports a single field of each. By default we upload soilMoist1
+        # and soilTemp1 but the user can override these. Check for user
+        # overrides and update our field list as required.
+        self.formats = dict(WOWThread._FORMATS)
+        # Do we have a user specified soil moisture field that is different to
+        # the default
+        if soil_moist_field is not None and len(soil_moist_field) > 0 and \
+                soil_moist_field not in self.formats:
+            # Remove the existing 'default' entry
+            self.formats.pop('soilMoist1')
+            # Add the new entry
+            self.formats[soil_moist_field] = 'soilmoisture=%.1f'
+            # Construct a suitable debug log entry
+            soil_moist_str = "'%s' will be posted as 'soilmoist'" % soil_moist_field
+        else:
+            # Construct a suitable debug log entry
+            soil_moist_str = "'soilMoist1' will be posted as 'soilmoist'"
+        # Do we have a user specified soil temperature field that is different
+        # to the default
+        if soil_temp_field is not None and len(soil_temp_field) > 0 and \
+                soil_temp_field not in self.formats:
+            # Remove the existing 'default' entry
+            self.formats.pop('soilTemp1')
+            # Add the new entry
+            self.formats[soil_temp_field] = 'soiltempf=%.1f'
+            # Construct a suitable debug log entry
+            soil_temp_str = "'%s' will be posted as 'soiltempf'" % soil_temp_field
+        else:
+            # Construct a suitable debug log entry
+            soil_temp_str = "'soilTemp1' will be posted as 'soiltempf'"
+        # Assemble a suitable overall debug log entry
+        log.info("WOW: %s, %s" % (soil_moist_str, soil_temp_str))
 
     def format_url(self, incoming_record):
         """Return an URL for posting using WOW's version of the Ambient
@@ -1021,14 +1093,14 @@ class WOWThread(AmbientThread):
 
         # Go through each of the supported types, formatting it, then adding
         # to _liststr:
-        for _key in WOWThread._FORMATS:
+        for _key in self.formats:
             _v = record.get(_key)
             # Check to make sure the type is not null
             if _v is not None:
                 if _key == 'dateTime':
                     _v = urllib.parse.quote_plus(datetime.datetime.utcfromtimestamp(_v).isoformat(' '))
                 # Format the value, and accumulate in _liststr:
-                _liststr.append(WOWThread._FORMATS[_key] % _v)
+                _liststr.append(self.formats[_key] % _v)
         # Now stick all the pieces together with an ampersand between them:
         _urlquery = '&'.join(_liststr)
         # This will be the complete URL for the HTTP GET:
