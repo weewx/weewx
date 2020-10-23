@@ -148,12 +148,12 @@ class StdRESTful(weewx.engine.StdService):
     @staticmethod
     def shutDown_thread(q, t):
         """Function to shut down a thread."""
-        if q and t.isAlive():
+        if q and t.is_alive():
             # Put a None in the queue to signal the thread to shutdown
             q.put(None)
             # Wait up to 20 seconds for the thread to exit:
             t.join(20.0)
-            if t.isAlive():
+            if t.is_alive():
                 log.error("Unable to shut down %s thread", t.name)
             else:
                 log.debug("Shut down %s thread.", t.name)

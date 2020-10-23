@@ -792,7 +792,7 @@ class StdReport(StdService):
         # Do not launch the reporting thread if an old one is still alive.
         # To guard against a zombie thread (alive, but doing nothing) launch
         # anyway if enough time has passed.
-        if self.thread and self.thread.isAlive():
+        if self.thread and self.thread.is_alive():
             thread_age = time.time() - self.launch_time
             if thread_age < self.max_wait:
                 log.info("Launch of report thread aborted: existing report thread still running")
@@ -816,7 +816,7 @@ class StdReport(StdService):
         if self.thread:
             log.info("Shutting down StdReport thread")
             self.thread.join(20.0)
-            if self.thread.isAlive():
+            if self.thread.is_alive():
                 log.error("Unable to shut down StdReport thread")
             else:
                 log.debug("StdReport thread has been terminated")
