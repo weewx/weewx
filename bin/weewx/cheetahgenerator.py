@@ -313,13 +313,17 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
                 # Under Python 2, Cheetah V2 will crash if given a template file name in Unicode,
                 # so make sure it's a string first, using six.ensure_str().
                 compiled_template = Cheetah.Template.Template(
-                    file=six.ensure_str(template, encoding='utf-8'),
+                    file=six.ensure_str(template),
                     searchList=searchList,
                     filter='AssureUnicode',
                     filtersLib=weewx.cheetahgenerator)
 
+                # We have a compiled template in hand. Evaluate it. The result will be a long
+                # Unicode string.
                 unicode_string = compiled_template.respond()
 
+                # Time to write it out. Determine the strategy for encoding any non-ascii
+                # chartacters.
                 if encoding == 'html_entities':
                     byte_string = unicode_string.encode('ascii', 'xmlcharrefreplace')
                 elif encoding == 'strict_ascii':
@@ -625,7 +629,7 @@ class AssureUnicode(Cheetah.Filters.Filter):
         # bytes        decode()            decode()
         # str          decode()           -done-
         # unicode      -done-             N/A
-        # object       str().decode()     str()
+        # object       unicode()          str()
         if val is None:
             return u''
 
@@ -637,22 +641,18 @@ class AssureUnicode(Cheetah.Filters.Filter):
             filtered = val.decode('utf-8')
         # That leaves cells 7 and 8, that is val is an object, such as a ValueHelper
         else:
-            # Must be an object. Convert to string
+            # Must be an object. Convert to unicode string
             try:
-                # For late tag bindings, the following forces the invocation of __str__(),
-                # which can force an XTypes query. For a tag such as $day.foobar.min, where
-                # 'foobar' is an unknown type, this will cause an attribute error. Be prepared
-                # to catch it.
-                filtered = str(val)
+                # For late tag bindings under Python 2, the following forces the invocation of
+                # __unicode__(). Under Python 3, it invokes __str__(). Either way, it can force
+                # an XTypes query. For a tag such as $day.foobar.min, where 'foobar' is an unknown
+                # type, this will cause an attribute error. Be prepared to catch it.
+                filtered = six.text_type(val)
             except AttributeError as e:
                 # Offer a debug message.
                 log.debug("Unrecognized: %s", kwargs.get('rawExpr', e))
                 # Return the raw expression, if available. Otherwise, the exception message
                 # concatenated with a question mark.
                 filtered = kwargs.get('rawExpr', str(e) + '?')
-            if six.PY2:
-                # For Python 2, we have to take an additional step of converting from
-                # type 'str', which is a byte string, to a unicode string
-                filtered = filtered.decode('utf-8')
 
         return filtered

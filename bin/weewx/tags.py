@@ -387,6 +387,11 @@ class AggTypeBinder(object):
         vh = self._do_query()
         return str(vh)
 
+    def __unicode__(self):
+        """Used only Python 2. Force the query, return as a unicode string."""
+        vh = self._do_query()
+        return unicode(vh)
+
     def _do_query(self):
         """Run a query against the databases, using the given aggregation type."""
         db_manager = self.db_lookup(self.data_binding)

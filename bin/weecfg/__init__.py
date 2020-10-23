@@ -1239,7 +1239,7 @@ def update_to_v40(config_dict):
 def update_to_v42(config_dict):
     """Update a configuration file to V4.2
 
-    - Add new engine service group wtype_services
+    - Add new engine service group xtype_services
     """
 
     major, minor = get_version_info(config_dict)
@@ -1247,17 +1247,20 @@ def update_to_v42(config_dict):
     if major + minor >= '402':
         return
 
-    if 'Engine' in config_dict \
-            and 'Services' in config_dict['Engine'] \
-            and 'xtype_services' not in config_dict['Engine']['Services']:
-        config_dict['Engine']['Services']['xtype_services'] = ['weewx.wxxtypes.StdWXXTypes',
-                                                               'weewx.wxxtypes.StdPressureCooker',
-                                                               'weewx.wxxtypes.StdRainRater',
-                                                               'weewx.wxxtypes.StdDelta']
+    if 'Engine' in config_dict and 'Services' in config_dict['Engine']:
+        # If it's not there already, inject 'xtype_services'
+        if 'xtype_services' not in config_dict['Engine']['Services']:
+            config_dict['Engine']['Services']['xtype_services'] = \
+                ['weewx.wxxtypes.StdWXXTypes',
+                 'weewx.wxxtypes.StdPressureCooker',
+                 'weewx.wxxtypes.StdRainRater',
+                 'weewx.wxxtypes.StdDelta']
+        # Make sure it's located just before the 'archive_services'
         reorder_scalars(config_dict['Engine']['Services'].scalars,
                         'xtype_services',
-                        'prep_services')
+                        'archive_services')
         config_dict['Engine']['Services'].comments['prep_services'] = []
+        config_dict['Engine']['Services'].comments['xtype_services'] = []
         config_dict['Engine'].comments['Services'] = ['The following section specifies which '
                                                       'services should be run and in what order.']
     config_dict['version'] = '4.2.0'
