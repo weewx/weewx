@@ -171,9 +171,16 @@ class RESTThread(threading.Thread):
     def __init__(self, q, protocol_name,
                  essentials={},
                  manager_dict=None,
-                 post_interval=None, max_backlog=six.MAXSIZE, stale=None,
-                 log_success=True, log_failure=True,
-                 timeout=10, max_tries=3, retry_wait=5, retry_login=3600, retry_ssl=3600,
+                 post_interval=None,
+                 max_backlog=six.MAXSIZE,
+                 stale=None,
+                 log_success=True,
+                 log_failure=True,
+                 timeout=10,
+                 max_tries=3,
+                 retry_wait=5,
+                 retry_login=3600,
+                 retry_ssl=3600,
                  softwaretype="weewx-%s" % weewx.__version__,
                  skip_upload=False):
         """Initializer for the class RESTThread
@@ -497,7 +504,7 @@ class RESTThread(threading.Thread):
         """Raises exception AbortedPost if the record should not be posted.
         Otherwise, does nothing"""
         for obs_type in self.essentials:
-            if self.essentials[obs_type] and record.get(obs_type) is None:
+            if to_bool(self.essentials[obs_type]) and record.get(obs_type) is None:
                 raise AbortedPost("Observation type %s missing" % obs_type)
 
     def check_response(self, response):
@@ -784,14 +791,23 @@ class AmbientThread(RESTThread):
     def __init__(self,
                  q,
                  manager_dict,
-                 station, password, server_url,
+                 station,
+                 password,
+                 server_url,
                  post_indoor_observations=False,
                  api_key=None,  # Not used.
                  protocol_name="Unknown-Ambient",
                  essentials={},
-                 post_interval=None, max_backlog=six.MAXSIZE, stale=None,
-                 log_success=True, log_failure=True,
-                 timeout=10, max_tries=3, retry_wait=5, retry_login=3600, retry_ssl=3600,
+                 post_interval=None,
+                 max_backlog=six.MAXSIZE,
+                 stale=None,
+                 log_success=True,
+                 log_failure=True,
+                 timeout=10,
+                 max_tries=3,
+                 retry_wait=5,
+                 retry_login=3600,
+                 retry_ssl=3600,
                  softwaretype="weewx-%s" % weewx.__version__,
                  skip_upload=False,
                  force_direction=False):
@@ -809,7 +825,7 @@ class AmbientThread(RESTThread):
           server_url: An url where the server for this protocol can be found.
         """
         super(AmbientThread, self).__init__(q,
-                                            protocol_name=protocol_name,
+                                            protocol_name,
                                             essentials=essentials,
                                             manager_dict=manager_dict,
                                             post_interval=post_interval,
@@ -937,15 +953,31 @@ class AmbientThread(RESTThread):
 class AmbientLoopThread(AmbientThread):
     """Version used for the Rapidfire protocol."""
 
-    def __init__(self, q, manager_dict,
-                 station, password, server_url,
+    def __init__(self,
+                 q,
+                 manager_dict,
+                 station,
+                 password,
+                 server_url,
                  post_indoor_observations=False,
-                 api_key=None,
+                 api_key=None,  # Not used
                  protocol_name="Unknown-Ambient",
                  essentials={},
-                 post_interval=None, max_backlog=six.MAXSIZE, stale=None,
-                 log_success=True, log_failure=True,
-                 timeout=10, max_tries=3, retry_wait=5, rtfreq=2.5):
+                 post_interval=None,
+                 max_backlog=six.MAXSIZE,
+                 stale=None,
+                 log_success=True,
+                 log_failure=True,
+                 timeout=10,
+                 max_tries=3,
+                 retry_wait=5,
+                 retry_login=3600,
+                 retry_ssl=3600,
+                 softwaretype="weewx-%s" % weewx.__version__,
+                 skip_upload=False,
+                 force_direction=False,
+                 rtfreq=2.5     # This is the only one added by AmbientLoopThread
+                 ):
         """
         Initializer for the AmbientLoopThread class.
 
@@ -954,6 +986,7 @@ class AmbientLoopThread(AmbientThread):
           rtfreq: Frequency of update in seconds for RapidFire
         """
         super(AmbientLoopThread, self).__init__(q,
+                                                manager_dict=manager_dict,
                                                 station=station,
                                                 password=password,
                                                 server_url=server_url,
@@ -961,7 +994,6 @@ class AmbientLoopThread(AmbientThread):
                                                 api_key=api_key,
                                                 protocol_name=protocol_name,
                                                 essentials=essentials,
-                                                manager_dict=manager_dict,
                                                 post_interval=post_interval,
                                                 max_backlog=max_backlog,
                                                 stale=stale,
@@ -969,7 +1001,12 @@ class AmbientLoopThread(AmbientThread):
                                                 log_failure=log_failure,
                                                 timeout=timeout,
                                                 max_tries=max_tries,
-                                                retry_wait=retry_wait)
+                                                retry_wait=retry_wait,
+                                                retry_login=retry_login,
+                                                retry_ssl=retry_ssl,
+                                                softwaretype=softwaretype,
+                                                skip_upload=skip_upload,
+                                                force_direction=force_direction)
 
         self.rtfreq = float(rtfreq)
         self.formats.update(AmbientLoopThread.WUONLY_FORMATS)
@@ -1793,7 +1830,7 @@ class AWEKASThread(RESTThread):
             elif line.startswith(b"Benutzer/Passwort Fehler"):
                 raise BadLogin(line)
             else:
-                raise FailedPost("Server returned '%s'" % line)
+                raise FailedPost("Server returned '%s'" % six.ensure_text(line))
 
 
 ###############################################################################
