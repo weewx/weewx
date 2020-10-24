@@ -13,32 +13,32 @@ Each protocol uses two classes:
     "controlling object"
  o A separate "threading" class that runs in its own thread. Call this the
     "posting object".
- 
+
 Communication between the two is via an instance of queue.Queue. New loop
 packets or archive records are put into the queue by the controlling object
 and received by the posting object. Details below.
- 
+
 The controlling object should inherit from StdRESTful. The controlling object
 is responsible for unpacking any configuration information from weewx.conf, and
 supplying any defaults. It sets up the queue. It arranges for any new LOOP or
 archive records to be put in the queue. It then launches the thread for the
 posting object.
- 
+
 When a new LOOP or record arrives, the controlling object puts it in the queue,
 to be received by the posting object. The controlling object can tell the
 posting object to terminate by putting a 'None' in the queue.
- 
+
 The posting object should inherit from class RESTThread. It monitors the queue
 and blocks until a new record arrives.
 
 The base class RESTThread has a lot of functionality, so specializing classes
-should only have to implement a few functions. In particular, 
+should only have to implement a few functions. In particular,
 
  - format_url(self, record). This function takes a record dictionary as an
-   argument. It is responsible for formatting it as an appropriate URL. 
+   argument. It is responsible for formatting it as an appropriate URL.
    For example, the station registry's version emits strings such as
      http://weewx.com/register/register.cgi?weewx_info=2.6.0a5&python_info= ...
-   
+
  - skip_this_post(self, time_ts). If this function returns True, then the
    post will be skipped. Otherwise, it is done. The default version does two
    checks. First, it sees how old the record is. If it is older than the value
@@ -51,16 +51,16 @@ should only have to implement a few functions. In particular,
    simply uses urllib.request.urlopen(request) and returns the result. If the post
    could raise an unusual exception, override this function and catch the
    exception. See the WOWThread implementation for an example.
-   
+
  - check_response(self, response). After an HTTP request gets posted, the webserver sends
    back a "response." This response may contain clues as to whether the post
    worked.  By overriding check_response() you can look for these clues. For
    example, the station registry checks all lines in the response, looking for
    any that start with the string "FAIL". If it finds one, it raises a
    FailedPost exception, signaling that the post did not work.
-   
+
 In unusual cases, you might also have to implement the following:
-  
+
  - get_request(self, url). The default version of this function creates
    an urllib.request.Request object from the url, adds a 'User-Agent' header,
    then returns it. You may need to override this function if you need to add
@@ -135,7 +135,7 @@ class SendError(IOError):
 
 class StdRESTful(weewx.engine.StdService):
     """Abstract base class for RESTful weewx services.
-    
+
     Offers a few common bits of functionality."""
 
     def shutDown(self):
@@ -165,7 +165,7 @@ StdRESTbase = StdRESTful
 
 class RESTThread(threading.Thread):
     """Abstract base class for RESTful protocol threads.
-    
+
     Offers a few bits of common functionality."""
 
     def __init__(self, q, protocol_name,
@@ -182,7 +182,7 @@ class RESTThread(threading.Thread):
           q: An instance of queue.Queue where the records will appear.
 
           protocol_name: A string holding the name of the protocol.
-          
+
         Optional parameters:
 
           essentials: A dictionary that holds observation types that must
@@ -190,35 +190,35 @@ class RESTThread(threading.Thread):
 
           manager_dict: A manager dictionary, to be used to open up a
           database manager. Default is None.
-        
+
           post_interval: How long to wait between posts.
           Default is None (post every record).
-          
+
           max_backlog: How many records are allowed to accumulate in the queue
           before the queue is trimmed.
           Default is six.MAXSIZE (essentially, allow any number).
-          
+
           stale: How old a record can be and still considered useful.
           Default is None (never becomes too old).
-          
+
           log_success: If True, log a successful post in the system log.
           Default is True.
-          
+
           log_failure: If True, log an unsuccessful post in the system log.
           Default is True.
-          
+
           timeout: How long to wait for the server to respond before giving up.
           Default is 10 seconds.
 
           max_tries: How many times to try the post before giving up.
           Default is 3
-          
+
           retry_wait: How long to wait between retries when failures.
           Default is 5 seconds.
-          
+
           retry_login: How long to wait before retrying a login. Default
           is 3600 seconds (one hour).
-          
+
           retry_ssl: How long to wait before retrying after an SSL error. Default
           is 3600 seconds (one hour).
 
@@ -254,7 +254,7 @@ class RESTThread(threading.Thread):
     def get_record(self, record, dbmanager):
         """Augment record data with additional data from the archive.
         Should return results in the same units as the record and the database.
-        
+
         This is a general version that works for:
           - WeatherUnderground
           - PWSweather
@@ -411,7 +411,7 @@ class RESTThread(threading.Thread):
 
     def process_record(self, record, dbmanager):
         """Default version of process_record.
-        
+
         This version uses HTTP GETs to do the post, which should work for many
         protocols, but it can always be replaced by a specializing class."""
 
@@ -431,7 +431,7 @@ class RESTThread(threading.Thread):
             data = _payload[0]
         else:
             data = None
-        # ... check to see if this is just a drill...            
+        # ... check to see if this is just a drill...
         if self.skip_upload:
             raise AbortedPost("Skip post")
 
@@ -446,12 +446,12 @@ class RESTThread(threading.Thread):
 
     def post_with_retries(self, request, data=None):
         """Post a request, retrying if necessary
-        
-        Attempts to post the request object up to max_tries times. 
+
+        Attempts to post the request object up to max_tries times.
         Catches a set of generic exceptions.
-        
+
         request: An instance of urllib.request.Request
-        
+
         data: The body of the POST. If not given, the request will be done as a GET.
         """
 
@@ -516,13 +516,13 @@ class RESTThread(threading.Thread):
     def post_request(self, request, data=None):
         """Post a request object. This version does not catch any HTTP
         exceptions.
-        
+
         Specializing versions can can catch any unusual exceptions that might
         get raised by their protocol.
-        
+
         request: An instance of urllib.request.Request
-        
-        data: If given, the request will be done as a POST. Otherwise, 
+
+        data: If given, the request will be done as a POST. Otherwise,
         as a GET. [optional]
         """
         # Data might be a unicode string. Encode it first.
@@ -554,11 +554,11 @@ class RESTThread(threading.Thread):
 
     def get_post_body(self, record):  # @UnusedVariable
         """Return any POST payload.
-        
+
         The returned value should be a 2-way tuple. First element is the Python
-        object to be included as the payload. Second element is the MIME type it 
+        object to be included as the payload. Second element is the MIME type it
         is in (such as "application/json").
-        
+
         Return a simple 'None' if there is no POST payload. This is the default.
         """
         # Maintain backwards compatibility with the old format_data() function.
@@ -569,7 +569,7 @@ class RESTThread(threading.Thread):
 
     def format_data(self, _):
         """Return a POST payload as an urlencoded object.
-        
+
         DEPRECATED. Use get_post_body() instead.
         """
         return None
@@ -743,8 +743,8 @@ StdPWSweather = StdPWSWeather
 
 class StdWOW(StdRESTful):
     """Upload using the UK Met Office's WOW protocol.
-    
-    For details of the WOW upload protocol, see 
+
+    For details of the WOW upload protocol, see
     http://wow.metoffice.gov.uk/support/dataformats#dataFileUpload
     """
 
@@ -800,12 +800,12 @@ class AmbientThread(RESTThread):
         Initializer for the AmbientThread class.
 
         Parameters specific to this class:
-          
+
           station: The name of the station. For example, for the WU, this
           would be something like "KORHOODR3".
-          
+
           password: Password used for the station.
-          
+
           server_url: An url where the server for this protocol can be found.
         """
         super(AmbientThread, self).__init__(q,
@@ -950,7 +950,7 @@ class AmbientLoopThread(AmbientThread):
         Initializer for the AmbientLoopThread class.
 
         Parameters specific to this class:
-          
+
           rtfreq: Frequency of update in seconds for RapidFire
         """
         super(AmbientLoopThread, self).__init__(q,
@@ -996,19 +996,33 @@ class WOWThread(AmbientThread):
     """Class for posting to the WOW variant of the Ambient protocol."""
 
     # Types and formats of the data to be published:
-    _FORMATS = {'dateTime'   : 'dateutc=%s',
-                'barometer'  : 'baromin=%.3f',
-                'outTemp'    : 'tempf=%.1f',
-                'outHumidity': 'humidity=%.0f',
-                'windSpeed'  : 'windspeedmph=%.0f',
-                'windDir'    : 'winddir=%.0f',
-                'windGust'   : 'windgustmph=%.0f',
-                'windGustDir': 'windgustdir=%.0f',
-                'dewpoint'   : 'dewptf=%.1f',
-                'hourRain'   : 'rainin=%.2f',
-                'dayRain'    : 'dailyrainin=%.2f',
-                'soilMoist1' : 'soilmoisture=%.1f',
-                'soilTemp1'  : 'soiltempf=%.1f'}
+    _FORMATS = {'dateutc': {'source': 'dateTime',
+                            'format': '%s'},
+                'baromin': {'source': 'barometer',
+                            'format': '%.3f'},
+                'tempf': {'source': 'outTemp',
+                          'format': '%.1f'},
+                'humidity': {'source': 'outHumidity',
+                             'format': '%.0f'},
+                'windspeedmph': {'source': 'windSpeed',
+                                 'format': '%.0f'},
+                'winddir': {'source': 'windDir',
+                            'format': '%.0f'},
+                'windgustmph': {'source': 'windGust',
+                                'format': '%.0f'},
+                'windgustdir': {'source': 'windGustDir',
+                                'format': '%.0f'},
+                'dewptf': {'source': 'dewpoint',
+                           'format': '%.1f'},
+                'rainin': {'source': 'hourRain',
+                           'format': '%.2f'},
+                'dailyrainin': {'source': 'dayRain',
+                                'format': '%.2f'},
+                'soilmoisture': {'source': 'soilMoist1',
+                                 'format': '%.1f'},
+                'soiltempf': {'source': 'soilTemp1',
+                              'format': '%.1f'}
+                }
 
     def __init__(self,
                  q,
@@ -1024,7 +1038,7 @@ class WOWThread(AmbientThread):
                  softwaretype="weewx-%s" % weewx.__version__,
                  skip_upload=False,
                  force_direction=False,
-                 soil_moist_field=None, soil_temp_field=None):
+                 uploader_map=None):
 
         # Initialize my superclass
         super(WOWThread, self).__init__(q,
@@ -1046,39 +1060,7 @@ class WOWThread(AmbientThread):
                                         skip_upload=skip_upload,
                                         force_direction=force_direction)
 
-        # WeeWX supports multiple soil moisture and temperature fields but WOW
-        # only supports a single field of each. By default we upload soilMoist1
-        # and soilTemp1 but the user can override these. Check for user
-        # overrides and update our field list as required.
         self.formats = dict(WOWThread._FORMATS)
-        # Do we have a user specified soil moisture field that is different to
-        # the default
-        if soil_moist_field is not None and len(soil_moist_field) > 0 and \
-                soil_moist_field not in self.formats:
-            # Remove the existing 'default' entry
-            self.formats.pop('soilMoist1')
-            # Add the new entry
-            self.formats[soil_moist_field] = 'soilmoisture=%.1f'
-            # Construct a suitable debug log entry
-            soil_moist_str = "'%s' will be posted as 'soilmoist'" % soil_moist_field
-        else:
-            # Construct a suitable debug log entry
-            soil_moist_str = "'soilMoist1' will be posted as 'soilmoist'"
-        # Do we have a user specified soil temperature field that is different
-        # to the default
-        if soil_temp_field is not None and len(soil_temp_field) > 0 and \
-                soil_temp_field not in self.formats:
-            # Remove the existing 'default' entry
-            self.formats.pop('soilTemp1')
-            # Add the new entry
-            self.formats[soil_temp_field] = 'soiltempf=%.1f'
-            # Construct a suitable debug log entry
-            soil_temp_str = "'%s' will be posted as 'soiltempf'" % soil_temp_field
-        else:
-            # Construct a suitable debug log entry
-            soil_temp_str = "'soilTemp1' will be posted as 'soiltempf'"
-        # Assemble a suitable overall debug log entry
-        log.info("WOW: %s, %s" % (soil_moist_str, soil_temp_str))
 
     def format_url(self, incoming_record):
         """Return an URL for posting using WOW's version of the Ambient
@@ -1093,14 +1075,17 @@ class WOWThread(AmbientThread):
 
         # Go through each of the supported types, formatting it, then adding
         # to _liststr:
-        for _key in self.formats:
-            _v = record.get(_key)
+        for _dest, _config in six.iteritems(self.formats):
+            _source = _config['source']
+            _format = _config['format']
+            _v = record.get(_source)
             # Check to make sure the type is not null
             if _v is not None:
-                if _key == 'dateTime':
+                if _source == 'dateTime':
                     _v = urllib.parse.quote_plus(datetime.datetime.utcfromtimestamp(_v).isoformat(' '))
                 # Format the value, and accumulate in _liststr:
-                _liststr.append(self.formats[_key] % _v)
+                log.info("WOW: '='.join([_dest,_format])=%s" % ("=".join([_dest,_format]),))
+                _liststr.append("=".join([_dest,_format]) % _v)
         # Now stick all the pieces together with an ampersand between them:
         _urlquery = '&'.join(_liststr)
         # This will be the complete URL for the HTTP GET:
@@ -1134,7 +1119,7 @@ class WOWThread(AmbientThread):
 
 class StdCWOP(StdRESTful):
     """Weewx service for posting using the CWOP protocol.
-    
+
     Manages a separate thread CWOPThread"""
 
     # Default list of CWOP servers to try:
@@ -1183,28 +1168,28 @@ class CWOPThread(RESTThread):
 
         """
         Initializer for the CWOPThread class.
-        
+
         Parameters specific to this class:
-          
+
           station: The name of the station. Something like "DW1234".
-          
+
           passcode: Some stations require a passcode.
-          
+
           latitude: Latitude of the station in decimal degrees.
-          
+
           longitude: Longitude of the station in decimal degrees.
-          
+
           station_type: The type of station. Generally, this is the driver
           symbolic name, such as "Vantage".
-        
+
           server_list: A list of strings holding the CWOP server name and
           port. Default is ['cwop.aprs.net:14580', 'cwop.aprs.net:23']
 
         Parameters customized for this class:
-          
+
           post_interval: How long to wait between posts.
           Default is 600 (every 10 minutes).
-          
+
           stale: How old a record can be and still considered useful.
           Default is 60 (one minute).
         """
@@ -1481,32 +1466,32 @@ class StationRegistryThread(RESTThread):
                  log_success=True, log_failure=True,
                  timeout=60, max_tries=3, retry_wait=5):
         """Initialize an instance of StationRegistryThread.
-        
+
         Parameters specific to this class:
 
           station_url: An URL used to identify the station. This will be
           used as the unique key in the registry to identify each station.
-          
+
           latitude: Latitude of the staion
-          
+
           longitude: Longitude of the station
-        
-          server_url: The URL of the registry server. 
+
+          server_url: The URL of the registry server.
           Default is 'http://weewx.com/register/register.cgi'
-          
-          description: A brief description of the station. 
+
+          description: A brief description of the station.
           Default is 'Unknown'
-          
+
           station_type: The type of station. Generally, this is the name of
-          the driver used by the station. 
+          the driver used by the station.
           Default is 'Unknown'
-          
+
           station_model: The hardware model, typically the hardware_name
           property provided by the driver.
           Default is 'Unknown'.
 
         Parameters customized for this class:
-          
+
           post_interval: How long to wait between posts.
           Default is 604800 seconds (1 week).
         """
@@ -1595,7 +1580,7 @@ class StdAWEKAS(StdRESTful):
             enable   = True
             username = AWEKAS_USERNAME
             password = AWEKAS_PASSWORD
-    
+
     The AWEKAS server expects a single string of values delimited by
     semicolons.  The position of each value matters, for example position 1
     is the awekas username and position 2 is the awekas password.
@@ -1650,7 +1635,7 @@ class StdAWEKAS(StdRESTful):
             1 = rising
             2 = high rising
     Pos16. wind gust (km/h) (float)
-    Pos17: solar radiation (W/m^2) (float) 
+    Pos17: solar radiation (W/m^2) (float)
     Pos18: UV Index (float)
     Pos19: brightness (LUX) (int)
     Pos20: sunshine hours today (float)
@@ -1729,11 +1714,11 @@ class AWEKASThread(RESTThread):
 
           longitude: Station longitude in decimal degrees
           Default is station longitude
-        
+
           manager_dict: A dictionary holding the database manager
-          information. It will be used to open a connection to the archive 
+          information. It will be used to open a connection to the archive
           database.
-        
+
           server_url: URL of the server
           Default is the AWEKAS site
 
