@@ -6718,7 +6718,7 @@ growing_base = 50.0, degree_F</pre>
             </tr>
             <tr>
                 <td class="first_col">group_concentration</td>
-                <td>pm1_0<br/>pm2_5<br/>pm10_0</td>
+                <td>no2<br/>pm1_0<br/>pm2_5<br/>pm10_0</td>
                 <td>microgram_per_meter_cubed</td>
                 <td>microgram_per_meter_cubed</td>
                 <td>microgram_per_meter_cubed</td>
@@ -6739,6 +6739,14 @@ growing_base = 50.0, degree_F</pre>
                 <td>byte</td>
                 <td>byte</td>
                 <td>byte</td>
+            </tr>
+            <tr>
+                <td class="first_col">group_db</td>
+                <td>noise</td>
+                <td>dB</td>
+                <td>dB</td>
+                <td>dB</td>
+                <td>dB</td>
             </tr>
             <tr>
                 <td class="first_col">group_degree_day</td>
@@ -6767,8 +6775,8 @@ growing_base = 50.0, degree_F</pre>
             </tr>
             <tr>
                 <td class="first_col">group_energy</td>
-                <td></td>
-                <td>kilowatt_hour<br/>watt_hour<br/>watt_second</td>
+                <td>lightning_energy</td>
+                <td>kilowatt_hour<br/>mega_joule<br/>watt_hour<br/>watt_second</td>
                 <td>watt_hour</td>
                 <td>watt_hour</td>
                 <td>watt_hour</td>
@@ -6780,6 +6788,14 @@ growing_base = 50.0, degree_F</pre>
                 <td>watt_second</td>
                 <td>watt_second</td>
                 <td>watt_second</td>
+            </tr>
+            <tr>
+                <td class="first_col">group_fraction</td>
+                <td>co<br/>co2<br/>nh3<br/>o3</br>pb</br>so2</td>
+                <td>ppm</td>
+                <td>ppm</td>
+                <td>ppm</td>
+                <td>ppm</td>
             </tr>
             <tr>
                 <td class="first_col">group_interval</td>
@@ -6809,7 +6825,9 @@ growing_base = 50.0, degree_F</pre>
             </tr>
             <tr>
                 <td class="first_col">group_percent</td>
-                <td>extraHumid1 <br/> extraHumid2 <br/> inHumidity <br/> outHumidity <br/> rxCheckPercent
+                <td>
+                    extraHumid1 <br/> extraHumid2 <br/> inHumidity <br/> outHumidity <br/>
+                    rxCheckPercent<br/>snowMoisture
                 </td>
                 <td>percent</td>
                 <td>percent</td>
@@ -6818,7 +6836,7 @@ growing_base = 50.0, degree_F</pre>
             </tr>
             <tr>
                 <td class="first_col">group_power</td>
-                <td></td>
+                <td>luminosity</td>
                 <td>kilowatt<br/>watt</td>
                 <td>watt</td>
                 <td>watt</td>
@@ -6858,8 +6876,7 @@ growing_base = 50.0, degree_F</pre>
             </tr>
             <tr>
                 <td class="first_col">group_rain</td>
-                <td>rain <br/> ET <br/> hail
-                </td>
+                <td>rain<br/>ET<br/>hail<br/>snowDepth<br/>snowRate</td>
                 <td>inch <br/> cm <br/> mm
                 </td>
                 <td>inch</td>
