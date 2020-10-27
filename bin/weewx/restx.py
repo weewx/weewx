@@ -83,6 +83,7 @@ of various RESTful services.
 
 from __future__ import absolute_import
 
+import configobj
 import datetime
 import logging
 import platform
@@ -97,6 +98,7 @@ import six
 from six.moves import http_client
 from six.moves import queue
 from six.moves import urllib
+from six.moves import StringIO
 
 import weedb
 import weeutil.logger
@@ -751,13 +753,72 @@ class StdWOW(StdRESTful):
     # The URL used by WOW:
     archive_url = "http://wow.metoffice.gov.uk/automaticreading"
 
+    # Default types and formats of the data to be published:
+    DEFAULTS_INI = """
+    [StdRESTful]
+        [[WOW]]
+            [[[uploader_map]]]
+                [[[[dateutc]]]]
+                    source = dateTime
+                    format = %s
+                [[[[baromin]]]]
+                    source = barometer
+                    format = %.3f
+                [[[[tempf]]]]
+                    source = outTemp
+                    format = %.1f
+                [[[[humidity]]]]
+                    source = outHumidity
+                    format = %.0f
+                [[[[windspeedmph]]]]
+                    source = windSpeed
+                    format = %.0f
+                [[[[winddir]]]]
+                    source = windDir
+                    format = %.0f
+                [[[[windgustmph]]]]
+                    source = windGust
+                    format = %.0f
+                [[[[windgustdir]]]]
+                    source = windGustDir
+                    format = %.0f
+                [[[[dewptf]]]]
+                    source = dewpoint
+                    format = %.1f
+                [[[[rainin]]]]
+                    source = hourRain
+                    format = %.2f
+                [[[[dailyrainin]]]]
+                    source = dayRain
+                    format = %.2f
+                [[[[soilmoisture]]]]
+                    source = soilMoist1
+                    format = %.0f
+                [[[[soiltempf]]]]
+                    source = soilTemp1
+                    format = %.1f
+    """
+
     def __init__(self, engine, config_dict):
         super(StdWOW, self).__init__(engine, config_dict)
 
-        _ambient_dict = get_site_dict(
-            config_dict, 'WOW', 'station', 'password')
-        if _ambient_dict is None:
+        # Get my config dict
+        # First get my site options with any overrides
+        merge_dict = get_site_dict(config_dict, 'WOW', 'station', 'password')
+        if merge_dict is None:
             return
+        # We now have the scalar site options but we need to add in the
+        # uploader map if it exists
+        try:
+            merge_dict['uploader_map'] = config_dict['StdRESTful']['WOW'].get('uploader_map')
+        except KeyError:
+            pass
+        log.info("merge_dict=%s" % (merge_dict,))
+        # Now get a config dict with uploader map default
+        _ambient_dict = configobj.ConfigObj(StringIO(StdWOW.DEFAULTS_INI),
+                                  encoding='utf-8')['StdRESTful']['WOW']
+        # Merge the site options to give my final config dict with defaults
+        _ambient_dict.merge(merge_dict)
 
         # Get the manager dictionary:
         _manager_dict = weewx.manager.get_manager_dict_from_config(
@@ -995,35 +1056,6 @@ class AmbientLoopThread(AmbientThread):
 class WOWThread(AmbientThread):
     """Class for posting to the WOW variant of the Ambient protocol."""
 
-    # Types and formats of the data to be published:
-    _FORMATS = {'dateutc': {'source': 'dateTime',
-                            'format': '%s'},
-                'baromin': {'source': 'barometer',
-                            'format': '%.3f'},
-                'tempf': {'source': 'outTemp',
-                          'format': '%.1f'},
-                'humidity': {'source': 'outHumidity',
-                             'format': '%.0f'},
-                'windspeedmph': {'source': 'windSpeed',
-                                 'format': '%.0f'},
-                'winddir': {'source': 'windDir',
-                            'format': '%.0f'},
-                'windgustmph': {'source': 'windGust',
-                                'format': '%.0f'},
-                'windgustdir': {'source': 'windGustDir',
-                                'format': '%.0f'},
-                'dewptf': {'source': 'dewpoint',
-                           'format': '%.1f'},
-                'rainin': {'source': 'hourRain',
-                           'format': '%.2f'},
-                'dailyrainin': {'source': 'dayRain',
-                                'format': '%.2f'},
-                'soilmoisture': {'source': 'soilMoist1',
-                                 'format': '%.1f'},
-                'soiltempf': {'source': 'soilTemp1',
-                              'format': '%.1f'}
-                }
-
     def __init__(self,
                  q,
                  manager_dict,
@@ -1060,7 +1092,7 @@ class WOWThread(AmbientThread):
                                         skip_upload=skip_upload,
                                         force_direction=force_direction)
 
-        self.formats = dict(WOWThread._FORMATS)
+        self.formats = uploader_map
 
     def format_url(self, incoming_record):
         """Return an URL for posting using WOW's version of the Ambient
@@ -1076,15 +1108,15 @@ class WOWThread(AmbientThread):
         # Go through each of the supported types, formatting it, then adding
         # to _liststr:
         for _dest, _config in six.iteritems(self.formats):
-            _source = _config['source']
-            _format = _config['format']
+            _source = _config.get('source')
+            _format = _config.get('format')
             _v = record.get(_source)
-            # Check to make sure the type is not null
-            if _v is not None:
+            # Check to make sure the type is not null and that we have a format
+            # to use
+            if _v is not None and _format is not None and len(_format) > 0:
                 if _source == 'dateTime':
                     _v = urllib.parse.quote_plus(datetime.datetime.utcfromtimestamp(_v).isoformat(' '))
                 # Format the value, and accumulate in _liststr:
-                log.info("WOW: '='.join([_dest,_format])=%s" % ("=".join([_dest,_format]),))
                 _liststr.append("=".join([_dest,_format]) % _v)
         # Now stick all the pieces together with an ampersand between them:
         _urlquery = '&'.join(_liststr)
