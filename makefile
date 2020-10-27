@@ -315,7 +315,7 @@ DEB3_PKG=python3-weewx_$(DEBVER)_$(DEBARCH).deb
 RHEL7_PKG=weewx-$(RPMVER).el7.$(RPMARCH).rpm
 RHEL8_PKG=weewx-$(RPMVER).el8.$(RPMARCH).rpm
 SUSE12_PKG=weewx-$(RPMVER).suse12.$(RPMARCH).rpm
-SUSE12_PKG=weewx-$(RPMVER).suse15.$(RPMARCH).rpm
+SUSE15_PKG=weewx-$(RPMVER).suse15.$(RPMARCH).rpm
 upload-pkgs:
 	scp $(DSTDIR)/$(DEB2_PKG) $(DSTDIR)/$(DEB3_PKG) $(DSTDIR)/$(RHEL7_PKG) $(DSTDIR)/$(RHEL8_PKG) $(DSTDIR)/$(SUSE12_PKG) $(DSTDIR)/$(SUSE15_PKG) $(USER)@$(WEEWX_COM):$(WEEWX_STAGING)
 
