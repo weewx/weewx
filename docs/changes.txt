@@ -1,7 +1,7 @@
 weewx change history
 --------------------
 
-4.2.0 MM/DD/YYYY
+4.2.0 10/26/2020
 
 CHANGES COMING! This is the last release that will support the LaCrosse WS23xx,
 Oregon WMR200 and WMR300 stations. In the future, they will be published as
@@ -11,6 +11,9 @@ Made it easier to add new, derived types via StdWXCalculate. Fixes issue #491.
 
 Changed the tag system slightly in order to make it possible for the XTypes
 system to add new aggregations that take an argument.
+
+Added the new data types in the extended_wview schema to the WeeWX types
+system. Fixes issue #613.
 
 Added ability to label left, right or both y-axes of graphs.  PR#610.
 Fixes issue #609. Thanks to user Brent Fraser!
