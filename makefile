@@ -73,6 +73,11 @@ help: info
 	@echo "  update-yum-repo"
 	@echo "    push-yum-repo"
 	@echo ""
+	@echo " suse repository management"
+	@echo "   pull-suse-repo"
+	@echo " update-suse-repo"
+	@echo "   push-suse-repo"
+	@echo ""
 
 info:
 	@echo "     VERSION: $(VERSION)"
