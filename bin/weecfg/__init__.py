@@ -1242,11 +1242,6 @@ def update_to_v42(config_dict):
     - Add new engine service group xtype_services
     """
 
-    major, minor = get_version_info(config_dict)
-
-    if major + minor >= '402':
-        return
-
     if 'Engine' in config_dict and 'Services' in config_dict['Engine']:
         # If it's not there already, inject 'xtype_services'
         if 'xtype_services' not in config_dict['Engine']['Services']:
@@ -1255,7 +1250,12 @@ def update_to_v42(config_dict):
                  'weewx.wxxtypes.StdPressureCooker',
                  'weewx.wxxtypes.StdRainRater',
                  'weewx.wxxtypes.StdDelta']
-        # Make sure it's located just before the 'archive_services'
+
+        # V4.2.0 neglected to include StdDelta. If necessary, add it:
+        if 'weewx.wxxtypes.StdDelta' not in config_dict['Engine']['Services']['xtype_services']:
+            config_dict['Engine']['Services']['xtype_services'].append('weewx.wxxtypes.StdDelta')
+
+        # Make sure xtype_services are located just before the 'archive_services'
         reorder_scalars(config_dict['Engine']['Services'].scalars,
                         'xtype_services',
                         'archive_services')
