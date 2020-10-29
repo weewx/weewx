@@ -746,7 +746,8 @@ class StdWunderground(StdRESTful):
         # We now have the scalar site options but we need to add in the
         # uploader map if it exists
         try:
-            merge_dict['uploader_map'] = config_dict['StdRESTful']['Wunderground'].get('uploader_map')
+            merge_dict['uploader_map'] = config_dict['StdRESTful']['Wunderground'].get('uploader_map',
+                                                                                       {})
         except KeyError:
             pass
         # Now get a config dict with uploader map defaults
@@ -969,12 +970,13 @@ class StdWOW(StdRESTful):
         # We now have the scalar site options but we need to add in the
         # uploader map if it exists
         try:
-            merge_dict['uploader_map'] = config_dict['StdRESTful']['WOW'].get('uploader_map')
+            merge_dict['uploader_map'] = config_dict['StdRESTful']['WOW'].get('uploader_map',
+                                                                              {})
         except KeyError:
             pass
         # Now get a config dict with uploader map default
         _ambient_dict = configobj.ConfigObj(StringIO(StdWOW.DEFAULTS_INI),
-                                  encoding='utf-8')['StdRESTful']['WOW']
+                                            encoding='utf-8')['StdRESTful']['WOW']
         # Merge the site options to give my final config dict with defaults
         _ambient_dict.merge(merge_dict)
 
@@ -1141,8 +1143,8 @@ class AmbientLoopThread(AmbientThread):
                  softwaretype="weewx-%s" % weewx.__version__,
                  skip_upload=False,
                  force_direction=False,
-                 rtfreq=2.5     # This is the only one added by AmbientLoopThread
-                 ):
+                 rtfreq=2.5,     # This is the only one added by AmbientLoopThread
+                 uploader_map=None):
         """
         Initializer for the AmbientLoopThread class.
 
@@ -1171,7 +1173,8 @@ class AmbientLoopThread(AmbientThread):
                                                 retry_ssl=retry_ssl,
                                                 softwaretype=softwaretype,
                                                 skip_upload=skip_upload,
-                                                force_direction=force_direction)
+                                                force_direction=force_direction,
+                                                uploader_map=uploader_map)
 
         self.rtfreq = float(rtfreq)
         self.uploader_map.merge(configobj.ConfigObj(StringIO(AmbientLoopThread.DEFAULT_WUONLY_INI),
