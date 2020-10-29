@@ -972,7 +972,6 @@ class StdWOW(StdRESTful):
             merge_dict['uploader_map'] = config_dict['StdRESTful']['WOW'].get('uploader_map')
         except KeyError:
             pass
-        log.info("merge_dict=%s" % (merge_dict,))
         # Now get a config dict with uploader map default
         _ambient_dict = configobj.ConfigObj(StringIO(StdWOW.DEFAULTS_INI),
                                   encoding='utf-8')['StdRESTful']['WOW']
@@ -1240,7 +1239,7 @@ class WOWThread(AmbientThread):
                                         skip_upload=skip_upload,
                                         force_direction=force_direction)
 
-        self.formats = uploader_map
+        self.uploader_map = uploader_map
 
     def format_url(self, incoming_record):
         """Return an URL for posting using WOW's version of the Ambient
@@ -1255,7 +1254,7 @@ class WOWThread(AmbientThread):
 
         # Go through each of the supported types, formatting it, then adding
         # to _liststr:
-        for _dest, _config in six.iteritems(self.formats):
+        for _dest, _config in six.iteritems(self.uploader_map):
             _source = _config.get('source')
             _format = _config.get('format')
             _v = record.get(_source)
