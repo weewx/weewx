@@ -602,7 +602,6 @@ class StdWunderground(StdRESTful):
     # Default types and formats of the data to be published.
     # See https://support.weather.com/s/article/PWS-Upload-Protocol?language=en_US
     # for definitions.
-    # TODO. Any reason humidity is %03.0f ?
     DEFAULTS_INI = """
     [StdRESTful]
         [[Wunderground]]
@@ -721,6 +720,7 @@ class StdWunderground(StdRESTful):
         #            source = extraTemp4
         #            format = %.1f
     """
+    # Note, WU posts fail if indoorhumidity uses %03.0f
     DEFAULTS_INDOOR_INI = """
     [StdRESTful]
         [[Wunderground]]
@@ -755,7 +755,7 @@ class StdWunderground(StdRESTful):
                                             encoding='utf-8')['StdRESTful']['Wunderground']
         # Are we posting indoor obs? If so add them to the uploader map defaults
         if to_bool(merge_dict.get('post_indoor_observations', False)):
-            _ambient_dict.merge(configobj.ConfigObj(StringIO(StdWunderground.DEFAULTS_INI),
+            _ambient_dict.merge(configobj.ConfigObj(StringIO(StdWunderground.DEFAULTS_INDOOR_INI),
                                                     encoding='utf-8')['StdRESTful']['Wunderground'])
 
         # Merge the site options to give my final config dict with defaults
@@ -874,17 +874,168 @@ class StdPWSWeather(StdRESTful):
     # The URL used by PWSWeather:
     archive_url = "http://www.pwsweather.com/pwsupdate/pwsupdate.php"
 
+    # Default types and formats of the data to be published.
+    # See https://support.weather.com/s/article/PWS-Upload-Protocol?language=en_US
+    # for definitions.
+    DEFAULTS_INI = """
+    [StdRESTful]
+        [[PWSweather]]
+            [[[uploader_map]]]
+                [[[[dateutc]]]]
+                    source = dateTime
+                    format = %s     
+                [[[[baromin]]]]
+                    source = barometer
+                    format = %.3f      
+                [[[[AqCO]]]]
+                    source = co
+                    format = %f      
+                [[[[dailyrainin]]]]
+                    source = dayRain
+                    format = %.2f     
+                [[[[dewptf]]]]
+                    source = dewpoint
+                    format = %.1f
+                [[[[rainin]]]]
+                    source = hourRain
+                    format = %.2f     
+                [[[[leafwetness]]]]
+                    source = leafWet1
+                    format = %03.0f     
+                [[[[leafwetness2]]]]
+                    source = leafWet2
+                    format = %03.0f     
+                [[[[AqNO2]]]]
+                    source = no2
+                    format = %f     
+                [[[[AqOZONE]]]]
+                    source = o3
+                    format = %f     
+                [[[[humidity]]]]
+                    source = outHumidity
+                    format = %03.0f     
+                [[[[tempf]]]]
+                    source = outTemp
+                    format = %.1f     
+                [[[[AqPM10]]]]
+                    source = pm10_0
+                    format = %.1f     
+                [[[[AqPM2.5]]]]
+                    source = pm2_5
+                    format = %.1f     
+                [[[[solarradiation]]]]
+                    source = radiation
+                    format = %.2f     
+                [[[[realtime]]]]
+                    source = realtime
+                    format = %d     
+                [[[[rtfreq]]]]
+                    source = rtfreq
+                    format = %.1f     
+                [[[[AqSO2]]]]
+                    source = so2
+                    format = %f     
+                [[[[soilmoisture]]]]
+                    source = soilMoist1
+                    format = %03.0f     
+                [[[[soilmoisture2]]]]
+                    source = soilMoist2
+                    format = %03.0f     
+                [[[[soilmoisture3]]]]
+                    source = soilMoist3
+                    format = %03.0f     
+                [[[[soilmoisture4]]]]
+                    source = soilMoist4
+                    format = %03.0f     
+                [[[[soiltempf]]]]
+                    source = soilTemp1
+                    format = %.1f     
+                [[[[soiltempf2]]]]
+                    source = soilTemp2
+                    format = %.1f     
+                [[[[soiltempf3]]]]
+                    source = soilTemp3
+                    format = %.1f     
+                [[[[soiltempf4]]]]
+                    source = soilTemp4
+                    format = %.1f     
+                [[[[UV]]]]
+                    source = UV
+                    format = %.2f     
+                [[[[winddir]]]]
+                    source = windDir
+                    format = %03.0f     
+                [[[[windgustmph]]]]
+                    source = windGust
+                    format = %03.1f     
+                [[[[windgustmph_10m]]]]
+                    source = windGust10
+                    format = %03.1f     
+                [[[[windgustdir_10m]]]]
+                    source = windGustDir10
+                    format = %03.0f     
+                [[[[windspeedmph]]]]
+                    source = windSpeed
+                    format = %03.1f     
+                [[[[windspdmph_avg2m]]]]
+                    source = windSpeed2
+                    format = %03.1f     
+        # The following four formats have been commented out until the WU
+        # fixes the bug that causes them to be displayed as soil moisture.
+        #        [[[[temp2f]]]]
+        #            source = extraTemp1
+        #            format = %.1f
+        #        [[[[temp3f]]]]
+        #            source = extraTemp2
+        #            format = %.1f
+        #        [[[[temp4f]]]]
+        #            source = extraTemp3
+        #            format = %.1f
+        #        [[[[temp5f]]]]
+        #            source = extraTemp4
+        #            format = %.1f
+    """
+    # Note, WU posts fail if indoorhumidity uses %03.0f
+    DEFAULTS_INDOOR_INI = """
+    [StdRESTful]
+        [[PWSweather]]
+            [[[uploader_map]]]
+                [[[[indoortempf]]]]
+                    source = inTemp
+                    format = %.1f
+                [[[[indoorhumidity]]]]
+                    source = inHumidity
+                    format = %.0f     
+    """
+
     def __init__(self, engine, config_dict):
         super(StdPWSWeather, self).__init__(engine, config_dict)
 
-        _ambient_dict = get_site_dict(
-            config_dict, 'PWSweather', 'station', 'password')
-        if _ambient_dict is None:
+        # Get my config dict
+        # First get my site options with any overrides
+        merge_dict = get_site_dict(config_dict, 'PWSweather', 'station', 'password')
+        if merge_dict is None:
             return
+        # We now have the scalar site options but we need to add in the
+        # uploader map if it exists
+        try:
+            merge_dict['uploader_map'] = config_dict['StdRESTful']['PWSweather'].get('uploader_map',
+                                                                                     {})
+        except KeyError:
+            pass
+        # Now get a config dict with uploader map defaults
+        _ambient_dict = configobj.ConfigObj(StringIO(StdPWSWeather.DEFAULTS_INI),
+                                            encoding='utf-8')['StdRESTful']['PWSweather']
+        # Are we posting indoor obs? If so add them to the uploader map defaults
+        if to_bool(merge_dict.get('post_indoor_observations', False)):
+            _ambient_dict.merge(configobj.ConfigObj(StringIO(StdPWSWeather.DEFAULTS_INDOOR_INI),
+                                                    encoding='utf-8')['StdRESTful']['PWSweather'])
+
+        # Merge the site options to give my final config dict with defaults
+        _ambient_dict.merge(merge_dict)
 
         # Get the manager dictionary:
-        _manager_dict = weewx.manager.get_manager_dict_from_config(
-            config_dict, 'wx_binding')
+        _manager_dict = weewx.manager.get_manager_dict_from_config(config_dict, 'wx_binding')
 
         _ambient_dict.setdefault('server_url', StdPWSWeather.archive_url)
         self.archive_queue = queue.Queue()
@@ -1830,19 +1981,74 @@ class StdAWEKAS(StdRESTful):
     positions 26-111 are defined for API2
     """
 
+    # Default types and formats of the data to be published:
+    DEFAULTS_INI = """
+    [StdRESTful]
+        [[AWEKAS]]
+            [[[uploader_map]]]
+                [[[[temperature]]]]
+                    source = outTemp
+                    format = %.1f
+                [[[[humidity]]]]
+                    source = outHumidity
+                    format = %.0f
+                [[[[air_pressure]]]]
+                    source = barometer
+                    format = %.3f
+                [[[[precipitation]]]]
+                    source = dayRain
+                    format = %.2f
+                [[[[wind_speed]]]]
+                    source = windSpeed
+                    format = %.1f
+                [[[[wind_direction]]]]
+                    source = windDir
+                    format = %.0f
+                [[[[wind_gust]]]]
+                    source = windGust
+                    format = %.1f
+                [[[[solar_radiation]]]]
+                    source = radiation
+                    format = %.2f
+                [[[[uv_index]]]]
+                    source = UV
+                    format = %.2f
+                [[[[rain_rate]]]]
+                    source = rainRate
+                    format = %.2f
+    """
+
     def __init__(self, engine, config_dict):
         super(StdAWEKAS, self).__init__(engine, config_dict)
 
-        site_dict = get_site_dict(config_dict, 'AWEKAS', 'username', 'password')
-        if site_dict is None:
+        # Get my config dict
+        # First get my site options with any overrides
+        merge_dict = get_site_dict(config_dict, 'AWEKAS', 'station', 'password')
+        if merge_dict is None:
             return
 
-        site_dict.setdefault('latitude', engine.stn_info.latitude_f)
-        site_dict.setdefault('longitude', engine.stn_info.longitude_f)
-        site_dict.setdefault('language', 'de')
+        merge_dict.setdefault('latitude', engine.stn_info.latitude_f)
+        merge_dict.setdefault('longitude', engine.stn_info.longitude_f)
+        merge_dict.setdefault('language', 'de')
 
-        site_dict['manager_dict'] = weewx.manager.get_manager_dict_from_config(
-            config_dict, 'wx_binding')
+        # We now have the scalar site options but we need to add in the
+        # uploader map if it exists
+        try:
+            merge_dict['uploader_map'] = config_dict['StdRESTful']['AWEKAS'].get('uploader_map',
+                                                                                 {})
+        except KeyError:
+            pass
+        # Now get a config dict with uploader map default
+        site_dict = configobj.ConfigObj(StringIO(StdAWEKAS.DEFAULTS_INI),
+                                        encoding='utf-8')['StdRESTful']['AWEKAS']
+        # Merge the site options to give my final config dict with defaults
+        site_dict.merge(merge_dict)
+
+        # Get the manager dictionary:
+        site_dict['manager_dict'] = weewx.manager.get_manager_dict_from_config(config_dict,
+                                                                               'wx_binding')
+
+        # TODO. set URL here to allow it to be overridden ?
 
         self.archive_queue = queue.Queue()
         self.archive_thread = AWEKASThread(self.archive_queue, **site_dict)
@@ -1860,18 +2066,6 @@ AWEKAS = StdAWEKAS
 
 class AWEKASThread(RESTThread):
     _SERVER_URL = 'http://data.awekas.at/eingabe_pruefung.php'
-    _FORMATS = {'barometer'  : '%.3f',
-                'outTemp'    : '%.1f',
-                'outHumidity': '%.0f',
-                'windSpeed'  : '%.1f',
-                'windDir'    : '%.0f',
-                'windGust'   : '%.1f',
-                'dewpoint'   : '%.1f',
-                'hourRain'   : '%.2f',
-                'dayRain'    : '%.2f',
-                'radiation'  : '%.2f',
-                'UV'         : '%.2f',
-                'rainRate'   : '%.2f'}
 
     def __init__(self, q, username, password, latitude, longitude,
                  manager_dict,
@@ -1879,7 +2073,8 @@ class AWEKASThread(RESTThread):
                  post_interval=300, max_backlog=six.MAXSIZE, stale=None,
                  log_success=True, log_failure=True,
                  timeout=10, max_tries=3, retry_wait=5,
-                 retry_login=3600, retry_ssl=3600, skip_upload=False):
+                 retry_login=3600, retry_ssl=3600,
+                 skip_upload=False, uploader_map=None):
         """Initialize an instances of AWEKASThread.
 
         Parameters specific to this class:
@@ -1934,6 +2129,7 @@ class AWEKASThread(RESTThread):
         self.longitude = float(longitude)
         self.language = language
         self.server_url = server_url
+        self.uploader_map = uploader_map
 
     def get_record(self, record, dbmanager):
         """Ensure that rainRate is in the record."""
@@ -1982,24 +2178,24 @@ class AWEKASThread(RESTThread):
             self.password_hash,
             time.strftime("%d.%m.%Y", time_tt),
             time.strftime("%H:%M", time_tt),
-            self._format(record, 'outTemp'),  # C
-            self._format(record, 'outHumidity'),  # %
-            self._format(record, 'barometer'),  # mbar
-            self._format(record, 'dayRain'),  # mm
-            self._format(record, 'windSpeed'),  # km/h
-            self._format(record, 'windDir'),
+            self._format(record, 'temperature'),  # C
+            self._format(record, 'humidity'),  # %
+            self._format(record, 'air_pressure'),  # mbar
+            self._format(record, 'precipitation'),  # mm
+            self._format(record, 'wind_speed'),  # km/h
+            self._format(record, 'wind_direction'),
             '',  # weather condition
             '',  # warning text
             '',  # snow high
             self.language,
             '',  # tendency
-            self._format(record, 'windGust'),  # km/h
-            self._format(record, 'radiation'),  # W/m^2
-            self._format(record, 'UV'),  # uv index
+            self._format(record, 'wind_gust'),  # km/h
+            self._format(record, 'solar_radiation'),  # W/m^2
+            self._format(record, 'uv_index'),  # uv index
             '',  # brightness in lux
             '',  # sunshine hours
             '',  # soil temperature
-            self._format(record, 'rainRate'),  # mm/h
+            self._format(record, 'rain_rate'),  # mm/h
             'weewx_%s' % weewx.__version__,
             str(self.longitude),
             str(self.latitude),
@@ -2015,10 +2211,12 @@ class AWEKASThread(RESTThread):
         return url
 
     def _format(self, record, label):
-        if label in record and record[label] is not None:
-            if label in self._FORMATS:
-                return self._FORMATS[label] % record[label]
-            return str(record[label])
+        _source = self.uploader_map[label].get('source')
+        _format = self.uploader_map[label].get('format')
+        if _source is not None and _source in record and record[_source] is not None:
+            if _format is not None:
+                return _format % record[_source]
+            return str(record[_source])
         return ''
 
     def check_response(self, response):
