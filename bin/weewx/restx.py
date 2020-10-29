@@ -599,14 +599,166 @@ class StdWunderground(StdRESTful):
     # the personal weather station URL:
     pws_url = "https://weatherstation.wunderground.com/weatherstation/updateweatherstation.php"
 
+    # Default types and formats of the data to be published.
+    # See https://support.weather.com/s/article/PWS-Upload-Protocol?language=en_US
+    # for definitions.
+    # TODO. Any reason humidity is %03.0f ?
+    DEFAULTS_INI = """
+    [StdRESTful]
+        [[Wunderground]]
+            [[[uploader_map]]]
+                [[[[dateutc]]]]
+                    source = dateTime
+                    format = %s     
+                [[[[baromin]]]]
+                    source = barometer
+                    format = %.3f      
+                [[[[AqCO]]]]
+                    source = co
+                    format = %f      
+                [[[[dailyrainin]]]]
+                    source = dayRain
+                    format = %.2f     
+                [[[[dewptf]]]]
+                    source = dewpoint
+                    format = %.1f
+                [[[[rainin]]]]
+                    source = hourRain
+                    format = %.2f     
+                [[[[leafwetness]]]]
+                    source = leafWet1
+                    format = %03.0f     
+                [[[[leafwetness2]]]]
+                    source = leafWet2
+                    format = %03.0f     
+                [[[[AqNO2]]]]
+                    source = no2
+                    format = %f     
+                [[[[AqOZONE]]]]
+                    source = o3
+                    format = %f     
+                [[[[humidity]]]]
+                    source = outHumidity
+                    format = %03.0f     
+                [[[[tempf]]]]
+                    source = outTemp
+                    format = %.1f     
+                [[[[AqPM10]]]]
+                    source = pm10_0
+                    format = %.1f     
+                [[[[AqPM2.5]]]]
+                    source = pm2_5
+                    format = %.1f     
+                [[[[solarradiation]]]]
+                    source = radiation
+                    format = %.2f     
+                [[[[realtime]]]]
+                    source = realtime
+                    format = %d     
+                [[[[rtfreq]]]]
+                    source = rtfreq
+                    format = %.1f     
+                [[[[AqSO2]]]]
+                    source = so2
+                    format = %f     
+                [[[[soilmoisture]]]]
+                    source = soilMoist1
+                    format = %03.0f     
+                [[[[soilmoisture2]]]]
+                    source = soilMoist2
+                    format = %03.0f     
+                [[[[soilmoisture3]]]]
+                    source = soilMoist3
+                    format = %03.0f     
+                [[[[soilmoisture4]]]]
+                    source = soilMoist4
+                    format = %03.0f     
+                [[[[soiltempf]]]]
+                    source = soilTemp1
+                    format = %.1f     
+                [[[[soiltempf2]]]]
+                    source = soilTemp2
+                    format = %.1f     
+                [[[[soiltempf3]]]]
+                    source = soilTemp3
+                    format = %.1f     
+                [[[[soiltempf4]]]]
+                    source = soilTemp4
+                    format = %.1f     
+                [[[[UV]]]]
+                    source = UV
+                    format = %.2f     
+                [[[[winddir]]]]
+                    source = windDir
+                    format = %03.0f     
+                [[[[windgustmph]]]]
+                    source = windGust
+                    format = %03.1f     
+                [[[[windgustmph_10m]]]]
+                    source = windGust10
+                    format = %03.1f     
+                [[[[windgustdir_10m]]]]
+                    source = windGustDir10
+                    format = %03.0f     
+                [[[[windspeedmph]]]]
+                    source = windSpeed
+                    format = %03.1f     
+                [[[[windspdmph_avg2m]]]]
+                    source = windSpeed2
+                    format = %03.1f     
+        # The following four formats have been commented out until the WU
+        # fixes the bug that causes them to be displayed as soil moisture.
+        #        [[[[temp2f]]]]
+        #            source = extraTemp1
+        #            format = %.1f
+        #        [[[[temp3f]]]]
+        #            source = extraTemp2
+        #            format = %.1f
+        #        [[[[temp4f]]]]
+        #            source = extraTemp3
+        #            format = %.1f
+        #        [[[[temp5f]]]]
+        #            source = extraTemp4
+        #            format = %.1f
+    """
+    DEFAULTS_INDOOR_INI = """
+    [StdRESTful]
+        [[Wunderground]]
+            [[[uploader_map]]]
+                [[[[indoortempf]]]]
+                    source = inTemp
+                    format = %.1f
+                [[[[indoorhumidity]]]]
+                    source = inHumidity
+                    format = %.0f     
+    """
+
     def __init__(self, engine, config_dict):
 
         super(StdWunderground, self).__init__(engine, config_dict)
 
-        _ambient_dict = get_site_dict(
-            config_dict, 'Wunderground', 'station', 'password')
-        if _ambient_dict is None:
+        # Get my config dict
+        # First get my site options with any overrides
+        merge_dict = get_site_dict(config_dict, 'Wunderground',
+                                   'station', 'password')
+        if merge_dict is None:
             return
+        # We now have the scalar site options but we need to add in the
+        # uploader map if it exists
+        try:
+            merge_dict['uploader_map'] = config_dict['StdRESTful']['Wunderground'].get('uploader_map')
+        except KeyError:
+            pass
+        # Now get a config dict with uploader map defaults
+        _ambient_dict = configobj.ConfigObj(StringIO(StdWunderground.DEFAULTS_INI),
+                                            encoding='utf-8')['StdRESTful']['Wunderground']
+        # Are we posting indoor obs? If so add them to the uploader map defaults
+        if to_bool(merge_dict.get('post_indoor_observations', False)):
+            _ambient_dict.merge(configobj.ConfigObj(StringIO(StdWunderground.DEFAULTS_INI),
+                                                    encoding='utf-8')['StdRESTful']['Wunderground'])
+
+        # Merge the site options to give my final config dict with defaults
+        _ambient_dict.merge(merge_dict)
 
         _essentials_dict = search_up(config_dict['StdRESTful']['Wunderground'], 'Essentials', {})
 
@@ -871,7 +1023,8 @@ class AmbientThread(RESTThread):
                  retry_ssl=3600,
                  softwaretype="weewx-%s" % weewx.__version__,
                  skip_upload=False,
-                 force_direction=False):
+                 force_direction=False,
+                 uploader_map=None):
 
         """
         Initializer for the AmbientThread class.
@@ -904,60 +1057,9 @@ class AmbientThread(RESTThread):
         self.station = station
         self.password = password
         self.server_url = server_url
-        self.formats = dict(AmbientThread._FORMATS)
-        if to_bool(post_indoor_observations):
-            self.formats.update(AmbientThread._INDOOR_FORMATS)
+        self.uploader_map = uploader_map
         self.force_direction = to_bool(force_direction)
         self.last_direction = 0
-
-    # Types and formats of the data to be published.
-    # See https://support.weather.com/s/article/PWS-Upload-Protocol?language=en_US
-    # for definitions.
-    _FORMATS = {
-        'barometer': 'baromin=%.3f',
-        'co': 'AqCO=%f',
-        'dateTime': 'dateutc=%s',
-        'dayRain': 'dailyrainin=%.2f',
-        'dewpoint': 'dewptf=%.1f',
-        'hourRain': 'rainin=%.2f',
-        'leafWet1': "leafwetness=%03.0f",
-        'leafWet2': "leafwetness2=%03.0f",
-        'no2': 'AqNO2=%f',
-        'o3': 'AqOZONE=%f',
-        'outHumidity': 'humidity=%03.0f',
-        'outTemp': 'tempf=%.1f',
-        'pm10_0': 'AqPM10=%.1f',
-        'pm2_5': 'AqPM2.5=%.1f',
-        'radiation': 'solarradiation=%.2f',
-        'realtime': 'realtime=%d',
-        'rtfreq': 'rtfreq=%.1f',
-        'so2': 'AqSO2=%f',
-        'soilMoist1': "soilmoisture=%03.0f",
-        'soilMoist2': "soilmoisture2=%03.0f",
-        'soilMoist3': "soilmoisture3=%03.0f",
-        'soilMoist4': "soilmoisture4=%03.0f",
-        'soilTemp1': "soiltempf=%.1f",
-        'soilTemp2': "soiltemp2f=%.1f",
-        'soilTemp3': "soiltemp3f=%.1f",
-        'soilTemp4': "soiltemp4f=%.1f",
-        'UV': 'UV=%.2f',
-        'windDir': 'winddir=%03.0f',
-        'windGust': 'windgustmph=%03.1f',
-        'windGust10': 'windgustmph_10m=%03.1f',
-        'windGustDir10': 'windgustdir_10m=%03.0f',
-        'windSpeed': 'windspeedmph=%03.1f',
-        'windSpeed2': 'windspdmph_avg2m=%03.1f',
-        # The following four formats have been commented out until the WU
-        # fixes the bug that causes them to be displayed as soil moisture.
-        # 'extraTemp1' : "temp2f=%.1f",
-        # 'extraTemp2' : "temp3f=%.1f",
-        # 'extraTemp3' : "temp4f=%.1f",
-        # 'extraTemp4' : "temp5f=%.1f",
-    }
-
-    _INDOOR_FORMATS = {
-        'inTemp'    : 'indoortempf=%.1f',
-        'inHumidity': 'indoorhumidity=%.0f'}
 
     def format_url(self, incoming_record):
         """Return an URL for posting using the Ambient protocol."""
@@ -971,24 +1073,27 @@ class AmbientThread(RESTThread):
 
         # Go through each of the supported types, formatting it, then adding
         # to _liststr:
-        for _key in self.formats:
-            _v = record.get(_key)
+        for _dest, _config in six.iteritems(self.uploader_map):
+            _source = _config.get('source')
+            _format = _config.get('format')
+            _v = record.get(_source)
             # WU claims a station is "offline" if it sends a null wind direction, even when wind
             # speed is zero. If option 'force_direction' is set, cache the last non-null wind
             # direction and use it instead.
-            if _key == 'windDir' and self.force_direction:
+            if _source == 'windDir' and self.force_direction:
                 if _v is None:
                     _v = self.last_direction
                 else:
                     self.last_direction = _v
-            # Check to make sure the type is not null
-            if _v is not None:
-                if _key == 'dateTime':
+            # Check to make sure the type is not null and that we have a format
+            # to use
+            if _v is not None and _format is not None and len(_format) > 0:
+                if _source == 'dateTime':
                     # Convert from timestamp to string. The results will look something
                     # like '2020-10-19%2021%3A43%3A18'
-                    _v = urllib.parse.quote(str(datetime.datetime.utcfromtimestamp(_v)))
+                    _v = urllib.parse.quote_plus(datetime.datetime.utcfromtimestamp(_v).isoformat(' '))
                 # Format the value, and accumulate in _liststr:
-                _liststr.append(self.formats[_key] % _v)
+                _liststr.append("=".join([_dest,_format]) % _v)
         # Now stick all the pieces together with an ampersand between them:
         _urlquery = '&'.join(_liststr)
         # This will be the complete URL for the HTTP GET:
@@ -1070,13 +1175,19 @@ class AmbientLoopThread(AmbientThread):
                                                 force_direction=force_direction)
 
         self.rtfreq = float(rtfreq)
-        self.formats.update(AmbientLoopThread.WUONLY_FORMATS)
+        self.uploader_map.merge(configobj.ConfigObj(StringIO(AmbientLoopThread.DEFAULT_WUONLY_INI),
+                                                    encoding='utf-8')['StdRESTful']['Wunderground'])
 
     # may also be used by non-rapidfire; this is the least invasive way to just fix rapidfire,
     # which i know supports windGustDir, while the Ambient class is used elsewhere
-    WUONLY_FORMATS = {
-        'windGustDir': 'windgustdir=%03.0f'
-    }
+    DEFAULT_WUONLY_INI = """
+    [StdRESTful]
+        [[Wunderground]]
+            [[[uploader_map]]]
+                [[[[windgustdir]]]]
+                    source = windGustDir
+                    format = %03.0f
+    """
 
     def get_record(self, record, dbmanager):
         """Prepare a record for the Rapidfire protocol."""
