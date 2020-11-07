@@ -33,7 +33,8 @@ class WXXTypes(weewx.xtypes.XType):
                  nfac=2,
                  wind_height=2.0,
                  ignore_zero_wind=False,
-                 maxSolarRad_algo='rs'
+                 maxSolarRad_algo='rs',
+                 heat_index_algo='new'
                  ):
         # Fail hard if out of range:
         if not 0.7 <= atc <= 0.91:
@@ -48,6 +49,7 @@ class WXXTypes(weewx.xtypes.XType):
         self.wind_height = wind_height
         self.ignore_zero_wind = ignore_zero_wind
         self.maxSolarRad_algo = maxSolarRad_algo.lower()
+        self.heat_index_algo = heat_index_algo.lower()
 
     def get_scalar(self, obs_type, record, db_manager):
         """Invoke the proper method for the desired observation type."""
@@ -207,15 +209,16 @@ class WXXTypes(weewx.xtypes.XType):
             u = 'degree_C'
         return weewx.units.convertStd((val, u, 'group_temperature'), data['usUnits'])
 
-    @staticmethod
-    def calc_heatindex(key, data, db_manager=None):
+    def calc_heatindex(self, key, data, db_manager=None):
         if 'outTemp' not in data or 'outHumidity' not in data:
             raise weewx.CannotCalculate(key)
         if data['usUnits'] == weewx.US:
-            val = weewx.wxformulas.heatindexF(data['outTemp'], data['outHumidity'])
+            val = weewx.wxformulas.heatindexF(data['outTemp'], data['outHumidity'],
+                                              algorithm=self.heat_index_algo)
             u = 'degree_F'
         else:
-            val = weewx.wxformulas.heatindexC(data['outTemp'], data['outHumidity'])
+            val = weewx.wxformulas.heatindexC(data['outTemp'], data['outHumidity'],
+                                              algorithm=self.heat_index_algo)
             u = 'degree_C'
         return weewx.units.convertStd((val, u, 'group_temperature'), data['usUnits'])
 
@@ -598,15 +601,17 @@ class StdWXXTypes(weewx.engine.StdService):
         ignore_zero_wind = to_bool(calc_dict.get('ignore_zero_wind', False))
 
         maxSolarRad_algo = calc_dict.get('Algorithms',
-                                         {'maxSolarRad': 'rs'}).get('maxSolarRad',
-                                                                    'rs').lower()
+                                         {'maxSolarRad': 'rs'}).get('maxSolarRad', 'rs').lower()
+        heatindex_algo = calc_dict.get('Algorithms',
+                                       {'heatindex' : 'new'}).get('heatindex', 'new').lower()
         self.wxxtypes = WXXTypes(altitude_vt, latitude_f, longitude_f,
                                  et_period,
                                  atc,
                                  nfac,
                                  wind_height,
                                  ignore_zero_wind,
-                                 maxSolarRad_algo)
+                                 maxSolarRad_algo,
+                                 heatindex_algo)
         # Add to the xtypes system
         weewx.xtypes.xtypes.append(self.wxxtypes)
 

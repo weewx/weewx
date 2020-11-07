@@ -2676,19 +2676,25 @@ longitude = -77.0366</pre>
             <li>windrun</li>
         </ul>
         <p>In its default configuration, the service calculates values only if they have not already been provided by
-            the hardware or driver. This is the default configuration:
+            the hardware or driver. This is the default configuration in <span class="code">weewx.conf</span>:
         </p>
 
         <pre class="tty">[StdWXCalculate]
     [[Calculations]]
         pressure = prefer_hardware
-        barometer = prefer_hardware
         altimeter = prefer_hardware
-        windchill = prefer_hardware
-        heatindex = prefer_hardware
+        appTemp = prefer_hardware
+        barometer = prefer_hardware
+        cloudbase = prefer_hardware
         dewpoint = prefer_hardware
+        ET = prefer_hardware
+        heatindex = prefer_hardware
+        humidex = prefer_hardware
         inDewpoint = prefer_hardware
-        rainRate = prefer_hardware</pre>
+        maxSolarRad = prefer_hardware
+        rainRate = prefer_hardware
+        windchill = prefer_hardware
+        windrun = prefer_hardware</pre>
 
         <p>The options for each quantity are <span class='code'>hardware</span>, <span class='code'>software</span>, or
             <span class='code'>prefer_hardware</span></p>
@@ -2715,6 +2721,60 @@ longitude = -77.0366</pre>
     [[Calculations]]
         ...
         windchill = software</pre>
+
+        <p>Here are some options that are used by <span class="code">StdWXCalculate</span>:</p>
+
+        <p class="config_option">et_period</p>
+
+        <p>This option changes the period over which evapotranspiration is calculated. Default is 1800 seconds.</p>
+
+        <p class="config_option">wind_height</p>
+
+        <p>
+            The option <span class="code">wind_height</span> is used to normalize where wind speed is measured for
+            calculating evapotranspiration. It should be set to the height of your anemometer in meters. Default is 2.0.
+        </p>
+
+        <p class="config_option">atc</p>
+
+        <p>
+            The coefficient <span class="code">atc</span> is the "atmospheric transmission coefficient" used by the
+            'Ryan-Stolzenbach' algorithm for calculating maximum solar radiation. Value must be between 0.7 and 0.91.
+            Default is 0.8.
+        </p>
+
+        <p class="config_option">nfac</p>
+        <p>
+            The coefficient <span class="nfac">nfac</span> is "atmospheric turbidity" used by the 'Bras' algorithm for
+            calculating maximum solar radiation. Values must be between 2 (clear) and 5 (smoggy). Default is 2.
+        </p>
+
+        <p class="config_option">ignore_zero_wind</p>
+        <p>
+            By default, if wind speed is zero, the wind direction will be set to undefined, unless this option is set to
+            <span class="code">True</span>. Default is <span class="code">False</span>.
+        </p>
+
+
+        <h3 class="config_section">[[Algorithms]]</h3>
+
+        <p class="config_option">maxSolarRad</p>
+        <p>
+            Controls which algorithm will be used to calculate <span class="code">maxSolarRad</span>. Choices are <span
+            class="code">bras</span> ("<a href="http://www.ecy.wa.gov/programs/eap/models.html">Bras</a>"), or <span
+            class="code">rs</span> (<a href="http://www.ecy.wa.gov/programs/eap/models.html">Ryan-Stolzenbach</a>).
+            Default is <span class="code">rs</span>.
+        </p>
+
+        <p class="config_option">heatindex</p>
+        <p>
+            Controls which algorithm will be used to calculate heat-index. Choices are <span class="code">new</span>
+            (see <a href="https://www.wpc.ncep.noaa.gov/html/heatindex_equation.shtml">https://www.wpc.ncep.noaa.gov/html/heatindex_equation.shtml</a>),
+            or <span class="code">old</span>. The newer algorithm will give results down to 40&deg;F, which are
+            sometimes less than the sensible temperature. For this reason, some people prefer the older algorithm, which
+            applies only for temperatures above 80&deg;F. Default is <span class="code">new</span>.
+        </p>
+
 
         <h2 class="config_section" id="StdArchive">[StdArchive]</h2>
 

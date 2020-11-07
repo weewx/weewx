@@ -6,6 +6,8 @@ weewx change history
 Service weewx.wxxtypes.StdDelta was inadvertently left out of the list of
 services to be run. Fortunately, it is not used. Yet. Added it back in.
 
+Added the "old" NWS algorithm as an option for calculating heat index.
+
 
 4.2.0 10/26/2020
 
