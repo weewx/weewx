@@ -1,7 +1,7 @@
 weewx change history
 --------------------
 
-4.2.1 MM/DD/YYYY
+4.3.0 MM/DD/YYYY
 
 Service weewx.wxxtypes.StdDelta was inadvertently left out of the list of
 services to be run. Fortunately, it is not used. Yet. Added it back in.
