@@ -229,6 +229,43 @@ sudo apt-get install weewx</pre>
 
         <h1><a id="Instructions_for_specific_versions">Instructions for specific versions</a></h1>
 
+        <h2>From 4.2 or earlier</h2>
+
+        <h3>Option <span class="code">ignore_zero_wind</span> moved</h3>
+
+        <p>
+            While it was never documented, the option <span class="code">ignore_zero_wind</span> was used by some
+            users. Normally, WeeWX sets wind direction to undefined when wind speed is zero. This option can prevent
+            that. However, its location has changed.
+        </p>
+
+        <table>
+            <tr class="first_row">
+                <td style='width:50%'>pre 4.2</td>
+                <td>4.3</td>
+            </tr>
+            <tr>
+                <td>
+                    <pre class='tty'>
+[StdWXCalculate]
+    <span class="removed">ignore_zero_wind = True</span>
+    [[Calculations]]
+        ...
+</pre>
+                </td>
+                <td>
+                    <pre class='tty'>
+[StdWXCalculate]
+    [[Calculations]]
+        ...
+    [[WXXTypes]]
+        [[[windDir]]]
+            <span class="added">ignore_zero_wind = False</span>
+</pre>
+                </td>
+            </tr>
+        </table>
+
         <h2>From 4.1 or earlier</h2>
 
         <p>

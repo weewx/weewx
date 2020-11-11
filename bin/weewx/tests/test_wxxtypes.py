@@ -346,8 +346,8 @@ class TestDelta(unittest.TestCase):
     """Test XTypes extension 'Delta'."""
 
     def test_delta(self):
-        # Instantiate a Delta, using the default:
-        delta = weewx.wxxtypes.Delta(weewx.wxxtypes.Delta.DEFAULT)
+        # Instantiate a Delta for calculating 'rain' from 'totalRain':
+        delta = weewx.wxxtypes.Delta({'rain': {'input': 'totalRain'}})
 
         # Add a new total rain to it:
         record = {'dateTime': 1567515300, 'usUnits': 1, 'interval': 5, 'totalRain': 0.05}

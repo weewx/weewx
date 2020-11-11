@@ -2626,40 +2626,17 @@ longitude = -77.0366</pre>
 
         <h2 class="config_section" id="StdWXCalculate">[StdWXCalculate]</h2>
 
-        <p>The calculation service calculates derived quantities such as <span class='code'>dewpoint</span>, <span
-            class='code'>windchill</span>, and <span class='code'>heatindex</span>.
-        </p>
-
-        <p>Some hardware provides derived quantities, others provide only raw observations. The calculation service
-            provides derived quantities for hardware that does not provide them, and known algorithms for hardware that
-            provides unreliable or antiquated calculations.
-        </p>
-
-        <p>The section <span class="code">[StdWXCalculate]</span> consists of a group of Observation defaults, followed by a
-            subsection <span class="code">[[Calculations]]</span> that specifies the calculation strategy to be used for
-            each derived quantity.
-        </p>
-
-        <p class="config_option" id="ignore_zero_wind">ignore_zero_wind</p>
-
         <p>
-            Indicates whether the wind direction should be undefined when the wind speed is zero. The default value is
-            <span class="code">True</span>: the wind direction will be undefined when wind speed is zero.
+            Some hardware provides derived quantities, such as <span class='code'>dewpoint</span>, <span
+            class='code'>windchill</span>, and <span class='code'>heatindex</span>, while other hardware does not.
+            This service can be used to fill in any missing quantities, or to substitute a software-calculated value
+            for hardware that has unreliable or obsolete calculations.
         </p>
 
         <p>
-            To report the wind vane direction even when there is no wind speed, change this to False:
+            By default, the service can calculate the following values, although the list can be extended:
         </p>
-        <pre class="tty">[StdWXCalculate]
-    ...
-    ignore_zero_wind = False</pre>
-
-        <h3 class="config_section">[[Calculations]]</h3>
-
-        <p>This subsection specifies which strategy is to be used to provide values for derived variables. The service
-            can calculate the following values:
-        </p>
-        <ul>
+        <ul style="width:50%" class="code mc-list">
             <li>pressure</li>
             <li>barometer</li>
             <li>altimeter</li>
@@ -2675,8 +2652,36 @@ longitude = -77.0366</pre>
             <li>ET</li>
             <li>windrun</li>
         </ul>
-        <p>In its default configuration, the service calculates values only if they have not already been provided by
-            the hardware or driver. This is the default configuration in <span class="code">weewx.conf</span>:
+
+        <p>
+            The configuration section <span class="code">[StdWXCalculate]</span> consists of two different parts:
+        </p>
+
+        <ol>
+            <li>
+                The sub-section <span class="code">[[Calculations]]</span>, which specifies which derived types are to
+                be calculated and under what circumstances;
+            </li>
+            <li>
+                Zero or more sub-sections, which specify what parameters are to be used for the calculation. These are
+                described below.
+            </li>
+        </ol>
+
+        <p>
+            The service <span class="code">StdWXCalculate</span> can be extended by the user to add new, derived types
+            using the XTypes system. See the wiki article <a
+            href="https://github.com/weewx/weewx/wiki/WeeWX-V4-user-defined-types"><em>Extensible types
+            (XTypes)</em></a> for how to do this.
+        </p>
+
+        <h3 class="config_section">[[Calculations]]</h3>
+
+        <p>
+            This subsection specifies which strategy is to be used to provide values for derived variables.
+            In the absence of a <span class="code">[[Calculations]]</span> section, <em>no</em> values will be
+            calculated. However, the version of <span class="code">weewx.conf</span> that comes with the WeeWX
+            distribution comes with a version of <span class="code">[[Calculations]]</span> that looks like this:
         </p>
 
         <pre class="tty">[StdWXCalculate]
@@ -2696,7 +2701,8 @@ longitude = -77.0366</pre>
         windchill = prefer_hardware
         windrun = prefer_hardware</pre>
 
-        <p>The options for each quantity are <span class='code'>hardware</span>, <span class='code'>software</span>, or
+        <p>
+            The options for each quantity are <span class='code'>hardware</span>, <span class='code'>software</span>, or
             <span class='code'>prefer_hardware</span></p>
         <table class="indent">
             <tr>
@@ -2712,31 +2718,83 @@ longitude = -77.0366</pre>
                 <td>Calculate the value only if it is not provided by hardware.</td>
             </tr>
         </table>
-        <p>For example, if your weather station calculates windchill using the pre-2001 algorithm, and you prefer to
+
+        <p>
+            For example, if your weather station calculates windchill using the pre-2001 algorithm, and you prefer to
             have WeeWX calculate it using a current algorithm, specify the following:
         </p>
 
         <pre class="tty">[StdWXCalculate]
-    ...
     [[Calculations]]
-        ...
-        windchill = software</pre>
+      windchill = software</pre>
 
-        <p>Here are some options that are used by <span class="code">StdWXCalculate</span>:</p>
+        <p>
+            This will force WeeWX to always calculate a value for <span class="code">windchill</span>, irregardless
+            of whether the hardware provides one.
+        </p>
+
+        <h3 class="config_section">[[WXXTypes]]</h3>
+
+        <p>
+            The <span class="code">StdWXXTypes</span> class is responsible for calculating the following simple, derived
+            types:
+        </p>
+
+        <ul style="width:50%" class="code mc-list">
+            <li>appTemp</li>
+            <li>cloudbase</li>
+            <li>dewpoint</li>
+            <li>ET</li>
+            <li>heatindex</li>
+            <li>humidex</li>
+            <li>inDewpoint</li>
+            <li>maxSolarRad</li>
+            <li>windchill</li>
+            <li>windDir</li>
+            <li>windRun</li>
+        </ul>
+
+        <p>A few of these types have an option or two that can be set. These are described below. </p>
+
+        <h4 class="config_section">[[[ET]]]</h4>
+        <p>
+            This sub-section contains several options used when calculating ET (evapotranspiration)
+        </p>
 
         <p class="config_option">et_period</p>
-
-        <p>This option changes the period over which evapotranspiration is calculated. Default is 1800 seconds.</p>
+        <p>This option changes the period over which evapotranspiration is calculated. Default is 3600 seconds.</p>
 
         <p class="config_option">wind_height</p>
-
         <p>
             The option <span class="code">wind_height</span> is used to normalize where wind speed is measured for
             calculating evapotranspiration. It should be set to the height of your anemometer in meters. Default is 2.0.
         </p>
 
-        <p class="config_option">atc</p>
+        <h4 class="config_section">[[[heatindex]]]</h4>
+        <p class="config_option">algorithm</p>
+        <p>
+            Controls which algorithm will be used to calculate heat-index. Choices are <span class="code">new</span>
+            (see <a href="https://www.wpc.ncep.noaa.gov/html/heatindex_equation.shtml">https://www.wpc.ncep.noaa.gov/html/heatindex_equation.shtml</a>),
+            or <span class="code">old</span>. The newer algorithm will give results down to 40&deg;F, which are
+            sometimes less than the sensible temperature. For this reason, some people prefer the older algorithm, which
+            applies only for temperatures above 80&deg;F. Default is <span class="code">new</span>.
+        </p>
 
+        <h4 class="config_section">[[[maxSolarRad]]]</h4>
+        <p>
+            This section is used for specifying options when calculating <span class="code">maxSolarRad</span>,
+            the theoretical maximum solar radiation.
+        </p>
+
+        <p class="config_option">algorithm</p>
+        <p>
+            Controls which algorithm will be used to calculate <span class="code">maxSolarRad</span>. Choices are <span
+            class="code">bras</span> ("<a href="http://www.ecy.wa.gov/programs/eap/models.html">Bras</a>"), or <span
+            class="code">rs</span> (<a href="http://www.ecy.wa.gov/programs/eap/models.html">Ryan-Stolzenbach</a>).
+            Default is <span class="code">rs</span>.
+        </p>
+
+        <p class="config_option">atc</p>
         <p>
             The coefficient <span class="code">atc</span> is the "atmospheric transmission coefficient" used by the
             'Ryan-Stolzenbach' algorithm for calculating maximum solar radiation. Value must be between 0.7 and 0.91.
@@ -2749,30 +2807,56 @@ longitude = -77.0366</pre>
             calculating maximum solar radiation. Values must be between 2 (clear) and 5 (smoggy). Default is 2.
         </p>
 
-        <p class="config_option">ignore_zero_wind</p>
+        <h4 class="config_section">[[[windDir]]]</h4>
+        <p class="config_option" id="ignore_zero_wind">ignore_zero_wind</p>
         <p>
-            By default, if wind speed is zero, the wind direction will be set to undefined, unless this option is set to
-            <span class="code">True</span>. Default is <span class="code">False</span>.
+            Indicates whether the wind direction should be undefined when the wind speed is zero. The default value is
+            <span class="code">True</span>: when the wind speed is true, the wind direction will be set to undefined
+            (Python <span class="code">None</span>.
         </p>
 
-
-        <h3 class="config_section">[[Algorithms]]</h3>
-
-        <p class="config_option">maxSolarRad</p>
         <p>
-            Controls which algorithm will be used to calculate <span class="code">maxSolarRad</span>. Choices are <span
-            class="code">bras</span> ("<a href="http://www.ecy.wa.gov/programs/eap/models.html">Bras</a>"), or <span
-            class="code">rs</span> (<a href="http://www.ecy.wa.gov/programs/eap/models.html">Ryan-Stolzenbach</a>).
-            Default is <span class="code">rs</span>.
+            To report the wind vane direction even when there is no wind speed, change this to False:
+        </p>
+        <pre class="tty">[StdWXCalculate]
+    [[WXXTypes]]
+      [[[windDir]]]
+        ignore_zero_wind = False</pre>
+
+</pre>
+
+        <h3 class="config_section">[[PressureCooker]]</h3>
+        <p>
+            This class is responsible for calculating pressure-related values. Given the right set of input types, it
+            can calculate <span class="code">barometer</span>, <span class="code">pressure</span>, and <span
+            class="code">altimeter</span>. See the Wiki article <a
+            href="https://github.com/weewx/weewx/wiki/Barometer,-pressure,-and-altimeter"><em>Barometer, pressure,
+            and altimeter</em></a> for the differences between these three types.
         </p>
 
-        <p class="config_option">heatindex</p>
+        <p class="config_option">max_delta_12h</p>
         <p>
-            Controls which algorithm will be used to calculate heat-index. Choices are <span class="code">new</span>
-            (see <a href="https://www.wpc.ncep.noaa.gov/html/heatindex_equation.shtml">https://www.wpc.ncep.noaa.gov/html/heatindex_equation.shtml</a>),
-            or <span class="code">old</span>. The newer algorithm will give results down to 40&deg;F, which are
-            sometimes less than the sensible temperature. For this reason, some people prefer the older algorithm, which
-            applies only for temperatures above 80&deg;F. Default is <span class="code">new</span>.
+            Some of the calculations require the temperature 12 hours ago (to compensate for tidal effects), which
+            requires a database lookup. There may or may not be a temperature exactly 12 hours ago. This option sets how
+            much of a time difference is allowed. The default is 1800 seconds.
+        </p>
+
+        <h4 class="config_section">[[[altimeter]]]</h4>
+        <p class="config_option">algorithm</p>
+        <p>
+            Which algorithm to use when calculating <span class="code">altimeter</span> from gauge pressure. Possible
+            choices are <span class="code">ASOS</span>, <span class="code">ASOS2</span>, <span class="code">MADIS</span>,
+            <span class="code">NOAA</span>, <span class="code">WOB</span>, and <span class="code">SMT</span>, The
+            default is <span class="code">ASOS</span>.
+        </p>
+
+        <h3 class="config_section">[[RainRater]]</h3>
+        <p>This class calculates <span class="code">rainRate</span> from recent rain events.</p>
+
+        <p class="config_option">rain_period</p>
+        <p>
+            The algorithm calculates a running average over a period of time in the past. This option controls how far
+            back to go in time. Default is 1800 seconds.
         </p>
 
 

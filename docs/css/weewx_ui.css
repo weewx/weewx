@@ -394,6 +394,17 @@ p .symcode {
     margin-left: 20px;
 }
 
+/* Multi-column list */
+.mc-list {
+    column-count: 3;
+    list-style: none;
+}
+
+ul.mc-list > li {
+    display: inline-block;
+    width: 100%;
+}
+
 /*
  * The stats styles mimic the styles used in the default standard template
  * output so that examples in the docs match those of the standard template.

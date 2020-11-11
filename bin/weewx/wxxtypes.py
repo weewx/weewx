@@ -9,7 +9,11 @@ from __future__ import absolute_import
 import logging
 import threading
 
+import configobj
+from six.moves import StringIO
+
 import weedb
+import weeutil.config
 import weeutil.logger
 import weewx.engine
 import weewx.units
@@ -19,6 +23,33 @@ from weeutil.weeutil import to_int, to_float, to_bool
 from weewx.units import ValueTuple, mps_to_mph, kph_to_mph, METER_PER_FOOT, CtoF
 
 log = logging.getLogger(__name__)
+
+DEFAULTS_INI = """
+[StdWXCalculate]
+  [[WXXTypes]]
+    [[[windDir]]]
+       ignore_zero_wind = False
+    [[[maxSolarRad]]]
+      algorithm = rs
+      atc = 0.8
+      nfac = 2
+    [[[ET]]]
+      wind_height = 2.0
+      et_period = 3600
+    [[[heatindex]]]
+      algorithm = new
+  [[PressureCooker]]
+    max_delta_12h = 1800
+    [[[altimeter]]]
+      algorithm = aaASOS    # Case-sensitive!
+  [[RainRater]]
+    rain_period = 900
+    retain_period = 930
+  [[Delta]]
+    [[[rain]]]
+      input = totalRain
+"""
+defaults_dict = configobj.ConfigObj(StringIO(DEFAULTS_INI), encoding='utf-8')
 
 first_time = True
 
@@ -539,9 +570,7 @@ class Delta(weewx.xtypes.XType):
                 input = totalRain
     """
 
-    DEFAULT = {'rain': {'input': 'totalRain'}}
-
-    def __init__(self, delta_config=DEFAULT):
+    def __init__(self, delta_config={}):
         # The dictionary 'totals' will hold two-way lists. The first element of the list is the key
         # to be used for the cumulative value. The second element holds the previous total (None
         # to start). The result will be something like
@@ -585,25 +614,36 @@ class StdWXXTypes(weewx.engine.StdService):
         altitude_vt = engine.stn_info.altitude_vt
         latitude_f = engine.stn_info.latitude_f
         longitude_f = engine.stn_info.longitude_f
-        try:
-            calc_dict = config_dict['StdWXCalculate']
-        except KeyError:
-            calc_dict = {}
-            # window of time for evapotranspiration calculation, in seconds
-        et_period = to_int(calc_dict.get('et_period', 3600))
-        # atmospheric transmission coefficient [0.7-0.91]
-        atc = to_float(calc_dict.get('atc', 0.8))
-        # atmospheric turbidity (2=clear, 4-5=smoggy)
-        nfac = to_float(calc_dict.get('nfac', 2))
-        # height above ground at which wind is measured, in meters
-        wind_height = to_float(calc_dict.get('wind_height', 2.0))
-        # Adjust wind direction to null, if the wind speed is zero:
-        ignore_zero_wind = to_bool(calc_dict.get('ignore_zero_wind', False))
 
-        maxSolarRad_algo = calc_dict.get('Algorithms',
-                                         {'maxSolarRad': 'rs'}).get('maxSolarRad', 'rs').lower()
-        heatindex_algo = calc_dict.get('Algorithms',
-                                       {'heatindex' : 'new'}).get('heatindex', 'new').lower()
+        # Get any user-defined overrides
+        try:
+            override_dict = config_dict['StdWXCalculate']['WXXTypes']
+        except KeyError:
+            override_dict = {}
+
+        # Get the default values, then merge the user overrides into it
+        option_dict = weeutil.config.deep_copy(defaults_dict['StdWXCalculate']['WXXTypes'])
+        option_dict.merge(override_dict)
+
+        # Adjust wind direction to null, if the wind speed is zero:
+        ignore_zero_wind = to_bool(option_dict['windDir'].get('ignore_zero_wind', False))
+
+        # maxSolarRad-related options
+        maxSolarRad_algo = option_dict['maxSolarRad'].get('algorithm', 'rs').lower()
+        # atmospheric transmission coefficient [0.7-0.91]
+        atc = to_float(option_dict['maxSolarRad'].get('atc', 0.8))
+        # atmospheric turbidity (2=clear, 4-5=smoggy)
+        nfac = to_float(option_dict['maxSolarRad'].get('nfac', 2))
+
+        # ET-related options
+        # height above ground at which wind is measured, in meters
+        wind_height = to_float(weeutil.config.search_up(option_dict['ET'], 'wind_height', 2.0))
+        # window of time for evapotranspiration calculation, in seconds
+        et_period = to_int(option_dict['ET'].get('et_period', 3600))
+
+        # heatindex-related options
+        heatindex_algo = option_dict['heatindex'].get('algorithm', 'new').lower()
+
         self.wxxtypes = WXXTypes(altitude_vt, latitude_f, longitude_f,
                                  et_period,
                                  atc,
@@ -629,14 +669,16 @@ class StdPressureCooker(weewx.engine.StdService):
         super(StdPressureCooker, self).__init__(engine, config_dict)
 
         try:
-            calc_dict = config_dict['StdWXCalculate']
+            override_dict = config_dict['StdWXCalculate']['PressureCooker']
         except KeyError:
-            calc_dict = {}
+            override_dict = {}
 
-        max_delta_12h = to_float(calc_dict.get('max_delta_12h', 1800))
-        altimeter_algorithm = calc_dict.get('Algorithms',
-                                            {'altimeter': 'aaASOS'}).get('altimeter',
-                                                                         'aaASOS')
+        # Get the default values, then merge the user overrides into it
+        option_dict = weeutil.config.deep_copy(defaults_dict['StdWXCalculate']['PressureCooker'])
+        option_dict.merge(override_dict)
+
+        max_delta_12h = to_float(option_dict.get('max_delta_12h', 1800))
+        altimeter_algorithm = option_dict['altimeter'].get('algorithm', 'aaASOS')
 
         self.pressure_cooker = PressureCooker(engine.stn_info.altitude_vt,
                                               max_delta_12h,
@@ -657,12 +699,18 @@ class StdRainRater(weewx.engine.StdService):
         """Initialize the RainRater."""
         super(StdRainRater, self).__init__(engine, config_dict)
 
+        # Get any user-defined overrides
         try:
-            calc_dict = config_dict['StdWXCalculate']
+            override_dict = config_dict['StdWXCalculate']['RainRater']
         except KeyError:
-            calc_dict = {}
-        rain_period = to_int(calc_dict.get('rain_period', 900))
-        retain_period = to_int(calc_dict.get('retain_period', 930))
+            override_dict = {}
+
+        # Get the default values, then merge the user overrides into it
+        option_dict = weeutil.config.deep_copy(defaults_dict['StdWXCalculate']['RainRater'])
+        option_dict.merge(override_dict)
+
+        rain_period = to_int(option_dict.get('rain_period', 900))
+        retain_period = to_int(option_dict.get('retain_period', 930))
 
         self.rain_rater = RainRater(rain_period, retain_period)
         # Add to the XTypes system
@@ -685,12 +733,17 @@ class StdDelta(weewx.engine.StdService):
     def __init__(self, engine, config_dict):
         super(StdDelta, self).__init__(engine, config_dict)
 
+        # Get any user-defined overrides
         try:
-            delta_dict = config_dict['StdWXCalculate']['Delta']
+            override_dict = config_dict['StdWXCalculate']['Delta']
         except KeyError:
-            delta_dict = {}
+            override_dict = {}
 
-        self.delta = Delta(delta_dict)
+        # Get the default values, then merge the user overrides into it
+        option_dict = weeutil.config.deep_copy(defaults_dict['StdWXCalculate']['Delta'])
+        option_dict.merge(override_dict)
+
+        self.delta = Delta(option_dict)
         weewx.xtypes.xtypes.append(self.delta)
 
     def shutDown(self):
