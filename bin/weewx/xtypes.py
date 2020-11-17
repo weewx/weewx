@@ -198,29 +198,23 @@ class ArchiveTable(XType):
                 "AND a.dateTime = (SELECT MIN(dateTime) FROM archive "
                 "WHERE dateTime >= %(start)s);",
         'first': "SELECT %(obs_type)s FROM %(table_name)s "
-                 "WHERE dateTime = (SELECT MIN(dateTime) FROM %(table_name)s "
-                 "WHERE dateTime > %(start)s AND dateTime <= %(stop)s  "
-                 "AND %(obs_type)s IS NOT NULL)",
+                 "WHERE dateTime > %(start)s AND dateTime <= %(stop)s "
+                 "AND %(obs_type)s IS NOT NULL ORDER BY dateTime ASC LIMIT 1",
         'firsttime': "SELECT MIN(dateTime) FROM %(table_name)s "
-                     "WHERE dateTime > %(start)s AND dateTime <= %(stop)s  "
+                     "WHERE dateTime > %(start)s AND dateTime <= %(stop)s "
                      "AND %(obs_type)s IS NOT NULL",
         'last': "SELECT %(obs_type)s FROM %(table_name)s "
-                "WHERE dateTime = (SELECT MAX(dateTime) FROM %(table_name)s "
-                "WHERE dateTime > %(start)s AND dateTime <= %(stop)s  "
-                "AND %(obs_type)s IS NOT NULL)",
+                "WHERE dateTime > %(start)s AND dateTime <= %(stop)s "
+                "AND %(obs_type)s IS NOT NULL ORDER BY dateTime DESC LIMIT 1",
         'lasttime': "SELECT MAX(dateTime) FROM %(table_name)s "
-                    "WHERE dateTime > %(start)s AND dateTime <= %(stop)s  "
+                    "WHERE dateTime > %(start)s AND dateTime <= %(stop)s "
                     "AND %(obs_type)s IS NOT NULL",
         'maxtime': "SELECT dateTime FROM %(table_name)s "
-                   "WHERE dateTime > %(start)s AND dateTime <= %(stop)s AND "
-                   "%(obs_type)s = (SELECT MAX(%(obs_type)s) FROM %(table_name)s "
-                   "WHERE dateTime > %(start)s and dateTime <= %(stop)s) "
-                   "AND %(obs_type)s IS NOT NULL",
+                   "WHERE dateTime > %(start)s AND dateTime <= %(stop)s "
+                   "AND %(obs_type)s IS NOT NULL ORDER BY %(obs_type)s DESC LIMIT 1",
         'mintime': "SELECT dateTime FROM %(table_name)s "
-                   "WHERE dateTime > %(start)s AND dateTime <= %(stop)s AND "
-                   "%(obs_type)s = (SELECT MIN(%(obs_type)s) FROM %(table_name)s "
-                   "WHERE dateTime > %(start)s and dateTime <= %(stop)s) "
-                   "AND %(obs_type)s IS NOT NULL",
+                   "WHERE dateTime > %(start)s AND dateTime <= %(stop)s "
+                   "AND %(obs_type)s IS NOT NULL ORDER BY %(obs_type)s ASC LIMIT 1",
         'tderiv': "SELECT (b.%(obs_type)s - a.%(obs_type)s) / (b.dateTime-a.dateTime) "
                   "FROM archive a, archive b "
                   "WHERE b.dateTime = (SELECT MAX(dateTime) FROM archive "
@@ -252,8 +246,8 @@ class ArchiveTable(XType):
     
         returns: A ValueTuple containing the result."""
 
-        if aggregate_type not in ['sum', 'count', 'avg', 'max', 'min'] + list(
-                ArchiveTable.agg_sql_dict.keys()):
+        if aggregate_type not in ['sum', 'count', 'avg', 'max', 'min'] \
+                + list(ArchiveTable.agg_sql_dict.keys()):
             raise weewx.UnknownAggregation(aggregate_type)
 
         interpolate_dict = {
