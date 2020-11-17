@@ -289,8 +289,8 @@ class VaporPressure(weewx.xtypes.XType):
             outTemp_K = weewx.units.CtoK(outTemp_C)
             # Now we can use the formula. Results will be in mmHg. Create a ValueTuple out of it:
             p_vt = ValueTuple(math.exp(20.386 - 5132.0 / outTemp_K), 'mmHg', 'group_pressure')
-        elif self.algorithm == 'tetens':
-            # Use Teten's algorithm.
+        elif self.algorithm == 'teters':
+            # Use Teter's algorithm.
             # Use the formula. Results will be in kPa:
             p_kPa = 0.61078 * math.exp(17.27 * outTemp_C_vt[0] / (outTemp_C_vt[0] + 237.3))
             # Form a ValueTuple
