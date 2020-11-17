@@ -35,7 +35,7 @@ longitude = -122
 # Test values:
 record_1 = {
     'dateTime': 1567515300, 'usUnits': 1, 'interval': 5, 'inTemp': 73.0, 'outTemp': 88.7,
-    'inHumidity': 54.0, 'outHumidity': 90.0, 'windSpeed': 12.0, 'windDir': None, 'windGust': 15.0,
+    'inHumidity': 54.0, 'outHumidity': 90.0, 'windSpeed': 12.0, 'windDir': 250.0, 'windGust': 15.0,
     'windGustDir': 270.0, 'rain': 0.02,
 }
 
@@ -82,6 +82,19 @@ class TestSimpleFunctions(unittest.TestCase):
 
     def test_windrun(self):
         self.calc('windrun', 'windSpeed')
+
+    def test_windDir_default(self):
+        # With the default, windDir should be set to None if the windSpeed is zero.
+        self.record['windSpeed'] = 0.0
+        result = self.wx_calc.get_scalar('windDir', self.record, None)
+        self.assertIsNone(result[0])
+
+    def test_windDir_no_ignore(self):
+        # Now let's not ignore zero wind
+        wx_calc = weewx.wxxtypes.WXXTypes(altitude_vt, latitude, longitude, force_null=False)
+        result = wx_calc.get_scalar('windDir', self.record, None)
+        self.assertIsNotNone(result[0])
+        self.assertEqual(result[0], self.record['windDir'])
 
     def calc(self, key, *crits):
         """Calculate derived type 'key'. Parameters in "crits" are required to perform the

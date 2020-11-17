@@ -2808,20 +2808,21 @@ longitude = -77.0366</pre>
         </p>
 
         <h4 class="config_section">[[[windDir]]]</h4>
-        <p class="config_option" id="ignore_zero_wind">ignore_zero_wind</p>
+        <p class="config_option" id="force_null">force_null</p>
         <p>
             Indicates whether the wind direction should be undefined when the wind speed is zero. The default value is
-            <span class="code">True</span>: when the wind speed is true, the wind direction will be set to undefined
-            (Python <span class="code">None</span>.
+            <span class="code">True</span>: when the wind speed is zero, the wind direction will be set to undefined
+            (Python <span class="code">None</span>).
         </p>
 
         <p>
-            To report the wind vane direction even when there is no wind speed, change this to False:
+            To report the wind vane direction even when there is no wind speed, change this to
+            <span class="code">False</span>:
         </p>
         <pre class="tty">[StdWXCalculate]
     [[WXXTypes]]
       [[[windDir]]]
-        ignore_zero_wind = False</pre>
+        force_null = False</pre>
 
 </pre>
 
@@ -3809,7 +3810,7 @@ May 14 13:35:23 web weewx[5633]:         ****  Generator terminated...</pre>
         <p>
             This is by design &mdash; if there is no wind, then the wind direction is undefined, represented by NULL in
             the database or None in Python. This policy is enforced by the <span class='code'>StdWXCalculate</span>
-            service. If necessary, it can be overridden. See option <a href="#ignore_zero_wind"><span class="code">ignore_zero_wind</span></a>
+            service. If necessary, it can be overridden. See option <a href="#force_null"><span class="code">force_null</span></a>
             in the <a href="#StdWXCalculate"><span class='code'>[StdWXCalculate]</span></a> section.
         </p>
         <p>

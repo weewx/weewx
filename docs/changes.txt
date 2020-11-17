@@ -9,8 +9,8 @@ services to be run. Fortunately, it is not used. Yet. Added it back in.
 Added the "old" NWS algorithm as an option for calculating heat index.
 
 Changed how various undocumented parameters in [StdWXCalculate] are specified.
-The only one people are likely to have used is ignore_zero_wind. See the
-Upgrading Guide.
+The only one people are likely to have used is 'ignore_zero_wind'. Its name has
+changed to 'force_null', and it has been moved. See the Upgrading Guide.
 
 Documented the various [StdWXCalculate] options.
 

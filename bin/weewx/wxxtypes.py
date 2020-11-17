@@ -28,7 +28,7 @@ DEFAULTS_INI = """
 [StdWXCalculate]
   [[WXXTypes]]
     [[[windDir]]]
-       ignore_zero_wind = False
+       force_null = True
     [[[maxSolarRad]]]
       algorithm = rs
       atc = 0.8
@@ -63,7 +63,7 @@ class WXXTypes(weewx.xtypes.XType):
                  atc=0.8,
                  nfac=2,
                  wind_height=2.0,
-                 ignore_zero_wind=False,
+                 force_null=True,
                  maxSolarRad_algo='rs',
                  heat_index_algo='new'
                  ):
@@ -78,7 +78,7 @@ class WXXTypes(weewx.xtypes.XType):
         self.atc = atc
         self.nfac = nfac
         self.wind_height = wind_height
-        self.ignore_zero_wind = ignore_zero_wind
+        self.force_null = force_null
         self.maxSolarRad_algo = maxSolarRad_algo.lower()
         self.heat_index_algo = heat_index_algo.lower()
 
@@ -94,20 +94,20 @@ class WXXTypes(weewx.xtypes.XType):
         # Return the current wind direction if windSpeed is non-zero, otherwise, None
         if 'windSpeed' not in data:
             raise weewx.CannotCalculate
-        if self.ignore_zero_wind or data['windSpeed']:
-            val = data.get('windDir')
-        else:
+        if self.force_null and data['windSpeed'] == 0:
             val = None
+        else:
+            val = data.get('windDir')
         return ValueTuple(val, 'degree_compass', 'group_direction')
 
     def calc_windGustDir(self, key, data, db_manager):
         # Return the current gust direction if windGust is non-zero, otherwise, None
         if 'windGust' not in data:
             raise weewx.CannotCalculate
-        if self.ignore_zero_wind or data['windGust']:
-            val = data.get('windGustDir')
-        else:
+        if self.force_null and data['windGust'] == 0:
             val = None
+        else:
+            val = data.get('windGustDir')
         return ValueTuple(val, 'degree_compass', 'group_direction')
 
     def calc_maxSolarRad(self, key, data, db_manager):
@@ -615,18 +615,46 @@ class StdWXXTypes(weewx.engine.StdService):
         latitude_f = engine.stn_info.latitude_f
         longitude_f = engine.stn_info.longitude_f
 
+        # These options were never documented. They have moved. Fail hard if they are present.
+        if 'StdWXCalculate' in config_dict \
+                and any(key in config_dict['StdWXCalculate']
+                        for key in ['rain_period', 'et_period', 'wind_height',
+                                    'atc', 'nfac', 'max_delta_12h']):
+            raise ValueError("Undocumented options for [StdWXCalculate] have moved. "
+                             "See User's Guide.")
+
         # Get any user-defined overrides
         try:
             override_dict = config_dict['StdWXCalculate']['WXXTypes']
         except KeyError:
             override_dict = {}
-
         # Get the default values, then merge the user overrides into it
         option_dict = weeutil.config.deep_copy(defaults_dict['StdWXCalculate']['WXXTypes'])
         option_dict.merge(override_dict)
 
-        # Adjust wind direction to null, if the wind speed is zero:
-        ignore_zero_wind = to_bool(option_dict['windDir'].get('ignore_zero_wind', False))
+        # Get force_null from the option dictionary
+        force_null = to_bool(option_dict['windDir'].get('force_null', True))
+
+        # Option ignore_zero_wind has also moved, but we will support it in a backwards-compatible
+        # way, provided that it doesn't conflict with any setting of force_null.
+        try:
+            # Is there a value for ignore_zero_wind as well?
+            ignore_zero_wind = to_bool(config_dict['StdWXCalculate']['ignore_zero_wind'])
+        except KeyError:
+            # No. We're done
+            pass
+        else:
+            # No exception, so there must be a value for ignore_zero_wind.
+            # Is there an explicit value for 'force_null'? That is, a default was not used?
+            if 'force_null' in override_dict:
+                # Yes. Make sure they match
+                if ignore_zero_wind != to_bool(override_dict['force_null']):
+                    raise ValueError("Conflicting values for "
+                                     "ignore_zero_wind (%s) and force_null (%s)"
+                                     % (ignore_zero_wind, force_null))
+            else:
+                # No explicit value for 'force_null'. Use 'ignore_zero_wind' in its place
+                force_null = ignore_zero_wind
 
         # maxSolarRad-related options
         maxSolarRad_algo = option_dict['maxSolarRad'].get('algorithm', 'rs').lower()
@@ -649,7 +677,7 @@ class StdWXXTypes(weewx.engine.StdService):
                                  atc,
                                  nfac,
                                  wind_height,
-                                 ignore_zero_wind,
+                                 force_null,
                                  maxSolarRad_algo,
                                  heatindex_algo)
         # Add to the xtypes system
