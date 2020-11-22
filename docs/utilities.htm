@@ -1083,6 +1083,7 @@ No extensions installed</pre>
             [--date=YYYY-mm-dd | --from=YYYY-mm-dd[THH:MM] --to=YYYY-mm-dd[THH:MM]]
             [--dry-run]
             [--verbose]
+            [--no-prompt]
             [--suppress-warnings]
 
 
@@ -1102,6 +1103,8 @@ Options:
                         Import data up until this date or date-time. Format is
                         YYYY-mm-dd[THH:MM].
   --verbose             Print and log useful extra output.
+  --no-prompt           Do not prompt. Accept relevant defaults and all y/n
+                        prompts.
   --suppress-warnings   Suppress warnings to stdout. Warnings are still
                         logged.
   --version             Display wee_import version number.
@@ -1263,6 +1266,23 @@ summaries using the wee_database utility.</pre>
 
         <pre class="tty cmd">wee_import --import-config=/directory/import.conf --verbose
 </pre>
+
+        <h3>Option <span class="code">--no-prompt</span></h3>
+
+        <p>Inclusion of the <span class="code">--no-prompt</span> option will run <span class="code">wee_import</span>
+            without prompts. Relevant defaults will be used and all y/n prompts are automatically accepted as 'y'. This
+            may be useful for unattended use of <span class="code">wee_import</span>.
+        </p>
+
+        <pre class="tty cmd">wee_import --import-config=/directory/import.conf --no-prompt
+</pre>
+
+        <p class="warning">
+            <strong>Warning!</strong><br/>Care must be taken when using the <span class="code">--no-prompt</span>
+            option as ignoring warnings during the import process can lead to unexpected results. Whilst existing data
+            will be protected, the use or acceptance of an incorrect or unexpected parameter or default may lead to
+            significant amounts of unwanted data being imported.
+        </p>
 
         <h3>Option <span class="code">--suppress-warnings</span></h3>
 
