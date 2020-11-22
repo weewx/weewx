@@ -6,6 +6,10 @@ weewx change history
 Service weewx.wxxtypes.StdDelta was inadvertently left out of the list of
 services to be run. Fortunately, it is not used. Yet. Added it back in.
 
+Fixed corner case for windDir when using software record generation,
+ignore_zero_wind=True, and windSpeed=0 for entire record interval. Now emits
+last windDir value.
+
 
 4.2.0 10/26/2020
 
