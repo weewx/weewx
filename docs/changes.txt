@@ -10,6 +10,9 @@ Fixed corner case for windDir when using software record generation,
 ignore_zero_wind=True, and windSpeed=0 for entire record interval. Now emits
 last windDir value.
 
+Fixed problem when looking up stars with more than one word in their name.
+Fixes issue #620.
+
 
 4.2.0 10/26/2020
 
