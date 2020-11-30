@@ -13,6 +13,8 @@ last windDir value.
 Fixed problem when looking up stars with more than one word in their name.
 Fixes issue #620.
 
+Fixed problem that caused daily summary weights to revert to V1.0 style weights.
+
 
 4.2.0 10/26/2020
 
