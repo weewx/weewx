@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2015 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2020 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -442,7 +442,7 @@ def _get_observer(almanac_obj, time_ts):
 def _get_ephem_body(heavenly_body):
     # The library 'ephem' refers to heavenly bodies using a capitalized
     # name. For example, the module used for 'mars' is 'ephem.Mars'.
-    cap_name = heavenly_body.capitalize()
+    cap_name = heavenly_body.title()
     
     # If the heavenly body is a star, or if the body does not exist, then an
     # exception will be raised. Be prepared to catch it.
