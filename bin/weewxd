@@ -257,5 +257,6 @@ def sigTERMhandler(signum, _frame):
     raise Terminate
 
 
-# Start up the program
-main()
+if __name__ == "__main__":
+    # Start up the program
+    main()

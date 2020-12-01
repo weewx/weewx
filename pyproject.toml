@@ -1,0 +1,74 @@
+[tool.poetry]
+name = "weewx"
+version = "4.3.0a2"
+description = "The WeeWX weather software system"
+authors = ["Tom Keffer <tkeffer@gmail.com>"]
+license = "GPL3"
+readme = 'README.md'
+repository = "https://github.com/weewx/weewx"
+homepage = "http://weewx.com"
+documentation = "http://weewx.com/docs"
+classifiers=[
+  'Development Status :: 5 - Production/Stable',
+  'Intended Audience :: End Users/Desktop',
+  'Intended Audience :: Science/Research',
+  'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
+  'Operating System :: POSIX :: Linux',
+  'Operating System :: Unix',
+  'Programming Language :: Python',
+  'Programming Language :: Python :: 2.7',
+  'Programming Language :: Python :: 3.5',
+  'Programming Language :: Python :: 3.6',
+  'Programming Language :: Python :: 3.7',
+  'Programming Language :: Python :: 3.8',
+  'Topic :: Scientific/Engineering :: Physics'
+]
+packages = [
+    { include = "schemas", from = "bin" },
+    { include = "user", from = "bin" },
+    { include = "weecfg", from = "bin" },
+    { include = "weedb", from = "bin" },
+    { include = "weeimport", from = "bin" },
+    { include = "weeplot", from = "bin" },
+    { include = "weeutil", from = "bin" },
+    { include = "weewx", from = "bin" },
+    { include = "daemon.py", from = "bin" },
+]
+
+include = [
+  "LICENSE.txt",
+  "README.md",
+  "weewx.conf",
+  "bin/wee_config",
+  "bin/wee_database",
+  "bin/wee_debug",
+  "bin/wee_device",
+  "bin/wee_extension",
+  "bin/wee_import",
+  "bin/wee_reports",
+  "bin/weewxd",
+  "bin/wunderfixer",
+]
+
+[tool.poetry.dependencies]
+python = "~2.7 || ^3.5"
+configobj = ">=4.7"
+pyusb = "^1.0.2"
+pyserial = "^3.4"
+pyephem = "^3.7"
+pillow = ">=6.2"
+six = "^1"
+cheetah = {version="^2.4", python="~2.7"}
+cheetah3 = {version="^3.2", python=">=3.5" }
+
+[tool.poetry.dev-dependencies]
+mock = {version="*", python="~2.7"}
+
+[build-system]
+# Minimum requirements for the build system to execute.
+# requires = ["poetry", "setuptools>=46.0", "wheel", "configobj"]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"
+
+#[tool.poetry.scripts]
+#weewxd = 'weewxd:main'
