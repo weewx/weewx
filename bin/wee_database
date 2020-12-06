@@ -561,9 +561,6 @@ def update(config_dict, db_binding, options):
                              'trans_days': 100,
                              'dry_run': options.dry_run}
 
-    # create an interval weighting fix object
-    weight_obj = weecfg.database.IntervalWeighting(config_dict,
-                                                   weighting_config_dict)
     # check the daily summary version
     _daily_summary_version = dbm._read_metadata('Version')
     msg = "Daily summary tables are at version %s" % _daily_summary_version
@@ -581,7 +578,7 @@ def update(config_dict, db_binding, options):
         log.info(msg)
         print(msg)
         t1 = time.time()
-        weight_obj.run()
+        dbm.recalculate_weights()
         msg = "Interval Weighting Fix completed in %0.2f seconds." % (time.time() - t1)
         log.info(msg)
         print(msg)

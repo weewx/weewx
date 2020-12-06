@@ -1118,15 +1118,11 @@ class DaySummaryManager(Manager):
         last_date = datetime.date.fromtimestamp(last_ts) + datetime.timedelta(days=1)
         mark_date = first_date
 
-        start = time.time()
         # March forward, tranche by tranche
         while mark_date < last_date:
             end_of_tranche = min(mark_date + tranche_days, last_date)
             self._do_tranche(mark_date, end_of_tranche, progress_fn)
             mark_date = end_of_tranche
-
-        log.info("recalculate_weights: "
-                 "Weights recalculated in %f.1 seconds" % (time.time() - start))
 
     def _do_tranche(self, start_date, end_date, progress_fn):
         """Reweight a tranche of daily summaries, using an appropriate strategy.
