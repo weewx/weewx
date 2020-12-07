@@ -39,6 +39,8 @@ usage = """wee_database --help
        wee_database --drop-daily
        wee_database --rebuild-daily [--date=YYYY-mm-dd |
                                     [--from=YYYY-mm-dd] [--to=YYYY-mm-dd]]
+       wee_database --reweight [--date=YYYY-mm-dd |
+                               [--from=YYYY-mm-dd] [--to=YYYY-mm-dd]]
        wee_database --calc-missing [--date=YYYY-mm-dd |
                                    [--from=YYYY-mm-dd[THH:MM]] [--to=YYYY-mm-dd[THH:MM]]]
        wee_database --check-strings
@@ -87,6 +89,8 @@ def main():
                       help="Drop the daily summary tables from a database.")
     parser.add_option("--rebuild-daily", action='store_true',
                       help="Rebuild the daily summaries from data in the archive table.")
+    parser.add_option("--reweight", action="store_true",
+                      help="Recalculate the weighted sums in the daily summaries.")
 
     # ... then add the various options:
     parser.add_option("--config", dest="config_path", type=str,
@@ -112,7 +116,7 @@ def main():
     (options, args) = parser.parse_args()
 
     # Do a check to see if the user used more than 1 'verb'
-    if sum(1 if x else 0 for x in [options.create,
+    if sum(x is not None for x in [options.create,
                                    options.reconfigure,
                                    options.transfer,
                                    options.check,
@@ -121,7 +125,9 @@ def main():
                                    options.check_strings,
                                    options.fix_strings,
                                    options.drop_daily,
-                                   options.rebuild_daily]) != 1:
+                                   options.rebuild_daily,
+                                   options.reweight
+                                   ]) != 1:
         sys.exit("Must specify one and only one verb.")
 
     # get config_dict to use
@@ -167,6 +173,9 @@ def main():
 
     elif options.rebuild_daily:
         rebuildDaily(config_dict, db_binding, options)
+
+    elif options.reweight:
+        reweight(config_dict, db_binding, options)
 
 
 def createMainDatabase(config_dict, db_binding):
@@ -293,6 +302,58 @@ def rebuildDaily(config_dict, db_binding, options):
         print("Rebuild of daily summaries in database '%s' complete" % database_name)
     else:
         print("Daily summaries up to date in '%s'" % database_name)
+
+
+def reweight(config_dict, db_binding, options):
+    """Recalculate the weighted sums in the daily summaries."""
+
+    # Determine the period over which we are rebuilding from any command line date parameters
+    from_dt, to_dt = _parse_dates(options)
+    # Convert from Datetime to Date objects
+    from_d = from_dt.date() if from_dt is not None else None
+    to_d = to_dt.date() if to_dt is not None else None
+
+    # advise the user/log what we will do
+    if from_d is None and to_d is None:
+        msg = "The weighted sums in all the daily summaries will be recalculated."
+    elif from_d and not to_d:
+        msg = "The weighted sums in the daily summaries from %s through the end " \
+               "will be recalculated." % from_d
+    elif not from_d and to_d:
+        msg = "The weighted sums in the daily summaries from the beginning through %s" \
+               "will be recalculated." % to_d
+    elif from_d == to_d:
+        msg = "The weighted sums in the daily summary for %s will be recalculated." % from_d
+    else:
+        msg = "The weighted sums in the daily summaries from %s through %s, " \
+               "inclusive, will be recalculated." % (from_d, to_d)
+
+    log.info(msg)
+    print(msg)
+    ans = y_or_n("Proceed (y/n)? ")
+    if ans == 'n':
+        msg = "Nothing done."
+        log.info(msg)
+        print(msg)
+        return
+
+    t1 = time.time()
+
+    # Open up the database.
+    manager_dict = weewx.manager.get_manager_dict_from_config(config_dict, db_binding)
+    database_name = manager_dict['database_dict']['database_name']
+    with weewx.manager.open_manager_with_config(config_dict, db_binding) as dbmanager:
+
+        log.info("Recalculating the weighted summaries in database '%s' ..." % database_name)
+        print("Recalculating the weighted summaries in database '%s' ..." % database_name)
+        if options.dry_run:
+            print("Dry run. Nothing done.")
+
+        # Do the actual recalculations
+        dbmanager.recalculate_weights(start_d=from_d, stop_d=to_d)
+    msg = "Finished reweighting in %.1f seconds." % (time.time() - t1)
+    log.info(msg)
+    print(msg)
 
 
 def reconfigMainDatabase(config_dict, db_binding):
@@ -900,7 +961,7 @@ def _parse_dates(options):
         else:
             # we have the from date-time, for a --date option our final results
             # depend on the action we are to perform
-            if options.rebuild_daily:
+            if options.rebuild_daily or options.reweight:
                 # The daily summaries are stamped with the midnight timestamp
                 # for each day, so our from and to results need to be within the
                 # same calendar day else we will rebuild more than just one day.
@@ -946,7 +1007,7 @@ def _parse_dates(options):
                 _to_dt = datetime.datetime.strptime(options.to_date, "%Y-%m-%d")
                 # since we have a date the result we want depends on what action
                 # we are to complete
-                if options.rebuild_daily:
+                if options.rebuild_daily or options.reweight:
                     # for a rebuild the to date-time must be within the date
                     # specified date, which it already is so leave it
                     pass
