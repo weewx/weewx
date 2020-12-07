@@ -142,7 +142,7 @@ class Manager(object):
 
         schema: The schema to be used. If not supplied, then an exception of type
         weedb.OperationalError will be raised if the database does not exist, and of type
-        weedb.UnitializedDatabase if it exists, but has not been initialized.
+        weedb.Uninitialized if it exists, but has not been initialized.
         """
 
         # This will raise a weedb.OperationalError if the database does not exist.
@@ -272,7 +272,7 @@ class Manager(object):
 
                     N += 1
                     if progress_fn and N % 1000 == 0:
-                        progress_fn(N, record['dateTime'])
+                        progress_fn(record['dateTime'], N)
 
                     min_ts = min(min_ts, record['dateTime'])
                     max_ts = max(max_ts, record['dateTime'])
@@ -708,20 +708,14 @@ def drop_database_with_config(config_dict, data_binding,
     drop_database(manager_dict)
 
 
-def show_progress(nrec, last_time):
+def show_progress(last_time, nrec=None):
     """Utility function to show our progress"""
-    print("Records processed: %d; Last date: %s\r"
-          % (nrec, weeutil.weeutil.timestamp_to_string(last_time)),
-          end='',
-          file=sys.stdout)
-    sys.stdout.flush()
-
-
-def show_last_time(last_time):
-    """Utility function to show the last processed time"""
-    print("Last timestamp: %s\r" % weeutil.weeutil.timestamp_to_string(last_time),
-          end='',
-          file=sys.stdout)
+    if nrec:
+        msg = "Records processed: %d; time: %s\r" \
+              % (nrec, weeutil.weeutil.timestamp_to_string(last_time))
+    else:
+        msg = "Processed through: %s\r" % weeutil.weeutil.timestamp_to_string(last_time)
+    print(msg, end='', file=sys.stdout)
     sys.stdout.flush()
 
 
@@ -1070,7 +1064,7 @@ class DaySummaryManager(Manager):
                         if lastUpdate else rec['dateTime']
                     nrecs += 1
                     if progress_fn and nrecs % 1000 == 0:
-                        progress_fn(nrecs, rec['dateTime'])
+                        progress_fn(rec['dateTime'], nrecs)
 
                 # We're done with this transaction. Record the daily summary for the last day
                 # unless it is empty
@@ -1093,14 +1087,25 @@ class DaySummaryManager(Manager):
 
         return nrecs, ndays
 
-    def recalculate_weights(self, tranche_size=100, progress_fn=show_last_time):
+    def recalculate_weights(self, start_d=None, stop_d=None,
+                            tranche_size=100, progress_fn=show_progress):
         """Recalculate just the daily summary weights.
 
         Rather than backfill all the daily summaries, this function simply recalculates the
         weights.
 
+        start_d: The first day to be included, specified as a datetime.date object [Optional.
+        Default is to start with the first record in the daily summaries.]
+
+        stop_d: The last day to be included, specified as a datetime.date object [Optional.
+        Default is to end with the last record in the daily summaries.]
+
         tranche_size: How many days to do in a single transaction.
+
+        progress_fn: This function will be called after every tranche with the timestamp of the
+        last record processed.
         """
+
         log.info("recalculate_weights: Using database '%s'" % self.database_name)
         log.debug("recalculate_weights: Tranche size %d" % tranche_size)
 
@@ -1108,14 +1113,24 @@ class DaySummaryManager(Manager):
         tranche_days = datetime.timedelta(days=tranche_size)
 
         # Get the first and last timestamps for all the tables in the daily summaries.
-        first_last = self.get_first_last()
-        if first_last is None:
-            log.info("recalculate_weights: No daily summaries. Nothing done.")
+        first_ts, last_ts = self.get_first_last()
+        if first_ts is None or last_ts is None:
+            log.info("recalculate_weights: Empty daily summaries. Nothing done.")
             return
-        first_ts, last_ts = first_last
+
         # Convert to date objects
         first_date = datetime.date.fromtimestamp(first_ts)
-        last_date = datetime.date.fromtimestamp(last_ts) + datetime.timedelta(days=1)
+        last_date = datetime.date.fromtimestamp(last_ts)
+
+        # Trim according to the requested dates
+        if start_d is not None:
+            first_date = max(first_date, start_d)
+        if stop_d is not None:
+            last_date = min(last_date, stop_d)
+
+        # For what follows, last_date needs to point to the day *after* the last desired day.
+        last_date += datetime.timedelta(days=1)
+
         mark_date = first_date
 
         # March forward, tranche by tranche
@@ -1283,12 +1298,17 @@ class DaySummaryManager(Manager):
             Returns None if there is nothing in the daily summaries.
         """
 
-        sql_select = "SELECT MIN(dateTime), MAX(dateTime) FROM %s_day_%s"
-        big_select = [sql_select % (self.table_name, key) for key in self.daykeys]
-        big_sql = " UNION ".join(big_select)
+        big_select = ["SELECT MIN(dateTime) AS mtime FROM %s_day_%s"
+                      % (self.table_name, key) for key in self.daykeys]
+        big_sql = " UNION ".join(big_select) + " ORDER BY mtime ASC LIMIT 1"
+        first_ts = self.getSql(big_sql)
 
-        result = self.getSql(big_sql)
-        return result
+        big_select = ["SELECT MAX(dateTime) AS mtime FROM %s_day_%s"
+                      % (self.table_name, key) for key in self.daykeys]
+        big_sql = " UNION ".join(big_select) + " ORDER BY mtime DESC LIMIT 1"
+        last_ts = self.getSql(big_sql)
+
+        return first_ts[0], last_ts[0]
 
     def _check_intervals(self, timespan):
         """Check to see if the field "interval" is constant over the time span."""
