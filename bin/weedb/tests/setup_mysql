@@ -22,6 +22,7 @@ create user 'weewx'@'localhost' identified by 'weewx';
 create user 'weewx1'@'localhost' identified by 'weewx1';
 create user 'weewx2'@'localhost' identified by 'weewx2';
 grant select, update, create, delete, drop, insert on weewx.*          to 'weewx'@'localhost';
+grant select, update, create, delete, drop, insert on weewx_scratch.*  to 'weewx'@'localhost';
 grant select, update, create, delete, drop, insert on test.*           to 'weewx'@'localhost';
 grant select, update, create, delete, drop, insert on test_weedb.*     to 'weewx'@'localhost';
 grant select, update, create, delete, drop, insert on test_alt_weewx.* to 'weewx'@'localhost';

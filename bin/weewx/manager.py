@@ -94,8 +94,9 @@ class Manager(object):
             # Try again:
             self.sqlkeys = self.connection.columnsOf(self.table_name)
 
-        # Set up cached data:
-        self._sync()
+        # Set up cached data. Make sure to call my version, not any subclass's version. This is
+        # because the subclass has not been initialized yet.
+        Manager._sync(self)
 
     @classmethod
     def open(cls, database_dict, table_name='archive'):
@@ -213,8 +214,8 @@ class Manager(object):
         log.info("Created and initialized table '%s' in database '%s'",
                  self.table_name, self.database_name)
 
-    def _sync(self):
-        """Resynch the internal caches."""
+    def _create_sync(self):
+        """Create the internal caches."""
 
         # Fetch the first row in the database to determine the unit system in use. If the database
         # has never been used, then the unit system is still indeterminate --- set it to 'None'.
@@ -224,6 +225,9 @@ class Manager(object):
         # Cache the first and last timestamps
         self.first_timestamp = self.firstGoodStamp()
         self.last_timestamp = self.lastGoodStamp()
+
+    def _sync(self):
+        Manager._create_sync(self)
 
     def lastGoodStamp(self):
         """Retrieves the epoch time of the last good archive record.
@@ -278,7 +282,7 @@ class Manager(object):
                     max_ts = max(max_ts, record['dateTime'])
                 except (weedb.IntegrityError, weedb.OperationalError) as e:
                     log.error("Unable to add record %s to database '%s': %s",
-                              weeutil.weeutil.timestamp_to_string(record['dateTime']),
+                              timestamp_to_string(record['dateTime']),
                               self.database_name, e)
 
         # Update the cached timestamps. This has to sit outside the transaction context,
@@ -320,7 +324,7 @@ class Manager(object):
         sql_insert_stmt = "INSERT INTO %s (%s) VALUES (%s)" % (self.table_name, k_str, q_str)
         cursor.execute(sql_insert_stmt, value_list)
         log.info("Added record %s to database '%s'",
-                 weeutil.weeutil.timestamp_to_string(record['dateTime']),
+                 timestamp_to_string(record['dateTime']),
                  self.database_name)
 
     def _updateHiLo(self, accumulator, cursor):
@@ -712,9 +716,9 @@ def show_progress(last_time, nrec=None):
     """Utility function to show our progress"""
     if nrec:
         msg = "Records processed: %d; time: %s\r" \
-              % (nrec, weeutil.weeutil.timestamp_to_string(last_time))
+              % (nrec, timestamp_to_string(last_time))
     else:
-        msg = "Processed through: %s\r" % weeutil.weeutil.timestamp_to_string(last_time)
+        msg = "Processed through: %s\r" % timestamp_to_string(last_time)
     print(msg, end='', file=sys.stdout)
     sys.stdout.flush()
 
@@ -762,7 +766,7 @@ class DaySummaryManager(Manager):
     update.
     """
 
-    version = "2.0"
+    version = "3.0"
 
     # Schemas used by the daily summaries:
     day_schemas = {
@@ -821,6 +825,17 @@ class DaySummaryManager(Manager):
             # Database has not been initialized. Initialize it:
             self._initialize_day_tables(schema)
 
+        self.version = None
+        self.daykeys = None
+        DaySummaryManager._create_sync(self)
+        self.patch_sums()
+
+    def close(self):
+        self.version = None
+        self.daykeys = None
+        super(DaySummaryManager, self).close()
+
+    def _create_sync(self):
         # Get a list of all the observation types which have daily summaries
         all_tables = self.connection.tables()
         prefix = "%s_day_" % self.table_name
@@ -828,15 +843,15 @@ class DaySummaryManager(Manager):
         meta_name = '%s_day__metadata' % self.table_name
         self.daykeys = [x[n_prefix:] for x in all_tables
                         if (x.startswith(prefix) and x != meta_name)]
+
         self.version = self._read_metadata('Version')
         if self.version is None:
             self.version = '1.0'
         log.debug('Daily summary version is %s', self.version)
 
-    def close(self):
-        self.version = None
-        self.daykeys = None
-        super(DaySummaryManager, self).close()
+    def _sync(self):
+        super(DaySummaryManager, self)._sync()
+        self._create_sync()
 
     def _initialize_day_tables(self, schema):
         """Initialize the tables needed for the daily summary."""
@@ -902,7 +917,7 @@ class DaySummaryManager(Manager):
         _day_summary.addRecord(record, weight=_weight)
         self._set_day_summary(_day_summary, record['dateTime'], cursor)
         log.info("Added record %s to daily summary in '%s'",
-                 weeutil.weeutil.timestamp_to_string(record['dateTime']),
+                 timestamp_to_string(record['dateTime']),
                  self.database_name)
 
     def _updateHiLo(self, accumulator, cursor):
@@ -1090,6 +1105,26 @@ class DaySummaryManager(Manager):
             log.info("Daily summaries up to date")
 
         return nrecs, ndays
+
+    def drop_daily(self):
+        """Drop the daily summaries."""
+
+        log.info("Dropping daily summary tables from '%s' ...", self.connection.database_name)
+        try:
+            _all_tables = self.connection.tables()
+            with weedb.Transaction(self.connection) as _cursor:
+                for _table_name in _all_tables:
+                    if _table_name.startswith('%s_day_' % self.table_name):
+                        _cursor.execute("DROP TABLE %s" % _table_name)
+
+            self.daykeys = None
+        except weedb.OperationalError as e:
+            log.error("Drop daily summary tables failed for database '%s': %s",
+                      self.connection.database_name, e)
+            raise
+        else:
+            log.info("Dropped daily summary tables from database '%s'",
+                     self.connection.database_name)
 
     def recalculate_weights(self, start_d=None, stop_d=None,
                             tranche_size=100, progress_fn=show_progress):
@@ -1292,6 +1327,32 @@ class DaySummaryManager(Manager):
                                                  'squaresum', 'wsquaresum']]))
         cursor.execute(wind_update, (start_ts,))
 
+    def patch_sums(self):
+        """Version 4.2 accidentally interpreted V2.0 daily sums as V1.0, so the weighted sums
+        were all given a weight of 1.0, instead of the interval length. This fixes that."""
+        if '1.0' < self.version < '3.0':
+            msg = "Daily summaries at V%s. Patching to V%s" \
+                  % (self.version, DaySummaryManager.version)
+            print(msg)
+            log.info(msg)
+            # We need to upgrade from V2.0 to V3.0. The only difference is that the
+            # patch has been supplied to V3.0 daily summaries. The patch need only be
+            # done from a date well before the V4.2 release. We pick 1-Jun-2020.
+            self.recalculate_weights(start_d=datetime.date(2020,6,1))
+            self._write_metadata('Version', DaySummaryManager.version)
+            self.version = DaySummaryManager.version
+            log.info("Patch finished.")
+
+    def update(self):
+        """Update the database to V3.0"""
+        if self.version == '1.0':
+            self.recalculate_weights()
+            self._write_metadata('Version', DaySummaryManager.version)
+            self.version = DaySummaryManager.version
+        elif self.version == '2.0':
+            self.patch_sums()
+
+
     # --------------------------- UTILITY FUNCTIONS -----------------------------------
 
     def get_first_last(self):
@@ -1424,26 +1485,6 @@ class DaySummaryManager(Manager):
         finally:
             if cursor is None:
                 _cursor.close()
-
-    def drop_daily(self):
-        """Drop the daily summaries."""
-
-        log.info("Dropping daily summary tables from '%s' ...", self.connection.database_name)
-        try:
-            _all_tables = self.connection.tables()
-            with weedb.Transaction(self.connection) as _cursor:
-                for _table_name in _all_tables:
-                    if _table_name.startswith('%s_day_' % self.table_name):
-                        _cursor.execute("DROP TABLE %s" % _table_name)
-
-            self.daykeys = None
-        except weedb.OperationalError as e:
-            log.error("Drop daily summary tables failed for database '%s': %s",
-                      self.connection.database_name, e)
-            raise
-        else:
-            log.info("Dropped daily summary tables from database '%s'",
-                     self.connection.database_name)
 
 
 if __name__ == '__main__':
