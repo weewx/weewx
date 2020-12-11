@@ -229,7 +229,7 @@ sudo apt-get install weewx</pre>
 
         <h1><a id="Instructions_for_specific_versions">Instructions for specific versions</a></h1>
 
-        <h2>From 4.1 or earlier</h2>
+        <h2>Upgrading to V4.2</h2>
 
         <p>
             For the most part, V4.2 is backwards compatible with previous versions. There is one small exception.
@@ -312,7 +312,7 @@ sudo apt-get install weewx</pre>
     <span class="highlight">dewpoint = prefer_hardware</span>
         </pre>
 
-        <h2>From V3.8 or earlier</h2>
+        <h2>Upgrading to V3.9</h2>
 
         <h3>New skins</h3>
         <p>
@@ -387,7 +387,7 @@ sudo apt-get install weewx</pre>
             will be unaffected. This is because the override section has the highest priority.
         </p>
 
-        <h2>From V3.6 or earlier</h2>
+        <h2>Upgrading to V3.7</h2>
 
 
         <h3 id="change_to_daily_summaries">Changes to daily summaries</h3>
@@ -692,7 +692,7 @@ extraHumid8 = humidity_8</pre>
         </table>
 
 
-        <h2>From V3.5 or earlier</h2>
+        <h2>Upgrading to V3.6</h2>
 
         <h3>Changes to <span class="code">weewx.conf</span></h3>
         <p>
@@ -736,7 +736,7 @@ extraHumid8 = humidity_8</pre>
         </table>
 
 
-        <h2>From V3.1 or earlier</h2>
+        <h2>Upgrading to V3.2</h2>
 
         <h3>New utilities</h3>
 
@@ -851,7 +851,7 @@ extraHumid8 = humidity_8</pre>
             </tr>
         </table>
 
-        <h2>From V2.7 or earlier</h2>
+        <h2>Upgrading to V3.0</h2>
 
         <h3>Overview</h3>
 
@@ -1409,7 +1409,7 @@ setup.py install --extension basic.tar.gz --dry-run</pre>
             </tr>
         </table>
 
-        <h2>From V2.6 or earlier</h2>
+        <h2>Upgrading to V2.7</h2>
 
         <p>Version 2.7 is backwards compatible with earlier versions with one minor exception.</p>
 
@@ -1441,7 +1441,7 @@ second            = " second", " seconds"</pre>
         <pre class="tty">Weewx uptime:  1 day, 1 hour, 41 minutes
 Server uptime: 2 days, 10 hours, 22 minutes</pre>
 
-        <h2>From V2.5 or earlier</h2>
+        <h2>Upgrading to V2.6</h2>
 
         <p>Version 2.6 is backwards compatible with earlier versions, with a couple of small exceptions.</p>
         <ul>
@@ -1465,7 +1465,7 @@ Server uptime: 2 days, 10 hours, 22 minutes</pre>
             </li>
         </ul>
 
-        <h2>From V2.3 or earlier</h2>
+        <h2>Upgrading to V2.4</h2>
 
         <p>The option <span class="code">time_length</span> will now be the exact length of the resultant plot. Before,
             a plot with <span class="code">time_length</span> equal to 24 hours would result in a plot of 27 hours, now
@@ -1497,7 +1497,7 @@ Server uptime: 2 days, 10 hours, 22 minutes</pre>
     weewx.wxengine.StdCalibrate, weewx.wxengine.StdQC, weewx.wxengine.StdArchive, weewx.wxengine.StdPrint,
     weewx.wxengine.StdRESTful, weewx.wxengine.StdReport</pre>
 
-        <h2>From V2.2 or earlier</h2>
+        <h2>Upgrading to V2.3</h2>
 
         <p>The signature of the function "<span class="code">loader</span>", used to return an instance of the station
             device driver, has changed slightly. It has changed from
@@ -1515,7 +1515,7 @@ Server uptime: 2 days, 10 hours, 22 minutes</pre>
 
         <p>This change will affect only those who have written their own device driver.</p>
 
-        <h2>From V2.1 or earlier</h2>
+        <h2>Upgrading to V2.2</h2>
 
         <p>Version 2.2 introduces a schema, found in <span class="code">
         bin/user/schemas.py</span>, for the stats database. This schema is used only when initially creating the
@@ -1524,7 +1524,7 @@ Server uptime: 2 days, 10 hours, 22 minutes</pre>
             database.
         </p>
 
-        <h2>From V1.14 or earlier</h2>
+        <h2>Upgrading to V2.0</h2>
 
         <p>Version 2.0 introduces many new features, including a revamped internal engine. There are two changes that
             are not backwards compatible:
@@ -1547,7 +1547,7 @@ Server uptime: 2 days, 10 hours, 22 minutes</pre>
 
         <p>If you have written a custom report generator it should also be backwards compatible.</p>
 
-        <h2>From V1.13 or earlier</h2>
+        <h2>Upgrading to V1.14</h2>
 
         <p>Version 1.14 introduces some new webpages that have been expressly formatted for the smartphone by using <a
             href="http://jquery.com/">jQuery</a>.
@@ -1606,7 +1606,7 @@ Server uptime: 2 days, 10 hours, 22 minutes</pre>
             You may want to add a link to this in the template for your main index page <span class="code">skins/Standard/index.html.tmpl</span>.
         </p>
 
-        <h2>From V1.12 or earlier</h2>
+        <h2>Upgrading to V1.13</h2>
 
         <p>Version 1.13 changed the way binding happens to the databases used in reports so that it happens much later.
             The upshot is that the signature of a few functions changed. Most you are unlikely to encounter. The
@@ -1617,7 +1617,7 @@ Server uptime: 2 days, 10 hours, 22 minutes</pre>
 
         <p>No changes to skins.</p>
 
-        <h2>From V1.9 or earlier</h2>
+        <h2>Upgrading to V1.10</h2>
 
         <p>Version 1.10 introduced several new features.</p>
 
@@ -1681,14 +1681,14 @@ Server uptime: 2 days, 10 hours, 22 minutes</pre>
 
         <p>This will only affect you if you have written a custom generator.</p>
 
-        <h2>From V1.7.0 or earlier</h2>
+        <h2>Upgrading to V1.8</h2>
 
         <p>With the introduction of a standard archiving service, <span class="code">
         StdArchive</span>, the names of some events have changed. This will not affect you unless you have written a
             custom service.
         </p>
 
-        <h2>From V.1.5.0 or earlier</h2>
+        <h2>Upgrading to V1.7</h2>
 
         <p>V1.7 introduces <em>skins</em>. The skins live in subdirectory <span class="code">skins</span>. They are <em>not</em>
             compatible with the old <span class="code">template</span> subdirectory --- you can&#39;t simply rename
@@ -1727,7 +1727,7 @@ cooling_base = 65, degree_F</pre>
 
         <pre class="tty cmd">rm -r templates</pre>
 
-        <h2>From V1.4.0 or earlier</h2>
+        <h2>Upgrading to V1.5</h2>
 
         <p>Because the configuration file <span class="code">weewx.conf</span> changed significantly going from V1.4 to
             V1.5, the installation script <span class="code">setup.py</span> will NOT merge your old configuration file
@@ -1735,7 +1735,7 @@ cooling_base = 65, degree_F</pre>
             customizations.
         </p>
 
-        <h2>From V1.2.0 or earlier</h2>
+        <h2>Upgrading to V1.4</h2>
 
         <p>Option <span class="code">clock_check</span>, previously found in the <span class="code">[VantagePro]</span>
             section, is now found in the <span class="code">[Station]</span> section. The install program will put a
