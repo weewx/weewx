@@ -21,7 +21,7 @@ import weeutil.weeutil
 import weewx.accum
 import weewx.units
 import weewx.xtypes
-from weeutil.weeutil import timestamp_to_string, to_int
+from weeutil.weeutil import timestamp_to_string, to_int, TimeSpan
 
 log = logging.getLogger(__name__)
 
@@ -94,8 +94,9 @@ class Manager(object):
             # Try again:
             self.sqlkeys = self.connection.columnsOf(self.table_name)
 
-        # Set up cached data:
-        self._sync()
+        # Set up cached data. Make sure to call my version, not any subclass's version. This is
+        # because the subclass has not been initialized yet.
+        Manager._sync(self)
 
     @classmethod
     def open(cls, database_dict, table_name='archive'):
@@ -142,7 +143,7 @@ class Manager(object):
 
         schema: The schema to be used. If not supplied, then an exception of type
         weedb.OperationalError will be raised if the database does not exist, and of type
-        weedb.UnitializedDatabase if it exists, but has not been initialized.
+        weedb.Uninitialized if it exists, but has not been initialized.
         """
 
         # This will raise a weedb.OperationalError if the database does not exist.
@@ -213,8 +214,8 @@ class Manager(object):
         log.info("Created and initialized table '%s' in database '%s'",
                  self.table_name, self.database_name)
 
-    def _sync(self):
-        """Resynch the internal caches."""
+    def _create_sync(self):
+        """Create the internal caches."""
 
         # Fetch the first row in the database to determine the unit system in use. If the database
         # has never been used, then the unit system is still indeterminate --- set it to 'None'.
@@ -224,6 +225,9 @@ class Manager(object):
         # Cache the first and last timestamps
         self.first_timestamp = self.firstGoodStamp()
         self.last_timestamp = self.lastGoodStamp()
+
+    def _sync(self):
+        Manager._create_sync(self)
 
     def lastGoodStamp(self):
         """Retrieves the epoch time of the last good archive record.
@@ -272,13 +276,13 @@ class Manager(object):
 
                     N += 1
                     if progress_fn and N % 1000 == 0:
-                        progress_fn(N, record['dateTime'])
+                        progress_fn(record['dateTime'], N)
 
                     min_ts = min(min_ts, record['dateTime'])
                     max_ts = max(max_ts, record['dateTime'])
                 except (weedb.IntegrityError, weedb.OperationalError) as e:
                     log.error("Unable to add record %s to database '%s': %s",
-                              weeutil.weeutil.timestamp_to_string(record['dateTime']),
+                              timestamp_to_string(record['dateTime']),
                               self.database_name, e)
 
         # Update the cached timestamps. This has to sit outside the transaction context,
@@ -320,7 +324,7 @@ class Manager(object):
         sql_insert_stmt = "INSERT INTO %s (%s) VALUES (%s)" % (self.table_name, k_str, q_str)
         cursor.execute(sql_insert_stmt, value_list)
         log.info("Added record %s to database '%s'",
-                 weeutil.weeutil.timestamp_to_string(record['dateTime']),
+                 timestamp_to_string(record['dateTime']),
                  self.database_name)
 
     def _updateHiLo(self, accumulator, cursor):
@@ -708,10 +712,14 @@ def drop_database_with_config(config_dict, data_binding,
     drop_database(manager_dict)
 
 
-def show_progress(nrec, last_time):
+def show_progress(last_time, nrec=None):
     """Utility function to show our progress"""
-    print("Records processed: %d; Last date: %s\r"
-          % (nrec, weeutil.weeutil.timestamp_to_string(last_time)), end='', file=sys.stdout)
+    if nrec:
+        msg = "Records processed: %d; time: %s\r" \
+              % (nrec, timestamp_to_string(last_time))
+    else:
+        msg = "Processed through: %s\r" % timestamp_to_string(last_time)
+    print(msg, end='', file=sys.stdout)
     sys.stdout.flush()
 
 
@@ -758,7 +766,7 @@ class DaySummaryManager(Manager):
     update.
     """
 
-    version = "2.0"
+    version = "3.0"
 
     # Schemas used by the daily summaries:
     day_schemas = {
@@ -817,6 +825,17 @@ class DaySummaryManager(Manager):
             # Database has not been initialized. Initialize it:
             self._initialize_day_tables(schema)
 
+        self.version = None
+        self.daykeys = None
+        DaySummaryManager._create_sync(self)
+        self.patch_sums()
+
+    def close(self):
+        self.version = None
+        self.daykeys = None
+        super(DaySummaryManager, self).close()
+
+    def _create_sync(self):
         # Get a list of all the observation types which have daily summaries
         all_tables = self.connection.tables()
         prefix = "%s_day_" % self.table_name
@@ -824,15 +843,15 @@ class DaySummaryManager(Manager):
         meta_name = '%s_day__metadata' % self.table_name
         self.daykeys = [x[n_prefix:] for x in all_tables
                         if (x.startswith(prefix) and x != meta_name)]
+
         self.version = self._read_metadata('Version')
         if self.version is None:
             self.version = '1.0'
         log.debug('Daily summary version is %s', self.version)
 
-    def close(self):
-        self.version = None
-        self.daykeys = None
-        super(DaySummaryManager, self).close()
+    def _sync(self):
+        super(DaySummaryManager, self)._sync()
+        self._create_sync()
 
     def _initialize_day_tables(self, schema):
         """Initialize the tables needed for the daily summary."""
@@ -898,7 +917,7 @@ class DaySummaryManager(Manager):
         _day_summary.addRecord(record, weight=_weight)
         self._set_day_summary(_day_summary, record['dateTime'], cursor)
         log.info("Added record %s to daily summary in '%s'",
-                 weeutil.weeutil.timestamp_to_string(record['dateTime']),
+                 timestamp_to_string(record['dateTime']),
                  self.database_name)
 
     def _updateHiLo(self, accumulator, cursor):
@@ -937,7 +956,7 @@ class DaySummaryManager(Manager):
         data, it's necessary to recreate it from straight archive data. The Hi/Lows will all be
         there, but the times won't be any more accurate than the archive period.
 
-        To help prevent database errors for large archives database transactions are limited to
+        To help prevent database errors for large archives, database transactions are limited to
         trans_days days of archive data. This is a trade-off between speed and memory usage.
 
         start_d: The first day to be included, specified as a datetime.date object [Optional.
@@ -955,79 +974,81 @@ class DaySummaryManager(Manager):
           nrecs is the number of records backfilled;
           ndays is the number of days
         """
-        # Table of actions.
-        #
-        # State                  start_ts    stop_ts     Action
-        # -----                  --------    -------     ------
-        # lastUpdate==None       any         any         No summary. Rebuild all
-        # lastUpdate <lastRecord any         any         Aborted rebuild. lastUpdate should 
-        #                                                be on day boundary. Restart from there.
-        # lastUpdate==lastRecord None        None        No action.
-        #          ""            X           None        Rebuild from X to end
-        #          ""            None        Y           Rebuild from beginning through Y,
-        #                                                inclusively
-        #          ""            X           Y           Rebuild from X through Y, inclusively
-        #
-        # Definitions:
-        #   lastUpdate: last update to the daily summary
-        #   lastRecord: last update to the archive table
-        #   X:          A start time that falls on a day boundary
-        #   Y:          A stop  time that falls on a day boundary
-        #
+        # Definition:
+        #   last_daily_ts: Timestamp of the last record that was incorporated into the
+        #                  daily summary. Usually it is equal to last_record, but it can be less
+        #                  if a backfill was aborted.
 
         log.info("Starting backfill of daily summaries")
 
-        first_record = self.firstGoodStamp()
-        if first_record is None:
+        if self.first_timestamp is None:
             # Nothing in the archive database, so there's nothing to do.
             return 0, 0
 
+        # Convert tranch size to a timedelta object, so we can perform arithmetic with it.
+        tranche_days = datetime.timedelta(days=trans_days)
+
         t1 = time.time()
 
-        lastUpdate = to_int(self._read_metadata('lastUpdate'))
-        lastRecord = self.last_timestamp
+        last_daily_ts = to_int(self._read_metadata('lastUpdate'))
 
-        if lastUpdate is None or lastUpdate < lastRecord:
-            # We are either building the daily summary from scratch, or restarting from
-            # an aborted build. Must finish the rebuild first.
-            if start_d or stop_d:
-                raise weewx.ViolatedPrecondition(
-                    "Daily summaries not complete. Try again without from/to dates.")
+        # The goal here is to figure out:
+        #  first_d:   A datetime.date object, representing the first date to be rebuilt.
+        #  last_d:    A datetime.date object, representing the date after the last date
+        #             to be rebuilt.
 
-            start_ts = lastUpdate or first_record
-            start_d = datetime.date.fromtimestamp(start_ts)
-            stop_d = datetime.date.fromtimestamp(lastRecord)
+        # Check preconditions. Cannot specify start_d or stop_d unless the summaries are complete.
+        if last_daily_ts != self.last_timestamp and (start_d or stop_d):
+            raise weewx.ViolatedPrecondition("Daily summaries are not complete. "
+                                             "Try again without from/to dates.")
 
-        elif lastUpdate == lastRecord:
-            # This is the normal state of affairs. If a value for start_d or stop_d
-            # has been passed in, a rebuild has been requested.
-            if start_d is None and stop_d is None:
-                # Nothing to do
-                return 0, 0
-            if start_d is None:
-                start_d = datetime.date.fromtimestamp(first_record)
-            if stop_d is None:
-                stop_d = datetime.date.fromtimestamp(lastRecord)
-        else:
-            raise weewx.ViolatedPrecondition("lastUpdate(%s) > lastRecord(%s)" %
-                                             (timestamp_to_string(lastUpdate),
-                                              timestamp_to_string(lastRecord)))
+        # If we were doing a complete rebuild, these would be the first and
+        # last dates to be processed:
+        first_d = datetime.date.fromtimestamp(weeutil.weeutil.startOfArchiveDay(
+            self.first_timestamp))
+        last_d = datetime.date.fromtimestamp(weeutil.weeutil.startOfArchiveDay(
+            self.last_timestamp))
+
+        # Are there existing daily summaries?
+        if last_daily_ts:
+            # Yes. Is it an aborted rebuild?
+            if last_daily_ts < self.last_timestamp:
+                # We are restarting from an aborted build. Pick up from where we left off.
+                # Because last_daily_ts always sits on the boundary of a day, this will include the
+                # following day to be included, but not the actual record with
+                # timestamp last_daily_ts.
+                first_d = datetime.date.fromtimestamp(last_daily_ts)
+            else:
+                # Daily summaries exist, and they are complete.
+                if not start_d and not stop_d:
+                    # The daily summaries are complete, yet the user has not specified anything.
+                    # Guess we're done.
+                    return 0, 0
+                # Trim what we rebuild to what the user has specified
+                if start_d:
+                    first_d = max(first_d, start_d)
+                if stop_d:
+                    last_d = min(last_d, stop_d)
+
+        # For what follows, last_d needs to point to the day *after* the last desired day
+        last_d += datetime.timedelta(days=1)
 
         nrecs = 0
         ndays = 0
 
-        while start_d <= stop_d:
+        mark_d = first_d
+        
+        while mark_d < last_d:
             # Calculate the last date included in this transaction
-            stop_transaction = min(stop_d, start_d + datetime.timedelta(days=(trans_days - 1)))
+            stop_transaction = min(mark_d + tranche_days, last_d)
             day_accum = None
 
             with weedb.Transaction(self.connection) as cursor:
                 # Go through all the archive records in the time span, adding them to the
                 # daily summaries
-                start_batch = time.mktime(start_d.timetuple())
-                stop_batch = time.mktime(
-                    (stop_transaction + datetime.timedelta(days=1)).timetuple())
-                for rec in self.genBatchRecords(start_batch, stop_batch):
+                start_batch_ts = time.mktime(mark_d.timetuple())
+                stop_batch_ts = time.mktime(stop_transaction.timetuple())
+                for rec in self.genBatchRecords(start_batch_ts, stop_batch_ts):
                     # If this is the very first record, fetch a new accumulator
                     if not day_accum:
                         # Get a TimeSpan that include's the record's timestamp:
@@ -1056,23 +1077,25 @@ class DaySummaryManager(Manager):
                         # try again
                         day_accum.addRecord(rec, weight=weight)
 
-                    lastUpdate = max(lastUpdate, rec['dateTime']) \
-                        if lastUpdate else rec['dateTime']
+                    if last_daily_ts is None:
+                        last_daily_ts = rec['dateTime']
+                    else:
+                        last_daily_ts = max(last_daily_ts, rec['dateTime'])
                     nrecs += 1
                     if progress_fn and nrecs % 1000 == 0:
-                        progress_fn(nrecs, rec['dateTime'])
+                        progress_fn(rec['dateTime'], nrecs)
 
-                # We're done with this transaction. Record the daily summary for the last day
-                # unless it is empty
+                # We're done with this transaction. Unless it is empty, save the daily summary for
+                # the last day
                 if day_accum and not day_accum.isEmpty:
                     self._set_day_summary(day_accum, None, cursor)
                     ndays += 1
                 # Patch lastUpdate:
-                if lastUpdate:
-                    self._write_metadata('lastUpdate', str(int(lastUpdate)), cursor)
+                if last_daily_ts:
+                    self._write_metadata('lastUpdate', str(int(last_daily_ts)), cursor)
 
-            # Advance
-            start_d += datetime.timedelta(days=trans_days)
+            # Advance to the next tranche
+            mark_d += tranche_days
 
         tdiff = time.time() - t1
         if nrecs:
@@ -1083,7 +1106,283 @@ class DaySummaryManager(Manager):
 
         return nrecs, ndays
 
+    def drop_daily(self):
+        """Drop the daily summaries."""
+
+        log.info("Dropping daily summary tables from '%s' ...", self.connection.database_name)
+        try:
+            _all_tables = self.connection.tables()
+            with weedb.Transaction(self.connection) as _cursor:
+                for _table_name in _all_tables:
+                    if _table_name.startswith('%s_day_' % self.table_name):
+                        _cursor.execute("DROP TABLE %s" % _table_name)
+
+            self.daykeys = None
+        except weedb.OperationalError as e:
+            log.error("Drop daily summary tables failed for database '%s': %s",
+                      self.connection.database_name, e)
+            raise
+        else:
+            log.info("Dropped daily summary tables from database '%s'",
+                     self.connection.database_name)
+
+    def recalculate_weights(self, start_d=None, stop_d=None,
+                            tranche_size=100, progress_fn=show_progress):
+        """Recalculate just the daily summary weights.
+
+        Rather than backfill all the daily summaries, this function simply recalculates the
+        weighted sums.
+
+        start_d: The first day to be included, specified as a datetime.date object [Optional.
+        Default is to start with the first record in the daily summaries.]
+
+        stop_d: The last day to be included, specified as a datetime.date object [Optional.
+        Default is to end with the last record in the daily summaries.]
+
+        tranche_size: How many days to do in a single transaction.
+
+        progress_fn: This function will be called after every tranche with the timestamp of the
+        last record processed.
+        """
+
+        log.info("recalculate_weights: Using database '%s'" % self.database_name)
+        log.debug("recalculate_weights: Tranche size %d" % tranche_size)
+
+        # Convert tranch size to a timedelta object, so we can perform arithmetic with it.
+        tranche_days = datetime.timedelta(days=tranche_size)
+
+        # Get the first and last timestamps for all the tables in the daily summaries.
+        first_ts, last_ts = self.get_first_last()
+        if first_ts is None or last_ts is None:
+            log.info("recalculate_weights: Empty daily summaries. Nothing done.")
+            return
+
+        # Convert to date objects
+        first_date = datetime.date.fromtimestamp(first_ts)
+        last_date = datetime.date.fromtimestamp(last_ts)
+
+        # Trim according to the requested dates
+        if start_d:
+            first_date = max(first_date, start_d)
+        if stop_d:
+            last_date = min(last_date, stop_d)
+
+        # For what follows, last_date needs to point to the day *after* the last desired day.
+        last_date += datetime.timedelta(days=1)
+
+        mark_date = first_date
+
+        # March forward, tranche by tranche
+        while mark_date < last_date:
+            end_of_tranche = min(mark_date + tranche_days, last_date)
+            self._do_tranche(mark_date, end_of_tranche, progress_fn)
+            mark_date = end_of_tranche
+
+    def _do_tranche(self, start_date, end_date, progress_fn):
+        """Reweight a tranche of daily summaries, using an appropriate strategy.
+
+        If the archive record length (field "interval") is constant in the tranche, then we can
+        calculate wsum and sumtime from the existing fields sum and count. Much faster. Otherwise,
+        we must recalculate the weights from scratch.
+
+        start_date: A datetime.date object with the first date to be reweighted.
+        end_date: A datetime.date object with the day after the last date to be reweighted.
+        """
+        # Convert to a TimeSpan object
+        timespan = TimeSpan(time.mktime(start_date.timetuple()),
+                            time.mktime(end_date.timetuple()))
+        # See what strategy we need:
+        interval = self._check_intervals(timespan)
+        if interval:
+            # The intervals are constant. We can take a short cut
+            self._do_simple_reweight(timespan, interval)
+        else:
+            # Somewhere in the tranche, the interval changes. We'll have to recalculate from
+            # scratch.
+            self._do_scratch_reweight(timespan)
+
+        # Update our progress
+        progress_fn(timespan.stop)
+
+    def _do_simple_reweight(self, timespan, interval):
+        """ Simple reweighting of the daily summaries. Assumes that the archive interval does not
+        change during the timespan. This allows us to use a simple SQL UPDATE.
+
+        timespan: A TimeSpan object. First element is the first timestamp of the tranche, the
+        second element is the timestamp of the day after the last day in the tranche.
+        """
+
+        # Do all the observation types in a single transaction:
+        with weedb.Transaction(self.connection) as cursor:
+            for obs_type in self.daykeys:
+                if obs_type == 'wind':
+                    # Wind is special because it contains fields that cannot be calculated using
+                    # SQL statements. They must be done in Python.
+                    self._do_scratch_single(timespan, obs_type, cursor)
+                else:
+                    # For all other types, the entire tranche can be recalculated in a single
+                    # SQL statement.
+                    sql = "UPDATE {archive_table}_day_{obs_type} " \
+                          "SET wsum = sum * {interval} * 60, " \
+                          "sumtime = count * {interval} * 60 " \
+                          "WHERE dateTime>=? AND dateTime<?".format(obs_type=obs_type,
+                                                                    interval=interval,
+                                                                    archive_table=self.table_name)
+                    cursor.execute(sql, timespan)
+
+    def _do_scratch_reweight(self, timespan):
+        """Recalculate from scratch all the weights in a tranche for all types.
+
+        timespan: A TimeSpan object. First element is the first timestamp of the tranche, the
+        second element is the timestamp of the day after the last day in the tranche."""
+
+        # Do all the observation types in a single transaction
+        with weedb.Transaction(self.connection) as cursor:
+            for obs_type in self.daykeys:
+                self._do_scratch_single(timespan, obs_type, cursor)
+
+    def _do_scratch_single(self, timespan, obs_type, cursor):
+        """Recalculate from scratch all the weights in a tranche for a single type.
+
+        timespan: A Timespan object. First element is the first timestamp of the tranche, the
+        second element is the timestamp of the day after the last day in the tranche.
+
+        obs_type: The observation type to be calculated
+
+        cursor: An active transaction cursor.
+        """
+        interp_dict = {
+            'obs_type': obs_type,
+            'archive_table': self.table_name
+        }
+
+        # A tranche updates a set of of daily summaries. This SQL statement gets the
+        # timestamps in that tranche for an observation type:
+        time_sql = "SELECT dateTime FROM {archive_table}_day_{obs_type} " \
+                   "WHERE dateTime >= ? AND dateTime < ?".format(**interp_dict)
+        # Get all the timestamps for this type in this tranche:
+        time_results = [t[0] for t in self.genSql(time_sql, timespan)]
+
+        # SQL statement that will be used for updating a single row in an observation type's daily
+        # summary:
+        update_sql = """
+        UPDATE
+          {archive_table}_day_{obs_type}
+        SET
+          (sum, count, wsum, sumtime) = (
+            SELECT
+              SUM({obs_type}),
+              COUNT({obs_type}),
+              SUM({obs_type} * `interval` * 60),
+              SUM(`interval` * 60)
+            FROM
+              {archive_table}
+            WHERE
+              {obs_type} IS NOT NULL
+            AND
+              dateTime > ? AND dateTime <= ?
+        )
+        WHERE
+          dateTime = ?;
+        """.format(**interp_dict)
+
+        # Process each time stamp in the tranche:
+        for i in range(len(time_results) - 1):
+            start_ts = time_results[i]
+            stop_ts = time_results[i + 1]
+            if obs_type == 'wind':
+                self._update_wind(start_ts, stop_ts, cursor)
+            else:
+                cursor.execute(update_sql, (start_ts, stop_ts))
+
+    def _update_wind(self, start_ts, stop_ts, cursor):
+        """Update a single daily summary for wind.
+
+        start_ts: The timestamp of the daily summary to be updated.
+
+        stop_ts: The timestamp of the next day.
+
+        cursor: An active transaction.
+        """
+        # Calculate the statistics for the day by starting with a vector accumulator,
+        # then adding all of the day's archive records to it.
+        vec_stats = weewx.accum.VecStats()
+        for record in self.genBatchRecords(start_ts, stop_ts):
+            weight = 60.0 * record['interval']
+            wind_tuple = (record.get('windSpeed'), record.get('windDir'))
+            vec_stats.addSum(wind_tuple, weight)
+
+        # The variable 'vec_stats' now holds the day's stats. Use it to update the daily summary.
+        wind_update = """
+        UPDATE
+          {archive_table}_day_wind
+        SET
+          {set_stmt}
+        WHERE
+          dateTime = ?;
+        """.format(archive_table=self.table_name,
+                   set_stmt=", ".join(["%s=%s" % (k, getattr(vec_stats, k))
+                                       for k in ['sum', 'count', 'wsum', 'sumtime',
+                                                 'xsum', 'ysum', 'dirsumtime',
+                                                 'squaresum', 'wsquaresum']]))
+        cursor.execute(wind_update, (start_ts,))
+
+    def patch_sums(self):
+        """Version 4.2 accidentally interpreted V2.0 daily sums as V1.0, so the weighted sums
+        were all given a weight of 1.0, instead of the interval length. This fixes that."""
+        if '1.0' < self.version < '3.0':
+            msg = "Daily summaries at V%s. Patching to V%s" \
+                  % (self.version, DaySummaryManager.version)
+            print(msg)
+            log.info(msg)
+            # We need to upgrade from V2.0 to V3.0. The only difference is that the
+            # patch has been supplied to V3.0 daily summaries. The patch need only be
+            # done from a date well before the V4.2 release. We pick 1-Jun-2020.
+            self.recalculate_weights(start_d=datetime.date(2020,6,1))
+            self._write_metadata('Version', DaySummaryManager.version)
+            self.version = DaySummaryManager.version
+            log.info("Patch finished.")
+
+    def update(self):
+        """Update the database to V3.0"""
+        if self.version == '1.0':
+            self.recalculate_weights()
+            self._write_metadata('Version', DaySummaryManager.version)
+            self.version = DaySummaryManager.version
+        elif self.version == '2.0':
+            self.patch_sums()
+
+
     # --------------------------- UTILITY FUNCTIONS -----------------------------------
+
+    def get_first_last(self):
+        """Obtain the first and last timestamp of all the daily summaries.
+
+        Returns:
+            (first_ts, last_ts): A two-way tuple with the first timestamp and the last timestamp.
+            Returns None if there is nothing in the daily summaries.
+        """
+
+        big_select = ["SELECT MIN(dateTime) AS mtime FROM %s_day_%s"
+                      % (self.table_name, key) for key in self.daykeys]
+        big_sql = " UNION ".join(big_select) + " ORDER BY mtime ASC LIMIT 1"
+        first_ts = self.getSql(big_sql)
+
+        big_select = ["SELECT MAX(dateTime) AS mtime FROM %s_day_%s"
+                      % (self.table_name, key) for key in self.daykeys]
+        big_sql = " UNION ".join(big_select) + " ORDER BY mtime DESC LIMIT 1"
+        last_ts = self.getSql(big_sql)
+
+        return first_ts[0], last_ts[0]
+
+    def _check_intervals(self, timespan):
+        """Check to see if the field "interval" is constant over the time span."""
+
+        sql = "SELECT MIN(`interval`), MAX(`interval`) FROM %s WHERE dateTime>? AND dateTime<?;" \
+              % self.table_name
+        result = self.getSql(sql, timespan)
+        if result is not None and result[0] == result[1]:
+            return result[0]
 
     def _get_day_summary(self, sod_ts, cursor=None):
         """Return an instance of an appropriate accumulator, initialized to a given day's
@@ -1186,26 +1485,6 @@ class DaySummaryManager(Manager):
         finally:
             if cursor is None:
                 _cursor.close()
-
-    def drop_daily(self):
-        """Drop the daily summaries."""
-
-        log.info("Dropping daily summary tables from '%s' ...", self.connection.database_name)
-        try:
-            _all_tables = self.connection.tables()
-            with weedb.Transaction(self.connection) as _cursor:
-                for _table_name in _all_tables:
-                    if _table_name.startswith('%s_day_' % self.table_name):
-                        _cursor.execute("DROP TABLE %s" % _table_name)
-
-            self.daykeys = None
-        except weedb.OperationalError as e:
-            log.error("Drop daily summary tables failed for database '%s': %s",
-                      self.connection.database_name, e)
-            raise
-        else:
-            log.info("Dropped daily summary tables from database '%s'",
-                     self.connection.database_name)
 
 
 if __name__ == '__main__':

@@ -18,7 +18,6 @@ import math
 import os
 import time
 
-import schemas.wview_extended
 import weecfg.database
 import weedb
 import weewx.manager
@@ -58,8 +57,6 @@ weather_wind_range = 10.0
 weather_rain_total = 0.5  # This is inches per weather cycle
 avg_baro = 30.0
 
-schema = schemas.wview_extended.schema
-
 
 def configDatabases(config_dict, database_type):
     config_dict['DataBindings']['wx_binding']['database'] = "archive_" + database_type
@@ -72,8 +69,6 @@ def configDatabase(config_dict, binding, start_ts=start_ts, stop_ts=stop_ts, int
                    day_phase_offset=math.pi / 4.0, annual_phase_offset=0.0,
                    weather_phase_offset=0.0, year_start=start_ts):
     """Configures the archive databases."""
-
-    global schema
 
     # Check to see if it already exists and is configured correctly.
     try:

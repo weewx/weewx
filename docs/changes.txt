@@ -17,6 +17,10 @@ Documented the various [StdWXCalculate] options.
 
 4.2.1 MM/DD/YYYY
 
+Version 4.2.0 had a bug, which caused the sums in the daily summary to be
+incorrectly calculated. This version includes a patch to fix the problem. It
+runs once at startup. Fixes issue #623.
+
 Service weewx.wxxtypes.StdDelta was inadvertently left out of the list of
 services to be run. Fortunately, it is not used. Yet. Added it back in.
 
@@ -26,8 +30,6 @@ last windDir value.
 
 Fixed problem when looking up stars with more than one word in their name.
 Fixes issue #620.
-
-Fixed problem that caused daily summary weights to revert to V1.0 style weights.
 
 
 4.2.0 10/26/2020
