@@ -234,26 +234,27 @@ sudo apt-get install weewx</pre>
         <h3>Auto patch of daily summaries</h3>
 
         <p>
-            Version 4.2 inadvertently introduced a bug which prevented the sums kept in the daily summaries from being
-            weighted by the archive interval. See issue <a href="https://github.com/weewx/weewx/issues/623">#623</a>.
-            V4.3 includes a patch will automatically fix any defective daily summaries. It takes only a few seconds and
-            is run only once on startup.
+            Version 4.2 inadvertently introduced a bug, which prevented the sums that are kept in the daily summaries
+            from being weighted by the archive interval. See issue <a href="https://github.com/weewx/weewx/issues/623">#623</a>.
+            V4.3 includes a patch, which will fix any defective daily summaries automatically. It is run only once
+            on the first use of a database (usually by <span class="code">weewxd</span>) and takes only a few
+            seconds.
         </p>
 
         <h3>Option <span class="code">ignore_zero_wind</span> has been renamed and moved</h3>
 
         <p>
-            Normally, WeeWX sets wind direction to undefined when wind speed is zero. While it was never documented, the
-            option <span class="code">ignore_zero_wind</span> was used by some users to prevent this: if set to <span
-            class="code">False</span>, wind direction will not be set to undefined when wind speed is zero. However, its
-            location and name has changed. It is now called <span class="code">force_null</span>, and it is located
-            under <span class="code">[StdWXCalculate] / [[WXXTypes]] / [[[windDir]]]</span>. The old name and location
-            has been deprecated, but still honored.
+            Normally, WeeWX sets wind direction to undefined when wind speed is zero. While it was never documented,
+            some users used option <span class="code">ignore_zero_wind</span> to prevent this: if set to <span
+            class="code">False</span>, wind direction will not be set to undefined when wind speed is zero. However, the
+            option's location and name has changed. It is now called <span class="code">force_null</span>, and it is
+            now located under <span class="code">[StdWXCalculate] / [[WXXTypes]] / [[[windDir]]]</span>. The old name
+            and location has been deprecated, but still honored.
         </p>
 
         <table>
             <tr class="first_row">
-                <td style='width:50%'>pre 4.2</td>
+                <td style='width:50%'>V4.2 and earlier</td>
                 <td>4.3</td>
             </tr>
             <tr>
@@ -292,7 +293,7 @@ sudo apt-get install weewx</pre>
         </p>
         <table>
             <tr class="first_row">
-                <td style='width:50%'>pre 4.1</td>
+                <td style='width:50%'>V4.1 and earlier</td>
                 <td>4.2</td>
             </tr>
             <tr>
