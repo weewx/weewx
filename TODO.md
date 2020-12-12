@@ -1,7 +1,6 @@
 # To do
 
-Doing `wee_database --reweight` effectively upgrades to Version 2 of the daily
-summaries.
+Document `wee_database --reweight` in the utilities guide.
 
 Some of the aggregations in xtypes.py could be made a little more efficient. Particularly
 those with two SELECT statements.

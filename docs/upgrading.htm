@@ -227,6 +227,27 @@ sudo apt-get install weewx</pre>
 
         <pre class='tty'>warning: /etc/weewx/weewx.conf created as /etc/weewx/weewx.conf.rpmnew</pre>
 
+        <h1>Upgrading the configuration file, <span class="code">weewx.conf</span></h1>
+
+        <p>
+            It doesn't happen very often, but occasionally the configuration file, <span class="code">weewx.conf</span>
+            needs some changes when a new version arrives, perhaps because a new feature requires some configuration
+            information. Normally the installer, whether it is <span class="code">setup.py</span>, or a package installer, takes
+            care of upgrading the file and you do not need to worry about it.
+        </p>
+        <p>
+            However, there are some occasions when you may need to upgrade the file yourself. In particular, this happens
+            when you run several instances of <span class="code">weewxd</span> on the same machine, each with its own
+            configuration file, and each with a different name. The one named <span class="code">weewx.conf</span> will
+            get upgraded, but what about the others?
+        </p>
+
+        <p>
+            See the section on <a href="utilities.htm#wee_config_utility_upgrade"><span class="code">wee_config --upgrade</span></a>
+            in the Utilities Guide for how to do this.
+        </p>
+
+
         <h1><a id="Instructions_for_specific_versions">Instructions for specific versions</a></h1>
 
         <h2>Upgrading to V4.3</h2>
