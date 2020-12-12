@@ -80,7 +80,7 @@
         <div class="logoref">
             <a href='http://weewx.com'> <img src='images/logo-weewx.png' class='logo' style="float:right"
                                              alt="weewx logo"/> </a><br/> <span class='version'>
-Version: 4.2
+Version: 4.3
     </span>
         </div>
         <div class="title">WeeWX Upgrade Guide</div>
@@ -228,6 +228,55 @@ sudo apt-get install weewx</pre>
         <pre class='tty'>warning: /etc/weewx/weewx.conf created as /etc/weewx/weewx.conf.rpmnew</pre>
 
         <h1><a id="Instructions_for_specific_versions">Instructions for specific versions</a></h1>
+
+        <h2>Upgrading to V4.3</h2>
+
+        <h3>Auto patch of daily summaries</h3>
+
+        <p>
+            Version 4.2 inadvertently introduced a bug which prevented the sums kept in the daily summaries from being
+            weighted by the archive interval. See issue <a href="https://github.com/weewx/weewx/issues/623">#623</a>.
+            V4.3 includes a patch will automatically fix any defective daily summaries. It takes only a few seconds and
+            is run only once on startup.
+        </p>
+
+        <h3>Option <span class="code">ignore_zero_wind</span> has been renamed and moved</h3>
+
+        <p>
+            Normally, WeeWX sets wind direction to undefined when wind speed is zero. While it was never documented, the
+            option <span class="code">ignore_zero_wind</span> was used by some users to prevent this: if set to <span
+            class="code">False</span>, wind direction will not be set to undefined when wind speed is zero. However, its
+            location and name has changed. It is now called <span class="code">force_null</span>, and it is located
+            under <span class="code">[StdWXCalculate] / [[WXXTypes]] / [[[windDir]]]</span>. The old name and location
+            has been deprecated, but still honored.
+        </p>
+
+        <table>
+            <tr class="first_row">
+                <td style='width:50%'>pre 4.2</td>
+                <td>4.3</td>
+            </tr>
+            <tr>
+                <td>
+                    <pre class='tty'>
+[StdWXCalculate]
+    <span class="removed">ignore_zero_wind = False</span>
+    [[Calculations]]
+        ...
+</pre>
+                </td>
+                <td>
+                    <pre class='tty'>
+[StdWXCalculate]
+    [[Calculations]]
+        ...
+    [[WXXTypes]]
+        [[[windDir]]]
+            <span class="added">force_null = False</span>
+</pre>
+                </td>
+            </tr>
+        </table>
 
         <h2>Upgrading to V4.2</h2>
 

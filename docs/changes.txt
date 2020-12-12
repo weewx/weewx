@@ -3,6 +3,10 @@ weewx change history
 
 4.3.0 MM/DD/YYYY
 
+Version 4.2.0 had a bug, which caused the sums in the daily summary to be
+incorrectly calculated. This version includes a patch to fix the problem. It
+runs once at startup. Fixes issue #623.
+
 Service weewx.wxxtypes.StdDelta was inadvertently left out of the list of
 services to be run. Fortunately, it is not used. Yet. Added it back in.
 
@@ -13,16 +17,6 @@ The only one people are likely to have used is 'ignore_zero_wind'. Its name has
 changed to 'force_null', and it has been moved. See the Upgrading Guide.
 
 Documented the various [StdWXCalculate] options.
-
-
-4.2.1 MM/DD/YYYY
-
-Version 4.2.0 had a bug, which caused the sums in the daily summary to be
-incorrectly calculated. This version includes a patch to fix the problem. It
-runs once at startup. Fixes issue #623.
-
-Service weewx.wxxtypes.StdDelta was inadvertently left out of the list of
-services to be run. Fortunately, it is not used. Yet. Added it back in.
 
 Fixed corner case for windDir when using software record generation,
 ignore_zero_wind=True, and windSpeed=0 for entire record interval. Now emits
