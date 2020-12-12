@@ -430,7 +430,4 @@ critic:
 	perlcritic -1 --verbose 8 pkg/mkchangelog.pl
 
 code-summary:
-	cloc bin
-	@for d in weecfg weedb weeutil weewx; do \
-  cloc bin/$$d/tests; \
-done
+	cloc --force-lang="HTML",tmpl --force-lang="INI",conf --force-lang="INI",inc bin docs examples skins util
