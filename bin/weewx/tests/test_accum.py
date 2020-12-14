@@ -81,27 +81,20 @@ class StatsTest(unittest.TestCase):
         self.assertEqual(ss.count, 2 * tcount)
 
     def test_null_wind_gust_dir(self):
-        # If LOOP packets windGustDir=None, the accumulator is supposed to substitute windDir.
+        # If LOOP packets windGustDir=None, the accumulator should not substitute windDir.
         # This is a regression test that tests that.
         accum = weewx.accum.Accum(TimeSpan(start_ts, stop_ts))
 
-        windMax = None
-        windMaxDir = None
         # Add the dataset to the accumulator. Null out windGustDir first.
         for record in self.dataset:
             record_test = dict(record)
             record_test['windGustDir'] = None
-            if windMax is None \
-                    or (record_test['windSpeed'] is not None
-                        and record_test['windSpeed'] > windMax):
-                windMax = record_test['windSpeed']
-                windMaxDir = record_test['windDir']
             accum.addRecord(record_test)
 
         # Extract the record out of the accumulator
         accum_record = accum.getRecord()
         # windGustDir should match the windDir seen at max wind:
-        self.assertEqual(accum_record['windGustDir'], windMaxDir)
+        self.assertIsNone(accum_record['windGustDir'])
 
     def test_no_wind_gust_dir(self):
         # If LOOP packets do not have windGustDir at all, then the accumulator is supposed to
