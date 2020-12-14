@@ -513,9 +513,11 @@ class Accum(dict):
         if add_hilo:
             # If the station does not provide windGustDir, then substitute windDir.
             # See issue #320, https://bit.ly/2HSo0ju
-            # Do windGust first, so the last packet in is windSpeed, not windGust.
-            self['wind'].addHiLo((record.get('windGust'), record.get('windGustDir',
-                                                                     record.get('windDir'))),
+            wind_gust_dir = record['windGustDir'] \
+                if 'windGustDir' in record else record.get('windDir')
+            # Do windGust first, so that the last value entered is windSpeed, not windGust
+            # See Slack discussion https://bit.ly/3qV1nBV
+            self['wind'].addHiLo((record.get('windGust'), wind_gust_dir),
                                  record['dateTime'])
             self['wind'].addHiLo((record.get('windSpeed'), record.get('windDir')),
                                  record['dateTime'])

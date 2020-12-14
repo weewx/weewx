@@ -25,6 +25,9 @@ last windDir value.
 Fixed problem when looking up stars with more than one word in their name.
 Fixes issue #620.
 
+Fixed problem where wind gust direction is not available when using software
+record generation.
+
 
 4.2.0 10/26/2020
 
