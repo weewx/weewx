@@ -54,6 +54,10 @@ locale.setlocale(locale.LC_ALL, '')
 config_path = os.path.join(os.path.dirname(__file__), "testgen.conf")
 cwd = None
 
+# These tests also test the "stats" example in the 'example' subdirectory. Add it to the
+# Python path.
+sys.path.append('../../../examples')
+
 
 # We will be testing the ability to extend the unit system, so set that up first:
 class ExtraUnits(object):
