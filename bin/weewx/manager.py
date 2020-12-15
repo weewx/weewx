@@ -1293,7 +1293,7 @@ class DaySummaryManager(Manager):
             if obs_type == 'wind':
                 self._update_wind(start_ts, stop_ts, cursor)
             else:
-                cursor.execute(update_sql, (start_ts, stop_ts))
+                cursor.execute(update_sql, (start_ts, stop_ts, start_ts))
 
     def _update_wind(self, start_ts, stop_ts, cursor):
         """Update a single daily summary for wind.
