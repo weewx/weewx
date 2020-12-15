@@ -717,7 +717,7 @@ def pywws2weewx(p, ts, last_rain, last_rain_ts, last_spurious_rain, rain_counter
     if packet['rain'] is not None and ts is not None and last_rain_ts is not None and ts != last_rain_ts:
         rainRate = packet['rain'] * (3600 / (ts - last_rain_ts))
         if rainRate > max_rain_rate:
-            log.debug('ignoring current rainfall of %.2f due to too high rain rate of %.2f' % 
+            log.info('ignoring current rainfall of %.2f due to too high rain rate of %.2f' % 
                       (packet['rain'], rainRate))
             packet['rain'] = None
             # reuse the last_rain value for the next loop instead of the spurious value
