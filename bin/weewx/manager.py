@@ -841,8 +841,9 @@ class DaySummaryManager(Manager):
         prefix = "%s_day_" % self.table_name
         n_prefix = len(prefix)
         meta_name = '%s_day__metadata' % self.table_name
-        self.daykeys = [x[n_prefix:] for x in all_tables
-                        if (x.startswith(prefix) and x != meta_name)]
+        # Create a set of types that are in the daily summaries:
+        self.daykeys = {x[n_prefix:] for x in all_tables
+                        if (x.startswith(prefix) and x != meta_name)}
 
         self.version = self._read_metadata('Version')
         if self.version is None:
