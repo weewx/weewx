@@ -57,7 +57,7 @@ db_dict_mysql = {
     'host': 'localhost',
     'user': 'weewx',
     'password': 'weewx',
-    'database_name': 'weewx_scratch',
+    'database_name': 'test_scratch',
     'driver': 'weedb.mysql',
 }
 
