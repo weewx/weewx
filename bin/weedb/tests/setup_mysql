@@ -2,12 +2,14 @@
 #
 # Shell script to set up the MySQL database for testing
 #
-# It creates two users:
-# User: weewx1
-# Password: weewx1
+# It creates three users:
 #
-# User: weewx2
-# Password: weewx2
+# 1. User: weewx
+#    Password: weewx
+# 2. User: weewx1
+#    Password: weewx1
+# 3. User: weewx2
+#    Password: weewx2
 #
 # NB: user weewx2 has more restrictive permissions than user weewx1
 #
