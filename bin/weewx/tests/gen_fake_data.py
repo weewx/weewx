@@ -149,6 +149,13 @@ def configDatabase(config_dict, binding, start_ts=start_ts, stop_ts=stop_ts, int
 def genFakeRecords(start_ts=start_ts, stop_ts=stop_ts, interval=interval,
                    amplitude=1.0, day_phase_offset=0.0, annual_phase_offset=0.0,
                    weather_phase_offset=0.0, year_start=start_ts, db_manager=None):
+    """Generate records from start_ts to stop_ts, inclusive.
+    start_ts: Starting timestamp in unix epoch time. This timestamp will be included in the results.
+
+    stop_ts: Stopping timestamp in unix epoch time. This timestamp will be included in the results.
+
+    interval: The interval between timestamps IN SECONDS!
+    """
     count = 0
 
     for ts in range(start_ts, stop_ts + interval, interval):
