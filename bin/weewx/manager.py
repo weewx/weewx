@@ -1158,174 +1158,76 @@ class DaySummaryManager(Manager):
             return
 
         # Convert to date objects
-        first_date = datetime.date.fromtimestamp(first_ts)
-        last_date = datetime.date.fromtimestamp(last_ts)
+        first_d = datetime.date.fromtimestamp(first_ts)
+        last_d = datetime.date.fromtimestamp(last_ts)
 
         # Trim according to the requested dates
         if start_d:
-            first_date = max(first_date, start_d)
+            first_d = max(first_d, start_d)
         if stop_d:
-            last_date = min(last_date, stop_d)
+            last_d = min(last_d, stop_d)
 
         # For what follows, last_date needs to point to the day *after* the last desired day.
-        last_date += datetime.timedelta(days=1)
+        last_d += datetime.timedelta(days=1)
 
-        mark_date = first_date
+        mark_d = first_d
 
         # March forward, tranche by tranche
-        while mark_date < last_date:
-            end_of_tranche = min(mark_date + tranche_days, last_date)
-            self._do_tranche(mark_date, end_of_tranche, progress_fn)
-            mark_date = end_of_tranche
+        while mark_d < last_d:
+            end_of_tranche_d = min(mark_d + tranche_days, last_d)
+            self._do_tranche(mark_d, end_of_tranche_d, progress_fn)
+            mark_d = end_of_tranche_d
 
-    def _do_tranche(self, start_date, end_date, progress_fn):
-        """Reweight a tranche of daily summaries, using an appropriate strategy.
+    def _do_tranche(self, start_d, last_d, progress_fn=None):
+        """Reweight a tranche of daily summaries.
 
-        If the archive record length (field "interval") is constant in the tranche, then we can
-        calculate wsum and sumtime from the existing fields sum and count. Much faster. Otherwise,
-        we must recalculate the weights from scratch.
+        start_d: A datetime.date object with the first date in the tranche to be reweighted.
 
-        start_date: A datetime.date object with the first date to be reweighted.
-        end_date: A datetime.date object with the day after the last date to be reweighted.
-        """
-        # Convert to a TimeSpan object
-        timespan = TimeSpan(time.mktime(start_date.timetuple()),
-                            time.mktime(end_date.timetuple()))
-        # See what strategy we need:
-        interval = self._check_intervals(timespan)
-        if interval:
-            # The intervals are constant. We can take a short cut
-            self._do_simple_reweight(timespan, interval)
-        else:
-            # Somewhere in the tranche, the interval changes. We'll have to recalculate from
-            # scratch.
-            self._do_scratch_reweight(timespan)
-
-        # Update our progress
-        progress_fn(timespan.stop)
-
-    def _do_simple_reweight(self, timespan, interval):
-        """ Simple reweighting of the daily summaries. Assumes that the archive interval does not
-        change during the timespan. This allows us to use a simple SQL UPDATE.
-
-        timespan: A TimeSpan object. First element is the first timestamp of the tranche, the
-        second element is the timestamp of the day after the last day in the tranche.
+        last_d: A datetime.date object with the day after the last date in the
+        tranche to be reweighted.
         """
 
-        # Do all the observation types in a single transaction:
+        # Do all the dates in the tranche as a single transaction
         with weedb.Transaction(self.connection) as cursor:
-            for obs_type in self.daykeys:
-                if obs_type == 'wind':
-                    # Wind is special because it contains fields that cannot be calculated using
-                    # SQL statements. They must be done in Python.
-                    self._do_scratch_single(timespan, obs_type, cursor)
-                else:
-                    # For all other types, the entire tranche can be recalculated in a single
-                    # SQL statement.
-                    sql = "UPDATE {archive_table}_day_{obs_type} " \
-                          "SET wsum = sum * {interval} * 60, " \
-                          "sumtime = count * {interval} * 60 " \
-                          "WHERE dateTime>=? AND dateTime<?".format(obs_type=obs_type,
-                                                                    interval=interval,
-                                                                    archive_table=self.table_name)
-                    cursor.execute(sql, timespan)
 
-    def _do_scratch_reweight(self, timespan):
-        """Recalculate from scratch all the weights in a tranche for all types.
+            # March down the tranche, day by day
+            mark_d = start_d
+            while mark_d < last_d:
+                next_d = mark_d + datetime.timedelta(days=1)
+                day_span = TimeSpan(time.mktime(mark_d.timetuple()),
+                                    time.mktime(next_d.timetuple()))
+                # Get an accumulator for the day
+                day_accum = weewx.accum.Accum(day_span)
+                # Now populate it with a day's worth of records
+                for rec in self.genBatchRecords(day_span.start, day_span.stop):
+                    weight = self._calc_weight(rec)
+                    day_accum.addRecord(rec, weight=weight)
+                # Write out the results of the accumulator
+                self._set_day_sums(day_accum, cursor)
+                if progress_fn:
+                    # Update our progress
+                    progress_fn(day_accum.timespan.stop)
+                # On to the next day
+                mark_d += datetime.timedelta(days=1)
 
-        timespan: A TimeSpan object. First element is the first timestamp of the tranche, the
-        second element is the timestamp of the day after the last day in the tranche."""
-
-        # Do all the observation types in a single transaction
-        with weedb.Transaction(self.connection) as cursor:
-            for obs_type in self.daykeys:
-                self._do_scratch_single(timespan, obs_type, cursor)
-
-    def _do_scratch_single(self, timespan, obs_type, cursor):
-        """Recalculate from scratch all the weights in a tranche for a single type.
-
-        timespan: A Timespan object. First element is the first timestamp of the tranche, the
-        second element is the timestamp of the day after the last day in the tranche.
-
-        obs_type: The observation type to be calculated
-
-        cursor: An active transaction cursor.
-        """
-        interp_dict = {
-            'obs_type': obs_type,
-            'archive_table': self.table_name
-        }
-
-        # A tranche updates a set of of daily summaries. This SQL statement gets the
-        # timestamps in that tranche for an observation type:
-        time_sql = "SELECT dateTime FROM {archive_table}_day_{obs_type} " \
-                   "WHERE dateTime >= ? AND dateTime < ?".format(**interp_dict)
-        # Get all the timestamps for this type in this tranche:
-        time_results = [t[0] for t in self.genSql(time_sql, timespan)]
-
-        # SQL statement that will be used for updating a single row in an observation type's daily
-        # summary:
-        update_sql = """
-        UPDATE
-          {archive_table}_day_{obs_type}
-        SET
-          (sum, count, wsum, sumtime) = (
-            SELECT
-              SUM({obs_type}),
-              COUNT({obs_type}),
-              SUM({obs_type} * `interval` * 60),
-              SUM(`interval` * 60)
-            FROM
-              {archive_table}
-            WHERE
-              {obs_type} IS NOT NULL
-            AND
-              dateTime > ? AND dateTime <= ?
-        )
-        WHERE
-          dateTime = ?;
-        """.format(**interp_dict)
-
-        # Process each time stamp in the tranche:
-        for i in range(len(time_results) - 1):
-            start_ts = time_results[i]
-            stop_ts = time_results[i + 1]
-            if obs_type == 'wind':
-                self._update_wind(start_ts, stop_ts, cursor)
-            else:
-                cursor.execute(update_sql, (start_ts, stop_ts, start_ts))
-
-    def _update_wind(self, start_ts, stop_ts, cursor):
-        """Update a single daily summary for wind.
-
-        start_ts: The timestamp of the daily summary to be updated.
-
-        stop_ts: The timestamp of the next day.
-
-        cursor: An active transaction.
-        """
-        # Calculate the statistics for the day by starting with a vector accumulator,
-        # then adding all of the day's archive records to it.
-        vec_stats = weewx.accum.VecStats()
-        for record in self.genBatchRecords(start_ts, stop_ts):
-            weight = 60.0 * record['interval']
-            wind_tuple = (record.get('windSpeed'), record.get('windDir'))
-            vec_stats.addSum(wind_tuple, weight)
-
-        # The variable 'vec_stats' now holds the day's stats. Use it to update the daily summary.
-        wind_update = """
-        UPDATE
-          {archive_table}_day_wind
-        SET
-          {set_stmt}
-        WHERE
-          dateTime = ?;
-        """.format(archive_table=self.table_name,
-                   set_stmt=", ".join(["%s=%s" % (k, getattr(vec_stats, k))
-                                       for k in ['sum', 'count', 'wsum', 'sumtime',
-                                                 'xsum', 'ysum', 'dirsumtime',
-                                                 'squaresum', 'wsquaresum']]))
-        cursor.execute(wind_update, (start_ts,))
+    def _set_day_sums(self, day_accum, cursor):
+        """Replace the weighted sums for all types for a day. Don't touch the mins and maxes."""
+        for obs_type in day_accum:
+            # Skip any types that are not in the daily summary schema
+            if obs_type not in self.daykeys:
+                continue
+            # This will be list that looks like ['sum=2345.65', 'count=123', ... etc]
+            # It will only include attributes that are in the accumulator for this type.
+            set_list = ['%s=%s' % (k, getattr(day_accum[obs_type], k))
+                        for k in ['sum', 'count', 'wsum', 'sumtime',
+                                  'xsum', 'ysum', 'squaresum', 'wsquaresum']
+                        if hasattr(day_accum[obs_type], k)]
+            update_sql = "UPDATE {archive_table}_day_{obs_type} SET {set_stmt} " \
+                         "WHERE dateTime = ?;".format(archive_table=self.table_name,
+                                                      obs_type=obs_type,
+                                                      set_stmt=', '.join(set_list))
+            # Update this observation type's weighted sums:
+            cursor.execute(update_sql, (day_accum.timespan.start, ))
 
     def patch_sums(self):
         """Version 4.2 accidentally interpreted V2.0 daily sums as V1.0, so the weighted sums
