@@ -7,6 +7,9 @@ Version 4.2.0 had a bug, which caused the sums in the daily summary to be
 incorrectly calculated. This version includes a patch to fix the problem. It
 runs once at startup. Fixes issue #623.
 
+The WMR200 driver is no longer supported. An unsupported version can be found
+at https://github.com/weewx/weewx-wmr200.
+
 Service weewx.wxxtypes.StdDelta was inadvertently left out of the list of
 services to be run. Fortunately, it is not used. Yet. Added it back in.
 
