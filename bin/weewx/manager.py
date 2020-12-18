@@ -1128,7 +1128,7 @@ class DaySummaryManager(Manager):
                      self.connection.database_name)
 
     def recalculate_weights(self, start_d=None, stop_d=None,
-                            tranche_size=100, progress_fn=show_progress):
+                            tranche_size=100, weight_fn=None, progress_fn=show_progress):
         """Recalculate just the daily summary weights.
 
         Rather than backfill all the daily summaries, this function simply recalculates the
@@ -1141,6 +1141,9 @@ class DaySummaryManager(Manager):
         Default is to end with the last record in the daily summaries.]
 
         tranche_size: How many days to do in a single transaction.
+
+        weight_fn: A function used to calculate the weights for a record. Default
+        is _calc_weight().
 
         progress_fn: This function will be called after every tranche with the timestamp of the
         last record processed.
@@ -1176,17 +1179,25 @@ class DaySummaryManager(Manager):
         # March forward, tranche by tranche
         while mark_d < last_d:
             end_of_tranche_d = min(mark_d + tranche_days, last_d)
-            self._do_tranche(mark_d, end_of_tranche_d, progress_fn)
+            self._do_tranche(mark_d, end_of_tranche_d, weight_fn, progress_fn)
             mark_d = end_of_tranche_d
 
-    def _do_tranche(self, start_d, last_d, progress_fn=None):
+    def _do_tranche(self, start_d, last_d, weight_fn=None, progress_fn=None):
         """Reweight a tranche of daily summaries.
 
         start_d: A datetime.date object with the first date in the tranche to be reweighted.
 
         last_d: A datetime.date object with the day after the last date in the
         tranche to be reweighted.
+
+        weight_fn: A function used to calculate the weights for a record. Default is
+        _calc_weight().
+
+        progress_fn: A function to call to show progress. It will be called after every update.
         """
+
+        if weight_fn is None:
+            weight_fn = DaySummaryManager._calc_weight
 
         # Do all the dates in the tranche as a single transaction
         with weedb.Transaction(self.connection) as cursor:
@@ -1201,7 +1212,7 @@ class DaySummaryManager(Manager):
                 day_accum = weewx.accum.Accum(day_span)
                 # Now populate it with a day's worth of records
                 for rec in self.genBatchRecords(day_span.start, day_span.stop):
-                    weight = self._calc_weight(rec)
+                    weight = weight_fn(self, rec)
                     day_accum.addRecord(rec, weight=weight)
                 # Write out the results of the accumulator
                 self._set_day_sums(day_accum, cursor)
@@ -1249,7 +1260,7 @@ class DaySummaryManager(Manager):
     def update(self):
         """Update the database to V3.0"""
         if self.version == '1.0':
-            self.recalculate_weights()
+            self.recalculate_weights(weight_fn=DaySummaryManager._get_weight)
             self._write_metadata('Version', DaySummaryManager.version)
             self.version = DaySummaryManager.version
         elif self.version == '2.0':
@@ -1356,6 +1367,7 @@ class DaySummaryManager(Manager):
             self._write_metadata('lastUpdate', str(int(lastUpdate)), cursor)
 
     def _calc_weight(self, record):
+        """Returns the weighting to be used, depending on the version of the daily summaries."""
         if 'interval' not in record:
             raise ValueError("Missing value for record field 'interval'")
         elif record['interval'] <= 0:
@@ -1363,6 +1375,15 @@ class DaySummaryManager(Manager):
                 "Non-positive value for record field 'interval': %s" % (record['interval'],))
         weight = 60.0 * record['interval'] if self.version >= '2.0' else 1.0
         return weight
+
+    def _get_weight(self, record):
+        """Always returns a weight based on the field 'interval'."""
+        if 'interval' not in record:
+            raise ValueError("Missing value for record field 'interval'")
+        elif record['interval'] <= 0:
+            raise IntervalError(
+                "Non-positive value for record field 'interval': %s" % (record['interval'],))
+        return 60.0 * record['interval']
 
     def _read_metadata(self, key, cursor=None):
         """Obtain a value from the daily summary metadata table.
