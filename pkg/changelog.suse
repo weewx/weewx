@@ -1,3 +1,5 @@
+* Fri Dec 18 2020 Thomas Keffer (Author of weewx) <tkeffer@gmail.com> - 4.3.0b2-1
+- new upstream release
 * Mon Dec 14 2020 Thomas Keffer (Author of weewx) <tkeffer@gmail.com> - 4.3.0b1-1
 - new upstream release
 * Mon Oct 26 2020 Matthew Wall <mwall@users.sourceforge.net> - 4.2.0-1
