@@ -5,10 +5,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <link rel="icon" href="images/favicon.png" type="image/png"/>
-    <link rel="stylesheet" href="css/tocbot-4.3.1.css">
+    <link rel="stylesheet" href="css/tocbot-4.12.0.css">
     <link rel="stylesheet" href="css/weewx_ui.css"/>
     <script src="js/cash.min.js"></script>
-    <script src="js/tocbot-4.3.1.min.js"></script>
+    <script src="js/tocbot-4.12.0.min.js"></script>
     <script src="js/weewx.js"></script>
     <script>
         $(function () {
@@ -227,28 +227,62 @@ sudo apt-get install weewx</pre>
 
         <pre class='tty'>warning: /etc/weewx/weewx.conf created as /etc/weewx/weewx.conf.rpmnew</pre>
 
-        <h1><a id="Instructions_for_specific_versions">Instructions for specific versions</a></h1>
-
-        <h2>From 4.2 or earlier</h2>
-
-        <h3>Option <span class="code">ignore_zero_wind</span> moved</h3>
+        <h1>Upgrading the configuration file, <span class="code">weewx.conf</span></h1>
 
         <p>
-            While it was never documented, the option <span class="code">ignore_zero_wind</span> was used by some
-            users. Normally, WeeWX sets wind direction to undefined when wind speed is zero. This option can prevent
-            that. However, its location has changed.
+            It doesn't happen very often, but occasionally the configuration file, <span class="code">weewx.conf</span>
+            needs some changes when a new version arrives, perhaps because a new feature requires some configuration
+            information. Normally the installer, whether it is <span class="code">setup.py</span>, or a package installer, takes
+            care of upgrading the file and you do not need to worry about it.
+        </p>
+        <p>
+            However, there are some occasions when you may need to upgrade the file yourself. In particular, this happens
+            when you run several instances of <span class="code">weewxd</span> on the same machine, each with its own
+            configuration file, and each with a different name. The one named <span class="code">weewx.conf</span> will
+            get upgraded, but what about the others?
+        </p>
+
+        <p>
+            See the section on <a href="utilities.htm#wee_config_utility_upgrade"><span class="code">wee_config --upgrade</span></a>
+            in the Utilities Guide for how to do this.
+        </p>
+
+
+        <h1><a id="Instructions_for_specific_versions">Instructions for specific versions</a></h1>
+
+        <h2>Upgrading to V4.3</h2>
+
+        <h3>Auto patch of daily summaries</h3>
+
+        <p>
+            Version 4.2 inadvertently introduced a bug, which prevented the sums that are kept in the daily summaries
+            from being weighted by the archive interval. See issue <a href="https://github.com/weewx/weewx/issues/623">#623</a>.
+            V4.3 includes a patch, which will fix any defective daily summaries automatically. It is run only once
+            on the first use of a database (usually by <span class="code">weewxd</span>) and takes only a few
+            seconds.
+        </p>
+
+        <h3>Option <span class="code">ignore_zero_wind</span> has been renamed and moved</h3>
+
+        <p>
+            Normally, WeeWX sets wind direction to undefined when wind speed is zero. While it was never documented,
+            some users used option <span class="code">ignore_zero_wind</span> to prevent this: if set to <span
+            class="code">False</span>, wind direction will not be set to undefined when wind speed is zero. However, the
+            option's location and name has changed. It is now called <span class="code">force_null</span>, and it is
+            now located under <span class="code">[StdWXCalculate] / [[WXXTypes]] / [[[windDir]]]</span>. The old name
+            and location has been deprecated, but still honored.
         </p>
 
         <table>
             <tr class="first_row">
-                <td style='width:50%'>pre 4.2</td>
+                <td style='width:50%'>V4.2 and earlier</td>
                 <td>4.3</td>
             </tr>
             <tr>
                 <td>
                     <pre class='tty'>
 [StdWXCalculate]
-    <span class="removed">ignore_zero_wind = True</span>
+    <span class="removed">ignore_zero_wind = False</span>
     [[Calculations]]
         ...
 </pre>
@@ -260,13 +294,13 @@ sudo apt-get install weewx</pre>
         ...
     [[WXXTypes]]
         [[[windDir]]]
-            <span class="added">ignore_zero_wind = False</span>
+            <span class="added">force_null = False</span>
 </pre>
                 </td>
             </tr>
         </table>
 
-        <h2>From 4.1 or earlier</h2>
+        <h2>Upgrading to V4.2</h2>
 
         <p>
             For the most part, V4.2 is backwards compatible with previous versions. There is one small exception.
@@ -280,7 +314,7 @@ sudo apt-get install weewx</pre>
         </p>
         <table>
             <tr class="first_row">
-                <td style='width:50%'>pre 4.1</td>
+                <td style='width:50%'>V4.1 and earlier</td>
                 <td>4.2</td>
             </tr>
             <tr>
@@ -349,7 +383,7 @@ sudo apt-get install weewx</pre>
     <span class="highlight">dewpoint = prefer_hardware</span>
         </pre>
 
-        <h2>From V3.8 or earlier</h2>
+        <h2>Upgrading to V3.9</h2>
 
         <h3>New skins</h3>
         <p>
@@ -424,7 +458,7 @@ sudo apt-get install weewx</pre>
             will be unaffected. This is because the override section has the highest priority.
         </p>
 
-        <h2>From V3.6 or earlier</h2>
+        <h2>Upgrading to V3.7</h2>
 
 
         <h3 id="change_to_daily_summaries">Changes to daily summaries</h3>
@@ -729,7 +763,7 @@ extraHumid8 = humidity_8</pre>
         </table>
 
 
-        <h2>From V3.5 or earlier</h2>
+        <h2>Upgrading to V3.6</h2>
 
         <h3>Changes to <span class="code">weewx.conf</span></h3>
         <p>
@@ -773,7 +807,7 @@ extraHumid8 = humidity_8</pre>
         </table>
 
 
-        <h2>From V3.1 or earlier</h2>
+        <h2>Upgrading to V3.2</h2>
 
         <h3>New utilities</h3>
 
@@ -888,7 +922,7 @@ extraHumid8 = humidity_8</pre>
             </tr>
         </table>
 
-        <h2>From V2.7 or earlier</h2>
+        <h2>Upgrading to V3.0</h2>
 
         <h3>Overview</h3>
 
@@ -1446,7 +1480,7 @@ setup.py install --extension basic.tar.gz --dry-run</pre>
             </tr>
         </table>
 
-        <h2>From V2.6 or earlier</h2>
+        <h2>Upgrading to V2.7</h2>
 
         <p>Version 2.7 is backwards compatible with earlier versions with one minor exception.</p>
 
@@ -1478,7 +1512,7 @@ second            = " second", " seconds"</pre>
         <pre class="tty">Weewx uptime:  1 day, 1 hour, 41 minutes
 Server uptime: 2 days, 10 hours, 22 minutes</pre>
 
-        <h2>From V2.5 or earlier</h2>
+        <h2>Upgrading to V2.6</h2>
 
         <p>Version 2.6 is backwards compatible with earlier versions, with a couple of small exceptions.</p>
         <ul>
@@ -1502,7 +1536,7 @@ Server uptime: 2 days, 10 hours, 22 minutes</pre>
             </li>
         </ul>
 
-        <h2>From V2.3 or earlier</h2>
+        <h2>Upgrading to V2.4</h2>
 
         <p>The option <span class="code">time_length</span> will now be the exact length of the resultant plot. Before,
             a plot with <span class="code">time_length</span> equal to 24 hours would result in a plot of 27 hours, now
@@ -1534,7 +1568,7 @@ Server uptime: 2 days, 10 hours, 22 minutes</pre>
     weewx.wxengine.StdCalibrate, weewx.wxengine.StdQC, weewx.wxengine.StdArchive, weewx.wxengine.StdPrint,
     weewx.wxengine.StdRESTful, weewx.wxengine.StdReport</pre>
 
-        <h2>From V2.2 or earlier</h2>
+        <h2>Upgrading to V2.3</h2>
 
         <p>The signature of the function "<span class="code">loader</span>", used to return an instance of the station
             device driver, has changed slightly. It has changed from
@@ -1552,7 +1586,7 @@ Server uptime: 2 days, 10 hours, 22 minutes</pre>
 
         <p>This change will affect only those who have written their own device driver.</p>
 
-        <h2>From V2.1 or earlier</h2>
+        <h2>Upgrading to V2.2</h2>
 
         <p>Version 2.2 introduces a schema, found in <span class="code">
         bin/user/schemas.py</span>, for the stats database. This schema is used only when initially creating the
@@ -1561,7 +1595,7 @@ Server uptime: 2 days, 10 hours, 22 minutes</pre>
             database.
         </p>
 
-        <h2>From V1.14 or earlier</h2>
+        <h2>Upgrading to V2.0</h2>
 
         <p>Version 2.0 introduces many new features, including a revamped internal engine. There are two changes that
             are not backwards compatible:
@@ -1584,7 +1618,7 @@ Server uptime: 2 days, 10 hours, 22 minutes</pre>
 
         <p>If you have written a custom report generator it should also be backwards compatible.</p>
 
-        <h2>From V1.13 or earlier</h2>
+        <h2>Upgrading to V1.14</h2>
 
         <p>Version 1.14 introduces some new webpages that have been expressly formatted for the smartphone by using <a
             href="http://jquery.com/">jQuery</a>.
@@ -1643,7 +1677,7 @@ Server uptime: 2 days, 10 hours, 22 minutes</pre>
             You may want to add a link to this in the template for your main index page <span class="code">skins/Standard/index.html.tmpl</span>.
         </p>
 
-        <h2>From V1.12 or earlier</h2>
+        <h2>Upgrading to V1.13</h2>
 
         <p>Version 1.13 changed the way binding happens to the databases used in reports so that it happens much later.
             The upshot is that the signature of a few functions changed. Most you are unlikely to encounter. The
@@ -1654,7 +1688,7 @@ Server uptime: 2 days, 10 hours, 22 minutes</pre>
 
         <p>No changes to skins.</p>
 
-        <h2>From V1.9 or earlier</h2>
+        <h2>Upgrading to V1.10</h2>
 
         <p>Version 1.10 introduced several new features.</p>
 
@@ -1718,14 +1752,14 @@ Server uptime: 2 days, 10 hours, 22 minutes</pre>
 
         <p>This will only affect you if you have written a custom generator.</p>
 
-        <h2>From V1.7.0 or earlier</h2>
+        <h2>Upgrading to V1.8</h2>
 
         <p>With the introduction of a standard archiving service, <span class="code">
         StdArchive</span>, the names of some events have changed. This will not affect you unless you have written a
             custom service.
         </p>
 
-        <h2>From V.1.5.0 or earlier</h2>
+        <h2>Upgrading to V1.7</h2>
 
         <p>V1.7 introduces <em>skins</em>. The skins live in subdirectory <span class="code">skins</span>. They are <em>not</em>
             compatible with the old <span class="code">template</span> subdirectory --- you can&#39;t simply rename
@@ -1764,7 +1798,7 @@ cooling_base = 65, degree_F</pre>
 
         <pre class="tty cmd">rm -r templates</pre>
 
-        <h2>From V1.4.0 or earlier</h2>
+        <h2>Upgrading to V1.5</h2>
 
         <p>Because the configuration file <span class="code">weewx.conf</span> changed significantly going from V1.4 to
             V1.5, the installation script <span class="code">setup.py</span> will NOT merge your old configuration file
@@ -1772,7 +1806,7 @@ cooling_base = 65, degree_F</pre>
             customizations.
         </p>
 
-        <h2>From V1.2.0 or earlier</h2>
+        <h2>Upgrading to V1.4</h2>
 
         <p>Option <span class="code">clock_check</span>, previously found in the <span class="code">[VantagePro]</span>
             section, is now found in the <span class="code">[Station]</span> section. The install program will put a

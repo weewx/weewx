@@ -92,22 +92,22 @@ class WXXTypes(weewx.xtypes.XType):
 
     def calc_windDir(self, key, data, db_manager):
         # Return the current wind direction if windSpeed is non-zero, otherwise, None
-        if 'windSpeed' not in data:
+        if 'windSpeed' not in data or 'windDir' not in data:
             raise weewx.CannotCalculate
         if self.force_null and data['windSpeed'] == 0:
             val = None
         else:
-            val = data.get('windDir')
+            val = data['windDir']
         return ValueTuple(val, 'degree_compass', 'group_direction')
 
     def calc_windGustDir(self, key, data, db_manager):
         # Return the current gust direction if windGust is non-zero, otherwise, None
-        if 'windGust' not in data:
+        if 'windGust' not in data or 'windGustDir' not in data:
             raise weewx.CannotCalculate
         if self.force_null and data['windGust'] == 0:
             val = None
         else:
-            val = data.get('windGustDir')
+            val = data['windGustDir']
         return ValueTuple(val, 'degree_compass', 'group_direction')
 
     def calc_maxSolarRad(self, key, data, db_manager):
