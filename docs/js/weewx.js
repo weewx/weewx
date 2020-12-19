@@ -1,6 +1,6 @@
 /*  Javascript for the weewx documentation
  *
- *  Copyright (c) 2015-2019 Tom Keffer <tkeffer@gmail.com>
+ *  Copyright (c) 2015-2020 Tom Keffer <tkeffer@gmail.com>
  * 
  *  See the file LICENSE.txt for your rights.
  */
@@ -50,7 +50,7 @@ function get_level_from_cookie() {
 function create_toc(level) {
     let headingSelector = "h1";
     for (let i = 2; i <= level; i++) {
-        headingSelector += ",h" + i;
+        headingSelector += ", h" + i;
     }
     tocbot.init({
         // Where to render the table of contents.
@@ -59,8 +59,8 @@ function create_toc(level) {
         contentSelector: '#technical_content',
         // Which headings to grab inside of the contentSelector element.
         headingSelector: headingSelector,
-        // At what depth should we start collapsing things?
-        collapseDepth: 3,
+        // At what depth should we start collapsing things? A depth of 6 shows everything.
+        collapseDepth: 6,
     });
 }
 

@@ -405,6 +405,20 @@ class ConfigTest(LineTest):
 
         self._check_against_expected(config_dict, 'expected/weewx40_expected.conf')
 
+    def test_upgrade_v42(self):
+        """Test an upgrade of the stock v4.1 weewx.conf to V4.2"""
+
+        # Start with the Version 4.1 weewx.conf file:
+        config_dict = configobj.ConfigObj('weewx41.conf', encoding='utf-8')
+
+        # Upgrade the V4.1 configuration dictionary to V4.2:
+        weecfg.update_to_v42(config_dict)
+
+        # with open('expected/weewx42_expected.conf', 'wb') as fd:
+        #     config_dict.write(fd)
+
+        self._check_against_expected(config_dict, 'expected/weewx42_expected.conf')
+
     def test_merge(self):
         """Test an upgrade against a typical user's configuration file"""
 
@@ -417,10 +431,10 @@ class ConfigTest(LineTest):
         # First update, then merge:
         weecfg.update_and_merge(config_dict, template)
 
-        # with open('expected/weewx40_user_expected.conf', 'wb') as fd:
+        # with open('expected/weewx42_user_expected.conf', 'wb') as fd:
         #     config_dict.write(fd)
 
-        self._check_against_expected(config_dict, 'expected/weewx40_user_expected.conf')
+        self._check_against_expected(config_dict, 'expected/weewx42_user_expected.conf')
 
     def test_driver_info(self):
         """Test the discovery and listing of drivers."""

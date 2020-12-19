@@ -1,7 +1,53 @@
 weewx change history
 --------------------
 
-4.1.2 MM/DD/YYYY
+4.3.0 MM/DD/YYYY
+
+Version 4.2.0 had a bug, which caused the sums in the daily summary to be
+incorrectly calculated. This version includes a patch to fix the problem. It
+runs once at startup. Fixes issue #623.
+
+The WMR200 driver is no longer supported. An unsupported version can be found
+at https://github.com/weewx/weewx-wmr200.
+
+Service weewx.wxxtypes.StdDelta was inadvertently left out of the list of
+services to be run. Fortunately, it is not used. Yet. Added it back in.
+
+Added the "old" NWS algorithm as an option for calculating heat index.
+
+Changed how various undocumented parameters in [StdWXCalculate] are specified.
+The only one people are likely to have used is 'ignore_zero_wind'. Its name has
+changed to 'force_null', and it has been moved. See the Upgrading Guide.
+
+Documented the various [StdWXCalculate] options.
+
+Fixed corner case for windDir when using software record generation,
+ignore_zero_wind=True, and windSpeed=0 for entire record interval. Now emits
+last windDir value.
+
+Fixed problem when looking up stars with more than one word in their name.
+Fixes issue #620.
+
+Fixed problem where wind gust direction is not available when using software
+record generation.
+
+
+4.2.0 10/26/2020
+
+CHANGES COMING! This is the last release that will support the LaCrosse WS23xx,
+Oregon WMR200 and WMR300 stations. In the future, they will be published as
+unsupported extensions.
+
+Made it easier to add new, derived types via StdWXCalculate. Fixes issue #491.
+
+Changed the tag system slightly in order to make it possible for the XTypes
+system to add new aggregations that take an argument.
+
+Added the new data types in the extended_wview schema to the WeeWX types
+system. Fixes issue #613.
+
+Added ability to label left, right or both y-axes of graphs.  PR#610.
+Fixes issue #609. Thanks to user Brent Fraser!
 
 Added units and labels for the lightning data types.
 
@@ -29,6 +75,35 @@ being included in loop packets when run under Python 3. Thanks to users
 Constantine and Jacques!
 
 Improved auto-scaling of plot axes.
+
+Fixed problem where aggregates of windvec and windgustvec returned the aggregate
+since start of day, not the start of the aggregation period. Fixes issue #590.
+
+New unit "beaufort", included in "group_speed". Treating beaufort as a separate
+type has been deprecated. Fixes issue #591.
+
+New unit "kPa", included in "group_pressure". Fixes issue #596.
+
+Fixed bug in the simulator. Made it easier to subclass class Simulator.
+
+Expressions in StdCalibration are now ordered. Later corrections can depend on
+earlier corrections.
+
+Fixed problem under Python 2, where option 'none' could cause exception.
+PR #597. Thanks to user Clément!
+
+Fixed problem with ws23xx driver under Python 3 that caused it to crash.
+
+Use a more modern formula for heat index. Fixes issue #601. Thanks to
+user Peter Q!
+
+Allow overriding the data binding when using iterators. Fixes issue #580.
+
+Fixed problem where old daily summaries may not have a version number.
+
+Fixed problem in WMR200 driver where missing UV reports as index 255.
+
+Added option 'force_direction' for working around a WU bug. Fixes issue #614.
 
 
 4.1.1 06/01/2020

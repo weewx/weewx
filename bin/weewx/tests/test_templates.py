@@ -54,6 +54,10 @@ locale.setlocale(locale.LC_ALL, '')
 config_path = os.path.join(os.path.dirname(__file__), "testgen.conf")
 cwd = None
 
+# These tests also test the "stats" example in the 'example' subdirectory. Add it to the
+# Python path.
+sys.path.append('../../../examples')
+
 
 # We will be testing the ability to extend the unit system, so set that up first:
 class ExtraUnits(object):
@@ -168,7 +172,7 @@ class Common(object):
                         while True:
                             actual_line = actual.readline()
                             expected_line = expected.readline()
-                            if actual_line == '' or expected_line == '':
+                            if actual_line == '' and expected_line == '':
                                 break
                             n += 1
                             self.assertEqual(actual_line,

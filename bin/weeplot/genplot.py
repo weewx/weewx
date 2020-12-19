@@ -84,8 +84,15 @@ class GeneralPlot(object):
         self.y_label_spacing        = int(config_dict.get('y_label_spacing', 2))
         
         # Calculate sensible margins for the given image and font sizes.
-        self.lmargin = int(4.0 * self.axis_label_font_size)
-        self.rmargin = 20 * self.anti_alias
+        self.y_label_side = config_dict.get('y_label_side','left')
+        if self.y_label_side == 'left' or self.y_label_side == 'both':
+            self.lmargin = int(4.0 * self.axis_label_font_size)
+        else:
+            self.lmargin = 20 * self.anti_alias
+        if self.y_label_side == 'right' or self.y_label_side == 'both':
+            self.rmargin = int(4.0 * self.axis_label_font_size)
+        else:
+            self.rmargin = 20 * self.anti_alias
         self.bmargin = int(1.5 * (self.bottom_label_font_size + self.axis_label_font_size) + 0.5)
         self.tmargin = int(1.5 * self.top_label_font_size + 0.5)
         self.tbandht = int(1.2 * self.top_label_font_size + 0.5)
@@ -317,7 +324,11 @@ class GeneralPlot(object):
                 ylabel = self._genYLabel(y)
                 axis_label_size = sdraw.draw.textsize(ylabel, font=axis_label_font)
                 ypos = sdraw.ytranslate(y)
-                sdraw.draw.text((self.lmargin - axis_label_size[0] - 2, ypos - axis_label_size[1]/2),
+                if self.y_label_side == 'left' or self.y_label_side == 'both':
+                    sdraw.draw.text( (self.lmargin - axis_label_size[0] - 2, ypos - axis_label_size[1]/2),
+                                ylabel, fill=self.axis_label_font_color, font=axis_label_font)
+                if self.y_label_side == 'right' or self.y_label_side == 'both':
+                    sdraw.draw.text( (self.image_width - self.rmargin + 4, ypos - axis_label_size[1]/2),
                                 ylabel, fill=self.axis_label_font_color, font=axis_label_font)
 
     def _renderPlotLines(self, sdraw):
@@ -391,10 +402,17 @@ class GeneralPlot(object):
         # Put the units in the upper left corner
         unit_label_font = weeplot.utilities.get_font_handle(self.unit_label_font_path, self.unit_label_font_size)
         if self.unit_label:
-            draw.text(self.unit_label_position,
-                      self.unit_label,
-                      fill=self.unit_label_font_color,
-                      font=unit_label_font)
+            if self.y_label_side == 'left' or self.y_label_side == 'both':
+                draw.text(self.unit_label_position,
+                          self.unit_label,
+                          fill=self.unit_label_font_color,
+                          font=unit_label_font)
+            if self.y_label_side == 'right' or self.y_label_side == 'both':
+                unit_label_position_right = (self.image_width - self.rmargin + 4, 0)
+                draw.text(unit_label_position_right,
+                          self.unit_label,
+                          fill=self.unit_label_font_color,
+                          font=unit_label_font)
 
         top_label_font = weeplot.utilities.get_font_handle(self.top_label_font_path, self.top_label_font_size)
         
@@ -507,11 +525,11 @@ class GeneralPlot(object):
             self.y_label_format = weeplot.utilities.pickLabelFormat(self.yscale[2])
         
     def _genXLabel(self, x):
-        xlabel = locale.format(self.x_label_format, x)
+        xlabel = locale.format_string(self.x_label_format, x)
         return xlabel
     
     def _genYLabel(self, y):
-        ylabel = locale.format(self.y_label_format, y)
+        ylabel = locale.format_string(self.y_label_format, y)
         return ylabel
     
     def _calcXMinMax(self):

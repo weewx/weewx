@@ -14,6 +14,9 @@ from weeutil.weeutil import to_int
 from weewx.units import ValueTuple
 
 
+# Attributes we are to ignore. Cheetah calls these housekeeping functions.
+IGNORE_ATTR = ['mro', 'im_func', 'func_code', '__func__', '__code__', '__init__', '__self__']
+
 # ===============================================================================
 #                    Class TimeBinder
 # ===============================================================================
@@ -30,7 +33,7 @@ class TimeBinder(object):
                  formatter=weewx.units.Formatter(), converter=weewx.units.Converter(),
                  **option_dict):
         """Initialize an instance of DatabaseBinder.
-        
+
         db_lookup: A function with call signature db_lookup(data_binding), which returns a database
         manager and where data_binding is an optional binding name. If not given, then a default
         binding will be used.
@@ -243,6 +246,12 @@ class TimespanBinder(object):
     # Alias for the start time:
     dateTime = start
 
+    def __call__(self, data_binding=None):
+        """The iterators return an instance of TimespanBinder. Allow them to override
+        data_binding"""
+        return TimespanBinder(self.timespan, self.db_lookup, data_binding, self.context,
+                              self.formatter, self.converter, **self.option_dict)
+
     def __getattr__(self, obs_type):
         """Return a helper object that binds the database, a time period, and the given observation
         type.
@@ -251,9 +260,8 @@ class TimespanBinder(object):
 
         returns: An instance of class ObservationBinder."""
 
-        # This is to get around bugs in the Python version of Cheetah's namemapper:
-        if obs_type in ['__call__', 'has_key']:
-            raise AttributeError
+        if obs_type in IGNORE_ATTR:
+            raise AttributeError(obs_type)
 
         # Return an ObservationBinder: if an attribute is
         # requested from it, an aggregation value will be returned.
@@ -267,11 +275,11 @@ class TimespanBinder(object):
 # ===============================================================================
 
 class ObservationBinder(object):
-    """This is the final class in the chain of helper classes. It binds the
+    """This is the next class in the chain of helper classes. It binds the
     database, a time period, and an observation type all together.
 
-    When an aggregation type (eg, 'max') is given as an attribute to it, it runs the
-    query against the database, assembles the result, and returns it as a ValueHelper.
+    When an aggregation type (eg, 'max') is given as an attribute to it, it binds it to
+    an instance of AggTypeBinder and returns it.
     """
 
     def __init__(self, obs_type, timespan, db_lookup, data_binding, context,
@@ -310,41 +318,28 @@ class ObservationBinder(object):
         self.converter = converter
         self.option_dict = option_dict
 
-    def max_ge(self, val):
-        return self._do_query('max_ge', val=val)
+    def __getattr__(self, aggregation_type):
+        """Use the specified aggregation type
 
-    def max_le(self, val):
-        return self._do_query('max_le', val=val)
-
-    def min_ge(self, val):
-        return self._do_query('min_ge', val=val)
-
-    def min_le(self, val):
-        return self._do_query('min_le', val=val)
-
-    def sum_ge(self, val):
-        return self._do_query('sum_ge', val=val)
-
-    def sum_le(self, val):
-        return self._do_query('sum_le', val=val)
-
-    def __getattr__(self, aggregate_type):
-        """Return statistical summary using a given aggregate type.
-
-        aggregate_type: The type of aggregation over which the summary is to be done. This is
+        aggregation_type: The type of aggregation over which the summary is to be done. This is
         normally something like 'sum', 'min', 'mintime', 'count', etc. However, there are two
         special aggregation types that can be used to determine the existence of data:
           'exists':   Return True if the observation type exists in the database.
           'has_data': Return True if the type exists and there is a non-zero number of entries over
                       the aggregation period.
 
-        returns: A ValueHelper containing the aggregation data.
+        returns: An instance of AggTypeBinder, which is bound to the aggregation type.
         """
-
-        # This is to get around bugs in the Python version of Cheetah's namemapper:
-        if aggregate_type in ['__call__', 'has_key']:
-            raise AttributeError
-        return self._do_query(aggregate_type)
+        if aggregation_type in IGNORE_ATTR:
+            raise AttributeError(aggregation_type)
+        return AggTypeBinder(aggregation_type=aggregation_type,
+                             obs_type=self.obs_type,
+                             timespan=self.timespan,
+                             db_lookup=self.db_lookup,
+                             data_binding=self.data_binding,
+                             context=self.context,
+                             formatter=self.formatter, converter=self.converter,
+                             **self.option_dict)
 
     @property
     def exists(self):
@@ -354,18 +349,72 @@ class ObservationBinder(object):
     def has_data(self):
         return self.db_lookup(self.data_binding).has_data(self.obs_type, self.timespan)
 
-    def _do_query(self, aggregate_type, val=None):
+
+# ===============================================================================
+#                             Class AggTypeBinder
+# ===============================================================================
+
+class AggTypeBinder(object):
+    """This is the final class in the chain of helper classes. It binds everything needed
+    for a query."""
+
+    def __init__(self, aggregation_type, obs_type, timespan, db_lookup, data_binding, context,
+                 formatter=weewx.units.Formatter(), converter=weewx.units.Converter(),
+                 **option_dict):
+        self.aggregation_type = aggregation_type
+        self.obs_type = obs_type
+        self.timespan = timespan
+        self.db_lookup = db_lookup
+        self.data_binding = data_binding
+        self.context = context
+        self.formatter = formatter
+        self.converter = converter
+        self.option_dict = option_dict
+
+    def __call__(self, *args, **kwargs):
+        """Offer a call option for expressions such as $month.outTemp.max_ge((90.0, 'degree_F')).
+
+        In this example, self.aggregation_type would be 'max_ge', and val would be the tuple
+        (90.0, 'degree_F').
+        """
+        if len(args):
+            self.option_dict['val'] = args[0]
+        self.option_dict.update(kwargs)
+        return self
+
+    def __str__(self):
+        """Need a string representation. Force the query, return as string."""
+        vh = self._do_query()
+        return str(vh)
+
+    def __unicode__(self):
+        """Used only Python 2. Force the query, return as a unicode string."""
+        vh = self._do_query()
+        return unicode(vh)
+
+    def _do_query(self):
         """Run a query against the databases, using the given aggregation type."""
         db_manager = self.db_lookup(self.data_binding)
         try:
             # If we cannot perform the aggregation, we will get an UnknownType or
             # UnknownAggregation error. Be prepared to catch it.
-            result = weewx.xtypes.get_aggregate(self.obs_type, self.timespan, aggregate_type,
-                                                db_manager, val=val, **self.option_dict)
+            result = weewx.xtypes.get_aggregate(self.obs_type, self.timespan,
+                                                self.aggregation_type,
+                                                db_manager, **self.option_dict)
         except (weewx.UnknownType, weewx.UnknownAggregation):
-            # Signal Cheetah that we don't know how to do this by raiing an AttributeError.
+            # Signal Cheetah that we don't know how to do this by raising an AttributeError.
             raise AttributeError(self.obs_type)
         return weewx.units.ValueHelper(result, self.context, self.formatter, self.converter)
+
+    def __getattr__(self, attr):
+        # The following is an optimization, so we avoid doing an SQL query for these kinds of
+        # housekeeping attribute queries done by Cheetah's NameMapper
+        if attr in IGNORE_ATTR:
+            raise AttributeError(attr)
+        # Do the query, getting a ValueHelper back
+        vh = self._do_query()
+        # Now seek the desired attribute of the ValueHelper and return
+        return getattr(vh, attr)
 
 
 # ===============================================================================
@@ -404,7 +453,7 @@ class RecordBinder(object):
 
 class CurrentObj(object):
     """Helper class for the "Current" record. Hits the database lazily.
-    
+
     This class allows tags such as:
       $current.barometer
     """
@@ -421,9 +470,9 @@ class CurrentObj(object):
 
     def __getattr__(self, obs_type):
         """Return the given observation type."""
-        # This is to get around bugs in the Python version of Cheetah's namemapper:
-        if obs_type in ['__call__', 'has_key']:
-            raise AttributeError
+
+        if obs_type in IGNORE_ATTR:
+            raise AttributeError(obs_type)
 
         # TODO: Refactor the following to be a separate function.
 
@@ -468,8 +517,8 @@ class CurrentObj(object):
 # ===============================================================================
 
 class TrendObj(object):
-    """Helper class that calculates trends. 
-    
+    """Helper class that calculates trends.
+
     This class allows tags such as:
       $trend.barometer
     """
@@ -477,9 +526,9 @@ class TrendObj(object):
     def __init__(self, time_delta, time_grace, db_lookup, data_binding,
                  nowtime, formatter, converter, **option_dict):  # @UnusedVariable
         """Initialize a Trend object
-        
+
         time_delta: The time difference over which the trend is to be calculated
-        
+
         time_grace: A time within this amount is accepted.
         """
         self.time_delta_val = time_delta
@@ -500,9 +549,8 @@ class TrendObj(object):
 
     def __getattr__(self, obs_type):
         """Return the trend for the given observation type."""
-        # This is to get around bugs in the Python version of Cheetah's namemapper:
-        if obs_type in ['__call__', 'has_key']:
-            raise AttributeError
+        if obs_type in IGNORE_ATTR:
+            raise AttributeError(obs_type)
 
         db_manager = self.db_lookup(self.data_binding)
         # Get the current record, and one "time_delta" ago:        

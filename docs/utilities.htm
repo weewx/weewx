@@ -5,10 +5,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <link rel="icon" href="images/favicon.png" type="image/png"/>
-    <link rel="stylesheet" href="css/tocbot-4.3.1.css">
+    <link rel="stylesheet" href="css/tocbot-4.12.0.css">
     <link rel="stylesheet" href="css/weewx_ui.css"/>
     <script src="js/cash.min.js"></script>
-    <script src="js/tocbot-4.3.1.min.js"></script>
+    <script src="js/tocbot-4.12.0.min.js"></script>
     <script src="js/weewx.js"></script>
     <script>
         $(function () {
@@ -49,7 +49,7 @@
         <div class="logoref">
             <a href='http://weewx.com'> <img src='images/logo-weewx.png' class='logo' style="float:right"
                                              alt="weewx logo"/> </a><br/> <span class='version'>
-Version: 4.1
+Version: 4.3
     </span>
         </div>
         <div class="title">WeeWX Utilities Guide</div>
@@ -214,7 +214,6 @@ Module name              Driver name    Version  Status
   weewx.drivers.ultimeter  Ultimeter      0.13
   weewx.drivers.vantage    Vantage        3.0
   weewx.drivers.wmr100     WMR100         3.0      No module named usb
-  weewx.drivers.wmr200     WMR200         3.0      No module named usb
   weewx.drivers.wmr9x8     WMR9x8         3.0
   weewx.drivers.ws1        WS1            0.19
   weewx.drivers.ws23xx     WS23xx         0.24
@@ -243,7 +242,7 @@ Module name              Driver name    Version  Status
 
         <pre class="tty cmd">wee_config --reconfigure --driver=user.netatmo --no-prompt</pre>
 
-        <h2>Example: changing the driver</h2>
+        <h4>Example: changing the driver</h4>
 
         <p>Say that you originally installed WeeWX with the Simulator. Now you've bought a Davis Vantage and you want to
             switch to that. Here's how you do it. First, use the action <span class="code">--list-drivers</span> to see
@@ -261,7 +260,6 @@ Module name              Driver name    Version  Status
   weewx.drivers.ultimeter  Ultimeter      0.13
   weewx.drivers.vantage    Vantage        3.0
   weewx.drivers.wmr100     WMR100         3.0      
-  weewx.drivers.wmr200     WMR200         3.0      
   weewx.drivers.wmr9x8     WMR9x8         3.0
   weewx.drivers.ws1        WS1            0.19
   weewx.drivers.ws23xx     WS23xx         0.24
@@ -317,12 +315,11 @@ Installed drivers include:
   5) Ultimeter       (weewx.drivers.ultimeter)
   6) Vantage         (weewx.drivers.vantage)
   7) WMR100          (weewx.drivers.wmr100)
-  8) WMR200          (weewx.drivers.wmr200)
-  9) WMR300          (weewx.drivers.wmr300)
- 10) WMR9x8          (weewx.drivers.wmr9x8)
- 11) WS1             (weewx.drivers.ws1)
- 12) WS23xx          (weewx.drivers.ws23xx)
- 13) WS28xx          (weewx.drivers.ws28xx)
+  8) WMR300          (weewx.drivers.wmr300)
+  9) WMR9x8          (weewx.drivers.wmr9x8)
+ 10) WS1             (weewx.drivers.ws1)
+ 11) WS23xx          (weewx.drivers.ws23xx)
+ 12) WS28xx          (weewx.drivers.ws28xx)
 choose a driver [3]:
 Saved backup to /home/weewx/weewx.conf.20200328054724</pre>
 
@@ -332,6 +329,56 @@ Saved backup to /home/weewx/weewx.conf.20200328054724</pre>
 
         <p>This will accept all the defaults, including your new device driver, without asking for any input.</p>
 
+        <h3 id="wee_config_utility_upgrade">Action <span class="code">--upgrade</span></h3>
+        <p>
+            Use this action to upgrade a configuration file, such as <span class="code">weewx.conf</span>. Normally,
+            this is done automatically by the installer, but there are occasions when it must be done manually. In
+            particular, this can happen when you run several instances of <span class="code">weewxd</span> on the same
+            machine and each has its own, unique, configuration file. The one named <span class="code">weewx.conf</span>
+            will get upgraded, but not the others.
+        </p>
+        <p>
+            Say you have an additonal configuration file, <span class="code">foo.conf</span>, located in <span
+            class="code">/etc/weewx/foo.conf</span>. Here's how you can upgrade it:
+        </p>
+        <ol>
+            <li>
+                <p>
+                    First, locate the "distribution configuration file." This is the version of <span class="code">weewx.conf</span>
+                    that came with the new version of WeeWX.
+                </p>
+                <p>
+                    If you used the <span class="code">setup.py</span> install method, it will be in <span class="code">/home/weewx/weewx.conf.X.Y.Z</span>,
+                    where <span class="code">X.Y.Z</span> is the version number.
+                </p>
+                <p>
+                    If you used a package installer, it will be in <span class="code">/etc/weewx/weewx.conf.dist</span>.
+                </p>
+
+            </li>
+            <li>
+                <p>
+                    Next use the utility to upgrade it:
+                </p>
+
+                <pre
+                    class="cmd tty">sudo wee_config --upgrade --config=/etc/weewx/foo.conf --dist-config=path-to-dist-config</pre>
+
+                <p>
+                    where <span class="code">path-to-dist-config</span> is the path to the distribution configuration
+                    file identified above.
+                </p>
+            </li>
+        </ol>
+
+        <p>
+            Your old version of <span class="code">foo.conf</span> will be copied to a timestamped backup.
+            Then, it will upgraded and the results will replace the old copy.
+        </p>
+        <p>
+            The option <span class="code">--upgrade</span> is idempotent. That is, subsequent invocations do not change
+            the result (although they will leave multiple backups behind).
+        </p>
 
         <!-- ======== -->
 
@@ -899,7 +946,6 @@ wee_debug report successfully generated
             <li><a href="hardware.htm#ultimeter_notes">Ultimeter</a></li>
             <li><a href="hardware.htm#vantage_notes">Vantage</a></li>
             <li><a href="hardware.htm#wmr100_notes">WMR100</a></li>
-            <li><a href="hardware.htm#wmr200_notes">WMR200</a></li>
             <li><a href="hardware.htm#wmr300_notes">WMR300</a></li>
             <li><a href="hardware.htm#wmr9x8_notes">WMR9x8</a></li>
             <li><a href="hardware.htm#ws1_notes">WS1</a></li>

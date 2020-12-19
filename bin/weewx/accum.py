@@ -1,24 +1,27 @@
 #
-#    Copyright (c) 2009-2019 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2020 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
-"""Statistical accumulators. They accumulate the highs, lows, averages, etc., of a sequence of records."""
+"""Statistical accumulators. They accumulate the highs, lows, averages, etc.,
+of a sequence of records."""
 #
 # General strategy.
 #
-# Most observation types are scalars, so they can be treated simply. Values are added to a scalar accumulator,
-# which keeps track of highs, lows, and a sum. When it comes time for extraction, the average over the archive period
-# is typically produced.
+# Most observation types are scalars, so they can be treated simply. Values are added to a scalar
+# accumulator, which keeps track of highs, lows, and a sum. When it comes time for extraction, the
+# average over the archive period is typically produced.
 #
-# However, wind is a special case. It is a vector, which has been flatted over at least two scalars, windSpeed and
-# windDir. Some stations, notably the Davis Vantage, add windGust and windGustDir. The accumulators cannot simply treat
-# them individually as if they were just another scalar. Instead they must be grouped together. This is done by treating
-# windSpeed as a 'special' scalar. When it appears, it is coupled with windDir and, if available, windGust and
-# windGustDir, and added to a vector accumulator. When the other types ( windDir, windGust, and windGustDir) appear,
-# they are ignored, having already been handled during the processing of type windSpeed.
+# However, wind is a special case. It is a vector, which has been flatted over at least two
+# scalars, windSpeed and windDir. Some stations, notably the Davis Vantage, add windGust and
+# windGustDir. The accumulators cannot simply treat them individually as if they were just another
+# scalar. Instead they must be grouped together. This is done by treating windSpeed as a 'special'
+# scalar. When it appears, it is coupled with windDir and, if available, windGust and windGustDir,
+# and added to a vector accumulator. When the other types ( windDir, windGust, and windGustDir)
+# appear, they are ignored, having already been handled during the processing of type windSpeed.
 #
-# When it comes time to extract wind, vector averages are calculated, then the results are flattened again.
+# When it comes time to extract wind, vector averages are calculated, then the results are
+# flattened again.
 #
 from __future__ import absolute_import
 
@@ -309,6 +312,8 @@ class VecStats(object):
             if dirN is not None:
                 self.xsum += weight * speed * math.cos(math.radians(90.0 - dirN))
                 self.ysum += weight * speed * math.sin(math.radians(90.0 - dirN))
+            # It's OK for direction to be None, provided speed is zero:
+            if dirN is not None or speed == 0:
                 self.dirsumtime += weight
 
     @property
@@ -432,7 +437,8 @@ class Accum(dict):
 
     def updateHiLo(self, accumulator):
         """Merge the high/low stats of another accumulator into me."""
-        if accumulator.timespan.start < self.timespan.start or accumulator.timespan.stop > self.timespan.stop:
+        if accumulator.timespan.start < self.timespan.start \
+                or accumulator.timespan.stop > self.timespan.stop:
             raise OutOfSpan("Attempt to merge an accumulator whose timespan is not a subset")
 
         self._check_units(accumulator.unit_system)
@@ -505,11 +511,15 @@ class Accum(dict):
         self._init_type('wind')
         # Then add to highs/lows.
         if add_hilo:
-            self['wind'].addHiLo((record.get('windSpeed'), record.get('windDir')),
-                                 record['dateTime'])
             # If the station does not provide windGustDir, then substitute windDir.
             # See issue #320, https://bit.ly/2HSo0ju
-            self['wind'].addHiLo((record.get('windGust'), record.get('windGustDir', record.get('windDir'))),
+            wind_gust_dir = record['windGustDir'] \
+                if 'windGustDir' in record else record.get('windDir')
+            # Do windGust first, so that the last value entered is windSpeed, not windGust
+            # See Slack discussion https://bit.ly/3qV1nBV
+            self['wind'].addHiLo((record.get('windGust'), wind_gust_dir),
+                                 record['dateTime'])
+            self['wind'].addHiLo((record.get('windSpeed'), record.get('windDir')),
                                  record['dateTime'])
         # Add to the running sum.
         self['wind'].addSum((record['windSpeed'], record.get('windDir')), weight=weight)

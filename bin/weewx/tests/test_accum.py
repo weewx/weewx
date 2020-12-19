@@ -18,7 +18,7 @@ start_ts = int(time.mktime((2009, 1, 1, 0, 0, 0, 0, 0, -1)))
 stop_ts = int(time.mktime((2009, 1, 1, 0, 30, 0, 0, 0, -1)))
 
 
-class ScalarStatsTest(unittest.TestCase):
+class StatsTest(unittest.TestCase):
 
     def setUp(self):
 
@@ -79,6 +79,45 @@ class ScalarStatsTest(unittest.TestCase):
 
         self.assertAlmostEqual(ss.sum, 2 * tsum, 6)
         self.assertEqual(ss.count, 2 * tcount)
+
+    def test_null_wind_gust_dir(self):
+        # If LOOP packets windGustDir=None, the accumulator should not substitute windDir.
+        # This is a regression test that tests that.
+        accum = weewx.accum.Accum(TimeSpan(start_ts, stop_ts))
+
+        # Add the dataset to the accumulator. Null out windGustDir first.
+        for record in self.dataset:
+            record_test = dict(record)
+            record_test['windGustDir'] = None
+            accum.addRecord(record_test)
+
+        # Extract the record out of the accumulator
+        accum_record = accum.getRecord()
+        # windGustDir should match the windDir seen at max wind:
+        self.assertIsNone(accum_record['windGustDir'])
+
+    def test_no_wind_gust_dir(self):
+        # If LOOP packets do not have windGustDir at all, then the accumulator is supposed to
+        # substitute windDir. This is a regression test that tests that.
+        accum = weewx.accum.Accum(TimeSpan(start_ts, stop_ts))
+
+        windMax = None
+        windMaxDir = None
+        # Add the dataset to the accumulator. Null out windGustDir first.
+        for record in self.dataset:
+            record_test = dict(record)
+            del record_test['windGustDir']
+            if windMax is None \
+                    or (record_test['windSpeed'] is not None
+                        and record_test['windSpeed'] > windMax):
+                windMax = record_test['windSpeed']
+                windMaxDir = record_test['windDir']
+            accum.addRecord(record_test)
+
+        # Extract the record out of the accumulator
+        accum_record = accum.getRecord()
+        # windGustDir should match the windDir seen at max wind:
+        self.assertEqual(accum_record['windGustDir'], windMaxDir)
 
 
 class AccumTest(unittest.TestCase):

@@ -17,9 +17,10 @@ This search list extension offers two extra tags:
 
 To use this search list extension:
 
-1) copy this file to the user directory
+1) Copy this file to the user directory. See https://bit.ly/33YHsqX for where your user
+directory is located.
 
-2) modify the option search_list in the skin.conf configuration file, adding
+2) Modify the option search_list in the skin.conf configuration file, adding
 the name of this extension.  When you're done, it will look something like
 this:
 

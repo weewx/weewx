@@ -1,13 +1,13 @@
 #
-#    Copyright (c) 2019 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2019-2020 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
-"""Test StdWXService"""
+"""Test weather-related XTypes extensions."""
 
+import logging
 import math
 import unittest
-import logging
 
 try:
     # Python 3 --- mock is included in unittest
@@ -16,7 +16,7 @@ except ImportError:
     # Python 2 --- must have mock installed
     import mock
 
-import weewx.wxservices
+import weewx.wxxtypes
 import weeutil.logger
 from weewx.units import ValueTuple
 import schemas.wview_extended
@@ -26,30 +26,16 @@ weewx.debug = 1
 
 log = logging.getLogger(__name__)
 # Set up logging using the defaults.
-weeutil.logger.setup('test_wxservices', {})
+weeutil.logger.setup('test_wxxtypes', {})
 
-altitude_vt = (700, 'foot', 'group_altitude')
+altitude_vt = weewx.units.ValueTuple(700, "foot", "group_altitude")
 latitude = 45
 longitude = -122
-
-svc_dict = {
-    'Algorithms': {},
-    'Calculations': {
-        'appTemp': 'software',
-        'beaufort': 'software',
-        'dewpoint': 'software',
-        'heatindex': 'software',
-        'humidex': 'software',
-        'inDewpoint': 'software',
-        'windchill': 'software',
-        'windrun': 'software',
-    }
-}
 
 # Test values:
 record_1 = {
     'dateTime': 1567515300, 'usUnits': 1, 'interval': 5, 'inTemp': 73.0, 'outTemp': 88.7,
-    'inHumidity': 54.0, 'outHumidity': 90.0, 'windSpeed': 12.0, 'windDir': None, 'windGust': 15.0,
+    'inHumidity': 54.0, 'outHumidity': 90.0, 'windSpeed': 12.0, 'windDir': 250.0, 'windGust': 15.0,
     'windGustDir': 270.0, 'rain': 0.02,
 }
 
@@ -71,7 +57,7 @@ class TestSimpleFunctions(unittest.TestCase):
     def setUp(self):
         # Make a copy. We may be modifying it.
         self.record = dict(record_1)
-        self.wx_calc = weewx.wxservices.WXXTypes(svc_dict, altitude_vt, latitude, longitude)
+        self.wx_calc = weewx.wxxtypes.WXXTypes(altitude_vt, latitude, longitude)
 
     def test_appTemp(self):
         self.calc('appTemp', 'outTemp', 'outHumidity', 'windSpeed')
@@ -96,6 +82,19 @@ class TestSimpleFunctions(unittest.TestCase):
 
     def test_windrun(self):
         self.calc('windrun', 'windSpeed')
+
+    def test_windDir_default(self):
+        # With the default, windDir should be set to None if the windSpeed is zero.
+        self.record['windSpeed'] = 0.0
+        result = self.wx_calc.get_scalar('windDir', self.record, None)
+        self.assertIsNone(result[0])
+
+    def test_windDir_no_ignore(self):
+        # Now let's not ignore zero wind
+        wx_calc = weewx.wxxtypes.WXXTypes(altitude_vt, latitude, longitude, force_null=False)
+        result = wx_calc.get_scalar('windDir', self.record, None)
+        self.assertIsNotNone(result[0])
+        self.assertEqual(result[0], self.record['windDir'])
 
     def calc(self, key, *crits):
         """Calculate derived type 'key'. Parameters in "crits" are required to perform the
@@ -128,15 +127,13 @@ record_2 = {
     'dateTime': 1567515300, 'usUnits': 1, 'interval': 5, 'inTemp': 73.0, 'outTemp': 55.7,
     'inHumidity': 54.0, 'outHumidity': 90.0, 'windSpeed': 0.0, 'windDir': None, 'windGust': 2.0,
     'windGustDir': 270.0, 'rain': 0.0, 'windchill': 55.7, 'heatindex': 55.7,
-    'pressure': 29.259303850622302, 'barometer': 29.99, 'altimeter': 30.001561119603156,
+    'pressure': 29.259303850622302, 'barometer': 29.99, 'altimeter': 30.012983156964353,
 }
-
-altitude_vt = weewx.units.ValueTuple(700, "foot", "group_altitude")
 
 # These are the correct values
 pressure = 29.259303850622302
 barometer = 30.01396476909608
-altimeter = 30.001561119603156
+altimeter = 30.012983156964353
 
 
 class TestPressureCooker(unittest.TestCase):
@@ -147,7 +144,7 @@ class TestPressureCooker(unittest.TestCase):
         self.record = dict(record_2)
 
     def test_get_temperature_12h(self):
-        pc = weewx.wxservices.PressureCooker(altitude_vt)
+        pc = weewx.wxxtypes.PressureCooker(altitude_vt)
 
         # Mock a database in US units
         db_manager = mock.Mock()
@@ -184,7 +181,7 @@ class TestPressureCooker(unittest.TestCase):
         """Test interface pressure()"""
 
         # Create a pressure cooker
-        pc = weewx.wxservices.PressureCooker(altitude_vt)
+        pc = weewx.wxxtypes.PressureCooker(altitude_vt)
 
         # Mock up a database manager in US units
         db_manager = mock.Mock()
@@ -213,9 +210,13 @@ class TestPressureCooker(unittest.TestCase):
     def test_altimeter(self):
         """Test interface altimeter()"""
 
-        # Create a pressure cooker
-        pc = weewx.wxservices.PressureCooker(altitude_vt)
+        # First, try the example in wxformulas.py. This has elevation 1,000 feet
+        pc = weewx.wxxtypes.PressureCooker((1000.0, 'foot', 'group_altitude'))
+        a = pc.altimeter({'usUnits': 1, 'pressure': 28.0})
+        self.assertAlmostEqual(a[0], 29.04, 2)
+        self.assertEqual(a[1:], ('inHg', 'group_pressure'))
 
+        pc = weewx.wxxtypes.PressureCooker(altitude_vt)
         a = pc.altimeter(self.record)
         self.assertEqual(a, (altimeter, 'inHg', 'group_pressure'))
 
@@ -228,7 +229,7 @@ class TestPressureCooker(unittest.TestCase):
         """Test interface barometer()"""
 
         # Create a pressure cooker
-        pc = weewx.wxservices.PressureCooker(altitude_vt)
+        pc = weewx.wxxtypes.PressureCooker(altitude_vt)
 
         b = pc.barometer(self.record)
         self.assertEqual(b, (barometer, 'inHg', 'group_pressure'))
@@ -270,7 +271,7 @@ class TestRainRater(unittest.TestCase):
     retain_period = 915
 
     def setUp(self):
-        """Set up an in-memory database"""
+        """Set up and populate an in-memory database"""
         self.db_manager = weewx.manager.Manager.open_with_create(
             {
                 'database_name': ':memory:',
@@ -293,25 +294,25 @@ class TestRainRater(unittest.TestCase):
 
     def test_add_US(self):
         """Test adding rain data in the US system"""
-        rain_rater = weewx.wxservices.RainRater(TestRainRater.rain_period,
-                                                TestRainRater.retain_period)
+        rain_rater = weewx.wxxtypes.RainRater(TestRainRater.rain_period,
+                                              TestRainRater.retain_period)
 
         # Get the next record out of the rain generator.
         record = self.rain_generator.next()
         # Make sure the event is what we think it is
         self.assertEqual(record['dateTime'], TestRainRater.start + 30 * 60)
         # Add it to the RainRater object
-        rain_rater.add_loop_packet(record, self.db_manager)
+        rain_rater.add_loop_packet(record)
         # Get the rainRate out of it
-        rate = rain_rater.get_scalar('rainRate', record, None)
+        rate = rain_rater.get_scalar('rainRate', record, self.db_manager)
         # Check its values
         self.assertAlmostEqual(rate[0], 13.80, 2)
         self.assertEqual(rate[1:], ('inch_per_hour', 'group_rainrate'))
 
     def test_add_METRICWX(self):
         """Test adding rain data in the METRICWX system"""
-        rain_rater = weewx.wxservices.RainRater(TestRainRater.rain_period,
-                                                TestRainRater.retain_period)
+        rain_rater = weewx.wxxtypes.RainRater(TestRainRater.rain_period,
+                                              TestRainRater.retain_period)
 
         # Get the next record out of the rain generator.
         record = self.rain_generator.next()
@@ -320,23 +321,23 @@ class TestRainRater(unittest.TestCase):
         # Convert to metric:
         record_metric = weewx.units.to_METRICWX(record)
         # Add it to the RainRater object
-        rain_rater.add_loop_packet(record_metric, self.db_manager)
+        rain_rater.add_loop_packet(record_metric)
         # The rest should be as before:
         # Get the rainRate out of it
-        rate = rain_rater.get_scalar('rainRate', record, None)
+        rate = rain_rater.get_scalar('rainRate', record, self.db_manager)
         # Check its values
         self.assertAlmostEqual(rate[0], 13.80, 2)
         self.assertEqual(rate[1:], ('inch_per_hour', 'group_rainrate'))
 
     def test_trim(self):
         """"Test trimming old events"""
-        rain_rater = weewx.wxservices.RainRater(TestRainRater.rain_period,
-                                                TestRainRater.retain_period)
+        rain_rater = weewx.wxxtypes.RainRater(TestRainRater.rain_period,
+                                              TestRainRater.retain_period)
 
-        # Add 5 minutes worth of rain
-        N = 5
+        # Add 20 minutes worth of rain
+        N = 20
         for record in self.rain_generator:
-            rain_rater.add_loop_packet(record, self.db_manager)
+            rain_rater.add_loop_packet(record)
             N -= 1
             if not N:
                 break
@@ -348,11 +349,41 @@ class TestRainRater(unittest.TestCase):
         self.assertEqual(rain_rater.rain_events[-1][0], record['dateTime'])
 
         # Get the rainRate
-        rate = rain_rater.get_scalar('rainRate', record, None)
+        rate = rain_rater.get_scalar('rainRate', record, self.db_manager)
         # Check its values
-        self.assertAlmostEqual(rate[0], 16.20, 2)
+        self.assertAlmostEqual(rate[0], 25.20, 2)
         self.assertEqual(rate[1:], ('inch_per_hour', 'group_rainrate'))
 
+
+class TestDelta(unittest.TestCase):
+    """Test XTypes extension 'Delta'."""
+
+    def test_delta(self):
+        # Instantiate a Delta for calculating 'rain' from 'totalRain':
+        delta = weewx.wxxtypes.Delta({'rain': {'input': 'totalRain'}})
+
+        # Add a new total rain to it:
+        record = {'dateTime': 1567515300, 'usUnits': 1, 'interval': 5, 'totalRain': 0.05}
+        val = delta.get_scalar('rain', record, None)
+        self.assertIsNone(val[0])
+
+        # Add the same record again. No change in totalRain, so rain should be zero
+        val = delta.get_scalar('rain', record, None)
+        self.assertEqual(val[0], 0.0)
+
+        # Add a little rain.
+        record['totalRain'] += 0.01
+        val = delta.get_scalar('rain', record, None)
+        self.assertAlmostEqual(val[0], 0.01, 6)
+
+        # Adding None should reset counter
+        record['totalRain'] = None
+        val = delta.get_scalar('rain', record, None)
+        self.assertIsNone(val[0])
+
+        # Try an unknown type
+        with self.assertRaises(weewx.UnknownType):
+            delta.get_scalar('foo', record, None)
 
 class TestET(unittest.TestCase):
     start = 1562007600  # 1-Jul-2019 1200
@@ -378,9 +409,9 @@ class TestET(unittest.TestCase):
             self.db_manager.addRecord(record)
 
     def test_ET(self):
-        wx_xtypes = weewx.wxservices.WXXTypes(svc_dict, altitude_vt,
-                                              latitude=latitude,
-                                              longitude=longitude)
+        wx_xtypes = weewx.wxxtypes.WXXTypes(altitude_vt,
+                                            latitude_f=latitude,
+                                            longitude_f=longitude)
         ts = self.db_manager.lastGoodStamp()
         record = self.db_manager.getRecord(ts)
         et_vt = wx_xtypes.get_scalar('ET', record, self.db_manager)
@@ -393,7 +424,7 @@ class TestWindRun(unittest.TestCase):
     """Windrun calculations always seem to give us trouble..."""
 
     def setUp(self):
-        self.wx_calc = weewx.wxservices.WXXTypes(svc_dict, altitude_vt, latitude, longitude)
+        self.wx_calc = weewx.wxxtypes.WXXTypes(altitude_vt, latitude, longitude)
 
     def test_US(self):
         record = {'usUnits': weewx.US, 'interval': 5, 'windSpeed': 3.8}

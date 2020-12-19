@@ -198,29 +198,23 @@ class ArchiveTable(XType):
                 "AND a.dateTime = (SELECT MIN(dateTime) FROM archive "
                 "WHERE dateTime >= %(start)s);",
         'first': "SELECT %(obs_type)s FROM %(table_name)s "
-                 "WHERE dateTime = (SELECT MIN(dateTime) FROM %(table_name)s "
-                 "WHERE dateTime > %(start)s AND dateTime <= %(stop)s  "
-                 "AND %(obs_type)s IS NOT NULL)",
+                 "WHERE dateTime > %(start)s AND dateTime <= %(stop)s "
+                 "AND %(obs_type)s IS NOT NULL ORDER BY dateTime ASC LIMIT 1",
         'firsttime': "SELECT MIN(dateTime) FROM %(table_name)s "
-                     "WHERE dateTime > %(start)s AND dateTime <= %(stop)s  "
+                     "WHERE dateTime > %(start)s AND dateTime <= %(stop)s "
                      "AND %(obs_type)s IS NOT NULL",
         'last': "SELECT %(obs_type)s FROM %(table_name)s "
-                "WHERE dateTime = (SELECT MAX(dateTime) FROM %(table_name)s "
-                "WHERE dateTime > %(start)s AND dateTime <= %(stop)s  "
-                "AND %(obs_type)s IS NOT NULL)",
+                "WHERE dateTime > %(start)s AND dateTime <= %(stop)s "
+                "AND %(obs_type)s IS NOT NULL ORDER BY dateTime DESC LIMIT 1",
         'lasttime': "SELECT MAX(dateTime) FROM %(table_name)s "
-                    "WHERE dateTime > %(start)s AND dateTime <= %(stop)s  "
+                    "WHERE dateTime > %(start)s AND dateTime <= %(stop)s "
                     "AND %(obs_type)s IS NOT NULL",
         'maxtime': "SELECT dateTime FROM %(table_name)s "
-                   "WHERE dateTime > %(start)s AND dateTime <= %(stop)s AND "
-                   "%(obs_type)s = (SELECT MAX(%(obs_type)s) FROM %(table_name)s "
-                   "WHERE dateTime > %(start)s and dateTime <= %(stop)s) "
-                   "AND %(obs_type)s IS NOT NULL",
+                   "WHERE dateTime > %(start)s AND dateTime <= %(stop)s "
+                   "AND %(obs_type)s IS NOT NULL ORDER BY %(obs_type)s DESC LIMIT 1",
         'mintime': "SELECT dateTime FROM %(table_name)s "
-                   "WHERE dateTime > %(start)s AND dateTime <= %(stop)s AND "
-                   "%(obs_type)s = (SELECT MIN(%(obs_type)s) FROM %(table_name)s "
-                   "WHERE dateTime > %(start)s and dateTime <= %(stop)s) "
-                   "AND %(obs_type)s IS NOT NULL",
+                   "WHERE dateTime > %(start)s AND dateTime <= %(stop)s "
+                   "AND %(obs_type)s IS NOT NULL ORDER BY %(obs_type)s ASC LIMIT 1",
         'tderiv': "SELECT (b.%(obs_type)s - a.%(obs_type)s) / (b.dateTime-a.dateTime) "
                   "FROM archive a, archive b "
                   "WHERE b.dateTime = (SELECT MAX(dateTime) FROM archive "
@@ -252,8 +246,8 @@ class ArchiveTable(XType):
     
         returns: A ValueTuple containing the result."""
 
-        if aggregate_type not in ['sum', 'count', 'avg', 'max', 'min'] + list(
-                ArchiveTable.agg_sql_dict.keys()):
+        if aggregate_type not in ['sum', 'count', 'avg', 'max', 'min'] \
+                + list(ArchiveTable.agg_sql_dict.keys()):
             raise weewx.UnknownAggregation(aggregate_type)
 
         interpolate_dict = {
@@ -693,7 +687,7 @@ class WindVec(XType):
         interpolation_dict = {
             'dir': WindVec.windvec_types[obs_type][1],
             'mag': WindVec.windvec_types[obs_type][0],
-            'start': weeutil.weeutil.startOfDay(timespan.start),
+            'start': timespan.start,
             'stop': timespan.stop,
             'table_name': db_manager.table_name
         }
@@ -810,6 +804,51 @@ class WindVecDaily(XType):
         return weewx.units.ValueTuple(value, t, g)
 
 
+class XTypeTable(XType):
+    """Calculate a series for an xtype. Note: this version only works if no aggregation has
+    been requested."""
+
+    @staticmethod
+    def get_series(obs_type, timespan, db_manager, aggregate_type=None, aggregate_interval=None):
+        """Get a series of an xtype, by using the main archive table. Works only for no
+        aggregation. """
+
+        start_vec = list()
+        stop_vec = list()
+        data_vec = list()
+
+        if aggregate_type:
+            # This version does not know how to do aggregations, although this could be
+            # added in the future.
+            raise weewx.UnknownAggregation(aggregate_type)
+
+        else:
+            # No aggregation
+
+            std_unit_system = None
+
+            # Hit the database.
+            for record in db_manager.genBatchRecords(*timespan):
+
+                if std_unit_system:
+                    if std_unit_system != record['usUnits']:
+                        raise weewx.UnsupportedFeature("Unit system cannot change "
+                                                       "within a series.")
+                else:
+                    std_unit_system = record['usUnits']
+
+                # Given a record, use the xtypes system to calculate a value:
+                value = get_scalar(obs_type, record, db_manager)
+                start_vec.append(record['dateTime']- record['interval'] * 60)
+                stop_vec.append(record['dateTime'])
+                data_vec.append(value[0])
+
+            unit, unit_group = weewx.units.getStandardUnitType(std_unit_system, obs_type)
+
+        return (ValueTuple(start_vec, 'unix_epoch', 'group_time'),
+                ValueTuple(stop_vec, 'unix_epoch', 'group_time'),
+                ValueTuple(data_vec, unit, unit_group))
+
 # Add instantiated versions to the extension list. Order matters. We want the highly-specialized
 # versions first, because they might offer optimizations.
 xtypes.append(WindVecDaily())
@@ -817,3 +856,4 @@ xtypes.append(WindVec())
 xtypes.append(AggregateHeatCool())
 xtypes.append(DailySummaries())
 xtypes.append(ArchiveTable())
+xtypes.append(XTypeTable())

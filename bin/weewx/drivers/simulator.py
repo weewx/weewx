@@ -12,44 +12,55 @@ import math
 import random
 import time
 
-import weedb
 import weewx.drivers
 import weeutil.weeutil
 
 DRIVER_NAME = 'Simulator'
-DRIVER_VERSION = "3.2"
+DRIVER_VERSION = "3.3"
+
 
 def loader(config_dict, engine):
 
-    # This loader uses a bit of a hack to have the simulator resume at a later
+    start_ts, resume_ts = extract_starts(config_dict, DRIVER_NAME)
+
+    station = Simulator(start_time=start_ts, resume_time=resume_ts, **config_dict[DRIVER_NAME])
+
+    return station
+
+
+def extract_starts(config_dict, driver_name):
+    """Extract the start and resume times out of the configuration dictionary"""
+
+    # This uses a bit of a hack to have the simulator resume at a later
     # time. It's not bad, but I'm not enthusiastic about having special
     # knowledge about the database in a driver, albeit just the loader.
 
     start_ts = resume_ts = None
-    if 'start' in config_dict[DRIVER_NAME]:
+    if 'start' in config_dict[driver_name]:
         # A start has been specified. Extract the time stamp.
-        start_tt = time.strptime(config_dict[DRIVER_NAME]['start'], "%Y-%m-%dT%H:%M")        
+        start_tt = time.strptime(config_dict[driver_name]['start'], "%Y-%m-%dT%H:%M")
         start_ts = time.mktime(start_tt)
         # If the 'resume' keyword is present and True, then get the last
         # archive record out of the database and resume with that.
-        if weeutil.weeutil.to_bool(config_dict[DRIVER_NAME].get('resume', False)):
+        if weeutil.weeutil.to_bool(config_dict[driver_name].get('resume', False)):
             import weewx.manager
+            import weedb
             try:
                 # Resume with the last time in the database. If there is no such
                 # time, then fall back to the time specified in the configuration
                 # dictionary.
-                with weewx.manager.open_manager_with_config(config_dict, 'wx_binding') as dbmanager:
-                        resume_ts = dbmanager.lastGoodStamp()
+                with weewx.manager.open_manager_with_config(config_dict,
+                                                            'wx_binding') as dbmanager:
+                    resume_ts = dbmanager.lastGoodStamp()
             except weedb.OperationalError:
                 pass
         else:
             # The resume keyword is not present. Start with the seed time:
             resume_ts = start_ts
-            
-    station = Simulator(start_time=start_ts, resume_time=resume_ts, **config_dict[DRIVER_NAME])
-    
-    return station
-        
+
+    return start_ts, resume_ts
+
+
 class Simulator(weewx.drivers.AbstractDevice):
     """Station simulator"""
     
@@ -125,10 +136,13 @@ class Simulator(weewx.drivers.AbstractDevice):
             'referenceVoltage': BatteryVoltage(),
             'rxCheckPercent': SignalStrength()}
 
-        # calculate only the specified observations, or all if none specified
+        self.trim_observations(stn_dict)
+
+    def trim_observations(self, stn_dict):
+        """Calculate only the specified observations, or all if none specified"""
         if 'observations' in stn_dict and stn_dict['observations'] is not None:
             desired = [x.strip() for x in stn_dict['observations'].split(',')]
-            for obs in self.observations:
+            for obs in list(self.observations):
                 if obs not in desired:
                     del self.observations[obs]
 

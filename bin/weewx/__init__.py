@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2019 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2020 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -7,7 +7,7 @@
 from __future__ import absolute_import
 import time
 
-__version__="4.1.1"
+__version__="4.3.0b2"
 
 # Holds the program launch time in unix epoch seconds:
 # Useful for calculating 'uptime.'
@@ -114,10 +114,9 @@ class POST_LOOP(object):
 #                       Service groups.
 # =============================================================================
 
-# All existent service groups:
-all_service_groups = [
-    'prep_services', 'data_services', 'process_services',
-    'archive_services', 'restful_services', 'report_services']
+# All existent service groups and the order in which they should be run:
+all_service_groups = ['prep_services', 'data_services', 'process_services', 'xtype_services',
+                      'archive_services', 'restful_services', 'report_services']
 
 # =============================================================================
 #                       Class Event
