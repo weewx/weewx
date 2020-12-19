@@ -10,6 +10,8 @@ up by inserting a bunch of records in the archive table *then* building the dail
 does not test adding things on the fly.
 
 This file also tests reweighting the weighted sums.
+
+It also tests the V4.3 patch.
 """
 import datetime
 import logging
@@ -35,21 +37,25 @@ schema = schemas.wview_small.schema
 # Archive interval of one hour
 interval_secs = 3600
 # Fifteen days worth of data.
-start_dt = datetime.date(2019, 6, 1)
-stop_dt = datetime.date(2019, 6, 15)
+start_d = datetime.date(2020, 10, 26)
+stop_d = datetime.date(2020, 11, 11)
 # This starts and ends on day boundaries:
-start_ts = int(time.mktime(start_dt.timetuple())) + interval_secs
-stop_ts = int(time.mktime(stop_dt.timetuple()))
+start_ts = int(time.mktime(start_d.timetuple())) + interval_secs
+stop_ts = int(time.mktime(stop_d.timetuple()))
 # Add a little data to both ends, so the data do not start and end on day boundaries:
 start_ts -= 4 * interval_secs
 stop_ts += 4 * interval_secs
+
+# Find something roughly near the half way mark
+mid_d = datetime.date(2020, 11, 1)
+mid_ts = int(time.mktime(mid_d.timetuple()))
 
 db_dict_sqlite = {
     'driver': 'weedb.sqlite',
     # Use an in-memory database:
     'database_name': ':memory:',
     # Can be useful for testing:
-    'SQLITE_ROOT': '/var/tmp/weewx_test',
+    # 'SQLITE_ROOT': '/var/tmp/weewx_test',
     # 'database_name': 'testmgr.sdb',
 }
 
@@ -62,7 +68,7 @@ db_dict_mysql = {
 }
 
 
-class Common(object):
+class CommonWeightTests(object):
     """Test that inserting records get the weighted sums right. Regression test for issue #623. """
 
     def setUp(self):
@@ -104,18 +110,45 @@ class Common(object):
             self.assertEqual(result3, result4)
 
 
-class TestSqlite(Common, unittest.TestCase):
+class CommonPatchTest(CommonWeightTests):
+    """Test patching the flawed databases from V4.2."""
+
+    def setUp(self):
+        # Set up the database
+        super(CommonPatchTest, self).setUp()
+        with weedb.Transaction(self.db_manager.connection) as cursor:
+            # Bugger up roughly half the database
+            for key in self.db_manager.daykeys:
+                sql_update = "UPDATE %s_day_%s SET wsum=sum, sumtime=count WHERE dateTime >?" \
+                             % (self.db_manager.table_name, key)
+                cursor.execute(sql_update, (mid_ts,))
+        self.db_manager.version = '2.0'
+
+    def test_patch(self):
+        self.db_manager.patch_sums()
+        self.check_weights()
+        self.assertEqual(self.db_manager.version, weewx.manager.DaySummaryManager.version)
+
+
+class TestSqliteWeights(CommonWeightTests, unittest.TestCase):
 
     def __init__(self, *args, **kwargs):
         self.db_dict = db_dict_sqlite
-        super(TestSqlite, self).__init__(*args, **kwargs)
+        super(TestSqliteWeights, self).__init__(*args, **kwargs)
 
 
-class TestMySQL(Common, unittest.TestCase):
+class TestSqlitePatch(CommonPatchTest, unittest.TestCase):
+
+    def __init__(self, *args, **kwargs):
+        self.db_dict = db_dict_sqlite
+        super(CommonPatchTest, self).__init__(*args, **kwargs)
+
+
+class TestMySQLWeights(CommonWeightTests, unittest.TestCase):
 
     def __init__(self, *args, **kwargs):
         self.db_dict = db_dict_mysql
-        super(TestMySQL, self).__init__(*args, **kwargs)
+        super(TestMySQLWeights, self).__init__(*args, **kwargs)
 
     def setUp(self):
         try:
@@ -125,14 +158,16 @@ class TestMySQL(Common, unittest.TestCase):
                 import pymysql as MySQLdb
             except ImportError as e:
                 raise unittest.case.SkipTest(e)
-        super(TestMySQL, self).setUp()
+        super(TestMySQLWeights, self).setUp()
 
 
 def suite():
     tests = ['test_weights', 'test_reweight']
 
     # Test both sqlite and MySQL:
-    return unittest.TestSuite(list(map(TestSqlite, tests)) + list(map(TestMySQL, tests)))
+    return unittest.TestSuite(list(map(TestSqliteWeights, tests))
+                              + list(map(TestMySQLWeights, tests))
+                              + list(map(TestSqlitePatch, ['test_patch'])))
 
 
 if __name__ == '__main__':
