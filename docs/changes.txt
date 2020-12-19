@@ -31,6 +31,8 @@ Fixes issue #620.
 Fixed problem where wind gust direction is not available when using software
 record generation.
 
+Added --no-prompt action to wee_import allowing wee_import to be run unattended.
+
 
 4.2.0 10/26/2020
 
