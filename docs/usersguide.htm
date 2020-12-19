@@ -5,10 +5,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <link rel="icon" href="images/favicon.png" type="image/png"/>
-    <link rel="stylesheet" href="css/tocbot-4.3.1.css">
+    <link rel="stylesheet" href="css/tocbot-4.12.0.css">
     <link rel="stylesheet" href="css/weewx_ui.css"/>
     <script src="js/cash.min.js"></script>
-    <script src="js/tocbot-4.3.1.min.js"></script>
+    <script src="js/tocbot-4.12.0.min.js"></script>
     <script src="js/weewx.js"></script>
     <script>
         $(function () {
@@ -47,7 +47,7 @@
         <div class="logoref">
             <a href='http://weewx.com'> <img src='images/logo-weewx.png' class='logo' style="float:right"
                                              alt="weewx logo"/> </a><br/> <span class='version'>
-Version: 4.2
+Version: 4.3
     </span>
         </div>
         <div class="title">User's Guide to WeeWX</div>
@@ -1297,10 +1297,6 @@ longitude = -77.0366</pre>
                 <td>Oregon Scientific WMR100 series stations</td>
             </tr>
             <tr>
-                <td class="code first_col">WMR200</td>
-                <td>Oregon Scientific WMR200 series stations</td>
-            </tr>
-            <tr>
                 <td class="code first_col">WMR300</td>
                 <td>Oregon Scientific WMR300 series stations</td>
             </tr>
@@ -1656,71 +1652,6 @@ longitude = -77.0366</pre>
     extraTemp1 = temperature_5</pre>
 
         <p>See the <a href="hardware.htm#wmr100_data">Hardware Guide</a> for a complete listing of sensor names and the
-            default database fields for each sensor.
-        </p>
-
-
-        <h3 class="config_section">[WMR200]</h3>
-
-        <p>This section is for options relating to the Oregon Scientific WMR200 series of weather stations with USB
-            connectors.
-        </p>
-
-        <p class="config_important">model</p>
-
-        <p>Set to the station model. For example, WMR200 or WMR200A.</p>
-
-        <p class="config_option">use_pc_time</p>
-
-        <p>If True, use the computer time, otherwise use the station time. Default is True.</p>
-
-        <p class="config_option">archive_interval</p>
-
-        <p>Set the wmr200 archive interval in seconds. Default is 60 seconds.</p>
-
-        <p>The wmr200 hardware records archive data at an immutable rate of 60 seconds. This field may be set to a
-            higher value enabling the WeeWX engine to coalesce live data packets. However, when the wmr200 is not
-            connected to a system via USB or if the WeeWX software is not running, the wmr200 console will continue to
-            store weather data in onboard console memory at a fixed rate of 60 seconds.
-        </p>
-
-        <p class="config_option">erase_archive</p>
-
-        <p>If True, erase onboard console memory archive on startup. Default is False.</p>
-
-        <p class="config_option">archive_startup</p>
-
-        <p>When retrieving archive data packets from the wmr200 onboard console memory, there is no explicit indication
-            that all the data has been drained. This field specifies when to transition from archive mode to live mode.
-            This transition occurs when no archive packets are detected within this time interval. Default is 120
-            seconds.
-        </p>
-
-        <p class="config_option">archive_threshold</p>
-
-        <p>Occasionally when retrieving archive packets from the wmr200 onboard memory a stale data packet will be
-            detected. The archive packets are presented in sequential order typically timestamped 60 seconds apart.
-            However, there is no guarantee the archive packets are exactly 60 seconds apart. Should an incoming archive
-            data packet timestamp exceed the previous archive data packet one by the amount in this field it will be
-            dropped. Default is 1512000 seconds (1 week).
-        </p>
-
-        <p class="config_option">sensor_status</p>
-
-        <p>If True, emit sensor faults and failures to log. Default is True.</p>
-
-        <p class="config_option">sensor_map</p>
-
-        <p>This option defines the mapping between observations from remote sensors and the fields in the database.
-        </p>
-
-        <p>For example, this would associate extraTemp1 with the remote T/H sensor on channel 5:
-        </p>
-
-        <pre class='tty'>[[sensor_map]]
-    extraTemp1 = temperature_5</pre>
-
-        <p>See the <a href="hardware.htm#wmr200_data">Hardware Guide</a> for a complete listing of sensor names and the
             default database fields for each sensor.
         </p>
 
@@ -2626,40 +2557,17 @@ longitude = -77.0366</pre>
 
         <h2 class="config_section" id="StdWXCalculate">[StdWXCalculate]</h2>
 
-        <p>The calculation service calculates derived quantities such as <span class='code'>dewpoint</span>, <span
-            class='code'>windchill</span>, and <span class='code'>heatindex</span>.
-        </p>
-
-        <p>Some hardware provides derived quantities, others provide only raw observations. The calculation service
-            provides derived quantities for hardware that does not provide them, and known algorithms for hardware that
-            provides unreliable or antiquated calculations.
-        </p>
-
-        <p>The section <span class="code">[StdWXCalculate]</span> consists of a group of Observation defaults, followed by a
-            subsection <span class="code">[[Calculations]]</span> that specifies the calculation strategy to be used for
-            each derived quantity.
-        </p>
-
-        <p class="config_option" id="ignore_zero_wind">ignore_zero_wind</p>
-
         <p>
-            Indicates whether the wind direction should be undefined when the wind speed is zero. The default value is
-            <span class="code">True</span>: the wind direction will be undefined when wind speed is zero.
+            Some hardware provides derived quantities, such as <span class='code'>dewpoint</span>, <span
+            class='code'>windchill</span>, and <span class='code'>heatindex</span>, while other hardware does not.
+            This service can be used to fill in any missing quantities, or to substitute a software-calculated value
+            for hardware that has unreliable or obsolete calculations.
         </p>
 
         <p>
-            To report the wind vane direction even when there is no wind speed, change this to False:
+            By default, the service can calculate the following values, although the list can be extended:
         </p>
-        <pre class="tty">[StdWXCalculate]
-    ...
-    ignore_zero_wind = False</pre>
-
-        <h3 class="config_section">[[Calculations]]</h3>
-
-        <p>This subsection specifies which strategy is to be used to provide values for derived variables. The service
-            can calculate the following values:
-        </p>
-        <ul>
+        <ul style="width:50%" class="code mc-list">
             <li>pressure</li>
             <li>barometer</li>
             <li>altimeter</li>
@@ -2675,22 +2583,57 @@ longitude = -77.0366</pre>
             <li>ET</li>
             <li>windrun</li>
         </ul>
-        <p>In its default configuration, the service calculates values only if they have not already been provided by
-            the hardware or driver. This is the default configuration:
+
+        <p>
+            The configuration section <span class="code">[StdWXCalculate]</span> consists of two different parts:
+        </p>
+
+        <ol>
+            <li>
+                The sub-section <span class="code">[[Calculations]]</span>, which specifies which derived types are to
+                be calculated and under what circumstances;
+            </li>
+            <li>
+                Zero or more sub-sections, which specify what parameters are to be used for the calculation. These are
+                described below.
+            </li>
+        </ol>
+
+        <p>
+            The service <span class="code">StdWXCalculate</span> can be extended by the user to add new, derived types
+            using the XTypes system. See the wiki article <a
+            href="https://github.com/weewx/weewx/wiki/WeeWX-V4-user-defined-types"><em>Extensible types
+            (XTypes)</em></a> for how to do this.
+        </p>
+
+        <h3 class="config_section">[[Calculations]]</h3>
+
+        <p>
+            This subsection specifies which strategy is to be used to provide values for derived variables.
+            In the absence of a <span class="code">[[Calculations]]</span> section, <em>no</em> values will be
+            calculated. However, the version of <span class="code">weewx.conf</span> that comes with the WeeWX
+            distribution comes with a version of <span class="code">[[Calculations]]</span> that looks like this:
         </p>
 
         <pre class="tty">[StdWXCalculate]
     [[Calculations]]
         pressure = prefer_hardware
-        barometer = prefer_hardware
         altimeter = prefer_hardware
-        windchill = prefer_hardware
-        heatindex = prefer_hardware
+        appTemp = prefer_hardware
+        barometer = prefer_hardware
+        cloudbase = prefer_hardware
         dewpoint = prefer_hardware
+        ET = prefer_hardware
+        heatindex = prefer_hardware
+        humidex = prefer_hardware
         inDewpoint = prefer_hardware
-        rainRate = prefer_hardware</pre>
+        maxSolarRad = prefer_hardware
+        rainRate = prefer_hardware
+        windchill = prefer_hardware
+        windrun = prefer_hardware</pre>
 
-        <p>The options for each quantity are <span class='code'>hardware</span>, <span class='code'>software</span>, or
+        <p>
+            The options for each quantity are <span class='code'>hardware</span>, <span class='code'>software</span>, or
             <span class='code'>prefer_hardware</span></p>
         <table class="indent">
             <tr>
@@ -2706,15 +2649,148 @@ longitude = -77.0366</pre>
                 <td>Calculate the value only if it is not provided by hardware.</td>
             </tr>
         </table>
-        <p>For example, if your weather station calculates windchill using the pre-2001 algorithm, and you prefer to
+
+        <p>
+            For example, if your weather station calculates windchill using the pre-2001 algorithm, and you prefer to
             have WeeWX calculate it using a current algorithm, specify the following:
         </p>
 
         <pre class="tty">[StdWXCalculate]
-    ...
     [[Calculations]]
-        ...
-        windchill = software</pre>
+      windchill = software</pre>
+
+        <p>
+            This will force WeeWX to always calculate a value for <span class="code">windchill</span>, irregardless
+            of whether the hardware provides one.
+        </p>
+
+        <h3 class="config_section">[[WXXTypes]]</h3>
+
+        <p>
+            The <span class="code">StdWXXTypes</span> class is responsible for calculating the following simple, derived
+            types:
+        </p>
+
+        <ul style="width:50%" class="code mc-list">
+            <li>appTemp</li>
+            <li>cloudbase</li>
+            <li>dewpoint</li>
+            <li>ET</li>
+            <li>heatindex</li>
+            <li>humidex</li>
+            <li>inDewpoint</li>
+            <li>maxSolarRad</li>
+            <li>windchill</li>
+            <li>windDir</li>
+            <li>windRun</li>
+        </ul>
+
+        <p>A few of these types have an option or two that can be set. These are described below. </p>
+
+        <h4 class="config_section">[[[ET]]]</h4>
+        <p>
+            This sub-section contains several options used when calculating ET (evapotranspiration)
+        </p>
+
+        <p class="config_option">et_period</p>
+        <p>This option changes the period over which evapotranspiration is calculated. Default is 3600 seconds.</p>
+
+        <p class="config_option">wind_height</p>
+        <p>
+            The option <span class="code">wind_height</span> is used to normalize where wind speed is measured for
+            calculating evapotranspiration. It should be set to the height of your anemometer in meters. Default is 2.0.
+        </p>
+
+        <h4 class="config_section">[[[heatindex]]]</h4>
+        <p class="config_option">algorithm</p>
+        <p>
+            Controls which algorithm will be used to calculate heat-index. Choices are <span class="code">new</span>
+            (see <a href="https://www.wpc.ncep.noaa.gov/html/heatindex_equation.shtml">https://www.wpc.ncep.noaa.gov/html/heatindex_equation.shtml</a>),
+            or <span class="code">old</span>. The newer algorithm will give results down to 40&deg;F, which are
+            sometimes less than the sensible temperature. For this reason, some people prefer the older algorithm, which
+            applies only for temperatures above 80&deg;F. Default is <span class="code">new</span>.
+        </p>
+
+        <h4 class="config_section">[[[maxSolarRad]]]</h4>
+        <p>
+            This section is used for specifying options when calculating <span class="code">maxSolarRad</span>,
+            the theoretical maximum solar radiation.
+        </p>
+
+        <p class="config_option">algorithm</p>
+        <p>
+            Controls which algorithm will be used to calculate <span class="code">maxSolarRad</span>. Choices are <span
+            class="code">bras</span> ("<a href="http://www.ecy.wa.gov/programs/eap/models.html">Bras</a>"), or <span
+            class="code">rs</span> (<a href="http://www.ecy.wa.gov/programs/eap/models.html">Ryan-Stolzenbach</a>).
+            Default is <span class="code">rs</span>.
+        </p>
+
+        <p class="config_option">atc</p>
+        <p>
+            The coefficient <span class="code">atc</span> is the "atmospheric transmission coefficient" used by the
+            'Ryan-Stolzenbach' algorithm for calculating maximum solar radiation. Value must be between 0.7 and 0.91.
+            Default is 0.8.
+        </p>
+
+        <p class="config_option">nfac</p>
+        <p>
+            The coefficient <span class="nfac">nfac</span> is "atmospheric turbidity" used by the 'Bras' algorithm for
+            calculating maximum solar radiation. Values must be between 2 (clear) and 5 (smoggy). Default is 2.
+        </p>
+
+        <h4 class="config_section">[[[windDir]]]</h4>
+        <p class="config_option" id="force_null">force_null</p>
+        <p>
+            Indicates whether the wind direction should be undefined when the wind speed is zero. The default value is
+            <span class="code">True</span>: when the wind speed is zero, the wind direction will be set to undefined
+            (Python <span class="code">None</span>).
+        </p>
+
+        <p>
+            To report the wind vane direction even when there is no wind speed, change this to
+            <span class="code">False</span>:
+        </p>
+        <pre class="tty">[StdWXCalculate]
+    [[WXXTypes]]
+      [[[windDir]]]
+        force_null = False</pre>
+
+</pre>
+
+        <h3 class="config_section">[[PressureCooker]]</h3>
+        <p>
+            This class is responsible for calculating pressure-related values. Given the right set of input types, it
+            can calculate <span class="code">barometer</span>, <span class="code">pressure</span>, and <span
+            class="code">altimeter</span>. See the Wiki article <a
+            href="https://github.com/weewx/weewx/wiki/Barometer,-pressure,-and-altimeter"><em>Barometer, pressure,
+            and altimeter</em></a> for the differences between these three types.
+        </p>
+
+        <p class="config_option">max_delta_12h</p>
+        <p>
+            Some of the calculations require the temperature 12 hours ago (to compensate for tidal effects), which
+            requires a database lookup. There may or may not be a temperature exactly 12 hours ago. This option sets how
+            much of a time difference is allowed. The default is 1800 seconds.
+        </p>
+
+        <h4 class="config_section">[[[altimeter]]]</h4>
+        <p class="config_option">algorithm</p>
+        <p>
+            Which algorithm to use when calculating <span class="code">altimeter</span> from gauge pressure. Possible
+            choices are <span class="code">ASOS</span>, <span class="code">ASOS2</span>, <span class="code">MADIS</span>,
+            <span class="code">NOAA</span>, <span class="code">WOB</span>, and <span class="code">SMT</span>, The
+            default is <span class="code">ASOS</span>.
+        </p>
+
+        <h3 class="config_section">[[RainRater]]</h3>
+        <p>This class calculates <span class="code">rainRate</span> from recent rain events.</p>
+
+        <p class="config_option">rain_period</p>
+        <p>
+            The algorithm calculates a running average over a period of time in the past. This option controls how far
+            back to go in time. Default is 1800 seconds.
+        </p>
+
 
         <h2 class="config_section" id="StdArchive">[StdArchive]</h2>
 
@@ -3665,7 +3741,7 @@ May 14 13:35:23 web weewx[5633]:         ****  Generator terminated...</pre>
         <p>
             This is by design &mdash; if there is no wind, then the wind direction is undefined, represented by NULL in
             the database or None in Python. This policy is enforced by the <span class='code'>StdWXCalculate</span>
-            service. If necessary, it can be overridden. See option <a href="#ignore_zero_wind"><span class="code">ignore_zero_wind</span></a>
+            service. If necessary, it can be overridden. See option <a href="#force_null"><span class="code">force_null</span></a>
             in the <a href="#StdWXCalculate"><span class='code'>[StdWXCalculate]</span></a> section.
         </p>
         <p>

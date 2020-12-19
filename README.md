@@ -53,7 +53,7 @@ Support for many data aggregation services, including:
 Support for over 70 types of hardware including, but not limited to:
 
 * Davis Vantage Pro, Pro2, Vue, Envoy;
-* Oregon Scientific WMR100, WMR200, WMR300, WMR9x8, and other variants;
+* Oregon Scientific WMR100, WMR300, WMR9x8, and other variants;
 * Oregon Scientific LW300/LW301/LW302;
 * Fine Offset WH10xx, WH20xx, and WH30xx series (including Ambient, Elecsa, Maplin, Tycon, Watson, and others);
 * Fine Offset WH23xx, WH4000 (including Tycon TP2700, MiSol WH2310);

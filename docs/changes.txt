@@ -1,10 +1,25 @@
 weewx change history
 --------------------
 
-4.2.1 MM/DD/YYYY
+4.3.0 MM/DD/YYYY
+
+Version 4.2.0 had a bug, which caused the sums in the daily summary to be
+incorrectly calculated. This version includes a patch to fix the problem. It
+runs once at startup. Fixes issue #623.
+
+The WMR200 driver is no longer supported. An unsupported version can be found
+at https://github.com/weewx/weewx-wmr200.
 
 Service weewx.wxxtypes.StdDelta was inadvertently left out of the list of
 services to be run. Fortunately, it is not used. Yet. Added it back in.
+
+Added the "old" NWS algorithm as an option for calculating heat index.
+
+Changed how various undocumented parameters in [StdWXCalculate] are specified.
+The only one people are likely to have used is 'ignore_zero_wind'. Its name has
+changed to 'force_null', and it has been moved. See the Upgrading Guide.
+
+Documented the various [StdWXCalculate] options.
 
 Fixed corner case for windDir when using software record generation,
 ignore_zero_wind=True, and windSpeed=0 for entire record interval. Now emits
@@ -13,7 +28,8 @@ last windDir value.
 Fixed problem when looking up stars with more than one word in their name.
 Fixes issue #620.
 
-Fixed problem that caused daily summary weights to revert to V1.0 style weights.
+Fixed problem where wind gust direction is not available when using software
+record generation.
 
 
 4.2.0 10/26/2020

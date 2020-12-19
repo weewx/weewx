@@ -126,7 +126,10 @@ TESTDIR=/var/tmp/weewx_test
 MYSQLCLEAN="drop database test_weewx;\n\
 drop database test_alt_weewx;\n\
 drop database test_sim;\n\
-drop database test_weewx1;\n"
+drop database test_weewx1;\n\
+drop database test_weewx2;\n\
+drop database test_scratch;\n"
+
 test-clean:
 	rm -rf $(TESTDIR)
 	echo $(MYSQLCLEAN) | mysql --user=weewx --password=weewx --force >/dev/null 2>&1
@@ -430,7 +433,4 @@ critic:
 	perlcritic -1 --verbose 8 pkg/mkchangelog.pl
 
 code-summary:
-	cloc bin
-	@for d in weecfg weedb weeutil weewx; do \
-  cloc bin/$$d/tests; \
-done
+	cloc --force-lang="HTML",tmpl --force-lang="INI",conf --force-lang="INI",inc bin docs examples skins util

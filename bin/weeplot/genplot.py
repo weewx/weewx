@@ -525,11 +525,11 @@ class GeneralPlot(object):
             self.y_label_format = weeplot.utilities.pickLabelFormat(self.yscale[2])
         
     def _genXLabel(self, x):
-        xlabel = locale.format(self.x_label_format, x)
+        xlabel = locale.format_string(self.x_label_format, x)
         return xlabel
     
     def _genYLabel(self, y):
-        ylabel = locale.format(self.y_label_format, y)
+        ylabel = locale.format_string(self.y_label_format, y)
         return ylabel
     
     def _calcXMinMax(self):
