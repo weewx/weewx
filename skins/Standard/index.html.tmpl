@@ -91,7 +91,7 @@
                 <td class="stats_data">$current.UV</td>
               </tr>
               #end if
-              #if $day.ET.has_data and $day.ET.sum.raw > 0.0
+              #if $day.ET.has_data and $day.ET.sum.raw is not None and $day.ET.sum.raw > 0.0
               <tr>
                 <td class="stats_label">ET</td>
                 <td class="stats_data">$current.ET</td>
@@ -231,7 +231,7 @@
                 </td>
               </tr>
               #end if
-              #if $day.ET.has_data and $day.ET.sum.raw >0.0
+              #if $day.ET.has_data and $day.ET.sum.raw is not None and $day.ET.sum.raw >0.0
               <tr>
                 <td class="stats_label">
                   High ET<br/>

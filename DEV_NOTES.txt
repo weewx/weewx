@@ -9,13 +9,14 @@ checklist for doing a release:
 3. Make sure all changes have been logged
      1. docs/changes.txt
      2. make deb-changelog
-     3. make rpm-changelog
-     4. docs/upgrading.htm
+     3. make redhat-changelog
+     4. make suse-changelog
+     5. docs/upgrading.htm
 4. Create the packages
      1. make src-package
      2. make debian-packages
      3. make redhat-packages
-     4. make suse-package
+     4. make suse-packages
 5. Sanity check on production machine: unpack the tarball, install, run
 6. Tag it
      1. git tag -a v1.3.1 -m "Version 1.3.1 release"
@@ -35,7 +36,12 @@ checklist for doing a release:
      2. make update-yum-repo
      3. make push-yum-repo
      4. ssh weewx.com rsync -arv /var/www/html/yum-test/ /var/www/html/yum
-10. Announce the release to the weewx user's group.
+10. Update the suse repository
+     1. make pull-suse-repo
+     2. make update-suse-repo
+     3. make push-suse-repo
+     4. ssh weewx.com rsync -arv /var/www/html/suse-test/ /var/www/html/suse
+11. Announce the release to the weewx user's group.
 
 
 
@@ -46,7 +52,8 @@ git clone https://github.com/weewx/weewx.git
 vi bin/weewx/__init__.py
 make version
 make deb-changelog
-make rpm-changelog
+make redhat-changelog
+make suse-changelog
 vi docs/changes.txt        # as needed
 vi docs/upgrading.htm      # as needed
 git commit -a -m "release x.y.z"
@@ -66,7 +73,7 @@ make redhat-packages upload-redhat
 
 # on suse host, build the suse packages, upload to development_versions
 rm -rf build dist
-make suse-package upload-suse
+make suse-packages upload-suse
 
 # tag the release
 git tag -a vX.Y.Z -m "tag release X.Y.Z"
@@ -88,6 +95,11 @@ make pull-yum-repo
 make update-yum-repo (requires local installation of createrepo)
 make push-yum-repo
 
+# update the suse repository
+make pull-suse-repo
+make update-suse-repo (requires local installation of createrepo)
+make push-suse-repo
+
 
 pre-requisites ----------------------------------------------------------------
 
@@ -103,6 +115,11 @@ to build redhat package install the following (use 'yum install'):
   rsync
   rpm-build
   rpm-sign
+
+to build suse package install the following (use 'zypper install'):
+  git
+  rsync
+  rpm-build
 
 
 howto -------------------------------------------------------------------------
@@ -122,10 +139,16 @@ how to build debian packages:
   make debian-packages
 
 how to build redhat packages:
-  make rpm-changelog
-  emacs pkg/changelog.rpm       # add any package-specific changes, if any
-  git commit -m "update rpm changelog" pkg/changelog.rpm
+  make redhat-changelog
+  emacs pkg/changelog.el       # add any package-specific changes, if any
+  git commit -m "update redhat changelog" pkg/changelog.el
   make redhat-packages
+
+how to build redhat packages:
+  make suse-changelog
+  emacs pkg/changelog.suse     # add any package-specific changes, if any
+  git commit -m "update suse changelog" pkg/changelog.suse
+  make suse-packages
 
 to display debconf variables:
   sudo debconf-show weewx
@@ -160,6 +183,12 @@ debian install/remove:
 redhat install/remove:
   yum install weewx-x.y.z-r.rpm [--nogpgcheck]    # install with yum
   yum remove weewx                                # remove with yum
+  rpm -i weewx-x.y.z-r.rpm                        # install with rpm directly
+  rpm -e weewx                                    # remove with rpm
+
+suse install/remove:
+  zypper install weewx-x.y.z-r.rpm [--nogpgcheck] # install with zypper
+  zypper remove weewx                             # remove with zypper
   rpm -i weewx-x.y.z-r.rpm                        # install with rpm directly
   rpm -e weewx                                    # remove with rpm
 
@@ -256,7 +285,8 @@ notes -------------------------------------------------------------------------
 there are multiple changelogs:
   docs/changes.txt - definitive changelog for the application
   pkg/debian/changelog - changes to the debian packaging
-  pkg/changelog.rpm - changes to the redhat packaging
+  pkg/changelog.el - changes to the redhat packaging
+  pkg/changelog.suse - changes to the suse packaging
 
 when signing, gpg info must match the name and email in the latest package
 changelog entry.

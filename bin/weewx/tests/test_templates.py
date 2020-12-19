@@ -168,7 +168,7 @@ class Common(object):
                         while True:
                             actual_line = actual.readline()
                             expected_line = expected.readline()
-                            if actual_line == '' or expected_line == '':
+                            if actual_line == '' and expected_line == '':
                                 break
                             n += 1
                             self.assertEqual(actual_line,

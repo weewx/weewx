@@ -6,45 +6,92 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <link rel="stylesheet" href="css/weewx_ui.css"/>
     <link rel="icon" href="images/favicon.png" type="image/png"/>
+    <!-- Use cash, a lightweight jQuery clone: -->
+    <script src="js/cash.min.js"></script>
+    <script src="js/weewx.js"></script>
+    <script>
+        $(function () {
+            // Create a click on the first tab in each tab group to get things started.
+            $('#prereq-tabs .tab')[0].click();
+        })
+    </script>
 </head>
 <body>
 
-<h1 class="title">WeeWX: Installation on Redhat-based systems
-    <span class='os-icons'>
+<h1 class="title">WeeWX: Installation on Redhat-based systems <span class='os-icons'>
         <img class='logo' src='images/logo-redhat.png' alt=""/>
         <img class='logo' src='images/logo-centos.png' alt=""/>
         <img class='logo' src='images/logo-fedora.png' alt=""/>
     </span>
 </h1>
 
-<p>This is a guide to installing WeeWX from an RPM package on systems such as Redhat, CentOS or Fedora.
+<p>
+    This is a guide to installing WeeWX from an RPM package on systems such as Redhat, CentOS or Fedora.
 </p>
 
 <h2>Install pre-requisites</h2>
 
-For Redhat 8:
-<pre class='tty cmd'>sudo yum install epel-release
-sudo yum install python3-cheetah</pre>
+<p>
+    Unfortunately, not everything that WeeWX uses is included in the standard Redhat 8 and Redhat 7 repositories. You
+    will need to enable their respective EPEL ("Extra Packages for Enterprise Linux") repositories, then install some
+    prerequisites manually.
+</p>
 
-For Redhat 7:
-<pre class='tty cmd'>sudo pip install pyserial pyusb</pre>
+
+<div id="prereq-tabs">
+    <nav>
+        <button class="tab" onclick="openTab(event, '#prereq-redhat-8')">
+            Redhat 8<br/>Centos 8
+        </button>
+
+        <button class="tab" onclick="openTab(event, '#prereq-redhat-7')">
+            Redhat 7<br/>Centos 7
+        </button>
+
+    </nav>
+</div>
+
+
+<div id="prereq-redhat-8" class="tab-content">
+    <p>
+        For Redhat 8 and Centos 8, you will be using Python 3. Here are the pre-requisites:
+    </p>
+    <pre class='tty cmd'>sudo yum install epel-release
+sudo yum install python3-cheetah</pre>
+</div>
+
+<div id="prereq-redhat-7" class="tab-content">
+    <p>
+        For Redhat 7 and Centos 7, you will be using Python 2. Here are the pre-requisites:
+    </p>
+    <pre class="tty cmd">
+sudo yum install epel-release
+sudo yum install pyserial pyusb
+sudo yum install python2-pip      # (Optional)</pre>
+
+</div>
+
 
 <h2>Configure yum</h2>
 
-<p>Tell <span class="code">yum</span> (or <span class="code">dnf</span>) where to find the WeeWX releases.  This only has to be done once - the first time you install WeeWX.</p>
+<p>Tell <span class="code">yum</span> (or <span class="code">dnf</span>) where to find the WeeWX releases. This only has
+    to be done once - the first time you install WeeWX.
+</p>
 
 Tell your system to trust weewx.com:
 <pre class='tty cmd'>sudo rpm --import http://weewx.com/keys.html</pre>
 
-For Redhat 8 use python3:
+For Redhat 8, using Python 3:
 <pre class='tty cmd'>curl -s http://weewx.com/yum/weewx-el8.repo | sudo tee /etc/yum.repos.d/weewx.repo</pre>
 
-For Redhat 7 use python2:
+For Redhat 7, using Python 2:
 <pre class='tty cmd'>curl -s http://weewx.com/yum/weewx-el7.repo | sudo tee /etc/yum.repos.d/weewx.repo</pre>
 
 <h2>Install WeeWX</h2>
 
-<p>Install WeeWX using <span class="code">yum</span> (or <span class="code">dnf</span>).  When you are done, WeeWX will be running the Simulator in the background as a daemon.
+<p>
+    Install WeeWX using <span class="code">yum</span> (or <span class="code">dnf</span>). When you are done, WeeWX will
+    be running the Simulator in the background as a daemon.
 </p>
 
 <pre class='tty cmd'>sudo yum install weewx</pre>

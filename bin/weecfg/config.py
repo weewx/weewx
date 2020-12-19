@@ -49,10 +49,10 @@ class ConfigEngine(object):
         # Check for errors in the options.
         #
 
-        # We can do one and only one of install, upgrade, and reconfigure:
-        if (options.install and options.upgrade) \
-                or (options.install and options.reconfigure) \
-                or (options.upgrade and options.reconfigure):
+        # There must be one, and only one, of options install, upgrade, and reconfigure
+        if sum([options.install is not None,
+                options.upgrade is not None,
+                options.reconfigure is not None]) != 1:
             sys.exit("Must specify one and only one of --install, --upgrade, or --reconfigure.")
 
         # Check for missing --dist-config

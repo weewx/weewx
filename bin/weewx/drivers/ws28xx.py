@@ -4081,7 +4081,7 @@ class CCommunicationService(object):
         self.running = False
         log.debug('stopRFThread: waiting for RF thread to terminate')
         self.child.join(self.thread_wait)
-        if self.child.isAlive():
+        if self.child.is_alive():
             log.error('unable to terminate RF thread after %d seconds'
                       % self.thread_wait)
         else:

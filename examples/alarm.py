@@ -39,9 +39,10 @@ hour).
 
 To enable this service:
 
-1) copy this file to the user directory
+1) Copy this file to the user directory. See https://bit.ly/33YHsqX for where your user
+directory is located.
 
-2) modify the weewx configuration file by adding this service to the option
+2) Modify the weewx configuration file by adding this service to the option
 "report_services", located in section [Engine][[Services]].
 
 [Engine]

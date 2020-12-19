@@ -56,7 +56,7 @@
         <td class="data">$current.UV</td>
       </tr>
 #end if
-#if $day.ET.has_data and $day.ET.sum.raw > 0.0
+#if $day.ET.has_data and $day.ET.sum.raw is not None and $day.ET.sum.raw > 0.0
       <tr>
         <td class="label">$obs.label.ET</td>
         <td class="data">$current.ET</td>

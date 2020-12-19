@@ -44,7 +44,7 @@
         <div class="logoref">
             <a href='http://weewx.com'> <img src='images/logo-weewx.png' class='logo' style="float:right"
                                              alt="weewx logo"/> </a><br/> <span class='version'>
-Version: 4.1
+Version: 4.2
     </span>
         </div>
         <div class="title">WeeWX Customization Guide</div>
@@ -1034,8 +1034,8 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
                 group_altitude     = foot                 # Options are 'foot' or 'meter'
                 group_degree_day   = degree_F_day         # Options are 'degree_F_day' or 'degree_C_day'
                 group_distance     = mile                 # Options are 'mile' or 'km'
-                group_pressure     = inHg                 # Options are 'inHg', 'mmHg', 'mbar', or 'hPa'
-                group_pressurerate = inHg_per_hour        # Options are 'inHg_per_hour', 'mmHg_per_hour', 'mbar_per_hour', or 'hPa_per_hour'
+                group_pressure     = inHg                 # Options are 'inHg', 'mmHg', 'mbar', 'hPa', or 'kPa'
+                group_pressurerate = inHg_per_hour        # Options are 'inHg_per_hour', 'mmHg_per_hour', 'mbar_per_hour', 'hPa_per_hour', or 'kPa_per_hour'
                 group_rain         = inch                 # Options are 'inch', 'cm', or 'mm'
                 group_rainrate     = inch_per_hour        # Options are 'inch_per_hour', 'cm_per_hour', or 'mm_per_hour'
                 group_speed        = mile_per_hour        # Options are 'mile_per_hour', 'km_per_hour', 'knot', or 'meter_per_second'
@@ -1072,8 +1072,8 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
                 group_altitude     = <span class="highlight">meter</span>                # Options are 'foot' or 'meter'
                 group_degree_day   = <span class="highlight">degree_C_day</span>         # Options are 'degree_F_day' or 'degree_C_day'
                 group_distance     = <span class="highlight">km</span>                   # Options are 'mile' or 'km'
-                group_pressure     = <span class="highlight">mbar</span>                 # Options are 'inHg', 'mmHg', 'mbar', or 'hPa'
-                group_pressurerate = <span class="highlight">mbar_per_hour</span>        # Options are 'inHg_per_hour', 'mmHg_per_hour', 'mbar_per_hour', or 'hPa_per_hour'
+                group_pressure     = <span class="highlight">mbar</span>                 # Options are 'inHg', 'mmHg', 'mbar', 'hPa', or 'kPa'
+                group_pressurerate = <span class="highlight">mbar_per_hour</span>        # Options are 'inHg_per_hour', 'mmHg_per_hour', 'mbar_per_hour', 'hPa_per_hour', or 'kPa_per_hour'
                 group_rain         = <span class="highlight">mm</span>                   # Options are 'inch', 'cm', or 'mm'
                 group_rainrate     = <span class="highlight">mm_per_hour</span>          # Options are 'inch_per_hour', 'cm_per_hour', or 'mm_per_hour'
                 group_speed        = <span class="highlight">meter_per_second</span>     # Options are 'mile_per_hour', 'km_per_hour', 'knot', or 'meter_per_second'
@@ -1121,8 +1121,8 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
                 group_altitude     = foot                 # Options are 'foot' or 'meter'
                 group_degree_day   = degree_F_day         # Options are 'degree_F_day' or 'degree_C_day'
                 group_distance     = mile                 # Options are 'mile' or 'km'
-                group_pressure     = inHg                 # Options are 'inHg', 'mmHg', 'mbar', or 'hPa'
-                group_pressurerate = inHg_per_hour        # Options are 'inHg_per_hour', 'mmHg_per_hour', 'mbar_per_hour', or 'hPa_per_hour'
+                group_pressure     = inHg                 # Options are 'inHg', 'mmHg', 'mbar', 'hPa', or 'kPa'
+                group_pressurerate = inHg_per_hour        # Options are 'inHg_per_hour', 'mmHg_per_hour', 'mbar_per_hour', 'hPa_per_hour', or 'kPa_per_hour'
                 group_rain         = inch                 # Options are 'inch', 'cm', or 'mm'
                 group_rainrate     = inch_per_hour        # Options are 'inch_per_hour', 'cm_per_hour', or 'mm_per_hour'
                 group_speed        = mile_per_hour        # Options are 'mile_per_hour', 'km_per_hour', 'knot', or 'meter_per_second'
@@ -1136,14 +1136,14 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
 <span class="highlight">    [[SeasonsMetricReport]]
         skin = Seasons
         enable = true
-        HTML_ROOT = skins/metric
+        HTML_ROOT = public_html/metric
         [[[Units]]]
             [[[[Groups]]]]
                 group_altitude     = meter                # Options are 'foot' or 'meter'
                 group_degree_day   = degree_C_day         # Options are 'degree_F_day' or 'degree_C_day'
                 group_distance     = km                   # Options are 'mile' or 'km'
-                group_pressure     = mbar                 # Options are 'inHg', 'mmHg', 'mbar', or 'hPa'
-                group_pressurerate = mbar_per_hour        # Options are 'inHg_per_hour', 'mmHg_per_hour', 'mbar_per_hour', or 'hPa_per_hour'
+                group_pressure     = mbar                 # Options are 'inHg', 'mmHg', 'mbar', 'hPa', or 'kPa'
+                group_pressurerate = mbar_per_hour        # Options are 'inHg_per_hour', 'mmHg_per_hour', 'mbar_per_hour', 'hPa_per_hour', or 'kPa_per_hour'
                 group_rain         = mm                   # Options are 'inch', 'cm', or 'mm'
                 group_rainrate     = mm_per_hour          # Options are 'inch_per_hour', 'cm_per_hour', or 'mm_per_hour'
                 group_speed        = meter_per_second     # Options are 'mile_per_hour', 'km_per_hour', 'knot', or 'meter_per_second'
@@ -3290,11 +3290,22 @@ $station.altitude</pre>
         </p>
 
         <p>
-            Cheetah then tries to evaluate an attribute <span class="code">max</span> of this class. Now, finally, the
-            chain ends. The attribute <span class="code">max</span> triggers the actual calculation of the value, using
-            all the known parameters: the database binding to be hit, the time span of interest, the observation type,
-            and the type of aggregation, querying the database as necessary. The database is not actually hit until the
-            last possible moment, after everything needed to do the evalation is known.
+            Cheetah then tries to evaluate an attribute <span class="code">max</span> of this class, and the pattern
+            repeats. Class <span class="code">weewx.tags.ObservationBinder</span> does not have an attribute <span
+            class="code">max</span>, but it does have a method <span class="code">__getattr___</span>. This method
+            returns an instance of the next class in the chain, class <span class="code">AggTypeBinder</span>, which not
+            only remembers all the previous information, but adds the aggregation type, <span class="code">max</span>.
+        </p>
+
+        <p>
+            One final step needs to occur: Cheetah has an instance of <span class="code">AggTypeBinder</span> in hand,
+            but what it really needs is a string to put in the file being created from the template. It creates the string by
+            calling the method <span class="code">__str__()</span> of <span class="code">AggTypeBinder</span>. Now,
+            finally, the chain ends and everything comes together. The method <span class="code">__str__</span> triggers
+            the actual calculation of the value, using all the known parameters: the database binding to be hit, the
+            time span of interest, the observation type, and the type of aggregation, querying the database as
+            necessary. The database is not actually hit until the last possible moment, after everything needed to do
+            the evalation is known.
         </p>
 
         <p>
@@ -4003,10 +4014,6 @@ class MyStats(SearchList):                                                   # 1
         <h3>Translate the templates</h3>
 
         <p>
-            Translate the text in each template file to the target language. Any strings that are not specified using
-            tags will need to be translated.
-        </p>
-        <p>
             In every HTML template (these typically have a file suffix of <span class="code">.html.tmpl</span>) change
             the HTML "lang" attribute to the target language. For example, for Spanish use <span class="code">es</span>:
         </p>
@@ -4026,6 +4033,30 @@ class MyStats(SearchList):                                                   # 1
             <a href="https://www.w3schools.com/tags/ref_language_codes.asp">language codes</a><br/> <a
             href="https://www.w3schools.com/tags/ref_country_codes.asp">country codes</a><br/>
         </p>
+
+        <p>
+            Then, go through each template file in the skin, translating any text to your target language. For example,
+            suppose you were localizing the <em>Seasons</em> skin to the French language. Search all the template
+            files for English phrases that need to be translated. As an example, the file <span class="code">current.inc</span>
+            has a section that looks like this:
+        </p>
+       <pre class="tty">
+&lt;div id='current_widget' class="widget"&gt;
+  &lt;div class="widget_title"&gt;
+    Current Conditions
+    &lt;a class="widget_control"
+      onclick="toggle_widget('current')"&gt;&amp;diams;&lt;/a&gt;
+  &lt;/div&gt;
+        </pre>
+<p>This would need to be changed to this:</p>
+        <pre class="tty">
+&lt;div id='current_widget' class="widget"&gt;
+  &lt;div class="widget_title"&gt;
+    <span class="highlight">Conditions Actuelle</span>
+    &lt;a class="widget_control"
+      onclick="toggle_widget('current')"&gt;&amp;diams;&lt;/a&gt;
+  &lt;/div&gt;
+        </pre>
 
         <h3>Translate labels and modify local options</h3>
 
@@ -4612,6 +4643,7 @@ class AddElectricity(StdService):
         # This section specifies the services that should be run. They are
         # grouped by type, and the order of services within each group
         # determines the order in which the services will be run.
+        xtype_services = weewx.wxxtypes.StdWXXTypes, weewx.wxxtypes.StdPressureCooker, weewx.wxxtypes.StdRainRater, weewx.wxxtypes.StdDelta
         prep_services = weewx.engine.StdTimeSynch
         data_services = <span class="highlight">user.electricity.AddElectricity</span>
         process_services = weewx.engine.StdConvert, weewx.engine.StdCalibrate, weewx.engine.StdQC, weewx.wxservices.StdWXCalculate
@@ -4712,7 +4744,7 @@ schema_with_electricity = {
         database = archive_sqlite
         table_name = archive
         manager = weewx.manager.DaySummaryManager
-        <span class="highlight">schema = user.electricity.electricity_schema</span></pre>
+        <span class="highlight">schema = user.electricity.schema_with_electricity</span></pre>
             </li>
 
             <li>
@@ -5034,13 +5066,31 @@ weewx.units.conversionDict['pound']  = {'newton': lambda x : x * 4.44822}
                 <td>The day it happened.</td>
             </tr>
             <tr>
-                <td class="code">$year.electricity.sum_ge(5000.0)</td>
-                <td>The number of days of the year where more than 5.0 kWh of energy was consumed.
+                <td class="code">$year.electricity.sum_ge((5000.0, 'kWh', 'group_energy'))</td>
+                <td>The number of days of the year where more than 5.0 kWh of energy was consumed. The argument
+                    is a <span class="code">ValueTuple</span>.
                 </td>
             </tr>
             </tbody>
         </table>
 
+
+        <h1>Adding new, derived types</h1>
+        <p>
+            In the section <a href="#Adding_2nd_source"><em>Adding a second data source</em></a>, we saw an example of
+            how to create a new type for a new data source. But, what if you just want to add a type that is a
+            derivation of existing types? The WeeWX type <span class="code">dewpoint</span> is an example of this: it's
+            a function of two observables, <span class="code">outTemp</span>, and <span class="code">outHumidity</span>.
+            WeeWX calculates it automatically for you.
+        </p>
+        <p>
+            Calculating new, derived types is the job of the WeeWX XTypes system. It can also allow you to add new
+            aggregatioin types.
+        </p>
+        <p>
+            See the Wiki article <a href="https://github.com/weewx/weewx/wiki/WeeWX-V4-user-defined-types"><em>WeeWX V4
+            user defined types</em></a> for complete details on how the XTypes system works.
+        </p>
 
         <h1 id="porting">Porting to new hardware</h1>
 
@@ -5637,14 +5687,17 @@ UV      = UV Index</pre>
 
         <p>
             The measurement unit to be used for pressure. Possible options are one of <span class="code">inHg</span>
-            (inches of mercury), <span class="code">mbar</span>, or <span class="code">hPa</span>.
+            (inches of mercury), <span class="code">mbar</span>, <span class="code">hPa</span>, or
+            <span class="code">kPa</span>.
         </p>
 
         <p class="config_important">group_pressurerate</p>
 
         <p>
-            The measurement unit to be used for rate of change in pressure. Possible options are one of <span class="code">inHg_per_hour</span>
-            (inches of mercury per hour), <span class="code">mbar_per_hour</span>, or <span class="code">hPa_per_hour</span>.
+            The measurement unit to be used for rate of change in pressure. Possible options are one of
+            <span class="code">inHg_per_hour</span> (inches of mercury per hour),
+            <span class="code">mbar_per_hour</span>, <span class="code">hPa_per_hour</span>,
+            or <span class="code">kPa_per_hour</span>.
         </p>
 
         <p class="config_option">group_radiation</p>
@@ -5672,7 +5725,8 @@ UV      = UV Index</pre>
 
         <p>
             The measurement unit to be used for wind speeds. Possible options are one of <span class="code">mile_per_hour</span>,
-            <span class="code">km_per_hour</span>, <span class="code">knot</span>, or <span class="code">meter_per_second</span>.
+            <span class="code">km_per_hour</span>, <span class="code">knot</span>, <span class="code">meter_per_second</span>,
+            or <span class="code">beaufort</span>.
         </p>
 
         <p class="config_important">group_speed2</p>
@@ -6143,6 +6197,14 @@ growing_base = 50.0, degree_F</pre>
             mark. Optional. The default is <span class='code'>2</span>.
         </p>
 
+        <p class="config_option">y_label_side</p>
+
+        <p>
+            Specifies if the y-axis labels should be on the left, right, or both sides of the graph.
+            Valid values are <span class='code'>left</span>, <span class='code'>right</span> or
+            <span class='code'>both</span>.  Optional.  Default is <span class='code'>left</span>.
+        </p>
+
         <p class="config_option">y_nticks</p>
 
         <p>
@@ -6429,11 +6491,11 @@ growing_base = 50.0, degree_F</pre>
             </tr>
             <tr>
                 <td class="first_col code">first</td>
-                <td>The first value in the aggregation period.</td>
+                <td>The first non-null value in the aggregation period.</td>
             </tr>
             <tr>
                 <td class="first_col code">firsttime</td>
-                <td>The time of the first value in the aggregation period.
+                <td>The time of the first non-null value in the aggregation period.
                 </td>
             </tr>
             <tr>
@@ -6449,11 +6511,11 @@ growing_base = 50.0, degree_F</pre>
             </tr>
             <tr>
                 <td class="first_col code">last</td>
-                <td>The last value in the aggregation period.</td>
+                <td>The last non-null value in the aggregation period.</td>
             </tr>
             <tr>
                 <td class="first_col code">lasttime</td>
-                <td>The time of the last value in the aggregation period.
+                <td>The time of the last non-null value in the aggregation period.
                 </td>
             </tr>
             <tr>
@@ -6485,13 +6547,15 @@ growing_base = 50.0, degree_F</pre>
             <tr>
                 <td class="first_col code">max_ge(val)</td>
                 <td>The number of days where the maximum value is greater than or equal to <em>val</em>. Aggregation
-                    period must be one day or longer.
+                    period must be one day or longer. The argument <span class="code">val</span> is a
+                    <a href="#ValueTuple"><span class="code">ValueTuple</span></a>.
                 </td>
             </tr>
             <tr>
                 <td class="first_col code">max_le(val)</td>
                 <td>The number of days where the maximum value is less than or equal to <em>val</em>. Aggregation period
-                    must be one day or longer.
+                    must be one day or longer. The argument <span class="code">val</span> is a
+                    <a href="#ValueTuple"><span class="code">ValueTuple</span></a>.
                 </td>
             </tr>
             <tr>
@@ -6533,13 +6597,15 @@ growing_base = 50.0, degree_F</pre>
             <tr>
                 <td class="first_col code">min_ge(val)</td>
                 <td>The number of days where the minimum value is greater than or equal to <em>val</em>. Aggregation
-                    period must be one day or longer.
+                    period must be one day or longer. The argument <span class="code">val</span> is a
+                    <a href="#ValueTuple"><span class="code">ValueTuple</span></a>.
                 </td>
             </tr>
             <tr>
                 <td class="first_col code">min_le(val)</td>
                 <td>The number of days where the minimum value is less than or equal to <em>val</em>. Aggregation period
-                    must be one day or longer.
+                    must be one day or longer. The argument <span class="code">val</span> is a
+                    <a href="#ValueTuple"><span class="code">ValueTuple</span></a>.
                 </td>
             </tr>
             <tr>
@@ -6554,13 +6620,15 @@ growing_base = 50.0, degree_F</pre>
             <tr>
                 <td class="first_col code">sum_ge(val)</td>
                 <td>The number of days where the sum of value is greater than or equal to <em>val</em>. Aggregation
-                    period must be one day or longer.
+                    period must be one day or longer. The argument <span class="code">val</span> is a
+                    <a href="#ValueTuple"><span class="code">ValueTuple</span></a>.
                 </td>
             </tr>
             <tr>
                 <td class="first_col code">sum_le(val)</td>
                 <td>The number of days where the sum of value is less than or equal to <em>val</em>. Aggregation period
-                    must be one day or longer.
+                    must be one day or longer. The argument <span class="code">val</span> is a
+                    <a href="#ValueTuple"><span class="code">ValueTuple</span></a>.
                 </td>
             </tr>
             <tr>
@@ -6650,11 +6718,19 @@ growing_base = 50.0, degree_F</pre>
             </tr>
             <tr>
                 <td class="first_col">group_concentration</td>
-                <td>pm1_0<br/>pm2_5<br/>pm10_0</td>
+                <td>no2<br/>pm1_0<br/>pm2_5<br/>pm10_0</td>
                 <td>microgram_per_meter_cubed</td>
                 <td>microgram_per_meter_cubed</td>
                 <td>microgram_per_meter_cubed</td>
                 <td>microgram_per_meter_cubed</td>
+            </tr>
+            <tr>
+                <td class="first_col">group_count</td>
+                <td>leafWet1<br/>leafWet2<br/>lightning_disturber_count<br/>lightning_noise_count<br/>lightning_strike_count<br/></td>
+                <td>count</td>
+                <td>count</td>
+                <td>count</td>
+                <td>count</td>
             </tr>
             <tr>
                 <td class="first_col">group_data</td>
@@ -6663,6 +6739,14 @@ growing_base = 50.0, degree_F</pre>
                 <td>byte</td>
                 <td>byte</td>
                 <td>byte</td>
+            </tr>
+            <tr>
+                <td class="first_col">group_db</td>
+                <td>noise</td>
+                <td>dB</td>
+                <td>dB</td>
+                <td>dB</td>
+                <td>dB</td>
             </tr>
             <tr>
                 <td class="first_col">group_degree_day</td>
@@ -6683,7 +6767,7 @@ growing_base = 50.0, degree_F</pre>
             </tr>
             <tr>
                 <td class="first_col">group_distance</td>
-                <td>windrun</td>
+                <td>windrun<br/>lightning_distance</td>
                 <td>mile<br/>km</td>
                 <td>mile</td>
                 <td>km</td>
@@ -6692,7 +6776,7 @@ growing_base = 50.0, degree_F</pre>
             <tr>
                 <td class="first_col">group_energy</td>
                 <td></td>
-                <td>kilowatt_hour<br/>watt_hour<br/>watt_second</td>
+                <td>kilowatt_hour<br/>mega_joule<br/>watt_hour<br/>watt_second</td>
                 <td>watt_hour</td>
                 <td>watt_hour</td>
                 <td>watt_hour</td>
@@ -6704,6 +6788,22 @@ growing_base = 50.0, degree_F</pre>
                 <td>watt_second</td>
                 <td>watt_second</td>
                 <td>watt_second</td>
+            </tr>
+            <tr>
+                <td class="first_col">group_fraction</td>
+                <td>co<br/>co2<br/>nh3<br/>o3</br>pb</br>so2</td>
+                <td>ppm</td>
+                <td>ppm</td>
+                <td>ppm</td>
+                <td>ppm</td>
+            </tr>
+            <tr>
+                <td class="first_col">group_illuminance</td>
+                <td>illuminance</td>
+                <td>lux</td>
+                <td>lux</td>
+                <td>lux</td>
+                <td>lux</td>
             </tr>
             <tr>
                 <td class="first_col">group_interval</td>
@@ -6733,7 +6833,9 @@ growing_base = 50.0, degree_F</pre>
             </tr>
             <tr>
                 <td class="first_col">group_percent</td>
-                <td>extraHumid1 <br/> extraHumid2 <br/> inHumidity <br/> outHumidity <br/> rxCheckPercent
+                <td>
+                    extraHumid1 <br/> extraHumid2 <br/> inHumidity <br/> outHumidity <br/>
+                    rxCheckPercent<br/>snowMoisture
                 </td>
                 <td>percent</td>
                 <td>percent</td>
@@ -6750,9 +6852,11 @@ growing_base = 50.0, degree_F</pre>
             </tr>
             <tr>
                 <td class="first_col">group_pressure</td>
-                <td>barometer <br/> altimeter <br/> pressure
+                <td>
+                    barometer <br/> altimeter <br/> pressure
                 </td>
-                <td>inHg <br/> mbar <br/> hPa
+                <td>
+                    inHg<br/>mbar<br/>hPa<br/>kPa
                 </td>
                 <td>inHg</td>
                 <td>mbar</td>
@@ -6760,9 +6864,11 @@ growing_base = 50.0, degree_F</pre>
             </tr>
             <tr>
                 <td class="first_col">group_pressurerate</td>
-                <td>barometerRate <br/> altimeterRate <br/> pressureRate
+                <td>
+                    barometerRate <br/> altimeterRate <br/> pressureRate
                 </td>
-                <td>inHg_per_hour <br/> mbar_per_hour <br/> hPa_per_hour
+                <td>
+                    inHg_per_hour <br/> mbar_per_hour <br/> hPa_per_hour <br/> kPa_per_hour
                 </td>
                 <td>inHg_per_hour</td>
                 <td>mbar_per_hour</td>
@@ -6778,8 +6884,7 @@ growing_base = 50.0, degree_F</pre>
             </tr>
             <tr>
                 <td class="first_col">group_rain</td>
-                <td>rain <br/> ET <br/> hail
-                </td>
+                <td>rain<br/>ET<br/>hail<br/>snowDepth<br/>snowRate</td>
                 <td>inch <br/> cm <br/> mm
                 </td>
                 <td>inch</td>
@@ -6800,7 +6905,7 @@ growing_base = 50.0, degree_F</pre>
                 <td class="first_col">group_speed</td>
                 <td>wind <br/> windGust <br/> windSpeed <br/> windgustvec <br/> windvec
                 </td>
-                <td>mile_per_hour <br/> km_per_hour <br/> knot <br/> meter_per_second
+                <td>mile_per_hour <br/> km_per_hour <br/> knot <br/> meter_per_second <br/> beaufort
                 </td>
                 <td>mile_per_hour</td>
                 <td>meter_per_second</td>
@@ -6820,7 +6925,7 @@ growing_base = 50.0, degree_F</pre>
                 <td class="first_col">group_temperature</td>
                 <td>appTemp <br/> dewpoint <br/> extraTemp1 <br/> extraTemp2 <br/> extraTemp3 <br/> heatindex <br/>
                     heatingTemp <br/> humidex <br/> inTemp <br/> leafTemp1 <br/> leafTemp2 <br/> outTemp <br/> soilTemp1
-                    <br/> soilTemp2 <br/> soilTemp3 <br/> soilTemp4 <br/> windchill
+                    <br/> soilTemp2 <br/> soilTemp3 <br/> soilTemp4 <br/> windchill <br/> THSW
                 </td>
                 <td>degree_F <br/> degree_C
                 </td>
@@ -6874,6 +6979,49 @@ growing_base = 50.0, degree_F</pre>
             </tbody>
         </table>
 
+        <h1 id="ValueTuple">Appendix: <span class="code">ValueTuples</span></h1>
+        <p>
+            A value, along with the unit it is in, can be represented by a 3-way tuple called a "value tuple". They
+            are used throughout WeeWX. All WeeWX
+            routines can accept a simple unadorned 3-way tuple as a value tuple, but they return the type <span
+            class="code">ValueTuple</span>. It is useful because its contents can be accessed using named attributes.
+        </p>
+
+        <table>
+            <caption>Attributes of a <span class="code">ValueTuple</span>.</caption>
+            <tbody>
+            <tr class="first_row">
+                <td>Item</td><td>attribute</td><td>Meaning</td>
+            </tr>
+            <tr>
+                <td class="code first_col">0</td><td class="code">value</td><td>The datum value (eg, 20.2)</td>
+            </tr>
+            <tr>
+                <td class="code first_col">1</td><td class="code">unit</td><td>The unit it is in ("<span class="code">degree_C</span>")</td>
+            </tr>
+            <tr>
+                <td class="code first_col">2</td><td class="code">group</td><td>The unit group ("<span class="code">group_temperature</span>")</td>
+            </tr>
+            </tbody>
+        </table>
+
+        <p>
+            It is valid to have a datum value of <span class="code">None</span>.
+        </p>
+
+        <p>
+            It is also valid to have a unit type of <span class="code">None</span> (meaning there is no information about
+            the unit the value is in). In this case, you won't be able to convert it to another unit.
+        </p>
+
+        <p>Here are some examples:</p>
+        <pre class="tty">
+from weewx.units import ValueTuple
+
+freezing_vt = ValueTuple(0.0, "degree_C", "group_temperature")
+body_temperature_vt = ValueTuple(98.6, "degree_F", group_temperature")
+station_altitude_vt = ValueTuple(120.0, "meter", "group_altitude")
+        </pre>
     </div>
     <!-- end id technical_content -->
 

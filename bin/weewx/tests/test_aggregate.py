@@ -203,6 +203,25 @@ class TestAggregate(unittest.TestCase):
                 self.assertAlmostEqual(windvec[0].imag, 3.250, 3)
                 self.assertEqual(windvec[1:3], ('mile_per_hour', 'group_speed'))
 
+            # Calculate the wind vector for the hour starting at 1-06-2010 15:00
+            hour_start_tt = (2010, 1, 6, 15, 0, 0, 0, 0, -1)
+            hour_stop_tt = (2010, 1, 6, 16, 0, 0, 0, 0, -1)
+            hour_start_ts = time.mktime(hour_start_tt)
+            hour_stop_ts = time.mktime(hour_stop_tt)
+            vt = weewx.xtypes.WindVec.get_aggregate('windvec',
+                                                    TimeSpan(hour_start_ts, hour_stop_ts),
+                                                    'max', db_manager)
+            self.assertAlmostEqual(abs(vt[0]), 15.281, 3)
+            self.assertAlmostEqual(vt[0].real, 8.069, 3)
+            self.assertAlmostEqual(vt[0].imag, -12.976, 3)
+            vt = weewx.xtypes.WindVec.get_aggregate('windgustvec',
+                                                    TimeSpan(hour_start_ts, hour_stop_ts),
+                                                    'max', db_manager)
+            self.assertAlmostEqual(abs(vt[0]), 18.337, 3)
+            self.assertAlmostEqual(vt[0].real, 9.683, 3)
+            self.assertAlmostEqual(vt[0].imag, -15.572, 3)
+
+
     def test_get_aggregate_expression(self):
         """Test using an expression in an aggregate"""
         with weewx.manager.open_manager_with_config(self.config_dict, 'wx_binding') as db_manager:

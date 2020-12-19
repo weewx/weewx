@@ -858,9 +858,11 @@ class PacketRain(PacketLive):
 def decode_uvi(pkt, pkt_data):
     """Decode the uvi portion of a wmr200 packet."""
     try:
-        record = {'uv': pkt_data[0 & 0x0f]}
+        uv = pkt_data[0] & 0x0f
+        record = {'uv': uv if uv != 0xff else None}
+
         if DEBUG_PACKETS_UVI:
-            log.debug("  UV index:%s\n" % record['UV'])
+            log.debug("  UV index:%s\n" % record['uv'])
         return record
 
     except IndexError:
@@ -1529,6 +1531,8 @@ class WMR200(weewx.drivers.AbstractDevice):
         DEBUG_PACKETS_TEMP = int(stn_dict.get('debug_packets_temp', 0))
         global DEBUG_PACKETS_RAIN
         DEBUG_PACKETS_RAIN = int(stn_dict.get('debug_packets_rain', 0))
+        global DEBUG_PACKETS_UVI
+        DEBUG_PACKETS_UVI = int(stn_dict.get('debug_packets_uvi', 0))
         global DEBUG_PACKETS_WIND
         DEBUG_PACKETS_WIND = int(stn_dict.get('debug_packets_wind', 0))
         global DEBUG_PACKETS_STATUS
@@ -1539,6 +1543,8 @@ class WMR200(weewx.drivers.AbstractDevice):
         DEBUG_CHECKSUM = int(stn_dict.get('debug_checksum', 0))
         global DEBUG_MAPPING
         DEBUG_MAPPING = int(stn_dict.get('debug_mapping', 0))
+        global DEBUG_READS
+        DEBUG_READS = int(stn_dict.get('debug_reads', 0))
 
         if DEBUG_CONFIG_DATA:
             log.debug('Configuration setup')
@@ -1915,11 +1921,11 @@ class WMR200(weewx.drivers.AbstractDevice):
                     # Ensure that the packet has a valid 'interval' field.
                     packet_record_interval = int(timestamp_packet_interval / 60.0)
                     if packet_record_interval == 0:
-                      # This packet occurred less than the minimal interval after the
-                      # initial time search space and is discarded.
-                      loginf('genStartup() Discarding received archive record'
-                             ' since interval is zero')
-                      return
+                        # This packet occurred less than the minimal interval after the
+                        # initial time search space and is discarded.
+                        log.info('genStartup() Discarding received archive record'
+                                 ' since interval is zero')
+                        return
                     pkt.record_update({'interval': packet_record_interval})
                     # Calculate the rain accumulation between valid archive
                     # packets.

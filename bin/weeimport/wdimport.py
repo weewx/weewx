@@ -45,17 +45,17 @@ class WDSource(weeimport.Source):
     data across a number of monthly log files. Each log file contains one month
     of minute separated data in structured text or csv format.
 
-    Data is imported from all monthly log files found in the source directory 
+    Data is imported from all monthly log files found in the source directory
     one set of monthly log files at a time. Units of measure are not specified
     in the monthly log files so the units of measure must be specified in the
     wee_import config file. Whilst the WD monthly log file formats are well
     defined, some pre-processing of the data is required to provide data in a
     format suitable for use in the wee_import mapping methods.
-   
+
     WD log file units are set to either Metric or US in WD via the 'Log File'
     setting under 'Units' on the 'Units/Wind Chill' tab of the universal setup.
     The units used in each log file in each case are:
-    
+
     Log File                            Field               Metric      US
                                                             Units       Units
     MMYYYYlg.txt                        day
@@ -125,13 +125,15 @@ class WDSource(weeimport.Source):
     wd_unit_sys = {'temperature': {'METRIC': 'degree_C', 'US': 'degree_F'},
                    'dewpoint': {'METRIC': 'degree_C', 'US': 'degree_F'},
                    'barometer': {'METRIC': 'hPa', 'US': 'inHg'},
-                   'direction': {'METRIC': 'degree_compass', 'US': 'degree_compass'},
+                   'direction': {'METRIC': 'degree_compass',
+                                 'US': 'degree_compass'},
                    'windspeed': {'METRIC': 'knot', 'US': 'mile_per_hour'},
                    'heatindex': {'METRIC': 'degree_C', 'US': 'degree_F'},
                    'gustspeed': {'METRIC': 'knot', 'US': 'mile_per_hour'},
                    'humidity': {'METRIC': 'percent', 'US': 'percent'},
                    'rainlastmin': {'METRIC': 'mm', 'US': 'inch'},
-                   'radiation': {'METRIC': 'watt_per_meter_squared', 'US': 'watt_per_meter_squared'},
+                   'radiation': {'METRIC': 'watt_per_meter_squared',
+                                 'US': 'watt_per_meter_squared'},
                    'uv': {'METRIC': 'uv_index', 'US': 'uv_index'},
                    'soilmoist': {'METRIC': 'centibar', 'US': 'centibar'},
                    'soiltemp': {'METRIC': 'degree_C', 'US': 'degree_F'},
@@ -165,7 +167,7 @@ class WDSource(weeimport.Source):
                    'humidity': {'units': 'percent', 'map_to': 'outHumidity'},
                    'rainlastmin': {'map_to': 'rain'},
                    'radiation': {'units': 'watt_per_meter_squared',
-                                          'map_to': 'radiation'},
+                                 'map_to': 'radiation'},
                    'uv': {'units': 'uv_index', 'map_to': 'UV'},
                    'soilmoist': {'units': 'centibar', 'map_to': 'soilMoist1'},
                    'soiltemp': {'map_to': 'soilTemp1'},
@@ -224,8 +226,8 @@ class WDSource(weeimport.Source):
         self.decimal = wd_config_dict.get('decimal', '.')
 
         # ignore extreme > 255.0 values for temperature and humidity fields
-        self.ignore_extreme_temp_hum = weeutil.weeutil.tobool(wd_config_dict.get('ignore_extreme_temp_hum',
-                                                                                 True))
+        self.ignore_extr_th = weeutil.weeutil.tobool(wd_config_dict.get('ignore_extreme_temp_hum',
+                                                                        True))
 
         # initialise the import field-to-WeeWX archive field map
         self.map = None
@@ -362,7 +364,8 @@ class WDSource(weeimport.Source):
         try:
             self.source = wd_config_dict['directory']
         except KeyError:
-            _msg = "Weather Display monthly logs directory not specified in '%s'." % import_config_path
+            _msg = "Weather Display monthly logs directory not " \
+                   "specified in '%s'." % import_config_path
             raise weewx.ViolatedPrecondition(_msg)
 
         # get the source file encoding, default to utf-8-sig
@@ -391,17 +394,18 @@ class WDSource(weeimport.Source):
         self.log_list = [a[0] for a in sorted(_temp, key=lambda el: (el[2], el[1]))]
         # if there are no log files then there is nothing to be done
         if len(self.log_list) == 0:
-            raise weeimport.WeeImportIOError(
-                "No Weather Display monthly logs found in directory '%s'." % self.source)
+            raise weeimport.WeeImportIOError("No Weather Display monthly logs "
+                                             "found in directory '%s'." % self.source)
         # Some log files have entries that belong in a different month.
         # Initialise a list to hold these extra records for processing during
         # the appropriate month
         self.extras = {}
-        for l in self.logs_to_process:
-            self.extras[l] = []
+        for log_to_process in self.logs_to_process:
+            self.extras[log_to_process] = []
 
         # tell the user/log what we intend to do
-        _msg = "Weather Display monthly log files in the '%s' directory will be imported" % self.source
+        _msg = "Weather Display monthly log files in the '%s' " \
+               "directory will be imported" % self.source
         print(_msg)
         log.info(_msg)
         _msg = "The following options will be used:"
@@ -421,9 +425,10 @@ class WDSource(weeimport.Source):
         if self.verbose:
             print(_msg)
         log.debug(_msg)
-        _msg = "     dry-run=%s, calc_missing=%s, ignore_invalid_data=%s" % (self.dry_run,
-                                                                             self.calc_missing,
-                                                                             self.ignore_invalid_data)
+        _msg = "     dry-run=%s, calc_missing=%s, " \
+               "ignore_invalid_data=%s" % (self.dry_run,
+                                           self.calc_missing,
+                                           self.ignore_invalid_data)
         if self.verbose:
             print(_msg)
         log.debug(_msg)
@@ -452,19 +457,22 @@ class WDSource(weeimport.Source):
         if self.verbose:
             print(_msg)
         log.debug(_msg)
-        _msg = "     UV=%s, radiation=%s ignore extreme temperature and humidity=%s" % (self.UV_sensor,
-                                                                                        self.solar_sensor,
-                                                                                        self.ignore_extreme_temp_hum)
+        _msg = "     UV=%s, radiation=%s ignore extreme temperature " \
+               "and humidity=%s" % (self.UV_sensor,
+                                    self.solar_sensor,
+                                    self.ignore_extr_th)
         if self.verbose:
             print(_msg)
         log.debug(_msg)
-        _msg = "Using database binding '%s', which is bound to database '%s'" % (self.db_binding_wx,
-                                                                                 self.dbm.database_name)
+        _msg = "Using database binding '%s', which is bound to " \
+               "database '%s'" % (self.db_binding_wx,
+                                  self.dbm.database_name)
         print(_msg)
         log.info(_msg)
-        _msg = "Destination table '%s' unit system is '%#04x' (%s)." % (self.dbm.table_name,
-                                                                        self.archive_unit_sys,
-                                                                        unit_nicknames[self.archive_unit_sys])
+        _msg = "Destination table '%s' unit system " \
+               "is '%#04x' (%s)." % (self.dbm.table_name,
+                                     self.archive_unit_sys,
+                                     unit_nicknames[self.archive_unit_sys])
         print(_msg)
         log.info(_msg)
         if self.calc_missing:
@@ -474,7 +482,8 @@ class WDSource(weeimport.Source):
         if not self.solar_sensor:
             print("All WeeWX radiation fields will be set to None.")
         if options.date or options.date_from:
-            print("Observations timestamped after %s and up to and" % timestamp_to_string(self.first_ts))
+            print("Observations timestamped after %s and "
+                  "up to and" % timestamp_to_string(self.first_ts))
             print("including %s will be imported." % timestamp_to_string(self.last_ts))
         if self.dry_run:
             print("This is a dry run, imported data will not be saved to archive.")
@@ -525,7 +534,8 @@ class WDSource(weeimport.Source):
                 if self.ignore_missing_log:
                     pass
                 else:
-                    _msg = "Weather Display monthly log file '%s' could not be found." % _path_file_name
+                    _msg = "Weather Display monthly log file '%s' could " \
+                           "not be found." % _path_file_name
                     raise weeimport.WeeImportIOError(_msg)
 
             # Determine delimiter to use. This is a simple check, if 'csv'
@@ -541,14 +551,24 @@ class WDSource(weeimport.Source):
                 # have changed over time
 
                 # ignore the first line, it will likely be header info
-                if i == 2 and len(" ".join(_row.split()).split(_del)) != len(self.logs[lg]['fields']):
-                    _msg = "Unexpected number of columns found in '%s': %s v %s" % (_fn,
-                                                                                    len(_row.split(_del)),
-                                                                                    len(self.logs[lg]['fields']))
+                if i == 2 and \
+                        len(" ".join(_row.split()).split(_del)) != len(self.logs[lg]['fields']):
+                    _msg = "Unexpected number of columns found in '%s': " \
+                           "%s v %s" % (_fn,
+                                        len(_row.split(_del)),
+                                        len(self.logs[lg]['fields']))
+                    print(_msg)
+                    log.info(_msg)
+                # check for and remove any null bytes
+                clean_row = _row
+                if "\x00" in _row:
+                    clean_row = clean_row.replace("\x00", "")
+                    _msg = "One or more null bytes found in and removed " \
+                           "from row %d in file '%s'" % (i, _fn)
                     print(_msg)
                     log.info(_msg)
                 # make sure we have full stops as decimal points
-                _clean_data.append(_row.replace(self.decimal, '.'))
+                _clean_data.append(clean_row.replace(self.decimal, '.'))
 
             # initialise a list to hold our processed data for this log file
             _data = []
@@ -593,7 +613,8 @@ class WDSource(weeimport.Source):
                         # add the record
                         _data.append(e_rec)
                 # now update our extras and remove any records we added
-                self.extras[lg][:] = [x for x in self.extras[lg] if not (x['year'] == _year and x['month'] == _month)]
+                self.extras[lg][:] = [x for x in self.extras[lg] if
+                                      not (x['year'] == _year and x['month'] == _month)]
 
             # There may be duplicate timestamped records in the data. We will
             # keep the first encountered duplicate and discard the latter ones

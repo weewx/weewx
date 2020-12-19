@@ -825,6 +825,8 @@ class DaySummaryManager(Manager):
         self.daykeys = [x[n_prefix:] for x in all_tables
                         if (x.startswith(prefix) and x != meta_name)]
         self.version = self._read_metadata('Version')
+        if self.version is None:
+            self.version = '1.0'
         log.debug('Daily summary version is %s', self.version)
 
     def close(self):

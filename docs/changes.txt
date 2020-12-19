@@ -1,7 +1,99 @@
 weewx change history
 --------------------
 
-4.1.1 05/30/2020
+4.2.1 MM/DD/YYYY
+
+Service weewx.wxxtypes.StdDelta was inadvertently left out of the list of
+services to be run. Fortunately, it is not used. Yet. Added it back in.
+
+Fixed corner case for windDir when using software record generation,
+ignore_zero_wind=True, and windSpeed=0 for entire record interval. Now emits
+last windDir value.
+
+Fixed problem when looking up stars with more than one word in their name.
+Fixes issue #620.
+
+Fixed problem that caused daily summary weights to revert to V1.0 style weights.
+
+
+4.2.0 10/26/2020
+
+CHANGES COMING! This is the last release that will support the LaCrosse WS23xx,
+Oregon WMR200 and WMR300 stations. In the future, they will be published as
+unsupported extensions.
+
+Made it easier to add new, derived types via StdWXCalculate. Fixes issue #491.
+
+Changed the tag system slightly in order to make it possible for the XTypes
+system to add new aggregations that take an argument.
+
+Added the new data types in the extended_wview schema to the WeeWX types
+system. Fixes issue #613.
+
+Added ability to label left, right or both y-axes of graphs.  PR#610.
+Fixes issue #609. Thanks to user Brent Fraser!
+
+Added units and labels for the lightning data types.
+
+Fixed problem where threads attempt to access non-existent database. Fixes
+issue #579.
+
+Fixed problem that caused reporting units to revert to US if they were in a
+mixed unit system. Fixes issue #576.
+
+Fixed problem that could cause the station registry to fail if given a location
+with a non-ASCII location name.
+
+Changed TE923 bucket size from 0.02589 inches to 1/36 of an inch
+(0.02777778 in). PR #575. Fixes issue #574. Thanks to user Timothy!
+
+Undocumented option retry_certificate has been renamed to retry_ssl, and now
+covers all SSL errors (not just certificate errors). Fixes issue #569. Thanks
+to user Eric!
+
+Fixed problem caused by specifying a [Logging]/[[formatters]] section in
+weewx.conf that uses interpolated variables.
+
+Fixed problem in the Vantage driver that resulted in incorrect sunrise/sunset
+being included in loop packets when run under Python 3. Thanks to users 
+Constantine and Jacques!
+
+Improved auto-scaling of plot axes.
+
+Fixed problem where aggregates of windvec and windgustvec returned the aggregate
+since start of day, not the start of the aggregation period. Fixes issue #590.
+
+New unit "beaufort", included in "group_speed". Treating beaufort as a separate
+type has been deprecated. Fixes issue #591.
+
+New unit "kPa", included in "group_pressure". Fixes issue #596.
+
+Fixed bug in the simulator. Made it easier to subclass class Simulator.
+
+Expressions in StdCalibration are now ordered. Later corrections can depend on
+earlier corrections.
+
+Fixed problem under Python 2, where option 'none' could cause exception.
+PR #597. Thanks to user Clément!
+
+Fixed problem with ws23xx driver under Python 3 that caused it to crash.
+
+Use a more modern formula for heat index. Fixes issue #601. Thanks to
+user Peter Q!
+
+Allow overriding the data binding when using iterators. Fixes issue #580.
+
+Fixed problem where old daily summaries may not have a version number.
+
+Fixed problem in WMR200 driver where missing UV reports as index 255.
+
+Added option 'force_direction' for working around a WU bug. Fixes issue #614.
+
+
+4.1.1 06/01/2020
+
+Fixed problem that caused wind speed to be reported to AWEKAS in m/s instead
+of km/h.
 
 Fixed problem that caused FTP attempts not to be retried.
 
@@ -207,6 +299,11 @@ calculated must be listed in weewx.conf. See the Upgrade Guide.
 
 setup.py install no longer saves the old 'bin' subdirectory. Instead, it simply
 overwrites it.
+
+Support for the vantage LOOP2 packet format. Fixes issue #374.
+
+The vantage driver now allows 3 retries per read, rather than per
+archive interval.
 
 
 3.9.2 07/14/2019
@@ -608,8 +705,6 @@ Decode heatindex and windchill from wmr300 sensor outputs.
 
 Report the firmware version when initializing the cc3000 driver.
 
-Support for the vantage LOOP2 packet format. Fixes issue #374.
-
 Fixed bug in vantage driver that would prevent console wake up during
 retries when fetching EEPROM vales. Thanks to user Dan Begallie!
 
@@ -620,10 +715,7 @@ out, other drivers will follow suit. Partial fix of issue #175.
 The vantage driver now emits the barometer trend in LOOP packets as
 field 'trendIcon'.
 
-The vantage driver now allows 3 retries per read, rather than per
-archive interval.
-
-The engine now logs locale. Additional information if a TERM signal is 
+The engine now logs locale. Additional information if a TERM signal is
 received.
 
 Removed the site-specific "Pond" extensions from the Standard skin.

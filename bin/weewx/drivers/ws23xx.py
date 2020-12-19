@@ -1005,6 +1005,11 @@ class Ws2300(object):
     # Write data to the device.
     #
     def write_byte(self, data):
+        """Write a single-element byte string.
+
+        data: In Python 2, type 'str'; in Python 3, either type 'bytes', or 'bytearray'. It should
+        hold only one element.
+        """
         if self.log_mode != 'w':
             if self.log_mode != 'e':
                 self.log(' ')
@@ -1096,7 +1101,7 @@ class Ws2300(object):
                 }[encode_constant]
             self.log(",")
             for i in range(len(encoded_data)):
-                self.write_byte(encoded_data[i])
+                self.write_byte(bytearray([encoded_data[i]]))
                 answer = self.read_byte()
                 if six.int2byte(nybbles[i] + ack_constant) != answer:
                     self.log("??")

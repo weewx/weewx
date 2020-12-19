@@ -148,7 +148,8 @@ class CumulusSource(weeimport.Source):
         try:
             temp_u = cumulus_config_dict['Units'].get('temperature')
         except KeyError:
-            _msg = "No units specified for Cumulus temperature fields in %s." % (self.import_config_path, )
+            _msg = "No units specified for Cumulus temperature " \
+                   "fields in %s." % (self.import_config_path, )
             raise weewx.UnitError(_msg)
         else:
             if temp_u in weewx.units.default_unit_format_dict:
@@ -159,27 +160,31 @@ class CumulusSource(weeimport.Source):
                 self._header_map['cur_windchill']['units'] = temp_u
                 self._header_map['cur_app_temp']['units'] = temp_u
             else:
-                _msg = "Unknown units '%s' specified for Cumulus temperature fields in %s." % (temp_u,
-                                                                                               self.import_config_path)
+                _msg = "Unknown units '%s' specified for Cumulus " \
+                       "temperature fields in %s." % (temp_u,
+                                                      self.import_config_path)
                 raise weewx.UnitError(_msg)
         # Pressure
         try:
             press_u = cumulus_config_dict['Units'].get('pressure')
         except KeyError:
-            _msg = "No units specified for Cumulus pressure fields in %s." % (self.import_config_path, )
+            _msg = "No units specified for Cumulus pressure " \
+                   "fields in %s." % (self.import_config_path, )
             raise weewx.UnitError(_msg)
         else:
             if press_u in ['inHg', 'mbar', 'hPa']:
                 self._header_map['cur_slp']['units'] = press_u
             else:
-                _msg = "Unknown units '%s' specified for Cumulus pressure fields in %s." % (press_u,
-                                                                                            self.import_config_path)
+                _msg = "Unknown units '%s' specified for Cumulus " \
+                       "pressure fields in %s." % (press_u,
+                                                   self.import_config_path)
                 raise weewx.UnitError(_msg)
         # Rain
         try:
             rain_u = cumulus_config_dict['Units'].get('rain')
         except KeyError:
-            _msg = "No units specified for Cumulus rain fields in %s." % (self.import_config_path, )
+            _msg = "No units specified for Cumulus " \
+                   "rain fields in %s." % (self.import_config_path, )
             raise weewx.UnitError(_msg)
         else:
             if rain_u in rain_units_dict:
@@ -187,22 +192,25 @@ class CumulusSource(weeimport.Source):
                 self._header_map['cur_rain_rate']['units'] = rain_units_dict[rain_u]
 
             else:
-                _msg = "Unknown units '%s' specified for Cumulus rain fields in %s." % (rain_u,
-                                                                                        self.import_config_path)
+                _msg = "Unknown units '%s' specified for Cumulus " \
+                       "rain fields in %s." % (rain_u,
+                                               self.import_config_path)
                 raise weewx.UnitError(_msg)
         # Speed
         try:
             speed_u = cumulus_config_dict['Units'].get('speed')
         except KeyError:
-            _msg = "No units specified for Cumulus speed fields in %s." % (self.import_config_path, )
+            _msg = "No units specified for Cumulus " \
+                   "speed fields in %s." % (self.import_config_path, )
             raise weewx.UnitError(_msg)
         else:
             if speed_u in weewx.units.default_unit_format_dict:
                 self._header_map['avg_wind_speed']['units'] = speed_u
                 self._header_map['gust_wind_speed']['units'] = speed_u
             else:
-                _msg = "Unknown units '%s' specified for Cumulus speed fields in %s." % (speed_u,
-                                                                                         self.import_config_path)
+                _msg = "Unknown units '%s' specified for Cumulus " \
+                       "speed fields in %s." % (speed_u,
+                                                self.import_config_path)
                 raise weewx.UnitError(_msg)
 
         # get our source file path
@@ -249,9 +257,10 @@ class CumulusSource(weeimport.Source):
         if self.verbose:
             print(_msg)
         log.debug(_msg)
-        _msg = "     dry-run=%s, calc_missing=%s, ignore_invalid_data=%s" % (self.dry_run,
-                                                                             self.calc_missing,
-                                                                             self.ignore_invalid_data)
+        _msg = "     dry-run=%s, calc_missing=%s, " \
+               "ignore_invalid_data=%s" % (self.dry_run,
+                                           self.calc_missing,
+                                           self.ignore_invalid_data)
         if self.verbose:
             print(_msg)
         log.debug(_msg)
@@ -264,13 +273,15 @@ class CumulusSource(weeimport.Source):
         if self.verbose:
             print(_msg)
         log.debug(_msg)
-        _msg = "Using database binding '%s', which is bound to database '%s'" % (self.db_binding_wx,
-                                                                                 self.dbm.database_name)
+        _msg = "Using database binding '%s', which is bound " \
+               "to database '%s'" % (self.db_binding_wx,
+                                     self.dbm.database_name)
         print(_msg)
         log.info(_msg)
-        _msg = "Destination table '%s' unit system is '%#04x' (%s)." % (self.dbm.table_name,
-                                                                        self.archive_unit_sys,
-                                                                        unit_nicknames[self.archive_unit_sys])
+        _msg = "Destination table '%s' unit system " \
+               "is '%#04x' (%s)." % (self.dbm.table_name,
+                                     self.archive_unit_sys,
+                                     unit_nicknames[self.archive_unit_sys])
         print(_msg)
         log.info(_msg)
         if self.calc_missing:
@@ -280,7 +291,8 @@ class CumulusSource(weeimport.Source):
         if not self.solar_sensor:
             print("All WeeWX radiation fields will be set to None.")
         if options.date or options.date_from:
-            print("Observations timestamped after %s and up to and" % timestamp_to_string(self.first_ts))
+            print("Observations timestamped after %s and "
+                  "up to and" % timestamp_to_string(self.first_ts))
             print("including %s will be imported." % timestamp_to_string(self.last_ts))
         if self.dry_run:
             print("This is a dry run, imported data will not be saved to archive.")
@@ -318,9 +330,17 @@ class CumulusSource(weeimport.Source):
         # Our raw data needs a bit of cleaning up before we can parse/map it.
         _clean_data = []
         for _row in _raw_data:
-            # Make sure we have full stops as decimal points
-            _line = _row.replace(self.decimal, '.')
-            # Ignore any blank lines
+            # check for and remove any null bytes
+            clean_row = _row
+            if "\x00" in _row:
+                clean_row = clean_row.replace("\x00", "")
+                _msg = "One or more null bytes found in and removed " \
+                       "from monthly log file '%s'" % (period, )
+                print(_msg)
+                log.info(_msg)
+            # make sure we have full stops as decimal points
+            _line = clean_row.replace(self.decimal, '.')
+            # ignore any blank lines
             if _line != "\n":
                 # Cumulus has separate date and time fields as the first 2
                 # fields of a row. It is easier to combine them now into a

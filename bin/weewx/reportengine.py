@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2019 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2020 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -8,7 +8,6 @@
 from __future__ import absolute_import
 
 # System imports:
-import copy
 import datetime
 import ftplib
 import glob
@@ -214,9 +213,9 @@ class StdReportEngine(threading.Thread):
     def _build_skin_dict(self, report):
         """Find and build the skin_dict for the given report"""
 
-        # Start with the defaults in the defaults module. Because we will be modifying it, we need to make a deep
-        # copy.
-        skin_dict = copy.deepcopy(weewx.defaults.defaults)
+        # Start with the defaults in the defaults module. Because we will be modifying it, we need
+        # to make a deep copy.
+        skin_dict = weeutil.config.deep_copy(weewx.defaults.defaults)
 
         # Add the report name:
         skin_dict['REPORT_NAME'] = report
@@ -245,7 +244,9 @@ class StdReportEngine(threading.Thread):
 
         # Now add on the [StdReport][[Defaults]] section, if present:
         if 'Defaults' in self.config_dict['StdReport']:
-            merge_dict = copy.deepcopy(self.config_dict['StdReport']['Defaults'])
+            # Because we will be modifying the results, make a deep copy of the [[Defaults]]
+            # section.
+            merge_dict = weeutil.config.deep_copy(self.config_dict)['StdReport']['Defaults']
             weeutil.config.merge_config(skin_dict, merge_dict)
 
         # Inject any scalar overrides. This is for backwards compatibility. These options should now go

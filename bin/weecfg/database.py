@@ -19,6 +19,7 @@ import time
 # weewx imports
 import weedb
 import weeutil.weeutil
+import weewx.engine
 import weewx.manager
 import weewx.units
 import weewx.wxservices
@@ -717,6 +718,8 @@ class CalcMissing(DatabaseFix):
         # is this a dry run, default to true
         self.dry_run = to_bool(calc_missing_config_dict.get('dry_run', True))
 
+        self.config_dict = config_dict
+
     def run(self):
         """Main entry point for calculating missing derived fields.
 
@@ -726,25 +729,13 @@ class CalcMissing(DatabaseFix):
 
         # record the current time
         t1 = time.time()
-        # obtain a wxservices.WXCalculate object to calculate the missing fields
-        # first we need station altitude, latitude and longitude
-        stn_dict = self.config_dict['Station']
-        altitude_t = option_as_list(stn_dict.get('altitude', (None, None)))
-        try:
-            altitude_vt = weewx.units.ValueTuple(float(altitude_t[0]),
-                                                 altitude_t[1],
-                                                 "group_altitude")
-        except KeyError as e:
-            raise weewx.ViolatedPrecondition(
-                "Value 'altitude' needs a unit (%s)" % e)
-        latitude_f = float(stn_dict['latitude'])
-        longitude_f = float(stn_dict['longitude'])
 
-        # now we can create a WXCalculate object
-        wxcalculate = weewx.wxservices.WXCalculate(self.config_dict,
-                                                   altitude_vt,
-                                                   latitude_f,
-                                                   longitude_f)
+        # Instantiate a dummy engine, to be used to calculate derived variables. This will
+        # cause all the xtype services to get loaded.
+        engine = weewx.engine.DummyEngine(self.config_dict)
+        # While the above instantiated an instance of StdWXCalculate, we have no way of
+        # retrieving it. So, instantiate another one, then use that to calculate derived types.
+        wxcalculate = weewx.wxservices.StdWXCalculate(engine, self.config_dict)
 
         # initialise some counters so we know what we have processed
         days_updated = 0
@@ -776,24 +767,20 @@ class CalcMissing(DatabaseFix):
                         if self.start_ts < record['dateTime'] <= self.stop_ts:
                             # first obtain a list of the fields that may be calculated
                             extras_list = []
-                            for obs in wxcalculate.svc_dict['Calculations']:
-                                directive = wxcalculate.svc_dict['Calculations'][obs]
+                            for obs in wxcalculate.calc_dict:
+                                directive = wxcalculate.calc_dict[obs]
                                 if directive == 'software' \
-                                        or directive == 'prefer_hardware' and (
-                                        obs not in record or record[obs] is None):
+                                        or directive == 'prefer_hardware' \
+                                        and (obs not in record or record[obs] is None):
                                     extras_list.append(obs)
 
                             # calculate the missing derived fields for the record
-                            wxcalculate.do_calculations(data_dict=record,
-                                                        data_type='archive')
-                            # Obtain a dict containing only those fields that
-                            # WXCalculate calculated. We could do this as a
-                            # dictionary comprehension but python2.6 does not
-                            # support dictionary comprehensions.
-                            extras_dict = {}
-                            for k in extras_list:
-                                if k in record.keys():
-                                    extras_dict[k] = record[k]
+                            wxcalculate.do_calculations(record)
+
+                            # Obtain a new record dictionary that contains only those items
+                            # that wxcalculate calculated. Use dictionary comprehension.
+                            extras_dict = {k:v for (k,v) in record.items() if k in extras_list}
+
                             # update the archive with the calculated data
                             records_updated += self.update_record_fields(record['dateTime'],
                                                                          extras_dict)

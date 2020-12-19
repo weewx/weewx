@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2018-2019 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2018-2020 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -226,3 +226,36 @@ def config_from_str(input_str):
         open_str = input_str
     config = configobj.ConfigObj(StringIO(open_str), encoding='utf-8', default_encoding='utf-8')
     return config
+
+
+def deep_copy(old_dict, parent=None, depth=None, main=None):
+    """Return a deep copy of a ConfigObj"""
+
+    # Is this a copy starting from the top level?
+    if isinstance(old_dict, configobj.ConfigObj):
+        new_dict = configobj.ConfigObj('',
+                                       encoding=old_dict.encoding,
+                                       default_encoding=old_dict.default_encoding,
+                                       interpolation=old_dict.interpolation)
+    else:
+        # No. It's a copy of something deeper down. If no parent or main is given, then
+        # adopt the parent and main of the incoming dictionary.
+        new_dict = configobj.Section(parent if parent is not None else old_dict.parent,
+                                     depth if depth is not None else old_dict.depth,
+                                     main if main is not None else old_dict.main)
+    for entry in old_dict:
+        # Avoid interpolation by using the version of __getitem__ from dict
+        old_value = dict.__getitem__(old_dict, entry)
+        if isinstance(old_value, configobj.Section):
+            new_value = deep_copy(old_value, new_dict, new_dict.depth+1, new_dict.main)
+        elif isinstance(old_value, list):
+            # Make a copy
+            new_value = list(old_value)
+        elif isinstance(old_value, tuple):
+            # Make a copy
+            new_value = tuple(old_value)
+        else:
+            # It's a scalar
+            new_value = old_value
+        new_dict[entry] = new_value
+    return new_dict

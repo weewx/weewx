@@ -47,7 +47,7 @@
         <div class="logoref">
             <a href='http://weewx.com'> <img src='images/logo-weewx.png' class='logo' style="float:right"
                                              alt="weewx logo"/> </a><br/> <span class='version'>
-Version: 4.1
+Version: 4.2
     </span>
         </div>
         <div class="title">User's Guide to WeeWX</div>
@@ -335,6 +335,11 @@ Version: 4.1
                         <td class='tty'>/usr/share/doc/weewx/examples/</td>
                     </tr>
                     <tr>
+                        <td>User directory</td>
+                        <td class="symcode"></td>
+                        <td class='tty'>/usr/share/weewx/user</td>
+                    </tr>
+                    <tr>
                         <td>PID file</td>
                         <td class="symcode"></td>
                         <td class='tty'>/var/run/weewx.pid</td>
@@ -394,6 +399,11 @@ Version: 4.1
                         <td class='tty'>/usr/share/doc/weewx-x.y.z/examples/</td>
                     </tr>
                     <tr>
+                        <td>User directory</td>
+                        <td class="symcode"></td>
+                        <td class='tty'>/usr/share/weewx/user</td>
+                    </tr>
+                    <tr>
                         <td>PID file</td>
                         <td class="symcode"></td>
                         <td class='tty'>/var/run/weewx.pid</td>
@@ -446,6 +456,11 @@ Version: 4.1
                         <td>Documentation</td>
                         <td class="symcode">DOC_ROOT</td>
                         <td class='tty'>/Users/Shared/weewx/docs/</td>
+                    </tr>
+                    <tr>
+                        <td>User directory</td>
+                        <td class="symcode"></td>
+                        <td class='tty'>/Users/Shared/weewx/bin/user</td>
                     </tr>
                     <tr>
                         <td>Examples</td>
@@ -510,6 +525,11 @@ Version: 4.1
                         <td>Examples</td>
                         <td class="symcode">EXAMPLE_ROOT</td>
                         <td class='tty'>/home/weewx/examples/</td>
+                    </tr>
+                    <tr>
+                        <td>User directory</td>
+                        <td class="symcode"></td>
+                        <td class='tty'>/home/weewx/bin/user</td>
                     </tr>
                     <tr>
                         <td>PID file</td>
@@ -1192,7 +1212,7 @@ log_success = false
             seconds (3 hours).
         </p>
 
-        <p class="config_option">loop_on_init</p>
+        <p class="config_option" id="loop_on_init">loop_on_init</p>
 
         <p>Normally, if the hardware driver fails to load, WeeWX will exit. The assumption is that there is a
             configuration problem and so retries are useless. However, in some cases, drivers can fail to load for
@@ -2201,6 +2221,14 @@ longitude = -77.0366</pre>
         <p>
             The interval in seconds between posts. Setting this value to zero will cause every archive record to be
             posted. Optional. Default is zero.
+        </p>
+
+        <p class="config_option">force_direction</p>
+
+        <p>
+            The Weather Underground has a bug where they will claim that a station is "unavailable" if it sends a null
+            wind direction, even when the wind speed is zero. This option causes the software to cache the last non-null
+            wind direction and use that instead. Default is <span class="code">False</span>.
         </p>
 
         <p class='config_option'>[[[Essentials]]]</p>
