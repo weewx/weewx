@@ -82,6 +82,7 @@ help: info
 info:
 	@echo "     VERSION: $(VERSION)"
 	@echo "   MMVERSION: $(MMVERSION)"
+	@echo "      PYTHON: $(PYTHON)"
 	@echo "         CWD: $(CWD)"
 	@echo "        USER: $(USER)"
 	@echo "   WEEWX_COM: $(WEEWX_COM)"
