@@ -1,5 +1,9 @@
 # To do
 
+Test for xtypes.XTypeTable.
+
+Test for code inside wxservices.py
+
 Should Ultimeter driver actually emit `rain24` and `dayRain`? See
 this email thread: https://groups.google.com/forum/#!topic/weewx-user/FM9QANjo1cc
 
