@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2019 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2019-2020 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -9,6 +9,7 @@ from __future__ import absolute_import
 from __future__ import print_function
 
 import logging
+import math
 import os.path
 import sys
 import time
@@ -246,7 +247,44 @@ class TestAggregate(unittest.TestCase):
             with self.assertRaises(weedb.OperationalError):
                 value = weewx.xtypes.get_aggregate('foo(rain-ET)', TimeSpan(start_ts, stop_ts), 'sum', db_manager)
 
+    def test_first_wind(self):
+        with weewx.manager.open_manager_with_config(self.config_dict, 'wx_binding') as db_manager:
+            # Get the first value for 2-Aug-2010. This date was chosen because the very
+            # first datum of the day (at 00:30:00) is actually null, so the next value
+            # (at 01:00:00) should be the one chosen.
+            day_start_tt = (2010, 8, 2, 0, 0, 0, 0, 0, -1)
+            day_stop_tt = (2010, 8, 3, 0, 0, 0, 0, 0, -1)
+            start_ts = time.mktime(day_start_tt)
+            stop_ts = time.mktime(day_stop_tt)
+            value = weewx.xtypes.WindVec.get_aggregate('windvec',
+                                                       TimeSpan(start_ts, stop_ts),
+                                                       'first', db_manager)
+            self.assertEqual(value[0], complex(20.0, 0))
+            self.assertEqual(value[1], 'mile_per_hour')
+            self.assertEqual(value[2], 'group_speed')
 
+    def test_last_wind(self):
+        with weewx.manager.open_manager_with_config(self.config_dict, 'wx_binding') as db_manager:
+            # Get the last value for 18-Apr-2010. This date was chosen because the very last datum
+            # of the day (at 19-Apr-2010 00:00:00) is actually null, so the previous value (at
+            # 18-Apr-2010 23:30:00) should be the one chosen.
+            day_start_tt = (2010, 4, 18, 0, 0, 0, 0, 0, -1)
+            day_stop_tt = (2010, 4, 19, 0, 0, 0, 0, 0, -1)
+            start_ts = time.mktime(day_start_tt)
+            stop_ts = time.mktime(day_stop_tt)
+            value = weewx.xtypes.WindVec.get_aggregate('windvec',
+                                                       TimeSpan(start_ts, stop_ts),
+                                                       'last', db_manager)
+            # These are the correct values, directly from the database. We need to convert them
+            # to the complex value (x, y)
+            windSpeed = 9.019829
+            windDir = 354.375
+            xmag = windSpeed * math.cos(math.radians(90.0 - windDir))
+            ymag = windSpeed * math.sin(math.radians(90.0 - windDir))
+            self.assertAlmostEqual(value[0].real, xmag)
+            self.assertAlmostEqual(value[0].imag, ymag)
+            self.assertEqual(value[1], 'mile_per_hour')
+            self.assertEqual(value[2], 'group_speed')
 
 
 if __name__ == '__main__':
