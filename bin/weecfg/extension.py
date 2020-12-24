@@ -19,6 +19,8 @@ import os
 import shutil
 import sys
 
+import configobj
+
 import weecfg
 from weecfg import Logger
 from weewx import all_service_groups
@@ -240,7 +242,10 @@ class ExtensionEngine(object):
         self.logger.log("Adding sections to configuration file", level=2)
         # make a copy so we can modify the sections to fit the existing
         # configuration
-        cfg = dict(extension_config)
+        if isinstance(extension_config, configobj.Section):
+            cfg = weeutil.config.deep_copy(extension_config)
+        else:
+            cfg = dict(extension_config)
 
         save_config = False
 
