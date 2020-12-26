@@ -91,8 +91,8 @@ def windchillF(T_F, V_mph):
     return WcF
 
 
-def windchillC(T_C, V_kph):
-    """Wind chill, metric version.
+def windchillMetric(T_C, V_kph):
+    """Wind chill, metric version, with wind in kph.
     
     T: Temperature in Celsius
     
@@ -105,6 +105,30 @@ def windchillC(T_C, V_kph):
 
     T_F = CtoF(T_C)
     V_mph = 0.621371192 * V_kph
+
+    WcF = windchillF(T_F, V_mph)
+
+    return FtoC(WcF) if WcF is not None else None
+
+
+# For backwards compatibility
+windchillC = windchillMetric
+
+
+def windchillMetricWX(T_C, V_mps):
+    """Wind chill, metric version, with wind in mps.
+    
+    T: Temperature in Celsius
+    
+    V: Wind speed in mps
+    
+    Returns wind chill in Celsius"""
+
+    if T_C is None or V_mps is None:
+        return None
+
+    T_F = CtoF(T_C)
+    V_mph = 2.237 * V_mps
 
     WcF = windchillF(T_F, V_mph)
 

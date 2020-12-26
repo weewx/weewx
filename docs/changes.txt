@@ -36,6 +36,9 @@ Added --no-prompt action to wee_import allowing wee_import to be run unattended.
 Fixed problem that prevented option `observations` from being used in the
 simulator. Thanks to user Graham!
 
+Fixed problem where wind chill was calculated incorrectly for METRICWX
+databases. PR #627. Thanks to user edi-x!
+
 
 4.2.0 10/26/2020
 
