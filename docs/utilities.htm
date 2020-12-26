@@ -401,6 +401,10 @@ Usage: wee_database --help
        wee_database --drop-daily
        wee_database --rebuild-daily [--date=YYYY-mm-dd |
                                     [--from=YYYY-mm-dd] [--to=YYYY-mm-dd]]
+                                    [--dry-run]
+       wee_database --reweight [--date=YYYY-mm-dd |
+                               [--from=YYYY-mm-dd] [--to=YYYY-mm-dd]]
+                               [--dry-run]
        wee_database --calc-missing [--date=YYYY-mm-dd |
                                    [--from=YYYY-mm-dd[THH:MM]] [--to=YYYY-mm-dd[THH:MM]]]
        wee_database --check-strings
@@ -434,6 +438,7 @@ Options:
   --drop-daily          Drop the daily summary tables from a database.
   --rebuild-daily       Rebuild the daily summaries from data in the archive
                         table.
+  --reweight            Recalculate the weighted sums in the daily summaries.
   --config=CONFIG_FILE  Use configuration file CONFIG_FILE.
   --date=YYYY-mm-dd     This date only (options --calc-missing and --rebuild-
                         daily only).
@@ -569,6 +574,15 @@ wee_database --rebuild-daily --from=YYYY-mm-dd --to=YYYY-mm-dd</pre>
                     and the daily summary tables will be rebuild for the day defined by <span class="code">--from</span>
                     and the day defined by <span class="code">--to</span> and all days in between.
                 </p>
+
+        <h3>Action <span class="code">--reweight</span></h3>
+        <p>
+            As an alternative to dropping and rebuilding the daily summaries, this action simply rebuilds the weighted
+            daily sums (used to calculate averages) from the archive data. It does not touch the highs and lows. It is
+            much faster than <span class="code">--rebuild-daily</span>, and has the advantage that the highs and lows
+            remain unchanged.
+        </p>
+
 
         <h3>Action <span class="code">--calc-missing</span></h3>
         <p>This action calculates derived observations for archive records in the database and then stores the calculated
@@ -1129,6 +1143,7 @@ No extensions installed</pre>
             [--date=YYYY-mm-dd | --from=YYYY-mm-dd[THH:MM] --to=YYYY-mm-dd[THH:MM]]
             [--dry-run]
             [--verbose]
+            [--no-prompt]
             [--suppress-warnings]
 
 
@@ -1148,6 +1163,8 @@ Options:
                         Import data up until this date or date-time. Format is
                         YYYY-mm-dd[THH:MM].
   --verbose             Print and log useful extra output.
+  --no-prompt           Do not prompt. Accept relevant defaults and all y/n
+                        prompts.
   --suppress-warnings   Suppress warnings to stdout. Warnings are still
                         logged.
   --version             Display wee_import version number.
@@ -1309,6 +1326,23 @@ summaries using the wee_database utility.</pre>
 
         <pre class="tty cmd">wee_import --import-config=/directory/import.conf --verbose
 </pre>
+
+        <h3>Option <span class="code">--no-prompt</span></h3>
+
+        <p>Inclusion of the <span class="code">--no-prompt</span> option will run <span class="code">wee_import</span>
+            without prompts. Relevant defaults will be used and all y/n prompts are automatically accepted as 'y'. This
+            may be useful for unattended use of <span class="code">wee_import</span>.
+        </p>
+
+        <pre class="tty cmd">wee_import --import-config=/directory/import.conf --no-prompt
+</pre>
+
+        <p class="warning">
+            <strong>Warning!</strong><br/>Care must be taken when using the <span class="code">--no-prompt</span>
+            option as ignoring warnings during the import process can lead to unexpected results. Whilst existing data
+            will be protected, the use or acceptance of an incorrect or unexpected parameter or default may lead to
+            significant amounts of unwanted data being imported.
+        </p>
 
         <h3>Option <span class="code">--suppress-warnings</span></h3>
 

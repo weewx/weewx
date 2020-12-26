@@ -1289,15 +1289,6 @@ class DaySummaryManager(Manager):
 
         return first_ts[0], last_ts[0]
 
-    def _check_intervals(self, timespan):
-        """Check to see if the field "interval" is constant over the time span."""
-
-        sql = "SELECT MIN(`interval`), MAX(`interval`) FROM %s WHERE dateTime>? AND dateTime<?;" \
-              % self.table_name
-        result = self.getSql(sql, timespan)
-        if result is not None and result[0] == result[1]:
-            return result[0]
-
     def _get_day_summary(self, sod_ts, cursor=None):
         """Return an instance of an appropriate accumulator, initialized to a given day's
         statistics.

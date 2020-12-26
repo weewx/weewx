@@ -3,11 +3,13 @@
 #
 #    See the file LICENSE.txt for your full rights.
 #
-"""Test the weighted sums in the daily summary.
+"""Test the weighted sums in the daily summary. Most of tests for the daily summaries are in module
+test_daily. However, gen_fake_data.configDatabase() speeds things up by inserting a bunch of
+records in the archive table *then* building the daily summary, which means it does not test
+building the daily summaries by using addRecord().
 
-Ordinarily, these are tested in test_daily. However, gen_fake_data.configDatabase() speeds things
-up by inserting a bunch of records in the archive table *then* building the daily summary. This
-does not test adding things on the fly.
+The tests in this module take a different strategy by using addRecord() directly. This takes a lot
+longer, so the tests use a more abbreviated database.
 
 This file also tests reweighting the weighted sums.
 
@@ -36,9 +38,9 @@ schema = schemas.wview_small.schema
 
 # Archive interval of one hour
 interval_secs = 3600
-# Fifteen days worth of data.
+# Twelve days worth of data.
 start_d = datetime.date(2020, 10, 26)
-stop_d = datetime.date(2020, 11, 11)
+stop_d = datetime.date(2020, 11, 7)
 # This starts and ends on day boundaries:
 start_ts = int(time.mktime(start_d.timetuple())) + interval_secs
 stop_ts = int(time.mktime(stop_d.timetuple()))
@@ -71,24 +73,6 @@ db_dict_mysql = {
 class CommonWeightTests(object):
     """Test that inserting records get the weighted sums right. Regression test for issue #623. """
 
-    def setUp(self):
-        """Set up the database."""
-        try:
-            # Drop the old database
-            weedb.drop(self.db_dict)
-        except weedb.NoDatabaseError:
-            pass
-        # Get a new database by initializing with the schema
-        self.db_manager = weewx.manager.DaySummaryManager.open_with_create(self.db_dict,
-                                                                           schema=schema)
-
-        # Populate the database
-        self.db_manager.addRecord(
-            gen_fake_data.genFakeRecords(start_ts, stop_ts, interval=interval_secs))
-
-    def tearDown(self):
-        pass
-
     def test_weights(self):
         """Check that the weighted sums were done correctly."""
         self.check_weights()
@@ -109,46 +93,46 @@ class CommonWeightTests(object):
             result4 = self.db_manager.getSql("SELECT SUM(sumtime) FROM archive_day_%s" % key)
             self.assertEqual(result3, result4)
 
+            result5 = self.db_manager.getSql("SELECT SUM(%s * `interval` * 60) FROM archive"
+                                             % archive_key)
+            result6 = self.db_manager.getSql("SELECT SUM(wsum) FROM archive_day_%s" % key)
+            if result5[0] is None:
+                self.assertEqual(result6[0], 0.0)
+            else:
+                self.assertAlmostEqual(result5[0], result6[0], 3)
 
-class CommonPatchTest(CommonWeightTests):
-    """Test patching the flawed databases from V4.2."""
+
+
+class TestSqliteWeights(CommonWeightTests, unittest.TestCase):
+    """Test using the SQLite database"""
 
     def setUp(self):
-        # Set up the database
-        super(CommonPatchTest, self).setUp()
+        self.db_manager = setup_database(db_dict_sqlite)
+
+    # The patch test is done with sqlite only, because it is so much faster
+    def test_patch(self):
+        # Sanity check that the original database is at V3.0
+        self.assertEqual(self.db_manager.version, weewx.manager.DaySummaryManager.version)
+
+        # Bugger up roughly half the database
         with weedb.Transaction(self.db_manager.connection) as cursor:
-            # Bugger up roughly half the database
             for key in self.db_manager.daykeys:
                 sql_update = "UPDATE %s_day_%s SET wsum=sum, sumtime=count WHERE dateTime >?" \
                              % (self.db_manager.table_name, key)
                 cursor.execute(sql_update, (mid_ts,))
+
+        # Force the patch:
         self.db_manager.version = '2.0'
 
-    def test_patch(self):
         self.db_manager.patch_sums()
         self.check_weights()
+
+        # Make sure the version was set to V3.0 after the patch
         self.assertEqual(self.db_manager.version, weewx.manager.DaySummaryManager.version)
 
 
-class TestSqliteWeights(CommonWeightTests, unittest.TestCase):
-
-    def __init__(self, *args, **kwargs):
-        self.db_dict = db_dict_sqlite
-        super(TestSqliteWeights, self).__init__(*args, **kwargs)
-
-
-class TestSqlitePatch(CommonPatchTest, unittest.TestCase):
-
-    def __init__(self, *args, **kwargs):
-        self.db_dict = db_dict_sqlite
-        super(CommonPatchTest, self).__init__(*args, **kwargs)
-
-
 class TestMySQLWeights(CommonWeightTests, unittest.TestCase):
-
-    def __init__(self, *args, **kwargs):
-        self.db_dict = db_dict_mysql
-        super(TestMySQLWeights, self).__init__(*args, **kwargs)
+    """Test using the MySQL database"""
 
     def setUp(self):
         try:
@@ -158,17 +142,25 @@ class TestMySQLWeights(CommonWeightTests, unittest.TestCase):
                 import pymysql as MySQLdb
             except ImportError as e:
                 raise unittest.case.SkipTest(e)
-        super(TestMySQLWeights, self).setUp()
+
+        self.db_manager = setup_database(db_dict_mysql)
 
 
-def suite():
-    tests = ['test_weights', 'test_reweight']
+def setup_database(db_dict):
+    """Set up a database by using addRecord()"""
+    try:
+        # Drop the old database
+        weedb.drop(db_dict)
+    except weedb.NoDatabaseError:
+        pass
+    # Get a new database by initializing with the schema
+    db_manager = weewx.manager.DaySummaryManager.open_with_create(db_dict, schema=schema)
 
-    # Test both sqlite and MySQL:
-    return unittest.TestSuite(list(map(TestSqliteWeights, tests))
-                              + list(map(TestMySQLWeights, tests))
-                              + list(map(TestSqlitePatch, ['test_patch'])))
+    # Populate the database. By passing in a generator, it is all done as one transaction.
+    db_manager.addRecord(gen_fake_data.genFakeRecords(start_ts, stop_ts, interval=interval_secs))
+
+    return db_manager
 
 
 if __name__ == '__main__':
-    unittest.TextTestRunner(verbosity=2).run(suite())
+    unittest.main()

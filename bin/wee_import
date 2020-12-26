@@ -731,7 +731,7 @@ import weeutil.weeutil
 log = logging.getLogger(__name__)
 
 # wee_import version number
-WEE_IMPORT_VERSION = '0.5'
+WEE_IMPORT_VERSION = '0.6'
 # minimum WeeWX version required for this version of wee_import
 REQUIRED_WEEWX = "4.0.0"
 
@@ -744,6 +744,7 @@ usage = """wee_import --help
             [--date=YYYY-mm-dd | --from=YYYY-mm-dd[THH:MM] --to=YYYY-mm-dd[THH:MM]]
             [--dry-run]
             [--verbose]
+            [--no-prompt]
             [--suppress-warnings]
 """
 
@@ -783,6 +784,8 @@ def main():
                            "is YYYY-mm-dd[THH:MM].")
     parser.add_option("--verbose", action="store_true", dest="verbose",
                       help="Print and log useful extra output.")
+    parser.add_option("--no-prompt", action="store_true", dest="no_prompt",
+                      help="Do not prompt. Accept relevant defaults and all y/n prompts.")
     parser.add_option("--suppress-warnings", action="store_true", dest="suppress",
                       help="Suppress warnings to stdout. Warnings are still logged.")
     parser.add_option("--version", dest="version", action="store_true",

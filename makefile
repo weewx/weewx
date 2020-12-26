@@ -82,6 +82,7 @@ help: info
 info:
 	@echo "     VERSION: $(VERSION)"
 	@echo "   MMVERSION: $(MMVERSION)"
+	@echo "      PYTHON: $(PYTHON)"
 	@echo "         CWD: $(CWD)"
 	@echo "        USER: $(USER)"
 	@echo "   WEEWX_COM: $(WEEWX_COM)"
@@ -102,7 +103,7 @@ check-docs:
 
 # if no suite is specified, find all test suites in the source tree
 ifndef SUITE
-SUITE=`find bin -name "test_*.py"`
+SUITE=`find bin examples -name "test_*.py"`
 endif
 test:
 	@rm -f $(BLDDIR)/test-results
