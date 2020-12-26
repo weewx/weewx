@@ -792,7 +792,8 @@ class WindVecDaily(XType):
 
 
 class XTypeTable(XType):
-    """Calculate a series for an xtype. Note: this version only works if no aggregation has
+    """Calculate a series for an xtype. An xtype may not necessarily be in the database, so
+    this version calculates it on the fly. Note: this version only works if no aggregation has
     been requested."""
 
     @staticmethod
