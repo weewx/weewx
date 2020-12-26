@@ -615,6 +615,9 @@ datum_display_formats = {
     'magic_2' : '0x%2x',
     }
 
+# cm rain per rain sensor bucket tip
+rain_per_bucket_tip = 0.03
+
 # values for status:
 rain_overflow   = 0x80
 lost_connection = 0x40
@@ -688,7 +691,7 @@ def pywws2weewx(p, ts, last_rain, last_rain_ts, max_rain_rate, rain_counter_size
     if packet['rain'] is not None and last_rain is not None:
         if packet['rain'] < last_rain:
             pstr = '0x%04x' % packet['ptr'] if packet['ptr'] is not None else 'None'
-            if last_rain - packet['rain'] < (rain_counter_size - 1) * 0.3 * 0.5:
+            if last_rain - packet['rain'] < (rain_counter_size - 1) * rain_per_bucket_tip * 0.5:
                 log.info('ignoring spurious rain counter decrement (%s): '
                          'new: %s old: %s' % (pstr, packet['rain'], last_rain))
             else:
@@ -701,6 +704,10 @@ def pywws2weewx(p, ts, last_rain, last_rain_ts, max_rain_rate, rain_counter_size
     if DEBUG_RAIN and packet['rain'] is not None and packet['rain'] > 0:
         log.debug('got rainfall of %.2f cm (new: %.2f old: %.2f)' %
                   (packet['rain'], packet['rainTotal'], last_rain))
+        
+    if total > (rain_counter_size - 1) * rain_per_bucket_tip:
+        log.warn('configured rain_counter_size is too small. rainTotal: %s rainTotalMax: %s',
+                 packet['rainTotal'], (rain_counter_size - 1) * rain_per_bucket_tip)
 
     return packet
 
