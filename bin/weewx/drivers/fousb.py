@@ -99,7 +99,9 @@ a sample period of 30 minutes this would be 12 cm (4.72 in)
 The rain counter is two bytes, so the maximum value is 0xffff or 65535.  This
 translates to 19660.5 mm of rainfall (19.66 m or 64.9 ft).  The console would
 have to run for two years with 2 inches of rainfall a day before the counter
-wraps around.
+wraps around. However some stations have a different counter size! It can be
+set in the weewx.conf file using "rain_counter_size". Please set the real
+counter size as hex value there.
 
 Pressure Calculations
 
@@ -613,9 +615,6 @@ datum_display_formats = {
     'magic_2' : '0x%2x',
     }
 
-# wrap value for rain counter
-rain_max = 0x10000
-
 # values for status:
 rain_overflow   = 0x80
 lost_connection = 0x40
@@ -640,7 +639,7 @@ def decode_status(status):
 def get_status(code, status):
     return 1 if status & code == code else 0
 
-def pywws2weewx(p, ts, last_rain, last_rain_ts, max_rain_rate):
+def pywws2weewx(p, ts, last_rain, last_rain_ts, max_rain_rate, rain_counter_size):
     """Map the pywws dictionary to something weewx understands.
 
     p: dictionary of pywws readings
@@ -689,13 +688,13 @@ def pywws2weewx(p, ts, last_rain, last_rain_ts, max_rain_rate):
     if packet['rain'] is not None and last_rain is not None:
         if packet['rain'] < last_rain:
             pstr = '0x%04x' % packet['ptr'] if packet['ptr'] is not None else 'None'
-            if last_rain - packet['rain'] < rain_max * 0.3 * 0.5:
+            if last_rain - packet['rain'] < (rain_counter_size - 1) * 0.3 * 0.5:
                 log.info('ignoring spurious rain counter decrement (%s): '
                          'new: %s old: %s' % (pstr, packet['rain'], last_rain))
             else:
                 log.info('rain counter wraparound detected (%s): '
                          'new: %s old: %s' % (pstr, packet['rain'], last_rain))
-                total += rain_max * 0.3
+                total += rain_counter_size * 0.3
     packet['rain'] = weewx.wxformulas.calculate_rain(total, last_rain)
 
     # report rainfall in log to diagnose rain counter issues
@@ -919,6 +918,8 @@ class FineOffsetUSB(weewx.drivers.AbstractDevice):
             self.pc_port = int(self.pc_port)
 
         self.data_format   = stn_dict.get('data_format', '1080')
+        self.rain_counter_size = int(stn_dict.get('rain_counter_size', '0xffff'),16)
+        log.info('rain_counter_size is %s', hex(self.rain_counter_size))
         self.vendor_id     = 0x1941
         self.product_id    = 0x8021
         self.usb_interface = 0
@@ -1073,7 +1074,7 @@ class FineOffsetUSB(weewx.drivers.AbstractDevice):
             ts = int(time.time() + 0.5)
             packet = pywws2weewx(p, ts,
                                  self._last_rain_loop, self._last_rain_ts_loop,
-                                 self.max_rain_rate)
+                                 self.max_rain_rate, self.rain_counter_size)
             self._last_rain_loop = packet['rainTotal']
             self._last_rain_ts_loop = ts
             if packet['status'] != self._last_status:
@@ -1101,7 +1102,7 @@ class FineOffsetUSB(weewx.drivers.AbstractDevice):
             ts = delta.days * 86400 + delta.seconds
             data = pywws2weewx(r['data'], ts,
                                self._last_rain_arc, self._last_rain_ts_arc,
-                               self.max_rain_rate)
+                               self.max_rain_rate, self.rain_counter_size)
             data['interval'] = r['interval']
             data['ptr'] = r['ptr']
             self._last_rain_arc = data['rainTotal']
