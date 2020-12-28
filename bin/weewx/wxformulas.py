@@ -10,6 +10,7 @@ from __future__ import absolute_import
 from __future__ import print_function
 
 import logging
+import cmath
 import math
 import time
 
@@ -581,33 +582,40 @@ def apptempF(t_F, rh, ws_mph):
 
 def beaufort(ws_kts):
     """Return the beaufort number given a wind speed in knots"""
-    if ws_kts is None:
-        return None
-    elif ws_kts < 1:
-        return 0
-    elif ws_kts < 4:
-        return 1
-    elif ws_kts < 7:
-        return 2
-    elif ws_kts < 11:
-        return 3
-    elif ws_kts < 17:
-        return 4
-    elif ws_kts < 22:
-        return 5
-    elif ws_kts < 28:
-        return 6
-    elif ws_kts < 34:
-        return 7
-    elif ws_kts < 41:
-        return 8
-    elif ws_kts < 48:
-        return 9
-    elif ws_kts < 56:
-        return 10
-    elif ws_kts < 64:
-        return 11
-    return 12
+    mag_knts = abs(ws_kts)
+    if mag_knts is None:
+        beaufort_mag = None
+    elif mag_knts < 1:
+        beaufort_mag = 0
+    elif mag_knts < 4:
+        beaufort_mag = 1
+    elif mag_knts < 7:
+        beaufort_mag = 2
+    elif mag_knts < 11:
+        beaufort_mag = 3
+    elif mag_knts < 17:
+        beaufort_mag = 4
+    elif mag_knts < 22:
+        beaufort_mag = 5
+    elif mag_knts < 28:
+        beaufort_mag = 6
+    elif mag_knts < 34:
+        beaufort_mag = 7
+    elif mag_knts < 41:
+        beaufort_mag = 8
+    elif mag_knts < 48:
+        beaufort_mag = 9
+    elif mag_knts < 56:
+        beaufort_mag = 10
+    elif mag_knts < 64:
+        beaufort_mag = 11
+    else:
+        beaufort_mag = 12
+
+    if isinstance(ws_kts, complex):
+        return cmath.rect(beaufort_mag, cmath.phase(ws_kts))
+    else:
+        return beaufort_mag
 
 
 weewx.units.conversionDict['mile_per_hour']['beaufort'] = lambda x : beaufort(mph_to_knot(x))

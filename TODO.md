@@ -1,7 +1,5 @@
 # To do
 
-Allow unit `beaufort` to be used in `group_speed`.
-
 Test for code inside wxservices.py
 
 Should Ultimeter driver actually emit `rain24` and `dayRain`? See

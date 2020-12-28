@@ -39,6 +39,8 @@ simulator. Thanks to user Graham!
 Fixed problem where wind chill was calculated incorrectly for METRICWX
 databases. PR #627. Thanks to user edi-x!
 
+Allow wind vectors to be converted to unit of beaufort. Fixes issue #629.
+
 
 4.2.0 10/26/2020
 
