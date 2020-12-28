@@ -285,11 +285,27 @@ class ExtensionEngine(object):
             # Inject any new config data into the configuration file
             weeutil.config.conditional_merge(self.config_dict, cfg)
 
-            # Include the major comment block for any new top level sections
-            for new_section in new_top_level:
-                self.config_dict.comments[new_section] = \
-                    weecfg.major_comment_block + \
-                    ["# Options for extension '%s'" % extension_name]
+            for itop in range(len(new_top_level)):
+                top_level = new_top_level[itop]
+                # The very first section has to be handled differently because it needs a major
+                # comment block, plus its comments are held in "initial_comment", not the
+                # dictionary .comments like later sections. Quirk of how ConfigObj works.
+                if itop == 0:
+                    # Is there an initial comment?
+                    if any([x.strip() for x in cfg.initial_comment]):
+                        # There is an initial comment. Include not only the major comment block,
+                        # but also initial_comment
+                        new_comments = weecfg.major_comment_block + cfg.initial_comment
+                    else:
+                        # No initial comment. Include the major comment block, plus a synthesized
+                        # new comment.
+                        new_comments = weecfg.major_comment_block \
+                                   + ["# Options for '%s'" % top_level]
+                else:
+                    # Later sections can be simply transferred over
+                    new_comments = cfg.comments[top_level]
+
+                self.config_dict.comments[top_level] = new_comments
 
             self._reorder(cfg)
             save_config = True

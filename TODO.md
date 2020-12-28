@@ -1,6 +1,6 @@
 # To do
 
-Test for xtypes.XTypeTable.
+Allow unit `beaufort` to be used in `group_speed`.
 
 Test for code inside wxservices.py
 

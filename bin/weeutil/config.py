@@ -237,6 +237,7 @@ def deep_copy(old_dict, parent=None, depth=None, main=None):
                                        encoding=old_dict.encoding,
                                        default_encoding=old_dict.default_encoding,
                                        interpolation=old_dict.interpolation)
+        new_dict.initial_comment = [str(x) for x in old_dict.initial_comment]
     else:
         # No. It's a copy of something deeper down. If no parent or main is given, then
         # adopt the parent and main of the incoming dictionary.
@@ -258,4 +259,5 @@ def deep_copy(old_dict, parent=None, depth=None, main=None):
             # It's a scalar
             new_value = old_value
         new_dict[entry] = new_value
+        new_dict.comments[entry] = [str(x) for x in old_dict.comments[entry]]
     return new_dict
