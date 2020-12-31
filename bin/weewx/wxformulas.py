@@ -582,6 +582,8 @@ def apptempF(t_F, rh, ws_mph):
 
 def beaufort(ws_kts):
     """Return the beaufort number given a wind speed in knots"""
+    if ws_kts is None:
+        return None
     mag_knts = abs(ws_kts)
     if mag_knts is None:
         beaufort_mag = None
