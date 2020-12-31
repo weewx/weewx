@@ -228,6 +228,8 @@ agg_group = {
     'sum_ge'     : "group_count",
     'sum_le'     : "group_count",
     'vecdir'     : "group_direction",
+    'avg_ge'     : "group_count",
+    'avg_le'     : "group_count",
 }
 
 # This dictionary maps unit groups to a standard unit type in the 
