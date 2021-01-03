@@ -4283,9 +4283,9 @@ class MyPrint(StdPrint):
     # Override the default new_loop_packet member function:
     def new_loop_packet(self, event):
         packet = event.packet
-        print "LOOP: ", timestamp_to_string(packet['dateTime']),
+        print("LOOP: ", timestamp_to_string(packet['dateTime']),
             "BAR=",  packet.get('barometer', 'N/A'),
-            "TEMP=", packet.get('outTemp', 'N/A')</pre>
+            "TEMP=", packet.get('outTemp', 'N/A'))</pre>
         <p>
             This service substitutes a new implementation for the member function <span
             class="code">new_loop_packet</span>. This implementation prints out the time, then the barometer reading (or
