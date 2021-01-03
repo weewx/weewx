@@ -3694,6 +3694,7 @@ class MyStats(SearchList):                                                   # 1
             example would look like this:
         </p>
         <pre class="tty">[[[daytemp_with_avg]]]
+    line_gap_fraction = 0.1
     [[[[avgTemp]]]]
         data_type = outTemp
         aggregate_type = avg
@@ -3706,6 +3707,8 @@ class MyStats(SearchList):                                                   # 1
             have specified that the first line will use data type <span class="code"> outTemp</span> and that it will
             use averaging over a one hour period. The second also uses <span class="code">outTemp</span>, but will not
             use averaging.
+            
+            
         </p>
 
         <p>The result is a nice plot of the day's temperature, overlaid with a one hour smoothed average:</p>
@@ -3714,6 +3717,9 @@ class MyStats(SearchList):                                                   # 1
             <img alt="Daytime temperature with running average" src="images/daytemp_with_avg.png"/>
         </p>
 
+         <p> Note that this example includes an increase to the line gap fraction. See below for more information about line gaps.
+             If you leave the default line gap, your average graph may be interpreted as a gap and omitted from the graph.
+         </p>
         <p>One more example. This one shows daily high and low temperatures for a year:</p>
         <pre class="tty">[[year_images]]
     [[[yearhilow]]]
