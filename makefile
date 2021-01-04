@@ -400,7 +400,7 @@ update-yum-repo:
 push-yum-repo:
 	find ~/.yum -type f -exec chmod 664 {} \;
 	find ~/.yum -type d -exec chmod 2775 {} \;
-	rsync -rlvz ~/.yum/ $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/yum-test
+	rsync -rtlvz ~/.yum/ $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/yum-test
 
 # copy the testing repository onto the production repository
 release-yum-repo:
@@ -426,7 +426,7 @@ update-suse-repo:
 push-suse-repo:
 	find ~/.suse -type f -exec chmod 664 {} \;
 	find ~/.suse -type d -exec chmod 2775 {} \;
-	rsync -rlvz ~/.suse/ $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/suse-test
+	rsync -rtlvz ~/.suse/ $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/suse-test
 
 # copy the testing repository onto the production repository
 release-suse-repo:
