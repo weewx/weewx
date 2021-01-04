@@ -8,7 +8,8 @@ incorrectly calculated. This version includes a patch to fix the problem. It
 runs once at startup. Fixes issue #623.
 
 The WMR200 driver is no longer supported. An unsupported version can be found
-at https://github.com/weewx/weewx-wmr200.
+at https://github.com/weewx/weewx-wmr200. Support for LaCrosse WS23xx and
+Oregon WMR300 will continue.
 
 Service weewx.wxxtypes.StdDelta was inadvertently left out of the list of
 services to be run. Fortunately, it is not used. Yet. Added it back in.
@@ -40,6 +41,9 @@ Fixed problem where wind chill was calculated incorrectly for METRICWX
 databases. PR #627. Thanks to user edi-x!
 
 Allow wind vectors to be converted to unit of beaufort. Fixes issue #629.
+
+Option log_failure under [StdReport] is set to True by the upgrade process.
+See the Upgrading Guide.
 
 
 4.2.0 10/26/2020

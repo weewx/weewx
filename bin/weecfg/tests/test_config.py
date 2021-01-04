@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2020 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2021 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -429,6 +429,20 @@ class ConfigTest(LineTest):
 
         self._check_against_expected(config_dict, 'expected/weewx42_expected.conf')
 
+    def test_upgrade_v43(self):
+        """Test an upgrade of the stock v4.1 weewx.conf to V4.2"""
+
+        # Start with the Version 4.1 weewx.conf file:
+        config_dict = configobj.ConfigObj('weewx42.conf', encoding='utf-8')
+
+        # Upgrade the V4.2 configuration dictionary to V4.3:
+        weecfg.update_to_v43(config_dict)
+
+        # with open('expected/weewx43_expected.conf', 'wb') as fd:
+        #     config_dict.write(fd)
+
+        self._check_against_expected(config_dict, 'expected/weewx43_expected.conf')
+
     def test_merge(self):
         """Test an upgrade against a typical user's configuration file"""
 
@@ -441,10 +455,10 @@ class ConfigTest(LineTest):
         # First update, then merge:
         weecfg.update_and_merge(config_dict, template)
 
-        # with open('expected/weewx42_user_expected.conf', 'wb') as fd:
+        # with open('expected/weewx43_user_expected.conf', 'wb') as fd:
         #     config_dict.write(fd)
 
-        self._check_against_expected(config_dict, 'expected/weewx42_user_expected.conf')
+        self._check_against_expected(config_dict, 'expected/weewx43_user_expected.conf')
 
     def test_driver_info(self):
         """Test the discovery and listing of drivers."""

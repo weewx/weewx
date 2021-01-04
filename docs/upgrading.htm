@@ -300,6 +300,39 @@ sudo apt-get install weewx</pre>
             </tr>
         </table>
 
+        <h3>Option <span class="code">log_failure</span> set to <span class="code">True</span></h3>
+        <p>
+            The option <span class="code">log_failure</span> under <span class="code">[StdReport]</span> controls
+            whether to log failures into the system log. It was previously set to <span class="code">False</span>.
+            The upgrade process will set it to <span class="code">True</span>, so that users can better see failure
+            modes.
+        </p>
+
+        <table>
+            <tr class="first_row">
+                <td style='width:50%'>V4.2 and earlier</td>
+                <td>4.3</td>
+            </tr>
+            <tr>
+                <td>
+                    <pre class='tty'>
+[StdReport]
+    ...
+    <span class="changed">log_failure = False</span>
+    ...
+</pre>
+                </td>
+                <td>
+                    <pre class='tty'>
+[StdReport]
+    ...
+    <span class="changed">log_failure = True</span>
+    ...
+</pre>
+                </td>
+            </tr>
+        </table>
+
         <h2>Upgrading to V4.2</h2>
 
         <p>
