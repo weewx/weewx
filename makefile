@@ -372,9 +372,9 @@ update-apt-repo:
 
 # publish apt repo changes to the public weewx apt repo
 push-apt-repo:
+	find ~/.aptly -type f -exec chmod 664 {} \;
+	find ~/.aptly -type d -exec chmod 2775 {} \;
 	rsync -rlvz ~/.aptly/ $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/aptly-test
-	ssh $(USER)@$(WEEWX_COM) "find /var/www/html/aptly-test -type f -exec chmod 664 {} \;"
-	ssh $(USER)@$(WEEWX_COM) "find /var/www/html/aptly-test -type d -exec chmod 2775 {} \;"
 
 # copy the testing repository onto the production repository
 release-apt-repo:
@@ -398,9 +398,9 @@ update-yum-repo:
 	createrepo $(YUM_REPO)/el8
 
 push-yum-repo:
+	find ~/.yum -type f -exec chmod 664 {} \;
+	find ~/.yum -type d -exec chmod 2775 {} \;
 	rsync -rlvz ~/.yum/ $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/yum-test
-	ssh $(USER)@$(WEEWX_COM) "find /var/www/html/yum-test -type f -exec chmod 664 {} \;"
-	ssh $(USER)@$(WEEWX_COM) "find /var/www/html/yum-test -type d -exec chmod 2775 {} \;"
 
 # copy the testing repository onto the production repository
 release-yum-repo:
@@ -424,9 +424,9 @@ update-suse-repo:
 	createrepo $(SUSE_REPO)/suse15
 
 push-suse-repo:
+	find ~/.suse -type f -exec chmod 664 {} \;
+	find ~/.suse -type d -exec chmod 2775 {} \;
 	rsync -rlvz ~/.suse/ $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/suse-test
-	ssh $(USER)@$(WEEWX_COM) "find /var/www/html/suse-test -type f -exec chmod 664 {} \;"
-	ssh $(USER)@$(WEEWX_COM) "find /var/www/html/suse-test -type d -exec chmod 2775 {} \;"
 
 # copy the testing repository onto the production repository
 release-suse-repo:
