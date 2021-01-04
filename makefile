@@ -372,7 +372,7 @@ update-apt-repo:
 
 # publish apt repo changes to the public weewx apt repo
 push-apt-repo:
-	rsync -arvz ~/.aptly/ $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/aptly-test
+	rsync -rlvz ~/.aptly/ $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/aptly-test
 
 # copy the testing repository onto the production repository
 release-apt-repo:
@@ -396,7 +396,7 @@ update-yum-repo:
 	createrepo $(YUM_REPO)/el8
 
 push-yum-repo:
-	rsync -arvz ~/.yum/ $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/yum-test
+	rsync -rlvz ~/.yum/ $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/yum-test
 
 # copy the testing repository onto the production repository
 release-yum-repo:
@@ -420,7 +420,7 @@ update-suse-repo:
 	createrepo $(SUSE_REPO)/suse15
 
 push-suse-repo:
-	rsync -arvz ~/.suse/ $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/suse-test
+	rsync -rlvz ~/.suse/ $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/suse-test
 
 # copy the testing repository onto the production repository
 release-suse-repo:
