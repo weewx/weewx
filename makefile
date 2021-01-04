@@ -374,11 +374,11 @@ update-apt-repo:
 push-apt-repo:
 	find ~/.aptly -type f -exec chmod 664 {} \;
 	find ~/.aptly -type d -exec chmod 2775 {} \;
-	rsync -rlvz ~/.aptly/ $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/aptly-test
+	rsync -rtlvz ~/.aptly/ $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/aptly-test
 
 # copy the testing repository onto the production repository
 release-apt-repo:
-	ssh $(USER)@$(WEEWX_COM) "rsync -arvz /var/www/html/aptly-test/ /var/www/html/aptly"
+	ssh $(USER)@$(WEEWX_COM) "rsync -logrvz /var/www/html/aptly-test/ /var/www/html/aptly"
 
 YUM_REPO=~/.yum/weewx
 yum-repo:
@@ -404,7 +404,7 @@ push-yum-repo:
 
 # copy the testing repository onto the production repository
 release-yum-repo:
-	ssh $(USER)@$(WEEWX_COM) "rsync -arvz /var/www/html/yum-test/ /var/www/html/yum"
+	ssh $(USER)@$(WEEWX_COM) "rsync -logrvz /var/www/html/yum-test/ /var/www/html/yum"
 
 SUSE_REPO=~/.suse/weewx
 suse-repo:
@@ -430,7 +430,7 @@ push-suse-repo:
 
 # copy the testing repository onto the production repository
 release-suse-repo:
-	ssh $(USER)@$(WEEWX_COM) "rsync -arvz /var/www/html/suse-test/ /var/www/html/suse"
+	ssh $(USER)@$(WEEWX_COM) "rsync -logrvz /var/www/html/suse-test/ /var/www/html/suse"
 
 # run perlcritic to ensure clean perl code.  put these in ~/.perlcriticrc:
 # [-CodeLayout::RequireTidyCode]

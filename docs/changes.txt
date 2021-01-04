@@ -1,7 +1,7 @@
 weewx change history
 --------------------
 
-4.3.0 MM/DD/YYYY
+4.3.0 01/04/2020
 
 Version 4.2.0 had a bug, which caused the sums in the daily summary to be
 incorrectly calculated. This version includes a patch to fix the problem. It
