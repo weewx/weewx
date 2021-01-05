@@ -984,6 +984,7 @@ class DaySummaryManager(Manager):
 
         if self.first_timestamp is None:
             # Nothing in the archive database, so there's nothing to do.
+            log.info("Empty database")
             return 0, 0
 
         # Convert tranch size to a timedelta object, so we can perform arithmetic with it.
@@ -1024,6 +1025,7 @@ class DaySummaryManager(Manager):
                 if not start_d and not stop_d:
                     # The daily summaries are complete, yet the user has not specified anything.
                     # Guess we're done.
+                    log.info("Daily summaries up to date")
                     return 0, 0
                 # Trim what we rebuild to what the user has specified
                 if start_d:
@@ -1099,11 +1101,8 @@ class DaySummaryManager(Manager):
             mark_d += tranche_days
 
         tdiff = time.time() - t1
-        if nrecs:
-            log.info("Processed %d records to backfill %d day summaries in %.2f seconds", nrecs,
-                     ndays, tdiff)
-        else:
-            log.info("Daily summaries up to date")
+        log.info("Processed %d records to backfill %d day summaries in %.2f seconds",
+                 nrecs, ndays, tdiff)
 
         return nrecs, ndays
 
