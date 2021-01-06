@@ -2601,7 +2601,7 @@ longitude = -77.0366</pre>
 
         <p>
             The service <span class="code">StdWXCalculate</span> can be extended by the user to add new, derived types
-            using the XTypes system. See the wiki article <a
+            by using the XTypes system. See the wiki article <a
             href="https://github.com/weewx/weewx/wiki/WeeWX-V4-user-defined-types"><em>Extensible types
             (XTypes)</em></a> for how to do this.
         </p>
@@ -2609,9 +2609,71 @@ longitude = -77.0366</pre>
         <h3 class="config_section">[[Calculations]]</h3>
 
         <p>
-            This subsection specifies which strategy is to be used to provide values for derived variables.
+            This subsection specifies which strategy is to be used to provide values for derived variables. It consists
+            of zero or more options with the syntax:
+        </p>
+        <pre class="tty"><em>obs_type</em> = <em>directive</em>[, <em>optional_bindings</em>]...</pre>
+
+        <p>where</p>
+
+        <ul style="list-style-type:none;">
+            <li>
+                <p><span class="code"><em>directive</em></span> is one of <span class="code">prefer_hardware</span>,
+                    <span class="code">hardware</span>, or <span class="code">software</span>:
+                </p>
+                <table class="indent">
+                    <tr>
+                        <td class="code">prefer_hardware</td>
+                        <td>Calculate the value in software only if it is not provided by hardware.</td>
+                    </tr>
+                    <tr>
+                        <td class="code">hardware</td>
+                        <td>Hardware values only are accepted: never calculate the value in software.</td>
+                    </tr>
+                    <tr>
+                        <td class="code">software</td>
+                        <td>Always calculate the value in software.</td>
+                    </tr>
+                </table>
+            </li>
+            <li>
+                <span class="code"><em>optional_binding</em></span> is optional, and consists of either <span
+                class="code">loop</span>, or <span class="code">archive</span>. If <span class="code">loop</span>, then the
+                calculation will be done only for LOOP packets. If <span class="code">archive</span>, then the calculation
+                will be done only for archive records. If no binding is specified, then it will be done for both LOOP
+                packets and archive records.
+            </li>
+        </ul>
+
+        <p>
+            Example 1: if your weather station calculates windchill using the pre-2001 algorithm, and you prefer to
+            have WeeWX calculate it using a modern algorithm, specify the following:
+        </p>
+
+        <pre class="tty">[StdWXCalculate]
+    [[Calculations]]
+      windchill = software</pre>
+        <p>
+            This will force WeeWX to always calculate a value for <span class="code">windchill</span>, irregardless
+            of whether the hardware provides one.
+        </p>
+
+        <p>
+            Example 2: suppose you want ET to be calculated, but only for archive records. The option would look like:
+        </p>
+        <pre class="tty">[StdWXCalculate]
+    [[Calculations]]
+      ET = software, archive</pre>
+
+        <h4>Defaults</h4>
+
+        <p class="note">
+            <b>Note:</b><br/>
             In the absence of a <span class="code">[[Calculations]]</span> section, <em>no</em> values will be
-            calculated. However, the version of <span class="code">weewx.conf</span> that comes with the WeeWX
+            calculated!
+        </p>
+        <p>
+            However, the version of <span class="code">weewx.conf</span> that comes with the WeeWX
             distribution comes with a version of <span class="code">[[Calculations]]</span> that looks like this:
         </p>
 
@@ -2631,38 +2693,6 @@ longitude = -77.0366</pre>
         rainRate = prefer_hardware
         windchill = prefer_hardware
         windrun = prefer_hardware</pre>
-
-        <p>
-            The options for each quantity are <span class='code'>hardware</span>, <span class='code'>software</span>, or
-            <span class='code'>prefer_hardware</span></p>
-        <table class="indent">
-            <tr>
-                <td class="code">hardware</td>
-                <td>Never calculate the value.</td>
-            </tr>
-            <tr>
-                <td class="code">software</td>
-                <td>Always calculate the value.</td>
-            </tr>
-            <tr>
-                <td class="code">prefer_hardware</td>
-                <td>Calculate the value only if it is not provided by hardware.</td>
-            </tr>
-        </table>
-
-        <p>
-            For example, if your weather station calculates windchill using the pre-2001 algorithm, and you prefer to
-            have WeeWX calculate it using a current algorithm, specify the following:
-        </p>
-
-        <pre class="tty">[StdWXCalculate]
-    [[Calculations]]
-      windchill = software</pre>
-
-        <p>
-            This will force WeeWX to always calculate a value for <span class="code">windchill</span>, irregardless
-            of whether the hardware provides one.
-        </p>
 
         <h3 class="config_section">[[WXXTypes]]</h3>
 

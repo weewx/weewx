@@ -1,6 +1,12 @@
 weewx change history
 --------------------
 
+4.4.0 MM/DD/YYYY
+
+StdWXCalculate can now do calculations for only LOOP packets, only archive
+records, or both. PR #630. Thanks to user g-eddy!
+
+
 4.3.0 01/04/2020
 
 Version 4.2.0 had a bug, which caused the sums in the daily summary to be

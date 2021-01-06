@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2020 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2021 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -13,6 +13,7 @@ from __future__ import absolute_import
 import logging
 
 import weewx.engine
+import weeutil.weeutil
 
 log = logging.getLogger(__name__)
 
@@ -20,36 +21,55 @@ log = logging.getLogger(__name__)
 class StdWXCalculate(weewx.engine.StdService):
 
     def __init__(self, engine, config_dict):
-        """Initialize an instance of StdWXXTypes"""
+        """Initialize an instance of StdWXCalculate and determine the calculations to be done.
+
+        Directives look like:
+
+           obs_type = [prefer_hardware|hardware|software], [loop|archive]
+
+        where:
+
+        obs_type is an observation type to be calculated, such as 'heatindex'
+
+        The choice [prefer_hardware|hardware|software] determines how the value is to be
+        calculated. Option "prefer_hardware" means that if the hardware supplies a value, it will
+        be used, otherwise the value will be calculated in software.
+
+        The choice [loop|archive] indicates whether the calculation is to be done for only LOOP
+        packets, or only archive records. If left out, it will be done for both.
+
+        Examples:
+
+            cloudbase = software,loop
+        The derived type 'cloudbase' will always be calculated in software, but only for LOOP
+        packets
+
+            cloudbase = software, record
+        The derived type 'cloudbase' will always be calculated in software, but only for archive
+        records.
+
+            cloudbase = software
+        The derived type 'cloudbase' will always be calculated in software, for both LOOP packets
+        and archive records"""
+
         super(StdWXCalculate, self).__init__(engine, config_dict)
 
-        # determine the calculations to be done and when
-        #
-        # create calc_dicts for LOOP and for ARCHIVE holding the calculations
-        # to be done at those times. the configuration indicates the bindings,
-        # and thus into which or both calc_dicts that each calculation should
-        # be placed. no bindings mentioned means 'loop' and 'archive' e.g.
-        # 'cloudbase = software' same as 'cloudbase = software,loop,archive'
-        # (backwards compatability with weewx 4.2 configuration files).
-        # TODO document in User and/or Customisation Guide
-        #
-        # Default to no calculations.
-        #
-        self.loop_calc_dict = dict()        # map {obs->directive} for LOOP
-        self.archive_calc_dict = dict()     # map {obs->directive} for ARCHIVE
-        for obs, rule in config_dict.get('StdWXCalculate', {}).get('Calculations', {}).items():
-            # ensure we have a list, not a (possibly comma-separated) string
-            words = rule if isinstance(rule, list) else rule.split(',')
-            # canonicalise to trimmed lower case
-            words = [w.strip().lower() for w in words]
+        self.loop_calc_dict = dict()        # map {obs->directive} for LOOP packets
+        self.archive_calc_dict = dict()     # map {obs->directive} for archive records
 
-            # the first word is the directive, the rest are bindings (if any)
-            if len(words) == 1 or 'loop' in words:
+        for obs_type, rule in config_dict.get('StdWXCalculate', {}).get('Calculations', {}).items():
+            # Ensure we have a list:
+            words = weeutil.weeutil.option_as_list(rule)
+            # Split the list up into a directive, and (optionally) which bindings it applies to
+            # (loop or archive).
+            directive = words[0].lower()
+            bindings = [w.lower() for w in words[1:]]
+            if not bindings or 'loop' in bindings:
                 # no bindings mentioned, or 'loop' plus maybe others
-                self.loop_calc_dict[obs] = words[0]
-            if len(words) == 1 or 'archive' in words:
+                self.loop_calc_dict[obs_type] = directive
+            if not bindings or 'archive' in bindings:
                 # no bindings mentioned, or 'archive' plus maybe others
-                self.archive_calc_dict[obs] = words[0]
+                self.archive_calc_dict[obs_type] = directive
 
         # Backwards compatibility for configuration files v4.1 or earlier:
         self.loop_calc_dict.setdefault('windDir', 'software')
@@ -58,8 +78,8 @@ class StdWXCalculate(weewx.engine.StdService):
         self.archive_calc_dict.setdefault('windGustDir', 'software')
 
         if weewx.debug > 1:
-            log.debug(f"Calculations for LOOP: {self.loop_calc_dict}")
-            log.debug(f"Calculations for ARCHIVE: {self.archive_calc_dict}")
+            log.debug("Calculations for LOOP packets: %s", self.loop_calc_dict)
+            log.debug("Calculations for archive records: %s", self.archive_calc_dict)
 
         # Get the data binding. Default to 'wx_binding'.
         data_binding = config_dict.get('StdWXCalculate',
