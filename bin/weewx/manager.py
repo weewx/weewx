@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2020 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2021 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -909,8 +909,8 @@ class DaySummaryManager(Manager):
             _weight = self._calc_weight(record)
         except IntervalError as e:
             # Bad value for interval. Ignore this record
-            log.error(e)
-            log.error('*** record ignored')
+            log.info(e)
+            log.info('*** record ignored')
             return
 
         # Now add to the daily summary for the appropriate day:
@@ -1040,7 +1040,7 @@ class DaySummaryManager(Manager):
         ndays = 0
 
         mark_d = first_d
-        
+
         while mark_d < last_d:
             # Calculate the last date included in this transaction
             stop_transaction = min(mark_d + tranche_days, last_d)
@@ -1062,8 +1062,8 @@ class DaySummaryManager(Manager):
                         weight = self._calc_weight(rec)
                     except IntervalError as e:
                         # Ignore records with bad values for 'interval'
-                        log.error(e)
-                        log.error('***  ignored.')
+                        log.info(e)
+                        log.info('***  ignored.')
                         continue
                     # Try updating. If the time is out of the accumulator's time span, an
                     # exception will get raised.
@@ -1211,8 +1211,13 @@ class DaySummaryManager(Manager):
                 day_accum = weewx.accum.Accum(day_span)
                 # Now populate it with a day's worth of records
                 for rec in self.genBatchRecords(day_span.start, day_span.stop):
-                    weight = weight_fn(self, rec)
-                    day_accum.addRecord(rec, weight=weight)
+                    try:
+                        weight = weight_fn(self, rec)
+                    except IntervalError as e:
+                        log.info("%s: %s", timestamp_to_string(rec['dateTime']), e)
+                        log.info('***  ignored.')
+                    else:
+                        day_accum.addRecord(rec, weight=weight)
                 # Write out the results of the accumulator
                 self._set_day_sums(day_accum, cursor)
                 if progress_fn:
@@ -1238,7 +1243,7 @@ class DaySummaryManager(Manager):
                                                       obs_type=obs_type,
                                                       set_stmt=', '.join(set_list))
             # Update this observation type's weighted sums:
-            cursor.execute(update_sql, (day_accum.timespan.start, ))
+            cursor.execute(update_sql, (day_accum.timespan.start,))
 
     def patch_sums(self):
         """Version 4.2 accidentally interpreted V2.0 daily sums as V1.0, so the weighted sums
@@ -1251,7 +1256,7 @@ class DaySummaryManager(Manager):
             # We need to upgrade from V2.0 to V3.0. The only difference is that the
             # patch has been supplied to V3.0 daily summaries. The patch need only be
             # done from a date well before the V4.2 release. We pick 1-Jun-2020.
-            self.recalculate_weights(start_d=datetime.date(2020,6,1))
+            self.recalculate_weights(start_d=datetime.date(2020, 6, 1))
             self._write_metadata('Version', DaySummaryManager.version)
             self.version = DaySummaryManager.version
             log.info("Patch finished.")
@@ -1264,7 +1269,6 @@ class DaySummaryManager(Manager):
             self.version = DaySummaryManager.version
         elif self.version == '2.0':
             self.patch_sums()
-
 
     # --------------------------- UTILITY FUNCTIONS -----------------------------------
 
