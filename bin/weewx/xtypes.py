@@ -302,9 +302,9 @@ class DailySummaries(XType):
         'avg': "SELECT SUM(wsum),SUM(sumtime) FROM %(table_name)s_day_%(obs_key)s "
                "WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
         'avg_ge': "SELECT SUM((wsum/sumtime) >= %(val)s) FROM %(table_name)s_day_%(obs_key)s "
-                  "WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+                  "WHERE dateTime >= %(start)s AND dateTime < %(stop)s and sumtime <> 0",
         'avg_le': "SELECT SUM((wsum/sumtime) <= %(val)s) FROM %(table_name)s_day_%(obs_key)s "
-                  "WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+                  "WHERE dateTime >= %(start)s AND dateTime < %(stop)s and sumtime <> 0",
         'count': "SELECT SUM(count) FROM %(table_name)s_day_%(obs_key)s "
                  "WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
         'gustdir': "SELECT max_dir FROM %(table_name)s_day_%(obs_key)s  "
