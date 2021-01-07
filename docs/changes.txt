@@ -6,6 +6,9 @@ weewx change history
 StdWXCalculate can now do calculations for only LOOP packets, only archive
 records, or both. PR #630. Thanks to user g-eddy!
 
+Introduced aggregate types "avg_ge" and "avg_le". PR #631. Thanks again to user
+g-eddy!
+
 
 4.3.0 01/04/2020
 
