@@ -6476,6 +6476,20 @@ growing_base = 50.0, degree_F</pre>
                 <td>The average value in the aggregation period.</td>
             </tr>
             <tr>
+                <td class="first_col code">avg_ge(val)</td>
+                <td>The number of days where the average value is greater than or equal to <em>val</em>. Aggregation
+                    period must be one day or longer. The argument <span class="code">val</span> is a
+                    <a href="#ValueTuple"><span class="code">ValueTuple</span></a>.
+                </td>
+            </tr>
+            <tr>
+                <td class="first_col code">avg_le(val)</td>
+                <td>The number of days where the average value is less than or equal to <em>val</em>. Aggregation period
+                    must be one day or longer. The argument <span class="code">val</span> is a
+                    <a href="#ValueTuple"><span class="code">ValueTuple</span></a>.
+                </td>
+            </tr>
+            <tr>
                 <td class="first_col code">count</td>
                 <td>The number of non-null values in the aggregation period.
                 </td>
