@@ -5193,12 +5193,11 @@ weewx.units.conversionDict['pound']  = {'newton': lambda x : x * 4.44822}
         </p>
 
         <p>
-            A couple of observation types are tricky. In particular, <span class="code">rain</span>. Generally, WeeWX
-            expects to see a packet with the amount of rain that fell in that packet period included as observation
-            <span class="code">rain</span>. It then sums up all the values to get the total rainfall and emits that in
-            the archive record. If your hardware does not provide this value, you might have to infer it from changes in
-            whatever value it provides, for example changes in the daily or monthly rainfall. I know this is not the
-            best solution, but it is the most general solution. Any alternatives are welcome!
+            A couple of observation types are tricky, in particular, <span class="code">rain</span>. The field <span
+            class="code">rain</span> in a LOOP packet should be the amount of rain that has fallen <em>since the last
+            packet</em>. Because LOOP packets are emitted fairly frequently, this is likely to be a small number. If
+            your hardware does not provide this value, you might have to infer it from changes in whatever value it
+            provides, for example changes in the daily or monthly rainfall.
         </p>
 
         <p>
