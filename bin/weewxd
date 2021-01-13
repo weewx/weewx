@@ -17,6 +17,7 @@ import sys
 import time
 from optparse import OptionParser
 
+import configobj
 import daemon
 import weecfg
 import weedb
@@ -123,9 +124,11 @@ def main():
         try:
             # Pass in a copy of the command line arguments. read_config() will change it.
             config_path, config_dict = weecfg.read_config(options.config_path, list(args))
-        except IOError as e:
+        except (IOError, configobj.ConfigObjError) as e:
+            log.error("Error parsing config file: %s" % e)
+            weeutil.logger.log_traceback(log.critical, "    ****  ")
             print(e, file=sys.stderr)
-            sys.exit(weewx.CMD_ERROR)
+            sys.exit(weewx.CMD_ERROR)      
 
         log.info("Using configuration file %s", config_path)
         weewx.debug = int(config_dict.get('debug', 0))
