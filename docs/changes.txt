@@ -9,6 +9,8 @@ equal to zero.
 Fixed problem where invalid mintime or maxtime was returned for days with no
 data. Fixes issue #635.
 
+Syntax errors in weewx.conf are now logged. PR #637. Thanks to user Rich Bell!
+
 
 4.3.0 01/04/2020
 
