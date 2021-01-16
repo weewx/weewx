@@ -14,6 +14,10 @@ Syntax errors in weewx.conf are now logged. PR #637. Thanks to user Rich Bell!
 Fixed problem where plots could fail if the data range was outside of a
 specified axes range. Fixes issue #638.
 
+Fixed problem that could cause reporting to fail under Python2.7 if the
+configuration dictionary contained a comment with a UTF-8 character. Fixes
+issue #639.
+
 
 4.3.0 01/04/2020
 
