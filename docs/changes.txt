@@ -18,6 +18,9 @@ Fixed problem that could cause reporting to fail under Python2.7 if the
 configuration dictionary contained a comment with a UTF-8 character. Fixes
 issue #639.
 
+Fixed problem that could cause program to crash if asking for deltas of a non-
+existent key.
+
 
 4.3.0 01/04/2020
 

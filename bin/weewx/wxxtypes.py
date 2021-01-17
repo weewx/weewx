@@ -590,6 +590,8 @@ class Delta(weewx.xtypes.XType):
         # Get the key of the type to be used for the cumulative total. This is
         # something like 'totalRain':
         total_key = self.totals[key][0]
+        if total_key not in record:
+            raise weewx.CannotCalculate(key)
         # Calculate the delta
         delta = weewx.wxformulas.calculate_delta(record[total_key],
                                                  self.totals[key][1],
