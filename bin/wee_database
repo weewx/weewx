@@ -844,9 +844,12 @@ def check_strings(config_dict, db_binding, options, fix=False):
                       % (records, timestamp_to_string(record[0])), end=' ')
                 sys.stdout.flush()
     # update our final count now that we have finished
-    print("Checking record: %d; Timestamp: %s\r"
-          % (records, timestamp_to_string(record[0])), end=' ')
-    print()
+    if records:
+        print("Checking record: %d; Timestamp: %s\r"
+              % (records, timestamp_to_string(record[0])), end=' ')
+        print()
+    else:
+        print("No records in database.")
     tdiff = time.time() - t1
     # now display details of what we found if we found any null strings
     if len(_found):
