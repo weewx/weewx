@@ -616,7 +616,7 @@ def update(config_dict, db_binding, options):
     log.info(msg)
     print(msg)
 
-    if dbm.version is not None and dbm.version >= '3.0':
+    if dbm.version is not None and dbm.version >= '4.0':
         # interval weighting fix has been applied
         msg = "Interval weighting fix is not required."
         log.info(msg)
