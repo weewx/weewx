@@ -1633,19 +1633,19 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
     # The CheetahGenerator creates files from templates.  This section
     # specifies which files will be generated from which template.
 
-    # Possible encodings are 'html_entities', 'utf8', or 'strict_ascii'
+    # Possible encodings are 'html_entities', 'utf8', 'strict_ascii', or 'normalized_ascii'
     encoding = html_entities
 
     [[SummaryByMonth]]
         # Reports that summarize "by month"
         [[[NOAA_month]]]
-            encoding = strict_ascii
+            encoding = utf8
             template = NOAA/NOAA-%Y-%m.txt.tmpl
 
     [[SummaryByYear]]
         # Reports that summarize "by year"
         [[[NOAA_year]]]
-            encoding = strict_ascii
+            encoding = utf8
             template = NOAA/NOAA-%Y.txt.tmpl
 
     [[ToDate]]
@@ -1682,9 +1682,9 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
             </li>
         </ol>
         <p>
-            The encoding for text files is <span class="code">strict_ascii</span>, whereas the encoding for html files
+            The encoding for text files is <span class="code">utf8</span>, whereas the encoding for html files
             is <span class="code">html_entities</span>. This was specified by declaring <span class="code">encoding = html_entities</span>
-            at the top level of <span class="code">[CheetahGenerator]</span> then <span class="code">encoding = strict_ascii</span>
+            at the top level of <span class="code">[CheetahGenerator]</span> then <span class="code">encoding = utf8</span>
             for each text file.
         </p>
 
@@ -1709,7 +1709,7 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
     [[SummaryByYear]]
         # Reports that summarize "by year"
         [[[NOAA_year]]]
-            encoding = strict_ascii
+            encoding = utf8
             template = NOAA/NOAA-%Y.txt.tmpl
         </pre>
 
@@ -1738,7 +1738,7 @@ $record.dateTime $record.outTemp $record.outHumidity
     [[SummaryByMonth]]
         # Reports that summarize "by month"
         [[[NOAA_month]]]
-            encoding = strict_ascii
+            encoding = utf8
             template = NOAA/NOAA-%Y-%m.txt.tmpl
         </pre>
 
@@ -1767,7 +1767,7 @@ $record.dateTime $record.outTemp $record.outHumidity
     [[SummaryByDay]]
         # Reports that summarize "by day"
         [[[NOAA_day]]]
-            encoding = strict_ascii
+            encoding = utf8
             template = NOAA/NOAA-%Y-%m-%d.txt.tmpl
         </pre>
 
@@ -3498,7 +3498,7 @@ class MyStats(SearchList):                                                   # 1
     # This section is used by the generator CheetahGenerator, and specifies
     # which files are to be generated from which template.
 
-    # Possible encodings are 'html_entities', 'utf8', or 'strict_ascii'
+    # Possible encodings are 'html_entities', 'utf8', 'strict_ascii', or 'normalized_ascii'
     encoding = html_entities
     <span class="highlight">search_list_extensions = user.stats.MyStats</span>
 
@@ -5931,6 +5931,10 @@ growing_base = 50.0, degree_F</pre>
             <tr>
                 <td class="code first_col">strict_ascii</td>
                 <td>Non 7-bit characters will be ignored.</td>
+            </tr>
+            <tr>
+                <td class="code first_col">normalized_ascii</td>
+                <td>Replace accented characters with non-accented analogs (<i>e.g.</i>, 'ö' will be replaced with 'o').</td>
             </tr>
             </tbody>
         </table>

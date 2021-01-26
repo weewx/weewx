@@ -12,6 +12,10 @@ g-eddy!
 NOAA reports now use a 'utf8' encoding instead of 'strict_ascii'. This will only
 affect new installations. Fixes issue #654.
 
+Introduced new encoding type 'normalized_ascii', which replaces characters that
+have accented marks with analogous ascii characters. For example, ö gets
+replaced with o.
+
 
 4.3.0 01/04/2020
 
