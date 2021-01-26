@@ -9,6 +9,9 @@ records, or both. PR #630. Thanks to user g-eddy!
 Introduced aggregate types "avg_ge" and "avg_le". PR #631. Thanks again to user
 g-eddy!
 
+NOAA reports now use a 'utf8' encoding instead of 'strict_ascii'. This will only
+affect new installations. Fixes issue #654.
+
 
 4.3.0 01/04/2020
 
