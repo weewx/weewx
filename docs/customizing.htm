@@ -5926,7 +5926,10 @@ growing_base = 50.0, degree_F</pre>
             </tr>
             <tr>
                 <td class="code first_col">utf8</td>
-                <td>Non 7-bit characters will be represented in UTF-8.</td>
+                <td>Non 7-bit characters will be ignored or replaced with an ASCII equivalent (<i>e.g.</i>, accented
+                    characters such as <span class="code">ä</span> are replaced with a non-accented equivalent
+                    such as <span class="code">a</span>)
+                </td>
             </tr>
             <tr>
                 <td class="code first_col">strict_ascii</td>

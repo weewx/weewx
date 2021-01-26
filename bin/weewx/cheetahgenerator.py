@@ -61,6 +61,7 @@ import datetime
 import logging
 import os.path
 import time
+import unicodedata
 
 import Cheetah.Filters
 import Cheetah.Template
@@ -323,11 +324,14 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
                 unicode_string = compiled_template.respond()
 
                 # Time to write it out. Determine the strategy for encoding any non-ascii
-                # chartacters.
+                # characters.
                 if encoding == 'html_entities':
                     byte_string = unicode_string.encode('ascii', 'xmlcharrefreplace')
                 elif encoding == 'strict_ascii':
-                    byte_string = unicode_string.encode('ascii', 'ignore')
+                    # normalize the string first to replace accented characters with 
+                    # non-accented equivalents
+                    _normalized = unicodedata.normalize('NFD', unicode_string)
+                    byte_string = _normalized.encode('ascii', 'ignore')
                 else:
                     byte_string = unicode_string.encode('utf8')
 

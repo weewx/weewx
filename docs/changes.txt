@@ -9,6 +9,9 @@ records, or both. PR #630. Thanks to user g-eddy!
 Introduced aggregate types "avg_ge" and "avg_le". PR #631. Thanks again to user
 g-eddy!
 
+Accented (diacritic) characters in strict_ascii encoded reports are now
+replaced with an ascii equivalent rather than deleted.
+
 
 4.3.0 01/04/2020
 
