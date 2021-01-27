@@ -6,41 +6,56 @@
 #encoding UTF-8
 ##
 
-#set global graphOrder = $getVar('Extras.Graphs.order', 'barometer,outsideTemp,feelsLikeTemp,outsideHumidity,wind,windDirection,windVector,rain,uvIndex,radiation,insideTemp,insideHumidity,extraTemp,signalQuality').split(',')
+#set global plotOrder = $getVar('Extras.Plots.order', 'barometer,outsideTemp,feelsLikeTemp,outsideHumidity,wind,windDirection,windVector,rain,uvIndex,radiation,insideTemp,insideHumidity,extraTemp,signalQuality').replace(' ', '').split(',')
 
-#def dataSettings($field, $image, $label)
-#return {"field": field, "image": image, "alt": label}
+#def plotSettings($hasData, $image, $label)
+#return {"hasData": hasData, "image": image, "alt": label}
 #end def
 
-##  Still need special case for extraTemp1.has_data or extraTemp2.has_data or extraTemp3.has_data
-#set global graphData = { \
-  "outsideTemp":     $dataSettings(None, "tempdew.png", $obs.label.outTemp), \
-  "wind":            $dataSettings(None, "wind.png", $obs.label.windSpeed), \
-  "windDirection":   $dataSettings(None, "winddir.png", $obs.label.windDir), \
-  "windVector":      $dataSettings(None, "windvec.png", $obs.label.windvec), \
-  "rain":            $dataSettings(None, "rain.png", $obs.label.rain), \
-  "feelsLikeTemp":   $dataSettings(None, "tempfeel.png", $obs.label.feel), \
-  "barometer":       $dataSettings(None, "barometer.png", $obs.label.barometer), \
-  "outsideHumidity": $dataSettings(None, "hum.png", $obs.label.outHumidity), \
-  "uvIndex":         $dataSettings('UV', "uv.png", $obs.label.UV), \
-  "radiation":       $dataSettings('radiation', "radiation.png", $obs.label.radiation), \
-  "insideTemp":      $dataSettings('daytempin', "tempin.png", $obs.label.inTemp), \
-  "insideHumidity":  $dataSettings('inHumidity', "humin.png", $obs.label.inHumidity), \
-  "signalQuality":   $dataSettings('rxCheckPercent', "rx.png", $obs.label.rxCheckPercent), \
-  "extraTemp":       $dataSettings('extraTemp1', "temp.png", $obs.label.extraTemp1) \
+## Settings of each plot. Each row of the table contains the settings
+## for a plot of an individual weather reading.
+##                                  +--- Is there valid data in the plot?
+##                                  |        +--- The plot image to display. This is appended
+##                                  |        |         to the range (day, week, month, year) to
+##                                  |        |         build a full image file name. I.e. 'daywind.png'
+##                                  |        |                +--- The "alt" text of the image
+##                                  V        V                V
+#set global plotSettings = { \
+  "outsideTemp":     $plotSettings(True, "tempdew.png", $obs.label.outTemp), \
+  "wind":            $plotSettings(True, "wind.png", $obs.label.windSpeed), \
+  "windDirection":   $plotSettings(True, "winddir.png", $obs.label.windDir), \
+  "windVector":      $plotSettings(True, "windvec.png", $obs.label.windvec), \
+  "rain":            $plotSettings(True, "rain.png", $obs.label.rain), \
+  "feelsLikeTemp":   $plotSettings(True, "tempfeel.png", $obs.label.feel), \
+  "barometer":       $plotSettings(True, "barometer.png", $obs.label.barometer), \
+  "outsideHumidity": $plotSettings(True, "hum.png", $obs.label.outHumidity), \
+  "uvIndex":         $plotSettings($day.UV.has_data, "uv.png", $obs.label.UV), \
+  "radiation":       $plotSettings($day.radiation.has_data, "radiation.png", $obs.label.radiation), \
+  "insideTemp":      $plotSettings($day.daytempin.has_data, "tempin.png", $obs.label.inTemp), \
+  "insideHumidity":  $plotSettings($day.inHumidity.has_data, "humin.png", $obs.label.inHumidity), \
+  "signalQuality":   $plotSettings($day.rxCheckPercent.has_data, "rx.png", $obs.label.rxCheckPercent), \
+  "extraTemp":       $plotSettings($day.extraTemp1.has_data, "temp.png", $obs.label.extraTemp1) \
 }
 
-#def showGraph($dataVar, $key, $imgPrefix)
-#set data = $graphData[$key]
-#if $data.field == None or $getVar($dataVar+'.'+$data.field+'.has_data')
-<img src="$imgPrefix${$data.image}" alt="${$data.alt}"/>
-#end if
-#end def
-
-#def graphs($dataVar, $imgPrefix)
-#for $graph in $graphOrder
-$showGraph($dataVar, $graph, $imgPrefix)
-#end for
+##
+## This function displays all of the requested plots for a particular range (day,week,month,year).
+## Request plots and order with [[Plots]][[[order]]] in skin.conf
+##
+#def plots($imgPrefix)
+    ## Loop through each plot to display
+    #for $plot in $plotOrder
+        ## Ensure we have settings for that plot
+        #if $plot in $plotSettings
+            ## Ensure there is valid data for that weather reading
+            #if $plotSettings[$plot].hasData
+                <img src="$imgPrefix${$plotSettings[$plot].image}" alt="${$plotSettings[$plot].alt}"/>
+            #end if
+        #else
+            ## An unknown weather reading plot was present in the requested plots
+            ## Show an error right on the page
+            <br/>Unknown plot type $plot<br/>
+        #end if
+    #end for
 #end def
 
 <!DOCTYPE html>
@@ -82,16 +97,16 @@ $showGraph($dataVar, $graph, $imgPrefix)
                onclick="choose_history('year')">Year</a>
           </div>
           <div id="history_day" class="plot_container">
-            $graphs('day', 'day')
+            $plots('day')
           </div>
           <div id="history_week" class="plot_container" style="display:none">
-            $graphs('week','week')
+            $plots('week')
           </div>
           <div id="history_month" class="plot_container" style="display:none">
-            $graphs('month','month')
+            $plots('month')
           </div>
           <div id="history_year" class="plot_container" style="display:none">
-            $graphs('year','month')
+            $plots('year')
           </div>
         </div>
       </div>
