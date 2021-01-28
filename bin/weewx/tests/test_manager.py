@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2020 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2021 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -13,7 +13,7 @@ longer, so the tests use a more abbreviated database.
 
 This file also tests reweighting the weighted sums.
 
-It also tests the V4.3 patch.
+It also tests the V4.3 and v4.4 patches.
 """
 import datetime
 import logging
@@ -83,6 +83,7 @@ class CommonWeightTests(object):
         self.check_weights()
 
     def check_weights(self):
+        # check weights for scalar types
         for key in self.db_manager.daykeys:
             archive_key = key if key != 'wind' else 'windSpeed'
             result1 = self.db_manager.getSql("SELECT COUNT(%s) FROM archive" % archive_key)
@@ -100,7 +101,11 @@ class CommonWeightTests(object):
                 self.assertEqual(result6[0], 0.0)
             else:
                 self.assertAlmostEqual(result5[0], result6[0], 3)
-
+        # check weights for vector types, for now that is just type wind
+        result7 = self.db_manager.getSql("SELECT SUM(xsum), SUM(ysum), SUM(dirsumtime) FROM archive_day_wind")
+        self.assertAlmostEqual(result7[0], 5032317.02130538)
+        self.assertAlmostEqual(result7[1], -2600.12632736422)
+        self.assertEqual(result7[2], 1040400)
 
 
 class TestSqliteWeights(CommonWeightTests, unittest.TestCase):
@@ -111,7 +116,7 @@ class TestSqliteWeights(CommonWeightTests, unittest.TestCase):
 
     # The patch test is done with sqlite only, because it is so much faster
     def test_patch(self):
-        # Sanity check that the original database is at V3.0
+        # Sanity check that the original database is at V4.0
         self.assertEqual(self.db_manager.version, weewx.manager.DaySummaryManager.version)
 
         # Bugger up roughly half the database
@@ -121,13 +126,13 @@ class TestSqliteWeights(CommonWeightTests, unittest.TestCase):
                              % (self.db_manager.table_name, key)
                 cursor.execute(sql_update, (mid_ts,))
 
-        # Force the patch:
+        # Force the patch (could use '2.0' or '3.0':
         self.db_manager.version = '2.0'
 
         self.db_manager.patch_sums()
         self.check_weights()
 
-        # Make sure the version was set to V3.0 after the patch
+        # Make sure the version was set to V4.0 after the patch
         self.assertEqual(self.db_manager.version, weewx.manager.DaySummaryManager.version)
 
 
