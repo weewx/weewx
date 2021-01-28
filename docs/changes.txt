@@ -1,7 +1,7 @@
-weewx change history
+WeeWX change history
 --------------------
 
-4.3.1 MM/DD/YYYY
+4.4.0 MM/DD/YYYY
 
 Patching process is more forgiving about records with interval less than or
 equal to zero.
@@ -20,6 +20,12 @@ issue #639.
 
 Fixed problem that could cause program to crash if asking for deltas of a non-
 existent key.
+
+The version 4.3.0 patch to fix the incorrect calculation of sums in the daily
+summary tables itself contained a bug. This version includes a patch to fix the
+problem. It runs once at startup. Fixes issue #642.
+
+Weighting of the daily summaries now included in the test suite.
 
 
 4.3.0 01/04/2020
