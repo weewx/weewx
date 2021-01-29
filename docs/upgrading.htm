@@ -78,7 +78,7 @@
 
     <div class="header">
         <div class="logoref">
-            <a href='http://weewx.com'> <img src='images/logo-weewx.png' class='logo' style="float:right"
+            <a href='https://weewx.com'> <img src='images/logo-weewx.png' class='logo' style="float:right"
                                              alt="weewx logo"/> </a><br/> <span class='version'>
 Version: 4.3
     </span>
@@ -161,7 +161,7 @@ Version: 4.3
         <pre class='tty cmd'>sudo apt-get update
 sudo apt-get install weewx</pre>
 
-        <p>Otherwise, download the latest X.Y.Z DEB package from the <a href="http://weewx.com/downloads/">Download
+        <p>Otherwise, download the latest X.Y.Z DEB package from the <a href="https://weewx.com/downloads/">Download
             page</a> on weewx.com, then upgrade like this:
         </p>
 
@@ -207,7 +207,7 @@ sudo apt-get install weewx</pre>
 
         <pre class='tty cmd'>sudo yum update weewx</pre>
 
-        <p>Otherwise, download the latest X.Y.Z RPM package from the <a href="http://weewx.com/downloads/">Download
+        <p>Otherwise, download the latest X.Y.Z RPM package from the <a href="https://weewx.com/downloads/">Download
             page</a> on weewx.com, then upgrade like this:
         </p>
 
@@ -249,6 +249,17 @@ sudo apt-get install weewx</pre>
 
 
         <h1><a id="Instructions_for_specific_versions">Instructions for specific versions</a></h1>
+
+        <h2>Upgrading to V4.4</h2>
+
+        <h3>Auto patch of daily summaries</h3>
+
+        <p>
+            The V4.2 daily summary patch inadvertently introduced a bug which caused the <span class="code">wind</span>
+            daily summary to be incorrectly weighted. See issue <a href="https://github.com/weewx/weewx/issues/642">#642</a>.
+            V4.4 includes a patch to automatically fix the defective daily summary. It is run only once on the first use
+            of a database (usually by <span class="code">weewxd</span>) and takes only a few seconds.
+        </p>
 
         <h2>Upgrading to V4.3</h2>
 

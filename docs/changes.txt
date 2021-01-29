@@ -1,4 +1,4 @@
-weewx change history
+WeeWX change history
 --------------------
 
 4.4.0 MM/DD/YYYY
@@ -15,6 +15,30 @@ affect new installations. Fixes issue #644.
 Introduced new encoding type 'normalized_ascii', which replaces characters that
 have accented marks with analogous ascii characters. For example, ö gets
 replaced with o.
+
+Patching process is more forgiving about records with interval less than or
+equal to zero.
+
+Fixed problem where invalid mintime or maxtime was returned for days with no
+data. Fixes issue #635.
+
+Syntax errors in weewx.conf are now logged. PR #637. Thanks to user Rich Bell!
+
+Fixed problem where plots could fail if the data range was outside of a
+specified axes range. Fixes issue #638.
+
+Fixed problem that could cause reporting to fail under Python2.7 if the
+configuration dictionary contained a comment with a UTF-8 character. Fixes
+issue #639.
+
+Fixed problem that could cause program to crash if asking for deltas of a non-
+existent key.
+
+The version 4.3.0 patch to fix the incorrect calculation of sums in the daily
+summary tables itself contained a bug. This version includes a patch to fix the
+problem. It runs once at startup. Fixes issue #642.
+
+Weighting of the daily summaries now included in the test suite.
 
 
 4.3.0 01/04/2020
