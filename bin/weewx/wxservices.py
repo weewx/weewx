@@ -76,6 +76,8 @@ class StdWXCalculate(weewx.engine.StdService):
         self.archive_calc_dict.setdefault('windDir', 'software')
         self.loop_calc_dict.setdefault('windGustDir', 'software')
         self.archive_calc_dict.setdefault('windGustDir', 'software')
+        # For backwards compatibility:
+        self.calc_dict = self.archive_calc_dict
 
         if weewx.debug > 1:
             log.debug("Calculations for LOOP packets: %s", self.loop_calc_dict)
@@ -98,12 +100,15 @@ class StdWXCalculate(weewx.engine.StdService):
     def new_archive_record(self, event):
         self.do_calculations(event.record, self.archive_calc_dict)
 
-    def do_calculations(self, data_dict, calc_dict):
+    def do_calculations(self, data_dict, calc_dict=None):
         """Augment the data dictionary with derived types as necessary.
 
         data_dict: The incoming LOOP packet or archive record.
         calc_dict: the directives to apply
         """
+
+        if calc_dict is None:
+            calc_dict = self.archive_calc_dict
 
         # Go through the list of potential calculations and see which ones need to be done
         for obs in calc_dict:
