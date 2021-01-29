@@ -134,7 +134,7 @@ def scale(data_min, data_max, prescale=(None, None, None), nsteps=10):
         frange = maxscale - data_min
     else:
         frange = data_max - data_min
-    steps = frange / nsteps
+    steps = frange / float(nsteps)
 
     mag = math.floor(math.log10(steps))
     magPow = math.pow(10.0, mag)
