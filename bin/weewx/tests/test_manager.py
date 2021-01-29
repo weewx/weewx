@@ -103,8 +103,8 @@ class CommonWeightTests(object):
                 self.assertAlmostEqual(result5[0], result6[0], 3)
         # check weights for vector types, for now that is just type wind
         result7 = self.db_manager.getSql("SELECT SUM(xsum), SUM(ysum), SUM(dirsumtime) FROM archive_day_wind")
-        self.assertAlmostEqual(result7[0], 5032317.02130538)
-        self.assertAlmostEqual(result7[1], -2600.12632736422)
+        self.assertAlmostEqual(result7[0], 5032317.021, 3)
+        self.assertAlmostEqual(result7[1], -2600.126, 3)
         self.assertEqual(result7[2], 1040400)
 
 
