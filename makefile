@@ -121,7 +121,7 @@ done
 	@echo "see $(BLDDIR)/test-results for output from the tests"
 
 test-setup:
-	bin/weedb/test/setup_mysql
+	bin/weedb/tests/setup_mysql
 
 TESTDIR=/var/tmp/weewx_test
 MYSQLCLEAN="drop database test_weewx;\n\
