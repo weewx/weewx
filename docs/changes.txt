@@ -1,7 +1,7 @@
 WeeWX change history
 --------------------
 
-4.4.0 MM/DD/YYYY
+4.4.0 01/30/2021
 
 StdWXCalculate can now do calculations for only LOOP packets, only archive
 records, or both. PR #630. Thanks to user g-eddy!
@@ -37,8 +37,6 @@ existent key.
 The version 4.3.0 patch to fix the incorrect calculation of sums in the daily
 summary tables itself contained a bug. This version includes a patch to fix the
 problem. It runs once at startup. Fixes issue #642.
-
-Weighting of the daily summaries now included in the test suite.
 
 
 4.3.0 01/04/2020
