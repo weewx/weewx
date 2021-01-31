@@ -6,8 +6,8 @@ WeeWX change history
 StdWXCalculate can now do calculations for only LOOP packets, only archive
 records, or both. PR #630. Thanks to user g-eddy!
 
-Introduced aggregate types "avg_ge" and "avg_le". PR #631. Thanks again to user
-g-eddy!
+Introduced aggregate types "avg_ge" and "avg_le". PR #631. Thanks to user
+edi-x!
 
 NOAA reports now use a 'utf8' encoding instead of 'strict_ascii'. This will only
 affect new installations. Fixes issue #644.
