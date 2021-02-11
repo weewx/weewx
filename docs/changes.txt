@@ -1,6 +1,12 @@
 WeeWX change history
 --------------------
 
+4.4.1 MM/DD/YYYY
+
+Changed NOAA reports to use the 'normalized_ascii' encoding instead of 'utf8'
+(which did not display correctly for most browsers). Fixes issue #646.
+
+
 4.4.0 01/30/2021
 
 StdWXCalculate can now do calculations for only LOOP packets, only archive

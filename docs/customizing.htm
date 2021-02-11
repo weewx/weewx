@@ -1633,19 +1633,20 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
     # The CheetahGenerator creates files from templates.  This section
     # specifies which files will be generated from which template.
 
-    # Possible encodings are 'html_entities', 'utf8', 'strict_ascii', or 'normalized_ascii'
+    # Possible encodings include 'html_entities', 'strict_ascii', 'normalized_ascii',
+    # as well as those listed in https://docs.python.org/3/library/codecs.html#standard-encodings
     encoding = html_entities
 
     [[SummaryByMonth]]
         # Reports that summarize "by month"
         [[[NOAA_month]]]
-            encoding = utf8
+            encoding = normalized_ascii
             template = NOAA/NOAA-%Y-%m.txt.tmpl
 
     [[SummaryByYear]]
         # Reports that summarize "by year"
         [[[NOAA_year]]]
-            encoding = utf8
+            encoding = normalized_ascii
             template = NOAA/NOAA-%Y.txt.tmpl
 
     [[ToDate]]
@@ -1709,7 +1710,7 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
     [[SummaryByYear]]
         # Reports that summarize "by year"
         [[[NOAA_year]]]
-            encoding = utf8
+            encoding = normalized_ascii
             template = NOAA/NOAA-%Y.txt.tmpl
         </pre>
 
@@ -1738,7 +1739,7 @@ $record.dateTime $record.outTemp $record.outHumidity
     [[SummaryByMonth]]
         # Reports that summarize "by month"
         [[[NOAA_month]]]
-            encoding = utf8
+            encoding = normalized_ascii
             template = NOAA/NOAA-%Y-%m.txt.tmpl
         </pre>
 
@@ -1767,7 +1768,7 @@ $record.dateTime $record.outTemp $record.outHumidity
     [[SummaryByDay]]
         # Reports that summarize "by day"
         [[[NOAA_day]]]
-            encoding = utf8
+            encoding = normalized_ascii
             template = NOAA/NOAA-%Y-%m-%d.txt.tmpl
         </pre>
 
@@ -3498,7 +3499,8 @@ class MyStats(SearchList):                                                   # 1
     # This section is used by the generator CheetahGenerator, and specifies
     # which files are to be generated from which template.
 
-    # Possible encodings are 'html_entities', 'utf8', 'strict_ascii', or 'normalized_ascii'
+    # Possible encodings include 'html_entities', 'strict_ascii', 'normalized_ascii',
+    # as well as those listed in https://docs.python.org/3/library/codecs.html#standard-encodings
     encoding = html_entities
     <span class="highlight">search_list_extensions = user.stats.MyStats</span>
 
@@ -5909,8 +5911,10 @@ growing_base = 50.0, degree_F</pre>
 
         <p>
             As Cheetah goes through the template, it substitutes strings for all tag values. This option controls which
-            encoding to use for the new strings. The encoding can be chosen on a per file basis. There are 3 possible
-            choices:
+            encoding to use for the new strings. The encoding can be chosen on a per file basis. All of the encodings
+            listed in the Python documentation
+            <a href="https://docs.python.org/3/library/codecs.html#standard-encodings"><em>Standard Encodings</em></a>
+            are available, as well as these WeeWX-specific encodings:
         </p>
         <table class="indent">
             <tbody>
@@ -5925,10 +5929,6 @@ growing_base = 50.0, degree_F</pre>
                 </td>
             </tr>
             <tr>
-                <td class="code first_col">utf8</td>
-                <td>Non 7-bit characters will be represented in UTF-8.</td>
-            </tr>
-            <tr>
                 <td class="code first_col">strict_ascii</td>
                 <td>Non 7-bit characters will be ignored.</td>
             </tr>
@@ -5939,7 +5939,9 @@ growing_base = 50.0, degree_F</pre>
             </tbody>
         </table>
         <p>
-            The encoding <span class="code">html_entities</span> is the default.
+            The encoding <span class="code">html_entities</span> is the default. Other common choices are <span
+            class="code">utf8</span>, <span class="code">cp1252</span> (<em>a.k.a.</em> Windows-1252), and <span
+            class="code">latin1</span>.
         </p>
 
         <p class="config_option" id="option_template">template</p>

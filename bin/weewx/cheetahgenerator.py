@@ -32,14 +32,14 @@ Example:
 [CheetahGenerator]
     # How to specify search list extensions:
     search_list_extensions = user.forecast.ForecastVariables, user.extstats.ExtStatsVariables
-    encoding = html_entities      # html_entities, utf8, strict_ascii, or normalized_ascii
+    encoding = html_entities
     [[SummaryByMonth]]                              # period
         [[[NOAA_month]]]                            # report
-            encoding = utf8
+            encoding = normalized_ascii
             template = NOAA-YYYY-MM.txt.tmpl
     [[SummaryByYear]]
         [[[NOAA_year]]]]
-            encoding = utf8
+            encoding = normalized_ascii
             template = NOAA-YYYY.txt.tmpl
     [[ToDate]]
         [[[day]]]
@@ -335,7 +335,7 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
                     normalized = unicodedata.normalize('NFD', unicode_string)
                     byte_string = normalized.encode('ascii', 'ignore')
                 else:
-                    byte_string = unicode_string.encode('utf8')
+                    byte_string = unicode_string.encode(encoding)
 
                 # Open in binary mode. We are writing a byte-string, not a string
                 with open(tmpname, mode='wb') as fd:
