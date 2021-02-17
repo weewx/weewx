@@ -8,6 +8,8 @@ Changed NOAA reports to use the 'normalized_ascii' encoding instead of 'utf8'
 
 Plots longer than 2 years use a 6 month time increment.
 
+Uploads to PWSWeather and WOW now use HTTPS. Fixes issue #650.
+
 
 4.4.0 01/30/2021
 
