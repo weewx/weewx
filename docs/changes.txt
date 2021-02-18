@@ -10,6 +10,9 @@ Plots longer than 2 years use a 6 month time increment.
 
 Uploads to PWSWeather and WOW now use HTTPS. Fixes issue #650.
 
+Fixed bug that prevented the Vantage driver from waiting before a wakeup retry.
+Thanks to user Les Niles!
+
 
 4.4.0 01/30/2021
 

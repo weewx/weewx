@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-#    Copyright (c) 2009-2020 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2021 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -32,7 +32,7 @@ from weewx.crc16 import crc16
 log = logging.getLogger(__name__)
 
 DRIVER_NAME = 'Vantage'
-DRIVER_VERSION = '3.2.1'
+DRIVER_VERSION = '3.2.2'
 
 
 def loader(config_dict, engine):
@@ -107,12 +107,13 @@ class BaseWrapper(object):
                 if _resp == b'\n\r':
                     log.debug("Rude wake up of console successful")
                     return
-                print("Unable to wake up console... sleeping")
-                time.sleep(self.wait_before_retry)
-                print("Unable to wake up console... retrying")
             except weewx.WeeWxIOError:
                 pass
+
             log.debug("Retry #%d failed", count)
+            print("Unable to wake up console... sleeping")
+            time.sleep(self.wait_before_retry)
+            print("Unable to wake up console... retrying")
 
         log.error("Unable to wake up console")
         raise weewx.WakeupError("Unable to wake up Vantage console")
