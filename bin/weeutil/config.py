@@ -236,7 +236,9 @@ def deep_copy(old_dict, parent=None, depth=None, main=None):
         new_dict = configobj.ConfigObj('',
                                        encoding=old_dict.encoding,
                                        default_encoding=old_dict.default_encoding,
-                                       interpolation=old_dict.interpolation)
+                                       interpolation=old_dict.interpolation,
+                                       indent_type=old_dict.indent_type)
+        new_dict.initial_comment = list(old_dict.initial_comment)
     else:
         # No. It's a copy of something deeper down. If no parent or main is given, then
         # adopt the parent and main of the incoming dictionary.
@@ -247,7 +249,7 @@ def deep_copy(old_dict, parent=None, depth=None, main=None):
         # Avoid interpolation by using the version of __getitem__ from dict
         old_value = dict.__getitem__(old_dict, entry)
         if isinstance(old_value, configobj.Section):
-            new_value = deep_copy(old_value, new_dict, new_dict.depth+1, new_dict.main)
+            new_value = deep_copy(old_value, new_dict, new_dict.depth + 1, new_dict.main)
         elif isinstance(old_value, list):
             # Make a copy
             new_value = list(old_value)
@@ -255,7 +257,14 @@ def deep_copy(old_dict, parent=None, depth=None, main=None):
             # Make a copy
             new_value = tuple(old_value)
         else:
-            # It's a scalar
+            # It's a scalar, possibly a string
             new_value = old_value
         new_dict[entry] = new_value
+        # A comment is a list of strings. We need to make a copy of the list, but the strings
+        # themselves are immutable, so we don't need to copy them. That means a simple shallow
+        # copy will do:
+        new_dict.comments[entry] = list(old_dict.comments[entry])
+        # An inline comment is either None, or a string. Either way, they are immutable, so
+        # a simple assignment will work:
+        new_dict.inline_comments[entry] = old_dict.inline_comments[entry]
     return new_dict

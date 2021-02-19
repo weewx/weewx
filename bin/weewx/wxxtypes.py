@@ -235,9 +235,14 @@ class WXXTypes(weewx.xtypes.XType):
         if data['usUnits'] == weewx.US:
             val = weewx.wxformulas.windchillF(data['outTemp'], data['windSpeed'])
             u = 'degree_F'
-        else:
-            val = weewx.wxformulas.windchillC(data['outTemp'], data['windSpeed'])
+        elif data['usUnits'] == weewx.METRIC:
+            val = weewx.wxformulas.windchillMetric(data['outTemp'], data['windSpeed'])
             u = 'degree_C'
+        elif data['usUnits'] == weewx.METRICWX:
+            val = weewx.wxformulas.windchillMetricWX(data['outTemp'], data['windSpeed'])
+            u = 'degree_C'
+        else:
+            raise weewx.ViolatedPrecondition("Unknown unit system %s" % data['usUnits'])
         return weewx.units.convertStd((val, u, 'group_temperature'), data['usUnits'])
 
     def calc_heatindex(self, key, data, db_manager=None):
@@ -585,6 +590,8 @@ class Delta(weewx.xtypes.XType):
         # Get the key of the type to be used for the cumulative total. This is
         # something like 'totalRain':
         total_key = self.totals[key][0]
+        if total_key not in record:
+            raise weewx.CannotCalculate(key)
         # Calculate the delta
         delta = weewx.wxformulas.calculate_delta(record[total_key],
                                                  self.totals[key][1],

@@ -301,6 +301,10 @@ class DailySummaries(XType):
     daily_sql_dict = {
         'avg': "SELECT SUM(wsum),SUM(sumtime) FROM %(table_name)s_day_%(obs_key)s "
                "WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
+        'avg_ge': "SELECT SUM((wsum/sumtime) >= %(val)s) FROM %(table_name)s_day_%(obs_key)s "
+                  "WHERE dateTime >= %(start)s AND dateTime < %(stop)s and sumtime <> 0",
+        'avg_le': "SELECT SUM((wsum/sumtime) <= %(val)s) FROM %(table_name)s_day_%(obs_key)s "
+                  "WHERE dateTime >= %(start)s AND dateTime < %(stop)s and sumtime <> 0",
         'count': "SELECT SUM(count) FROM %(table_name)s_day_%(obs_key)s "
                  "WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
         'gustdir': "SELECT max_dir FROM %(table_name)s_day_%(obs_key)s  "
@@ -316,14 +320,17 @@ class DailySummaries(XType):
                   "WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
         'maxmintime': "SELECT mintime FROM %(table_name)s_day_%(obs_key)s  "
                       "WHERE dateTime >= %(start)s AND dateTime < %(stop)s "
+                      "AND mintime IS NOT NULL "
                       "ORDER BY min DESC, mintime ASC LIMIT 1",
         'maxsum': "SELECT MAX(sum) FROM %(table_name)s_day_%(obs_key)s "
                   "WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
         'maxsumtime': "SELECT maxtime FROM %(table_name)s_day_%(obs_key)s  "
                       "WHERE dateTime >= %(start)s AND dateTime < %(stop)s "
+                      "AND maxtime IS NOT NULL "
                       "ORDER BY sum DESC, maxtime ASC LIMIT 1",
         'maxtime': "SELECT maxtime FROM %(table_name)s_day_%(obs_key)s  "
                    "WHERE dateTime >= %(start)s AND dateTime < %(stop)s "
+                   "AND maxtime IS NOT NULL "
                    "ORDER BY max DESC, maxtime ASC LIMIT 1",
         'meanmax': "SELECT AVG(max) FROM %(table_name)s_day_%(obs_key)s "
                    "WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
@@ -339,14 +346,17 @@ class DailySummaries(XType):
                   "WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
         'minmaxtime': "SELECT maxtime FROM %(table_name)s_day_%(obs_key)s  "
                       "WHERE dateTime >= %(start)s AND dateTime < %(stop)s "
+                      "AND maxtime IS NOT NULL "
                       "ORDER BY max ASC, maxtime ASC ",
         'minsum': "SELECT MIN(sum) FROM %(table_name)s_day_%(obs_key)s "
                   "WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
         'minsumtime': "SELECT mintime FROM %(table_name)s_day_%(obs_key)s  "
                       "WHERE dateTime >= %(start)s AND dateTime < %(stop)s "
+                      "AND mintime IS NOT NULL "
                       "ORDER BY sum ASC, mintime ASC LIMIT 1",
         'mintime': "SELECT mintime FROM %(table_name)s_day_%(obs_key)s  "
                    "WHERE dateTime >= %(start)s AND dateTime < %(stop)s "
+                   "AND mintime IS NOT NULL "
                    "ORDER BY min ASC, mintime ASC LIMIT 1",
         'rms': "SELECT SUM(wsquaresum),SUM(sumtime) FROM %(table_name)s_day_%(obs_key)s "
                "WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
@@ -440,7 +450,7 @@ class DailySummaries(XType):
 
         elif aggregate_type in ['mintime', 'maxmintime', 'maxtime', 'minmaxtime', 'maxsumtime',
                                 'minsumtime', 'count', 'max_ge', 'max_le', 'min_ge', 'min_le',
-                                'sum_ge', 'sum_le']:
+                                'sum_ge', 'sum_le', 'avg_ge', 'avg_le']:
             # These aggregates are always integers:
             value = int(row[0])
 

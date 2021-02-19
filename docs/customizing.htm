@@ -42,9 +42,9 @@
 
     <div class="header">
         <div class="logoref">
-            <a href='http://weewx.com'> <img src='images/logo-weewx.png' class='logo' style="float:right"
+            <a href='https://weewx.com'> <img src='images/logo-weewx.png' class='logo' style="float:right"
                                              alt="weewx logo"/> </a><br/> <span class='version'>
-Version: 4.3
+Version: 4.4
     </span>
         </div>
         <div class="title">WeeWX Customization Guide</div>
@@ -340,7 +340,7 @@ Version: 4.3
                 <td class="code first_col">weewx.restx.StdStationRegistry<br/> weewx.restx.StdWunderground<br/>
                     weewx.restx.StdPWSweather<br/> weewx.restx.StdCWOP<br/> weewx.restx.StdWOW<br/>weewx.restx.StdAWEKAS
                 </td>
-                <td>Various <a href="http://en.wikipedia.org/wiki/Representational_State_Transfer"> RESTful services</a>
+                <td>Various <a href="https://en.wikipedia.org/wiki/Representational_State_Transfer"> RESTful services</a>
                     (simple stateless client-server protocols), such as the Weather Underground, CWOP, etc. Each
                     launches its own, independent thread, which manages the post.
                 </td>
@@ -548,8 +548,8 @@ Version: 4.3
 
         <p>
             WeeWX uses a single database to store and retrieve the records it needs. It can be implemented by using
-            either <a href="http://www.sqlite.org/">SQLITE3</a>, an open-source, lightweight SQL database, or <a
-            href="http://www.mysql.com/"> MySQL</a>, an open-source, full-featured database server.
+            either <a href="https://www.sqlite.org/">SQLITE3</a>, an open-source, lightweight SQL database, or <a
+            href="https://www.mysql.com/"> MySQL</a>, an open-source, full-featured database server.
         </p>
 
         <h3>Structure</h3>
@@ -621,7 +621,7 @@ Version: 4.3
             </tr>
             <tr>
                 <td class="first_col code">dateTime</td>
-                <td>The time at the end of the archive interval in <a href="http://en.wikipedia.org/wiki/Unix_time">unix
+                <td>The time at the end of the archive interval in <a href="https://en.wikipedia.org/wiki/Unix_time">unix
                     epoch time</a>. This is the <em>primary key</em> in the database. It must be unique, and it cannot
                     be null.
                 </td>
@@ -1633,19 +1633,19 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
     # The CheetahGenerator creates files from templates.  This section
     # specifies which files will be generated from which template.
 
-    # Possible encodings are 'html_entities', 'utf8', or 'strict_ascii'
+    # Possible encodings are 'html_entities', 'utf8', 'strict_ascii', or 'normalized_ascii'
     encoding = html_entities
 
     [[SummaryByMonth]]
         # Reports that summarize "by month"
         [[[NOAA_month]]]
-            encoding = strict_ascii
+            encoding = utf8
             template = NOAA/NOAA-%Y-%m.txt.tmpl
 
     [[SummaryByYear]]
         # Reports that summarize "by year"
         [[[NOAA_year]]]
-            encoding = strict_ascii
+            encoding = utf8
             template = NOAA/NOAA-%Y.txt.tmpl
 
     [[ToDate]]
@@ -1682,9 +1682,9 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
             </li>
         </ol>
         <p>
-            The encoding for text files is <span class="code">strict_ascii</span>, whereas the encoding for html files
+            The encoding for text files is <span class="code">utf8</span>, whereas the encoding for html files
             is <span class="code">html_entities</span>. This was specified by declaring <span class="code">encoding = html_entities</span>
-            at the top level of <span class="code">[CheetahGenerator]</span> then <span class="code">encoding = strict_ascii</span>
+            at the top level of <span class="code">[CheetahGenerator]</span> then <span class="code">encoding = utf8</span>
             for each text file.
         </p>
 
@@ -1709,7 +1709,7 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
     [[SummaryByYear]]
         # Reports that summarize "by year"
         [[[NOAA_year]]]
-            encoding = strict_ascii
+            encoding = utf8
             template = NOAA/NOAA-%Y.txt.tmpl
         </pre>
 
@@ -1738,7 +1738,7 @@ $record.dateTime $record.outTemp $record.outHumidity
     [[SummaryByMonth]]
         # Reports that summarize "by month"
         [[[NOAA_month]]]
-            encoding = strict_ascii
+            encoding = utf8
             template = NOAA/NOAA-%Y-%m.txt.tmpl
         </pre>
 
@@ -1767,7 +1767,7 @@ $record.dateTime $record.outTemp $record.outHumidity
     [[SummaryByDay]]
         # Reports that summarize "by day"
         [[[NOAA_day]]]
-            encoding = strict_ascii
+            encoding = utf8
             template = NOAA/NOAA-%Y-%m-%d.txt.tmpl
         </pre>
 
@@ -3498,7 +3498,7 @@ class MyStats(SearchList):                                                   # 1
     # This section is used by the generator CheetahGenerator, and specifies
     # which files are to be generated from which template.
 
-    # Possible encodings are 'html_entities', 'utf8', or 'strict_ascii'
+    # Possible encodings are 'html_entities', 'utf8', 'strict_ascii', or 'normalized_ascii'
     encoding = html_entities
     <span class="highlight">search_list_extensions = user.stats.MyStats</span>
 
@@ -4283,9 +4283,9 @@ class MyPrint(StdPrint):
     # Override the default new_loop_packet member function:
     def new_loop_packet(self, event):
         packet = event.packet
-        print "LOOP: ", timestamp_to_string(packet['dateTime']),
+        print("LOOP: ", timestamp_to_string(packet['dateTime']),
             "BAR=",  packet.get('barometer', 'N/A'),
-            "TEMP=", packet.get('outTemp', 'N/A')</pre>
+            "TEMP=", packet.get('outTemp', 'N/A'))</pre>
         <p>
             This service substitutes a new implementation for the member function <span
             class="code">new_loop_packet</span>. This implementation prints out the time, then the barometer reading (or
@@ -5175,11 +5175,12 @@ weewx.units.conversionDict['pound']  = {'newton': lambda x : x * 4.44822}
             </tr>
             <tr>
                 <td class="code first_col">usUnits</td>
-                <td>The unit system used. <span class="code">weewx.US</span> for US customary, <span class="code">weewx.METRICWX</span>,
-                    or <span class="code">weewx.METRIC</span> for metric. See the file <span
-                        class="code">units.py</span>, dictionaries <span class="code">USUnits</span>, <span
-                        class="code">MetricWXUnits</span>, and <span class="code">MetricUnits</span> for the exact
-                    definition of each.
+                <td>
+                    The unit system used. <span class="code">weewx.US</span> for US customary, <span
+                    class="code">weewx.METRICWX</span>, or <span class="code">weewx.METRIC</span> for metric. See the
+                    Appendix <a href="#units"><em>Units</em></a> for their exact definitions. The dictionaries <span
+                    class="code">USUnits</span>, <span class="code">MetricWXUnits</span>, and <span
+                    class="code">MetricUnits</span> in file <span class="code">units.py</span>, can also be useful.
                 </td>
             </tr>
             </tbody>
@@ -5193,12 +5194,11 @@ weewx.units.conversionDict['pound']  = {'newton': lambda x : x * 4.44822}
         </p>
 
         <p>
-            A couple of observation types are tricky. In particular, <span class="code">rain</span>. Generally, WeeWX
-            expects to see a packet with the amount of rain that fell in that packet period included as observation
-            <span class="code">rain</span>. It then sums up all the values to get the total rainfall and emits that in
-            the archive record. If your hardware does not provide this value, you might have to infer it from changes in
-            whatever value it provides, for example changes in the daily or monthly rainfall. I know this is not the
-            best solution, but it is the most general solution. Any alternatives are welcome!
+            A couple of observation types are tricky, in particular, <span class="code">rain</span>. The field <span
+            class="code">rain</span> in a LOOP packet should be the amount of rain that has fallen <em>since the last
+            packet</em>. Because LOOP packets are emitted fairly frequently, this is likely to be a small number. If
+            your hardware does not provide this value, you might have to infer it from changes in whatever value it
+            provides, for example changes in the daily or monthly rainfall.
         </p>
 
         <p>
@@ -5743,8 +5743,8 @@ UV      = UV Index</pre>
         </p>
 
         <p>
-            The measurement unit to be used for temperatures. Options are <span class="code">degree_F</span> or <span
-            class="code">degree_C</span>.
+            The measurement unit to be used for temperatures. Options are <span class="code">degree_F</span>, <span
+            class="code">degree_C</span>, or <span class="code"><a href="https://xkcd.com/1923/">degree_E</a></span>.
         </p>
 
         <p class="config_option">group_volt</p>
@@ -5931,6 +5931,10 @@ growing_base = 50.0, degree_F</pre>
             <tr>
                 <td class="code first_col">strict_ascii</td>
                 <td>Non 7-bit characters will be ignored.</td>
+            </tr>
+            <tr>
+                <td class="code first_col">normalized_ascii</td>
+                <td>Replace accented characters with non-accented analogs (<i>e.g.</i>, 'ö' will be replaced with 'o').</td>
             </tr>
             </tbody>
         </table>
@@ -6476,6 +6480,20 @@ growing_base = 50.0, degree_F</pre>
                 <td>The average value in the aggregation period.</td>
             </tr>
             <tr>
+                <td class="first_col code">avg_ge(val)</td>
+                <td>The number of days where the average value is greater than or equal to <em>val</em>. Aggregation
+                    period must be one day or longer. The argument <span class="code">val</span> is a
+                    <a href="#ValueTuple"><span class="code">ValueTuple</span></a>.
+                </td>
+            </tr>
+            <tr>
+                <td class="first_col code">avg_le(val)</td>
+                <td>The number of days where the average value is less than or equal to <em>val</em>. Aggregation period
+                    must be one day or longer. The argument <span class="code">val</span> is a
+                    <a href="#ValueTuple"><span class="code">ValueTuple</span></a>.
+                </td>
+            </tr>
+            <tr>
                 <td class="first_col code">count</td>
                 <td>The number of non-null values in the aggregation period.
                 </td>
@@ -6927,7 +6945,7 @@ growing_base = 50.0, degree_F</pre>
                     heatingTemp <br/> humidex <br/> inTemp <br/> leafTemp1 <br/> leafTemp2 <br/> outTemp <br/> soilTemp1
                     <br/> soilTemp2 <br/> soilTemp3 <br/> soilTemp4 <br/> windchill <br/> THSW
                 </td>
-                <td>degree_F <br/> degree_C
+                <td>degree_F <br/> degree_C<br/> degree_E
                 </td>
                 <td>degree_F</td>
                 <td>degree_C</td>

@@ -321,15 +321,17 @@ class WeatherCatSource(weeimport.Source):
                     if 't:' in _raw_line and 'V:' in _raw_line:
                         # we have a data line
                         _row = {}
-                        # check for and remove any null bytes
+                        # check for and remove any null bytes and strip any
+                        # whitespace
                         if "\x00" in _raw_line:
-                            _clean_line = _raw_line.replace("\x00", "")
+                            _line = _raw_line.replace("\x00", "").strip()
                             _msg = "One or more null bytes found in and removed " \
                                    "from month '%d' year '%d'" % (int(_month), _year)
                             print(_msg)
                             log.info(_msg)
-                        # strip any whitespace
-                        _line = _clean_line.strip()
+                        else:
+                            # strip any whitespace
+                            _line = _raw_line.strip()
                         # iterate over the key-value pairs on the line
                         for pair in shlex.split(_line):
                             _split_pair = pair.split(":", 1)

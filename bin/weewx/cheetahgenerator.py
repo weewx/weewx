@@ -9,7 +9,7 @@ For more information about Cheetah, see http://www.cheetahtemplate.org
 
 Configuration Options
 
-  encoding = (html_entities|utf8|strict_ascii)
+  encoding = (html_entities|utf8|strict_ascii|normalized_ascii)
   template = filename.tmpl           # must end with .tmpl
   stale_age = s                      # age in seconds
   search_list = a, b, c
@@ -32,14 +32,14 @@ Example:
 [CheetahGenerator]
     # How to specify search list extensions:
     search_list_extensions = user.forecast.ForecastVariables, user.extstats.ExtStatsVariables
-    encoding = html_entities      # html_entities, utf8, strict_ascii
+    encoding = html_entities      # html_entities, utf8, strict_ascii, or normalized_ascii
     [[SummaryByMonth]]                              # period
         [[[NOAA_month]]]                            # report
-            encoding = strict_ascii
+            encoding = utf8
             template = NOAA-YYYY-MM.txt.tmpl
     [[SummaryByYear]]
         [[[NOAA_year]]]]
-            encoding = strict_ascii
+            encoding = utf8
             template = NOAA-YYYY.txt.tmpl
     [[ToDate]]
         [[[day]]]
@@ -61,6 +61,7 @@ import datetime
 import logging
 import os.path
 import time
+import unicodedata
 
 import Cheetah.Filters
 import Cheetah.Template
@@ -328,6 +329,11 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
                     byte_string = unicode_string.encode('ascii', 'xmlcharrefreplace')
                 elif encoding == 'strict_ascii':
                     byte_string = unicode_string.encode('ascii', 'ignore')
+                elif encoding == 'normalized_ascii':
+                    # Normalize the string, replacing accented characters with non-accented
+                    # equivalents
+                    normalized = unicodedata.normalize('NFD', unicode_string)
+                    byte_string = normalized.encode('ascii', 'ignore')
                 else:
                     byte_string = unicode_string.encode('utf8')
 

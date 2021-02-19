@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2020 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2021 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -43,30 +43,30 @@ class Manager(object):
     is updating the table, while another is doing aggregate queries, the latter manager will be
     unaware of later records in the database, and may choose the wrong query strategy. If this
     might be the case, call member function _sync() before starting the query.
-    
+
     USEFUL ATTRIBUTES
-    
+
     database_name: The name of the database the manager is bound to.
-    
+
     table_name: The name of the main, archive table.
-    
+
     sqlkeys: A list of the SQL keys that the database table supports.
-    
+
     obskeys: A list of the observation types that the database table supports.
-    
+
     std_unit_system: The unit system used by the database table.
-    
+
     first_timestamp: The timestamp of the earliest record in the table.
-    
+
     last_timestamp: The timestamp of the last record in the table."""
 
     def __init__(self, connection, table_name='archive', schema=None):
         """Initialize an object of type Manager.
-        
+
         connection: A weedb connection to the database to be managed.
-        
+
         table_name: The name of the table to be used in the database. Default is 'archive'.
-        
+
         schema: The schema to be used. Optional. If not supplied, then an exception of type
         weedb.ProgrammingError will be raised if the database does not exist, and of type
         weedb.UnitializedDatabase if it exists, but has not been initialized.
@@ -78,7 +78,7 @@ class Manager(object):
         self.last_timestamp = None
         self.std_unit_system = None
 
-        # Now get the SQL types. 
+        # Now get the SQL types.
         try:
             self.sqlkeys = self.connection.columnsOf(self.table_name)
         except weedb.ProgrammingError:
@@ -100,8 +100,8 @@ class Manager(object):
 
     @classmethod
     def open(cls, database_dict, table_name='archive'):
-        """Open and return a Manager or a subclass of Manager.  
-        
+        """Open and return a Manager or a subclass of Manager.
+
         database_dict: A database dictionary holding the information necessary to open the
         database.
 
@@ -189,7 +189,7 @@ class Manager(object):
 
     def _initialize_database(self, schema):
         """Initialize the tables needed for the archive.
-        
+
         schema: The schema to be used
         """
         # If this is an old-style schema, this will raise an exception. Be prepared to catch it.
@@ -231,7 +231,7 @@ class Manager(object):
 
     def lastGoodStamp(self):
         """Retrieves the epoch time of the last good archive record.
-        
+
         returns: Time of the last good archive record as an epoch time, or None if there are no
         records.
         """
@@ -240,7 +240,7 @@ class Manager(object):
 
     def firstGoodStamp(self):
         """Retrieves earliest timestamp in the archive.
-        
+
         returns: Time of the first good archive record as an epoch time, or None if there are no
         records.
         """
@@ -249,7 +249,7 @@ class Manager(object):
 
     def addRecord(self, record_obj, accumulator=None, progress_fn=None):
         """Commit a single record or a collection of records to the archive.
-        
+
         record_obj: Either a data record, or an iterable that can return data records. Each data
         record must look like a dictionary, where the keys are the SQL types and the values are the
         values to be stored in the database.
@@ -388,12 +388,12 @@ class Manager(object):
 
     def getRecord(self, timestamp, max_delta=None):
         """Get a single archive record with a given epoch time stamp.
-        
+
         timestamp: The epoch time of the desired record.
-        
-        max_delta: The largest difference in time that is acceptable. 
+
+        max_delta: The largest difference in time that is acceptable.
         [Optional. The default is no difference]
-        
+
         returns: a record dictionary or None if the record does not exist."""
 
         with self.connection.cursor() as _cursor:
@@ -418,11 +418,11 @@ class Manager(object):
 
     def getSql(self, sql, sqlargs=(), cursor=None):
         """Executes an arbitrary SQL statement on the database.
-        
+
         sql: The SQL statement
-        
+
         sqlargs: A tuple containing the arguments for the SQL statement
-        
+
         returns: a tuple containing the results
         """
         _cursor = cursor or self.connection.cursor()
@@ -571,9 +571,9 @@ def get_database_dict_from_config(config_dict, database):
 
     Returns: a database dictionary, with everything needed to pass on to a Manager or weedb in
     order to open a database.
-    
+
     Example. Given a configuration file snippet that looks like:
-    
+
     >>> import configobj
     >>> from six.moves import StringIO
     >>> config_snippet = '''
@@ -727,7 +727,7 @@ def show_progress(last_time, nrec=None):
 #                        Class DaySummaryManager
 #
 #     Adds daily summaries to the database.
-# 
+#
 #     This class specializes method _addSingleRecord so that it adds the data to a daily summary,
 #     as well as the regular archive table.
 #
@@ -747,8 +747,8 @@ def show_progress(last_time, nrec=None):
 # ===============================================================================
 
 class DaySummaryManager(Manager):
-    """Manage a daily statistical summary. 
-    
+    """Manage a daily statistical summary.
+
     The daily summary consists of a separate table for each type. The columns of each table are
     things like min, max, the timestamps for min and max, sum and sumtime. The values sum and
     sumtime are kept to make it easy to calculate averages for different time periods.
@@ -760,13 +760,13 @@ class DaySummaryManager(Manager):
 
     wsum is the "Weighted sum," that is, the sum weighted by the archive interval. sumtime is the
     sum of the archive intervals.
-        
+
     In addition to all the tables for each type, there is one additional table called
     'archive_day__metadata', which currently holds the version number and the time of the last
     update.
     """
 
-    version = "3.0"
+    version = "4.0"
 
     # Schemas used by the daily summaries:
     day_schemas = {
@@ -808,9 +808,9 @@ class DaySummaryManager(Manager):
 
     def __init__(self, connection, table_name='archive', schema=None):
         """Initialize an instance of DaySummaryManager
-        
+
         connection: A weedb connection to the database to be managed.
-        
+
         table_name: The name of the table to be used in the database. Default is 'archive'.
 
         schema: The schema to be used. Optional. If not supplied, then an exception of type
@@ -901,7 +901,7 @@ class DaySummaryManager(Manager):
         # First let my superclass handle adding the record to the main archive table:
         super(DaySummaryManager, self)._addSingleRecord(record, cursor)
 
-        # Get the start of day for the record:        
+        # Get the start of day for the record:
         _sod_ts = weeutil.weeutil.startOfArchiveDay(record['dateTime'])
 
         # Get the weight. If the value for 'interval' is bad, an exception will be raised.
@@ -909,8 +909,8 @@ class DaySummaryManager(Manager):
             _weight = self._calc_weight(record)
         except IntervalError as e:
             # Bad value for interval. Ignore this record
-            log.error(e)
-            log.error('*** record ignored')
+            log.info(e)
+            log.info('*** record ignored')
             return
 
         # Now add to the daily summary for the appropriate day:
@@ -951,7 +951,7 @@ class DaySummaryManager(Manager):
                              progress_fn=show_progress, trans_days=5):
 
         """Fill the daily summaries from an archive database.
-          
+
         Normally, the daily summaries get filled by LOOP packets (to get maximum time resolution),
         but if the database gets corrupted, or if a new user is starting up with imported wview
         data, it's necessary to recreate it from straight archive data. The Hi/Lows will all be
@@ -965,13 +965,13 @@ class DaySummaryManager(Manager):
 
         stop_d: The last day to be included, specified as a datetime.date object [Optional. Default
         is to include the date of the last archive record.]
-          
+
         progress_fn: This function will be called after processing every 1000 records.
-          
+
         trans_day: Number of days of archive data to be used for each daily summaries database
         transaction. [Optional. Default is 5.]
-          
-        returns: A 2-way tuple (nrecs, ndays) where 
+
+        returns: A 2-way tuple (nrecs, ndays) where
           nrecs is the number of records backfilled;
           ndays is the number of days
         """
@@ -984,6 +984,7 @@ class DaySummaryManager(Manager):
 
         if self.first_timestamp is None:
             # Nothing in the archive database, so there's nothing to do.
+            log.info("Empty database")
             return 0, 0
 
         # Convert tranch size to a timedelta object, so we can perform arithmetic with it.
@@ -1024,6 +1025,7 @@ class DaySummaryManager(Manager):
                 if not start_d and not stop_d:
                     # The daily summaries are complete, yet the user has not specified anything.
                     # Guess we're done.
+                    log.info("Daily summaries up to date")
                     return 0, 0
                 # Trim what we rebuild to what the user has specified
                 if start_d:
@@ -1038,7 +1040,7 @@ class DaySummaryManager(Manager):
         ndays = 0
 
         mark_d = first_d
-        
+
         while mark_d < last_d:
             # Calculate the last date included in this transaction
             stop_transaction = min(mark_d + tranche_days, last_d)
@@ -1060,8 +1062,8 @@ class DaySummaryManager(Manager):
                         weight = self._calc_weight(rec)
                     except IntervalError as e:
                         # Ignore records with bad values for 'interval'
-                        log.error(e)
-                        log.error('***  ignored.')
+                        log.info(e)
+                        log.info('***  ignored.')
                         continue
                     # Try updating. If the time is out of the accumulator's time span, an
                     # exception will get raised.
@@ -1099,11 +1101,8 @@ class DaySummaryManager(Manager):
             mark_d += tranche_days
 
         tdiff = time.time() - t1
-        if nrecs:
-            log.info("Processed %d records to backfill %d day summaries in %.2f seconds", nrecs,
-                     ndays, tdiff)
-        else:
-            log.info("Daily summaries up to date")
+        log.info("Processed %d records to backfill %d day summaries in %.2f seconds",
+                 nrecs, ndays, tdiff)
 
         return nrecs, ndays
 
@@ -1212,8 +1211,13 @@ class DaySummaryManager(Manager):
                 day_accum = weewx.accum.Accum(day_span)
                 # Now populate it with a day's worth of records
                 for rec in self.genBatchRecords(day_span.start, day_span.stop):
-                    weight = weight_fn(self, rec)
-                    day_accum.addRecord(rec, weight=weight)
+                    try:
+                        weight = weight_fn(self, rec)
+                    except IntervalError as e:
+                        log.info("%s: %s", timestamp_to_string(rec['dateTime']), e)
+                        log.info('***  ignored.')
+                    else:
+                        day_accum.addRecord(rec, weight=weight)
                 # Write out the results of the accumulator
                 self._set_day_sums(day_accum, cursor)
                 if progress_fn:
@@ -1232,40 +1236,50 @@ class DaySummaryManager(Manager):
             # It will only include attributes that are in the accumulator for this type.
             set_list = ['%s=%s' % (k, getattr(day_accum[obs_type], k))
                         for k in ['sum', 'count', 'wsum', 'sumtime',
-                                  'xsum', 'ysum', 'squaresum', 'wsquaresum']
+                                  'xsum', 'ysum', 'dirsumtime',
+                                  'squaresum', 'wsquaresum']
                         if hasattr(day_accum[obs_type], k)]
             update_sql = "UPDATE {archive_table}_day_{obs_type} SET {set_stmt} " \
                          "WHERE dateTime = ?;".format(archive_table=self.table_name,
                                                       obs_type=obs_type,
                                                       set_stmt=', '.join(set_list))
             # Update this observation type's weighted sums:
-            cursor.execute(update_sql, (day_accum.timespan.start, ))
+            cursor.execute(update_sql, (day_accum.timespan.start,))
 
     def patch_sums(self):
-        """Version 4.2 accidentally interpreted V2.0 daily sums as V1.0, so the weighted sums
-        were all given a weight of 1.0, instead of the interval length. This fixes that."""
-        if '1.0' < self.version < '3.0':
+        """Version 4.2.0 accidentally interpreted V2.0 daily sums as V1.0, so the weighted sums
+        were all given a weight of 1.0, instead of the interval length. Version 4.3.0 attempted
+        to fix this bug but introduced its own bug by failing to weight 'dirsumtime'. This fixes
+        both bugs."""
+        if '1.0' < self.version < '4.0':
             msg = "Daily summaries at V%s. Patching to V%s" \
                   % (self.version, DaySummaryManager.version)
             print(msg)
             log.info(msg)
-            # We need to upgrade from V2.0 to V3.0. The only difference is that the
-            # patch has been supplied to V3.0 daily summaries. The patch need only be
-            # done from a date well before the V4.2 release. We pick 1-Jun-2020.
-            self.recalculate_weights(start_d=datetime.date(2020,6,1))
+            # We need to upgrade from V2.0 or V3.0 to V4.0. The only difference is
+            # that the patch has been supplied to V4.0 daily summaries. The patch
+            # need only be done from a date well before the V4.2 release.
+            # We pick 1-Jun-2020.
+            self.recalculate_weights(start_d=datetime.date(2020, 6, 1))
             self._write_metadata('Version', DaySummaryManager.version)
             self.version = DaySummaryManager.version
             log.info("Patch finished.")
 
     def update(self):
-        """Update the database to V3.0"""
+        """Update the database to V4.0.
+
+        - all V1.0 daily sums need to be upgraded
+        - V2.0 daily sums need to be upgraded but only those after a date well before the
+          V4.2.0 release (we pick 1 June 2020)
+        - V3.0 daily sums need to be upgraded due to a bug in the V4.2.0 and V4.3.0 releases
+          but only those after 1 June 2020
+        """
         if self.version == '1.0':
             self.recalculate_weights(weight_fn=DaySummaryManager._get_weight)
             self._write_metadata('Version', DaySummaryManager.version)
             self.version = DaySummaryManager.version
-        elif self.version == '2.0':
+        elif self.version == '2.0' or self.version == '3.0':
             self.patch_sums()
-
 
     # --------------------------- UTILITY FUNCTIONS -----------------------------------
 
@@ -1323,10 +1337,10 @@ class DaySummaryManager(Manager):
 
     def _set_day_summary(self, day_accum, lastUpdate, cursor):
         """Write all statistics for a day to the database in a single transaction.
-        
+
         day_accum: an accumulator with the daily summary. See weewx.accum
-        
-        lastUpdate: the time of the last update will be set to this unless it is None. 
+
+        lastUpdate: the time of the last update will be set to this unless it is None.
         Normally, this is the timestamp of the last archive record added to the instance
         day_accum. """
 

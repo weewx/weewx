@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2020 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2021 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -13,6 +13,7 @@ from __future__ import absolute_import
 import logging
 
 import weewx.engine
+import weeutil.weeutil
 
 log = logging.getLogger(__name__)
 
@@ -20,15 +21,67 @@ log = logging.getLogger(__name__)
 class StdWXCalculate(weewx.engine.StdService):
 
     def __init__(self, engine, config_dict):
-        """Initialize an instance of StdWXXTypes"""
+        """Initialize an instance of StdWXCalculate and determine the calculations to be done.
+
+        Directives look like:
+
+           obs_type = [prefer_hardware|hardware|software], [loop|archive]
+
+        where:
+
+        obs_type is an observation type to be calculated, such as 'heatindex'
+
+        The choice [prefer_hardware|hardware|software] determines how the value is to be
+        calculated. Option "prefer_hardware" means that if the hardware supplies a value, it will
+        be used, otherwise the value will be calculated in software.
+
+        The choice [loop|archive] indicates whether the calculation is to be done for only LOOP
+        packets, or only archive records. If left out, it will be done for both.
+
+        Examples:
+
+            cloudbase = software,loop
+        The derived type 'cloudbase' will always be calculated in software, but only for LOOP
+        packets
+
+            cloudbase = software, record
+        The derived type 'cloudbase' will always be calculated in software, but only for archive
+        records.
+
+            cloudbase = software
+        The derived type 'cloudbase' will always be calculated in software, for both LOOP packets
+        and archive records"""
+
         super(StdWXCalculate, self).__init__(engine, config_dict)
 
-        # Get the dictionary containing the calculations to be done. Default to no calculations
-        self.calc_dict = config_dict.get('StdWXCalculate', {}).get('Calculations', {})
+        self.loop_calc_dict = dict()        # map {obs->directive} for LOOP packets
+        self.archive_calc_dict = dict()     # map {obs->directive} for archive records
+
+        for obs_type, rule in config_dict.get('StdWXCalculate', {}).get('Calculations', {}).items():
+            # Ensure we have a list:
+            words = weeutil.weeutil.option_as_list(rule)
+            # Split the list up into a directive, and (optionally) which bindings it applies to
+            # (loop or archive).
+            directive = words[0].lower()
+            bindings = [w.lower() for w in words[1:]]
+            if not bindings or 'loop' in bindings:
+                # no bindings mentioned, or 'loop' plus maybe others
+                self.loop_calc_dict[obs_type] = directive
+            if not bindings or 'archive' in bindings:
+                # no bindings mentioned, or 'archive' plus maybe others
+                self.archive_calc_dict[obs_type] = directive
 
         # Backwards compatibility for configuration files v4.1 or earlier:
-        self.calc_dict.setdefault('windDir', 'software')
-        self.calc_dict.setdefault('windGustDir', 'software')
+        self.loop_calc_dict.setdefault('windDir', 'software')
+        self.archive_calc_dict.setdefault('windDir', 'software')
+        self.loop_calc_dict.setdefault('windGustDir', 'software')
+        self.archive_calc_dict.setdefault('windGustDir', 'software')
+        # For backwards compatibility:
+        self.calc_dict = self.archive_calc_dict
+
+        if weewx.debug > 1:
+            log.debug("Calculations for LOOP packets: %s", self.loop_calc_dict)
+            log.debug("Calculations for archive records: %s", self.archive_calc_dict)
 
         # Get the data binding. Default to 'wx_binding'.
         data_binding = config_dict.get('StdWXCalculate',
@@ -42,20 +95,24 @@ class StdWXCalculate(weewx.engine.StdService):
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
 
     def new_loop_packet(self, event):
-        self.do_calculations(event.packet)
+        self.do_calculations(event.packet, self.loop_calc_dict)
 
     def new_archive_record(self, event):
-        self.do_calculations(event.record)
+        self.do_calculations(event.record, self.archive_calc_dict)
 
-    def do_calculations(self, data_dict):
+    def do_calculations(self, data_dict, calc_dict=None):
         """Augment the data dictionary with derived types as necessary.
 
         data_dict: The incoming LOOP packet or archive record.
+        calc_dict: the directives to apply
         """
 
+        if calc_dict is None:
+            calc_dict = self.archive_calc_dict
+
         # Go through the list of potential calculations and see which ones need to be done
-        for obs in self.calc_dict:
-            directive = self.calc_dict[obs]
+        for obs in calc_dict:
+            directive = calc_dict[obs]
             # Keys in calc_dict are in unicode. Keys in packets and records are in native strings.
             # Just to keep things consistent, convert.
             obs_type = str(obs)

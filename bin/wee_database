@@ -604,7 +604,7 @@ def update(config_dict, db_binding, options):
         print(msg)
         return
 
-    msg = "Preparing Interval Weighting Fix..."
+    msg = "Preparing interval weighting fix..."
     log.info(msg)
     print(msg)
 
@@ -616,7 +616,7 @@ def update(config_dict, db_binding, options):
     log.info(msg)
     print(msg)
 
-    if dbm.version is not None and dbm.version >= '3.0':
+    if dbm.version is not None and dbm.version >= '4.0':
         # interval weighting fix has been applied
         msg = "Interval weighting fix is not required."
         log.info(msg)
@@ -720,7 +720,7 @@ def _fix_wind(config_dict, db_binding, options):
     """
 
     t1 = time.time()
-    msg = "Preparing Maximum windSpeed Fix..."
+    msg = "Preparing maximum windSpeed fix..."
     log.info(msg)
     print(msg)
 
@@ -729,7 +729,7 @@ def _fix_wind(config_dict, db_binding, options):
         print("This is a dry run: maximum windSpeed will be calculated but not saved.")
 
     # construct a windSpeed recalculation config dict
-    wind_config_dict = {'name': 'Maximum windSpeed Fix',
+    wind_config_dict = {'name': 'Maximum windSpeed fix',
                         'binding': db_binding,
                         'trans_days': 100,
                         'dry_run': options.dry_run}
@@ -741,11 +741,11 @@ def _fix_wind(config_dict, db_binding, options):
     try:
         wind_obj.run()
     except weedb.NoTableError as e:
-        msg = "Maximum windSpeed Fix applied: no windSpeed found"
+        msg = "Maximum windSpeed fix applied: no windSpeed found"
         log.info(msg)
         print(msg)
     else:
-        msg = "Maximum windSpeed Fix completed in %0.2f seconds" % (time.time() - t1)
+        msg = "Maximum windSpeed fix completed in %0.2f seconds" % (time.time() - t1)
         log.info(msg)
         print(msg)
 
@@ -844,9 +844,12 @@ def check_strings(config_dict, db_binding, options, fix=False):
                       % (records, timestamp_to_string(record[0])), end=' ')
                 sys.stdout.flush()
     # update our final count now that we have finished
-    print("Checking record: %d; Timestamp: %s\r"
-          % (records, timestamp_to_string(record[0])), end=' ')
-    print()
+    if records:
+        print("Checking record: %d; Timestamp: %s\r"
+              % (records, timestamp_to_string(record[0])), end=' ')
+        print()
+    else:
+        print("No records in database.")
     tdiff = time.time() - t1
     # now display details of what we found if we found any null strings
     if len(_found):

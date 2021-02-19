@@ -216,6 +216,9 @@ class WindSpeedRecalculation(DatabaseFix):
         log.info("maxwindspeed: Applying %s..." % self.name)
         # get the start and stop Gregorian day number
         start_ts = self.first_summary_ts('windSpeed')
+        if not start_ts:
+            print("Database empty. Nothing done.")
+            return
         start_greg = weeutil.weeutil.toGregorianDay(start_ts)
         stop_greg = weeutil.weeutil.toGregorianDay(self.dbm.last_timestamp)
         # initialise a few things

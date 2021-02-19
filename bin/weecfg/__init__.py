@@ -1,6 +1,6 @@
 # coding: utf-8
 #
-#    Copyright (c) 2009-2020 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2021 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your rights.
 #
@@ -383,6 +383,8 @@ def update_config(config_dict):
     update_to_v40(config_dict)
 
     update_to_v42(config_dict)
+
+    update_to_v43(config_dict)
 
 
 def merge_config(config_dict, template_dict):
@@ -1264,6 +1266,18 @@ def update_to_v42(config_dict):
         config_dict['Engine'].comments['Services'] = ['The following section specifies which '
                                                       'services should be run and in what order.']
     config_dict['version'] = '4.2.0'
+
+
+def update_to_v43(config_dict):
+    """Update a configuration file to V4.3
+
+    - Set [StdReport] / log_failure to True
+    """
+    if 'StdReport' in config_dict and 'log_failure' in config_dict['StdReport']:
+        config_dict['StdReport']['log_failure'] = True
+
+    config_dict['version'] = '4.3.0'
+
 
 def update_units(config_dict, unit_system_name, logger=None, debug=False):
     """Update [StdReport][Defaults] with the desired unit system"""

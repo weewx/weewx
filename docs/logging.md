@@ -20,53 +20,56 @@ First, read, or, at least, attempt to read, the section on the [schema of the co
 
 ## Defaults
 With that in mind, here is the default configuration that WeeWX uses (Linux only; the defaults are slightly
-different on the Mac or Windows):
+different for MacOS):
 
 ```ini
 [Logging]
-  version = 1
-  disable_existing_loggers = False
-      
-  [[loggers]]
+    version = 1
+    disable_existing_loggers = False
+
     # Root logger
-    [[[root]]]
+    [[root]]
       level = {log_level}
-      propagate = 1
-      handlers = syslog,
+      handlers = rotate,
+    
+    # Additional loggers would go in the following section. This is useful for tailoring logging
+    # for individual modules.
+    [[loggers]]
 
-  # Definitions of possible logging destinations
-  [[handlers]]
+    # Definitions of possible logging destinations
+    [[handlers]]
 
-    # System logger
-    [[[syslog]]]
-      level = DEBUG
-      formatter = standard
-      class = logging.handlers.SysLogHandler
-      address = /dev/log
-      facility = user
+        # Log to a set of rotating files    
+        [[[rotate]]]
+            level = DEBUG
+            formatter = standard
+            class = logging.handlers.RotatingFileHandler
+            filename = /var/log/weewx.log
+            maxBytes = 10000000
+            backupCount = 4
 
-    # Log to console
-    [[[console]]]
-      level = DEBUG
-      formatter = verbose
-      class = logging.StreamHandler
-      # Alternate choice is 'ext://sys.stderr'
-      stream = ext://sys.stdout
+        # Log to console
+        [[[console]]]
+            level = DEBUG
+            formatter = verbose
+            class = logging.StreamHandler
+            # Alternate choice is 'ext://sys.stderr'
+            stream = ext://sys.stdout
 
-  # How to format log messages
-  [[formatters]]
-    [[[simple]]]
-      format = %(levelname)s %(message)s
-    [[[standard]]]
-      format = "{process_name}[%(process)d]/%(levelname)s %(name)s: %(message)s" 
-    [[[verbose]]]
-      format = "%(asctime)s  {process_name}[%(process)d]/%(levelname)s %(name)s: %(message)s"
-      # Format to use for dates and times:
-      datefmt = %Y-%m-%d %H:%M:%S
+    # How to format log messages
+    [[formatters]]
+        [[[simple]]]
+            format = "%(levelname)s %(message)s"
+        [[[standard]]]
+            format = "{process_name}[%(process)d] %(levelname)s %(name)s: %(message)s" 
+        [[[verbose]]]
+            format = "%(asctime)s  {process_name}[%(process)d] %(levelname)s %(name)s: %(message)s"
+            # Format to use for dates and times:
+            datefmt = %Y-%m-%d %H:%M:%S
 ```
 This configures three different facilities:
 1. Loggers, which expose the interface that application code directly uses. Most importantly,
-it determines which *handler(s)* to use.
+it determines which *handler(s)* to use. Note that the `root` logger is in its own section.
 2. Handlers, which send the log records (created by loggers) to an appropriate destination.
 3. Formatters, which specify the layout of log records in the final output. A number of attributes
  are available to the formatter (such as `%(levelname)s`; see the documentation 
@@ -80,21 +83,20 @@ The value for `{process_name}` is passed in when setting up the logging facility
 main program, it is `weewxd` (see below).
 
 ## Specifying other handlers
-An example. Say you want to log to not only the system log (the default), but to the console as 
+An example. Say you want logs to go to not only the system log (the default), but to the console as 
 well. Then add this to your `weewx.conf` file:
 
 ```ini
 [Logging]
-  [[loggers]]
-    [[[root]]]
-      handlers = syslog, console
+  [[root]]
+    handlers = syslog, console
 ```
-This will override the default list of handlers, which consists only of `syslog`, with a new list, that includes `console` as well as `syslog`.
+This will override the default list of handlers, which consists only of `syslog`, with a new list that includes `console` as well as `syslog`.
 
-## Supressing log events
-Another example. Say you've decided that the `restx` module is too chatty for your liking when `debug` is on. You want to see only `INFO` messages and above --- nothing else. However, when `debug` is on, the default "root" logger will show `DEBUG` messages above ---basically everything.
+## Customizing what gets logged
+Another example. When the `debug` option is on, the default "root" logger will show `DEBUG` messages and above ---basically everything. This is fine, but say you've decided that the `weewx.restx` module is too chatty for your liking. For it, you want to see only `INFO` messages and above --- nothing else. 
 
-The solution is to create a specialized logger for just the `restx` module, so it no longer inherits properties from the root logger. For this logger, we will specify that it logs only `INFO` and above. To do this, the `[Logging]` section would look like:
+The solution is to tailor the logger used by the `weewx.restx` module, so it no longer inherits properties from the root logger. For this logger, we will specify that it logs only `INFO` and above. To do this, the `[Logging]` section would look like:
 
 ```ini
 [Logging]
@@ -103,7 +105,8 @@ The solution is to create a specialized logger for just the `restx` module, so i
       level = INFO
 ```
 
-Or instead, suppose you are debugging the `restx` module. In this case it would desirable to set its logging `level` to `DEBUG` while other loggers continue to log `INFO` or higher. Again, the solution is to create a logger for the `restx` module.  In this case, along with setting the logging `level`, we need to define a `handler`. Because the `restx` logger will handle the logging for the `restx` module, we will also want to turn `propagate` off. Otherwise `INFO` and higher messages will be logged twice. Once by the `restx` logger and also by any parent handlers. Lastly, `debug` should be left at 0, so that the default `root` logging is `INFO`.
+Or instead, suppose you are debugging the `weewx.restx` module. In this case it would desirable to set its logging `level` to `DEBUG` while other loggers continue to log `INFO` or higher. Again, the solution is to customize the logger for the `weewx.restx` module.  In this case, along with setting the logging `level`, we need to define a `handler`. Because the `weewx.restx` logger will handle the logging for the `weewx.restx` module, we will also want to turn `propagate` off. Otherwise `INFO` and higher messages will be logged twice: once by the `weewx.restx` logger and also by any parent handlers. Lastly, `debug` should be left at 0, so that the default `root` logging is `INFO`.
+
 The configuration would look something like this.
 ```ini
 debug = 0
@@ -117,6 +120,7 @@ debug = 0
 ```
 
 ## Logging to rotating files
+
 By default, the logging module logs to the "system log". In some cases, you may want to log to a
 set of rotating log files, such as `/var/log/weewx.log`. The WeeWX logging facility allows you
 to do this.
@@ -125,10 +129,10 @@ Add this to `weewx.conf`:
 
 ```ini
 [Logging]
+    # Root logger
+    [[root]]
+      handlers = rotate,                    # 1
     [[loggers]]
-        # Root logger
-        [[[root]]]
-          handlers = rotate,                # 1
     [[handlers]]
         # Log to a set of rotating files    
         [[[rotate]]]
@@ -143,7 +147,7 @@ Add this to `weewx.conf`:
 Here's the meaning of the various lines:
 
 1. This tells the logging facility to use the `rotate` handler, instead of the default `syslog`
-handler.
+handler. The comma is important: it tells Python that the option is actually a list.
 2. The default log level will be `DEBUG`. Everything with priority `DEBUG` or higher will get 
 logged.
 3. How shall the entries get formatted? This tells the logging facility to use the "standard"

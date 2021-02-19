@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2020 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2021 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -7,7 +7,7 @@
 from __future__ import absolute_import
 import time
 
-__version__="4.3.0b2"
+__version__="4.4.0"
 
 # Holds the program launch time in unix epoch seconds:
 # Useful for calculating 'uptime.'

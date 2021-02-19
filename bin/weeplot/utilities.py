@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2019 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2021 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -20,15 +20,16 @@ import math
 import six
 
 import weeplot
-    
-def scale(fmn, fmx, prescale = (None, None, None), nsteps = 10):
+
+
+def scale(data_min, data_max, prescale=(None, None, None), nsteps=10):
     """Calculates an appropriate min, max, and step size for scaling axes on a plot.
 
     The origin (zero) is guaranteed to be on an interval boundary.
 
-    fmn: The minimum data value
+    data_min: The minimum data value
 
-    fmx: The maximum data value. Must be greater than or equal to fmn.
+    data_max: The maximum data value. Must be greater than or equal to data_min.
 
     prescale: A 3-way tuple. A non-None min or max value (positions 0 and 1,
     respectively) will be fixed to that value. A non-None interval (position 2)
@@ -77,24 +78,30 @@ def scale(fmn, fmx, prescale = (None, None, None), nsteps = 10):
     if None not in prescale:
         return prescale
 
-    (minscale, maxscale, min_interval) = prescale
+    # Unpack
+    minscale, maxscale, min_interval = prescale
 
-    # Make sure fmn and fmx are float values, in case a user passed
+    # Make sure data_min and data_max are float values, in case a user passed
     # in integers:
-    fmn = float(fmn)
-    fmx = float(fmx)
+    data_min = float(data_min)
+    data_max = float(data_max)
 
-    if fmx < fmn:
+    if data_max < data_min:
         raise weeplot.ViolatedPrecondition("scale() called with max value less than min value")
 
-    # In case minscale and/or maxscale was specified, clip fmn and fmx to make sure they stay within bounds
+    # In case minscale and/or maxscale was specified, clip data_min and data_max to make sure they
+    # stay within bounds
     if maxscale is not None:
-        fmx = min(fmx, maxscale)
+        data_max = min(data_max, maxscale)
+        if data_max < data_min:
+            data_min = data_max
     if minscale is not None:
-        fmn = max(fmn, minscale)
+        data_min = max(data_min, minscale)
+        if data_max < data_min:
+            data_max = data_min
 
     # Check the special case where the min and max values are equal.
-    if _rel_approx_equal(fmn, fmx):
+    if _rel_approx_equal(data_min, data_max):
         # They are equal. We need to move one or the other to create a range, while
         # being careful that the resultant min/max stay within the interval [minscale, maxscale]
         # Pick a step out value based on min_interval if the user has supplied one. Otherwise,
@@ -102,32 +109,32 @@ def scale(fmn, fmx, prescale = (None, None, None), nsteps = 10):
         if min_interval is not None:
             step_out = min_interval * nsteps
         else:
-            step_out = 0.01 * round(abs(fmx), 2) if fmx else 0.1
+            step_out = 0.01 * round(abs(data_max), 2) if data_max else 0.1
         if maxscale is not None:
-            # maxscale if fixed. Move fmn.
-            fmn = fmx - step_out
+            # maxscale if fixed. Move data_min.
+            data_min = data_max - step_out
         elif minscale is not None:
-            # minscale if fixed. Move fmx.
-            fmx = fmn + step_out
+            # minscale if fixed. Move data_max.
+            data_max = data_min + step_out
         else:
-            # Both can float. Check special case where fmn and fmx are zero
-            if fmn == 0.0:
-                fmx = 1.0
+            # Both can float. Check special case where data_min and data_max are zero
+            if data_min == 0.0:
+                data_max = 1.0
             else:
-                # Just arbitrarily move one. Say, fmx.
-                fmx = fmn + step_out
+                # Just arbitrarily move one. Say, data_max.
+                data_max = data_min + step_out
 
     if minscale is not None and maxscale is not None:
         if maxscale < minscale:
             raise weeplot.ViolatedPrecondition("scale() called with prescale max less than min")
         frange = maxscale - minscale
     elif minscale is not None:
-        frange = fmx - minscale
+        frange = data_max - minscale
     elif maxscale is not None:
-        frange = maxscale - fmn
+        frange = maxscale - data_min
     else:
-        frange = fmx - fmn
-    steps = frange / nsteps
+        frange = data_max - data_min
+    steps = frange / float(nsteps)
 
     mag = math.floor(math.log10(steps))
     magPow = math.pow(10.0, mag)
@@ -148,10 +155,10 @@ def scale(fmn, fmx, prescale = (None, None, None), nsteps = 10):
         # Either no min interval was specified, or its safely
         # less than the chosen interval.
         if minscale is None:
-            minscale = interval * math.floor(fmn / interval)
+            minscale = interval * math.floor(data_min / interval)
 
         if maxscale is None:
-            maxscale = interval * math.ceil(fmx / interval)
+            maxscale = interval * math.ceil(data_max / interval)
 
     else:
 
@@ -165,7 +172,7 @@ def scale(fmn, fmx, prescale = (None, None, None), nsteps = 10):
             if maxscale is None:
                 # Both can float. Pick values so the range is near the bottom
                 # of the scale:
-                minscale = interval * math.floor(fmn / interval)
+                minscale = interval * math.floor(data_min / interval)
                 maxscale = minscale + interval * nsteps
             else:
                 # Only minscale can float
@@ -178,7 +185,7 @@ def scale(fmn, fmx, prescale = (None, None, None), nsteps = 10):
                 # Both are fixed --- nothing to be done
                 pass
 
-    return (minscale, maxscale, interval)
+    return minscale, maxscale, interval
 
 
 def scaletime(tmin_ts, tmax_ts) :
