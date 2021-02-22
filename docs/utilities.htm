@@ -396,6 +396,8 @@ Usage: wee_database --help
        wee_database --create
        wee_database --reconfigure
        wee_database --transfer --dest-binding=BINDING_NAME [--dry-run]
+       wee_database --add-column=NAME [--type=(REAL|INTEGER)]
+       wee_database --rename-column=NAME --to-name=NEW_NAME
        wee_database --check
        wee_database --update [--dry-run]
        wee_database --drop-daily
@@ -427,6 +429,11 @@ Options:
                         the end.
   --transfer            Transfer the WeeWX archive from source database to
                         destination database.
+  --add-column=NAME     Add new column NAME to database.
+  --type=TYPE           New database column type (INTEGER|REAL) (option --add-
+                        column only).  Default is 'REAL'.
+  --rename-column=NAME  Rename the column with name NAME.
+  --to-name=NEW_NAME    New name of the column (option --rename-column only).
   --check               Check the calculations in the daily summary tables.
   --update              Update the daily summary tables if required and
                         recalculate the daily summary maximum windSpeed
@@ -500,6 +507,36 @@ wee_database --transfer --dest-binding=dest_binding</pre>
             href="https://github.com/weewx/weewx/wiki/Transfer%20from%20MySQL%20to%20sqlite#using-wee_database">MySQL to
             SQLite</a>, using <span class="code">wee_database</span>.
         </p>
+
+        <h3>Action <span class="code">--add-column</span></h3>
+        <p>
+            This action adds a new database observation type (column) to the database. If used without the
+            <span class="code">--type</span> option, the type will default to <span class="code">REAL</span>.
+        </p>
+
+        <pre class="tty cmd">wee_database --add-column</pre>
+
+        <p>
+            Optionally, option <span class="code">--type</span> can be used with a SQL type
+            <span class="code">REAL</span>, <span class="code">INTEGER</span>,
+            or any other SQL column definition (such as <span class="code">INTEGER DEFAULT 0</span>).
+        </p>
+
+        <pre class="tty cmd">wee_database --add-column=NAME --type=TYPE</pre>
+
+        <h3>Action <span class="code">--rename-column</span></h3>
+        <p>
+            Use this action to rename a database observation type (column) to a new name. It requires the option
+            <span class="code">--to-name</span>.
+        </p>
+        <pre class="tty cmd">wee_database --rename-column=NAME --to-name=NEW_NAME</pre>
+        <p>
+            For example, to rename the column <span class="code">luminosity</span> in your schema to
+            <span class="code">illuminance</span>:
+        </p>
+
+        <pre class="tty cmd">wee_database --rename-column=luminosity --to-name=illuminance</pre>
+
 
         <h3>Action <span class="code">--check</span></h3>
         <p>This action will check the calculations in the daily summary tables as well as checking the archive for null

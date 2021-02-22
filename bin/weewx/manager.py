@@ -455,6 +455,27 @@ class Manager(object):
         return weewx.xtypes.get_series(obs_type, timespan, self,
                                        aggregate_type, aggregate_interval)
 
+    def add_column(self, column_name, column_type="REAL"):
+        """Add a single column to the database.
+        column_name: The name of the new column.
+        column_type: The type ("REAL"|"INTEGER|) of the new column. Default is "REAL".
+        """
+        with weedb.Transaction(self.connection) as cursor:
+            self._add_column(column_name, column_type, cursor)
+
+    def _add_column(self, column_name, column_type, cursor):
+        cursor.execute("ALTER TABLE %s ADD COLUMN %s %s"
+                       % (self.table_name, column_name, column_type))
+
+    def rename_column(self, old_column_name, new_column_name):
+        """Rename an existing column"""
+        with weedb.Transaction(self.connection) as cursor:
+            self._rename_column(old_column_name, new_column_name, cursor)
+
+    def _rename_column(self, old_column_name, new_column_name, cursor):
+        cursor.execute("ALTER TABLE %s RENAME COLUMN %s TO %s"
+                       %( self.table_name, old_column_name, new_column_name))
+
     def _check_unit_system(self, unit_system):
         """Check to make sure a unit system is the same as what's already in use in the database.
         """
@@ -877,21 +898,43 @@ class DaySummaryManager(Manager):
 
         # Create the tables needed for the daily summaries in one transaction:
         with weedb.Transaction(self.connection) as cursor:
+            # obs will be a 2-way tuple (obs_type, ('scalar'|'vector'))
             for obs in day_summaries_schemas:
-                obs_schema = (obs[0], obs[1].lower())
-                # 'obs_schema' is a two-way tuple (obs_name, 'scalar'|'vector')
-                # 'column_type' is a two-way tuple (column_name, 'REAL'|'INTEGER')
-                s = ', '.join(
-                    ["%s %s" % column_type
-                     for column_type in DaySummaryManager.day_schemas[obs_schema[1]]])
-                sql_create_str = "CREATE TABLE %s_day_%s (%s);" \
-                                 % (self.table_name, obs_schema[0], s)
-                cursor.execute(sql_create_str)
-            # Create the meta table:
+                self._initialize_day_table(obs[0], obs[1].lower(), cursor)
+
+            # Now create the meta table...
             cursor.execute(DaySummaryManager.meta_create_str % self.table_name)
-            # Put the version number in it:
+            # ... then put the version number in it:
             self._write_metadata('Version', DaySummaryManager.version, cursor)
+
             log.info("Created daily summary tables")
+
+    def _initialize_day_table(self, obs_type, day_schema_type, cursor):
+        """Initialize a single daily summary.
+
+        obs_type: An observation type, such as 'outTemp'
+        day_schema: The schema to be used. Either 'scalar', or 'vector'
+        cursor: An open cursor
+        """
+        s = ', '.join(
+            ["%s %s" % column_type
+             for column_type in DaySummaryManager.day_schemas[day_schema_type]])
+
+        sql_create_str = "CREATE TABLE %s_day_%s (%s);" % (self.table_name, obs_type, s)
+        cursor.execute(sql_create_str)
+
+    def _add_column(self, column_name, column_type, cursor):
+        # First call my superclass's version...
+        Manager._add_column(self, column_name, column_type, cursor)
+        # ... then do mine
+        self._initialize_day_table(column_name, 'scalar', cursor)
+
+    def _rename_column(self, old_column_name, new_column_name, cursor):
+        # First call my superclass's version...
+        Manager._rename_column(self, old_column_name, new_column_name, cursor)
+        # ... then do mine
+        cursor.execute("ALTER TABLE %s_day_%s RENAME TO %s_day_%s;"
+                       % (self.table_name, old_column_name, self.table_name, new_column_name))
 
     def _addSingleRecord(self, record, cursor):
         """Specialized version that updates the daily summaries, as well as the main archive

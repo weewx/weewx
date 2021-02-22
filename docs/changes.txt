@@ -1,6 +1,12 @@
 WeeWX change history
 --------------------
 
+4.5.0 MM/DD/YYYY
+
+The utility wee_database has new option --add-column and --rename-column for
+adding and renaming columns in the database.
+
+
 4.4.0 01/30/2021
 
 StdWXCalculate can now do calculations for only LOOP packets, only archive
