@@ -232,7 +232,7 @@ class Cursor(sqlite3.Cursor):
         drop a non-existent column.
         """
 
-        # First get the list of types we will need to create and insert the new columns.
+        existing_column_set = set()
         create_list = []
         insert_list = []
 
@@ -241,6 +241,7 @@ class Cursor(sqlite3.Cursor):
         for row in self.fetchall():
             # Unpack the row
             row_no, obs_name, obs_type, no_null, default, pk = row
+            existing_column_set.add(obs_name)
             # Search through the target columns.
             if obs_name in column_names:
                 continue
@@ -251,10 +252,12 @@ class Cursor(sqlite3.Cursor):
                                                   pk_str, default_str))
             insert_list.append(obs_name)
 
+        for column in column_names:
+            if column not in existing_column_set:
+                raise weedb.NoColumnError("Cannot DROP '%s'; column does not exist." % column)
+
         create_str = ", ".join(create_list)
         insert_str = ", ".join(insert_list)
-        print(create_str)
-        print(insert_str)
 
         self.execute("CREATE TEMPORARY TABLE %s_temp (%s);" % (table, create_str))
         self.execute("INSERT INTO %s_temp SELECT %s FROM %s;" % (table, insert_str, table))
