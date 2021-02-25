@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2019 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2021 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -33,6 +33,7 @@ exception_map = {
     1049: weedb.NoDatabaseError,
     1050: weedb.TableExistsError,
     1054: weedb.NoColumnError,
+    1091: weedb.NoColumnError,
     1062: weedb.IntegrityError,
     1146: weedb.NoTableError,
     1927: weedb.CannotConnectError,
@@ -267,6 +268,17 @@ class Cursor(object):
         # Get a result from the MySQL cursor, then run it through the _massage
         # filter below
         return _massage(self.cursor.fetchone())
+
+    def drop_columns(self, table, column_names):
+        """Drop the set of 'column_names' from table 'table'.
+
+        table: The name of the table from which the column(s) are to be dropped.
+
+        column_names: A set (or list) of column names to be dropped. It is not an error to try to drop
+        a non-existent column.
+        """
+        for column_name in column_names:
+            self.execute("ALTER TABLE %s DROP COLUMN %s;" % (table, column_name))
 
     def close(self):
         try:

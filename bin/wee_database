@@ -36,6 +36,7 @@ usage = """wee_database --help
        wee_database --transfer --dest-binding=BINDING_NAME [--dry-run]
        wee_database --add-column=NAME [--type=(REAL|INTEGER)]
        wee_database --rename-column=NAME --to-name=NEW_NAME
+       wee_database --drop-columns=NAME1,NAME2,...
        wee_database --check
        wee_database --update [--dry-run]
        wee_database --drop-daily
@@ -86,6 +87,9 @@ def main():
                       help="Rename the column with name NAME.")
     parser.add_option("--to-name", type=str, metavar="NEW_NAME",
                       help="New name of the column (option --rename-column only).")
+    parser.add_option("--drop-columns", type=str, metavar="NAME1,NAME2,...",
+                      help="Drop one or more columns. Names must be separated by commas, "
+                      "with NO SPACES.")
     parser.add_option("--check", action="store_true",
                       help="Check the calculations in the daily summary tables.")
     parser.add_option("--update", action="store_true",
@@ -134,6 +138,7 @@ def main():
                                    options.transfer,
                                    options.add_column,
                                    options.rename_column,
+                                   options.drop_columns,
                                    options.check,
                                    options.update,
                                    options.calc_missing,
@@ -196,6 +201,9 @@ def main():
 
     elif options.rename_column:
         renameColumn(config_dict, db_binding, options.rename_column, options.to_name)
+
+    elif options.drop_columns:
+        dropColumns(config_dict, db_binding, options.drop_columns)
 
     elif options.check:
         check(config_dict, db_binding, options)
@@ -614,6 +622,18 @@ def renameColumn(config_dict, db_binding, old_column_name, new_column_name):
         dbm = weewx.manager.open_manager_with_config(config_dict, db_binding)
         dbm.rename_column(old_column_name, new_column_name)
         print("Column '%s' renamed to '%s'." % (old_column_name, new_column_name))
+    else:
+        print("Nothing done.")
+
+
+def dropColumns(config_dict, db_binding, drop_columns):
+    """Drop a set of columns from the database"""
+    drop_set = set(drop_columns.split(','))
+    ans = y_or_n("Drop column(s) %s from the database (y/n)? " % drop_columns)
+    if ans == 'y':
+        dbm = weewx.manager.open_manager_with_config(config_dict, db_binding)
+        dbm.drop_columns(drop_set)
+        print("Column(s) %s dropped from the database" % drop_columns)
     else:
         print("Nothing done.")
 

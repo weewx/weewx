@@ -398,6 +398,7 @@ Usage: wee_database --help
        wee_database --transfer --dest-binding=BINDING_NAME [--dry-run]
        wee_database --add-column=NAME [--type=(REAL|INTEGER)]
        wee_database --rename-column=NAME --to-name=NEW_NAME
+       wee_database --drop-columns=NAME1,NAME2,...
        wee_database --check
        wee_database --update [--dry-run]
        wee_database --drop-daily
@@ -434,6 +435,9 @@ Options:
                         column only).  Default is 'REAL'.
   --rename-column=NAME  Rename the column with name NAME.
   --to-name=NEW_NAME    New name of the column (option --rename-column only).
+  --drop-columns=NAME1,NAME2,...
+                        Drop one or more columns. Names must be separated by
+                        commas, with NO SPACES.
   --check               Check the calculations in the daily summary tables.
   --update              Update the daily summary tables if required and
                         recalculate the daily summary maximum windSpeed
@@ -537,6 +541,19 @@ wee_database --transfer --dest-binding=dest_binding</pre>
 
         <pre class="tty cmd">wee_database --rename-column=luminosity --to-name=illuminance</pre>
 
+        <h3>Action <span class="code">--drop-columns</span></h3>
+        <p>
+            This action will drop one or more observation types (columns) from the database. If more than one column
+            name is given, they should be separated by commas and <em>no spaces</em>.
+        </p>
+        <pre class="tty cmd">wee_database --drop-columns=NAME1,NAME2</pre>
+
+        <p class="note">
+            NOTE: When dropping columns from a SQLite database, the entire database must be copied except for the
+            dropped columns. Because this can be quite slow, if you are dropping more than one column, it is better
+            to do them all in one pass. This is why option <span class="code">--drop-columns</span> accepts more than
+            one name.
+        </p>
 
         <h3>Action <span class="code">--check</span></h3>
         <p>This action will check the calculations in the daily summary tables as well as checking the archive for null

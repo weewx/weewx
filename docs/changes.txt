@@ -3,8 +3,8 @@ WeeWX change history
 
 4.5.0 MM/DD/YYYY
 
-The utility wee_database has new option --add-column and --rename-column for
-adding and renaming columns in the database.
+The utility wee_database has new options --add-column, --rename-column, and
+--drop-columns for adding, renaming, and deleting columns in the database.
 
 
 4.4.1 MM/DD/YYYY

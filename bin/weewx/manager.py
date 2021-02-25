@@ -476,6 +476,13 @@ class Manager(object):
         cursor.execute("ALTER TABLE %s RENAME COLUMN %s TO %s"
                        %( self.table_name, old_column_name, new_column_name))
 
+    def drop_columns(self, column_names):
+        with weedb.Transaction(self.connection) as cursor:
+            self._drop_columns(column_names, cursor)
+
+    def _drop_columns(self, column_names, cursor):
+        cursor.drop_columns(self.table_name, column_names)
+
     def _check_unit_system(self, unit_system):
         """Check to make sure a unit system is the same as what's already in use in the database.
         """
@@ -935,6 +942,13 @@ class DaySummaryManager(Manager):
         # ... then do mine
         cursor.execute("ALTER TABLE %s_day_%s RENAME TO %s_day_%s;"
                        % (self.table_name, old_column_name, self.table_name, new_column_name))
+
+    def _drop_columns(self, column_names, cursor):
+        # First call my superclass's version...
+        Manager._drop_columns(self, column_names, cursor)
+        # ... then do mine
+        for column_name in column_names:
+            cursor.execute("DROP TABLE IF EXISTS %s_day_%s;" % (self.table_name, column_name))
 
     def _addSingleRecord(self, record, cursor):
         """Specialized version that updates the daily summaries, as well as the main archive
