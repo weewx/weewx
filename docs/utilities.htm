@@ -1273,8 +1273,8 @@ summaries using the wee_database utility.</pre>
             </tr>
             <tr>
                 <td class="code first_col">--date=2015-12-22</td>
-                <td>All records from 2015-12-22 00:00 (inclusive) to 2015-12-23 00:00 (exclusive)</td>
-                <td>All records from 2015-12-22 00:00 (inclusive) to 2015-12-23 00:00 (exclusive)</td>
+                <td>All records from 2015-12-22 00:00 (exclusive) to 2015-12-23 00:00 (inclusive)</td>
+                <td>All records from 2015-12-22 00:00 (exclusive) to 2015-12-23 00:00 (inclusive)</td>
             </tr>
             </tbody>
         </table>
@@ -1283,6 +1283,13 @@ summaries using the wee_database utility.</pre>
             <strong>Note</strong><br/>If the <span class="code">--date</span>, <span class="code">--from</span> and
             <span class="code">--to</span> options are omitted the default is to import today's records only when
             importing from Weather Underground or to import all available records when importing from any other source.
+        </p>
+
+        <p class="note">
+            <strong>Note</strong><br/>WeeWX considers an archive record to represent an aggregation of data over the
+            archive interval preceding the archive record's timestamp. For this reason imports which are to be limited
+            to a given date with the <span class="code">--date</span> option will only import records timestamped after
+            midnight at the start of the day concerned and up to and including midnight at the end of the day concerned.
         </p>
 
         <h3>Options <span class="code">--from</span> and <span class="code">--to</span></h3>
@@ -1325,26 +1332,26 @@ summaries using the wee_database utility.</pre>
             <tr>
                 <td class="code first_col">--from=2015-12-22</td>
                 <td class="code first_col">--to=2015-12-29</td>
-                <td>All records from 2015-12-22 00:00 (inclusive) to 2015-12-30 00:00 (exclusive)</td>
-                <td>All records from 2015-12-22 00:00 (inclusive) to 2015-12-30 00:00 (exclusive)</td>
+                <td>All records from 2015-12-22 00:00 (exclusive) to 2015-12-30 00:00 (inclusive)</td>
+                <td>All records from 2015-12-22 00:00 (exclusive) to 2015-12-30 00:00 (inclusive)</td>
             </tr>
             <tr>
                 <td class="code first_col">--from=2016-7-18T15:29</td>
                 <td class="code first_col">--to=2016-7-25</td>
-                <td>All records from 2016-7-18 15:29 (inclusive) to 2016-7-26 22:00 (exclusive)</td>
-                <td>All records from 2016-7-18 15:29 (inclusive) to 2016-7-26 22:00 (exclusive)</td>
+                <td>All records from 2016-7-18 15:29 (exclusive) to 2016-7-26 00:00 (inclusive)</td>
+                <td>All records from 2016-7-18 15:29 (exclusive) to 2016-7-26 00:00 (inclusive)</td>
             </tr>
             <tr>
                 <td class="code first_col">--from=2016-5-12</td>
                 <td class="code first_col">--to=2016-7-22T22:15</td>
-                <td>All records from 2016-5-12 00:00 (inclusive) to 2016-7-22 22:15 (exclusive)</td>
-                <td>All records from 2016-5-12 00:00 (inclusive) to 2016-7-22 22:15 (exclusive)</td>
+                <td>All records from 2016-5-12 00:00 (exclusive) to 2016-7-22 22:15 (inclusive)</td>
+                <td>All records from 2016-5-12 00:00 (exclusive) to 2016-7-22 22:15 (inclusive)</td>
             </tr>
             <tr>
                 <td class="code first_col">--from=2016-3-18T15:29</td>
                 <td class="code first_col">--to=2016-6-20T22:00</td>
-                <td>All records from 2016-3-18 15:29 (inclusive) to 2016-6-20 22:00 (exclusive)</td>
-                <td>All records from 2016-3-18 15:29 (inclusive) to 2016-6-20 22:00 (exclusive)</td>
+                <td>All records from 2016-3-18 15:29 (exclusive) to 2016-6-20 22:00 (inclusive)</td>
+                <td>All records from 2016-3-18 15:29 (exclusive) to 2016-6-20 22:00 (inclusive)</td>
             </tr>
             </tbody>
         </table>
@@ -1353,6 +1360,15 @@ summaries using the wee_database utility.</pre>
             <strong>Note</strong><br/>If the <span class="code">--date</span>, <span class="code">--from</span> and
             <span class="code">--to</span> options are omitted the default is to import today's records only when
             importing from Weather Underground or to import all available records when importing from any other source.
+        </p>
+
+        <p class="note">
+            <strong>Note</strong><br/>WeeWX considers an archive record to represent an aggregation of data over the
+            archive interval preceding the archive record's timestamp. For this reason imports which are to be limited
+            to a given timespan with the <span class="code">--from</span> and <span class="code">--to</span> options
+            will only import records timestamped after the timestamp represented by the <span class="code">--from</span>
+            option and up to and including the timestamp represented by the <span class="code">--to</span>
+            option.
         </p>
 
         <h3>Option <span class="code">--verbose</span></h3>
