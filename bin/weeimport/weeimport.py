@@ -185,10 +185,10 @@ class Source(object):
         self.suppress = options.suppress
 
         # By processing any --date, --from and --to options we need to derive
-        # self.first_ts and self.last_ts; the earliest and latest (inclusive)
-        # timestamps of data to be imported. If we have no --date, --from or
-        # --to then set both to None (we then get the default action for each
-        # import type).
+        # self.first_ts and self.last_ts; the earliest (exclusive) and latest
+        # (inclusive) timestamps of data to be imported. If we have no --date,
+        # --from or --to then set both to None (we then get the default action
+        # for each import type).
         # First we see if we have a valid --date, if not then we look for
         # --from and --to.
         if options.date or options.date == "":
