@@ -56,13 +56,15 @@ Description:
 Manipulate the WeeWX database. Most of these operations are handled
 automatically by WeeWX, but they may be useful in special cases."""
 
+epilog = """NOTE: MAKE A BACKUP OF YOUR DATABASE BEFORE USING THIS UTILITY!
+Many of its actions are irreversible!"""
 
 def main():
     # Set defaults for logging:
     weeutil.logger.setup('wee_database', {})
 
     # Create a command line parser:
-    parser = optparse.OptionParser(usage=usage)
+    parser = optparse.OptionParser(usage=usage, epilog=epilog)
 
     # Add the various verbs...
     parser.add_option("--create", action='store_true',
@@ -628,12 +630,18 @@ def renameColumn(config_dict, db_binding, old_column_name, new_column_name):
 
 def dropColumns(config_dict, db_binding, drop_columns):
     """Drop a set of columns from the database"""
-    drop_set = set(drop_columns.split(','))
-    ans = y_or_n("Drop column(s) %s from the database (y/n)? " % drop_columns)
+    ans = y_or_n("Drop column(s) '%s' from the database (y/n)? " % drop_columns)
     if ans == 'y':
+        print("This may take a while...")
         dbm = weewx.manager.open_manager_with_config(config_dict, db_binding)
-        dbm.drop_columns(drop_set)
-        print("Column(s) %s dropped from the database" % drop_columns)
+        drop_set = set(drop_columns.split(','))
+        try:
+            dbm.drop_columns(drop_set)
+        except weedb.NoColumnError as e:
+            print(e, file=sys.stderr)
+            print("Nothing done.")
+        else:
+            print("Column(s) %s dropped from the database" % drop_columns)
     else:
         print("Nothing done.")
 
