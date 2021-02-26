@@ -478,9 +478,10 @@ Options:
         <pre class="tty cmd">wee_database --create</pre>
 
         <h3>Action <span class="code">--reconfigure</span></h3>
-        <p>This action is useful for changing the schema in your database.</p>
+        <p>This action is useful for changing the schema or unit system in your database.</p>
 
-        <p>It creates a new database with the same name as the old, except with the suffix <span
+        <p>
+            It creates a new database with the same name as the old, except with the suffix <span
             class="code">_new</span> attached at the end (nominally, <span class="code">weewx.sdb_new</span> if you are
             using SQLite, <span class="code">weewx_new</span> if you are using MySQL). It then initializes it with the
             schema specified in <span class="code">weewx.conf</span>. Finally, it copies over the data from your old
@@ -489,8 +490,9 @@ Options:
 
         <pre class="tty cmd">wee_database --reconfigure</pre>
 
-        <p>See the section <a href="customizing.htm#add_archive_type">Adding a new type to the database</a> in
-            the Customization Guide for step-by-step instructions that use this option.
+        <p>
+            See the section <a href="customizing.htm#Changing_the_unit_system">Changing the database unit system in
+            an existing database</a> in the Customization Guide for step-by-step instructions that use this option.
         </p>
 
         <h3>Action <span class="code">--transfer</span></h3>
