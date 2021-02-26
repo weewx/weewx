@@ -59,6 +59,7 @@ automatically by WeeWX, but they may be useful in special cases."""
 epilog = """NOTE: MAKE A BACKUP OF YOUR DATABASE BEFORE USING THIS UTILITY!
 Many of its actions are irreversible!"""
 
+
 def main():
     # Set defaults for logging:
     weeutil.logger.setup('wee_database', {})
@@ -91,7 +92,7 @@ def main():
                       help="New name of the column (option --rename-column only).")
     parser.add_option("--drop-columns", type=str, metavar="NAME1,NAME2,...",
                       help="Drop one or more columns. Names must be separated by commas, "
-                      "with NO SPACES.")
+                           "with NO SPACES.")
     parser.add_option("--check", action="store_true",
                       help="Check the calculations in the daily summary tables.")
     parser.add_option("--update", action="store_true",

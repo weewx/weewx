@@ -43,7 +43,8 @@ exception_map = {
     2006: weedb.DisconnectError,
     2013: weedb.DisconnectError,
     None: weedb.DatabaseError
-    }
+}
+
 
 def guard(fn):
     """Decorator function that converts MySQL exceptions into weedb exceptions."""
@@ -70,6 +71,7 @@ def connect(host='localhost', user='', password='', database_name='',
     return Connection(host=host, port=int(port), user=user, password=password,
                       database_name=database_name, engine=engine, autocommit=autocommit, **kwargs)
 
+
 def create(host='localhost', user='', password='', database_name='',
            driver='', port=3306, engine=DEFAULT_ENGINE, autocommit=True, **kwargs):
     """Create the specified database. If it already exists,
@@ -91,8 +93,9 @@ def create(host='localhost', user='', password='', database_name='',
         connect.close()
 
 
-def drop(host='localhost', user='', password='', database_name='', 
-         driver='', port=3306, engine=DEFAULT_ENGINE, autocommit=True, **kwargs):  # @UnusedVariable
+def drop(host='localhost', user='', password='', database_name='',
+         driver='', port=3306, engine=DEFAULT_ENGINE, autocommit=True,
+         **kwargs):  # @UnusedVariable
     """Drop (delete) the specified database."""
     # Open up a connection
     connect = Connection(host=host,
@@ -193,7 +196,7 @@ class Connection(weedb.Connection):
                 else:
                     coltype = str(row[1]).upper()
                 is_primary = True if row[3] == 'PRI' else False
-                can_be_null = False if row[2]=='' else to_bool(row[2])
+                can_be_null = False if row[2] == '' else to_bool(row[2])
                 yield (irow, colname, coltype, can_be_null, row[4], is_primary)
                 irow += 1
         finally:
@@ -308,6 +311,7 @@ class Cursor(object):
     def __exit__(self, etyp, einst, etb):  # @UnusedVariable
         self.close()
 
+
 #
 # This is a utility function for converting a result set that might contain
 # longs or decimal.Decimals (which MySQLdb uses) to something containing just ints.
@@ -315,7 +319,8 @@ class Cursor(object):
 def _massage(seq):
     # Return the _massaged sequence if it exists, otherwise, return None
     if seq is not None:
-        return [int(i) if isinstance(i, six.integer_types) or isinstance(i, decimal.Decimal) else i for i in seq]
+        return [int(i) if isinstance(i, (six.integer_types, decimal.Decimal)) else i for i in seq]
+
 
 def set_engine(connect, engine):
     """Set the default MySQL storage engine."""

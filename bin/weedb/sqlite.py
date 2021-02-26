@@ -14,12 +14,13 @@ import sqlite3
 
 if not hasattr(sqlite3.Connection, "__exit__"):  # @UndefinedVariable
     del sqlite3
-    from pysqlite2 import dbapi2 as sqlite3  #@Reimport @UnresolvedImport
+    from pysqlite2 import dbapi2 as sqlite3  # @Reimport @UnresolvedImport
 
 sqlite_version = sqlite3.sqlite_version
 
 import weedb
 from weeutil.weeutil import to_int, to_bool
+
 
 def guard(fn):
     """Decorator function that converts sqlite exceptions into weedb exceptions."""
@@ -51,6 +52,7 @@ def connect(database_name='', SQLITE_ROOT='', driver='', **argv):  # @UnusedVari
     """Factory function, to keep things compatible with DBAPI. """
     return Connection(database_name=database_name, SQLITE_ROOT=SQLITE_ROOT, **argv)
 
+
 @guard
 def create(database_name='', SQLITE_ROOT='', driver='', **argv):  # @UnusedVariable
     """Create the database specified by the db_dict. If it already exists,
@@ -74,6 +76,7 @@ def create(database_name='', SQLITE_ROOT='', driver='', **argv):  # @UnusedVaria
         connection = sqlite3.connect(file_path, timeout=timeout, isolation_level=isolation_level)
         connection.close()
 
+
 def drop(database_name='', SQLITE_ROOT='', driver='', **argv):  # @UnusedVariable
     file_path = _get_filepath(SQLITE_ROOT, database_name, **argv)
     try:
@@ -85,6 +88,7 @@ def drop(database_name='', SQLITE_ROOT='', driver='', **argv):  # @UnusedVariabl
         else:
             raise weedb.NoDatabaseError("Attempt to drop non-existent database %s" % file_path)
 
+
 def _get_filepath(SQLITE_ROOT, database_name, **argv):
     """Utility function to calculate the path to the sqlite database file."""
     if database_name == ':memory:':
@@ -93,6 +97,7 @@ def _get_filepath(SQLITE_ROOT, database_name, **argv):
     # not defined:
     root_dir = SQLITE_ROOT or argv.get('root', '')
     return os.path.join(root_dir, database_name)
+
 
 class Connection(weedb.Connection):
     """A wrapper around a sqlite3 connection object."""
@@ -117,10 +122,12 @@ class Connection(weedb.Connection):
 
         self.file_path = _get_filepath(SQLITE_ROOT, database_name, **argv)
         if self.file_path != ':memory:' and not os.path.exists(self.file_path):
-            raise weedb.NoDatabaseError("Attempt to open a non-existent database %s" % self.file_path)
+            raise weedb.NoDatabaseError("Attempt to open a non-existent database %s"
+                                        % self.file_path)
         timeout = to_int(argv.get('timeout', 5))
         isolation_level = argv.get('isolation_level')
-        connection = sqlite3.connect(self.file_path, timeout=timeout, isolation_level=isolation_level)
+        connection = sqlite3.connect(self.file_path, timeout=timeout,
+                                     isolation_level=isolation_level)
 
         if pragmas is not None:
             for pragma in pragmas:
@@ -145,7 +152,8 @@ class Connection(weedb.Connection):
         """Returns a list of tables in the database."""
 
         table_list = list()
-        for row in self.connection.execute("""SELECT tbl_name FROM sqlite_master WHERE type='table';"""):
+        for row in self.connection.execute("SELECT tbl_name FROM sqlite_master "
+                                           "WHERE type='table';"):
             # Extract the table name. Sqlite returns unicode, so always
             # convert to a regular string:
             table_list.append(str(row[0]))
@@ -265,7 +273,6 @@ class Cursor(sqlite3.Cursor):
         self.execute("CREATE TABLE %s (%s);" % (table, create_str))
         self.execute("INSERT INTO %s SELECT %s FROM %s_temp;" % (table, insert_str, table))
         self.execute("DROP TABLE %s_temp;" % table)
-
 
     def __enter__(self):
         return self

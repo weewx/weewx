@@ -464,6 +464,7 @@ class Manager(object):
             self._add_column(column_name, column_type, cursor)
 
     def _add_column(self, column_name, column_type, cursor):
+        """Add a column to the main archive table"""
         cursor.execute("ALTER TABLE %s ADD COLUMN %s %s"
                        % (self.table_name, column_name, column_type))
 
@@ -473,14 +474,16 @@ class Manager(object):
             self._rename_column(old_column_name, new_column_name, cursor)
 
     def _rename_column(self, old_column_name, new_column_name, cursor):
+        """Rename a column in the main archive table."""
         cursor.execute("ALTER TABLE %s RENAME COLUMN %s TO %s"
-                       %( self.table_name, old_column_name, new_column_name))
+                       % (self.table_name, old_column_name, new_column_name))
 
     def drop_columns(self, column_names):
         with weedb.Transaction(self.connection) as cursor:
             self._drop_columns(column_names, cursor)
 
     def _drop_columns(self, column_names, cursor):
+        """Drop a column in the main archive table"""
         cursor.drop_columns(self.table_name, column_names)
 
     def _check_unit_system(self, unit_system):
