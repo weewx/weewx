@@ -4656,12 +4656,18 @@ class AddElectricity(StdService):
 
         <h1 id="archive_database">Customizing the database</h1>
 
+        <p>
+            For most users the database defaults will work just fine. However, there may be occasions when you may want
+            to add a new observation type to your database, or change its unit system. This section shows you how to do
+            this.
+        </p>
+
         <h2>The schema</h2>
         <p>
             Every relational database depends on a <em>schema</em> to specify which types to include in the database.
             When a WeeWX database is first created, it uses a Python version of the schema to initialize the database.
-            However, once the database has been created, the schema is read directly from the database. The Python
-            version is not used again, and any changes to it will have no affect. This means that the strategy for
+            However, once the database has been created, the schema is read directly from the database and the Python
+            version is not used again &mdash; any changes to it will have no affect. This means that the strategy for
             modifying the schema depends on whether or not the database already exists.
         </p>
 
@@ -4729,10 +4735,11 @@ class AddElectricity(StdService):
             If none of the three starting schemas that come with WeeWX suits your purposes, you can easily create your
             own. Just pick one of the three schemas as a starting point, then modify it. Put the results in the <span
             class="code">user</span> subdirectory, where it will be safe from upgrades. For example, suppose you like
-            the <span class="code">schemas.wview_small</span> schema, but you need to store <span
+            the <span class="code">schemas.wview_small</span> schema, but you need to store the type <span
             class="code">electricity</span> from the example <a href="#Adding_2nd_source"><em>Adding a second data
             source</em></a> above. The type <span class="code">electricity</span> does not appear in the schema, so
-            you'll have to add it before starting up WeeWX. We'll call the new schema <span class="code">user.myschema</span>.
+            you'll have to add it before starting up WeeWX. We will call the resulting new schema
+            <span class="code">user.myschema</span>.
         </p>
         <p>
             If you did a Debian install, here's how you would do this:
@@ -4799,10 +4806,10 @@ class AddElectricity(StdService):
         <h2>Modifying an existing database</h2>
 
         <p>
-            Suppose you have an existing database and you want to add or remove types? Modifying the schema will not
-            work, because it is only used when the database is initially created. Here is where the tool <a
-            href="utilities.htm#wee_database_utility"><span class="code">wee_database</span></a> can be useful. Be sure
-            to stop WeeWX before attempting to use it.
+            Suppose the database has already been created and you want to add or remove types? How would you do this?
+            Modifying or changing the Python version of the schema will not work, because it is only used when the
+            database is fist created. Here is where the tool <a href="utilities.htm#wee_database_utility"><span
+            class="code">wee_database</span></a> can be useful. Be sure to stop WeeWX before attempting to use it.
         </p>
 
         <p class="warning">
@@ -4830,7 +4837,7 @@ class AddElectricity(StdService):
         </p>
     <pre class="tty cmd">wee_database --drop-columns=soilMoist1,soilMoist2,soilMoist3,soilMoist4</pre>
         <p>
-            Unlike the option <span class="code">--add-column</span>, in the interests of efficiency the option <span
+            Unlike the option <span class="code">--add-column</span>, in the interests of efficiency, the option <span
             class="code">--drop-columns</span> can take more than one type. Adding new columns is easy and fast with the
             SQLite database, but dropping columns requires copying the whole database. By specifying more than one type,
             you can amortize the cost over a single invocation of the utility.
@@ -4845,18 +4852,19 @@ class AddElectricity(StdService):
         <h2 id="Changing_the_unit_system">Changing the database unit system in an existing database</h2>
         <p>
             Normally, data are stored in the databases using US Customary units and you shouldn't care; it is an
-            "implementation detail". Data can always be displayed using any set of units you want. The section <a
-            href="#how_to_change_units"><em>How to change units</em></a> explains how to do this. Nevertheless, there
-            may be special situations where you wish to store the data in Metric units. For example, you may need to
-            allow direct programmatic access to the database from another piece of software that expects metric units.
+            "implementation detail". Data can always be displayed using any set of units you want &mdash; the section <a
+            href="#how_to_change_units"><em>How to change units</em></a> explains how to change the reporting units.
+            Nevertheless, there may be special situations where you wish to store the data in Metric units. For example,
+            you may need to allow direct programmatic access to the database from another piece of software that expects
+            metric units.
         </p>
 
         <p>
             You should not change the database unit system midstream. That is, do not start with one unit system then,
-            some time later, switch to another. WeeWX cannot handle databases with mixed unit systems. See the section
-            <span class="code"> <a href="usersguide.htm#StdConvert">[StdConvert]</a></span> in the WeeWX User's Guide.
-            However, you can reconfigure the database by copying it to a new database, performing the unit conversion
-            along the way. You then use this new database.
+            some time later, switch to another. WeeWX cannot handle databases with mixed unit systems &mdash; see the
+            section <span class="code"> <a href="usersguide.htm#StdConvert">[StdConvert]</a></span> in the WeeWX User's
+            Guide. However, you can reconfigure the database by copying it to a new database, performing the unit
+            conversion along the way. You then use this new database.
         </p>
 
         <p>Here is the general strategy:</p>
