@@ -135,6 +135,12 @@ def main():
     # Now we are ready to parse the command line:
     (options, args) = parser.parse_args()
 
+    if len(args) > 1:
+        print("wee_database takes at most a single argument (the path to the configuration file).",
+              file=sys.stderr)
+        print("You have %d: %s." % (len(args), args), file=sys.stderr)
+        sys.exit(2)
+
     # Do a check to see if the user used more than 1 'verb'
     if sum(x is not None for x in [options.create,
                                    options.reconfigure,
@@ -631,18 +637,27 @@ def renameColumn(config_dict, db_binding, old_column_name, new_column_name):
 
 def dropColumns(config_dict, db_binding, drop_columns):
     """Drop a set of columns from the database"""
-    ans = y_or_n("Drop column(s) '%s' from the database (y/n)? " % drop_columns)
+    drop_list = drop_columns.split(',')
+    # In case the user ended the list of columns to be dropped with a comma, search for an
+    # empty column name
+    try:
+        drop_list.remove('')
+    except ValueError:
+        pass
+    ans = y_or_n("Drop column(s) '%s' from the database (y/n)? " % ", ".join(drop_list))
     if ans == 'y':
-        print("This may take a while...")
+        drop_set = set(drop_list)
         dbm = weewx.manager.open_manager_with_config(config_dict, db_binding)
-        drop_set = set(drop_columns.split(','))
+        # Now drop the columns. If one is missing, a NoColumnError will be raised. Be prepared
+        # to catch it.
         try:
+            print("This may take a while...")
             dbm.drop_columns(drop_set)
         except weedb.NoColumnError as e:
             print(e, file=sys.stderr)
             print("Nothing done.")
         else:
-            print("Column(s) %s dropped from the database" % drop_columns)
+            print("Column(s) '%s' dropped from the database" % ", ".join(drop_list))
     else:
         print("Nothing done.")
 
