@@ -546,6 +546,9 @@ wee_database --transfer --dest-binding=dest_binding</pre>
             This action will drop one or more observation types (columns) from the database. If more than one column
             name is given, they should be separated by commas and <em>no spaces</em>.
         </p>
+        <p>
+            It is an error to attempt to drop a non-existing column. In this case, nothing will be done.
+        </p>
         <pre class="tty cmd">wee_database --drop-columns=NAME1,NAME2</pre>
 
         <p class="note">
