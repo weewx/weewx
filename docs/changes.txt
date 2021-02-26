@@ -19,6 +19,9 @@ Uploads to PWSWeather and WOW now use HTTPS. Fixes issue #650.
 Fixed bug that prevented the Vantage driver from waiting before a wakeup retry.
 Thanks to user Les Niles!
 
+Changed the way of expressing the old "wview" schema to the new V4 way.
+Hopefully, this will lead to fewer support issues. Fixes issue #651.
+
 
 4.4.0 01/30/2021
 
