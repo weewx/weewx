@@ -1209,6 +1209,9 @@ class ValueHelper(object):
                                      %(self.value_t[1], target_unit))
         return ValueHelper(self.value_t, self.context, self.formatter, FixedConverter(target_unit))
 
+    def __iter__(self):
+        return ValueHelperIterator(self)
+
     def exists(self):
         return not isinstance(self.value_t, UnknownType)
 
@@ -1233,6 +1236,28 @@ class ValueHelper(object):
         """Return a formatted version of the datum. No label.
         DEPRECATED."""
         return self.toString(addLabel=False)
+
+
+class ValueHelperIterator(object):
+    """An iterator for iterating over a ValueHelper that contains a series"""
+    def __init__(self, vhelper):
+        self.vhelper = vhelper
+        self.index = 0
+
+    def __next__(self):
+        if self.index >= len(self.vhelper.value_t[0]):
+            raise StopIteration
+        # Create a ValueTuple with the next value, along with the existing unit and unit group
+        vt = ValueTuple(self.vhelper.value_t[0][self.index],    # The value
+                        self.vhelper.value_t[1],                # The unit
+                        self.vhelper.value_t[2])                # The unit group
+        # Using that, create a ValueHlper
+        value_helper = ValueHelper(vt,
+                                   self.vhelper.context,
+                                   self.vhelper.formatter,
+                                   self.vhelper.converter)
+        self.index += 1
+        return value_helper
 
 
 #==============================================================================
