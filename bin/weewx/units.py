@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-#    Copyright (c) 2009-2020 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2021 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -42,7 +42,7 @@ def CtoF(x):
 def FtoC(x):
     return (x - 32.0) * 5.0 / 9.0
 
-# Conversions to and from Felsius. 
+# Conversions to and from Felsius.
 # For the definition of Felsius, see https://xkcd.com/1923/
 def FtoE(x):
     return (7.0 * x - 80.0) / 9.0
@@ -52,7 +52,7 @@ def EtoF(x):
 
 def CtoE(x):
     return (7.0 / 5.0) * x + 16.0
-    
+
 def EtoC(x):
     return (x - 16.0) * 5.0 / 7.0
 
@@ -718,7 +718,7 @@ class Formatter(object):
         # Add new keys for backwards compatibility on old skin dictionaries:
         self.time_format_dict.setdefault('ephem_day', "%H:%M")
         self.time_format_dict.setdefault('ephem_year', "%d-%b-%Y %H:%M")
-        
+
     @staticmethod
     def fromSkinDict(skin_dict):
         """Factory static method to initialize from a skin dictionary."""
@@ -795,7 +795,7 @@ class Formatter(object):
                  localize=True):
         """Format the value as a unicode string.
         
-        val_t: The value to be formatted as a value tuple. 
+        val_t: A ValueTuple holding the value to be formatted. The value can be an iterable.
         
         context: A time context (eg, 'day'). 
         [Optional. If not given, context 'current' will be used.]
@@ -813,6 +813,26 @@ class Formatter(object):
         
         localize: True to localize the results. False otherwise
         """
+
+        # Check to see if the ValueTuple holds an iterable:
+        if isinstance(val_t[0], (list, tuple)):
+            # Yes. Format each element individually, then stick them all together.
+            s_list = [self._to_string((v, val_t[1], val_t[2]),
+                                      context, addLabel, useThisFormat, None_string, localize)
+                      for v in val_t[0]]
+            s = ", ".join(s_list)
+        else:
+            # The value is a simple scalar.
+            s = self._to_string(val_t, context, addLabel, useThisFormat, None_string, localize)
+
+        return s
+
+    def _to_string(self, val_t, context='current', addLabel=True,
+                   useThisFormat=None, None_string=None,
+                   localize=True):
+        """Similar to the function toString(), except that the value in val_t must be a
+        simple scalar."""
+
         if val_t is None or val_t[0] is None:
             if None_string is None:
                 val_str = self.unit_format_dict.get('NONE', u'N/A')
@@ -875,7 +895,7 @@ class Formatter(object):
         _degree = (val_t[0] + _sector_size/2.0) % 360.0
         _sector = int(_degree / _sector_size)
         return self.ordinate_names[_sector]
-    
+
     def delta_secs_to_string(self, secs, label_format):
         """Convert elapsed seconds to a string
         
@@ -900,7 +920,7 @@ class Formatter(object):
 
 class Converter(object):
     """Holds everything necessary to do conversions to a target unit system."""
-    
+
     def __init__(self, group_unit_dict=USUnits):
         """Initialize an instance of Converter
         
@@ -909,7 +929,7 @@ class Converter(object):
         unit type ('mbar')"""
 
         self.group_unit_dict  = group_unit_dict
-        
+
     @staticmethod
     def fromSkinDict(skin_dict):
         """Factory static method to initialize from a skin dictionary."""
@@ -1000,8 +1020,8 @@ class Converter(object):
             # the ValueTuple:
             target_dict[obs_type] = self.convert(as_value_tuple(obs_dict, obs_type))[0]
         return target_dict
-            
-            
+
+
     def getTargetUnit(self, obs_type, agg_type=None):
         """Given an observation type and an aggregation type, return the 
         target unit type and group, or (None, None) if they cannot be determined.
@@ -1013,7 +1033,7 @@ class Converter(object):
         
         returns: A 2-way tuple holding the unit type and the unit group
         or (None, None) if they cannot be determined.
-        """        
+        """
         unit_group = _getUnitGroup(obs_type, agg_type)
         if unit_group in self.group_unit_dict:
             unit_type = self.group_unit_dict[unit_group]
@@ -1041,10 +1061,10 @@ class FixedConverter(object):
         
         target_units: The new, target unit (eg, "degree_C")"""
         self.target_units = target_units
-        
+
     def convert(self, val_t):
         return convert(val_t, self.target_units)
-    
+
 #==============================================================================
 #                      class ValueHelper
 #==============================================================================
@@ -1077,7 +1097,7 @@ class ValueHelper(object):
     def __init__(self, value_t, context='current', formatter=Formatter(), converter=Converter()):
         """Initialize a ValueHelper.
         
-        value_t: An instance of a ValueTuple, holding the datum.
+        value_t: An instance of a ValueTuple. The "value" part can be either a scalar, or a series.
         
         context: The time context. Something like 'current', 'day', 'week'.
         [Optional. If not given, context 'current' will be used.]
@@ -1125,11 +1145,11 @@ class ValueHelper(object):
         # Get the value tuple in the target units:
         vtx = self._raw_value_tuple
         # Then do the format conversion:
-        s = self.formatter.toString(vtx, self.context, addLabel=addLabel, 
-                                    useThisFormat=useThisFormat, None_string=None_string, 
+        s = self.formatter.toString(vtx, self.context, addLabel=addLabel,
+                                    useThisFormat=useThisFormat, None_string=None_string,
                                     localize=localize)
         return s
-        
+
     def __str__(self):
         """Return as the native string type for the version of Python being run."""
         s = self.toString()
@@ -1149,28 +1169,15 @@ class ValueHelper(object):
         # Get the raw value tuple, then ask the formatter to look up an
         # appropriate ordinate:
         return self.formatter.to_ordinal_compass(self._raw_value_tuple)
-        
+
+    def json(self):
+        import json
+        return json.dumps(self._raw_value_tuple[0])
+
     @property
     def raw(self):
         """Returns the raw value without any formatting."""
         return self._raw_value_tuple[0]
-
-    # Backwards compatibility
-    def string(self, None_string=None):
-        """Return as string with an optional user specified string to be used if None"""
-        return self.toString(None_string=None_string)
-
-    # Backwards compatibility
-    def nolabel(self, format_string, None_string=None):
-        """Returns a formatted version of the datum, using a user-supplied
-        format. No label."""
-        return self.toString(addLabel=False, useThisFormat=format_string, None_string=None_string)
-
-    # Backwards compatibility
-    @property
-    def formatted(self):
-        """Return a formatted version of the datum. No label."""
-        return self.toString(addLabel=False)
 
     @property
     def _raw_value_tuple(self):
@@ -1194,20 +1201,39 @@ class ValueHelper(object):
 
         # If we are being asked to perform a conversion, make sure it's a
         # legal one:
-        if self.value_t[1] != target_unit:        
+        if self.value_t[1] != target_unit:
             try:
                 conversionDict[self.value_t[1]][target_unit]
             except KeyError:
                 raise AttributeError("Illegal conversion from '%s' to '%s'"
                                      %(self.value_t[1], target_unit))
         return ValueHelper(self.value_t, self.context, self.formatter, FixedConverter(target_unit))
-    
+
     def exists(self):
         return not isinstance(self.value_t, UnknownType)
-    
+
     def has_data(self):
         return self.exists() and self.value_t[0] is not None
-    
+
+    # Backwards compatibility
+    def string(self, None_string=None):
+        """Return as string with an optional user specified string to be used if None.
+        DEPRECATED."""
+        return self.toString(None_string=None_string)
+
+    # Backwards compatibility
+    def nolabel(self, format_string, None_string=None):
+        """Returns a formatted version of the datum, using a user-supplied format. No label.
+        DEPRECATED."""
+        return self.toString(addLabel=False, useThisFormat=format_string, None_string=None_string)
+
+    # Backwards compatibility
+    @property
+    def formatted(self):
+        """Return a formatted version of the datum. No label.
+        DEPRECATED."""
+        return self.toString(addLabel=False)
+
 
 #==============================================================================
 #                       class UnitInfoHelper and friends
@@ -1231,7 +1257,7 @@ class FormatHelper(object):
         if obs_type in ['__call__', 'has_key']:
             raise AttributeError
         return get_format_string(self.formatter, self.converter, obs_type)
-    
+
 class LabelHelper(object):
     def __init__(self, formatter, converter):
         self.formatter = formatter
@@ -1241,7 +1267,7 @@ class LabelHelper(object):
         if obs_type in ['__call__', 'has_key']:
             raise AttributeError
         return get_label_string(self.formatter, self.converter, obs_type)
-    
+
 class UnitInfoHelper(object):
     """Helper class used for for the $unit template tag."""
     def __init__(self, formatter, converter):
@@ -1261,7 +1287,7 @@ class UnitInfoHelper(object):
 
 
 class ObsInfoHelper(object):
-    """Helper class to implement the $obs template tag."""    
+    """Helper class to implement the $obs template tag."""
     def __init__(self, skin_dict):
         try:
             d = skin_dict['Labels']['Generic']
@@ -1294,7 +1320,7 @@ def _getUnitGroup(obs_type, agg_type=None):
         return agg_group[agg_type]
     else:
         return obs_group_dict.get(obs_type)
-    
+
 def convert(val_t, target_unit_type):
     """ Convert a value or a sequence of values between unit systems
 
@@ -1375,7 +1401,7 @@ def getStandardUnitType(target_std_unit_system, obs_type, agg_type=None):
     >>> print(getStandardUnitType(None, 'barometer', 'avg'))
     (None, None)
     """
-    
+
     if target_std_unit_system is not None:
         return StdUnitConverters[target_std_unit_system].getTargetUnit(obs_type, agg_type)
     else:
@@ -1419,7 +1445,7 @@ class GenWithConvert(object):
     Timestamp: 194758400; Temperature: 21.00; Unit system: 16
     Timestamp: 194758700; Temperature: 22.00; Unit system: 16
     """
-    
+
     def __init__(self, input_generator, target_unit_system=weewx.METRIC):
         """Initialize an instance of GenWithConvert
         
@@ -1429,10 +1455,10 @@ class GenWithConvert(object):
         use, or 'None' if it should leave the output unchanged."""
         self.input_generator = input_generator
         self.target_unit_system = target_unit_system
-        
+
     def __iter__(self):
         return self
-    
+
     def __next__(self):
         _record = next(self.input_generator)
         if self.target_unit_system is None:

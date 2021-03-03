@@ -13,9 +13,9 @@ import weewx.xtypes
 from weeutil.weeutil import to_int
 from weewx.units import ValueTuple
 
-
 # Attributes we are to ignore. Cheetah calls these housekeeping functions.
-IGNORE_ATTR = ['mro', 'im_func', 'func_code', '__func__', '__code__', '__init__', '__self__']
+IGNORE_ATTR = {'mro', 'im_func', 'func_code', '__func__', '__code__', '__init__', '__self__'}
+
 
 # ===============================================================================
 #                    Class TimeBinder
@@ -349,6 +349,15 @@ class ObservationBinder(object):
     def has_data(self):
         return self.db_lookup(self.data_binding).has_data(self.obs_type, self.timespan)
 
+    def series(self):
+        return SeriesBinder(obs_type=self.obs_type,
+                            timespan=self.timespan,
+                            db_lookup=self.db_lookup,
+                            data_binding=self.data_binding,
+                            context=self.context,
+                            formatter=self.formatter, converter=self.converter,
+                            **self.option_dict)
+
 
 # ===============================================================================
 #                             Class AggTypeBinder
@@ -415,6 +424,61 @@ class AggTypeBinder(object):
         vh = self._do_query()
         # Now seek the desired attribute of the ValueHelper and return
         return getattr(vh, attr)
+
+
+# ===============================================================================
+#                             Class SeriesBinder
+# ===============================================================================
+
+class SeriesBinder(object):
+    """Bind information necessary to form a series"""
+
+    def __init__(self, obs_type, timespan, db_lookup, data_binding, context,
+                 formatter=weewx.units.Formatter(), converter=weewx.units.Converter(),
+                 **option_dict):
+        self.obs_type = obs_type
+        self.timespan = timespan
+        self.db_lookup = db_lookup
+        self.data_binding = data_binding
+        self.context = context
+        self.formatter = formatter
+        self.converter = converter
+        self.option_dict = option_dict
+
+    def __str__(self):
+        """Need a string representation. Force the query, return as string."""
+        vh = self._do_query()
+        return str(vh)
+
+    def __unicode__(self):
+        """Used only Python 2. Force the query, return as a unicode string."""
+        vh = self._do_query()
+        return unicode(vh)
+
+    def _do_query(self, aggregation_type=None, aggregation_interval=None):
+        """Run a query against the databases."""
+        db_manager = self.db_lookup(self.data_binding)
+        try:
+            # If we cannot calculate the series, we will get an UnknownType or
+            # UnknownAggregation error. Be prepared to catch it.
+            start, stop, data = weewx.xtypes.get_series(self.obs_type, self.timespan, db_manager,
+                                                        aggregation_type, aggregation_interval)
+        except (weewx.UnknownType, weewx.UnknownAggregation):
+            # Signal Cheetah that we don't know how to do this by raising an AttributeError.
+            raise AttributeError(self.obs_type)
+
+        return weewx.units.ValueHelper(start, self.context, self.formatter, self.converter), \
+               weewx.units.ValueHelper(stop, self.context, self.formatter, self.converter), \
+               weewx.units.ValueHelper(data, self.context, self.formatter, self.converter)
+
+    def __getattr__(self, aggregation_type):
+        if aggregation_type in IGNORE_ATTR:
+            raise AttributeError(aggregation_type)
+
+        def wrapper(*args, **kwargs):
+            return self._do_query(aggregation_type=aggregation_type, **kwargs)
+
+        return wrapper
 
 
 # ===============================================================================
