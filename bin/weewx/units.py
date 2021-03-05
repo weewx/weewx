@@ -602,6 +602,7 @@ default_ordinate_names = [
     'N/A'
 ]
 
+
 #==============================================================================
 #                        class ValueTuple
 #==============================================================================
@@ -612,7 +613,8 @@ default_ordinate_names = [
 # useful because its contents can be accessed using named attributes.
 #
 # Item   attribute   Meaning
-#    0    value      The datum value (eg, 20.2)
+#    0    value      The data value(s). Can be a series (eg, [20.2, 23.2, ...])
+#                    or a scalar (eg, 20.2).
 #    1    unit       The unit it is in ("degree_C")
 #    2    group      The unit group ("group_temperature")
 #
@@ -645,6 +647,7 @@ class ValueTuple(tuple):
             raise TypeError("Unsupported operand error for addition: %s and %s"
                             % (self[1], other[1]))
         return ValueTuple(self[0] + other[0], self[1], self[2])
+
 
 #==============================================================================
 #                        class Formatter
@@ -1245,6 +1248,7 @@ class ValueHelperIterator(object):
         self.index = 0
 
     def __next__(self):
+        """Return the next item from the series as a ValueHelper"""
         if self.index >= len(self.vhelper.value_t[0]):
             raise StopIteration
         # Create a ValueTuple with the next value, along with the existing unit and unit group
@@ -1259,6 +1263,42 @@ class ValueHelperIterator(object):
         self.index += 1
         return value_helper
 
+
+#==============================================================================
+#                        SeriesHelper
+#==============================================================================
+#
+# Item   attribute   Meaning
+#    0    start      A ValueHelper holding a series of start times.
+#    1    stop       A ValueHelper holding a series of stop times.
+#    2    data       A ValueHelper holding a series of data values.
+
+class SeriesHelper(tuple):
+    def __new__(cls, *args):
+        return tuple.__new__(cls, args)
+    @property
+    def start(self):
+        return self[0]
+    @property
+    def stop(self):
+        return self[1]
+    @property
+    def data(self):
+        return self[2]
+
+    def json(self, order_by='row'):
+        import json
+
+        if order_by == 'row':
+            json_data = [[start_.raw, stop_.raw, data_.raw]
+                         for start_, stop_, data_ in zip(self.start, self.stop, self.data)]
+        elif order_by == 'column':
+            json_data = [self.start.raw, self.stop.raw, self.data.raw]
+        else:
+            raise ValueError('Unknown order by option %s' % order_by)
+
+        s = json.dumps(json_data)
+        return s
 
 #==============================================================================
 #                       class UnitInfoHelper and friends

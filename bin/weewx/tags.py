@@ -467,9 +467,11 @@ class SeriesBinder(object):
             # Signal Cheetah that we don't know how to do this by raising an AttributeError.
             raise AttributeError(self.obs_type)
 
-        return weewx.units.ValueHelper(start, self.context, self.formatter, self.converter), \
-               weewx.units.ValueHelper(stop, self.context, self.formatter, self.converter), \
-               weewx.units.ValueHelper(data, self.context, self.formatter, self.converter)
+        sh = weewx.units.SeriesHelper(
+            weewx.units.ValueHelper(start, self.context, self.formatter, self.converter), \
+            weewx.units.ValueHelper(stop, self.context, self.formatter, self.converter), \
+            weewx.units.ValueHelper(data, self.context, self.formatter, self.converter))
+        return sh
 
     def __getattr__(self, aggregation_type):
         if aggregation_type in IGNORE_ATTR:
