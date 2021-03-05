@@ -158,7 +158,7 @@ class ArchiveTable(XType):
 
             # No aggregation
             sql_str = "SELECT dateTime, %s, usUnits, `interval` FROM %s " \
-                      "WHERE dateTime >= ? AND dateTime <= ?" % (obs_type, db_manager.table_name)
+                      "WHERE dateTime > ? AND dateTime <= ?" % (obs_type, db_manager.table_name)
 
             std_unit_system = None
 
