@@ -1300,6 +1300,31 @@ class SeriesHelper(tuple):
         s = json.dumps(json_data)
         return s
 
+    def __str__(self):
+        """Return as the native string type for the version of Python being run."""
+        s = self.format()
+        return six.ensure_str(s)
+
+    def format(self, format_string=None, None_string=None, add_label=True,
+               localize=True, order_by='row'):
+
+        if order_by == 'row':
+            rows = []
+            for start_, stop_, data_ in zip(*self):
+                rows += ["%s, %s, %s" \
+                         % (str(start_),
+                            str(stop_),
+                            data_.format(format_string, None_string, add_label, localize))
+                ]
+            return "\n".join(rows)
+        elif order_by == 'column':
+            return "%s\n%s\n%s" \
+                   % (str(self.start),
+                      str(self.stop),
+                      self.data.format(format_string, None_string, add_label, localize))
+        else:
+            raise ValueError('Unknown order by option %s' % order_by)
+
 #==============================================================================
 #                       class UnitInfoHelper and friends
 #==============================================================================
