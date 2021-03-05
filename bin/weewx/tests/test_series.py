@@ -96,9 +96,9 @@ class Common(object):
             start_vec, stop_vec, data_vec = weewx.xtypes.get_series('outTemp',
                                                                     TimeSpan(start_ts, stop_ts),
                                                                     db_manager)
-        self.assertEqual(len(start_vec[0]), (stop_ts - start_ts) / gen_fake_data.interval + 1)
-        self.assertEqual(len(stop_vec[0]), (stop_ts - start_ts) / gen_fake_data.interval + 1)
-        self.assertEqual(len(data_vec[0]), (stop_ts - start_ts) / gen_fake_data.interval + 1)
+        self.assertEqual(len(start_vec[0]), (stop_ts - start_ts) / gen_fake_data.interval)
+        self.assertEqual(len(stop_vec[0]), (stop_ts - start_ts) / gen_fake_data.interval)
+        self.assertEqual(len(data_vec[0]), (stop_ts - start_ts) / gen_fake_data.interval)
 
     def test_get_series_archive_agg_rain_sum(self):
         """Test a series of daily aggregated rain totals"""
