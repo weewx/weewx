@@ -16,6 +16,9 @@ Thanks to user Les Niles!
 Changed the way of expressing the old "wview" schema to the new V4 way.
 Hopefully, this will lead to fewer support issues. Fixes issue #651.
 
+Fixed problem where iterating over a time period without an aggregation would
+wrongly include the record on the left.
+
 
 4.4.0 01/30/2021
 

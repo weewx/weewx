@@ -50,16 +50,18 @@ def temperfunc(i):
     return 68.0 + 0.1*i
 
 def expected_record(irec):
-    _record = {'dateTime': timefunc(irec), 'interval': interval, 'usUnits' : 1, 
+    _record = {'dateTime': timefunc(irec), 'interval': int(interval/60), 'usUnits' : 1,
                'outTemp': temperfunc(irec), 'barometer': barfunc(irec), 'inTemp': 70.0 + 0.1*irec}
     return _record
 
 def gen_included_recs(timevec, start_ts, stop_ts, agg_interval):
-    for stamp in weeutil.weeutil.intervalgen(start_ts, stop_ts, agg_interval):
-        included = []
+    """Generator function that marches down a set of aggregation intervals. Each yield returns
+     the set of records included in that interval."""
+    for span in weeutil.weeutil.intervalgen(start_ts, stop_ts, agg_interval):
+        included = set()
         for (irec, ts) in enumerate(timevec):
-            if stamp[0] < ts <= stamp[1]:
-                included.append(irec)
+            if span[0] < ts <= span[1]:
+                included.add(irec)
         yield included
     
 def genRecords():
@@ -224,11 +226,17 @@ class Common(object):
             
         # Now try fetching them as vectors:
         with weewx.manager.Manager.open(self.archive_db_dict) as archive:
-            barvec = archive.getSqlVectors((start_ts, stop_ts), 'barometer')
-            # Recall that barvec will be a 3-way tuple. The first element is the vector of starting
-            # times, the second the vector of ending times, and the third the data vector.
-            self.assertEqual(barvec[1], ([timefunc(irec) for irec in range(nrecs)], "unix_epoch", "group_time"))
-            self.assertEqual(barvec[2], ([barfunc(irec)  for irec in range(nrecs)], "inHg",       "group_pressure"))
+            # Return the values between start_ts and stop_ts, exclusive on the left,
+            # inclusive on the right.
+            # Recall that barvec returns a 3-way tuple of VectorTuples.
+            start_vt, stop_vt, data_vt = archive.getSqlVectors((start_ts, stop_ts), 'barometer')
+            # Build the expected series of stop times and data values. Note that the very first
+            # value in the database (at timestamp start_ts) is not included, so it should not be
+            # included in the expected results either.
+            expected_stop = [timefunc(irec) for irec in range(1, nrecs)]
+            expected_data = [barfunc(irec) for irec in range(1, nrecs)]
+            self.assertEqual(stop_vt, (expected_stop, "unix_epoch", "group_time"))
+            self.assertEqual(data_vt, (expected_data, "inHg",       "group_pressure"))
 
         # Now try fetching the vectora gain, but using aggregation.
         # Start by setting up a generator function that will return the records to be
