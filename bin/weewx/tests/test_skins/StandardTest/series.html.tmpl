@@ -1,0 +1,79 @@
+#errorCatcher Echo
+## Copyright 2009-2021 Tom Keffer
+## Distributed under terms of GPLv3.  See LICENSE.txt for your rights.
+##
+## This template tests tags used for generating series
+##
+##
+## Specifying an encoding of UTF-8 is usually safe:
+#encoding UTF-8
+##
+<!DOCTYPE HTML>
+<html lang="en">
+  <head>
+    ## This choice should match the #encoding directive above
+    <meta charset="UTF-8">
+    <title>Current Weather Conditions</title>
+    <link rel="stylesheet" type="text/css" href="weewx.css"/>
+    <style>
+        p { font-weight: bold; }
+    </style>
+  </head>
+
+  <body>
+
+    #set ($start, $stop, $data) = $month.outTemp.series(aggregation_type='max', aggregation_interval=86400)
+    <p> For what follows, \$start, \$stop, and \$data are defined as:</p>
+	<pre>\#set (\$start, \$stop, \$data) = \$month.outTemp.series(aggregation_type='max', aggregation_interval=86400)</pre>
+
+	<hr/>
+	<p>\$data:</p>
+	<pre> $data </pre>
+
+	<hr/>
+	<p>\$data.format("%.2f"): </p>
+	<pre>$data.format("%.2f")</pre>
+
+	<hr/>
+	<p>\$data.degree_C:</p>
+	<pre>$data.degree_C</pre>
+
+	<hr/>
+	<p>\$data.json: </p>
+	<pre>$data.json</pre>
+
+	<hr/>
+	<p>\$data.degree_C.json: </p>
+	<pre>$data.degree_C.json</pre>
+
+	<hr/>
+	<p>\$data.raw:</p>
+    <pre>$data.raw</pre>
+
+	<hr/>
+	<p>\$month.outTemp.series(aggregation_type='max', aggregation_interval=86400).json():</p>
+    <pre>$month.outTemp.series(aggregation_type='max', aggregation_interval=86400).json()</pre>
+
+	<hr/>
+	<p>\$month.outTemp.series(aggregation_type='max', aggregation_interval='day').json():</p>
+    <pre>$month.outTemp.series(aggregation_type='max', aggregation_interval='day').json()</pre>
+
+	<hr/>
+	<p>\$month.outTemp.series(aggregation_type='max', aggregation_interval=86400).json(order_by="column"):</p>
+    <pre>$month.outTemp.series(aggregation_type='max', aggregation_interval=86400).json(order_by="column")</pre>
+
+	<hr/>
+	<p>\$day.outTemp.series.json():</p>
+    <pre>$day.outTemp.series.json()</pre>
+
+    <hr/>
+    <p>\$day.outTemp.series: (<em>not JSON</em>) </p>
+    <pre>$day.outTemp.series</pre>
+
+    <hr/>
+    <p>\$day.outTemp.series.format(order_by='column'): (<em>not JSON</em>)</p>
+    <pre>$day.outTemp.series.format(order_by='column')</pre>
+
+  </body>
+
+</html>
