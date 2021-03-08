@@ -86,8 +86,9 @@ def get_series(obs_type, timespan, db_manager, aggregate_type=None, aggregate_in
             # Try this function. It will raise an exception if it does not know about the type.
             return xtype.get_series(obs_type, timespan, db_manager, aggregate_type,
                                     aggregate_interval)
-        except weewx.UnknownType:
-            # This function does not know about the type. Move on to the next one.
+        except (weewx.UnknownType, weewx.UnknownAggregation):
+            # This function does not know about the type and/or aggregation.
+            # Move on to the next one.
             pass
     # None of the functions worked.
     raise weewx.UnknownType(obs_type)
@@ -102,7 +103,7 @@ def get_aggregate(obs_type, timespan, aggregate_type, db_manager, **option_dict)
             # aggregation.
             return xtype.get_aggregate(obs_type, timespan, aggregate_type, db_manager,
                                        **option_dict)
-        except (weewx.UnknownAggregation, weewx.UnknownType):
+        except (weewx.UnknownType, weewx.UnknownAggregation):
             pass
     raise weewx.UnknownAggregation("%s('%s')" % (aggregate_type, obs_type))
 
@@ -393,6 +394,16 @@ class DailySummaries(XType):
     
         returns: A ValueTuple containing the result."""
 
+        # We cannot use the daily summaries if there is no aggregation
+        if not aggregate_type:
+            raise weewx.UnknownAggregation(aggregate_type)
+
+        aggregate_type = aggregate_type.lower()
+
+        # Raise exception if we don't know about this type of aggregation
+        if aggregate_type not in DailySummaries.agg_sql_dict:
+            raise weewx.UnknownAggregation(aggregate_type)
+
         # Check to see whether we can use the daily summaries:
         DailySummaries._check_eligibility(obs_type, timespan, db_manager, aggregate_type)
 
@@ -499,6 +510,16 @@ class DailySummaries(XType):
     @staticmethod
     def get_series(obs_type, timespan, db_manager, aggregate_type=None, aggregate_interval=None):
 
+        # We cannot use the daily summaries if there is no aggregation
+        if not aggregate_type:
+            raise weewx.UnknownAggregation(aggregate_type)
+
+        aggregate_type = aggregate_type.lower()
+
+        # Raise exception if we don't know about this type of aggregation
+        if aggregate_type not in DailySummaries.common:
+            raise weewx.UnknownAggregation(aggregate_type)
+
         # Check to see whether we can use the daily summaries:
         DailySummaries._check_eligibility(obs_type, timespan, db_manager, aggregate_type)
 
@@ -559,14 +580,10 @@ class DailySummaries(XType):
 
     @staticmethod
     def _check_eligibility(obs_type, timespan, db_manager, aggregate_type):
+
+        # It has to be a type we know about
         if not hasattr(db_manager, 'daykeys') or obs_type not in db_manager.daykeys:
             raise weewx.UnknownType(obs_type)
-
-        aggregate_type = aggregate_type.lower()
-
-        # Raise exception if we don't know about this type of aggregation
-        if aggregate_type not in DailySummaries.common:
-            raise weewx.UnknownAggregation(aggregate_type)
 
         # We cannot use the day summaries if the starting and ending times of the aggregation
         # interval are not on midnight boundaries, and are not the first or last records in the
