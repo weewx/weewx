@@ -1286,14 +1286,30 @@ class SeriesHelper(tuple):
     def data(self):
         return self[2]
 
-    def json(self, order_by='row'):
+    def json(self, order_by='row', time_series='both'):
         import json
 
+        time_series = time_series.lower()
+        if time_series not in ['both', 'start', 'stop']:
+            raise ValueError("Unknown option '%s' for which time series to include" % time_series)
+
         if order_by == 'row':
-            json_data = [[start_.raw, stop_.raw, data_.raw]
-                         for start_, stop_, data_ in zip(self.start, self.stop, self.data)]
+            if time_series == 'both':
+                json_data = [[start_.raw, stop_.raw, data_.raw]
+                             for start_, stop_, data_ in zip(self.start, self.stop, self.data)]
+            elif time_series == 'start':
+                json_data = [[start_.raw, data_.raw]
+                             for start_, data_ in zip(self.start, self.data)]
+            else:
+                json_data = [[stop_.raw, data_.raw]
+                             for stop_, data_ in zip(self.stop, self.data)]
         elif order_by == 'column':
-            json_data = [self.start.raw, self.stop.raw, self.data.raw]
+            if time_series == 'both':
+                json_data = [self.start.raw, self.stop.raw, self.data.raw]
+            elif time_series == 'start':
+                json_data = [self.start.raw, self.data.raw]
+            else:
+                json_data = [self.stop.raw, self.data.raw]
         else:
             raise ValueError('Unknown order by option %s' % order_by)
 

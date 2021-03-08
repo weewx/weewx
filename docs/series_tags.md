@@ -14,6 +14,18 @@ include the keyword `series`:
 $period($data_binding=binding_name, $optional_ago=delta).obstype.series[.optional_unit_conversion][.optional_formatting]
 ```
 
+## JSON formatting
+By adding the suffix `.json()` to the tag, the results will be formatted as JSON. This option has
+two optional parameters, `order_by` and `time_series`:
+```
+.json(order_by=['row'|'column'], time_series=['start'|'stop'|'both'])
+```
+`order_by`: The returned JSON can either be organized by rows, or by columns. The default is `row`.
+
+`time_series`: This option controls which series are emitted for time. Option `start` selects the
+start of each aggregation interval. Option `stop` selects the end of each interval. Option `both`
+causes both to be emitted.
+
 ## Series with no aggregation
 Here's an example of asking for a series with the temperature for all records in the day. We will
 display it with an HTML `<pre>` tag so that the embedded newlines work.
