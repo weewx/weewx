@@ -25,6 +25,9 @@ Hopefully, this will lead to fewer support issues. Fixes issue #651.
 Fixed problem where iterating over a time period without an aggregation would
 wrongly include the record on the left.
 
+Fixed bug that caused the incorrect label to be applied to plots where the
+aggregation type changes the unit. Fixes issue #654.
+
 
 4.4.0 01/30/2021
 
