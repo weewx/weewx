@@ -88,7 +88,7 @@ def configDatabase(config_dict, binding, start_ts=start_ts, stop_ts=stop_ts, int
 
     # Delete anything that might already be there.
     try:
-        log.info("Dropping database %s" % config_dict['DataBindings']['wx_binding']['database'])
+        log.info("Dropping database %s" % config_dict['DataBindings'][binding]['database'])
         weewx.manager.drop_database_with_config(config_dict, binding)
     except weedb.DatabaseError:
         pass
@@ -103,7 +103,7 @@ def configDatabase(config_dict, binding, start_ts=start_ts, stop_ts=stop_ts, int
 
     with weewx.manager.open_manager_with_config(monkey_dict, binding, initialize=True) as archive:
 
-        log.info("Creating synthetic database %s" % config_dict['DataBindings']['wx_binding']['database'])
+        log.info("Creating synthetic database %s" % config_dict['DataBindings'][binding]['database'])
 
         # Because this can generate voluminous log information,
         # suppress all but the essentials:
@@ -122,7 +122,7 @@ def configDatabase(config_dict, binding, start_ts=start_ts, stop_ts=stop_ts, int
         t2 = time.time()
         delta = t2 - t1
         print("\nTime to create synthetic database '%s' = %6.2fs"
-              % (config_dict['DataBindings']['wx_binding']['database'], delta))
+              % (config_dict['DataBindings'][binding]['database'], delta))
 
         # Restore the logging
         logging.disable(logging.NOTSET)
@@ -135,13 +135,13 @@ def configDatabase(config_dict, binding, start_ts=start_ts, stop_ts=stop_ts, int
         tdiff = time.time() - t1
         if nrecs:
             print("\nProcessed %d records to backfill %d day summaries in database '%s' in %.2f seconds"
-                  % (nrecs, ndays, config_dict['DataBindings']['wx_binding']['database'], tdiff))
+                  % (nrecs, ndays, config_dict['DataBindings'][binding]['database'], tdiff))
         else:
             print("Daily summaries in database '%s' up to date."
-                  % config_dict['DataBindings']['wx_binding']['database'])
+                  % config_dict['DataBindings'][binding]['database'])
 
         t1 = time.time()
-        patch_database(config_dict)
+        patch_database(config_dict, binding)
         tdiff = time.time() - t1
         print("\nTime to patch database with derived types: %.2f seconds" % tdiff)
 
@@ -197,10 +197,10 @@ def genFakeRecords(start_ts=start_ts, stop_ts=stop_ts, interval=interval,
 
 
 
-def patch_database(config_dict):
+def patch_database(config_dict, binding='wx_binding'):
     calc_missing_config_dict = {
         'name': 'Patch gen_fake_data',
-        'binding': 'wx_binding',
+        'binding': binding,
         'start_ts': start_ts,
         'stop_ts': stop_ts,
         'dry_run': False,
