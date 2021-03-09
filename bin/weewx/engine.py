@@ -336,8 +336,13 @@ class StdConvert(StdService):
         # Initialize my base class:
         super(StdConvert, self).__init__(engine, config_dict)
 
-        # Get the target unit nickname (something like 'US' or 'METRIC'):
-        target_unit_nickname = config_dict['StdConvert']['target_unit']
+        # Get the target unit nickname (something like 'US' or 'METRIC'). If there is no
+        # target, then do nothing
+        try:
+            target_unit_nickname = config_dict['StdConvert']['target_unit']
+        except KeyError:
+            # Missing target unit.
+            return
         # Get the target unit: weewx.US, weewx.METRIC, weewx.METRICWX
         self.target_unit = weewx.units.unit_constants[target_unit_nickname.upper()]
         # Bind self.converter to the appropriate standard converter
