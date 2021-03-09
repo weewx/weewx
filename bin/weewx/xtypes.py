@@ -548,7 +548,6 @@ class DailySummaries(XType):
         start_list = list()
         stop_list = list()
         data_list = list()
-        print(sql_stmt)
 
         for row in db_manager.genSql(sql_stmt):
             # Find the start of this aggregation interval. That's easy: it's the minimum value.
