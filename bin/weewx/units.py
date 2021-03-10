@@ -13,6 +13,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+import json
 import locale
 import logging
 import time
@@ -1174,8 +1175,7 @@ class ValueHelper(object):
         return self.formatter.to_ordinal_compass(self._raw_value_tuple)
 
     def json(self):
-        import json
-        return json.dumps(self._raw_value_tuple[0])
+        return json.dumps(self._raw_value_tuple[0], cls=ComplexEncoder)
 
     @property
     def raw(self):
@@ -1287,8 +1287,6 @@ class SeriesHelper(tuple):
         return self[2]
 
     def json(self, order_by='row', time_series='both'):
-        import json
-
         time_series = time_series.lower()
         if time_series not in ['both', 'start', 'stop']:
             raise ValueError("Unknown option '%s' for which time series to include" % time_series)
@@ -1313,7 +1311,7 @@ class SeriesHelper(tuple):
         else:
             raise ValueError('Unknown order by option %s' % order_by)
 
-        s = json.dumps(json_data)
+        s = json.dumps(json_data, cls=ComplexEncoder)
         return s
 
     def __str__(self):
@@ -1623,6 +1621,15 @@ def as_value_tuple(record_dict, obs_type):
 
     # Form the value-tuple and return it:
     return ValueTuple(val, unit_type, unit_group)
+
+
+class ComplexEncoder(json.JSONEncoder):
+    """Custom encoder that knows how to encode complex objects"""
+    def default(self, obj):
+        if isinstance(obj, complex):
+            return [obj.real, obj.imag]
+        # Otherwise, let the base class handle it
+        return json.JSONEncoder.default(self, obj)
 
 
 if __name__ == "__main__":
