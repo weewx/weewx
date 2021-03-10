@@ -480,31 +480,33 @@ class DailySummaries(XType):
     # There is a common part, which include 'select_def' and 'group_def', which will be
     # replaced with database-specific versions
     common = {
-        'min': "SELECT MIN(dateTime), MAX(dateTime), MIN(min), %(select_def)s "
+        'min': "SELECT MIN(dateTime), MAX(dateTime), MIN(min) %(select_def)s "
                "FROM %(day_table)s "
                "WHERE dateTime>=%(start)s AND dateTime<%(stop)s %(group_def)s",
-        'max': "SELECT MIN(dateTime), MAX(dateTime), MAX(max), %(select_def)s "
+        'max': "SELECT MIN(dateTime), MAX(dateTime), MAX(max) %(select_def)s "
                "FROM %(day_table)s "
                "WHERE dateTime>=%(start)s AND dateTime<%(stop)s %(group_def)s",
-        'avg': "SELECT MIN(dateTime), MAX(dateTime), SUM(wsum), SUM(sumtime), %(select_def)s "
+        'avg': "SELECT MIN(dateTime), MAX(dateTime), SUM(wsum), SUM(sumtime) %(select_def)s "
                "FROM %(day_table)s "
                "WHERE dateTime>=%(start)s AND dateTime<%(stop)s %(group_def)s",
-        'sum': "SELECT MIN(dateTime), MAX(dateTime), SUM(sum), %(select_def)s "
+        'sum': "SELECT MIN(dateTime), MAX(dateTime), SUM(sum) %(select_def)s "
                "FROM %(day_table)s "
                "WHERE dateTime>=%(start)s AND dateTime<%(stop)s %(group_def)s",
-        'count': "SELECT MIN(dateTime), MAX(dateTime), SUM(count), %(select_def)s "
+        'count': "SELECT MIN(dateTime), MAX(dateTime), SUM(count) %(select_def)s "
                  "FROM %(day_table)s "
                  "WHERE dateTime>=%(start)s AND dateTime<%(stop)s %(group_def)s",
     }
     # Here's the database-specific versions that gather the needed SELECT definitions.
     select_defs = {
-        'sqlite': "CAST(julianday(%(sod)s, 'unixepoch','localtime') AS int) AS start_bin, "
-                  "julianday(dateTime,'unixepoch','localtime') - 0.5 AS jd"
+        'sqlite': ", CAST(julianday(%(sod)s, 'unixepoch','localtime') AS int) AS start_bin "
+                  ", julianday(dateTime,'unixepoch','localtime') - 0.5 AS jd",
+        'mysql': ""
     }
     # Here's the database-specific "GROUP BY" clauses.
-    # It can use the results from select_defs above.
     group_defs = {
-        'sqlite': "GROUP BY cast((jd - start_bin) / %(agg_days)s AS int)"
+        'sqlite': "GROUP BY cast((jd - start_bin) / %(agg_days)s AS int)",
+        'mysql': "GROUP BY TRUNCATE((TO_DAYS(FROM_UNIXTIME(dateTime)) "
+                 "- TO_DAYS(FROM_UNIXTIME(%(sod)s)))/ %(agg_days)s, 0)"
     }
 
     @staticmethod
