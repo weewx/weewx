@@ -477,34 +477,31 @@ class DailySummaries(XType):
         return weewx.units.ValueTuple(value, t, g)
 
     # These are SQL statements used for calculating series from the daily summaries.
-    # There is a common part, which include 'select_def' and 'group_def', which will be
-    # replaced with database-specific versions
+    # They include "group_def", which will be replaced with a database-specific GROUP BY clause
     common = {
-        'min': "SELECT MIN(dateTime), MAX(dateTime), MIN(min) %(select_def)s "
+        'min': "SELECT MIN(dateTime), MAX(dateTime), MIN(min) "
                "FROM %(day_table)s "
                "WHERE dateTime>=%(start)s AND dateTime<%(stop)s %(group_def)s",
-        'max': "SELECT MIN(dateTime), MAX(dateTime), MAX(max) %(select_def)s "
+        'max': "SELECT MIN(dateTime), MAX(dateTime), MAX(max) "
                "FROM %(day_table)s "
                "WHERE dateTime>=%(start)s AND dateTime<%(stop)s %(group_def)s",
-        'avg': "SELECT MIN(dateTime), MAX(dateTime), SUM(wsum), SUM(sumtime) %(select_def)s "
+        'avg': "SELECT MIN(dateTime), MAX(dateTime), SUM(wsum), SUM(sumtime) "
                "FROM %(day_table)s "
                "WHERE dateTime>=%(start)s AND dateTime<%(stop)s %(group_def)s",
-        'sum': "SELECT MIN(dateTime), MAX(dateTime), SUM(sum) %(select_def)s "
+        'sum': "SELECT MIN(dateTime), MAX(dateTime), SUM(sum) "
                "FROM %(day_table)s "
                "WHERE dateTime>=%(start)s AND dateTime<%(stop)s %(group_def)s",
-        'count': "SELECT MIN(dateTime), MAX(dateTime), SUM(count) %(select_def)s "
+        'count': "SELECT MIN(dateTime), MAX(dateTime), SUM(count) "
                  "FROM %(day_table)s "
                  "WHERE dateTime>=%(start)s AND dateTime<%(stop)s %(group_def)s",
     }
-    # Here's the database-specific versions that gather the needed SELECT definitions.
-    select_defs = {
-        'sqlite': ", CAST(julianday(%(sod)s, 'unixepoch','localtime') AS int) AS start_bin "
-                  ", julianday(dateTime,'unixepoch','localtime') - 0.5 AS jd",
-        'mysql': ""
-    }
-    # Here's the database-specific "GROUP BY" clauses.
+    # Database-specific "GROUP BY" clauses.
     group_defs = {
-        'sqlite': "GROUP BY cast((jd - start_bin) / %(agg_days)s AS int)",
+        'sqlite': "GROUP BY CAST("
+                  "    (julianday(dateTime,'unixepoch','localtime') - 0.5 "
+                  "       - CAST(julianday(%(sod)s, 'unixepoch','localtime') AS int)) "
+                  "     / %(agg_days)s "
+                  "AS int)",
         'mysql': "GROUP BY TRUNCATE((TO_DAYS(FROM_UNIXTIME(dateTime)) "
                  "- TO_DAYS(FROM_UNIXTIME(%(sod)s)))/ %(agg_days)s, 0)"
     }
@@ -541,8 +538,7 @@ class DailySummaries(XType):
             'start': timespan.start,
             'stop': timespan.stop,
         }
-        # Add the database-specific SELECT and GROUP_BY clauses to the interpolation dictionary
-        interp_dict['select_def'] = DailySummaries.select_defs[dbtype] % interp_dict
+        # Add the database-specific GROUP_BY clause to the interpolation dictionary
         interp_dict['group_def'] = DailySummaries.group_defs[dbtype] % interp_dict
         # Final SELECT statement.
         sql_stmt = DailySummaries.common[aggregate_type] % interp_dict
