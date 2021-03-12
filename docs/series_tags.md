@@ -118,7 +118,8 @@ yields something like
 
 ### Optional JSON formatting
 By adding the suffix `.json()` to the tag, the results will be formatted as JSON. This option has
-two optional parameters, `order_by` and `time_series`:
+two optional parameters, `order_by` and `time_series`. It can also pass on parameters to the 
+`json.loads()` call.
 ```
 .json(order_by=['row'|'column'], time_series=['start'|'stop'|'both'], **kwargs)
 ```
@@ -213,15 +214,19 @@ yields
 
 There are a number of conversion operators that can yield various parts of the complex results. 
 
-| Operator | Effect |
-| ------------- | ------------- |
-| `.x`  | Just the x-components  |
-| `.y`  | Just the y-components |
-| `.magnitude` | The total (absolute) magnitude |
-| `.direction` | The compass direction |
-|`.polar` | As polar coordinates |
+| Operator     | Effect                                    |
+|--------------|-------------------------------------------|
+| `.x`         | Just the x-components                     |
+| `.y`         | Just the y-components                     |
+| `.magnitude` | The total (absolute) magnitude            |
+| `.direction` | The compass direction (0°=N, 90°=E, etc.) |
+| `.polar`     | As polar coordinates                      |
 
-Here's an example. Other operators are similar.
+Note that direction uses _compass directions_.
+
+Here's an example. Other operators are similar. Suppose we would like the output in _polar_
+notation, that is a 2-way tuple of (`magnitude`, `direction`), where `direction` is the compass
+direction. 
 
 ```
 <pre>
