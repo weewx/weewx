@@ -603,6 +603,13 @@ default_ordinate_names = [
     'N/A'
 ]
 
+complex_conversions = {
+    'x': lambda c: c.real if c is not None else None,
+    'y': lambda c: c.imag if c is not None else None,
+    'magnitude': lambda c: abs(c) if c is not None else None,
+    'direction': weeutil.weeutil.dirN,
+    'polar': lambda c: (abs(c), weeutil.weeutil.dirN(c)) if c is not None else None,
+}
 
 #==============================================================================
 #                        class ValueTuple
@@ -1202,6 +1209,11 @@ class ValueHelper(object):
         if target_unit in ['__call__', 'has_key']:
             raise AttributeError
 
+        if target_unit in complex_conversions:
+            return ValueHelper(convert(self.value_t, target_unit),
+                               self.context,
+                               self.formatter,
+                               self.converter)
         # If we are being asked to perform a conversion, make sure it's a
         # legal one:
         if self.value_t[1] != target_unit:
@@ -1339,6 +1351,17 @@ class SeriesHelper(tuple):
         else:
             raise ValueError('Unknown order by option %s' % order_by)
 
+    def __getattr__(self, target_unit):
+        """Convert the data part of the series to a new unit. Only the data part gets converted."""
+
+        # This is to get around bugs in the Python version of Cheetah's namemapper:
+        if target_unit in ['__call__', 'has_key']:
+            raise AttributeError
+
+        converted_data = getattr(self.data, target_unit)
+
+        return SeriesHelper(self.start, self.stop, converted_data)
+
 #==============================================================================
 #                       class UnitInfoHelper and friends
 #==============================================================================
@@ -1425,37 +1448,48 @@ def _getUnitGroup(obs_type, agg_type=None):
     else:
         return obs_group_dict.get(obs_type)
 
-def convert(val_t, target_unit_type):
-    """ Convert a value or a sequence of values between unit systems
 
-    val_t: A value-tuple with the value to be converted. The first
-    element is the value (either a scalar or iterable), the second element 
-    the unit type (e.g., "foot", or "inHg") it is in.
+def convert(val_t, target_unit):
+    """ Convert a ValueTuple to a new unit
+
+    val_t: A value-tuple with the value to be converted. The first element can be either a scalar
+    or iterable.
     
-    target_unit_type: The unit type (e.g., "meter", or "mbar") to
-    which the value is to be converted. 
+    target_unit: The unit type (e.g., "meter", or "mbar") to which the value is to be converted. If
+    the ValueTuple holds a complex number, target_unit can be a complex conversion nickname, such
+    as 'polar'.
     
-    returns: An instance of ValueTuple, converted into the desired units.
+    returns: An instance of ValueTuple, where the desired conversion has been performed.
     """
-    # If the value is already in the target unit type, then just return it:
-    if val_t[1] == target_unit_type:
-        return val_t
 
-    # Retrieve the conversion function. An exception of type KeyError
-    # will occur if the target or source units are invalid
-    try:
-        conversion_func = conversionDict[val_t[1]][target_unit_type]
-    except KeyError:
-        log.debug("Unable to convert from %s to %s", val_t[1], target_unit_type)
-        raise
+    # Is the "target_unit" really a conversion for complex numbers?
+    if target_unit in complex_conversions:
+        # Yes. Get the conversion function. Also, note that these operations do not change the
+        # unit the ValueTuple is in.
+        conversion_func = complex_conversions[target_unit]
+        target_unit = val_t[1]
+    else:
+        # We are converting between units. If the value is already in the target unit type, then
+        # just return it:
+        if val_t[1] == target_unit:
+            return val_t
+
+        # Retrieve the conversion function. An exception of type KeyError
+        # will occur if the target or source units are invalid
+        try:
+            conversion_func = conversionDict[val_t[1]][target_unit]
+        except KeyError:
+            log.debug("Unable to convert from %s to %s", val_t[1], target_unit)
+            raise
     # Try converting a sequence first. A TypeError exception will occur if
     # the value is actually a scalar:
     try:
-        new_val = list([conversion_func(x) if x is not None else None for x in val_t[0]])
+        new_val = [conversion_func(x) if x is not None else None for x in val_t[0]]
     except TypeError:
         new_val = conversion_func(val_t[0]) if val_t[0] is not None else None
+
     # Add on the unit type and the group type and return the results:
-    return ValueTuple(new_val, target_unit_type, val_t[2])
+    return ValueTuple(new_val, target_unit, val_t[2])
 
 def convertStd(val_t, target_std_unit_system):
     """Convert a value tuple to an appropriate unit in a target standardized

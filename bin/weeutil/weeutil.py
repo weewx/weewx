@@ -12,6 +12,7 @@ from __future__ import absolute_import
 from __future__ import print_function
 
 import calendar
+import cmath
 import datetime
 import math
 import os
@@ -1287,6 +1288,15 @@ def to_complex(magnitude, direction):
         x = magnitude * math.cos(math.radians(90.0 - direction))
         y = magnitude * math.sin(math.radians(90.0 - direction))
         value = complex(x, y)
+    return value
+
+
+def dirN(c):
+    """Given a complex number, return its phase as a compass heading"""
+    if c is None:
+        value = None
+    else:
+        value = (450 - math.degrees(cmath.phase(c))) % 360.0
     return value
 
 
