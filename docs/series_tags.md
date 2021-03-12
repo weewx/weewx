@@ -36,7 +36,10 @@ The first column is the start time of each point in the series, the second colum
 From this example, we can see that the data have a 5 minute archive period.
 
 ## Series with aggregation
-Suppose you would like the maximum temperature for each day of the month. This can be specified as
+Suppose you would like the maximum temperature for each day of the month. This is an _aggregation_
+(maximum temperature, in this case), over a time period (one day). This can be specified with
+optional parameters `aggregation_type` and `aggregation_interval` to the `series` tag. Here's
+an example:
 
 ```
 <pre>
@@ -55,13 +58,18 @@ $month.outTemp.series(aggregation_type='max', aggregation_interval='day')
 Either way, the results would be:
 
 ```
-01/01/2021 12:00:00 AM, 01/02/2021 12:00:00 AM, 45.6°F
-01/02/2021 12:00:00 AM, 01/03/2021 12:00:00 AM, 46.2°F
-01/03/2021 12:00:00 AM, 01/04/2021 12:00:00 AM, 49.5°F
+03/01/2021 12:00:00 AM, 03/02/2021 12:00:00 AM, 58.2°F
+03/02/2021 12:00:00 AM, 03/03/2021 12:00:00 AM, 55.8°F
+03/03/2021 12:00:00 AM, 03/04/2021 12:00:00 AM, 59.6°F
+03/04/2021 12:00:00 AM, 03/05/2021 12:00:00 AM, 57.8°F
+03/05/2021 12:00:00 AM, 03/06/2021 12:00:00 AM, 50.2°F
+03/06/2021 12:00:00 AM, 03/07/2021 12:00:00 AM, 42.0°F
   ...
 ```
-Again, the first column is the start of the day, the second column the end of the day, the
-final column the maximum temperature for the day.
+
+The first column is the start of the aggregation period, the second the end of the period, and the
+final column the maximum temperature for aggregation period. In this example, because the
+aggregation period is one day, the start and stop fall on daily boundaries.
 
 ## Optional unit conversion.
 Just like scalars, the unit system of the resultant series can be changed. For example,
@@ -75,21 +83,44 @@ $month.outTemp.series(aggregation_type='max', aggregation_interval='day').degree
 Results in
 
 ```
-01/01/2021 12:00:00 AM, 01/02/2021 12:00:00 AM, 7.6°C
-01/02/2021 12:00:00 AM, 01/03/2021 12:00:00 AM, 7.9°C
-01/03/2021 12:00:00 AM, 01/04/2021 12:00:00 AM, 9.7°C
+03/01/2021 12:00:00 AM, 03/02/2021 12:00:00 AM, 14.6°C
+03/02/2021 12:00:00 AM, 03/03/2021 12:00:00 AM, 13.2°C
+03/03/2021 12:00:00 AM, 03/04/2021 12:00:00 AM, 15.3°C
+03/04/2021 12:00:00 AM, 03/05/2021 12:00:00 AM, 14.3°C
+03/05/2021 12:00:00 AM, 03/06/2021 12:00:00 AM, 10.1°C
+03/06/2021 12:00:00 AM, 03/07/2021 12:00:00 AM, 5.6°C
   ...
 ```
 
 ## Optional formatting
-Similar to its scalar cousins, the output can be formatted. At this point, JSON formatting is
-supported. CSV may be added in the future.
+Similar to its scalar cousins, the output can be formatted. At this point, there are
+two types of formatting: one for strings, one for JSON. CSV may be added in the future.
 
-### JSON formatting
+### Optional string formatting
+The format of the data can be changed with optional suffix `.format()`. Only the data is affected.
+If you want to change the formatting of the start and stop times, you must use iteration. See
+the section Iteration below.
+
+Example:
+```
+$month.outTemp.series(aggregation_type='max', aggregation_interval='day').format("%.2f")
+```
+yields something like
+```
+03/01/2021 12:00:00 AM, 03/02/2021 12:00:00 AM, 58.20°F
+03/02/2021 12:00:00 AM, 03/03/2021 12:00:00 AM, 55.80°F
+03/03/2021 12:00:00 AM, 03/04/2021 12:00:00 AM, 59.60°F
+03/04/2021 12:00:00 AM, 03/05/2021 12:00:00 AM, 57.80°F
+03/05/2021 12:00:00 AM, 03/06/2021 12:00:00 AM, 50.20°F
+03/06/2021 12:00:00 AM, 03/07/2021 12:00:00 AM, 42.00°F
+  ...
+```
+
+### Optional JSON formatting
 By adding the suffix `.json()` to the tag, the results will be formatted as JSON. This option has
 two optional parameters, `order_by` and `time_series`:
 ```
-.json(order_by=['row'|'column'], time_series=['start'|'stop'|'both'])
+.json(order_by=['row'|'column'], time_series=['start'|'stop'|'both'], **kwargs)
 ```
 `order_by`: The returned JSON can either be organized by rows, or by columns. The default is `row`.
 
@@ -97,7 +128,10 @@ two optional parameters, `order_by` and `time_series`:
 start of each aggregation interval. Option `stop` selects the end of each interval. Option `both`
 causes both to be emitted.
 
-## Example: series with aggregation, formatted as JSON
+`kwargs`: These are optional keyword arguments that are passed on to the Python `json.dumps()`
+call. [See the documentation for `json.dumps`](https://docs.python.org/3/library/json.html#basic-usage).
+
+#### Example: series with aggregation, formatted as JSON
 Here's an example of the maximum temperature for all days of the current month, formatted in JSON
 
 ```
@@ -137,6 +171,92 @@ Results:
 [[1614585600, 58.2], [1614672000, 55.8], [1614758400, 59.6], [1614844800, 57.8], [1614931200, 50.2], [1615017600, 42.0]]
 ```
 
+
+## Working with wind vectors.
+A series over types `windvec` and `windgustvec` return a series of _complex_ numbers. For example,
+
+```
+<pre>
+$month.windvec.series(aggregation_type='max', aggregation_interval='day').json(indent=2)
+</pre>
+```
+yields
+```
+[
+  [
+    1614585600,
+    1614672000,
+    [
+      -6.0,
+      -7.347880794884119e-16
+    ]
+  ],
+  [
+    1614672000,
+    1614758400,
+    [
+      -9.0,
+      -1.102182119232618e-15
+    ]
+  ],
+  [
+    1614758400,
+    1614844800,
+    [
+      -1.1480502970952693,
+      -2.77163859753386
+    ]
+  ],
+   ...
+]
+```
+
+There are a number of conversion operators that can yield various parts of the complex results. 
+
+| Operator | Effect |
+| ------------- | ------------- |
+| `.x`  | Just the x-components  |
+| `.y`  | Just the y-components |
+| `.magnitude` | The total (absolute) magnitude |
+| `.direction` | The compass direction |
+|`.polar` | As polar coordinates |
+
+Here's an example. Other operators are similar.
+
+```
+<pre>
+$month.windvec.series(aggregation_type='max', aggregation_interval='day').polar.json(indent=2)
+</pre>
+```
+yields
+```
+[
+  [
+    1614585600,
+    1614672000,
+    [
+      6.0,
+      270.0
+    ]
+  ],
+  [
+    1614672000,
+    1614758400,
+    [
+      9.0,
+      270.0
+    ]
+  ],
+  [
+    1614758400,
+    1614844800,
+    [
+      2.9999999999999996,
+      202.5
+    ]
+  ],
+  ...
+```
 
 ## Iteration
 If you want finer control over formatting, you can iterate over the series and apply precise

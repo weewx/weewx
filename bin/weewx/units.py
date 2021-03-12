@@ -1181,8 +1181,8 @@ class ValueHelper(object):
         # appropriate ordinate:
         return self.formatter.to_ordinal_compass(self._raw_value_tuple)
 
-    def json(self):
-        return json.dumps(self._raw_value_tuple[0], cls=ComplexEncoder)
+    def json(self, **kwargs):
+        return json.dumps(self._raw_value_tuple[0], cls=ComplexEncoder, **kwargs)
 
     @property
     def raw(self):
@@ -1298,7 +1298,7 @@ class SeriesHelper(tuple):
     def data(self):
         return self[2]
 
-    def json(self, order_by='row', time_series='both'):
+    def json(self, order_by='row', time_series='both', **kwargs):
         time_series = time_series.lower()
         if time_series not in ['both', 'start', 'stop']:
             raise ValueError("Unknown option '%s' for which time series to include" % time_series)
@@ -1323,7 +1323,7 @@ class SeriesHelper(tuple):
         else:
             raise ValueError('Unknown order by option %s' % order_by)
 
-        s = json.dumps(json_data, cls=ComplexEncoder)
+        s = json.dumps(json_data, cls=ComplexEncoder, **kwargs)
         return s
 
     def __str__(self):
