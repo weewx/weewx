@@ -271,9 +271,10 @@ formatting. Here's an example:
     #set ($start, $stop, $data) = $month.outTemp.series(aggregation_type='max', aggregation_interval='day') ## 1
     <table>
     #for ($time_vh, $data_vh) in $zip($start, $data)                       ## 2
-    <tr>
-    <td>$time_vh.format("%Y-%m-%d")</td><td>$data_vh.format("%.2f")</td>   ## 3
-    </tr>
+      <tr>
+        <td>$time_vh.format("%Y-%m-%d")</td>  ## 3
+        <td>$data_vh.format("%.2f")</td>      ## 4
+      </tr>
     #end for
     </table>
 ```
@@ -283,10 +284,10 @@ lines:
 1. Normally, if the tag `$month.outTemp.series(aggregation_type='max', aggregation_interval='day')`
 occurs in a document, Cheetah will try and convert it into a string in order to embed the results
 in the generated file. However, if it is not converted into a string, the expression actually
-returns a 3-way tuple of `ValueHelpers`. The data in each `ValueHelper` is a series. The first one
-holds the start times of the aggregation intervals, the second the stop times, and the third
-the actual data. So, in this line, we store the three `ValueHelpers` separately as variables
-`$start`, `$stop`, and `$data`, respectively. 
+returns a `SeriesHelper`, which is a 3-way tuple of `ValueHelpers`. The data in each `ValueHelper`
+is a _series_. The first one holds the start times of the aggregation intervals, the second the stop
+times, and the third the actual data. So, in this line, we store the three `ValueHelpers`
+separately as variables `$start`, `$stop`, and `$data`, respectively.
 
 2. We will work only with the start times and data. We
 [zip](https://docs.python.org/3/library/functions.html#zip) `$start` and `$data` together in order
@@ -294,8 +295,10 @@ to convert the "by column" ordering into "by row", then iterate over the results
    them to variables `$time_vh` and `$data_vh`. It's important to note, that both of these
    variables are garden-variety `ValueHelpers` and can be formatted accordingly.
    
-3. In line 3, we apply some custom formatting. The time is formatted to show only the day. The
-datum formatted to show two decimal points.
+3. In line 3, we apply some custom formatting for the start times, so that only the day (no time)
+   is shown.
+
+4. Similarly, we apply some custom formatting for the datum to show two decimal points.
    
 The final results look like:
 ```
