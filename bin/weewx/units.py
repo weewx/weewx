@@ -1225,7 +1225,15 @@ class ValueHelper(object):
         return ValueHelper(self.value_t, self.context, self.formatter, FixedConverter(target_unit))
 
     def __iter__(self):
-        return ValueHelperIterator(self)
+        """Return an iterator that can iterate over the elements of the self.value_t"""
+        def rows():
+            for row in self.value_t[0]:
+                # Form a ValueTuple using the value, plus the unit and unit group
+                vt = ValueTuple(row, self.value_t[1], self.value_t[2])
+                # Form a ValueHelper out of that
+                vh = ValueHelper(vt, self.context, self.formatter, self.converter)
+                yield vh
+        return rows()
 
     def exists(self):
         return not isinstance(self.value_t, UnknownType)
@@ -1253,55 +1261,20 @@ class ValueHelper(object):
         return self.toString(addLabel=False)
 
 
-class ValueHelperIterator(object):
-    """An iterator for iterating over a ValueHelper that contains a series"""
-    def __init__(self, vhelper):
-        self.vhelper = vhelper
-        self.index = 0
-
-    def __next__(self):
-        """Return the next item from the series as a ValueHelper"""
-        if self.index >= len(self.vhelper.value_t[0]):
-            raise StopIteration
-        # Create a ValueTuple with the next value, along with the existing unit and unit group
-        vt = ValueTuple(self.vhelper.value_t[0][self.index],    # The value
-                        self.vhelper.value_t[1],                # The unit
-                        self.vhelper.value_t[2])                # The unit group
-        # Using that, create a ValueHlper
-        value_helper = ValueHelper(vt,
-                                   self.vhelper.context,
-                                   self.vhelper.formatter,
-                                   self.vhelper.converter)
-        self.index += 1
-        return value_helper
-
-
 #==============================================================================
 #                        SeriesHelper
 #==============================================================================
-#
-# Item   attribute   Meaning
-#    0    start      A ValueHelper holding a series of start times.
-#    1    stop       A ValueHelper holding a series of stop times.
-#    2    data       A ValueHelper holding a series of data values.
 
-class SeriesHelper(tuple):
-    def __new__(cls, *args):
-        return tuple.__new__(cls, args)
-    @property
-    def start(self):
-        return self[0]
-    @property
-    def stop(self):
-        return self[1]
-    @property
-    def data(self):
-        return self[2]
+class SeriesHelper(object):
+    def __init__(self, start, stop, data):
+        self.start = start
+        self.stop = stop
+        self.data = data
 
     def json(self, order_by='row', time_series='both', **kwargs):
         time_series = time_series.lower()
         if time_series not in ['both', 'start', 'stop']:
-            raise ValueError("Unknown option '%s' for which time series to include" % time_series)
+            raise ValueError("Unknown option '%s' for parameter 'time_series'" % time_series)
 
         if order_by == 'row':
             if time_series == 'both':
@@ -1321,10 +1294,9 @@ class SeriesHelper(tuple):
             else:
                 json_data = [self.stop.raw, self.data.raw]
         else:
-            raise ValueError('Unknown order by option %s' % order_by)
+            raise ValueError("Unknown option '%s' for parameter 'order_by'" % order_by)
 
-        s = json.dumps(json_data, cls=ComplexEncoder, **kwargs)
-        return s
+        return json.dumps(json_data, cls=ComplexEncoder, **kwargs)
 
     def __str__(self):
         """Return as the native string type for the version of Python being run."""
@@ -1336,7 +1308,7 @@ class SeriesHelper(tuple):
 
         if order_by == 'row':
             rows = []
-            for start_, stop_, data_ in zip(*self):
+            for start_, stop_, data_ in zip(self.start, self.stop, self.data):
                 rows += ["%s, %s, %s" \
                          % (str(start_),
                             str(stop_),

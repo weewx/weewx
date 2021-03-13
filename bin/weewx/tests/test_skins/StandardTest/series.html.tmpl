@@ -11,72 +11,42 @@
 <!DOCTYPE HTML>
 <html lang="en">
   <head>
-    ## This choice should match the #encoding directive above
-    <meta charset="UTF-8">
-    <title>Current Weather Conditions</title>
-    <link rel="stylesheet" type="text/css" href="weewx.css"/>
-    <style>
-        p { font-weight: bold; }
-    </style>
+      <meta charset="UTF-8">
+      <title>Current Weather Conditions</title>
+      <style>
+          p {
+              font-weight: bold;
+          }
+          table, th, td {
+              border: 1px solid black;
+              border-collapse: collapse;
+          }    </style>
   </head>
 
   <body>
-
-    #set ($start, $stop, $data) = $month.outTemp.series(aggregation_type='max', aggregation_interval=86400)
-    <p> For what follows, \$start, \$stop, and \$data are defined as:</p>
-	<pre>\#set (\$start, \$stop, \$data) = \$month.outTemp.series(aggregation_type='max', aggregation_interval=86400)</pre>
-
-	<hr/>
-	<p>\$data:</p>
-	<pre> $data </pre>
-
-	<hr/>
-	<p>\$data.format("%.2f"): </p>
-	<pre>$data.format("%.2f")</pre>
-
-	<hr/>
-	<p>\$data.degree_C:</p>
-	<pre>$data.degree_C</pre>
-
-	<hr/>
-	<p>\$data.json: </p>
-	<pre>$data.json</pre>
-
-	<hr/>
-	<p>\$data.degree_C.json: </p>
-	<pre>$data.degree_C.json</pre>
-
-	<hr/>
-	<p>\$data.raw:</p>
-    <pre>$data.raw</pre>
-
-	<hr/>
-	<p>Aggregated series: \$month.outTemp.series(aggregation_type='max', aggregation_interval=86400).json():</p>
-    <pre>$month.outTemp.series(aggregation_type='max', aggregation_interval=86400).json()</pre>
-
-	<hr/>
-	<p>Using shortcut 'day': \$month.outTemp.series(aggregation_type='max', aggregation_interval='day').json():</p>
-    <pre>$month.outTemp.series(aggregation_type='max', aggregation_interval='day').json()</pre>
-
-	<hr/>
-	<p>Order by column: \$month.outTemp.series(aggregation_type='max', aggregation_interval=86400).json(order_by="column"):</p>
-    <pre>$month.outTemp.series(aggregation_type='max', aggregation_interval=86400).json(order_by="column")</pre>
-
-	<hr/>
+    <h2>Unaggregated series </h2>
 	<p>Unaggregated series: \$day.outTemp.series.json():</p>
     <pre>$day.outTemp.series.json()</pre>
 
-	<hr/>
 	<p>Unaggregated series, just emit start times: \$day.outTemp.series.json(time_series='start'):</p>
     <pre>$day.outTemp.series.json(time_series='start')</pre>
 
-    <hr/>
     <p>Unaggregated series, as a formatted string (<em>not JSON</em>) : \$day.outTemp.series:</p>
     <pre>$day.outTemp.series</pre>
 
-    <hr/>
     <p>Unaggregated series, by column, as a formatted string (<em>not JSON</em>) \$day.outTemp.series.format(order_by='column'):</p>
     <pre>$day.outTemp.series.format(order_by='column')</pre>
+
+	<hr/>
+	<h2>Aggregated series</h2>
+	<p>Aggregated series: \$month.outTemp.series(aggregation_type='max', aggregation_interval=86400).json():</p>
+    <pre>$month.outTemp.series(aggregation_type='max', aggregation_interval=86400).json()</pre>
+
+	<p>Using shortcut 'day': \$month.outTemp.series(aggregation_type='max', aggregation_interval='day').json():</p>
+    <pre>$month.outTemp.series(aggregation_type='max', aggregation_interval='day').json()</pre>
+
+	<p>Order by column: \$month.outTemp.series(aggregation_type='max', aggregation_interval=86400).json(order_by="column"):</p>
+    <pre>$month.outTemp.series(aggregation_type='max', aggregation_interval=86400).json(order_by="column")</pre>
 
     <hr/>
     <h2>Complex conversions</h2>
@@ -121,6 +91,31 @@
     $month.windvec.series(aggregation_type='max', aggregation_interval='day').polar.knot.json()
     </pre>
 
+  <hr/>
+  <h2>Iterate over an aggregated series</h2>
+  <pre>
+    \#set \$series = \$month.outTemp.series(aggregation_type='max', aggregation_interval='day')
+    \#for (\$start, \$stop, \$data) in \$zip(\$series.start, \$series.stop, \$series.data)
+      ...
+    \#end for
+  </pre>
+
+    #set $series = $month.outTemp.series(aggregation_type='max', aggregation_interval='day')
+
+    <table>
+      <tr>
+        <td>Start date</td>
+        <td>Stop date</td>
+        <td>Max temperature</td>
+      </tr>
+    #for ($start, $stop, $data) in $zip($series.start, $series.stop, $series.data)
+      <tr>
+        <td>$start.format("%Y-%m-%d")</td>
+        <td>$stop.format("%Y-%m-%d")</td>
+        <td>$data.format("%.2f")</td>
+      </tr>
+    #end for
+    </table>
 
   </body>
 
