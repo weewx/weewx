@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-#    Copyright (c) 2009-2020 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2021 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -13,6 +13,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+import json
 import locale
 import logging
 import time
@@ -42,7 +43,7 @@ def CtoF(x):
 def FtoC(x):
     return (x - 32.0) * 5.0 / 9.0
 
-# Conversions to and from Felsius. 
+# Conversions to and from Felsius.
 # For the definition of Felsius, see https://xkcd.com/1923/
 def FtoE(x):
     return (7.0 * x - 80.0) / 9.0
@@ -52,7 +53,7 @@ def EtoF(x):
 
 def CtoE(x):
     return (7.0 / 5.0) * x + 16.0
-    
+
 def EtoC(x):
     return (x - 16.0) * 5.0 / 7.0
 
@@ -602,6 +603,14 @@ default_ordinate_names = [
     'N/A'
 ]
 
+complex_conversions = {
+    'x': lambda c: c.real if c is not None else None,
+    'y': lambda c: c.imag if c is not None else None,
+    'magnitude': lambda c: abs(c) if c is not None else None,
+    'direction': weeutil.weeutil.dirN,
+    'polar': lambda c: (abs(c), weeutil.weeutil.dirN(c)) if c is not None else None,
+}
+
 #==============================================================================
 #                        class ValueTuple
 #==============================================================================
@@ -612,7 +621,8 @@ default_ordinate_names = [
 # useful because its contents can be accessed using named attributes.
 #
 # Item   attribute   Meaning
-#    0    value      The datum value (eg, 20.2)
+#    0    value      The data value(s). Can be a series (eg, [20.2, 23.2, ...])
+#                    or a scalar (eg, 20.2).
 #    1    unit       The unit it is in ("degree_C")
 #    2    group      The unit group ("group_temperature")
 #
@@ -645,6 +655,7 @@ class ValueTuple(tuple):
             raise TypeError("Unsupported operand error for addition: %s and %s"
                             % (self[1], other[1]))
         return ValueTuple(self[0] + other[0], self[1], self[2])
+
 
 #==============================================================================
 #                        class Formatter
@@ -700,14 +711,16 @@ class Formatter(object):
                        time_format_dict = default_time_format_dict,
                        ordinate_names   = default_ordinate_names):
         """
-        unit_format_dict: Key is unit type (eg, 'inHg'), value is a
-        string format ("%.1f")
-        
-        unit_label_dict: Key is unit type (eg, 'inHg'), value is a
-        label (" inHg")
-        
-        time_format_dict: Key is a context (eg, 'week'), value is a
-        strftime format ("%d-%b-%Y %H:%M")."""
+
+        Args:
+            unit_format_dict (dict):  Key is unit type (e.g., 'inHg'), value is a
+                string format (e.g., "%.1f")
+            unit_label_dict (dict): Key is unit type (e.g., 'inHg'), value is a
+                label (e.g., " inHg")
+            time_format_dict (dict): Key is a context (e.g., 'week'), value is a
+                strftime format (e.g., "%d-%b-%Y %H:%M").
+            ordinate_names(list): A list containing ordinal compass names (e.g., ['N', 'NNE', etc.]
+        """
 
         self.unit_format_dict = unit_format_dict
         self.unit_label_dict  = unit_label_dict
@@ -718,7 +731,7 @@ class Formatter(object):
         # Add new keys for backwards compatibility on old skin dictionaries:
         self.time_format_dict.setdefault('ephem_day', "%H:%M")
         self.time_format_dict.setdefault('ephem_year', "%d-%b-%Y %H:%M")
-        
+
     @staticmethod
     def fromSkinDict(skin_dict):
         """Factory static method to initialize from a skin dictionary."""
@@ -794,25 +807,43 @@ class Formatter(object):
                  useThisFormat=None, None_string=None, 
                  localize=True):
         """Format the value as a unicode string.
-        
-        val_t: The value to be formatted as a value tuple. 
-        
-        context: A time context (eg, 'day'). 
-        [Optional. If not given, context 'current' will be used.]
-        
-        addLabel: True to add a unit label (eg, 'mbar'), False to not.
-        [Optional. If not given, a label will be added.]
-        
-        useThisFormat: An optional string or strftime format to be used. 
-        [Optional. If not given, the format given in the initializer will
-        be used.]
-        
-        None_string: A string to be used if the value val is None.
-        [Optional. If not given, the string given by unit_format_dict['NONE']
-        will be used.]
-        
-        localize: True to localize the results. False otherwise
+
+        Args:
+            val_t (ValueTuple): A ValueTuple holding the value to be formatted. The value can be an iterable.
+            context (str): A time context (eg, 'day').
+                [Optional. If not given, context 'current' will be used.]
+            addLabel (bool):  True to add a unit label (eg, 'mbar'), False to not.
+                [Optional. If not given, a label will be added.]
+            useThisFormat (str): An optional string or strftime format to be used.
+                [Optional. If not given, the format given in the initializer will be used.]
+            None_string (str): A string to be used if the value val is None.
+                [Optional. If not given, the string given by unit_format_dict['NONE']
+                will be used.]
+            localize (bool): True to localize the results. False otherwise.
+
+        Returns:
+            str. The localized, formatted, and labeled value.
         """
+
+        # Check to see if the ValueTuple holds an iterable:
+        if isinstance(val_t[0], (list, tuple)):
+            # Yes. Format each element individually, then stick them all together.
+            s_list = [self._to_string((v, val_t[1], val_t[2]),
+                                      context, addLabel, useThisFormat, None_string, localize)
+                      for v in val_t[0]]
+            s = ", ".join(s_list)
+        else:
+            # The value is a simple scalar.
+            s = self._to_string(val_t, context, addLabel, useThisFormat, None_string, localize)
+
+        return s
+
+    def _to_string(self, val_t, context='current', addLabel=True,
+                   useThisFormat=None, None_string=None,
+                   localize=True):
+        """Similar to the function toString(), except that the value in val_t must be a
+        simple scalar."""
+
         if val_t is None or val_t[0] is None:
             if None_string is None:
                 val_str = self.unit_format_dict.get('NONE', u'N/A')
@@ -875,7 +906,7 @@ class Formatter(object):
         _degree = (val_t[0] + _sector_size/2.0) % 360.0
         _sector = int(_degree / _sector_size)
         return self.ordinate_names[_sector]
-    
+
     def delta_secs_to_string(self, secs, label_format):
         """Convert elapsed seconds to a string
         
@@ -900,7 +931,7 @@ class Formatter(object):
 
 class Converter(object):
     """Holds everything necessary to do conversions to a target unit system."""
-    
+
     def __init__(self, group_unit_dict=USUnits):
         """Initialize an instance of Converter
         
@@ -909,7 +940,7 @@ class Converter(object):
         unit type ('mbar')"""
 
         self.group_unit_dict  = group_unit_dict
-        
+
     @staticmethod
     def fromSkinDict(skin_dict):
         """Factory static method to initialize from a skin dictionary."""
@@ -1000,8 +1031,8 @@ class Converter(object):
             # the ValueTuple:
             target_dict[obs_type] = self.convert(as_value_tuple(obs_dict, obs_type))[0]
         return target_dict
-            
-            
+
+
     def getTargetUnit(self, obs_type, agg_type=None):
         """Given an observation type and an aggregation type, return the 
         target unit type and group, or (None, None) if they cannot be determined.
@@ -1013,7 +1044,7 @@ class Converter(object):
         
         returns: A 2-way tuple holding the unit type and the unit group
         or (None, None) if they cannot be determined.
-        """        
+        """
         unit_group = _getUnitGroup(obs_type, agg_type)
         if unit_group in self.group_unit_dict:
             unit_type = self.group_unit_dict[unit_group]
@@ -1041,10 +1072,10 @@ class FixedConverter(object):
         
         target_units: The new, target unit (eg, "degree_C")"""
         self.target_units = target_units
-        
+
     def convert(self, val_t):
         return convert(val_t, self.target_units)
-    
+
 #==============================================================================
 #                      class ValueHelper
 #==============================================================================
@@ -1075,19 +1106,18 @@ class ValueHelper(object):
     20.0
     """
     def __init__(self, value_t, context='current', formatter=Formatter(), converter=Converter()):
-        """Initialize a ValueHelper.
-        
-        value_t: An instance of a ValueTuple, holding the datum.
-        
-        context: The time context. Something like 'current', 'day', 'week'.
-        [Optional. If not given, context 'current' will be used.]
-        
-        formatter: An instance of class Formatter.
-        [Optional. If not given, then the default Formatter() will be used]
-        
-        converter: An instance of class Converter.
-        [Optional. If not given, then the default Converter() will be used,
-        which will convert to US units]
+        """Initialize a ValueHelper
+
+        Args:
+            value_t (ValueTuple): An instance of a ValueTuple. The "value" part can be either a
+                scalar, or a series.
+            context (str): The time context. Something like 'current', 'day', 'week'.
+                [Optional. If not given, context 'current' will be used.]
+            formatter (Formatter): An instance of class Formatter.
+                [Optional. If not given, then the default Formatter() will be used]
+            converter (Converter):  An instance of class Converter.
+                [Optional. If not given, then the default Converter() will be used,
+                which will convert to US units]
         """
         self.value_t   = value_t
         self.context   = context
@@ -1103,20 +1133,20 @@ class ValueHelper(object):
         """Convert my internally held ValueTuple to a unicode string, using the supplied
         converter and formatter.
 
-        Parameters:
-            addLabel: If True, add a unit label
+        Args:
+            addLabel (bool):  If True, add a unit label
+            useThisFormat (str):  String with a format to be used when formatting the value.
+                If None, then a format will be supplied. Default is None.
+            None_string (str): If the value is not None, then this string will be used. If None,
+                then a default string from skin.conf will be used. Default is None.
+            localize (bool):  If True, localize the results. Default is True
+            NONE_string (str): Supplied for backwards compatibility. Identical semantics to
+                None_string.
 
-            useThisFormat: String with a format to be used when formatting the value. If None,
-            then a format will be supplied. Default is None.
-
-            None_string: If the value is None, then this string will be used. If None, then a
-            default string from skin.conf will be used. Default is None.
-
-            localize: If True, localize the results. Default is True
-
-            NONE_string: Supplied for backwards compatibility. Identical semantics to None_string.
+        Returns:
+            str. The formatted and labeled string
         """
-        # If the type is unknown, then just return an error string: 
+        # If the type is unknown, then just return an error string:
         if isinstance(self.value_t, UnknownType):
             return u"?'%s'?" % self.value_t.obs_type
         # Check NONE_string for backwards compatibility:
@@ -1125,11 +1155,11 @@ class ValueHelper(object):
         # Get the value tuple in the target units:
         vtx = self._raw_value_tuple
         # Then do the format conversion:
-        s = self.formatter.toString(vtx, self.context, addLabel=addLabel, 
-                                    useThisFormat=useThisFormat, None_string=None_string, 
+        s = self.formatter.toString(vtx, self.context, addLabel=addLabel,
+                                    useThisFormat=useThisFormat, None_string=None_string,
                                     localize=localize)
         return s
-        
+
     def __str__(self):
         """Return as the native string type for the version of Python being run."""
         s = self.toString()
@@ -1149,28 +1179,14 @@ class ValueHelper(object):
         # Get the raw value tuple, then ask the formatter to look up an
         # appropriate ordinate:
         return self.formatter.to_ordinal_compass(self._raw_value_tuple)
-        
+
+    def json(self, **kwargs):
+        return json.dumps(self._raw_value_tuple[0], cls=ComplexEncoder, **kwargs)
+
     @property
     def raw(self):
         """Returns the raw value without any formatting."""
         return self._raw_value_tuple[0]
-
-    # Backwards compatibility
-    def string(self, None_string=None):
-        """Return as string with an optional user specified string to be used if None"""
-        return self.toString(None_string=None_string)
-
-    # Backwards compatibility
-    def nolabel(self, format_string, None_string=None):
-        """Returns a formatted version of the datum, using a user-supplied
-        format. No label."""
-        return self.toString(addLabel=False, useThisFormat=format_string, None_string=None_string)
-
-    # Backwards compatibility
-    @property
-    def formatted(self):
-        """Return a formatted version of the datum. No label."""
-        return self.toString(addLabel=False)
 
     @property
     def _raw_value_tuple(self):
@@ -1182,32 +1198,170 @@ class ValueHelper(object):
 
     def __getattr__(self, target_unit):
         """Convert to a new unit type.
-        
-        target_unit: The new target unit. 
-        
-        returns: A ValueHelper with a FixedConverter that converts to the
-        specified units."""
+
+        Args:
+            target_unit (str): The new target unit
+
+        Returns:
+            ValueHelper. The returned ValueHelper uses an instance of FixedConverter to insure that
+                the data will be in the selected unit.
+        """
 
         # This is to get around bugs in the Python version of Cheetah's namemapper:
         if target_unit in ['__call__', 'has_key']:
             raise AttributeError
 
+        if target_unit in complex_conversions:
+            return ValueHelper(convert(self.value_t, target_unit),
+                               self.context,
+                               self.formatter,
+                               self.converter)
         # If we are being asked to perform a conversion, make sure it's a
         # legal one:
-        if self.value_t[1] != target_unit:        
+        if self.value_t[1] != target_unit:
             try:
                 conversionDict[self.value_t[1]][target_unit]
             except KeyError:
                 raise AttributeError("Illegal conversion from '%s' to '%s'"
                                      %(self.value_t[1], target_unit))
         return ValueHelper(self.value_t, self.context, self.formatter, FixedConverter(target_unit))
-    
+
+    def __iter__(self):
+        """Return an iterator that can iterate over the elements of self.value_t."""
+        for row in self.value_t[0]:
+            # Form a ValueTuple using the value, plus the unit and unit group
+            vt = ValueTuple(row, self.value_t[1], self.value_t[2])
+            # Form a ValueHelper out of that
+            vh = ValueHelper(vt, self.context, self.formatter, self.converter)
+            yield vh
+
     def exists(self):
         return not isinstance(self.value_t, UnknownType)
-    
+
     def has_data(self):
         return self.exists() and self.value_t[0] is not None
-    
+
+    # Backwards compatibility
+    def string(self, None_string=None):
+        """Return as string with an optional user specified string to be used if None.
+        DEPRECATED."""
+        return self.toString(None_string=None_string)
+
+    # Backwards compatibility
+    def nolabel(self, format_string, None_string=None):
+        """Returns a formatted version of the datum, using a user-supplied format. No label.
+        DEPRECATED."""
+        return self.toString(addLabel=False, useThisFormat=format_string, None_string=None_string)
+
+    # Backwards compatibility
+    @property
+    def formatted(self):
+        """Return a formatted version of the datum. No label.
+        DEPRECATED."""
+        return self.toString(addLabel=False)
+
+
+#==============================================================================
+#                        SeriesHelper
+#==============================================================================
+
+class SeriesHelper(object):
+    def __init__(self, start, stop, data):
+        """A convenience class that holds starting times, stopping times, and data for a series.
+
+        Args:
+            start: A ValueHelper holding the start times of the data.
+            stop: A ValueHelper holding the stop times of the data.
+            data: A ValueHelper holding the data.
+        """
+        self.start = start
+        self.stop = stop
+        self.data = data
+
+    def json(self, order_by='row', time_series='both', **kwargs):
+        """Return the data in this series as JSON.
+
+        Args:
+            order_by: A string that determines whether the generated string is ordered by
+                row or column. Either 'row' or 'column'.
+            time_series: What to include for the time series. Either 'start', 'stop', or
+                'both'.
+            **kwargs: These arguments are passed on to json.loads()
+
+        Returns:
+            A string with the encoded JSON.
+        """
+
+        time_series = time_series.lower()
+        if time_series not in ['both', 'start', 'stop']:
+            raise ValueError("Unknown option '%s' for parameter 'time_series'" % time_series)
+
+        if order_by == 'row':
+            if time_series == 'both':
+                json_data = [[start_.raw, stop_.raw, data_.raw]
+                             for start_, stop_, data_ in zip(self.start, self.stop, self.data)]
+            elif time_series == 'start':
+                json_data = [[start_.raw, data_.raw]
+                             for start_, data_ in zip(self.start, self.data)]
+            else:
+                json_data = [[stop_.raw, data_.raw]
+                             for stop_, data_ in zip(self.stop, self.data)]
+        elif order_by == 'column':
+            if time_series == 'both':
+                json_data = [self.start.raw, self.stop.raw, self.data.raw]
+            elif time_series == 'start':
+                json_data = [self.start.raw, self.data.raw]
+            else:
+                json_data = [self.stop.raw, self.data.raw]
+        else:
+            raise ValueError("Unknown option '%s' for parameter 'order_by'" % order_by)
+
+        return json.dumps(json_data, cls=ComplexEncoder, **kwargs)
+
+    def __str__(self):
+        """Return as the native string type for the version of Python being run."""
+        s = self.format()
+        return six.ensure_str(s)
+
+    def __unicode__(self):
+        """Return as unicode. This function is called only under Python 2."""
+        return self.format()
+
+    def format(self, format_string=None, None_string=None, add_label=True,
+               localize=True, order_by='row'):
+
+        if order_by == 'row':
+            rows = []
+            for start_, stop_, data_ in zip(self.start, self.stop, self.data):
+                rows += ["%s, %s, %s" \
+                         % (str(start_),
+                            str(stop_),
+                            data_.format(format_string, None_string, add_label, localize))
+                ]
+            return "\n".join(rows)
+        elif order_by == 'column':
+            return "%s\n%s\n%s" \
+                   % (str(self.start),
+                      str(self.stop),
+                      self.data.format(format_string, None_string, add_label, localize))
+        else:
+            raise ValueError('Unknown order by option %s' % order_by)
+
+    def __getattr__(self, target_unit):
+        """Convert the data part of the series to a new unit. Only the data part gets converted."""
+
+        # This is to get around bugs in the Python version of Cheetah's namemapper:
+        if target_unit in ['__call__', 'has_key']:
+            raise AttributeError
+
+        converted_data = getattr(self.data, target_unit)
+
+        return SeriesHelper(self.start, self.stop, converted_data)
+
+    def __iter__(self):
+        """Iterate over myself by row."""
+        for start, stop, data in zip(self.start, self.stop, self.data):
+            yield start, stop, data
 
 #==============================================================================
 #                       class UnitInfoHelper and friends
@@ -1231,7 +1385,7 @@ class FormatHelper(object):
         if obs_type in ['__call__', 'has_key']:
             raise AttributeError
         return get_format_string(self.formatter, self.converter, obs_type)
-    
+
 class LabelHelper(object):
     def __init__(self, formatter, converter):
         self.formatter = formatter
@@ -1241,7 +1395,7 @@ class LabelHelper(object):
         if obs_type in ['__call__', 'has_key']:
             raise AttributeError
         return get_label_string(self.formatter, self.converter, obs_type)
-    
+
 class UnitInfoHelper(object):
     """Helper class used for for the $unit template tag."""
     def __init__(self, formatter, converter):
@@ -1261,13 +1415,14 @@ class UnitInfoHelper(object):
 
 
 class ObsInfoHelper(object):
-    """Helper class to implement the $obs template tag."""    
+    """Helper class to implement the $obs template tag."""
     def __init__(self, skin_dict):
         try:
             d = skin_dict['Labels']['Generic']
         except KeyError:
             d = {}
         self.label = weeutil.weeutil.KeyDict(d)
+
 
 #==============================================================================
 #                             Helper functions
@@ -1276,110 +1431,136 @@ def _getUnitGroup(obs_type, agg_type=None):
     """Given an observation type and an aggregation type, what unit group
     does it belong to?
 
-        Examples:
-             obs_type  agg_type          Returns
-             ________  ________         _________
-            'outTemp',  None      -->  'group_temperature'
-            'outTemp', 'min'      -->  'group_temperature'
-            'outTemp', 'mintime'  -->  'group_time'
-            'wind',    'avg'      -->  'group_speed'
-            'wind',    'vecdir'   -->  'group_direction'
-        
-        obs_type: An observation type. E.g., 'barometer'.
-        
-        agg_type: An aggregation type E.g., 'mintime', or 'avg'.
-        
-        Returns: the unit group or None if it cannot be determined."""
+    Examples:
+        +-------------+-----------+---------------------+
+        | obs_type    | agg_type  | Returns             |
+        +=============+===========+=====================+
+        | 'outTemp'   | None      | 'group_temperature' |
+        +-------------+-----------+---------------------+
+        | 'outTemp'   | 'min'     | 'group_temperature' |
+        +-------------+-----------+---------------------+
+        | 'outTemp'   | 'mintime' | 'group_time'        |
+        +-------------+-----------+---------------------+
+        | 'wind'      | 'avg'     | 'group_speed'       |
+        +-------------+-----------+---------------------+
+        | 'wind'      | 'vecdir'  | 'group_direction'   |
+        +-------------+-----------+---------------------+
+
+    Args:
+        obs_type (str): An observation type (eg, 'barometer')
+        agg_type (str): An aggregation (eg, 'mintime', or 'avg'.)
+
+    Returns:
+        str or None. The unit group or None if it cannot be determined.
+    """
     if agg_type and agg_type in agg_group:
         return agg_group[agg_type]
     else:
         return obs_group_dict.get(obs_type)
-    
-def convert(val_t, target_unit_type):
-    """ Convert a value or a sequence of values between unit systems
 
-    val_t: A value-tuple with the value to be converted. The first
-    element is the value (either a scalar or iterable), the second element 
-    the unit type (e.g., "foot", or "inHg") it is in.
-    
-    target_unit_type: The unit type (e.g., "meter", or "mbar") to
-    which the value is to be converted. 
-    
-    returns: An instance of ValueTuple, converted into the desired units.
+
+def convert(val_t, target_unit):
+    """Convert a ValueTuple to a new unit
+
+    Args:
+        val_t (ValueTuple): A ValueTuple containing the value to be converted. The first element
+            can be either a scalar or iterable.
+        target_unit (str): The unit type (e.g., "meter", or "mbar") to which the value is to be
+         converted. If the ValueTuple holds a complex number, target_unit can be a complex
+         conversion nickname, such as 'polar'.
+
+    Returns:
+        ValueTuple. An instance of ValueTuple, where the desired conversion has been performed.
+
     """
-    # If the value is already in the target unit type, then just return it:
-    if val_t[1] == target_unit_type:
-        return val_t
+    # Is the "target_unit" really a conversion for complex numbers?
+    if target_unit in complex_conversions:
+        # Yes. Get the conversion function. Also, note that these operations do not change the
+        # unit the ValueTuple is in.
+        conversion_func = complex_conversions[target_unit]
+        target_unit = val_t[1]
+    else:
+        # We are converting between units. If the value is already in the target unit type, then
+        # just return it:
+        if val_t[1] == target_unit:
+            return val_t
 
-    # Retrieve the conversion function. An exception of type KeyError
-    # will occur if the target or source units are invalid
-    try:
-        conversion_func = conversionDict[val_t[1]][target_unit_type]
-    except KeyError:
-        log.debug("Unable to convert from %s to %s", val_t[1], target_unit_type)
-        raise
+        # Retrieve the conversion function. An exception of type KeyError
+        # will occur if the target or source units are invalid
+        try:
+            conversion_func = conversionDict[val_t[1]][target_unit]
+        except KeyError:
+            log.debug("Unable to convert from %s to %s", val_t[1], target_unit)
+            raise
     # Try converting a sequence first. A TypeError exception will occur if
     # the value is actually a scalar:
     try:
-        new_val = list([conversion_func(x) if x is not None else None for x in val_t[0]])
+        new_val = [conversion_func(x) if x is not None else None for x in val_t[0]]
     except TypeError:
         new_val = conversion_func(val_t[0]) if val_t[0] is not None else None
+
     # Add on the unit type and the group type and return the results:
-    return ValueTuple(new_val, target_unit_type, val_t[2])
+    return ValueTuple(new_val, target_unit, val_t[2])
+
 
 def convertStd(val_t, target_std_unit_system):
     """Convert a value tuple to an appropriate unit in a target standardized
     unit system
     
-    val_t: A value tuple.
-    
-    target_std_unit_system: A standardized unit system
-                            (weewx.US, weewx.METRIC, or weewx.METRICWX)
-    
-    Returns: A value tuple in the given standardized unit system.
-    
     Example:
-    >>> value_t = (30.02, 'inHg', 'group_pressure')
-    >>> print("(%.2f, %s, %s)" % convertStd(value_t, weewx.METRIC))
-    (1016.59, mbar, group_pressure)
-    >>> value_t = (1.2, 'inch', 'group_rain')
-    >>> print("(%.2f, %s, %s)" % convertStd(value_t, weewx.METRICWX))
-    (30.48, mm, group_rain)
+        >>> value_t = (30.02, 'inHg', 'group_pressure')
+        >>> print("(%.2f, %s, %s)" % convertStd(value_t, weewx.METRIC))
+        (1016.59, mbar, group_pressure)
+        >>> value_t = (1.2, 'inch', 'group_rain')
+        >>> print("(%.2f, %s, %s)" % convertStd(value_t, weewx.METRICWX))
+        (30.48, mm, group_rain)
+
+    Args:
+        val_t (ValueTuple): The ValueTuple to be converted.
+        target_std_unit_system (int):  A standardized WeeWX unit system (weewx.US, weewx.METRIC,
+            or weewx.METRICWX)
+
+    Returns:
+        ValueTuple. A value tuple in the given standardized unit system.
+    
     """
     return StdUnitConverters[target_std_unit_system].convert(val_t)
 
 def getStandardUnitType(target_std_unit_system, obs_type, agg_type=None):
     """Given a standard unit system (weewx.US, weewx.METRIC, weewx.METRICWX),
     an observation type, and an aggregation type, what units would it be in?
-    
-    target_std_unit_system: A standardized unit system. If None, then
-    the the output units are indeterminate, so (None, None) is returned. 
-    
-    obs_type: An observation type.
-        
-    agg_type: An aggregation type E.g., 'mintime', or 'avg'.
-    
-    returns: A 2-way tuple containing the target units, and the target group.
 
     Examples:
-    >>> print(getStandardUnitType(weewx.US,     'barometer'))
-    ('inHg', 'group_pressure')
-    >>> print(getStandardUnitType(weewx.METRIC, 'barometer'))
-    ('mbar', 'group_pressure')
-    >>> print(getStandardUnitType(weewx.US, 'barometer', 'mintime'))
-    ('unix_epoch', 'group_time')
-    >>> print(getStandardUnitType(weewx.METRIC, 'barometer', 'avg'))
-    ('mbar', 'group_pressure')
-    >>> print(getStandardUnitType(weewx.METRIC, 'wind', 'rms'))
-    ('km_per_hour', 'group_speed')
-    >>> print(getStandardUnitType(None, 'barometer', 'avg'))
-    (None, None)
-    """
+        >>> print(getStandardUnitType(weewx.US,     'barometer'))
+        ('inHg', 'group_pressure')
+        >>> print(getStandardUnitType(weewx.METRIC, 'barometer'))
+        ('mbar', 'group_pressure')
+        >>> print(getStandardUnitType(weewx.US, 'barometer', 'mintime'))
+        ('unix_epoch', 'group_time')
+        >>> print(getStandardUnitType(weewx.METRIC, 'barometer', 'avg'))
+        ('mbar', 'group_pressure')
+        >>> print(getStandardUnitType(weewx.METRIC, 'wind', 'rms'))
+        ('km_per_hour', 'group_speed')
+        >>> print(getStandardUnitType(None, 'barometer', 'avg'))
+        (None, None)
+
+    Args:
+        target_std_unit_system (int): A standardized unit system. If None, then
+            the the output units are indeterminate, so (None, None) is returned.
+
+        obs_type (str): An observation type, e.g., 'outTemp'
+
+        agg_type (str): An aggregation type, e.g., 'mintime', or 'avg'.
     
+    Returns:
+         tuple. A 2-way tuple containing the target units, and the target group.
+    """
+
     if target_std_unit_system is not None:
         return StdUnitConverters[target_std_unit_system].getTargetUnit(obs_type, agg_type)
     else:
-        return (None, None)
+        return None, None
+
 
 def get_format_string(formatter, converter, obs_type):
     # First convert to the target unit type:
@@ -1387,11 +1568,13 @@ def get_format_string(formatter, converter, obs_type):
     # Then look up the format string for that unit type:
     return formatter.get_format_string(u)
 
+
 def get_label_string(formatter, converter, obs_type, plural=True):
     # First convert to the target unit type:    
     u = converter.getTargetUnit(obs_type)[0]
     # Then look up the label for that unit type:
     return formatter.get_label_string(u, plural)
+
 
 class GenWithConvert(object):
     """Generator wrapper. Converts the output of the wrapped generator to a
@@ -1419,7 +1602,7 @@ class GenWithConvert(object):
     Timestamp: 194758400; Temperature: 21.00; Unit system: 16
     Timestamp: 194758700; Temperature: 22.00; Unit system: 16
     """
-    
+
     def __init__(self, input_generator, target_unit_system=weewx.METRIC):
         """Initialize an instance of GenWithConvert
         
@@ -1429,10 +1612,10 @@ class GenWithConvert(object):
         use, or 'None' if it should leave the output unchanged."""
         self.input_generator = input_generator
         self.target_unit_system = target_unit_system
-        
+
     def __iter__(self):
         return self
-    
+
     def __next__(self):
         _record = next(self.input_generator)
         if self.target_unit_system is None:
@@ -1491,6 +1674,15 @@ def as_value_tuple(record_dict, obs_type):
 
     # Form the value-tuple and return it:
     return ValueTuple(val, unit_type, unit_group)
+
+
+class ComplexEncoder(json.JSONEncoder):
+    """Custom encoder that knows how to encode complex objects"""
+    def default(self, obj):
+        if isinstance(obj, complex):
+            return [obj.real, obj.imag]
+        # Otherwise, let the base class handle it
+        return json.JSONEncoder.default(self, obj)
 
 
 if __name__ == "__main__":

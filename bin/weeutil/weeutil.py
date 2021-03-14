@@ -12,6 +12,7 @@ from __future__ import absolute_import
 from __future__ import print_function
 
 import calendar
+import cmath
 import datetime
 import math
 import os
@@ -249,6 +250,25 @@ class TimeSpan(tuple):
         return 0 if self.start == other.start else 1
 
 
+def nominal_spans(label):
+    """Convert a (possible) string into an integer time."""
+    if label is None:
+        return None
+    try:
+        # Is the label either an integer, or something that can be converted into an integer?
+        interval = int(label)
+    except ValueError:
+        # Is it in our list of nominal spans? If not, fail hard.
+        interval = {
+            'hour' : 3600,
+            'day': 86400,
+            'week': 7 * 86400,
+            'month': 365.25 / 12 * 86400,
+            'year': 365.25 * 86400,
+        }[label.lower()]
+    return interval
+
+
 def intervalgen(start_ts, stop_ts, interval):
     """Generator function yielding a sequence of time spans whose boundaries
     are on constant local time.
@@ -310,6 +330,9 @@ def intervalgen(start_ts, stop_ts, interval):
 
     dt1 = datetime.datetime.fromtimestamp(start_ts)
     stop_dt = datetime.datetime.fromtimestamp(stop_ts)
+
+    # If a string was passed in, convert to seconds using nominal time intervals.
+    interval = nominal_spans(interval)
 
     if interval == 365.25 / 12 * 24 * 3600:
         # Interval is a nominal month. This algorithm is 
@@ -1265,6 +1288,15 @@ def to_complex(magnitude, direction):
         x = magnitude * math.cos(math.radians(90.0 - direction))
         y = magnitude * math.sin(math.radians(90.0 - direction))
         value = complex(x, y)
+    return value
+
+
+def dirN(c):
+    """Given a complex number, return its phase as a compass heading"""
+    if c is None:
+        value = None
+    else:
+        value = (450 - math.degrees(cmath.phase(c))) % 360.0
     return value
 
 
