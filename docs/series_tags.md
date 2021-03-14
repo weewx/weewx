@@ -276,8 +276,8 @@ formatting. Here's an example:
       </tr>
     #for ($start, $stop, $data) in $month.outTemp.series(aggregation_type='max', aggregation_interval='day') ## 1
       <tr>
-        <td>$start.format("%Y-%m-%d")</td> ## 2
-        <td>$data.format("%.2f")</td>      ## 3
+        <td>$start.format("%Y-%m-%d")</td>      ## 2
+        <td>$data.format("%.2f")</td>           ## 3
       </tr>
     #end for
     </table>
@@ -285,13 +285,11 @@ formatting. Here's an example:
 Here, we create a table. Each row is individually formatted. Comments below refer to the marked
 lines:
 
-1. Normally, if the tag `$month.outTemp.series(aggregation_type='max', aggregation_interval='day')`
-   occurs in a document, Cheetah will try and convert it into a string in order to embed the
-   results in the generated file. However, if it is not converted into a string, the expression
-   actually returns a `SeriesHelper`, which internally holds the start and stop time of each
-   interval, as well as the aggregated data for the interval. We then _iterate_ over
-   the `SeriesHelper`. Iteration returns a 3-way tuple `start`, `stop`, and `data`. Each is an
-   instance of a `ValueHelper`, which can be formatted like any other `ValueHelper`.
+1. Once evaluated, the tag `$month.outTemp.series(aggregation_type='max', aggregation_interval='day')`
+   returns a `SeriesHelper`. Normally, Cheetah would try to convert this into a string, in order to
+   embed the results in a document. However, in this case we are _iterating_ over the tag. Iteration
+   returns a 3-way tuple `start`, `stop`, and `data`, each an instance of `ValueHelper`, each of
+   which can be formatted like any other `ValueHelper`.
 
 2. We will work only with the start times and data. On line 2, we apply a custom formatting for the
    start times, so that only the date (no time) is shown.
@@ -331,7 +329,8 @@ The final results look like:
    </tr>
  </table>
 ``` 
-This Markdown document cannot show rendered HTML, but it looks something like:
+Unfortunately, this Markdown document cannot show rendered HTML but, once rendered, it would look
+something like:
 ```
 Start date	Max temperature
 2021-03-01	58.20°F
