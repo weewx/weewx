@@ -28,6 +28,9 @@ wrongly include the record on the left.
 Fixed bug that caused the incorrect label to be applied to plots where the
 aggregation type changes the unit. Fixes issue #654.
 
+Plots now locate the x-coordinate in the middle of the aggregation interval for
+all aggregation types (not just min, max, avg). Revisits PR #232.
+
 
 4.4.0 01/30/2021
 

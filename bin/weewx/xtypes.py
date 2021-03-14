@@ -576,7 +576,7 @@ class WindVec(XType):
 
     agg_sql_dict = {
         'count': "SELECT COUNT(dateTime), usUnits FROM %(table_name)s "
-                 "WHERE dateTime > %(start)s AND dateTime <= %(stop)s  AND %(mag)s IS NOT NULL)",
+                 "WHERE dateTime > %(start)s AND dateTime <= %(stop)s  AND %(mag)s IS NOT NULL",
         'first': "SELECT %(mag)s, %(dir)s, usUnits FROM %(table_name)s "
                  "WHERE dateTime > %(start)s AND dateTime <= %(stop)s  AND %(mag)s IS NOT NULL "
                  "ORDER BY dateTime ASC LIMIT 1",
