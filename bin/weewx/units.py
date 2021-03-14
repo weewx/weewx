@@ -711,14 +711,16 @@ class Formatter(object):
                        time_format_dict = default_time_format_dict,
                        ordinate_names   = default_ordinate_names):
         """
-        unit_format_dict: Key is unit type (eg, 'inHg'), value is a
-        string format ("%.1f")
-        
-        unit_label_dict: Key is unit type (eg, 'inHg'), value is a
-        label (" inHg")
-        
-        time_format_dict: Key is a context (eg, 'week'), value is a
-        strftime format ("%d-%b-%Y %H:%M")."""
+
+        Args:
+            unit_format_dict (dict):  Key is unit type (e.g., 'inHg'), value is a
+                string format (e.g., "%.1f")
+            unit_label_dict (dict): Key is unit type (e.g., 'inHg'), value is a
+                label (e.g., " inHg")
+            time_format_dict (dict): Key is a context (e.g., 'week'), value is a
+                strftime format (e.g., "%d-%b-%Y %H:%M").
+            ordinate_names(list): A list containing ordinal compass names (e.g., ['N', 'NNE', etc.]
+        """
 
         self.unit_format_dict = unit_format_dict
         self.unit_label_dict  = unit_label_dict
@@ -804,25 +806,23 @@ class Formatter(object):
     def toString(self, val_t, context='current', addLabel=True, 
                  useThisFormat=None, None_string=None, 
                  localize=True):
-        """Format the value as a unicode string.
-        
-        val_t: A ValueTuple holding the value to be formatted. The value can be an iterable.
-        
-        context: A time context (eg, 'day'). 
-        [Optional. If not given, context 'current' will be used.]
-        
-        addLabel: True to add a unit label (eg, 'mbar'), False to not.
-        [Optional. If not given, a label will be added.]
-        
-        useThisFormat: An optional string or strftime format to be used. 
-        [Optional. If not given, the format given in the initializer will
-        be used.]
-        
-        None_string: A string to be used if the value val is None.
-        [Optional. If not given, the string given by unit_format_dict['NONE']
-        will be used.]
-        
-        localize: True to localize the results. False otherwise
+        """
+
+        Args:
+            val_t (ValueTuple): A ValueTuple holding the value to be formatted. The value can be an iterable.
+            context (str): A time context (eg, 'day').
+                [Optional. If not given, context 'current' will be used.]
+            addLabel (bool):  True to add a unit label (eg, 'mbar'), False to not.
+                [Optional. If not given, a label will be added.]
+            useThisFormat (str): An optional string or strftime format to be used.
+                [Optional. If not given, the format given in the initializer will be used.]
+            None_string (str): A string to be used if the value val is None.
+                [Optional. If not given, the string given by unit_format_dict['NONE']
+                will be used.]
+            localize (bool): True to localize the results. False otherwise.
+
+        Returns:
+            str. The localized, formatted, and labeled value.
         """
 
         # Check to see if the ValueTuple holds an iterable:
@@ -1106,19 +1106,18 @@ class ValueHelper(object):
     20.0
     """
     def __init__(self, value_t, context='current', formatter=Formatter(), converter=Converter()):
-        """Initialize a ValueHelper.
-        
-        value_t: An instance of a ValueTuple. The "value" part can be either a scalar, or a series.
-        
-        context: The time context. Something like 'current', 'day', 'week'.
-        [Optional. If not given, context 'current' will be used.]
-        
-        formatter: An instance of class Formatter.
-        [Optional. If not given, then the default Formatter() will be used]
-        
-        converter: An instance of class Converter.
-        [Optional. If not given, then the default Converter() will be used,
-        which will convert to US units]
+        """Initialize a ValueHelper
+
+        Args:
+            value_t (ValueTuple): An instance of a ValueTuple. The "value" part can be either a
+                scalar, or a series.
+            context (str): The time context. Something like 'current', 'day', 'week'.
+                [Optional. If not given, context 'current' will be used.]
+            formatter (Formatter): An instance of class Formatter.
+                [Optional. If not given, then the default Formatter() will be used]
+            converter (Converter):  An instance of class Converter.
+                [Optional. If not given, then the default Converter() will be used,
+                which will convert to US units]
         """
         self.value_t   = value_t
         self.context   = context
@@ -1134,20 +1133,20 @@ class ValueHelper(object):
         """Convert my internally held ValueTuple to a unicode string, using the supplied
         converter and formatter.
 
-        Parameters:
-            addLabel: If True, add a unit label
+        Args:
+            addLabel (bool):  If True, add a unit label
+            useThisFormat (str):  String with a format to be used when formatting the value.
+                If None, then a format will be supplied. Default is None.
+            None_string (str): If the value is not None, then this string will be used. If None,
+                then a default string from skin.conf will be used. Default is None.
+            localize (bool):  If True, localize the results. Default is True
+            NONE_string (str): Supplied for backwards compatibility. Identical semantics to
+                None_string.
 
-            useThisFormat: String with a format to be used when formatting the value. If None,
-            then a format will be supplied. Default is None.
-
-            None_string: If the value is None, then this string will be used. If None, then a
-            default string from skin.conf will be used. Default is None.
-
-            localize: If True, localize the results. Default is True
-
-            NONE_string: Supplied for backwards compatibility. Identical semantics to None_string.
+        Returns:
+            str. The formatted and labeled string
         """
-        # If the type is unknown, then just return an error string: 
+        # If the type is unknown, then just return an error string:
         if isinstance(self.value_t, UnknownType):
             return u"?'%s'?" % self.value_t.obs_type
         # Check NONE_string for backwards compatibility:
@@ -1199,11 +1198,14 @@ class ValueHelper(object):
 
     def __getattr__(self, target_unit):
         """Convert to a new unit type.
-        
-        target_unit: The new target unit. 
-        
-        returns: A ValueHelper with a FixedConverter that converts to the
-        specified units."""
+
+        Args:
+            target_unit (str): The new target unit
+
+        Returns:
+            ValueHelper. The returned ValueHelper uses an instance of FixedConverter to insure that
+                the data will be in the selected unit.
+        """
 
         # This is to get around bugs in the Python version of Cheetah's namemapper:
         if target_unit in ['__call__', 'has_key']:
@@ -1277,6 +1279,19 @@ class SeriesHelper(object):
         self.data = data
 
     def json(self, order_by='row', time_series='both', **kwargs):
+        """Return the data in this series as JSON.
+
+        Args:
+            order_by: A string that determines whether the generated string is ordered by
+                row or column. Either 'row' or 'column'.
+            time_series: What to include for the time series. Either 'start', 'stop', or
+                'both'.
+            **kwargs: These arguments are passed on to json.loads()
+
+        Returns:
+            A string with the encoded JSON.
+        """
+
         time_series = time_series.lower()
         if time_series not in ['both', 'start', 'stop']:
             raise ValueError("Unknown option '%s' for parameter 'time_series'" % time_series)

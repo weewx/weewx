@@ -6,6 +6,10 @@ WeeWX change history
 The utility wee_database has new options --add-column, --rename-column, and
 --drop-columns for adding, renaming, and deleting columns in the database.
 
+There is limited support for generating JSON in templates, particulary series.
+See the document series_tags.md in the docs subdirectory. This is still
+experimental and subject to change!
+
 
 4.4.1 MM/DD/YYYY
 
