@@ -268,12 +268,15 @@ If you want finer control over formatting, you can iterate over the series and a
 formatting. Here's an example:
 
 ```
-    #set ($start, $stop, $data) = $month.outTemp.series(aggregation_type='max', aggregation_interval='day') ## 1
     <table>
-    #for ($time_vh, $data_vh) in $zip($start, $data)                       ## 2
       <tr>
-        <td>$time_vh.format("%Y-%m-%d")</td>  ## 3
-        <td>$data_vh.format("%.2f")</td>      ## 4
+        <td>Start date</td>
+        <td>Max temperature</td>
+      </tr>
+    #for ($start, $stop, $data) in $month.outTemp.series(aggregation_type='max', aggregation_interval='day') ## 1
+      <tr>
+        <td>$start.format("%Y-%m-%d")</td> ## 2
+        <td>$data.format("%.2f")</td>      ## 3
       </tr>
     #end for
     </table>
@@ -282,29 +285,58 @@ Here, we create a table. Each row is individually formatted. Comments below refe
 lines:
 
 1. Normally, if the tag `$month.outTemp.series(aggregation_type='max', aggregation_interval='day')`
-occurs in a document, Cheetah will try and convert it into a string in order to embed the results
-in the generated file. However, if it is not converted into a string, the expression actually
-returns a `SeriesHelper`, which is a 3-way tuple of `ValueHelpers`. The data in each `ValueHelper`
-is a _series_. The first one holds the start times of the aggregation intervals, the second the stop
-times, and the third the actual data. So, in this line, we store the three `ValueHelpers`
-separately as variables `$start`, `$stop`, and `$data`, respectively.
+   occurs in a document, Cheetah will try and convert it into a string in order to embed the
+   results in the generated file. However, if it is not converted into a string, the expression
+   actually returns a `SeriesHelper`, which internally holds the start and stop time of each
+   interval, as well as the aggregated data for the interval. We then _iterate_ over
+   the `SeriesHelper`. Iteration returns a 3-way tuple `start`, `stop`, and `data`. Each is an
+   instance of a `ValueHelper`, which can be formatted like any other `ValueHelper`.
 
-2. We will work only with the start times and data. We
-[zip](https://docs.python.org/3/library/functions.html#zip) `$start` and `$data` together in order
-to convert the "by column" ordering into "by row", then iterate over the results, assigning
-   them to variables `$time_vh` and `$data_vh`. It's important to note, that both of these
-   variables are garden-variety `ValueHelpers` and can be formatted accordingly.
-   
-3. In line 3, we apply some custom formatting for the start times, so that only the day (no time)
-   is shown.
+2. We will work only with the start times and data. On line 2, we apply a custom formatting for the
+   start times, so that only the date (no time) is shown.
 
-4. Similarly, we apply some custom formatting for the datum to show two decimal points.
+3. Similarly, we apply some custom formatting for the datum to show two decimal points.
    
 The final results look like:
 ```
-2021-01-01	45.60°F
-2021-01-02	46.20°F
-2021-01-03	49.50°F
-2021-01-04	46.90°F
-2021-01-05	42.60°F
-...
+ <table>
+   <tr>
+     <td>Start date</td>
+     <td>Max temperature</td>
+   </tr>
+   <tr>
+     <td>2021-03-01</td>
+     <td>58.20&#176;F</td>
+   </tr>
+   <tr>
+     <td>2021-03-02</td>
+     <td>55.80&#176;F</td>
+   </tr>
+   <tr>
+     <td>2021-03-03</td>
+     <td>59.60&#176;F</td>
+   </tr>
+   <tr>
+     <td>2021-03-04</td>
+     <td>57.80&#176;F</td>
+   </tr>
+   <tr>
+     <td>2021-03-05</td>
+     <td>50.20&#176;F</td>
+   </tr>
+   <tr>
+     <td>2021-03-06</td>
+     <td>42.00&#176;F</td>
+   </tr>
+ </table>
+``` 
+This Markdown document cannot show rendered HTML, but it looks something like:
+```
+Start date	Max temperature
+2021-03-01	58.20°F
+2021-03-02	55.80°F
+2021-03-03	59.60°F
+2021-03-04	57.80°F
+2021-03-05	50.20°F
+2021-03-06	42.00°F
+```

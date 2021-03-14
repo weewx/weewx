@@ -107,12 +107,10 @@
   <hr/>
   <h2>Iterate over an aggregated series</h2>
   <pre>
-    #set $series = $month.outTemp.series(aggregation_type='max', aggregation_interval='day')
-    #for ($start, $stop, $data) in $zip($series.start, $series.stop, $series.data)
+    #for ($start, $stop, $data) in $month.outTemp.series(aggregation_type='max', aggregation_interval='day')
       ...
     #end for
   </pre>
-
 
     <table>
       <tr>

@@ -1225,15 +1225,13 @@ class ValueHelper(object):
         return ValueHelper(self.value_t, self.context, self.formatter, FixedConverter(target_unit))
 
     def __iter__(self):
-        """Return an iterator that can iterate over the elements of the self.value_t"""
-        def rows():
-            for row in self.value_t[0]:
-                # Form a ValueTuple using the value, plus the unit and unit group
-                vt = ValueTuple(row, self.value_t[1], self.value_t[2])
-                # Form a ValueHelper out of that
-                vh = ValueHelper(vt, self.context, self.formatter, self.converter)
-                yield vh
-        return rows()
+        """Return an iterator that can iterate over the elements of self.value_t."""
+        for row in self.value_t[0]:
+            # Form a ValueTuple using the value, plus the unit and unit group
+            vt = ValueTuple(row, self.value_t[1], self.value_t[2])
+            # Form a ValueHelper out of that
+            vh = ValueHelper(vt, self.context, self.formatter, self.converter)
+            yield vh
 
     def exists(self):
         return not isinstance(self.value_t, UnknownType)
@@ -1267,6 +1265,13 @@ class ValueHelper(object):
 
 class SeriesHelper(object):
     def __init__(self, start, stop, data):
+        """A convenience class that holds starting times, stopping times, and data for a series.
+
+        Args:
+            start: A ValueHelper holding the start times of the data.
+            stop: A ValueHelper holding the stop times of the data.
+            data: A ValueHelper holding the data.
+        """
         self.start = start
         self.stop = stop
         self.data = data
@@ -1333,6 +1338,11 @@ class SeriesHelper(object):
         converted_data = getattr(self.data, target_unit)
 
         return SeriesHelper(self.start, self.stop, converted_data)
+
+    def __iter__(self):
+        """Iterate over myself by row."""
+        for start, stop, data in zip(self.start, self.stop, self.data):
+            yield start, stop, data
 
 #==============================================================================
 #                       class UnitInfoHelper and friends
