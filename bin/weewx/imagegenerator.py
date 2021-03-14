@@ -183,8 +183,8 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                     # Get the type of plot ("bar', 'line', or 'vector')
                     plot_type = line_options.get('plot_type', 'line')
 
-                    if aggregate_type and aggregate_type.lower() in ('avg', 'max', 'min') and plot_type != 'bar':
-                        # Put the point in the middle of the aggregate_interval for these aggregation types
+                    if aggregate_type and plot_type != 'bar':
+                        # If aggregating, put the point in the middle of the interval
                         start_vec_t = ValueTuple([x - aggregate_interval / 2.0 for x in start_vec_t[0]],
                                                  start_vec_t[1], start_vec_t[2])
                         stop_vec_t = ValueTuple([x - aggregate_interval / 2.0 for x in stop_vec_t[0]],
