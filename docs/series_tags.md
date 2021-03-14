@@ -127,7 +127,7 @@ two optional parameters, `order_by` and `time_series`. It can also pass on param
 
 `time_series`: This option controls which series are emitted for time. Option `start` selects the
 start of each aggregation interval. Option `stop` selects the end of each interval. Option `both`
-causes both to be emitted.
+causes both to be emitted. The default is `both`.
 
 `kwargs`: These are optional keyword arguments that are passed on to the Python `json.dumps()`
 call. [See the documentation for `json.dumps`](https://docs.python.org/3/library/json.html#basic-usage).
