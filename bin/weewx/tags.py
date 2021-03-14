@@ -350,7 +350,17 @@ class ObservationBinder(object):
         return self.db_lookup(self.data_binding).has_data(self.obs_type, self.timespan)
 
     def series(self, aggregation_type=None, aggregation_interval=None):
-        """Run a query against the databases with the given aggregation type."""
+        """Return a series with the given aggregation type and interval.
+
+        Args:
+            aggregation_type (str or None): The type of aggregation to use, if any. Default is None
+                (no aggregation).
+            aggregation_interval (str or None): The aggregation interval in seconds. Default is
+                None (no aggregation).
+
+        Returns:
+            SeriesHelper.
+        """
         db_manager = self.db_lookup(self.data_binding)
         try:
             # If we cannot calculate the series, we will get an UnknownType or
@@ -362,6 +372,7 @@ class ObservationBinder(object):
             # Signal Cheetah that we don't know how to do this by raising an AttributeError.
             raise AttributeError(self.obs_type)
 
+        # Form a SeriesHelper, using our existing context, formatter, and converter.
         sh = weewx.units.SeriesHelper(
             weewx.units.ValueHelper(start, self.context, self.formatter, self.converter), \
             weewx.units.ValueHelper(stop, self.context, self.formatter, self.converter), \

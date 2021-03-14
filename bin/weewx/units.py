@@ -806,7 +806,7 @@ class Formatter(object):
     def toString(self, val_t, context='current', addLabel=True, 
                  useThisFormat=None, None_string=None, 
                  localize=True):
-        """
+        """Format the value as a unicode string.
 
         Args:
             val_t (ValueTuple): A ValueTuple holding the value to be formatted. The value can be an iterable.
@@ -1423,6 +1423,7 @@ class ObsInfoHelper(object):
             d = {}
         self.label = weeutil.weeutil.KeyDict(d)
 
+
 #==============================================================================
 #                             Helper functions
 #==============================================================================
@@ -1430,20 +1431,28 @@ def _getUnitGroup(obs_type, agg_type=None):
     """Given an observation type and an aggregation type, what unit group
     does it belong to?
 
-        Examples:
-             obs_type  agg_type          Returns
-             ________  ________         _________
-            'outTemp',  None      -->  'group_temperature'
-            'outTemp', 'min'      -->  'group_temperature'
-            'outTemp', 'mintime'  -->  'group_time'
-            'wind',    'avg'      -->  'group_speed'
-            'wind',    'vecdir'   -->  'group_direction'
-        
-        obs_type: An observation type. E.g., 'barometer'.
-        
-        agg_type: An aggregation type E.g., 'mintime', or 'avg'.
-        
-        Returns: the unit group or None if it cannot be determined."""
+    Examples:
+        +-------------+-----------+---------------------+
+        | obs_type    | agg_type  | Returns             |
+        +=============+===========+=====================+
+        | 'outTemp'   | None      | 'group_temperature' |
+        +-------------+-----------+---------------------+
+        | 'outTemp'   | 'min'     | 'group_temperature' |
+        +-------------+-----------+---------------------+
+        | 'outTemp'   | 'mintime' | 'group_time'        |
+        +-------------+-----------+---------------------+
+        | 'wind'      | 'avg'     | 'group_speed'       |
+        +-------------+-----------+---------------------+
+        | 'wind'      | 'vecdir'  | 'group_direction'   |
+        +-------------+-----------+---------------------+
+
+    Args:
+        obs_type (str): An observation type (eg, 'barometer')
+        agg_type (str): An aggregation (eg, 'mintime', or 'avg'.)
+
+    Returns:
+        str or None. The unit group or None if it cannot be determined.
+    """
     if agg_type and agg_type in agg_group:
         return agg_group[agg_type]
     else:
@@ -1451,18 +1460,19 @@ def _getUnitGroup(obs_type, agg_type=None):
 
 
 def convert(val_t, target_unit):
-    """ Convert a ValueTuple to a new unit
+    """Convert a ValueTuple to a new unit
 
-    val_t: A value-tuple with the value to be converted. The first element can be either a scalar
-    or iterable.
-    
-    target_unit: The unit type (e.g., "meter", or "mbar") to which the value is to be converted. If
-    the ValueTuple holds a complex number, target_unit can be a complex conversion nickname, such
-    as 'polar'.
-    
-    returns: An instance of ValueTuple, where the desired conversion has been performed.
+    Args:
+        val_t (ValueTuple): A ValueTuple containing the value to be converted. The first element
+            can be either a scalar or iterable.
+        target_unit (str): The unit type (e.g., "meter", or "mbar") to which the value is to be
+         converted. If the ValueTuple holds a complex number, target_unit can be a complex
+         conversion nickname, such as 'polar'.
+
+    Returns:
+        ValueTuple. An instance of ValueTuple, where the desired conversion has been performed.
+
     """
-
     # Is the "target_unit" really a conversion for complex numbers?
     if target_unit in complex_conversions:
         # Yes. Get the conversion function. Also, note that these operations do not change the
@@ -1492,59 +1502,65 @@ def convert(val_t, target_unit):
     # Add on the unit type and the group type and return the results:
     return ValueTuple(new_val, target_unit, val_t[2])
 
+
 def convertStd(val_t, target_std_unit_system):
     """Convert a value tuple to an appropriate unit in a target standardized
     unit system
     
-    val_t: A value tuple.
-    
-    target_std_unit_system: A standardized unit system
-                            (weewx.US, weewx.METRIC, or weewx.METRICWX)
-    
-    Returns: A value tuple in the given standardized unit system.
-    
     Example:
-    >>> value_t = (30.02, 'inHg', 'group_pressure')
-    >>> print("(%.2f, %s, %s)" % convertStd(value_t, weewx.METRIC))
-    (1016.59, mbar, group_pressure)
-    >>> value_t = (1.2, 'inch', 'group_rain')
-    >>> print("(%.2f, %s, %s)" % convertStd(value_t, weewx.METRICWX))
-    (30.48, mm, group_rain)
+        >>> value_t = (30.02, 'inHg', 'group_pressure')
+        >>> print("(%.2f, %s, %s)" % convertStd(value_t, weewx.METRIC))
+        (1016.59, mbar, group_pressure)
+        >>> value_t = (1.2, 'inch', 'group_rain')
+        >>> print("(%.2f, %s, %s)" % convertStd(value_t, weewx.METRICWX))
+        (30.48, mm, group_rain)
+
+    Args:
+        val_t (ValueTuple): The ValueTuple to be converted.
+        target_std_unit_system (int):  A standardized WeeWX unit system (weewx.US, weewx.METRIC,
+            or weewx.METRICWX)
+
+    Returns:
+        ValueTuple. A value tuple in the given standardized unit system.
+    
     """
     return StdUnitConverters[target_std_unit_system].convert(val_t)
 
 def getStandardUnitType(target_std_unit_system, obs_type, agg_type=None):
     """Given a standard unit system (weewx.US, weewx.METRIC, weewx.METRICWX),
     an observation type, and an aggregation type, what units would it be in?
-    
-    target_std_unit_system: A standardized unit system. If None, then
-    the the output units are indeterminate, so (None, None) is returned. 
-    
-    obs_type: An observation type.
-        
-    agg_type: An aggregation type E.g., 'mintime', or 'avg'.
-    
-    returns: A 2-way tuple containing the target units, and the target group.
 
     Examples:
-    >>> print(getStandardUnitType(weewx.US,     'barometer'))
-    ('inHg', 'group_pressure')
-    >>> print(getStandardUnitType(weewx.METRIC, 'barometer'))
-    ('mbar', 'group_pressure')
-    >>> print(getStandardUnitType(weewx.US, 'barometer', 'mintime'))
-    ('unix_epoch', 'group_time')
-    >>> print(getStandardUnitType(weewx.METRIC, 'barometer', 'avg'))
-    ('mbar', 'group_pressure')
-    >>> print(getStandardUnitType(weewx.METRIC, 'wind', 'rms'))
-    ('km_per_hour', 'group_speed')
-    >>> print(getStandardUnitType(None, 'barometer', 'avg'))
-    (None, None)
+        >>> print(getStandardUnitType(weewx.US,     'barometer'))
+        ('inHg', 'group_pressure')
+        >>> print(getStandardUnitType(weewx.METRIC, 'barometer'))
+        ('mbar', 'group_pressure')
+        >>> print(getStandardUnitType(weewx.US, 'barometer', 'mintime'))
+        ('unix_epoch', 'group_time')
+        >>> print(getStandardUnitType(weewx.METRIC, 'barometer', 'avg'))
+        ('mbar', 'group_pressure')
+        >>> print(getStandardUnitType(weewx.METRIC, 'wind', 'rms'))
+        ('km_per_hour', 'group_speed')
+        >>> print(getStandardUnitType(None, 'barometer', 'avg'))
+        (None, None)
+
+    Args:
+        target_std_unit_system (int): A standardized unit system. If None, then
+            the the output units are indeterminate, so (None, None) is returned.
+
+        obs_type (str): An observation type, e.g., 'outTemp'
+
+        agg_type (str): An aggregation type, e.g., 'mintime', or 'avg'.
+    
+    Returns:
+         tuple. A 2-way tuple containing the target units, and the target group.
     """
 
     if target_std_unit_system is not None:
         return StdUnitConverters[target_std_unit_system].getTargetUnit(obs_type, agg_type)
     else:
-        return (None, None)
+        return None, None
+
 
 def get_format_string(formatter, converter, obs_type):
     # First convert to the target unit type:
@@ -1552,11 +1568,13 @@ def get_format_string(formatter, converter, obs_type):
     # Then look up the format string for that unit type:
     return formatter.get_format_string(u)
 
+
 def get_label_string(formatter, converter, obs_type, plural=True):
     # First convert to the target unit type:    
     u = converter.getTargetUnit(obs_type)[0]
     # Then look up the label for that unit type:
     return formatter.get_label_string(u, plural)
+
 
 class GenWithConvert(object):
     """Generator wrapper. Converts the output of the wrapped generator to a

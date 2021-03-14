@@ -123,11 +123,12 @@ two optional parameters, `order_by` and `time_series`. It can also pass on param
 ```
 .json(order_by=['row'|'column'], time_series=['start'|'stop'|'both'], **kwargs)
 ```
-`order_by`: The returned JSON can either be organized by rows, or by columns. The default is `row`.
+`order_by`: The returned JSON can either be organized by rows, or by columns. The default 
+   is '`row`'.
 
 `time_series`: This option controls which series are emitted for time. Option `start` selects the
-start of each aggregation interval. Option `stop` selects the end of each interval. Option `both`
-causes both to be emitted.
+   start of each aggregation interval. Option `stop` selects the end of each interval. Option `both`
+   causes both to be emitted. Default is '`both`'.
 
 `kwargs`: These are optional keyword arguments that are passed on to the Python `json.dumps()`
 call. [See the documentation for `json.dumps`](https://docs.python.org/3/library/json.html#basic-usage).
@@ -214,13 +215,13 @@ yields
 
 There are a number of conversion operators that can yield various parts of the complex results. 
 
-| Operator     | Effect                                    |
-|--------------|-------------------------------------------|
-| `.x`         | Just the x-components                     |
-| `.y`         | Just the y-components                     |
-| `.magnitude` | The total (absolute) magnitude            |
-| `.direction` | The compass direction (0°=N, 90°=E, etc.) |
-| `.polar`     | As polar coordinates                      |
+| Operator     | Effect                                                     |
+|--------------|------------------------------------------------------------|
+| `.x`         | Just the x-components                                      |
+| `.y`         | Just the y-components                                      |
+| `.magnitude` | Just the total (absolute) magnitude                        |
+| `.direction` | Just the compass direction (in degrees 0°=N, 90°=E, etc.)  |
+| `.polar`     | As polar coordinates (`magnitude`, `direction`)            |
 
 Note that direction uses _compass directions_.
 
