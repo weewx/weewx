@@ -1323,6 +1323,10 @@ class SeriesHelper(object):
         s = self.format()
         return six.ensure_str(s)
 
+    def __unicode__(self):
+        """Return as unicode. This function is called only under Python 2."""
+        return self.format()
+
     def format(self, format_string=None, None_string=None, add_label=True,
                localize=True, order_by='row'):
 
