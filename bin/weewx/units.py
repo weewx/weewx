@@ -443,7 +443,9 @@ conversionDict = {
     'second'           : {'hour'             : lambda x : x/3600.0,
                           'minute'           : lambda x : x/60.0,
                           'day'              : lambda x : x/86400.0},
-    'unix_epoch'       : {'dublin_jd'        : lambda x: x / 86400.0 + 25567.5},
+    'unix_epoch'       : {'dublin_jd'        : lambda x: x / 86400.0 + 25567.5,
+                          'unix_epoch_ms'    : lambda x : x * 1000.0,
+                          'unix_epoch_ns'    : lambda x : x * 1e6},
     'watt'             : {'kilowatt'         : lambda x : x / 1000.0},
     'watt_hour'        : {'kilowatt_hour'    : lambda x : x / 1000.0,
                           'mega_joule'       : lambda x : x * 0.0036,
@@ -1278,41 +1280,56 @@ class SeriesHelper(object):
         self.stop = stop
         self.data = data
 
-    def json(self, order_by='row', time_series='both', **kwargs):
+    def json(self, order_by='row', time_series='both', time_unit='unix_epoch', **kwargs):
         """Return the data in this series as JSON.
 
         Args:
-            order_by: A string that determines whether the generated string is ordered by
+            order_by (str): A string that determines whether the generated string is ordered by
                 row or column. Either 'row' or 'column'.
-            time_series: What to include for the time series. Either 'start', 'stop', or
+            time_series (str): What to include for the time series. Either 'start', 'stop', or
                 'both'.
-            **kwargs: These arguments are passed on to json.loads()
+            time_unit (str): Which unit to use for time. Choices are 'unix_epoch', 'unix_epoch_ms',
+                or 'unix_epoch_ns'. Default is 'unix_epoch'.
+            **kwargs (Any): These arguments are passed on to json.loads()
 
         Returns:
-            A string with the encoded JSON.
+            str. A string with the encoded JSON.
         """
 
         time_series = time_series.lower()
         if time_series not in ['both', 'start', 'stop']:
             raise ValueError("Unknown option '%s' for parameter 'time_series'" % time_series)
 
+        # Convert the time series to the desired time unit. When done, start_series and
+        # stop_series will be ValueTuples with the converted series as their value.
+        if time_series in ['start', 'both']:
+            start_series = convert(self.start.value_t, time_unit)
+        if time_series in ['stop', 'both']:
+            stop_series = convert(self.stop.value_t, time_unit)
+            # Sanity checks
+            assert start_series[1] == time_unit
+            assert stop_series[1] == time_unit
+
         if order_by == 'row':
             if time_series == 'both':
-                json_data = [[start_.raw, stop_.raw, data_.raw]
-                             for start_, stop_, data_ in zip(self.start, self.stop, self.data)]
+                json_data = [[start_, stop_, data_.raw]
+                             for start_, stop_, data_
+                             in zip(start_series[0], stop_series[0], self.data)]
             elif time_series == 'start':
-                json_data = [[start_.raw, data_.raw]
-                             for start_, data_ in zip(self.start, self.data)]
+                json_data = [[start_, data_.raw]
+                             for start_, data_
+                             in zip(start_series[0], self.data)]
             else:
-                json_data = [[stop_.raw, data_.raw]
-                             for stop_, data_ in zip(self.stop, self.data)]
+                json_data = [[stop_, data_.raw]
+                             for stop_, data_
+                             in zip(stop_series[0], self.data)]
         elif order_by == 'column':
             if time_series == 'both':
-                json_data = [self.start.raw, self.stop.raw, self.data.raw]
+                json_data = [start_series[0], stop_series[0], self.data.raw]
             elif time_series == 'start':
-                json_data = [self.start.raw, self.data.raw]
+                json_data = [start_series[0], self.data.raw]
             else:
-                json_data = [self.stop.raw, self.data.raw]
+                json_data = [stop_series[0], self.data.raw]
         else:
             raise ValueError("Unknown option '%s' for parameter 'order_by'" % order_by)
 

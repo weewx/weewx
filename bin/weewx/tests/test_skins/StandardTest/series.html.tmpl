@@ -25,11 +25,14 @@
 
   <body>
     <h2>Unaggregated series </h2>
-	<p>Unaggregated series: \$day.outTemp.series.json():</p>
+	<p>Unaggregated series in json: \$day.outTemp.series.json():</p>
     <pre>$day.outTemp.series.json()</pre>
 
-	<p>Unaggregated series, just emit start times: \$day.outTemp.series.json(time_series='start'):</p>
+	<p>Unaggregated series, in json with just start times: \$day.outTemp.series.json(time_series='start'):</p>
     <pre>$day.outTemp.series.json(time_series='start')</pre>
+
+	<p>Unaggregated series, in json with start times in milliseconds: \$day.outTemp.series.json(time_series='start', time_unit='unix_epoch_ms'):</p>
+    <pre>$day.outTemp.series.json(time_series='start', time_unit='unix_epoch_ms')</pre>
 
     <p>Unaggregated series, as a formatted string (<em>not JSON</em>) : \$day.outTemp.series:</p>
     <pre>$day.outTemp.series</pre>

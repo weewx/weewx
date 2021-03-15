@@ -121,7 +121,10 @@ By adding the suffix `.json()` to the tag, the results will be formatted as JSON
 two optional parameters, `order_by` and `time_series`. It can also pass on parameters to the 
 `json.loads()` call.
 ```
-.json(order_by=['row'|'column'], time_series=['start'|'stop'|'both'], **kwargs)
+.json(order_by=['row'|'column'], 
+      time_series=['start'|'stop'|'both'], 
+      time_unit=['unix_epoch'|'unix_epoch_ms'|'unix_epoch_ns', 
+      **kwargs)
 ```
 `order_by`: The returned JSON can either be organized by rows, or by columns. The default 
    is '`row`'.
@@ -130,8 +133,11 @@ two optional parameters, `order_by` and `time_series`. It can also pass on param
    start of each aggregation interval. Option `stop` selects the end of each interval. Option `both`
    causes both to be emitted. Default is '`both`'.
 
+`time_unit`: The unit to be used for the time domain. Choices are `unix_epoch`, `unix_epoch_ms`,
+   or `unix_epoch_ns`. Or, I suppose, `dublin_jd` if you're into it.
+
 `kwargs`: These are optional keyword arguments that are passed on to the Python `json.dumps()`
-call. [See the documentation for `json.dumps`](https://docs.python.org/3/library/json.html#basic-usage).
+   call. [See the documentation for `json.dumps`](https://docs.python.org/3/library/json.html#basic-usage).
 
 #### Example: series with aggregation, formatted as JSON
 Here's an example of the maximum temperature for all days of the current month, formatted in JSON
@@ -159,6 +165,7 @@ Results:
 [[1614585600, 1614672000, 1614758400, 1614844800, 1614931200, 1615017600], [1614672000, 1614758400, 1614844800, 1614931200, 1615017600, 1615104000], [58.2, 55.8, 59.6, 57.8, 50.2, 42.0]]
 ```
 
+#### Example: series with aggregation, formatted as JSON, selected time series
 The above examples include both start and stop times of each interval. 
 If you want only the start times, then use the optional argument `time_series`:
 
@@ -171,6 +178,21 @@ $month.outTemp.series(aggregation_type='max', aggregation_interval='day').json(t
 Results:
 ```
 [[1614585600, 58.2], [1614672000, 55.8], [1614758400, 59.6], [1614844800, 57.8], [1614931200, 50.2], [1615017600, 42.0]]
+```
+
+#### Example: series with aggregation, formatted as JSON, optional time unit
+Suppose you want the previous example, except that you want the unix epoch time to be in
+miliseconds. To do this, add optional argument `time_unit`:
+
+```
+<pre>
+$month.outTemp.series(aggregation_type='max', aggregation_interval='day').json(time_series='start'. time_unit='unix_epoch_ms')
+</pre>
+```
+
+Results:
+```
+[[1614585600000.0, 58.2], [1614672000000.0, 55.8], [1614758400000.0, 59.6], [1614844800000.0, 57.8], [1614931200000.0, 50.2], [1615017600000.0, 42.0]]
 ```
 
 

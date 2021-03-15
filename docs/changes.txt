@@ -35,6 +35,9 @@ aggregation type changes the unit. Fixes issue #654.
 Plots now locate the x-coordinate in the middle of the aggregation interval for
 all aggregation types (not just min, max, avg). Revisits PR #232.
 
+Added new time units 'unix_epoch_ms' and 'unix_epoch_ns', which are unix epoch
+time in milliseconds and nanoseconds, respectively.
+
 
 4.4.0 01/30/2021
 
