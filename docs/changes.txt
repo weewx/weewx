@@ -13,9 +13,6 @@ experimental and subject to change! Addresses issue #341.
 Improved performance when calculating series using aggregation periods that are
 multiples of a day.
 
-
-4.4.1 MM/DD/YYYY
-
 Changed NOAA reports to use the 'normalized_ascii' encoding instead of 'utf8'
 (which did not display correctly for most browsers). Fixes issue #646.
 
