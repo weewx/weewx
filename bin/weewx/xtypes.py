@@ -816,8 +816,8 @@ class WindVec(XType):
                 std_unit_system = db_manager.std_unit_system
                 value = None
         else:
-            # The result is more complex, requiring vector arithmetic. We will have to do it
-            # in Python
+            # The requested aggregation must be either 'sum' or 'avg', which will require some
+            # arithmetic in Python, so it cannot be done by a simple query.
             std_unit_system = None
             xsum = ysum = 0.0
             count = 0
