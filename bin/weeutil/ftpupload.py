@@ -17,6 +17,12 @@ import time
 
 from six.moves import cPickle
 
+try:
+    import hashlib
+    has_hashlib=True
+except ImportError:
+    has_hashlib=False
+    
 log = logging.getLogger(__name__)
 
 
@@ -86,7 +92,7 @@ class FtpUpload(object):
         returns: the number of files uploaded."""
 
         # Get the timestamp and members of the last upload:
-        timestamp, fileset = self.get_last_upload()
+        timestamp, fileset, hashdict = self.get_last_upload()
 
         n_uploaded = 0
 
@@ -151,12 +157,21 @@ class FtpUpload(object):
                 for filename in filenames:
 
                     full_local_path = os.path.join(dirpath, filename)
+
+                    # calculate hash
+                    if has_hashlib:
+                        filehash=sha256sum(full_local_path)
+                    else:
+                        filehash=None
+
                     # See if this file can be skipped:
-                    if _skip_this_file(timestamp, fileset, full_local_path):
+                    if _skip_this_file(timestamp, fileset, hashdict, full_local_path, filehash):
                         continue
 
                     full_remote_path = os.path.join(remote_dir_path, filename)
                     stor_cmd = "STOR %s" % full_remote_path
+
+                    log.debug("%s %s/%s %s" % (n_uploaded,local_rel_dir_path,filename,filehash))
 
                     with open(full_local_path, 'rb') as fd:
                         try:
@@ -169,6 +184,7 @@ class FtpUpload(object):
                     # Success.
                     n_uploaded += 1
                     fileset.add(full_local_path)
+                    hashdict[full_local_path]=filehash
                     log.debug("Uploaded file %s to %s", full_local_path, full_remote_path)
         finally:
             try:
@@ -177,7 +193,7 @@ class FtpUpload(object):
                 pass
 
         timestamp = time.time()
-        self.save_last_upload(timestamp, fileset)
+        self.save_last_upload(timestamp, fileset, hashdict)
         return n_uploaded
 
     def get_last_upload(self):
@@ -192,9 +208,11 @@ class FtpUpload(object):
             with open(timestamp_file_path, "rb") as f:
                 timestamp = cPickle.load(f)
                 fileset = cPickle.load(f)
+                hashdict = cPickle.load(f)
         except (IOError, EOFError, cPickle.PickleError, AttributeError):
             timestamp = 0
             fileset = set()
+            hashdict = {}
             # Either the file does not exist, or it is garbled.
             # Either way, it's safe to remove it.
             try:
@@ -202,17 +220,18 @@ class FtpUpload(object):
             except OSError:
                 pass
 
-        return timestamp, fileset
+        return timestamp, fileset, hashdict
 
-    def save_last_upload(self, timestamp, fileset):
+    def save_last_upload(self, timestamp, fileset, hashdict):
         """Saves the time and members of the last upload in the local root."""
         timestamp_file_path = os.path.join(self.local_root, "#%s.last" % self.name)
         with open(timestamp_file_path, "wb") as f:
             cPickle.dump(timestamp, f)
             cPickle.dump(fileset, f)
+            cPickle.dump(hashdict, f)
 
 
-def _skip_this_file(timestamp, fileset, full_local_path):
+def _skip_this_file(timestamp, fileset, hashdict, full_local_path, filehash):
     """Determine whether to skip a specific file."""
 
     filename = os.path.basename(full_local_path)
@@ -222,8 +241,16 @@ def _skip_this_file(timestamp, fileset, full_local_path):
     if full_local_path not in fileset:
         return False
 
-    if os.stat(full_local_path).st_mtime > timestamp:
-        return False
+    if has_hashlib and filehash is not None:
+        # use hash if available
+        if full_local_path not in hashdict:
+            return False
+        if hashdict[full_local_path]!=filehash:
+            return False
+    else:
+        # otherwise use file time
+        if os.stat(full_local_path).st_mtime > timestamp:
+            return False
 
     # Filename is in the set, and is up to date.
     return True
@@ -254,3 +281,14 @@ def _make_remote_dir(ftp_server, remote_dir_path):
         raise
 
     log.debug("Made directory %s", remote_dir_path)
+
+# from https://stackoverflow.com/questions/22058048/hashing-a-file-in-python
+
+def sha256sum(filename):
+    h  = hashlib.sha256()
+    b  = bytearray(128*1024)
+    mv = memoryview(b)
+    with open(filename, 'rb', buffering=0) as f:
+        for n in iter(lambda : f.readinto(mv), 0):
+            h.update(mv[:n])
+    return h.hexdigest()
