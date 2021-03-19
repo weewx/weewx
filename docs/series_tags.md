@@ -11,8 +11,10 @@ The tags used to specify a series is very similar to tags used for regular scala
 include the keyword `series`:
 
 ```
-$period($data_binding=binding_name, $optional_ago=delta).obstype.series[.optional_unit_conversion][.optional_formatting]
+$period.obstype.series[.optional_unit_conversion][.optional_formatting]
 ```
+
+The tags `.optional_unit_conversion` and `.optional_formatting` are explained below.
 
 ## Series with no aggregation
 Here's an example of asking for a series with the temperature for all records in the day. We will
@@ -72,7 +74,8 @@ final column the maximum temperature for aggregation period. In this example, be
 aggregation period is one day, the start and stop fall on daily boundaries.
 
 ## Optional unit conversion.
-Just like scalars, the unit system of the resultant series can be changed. For example,
+Just like scalars, the unit system of the resultant series can be changed. Only the data
+part, not the time part, is converted. For example,
 
 ```
 <pre>
@@ -94,7 +97,7 @@ Results in
 
 ## Optional formatting
 Similar to its scalar cousins, the output can be formatted. At this point, there are
-two types of formatting: one for strings, one for JSON. CSV may be added in the future.
+two types of formatting: one for strings, and one for JSON. CSV may be added in the future.
 
 ### Optional string formatting
 The format of the data can be changed with optional suffix `.format()`. Only the data is affected.
@@ -118,14 +121,17 @@ yields something like
 
 ### Optional JSON formatting
 By adding the suffix `.json()` to the tag, the results will be formatted as JSON. This option has
-two optional parameters, `order_by` and `time_series`. It can also pass on parameters to the 
-`json.loads()` call.
+several optional parameters, It can also pass on parameters to the `json.loads()` call.
 ```
-.json(order_by=['row'|'column'], 
+.json(ndigits=None,
+      order_by=['row'|'column'], 
       time_series=['start'|'stop'|'both'], 
       time_unit=['unix_epoch'|'unix_epoch_ms'|'unix_epoch_ns', 
       **kwargs)
 ```
+`ndigits`: The number of decimal digits to include in the results. Default is `None`, which means
+   all digits.
+
 `order_by`: The returned JSON can either be organized by rows, or by columns. The default 
    is '`row`'.
 
@@ -193,6 +199,30 @@ $month.outTemp.series(aggregation_type='max', aggregation_interval='day').json(t
 Results:
 ```
 [[1614585600000.0, 58.2], [1614672000000.0, 55.8], [1614758400000.0, 59.6], [1614844800000.0, 57.8], [1614931200000.0, 50.2], [1615017600000.0, 42.0]]
+```
+
+#### Example: series with aggregation, formatted as JSON, with unit conversion and rounding
+Suppose you want the results in °C, rather than °F. Then including a `.degree_C` between the
+`.series` and `.json` tags will give the desired results:
+```
+<pre>
+$month.outTemp.series(aggregation_type='max', aggregation_interval='day').degree_C.json(time_series='start')
+</pre>
+```
+```
+[[1614585600, 14.555555555555555], [1614672000, 13.222222222222221], [1614758400, 15.333333333333334], [1614844800, 14.333333333333334], [1614931200, 10.111111111111112], [1615017600, 5.555555555555555]]
+```
+Note that the unit conversion resulted in many extra decimal digits. It's an accurate representation
+of the internal data, but you may not want to transmit that much data over the network. You can
+limit the number of decimal digits by using optional parameter `ndigits`:
+```
+<pre>
+$month.outTemp.series(aggregation_type='max', aggregation_interval='day').degree_C.json(ndigits=2, time_series='start')
+</pre>
+```
+This gives a much more compact representation:
+```
+[[1614585600, 14.56], [1614672000, 13.22], [1614758400, 15.33], [1614844800, 14.33], [1614931200, 10.11], [1615017600, 5.56]]
 ```
 
 

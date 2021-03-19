@@ -534,7 +534,8 @@ class Almanac(SearchList):
                                              temperature=temperature_C,
                                              pressure=pressure_mbar,
                                              moon_phases=self.moonphases,
-                                             formatter=generator.formatter)
+                                             formatter=generator.formatter,
+                                             converter=generator.converter)
 
 
 class Station(SearchList):

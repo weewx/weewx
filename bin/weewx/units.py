@@ -997,7 +997,7 @@ class Converter(object):
         # Determine which units (eg, "mbar") this group should be in.
         # If the user has not specified anything, then fall back to US Units.
         new_unit_type = self.group_unit_dict.get(val_t[2], USUnits[val_t[2]])
-        # Now convert to this new unit type: 
+        # Now convert to this new unit type:
         new_val_t = convert(val_t, new_unit_type)
         return new_val_t
 
@@ -1063,20 +1063,6 @@ StdUnitConverters = {weewx.US       : Converter(USUnits),
                      weewx.METRIC   : Converter(MetricUnits),
                      weewx.METRICWX : Converter(MetricWXUnits)}
 
-#==============================================================================
-#                        class FixedConverter
-#==============================================================================
-
-class FixedConverter(object):
-    """Dirt simple converter that can only convert to a specified unit."""
-    def __init__(self, target_units):
-        """Initialize an instance of FixedConverter
-        
-        target_units: The new, target unit (eg, "degree_C")"""
-        self.target_units = target_units
-
-    def convert(self, val_t):
-        return convert(val_t, self.target_units)
 
 #==============================================================================
 #                      class ValueHelper
@@ -1107,24 +1093,27 @@ class ValueHelper(object):
     >>> print("%.1f" % vh.raw)
     20.0
     """
-    def __init__(self, value_t, context='current', formatter=Formatter(), converter=Converter()):
+    def __init__(self, value_t, context='current', formatter=Formatter(), converter=None):
         """Initialize a ValueHelper
 
         Args:
             value_t (ValueTuple): An instance of a ValueTuple. The "value" part can be either a
-                scalar, or a series.
+                scalar, or a series. If a converter is given, it will be used to convert the
+                ValueTuple before storing.
             context (str): The time context. Something like 'current', 'day', 'week'.
                 [Optional. If not given, context 'current' will be used.]
             formatter (Formatter): An instance of class Formatter.
                 [Optional. If not given, then the default Formatter() will be used]
             converter (Converter):  An instance of class Converter.
-                [Optional. If not given, then the default Converter() will be used,
-                which will convert to US units]
+                [Optional.]
         """
-        self.value_t   = value_t
+        # If there's a converter, then perform the conversion:
+        if converter and not isinstance(value_t, UnknownType):
+            self.value_t = converter.convert(value_t)
+        else:
+            self.value_t = value_t
         self.context   = context
         self.formatter = formatter
-        self.converter = converter
 
     def toString(self,
                  addLabel=True,
@@ -1154,10 +1143,8 @@ class ValueHelper(object):
         # Check NONE_string for backwards compatibility:
         if None_string is None and NONE_string is not None:
             None_string = NONE_string
-        # Get the value tuple in the target units:
-        vtx = self._raw_value_tuple
         # Then do the format conversion:
-        s = self.formatter.toString(vtx, self.context, addLabel=addLabel,
+        s = self.formatter.toString(self.value_t, self.context, addLabel=addLabel,
                                     useThisFormat=useThisFormat, None_string=None_string,
                                     localize=localize)
         return s
@@ -1180,23 +1167,31 @@ class ValueHelper(object):
         """Returns an ordinal compass direction (eg, 'NNW')"""
         # Get the raw value tuple, then ask the formatter to look up an
         # appropriate ordinate:
-        return self.formatter.to_ordinal_compass(self._raw_value_tuple)
+        return self.formatter.to_ordinal_compass(self.value_t)
 
-    def json(self, **kwargs):
-        return json.dumps(self._raw_value_tuple[0], cls=ComplexEncoder, **kwargs)
+    def json(self, ndigits=None, **kwargs):
+        if ndigits is None:
+            value = self.raw
+        else:
+            value = round(self.raw, ndigits)
+        return json.dumps(value, cls=ComplexEncoder, **kwargs)
 
     @property
     def raw(self):
-        """Returns the raw value without any formatting."""
-        return self._raw_value_tuple[0]
+        """Returns just the data part, without any formatting."""
+        return self.value_t[0]
 
-    @property
-    def _raw_value_tuple(self):
-        """Return a value tuple in the target units."""
-        # ... Do the unit conversion ...
-        vtx = self.converter.convert(self.value_t)
-        # ... and then return it
-        return vtx
+    def convert(self, target_unit):
+        """Return a ValueHelper in a new target unit.
+
+        Args:
+            target_unit (str): The unit (eg, 'degree_C') to which the data will be converted
+
+        Returns:
+            ValueHelper.
+        """
+        value_t = convert(self.value_t, target_unit)
+        return ValueHelper(value_t, self.context, self.formatter)
 
     def __getattr__(self, target_unit):
         """Convert to a new unit type.
@@ -1213,20 +1208,13 @@ class ValueHelper(object):
         if target_unit in ['__call__', 'has_key']:
             raise AttributeError
 
-        if target_unit in complex_conversions:
-            return ValueHelper(convert(self.value_t, target_unit),
-                               self.context,
-                               self.formatter,
-                               self.converter)
-        # If we are being asked to perform a conversion, make sure it's a
-        # legal one:
-        if self.value_t[1] != target_unit:
-            try:
-                conversionDict[self.value_t[1]][target_unit]
-            except KeyError:
-                raise AttributeError("Illegal conversion from '%s' to '%s'"
-                                     %(self.value_t[1], target_unit))
-        return ValueHelper(self.value_t, self.context, self.formatter, FixedConverter(target_unit))
+        # Convert any illegal conversions to an AttributeError:
+        try:
+            converted = self.convert(target_unit)
+        except KeyError:
+            raise AttributeError("Illegal conversion from '%s' to '%s'"
+                                 % (self.value_t[1], target_unit))
+        return converted
 
     def __iter__(self):
         """Return an iterator that can iterate over the elements of self.value_t."""
@@ -1234,7 +1222,7 @@ class ValueHelper(object):
             # Form a ValueTuple using the value, plus the unit and unit group
             vt = ValueTuple(row, self.value_t[1], self.value_t[2])
             # Form a ValueHelper out of that
-            vh = ValueHelper(vt, self.context, self.formatter, self.converter)
+            vh = ValueHelper(vt, self.context, self.formatter)
             yield vh
 
     def exists(self):
@@ -1268,22 +1256,26 @@ class ValueHelper(object):
 #==============================================================================
 
 class SeriesHelper(object):
+    """Convenience class that binds the series data, along with start and stop times."""
+
     def __init__(self, start, stop, data):
-        """A convenience class that holds starting times, stopping times, and data for a series.
+        """Initializer
 
         Args:
-            start: A ValueHelper holding the start times of the data.
-            stop: A ValueHelper holding the stop times of the data.
-            data: A ValueHelper holding the data.
+            start (ValueHelper): A ValueHelper holding the start times of the data.
+            stop (ValueHelper): A ValueHelper holding the stop times of the data.
+            data (ValueHelper): A ValueHelper holding the data.
         """
         self.start = start
         self.stop = stop
         self.data = data
 
-    def json(self, order_by='row', time_series='both', time_unit='unix_epoch', **kwargs):
+    def json(self, ndigits=None, order_by='row',
+             time_series='both', time_unit='unix_epoch', **kwargs):
         """Return the data in this series as JSON.
 
         Args:
+            ndigits (int): The number of decimal digits to include in the data. Default is all.
             order_by (str): A string that determines whether the generated string is ordered by
                 row or column. Either 'row' or 'column'.
             time_series (str): What to include for the time series. Either 'start', 'stop', or
@@ -1301,35 +1293,42 @@ class SeriesHelper(object):
             raise ValueError("Unknown option '%s' for parameter 'time_series'" % time_series)
 
         # Convert the time series to the desired time unit. When done, start_series and
-        # stop_series will be ValueTuples with the converted series as their value.
+        # stop_series will be simple lists with the time in the target time unit.
         if time_series in ['start', 'both']:
-            start_series = convert(self.start.value_t, time_unit)
+            start_series = convert(self.start.value_t, time_unit)[0]
         if time_series in ['stop', 'both']:
-            stop_series = convert(self.stop.value_t, time_unit)
-            # Sanity checks
-            assert start_series[1] == time_unit
-            assert stop_series[1] == time_unit
+            stop_series = convert(self.stop.value_t, time_unit)[0]
+
+        # If requested, round the data to the required number of decimal digits.
+        if ndigits is None:
+            data_series = self.data.raw
+        else:
+            # We need a function that can be fed to map().
+            def rnd(x):
+                if x is None:
+                    return None
+                elif isinstance(x, complex):
+                    return complex(round(x.real, ndigits), round(x.imag, ndigits))
+                elif isinstance(x, float):
+                    return round(x, ndigits)
+                return x
+            # data_series will be a simple list, holding the converted and rounded data.
+            data_series = list(map(rnd, self.data.raw))
 
         if order_by == 'row':
             if time_series == 'both':
-                json_data = [[start_, stop_, data_.raw]
-                             for start_, stop_, data_
-                             in zip(start_series[0], stop_series[0], self.data)]
+                json_data = list(zip(start_series, stop_series, data_series))
             elif time_series == 'start':
-                json_data = [[start_, data_.raw]
-                             for start_, data_
-                             in zip(start_series[0], self.data)]
+                json_data = list(zip(start_series, data_series))
             else:
-                json_data = [[stop_, data_.raw]
-                             for stop_, data_
-                             in zip(stop_series[0], self.data)]
+                json_data = list(zip(stop_series, data_series))
         elif order_by == 'column':
             if time_series == 'both':
-                json_data = [start_series[0], stop_series[0], self.data.raw]
+                json_data = [start_series, stop_series, data_series]
             elif time_series == 'start':
-                json_data = [start_series[0], self.data.raw]
+                json_data = [start_series, data_series]
             else:
-                json_data = [stop_series[0], self.data.raw]
+                json_data = [stop_series, data_series]
         else:
             raise ValueError("Unknown option '%s' for parameter 'order_by'" % order_by)
 
@@ -1344,12 +1343,15 @@ class SeriesHelper(object):
         """Return as unicode. This function is called only under Python 2."""
         return self.format()
 
+    def __len__(self):
+        return len(self.start)
+
     def format(self, format_string=None, None_string=None, add_label=True,
                localize=True, order_by='row'):
 
         if order_by == 'row':
             rows = []
-            for start_, stop_, data_ in zip(self.start, self.stop, self.data):
+            for start_, stop_, data_ in self:
                 rows += ["%s, %s, %s" \
                          % (str(start_),
                             str(stop_),
@@ -1371,7 +1373,8 @@ class SeriesHelper(object):
         if target_unit in ['__call__', 'has_key']:
             raise AttributeError
 
-        converted_data = getattr(self.data, target_unit)
+        # This will be a ValueHelper.
+        converted_data = self.data.convert(target_unit)
 
         return SeriesHelper(self.start, self.stop, converted_data)
 
@@ -1509,11 +1512,12 @@ def convert(val_t, target_unit):
         except KeyError:
             log.debug("Unable to convert from %s to %s", val_t[1], target_unit)
             raise
-    # Try converting a sequence first. A TypeError exception will occur if
-    # the value is actually a scalar:
-    try:
+    # Are we converting a list, or a simple scalar?
+    if isinstance(val_t[0], (list, tuple)):
+        # A list
         new_val = [conversion_func(x) if x is not None else None for x in val_t[0]]
-    except TypeError:
+    else:
+        # A scalar
         new_val = conversion_func(val_t[0]) if val_t[0] is not None else None
 
     # Add on the unit type and the group type and return the results:
@@ -1670,9 +1674,20 @@ def to_std_system(datadict, unit_system):
 
 
 def as_value_tuple(record_dict, obs_type):
-    """Look up an observation type in a record, returning the result
-    as a ValueTuple. If the observation type is not recognized, an object of
-    type UnknownType will be returned."""
+    """Look up an observation type in a record, returning the result as a ValueTuple.
+
+    Args:
+        record_dict (dict): A record. May be None.
+        obs_type (str): The observation type to be returned
+
+    Returns:
+        ValueTuple.
+
+    Raises:
+        KeyIndex, If the observation type cannot be found in the record, a KeyIndex error is
+            raised.
+
+    """
 
     # Is the record None?
     if record_dict is None:
@@ -1681,7 +1696,7 @@ def as_value_tuple(record_dict, obs_type):
         std_unit_system = weewx.US
     else:
         # There is a record. Get the value, and the unit system.
-        val = record_dict.get(obs_type)
+        val = record_dict[obs_type]
         std_unit_system = record_dict['usUnits']
 
     # Given this standard unit system, what is the unit type of this
@@ -1697,7 +1712,8 @@ class ComplexEncoder(json.JSONEncoder):
     """Custom encoder that knows how to encode complex objects"""
     def default(self, obj):
         if isinstance(obj, complex):
-            return [obj.real, obj.imag]
+            # Return as tuple
+            return obj.real, obj.imag
         # Otherwise, let the base class handle it
         return json.JSONEncoder.default(self, obj)
 

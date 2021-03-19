@@ -520,7 +520,7 @@ class CurrentObj(object):
                 db_manager = self.db_lookup(self.data_binding)
             except weewx.UnknownBinding:
                 # Don't recognize the binding.
-                vt = weewx.units.UnknownType(self.data_binding)
+                raise AttributeError(self.data_binding)
             else:
                 # Get the record for this timestamp from the database
                 record = db_manager.getRecord(self.current_time, max_delta=self.max_delta)
@@ -595,7 +595,7 @@ class TrendObj(object):
             # Both records exist. Check to see if the observation type is known
             if obs_type not in now_record or obs_type not in then_record:
                 # obs_type is unknown. Signal it
-                trend = weewx.units.UnknownType(obs_type)
+                raise AttributeError(obs_type)
             else:
                 # Both records exist, both types are known. We can proceed.
                 now_vt = weewx.units.as_value_tuple(now_record, obs_type)

@@ -175,8 +175,10 @@ class ValueHelperTest(unittest.TestCase):
 
     def testExplicitConversion(self):
         value_t = (10.0, "meter_per_second", "group_speed")
-        vh = weewx.units.ValueHelper(value_t)
+        # Default converter converts to US Units
+        vh = weewx.units.ValueHelper(value_t, converter=weewx.units.Converter())
         self.assertEqual(six.text_type(vh), "22 mph")
+        # Now explicitly convert to knots:
         self.assertEqual(six.text_type(vh.knot), "19 knots")
 
     def testNoneValue(self):

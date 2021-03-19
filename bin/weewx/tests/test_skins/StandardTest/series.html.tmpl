@@ -34,6 +34,12 @@
 	<p>Unaggregated series, in json with start times in milliseconds: \$day.outTemp.series.json(time_series='start', time_unit='unix_epoch_ms'):</p>
     <pre>$day.outTemp.series.json(time_series='start', time_unit='unix_epoch_ms')</pre>
 
+    <p>Unaggregated series, in json, in degrees C: \$day.outTemp.series.degree_C.json</p>
+    <pre>$day.outTemp.series.degree_C.json</pre>
+
+    <p>Unaggregated series, in json, in degrees C, rounded to 2 decimal places: \$day.outTemp.series.degree_C.json(ndigits=2)</p>
+    <pre>$day.outTemp.series.degree_C.json(ndigits=2)</pre>
+
     <p>Unaggregated series, as a formatted string (<em>not JSON</em>) : \$day.outTemp.series:</p>
     <pre>$day.outTemp.series</pre>
 
@@ -89,9 +95,9 @@
     $month.windvec.series(aggregation_type='max', aggregation_interval='day').polar.json()
     </pre>
 
-    <p>polar in knots: \$month.windvec.series(aggregation_type='max', aggregation_interval='day').polar.knot.json()</p>
+    <p>polar in knots: \$month.windvec.series(aggregation_type='max', aggregation_interval='day').knot.polar.json()</p>
     <pre>
-    $month.windvec.series(aggregation_type='max', aggregation_interval='day').polar.knot.json()
+    $month.windvec.series(aggregation_type='max', aggregation_interval='day').knot.polar.json()
     </pre>
 
   <hr/>
