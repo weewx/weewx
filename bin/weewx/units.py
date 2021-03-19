@@ -857,13 +857,18 @@ class Formatter(object):
                     # Coerce to a string.
                     val_str = str(None_string)
             addLabel = False
-        elif val_t[1] == "unix_epoch":
+        elif val_t[1] in {"unix_epoch", "unix_epoch_ms", "unix_epoch_ns"}:
             # Different formatting routines are used if the value is a time.
+            t = val_t[0]
+            if val_t[1] == "unix_epoch_ms":
+                t /= 1000.0
+            elif val_t[1] == "unix_epoch_ns":
+                t /= 1000000.0
             if useThisFormat is None:
                 val_str = time.strftime(self.time_format_dict.get(context, "%d-%b-%Y %H:%M"),
-                                        time.localtime(val_t[0]))
+                                        time.localtime(t))
             else:
-                val_str = time.strftime(useThisFormat, time.localtime(val_t[0]))
+                val_str = time.strftime(useThisFormat, time.localtime(t))
             addLabel = False
         elif val_t[2] == "group_deltatime":
             # Get a delta-time format string. Use a default if the user did not supply one:
@@ -1128,8 +1133,8 @@ class ValueHelper(object):
             addLabel (bool):  If True, add a unit label
             useThisFormat (str):  String with a format to be used when formatting the value.
                 If None, then a format will be supplied. Default is None.
-            None_string (str): If the value is not None, then this string will be used. If None,
-                then a default string from skin.conf will be used. Default is None.
+            None_string (str): A string to be used if the value is None. If None, then a default
+                string from skin.conf will be used. Default is None.
             localize (bool):  If True, localize the results. Default is True
             NONE_string (str): Supplied for backwards compatibility. Identical semantics to
                 None_string.
@@ -1200,8 +1205,7 @@ class ValueHelper(object):
             target_unit (str): The new target unit
 
         Returns:
-            ValueHelper. The returned ValueHelper uses an instance of FixedConverter to insure that
-                the data will be in the selected unit.
+            ValueHelper. The data in the new ValueHelper will be in the desired units.
         """
 
         # This is to get around bugs in the Python version of Cheetah's namemapper:
@@ -1275,14 +1279,15 @@ class SeriesHelper(object):
         """Return the data in this series as JSON.
 
         Args:
-            ndigits (int): The number of decimal digits to include in the data. Default is all.
+            ndigits (int): The number of decimal digits to include in the data. Default is None,
+                which means keep all digits.
             order_by (str): A string that determines whether the generated string is ordered by
                 row or column. Either 'row' or 'column'.
             time_series (str): What to include for the time series. Either 'start', 'stop', or
                 'both'.
             time_unit (str): Which unit to use for time. Choices are 'unix_epoch', 'unix_epoch_ms',
                 or 'unix_epoch_ns'. Default is 'unix_epoch'.
-            **kwargs (Any): These arguments are passed on to json.loads()
+            **kwargs (Any): Any extra arguments are passed on to json.loads()
 
         Returns:
             str. A string with the encoded JSON.
@@ -1312,8 +1317,8 @@ class SeriesHelper(object):
                 elif isinstance(x, float):
                     return round(x, ndigits)
                 return x
-            # data_series will be a simple list, holding the converted and rounded data.
-            data_series = list(map(rnd, self.data.raw))
+            # data_series will be an instance of `map`. Iterating over it returns a list.
+            data_series = map(rnd, self.data.raw)
 
         if order_by == 'row':
             if time_series == 'both':
@@ -1348,6 +1353,21 @@ class SeriesHelper(object):
 
     def format(self, format_string=None, None_string=None, add_label=True,
                localize=True, order_by='row'):
+        """Format a series as a string.
+
+        Args:
+            format_string (str):  String with a format to be used when formatting the values.
+                If None, then a format will be supplied. Default is None.
+            None_string (str): A string to be used if a value is None. If None,
+                then a default string from skin.conf will be used. Default is None.
+            add_label (bool):  If True, add a unit label to each value.
+            localize (bool):  If True, localize the results. Default is True
+            order_by (str): A string that determines whether the generated string is ordered by
+                row or column. Either 'row' or 'column'.
+
+        Returns:
+            str. The formatted and labeled string
+        """
 
         if order_by == 'row':
             rows = []
@@ -1367,7 +1387,14 @@ class SeriesHelper(object):
             raise ValueError('Unknown order by option %s' % order_by)
 
     def __getattr__(self, target_unit):
-        """Convert the data part of the series to a new unit. Only the data part gets converted."""
+        """Return a new SeriesHelper, with the data part converted to a new unit
+
+        Args:
+            target_unit (str): The data part of the returned SeriesHelper will be in this unit.
+
+        Returns:
+            SeriesHelper. The data in the new SeriesHelper will be in the target unit.
+        """
 
         # This is to get around bugs in the Python version of Cheetah's namemapper:
         if target_unit in ['__call__', 'has_key']:
@@ -1484,15 +1511,15 @@ def convert(val_t, target_unit):
 
     Args:
         val_t (ValueTuple): A ValueTuple containing the value to be converted. The first element
-            can be either a scalar or iterable.
+            can be either a scalar or an iterable.
         target_unit (str): The unit type (e.g., "meter", or "mbar") to which the value is to be
          converted. If the ValueTuple holds a complex number, target_unit can be a complex
          conversion nickname, such as 'polar'.
 
     Returns:
         ValueTuple. An instance of ValueTuple, where the desired conversion has been performed.
-
     """
+
     # Is the "target_unit" really a conversion for complex numbers?
     if target_unit in complex_conversions:
         # Yes. Get the conversion function. Also, note that these operations do not change the
@@ -1543,7 +1570,6 @@ def convertStd(val_t, target_std_unit_system):
 
     Returns:
         ValueTuple. A value tuple in the given standardized unit system.
-    
     """
     return StdUnitConverters[target_std_unit_system].convert(val_t)
 
@@ -1677,7 +1703,8 @@ def as_value_tuple(record_dict, obs_type):
     """Look up an observation type in a record, returning the result as a ValueTuple.
 
     Args:
-        record_dict (dict): A record. May be None.
+        record_dict (dict): A record. May be None. If it is not None, then it must contain an
+            entry for `usUnits`.
         obs_type (str): The observation type to be returned
 
     Returns:
@@ -1686,7 +1713,6 @@ def as_value_tuple(record_dict, obs_type):
     Raises:
         KeyIndex, If the observation type cannot be found in the record, a KeyIndex error is
             raised.
-
     """
 
     # Is the record None?

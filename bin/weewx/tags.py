@@ -374,8 +374,8 @@ class ObservationBinder(object):
 
         # Form a SeriesHelper, using our existing context, formatter, and converter.
         sh = weewx.units.SeriesHelper(
-            weewx.units.ValueHelper(start, self.context, self.formatter, self.converter), \
-            weewx.units.ValueHelper(stop, self.context, self.formatter, self.converter), \
+            weewx.units.ValueHelper(start, self.context, self.formatter, self.converter),
+            weewx.units.ValueHelper(stop, self.context, self.formatter, self.converter),
             weewx.units.ValueHelper(data, self.context, self.formatter, self.converter))
         return sh
 
