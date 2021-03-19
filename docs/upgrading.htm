@@ -258,6 +258,34 @@ sudo apt-get install weewx</pre>
 
         <h1><a id="Instructions_for_specific_versions">Instructions for specific versions</a></h1>
 
+        <h2>Upgrading to V4.5</h2>
+        <p>
+            Version 4.5 changes are unlikely to affect anyone, except extension writers who are deep in the internals of
+            WeeWX. The biggest change is that the data held internally in class <span class="code">ValueHelper</span> is
+            now held in the target unit system, rather than being converted at time of use.
+        </p>
+
+        <h3>Defaults for <span class="code">ValueHelper</span> have changed</h3>
+        <p>
+            Before, when constructing a new <span class="code">ValueHelper</span>, if no converter was included in the
+            constructor, a default converter, which converts to US Units, was supplied. Now no converter is supplied,
+            and the data remain in the original units. This is unlikely to affect most extension writers because
+            the usual case is to supply a converter to the <span class="code">ValueHelper</span> constructor.
+        </p>
+
+        <h3>Class <span class="code">FixedConverter</span> goes away</h3>
+        <p>
+            This is a class that was used internally to signal that data in a <span class="code">ValueHelper</span>
+            should be converted to a new unit. Because data are already held in the target unit, it is no longer
+            necessary.
+        </p>
+
+        <h3>Function <span class="code">ValueHelper._raw_value_tuple()`</span> goes away</h3>
+        <p>
+            This is a function that was used to convert the internally held data to the proper units before use.
+            Because data are already in the target unit, it is no longer necessary.
+        </p>
+
         <h2>Upgrading to V4.4</h2>
 
         <h3>Auto patch of daily summaries</h3>
