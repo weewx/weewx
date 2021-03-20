@@ -38,6 +38,10 @@ all aggregation types (not just min, max, avg). Revisits PR #232.
 Added new time units 'unix_epoch_ms' and 'unix_epoch_ns', which are unix epoch
 time in milliseconds and nanoseconds, respectively.
 
+The FTP uploader now calculates and saves a hash value for each uploaded file.
+If it does not change, the file is not uploaded, resulting in significant
+time savings. PR #655. Thanks to user Karen!
+
 
 4.4.0 01/30/2021
 
