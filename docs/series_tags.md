@@ -130,7 +130,7 @@ several optional parameters, It can also pass on parameters to the `json.loads()
       **kwargs)
 ```
 `ndigits`: The number of decimal digits to include in the results. Default is `None`, which means
-   all digits.
+   include all digits.
 
 `order_by`: The returned JSON can either be organized by rows, or by columns. The default 
    is '`row`'.
@@ -391,4 +391,60 @@ Start date	Max temperature
 2021-03-04	57.80°F
 2021-03-05	50.20°F
 2021-03-06	42.00°F
+```
+
+## Working with JSON
+We saw some examples above where the results of a tag can be formatted as JSON. However, there are
+cases when you need to combine several queries together to get the results you desire. Here's a
+common example: you wish to create a JSON structure with the minimum and maximum temperature for
+each day in a month.
+
+Creating separate series of minimums and maximums is easy enough:
+
+```
+$month.outTemp.series(aggregation_type='min', aggregation_interval='day').json
+$month.outTemp.series(aggregation_type='max', aggregation_interval='day').json
+```
+
+but how do you combine them into a single structure? Here's one way to do it:
+
+```
+ #set $min = $year.outTemp.series(aggregation_type='min', aggregation_interval='day')
+ #set $max = $year.outTemp.series(aggregation_type='max', aggregation_interval='day')
+ <pre>
+ $jsonize($zip($min.start.raw, $min.data.raw, $max.data.raw))
+ </pre>
+```
+
+This uses the Python function `zip()` to interleave the start times, minimums, and maximums
+together. This results in a list of 3-way tuples (time, minimum, maximum). The helper function
+`$jsonize()` is then used to convert this to JSON. The result looks something like this:
+
+```
+[[1609488000, 38.9, 45.6], [1609574400, 41.6, 46.2], [1609660800, 40.7, 49.5], ... ]
+```
+
+Suppose you want the results in degrees Celsius, instead of Fahrenheit? Then add the tag 
+`.degree_C`:
+
+```
+$jsonize($zip($min.start.raw, $min.data.degree_C.raw, $max.data.degree_C.raw))
+```
+with results:
+```
+[[1609488000, 3.8333333333333326, 7.555555555555555], [1609574400, 5.333333333333334, 7.88888888888889], [1609660800, 4.833333333333335, 9.722222222222221], ... ]
+```
+
+The unit conversion resulted in a lot of decimal digits. We saw this problem before, and solved it
+by using the `ndigits` parameter to `.json()`. Here we are not using `.json()`. To solve this
+problem, the `.raw` tag can also take the `ndigits` parameter:
+
+```
+$jsonize($zip($min.start.raw, $min.data.degree_C.raw(ndigits=2), $max.data.degree_C.raw(ndigits=2)))
+```
+
+This results in
+
+```
+[[1609488000, 3.83, 7.56], [1609574400, 5.33, 7.89], [1609660800, 4.83, 9.72], ... ]
 ```

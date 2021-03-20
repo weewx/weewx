@@ -58,6 +58,7 @@ Example:
 from __future__ import absolute_import
 
 import datetime
+import json
 import logging
 import os.path
 import time
@@ -88,7 +89,8 @@ default_search_list = [
     "weewx.cheetahgenerator.Current",
     "weewx.cheetahgenerator.Stats",
     "weewx.cheetahgenerator.UnitInfo",
-    "weewx.cheetahgenerator.Extras"]
+    "weewx.cheetahgenerator.Extras",
+    "weewx.cheetahgenerator.JSONHelpers"]
 
 
 # =============================================================================
@@ -618,6 +620,13 @@ class Extras(SearchList):
         # an empty dictionary.
         self.Extras = ExtraDict(generator.skin_dict['Extras'] if 'Extras' in generator.skin_dict else {})
 
+
+class JSONHelpers(SearchList):
+    """Helper functions for formatting JSON"""
+
+    def jsonize(self, arg):
+        val = list(arg)
+        return json.dumps(val)
 
 # =============================================================================
 # Filter

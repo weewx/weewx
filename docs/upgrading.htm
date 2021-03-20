@@ -265,6 +265,14 @@ sudo apt-get install weewx</pre>
             now held in the target unit system, rather than being converted at time of use.
         </p>
 
+        <h3>Tag <span class="code">.raw</span> has changed to a function</h3>
+        <p>
+            Previously, <span class="code">.raw</span> was a property. It has been changed to a function. This will not
+            affect any Cheetah templates, because Cheetah will call functions that are missing arguments. However, if
+            you used the <span class="code">.raw</span> in any Python code, you will get an error. The fix is simple
+            enough: just add a pair of parenthesis.
+        </p>
+
         <h3>Defaults for <span class="code">ValueHelper</span> have changed</h3>
         <p>
             Before, when constructing a new <span class="code">ValueHelper</span>, if no converter was included in the

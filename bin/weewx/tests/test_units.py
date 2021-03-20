@@ -145,7 +145,7 @@ class ValueHelperTest(unittest.TestCase):
         self.assertEqual(vh.string(), u"68.0°F")
         self.assertEqual(vh.nolabel("T=%.3f"), u"T=68.010")
         self.assertEqual(vh.formatted, u"68.0")
-        self.assertEqual(vh.raw, 68.01)
+        self.assertEqual(vh.raw(), 68.01)
         self.assertEqual(six.text_type(vh), u"68.0°F")
         self.assertEqual(six.text_type(vh.degree_F), u"68.0°F")
         self.assertEqual(six.text_type(vh.degree_C), u"20.0°C")
