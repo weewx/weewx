@@ -2154,10 +2154,11 @@ or in foobar units: $day.barometer.min.foobar
                 </td>
             </tr>
             <tr>
-                <td class="code text_highlight">.raw</td>
+                <td class="code text_highlight">.raw(ndigits=None)</td>
                 <td>Value is returned "as is" without being converted to a string and without any formatting applied.
                     This can be useful for doing arithmetic directly within the templates. You must be prepared to deal
-                    with a potential <span class="code">None</span> value.
+                    with a potential <span class="code">None</span> value. If optional argument <span class="code">ndigits</span>
+                    is given, the results will be rounded to that number of decimal digits before being returned.
                 </td>
             </tr>
             </tbody>
@@ -2344,6 +2345,18 @@ or in foobar units: $day.barometer.min.foobar
                 <td class="code first_col">$current.outTemp.raw</td>
                 <td class="code">45.2</td>
                 <td>Raw float value (which is converted to a string by the template engine).
+                </td>
+            </tr>
+            <tr>
+                <td class="code first_col">$current.outTemp.degree_C.raw</td>
+                <td class="code">7.33333333</td>
+                <td>Raw float value in degrees Celsius.
+                </td>
+            </tr>
+            <tr>
+                <td class="code first_col">$current.outTemp.degree_C.raw(2)</td>
+                <td class="code">7.33</td>
+                <td>Raw float value in degrees Celsius, rounding the results to two decimal digits.
                 </td>
             </tr>
             </tbody>
