@@ -25,6 +25,10 @@ aggregation type changes the unit. Fixes issue #654.
 Plots now locate the x-coordinate in the middle of the aggregation interval for
 all aggregation types (not just min, max, avg). Revisits PR #232.
 
+The FTP uploader now calculates and saves a hash value for each uploaded file.
+If it does not change, the file is not uploaded, resulting in significant
+time savings. PR #655. Thanks to user Karen!
+
 
 4.4.0 01/30/2021
 
