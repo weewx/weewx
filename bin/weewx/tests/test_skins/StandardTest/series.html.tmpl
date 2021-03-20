@@ -59,8 +59,8 @@
 
     <p>Aggregated series, using \$jsonize(), and rounding of raw data:
     \$jsonize(\$zip(\$min.start.unix_epoch_ms.raw, \$min.data.degree_C.raw(2), \$max.data.degree_C.raw(2)))
-    #set $min = $year.outTemp.series(aggregation_type='min', aggregation_interval='day')
-    #set $max = $year.outTemp.series(aggregation_type='max', aggregation_interval='day')
+    #set $min = $month.outTemp.series(aggregation_type='min', aggregation_interval='day')
+    #set $max = $month.outTemp.series(aggregation_type='max', aggregation_interval='day')
     <pre>
     $jsonize($zip($min.start.unix_epoch_ms.raw, $min.data.degree_C.raw(2), $max.data.degree_C.raw(2)))
     </pre>
