@@ -1300,6 +1300,29 @@ def dirN(c):
     return value
 
 
+def rounder(x, ndigits):
+    """Round a number, or sequence of numbers, to a specified number of decimal digits
+
+    Args:
+        x (None, float, complex, list): The number or sequence of numbers to be rounded. If the
+            argument is None, then None will be returned.
+        ndigits (int): The number of decimal digits to retain.
+
+    Returns:
+        None, float, complex, list: Returns the number, or sequence of numbers, with the requested
+            number of decimal digits
+    """
+    if x is None:
+        return None
+    elif isinstance(x, complex):
+        return complex(round(x.real, ndigits), round(x.imag, ndigits))
+    elif isinstance(x, float):
+        return round(x, ndigits)
+    elif hasattr(x, '__iter__'):
+        return [rounder(v, ndigits) for v in x]
+    return x
+
+
 def min_with_none(x_seq):
     """Find the minimum in a (possibly empty) sequence, ignoring Nones"""
     xmin = None

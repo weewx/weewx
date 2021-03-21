@@ -394,6 +394,7 @@ Start date	Max temperature
 ```
 
 ## Working with JSON
+### Helper function `$jsonize()`
 We saw some examples above where the results of a tag can be formatted as JSON. However, there are
 cases when you need to combine several queries together to get the results you desire. Here's a
 common example: you wish to create a JSON structure with the minimum and maximum temperature for
@@ -417,13 +418,14 @@ but how do you combine them into a single structure? Here's one way to do it:
 ```
 
 This uses the Python function `zip()` to interleave the start times, minimums, and maximums
-together. This results in a list of 3-way tuples (time, minimum, maximum). The helper function
-`$jsonize()` is then used to convert this to JSON. The result looks something like this:
+together. This results in a list of 3-way tuples (time, minimum, maximum). The WeeWX helper
+function `$jsonize()` is then used to convert this to JSON. The result looks something like this:
 
 ```
 [[1609488000, 38.9, 45.6], [1609574400, 41.6, 46.2], [1609660800, 40.7, 49.5], ... ]
 ```
 
+### Helper function `$rnd()`
 Suppose you want the results in degrees Celsius, instead of Fahrenheit? Then add the tag 
 `.degree_C`:
 
@@ -435,14 +437,15 @@ with results:
 [[1609488000, 3.8333333333333326, 7.555555555555555], [1609574400, 5.333333333333334, 7.88888888888889], [1609660800, 4.833333333333335, 9.722222222222221], ... ]
 ```
 
-The unit conversion resulted in a lot of decimal digits. We saw this problem before, and solved it
-by using the `ndigits` parameter to `.json()`. Here we are not using `.json()`. To solve this
-problem, the `.raw` tag can also take the `ndigits` parameter:
+Unfortunately, the unit conversion resulted in a lot of decimal digits, which we may not want to
+transmit over the wire to a Javascript plotting library. We can round the results by using the
+WeeWX helper function `$rnd()`:
 
 ```
-$jsonize($zip($min.start.raw, $min.data.degree_C.raw(ndigits=2), $max.data.degree_C.raw(ndigits=2)))
+$jsonize($zip($min.start.raw, $rnd($min.data.degree_C.raw, 2), $rnd($max.data.degree_C.raw, 2)))
 ```
 
+The second argument (`2`, in this example), say to round the results to two decimal digits. 
 This results in
 
 ```

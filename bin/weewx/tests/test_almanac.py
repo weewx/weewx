@@ -92,22 +92,22 @@ class AlmanacTest(unittest.TestCase):
         # Time and location where the sun is always up
         t = 1371044003  # 2013-06-12 06:33:23 PDT (1371044003)
         almanac = Almanac(t, 64.0, 0.0)
-        self.assertIsNone(almanac(horizon=-6).sun(use_center=1).rise.raw())
+        self.assertIsNone(almanac(horizon=-6).sun(use_center=1).rise.raw)
 
     def test_naval_observatory(self):
         #
         # pyephem "Naval Observatory" example.
         t = 1252256400  # 2009-09-06 17:00:00 UTC (1252256400)
         atlanta = Almanac(t, 33.8, -84.4, pressure=0, horizon=-34.0 / 60.0)
-        self.assertAlmostEqual(atlanta.sun.previous_rising.raw(), 1252235697, 0)
-        self.assertAlmostEqual(atlanta.moon.next_setting.raw(), 1252332329, 0)
+        self.assertAlmostEqual(atlanta.sun.previous_rising.raw, 1252235697, 0)
+        self.assertAlmostEqual(atlanta.moon.next_setting.raw, 1252332329, 0)
 
         # Civil twilight examples:
-        self.assertAlmostEqual(atlanta(horizon=-6).sun(use_center=1).previous_rising.raw(), 1252234180, 0)
-        self.assertAlmostEqual(atlanta(horizon=-6).sun(use_center=1).next_setting.raw(), 1252282883, 0)
+        self.assertAlmostEqual(atlanta(horizon=-6).sun(use_center=1).previous_rising.raw, 1252234180, 0)
+        self.assertAlmostEqual(atlanta(horizon=-6).sun(use_center=1).next_setting.raw, 1252282883, 0)
 
         # Try sun rise again, to make sure the horizon value cleared:
-        self.assertAlmostEqual(atlanta.sun.previous_rising.raw(), 1252235697, 0)
+        self.assertAlmostEqual(atlanta.sun.previous_rising.raw, 1252235697, 0)
 
     def test_exceptions(self):
         # Try a nonsense body

@@ -624,9 +624,25 @@ class Extras(SearchList):
 class JSONHelpers(SearchList):
     """Helper functions for formatting JSON"""
 
-    def jsonize(self, arg):
+    @staticmethod
+    def jsonize(arg):
         val = list(arg)
         return json.dumps(val, cls=weewx.units.ComplexEncoder)
+
+    @staticmethod
+    def rnd(arg, ndigits):
+        """Round a number, or sequence of numbers, to a specified number of decimal digits
+
+        Args:
+            arg (None, float, complex, list): The number or sequence of numbers to be rounded.
+                If the argument is None, then None will be returned.
+            ndigits (int): The number of decimal digits to retain.
+
+        Returns:
+            None, float, complex, list: Returns the number, or sequence of numbers, with the
+                requested number of decimal digits
+        """
+        return weeutil.weeutil.rounder(arg, ndigits)
 
 # =============================================================================
 # Filter

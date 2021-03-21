@@ -1095,7 +1095,7 @@ class ValueHelper(object):
     20.0°C
     
     Extract just the raw value:
-    >>> print("%.1f" % vh.raw())
+    >>> print("%.1f" % vh.raw)
     20.0
     """
     def __init__(self, value_t, context='current', formatter=Formatter(), converter=None):
@@ -1175,15 +1175,12 @@ class ValueHelper(object):
         return self.formatter.to_ordinal_compass(self.value_t)
 
     def json(self, ndigits=None, **kwargs):
-        value = self.raw(ndigits)
-        return json.dumps(value, cls=ComplexEncoder, **kwargs)
+        return json.dumps(self.raw, cls=ComplexEncoder, **kwargs)
 
-    def raw(self, ndigits=None):
+    @property
+    def raw(self):
         """Returns just the data part, without any formatting."""
-        if ndigits is None:
-            return self.value_t[0]
-        else:
-            return rounder(self.value_t[0], ndigits)
+        return self.value_t[0]
 
     def convert(self, target_unit):
         """Return a ValueHelper in a new target unit.
@@ -1305,13 +1302,13 @@ class SeriesHelper(object):
 
         # If requested, round the data to the required number of decimal digits.
         if ndigits is None:
-            data_series = self.data.raw()
+            data_series = self.data.raw
         else:
             # We need a function that can be fed to map().
             def rnd(x):
-                return rounder(x, ndigits)
+                return weeutil.weeutil.rounder(x, ndigits)
             # data_series will be an instance of `map`. Iterating over it returns a list.
-            data_series = map(rnd, self.data.raw())
+            data_series = map(rnd, self.data.raw)
 
         if order_by == 'row':
             if time_series == 'both':
@@ -1735,29 +1732,6 @@ class ComplexEncoder(json.JSONEncoder):
             return obj.real, obj.imag
         # Otherwise, let the base class handle it
         return json.JSONEncoder.default(self, obj)
-
-
-def rounder(x, ndigits):
-    """Round a number, or sequence of numbers, to a specified number of decimal digits
-
-    Args:
-        x (None, float, complex, list): The number or sequence of numbers to be rounded. If the
-            argument is None, then None will be returned.
-        ndigits (int): The number of decimal digits to retain.
-
-    Returns:
-        None, float, complex, list: Returns the number, or sequence of numbers, with the requested
-            number of decimal digits
-    """
-    if x is None:
-        return None
-    elif isinstance(x, complex):
-        return complex(round(x.real, ndigits), round(x.imag, ndigits))
-    elif isinstance(x, float):
-        return round(x, ndigits)
-    elif hasattr(x, '__iter__'):
-        return [rounder(v, ndigits) for v in x]
-    return x
 
 
 if __name__ == "__main__":

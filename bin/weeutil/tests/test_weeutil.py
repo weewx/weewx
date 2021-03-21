@@ -28,6 +28,14 @@ class WeeutilTest(unittest.TestCase):
                          [1.0, 2.0, None, None, 5.0, 6.0])
         self.assertIsNone(convertToFloat(None))
 
+    def test_rounder(self):
+        self.assertEqual(rounder(1.2345, 2), 1.23)
+        self.assertEqual(rounder([1.2345, 6.73848, 4.2901], 2), [1.23, 6.74, 4.29])
+        self.assertEqual(rounder(complex(1.2345, -2.1191), 2), complex(1.23, -2.12))
+        self.assertEqual(rounder([complex(1.2345, -2.1191), complex(5.1921, 11.2092)], 2),
+                         [complex(1.23, -2.12), complex(5.19, 11.21)])
+        self.assertIsNone(rounder(None, 2))
+
     def test_option_as_list(self):
 
         self.assertEqual(option_as_list("abc"), ['abc'])
