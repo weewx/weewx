@@ -626,7 +626,7 @@ class JSONHelpers(SearchList):
 
     def jsonize(self, arg):
         val = list(arg)
-        return json.dumps(val)
+        return json.dumps(val, cls=weewx.units.ComplexEncoder)
 
 # =============================================================================
 # Filter
