@@ -495,15 +495,23 @@ class DailySummaries(XType):
                  "FROM %(day_table)s "
                  "WHERE dateTime>=%(start)s AND dateTime<%(stop)s %(group_def)s",
     }
-    # Database-specific "GROUP BY" clauses.
+    # Database- and interval-specific "GROUP BY" clauses.
     group_defs = {
-        'sqlite': "GROUP BY CAST("
-                  "    (julianday(dateTime,'unixepoch','localtime') - 0.5 "
-                  "       - CAST(julianday(%(sod)s, 'unixepoch','localtime') AS int)) "
-                  "     / %(agg_days)s "
-                  "AS int)",
-        'mysql': "GROUP BY TRUNCATE((TO_DAYS(FROM_UNIXTIME(dateTime)) "
-                 "- TO_DAYS(FROM_UNIXTIME(%(sod)s)))/ %(agg_days)s, 0)"
+        'sqlite': {
+            'day': "GROUP BY CAST("
+                   "    (julianday(dateTime,'unixepoch','localtime') - 0.5 "
+                   "       - CAST(julianday(%(sod)s, 'unixepoch','localtime') AS int)) "
+                   "     / %(agg_days)s "
+                   "AS int)",
+            'month': "GROUP BY strftime('%%Y-%%m',dateTime,'unixepoch','localtime') ",
+            'year': "GROUP BY strftime('%%Y',dateTime,'unixepoch','localtime') ",
+        },
+        'mysql': {
+            'day': "GROUP BY TRUNCATE((TO_DAYS(FROM_UNIXTIME(dateTime)) "
+                   "- TO_DAYS(FROM_UNIXTIME(%(sod)s)))/ %(agg_days)s, 0) ",
+            'month': "GROUP BY DATE_FORMAT(FROM_UNIXTIME(dateTime), '%%%%Y-%%%%m') ",
+            'year': "GROUP BY DATE_FORMAT(FROM_UNIXTIME(dateTime), '%%%%Y') ",
+        },
     }
 
     @staticmethod
@@ -522,12 +530,14 @@ class DailySummaries(XType):
         # Check to see whether we can use the daily summaries:
         DailySummaries._check_eligibility(obs_type, timespan, db_manager, aggregate_type)
 
-        # We also have to check whether the aggregation interval is some multiple of one
-        # calendar day.
+        # We also have to make sure the aggregation interval is either the length of a nominal
+        # month or year, or some multiple of a calendar day.
         aggregate_interval = weeutil.weeutil.nominal_spans(aggregate_interval)
-        if aggregate_interval % 86400:
+        if aggregate_interval != weeutil.weeutil.nominal_intervals['year'] \
+                and aggregate_interval != weeutil.weeutil.nominal_intervals['month'] \
+                and aggregate_interval % 86400:
             raise weewx.UnknownAggregation(aggregate_interval)
-        
+
         # We're good. Proceed.
         dbtype = db_manager.connection.dbtype
         interp_dict = {
@@ -538,9 +548,15 @@ class DailySummaries(XType):
             'start': timespan.start,
             'stop': timespan.stop,
         }
+        if aggregate_interval == weeutil.weeutil.nominal_intervals['year']:
+            group_by_group = 'year'
+        elif aggregate_interval == weeutil.weeutil.nominal_intervals['month']:
+            group_by_group = 'month'
+        else:
+            group_by_group = 'day'
         # Add the database-specific GROUP_BY clause to the interpolation dictionary
-        interp_dict['group_def'] = DailySummaries.group_defs[dbtype] % interp_dict
-        # Final SELECT statement.
+        interp_dict['group_def'] = DailySummaries.group_defs[dbtype][group_by_group] % interp_dict
+        # This is the final SELECT statement.
         sql_stmt = DailySummaries.common[aggregate_type] % interp_dict
 
         start_list = list()
@@ -692,9 +708,9 @@ class WindVec(XType):
         'first': "SELECT %(mag)s, %(dir)s, usUnits FROM %(table_name)s "
                  "WHERE dateTime > %(start)s AND dateTime <= %(stop)s  AND %(mag)s IS NOT NULL "
                  "ORDER BY dateTime ASC LIMIT 1",
-        'last':  "SELECT %(mag)s, %(dir)s, usUnits FROM %(table_name)s "
-                 "WHERE dateTime > %(start)s AND dateTime <= %(stop)s  AND %(mag)s IS NOT NULL "
-                 "ORDER BY dateTime DESC LIMIT 1",
+        'last': "SELECT %(mag)s, %(dir)s, usUnits FROM %(table_name)s "
+                "WHERE dateTime > %(start)s AND dateTime <= %(stop)s  AND %(mag)s IS NOT NULL "
+                "ORDER BY dateTime DESC LIMIT 1",
         'min': "SELECT %(mag)s, %(dir)s, usUnits FROM %(table_name)s "
                "WHERE dateTime > %(start)s AND dateTime <= %(stop)s  AND %(mag)s IS NOT NULL "
                "ORDER BY %(mag)s ASC LIMIT 1;",
@@ -949,7 +965,7 @@ class XTypeTable(XType):
 
                 # Given a record, use the xtypes system to calculate a value:
                 value = get_scalar(obs_type, record, db_manager)
-                start_vec.append(record['dateTime']- record['interval'] * 60)
+                start_vec.append(record['dateTime'] - record['interval'] * 60)
                 stop_vec.append(record['dateTime'])
                 data_vec.append(value[0])
 
@@ -958,6 +974,7 @@ class XTypeTable(XType):
         return (ValueTuple(start_vec, 'unix_epoch', 'group_time'),
                 ValueTuple(stop_vec, 'unix_epoch', 'group_time'),
                 ValueTuple(data_vec, unit, unit_group))
+
 
 # Add instantiated versions to the extension list. Order matters. We want the highly-specialized
 # versions first, because they might offer optimizations.

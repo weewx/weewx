@@ -250,6 +250,15 @@ class TimeSpan(tuple):
         return 0 if self.start == other.start else 1
 
 
+nominal_intervals = {
+    'hour': 3600,
+    'day': 86400,
+    'week': 7 * 86400,
+    'month': int(365.25 / 12 * 86400),
+    'year': int(365.25 * 86400),
+}
+
+
 def nominal_spans(label):
     """Convert a (possible) string into an integer time."""
     if label is None:
@@ -259,13 +268,7 @@ def nominal_spans(label):
         interval = int(label)
     except ValueError:
         # Is it in our list of nominal spans? If not, fail hard.
-        interval = {
-            'hour' : 3600,
-            'day': 86400,
-            'week': 7 * 86400,
-            'month': 365.25 / 12 * 86400,
-            'year': 365.25 * 86400,
-        }[label.lower()]
+        interval = nominal_intervals[label.lower()]
     return interval
 
 
