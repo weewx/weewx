@@ -410,8 +410,8 @@ $month.outTemp.series(aggregation_type='max', aggregation_interval='day').json
 but how do you combine them into a single structure? Here's one way to do it:
 
 ```
- #set $min = $year.outTemp.series(aggregation_type='min', aggregation_interval='day')
- #set $max = $year.outTemp.series(aggregation_type='max', aggregation_interval='day')
+ #set $min = month.outTemp.series(aggregation_type='min', aggregation_interval='day')
+ #set $max = $month.outTemp.series(aggregation_type='max', aggregation_interval='day')
  <pre>
  $jsonize($zip($min.start.raw, $min.data.raw, $max.data.raw))
  </pre>
@@ -445,7 +445,7 @@ WeeWX helper function `$rnd()`:
 $jsonize($zip($min.start.raw, $rnd($min.data.degree_C.raw, 2), $rnd($max.data.degree_C.raw, 2)))
 ```
 
-The second argument (`2`, in this example), say to round the results to two decimal digits. 
+The second argument (`2`, in this example), says to round the results to two decimal digits. 
 This results in
 
 ```
