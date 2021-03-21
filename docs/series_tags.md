@@ -417,9 +417,10 @@ but how do you combine them into a single structure? Here's one way to do it:
  </pre>
 ```
 
-This uses the Python function `zip()` to interleave the start times, minimums, and maximums
-together. This results in a list of 3-way tuples (time, minimum, maximum). The WeeWX helper
-function `$jsonize()` is then used to convert this to JSON. The result looks something like this:
+This uses the Python function [`zip()`](https://docs.python.org/3/library/functions.html#zip) to
+interleave the start times, minimums, and maximums together. This results in a list of 3-way tuples
+(time, minimum, maximum). The WeeWX helper function `$jsonize()` is then used to convert this to
+JSON. The result looks something like this:
 
 ```
 [[1609488000, 38.9, 45.6], [1609574400, 41.6, 46.2], [1609660800, 40.7, 49.5], ... ]
