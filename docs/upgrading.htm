@@ -280,25 +280,19 @@ sudo apt-get install weewx</pre>
             class="code">ValueHelper</span> constructor.
         </p>
 
-        <h5>Class <span class="code">FixedConverter</span> goes away</h5>
-        <p>
-            This is a class that was used internally to signal that data in a <span class="code">ValueHelper</span>
-            should be converted to a new unit. Because data are already held in the target unit, it is no longer
-            necessary.
-        </p>
-
-        <h5>Function <span class="code">ValueHelper._raw_value_tuple()`</span> goes away</h5>
-        <p>
-            This is a private function that was used internally to convert held data to the proper units before use.
-            Because data are already in the target unit, it is no longer necessary.
-        </p>
-
         <h5>Tag <span class="code">.raw</span> has changed to a function</h5>
         <p>
             Previously, <span class="code">.raw</span> was a property. It has been changed to a function. This will not
             affect any Cheetah templates, because Cheetah will call functions that are missing arguments. However, if
             you used <span class="code">.raw</span> in any Python code, you will get an error. The fix is simple enough:
             just add a pair of parenthesis.
+        </p>
+        <h5>Function <span class="code">as_value_tuple()</span> may raise <span class="code">KeyError</span></h5>
+        <p>
+            Previously, if the function <span class="code">as_value_tuple()</span> was asked to return a
+            <span class="code">ValueTuple</span> of a non-existent type, it returned a <span class="code">ValueTuple</span>
+            with values <span class="code">(None, None, None)</span>. Now it raises a <span class="code">KeyError</span>
+            exception.
         </p>
 
         <h2>Upgrading to V4.4</h2>
