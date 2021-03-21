@@ -70,8 +70,8 @@
 	<p>Order by column: $month.outTemp.series(aggregation_type='max', aggregation_interval=86400).json(order_by="column"):</p>
     <pre>[[1283324400, 1283410800, 1283497200], [1283410800, 1283497200, 1283583600], [79.825823, 79.224876, 63.921459]]</pre>
 
-    <p>Aggregated series, using $jsonize():
-    $jsonize($zip($min.start.unix_epoch_ms.raw, $min.data.degree_C.raw, $max.data.degree_C.raw))
+    <p>Aggregated series, using $jsonize() and $rnd():
+    $jsonize($zip($min.start.unix_epoch_ms.raw, $rnd($min.data.degree_C.raw, 2), $rnd($max.data.degree_C.raw, 2)))
     <pre>
     [[1283324400000.0, 4.51, 26.57], [1283410800000.0, 4.18, 26.24], [1283497200000.0, 3.85, 17.73]]
     </pre>

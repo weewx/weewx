@@ -57,8 +57,8 @@
 	<p>Order by column: \$month.outTemp.series(aggregation_type='max', aggregation_interval=86400).json(order_by="column"):</p>
     <pre>$month.outTemp.series(aggregation_type='max', aggregation_interval=86400).json(order_by="column")</pre>
 
-    <p>Aggregated series, using \$jsonize():
-    \$jsonize(\$zip(\$min.start.unix_epoch_ms.raw, \$min.data.degree_C.raw, \$max.data.degree_C.raw))
+    <p>Aggregated series, using \$jsonize() and \$rnd():
+    \$jsonize(\$zip(\$min.start.unix_epoch_ms.raw, \$rnd(\$min.data.degree_C.raw, 2), \$rnd(\$max.data.degree_C.raw, 2)))
     #set $min = $month.outTemp.series(aggregation_type='min', aggregation_interval='day')
     #set $max = $month.outTemp.series(aggregation_type='max', aggregation_interval='day')
     <pre>
