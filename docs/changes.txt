@@ -42,6 +42,8 @@ The FTP uploader now calculates and saves a hash value for each uploaded file.
 If it does not change, the file is not uploaded, resulting in significant
 time savings. PR #655. Thanks to user Karen!
 
+Updated the version of six.py included with WeeWX to 1.15.0. Fixes issue #657.
+
 
 4.4.0 01/30/2021
 
