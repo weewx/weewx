@@ -1175,7 +1175,9 @@ class ValueHelper(object):
         return self.formatter.to_ordinal_compass(self.value_t)
 
     def json(self, ndigits=None, **kwargs):
-        return json.dumps(self.raw, cls=ComplexEncoder, **kwargs)
+        # If requested, round the value before converting to JSON
+        val = self.raw if ndigits is None else weeutil.weeutil.rounder(self.raw, ndigits)
+        return json.dumps(val, cls=ComplexEncoder, **kwargs)
 
     @property
     def raw(self):
