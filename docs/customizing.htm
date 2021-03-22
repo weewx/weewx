@@ -3638,7 +3638,7 @@ class MyStats(SearchList):                                                   # 1
             yscale = None, None, 0.02
             [[[[rain]]]]
                 aggregate_type = sum
-                aggregate_interval = 86400
+                aggregate_interval = day
                 label = Rain (daily total)</pre>
         <p>
             This will generate an image file with name <span class="code">monthrain.png</span>. It will be a bar plot.
@@ -3698,7 +3698,7 @@ class MyStats(SearchList):                                                   # 1
 [[[daytemp_with_avg]]]
     [[[[outTemp]]]]
         aggregate_type = avg
-        aggregate_interval = 3600
+        aggregate_interval = hour
     <span style="text-decoration: line-through; color: red">[[[[outTemp]]]]</span>  # OOPS! The same section name appears more than once!</pre>
         <p>
             The option parser does not allow the same section name (<span class="code">outTemp</span> in this case) to
@@ -3712,7 +3712,7 @@ class MyStats(SearchList):                                                   # 1
     [[[[avgTemp]]]]
         data_type = outTemp
         aggregate_type = avg
-        aggregate_interval = 3600
+        aggregate_interval = hour
         label = Avg. Temp.
     [[[[outTemp]]]]</pre>
         <p>
@@ -3786,7 +3786,7 @@ class MyStats(SearchList):                                                   # 1
             vector for one week that shows the hourly biggest wind gusts, along with hourly averages:
         </p>
         <pre class="tty">[[[weekgustoverlay]]]
-    aggregate_interval = 3600
+    aggregate_interval = hour
     [[[[windvec]]]]
         label = Hourly Wind
         plot_type = vector
@@ -5085,7 +5085,7 @@ weewx.units.conversionDict['pound']  = {'newton': lambda x : x * 4.44822}
         <pre class="tty">[[[monthelectric]]]
     [[[[electricity]]]]
         aggregate_type = sum
-        aggregate_interval = 86400
+        aggregate_interval = day
         label = Electric consumption (daily total)</pre>
         <p>
             This will cause the generation of an image <span class="code">monthelectric.png</span>, showing a plot of
@@ -6392,8 +6392,10 @@ growing_base = 50.0, degree_F</pre>
         <p class="config_option">aggregate_interval</p>
 
         <p>
-            The time period over which the data should be aggregated. Required if <span
-            class="code">aggregate_type</span> has been set.
+            The time period over which the data should be aggregated, in seconds. Required if
+            <span class="code">aggregate_type</span> has been set. Alternatively, the time can be specified by using
+            one of the "shortcuts" (that is, <span class="code">hour</span>, <span class="code">day</span>,
+            <span class="code">week</span>, <span class="code">month</span>, or <span class="code">year</span>).
         </p>
 
         <p class="config_option">plot_type</p>

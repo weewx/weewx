@@ -44,6 +44,9 @@ time savings. PR #655. Thanks to user Karen!
 
 Updated the version of six.py included with WeeWX to 1.15.0. Fixes issue #657.
 
+Option aggregate_interval can now be specified by using one of the "shortcuts",
+that is, 'hour', 'day', 'week', 'month', or 'year'.
+
 
 4.4.0 01/30/2021
 
