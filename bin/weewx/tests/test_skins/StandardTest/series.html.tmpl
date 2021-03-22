@@ -48,19 +48,19 @@
 
 	<hr/>
 	<h2>Aggregated series</h2>
-	<p>Aggregated series: \$month.outTemp.series(aggregation_type='max', aggregation_interval=86400).json():</p>
-    <pre>$month.outTemp.series(aggregation_type='max', aggregation_interval=86400).json()</pre>
+	<p>Aggregated series: \$month.outTemp.series(aggregate_type='max', aggregate_interval=86400).json():</p>
+    <pre>$month.outTemp.series(aggregate_type='max', aggregate_interval=86400).json()</pre>
 
-	<p>Using shortcut 'day': \$month.outTemp.series(aggregation_type='max', aggregation_interval='day').json():</p>
-    <pre>$month.outTemp.series(aggregation_type='max', aggregation_interval='day').json()</pre>
+	<p>Using shortcut 'day': \$month.outTemp.series(aggregate_type='max', aggregate_interval='day').json():</p>
+    <pre>$month.outTemp.series(aggregate_type='max', aggregate_interval='day').json()</pre>
 
-	<p>Order by column: \$month.outTemp.series(aggregation_type='max', aggregation_interval=86400).json(order_by="column"):</p>
-    <pre>$month.outTemp.series(aggregation_type='max', aggregation_interval=86400).json(order_by="column")</pre>
+	<p>Order by column: \$month.outTemp.series(aggregate_type='max', aggregate_interval=86400).json(order_by="column"):</p>
+    <pre>$month.outTemp.series(aggregate_type='max', aggregate_interval=86400).json(order_by="column")</pre>
 
     <p>Aggregated series, using \$jsonize() and \$rnd():
     \$jsonize(\$zip(\$min.start.unix_epoch_ms.raw, \$rnd(\$min.data.degree_C.raw, 2), \$rnd(\$max.data.degree_C.raw, 2)))
-    #set $min = $month.outTemp.series(aggregation_type='min', aggregation_interval='day')
-    #set $max = $month.outTemp.series(aggregation_type='max', aggregation_interval='day')
+    #set $min = $month.outTemp.series(aggregate_type='min', aggregate_interval='day')
+    #set $max = $month.outTemp.series(aggregate_type='max', aggregate_interval='day')
     <pre>
     $jsonize($zip($min.start.unix_epoch_ms.raw, $rnd($min.data.degree_C.raw, 2), $rnd($max.data.degree_C.raw, 2)))
     </pre>
@@ -69,50 +69,50 @@
     <hr/>
     <h2>Complex conversions</h2>
 
-    <p>Starting series: \$month.windvec.series(aggregation_type='max', aggregation_interval='day').json()</p>
+    <p>Starting series: \$month.windvec.series(aggregate_type='max', aggregate_interval='day').json()</p>
     <pre>
-    $month.windvec.series(aggregation_type='max', aggregation_interval='day').json()
+    $month.windvec.series(aggregate_type='max', aggregate_interval='day').json()
     </pre>
 
-    <p> X-component: \$month.windvec.series(aggregation_type='max', aggregation_interval='day').x.json()</p>
+    <p> X-component: \$month.windvec.series(aggregate_type='max', aggregate_interval='day').x.json()</p>
     <pre>
-    $month.windvec.series(aggregation_type='max', aggregation_interval='day').x.json()
+    $month.windvec.series(aggregate_type='max', aggregate_interval='day').x.json()
     </pre>
 
-    <p> x-component, in knots: \$month.windvec.series(aggregation_type='max', aggregation_interval='day').x.knot.json()</p>
+    <p> x-component, in knots: \$month.windvec.series(aggregate_type='max', aggregate_interval='day').x.knot.json()</p>
     <pre>
-    $month.windvec.series(aggregation_type='max', aggregation_interval='day').x.knot.json()
+    $month.windvec.series(aggregate_type='max', aggregate_interval='day').x.knot.json()
     </pre>
 
-    <p>Y-component: \$month.windvec.series(aggregation_type='max', aggregation_interval='day').y.json()</p>
+    <p>Y-component: \$month.windvec.series(aggregate_type='max', aggregate_interval='day').y.json()</p>
     <pre>
-    $month.windvec.series(aggregation_type='max', aggregation_interval='day').y.json()
+    $month.windvec.series(aggregate_type='max', aggregate_interval='day').y.json()
     </pre>
 
-    <p>magnitude: \$month.windvec.series(aggregation_type='max', aggregation_interval='day').magnitude.json()</p>
+    <p>magnitude: \$month.windvec.series(aggregate_type='max', aggregate_interval='day').magnitude.json()</p>
     <pre>
-    $month.windvec.series(aggregation_type='max', aggregation_interval='day').magnitude.json()
+    $month.windvec.series(aggregate_type='max', aggregate_interval='day').magnitude.json()
     </pre>
 
-    <p>direction: \$month.windvec.series(aggregation_type='max', aggregation_interval='day').direction.json()</p>
+    <p>direction: \$month.windvec.series(aggregate_type='max', aggregate_interval='day').direction.json()</p>
     <pre>
-    $month.windvec.series(aggregation_type='max', aggregation_interval='day').direction.json()
+    $month.windvec.series(aggregate_type='max', aggregate_interval='day').direction.json()
     </pre>
 
-    <p>polar: \$month.windvec.series(aggregation_type='max', aggregation_interval='day').polar.json()</p>
+    <p>polar: \$month.windvec.series(aggregate_type='max', aggregate_interval='day').polar.json()</p>
     <pre>
-    $month.windvec.series(aggregation_type='max', aggregation_interval='day').polar.json()
+    $month.windvec.series(aggregate_type='max', aggregate_interval='day').polar.json()
     </pre>
 
-    <p>polar in knots: \$month.windvec.series(aggregation_type='max', aggregation_interval='day').knot.polar.json()</p>
+    <p>polar in knots: \$month.windvec.series(aggregate_type='max', aggregate_interval='day').knot.polar.json()</p>
     <pre>
-    $month.windvec.series(aggregation_type='max', aggregation_interval='day').knot.polar.json()
+    $month.windvec.series(aggregate_type='max', aggregate_interval='day').knot.polar.json()
     </pre>
 
   <hr/>
   <h2>Iterate over an aggregated series</h2>
   <pre>
-    \#for (\$start, \$stop, \$data) in \$month.outTemp.series(aggregation_type='max', aggregation_interval='day')
+    \#for (\$start, \$stop, \$data) in \$month.outTemp.series(aggregate_type='max', aggregate_interval='day')
       ...
     \#end for
   </pre>
@@ -123,7 +123,7 @@
         <td>Stop date</td>
         <td>Max temperature</td>
       </tr>
-    #for ($start, $stop, $data) in $month.outTemp.series(aggregation_type='max', aggregation_interval='day')
+    #for ($start, $stop, $data) in $month.outTemp.series(aggregate_type='max', aggregate_interval='day')
       <tr>
         <td>$start.format("%Y-%m-%d")</td>
         <td>$stop.format("%Y-%m-%d")</td>

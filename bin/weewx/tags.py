@@ -318,10 +318,10 @@ class ObservationBinder(object):
         self.converter = converter
         self.option_dict = option_dict
 
-    def __getattr__(self, aggregation_type):
+    def __getattr__(self, aggregate_type):
         """Use the specified aggregation type
 
-        aggregation_type: The type of aggregation over which the summary is to be done. This is
+        aggregate_type: The type of aggregation over which the summary is to be done. This is
         normally something like 'sum', 'min', 'mintime', 'count', etc. However, there are two
         special aggregation types that can be used to determine the existence of data:
           'exists':   Return True if the observation type exists in the database.
@@ -330,9 +330,9 @@ class ObservationBinder(object):
 
         returns: An instance of AggTypeBinder, which is bound to the aggregation type.
         """
-        if aggregation_type in IGNORE_ATTR:
-            raise AttributeError(aggregation_type)
-        return AggTypeBinder(aggregation_type=aggregation_type,
+        if aggregate_type in IGNORE_ATTR:
+            raise AttributeError(aggregate_type)
+        return AggTypeBinder(aggregate_type=aggregate_type,
                              obs_type=self.obs_type,
                              timespan=self.timespan,
                              db_lookup=self.db_lookup,
@@ -349,13 +349,13 @@ class ObservationBinder(object):
     def has_data(self):
         return self.db_lookup(self.data_binding).has_data(self.obs_type, self.timespan)
 
-    def series(self, aggregation_type=None, aggregation_interval=None):
+    def series(self, aggregate_type=None, aggregate_interval=None):
         """Return a series with the given aggregation type and interval.
 
         Args:
-            aggregation_type (str or None): The type of aggregation to use, if any. Default is None
+            aggregate_type (str or None): The type of aggregation to use, if any. Default is None
                 (no aggregation).
-            aggregation_interval (str or None): The aggregation interval in seconds. Default is
+            aggregate_interval (str or None): The aggregation interval in seconds. Default is
                 None (no aggregation).
 
         Returns:
@@ -367,7 +367,7 @@ class ObservationBinder(object):
             # UnknownAggregation error. Be prepared to catch it.
             start, stop, data = weewx.xtypes.get_series(
                 self.obs_type, self.timespan, db_manager,
-                aggregation_type, aggregation_interval)
+                aggregate_type, aggregate_interval)
         except (weewx.UnknownType, weewx.UnknownAggregation):
             # Signal Cheetah that we don't know how to do this by raising an AttributeError.
             raise AttributeError(self.obs_type)
@@ -388,10 +388,10 @@ class AggTypeBinder(object):
     """This is the final class in the chain of helper classes. It binds everything needed
     for a query."""
 
-    def __init__(self, aggregation_type, obs_type, timespan, db_lookup, data_binding, context,
+    def __init__(self, aggregate_type, obs_type, timespan, db_lookup, data_binding, context,
                  formatter=weewx.units.Formatter(), converter=weewx.units.Converter(),
                  **option_dict):
-        self.aggregation_type = aggregation_type
+        self.aggregate_type = aggregate_type
         self.obs_type = obs_type
         self.timespan = timespan
         self.db_lookup = db_lookup
@@ -404,7 +404,7 @@ class AggTypeBinder(object):
     def __call__(self, *args, **kwargs):
         """Offer a call option for expressions such as $month.outTemp.max_ge((90.0, 'degree_F')).
 
-        In this example, self.aggregation_type would be 'max_ge', and val would be the tuple
+        In this example, self.aggregate_type would be 'max_ge', and val would be the tuple
         (90.0, 'degree_F').
         """
         if len(args):
@@ -429,7 +429,7 @@ class AggTypeBinder(object):
             # If we cannot perform the aggregation, we will get an UnknownType or
             # UnknownAggregation error. Be prepared to catch it.
             result = weewx.xtypes.get_aggregate(self.obs_type, self.timespan,
-                                                self.aggregation_type,
+                                                self.aggregate_type,
                                                 db_manager, **self.option_dict)
         except (weewx.UnknownType, weewx.UnknownAggregation):
             # Signal Cheetah that we don't know how to do this by raising an AttributeError.

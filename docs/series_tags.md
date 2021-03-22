@@ -40,12 +40,12 @@ From this example, we can see that the data have a 5 minute archive period.
 ## Series with aggregation
 Suppose you would like the maximum temperature for each day of the month. This is an _aggregation_
 (maximum temperature, in this case), over a time period (one day). This can be specified with
-optional parameters `aggregation_type` and `aggregation_interval` to the `series` tag. Here's
+optional parameters `aggregate_type` and `aggregate_interval` to the `series` tag. Here's
 an example:
 
 ```
 <pre>
-$month.outTemp.series(aggregation_type='max', aggregation_interval=86400)
+$month.outTemp.series(aggregate_type='max', aggregate_interval=86400)
 </pre>
 ```
 
@@ -53,7 +53,7 @@ where `86400` is the number of seconds in the day. As an alternative, you can us
 
 ```
 <pre>
-$month.outTemp.series(aggregation_type='max', aggregation_interval='day')
+$month.outTemp.series(aggregate_type='max', aggregate_interval='day')
 </pre>
 ```
 
@@ -79,7 +79,7 @@ part, not the time part, is converted. For example,
 
 ```
 <pre>
-$month.outTemp.series(aggregation_type='max', aggregation_interval='day').degree_C
+$month.outTemp.series(aggregate_type='max', aggregate_interval='day').degree_C
 </pre>
 ```
 
@@ -106,7 +106,7 @@ the section Iteration below.
 
 Example:
 ```
-$month.outTemp.series(aggregation_type='max', aggregation_interval='day').format("%.2f")
+$month.outTemp.series(aggregate_type='max', aggregate_interval='day').format("%.2f")
 ```
 yields something like
 ```
@@ -150,7 +150,7 @@ Here's an example of the maximum temperature for all days of the current month, 
 
 ```
 <pre>
-$month.outTemp.series(aggregation_type='max', aggregation_interval='day').json
+$month.outTemp.series(aggregate_type='max', aggregate_interval='day').json
 </pre>
 ```
 
@@ -162,7 +162,7 @@ The default is to order by row. If you want it by column:
 
 ```
 <pre>
-$month.outTemp.series(aggregation_type='max', aggregation_interval='day').json(order_by='column')
+$month.outTemp.series(aggregate_type='max', aggregate_interval='day').json(order_by='column')
 </pre>
 ```
 
@@ -177,7 +177,7 @@ If you want only the start times, then use the optional argument `time_series`:
 
 ```
 <pre>
-$month.outTemp.series(aggregation_type='max', aggregation_interval='day').json(time_series='start')
+$month.outTemp.series(aggregate_type='max', aggregate_interval='day').json(time_series='start')
 </pre>
 ```
 
@@ -192,7 +192,7 @@ miliseconds. To do this, add optional argument `time_unit`:
 
 ```
 <pre>
-$month.outTemp.series(aggregation_type='max', aggregation_interval='day').json(time_series='start'. time_unit='unix_epoch_ms')
+$month.outTemp.series(aggregate_type='max', aggregate_interval='day').json(time_series='start'. time_unit='unix_epoch_ms')
 </pre>
 ```
 
@@ -206,7 +206,7 @@ Suppose you want the results in °C, rather than °F. Then including a `.degree_
 `.series` and `.json` tags will give the desired results:
 ```
 <pre>
-$month.outTemp.series(aggregation_type='max', aggregation_interval='day').degree_C.json(time_series='start')
+$month.outTemp.series(aggregate_type='max', aggregate_interval='day').degree_C.json(time_series='start')
 </pre>
 ```
 ```
@@ -217,7 +217,7 @@ of the internal data, but you may not want to transmit that much data over the n
 limit the number of decimal digits by using optional parameter `ndigits`:
 ```
 <pre>
-$month.outTemp.series(aggregation_type='max', aggregation_interval='day').degree_C.json(ndigits=2, time_series='start')
+$month.outTemp.series(aggregate_type='max', aggregate_interval='day').degree_C.json(ndigits=2, time_series='start')
 </pre>
 ```
 This gives a much more compact representation:
@@ -231,7 +231,7 @@ A series over types `windvec` and `windgustvec` return a series of _complex_ num
 
 ```
 <pre>
-$month.windvec.series(aggregation_type='max', aggregation_interval='day').json(indent=2)
+$month.windvec.series(aggregate_type='max', aggregate_interval='day').json(indent=2)
 </pre>
 ```
 yields
@@ -283,7 +283,7 @@ direction.
 
 ```
 <pre>
-$month.windvec.series(aggregation_type='max', aggregation_interval='day').polar.json(indent=2)
+$month.windvec.series(aggregate_type='max', aggregate_interval='day').polar.json(indent=2)
 </pre>
 ```
 yields
@@ -326,7 +326,7 @@ formatting. Here's an example:
         <td>Start date</td>
         <td>Max temperature</td>
       </tr>
-    #for ($start, $stop, $data) in $month.outTemp.series(aggregation_type='max', aggregation_interval='day') ## 1
+    #for ($start, $stop, $data) in $month.outTemp.series(aggregate_type='max', aggregate_interval='day') ## 1
       <tr>
         <td>$start.format("%Y-%m-%d")</td>      ## 2
         <td>$data.format("%.2f")</td>           ## 3
@@ -337,7 +337,7 @@ formatting. Here's an example:
 Here, we create a table. Each row is individually formatted. Comments below refer to the marked
 lines:
 
-1. Once evaluated, the tag `$month.outTemp.series(aggregation_type='max', aggregation_interval='day')`
+1. Once evaluated, the tag `$month.outTemp.series(aggregate_type='max', aggregate_interval='day')`
    returns a `SeriesHelper`. Normally, Cheetah would try to convert this into a string, in order to
    embed the results in a document. However, in this case we are _iterating_ over the tag. Iteration
    returns a 3-way tuple `start`, `stop`, and `data`, each an instance of `ValueHelper`, each of
@@ -403,15 +403,15 @@ each day in a month.
 Creating separate series of minimums and maximums is easy enough:
 
 ```
-$month.outTemp.series(aggregation_type='min', aggregation_interval='day').json
-$month.outTemp.series(aggregation_type='max', aggregation_interval='day').json
+$month.outTemp.series(aggregate_type='min', aggregate_interval='day').json
+$month.outTemp.series(aggregate_type='max', aggregate_interval='day').json
 ```
 
 but how do you combine them into a single structure? Here's one way to do it:
 
 ```
- #set $min = month.outTemp.series(aggregation_type='min', aggregation_interval='day')
- #set $max = $month.outTemp.series(aggregation_type='max', aggregation_interval='day')
+ #set $min = month.outTemp.series(aggregate_type='min', aggregate_interval='day')
+ #set $max = $month.outTemp.series(aggregate_type='max', aggregate_interval='day')
  <pre>
  $jsonize($zip($min.start.raw, $min.data.raw, $max.data.raw))
  </pre>
