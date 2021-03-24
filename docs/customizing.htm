@@ -1867,7 +1867,7 @@ $month.outTemp.max</pre>
             record in the database will be searched.
         </p>
         <p>The most general tag for a "current" observation looks like:</p>
-        <pre class="tty">$current($timestamp=<em>some_time</em>, $max_delta=<em>delta_t</em>,$data_binding=<em>binding_name</em>).<em>obstype</em>[.<em>optional_unit_conversion</em>][.<em>optional_formatting</em>]</pre>
+        <pre class="tty">$current($timestamp=<em>some_time</em>, $max_delta=<em>delta_t</em>,$data_binding=<em>binding_name</em>).<em>obstype</em>[.<em>optional_unit_conversion</em>][.<em>optional_rounding</em>][.<em>optional_formatting</em>]</pre>
         <p>Where:</p>
 
         <p class="indent">
@@ -1898,12 +1898,17 @@ $month.outTemp.max</pre>
             <span class="code">optional_unit_conversion</span> is an optional unit conversion tag. If provided, the
             results will be converted into the specified units, otherwise the default units specified in the skin
             configuration file (in section <span class="code">[Units][[Groups]]</span>) will be used. See the section
-            <em><a href="#unit_conversion_options">Unit Conversion Options</a></em>.
+            <em><a href="#unit_conversion_options">Unit conversion options</a></em>.
+        </p>
+
+        <p class="indent">
+            <span class="code">optional_rounding</span> allows the results to be rounded to a fixed number of decimal
+            digits. See the section <em><a href="#optional_rounding">Optional rounding</a></em>
         </p>
 
         <p class="indent">
             <span class="code">optional_formatting</span> is a set of optional formatting tags, which control how the
-            value will appear. See the section <em><a href="#formatting_options">Formatting Options</a></em> below.
+            value will appear. See the section <em><a href="#formatting_options">Formatting options</a></em> below.
         </p>
 
         <h3>
@@ -1930,7 +1935,7 @@ $month.outTemp.max</pre>
 
         <p>The most general tag for an aggregation over time looks like:</p>
         <pre
-            class="tty">$<em>period</em>($data_binding=<em>binding_name</em>, <em>$optional_ago</em>=<em>delta</em>).<em>statstype</em>.<em>aggregation</em>[.<em>optional_unit_conversion</em>][.<em>optional_formatting</em>]</pre>
+            class="tty">$<em>period</em>($data_binding=<em>binding_name</em>, <em>$optional_ago</em>=<em>delta</em>).<em>statstype</em>.<em>aggregation</em>[.<em>optional_unit_conversion</em>][.<em>optional_rounding</em>][.<em>optional_formatting</em>]</pre>
         <p>Where:</p>
 
         <p class="indent">
@@ -1974,6 +1979,11 @@ $month.outTemp.max</pre>
             results will be converted into the specified units, otherwise the default units specified in the skin
             configuration file (in section <span class="code">[Units][[Groups]]</span>) will be used. See the section
             <em><a href="#unit_conversion_options">Unit Conversion Options</a></em>.
+        </p>
+
+        <p class="indent">
+            <span class="code">optional_rounding</span> allows the results to be rounded to a fixed number of decimal
+            digits. See the section <em><a href="#optional_rounding">Optional rounding</a></em>
         </p>
 
         <p class="indent">
@@ -2130,6 +2140,22 @@ or in foobar units: $day.barometer.min.foobar
             foobar units: $day.barometer.min.foobar
         </p>
 
+        <h3 id="optional_rounding">Optional rounding</h3>
+        <p>
+            The data in the resultant tag can be optionally rounded to a fixed number of decimal digits. This is useful
+            when emitting raw data or JSON strings. It should <em>not</em> be used with formatted data (using a
+            <a href="#format_string">format string</a> would be a better choice).
+        </p>
+        <p>
+            The structure of the tag is
+        </p>
+        <pre class="tty">.round(ndigits=None)</pre>
+        <p>where</p>
+        <p class="indent">
+            <span class="code">ndigits</span> is the number of decimal digits to retain. If
+            <span class="code">None</span> (the default), then all digits will be retained.
+        </p>
+
         <h3 id="formatting_options">Formatting options</h3>
 
         <p>
@@ -2154,17 +2180,16 @@ or in foobar units: $day.barometer.min.foobar
                 </td>
             </tr>
             <tr>
-                <td class="code text_highlight">.raw(ndigits=None)</td>
+                <td class="code text_highlight">.raw</td>
                 <td>Value is returned "as is" without being converted to a string and without any formatting applied.
                     This can be useful for doing arithmetic directly within the templates. You must be prepared to deal
-                    with a potential <span class="code">None</span> value. If optional argument <span class="code">ndigits</span>
-                    is given, the results will be rounded to that number of decimal digits before being returned.
+                    with a potential <span class="code">None</span> value.
                 </td>
             </tr>
             </tbody>
         </table>
 
-        <p>The first of these tags has the formal structure:</p>
+        <p>The first of these tags (<span class="code">.format()</span>) has the formal structure:</p>
         <pre class="tty">.format(format_string=None, None_string=None, add_label=True, localize=True)</pre>
 
         <p>Here is the meaning of each of the optional arguments:</p>
@@ -2177,7 +2202,7 @@ or in foobar units: $day.barometer.min.foobar
                 <td>Comment</td>
             </tr>
             <tr>
-                <td class='code text_highlight'>format_string</td>
+                <td id="format_string" class='code text_highlight'>format_string</td>
                 <td>Use the optional string to format the value. If set to <span class="code">None</span>, then an
                     appropriate string format from <span class="code">skin.conf</span> will be used.
                 </td>
@@ -2344,19 +2369,22 @@ or in foobar units: $day.barometer.min.foobar
             <tr>
                 <td class="code first_col">$current.outTemp.raw</td>
                 <td class="code">45.2</td>
-                <td>Raw float value (which is converted to a string by the template engine).
+                <td>Raw float value. The result is a <em>number</em> (which is converted to a string by the
+                    template engine).
                 </td>
             </tr>
             <tr>
                 <td class="code first_col">$current.outTemp.degree_C.raw</td>
                 <td class="code">7.33333333</td>
-                <td>Raw float value in degrees Celsius.
+                <td>Raw float value in degrees Celsius. The result is a <em>number</em> (which is converted to a string
+                    by the template engine).
                 </td>
             </tr>
             <tr>
-                <td class="code first_col">$current.outTemp.degree_C.raw(2)</td>
+                <td class="code first_col">$current.outTemp.degree_C.round(2).raw</td>
                 <td class="code">7.33</td>
-                <td>Raw float value in degrees Celsius, rounding the results to two decimal digits.
+                <td>Raw float value in degrees Celsius, then rounding the results to two decimal digits. The result is
+                    a <em>number</em> (which is converted to a string by the template engine).
                 </td>
             </tr>
             </tbody>
@@ -2506,12 +2534,12 @@ or in foobar units: $day.barometer.min.foobar
 
         <p class="indent">
             <span class="code">optional_unit_conversion</span> is an optional unit conversion tag. See the section
-            <em><a href="#unit_conversion_options"> Unit Conversion Options</a></em>.
+            <em><a href="#unit_conversion_options"> Unit conversion options</a></em>.
         </p>
 
         <p class="indent">
             <span class="code">optional_formatting</span> is an optional formatting tag that controls how the value will
-            appear. See the section <em><a href="#formatting_options">Formatting Options</a></em>.
+            appear. See the section <em><a href="#formatting_options">Formatting options</a></em>.
         </p>
         <p>There are several different delta settings that can be used:</p>
         <table class="indent">

@@ -626,6 +626,15 @@ class JSONHelpers(SearchList):
 
     @staticmethod
     def jsonize(arg):
+        """
+        Format my argument as JSON
+
+        Args:
+            arg (iterable): An iterable, such as a list, or zip structure
+
+        Returns:
+            str: The argument formatted as JSON.
+        """
         val = list(arg)
         return json.dumps(val, cls=weewx.units.ComplexEncoder)
 

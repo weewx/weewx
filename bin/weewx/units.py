@@ -613,45 +613,46 @@ complex_conversions = {
     'polar': lambda c: (abs(c), weeutil.weeutil.dirN(c)) if c is not None else None,
 }
 
-#==============================================================================
-#                        class ValueTuple
-#==============================================================================
-
-# A value, along with the unit it is in, can be represented by a 3-way tuple
-# called a value tuple. All weewx routines can accept a simple unadorned
-# 3-way tuple as a value tuple, but they return the type ValueTuple. It is
-# useful because its contents can be accessed using named attributes.
-#
-# Item   attribute   Meaning
-#    0    value      The data value(s). Can be a series (eg, [20.2, 23.2, ...])
-#                    or a scalar (eg, 20.2).
-#    1    unit       The unit it is in ("degree_C")
-#    2    group      The unit group ("group_temperature")
-#
-# It is valid to have a datum value of None.
-#
-# It is also valid to have a unit type of None (meaning there is no information
-# about the unit the value is in). In this case, you won't be able to convert
-# it to another unit.
-
 class ValueTuple(tuple):
+    """
+    A value, along with the unit it is in, can be represented by a 3-way tuple called a value
+    tuple. All weewx routines can accept a simple unadorned 3-way tuple as a value tuple, but they
+    return the type ValueTuple. It is useful because its contents can be accessed using named
+    attributes.
+
+    Item   attribute   Meaning
+       0    value      The data value(s). Can be a series (eg, [20.2, 23.2, ...])
+                       or a scalar (eg, 20.2).
+       1    unit       The unit it is in ("degree_C")
+       2    group      The unit group ("group_temperature")
+
+    It is valid to have a datum value of None.
+
+    It is also valid to have a unit type of None (meaning there is no information about the unit
+    the value is in). In this case, you won't be able to convert it to another unit.
+    """
     def __new__(cls, *args):
         return tuple.__new__(cls, args)
+
     @property
     def value(self):
         return self[0]
+
     @property
     def unit(self):
         return self[1]
+
     @property
     def group(self):
         return self[2]
+
     # ValueTuples have some modest math abilities: subtraction and addition.
     def __sub__(self, other):
         if self[1] != other[1] or self[2] != other[2]:
             raise TypeError("Unsupported operand error for subtraction: %s and %s"
                             % (self[1], other[1]))
         return ValueTuple(self[0] - other[0], self[1], self[2])
+
     def __add__(self, other):
         if self[1] != other[1] or self[2] != other[2]:
             raise TypeError("Unsupported operand error for addition: %s and %s"
@@ -805,8 +806,8 @@ class Formatter(object):
             # No singular/plural version. It's just a string. Return it.
             return label
 
-    def toString(self, val_t, context='current', addLabel=True, 
-                 useThisFormat=None, None_string=None, 
+    def toString(self, val_t, context='current', addLabel=True,
+                 useThisFormat=None, None_string=None,
                  localize=True):
         """Format the value as a unicode string.
 
@@ -1102,9 +1103,13 @@ class ValueHelper(object):
         """Initialize a ValueHelper
 
         Args:
-            value_t (ValueTuple): An instance of a ValueTuple. The "value" part can be either a
+            value_t (ValueTuple or UnknownType): This parameter can be either a ValueTuple,
+                or an instance of UnknownType. If a ValueTuple, the "value" part can be either a
                 scalar, or a series. If a converter is given, it will be used to convert the
-                ValueTuple before storing.
+                ValueTuple before storing. If the parameter is 'UnknownType', it is an error ot
+                perform any operation on the resultant ValueHelper, except ask it to be formatted
+                as a string. In this case, the name of the unknown type will be included in the
+                resultant string.
             context (str): The time context. Something like 'current', 'day', 'week'.
                 [Optional. If not given, context 'current' will be used.]
             formatter (Formatter): An instance of class Formatter.
@@ -1174,10 +1179,17 @@ class ValueHelper(object):
         # appropriate ordinate:
         return self.formatter.to_ordinal_compass(self.value_t)
 
-    def json(self, ndigits=None, **kwargs):
-        # If requested, round the value before converting to JSON
-        val = self.raw if ndigits is None else weeutil.weeutil.rounder(self.raw, ndigits)
-        return json.dumps(val, cls=ComplexEncoder, **kwargs)
+    def json(self, **kwargs):
+        return json.dumps(self.raw, cls=ComplexEncoder, **kwargs)
+
+    def round(self, ndigits=None):
+        """Round the data part to ndigits decimal digits."""
+        # Create a new ValueTuple with the rounded data
+        vt = ValueTuple(weeutil.weeutil.rounder(self.value_t[0], ndigits),
+                        self.value_t[1],
+                        self.value_t[2])
+        # Use it to create a new ValueHelper
+        return ValueHelper(vt, self.context, self.formatter)
 
     @property
     def raw(self):
@@ -1272,13 +1284,10 @@ class SeriesHelper(object):
         self.stop = stop
         self.data = data
 
-    def json(self, ndigits=None, order_by='row',
-             time_series='both', time_unit='unix_epoch', **kwargs):
+    def json(self, order_by='row', time_series='both', time_unit='unix_epoch', **kwargs):
         """Return the data in this series as JSON.
 
         Args:
-            ndigits (int): The number of decimal digits to include in the data. Default is None,
-                which means keep all digits.
             order_by (str): A string that determines whether the generated string is ordered by
                 row or column. Either 'row' or 'column'.
             time_series (str): What to include for the time series. Either 'start', 'stop', or
@@ -1302,34 +1311,38 @@ class SeriesHelper(object):
         if time_series in ['stop', 'both']:
             stop_series = convert(self.stop.value_t, time_unit)[0]
 
-        # If requested, round the data to the required number of decimal digits.
-        if ndigits is None:
-            data_series = self.data.raw
-        else:
-            # We need a function that can be fed to map().
-            def rnd(x):
-                return weeutil.weeutil.rounder(x, ndigits)
-            # data_series will be an instance of `map`. Iterating over it returns a list.
-            data_series = map(rnd, self.data.raw)
-
         if order_by == 'row':
             if time_series == 'both':
-                json_data = list(zip(start_series, stop_series, data_series))
+                json_data = list(zip(start_series, stop_series, self.data.raw))
             elif time_series == 'start':
-                json_data = list(zip(start_series, data_series))
+                json_data = list(zip(start_series, self.data.raw))
             else:
-                json_data = list(zip(stop_series, data_series))
+                json_data = list(zip(stop_series, self.data.raw))
         elif order_by == 'column':
             if time_series == 'both':
-                json_data = [start_series, stop_series, data_series]
+                json_data = [start_series, stop_series, self.data.raw]
             elif time_series == 'start':
-                json_data = [start_series, data_series]
+                json_data = [start_series, self.data.raw]
             else:
-                json_data = [stop_series, data_series]
+                json_data = [stop_series, self.data.raw]
         else:
             raise ValueError("Unknown option '%s' for parameter 'order_by'" % order_by)
 
         return json.dumps(json_data, cls=ComplexEncoder, **kwargs)
+
+    def round(self, ndigits=None):
+        """
+        Round the data part to ndigits number of decimal digits.
+
+        Args:
+            ndigits (int): The number of decimal digits to include in the data. Default is None,
+                which means keep all digits.
+
+        Returns:
+            SeriesHelper: A new SeriesHelper, with the data part rounded to the requested number of
+                decimal digits.
+        """
+        return SeriesHelper(self.start, self.stop, self.data.round(ndigits))
 
     def __str__(self):
         """Return as the native string type for the version of Python being run."""

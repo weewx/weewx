@@ -11,10 +11,11 @@ The tags used to specify a series is very similar to tags used for regular scala
 include the keyword `series`:
 
 ```
-$period.obstype.series[.optional_unit_conversion][.optional_formatting]
+$period.obstype.series[.optional_unit_conversion][.optional_rounding][.optional_formatting]
 ```
 
-The tags `.optional_unit_conversion` and `.optional_formatting` are explained below.
+The tags `.optional_unit_conversion`, `.optional_rounding`, and `.optional_formatting` are 
+explained below.
 
 ## Series with no aggregation
 Here's an example of asking for a series with the temperature for all records in the day. We will
@@ -201,7 +202,7 @@ Results:
 [[1614585600000.0, 58.2], [1614672000000.0, 55.8], [1614758400000.0, 59.6], [1614844800000.0, 57.8], [1614931200000.0, 50.2], [1615017600000.0, 42.0]]
 ```
 
-#### Example: series with aggregation, formatted as JSON, with unit conversion and rounding
+#### Example: series with aggregation, formatted as JSON, with unit conversion
 Suppose you want the results in °C, rather than °F. Then including a `.degree_C` between the
 `.series` and `.json` tags will give the desired results:
 ```
@@ -212,12 +213,14 @@ $month.outTemp.series(aggregate_type='max', aggregate_interval='day').degree_C.j
 ```
 [[1614585600, 14.555555555555555], [1614672000, 13.222222222222221], [1614758400, 15.333333333333334], [1614844800, 14.333333333333334], [1614931200, 10.111111111111112], [1615017600, 5.555555555555555]]
 ```
-Note that the unit conversion resulted in many extra decimal digits. It's an accurate representation
-of the internal data, but you may not want to transmit that much data over the network. You can
-limit the number of decimal digits by using optional parameter `ndigits`:
+#### Example: optional rounding
+Note that the previous example demonstrating unit conversion resulted in many extra decimal digits.
+It's an accurate representation of the internal data, but you may not want to transmit that much
+data over the network. You can limit the number of decimal digits by using an optional tag
+`.round(ndigits)`, where `ndigits` is the number of decimal digits to retain. For example:
 ```
 <pre>
-$month.outTemp.series(aggregate_type='max', aggregate_interval='day').degree_C.json(ndigits=2, time_series='start')
+$month.outTemp.series(aggregate_type='max', aggregate_interval='day').degree_C.round(2).json(time_series='start')
 </pre>
 ```
 This gives a much more compact representation:
@@ -424,31 +427,4 @@ JSON. The result looks something like this:
 
 ```
 [[1609488000, 38.9, 45.6], [1609574400, 41.6, 46.2], [1609660800, 40.7, 49.5], ... ]
-```
-
-### Helper function `$rnd()`
-Suppose you want the results in degrees Celsius, instead of Fahrenheit? Then add the tag 
-`.degree_C`:
-
-```
-$jsonize($zip($min.start.raw, $min.data.degree_C.raw, $max.data.degree_C.raw))
-```
-with results:
-```
-[[1609488000, 3.8333333333333326, 7.555555555555555], [1609574400, 5.333333333333334, 7.88888888888889], [1609660800, 4.833333333333335, 9.722222222222221], ... ]
-```
-
-Unfortunately, the unit conversion resulted in a lot of decimal digits, which we may not want to
-transmit over the wire to a Javascript plotting library. We can round the results by using the
-WeeWX helper function `$rnd()`:
-
-```
-$jsonize($zip($min.start.raw, $rnd($min.data.degree_C.raw, 2), $rnd($max.data.degree_C.raw, 2)))
-```
-
-The second argument (`2`, in this example), says to round the results to two decimal digits. 
-This results in
-
-```
-[[1609488000, 3.83, 7.56], [1609574400, 5.33, 7.89], [1609660800, 4.83, 9.72], ... ]
 ```

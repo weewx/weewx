@@ -203,17 +203,17 @@ class ValueHelperTest(unittest.TestCase):
         value_t = (68.1283, "degree_F", "group_temperature")
         vh = weewx.units.ValueHelper(value_t)
         self.assertEqual(vh.json(), "68.1283")
-        self.assertEqual(vh.json(ndigits=2), "68.13")
+        self.assertEqual(vh.round(2).json(), "68.13")
         # Test sequence:
         vh = weewx.units.ValueHelper(([68.1283, 65.201, None, 69.911],
                                       "degree_F", "group_temperature"))
         self.assertEqual(vh.json(), "[68.1283, 65.201, null, 69.911]")
-        self.assertEqual(vh.json(ndigits=2), "[68.13, 65.2, null, 69.91]")
+        self.assertEqual(vh.round(2).json(), "[68.13, 65.2, null, 69.91]")
         # Test sequence of complex
         vh = weewx.units.ValueHelper(([complex(1.234, 2.3456), complex(9.1891, 2.764), None],
                                       "degree_F", "group_temperature"))
         self.assertEqual(vh.json(), "[[1.234, 2.3456], [9.1891, 2.764], null]")
-        self.assertEqual(vh.json(ndigits=2), "[[1.23, 2.35], [9.19, 2.76], null]")
+        self.assertEqual(vh.round(2).json(), "[[1.23, 2.35], [9.19, 2.76], null]")
 
 
 if __name__ == '__main__':

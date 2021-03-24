@@ -1313,9 +1313,12 @@ def rounder(x, ndigits):
 
     Returns:
         None, float, complex, list: Returns the number, or sequence of numbers, with the requested
-            number of decimal digits
+            number of decimal digits. If 'None', no rounding is done, and the function returns
+            the original value.
     """
-    if x is None:
+    if ndigits is None:
+        return x
+    elif x is None:
         return None
     elif isinstance(x, complex):
         return complex(round(x.real, ndigits), round(x.imag, ndigits))
