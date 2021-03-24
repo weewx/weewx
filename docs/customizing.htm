@@ -2760,7 +2760,8 @@ $month.dateTime.format("%B"): Min, max temperatures: $month.outTemp.min $month.o
         <h3>Comprehensive example</h3>
         <p>
             This example is designed to put together a lot of the elements described above, including iteration,
-            aggregation period starts and ends, formatting, and overriding units.
+            aggregation period starts and ends, formatting, and overriding units. <a href="examples/tag.htm">Click
+            here</a> for the results.
         </p>
 
         <pre class="tty">
@@ -2795,7 +2796,38 @@ $month.dateTime.format("%B"): Min, max temperatures: $month.outTemp.min $month.o
   &lt;/body&gt;
 &lt;/html&gt;
 </pre>
-        <p><a href="examples/tag.htm">Click here</a> for the results.</p>
+        <h3>Support for series</h3>
+        <p class="warning">
+            This is an experimental API that could change.
+        </p>
+        <p>
+            WeeWX V4.5 introduces some experimental tags for producing <em>series</em> of data, possibly aggregated.
+            This can be useful for
+            creating the JSON data needed for JavaScript plotting packages, such
+            as <a href="https://www.highcharts.com/">HighCharts</a>,
+            <a href="https://developers.google.com/chart">Google Charts</a>,
+            or <a href="https://c3js.org/">C3.js</a>.
+        </p>
+        <p>
+            For example, suppose you need the maximum temperature for each day of the month. This tag
+        </p>
+        <pre>
+$month.outTemp.series(aggregate_type='max', aggregate_interval='day').json(time_series='start')
+        </pre>
+        <p>
+            would produce the following:
+        </p>
+        <pre>
+[[1614585600, 58.2], [1614672000, 55.8], [1614758400, 59.6], [1614844800, 57.8], ... ]
+        </pre>
+        <p>
+            This is a list of (time, temperature) for each day of the month, in JSON, easily consumed by many of these
+            plotting packages.
+        </p>
+        <p>
+            Many other combinations are possible. See the Wiki article
+            <a href="https://github.com/weewx/weewx/wiki/Tags-for-series"><em>Tags for series</em></a>.
+        </p>
 
         <h2>Almanac</h2>
 
