@@ -1,7 +1,7 @@
 # Tags for series
 
 ## Overview
-WeeWX Version 4.5 introduces limited support for tags that specifies _series_. The results
+WeeWX Version 4.5 introduces limited support of tags for working with _series_. The results
 can be formatted either as JSON, or as a string. This document describes the syntax.
 
 **NOTE:** This syntax is still experimental and subject to change! 
@@ -16,6 +16,24 @@ $period.obstype.series[.optional_unit_conversion][.optional_rounding][.optional_
 
 The tags `.optional_unit_conversion`, `.optional_rounding`, and `.optional_formatting` are 
 explained below.
+
+The tag `.series()` can take a number of optional parameters:
+
+```
+.series(aggregate_type=None,
+        aggregate_interval=None,
+        time_series='both',
+        time_unit='unix_epoch'
+```
+
+| Parameter            | Effect                                                                                               |
+|----------------------|------------------------------------------------------------------------------------------------------|
+| `aggregate_type`     | The type of aggregation (`max`, `avg`, etc.) to perform                                              |
+| `aggregate_interval` | The length of each aggregation time in seconds. "Nicknames" (such as "day") are allowed              |
+| `time_series`        | Which time variables to include in the results. Choices are `start`, `stop`, or `both`.              |
+| `time_unit`          | What time unit to use for the results. Choices are `unix_epoch`, `unix_epoch_ms`, or `unit_epoch_ns` |
+
+
 
 ## Series with no aggregation
 Here's an example of asking for a series with the temperature for all records in the day. We will
@@ -37,6 +55,25 @@ This would result in something like this:
 ```
 The first column is the start time of each point in the series, the second column is the stop time.
 From this example, we can see that the data have a 5 minute archive period.
+
+### With just start times:
+You can request that only the start, or stop, times be included. Here's an example where only the
+start time is included:
+```
+<pre>
+$day.outTemp.series(time_series='start')
+</pre>
+```
+
+Results:
+```
+12:00:00 AM, 43.8°F
+12:05:00 AM, 43.8°F
+12:10:00 AM, 42.7°F
+12:15:00 AM, 41.3°F
+          ...
+```
+
 
 ## Series with aggregation
 Suppose you would like the maximum temperature for each day of the month. This is an _aggregation_
@@ -97,8 +134,8 @@ Results in
 ```
 
 ## Optional formatting
-Similar to its scalar cousins, the output can be formatted. At this point, there are
-two types of formatting: one for strings, and one for JSON. CSV may be added in the future.
+Similar to its scalar cousins, custom formatting can be applied to the results. Currently,
+there are two types of formatting: one for strings, and one for JSON.
 
 ### Optional string formatting
 The format of the data can be changed with optional suffix `.format()`. Only the data is affected.
@@ -122,29 +159,16 @@ yields something like
 
 ### Optional JSON formatting
 By adding the suffix `.json()` to the tag, the results will be formatted as JSON. This option has
-several optional parameters, It can also pass on parameters to the `json.loads()` call.
+one optional parameter `order_by`, It can also pass on parameters to the `json.loads()` call.
 ```
-.json(ndigits=None,
-      order_by=['row'|'column'], 
-      time_series=['start'|'stop'|'both'], 
-      time_unit=['unix_epoch'|'unix_epoch_ms'|'unix_epoch_ns', 
+.json(order_by=['row'|'column'], 
       **kwargs)
 ```
-`ndigits`: The number of decimal digits to include in the results. Default is `None`, which means
-   include all digits.
 
-`order_by`: The returned JSON can either be organized by rows, or by columns. The default 
-   is '`row`'.
-
-`time_series`: This option controls which series are emitted for time. Option `start` selects the
-   start of each aggregation interval. Option `stop` selects the end of each interval. Option `both`
-   causes both to be emitted. Default is '`both`'.
-
-`time_unit`: The unit to be used for the time domain. Choices are `unix_epoch`, `unix_epoch_ms`,
-   or `unix_epoch_ns`. Or, I suppose, `dublin_jd` if you're into it.
-
-`kwargs`: These are optional keyword arguments that are passed on to the Python `json.dumps()`
-   call. [See the documentation for `json.dumps`](https://docs.python.org/3/library/json.html#basic-usage).
+| Parameter | Effect |
+|-----------|----------|
+|`order_by` | The returned JSON can either be organized by rows, or by columns. The default is `row`.|
+|`kwargs` | Optional keyword arguments that are passed on to the [Python `json.dumps()`](https://docs.python.org/3/library/json.html#basic-usage) call.|
 
 #### Example: series with aggregation, formatted as JSON
 Here's an example of the maximum temperature for all days of the current month, formatted in JSON
@@ -178,7 +202,7 @@ If you want only the start times, then use the optional argument `time_series`:
 
 ```
 <pre>
-$month.outTemp.series(aggregate_type='max', aggregate_interval='day').json(time_series='start')
+$month.outTemp.series(aggregate_type='max', aggregate_interval='day', time_series='start').json
 </pre>
 ```
 
@@ -189,17 +213,17 @@ Results:
 
 #### Example: series with aggregation, formatted as JSON, optional time unit
 Suppose you want the previous example, except that you want the unix epoch time to be in
-miliseconds. To do this, add optional argument `time_unit`:
+miliseconds. To do this, add optional argument `time_unit` to `series()`:
 
 ```
 <pre>
-$month.outTemp.series(aggregate_type='max', aggregate_interval='day').json(time_series='start'. time_unit='unix_epoch_ms')
+$month.outTemp.series(aggregate_type='max', aggregate_interval='day', time_series='start', time_unit='unix_epoch_ms').json
 </pre>
 ```
 
 Results:
 ```
-[[1614585600000.0, 58.2], [1614672000000.0, 55.8], [1614758400000.0, 59.6], [1614844800000.0, 57.8], [1614931200000.0, 50.2], [1615017600000.0, 42.0]]
+[[1614585600000, 58.2], [1614672000000, 55.8], [1614758400000, 59.6], [1614844800000, 57.8], [1614931200000, 50.2], [1615017600000, 42.0]]
 ```
 
 #### Example: series with aggregation, formatted as JSON, with unit conversion
@@ -207,7 +231,7 @@ Suppose you want the results in °C, rather than °F. Then including a `.degree_
 `.series` and `.json` tags will give the desired results:
 ```
 <pre>
-$month.outTemp.series(aggregate_type='max', aggregate_interval='day').degree_C.json(time_series='start')
+$month.outTemp.series(aggregate_type='max', aggregate_interval='day', time_series='start').degree_C.json
 </pre>
 ```
 ```
@@ -220,7 +244,7 @@ data over the network. You can limit the number of decimal digits by using an op
 `.round(ndigits)`, where `ndigits` is the number of decimal digits to retain. For example:
 ```
 <pre>
-$month.outTemp.series(aggregate_type='max', aggregate_interval='day').degree_C.round(2).json(time_series='start')
+$month.outTemp.series(aggregate_type='max', aggregate_interval='day', time_series='start').degree_C.round(2).json
 </pre>
 ```
 This gives a much more compact representation:
@@ -413,7 +437,7 @@ $month.outTemp.series(aggregate_type='max', aggregate_interval='day').json
 but how do you combine them into a single structure? Here's one way to do it:
 
 ```
- #set $min = month.outTemp.series(aggregate_type='min', aggregate_interval='day')
+ #set $min = $month.outTemp.series(aggregate_type='min', aggregate_interval='day')
  #set $max = $month.outTemp.series(aggregate_type='max', aggregate_interval='day')
  <pre>
  $jsonize($zip($min.start.raw, $min.data.raw, $max.data.raw))

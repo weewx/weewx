@@ -349,7 +349,10 @@ class ObservationBinder(object):
     def has_data(self):
         return self.db_lookup(self.data_binding).has_data(self.obs_type, self.timespan)
 
-    def series(self, aggregate_type=None, aggregate_interval=None):
+    def series(self, aggregate_type=None,
+               aggregate_interval=None,
+               time_series='both',
+               time_unit='unix_epoch'):
         """Return a series with the given aggregation type and interval.
 
         Args:
@@ -357,26 +360,52 @@ class ObservationBinder(object):
                 (no aggregation).
             aggregate_interval (str or None): The aggregation interval in seconds. Default is
                 None (no aggregation).
+            time_series (str): What to include for the time series. Either 'start', 'stop', or
+                'both'.
+            time_unit (str): Which unit to use for time. Choices are 'unix_epoch', 'unix_epoch_ms',
+                or 'unix_epoch_ns'. Default is 'unix_epoch'.
 
         Returns:
             SeriesHelper.
         """
+        time_series = time_series.lower()
+        if time_series not in ['both', 'start', 'stop']:
+            raise ValueError("Unknown option '%s' for parameter 'time_series'" % time_series)
+
         db_manager = self.db_lookup(self.data_binding)
+
+        # If we cannot calculate the series, we will get an UnknownType or UnknownAggregation
+        # error. Be prepared to catch it.
         try:
-            # If we cannot calculate the series, we will get an UnknownType or
-            # UnknownAggregation error. Be prepared to catch it.
-            start, stop, data = weewx.xtypes.get_series(
+            # The returned values start_vt, stop_vt, and data_vt, will be ValueTuples.
+            start_vt, stop_vt, data_vt = weewx.xtypes.get_series(
                 self.obs_type, self.timespan, db_manager,
                 aggregate_type, aggregate_interval)
         except (weewx.UnknownType, weewx.UnknownAggregation):
-            # Signal Cheetah that we don't know how to do this by raising an AttributeError.
+            # Cannot calculate the series. Convert to AttributeError, which will signal to Cheetah
+            # that this type of series is unknown.
             raise AttributeError(self.obs_type)
 
-        # Form a SeriesHelper, using our existing context, formatter, and converter.
+        # Figure out which time series are desired, and convert them to the desired time unit.
+        # If the conversion cannot be done, a KeyError will be raised.
+        # When done, start_vh and stop_vh will be ValueHelpers.
+        if time_series in ['start', 'both']:
+            start_vt = weewx.units.convert(start_vt, time_unit)
+            start_vh = weewx.units.ValueHelper(start_vt, self.context, self.formatter)
+        else:
+            start_vh = None
+        if time_series in ['stop', 'both']:
+            stop_vt = weewx.units.convert(stop_vt, time_unit)
+            stop_vh = weewx.units.ValueHelper(stop_vt, self.context, self.formatter)
+        else:
+            stop_vh = None
+
+        # Form a SeriesHelper, using our existing context and formatter. For the data series,
+        # use the existing converter.
         sh = weewx.units.SeriesHelper(
-            weewx.units.ValueHelper(start, self.context, self.formatter, self.converter),
-            weewx.units.ValueHelper(stop, self.context, self.formatter, self.converter),
-            weewx.units.ValueHelper(data, self.context, self.formatter, self.converter))
+            start_vh,
+            stop_vh,
+            weewx.units.ValueHelper(data_vt, self.context, self.formatter, self.converter))
         return sh
 
 

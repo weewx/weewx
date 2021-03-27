@@ -28,11 +28,11 @@
 	<p>Unaggregated series in json: \$day.outTemp.series.json():</p>
     <pre>$day.outTemp.series.json()</pre>
 
-	<p>Unaggregated series, in json with just start times: \$day.outTemp.series.json(time_series='start'):</p>
-    <pre>$day.outTemp.series.json(time_series='start')</pre>
+	<p>Unaggregated series, in json with just start times: \$day.outTemp.series(time_series='start').json:</p>
+    <pre>$day.outTemp.series(time_series='start').json</pre>
 
-	<p>Unaggregated series, in json with start times in milliseconds: \$day.outTemp.series.json(time_series='start', time_unit='unix_epoch_ms'):</p>
-    <pre>$day.outTemp.series.json(time_series='start', time_unit='unix_epoch_ms')</pre>
+	<p>Unaggregated series, in json with start times in milliseconds: \$day.outTemp.series(time_series='start', time_unit='unix_epoch_ms').json:</p>
+    <pre>$day.outTemp.series(time_series='start', time_unit='unix_epoch_ms').json</pre>
 
     <p>Unaggregated series, in json, in degrees C: \$day.outTemp.series.degree_C.json</p>
     <pre>$day.outTemp.series.degree_C.json</pre>
@@ -43,8 +43,20 @@
     <p>Unaggregated series, as a formatted string (<em>not JSON</em>) : \$day.outTemp.series:</p>
     <pre>$day.outTemp.series</pre>
 
+    <p>Unaggregated series, start time only, as a formatted string (<em>not JSON</em>) : \$day.outTemp.series(time_series='start'):</p>
+    <pre>$day.outTemp.series(time_series='start')</pre>
+
+    <p>Unaggregated series, stop time only, as a formatted string (<em>not JSON</em>) : \$day.outTemp.series(time_series='stop'):</p>
+    <pre>$day.outTemp.series(time_series='stop')</pre>
+
     <p>Unaggregated series, by column, as a formatted string (<em>not JSON</em>) \$day.outTemp.series.format(order_by='column'):</p>
     <pre>$day.outTemp.series.format(order_by='column')</pre>
+
+    <p>Unaggregated series, by column, start times only, as a formatted string (<em>not JSON</em>) \$day.outTemp.series(time_series='start').format(order_by='column'):</p>
+    <pre>$day.outTemp.series(time_series='start').format(order_by='column')</pre>
+
+    <p>Unaggregated series, by column, stop times only, as a formatted string (<em>not JSON</em>) \$day.outTemp.series(time_series='stop').format(order_by='column'):</p>
+    <pre>$day.outTemp.series(time_series='stop').format(order_by='column')</pre>
 
 	<hr/>
 	<h2>Aggregated series</h2>

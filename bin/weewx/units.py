@@ -444,8 +444,8 @@ conversionDict = {
                           'minute'           : lambda x : x/60.0,
                           'day'              : lambda x : x/86400.0},
     'unix_epoch'       : {'dublin_jd'        : lambda x: x / 86400.0 + 25567.5,
-                          'unix_epoch_ms'    : lambda x : x * 1000.0,
-                          'unix_epoch_ns'    : lambda x : x * 1e6},
+                          'unix_epoch_ms'    : lambda x : x * 1000,
+                          'unix_epoch_ns'    : lambda x : x * 1000000},
     'watt'             : {'kilowatt'         : lambda x : x / 1000.0},
     'watt_hour'        : {'kilowatt_hour'    : lambda x : x / 1000.0,
                           'mega_joule'       : lambda x : x * 0.0036,
@@ -1276,55 +1276,42 @@ class SeriesHelper(object):
         """Initializer
 
         Args:
-            start (ValueHelper): A ValueHelper holding the start times of the data.
-            stop (ValueHelper): A ValueHelper holding the stop times of the data.
+            start (ValueHelper): A ValueHelper holding the start times of the data. None if
+                there is no start series.
+            stop (ValueHelper): A ValueHelper holding the stop times of the data. None if
+                there is no stop series
             data (ValueHelper): A ValueHelper holding the data.
         """
         self.start = start
         self.stop = stop
         self.data = data
 
-    def json(self, order_by='row', time_series='both', time_unit='unix_epoch', **kwargs):
+    def json(self, order_by='row', **kwargs):
         """Return the data in this series as JSON.
 
         Args:
             order_by (str): A string that determines whether the generated string is ordered by
                 row or column. Either 'row' or 'column'.
-            time_series (str): What to include for the time series. Either 'start', 'stop', or
-                'both'.
-            time_unit (str): Which unit to use for time. Choices are 'unix_epoch', 'unix_epoch_ms',
-                or 'unix_epoch_ns'. Default is 'unix_epoch'.
             **kwargs (Any): Any extra arguments are passed on to json.loads()
 
         Returns:
             str. A string with the encoded JSON.
         """
 
-        time_series = time_series.lower()
-        if time_series not in ['both', 'start', 'stop']:
-            raise ValueError("Unknown option '%s' for parameter 'time_series'" % time_series)
-
-        # Convert the time series to the desired time unit. When done, start_series and
-        # stop_series will be simple lists with the time in the target time unit.
-        if time_series in ['start', 'both']:
-            start_series = convert(self.start.value_t, time_unit)[0]
-        if time_series in ['stop', 'both']:
-            stop_series = convert(self.stop.value_t, time_unit)[0]
-
         if order_by == 'row':
-            if time_series == 'both':
-                json_data = list(zip(start_series, stop_series, self.data.raw))
-            elif time_series == 'start':
-                json_data = list(zip(start_series, self.data.raw))
+            if self.start and self.stop:
+                json_data = list(zip(self.start.raw, self.stop.raw, self.data.raw))
+            elif self.start and not self.stop:
+                json_data = list(zip(self.start.raw, self.data.raw))
             else:
-                json_data = list(zip(stop_series, self.data.raw))
+                json_data = list(zip(self.stop.raw, self.data.raw))
         elif order_by == 'column':
-            if time_series == 'both':
-                json_data = [start_series, stop_series, self.data.raw]
-            elif time_series == 'start':
-                json_data = [start_series, self.data.raw]
+            if self.start and self.stop:
+                json_data = [self.start.raw, self.stop.raw, self.data.raw]
+            elif self.start and not self.stop:
+                json_data = [self.start.raw, self.data.raw]
             else:
-                json_data = [stop_series, self.data.raw]
+                json_data = [self.stop.raw, self.data.raw]
         else:
             raise ValueError("Unknown option '%s' for parameter 'order_by'" % order_by)
 
@@ -1376,20 +1363,43 @@ class SeriesHelper(object):
 
         if order_by == 'row':
             rows = []
-            for start_, stop_, data_ in self:
-                rows += ["%s, %s, %s" \
-                         % (str(start_),
-                            str(stop_),
-                            data_.format(format_string, None_string, add_label, localize))
-                ]
+            if self.start and self.stop:
+                for start_, stop_, data_ in self:
+                    rows += ["%s, %s, %s"
+                             % (str(start_),
+                                str(stop_),
+                                data_.format(format_string, None_string, add_label, localize))
+                    ]
+            elif self.start and not self.stop:
+                for start_, data_ in zip(self.start, self.data):
+                    rows += ["%s, %s"
+                             % (str(start_),
+                                data_.format(format_string, None_string, add_label, localize))
+                    ]
+            else:
+                for stop_, data_ in zip(self.stop, self.data):
+                    rows += ["%s, %s"
+                             % (str(stop_),
+                                data_.format(format_string, None_string, add_label, localize))
+                    ]
             return "\n".join(rows)
+
         elif order_by == 'column':
-            return "%s\n%s\n%s" \
-                   % (str(self.start),
-                      str(self.stop),
-                      self.data.format(format_string, None_string, add_label, localize))
+            if self.start and self.stop:
+                return "%s\n%s\n%s" \
+                       % (str(self.start),
+                          str(self.stop),
+                          self.data.format(format_string, None_string, add_label, localize))
+            elif self.start and not self.stop:
+                return "%s\n%s" \
+                       % (str(self.start),
+                          self.data.format(format_string, None_string, add_label, localize))
+            else:
+                return "%s\n%s" \
+                       % (str(self.stop),
+                          self.data.format(format_string, None_string, add_label, localize))
         else:
-            raise ValueError('Unknown order by option %s' % order_by)
+            raise ValueError("Unknown option '%s' for parameter 'order_by'" % order_by)
 
     def __getattr__(self, target_unit):
         """Return a new SeriesHelper, with the data part converted to a new unit
