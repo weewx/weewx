@@ -465,7 +465,7 @@ class Manager(object):
 
     def _add_column(self, column_name, column_type, cursor):
         """Add a column to the main archive table"""
-        cursor.execute("ALTER TABLE %s ADD COLUMN %s %s"
+        cursor.execute("ALTER TABLE %s ADD COLUMN `%s` %s"
                        % (self.table_name, column_name, column_type))
 
     def rename_column(self, old_column_name, new_column_name):
