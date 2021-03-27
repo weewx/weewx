@@ -6,9 +6,13 @@ WeeWX change history
 The utility wee_database has new options --add-column, --rename-column, and
 --drop-columns for adding, renaming, and deleting columns in the database.
 
-Introduced limited support for generating JSON in templates, particulary series.
+New optional tag ".series()", for creating and formatting series in templates.
 See the document series_tags.md in the docs subdirectory. This is still
 experimental and subject to change! Addresses issue #341.
+
+New optional tag ".json()" for formatting results as JSON.
+
+New optional tag ".round()". Useful for rounding results of .raw and .json tags.
 
 Improved performance when calculating series using aggregation periods that are
 multiples of a day.
@@ -46,8 +50,6 @@ Updated the version of six.py included with WeeWX to 1.15.0. Fixes issue #657.
 
 Option aggregate_interval can now be specified by using one of the "shortcuts",
 that is, 'hour', 'day', 'week', 'month', or 'year'.
-
-New optional tag ".round()". Useful for rounding results of .raw and .json tags.
 
 
 4.4.0 01/30/2021

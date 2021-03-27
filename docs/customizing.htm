@@ -2171,17 +2171,24 @@ or in foobar units: $day.barometer.min.foobar
             </tr>
             <tr>
                 <td class="code text_highlight">.format(<em>args</em>)</td>
-                <td>Format the string according to a set of optional <em>args</em> (see below).</td>
+                <td>Format the value as a string, according to a set of optional <em>args</em> (see below).</td>
             </tr>
             <tr>
                 <td class="code text_highlight">.ordinal_compass</td>
-                <td>Output compass ordinals for wind direction (<i>e.g.</i>"SW"). The ordinal abbreviations are set by
-                    option <span class="code">directions</span> in the skin configuration file <span class="code">skin.conf</span>.
+                <td>Format the value as a compass ordinals (<i>e.g.</i>"SW"), useful for wind directions.
+                    The ordinal abbreviations are set by option <span class="code">directions</span> in the skin
+                    configuration file <span class="code">skin.conf</span>.
+                </td>
+            </tr>
+            <tr>
+                <td class="code text_highlight">.json</td>
+                <td>
+                    Format the value as a <a href="https://www.json.org/json-en.html">JSON string</a>.
                 </td>
             </tr>
             <tr>
                 <td class="code text_highlight">.raw</td>
-                <td>Value is returned "as is" without being converted to a string and without any formatting applied.
+                <td>Return the value "as is", without being converted to a string and without any formatting applied.
                     This can be useful for doing arithmetic directly within the templates. You must be prepared to deal
                     with a potential <span class="code">None</span> value.
                 </td>
