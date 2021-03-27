@@ -2285,12 +2285,15 @@ or in foobar units: $day.barometer.min.foobar
             <tr class="first_row">
                 <td>Tag</td>
                 <td>Result</td>
+                <td>Result<br/>type</td>
                 <td>Comment</td>
             </tr>
             <tr>
                 <td class="code first_col">$current.outTemp</td>
                 <td class="code">45.2°F</td>
-                <td>String formatting from <span class="code"><a
+                <td class="code">str</td>
+                <td>
+                    String formatting from <span class="code"><a
                     href="#Units_StringFormats">[Units][[StringFormats]]</a></span>. Label from <span class="code"><a
                     href="#Units_Labels">[Units][[Labels]]</a></span>.
                 </td>
@@ -2298,100 +2301,141 @@ or in foobar units: $day.barometer.min.foobar
             <tr>
                 <td class="code first_col">$current.outTemp.format</td>
                 <td class="code">45.2°F</td>
-                <td>Same as the <span class="code">$current.outTemp</span>.</td>
+                <td class="code">str</td>
+                <td>
+                    Same as the <span class="code">$current.outTemp</span>.
+                </td>
             </tr>
             <tr>
                 <td class="code first_col">$current.outTemp.format()</td>
                 <td class="code">45.2°F</td>
-                <td>Same as the <span class="code">$current.outTemp</span>.</td>
+                <td class="code">str</td>
+                <td>
+                    Same as the <span class="code">$current.outTemp</span>.
+                </td>
             </tr>
             <tr>
                 <td class="code first_col">$current.outTemp.format(format_string="%.3f")</td>
                 <td class="code">45.200°F</td>
-                <td>Specified string format used; label from <span class="code"><a href="#Units_Labels">[Units][[Labels]]</a></span>.
+                <td class="code">str</td>
+                <td>
+                    Specified string format used; label from <span class="code"><a href="#Units_Labels">[Units][[Labels]]</a></span>.
                 </td>
             </tr>
             <tr>
                 <td class="code first_col">$current.outTemp.format("%.3f")</td>
                 <td class="code">45.200°F</td>
-                <td>As above, except a positional argument, instead of the named argument, is being used.
+                <td class="code">str</td>
+                <td>
+                    As above, except a positional argument, instead of the named argument, is being used.
                 </td>
             </tr>
             <tr>
                 <td class="code first_col">$current.outTemp.format(add_label=False)</td>
                 <td class="code">45.2</td>
-                <td>No label. The string formatting is from <span class="code"><a href="#Units_StringFormats">[Units][[StringFormats]]</a></span>.
+                <td class="code">str</td>
+                <td>
+                    No label. The string formatting is from <span class="code"><a href="#Units_StringFormats">[Units][[StringFormats]]</a></span>.
                 </td>
             </tr>
             <tr>
                 <td class="code first_col">$current.UV</td>
                 <td class="code">N/A</td>
-                <td>The string specified by option <span class="code">NONE</span> in <span class="code"> <a
+                <td class="code">str</td>
+                <td>
+                    The string specified by option <span class="code">NONE</span> in <span class="code"> <a
                     href="#Units_StringFormats">[Units][[StringFormats]]</a></span>.
                 </td>
             </tr>
             <tr>
                 <td class="code first_col">$current.UV.format(None_string="No UV")</td>
                 <td class="code">No UV</td>
-                <td>Specified <span class="code">None_string</span> is used.
+                <td class="code">str</td>
+                <td>
+                    Specified <span class="code">None_string</span> is used.
                 </td>
             </tr>
             <tr>
                 <td class="code first_col">$current.windDir</td>
                 <td class="code">138&deg;</td>
-                <td>Formatting is from option <span class="code">degree_compass</span> in <span class="code"> <a
+                <td class="code">str</td>
+                <td>
+                    Formatting is from option <span class="code">degree_compass</span> in <span class="code"> <a
                     href="#Units_StringFormats">[Units][[StringFormats]]</a></span>.
                 </td>
             </tr>
             <tr>
                 <td class="code first_col">$current.windDir.ordinal_compass</td>
                 <td class="code">SW</td>
-                <td>Ordinal direction from section <span class="code"><a
+                <td class="code">str</td>
+                <td>
+                    Ordinal direction from section <span class="code"><a
                     href="#Units_Ordinates">[Units][[Ordinates]]</a></span> is being substituted.
                 </td>
             </tr>
             <tr>
                 <td class="code first_col">$current.dateTime</td>
                 <td class="code">02-Apr-2010 16:25</td>
-                <td>Time formatting from <span class="code"><a
+                <td class="code">str</td>
+                <td>
+                    Time formatting from <span class="code"><a
                     href="#Units_TimeFormats">[Units][[TimeFormats]]</a></span> is being used.
                 </td>
             </tr>
             <tr>
                 <td class="code first_col">$current.dateTime.format(format_string="%H:%M")</td>
                 <td class="code">16:25</td>
-                <td>Specified time format used.</td>
+                <td class="code">str</td>
+                <td>
+                    Specified time format used.
+                </td>
             </tr>
             <tr>
                 <td class="code first_col">$current.dateTime.format("%H:%M")</td>
                 <td class="code">16:25</td>
-                <td>As above, except a positional argument, instead of the named argument, is being used.</td>
+                <td class="code">str</td>
+                <td>
+                    As above, except a positional argument, instead of the named argument, is being used.
+                </td>
             </tr>
             <tr>
                 <td class="code first_col">$current.dateTime.raw</td>
                 <td class="code">1270250700</td>
-                <td>Raw Unix epoch time (which is converted to a string by the template engine).
+                <td class="code">int</td>
+                <td>
+                    Raw Unix epoch time. The result is an <em>integer</em>.
                 </td>
             </tr>
             <tr>
                 <td class="code first_col">$current.outTemp.raw</td>
                 <td class="code">45.2</td>
-                <td>Raw float value. The result is a <em>number</em> (which is converted to a string by the
-                    template engine).
+                <td class="code">float</td>
+                <td>
+                    Raw float value. The result is a <em>float</em>.
                 </td>
             </tr>
             <tr>
                 <td class="code first_col">$current.outTemp.degree_C.raw</td>
                 <td class="code">7.33333333</td>
-                <td>Raw float value in degrees Celsius. The result is a <em>number</em> (which is converted to a string
-                    by the template engine).
+                <td class="code">float</td>
+                <td>
+                    Raw float value in degrees Celsius. The result is a <em>float</em>.
                 </td>
             </tr>
             <tr>
-                <td class="code first_col">$current.outTemp.degree_C.round(2).raw</td>
+                <td class="code first_col">$current.outTemp.degree_C.json</td>
+                <td class="code">7.33333333</td>
+                <td class="code">str</td>
+                <td>
+                    Value in degrees Celsius, converted to a JSON string.
+                </td>
+            </tr>
+            <tr>
+                <td class="code first_col">$current.outTemp.degree_C.round(2).json</td>
                 <td class="code">7.33</td>
-                <td>Raw float value in degrees Celsius, then rounding the results to two decimal digits. The result is
-                    a <em>number</em> (which is converted to a string by the template engine).
+                <td class="code">str</td>
+                <td>
+                    Value in degrees Celsius, rounded to two decimal digits, then converted to a JSON string.
                 </td>
             </tr>
             </tbody>
@@ -2847,7 +2891,7 @@ $month.dateTime.format("%B"): Min, max temperatures: $month.outTemp.min $month.o
             For example, suppose you need the maximum temperature for each day of the month. This tag
         </p>
         <pre>
-$month.outTemp.series(aggregate_type='max', aggregate_interval='day').json(time_series='start')
+$month.outTemp.series(aggregate_type='max', aggregate_interval='day', time_series='start').json
         </pre>
         <p>
             would produce the following:
