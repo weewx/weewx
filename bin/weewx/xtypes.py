@@ -141,6 +141,8 @@ class ArchiveTable(XType):
             for stamp in weeutil.weeutil.intervalgen(startstamp, stopstamp, aggregate_interval):
                 # Get the aggregate as a ValueTuple
                 agg_vt = get_aggregate(obs_type, stamp, do_aggregate, db_manager)
+                if agg_vt[0] is None:
+                    continue
                 if unit:
                     # It's OK if the unit is unknown (=None).
                     if agg_vt[1] is not None and (unit != agg_vt[1] or unit_group != agg_vt[2]):
