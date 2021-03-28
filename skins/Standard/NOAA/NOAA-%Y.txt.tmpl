@@ -54,13 +54,13 @@ ELEV: $station.altitude    LAT: $station.latitude[0]-$station.latitude[1] $stati
 ------------------------------------------------------------------------------------------------
 #for $month in $year.months
 #if $month.outTemp.count.raw
-$month.dateTime.format($YM) $month.outTemp.meanmax.nolabel($Temp,$NONE) $month.outTemp.meanmin.nolabel($Temp,$NONE) $month.outTemp.avg.nolabel($Temp,$NONE) $month.heatdeg.sum.nolabel($Temp,$NONE) $month.cooldeg.sum.nolabel($Temp,$NONE)  $month.outTemp.max.nolabel($Temp,$NONE) $month.outTemp.maxtime.format($D,$NODAY)  $month.outTemp.min.nolabel($Temp,$NONE) $month.outTemp.mintime.format($D,$NODAY) $month.outTemp.max_ge($Hot).nolabel($Count,$NONE) $month.outTemp.max_le($Cold).nolabel($Count,$NONE) $month.outTemp.min_le($Cold).nolabel($Count,$NONE) $month.outTemp.min_le($VeryCold).nolabel($Count,$NONE)
+$month.dateTime.format($YM) $month.outTemp.meanmax.format($Temp,$NONE,add_label=False) $month.outTemp.meanmin.format($Temp,$NONE,add_label=False) $month.outTemp.avg.format($Temp,$NONE,add_label=False) $month.heatdeg.sum.format($Temp,$NONE,add_label=False) $month.cooldeg.sum.format($Temp,$NONE,add_label=False)  $month.outTemp.max.format($Temp,$NONE,add_label=False) $month.outTemp.maxtime.format($D,$NODAY)  $month.outTemp.min.format($Temp,$NONE,add_label=False) $month.outTemp.mintime.format($D,$NODAY) $month.outTemp.max_ge($Hot).format($Count,$NONE,add_label=False) $month.outTemp.max_le($Cold).format($Count,$NONE,add_label=False) $month.outTemp.min_le($Cold).format($Count,$NONE,add_label=False) $month.outTemp.min_le($VeryCold).format($Count,$NONE,add_label=False)
 #else
 $month.dateTime.format($YM)
 #end if
 #end for
 ------------------------------------------------------------------------------------------------
-        $year.outTemp.meanmax.nolabel($Temp,$NONE) $year.outTemp.meanmin.nolabel($Temp,$NONE) $year.outTemp.avg.nolabel($Temp,$NONE) $year.heatdeg.sum.nolabel($Temp,$NONE) $year.cooldeg.sum.nolabel($Temp,$NONE)  $year.outTemp.max.nolabel($Temp,$NONE) $year.outTemp.maxtime.format($M,$NODAY)  $year.outTemp.min.nolabel($Temp,$NONE) $year.outTemp.mintime.format($M,$NODAY) $year.outTemp.max_ge($Hot).nolabel($Count,$NONE) $year.outTemp.max_le($Cold).nolabel($Count,$NONE) $year.outTemp.min_le($Cold).nolabel($Count,$NONE) $year.outTemp.min_le($VeryCold).nolabel($Count,$NONE)
+        $year.outTemp.meanmax.format($Temp,$NONE,add_label=False) $year.outTemp.meanmin.format($Temp,$NONE,add_label=False) $year.outTemp.avg.format($Temp,$NONE,add_label=False) $year.heatdeg.sum.format($Temp,$NONE,add_label=False) $year.cooldeg.sum.format($Temp,$NONE,add_label=False)  $year.outTemp.max.format($Temp,$NONE,add_label=False) $year.outTemp.maxtime.format($M,$NODAY)  $year.outTemp.min.format($Temp,$NONE,add_label=False) $year.outTemp.mintime.format($M,$NODAY) $year.outTemp.max_ge($Hot).format($Count,$NONE,add_label=False) $year.outTemp.max_le($Cold).format($Count,$NONE,add_label=False) $year.outTemp.min_le($Cold).format($Count,$NONE,add_label=False) $year.outTemp.min_le($VeryCold).format($Count,$NONE,add_label=False)
 
 
                   PRECIPITATION ($unit.label.rain.strip())
