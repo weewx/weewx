@@ -1,6 +1,6 @@
 # This Python file uses the following encoding: utf-8
 #
-#    Copyright (c) 2009-2018 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2021 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -1323,7 +1323,7 @@ def rounder(x, ndigits):
     elif isinstance(x, complex):
         return complex(round(x.real, ndigits), round(x.imag, ndigits))
     elif isinstance(x, float):
-        return round(x, ndigits)
+        return round(x, ndigits) if ndigits else int(x)
     elif hasattr(x, '__iter__'):
         return [rounder(v, ndigits) for v in x]
     return x

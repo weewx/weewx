@@ -1,6 +1,6 @@
 # This Python file uses the following encoding: utf-8
 #
-#    Copyright (c) 2009-2018 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2021 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -30,6 +30,8 @@ class WeeutilTest(unittest.TestCase):
 
     def test_rounder(self):
         self.assertEqual(rounder(1.2345, 2), 1.23)
+        self.assertEqual(rounder(1.2345, 0), 1)
+        self.assertIsInstance(rounder(1.2345, 0), int)
         self.assertEqual(rounder([1.2345, 6.73848, 4.2901], 2), [1.23, 6.74, 4.29])
         self.assertEqual(rounder(complex(1.2345, -2.1191), 2), complex(1.23, -2.12))
         self.assertEqual(rounder([complex(1.2345, -2.1191), complex(5.1921, 11.2092)], 2),
