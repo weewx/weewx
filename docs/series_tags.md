@@ -23,15 +23,15 @@ The tag `.series()` can take a number of optional parameters:
 .series(aggregate_type=None,
         aggregate_interval=None,
         time_series='both',
-        time_unit='unix_epoch'
+        time_unit='unix_epoch')
 ```
 
-| Parameter            | Effect                                                                                               |
-|----------------------|------------------------------------------------------------------------------------------------------|
-| `aggregate_type`     | The type of aggregation (`max`, `avg`, etc.) to perform                                              |
-| `aggregate_interval` | The length of each aggregation time in seconds. "Nicknames" (such as "day") are allowed              |
-| `time_series`        | Which time variables to include in the results. Choices are `start`, `stop`, or `both`.              |
-| `time_unit`          | What time unit to use for the results. Choices are `unix_epoch`, `unix_epoch_ms`, or `unit_epoch_ns` |
+| Parameter            | Effect                                                                                                |
+|----------------------|-------------------------------------------------------------------------------------------------------|
+| `aggregate_type`     | The type of aggregation (`max`, `avg`, etc.) to perform.                                              |
+| `aggregate_interval` | The length of each aggregation time in seconds. "Nicknames" (such as "day") are allowed.              |
+| `time_series`        | Which time variables to include in the results. Choices are `start`, `stop`, or `both`.               |
+| `time_unit`          | What time unit to use for the results. Choices are `unix_epoch`, `unix_epoch_ms`, or `unix_epoch_ns`. |
 
 
 
@@ -365,10 +365,10 @@ Here, we create a table. Each row is individually formatted. Comments below refe
 lines:
 
 1. Once evaluated, the tag `$month.outTemp.series(aggregate_type='max', aggregate_interval='day')`
-   returns a `SeriesHelper`. Normally, Cheetah would try to convert this into a string, in order to
-   embed the results in a document. However, in this case we are _iterating_ over the tag. Iteration
-   returns a 3-way tuple `start`, `stop`, and `data`, each an instance of `ValueHelper`, each of
-   which can be formatted like any other `ValueHelper`.
+   returns a `SeriesHelper`. Normally, in order to embed the results into a document, Cheetah would
+   try to convert this into a string. However, in this case, we are _iterating_ over the tag. 
+   Iterating over a `SeriesHelper` returns a 3-way tuple `start`, `stop`, and `data`, each an
+   instance of `ValueHelper`. They can be formatted like any other `ValueHelper`.
 
 2. We will work only with the start times and data. On line 2, we apply a custom formatting for the
    start times, so that only the date (no time) is shown.
@@ -427,7 +427,7 @@ cases when you need to combine several queries together to get the results you d
 common example: you wish to create a JSON structure with the minimum and maximum temperature for
 each day in a month.
 
-Creating separate series of minimums and maximums is easy enough:
+Creating separate series of minimums and maximums is easy enough,
 
 ```
 $month.outTemp.series(aggregate_type='min', aggregate_interval='day').json
@@ -437,14 +437,21 @@ $month.outTemp.series(aggregate_type='max', aggregate_interval='day').json
 but how do you combine them into a single structure? Here's one way to do it:
 
 ```
- #set $min = $month.outTemp.series(aggregate_type='min', aggregate_interval='day')
- #set $max = $month.outTemp.series(aggregate_type='max', aggregate_interval='day')
+ #set $min_sh = $month.outTemp.series(aggregate_type='min', aggregate_interval='day')
+ #set $max_sh = $month.outTemp.series(aggregate_type='max', aggregate_interval='day')
  <pre>
- $jsonize($zip($min.start.raw, $min.data.raw, $max.data.raw))
+ $jsonize($zip($min_sh.start.raw, $min_sh.data.raw, $max_sh.data.raw))
  </pre>
 ```
 
-This uses the Python function [`zip()`](https://docs.python.org/3/library/functions.html#zip) to
+The values `$min_sh` and `$max_sh` are `SeriesHelper`, each of which have three attributes:
+`.start`, `.stop`, and `.data`, respectively, the start times, stop times, and data.
+
+So, `$min_sh.start` will be a series with just the start times. Similarly, `$min_sh.data` will a
+series with the aggregated minimum values, `$max_sh.data` a series with the aggregated the maximum
+values.
+
+We then use the Python function [`zip()`](https://docs.python.org/3/library/functions.html#zip) to
 interleave the start times, minimums, and maximums together. This results in a list of 3-way tuples
 (time, minimum, maximum). The WeeWX helper function `$jsonize()` is then used to convert this to
 JSON. The result looks something like this:

@@ -164,7 +164,7 @@ class TimespanBinder(object):
         data_binding: If non-None, then use this data binding.
 
         context: A tag name for the timespan. This is something like 'current', 'day', 'week', etc.
-        This is used to figure out how to do aggregations, and for picking an appropriate label.
+        This is used to pick an appropriate time label.
 
         formatter: An instance of weewx.units.Formatter() holding the formatting information to be
         used. [Optional. If not given, the default Formatter will be used.]
