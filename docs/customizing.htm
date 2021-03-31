@@ -893,8 +893,11 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
 [StdReport]
     ...
 
-    [[LifeA]]
+    [[SeasonsA]]
         skin = Seasons
+
+    [[LifeA]]
+        skin = Life
 
     [[LifeB]]
         skin = Life
@@ -914,6 +917,11 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
                 <td>Label for <span class="code">outTemp</span></td>
             </tr>
             <tr>
+                <td>SeasonsA</td>
+                <td>Inside Temperature</td>
+                <td>Outside Temperature</td>
+            </tr>
+            <tr>
                 <td>LifeA</td>
                 <td>Inside Temperature</td>
                 <td>Exterior Temperature</td>
@@ -928,7 +936,11 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
         <p>
             Note how the values specified for <span class="code">inTemp</span> are not overridden anywhere, so the value
             specified in <span class="code">weewx/defaults.py</span>, that is, <span
-            class="code">Inside Temperature</span>, is used. By contrast, a value for <span class="code">outTemp</span>
+            class="code">Inside Temperature</span>, is used for all reports.</p>
+        <p>
+            The value for <span class="code">outTemp</span> is not overridden for report <span class="code">SeasonsA</span>,
+            so it uses the label specified in <span class="code">weewx/defaults.py</span>, that is, <span class="code">Outside Temperature</span>.
+            By contrast, for the "Life" reports, a value for <span class="code">outTemp</span>
             was specified in the skin so, in the absence of any user override, its value, <span class="code">Exterior
             Temperature</span> will be used as the new default. Finally, for the report <span class="code">LifeB</span>,
             the user <em>has</em> specified an override for <span class="code">outTemp</span>, so that value,
@@ -949,8 +961,11 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
             [[[[Generic]]]]
                 outTemp = Shed Temperature</span>
 
-    [[LifeA]]
+    [[SeasonsA]]
         skin = Seasons
+
+    [[LifeA]]
+        skin = Life
 
     [[LifeB]]
         skin = Life
@@ -970,6 +985,11 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
                 <td>Report</td>
                 <td>Label for <span class="code">inTemp</span></td>
                 <td>Label for <span class="code">outTemp</span></td>
+            </tr>
+            <tr>
+                <td>SeasonsA</td>
+                <td>Inside Temperature</td>
+                <td>Shed Temperature</td>
             </tr>
             <tr>
                 <td>LifeA</td>
