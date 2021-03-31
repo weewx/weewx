@@ -247,12 +247,28 @@ class Manager(object):
         _row = self.getSql("SELECT MIN(dateTime) FROM %s" % self.table_name)
         return _row[0] if _row else None
 
-    def addRecord(self, record_obj, accumulator=None, progress_fn=None):
-        """Commit a single record or a collection of records to the archive.
+    def addRecord(self, record_obj,
+                  accumulator=None,
+                  progress_fn=None,
+                  log_success=True,
+                  log_failure=True):
+        """
+        Commit a single record or a collection of records to the archive.
 
-        record_obj: Either a data record, or an iterable that can return data records. Each data
-        record must look like a dictionary, where the keys are the SQL types and the values are the
-        values to be stored in the database.
+        Args:
+            record_obj (iterable | dict): Either a data record, or an iterable that can return
+                data records. Each data record must look like a dictionary, where the keys are the
+                SQL types and the values are the values to be stored in the database.
+            accumulator (weewx.accum.Accum): An optional accumulator. If given, the record
+                will be added to the accumulator.
+            progress_fn (function): This function will be called every 1000 insertions. It should
+                have the signature fn(time, N) where time is the unix epoch time, and N is the
+                insertion count.
+            log_success (bool): Set to True to have successful insertions logged.
+            log_failure (bool): Set to True to have unsuccessful insertions logged
+
+        Returns:
+            int: The number of successful insertions.
         """
 
         # Determine if record_obj is just a single dictionary instance (in which case it will have
@@ -272,7 +288,7 @@ class Manager(object):
                         self._updateHiLo(accumulator, cursor)
 
                     # Then add the record to the archives:
-                    self._addSingleRecord(record, cursor)
+                    self._addSingleRecord(record, cursor, log_success, log_failure)
 
                     N += 1
                     if progress_fn and N % 1000 == 0:
@@ -281,9 +297,10 @@ class Manager(object):
                     min_ts = min(min_ts, record['dateTime'])
                     max_ts = max(max_ts, record['dateTime'])
                 except (weedb.IntegrityError, weedb.OperationalError) as e:
-                    log.error("Unable to add record %s to database '%s': %s",
-                              timestamp_to_string(record['dateTime']),
-                              self.database_name, e)
+                    if log_failure:
+                        log.error("Unable to add record %s to database '%s': %s",
+                                  timestamp_to_string(record['dateTime']),
+                                  self.database_name, e)
 
         # Update the cached timestamps. This has to sit outside the transaction context,
         # in case an exception occurs.
@@ -294,11 +311,12 @@ class Manager(object):
 
         return N
 
-    def _addSingleRecord(self, record, cursor):
-        """Internal function for adding a single record to the database."""
+    def _addSingleRecord(self, record, cursor, log_success=True, log_failure=True):
+        """Internal function for adding a single record to the main archive table."""
 
         if record['dateTime'] is None:
-            log.error("Archive record with null time encountered")
+            if log_failure:
+                log.error("Archive record with null time encountered")
             raise weewx.ViolatedPrecondition("Manager record with null time encountered.")
 
         # Check to make sure the incoming record is in the same unit system as the records already
@@ -323,9 +341,10 @@ class Manager(object):
         # Form the SQL insert statement:
         sql_insert_stmt = "INSERT INTO %s (%s) VALUES (%s)" % (self.table_name, k_str, q_str)
         cursor.execute(sql_insert_stmt, value_list)
-        log.info("Added record %s to database '%s'",
-                 timestamp_to_string(record['dateTime']),
-                 self.database_name)
+        if log_success:
+            log.info("Added record %s to database '%s'",
+                     timestamp_to_string(record['dateTime']),
+                     self.database_name)
 
     def _updateHiLo(self, accumulator, cursor):
         pass
@@ -953,13 +972,13 @@ class DaySummaryManager(Manager):
         for column_name in column_names:
             cursor.execute("DROP TABLE IF EXISTS %s_day_%s;" % (self.table_name, column_name))
 
-    def _addSingleRecord(self, record, cursor):
+    def _addSingleRecord(self, record, cursor, log_success=True, log_failure=True):
         """Specialized version that updates the daily summaries, as well as the main archive
         table.
         """
 
         # First let my superclass handle adding the record to the main archive table:
-        super(DaySummaryManager, self)._addSingleRecord(record, cursor)
+        super(DaySummaryManager, self)._addSingleRecord(record, cursor, log_success, log_failure)
 
         # Get the start of day for the record:
         _sod_ts = weeutil.weeutil.startOfArchiveDay(record['dateTime'])
@@ -969,17 +988,19 @@ class DaySummaryManager(Manager):
             _weight = self._calc_weight(record)
         except IntervalError as e:
             # Bad value for interval. Ignore this record
-            log.info(e)
-            log.info('*** record ignored')
+            if log_failure:
+                log.info(e)
+                log.info('*** record ignored')
             return
 
         # Now add to the daily summary for the appropriate day:
         _day_summary = self._get_day_summary(_sod_ts, cursor)
         _day_summary.addRecord(record, weight=_weight)
         self._set_day_summary(_day_summary, record['dateTime'], cursor)
-        log.info("Added record %s to daily summary in '%s'",
-                 timestamp_to_string(record['dateTime']),
-                 self.database_name)
+        if log_success:
+            log.info("Added record %s to daily summary in '%s'",
+                     timestamp_to_string(record['dateTime']),
+                     self.database_name)
 
     def _updateHiLo(self, accumulator, cursor):
         """Use the contents of an accumulator to update the daily hi/lows."""
