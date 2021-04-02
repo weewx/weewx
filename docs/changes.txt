@@ -1,6 +1,10 @@
 WeeWX change history
 --------------------
 
+4.5.1 04/02/2021
+Reverted the wview schema back to the V3 style.
+
+
 4.5.0 04/02/2021
 
 The utility wee_database has new options --add-column, --rename-column, and
