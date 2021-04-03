@@ -170,14 +170,14 @@ def main():
     if options.rename_column and not options.to_name:
         sys.exit("Option --rename-column requires option --to-name")
 
-    if options.date and not (options.calc_missing or options.rebuild_daily):
-        sys.exit("Option --date can only be used with options --calc-missing or --rebuild-daily")
+    if options.date and not (options.calc_missing or options.rebuild_daily or options.reweight):
+        sys.exit("Option --date can only be used with options --calc-missing or --rebuild-daily or --reweight")
 
-    if options.from_date and not (options.calc_missing or options.rebuild_daily):
-        sys.exit("Option --from can only be used with options --calc-missing or --rebuild-daily")
+    if options.from_date and not (options.calc_missing or options.rebuild_daily or options.reweight):
+        sys.exit("Option --from can only be used with options --calc-missing or --rebuild-daily or --reweight")
 
-    if options.to_date and not (options.calc_missing or options.rebuild_daily):
-        sys.exit("Option --to can only be used with options --calc-missing or --rebuild-daily")
+    if options.to_date and not (options.calc_missing or options.rebuild_daily or options.reweight):
+        sys.exit("Option --to can only be used with options --calc-missing or --rebuild-daily or --reweight")
 
     if options.dest_binding and not options.transfer:
         sys.exit("Option --dest-binding can only be used with option --transfer")
