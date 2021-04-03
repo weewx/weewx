@@ -167,26 +167,26 @@ fi
 case "$CMD" in
     start)
         for i in $INSTANCES; do
-	    log_daemon_msg "Starting $DESC" "$i"
-	    do_start $i
-	    case "$?" in
-		    0) log_end_msg 0; RETVAL=0 ;;
-	        1) log_action_cont_msg " already running" && log_end_msg 0; RETVAL=0 ;;
-	        2) log_end_msg 1; RETVAL=1 ;;
-	    esac
+            log_daemon_msg "Starting $DESC" "$i"
+            do_start $i
+            case "$?" in
+                0) log_end_msg 0; RETVAL=0 ;;
+                1) log_action_cont_msg " already running" && log_end_msg 0; RETVAL=0 ;;
+                2) log_end_msg 1; RETVAL=1 ;;
+            esac
         done
-	;;
+    ;;
     stop)
         for i in $INSTANCES; do
-	    [ "$VERBOSE" != no ] && log_daemon_msg "Stopping $DESC" "$i"
-	    do_stop $i
-	    case "$?" in
-		    0) log_end_msg 0; RETVAL=0 ;;
-	        1) log_action_cont_msg " not running" && log_end_msg 0; RETVAL=0 ;;
-	        2) log_end_msg 1; RETVAL=1 ;;
-	    esac
+            log_daemon_msg "Stopping $DESC" "$i"
+            do_stop $i
+            case "$?" in
+                0) log_end_msg 0; RETVAL=0 ;;
+                1) log_action_cont_msg " not running" && log_end_msg 0; RETVAL=0 ;;
+                2) log_end_msg 1; RETVAL=1 ;;
+            esac
         done
-	;;
+    ;;
     status)
         for i in $INSTANCES; do
             do_status "$i"
@@ -194,33 +194,33 @@ case "$CMD" in
         ;;
     reload|force-reload)
         for i in $INSTANCES; do
-	    log_daemon_msg "Reloading $DESC" "$i"
-	    do_reload $i
-	    log_end_msg $?
+            log_daemon_msg "Reloading $DESC" "$i"
+            do_reload $i
+            log_end_msg $?
         done
-	;;
+    ;;
     restart)
         for i in $INSTANCES; do
-	    log_daemon_msg "Restarting $DESC" "$i"
-	    do_stop $i
-	    case "$?" in
-	        0|1)
-		    do_start $i
-		    case "$?" in
-			    0) log_end_msg 0 ;;
-			    1) log_end_msg 1 ;; # Old process is still running
-			    *) log_end_msg 1 ;; # Failed to start
-		    esac
-		    ;;
-	        *)
-	  	# Failed to stop
-		    log_end_msg 1
-		    ;;
-	    esac
+        log_daemon_msg "Restarting $DESC" "$i"
+        do_stop $i
+        case "$?" in
+            0|1)
+            do_start $i
+            case "$?" in
+                0) log_end_msg 0 ;;
+                1) log_end_msg 1 ;; # Old process is still running
+                *) log_end_msg 1 ;; # Failed to start
+            esac
+            ;;
+            *)
+          # Failed to stop
+            log_end_msg 1
+            ;;
+        esac
         done
-	;;
+    ;;
     *)
-	echo "Usage: $0 {start|stop|restart|reload} [instance]" >&2
-	exit 3
-	;;
+    echo "Usage: $0 {start|stop|restart|reload} [instance]" >&2
+    exit 3
+    ;;
 esac
