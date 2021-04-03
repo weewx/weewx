@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2020 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2021 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -196,7 +196,8 @@ class Almanac(object):
                  pressure=None,
                  horizon=None,
                  moon_phases=weeutil.Moon.moon_phases,
-                 formatter=weewx.units.Formatter()):
+                 formatter=weewx.units.Formatter(),
+                 converter=weewx.units.Converter()):
         """Initialize an instance of Almanac
 
         time_ts: A unix epoch timestamp with the time of the almanac. If None, the
@@ -217,6 +218,8 @@ class Almanac(object):
         
         formatter: An instance of weewx.units.Formatter() with the formatting information
         to be used.
+
+        converter: An instance of weewx.units.Converter with the conversion information to be used.
         """
         self.time_ts      = time_ts if time_ts else time.time()
         self.lat          = lat
@@ -227,6 +230,7 @@ class Almanac(object):
         self.horizon      = horizon if horizon is not None else 0.0
         self.moon_phases  = moon_phases
         self.formatter    = formatter
+        self.converter    = converter
         self._precalc()
 
     def _precalc(self):
@@ -248,9 +252,13 @@ class Almanac(object):
             sunrise_ts = weeutil.weeutil.utc_to_ts(y, m, d, sunrise_utc_h)
             sunset_ts  = weeutil.weeutil.utc_to_ts(y, m, d, sunset_utc_h)
             self._sunrise = weewx.units.ValueHelper((sunrise_ts, "unix_epoch", "group_time"), 
-                                                    context="ephem_day", formatter=self.formatter)
+                                                    context="ephem_day",
+                                                    formatter=self.formatter,
+                                                    converter=self.converter)
             self._sunset  = weewx.units.ValueHelper((sunset_ts,  "unix_epoch", "group_time"), 
-                                                    context="ephem_day", formatter=self.formatter)
+                                                    context="ephem_day",
+                                                    formatter=self.formatter,
+                                                    converter=self.converter)
             self.hasExtras = False            
 
     # Shortcuts, used for backwards compatibility
@@ -318,7 +326,9 @@ class Almanac(object):
             # is the function's name as a string
             djd = getattr(ephem, attr)(self.time_djd)
             return weewx.units.ValueHelper((djd, "dublin_jd", "group_time"), 
-                                           context="ephem_year", formatter=self.formatter)
+                                           context="ephem_year",
+                                           formatter=self.formatter,
+                                           converter=self.converter)
         # Check to see if the attribute is sidereal time
         elif attr == 'sidereal_time':
             # sidereal time is obtained from an ephem Observer method, first get
@@ -353,6 +363,7 @@ class AlmanacBinder(object):
         self.moon_phases  = almanac.moon_phases
         self.moon_phase   = almanac.moon_phase
         self.formatter    = almanac.formatter
+        self.converter    = almanac.converter
 
         # Calculate and store the start-of-day in Dublin Julian Days. 
 #        self.sod_djd = timestamp_to_djd(weeutil.weeutil.startOfDay(self.time_ts))
@@ -392,7 +403,10 @@ class AlmanacBinder(object):
                     time_djd = getattr(observer, attr)(ephem_body)
             except (ephem.AlwaysUpError, ephem.NeverUpError):
                 time_djd = None
-            return weewx.units.ValueHelper((time_djd, "dublin_jd", "group_time"), context="ephem_day", formatter=self.formatter)
+            return weewx.units.ValueHelper((time_djd, "dublin_jd", "group_time"),
+                                           context="ephem_day",
+                                           formatter=self.formatter,
+                                           converter=self.converter)
         
         elif attr in ['next_rising', 'next_setting', 'next_transit', 'next_antitransit',
                       'previous_rising', 'previous_setting', 'previous_transit', 'previous_antitransit']:
@@ -406,7 +420,10 @@ class AlmanacBinder(object):
                     time_djd = getattr(observer, attr)(ephem_body)
             except (ephem.AlwaysUpError, ephem.NeverUpError):
                 time_djd = None
-            return weewx.units.ValueHelper((time_djd, "dublin_jd", "group_time"), context="ephem_day", formatter=self.formatter)
+            return weewx.units.ValueHelper((time_djd, "dublin_jd", "group_time"),
+                                           context="ephem_day",
+                                           formatter=self.formatter,
+                                           converter=self.converter)
 
         else:
             # These functions need the current time in Dublin Julian Days

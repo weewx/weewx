@@ -63,7 +63,7 @@ class TestFilter(unittest.TestCase):
         val_vh = ValueHelper(ValueTuple(20.0, 'degree_C', 'group_temperature'))
         au = weewx.cheetahgenerator.AssureUnicode()
         filtered_value = au.filter(val_vh)
-        self.assertEqual(filtered_value, u"68.0°F")
+        self.assertEqual(filtered_value, u"20.0°C")
 
     def test_RaiseException(self):
         r = RaiseException()

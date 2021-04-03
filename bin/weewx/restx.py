@@ -717,7 +717,7 @@ class StdPWSWeather(StdRESTful):
     """Specialized version of the Ambient protocol for PWSWeather"""
 
     # The URL used by PWSWeather:
-    archive_url = "http://www.pwsweather.com/pwsupdate/pwsupdate.php"
+    archive_url = "https://www.pwsweather.com/pwsupdate/pwsupdate.php"
 
     def __init__(self, engine, config_dict):
         super(StdPWSWeather, self).__init__(engine, config_dict)
@@ -756,7 +756,7 @@ class StdWOW(StdRESTful):
     """
 
     # The URL used by WOW:
-    archive_url = "http://wow.metoffice.gov.uk/automaticreading"
+    archive_url = "https://wow.metoffice.gov.uk/automaticreading"
 
     def __init__(self, engine, config_dict):
         super(StdWOW, self).__init__(engine, config_dict)
@@ -1043,7 +1043,7 @@ class WOWThread(AmbientThread):
                 'windGustDir': 'windgustdir=%.0f',
                 'dewpoint'   : 'dewptf=%.1f',
                 'hourRain'   : 'rainin=%.2f',
-                'dayRain'    : 'dailyrainin=%.2f'}
+                'dayRain'    : 'dailyrainin=%.3f'}
 
     def format_url(self, incoming_record):
         """Return an URL for posting using WOW's version of the Ambient

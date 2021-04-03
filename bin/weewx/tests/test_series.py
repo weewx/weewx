@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2018-2019 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2018-2021 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -91,24 +91,42 @@ class Common(object):
         pass
 
     def test_get_series_archive_outTemp(self):
-        """Test a series of outTemp with no aggregation"""
+        """Test a series of outTemp with no aggregation, run against the archive table."""
         with weewx.manager.open_manager_with_config(self.config_dict, 'wx_binding') as db_manager:
-            start_vec, stop_vec, data_vec = weewx.xtypes.get_series('outTemp',
-                                                                    TimeSpan(start_ts, stop_ts),
-                                                                    db_manager)
-        self.assertEqual(len(start_vec[0]), (stop_ts - start_ts) / gen_fake_data.interval + 1)
-        self.assertEqual(len(stop_vec[0]), (stop_ts - start_ts) / gen_fake_data.interval + 1)
-        self.assertEqual(len(data_vec[0]), (stop_ts - start_ts) / gen_fake_data.interval + 1)
+            start_vec, stop_vec, data_vec \
+                = weewx.xtypes.ArchiveTable.get_series('outTemp',
+                                                       TimeSpan(start_ts, stop_ts),
+                                                       db_manager)
+        self.assertEqual(len(start_vec[0]), (stop_ts - start_ts) / gen_fake_data.interval)
+        self.assertEqual(len(stop_vec[0]), (stop_ts - start_ts) / gen_fake_data.interval)
+        self.assertEqual(len(data_vec[0]), (stop_ts - start_ts) / gen_fake_data.interval)
 
-    def test_get_series_archive_agg_rain_sum(self):
-        """Test a series of daily aggregated rain totals"""
+    def test_get_series_daily_agg_rain_sum(self):
+        """Test a series of daily aggregated rain totals, run against the daily summaries"""
         with weewx.manager.open_manager_with_config(self.config_dict, 'wx_binding') as db_manager:
             # Calculate the total daily rain
-            start_vec, stop_vec, data_vec = weewx.xtypes.get_series('rain',
-                                                                    TimeSpan(start_ts, stop_ts),
-                                                                    db_manager,
-                                                                    'sum',
-                                                                    24 * 3600)
+            start_vec, stop_vec, data_vec \
+                = weewx.xtypes.DailySummaries.get_series('rain',
+                                                         TimeSpan(start_ts, stop_ts),
+                                                         db_manager,
+                                                         'sum',
+                                                         'day')
+        # March has 30 days.
+        self.assertEqual(len(start_vec[0]), 30 + 1)
+        self.assertEqual(len(stop_vec[0]), 30 + 1)
+        self.assertEqual((["%.2f" % d for d in data_vec[0]], data_vec[1], data_vec[2]),
+                         (["%.2f" % d for d in Common.expected_daily_rain_sum], 'inch', 'group_rain'))
+
+    def test_get_series_archive_agg_rain_sum(self):
+        """Test a series of daily aggregated rain totals, run against the main archive table"""
+        with weewx.manager.open_manager_with_config(self.config_dict, 'wx_binding') as db_manager:
+            # Calculate the total daily rain
+            start_vec, stop_vec, data_vec \
+                = weewx.xtypes.ArchiveTable.get_series('rain',
+                                                       TimeSpan(start_ts, stop_ts),
+                                                       db_manager,
+                                                       'sum',
+                                                       'day')
         # March has 30 days.
         self.assertEqual(len(start_vec[0]), 30 + 1)
         self.assertEqual(len(stop_vec[0]), 30 + 1)
@@ -116,14 +134,15 @@ class Common(object):
                          (["%.2f" % d for d in Common.expected_daily_rain_sum], 'inch', 'group_rain'))
 
     def test_get_series_archive_agg_rain_cum(self):
-        """Test a series of daily cumulative rain totals"""
+        """Test a series of daily cumulative rain totals, run against the main archive table."""
         with weewx.manager.open_manager_with_config(self.config_dict, 'wx_binding') as db_manager:
             # Calculate the cumulative total daily rain
-            start_vec, stop_vec, data_vec = weewx.xtypes.get_series('rain',
-                                                                    TimeSpan(start_ts, stop_ts),
-                                                                    db_manager,
-                                                                    'cumulative',
-                                                                    24 * 3600)
+            start_vec, stop_vec, data_vec \
+                = weewx.xtypes.ArchiveTable.get_series('rain',
+                                                       TimeSpan(start_ts, stop_ts),
+                                                       db_manager,
+                                                       'cumulative',
+                                                       24 * 3600)
         # March has 30 days.
         self.assertEqual(len(start_vec[0]), 30 + 1)
         self.assertEqual(len(stop_vec[0]), 30 + 1)
@@ -132,23 +151,29 @@ class Common(object):
                          (["%.2f" % d for d in right_answer], 'inch', 'group_rain'))
 
     def test_get_series_archive_windvec(self):
+        """Test a series of 'windvec', with no aggregation, run against the main archive table"""
         with weewx.manager.open_manager_with_config(self.config_dict, 'wx_binding') as db_manager:
             # Get a series of wind values
-            start_vec, stop_vec, data_vec = weewx.xtypes.get_series('windvec',
-                                                                    TimeSpan(start_ts, stop_ts),
-                                                                    db_manager)
+            start_vec, stop_vec, data_vec \
+                = weewx.xtypes.WindVec.get_series('windvec',
+                                                  TimeSpan(start_ts, stop_ts),
+                                                  db_manager)
         self.assertEqual(len(start_vec[0]), (stop_ts - start_ts) / gen_fake_data.interval + 1)
         self.assertEqual(len(stop_vec[0]), (stop_ts - start_ts) / gen_fake_data.interval + 1)
         self.assertEqual(len(data_vec[0]), (stop_ts - start_ts) / gen_fake_data.interval + 1)
 
     def test_get_series_archive_agg_windvec_avg(self):
+        """Test a series of 'windvec', with 'avg' aggregation. This will exercise
+        WindVec.get_series(0), which, in turn, will call WindVecDaily.get_aggregate() to get each
+        individual aggregate value."""
         with weewx.manager.open_manager_with_config(self.config_dict, 'wx_binding') as db_manager:
             # Get a series of wind values
-            start_vec, stop_vec, data_vec = weewx.xtypes.get_series('windvec',
-                                                                    TimeSpan(start_ts, stop_ts),
-                                                                    db_manager,
-                                                                    'avg',
-                                                                    24 * 3600)
+            start_vec, stop_vec, data_vec \
+                = weewx.xtypes.WindVec.get_series('windvec',
+                                                  TimeSpan(start_ts, stop_ts),
+                                                  db_manager,
+                                                  'avg',
+                                                  24 * 3600)
         # March has 30 days.
         self.assertEqual(len(start_vec[0]), 30 + 1)
         self.assertEqual(len(stop_vec[0]), 30 + 1)
@@ -156,6 +181,9 @@ class Common(object):
                          (["(%.2f, %.2f)" % (x[0], x[1]) for x in Common.expected_daily_wind_avg]))
 
     def test_get_series_archive_agg_windvec_last(self):
+        """Test a series of 'windvec', with 'last' aggregation. This will exercise
+        WindVec.get_series(), which, in turn, will call WindVec.get_aggregate() to get each
+        individual aggregate value."""
         with weewx.manager.open_manager_with_config(self.config_dict, 'wx_binding') as db_manager:
             # Get a series of wind values
             start_vec, stop_vec, data_vec = weewx.xtypes.get_series('windvec',
@@ -169,6 +197,25 @@ class Common(object):
         # The round(x, 2) + 0 is necessary to avoid 0.00 comparing different from -0.00.
         self.assertEqual((["(%.2f, %.2f)" % (round(x.real, 2) + 0, round(x.imag, 2) + 0) for x in data_vec[0]]),
                          (["(%.2f, %.2f)" % (x[0], x[1]) for x in Common.expected_daily_wind_last]))
+
+    def test_get_aggregate_windvec_last(self):
+        """Test getting a windvec aggregation over a period that does not fall on midnight
+        boundaries."""
+        with weewx.manager.open_manager_with_config(self.config_dict, 'wx_binding') as db_manager:
+            # This time span was chosen because it includes a null value.
+            start_tt = (2010, 3, 2, 12, 0, 0, 0, 0, -1)
+            start = time.mktime(start_tt)   # = 1267560000
+            stop = start + 6 * 3600
+            # Get a simple 'avg' aggregation over this period
+            val_t = weewx.xtypes.WindVec.get_aggregate('windvec',
+                                                       TimeSpan(start, stop),
+                                                       'avg',
+                                                       db_manager)
+            self.assertEqual(type(val_t[0]), complex)
+            self.assertAlmostEqual(val_t[0].real, 15.37441, 5)
+            self.assertAlmostEqual(val_t[0].imag,  9.79138, 5)
+            self.assertEqual(val_t[1], 'mile_per_hour')
+            self.assertEqual(val_t[2], 'group_speed')
 
 
 class TestSqlite(Common, unittest.TestCase):

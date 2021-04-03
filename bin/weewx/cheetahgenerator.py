@@ -32,14 +32,14 @@ Example:
 [CheetahGenerator]
     # How to specify search list extensions:
     search_list_extensions = user.forecast.ForecastVariables, user.extstats.ExtStatsVariables
-    encoding = html_entities      # html_entities, utf8, strict_ascii, or normalized_ascii
+    encoding = html_entities
     [[SummaryByMonth]]                              # period
         [[[NOAA_month]]]                            # report
-            encoding = utf8
+            encoding = normalized_ascii
             template = NOAA-YYYY-MM.txt.tmpl
     [[SummaryByYear]]
         [[[NOAA_year]]]]
-            encoding = utf8
+            encoding = normalized_ascii
             template = NOAA-YYYY.txt.tmpl
     [[ToDate]]
         [[[day]]]
@@ -58,6 +58,7 @@ Example:
 from __future__ import absolute_import
 
 import datetime
+import json
 import logging
 import os.path
 import time
@@ -88,7 +89,8 @@ default_search_list = [
     "weewx.cheetahgenerator.Current",
     "weewx.cheetahgenerator.Stats",
     "weewx.cheetahgenerator.UnitInfo",
-    "weewx.cheetahgenerator.Extras"]
+    "weewx.cheetahgenerator.Extras",
+    "weewx.cheetahgenerator.JSONHelpers"]
 
 
 # =============================================================================
@@ -335,7 +337,7 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
                     normalized = unicodedata.normalize('NFD', unicode_string)
                     byte_string = normalized.encode('ascii', 'ignore')
                 else:
-                    byte_string = unicode_string.encode('utf8')
+                    byte_string = unicode_string.encode(encoding)
 
                 # Open in binary mode. We are writing a byte-string, not a string
                 with open(tmpname, mode='wb') as fd:
@@ -534,7 +536,8 @@ class Almanac(SearchList):
                                              temperature=temperature_C,
                                              pressure=pressure_mbar,
                                              moon_phases=self.moonphases,
-                                             formatter=generator.formatter)
+                                             formatter=generator.formatter,
+                                             converter=generator.converter)
 
 
 class Station(SearchList):
@@ -617,6 +620,38 @@ class Extras(SearchList):
         # an empty dictionary.
         self.Extras = ExtraDict(generator.skin_dict['Extras'] if 'Extras' in generator.skin_dict else {})
 
+
+class JSONHelpers(SearchList):
+    """Helper functions for formatting JSON"""
+
+    @staticmethod
+    def jsonize(arg):
+        """
+        Format my argument as JSON
+
+        Args:
+            arg (iterable): An iterable, such as a list, or zip structure
+
+        Returns:
+            str: The argument formatted as JSON.
+        """
+        val = list(arg)
+        return json.dumps(val, cls=weewx.units.ComplexEncoder)
+
+    @staticmethod
+    def rnd(arg, ndigits):
+        """Round a number, or sequence of numbers, to a specified number of decimal digits
+
+        Args:
+            arg (None, float, complex, list): The number or sequence of numbers to be rounded.
+                If the argument is None, then None will be returned.
+            ndigits (int): The number of decimal digits to retain.
+
+        Returns:
+            None, float, complex, list: Returns the number, or sequence of numbers, with the
+                requested number of decimal digits
+        """
+        return weeutil.weeutil.rounder(arg, ndigits)
 
 # =============================================================================
 # Filter

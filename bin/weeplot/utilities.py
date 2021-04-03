@@ -9,6 +9,7 @@
 from __future__ import absolute_import
 from __future__ import print_function
 from six.moves import zip
+
 try:
     from PIL import ImageFont, ImageColor
 except ImportError:
@@ -188,7 +189,7 @@ def scale(data_min, data_max, prescale=(None, None, None), nsteps=10):
     return minscale, maxscale, interval
 
 
-def scaletime(tmin_ts, tmax_ts) :
+def scaletime(tmin_ts, tmax_ts):
     """Picks a time scaling suitable for a time plot.
     
     tmin_ts, tmax_ts: The time stamps in epoch time around which the times will be picked.
@@ -246,16 +247,16 @@ def scaletime(tmin_ts, tmax_ts) :
     >>> print(to_string(xmin), to_string(xmax), xinc)
     2013-05-16 17:00:00 PDT (1368748800) 2013-05-17 08:00:00 PDT (1368802800) 7200
     """
-    if tmax_ts <= tmin_ts :
+    if tmax_ts <= tmin_ts:
         raise weeplot.ViolatedPrecondition("scaletime called with tmax <= tmin")
-    
+
     tdelta = tmax_ts - tmin_ts
-    
+
     tmin_dt = datetime.datetime.fromtimestamp(tmin_ts)
     tmax_dt = datetime.datetime.fromtimestamp(tmax_ts)
-    
+
     if tdelta <= 16 * 3600:
-        if tdelta <= 3*3600:
+        if tdelta <= 3 * 3600:
             # For time intervals less than 3 hours, use an increment of 15 minutes
             interval = 900
         elif tdelta <= 12 * 3600:
@@ -272,72 +273,75 @@ def scaletime(tmin_ts, tmax_ts) :
             stop_dt += datetime.timedelta(hours=1)
         n_hours = int((tdelta + 3599) / 3600)
         start_dt = stop_dt - datetime.timedelta(hours=n_hours)
-        
+
     elif tdelta <= 27 * 3600:
         # A day plot is wanted. A time increment of 3 hours is appropriate
         interval = 3 * 3600
         # h is the hour of tmax_dt
         h = tmax_dt.timetuple()[3]
         # Subtract off enough to get to the lower 3-hour boundary from tmax: 
-        stop_dt = tmax_dt.replace(minute=0, second=0, microsecond=0) - datetime.timedelta(hours = h % 3)
+        stop_dt = tmax_dt.replace(minute=0, second=0, microsecond=0) \
+                  - datetime.timedelta(hours=h % 3)
         # If tmax happens to lie on a 3 hour boundary we don't need to do anything. If not, we need
         # to round up to the next 3 hour boundary:
         if tmax_dt > stop_dt:
             stop_dt += datetime.timedelta(hours=3)
         # The stop time is one day earlier
         start_dt = stop_dt - datetime.timedelta(days=1)
-        
-        if tdelta == 27 * 3600 :
+
+        if tdelta == 27 * 3600:
             # A "slightly more than a day plot" is wanted. Start 3 hours earlier:
             start_dt -= datetime.timedelta(hours=3)
-    
-    elif 27 * 3600 < tdelta <= 31 * 24 * 3600 :
+
+    elif 27 * 3600 < tdelta <= 31 * 24 * 3600:
         # The time scale is between a day and a month. A time increment of one day is appropriate
         start_dt = tmin_dt.replace(hour=0, minute=0, second=0, microsecond=0)
-        stop_dt  = tmax_dt.replace(hour=0, minute=0, second=0, microsecond=0)
-        
+        stop_dt = tmax_dt.replace(hour=0, minute=0, second=0, microsecond=0)
+
         tmax_tt = tmax_dt.timetuple()
-        if tmax_tt[3]!=0 or tmax_tt[4]!=0 :
+        if tmax_tt[3] != 0 or tmax_tt[4] != 0:
             stop_dt += datetime.timedelta(days=1)
-            
+
         interval = 24 * 3600
-    elif tdelta < 2 * 365.25 * 24 * 3600 :
-        # The time scale is between a month and 2 years. A time increment of a month is appropriate
+    elif tdelta <= 2 * 365.25 * 24 * 3600:
+        # The time scale is between a month and 2 years, inclusive. A time increment of a month
+        # is appropriate
         start_dt = tmin_dt.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-        
-        (year , mon, day) = tmax_dt.timetuple()[0:3]
-        if day != 1 :
+
+        year, mon, day = tmax_dt.timetuple()[0:3]
+        if day != 1:
             mon += 1
-            if mon==13 :
+            if mon == 13:
                 mon = 1
                 year += 1
         stop_dt = datetime.datetime(year, mon, 1)
         # Average month length:
-        interval = 365.25/12 * 24 * 3600
-    else :
-        # The time scale is between a month and 2 years. A time increment of a year is appropriate
+        interval = 365.25 / 12 * 24 * 3600
+    else:
+        # The time scale is over 2 years. A time increment of six months is appropriate
         start_dt = tmin_dt.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
 
-        (year , mon, day) = tmax_dt.timetuple()[0:3]
-        if day != 1 or mon !=1 :
+        year, mon, day = tmax_dt.timetuple()[0:3]
+        if day != 1 or mon != 1:
             day = 1
             mon = 1
             year += 1
         stop_dt = datetime.datetime(year, mon, 1)
-        # Average year length
-        interval = 365.25 * 24 * 3600
+        # Average length of six months
+        interval = 365.25 * 24 * 3600 / 2.0
 
     # Convert to epoch time stamps
     start_ts = int(time.mktime(start_dt.timetuple()))
-    stop_ts  = int(time.mktime(stop_dt.timetuple()))
+    stop_ts = int(time.mktime(stop_dt.timetuple()))
 
-    return (start_ts, stop_ts, interval)
-    
+    return start_ts, stop_ts, interval
+
 
 class ScaledDraw(object):
     """Like an ImageDraw object, but lines are scaled.
     
     """
+
     def __init__(self, draw, imagebox, scaledbox):
         """Initialize a ScaledDraw object.
         
@@ -361,14 +365,15 @@ class ScaledDraw(object):
         urs = scaledbox[1]
         if urs[1] == lls[1]:
             pass
-        self.xscale =  float(lri[0] - uli[0]) / float(urs[0] - lls[0])
-        self.yscale = -float(lri[1] - uli[1]) / float(urs[1] - lls[1]) 
+        self.xscale = float(lri[0] - uli[0]) / float(urs[0] - lls[0])
+        self.yscale = -float(lri[1] - uli[1]) / float(urs[1] - lls[1])
         self.xoffset = int(lri[0] - urs[0] * self.xscale + 0.5)
         self.yoffset = int(uli[1] - urs[1] * self.yscale + 0.5)
 
-        self.draw    = draw
-        
-    def line(self, x, y, line_type='solid', marker_type=None, marker_size=8, maxdx=None, **options) :
+        self.draw = draw
+
+    def line(self, x, y, line_type='solid', marker_type=None, marker_size=8, maxdx=None,
+             **options):
         """Draw a scaled line on the instance's ImageDraw object.
         
         x: sequence of x coordinates
@@ -391,39 +396,40 @@ class ScaledDraw(object):
         """
         # Break the line up around any nulls or gaps between samples
         for xy_seq in xy_seq_line(x, y, maxdx):
-        # Create a list with the scaled coordinates...
-            xy_seq_scaled = [(self.xtranslate(xc), self.ytranslate(yc)) for (xc,yc) in xy_seq]
+            # Create a list with the scaled coordinates...
+            xy_seq_scaled = [(self.xtranslate(xc), self.ytranslate(yc)) for (xc, yc) in xy_seq]
             if line_type == 'solid':
                 # Now pick the appropriate drawing function, depending on the length of the line:
-                if len(xy_seq) == 1 :
+                if len(xy_seq) == 1:
                     self.draw.point(xy_seq_scaled, fill=options['fill'])
-                else :
+                else:
                     self.draw.line(xy_seq_scaled, **options)
             if marker_type and marker_type.lower().strip() not in ['none', '']:
                 self.marker(xy_seq_scaled, marker_type, marker_size=marker_size, **options)
-        
+
     def marker(self, xy_seq, marker_type, marker_size=10, **options):
-        half_size = marker_size/2
-        marker=marker_type.lower()
+        half_size = marker_size / 2
+        marker = marker_type.lower()
         for x, y in xy_seq:
             if marker == 'cross':
-                self.draw.line([(x-half_size, y), (x+half_size, y)], **options)
-                self.draw.line([(x, y-half_size), (x, y+half_size)], **options)
+                self.draw.line([(x - half_size, y), (x + half_size, y)], **options)
+                self.draw.line([(x, y - half_size), (x, y + half_size)], **options)
             elif marker == 'x':
-                self.draw.line([(x-half_size, y-half_size), (x+half_size, y+half_size)], **options)
-                self.draw.line([(x-half_size, y+half_size), (x+half_size, y-half_size)], **options)
+                self.draw.line([(x - half_size, y - half_size), (x + half_size, y + half_size)],
+                               **options)
+                self.draw.line([(x - half_size, y + half_size), (x + half_size, y - half_size)],
+                               **options)
             elif marker == 'circle':
-                self.draw.ellipse([(x-half_size, y-half_size), 
-                                   (x+half_size, y+half_size)], outline=options['fill'])
+                self.draw.ellipse([(x - half_size, y - half_size),
+                                   (x + half_size, y + half_size)], outline=options['fill'])
             elif marker == 'box':
-                self.draw.line([(x-half_size, y-half_size), 
-                                (x+half_size, y-half_size),
-                                (x+half_size, y+half_size),
-                                (x-half_size, y+half_size),
-                                (x-half_size, y-half_size)], **options)
-                 
-        
-    def rectangle(self, box, **options) :
+                self.draw.line([(x - half_size, y - half_size),
+                                (x + half_size, y - half_size),
+                                (x + half_size, y + half_size),
+                                (x - half_size, y + half_size),
+                                (x - half_size, y - half_size)], **options)
+
+    def rectangle(self, box, **options):
         """Draw a scaled rectangle.
         
         box: A pair of 2-way tuples, containing coordinates of opposing corners
@@ -431,33 +437,34 @@ class ScaledDraw(object):
         
         options: passed on to draw.rectangle. Usually contains 'fill' (the color)
         """
-        box_scaled = [(coord[0]*self.xscale + self.xoffset + 0.5, coord[1]*self.yscale + self.yoffset + 0.5) for coord in box]
+        box_scaled = [(coord[0] * self.xscale + self.xoffset + 0.5,
+                       coord[1] * self.yscale + self.yoffset + 0.5) for coord in box]
         self.draw.rectangle(box_scaled, **options)
-        
+
     def vector(self, x, vec, vector_rotate, **options):
-        
-        if vec is None: 
+
+        if vec is None:
             return
         xstart_scaled = self.xtranslate(x)
         ystart_scaled = self.ytranslate(0)
-        
+
         vecinc_scaled = vec * self.yscale
-        
+
         if vector_rotate:
             vecinc_scaled *= complex(math.cos(math.radians(vector_rotate)),
                                      math.sin(math.radians(vector_rotate)))
-        
+
         # Subtract off the x increment because the x-axis
         # *increases* to the right, unlike y, which increases
         # downwards
         xend_scaled = xstart_scaled - vecinc_scaled.real
         yend_scaled = ystart_scaled + vecinc_scaled.imag
-        
+
         self.draw.line(((xstart_scaled, ystart_scaled), (xend_scaled, yend_scaled)), **options)
 
     def xtranslate(self, x):
         return int(x * self.xscale + self.xoffset + 0.5)
-                   
+
     def ytranslate(self, y):
         return int(y * self.yscale + self.yoffset + 0.5)
 
@@ -509,7 +516,7 @@ def xy_seq_line(x, y, maxdx=None):
     [(0, 0), (1, 10), (2, 20), (3, 30)]
     [(5.1, 50), (6, 60), (7, 70), (8, 80), (9, 90)]
     """
-    
+
     line = []
     last_x = None
     for xy in zip(x, y):
@@ -526,6 +533,7 @@ def xy_seq_line(x, y, maxdx=None):
     if len(line):
         yield line
 
+
 def pickLabelFormat(increment):
     """Pick an appropriate label format for the given increment.
     
@@ -541,15 +549,16 @@ def pickLabelFormat(increment):
     """
 
     i_log = math.log10(increment)
-    if i_log < 0 :
+    if i_log < 0:
         i_log = abs(i_log)
         decimal_places = int(i_log)
-        if i_log != decimal_places :
+        if i_log != decimal_places:
             decimal_places += 1
-    else :
+    else:
         decimal_places = 0
-        
+
     return "%%.%df" % decimal_places
+
 
 def get_font_handle(fontpath, *args):
     """Get a handle for a font path, caching the results"""
@@ -563,21 +572,24 @@ def get_font_handle(fontpath, *args):
         return get_font_handle.fontCache[font_key]
 
     font = None
-    if fontpath_str is not None :
-        try :
+    if fontpath_str is not None:
+        try:
             if fontpath_str.endswith('.ttf'):
                 font = ImageFont.truetype(fontpath_str, *args)
-            else :
+            else:
                 font = ImageFont.load_path(fontpath_str)
-        except IOError :
+        except IOError:
             pass
-    
-    if font is None :
+
+    if font is None:
         font = ImageFont.load_default()
-    if font is not None :
+    if font is not None:
         get_font_handle.fontCache[font_key] = font
-    return font 
-get_font_handle.fontCache={}
+    return font
+
+
+get_font_handle.fontCache = {}
+
 
 def _rel_approx_equal(x, y, rel=1e-7):
     """Relative test for equality.
@@ -598,7 +610,7 @@ def _rel_approx_equal(x, y, rel=1e-7):
     >>> rel_approx_equal(1e8, 1e8+1e-3)
     True
     """
-    return abs(x-y) <= rel*max(abs(x), abs(y))
+    return abs(x - y) <= rel * max(abs(x), abs(y))
 
 
 def tobgr(x):
@@ -612,8 +624,8 @@ def tobgr(x):
         if x.startswith('0x'):
             return int(x, 0)
         try:
-            (r,g,b) = ImageColor.getrgb(x)
-            return r + g*256 + b*256*256
+            r, g, b = ImageColor.getrgb(x)
+            return r + g * 256 + b * 256 * 256
         except ValueError:
             try:
                 return int(x)
@@ -622,9 +634,9 @@ def tobgr(x):
                                  "Colors must be specified as 0xBBGGRR, #RRGGBB, or standard color names." % x)
     return x
 
+
 if __name__ == "__main__":
     import doctest
 
     if not doctest.testmod().failed:
         print("PASSED")
-    

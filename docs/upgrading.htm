@@ -80,7 +80,7 @@
         <div class="logoref">
             <a href='https://weewx.com'> <img src='images/logo-weewx.png' class='logo' style="float:right"
                                              alt="weewx logo"/> </a><br/> <span class='version'>
-Version: 4.4
+Version: 4.5
     </span>
         </div>
         <div class="title">WeeWX Upgrade Guide</div>
@@ -188,16 +188,24 @@ sudo apt-get install weewx</pre>
               Z     : start a shell to examine the situation
          The default action is to keep your current version.
   *** weewx.conf (Y/I/N/O/D/Z) [default=N] ?</pre>
-        <p>Choosing <span class='code'>I</span> (install the new version) will place the previous configuration in <span
-            class='code'>/etc/weewx/weewx.conf.dpkg-old</span> where it can be compared with the new version <span
-            class='code'>/etc/weewx/weewx.conf</span>
+
+        <p>
+            Choosing <span class="code">Y</span> or <span class='code'>I</span> (install the new version) will place
+            your old configuration in <span class='code'>/etc/weewx/weewx.conf.dpkg-old</span>, where it can be compared
+            with the new version in <span class='code'>/etc/weewx/weewx.conf</span>.
         </p>
 
-        <p>Choosing <span class='code'>O</span> (keep the current version) will place the new configuration in <span
-            class='code'>/etc/weewx/weewx.conf.dpkg-new</span> where it can be compared with the old version <span
-            class='code'>/etc/weewx/weewx.conf</span>
+        <p>
+            Choosing <span class="code">N</span> or <span class='code'>O</span> (keep the current version) will place
+            the new configuration in <span class='code'>/etc/weewx/weewx.conf.X.Y.Z</span>, where <span class="code">X.Y.Z</span>
+            is the new version number. It can then be compared with your old version which will be in <span
+            class='code'>/etc/weewx/weewx.conf</span>.
         </p>
 
+        <p class="note">
+            The vast majority of the time you will want to choose <span class="code">N</span> (the default), and keep
+            your old version of <span class="code">weewx.conf</span>.
+        </p>
 
         <h1><a id="Upgrading_using_RPM_package">Upgrading using RPM package</a></h1>
 
@@ -249,6 +257,36 @@ sudo apt-get install weewx</pre>
 
 
         <h1><a id="Instructions_for_specific_versions">Instructions for specific versions</a></h1>
+
+        <h2>Upgrading to V4.5</h2>
+        <p>
+            Version 4.5 changes are unlikely to affect anyone, except extension writers who are deep in the internals of
+            WeeWX.
+        </p>
+
+        <h3>API changes</h3>
+        <p>
+            There have been a number of changes in the WeeWX API. None of them are likely to affect end users. Overall,
+            the biggest change is that the data held internally in class <span class="code">ValueHelper</span> is now
+            held in the target unit system, rather than being converted at time of use.
+        </p>
+
+        <h5>Defaults for <span class="code">ValueHelper</span> have changed</h5>
+        <p>
+            Before, when constructing a new <span class="code">ValueHelper</span>, if no converter was included in the
+            constructor, a default converter, which converts to US Units, was supplied. Now, if no converter is included
+            in the constructor, no default converter at all is supplied, and the data remain in the original units. This
+            is unlikely to affect most extension writers because the usual case is to supply a converter to the <span
+            class="code">ValueHelper</span> constructor.
+        </p>
+
+        <h5>Function <span class="code">as_value_tuple()</span> may raise <span class="code">KeyError</span></h5>
+        <p>
+            Previously, if the function <span class="code">as_value_tuple()</span> was asked to return a
+            <span class="code">ValueTuple</span> of a non-existent type, it returned a <span class="code">ValueTuple</span>
+            with values <span class="code">(None, None, None)</span>. Now it raises a <span class="code">KeyError</span>
+            exception.
+        </p>
 
         <h2>Upgrading to V4.4</h2>
 

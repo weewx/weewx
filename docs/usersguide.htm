@@ -47,7 +47,7 @@
         <div class="logoref">
             <a href='https://weewx.com'> <img src='images/logo-weewx.png' class='logo' style="float:right"
                                              alt="weewx logo"/> </a><br/> <span class='version'>
-Version: 4.4
+Version: 4.5
     </span>
         </div>
         <div class="title">User's Guide to WeeWX</div>
@@ -1028,7 +1028,7 @@ sudo apt install python3-mysqldb</pre>
                 </p>
                 <pre class="tty">mysql&gt; <span
                     class="cmd">CREATE USER 'weewx'@'localhost' IDENTIFIED BY 'weewx';</span>
-mysql&gt; <span class="cmd">GRANT select, update, create, delete, insert, drop ON weewx.* TO weewx@localhost;</span></pre>
+mysql&gt; <span class="cmd">GRANT select, update, create, delete, insert, alter, drop ON weewx.* TO weewx@localhost;</span></pre>
             </li>
         </ol>
 
@@ -1581,7 +1581,7 @@ longitude = -77.0366</pre>
 
         <p class="config_option">tcp_send_delay</p>
 
-        <p>How long to block after sending a socket packet to the WeatherLinkIP. Default is 1 second.</p>
+        <p>How long to block after sending a socket packet to the WeatherLinkIP. Default is 0.5 second.</p>
 
         <p class="config_option">loop_request</p>
 
@@ -2875,6 +2875,18 @@ longitude = -77.0366</pre>
 
         <p>The data binding to be used to store the data. This should match one of the bindings in the <span
             class="code">[DataBindings]</span> section, below. Optional. Default is <span class="code">wx_binding</span>.
+        </p>
+
+        <p class="config_option">log_success</p>
+        <p>
+            Set to <span class="code">True</span> to log successful insertions into the database. Otherwise,
+            <span class="code">False</span>. Default is <span class="code">True</span>.
+        </p>
+
+        <p class="config_option">log_failure</p>
+        <p>
+            Set to <span class="code">True</span> to log unsuccessful insertions into the database. Otherwise,
+            <span class="code">False</span>. Default is <span class="code">True</span>.
         </p>
 
         <h2 class="config_section">[StdTimeSynch]</h2>

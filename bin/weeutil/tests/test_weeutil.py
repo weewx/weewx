@@ -1,6 +1,6 @@
 # This Python file uses the following encoding: utf-8
 #
-#    Copyright (c) 2009-2018 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2021 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -27,6 +27,16 @@ class WeeutilTest(unittest.TestCase):
         self.assertEqual(convertToFloat(['1.0', '2.0', 'None', 'none', '5.0', '6.0']),
                          [1.0, 2.0, None, None, 5.0, 6.0])
         self.assertIsNone(convertToFloat(None))
+
+    def test_rounder(self):
+        self.assertEqual(rounder(1.2345, 2), 1.23)
+        self.assertEqual(rounder(1.2345, 0), 1)
+        self.assertIsInstance(rounder(1.2345, 0), int)
+        self.assertEqual(rounder([1.2345, 6.73848, 4.2901], 2), [1.23, 6.74, 4.29])
+        self.assertEqual(rounder(complex(1.2345, -2.1191), 2), complex(1.23, -2.12))
+        self.assertEqual(rounder([complex(1.2345, -2.1191), complex(5.1921, 11.2092)], 2),
+                         [complex(1.23, -2.12), complex(5.19, 11.21)])
+        self.assertIsNone(rounder(None, 2))
 
     def test_option_as_list(self):
 

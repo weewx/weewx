@@ -95,7 +95,8 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                 # Get the path that the image is going to be saved to:
                 img_file = os.path.join(image_root, '%s.png' % plotname)
 
-                ai = to_int(plot_options.get('aggregate_interval'))
+                # Convert from string to an integer:
+                ai = weeutil.weeutil.nominal_spans(plot_options.get('aggregate_interval'))
                 # Check whether this plot needs to be done at all:
                 if skipThisPlot(plotgen_ts, ai, img_file):
                     continue
@@ -164,7 +165,7 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                     else:
                         try:
                             # Aggregation specified. Get the interval.
-                            aggregate_interval = line_options.as_int('aggregate_interval')
+                            aggregate_interval = weeutil.weeutil.nominal_spans(line_options['aggregate_interval'])
                         except KeyError:
                             log.error("Aggregate interval required for aggregate type %s", aggregate_type)
                             log.error("Line type %s skipped", var_type)
@@ -182,8 +183,8 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                     # Get the type of plot ("bar', 'line', or 'vector')
                     plot_type = line_options.get('plot_type', 'line')
 
-                    if aggregate_type and aggregate_type.lower() in ('avg', 'max', 'min') and plot_type != 'bar':
-                        # Put the point in the middle of the aggregate_interval for these aggregation types
+                    if aggregate_type and plot_type != 'bar':
+                        # If aggregating, put the point in the middle of the interval
                         start_vec_t = ValueTuple([x - aggregate_interval / 2.0 for x in start_vec_t[0]],
                                                  start_vec_t[1], start_vec_t[2])
                         stop_vec_t = ValueTuple([x - aggregate_interval / 2.0 for x in stop_vec_t[0]],
@@ -196,7 +197,7 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
 
                     # Add a unit label. NB: all will get overwritten except the
                     # last. Get the label from the configuration dictionary.
-                    unit_label = line_options.get('y_label', weewx.units.get_label_string(self.formatter, self.converter, var_type))
+                    unit_label = line_options.get('y_label', self.formatter.get_label_string(new_data_vec_t[1]))
                     # Strip off any leading and trailing whitespace so it's
                     # easy to center
                     plot.setUnitLabel(unit_label.strip())
