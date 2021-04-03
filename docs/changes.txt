@@ -1,6 +1,11 @@
 WeeWX change history
 --------------------
 
+4.6.0 MM/DD/YYYY
+Allow options --date, --from, and --to to be used with wee_database --reweight.
+PR #659. Thanks to user edi-x!
+
+
 4.5.1 04/02/2021
 Reverted the wview schema back to the V3 style.
 
