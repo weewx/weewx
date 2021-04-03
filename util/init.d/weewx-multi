@@ -19,7 +19,7 @@
 # for example:
 #
 #   WEEWX_INSTANCES="vantage acurite"
-#   WEEWX_BINDIR=/opt/weewx/bin
+#   WEEWX_BIN=/opt/weewx/bin/weewxd
 #   WEEWX_CFGDIR=/etc/weewx
 
 ### BEGIN INIT INFO
@@ -36,17 +36,18 @@ PATH=/sbin:/usr/sbin:/bin:/usr/bin
 
 WEEWX_INSTANCES="no_instances_specified"
 WEEWX_USER=root:root
-WEEWX_BINDIR=/home/weewx/bin
+WEEWX_BIN=/opt/weewx/bin/weewxd
 WEEWX_CFGDIR=/home/weewx
 
 # Try to keep systemd from screwing everything up
 export SYSTEMCTL_SKIP_REDIRECT=1
 
-# Read configuration variable file if it is present
+# Read configuration variable files if they are present
+[ -r /etc/default/weewx ] && . /etc/default/weewx
 [ -r /etc/default/weewx-multi ] && . /etc/default/weewx-multi
 
 DESC=weewx
-DAEMON=$WEEWX_BINDIR/weewxd
+DAEMON=$WEEWX_BIN
 
 # Exit if the package is not installed
 if [ ! -x "$DAEMON" ]; then
@@ -150,7 +151,7 @@ do_status() {
 count_procs() {
     INSTANCE=$1
     NAME=weewx-$INSTANCE
-    NPROC=`ps ax | grep $DAEMON | grep $NAME.pid | wc -l`
+    NPROC=`ps ax | grep weewxd | grep $NAME.pid | wc -l`
     echo $NPROC
 }
 
@@ -166,11 +167,12 @@ fi
 case "$CMD" in
     start)
         for i in $INSTANCES; do
-	    [ "$VERBOSE" != no ] && log_daemon_msg "Starting $DESC" "$i"
+	    log_daemon_msg "Starting $DESC" "$i"
 	    do_start $i
 	    case "$?" in
-		0|1) [ "$VERBOSE" != no ] && log_end_msg 0 ;;
-		2) [ "$VERBOSE" != no ] && log_end_msg 1 ;;
+		    0) log_end_msg 0; RETVAL=0 ;;
+	      1) log_action_cont_msg " already running" && log_end_msg 0; RETVAL=0 ;;
+	      2) log_end_msg 1; RETVAL=1 ;;
 	    esac
         done
 	;;
@@ -179,8 +181,9 @@ case "$CMD" in
 	    [ "$VERBOSE" != no ] && log_daemon_msg "Stopping $DESC" "$i"
 	    do_stop $i
 	    case "$?" in
-		0|1) [ "$VERBOSE" != no ] && log_end_msg 0 ;;
-		2) [ "$VERBOSE" != no ] && log_end_msg 1 ;;
+		    0) log_end_msg 0; RETVAL=0 ;;
+	      1) log_action_cont_msg " not running" && log_end_msg 0; RETVAL=0 ;;
+	      2) log_end_msg 1; RETVAL=1 ;;
 	    esac
         done
 	;;
