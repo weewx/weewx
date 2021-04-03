@@ -171,8 +171,8 @@ case "$CMD" in
 	    do_start $i
 	    case "$?" in
 		    0) log_end_msg 0; RETVAL=0 ;;
-	      1) log_action_cont_msg " already running" && log_end_msg 0; RETVAL=0 ;;
-	      2) log_end_msg 1; RETVAL=1 ;;
+	        1) log_action_cont_msg " already running" && log_end_msg 0; RETVAL=0 ;;
+	        2) log_end_msg 1; RETVAL=1 ;;
 	    esac
         done
 	;;
@@ -182,8 +182,8 @@ case "$CMD" in
 	    do_stop $i
 	    case "$?" in
 		    0) log_end_msg 0; RETVAL=0 ;;
-	      1) log_action_cont_msg " not running" && log_end_msg 0; RETVAL=0 ;;
-	      2) log_end_msg 1; RETVAL=1 ;;
+	        1) log_action_cont_msg " not running" && log_end_msg 0; RETVAL=0 ;;
+	        2) log_end_msg 1; RETVAL=1 ;;
 	    esac
         done
 	;;
@@ -207,9 +207,9 @@ case "$CMD" in
 	        0|1)
 		    do_start $i
 		    case "$?" in
-			0) log_end_msg 0 ;;
-			1) log_end_msg 1 ;; # Old process is still running
-			*) log_end_msg 1 ;; # Failed to start
+			    0) log_end_msg 0 ;;
+			    1) log_end_msg 1 ;; # Old process is still running
+			    *) log_end_msg 1 ;; # Failed to start
 		    esac
 		    ;;
 	        *)
