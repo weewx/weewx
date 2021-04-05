@@ -4,7 +4,8 @@ WeeWX change history
 4.5.1 04/02/2021
 Reverted the wview schema back to the V3 style.
 
-setup.py keeps the OS environment when running wee_config as a subprocess.
+Fixed problem where setup.py would fail if the station description used UTF-8
+characters.
 
 
 4.5.0 04/02/2021
