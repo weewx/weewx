@@ -278,7 +278,10 @@ def update_and_install_config(install_dir, install_scripts, install_lib, no_prom
         log.info("Command used to invoke wee_config: %s" % args)
 
     # Add the freshly installed WeeWX modules to PYTHONPATH, so wee_config can find them.
-    os.environ['PYTHONPATH'] = install_lib
+    if 'PYTHONPATH' in os.environ:
+        os.environ['PYTHONPATH'] = install_lib + os.pathsep + os.environ['PYTHONPATH']
+    else:
+        os.environ['PYTHONPATH'] = install_lib
     # Run wee_config in a subprocess.
     proc = subprocess.Popen(args,
                             stdin=sys.stdin,
