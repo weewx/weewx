@@ -44,7 +44,7 @@
         <div class="logoref">
             <a href='https://weewx.com'> <img src='images/logo-weewx.png' class='logo' style="float:right"
                                              alt="weewx logo"/> </a><br/> <span class='version'>
-Version: 4.4
+Version: 4.5
     </span>
         </div>
         <div class="title">WeeWX Customization Guide</div>
@@ -893,8 +893,11 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
 [StdReport]
     ...
 
-    [[LifeA]]
+    [[SeasonsA]]
         skin = Seasons
+
+    [[LifeA]]
+        skin = Life
 
     [[LifeB]]
         skin = Life
@@ -914,6 +917,11 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
                 <td>Label for <span class="code">outTemp</span></td>
             </tr>
             <tr>
+                <td>SeasonsA</td>
+                <td>Inside Temperature</td>
+                <td>Outside Temperature</td>
+            </tr>
+            <tr>
                 <td>LifeA</td>
                 <td>Inside Temperature</td>
                 <td>Exterior Temperature</td>
@@ -928,7 +936,11 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
         <p>
             Note how the values specified for <span class="code">inTemp</span> are not overridden anywhere, so the value
             specified in <span class="code">weewx/defaults.py</span>, that is, <span
-            class="code">Inside Temperature</span>, is used. By contrast, a value for <span class="code">outTemp</span>
+            class="code">Inside Temperature</span>, is used for all reports.</p>
+        <p>
+            The value for <span class="code">outTemp</span> is not overridden for report <span class="code">SeasonsA</span>,
+            so it uses the label specified in <span class="code">weewx/defaults.py</span>, that is, <span class="code">Outside Temperature</span>.
+            By contrast, for the "Life" reports, a value for <span class="code">outTemp</span>
             was specified in the skin so, in the absence of any user override, its value, <span class="code">Exterior
             Temperature</span> will be used as the new default. Finally, for the report <span class="code">LifeB</span>,
             the user <em>has</em> specified an override for <span class="code">outTemp</span>, so that value,
@@ -949,8 +961,11 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
             [[[[Generic]]]]
                 outTemp = Shed Temperature</span>
 
-    [[LifeA]]
+    [[SeasonsA]]
         skin = Seasons
+
+    [[LifeA]]
+        skin = Life
 
     [[LifeB]]
         skin = Life
@@ -970,6 +985,11 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
                 <td>Report</td>
                 <td>Label for <span class="code">inTemp</span></td>
                 <td>Label for <span class="code">outTemp</span></td>
+            </tr>
+            <tr>
+                <td>SeasonsA</td>
+                <td>Inside Temperature</td>
+                <td>Shed Temperature</td>
             </tr>
             <tr>
                 <td>LifeA</td>
@@ -1867,7 +1887,7 @@ $month.outTemp.max</pre>
             record in the database will be searched.
         </p>
         <p>The most general tag for a "current" observation looks like:</p>
-        <pre class="tty">$current($timestamp=<em>some_time</em>, $max_delta=<em>delta_t</em>,$data_binding=<em>binding_name</em>).<em>obstype</em>[.<em>optional_unit_conversion</em>][.<em>optional_formatting</em>]</pre>
+        <pre class="tty">$current($timestamp=<em>some_time</em>, $max_delta=<em>delta_t</em>,$data_binding=<em>binding_name</em>).<em>obstype</em>[.<em>optional_unit_conversion</em>][.<em>optional_rounding</em>][.<em>optional_formatting</em>]</pre>
         <p>Where:</p>
 
         <p class="indent">
@@ -1898,12 +1918,17 @@ $month.outTemp.max</pre>
             <span class="code">optional_unit_conversion</span> is an optional unit conversion tag. If provided, the
             results will be converted into the specified units, otherwise the default units specified in the skin
             configuration file (in section <span class="code">[Units][[Groups]]</span>) will be used. See the section
-            <em><a href="#unit_conversion_options">Unit Conversion Options</a></em>.
+            <em><a href="#unit_conversion_options">Unit conversion options</a></em>.
+        </p>
+
+        <p class="indent">
+            <span class="code">optional_rounding</span> allows the results to be rounded to a fixed number of decimal
+            digits. See the section <em><a href="#optional_rounding">Optional rounding</a></em>
         </p>
 
         <p class="indent">
             <span class="code">optional_formatting</span> is a set of optional formatting tags, which control how the
-            value will appear. See the section <em><a href="#formatting_options">Formatting Options</a></em> below.
+            value will appear. See the section <em><a href="#formatting_options">Formatting options</a></em> below.
         </p>
 
         <h3>
@@ -1930,7 +1955,7 @@ $month.outTemp.max</pre>
 
         <p>The most general tag for an aggregation over time looks like:</p>
         <pre
-            class="tty">$<em>period</em>($data_binding=<em>binding_name</em>, <em>$optional_ago</em>=<em>delta</em>).<em>statstype</em>.<em>aggregation</em>[.<em>optional_unit_conversion</em>][.<em>optional_formatting</em>]</pre>
+            class="tty">$<em>period</em>($data_binding=<em>binding_name</em>, <em>$optional_ago</em>=<em>delta</em>).<em>statstype</em>.<em>aggregation</em>[.<em>optional_unit_conversion</em>][.<em>optional_rounding</em>][.<em>optional_formatting</em>]</pre>
         <p>Where:</p>
 
         <p class="indent">
@@ -1974,6 +1999,11 @@ $month.outTemp.max</pre>
             results will be converted into the specified units, otherwise the default units specified in the skin
             configuration file (in section <span class="code">[Units][[Groups]]</span>) will be used. See the section
             <em><a href="#unit_conversion_options">Unit Conversion Options</a></em>.
+        </p>
+
+        <p class="indent">
+            <span class="code">optional_rounding</span> allows the results to be rounded to a fixed number of decimal
+            digits. See the section <em><a href="#optional_rounding">Optional rounding</a></em>
         </p>
 
         <p class="indent">
@@ -2130,6 +2160,22 @@ or in foobar units: $day.barometer.min.foobar
             foobar units: $day.barometer.min.foobar
         </p>
 
+        <h3 id="optional_rounding">Optional rounding</h3>
+        <p>
+            The data in the resultant tag can be optionally rounded to a fixed number of decimal digits. This is useful
+            when emitting raw data or JSON strings. It should <em>not</em> be used with formatted data (using a
+            <a href="#format_string">format string</a> would be a better choice).
+        </p>
+        <p>
+            The structure of the tag is
+        </p>
+        <pre class="tty">.round(ndigits=None)</pre>
+        <p>where</p>
+        <p class="indent">
+            <span class="code">ndigits</span> is the number of decimal digits to retain. If
+            <span class="code">None</span> (the default), then all digits will be retained.
+        </p>
+
         <h3 id="formatting_options">Formatting options</h3>
 
         <p>
@@ -2145,17 +2191,24 @@ or in foobar units: $day.barometer.min.foobar
             </tr>
             <tr>
                 <td class="code text_highlight">.format(<em>args</em>)</td>
-                <td>Format the string according to a set of optional <em>args</em> (see below).</td>
+                <td>Format the value as a string, according to a set of optional <em>args</em> (see below).</td>
             </tr>
             <tr>
                 <td class="code text_highlight">.ordinal_compass</td>
-                <td>Output compass ordinals for wind direction (<i>e.g.</i>"SW"). The ordinal abbreviations are set by
-                    option <span class="code">directions</span> in the skin configuration file <span class="code">skin.conf</span>.
+                <td>Format the value as a compass ordinals (<i>e.g.</i>"SW"), useful for wind directions.
+                    The ordinal abbreviations are set by option <span class="code">directions</span> in the skin
+                    configuration file <span class="code">skin.conf</span>.
+                </td>
+            </tr>
+            <tr>
+                <td class="code text_highlight">.json</td>
+                <td>
+                    Format the value as a <a href="https://www.json.org/json-en.html">JSON string</a>.
                 </td>
             </tr>
             <tr>
                 <td class="code text_highlight">.raw</td>
-                <td>Value is returned "as is" without being converted to a string and without any formatting applied.
+                <td>Return the value "as is", without being converted to a string and without any formatting applied.
                     This can be useful for doing arithmetic directly within the templates. You must be prepared to deal
                     with a potential <span class="code">None</span> value.
                 </td>
@@ -2163,7 +2216,7 @@ or in foobar units: $day.barometer.min.foobar
             </tbody>
         </table>
 
-        <p>The first of these tags has the formal structure:</p>
+        <p>The first of these tags (<span class="code">.format()</span>) has the formal structure:</p>
         <pre class="tty">.format(format_string=None, None_string=None, add_label=True, localize=True)</pre>
 
         <p>Here is the meaning of each of the optional arguments:</p>
@@ -2176,7 +2229,7 @@ or in foobar units: $day.barometer.min.foobar
                 <td>Comment</td>
             </tr>
             <tr>
-                <td class='code text_highlight'>format_string</td>
+                <td id="format_string" class='code text_highlight'>format_string</td>
                 <td>Use the optional string to format the value. If set to <span class="code">None</span>, then an
                     appropriate string format from <span class="code">skin.conf</span> will be used.
                 </td>
@@ -2252,12 +2305,15 @@ or in foobar units: $day.barometer.min.foobar
             <tr class="first_row">
                 <td>Tag</td>
                 <td>Result</td>
+                <td>Result<br/>type</td>
                 <td>Comment</td>
             </tr>
             <tr>
                 <td class="code first_col">$current.outTemp</td>
                 <td class="code">45.2°F</td>
-                <td>String formatting from <span class="code"><a
+                <td class="code">str</td>
+                <td>
+                    String formatting from <span class="code"><a
                     href="#Units_StringFormats">[Units][[StringFormats]]</a></span>. Label from <span class="code"><a
                     href="#Units_Labels">[Units][[Labels]]</a></span>.
                 </td>
@@ -2265,85 +2321,141 @@ or in foobar units: $day.barometer.min.foobar
             <tr>
                 <td class="code first_col">$current.outTemp.format</td>
                 <td class="code">45.2°F</td>
-                <td>Same as the <span class="code">$current.outTemp</span>.</td>
+                <td class="code">str</td>
+                <td>
+                    Same as the <span class="code">$current.outTemp</span>.
+                </td>
             </tr>
             <tr>
                 <td class="code first_col">$current.outTemp.format()</td>
                 <td class="code">45.2°F</td>
-                <td>Same as the <span class="code">$current.outTemp</span>.</td>
+                <td class="code">str</td>
+                <td>
+                    Same as the <span class="code">$current.outTemp</span>.
+                </td>
             </tr>
             <tr>
                 <td class="code first_col">$current.outTemp.format(format_string="%.3f")</td>
                 <td class="code">45.200°F</td>
-                <td>Specified string format used; label from <span class="code"><a href="#Units_Labels">[Units][[Labels]]</a></span>.
+                <td class="code">str</td>
+                <td>
+                    Specified string format used; label from <span class="code"><a href="#Units_Labels">[Units][[Labels]]</a></span>.
                 </td>
             </tr>
             <tr>
                 <td class="code first_col">$current.outTemp.format("%.3f")</td>
                 <td class="code">45.200°F</td>
-                <td>As above, except a positional argument, instead of the named argument, is being used.
+                <td class="code">str</td>
+                <td>
+                    As above, except a positional argument, instead of the named argument, is being used.
                 </td>
             </tr>
             <tr>
                 <td class="code first_col">$current.outTemp.format(add_label=False)</td>
                 <td class="code">45.2</td>
-                <td>No label. The string formatting is from <span class="code"><a href="#Units_StringFormats">[Units][[StringFormats]]</a></span>.
+                <td class="code">str</td>
+                <td>
+                    No label. The string formatting is from <span class="code"><a href="#Units_StringFormats">[Units][[StringFormats]]</a></span>.
                 </td>
             </tr>
             <tr>
                 <td class="code first_col">$current.UV</td>
                 <td class="code">N/A</td>
-                <td>The string specified by option <span class="code">NONE</span> in <span class="code"> <a
+                <td class="code">str</td>
+                <td>
+                    The string specified by option <span class="code">NONE</span> in <span class="code"> <a
                     href="#Units_StringFormats">[Units][[StringFormats]]</a></span>.
                 </td>
             </tr>
             <tr>
                 <td class="code first_col">$current.UV.format(None_string="No UV")</td>
                 <td class="code">No UV</td>
-                <td>Specified <span class="code">None_string</span> is used.
+                <td class="code">str</td>
+                <td>
+                    Specified <span class="code">None_string</span> is used.
                 </td>
             </tr>
             <tr>
                 <td class="code first_col">$current.windDir</td>
                 <td class="code">138&deg;</td>
-                <td>Formatting is from option <span class="code">degree_compass</span> in <span class="code"> <a
+                <td class="code">str</td>
+                <td>
+                    Formatting is from option <span class="code">degree_compass</span> in <span class="code"> <a
                     href="#Units_StringFormats">[Units][[StringFormats]]</a></span>.
                 </td>
             </tr>
             <tr>
                 <td class="code first_col">$current.windDir.ordinal_compass</td>
                 <td class="code">SW</td>
-                <td>Ordinal direction from section <span class="code"><a
+                <td class="code">str</td>
+                <td>
+                    Ordinal direction from section <span class="code"><a
                     href="#Units_Ordinates">[Units][[Ordinates]]</a></span> is being substituted.
                 </td>
             </tr>
             <tr>
                 <td class="code first_col">$current.dateTime</td>
                 <td class="code">02-Apr-2010 16:25</td>
-                <td>Time formatting from <span class="code"><a
+                <td class="code">str</td>
+                <td>
+                    Time formatting from <span class="code"><a
                     href="#Units_TimeFormats">[Units][[TimeFormats]]</a></span> is being used.
                 </td>
             </tr>
             <tr>
                 <td class="code first_col">$current.dateTime.format(format_string="%H:%M")</td>
                 <td class="code">16:25</td>
-                <td>Specified time format used.</td>
+                <td class="code">str</td>
+                <td>
+                    Specified time format used.
+                </td>
             </tr>
             <tr>
                 <td class="code first_col">$current.dateTime.format("%H:%M")</td>
                 <td class="code">16:25</td>
-                <td>As above, except a positional argument, instead of the named argument, is being used.</td>
+                <td class="code">str</td>
+                <td>
+                    As above, except a positional argument, instead of the named argument, is being used.
+                </td>
             </tr>
             <tr>
                 <td class="code first_col">$current.dateTime.raw</td>
                 <td class="code">1270250700</td>
-                <td>Raw Unix epoch time (which is converted to a string by the template engine).
+                <td class="code">int</td>
+                <td>
+                    Raw Unix epoch time. The result is an <em>integer</em>.
                 </td>
             </tr>
             <tr>
                 <td class="code first_col">$current.outTemp.raw</td>
                 <td class="code">45.2</td>
-                <td>Raw float value (which is converted to a string by the template engine).
+                <td class="code">float</td>
+                <td>
+                    Raw float value. The result is a <em>float</em>.
+                </td>
+            </tr>
+            <tr>
+                <td class="code first_col">$current.outTemp.degree_C.raw</td>
+                <td class="code">7.33333333</td>
+                <td class="code">float</td>
+                <td>
+                    Raw float value in degrees Celsius. The result is a <em>float</em>.
+                </td>
+            </tr>
+            <tr>
+                <td class="code first_col">$current.outTemp.degree_C.json</td>
+                <td class="code">7.33333333</td>
+                <td class="code">str</td>
+                <td>
+                    Value in degrees Celsius, converted to a JSON string.
+                </td>
+            </tr>
+            <tr>
+                <td class="code first_col">$current.outTemp.degree_C.round(2).json</td>
+                <td class="code">7.33</td>
+                <td class="code">str</td>
+                <td>
+                    Value in degrees Celsius, rounded to two decimal digits, then converted to a JSON string.
                 </td>
             </tr>
             </tbody>
@@ -2493,12 +2605,12 @@ or in foobar units: $day.barometer.min.foobar
 
         <p class="indent">
             <span class="code">optional_unit_conversion</span> is an optional unit conversion tag. See the section
-            <em><a href="#unit_conversion_options"> Unit Conversion Options</a></em>.
+            <em><a href="#unit_conversion_options"> Unit conversion options</a></em>.
         </p>
 
         <p class="indent">
             <span class="code">optional_formatting</span> is an optional formatting tag that controls how the value will
-            appear. See the section <em><a href="#formatting_options">Formatting Options</a></em>.
+            appear. See the section <em><a href="#formatting_options">Formatting options</a></em>.
         </p>
         <p>There are several different delta settings that can be used:</p>
         <table class="indent">
@@ -2747,7 +2859,8 @@ $month.dateTime.format("%B"): Min, max temperatures: $month.outTemp.min $month.o
         <h3>Comprehensive example</h3>
         <p>
             This example is designed to put together a lot of the elements described above, including iteration,
-            aggregation period starts and ends, formatting, and overriding units.
+            aggregation period starts and ends, formatting, and overriding units. <a href="examples/tag.htm">Click
+            here</a> for the results.
         </p>
 
         <pre class="tty">
@@ -2782,7 +2895,38 @@ $month.dateTime.format("%B"): Min, max temperatures: $month.outTemp.min $month.o
   &lt;/body&gt;
 &lt;/html&gt;
 </pre>
-        <p><a href="examples/tag.htm">Click here</a> for the results.</p>
+        <h3>Support for series</h3>
+        <p class="warning">
+            This is an experimental API that could change.
+        </p>
+        <p>
+            WeeWX V4.5 introduces some experimental tags for producing <em>series</em> of data, possibly aggregated.
+            This can be useful for
+            creating the JSON data needed for JavaScript plotting packages, such
+            as <a href="https://www.highcharts.com/">HighCharts</a>,
+            <a href="https://developers.google.com/chart">Google Charts</a>,
+            or <a href="https://c3js.org/">C3.js</a>.
+        </p>
+        <p>
+            For example, suppose you need the maximum temperature for each day of the month. This tag
+        </p>
+        <pre>
+$month.outTemp.series(aggregate_type='max', aggregate_interval='day', time_series='start').json
+        </pre>
+        <p>
+            would produce the following:
+        </p>
+        <pre>
+[[1614585600, 58.2], [1614672000, 55.8], [1614758400, 59.6], [1614844800, 57.8], ... ]
+        </pre>
+        <p>
+            This is a list of (time, temperature) for each day of the month, in JSON, easily consumed by many of these
+            plotting packages.
+        </p>
+        <p>
+            Many other combinations are possible. See the Wiki article
+            <a href="https://github.com/weewx/weewx/wiki/Tags-for-series"><em>Tags for series</em></a>.
+        </p>
 
         <h2>Almanac</h2>
 
@@ -3625,7 +3769,7 @@ class MyStats(SearchList):                                                   # 1
             yscale = None, None, 0.02
             [[[[rain]]]]
                 aggregate_type = sum
-                aggregate_interval = 86400
+                aggregate_interval = day
                 label = Rain (daily total)</pre>
         <p>
             This will generate an image file with name <span class="code">monthrain.png</span>. It will be a bar plot.
@@ -3685,7 +3829,7 @@ class MyStats(SearchList):                                                   # 1
 [[[daytemp_with_avg]]]
     [[[[outTemp]]]]
         aggregate_type = avg
-        aggregate_interval = 3600
+        aggregate_interval = hour
     <span style="text-decoration: line-through; color: red">[[[[outTemp]]]]</span>  # OOPS! The same section name appears more than once!</pre>
         <p>
             The option parser does not allow the same section name (<span class="code">outTemp</span> in this case) to
@@ -3699,7 +3843,7 @@ class MyStats(SearchList):                                                   # 1
     [[[[avgTemp]]]]
         data_type = outTemp
         aggregate_type = avg
-        aggregate_interval = 3600
+        aggregate_interval = hour
         label = Avg. Temp.
     [[[[outTemp]]]]</pre>
         <p>
@@ -3773,7 +3917,7 @@ class MyStats(SearchList):                                                   # 1
             vector for one week that shows the hourly biggest wind gusts, along with hourly averages:
         </p>
         <pre class="tty">[[[weekgustoverlay]]]
-    aggregate_interval = 3600
+    aggregate_interval = hour
     [[[[windvec]]]]
         label = Hourly Wind
         plot_type = vector
@@ -4656,174 +4800,215 @@ class AddElectricity(StdService):
 
         <h1 id="archive_database">Customizing the database</h1>
 
-        <p>For most users the default database will work just fine. However, there may be occasions
-            where you may want to add a new SQL type to your database, or change its unit system.
-            This section shows you how to do this.
+        <p>
+            For most users the database defaults will work just fine. However, there may be occasions when you may want
+            to add a new observation type to your database, or change its unit system. This section shows you how to do
+            this.
         </p>
 
-        <h2 id="add_archive_type">Adding a new type to the database</h2>
+        <h2>The schema</h2>
+        <p>
+            Every relational database depends on a <em>schema</em> to specify which types to include in the database.
+            When a WeeWX database is first created, it uses a Python version of the schema to initialize the database.
+            However, once the database has been created, the schema is read directly from the database and the Python
+            version is not used again &mdash; any changes to it will have no affect. This means that the strategy for
+            modifying the schema depends on whether or not the database already exists.
+        </p>
+
+        <h3>Picking a starting schema</h3>
+        <p>
+            WeeWX gives you a choice of three different schemas to choose from when creating a new database:
+        </p>
+        <table class="indent">
+            <tbody>
+            <tr class="first_row">
+                <td>Name</td>
+                <td>Number of observation types</td>
+                <td>Comment</td>
+            </tr>
+            <tr>
+                <td class="code">schemas.wview</td>
+                <td>49</td>
+                <td>The original schema that came with wview.</td>
+            </tr>
+            <tr>
+                <td class="code">schemas.wview_extended</td>
+                <td>111</td>
+                <td>A version of the wview schema, which has been extended with many new types. This is the default
+                version.</td>
+            </tr>
+            <tr>
+                <td class="code">schemas.wview_small</td>
+                <td>20</td>
+                <td>A minimalist version of the wview schema. </td>
+            </tr>
+            </tbody>
+        </table>
 
         <p>
-            It is not unusual to have observation types that exist in the loop packets and/or archive records, but are
-            not in the database schema. An example is the new observation type <span class="code">electricity</span>,
-            from the example, <a href="#Adding_2nd_source"><em>Adding a second data source</em></a>. If a type is not in
-            the database schema, then it will be a second class citizen in WeeWX's world: it cannot be used in a plot,
-            nor for most statistics. So how would you add such a type to the database schema?
+            For most users, the default database schema, <span class="code">schemas.wview_extended</span>, will work
+            just fine.
         </p>
 
         <p>
-            The utility <a href="utilities.htm#wee_database_utility"><span class="code">wee_database</span></a> can do
-            this. It will create a new database that is similar to the old database, except it will have the new type in
-            its schema.
+            To specify which schema to use when creating a database, modify option <span class="code">schema</span> in
+            section <span class="code">[DataBindings]</span> in <span class="code">weewx.conf</span>. For example,
+            suppose you wanted to use the classic (and smaller) schema <span class="code">schemas.wview</span>
+            instead of the default <span class="code">schemas.wview_extended</span>. Then the section <span
+            class="code">[DataBindings]</span> would look like:
         </p>
 
-        <p class="note" style="display: inline-block; width: 70%">
-            <strong>Note</strong><br/>It is possible to observe all of the observation types included in the loop
-            packets and archive records, whether or not they are stored in the database, by <a
-            href="usersguide.htm#Running_directly">running WeeWX directly</a>.
-        </p>
-
-        <p>Here's our general strategy:</p>
-        <ol>
-            <li>Extend the existing schema with the new type.
-            </li>
-            <li>Modify the <span class="code">wx_binding</span> to use the new schema instead of the old.
-            </li>
-            <li>Make sure you have the necessary permissions to create a new database.
-            </li>
-            <li>Use the utility <span class="code">wee_database</span> to create the new database and populate it with
-                data from the old database.
-            </li>
-            <li>Shuffle databases around so WeeWX will use the new database.
-            </li>
-        </ol>
-        <p>Here is the recipe that follows that strategy:</p>
-        <ol>
-            <li>
-                <p>
-                    <strong>Extend the existing schema with the new type.</strong> The schema that
-                    comes with WeeWX is a superset of the schema that the weather program
-                    <em>wview</em> uses. It's located in the file <span
-                    class="code">schemas/wview_extended.py</span> &mdash; take a look at it now. We
-                    could just modify it <em>in situ</em>, but that would run the risk of confusing
-                    the two versions. Besides, our changes would get lost at the next upgrade.
-                    Alternatively, we could copy the file over to a new location, and then modify
-                    that. But, because our change is just a simple addition, we're going to import
-                    the old schema, then just add on our new type.
-                </p>
-                <p>
-                    For this example, we are going to add a few lines of code to the bottom of the file <span
-                    class="code">user/electricity.py</span>:
-                </p>
-                <pre class="tty">import schemas.wview_extended
-
-schema_with_electricity = {
-    'table': schemas.wview_extended.table + [('electricity', 'REAL')],
-    'day_summaries' : schemas.wview_extended.day_summaries + [('electricity', 'SCALAR')]
-}
-</pre>
-                <p>
-                    This creates a new schema with the name <span
-                    class="code">user.electricity.schema_with_electricity</span>, which is just
-                    like the old one, except it has a new type, <span
-                    class="code">electricity</span>, tacked on to the end of both the main archive
-                    table, and the daily summaries. Its schema type is REAL. Its corresponding
-                    daily summary will treat it as a SCALAR.
-                </p>
-            <li>
-                <p>
-                    <strong>Modify <span class="code">wx_binding</span>.</strong> When it creates the new, modified
-                    database, <span class="code">wee_database</span> needs to know to use your new schema instead of the
-                    old, wview schema. You do this by changing the option <span class="code">schema</span> in section
-                    <span class="code">[DataBindings]</span> in <span class="code">weewx.conf</span>.
-                </p>
-                <p>
-                    The <span class="code">[DataBindings]</span> section now looks like this:
-                </p>
-
-                <pre class="tty">[DataBindings]
+        <pre class="tty">[DataBindings]
     [[wx_binding]]
         database = archive_sqlite
         table_name = archive
         manager = weewx.manager.DaySummaryManager
-        <span class="highlight">schema = user.electricity.schema_with_electricity</span></pre>
-            </li>
-
-            <li>
-                <p>
-                    <strong>Check permissions.</strong> <span class="code">wee_database</span> will create a new
-                    database with the same name as the old, except with the suffix <span class="code">_new</span>
-                    attached to the end. Make sure you have the necessary permissions to create it. In particular, if
-                    you are using MySQL, you will need <span class="code">CREATE</span> privileges:
-                </p>
-                <pre class="tty">mysql&gt; <span class="cmd">GRANT select, update, create, delete, insert ON weewx_new.* TO weewx@localhost;</span></pre>
-            </li>
-            <li>
-                <p>
-                    <strong>Create and populate the new database.</strong> Now run the utility <span class="code">wee_database</span>
-                    with the <span class="code">--reconfigure</span> option and the path to the configuration file:
-                </p>
-
-                <p class="tty cmd">wee_database weewx.conf --reconfigure</p>
-
-                <p>
-                    This will create a new database (nominally, <span class="code">weewx.sdb_new</span> if you are using
-                    SQLite, <span class="code">weewx_new</span> if you are using MySQL) using the new schema and
-                    populate it with data from the old database.
-                </p>
-            </li>
-            <li>
-                <p>
-                    <strong>Shuffle the databases.</strong> Now arrange things so WeeWX can find the new database.
-                </p>
-
-                <p class="warning">
-                    <strong>Warning!</strong><br/> Make a backup of the data before doing any of the next steps!
-                </p>
-
-                <p>
-                    You can either shuffle the databases around so the new database has the same name as the old
-                    database, or edit <span class="code">weewx.conf</span> to use the new database name. To do the
-                    former:
-                </p>
-
-                <p>For SQLite:</p>
-                <pre class="tty cmd">cd <span class="symcode">SQLITE_ROOT</span>
-mv weewx.sdb_new weewx.sdb</pre>
-                <p>For MySQL:</p>
-                <pre class="tty"><span class="cmd">mysql -u &lt;username&gt; --password=&lt;mypassword&gt;</span>
-mysql&gt;<span class="cmd"> DROP DATABASE weewx;</span>                             # Delete the old database
-mysql&gt;<span class="cmd"> CREATE DATABASE weewx;</span>                           # Create a new one with the same name
-mysql&gt;<span class="cmd"> RENAME TABLE weewx_new.archive TO weewx.archive;</span> # Rename to the nominal name</pre>
-            </li>
-            <li>
-                <p>
-                    It's worth noting that there's actually a hidden, last step: rebuilding the daily summaries inside
-                    the new database. This will be done automatically by WeeWX at the next startup. Alternatively, it
-                    can be done manually using the <a href="utilities.htm#wee_database_utility"><span class="code">wee_database</span></a>
-                    utility and the <span class="code">--rebuild-daily</span> option:
-                </p>
-                <pre class="tty cmd">wee_database weewx.conf --rebuild-daily</pre>
-            </li>
-        </ol>
-
-
-        <h2 id="Changing_the_unit_system">Changing the database unit system</h2>
+        <span class="highlight">schema = schemas.wview</span></pre>
 
         <p>
-            Normally, data are stored in the databases using US Customary units and, normally, you don't care; it is an
-            "implementation detail". Data can always be displayed using any set of units you want. The section <a
-            href="#how_to_change_units"><em>How to change units</em></a> explains how to do this. Nevertheless, there
-            may be special situations where you wish to store the data in Metric units. For example, you may need to
-            allow direct programmatic access to the database from another piece of software that expects metric units.
+            Now, when you start WeeWX, it will use this new choice instead of the default.
+        </p>
+        <p class="note">
+            NOTE: This only works when the database is <em>first created</em>. Thereafter, WeeWX reads the schema
+            directly from the database. Changing this option will have no effect!
+        </p>
+
+        <h3>Modifying a starting schema</h3>
+
+        <p>
+            If none of the three starting schemas that come with WeeWX suits your purposes, you can easily create your
+            own. Just pick one of the three schemas as a starting point, then modify it. Put the results in the <span
+            class="code">user</span> subdirectory, where it will be safe from upgrades. For example, suppose you like
+            the <span class="code">schemas.wview_small</span> schema, but you need to store the type <span
+            class="code">electricity</span> from the example <a href="#Adding_2nd_source"><em>Adding a second data
+            source</em></a> above. The type <span class="code">electricity</span> does not appear in the schema, so
+            you'll have to add it before starting up WeeWX. We will call the resulting new schema
+            <span class="code">user.myschema</span>.
+        </p>
+        <p>
+            If you did a Debian install, here's how you would do this:
+        </p>
+        <pre class="tty"># Copy the wview_small schema over to the user subdirectory and rename it myschema:
+<span class="cmd">sudo cp /usr/share/weewx/schemas/wview_small.py /usr/share/weewx/user/myschema.py</span>
+
+# Edit it using your favorite text editor
+<span class="cmd">sudo nano /usr/share/weewx/user/myschema.py</span>
+</pre>
+
+        <p>If you did a <span class="code">setup.py</span> install, it would look like this:</p>
+        <pre class="tty"># Copy the wview_small schema over to the user subdirectory and rename it myschema:
+<span class="cmd">cp /home/weewx/bin/schemas/wview_small.py /home/weewx/bin/user/myschema.py</span>
+
+# Edit it using your favorite text editor
+<span class="cmd">nano /home/weewx/bin/user/myschema.py</span>
+</pre>
+
+        <p>In <span class="code">myschema.py</span> change this:</p>
+        <pre class="tty">         ...
+         ('windchill',            'REAL'),
+         ('windDir',              'REAL'),
+         ('windGust',             'REAL'),
+         ('windGustDir',          'REAL'),
+         ('windSpeed',            'REAL'),
+         ]
+</pre>
+        <p>to this</p>
+        <pre class="tty">         ...
+         ('windchill',            'REAL'),
+         ('windDir',              'REAL'),
+         ('windGust',             'REAL'),
+         ('windGustDir',          'REAL'),
+         ('windSpeed',            'REAL'),
+         <span class="highlight">('electricity',          'REAL'),</span>
+         ]
+</pre>
+        <p>
+            The only change was the addition (<span class="highlight">highlighted</span>) of <span
+            class="code">electricity</span> to the list of observation names.
         </p>
 
         <p>
-            You should not change the database unit system midstream. That is, do not start with one unit system then,
-            in the middle of the database, switch to another. See the section <span class="code"> <a
-            href="usersguide.htm#StdConvert">[StdConvert]</a></span> in the WeeWX User's Guide. However, you can
-            reconfigure the database by copying it to a new database, performing the unit conversion along the way. You
-            then use this new database.
+            Now change option <span class="code">schema</span> under <span class="code">[DataBindings]</span> in
+            <span class="code">weewx.conf</span> to use your new schema:
+        </p>
+        <pre class="tty">[DataBindings]
+    [[wx_binding]]
+        database = archive_sqlite
+        table_name = archive
+        manager = weewx.manager.DaySummaryManager
+        <span class="highlight">schema = user.myschema</span></pre>
+
+        <p>
+            Start WeeWX. When the new database is created, it will use your modified schema instead of the default.
+        </p>
+        <p class="note">
+            NOTE: This will only work when the database is first created! Thereafter, WeeWX reads the schema directly
+            from the database and your changes will have no effect!
+        </p>
+
+
+        <h2>Modifying an existing database</h2>
+
+        <p>
+            Suppose the database has already been created and you want to add or remove types? How would you do this?
+            Modifying or changing the Python version of the schema will not work, because it is only used when the
+            database is fist created. Here is where the tool <a href="utilities.htm#wee_database_utility"><span
+            class="code">wee_database</span></a> can be useful. Be sure to stop WeeWX before attempting to use it.
+        </p>
+
+        <p class="warning">
+            NOTE: Before using the tool <span class="code">wee_database</span>, MAKE A BACKUP FIRST!
+        </p>
+
+        <h3 id="add_archive_type">Adding a new type to an existing database</h3>
+
+        <p>
+            Here's how you would add the observation type <span class="code">electricity</span> (from the example <a
+            href="#Adding_2nd_source"><em>Adding a second data source</em></a>) to an existing database by using <span
+            class="code">wee_database</span>:
+        </p>
+        <pre class="tty cmd">wee_database --add-column=electricity</pre>
+        <p>
+            The tool not only adds <span class="code">electricity</span> to the main archive table, but also to the
+            daily summaries.
+        </p>
+
+        <h3 id="remove_archive_type">Removing types from an existing database</h3>
+        <p>
+            In a similar manner, the tool can remove any unneeded types from an existing database. For example,
+            suppose you are using the <span class="code">schemas.wview</span> schema, but you're pretty sure you're not
+            going to need to store soil moisture. You can drop the unnecessary types this way:
+        </p>
+    <pre class="tty cmd">wee_database --drop-columns=soilMoist1,soilMoist2,soilMoist3,soilMoist4</pre>
+        <p>
+            Unlike the option <span class="code">--add-column</span>, in the interests of efficiency, the option <span
+            class="code">--drop-columns</span> can take more than one type. Adding new columns is easy and fast with the
+            SQLite database, but dropping columns requires copying the whole database. By specifying more than one type,
+            you can amortize the cost over a single invocation of the utility.
+        </p>
+        <p class="warning">
+            NOTE: Dropping types from a database means <em>you will lose any data associated with them!</em> The data
+            cannot be recovered.
+        </p>
+
+
+
+        <h2 id="Changing_the_unit_system">Changing the database unit system in an existing database</h2>
+        <p>
+            Normally, data are stored in the databases using US Customary units and you shouldn't care; it is an
+            "implementation detail". Data can always be displayed using any set of units you want &mdash; the section <a
+            href="#how_to_change_units"><em>How to change units</em></a> explains how to change the reporting units.
+            Nevertheless, there may be special situations where you wish to store the data in Metric units. For example,
+            you may need to allow direct programmatic access to the database from another piece of software that expects
+            metric units.
+        </p>
+
+        <p>
+            You should not change the database unit system midstream. That is, do not start with one unit system then,
+            some time later, switch to another. WeeWX cannot handle databases with mixed unit systems &mdash; see the
+            section <span class="code"> <a href="usersguide.htm#StdConvert">[StdConvert]</a></span> in the WeeWX User's
+            Guide. However, you can reconfigure the database by copying it to a new database, performing the unit
+            conversion along the way. You then use this new database.
         </p>
 
         <p>Here is the general strategy:</p>
@@ -5031,7 +5216,7 @@ weewx.units.conversionDict['pound']  = {'newton': lambda x : x * 4.44822}
         <pre class="tty">[[[monthelectric]]]
     [[[[electricity]]]]
         aggregate_type = sum
-        aggregate_interval = 86400
+        aggregate_interval = day
         label = Electric consumption (daily total)</pre>
         <p>
             This will cause the generation of an image <span class="code">monthelectric.png</span>, showing a plot of
@@ -6338,8 +6523,10 @@ growing_base = 50.0, degree_F</pre>
         <p class="config_option">aggregate_interval</p>
 
         <p>
-            The time period over which the data should be aggregated. Required if <span
-            class="code">aggregate_type</span> has been set.
+            The time period over which the data should be aggregated, in seconds. Required if
+            <span class="code">aggregate_type</span> has been set. Alternatively, the time can be specified by using
+            one of the "shortcuts" (that is, <span class="code">hour</span>, <span class="code">day</span>,
+            <span class="code">week</span>, <span class="code">month</span>, or <span class="code">year</span>).
         </p>
 
         <p class="config_option">plot_type</p>

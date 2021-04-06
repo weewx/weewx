@@ -49,7 +49,7 @@
         <div class="logoref">
             <a href='https://weewx.com'> <img src='images/logo-weewx.png' class='logo' style="float:right"
                                              alt="weewx logo"/> </a><br/> <span class='version'>
-Version: 4.4
+Version: 4.5
     </span>
         </div>
         <div class="title">WeeWX Utilities Guide</div>
@@ -396,6 +396,9 @@ Usage: wee_database --help
        wee_database --create
        wee_database --reconfigure
        wee_database --transfer --dest-binding=BINDING_NAME [--dry-run]
+       wee_database --add-column=NAME [--type=(REAL|INTEGER)]
+       wee_database --rename-column=NAME --to-name=NEW_NAME
+       wee_database --drop-columns=NAME1,NAME2,...
        wee_database --check
        wee_database --update [--dry-run]
        wee_database --drop-daily
@@ -427,6 +430,14 @@ Options:
                         the end.
   --transfer            Transfer the WeeWX archive from source database to
                         destination database.
+  --add-column=NAME     Add new column NAME to database.
+  --type=TYPE           New database column type (INTEGER|REAL) (option --add-
+                        column only).  Default is 'REAL'.
+  --rename-column=NAME  Rename the column with name NAME.
+  --to-name=NEW_NAME    New name of the column (option --rename-column only).
+  --drop-columns=NAME1,NAME2,...
+                        Drop one or more columns. Names must be separated by
+                        commas, with NO SPACES.
   --check               Check the calculations in the daily summary tables.
   --update              Update the daily summary tables if required and
                         recalculate the daily summary maximum windSpeed
@@ -467,9 +478,10 @@ Options:
         <pre class="tty cmd">wee_database --create</pre>
 
         <h3>Action <span class="code">--reconfigure</span></h3>
-        <p>This action is useful for changing the schema in your database.</p>
+        <p>This action is useful for changing the schema or unit system in your database.</p>
 
-        <p>It creates a new database with the same name as the old, except with the suffix <span
+        <p>
+            It creates a new database with the same name as the old, except with the suffix <span
             class="code">_new</span> attached at the end (nominally, <span class="code">weewx.sdb_new</span> if you are
             using SQLite, <span class="code">weewx_new</span> if you are using MySQL). It then initializes it with the
             schema specified in <span class="code">weewx.conf</span>. Finally, it copies over the data from your old
@@ -478,8 +490,9 @@ Options:
 
         <pre class="tty cmd">wee_database --reconfigure</pre>
 
-        <p>See the section <a href="customizing.htm#add_archive_type">Adding a new type to the database</a> in
-            the Customization Guide for step-by-step instructions that use this option.
+        <p>
+            See the section <a href="customizing.htm#Changing_the_unit_system">Changing the database unit system in
+            an existing database</a> in the Customization Guide for step-by-step instructions that use this option.
         </p>
 
         <h3>Action <span class="code">--transfer</span></h3>
@@ -499,6 +512,52 @@ wee_database --transfer --dest-binding=dest_binding</pre>
             to MySQL</a>, and from <a
             href="https://github.com/weewx/weewx/wiki/Transfer%20from%20MySQL%20to%20sqlite#using-wee_database">MySQL to
             SQLite</a>, using <span class="code">wee_database</span>.
+        </p>
+
+        <h3>Action <span class="code">--add-column</span></h3>
+        <p>
+            This action adds a new database observation type (column) to the database. If used without the
+            <span class="code">--type</span> option, the type will default to <span class="code">REAL</span>.
+        </p>
+
+        <pre class="tty cmd">wee_database --add-column</pre>
+
+        <p>
+            Optionally, option <span class="code">--type</span> can be used with a SQL type
+            <span class="code">REAL</span>, <span class="code">INTEGER</span>,
+            or any other SQL column definition (such as <span class="code">INTEGER DEFAULT 0</span>).
+        </p>
+
+        <pre class="tty cmd">wee_database --add-column=NAME --type=TYPE</pre>
+
+        <h3>Action <span class="code">--rename-column</span></h3>
+        <p>
+            Use this action to rename a database observation type (column) to a new name. It requires the option
+            <span class="code">--to-name</span>.
+        </p>
+        <pre class="tty cmd">wee_database --rename-column=NAME --to-name=NEW_NAME</pre>
+        <p>
+            For example, to rename the column <span class="code">luminosity</span> in your schema to
+            <span class="code">illuminance</span>:
+        </p>
+
+        <pre class="tty cmd">wee_database --rename-column=luminosity --to-name=illuminance</pre>
+
+        <h3>Action <span class="code">--drop-columns</span></h3>
+        <p>
+            This action will drop one or more observation types (columns) from the database. If more than one column
+            name is given, they should be separated by commas and <em>no spaces</em>.
+        </p>
+        <p>
+            It is an error to attempt to drop a non-existing column. In this case, nothing will be done.
+        </p>
+        <pre class="tty cmd">wee_database --drop-columns=NAME1,NAME2</pre>
+
+        <p class="note">
+            NOTE: When dropping columns from a SQLite database, the entire database must be copied except for the
+            dropped columns. Because this can be quite slow, if you are dropping more than one column, it is better
+            to do them all in one pass. This is why option <span class="code">--drop-columns</span> accepts more than
+            one name.
         </p>
 
         <h3>Action <span class="code">--check</span></h3>
@@ -1236,8 +1295,8 @@ summaries using the wee_database utility.</pre>
             </tr>
             <tr>
                 <td class="code first_col">--date=2015-12-22</td>
-                <td>All records from 2015-12-22 00:00 (inclusive) to 2015-12-23 00:00 (exclusive)</td>
-                <td>All records from 2015-12-22 00:00 (inclusive) to 2015-12-23 00:00 (exclusive)</td>
+                <td>All records from 2015-12-22 00:00 (exclusive) to 2015-12-23 00:00 (inclusive)</td>
+                <td>All records from 2015-12-22 00:00 (exclusive) to 2015-12-23 00:00 (inclusive)</td>
             </tr>
             </tbody>
         </table>
@@ -1246,6 +1305,13 @@ summaries using the wee_database utility.</pre>
             <strong>Note</strong><br/>If the <span class="code">--date</span>, <span class="code">--from</span> and
             <span class="code">--to</span> options are omitted the default is to import today's records only when
             importing from Weather Underground or to import all available records when importing from any other source.
+        </p>
+
+        <p class="note">
+            <strong>Note</strong><br/>WeeWX considers an archive record to represent an aggregation of data over the
+            archive interval preceding the archive record's timestamp. For this reason imports which are to be limited
+            to a given date with the <span class="code">--date</span> option will only import records timestamped after
+            midnight at the start of the day concerned and up to and including midnight at the end of the day concerned.
         </p>
 
         <h3>Options <span class="code">--from</span> and <span class="code">--to</span></h3>
@@ -1288,26 +1354,26 @@ summaries using the wee_database utility.</pre>
             <tr>
                 <td class="code first_col">--from=2015-12-22</td>
                 <td class="code first_col">--to=2015-12-29</td>
-                <td>All records from 2015-12-22 00:00 (inclusive) to 2015-12-30 00:00 (exclusive)</td>
-                <td>All records from 2015-12-22 00:00 (inclusive) to 2015-12-30 00:00 (exclusive)</td>
+                <td>All records from 2015-12-22 00:00 (exclusive) to 2015-12-30 00:00 (inclusive)</td>
+                <td>All records from 2015-12-22 00:00 (exclusive) to 2015-12-30 00:00 (inclusive)</td>
             </tr>
             <tr>
                 <td class="code first_col">--from=2016-7-18T15:29</td>
                 <td class="code first_col">--to=2016-7-25</td>
-                <td>All records from 2016-7-18 15:29 (inclusive) to 2016-7-26 22:00 (exclusive)</td>
-                <td>All records from 2016-7-18 15:29 (inclusive) to 2016-7-26 22:00 (exclusive)</td>
+                <td>All records from 2016-7-18 15:29 (exclusive) to 2016-7-26 00:00 (inclusive)</td>
+                <td>All records from 2016-7-18 15:29 (exclusive) to 2016-7-26 00:00 (inclusive)</td>
             </tr>
             <tr>
                 <td class="code first_col">--from=2016-5-12</td>
                 <td class="code first_col">--to=2016-7-22T22:15</td>
-                <td>All records from 2016-5-12 00:00 (inclusive) to 2016-7-22 22:15 (exclusive)</td>
-                <td>All records from 2016-5-12 00:00 (inclusive) to 2016-7-22 22:15 (exclusive)</td>
+                <td>All records from 2016-5-12 00:00 (exclusive) to 2016-7-22 22:15 (inclusive)</td>
+                <td>All records from 2016-5-12 00:00 (exclusive) to 2016-7-22 22:15 (inclusive)</td>
             </tr>
             <tr>
                 <td class="code first_col">--from=2016-3-18T15:29</td>
                 <td class="code first_col">--to=2016-6-20T22:00</td>
-                <td>All records from 2016-3-18 15:29 (inclusive) to 2016-6-20 22:00 (exclusive)</td>
-                <td>All records from 2016-3-18 15:29 (inclusive) to 2016-6-20 22:00 (exclusive)</td>
+                <td>All records from 2016-3-18 15:29 (exclusive) to 2016-6-20 22:00 (inclusive)</td>
+                <td>All records from 2016-3-18 15:29 (exclusive) to 2016-6-20 22:00 (inclusive)</td>
             </tr>
             </tbody>
         </table>
@@ -1316,6 +1382,15 @@ summaries using the wee_database utility.</pre>
             <strong>Note</strong><br/>If the <span class="code">--date</span>, <span class="code">--from</span> and
             <span class="code">--to</span> options are omitted the default is to import today's records only when
             importing from Weather Underground or to import all available records when importing from any other source.
+        </p>
+
+        <p class="note">
+            <strong>Note</strong><br/>WeeWX considers an archive record to represent an aggregation of data over the
+            archive interval preceding the archive record's timestamp. For this reason imports which are to be limited
+            to a given timespan with the <span class="code">--from</span> and <span class="code">--to</span> options
+            will only import records timestamped after the timestamp represented by the <span class="code">--from</span>
+            option and up to and including the timestamp represented by the <span class="code">--to</span>
+            option.
         </p>
 
         <h3>Option <span class="code">--verbose</span></h3>

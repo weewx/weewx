@@ -1043,7 +1043,7 @@ class WOWThread(AmbientThread):
                 'windGustDir': 'windgustdir=%.0f',
                 'dewpoint'   : 'dewptf=%.1f',
                 'hourRain'   : 'rainin=%.2f',
-                'dayRain'    : 'dailyrainin=%.2f'}
+                'dayRain'    : 'dailyrainin=%.3f'}
 
     def format_url(self, incoming_record):
         """Return an URL for posting using WOW's version of the Ambient

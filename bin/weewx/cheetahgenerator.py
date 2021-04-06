@@ -58,6 +58,7 @@ Example:
 from __future__ import absolute_import
 
 import datetime
+import json
 import logging
 import os.path
 import time
@@ -88,7 +89,8 @@ default_search_list = [
     "weewx.cheetahgenerator.Current",
     "weewx.cheetahgenerator.Stats",
     "weewx.cheetahgenerator.UnitInfo",
-    "weewx.cheetahgenerator.Extras"]
+    "weewx.cheetahgenerator.Extras",
+    "weewx.cheetahgenerator.JSONHelpers"]
 
 
 # =============================================================================
@@ -534,7 +536,8 @@ class Almanac(SearchList):
                                              temperature=temperature_C,
                                              pressure=pressure_mbar,
                                              moon_phases=self.moonphases,
-                                             formatter=generator.formatter)
+                                             formatter=generator.formatter,
+                                             converter=generator.converter)
 
 
 class Station(SearchList):
@@ -617,6 +620,38 @@ class Extras(SearchList):
         # an empty dictionary.
         self.Extras = ExtraDict(generator.skin_dict['Extras'] if 'Extras' in generator.skin_dict else {})
 
+
+class JSONHelpers(SearchList):
+    """Helper functions for formatting JSON"""
+
+    @staticmethod
+    def jsonize(arg):
+        """
+        Format my argument as JSON
+
+        Args:
+            arg (iterable): An iterable, such as a list, or zip structure
+
+        Returns:
+            str: The argument formatted as JSON.
+        """
+        val = list(arg)
+        return json.dumps(val, cls=weewx.units.ComplexEncoder)
+
+    @staticmethod
+    def rnd(arg, ndigits):
+        """Round a number, or sequence of numbers, to a specified number of decimal digits
+
+        Args:
+            arg (None, float, complex, list): The number or sequence of numbers to be rounded.
+                If the argument is None, then None will be returned.
+            ndigits (int): The number of decimal digits to retain.
+
+        Returns:
+            None, float, complex, list: Returns the number, or sequence of numbers, with the
+                requested number of decimal digits
+        """
+        return weeutil.weeutil.rounder(arg, ndigits)
 
 # =============================================================================
 # Filter

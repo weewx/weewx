@@ -1,6 +1,6 @@
 # This Python file uses the following encoding: utf-8
 #
-#    Copyright (c) 2009-2018 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2021 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -12,6 +12,7 @@ from __future__ import absolute_import
 from __future__ import print_function
 
 import calendar
+import cmath
 import datetime
 import math
 import os
@@ -249,6 +250,28 @@ class TimeSpan(tuple):
         return 0 if self.start == other.start else 1
 
 
+nominal_intervals = {
+    'hour': 3600,
+    'day': 86400,
+    'week': 7 * 86400,
+    'month': int(365.25 / 12 * 86400),
+    'year': int(365.25 * 86400),
+}
+
+
+def nominal_spans(label):
+    """Convert a (possible) string into an integer time."""
+    if label is None:
+        return None
+    try:
+        # Is the label either an integer, or something that can be converted into an integer?
+        interval = int(label)
+    except ValueError:
+        # Is it in our list of nominal spans? If not, fail hard.
+        interval = nominal_intervals[label.lower()]
+    return interval
+
+
 def intervalgen(start_ts, stop_ts, interval):
     """Generator function yielding a sequence of time spans whose boundaries
     are on constant local time.
@@ -310,6 +333,9 @@ def intervalgen(start_ts, stop_ts, interval):
 
     dt1 = datetime.datetime.fromtimestamp(start_ts)
     stop_dt = datetime.datetime.fromtimestamp(stop_ts)
+
+    # If a string was passed in, convert to seconds using nominal time intervals.
+    interval = nominal_spans(interval)
 
     if interval == 365.25 / 12 * 24 * 3600:
         # Interval is a nominal month. This algorithm is 
@@ -1266,6 +1292,41 @@ def to_complex(magnitude, direction):
         y = magnitude * math.sin(math.radians(90.0 - direction))
         value = complex(x, y)
     return value
+
+
+def dirN(c):
+    """Given a complex number, return its phase as a compass heading"""
+    if c is None:
+        value = None
+    else:
+        value = (450 - math.degrees(cmath.phase(c))) % 360.0
+    return value
+
+
+def rounder(x, ndigits):
+    """Round a number, or sequence of numbers, to a specified number of decimal digits
+
+    Args:
+        x (None, float, complex, list): The number or sequence of numbers to be rounded. If the
+            argument is None, then None will be returned.
+        ndigits (int): The number of decimal digits to retain.
+
+    Returns:
+        None, float, complex, list: Returns the number, or sequence of numbers, with the requested
+            number of decimal digits. If 'None', no rounding is done, and the function returns
+            the original value.
+    """
+    if ndigits is None:
+        return x
+    elif x is None:
+        return None
+    elif isinstance(x, complex):
+        return complex(round(x.real, ndigits), round(x.imag, ndigits))
+    elif isinstance(x, float):
+        return round(x, ndigits) if ndigits else int(x)
+    elif hasattr(x, '__iter__'):
+        return [rounder(v, ndigits) for v in x]
+    return x
 
 
 def min_with_none(x_seq):

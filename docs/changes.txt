@@ -1,7 +1,28 @@
 WeeWX change history
 --------------------
 
-4.4.1 MM/DD/YYYY
+4.5.1 04/02/2021
+Reverted the wview schema back to the V3 style.
+
+Fixed problem where setup.py would fail if the station description used UTF-8
+characters.
+
+
+4.5.0 04/02/2021
+
+The utility wee_database has new options --add-column, --rename-column, and
+--drop-columns for adding, renaming, and deleting columns in the database.
+
+New optional tag ".series()", for creating and formatting series in templates.
+See the document series_tags.md in the docs subdirectory. This is still
+experimental and subject to change! Addresses issue #341.
+
+New optional tag ".json()" for formatting results as JSON.
+
+New optional tag ".round()". Useful for rounding results of .raw and .json tags.
+
+Improved performance when calculating series using aggregation periods that are
+multiples of a day.
 
 Changed NOAA reports to use the 'normalized_ascii' encoding instead of 'utf8'
 (which did not display correctly for most browsers). Fixes issue #646.
@@ -24,6 +45,21 @@ aggregation type changes the unit. Fixes issue #654.
 
 Plots now locate the x-coordinate in the middle of the aggregation interval for
 all aggregation types (not just min, max, avg). Revisits PR #232.
+
+Added new time units 'unix_epoch_ms' and 'unix_epoch_ns', which are unix epoch
+time in milliseconds and nanoseconds, respectively.
+
+The FTP uploader now calculates and saves a hash value for each uploaded file.
+If it does not change, the file is not uploaded, resulting in significant
+time savings. PR #655. Thanks to user Karen!
+
+Updated the version of six.py included with WeeWX to 1.15.0. Fixes issue #657.
+
+Option aggregate_interval can now be specified by using one of the "shortcuts",
+that is, 'hour', 'day', 'week', 'month', or 'year'.
+
+Options "log_success" and "log_failure" are now honored by the StdArchive
+service.
 
 
 4.4.0 01/30/2021

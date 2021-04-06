@@ -89,7 +89,7 @@
     </tr>
     <tr>
       <td>Outside Temperature with nonsense binding $current($data_binding='foo_binding').outTemp</td>
-      <td>?'foo_binding'?</td>
+      <td>$current($data_binding='foo_binding').outTemp</td>
     </tr>
     <tr>
       <td>Outside Temperature with explicit time</td>
@@ -109,7 +109,7 @@
     </tr>
     <tr>
       <td>Trend with nonsense type</td>
-      <td>?'foobar'?</td>
+      <td>$trend.foobar</td>
     </tr>
     <tr>
       <td>Barometer (normal)</td>
