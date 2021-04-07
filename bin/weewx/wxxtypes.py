@@ -49,7 +49,7 @@ DEFAULTS_INI = """
     [[[rain]]]
       input = totalRain
 """
-defaults_dict = configobj.ConfigObj(StringIO(DEFAULTS_INI), encoding='utf-8')
+defaults_dict = weeutil.config.config_from_str(DEFAULTS_INI)
 
 first_time = True
 
