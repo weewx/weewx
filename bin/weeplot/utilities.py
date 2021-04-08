@@ -557,7 +557,7 @@ def pickLabelFormat(increment):
     else:
         decimal_places = 0
 
-    return "%%.%df" % decimal_places
+    return u"%%.%df" % decimal_places
 
 
 def get_font_handle(fontpath, *args):

@@ -21,8 +21,12 @@ from six.moves import zip
 import weeplot.utilities
 from weeplot.utilities import tobgr
 import weeutil.weeutil
-from weeutil.weeutil import max_with_none, min_with_none, to_bool
+from weeutil.weeutil import max_with_none, min_with_none, to_bool, to_text
 
+
+# NB: PIL (and most fonts) expect text strings to be in Unicode. Hence, any place where a label can
+# be set should be protected by a call to weeutil.weeutil.to_text() to make sure the label is in
+# Unicode.
 
 class GeneralPlot(object):
     """Holds various parameters necessary for a plot. It should be specialized by the type of plot.
@@ -49,9 +53,9 @@ class GeneralPlot(object):
         color_list                  = plot_dict.get('chart_line_colors', ['0xff0000', '0x00ff00', '0x0000ff'])
         fill_color_list             = plot_dict.get('chart_fill_colors', color_list)
         width_list                  = plot_dict.get('chart_line_width', [1, 1, 1])
-        self.chart_line_colors      = map(tobgr, color_list)
-        self.chart_fill_colors      = map(tobgr, fill_color_list)
-        self.chart_line_widths      = map(int, width_list)
+        self.chart_line_colors      = [tobgr(v) for v in color_list]
+        self.chart_fill_colors      = [tobgr(v) for v in fill_color_list]
+        self.chart_line_widths      = [int(v) for v in width_list]
 
         
         self.top_label_font_path    = plot_dict.get('top_label_font_path')
@@ -73,8 +77,9 @@ class GeneralPlot(object):
         self.axis_label_font_color  = tobgr(plot_dict.get('axis_label_font_color', '0x000000'))
         self.axis_label_font_size   = int(plot_dict.get('axis_label_font_size', 10)) * self.anti_alias
 
-        self.x_label_format         = plot_dict.get('x_label_format')
-        self.y_label_format         = plot_dict.get('y_label_format')
+        # Make sure the formats used for the x- and y-axes are in unicode.
+        self.x_label_format         = to_text(plot_dict.get('x_label_format'))
+        self.y_label_format         = to_text(plot_dict.get('y_label_format'))
         
         self.x_nticks               = int(plot_dict.get('x_nticks', 10))
         self.y_nticks               = int(plot_dict.get('y_nticks', 10))
@@ -103,7 +108,7 @@ class GeneralPlot(object):
         self.rose_diameter          = int(plot_dict.get('rose_diameter', 10))
         self.rose_position          = (self.lmargin + self.padding + 5, self.image_height - self.bmargin - self.padding - self.rose_height)
         self.rose_rotation          = None
-        self.rose_label             = plot_dict.get('rose_label', u'N')
+        self.rose_label             = to_text(plot_dict.get('rose_label', u'N'))
         self.rose_label_font_path   = plot_dict.get('rose_label_font_path', self.bottom_label_font_path)
         self.rose_label_font_size   = int(plot_dict.get('rose_label_font_size', 10))
         self.rose_label_font_color  = tobgr(plot_dict.get('rose_label_font_color', '0x000000'))
@@ -139,11 +144,13 @@ class GeneralPlot(object):
 
     def setBottomLabel(self, bottom_label):
         """Set the label to be put at the bottom of the plot. """
-        self.bottom_label = bottom_label
+        # Make sure the label is in unicode or is None
+        self.bottom_label = to_text(bottom_label)
         
     def setUnitLabel(self, unit_label):
         """Set the label to be used to show the units of the plot. """
-        self.unit_label = unit_label
+        # Make sure the label is in unicode
+        self.unit_label = to_text(unit_label)
         
     def setXScaling(self, xscale):
         """Set the X scaling.
@@ -431,7 +438,7 @@ class GeneralPlot(object):
         # The top label is the appended label_list. However, it has to be drawn in segments 
         # because each label may be in a different color. For now, append them together to get
         # the total width
-        top_label = ' '.join([line.label for line in self.line_list])
+        top_label = u' '.join([line.label for line in self.line_list])
         top_label_size = draw.textsize(top_label, font=top_label_font)
         
         x = (self.image_width - top_label_size[0])/2
@@ -443,7 +450,7 @@ class GeneralPlot(object):
             # Draw a label
             draw.text( (x,y), this_line.label, fill = color, font = top_label_font)
             # Now advance the width of the label we just drew, plus a space:
-            label_size = draw.textsize(this_line.label + ' ', font= top_label_font)
+            label_size = draw.textsize(this_line.label + u' ', font= top_label_font)
             x += label_size[0]
 
     def _renderRose(self, image, draw):
@@ -588,7 +595,7 @@ class TimePlot(GeneralPlot) :
         
     def _genXLabel(self, x):
         if self.x_label_format is None:
-            return ''
+            return u''
         time_tuple = time.localtime(x)
         # There are still some strftimes out there that don't support Unicode.
         try:
@@ -606,7 +613,7 @@ class PlotLine(object):
                  bar_width=None, vector_rotate = None, gap_fraction=None):
         self.x               = x
         self.y               = y
-        self.label           = label
+        self.label           = to_text(label)   # Make sure the label is in unicode
         self.plot_type       = plot_type
         self.line_type       = line_type
         self.marker_type     = marker_type
