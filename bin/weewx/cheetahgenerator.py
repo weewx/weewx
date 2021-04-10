@@ -653,6 +653,18 @@ class JSONHelpers(SearchList):
         """
         return weeutil.weeutil.rounder(arg, ndigits)
 
+    @staticmethod
+    def to_int(arg):
+        """Convert the argument into an integer, honoring 'None'
+
+        Args:
+            arg (None, float, str):
+
+        Returns:
+            int: The argument converted to an integer.
+        """
+        return weeutil.weeutil.to_int(arg)
+
 # =============================================================================
 # Filter
 # =============================================================================
