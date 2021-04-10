@@ -1911,7 +1911,7 @@ $month.outTemp.max</pre>
         <p class="indent">
             <span class="code">obstype</span> is an observation type, such as <span
             class="code">barometer</span>. This type must appear either as a field in the database,
-            or in the current (usually, the latest) record.</span>
+            or in the current (usually, the latest) record.
         </p>
 
         <p class="indent">
@@ -2895,6 +2895,40 @@ $month.dateTime.format("%B"): Min, max temperatures: $month.outTemp.min $month.o
   &lt;/body&gt;
 &lt;/html&gt;
 </pre>
+        <h3>Helper functions</h3>
+        <p>
+            WeeWX includes a number of helper functions that may be useful when writing templates.
+        </p>
+        <table class="indent">
+            <caption>Cheetah helper functions</caption>
+            <tbody>
+            <tr class="first_row">
+                <td>Function</td>
+                <td>Description</td>
+            </tr>
+            <tr>
+                <td class="first_col code">$rnd(x, ndigits=None)</td>
+                <td>
+                    Round <span class="code">x</span> to <span class="code">ndigits</span> decimal digits. The argument
+                    <span class="code">x</span> can be a <span class="code">float</span> or a list of <span
+                    class="code">floats</span>. Values of <span class="code">None</span> are passed through.
+                </td>
+            </tr>
+            <tr>
+                <td class="first_col code">$jsonize(seq)</td>
+                <td>Convert the iterable <span class="code">seq</span> to a JSON string.</td>
+            </tr>
+            <tr>
+                <td class="first_col code">$to_int(x)</td>
+                <td>
+                    Convert <span class="code">x</span> to an integer. The argument <span class="code">x</span> can be
+                    of type <span class="code">float</span> or <span class="code">str</span>. Values of <span
+                    class="code">None</span> are passed through.
+                </td>
+            </tr>
+            </tbody>
+        </table>
+
         <h3>Support for series</h3>
         <p class="warning">
             This is an experimental API that could change.
@@ -6998,7 +7032,7 @@ growing_base = 50.0, degree_F</pre>
             </tr>
             <tr>
                 <td class="first_col">group_fraction</td>
-                <td>co<br/>co2<br/>nh3<br/>o3</br>pb</br>so2</td>
+                <td>co<br/>co2<br/>nh3<br/>o3<br/>pb<br/>so2</td>
                 <td>ppm</td>
                 <td>ppm</td>
                 <td>ppm</td>
