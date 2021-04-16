@@ -7,6 +7,9 @@ PR #659. Thanks to user edi-x!
 
 Added Cheetah helper functions $jsonize(), $rnd(), and $to_int().
 
+Added conversions for unix_epoch_ms and unix_epoch_ns. Calculations in
+celestial.inc now explicitly use unix_epoch.
+
 
 4.5.1 04/02/2021
 Reverted the wview schema back to the V3 style.
