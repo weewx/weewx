@@ -66,8 +66,7 @@ from weeutil.weeutil import timestamp_to_string
 log = logging.getLogger(__name__)
 
 DRIVER_NAME = 'Ultimeter'
-DRIVER_VERSION = '0.41'
-
+DRIVER_VERSION = '0.5'
 
 def loader(config_dict, _):
     return UltimeterDriver(**config_dict[DRIVER_NAME])
@@ -221,7 +220,8 @@ class Station(object):
     def get_readings(self):
         """Read an Ultimeter sentence.
 
-        Returns: a bytearray containing the sentence.
+        Returns:
+            bytearray: A bytearray containing the sentence.
         """
 
         # Search for the character '!', which marks the beginning of a "sentence":
@@ -297,12 +297,14 @@ class Station(object):
 
         Some stations may omit daily_rain or wind_average, so check for those.
 
-        raw: A bytearray containing the sentence.
+        Args:
+            raw (bytearray): A bytearray containing the sentence.
 
-        returns: A dictionary containing the data.
+        Returns
+            dict: A dictionary containing the data.
         """
-        # Convert from bytearray to text
-        buf = raw[2:].decode('ascii')
+        # Convert from bytearray to bytes
+        buf = bytes(raw[2:])
         data = dict()
         data['windSpeed'] = Station._decode(buf[0:4], 0.1 * MILE_PER_KM)  # mph
         data['windDir'] = Station._decode(buf[6:8], 1.411764)  # compass deg
@@ -322,32 +324,45 @@ class Station(object):
 
     @staticmethod
     def _decode(s, multiplier=None, neg=False):
-        """Ultimeter puts hyphens in the string when a sensor is not installed. When we get a
-        hyphen or any other non-hex character, return None. Negative values are represented in twos
+        """Decode a byte string.
+
+        Ultimeter puts dashes in the string when a sensor is not installed. When we get a dashes,
+        or any other non-hex character, return None. Negative values are represented in twos
         complement format.  Only do the check for negative values if requested, since some
         parameters use the full set of bits (e.g., wind direction) and some do not (e.g.,
         temperature).
 
-        s: A text string, encoding the value as hexadecimal digits.
+        Args:
+            s (bytes): Encoded value as hexadecimal digits.
+            multiplier (float): Multiply the results by this value.
+            neg (bool): If True, calculate the twos-complement.
 
-        multiplier: Multiply the results by this value
-
-        neg: If True, calculate twos-complement
+        Returns:
+            float: The decoded value.
         """
 
-        v = None
+        # First check for all dashes.
+        if s == len(s) * b'-':
+            # All bytes are dash values, meaning a non-existent or broken sensor. Return None.
+            return None
+
+        # Decode the hexadecimal number
         try:
-            # Under Python 2, the variable s must be a string, not a bytearray.
             v = int(s, 16)
-            if neg:
-                bits = 4 * len(s)
-                if v & (1 << (bits - 1)) != 0:
-                    v -= (1 << bits)
-            if multiplier is not None:
-                v *= multiplier
         except ValueError as e:
-            if s != b'----':
-                log.debug("Decode failed for '%s': %s", s, e)
+            log.debug("Decode failed for '%s': %s", s, e)
+            return None
+
+        # If requested, calculate the twos-complement
+        if neg:
+            bits = 4 * len(s)
+            if v & (1 << (bits - 1)) != 0:
+                v -= (1 << bits)
+
+        # If requested, scale the number
+        if multiplier is not None:
+            v *= multiplier
+
         return v
 
 

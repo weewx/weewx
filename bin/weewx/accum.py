@@ -28,12 +28,11 @@ from __future__ import absolute_import
 import logging
 import math
 
-import configobj
 import six
-from six.moves import StringIO
 
 import weewx
 from weeutil.weeutil import ListOfDicts, to_float
+import weeutil.config
 
 log = logging.getLogger(__name__)
 
@@ -97,7 +96,7 @@ DEFAULTS_INI = """
     [[lightning_strike_count]]
         extractor = sum
 """
-defaults_dict = configobj.ConfigObj(StringIO(DEFAULTS_INI), encoding='utf-8')
+defaults_dict = weeutil.config.config_from_str(DEFAULTS_INI)
 
 accum_dict = ListOfDicts(defaults_dict['Accumulator'].dict())
 
