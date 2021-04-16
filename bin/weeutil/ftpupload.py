@@ -277,7 +277,8 @@ def _make_remote_dir(ftp_server, remote_dir_path):
             if msg.startswith('550') or msg.startswith('521'):
                 # Directory already exists
                 return
-        # It's a real error. Re-raise the exception.
+        # It's a real error. Log it, then re-raise the exception.
+        log.error("Error creating directory %s", remote_dir_path)
         raise
 
     log.debug("Made directory %s", remote_dir_path)

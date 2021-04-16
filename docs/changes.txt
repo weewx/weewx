@@ -7,6 +7,9 @@ Reverted the wview schema back to the V3 style.
 Fixed problem where setup.py would fail if the station description used UTF-8
 characters.
 
+Fixed problem where unit labels would not render correctly under Python 2.7 if
+they were set by a 3rd party extension. Fixes issue #662.
+
 
 4.5.0 04/02/2021
 

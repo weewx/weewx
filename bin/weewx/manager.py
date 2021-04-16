@@ -247,6 +247,21 @@ class Manager(object):
         _row = self.getSql("SELECT MIN(dateTime) FROM %s" % self.table_name)
         return _row[0] if _row else None
 
+    def exists(self, obs_type):
+        """Checks whether the observation type exists in the database."""
+
+        # Check to see if this is a valid observation type:
+        return obs_type in self.obskeys
+
+    def has_data(self, obs_type, timespan):
+        """Checks whether the observation type exists in the database and whether it has any
+        data.
+        """
+
+        # return self.exists(obs_type) and self.getAggregate(timespan, obs_type, 'count')[0] != 0
+        return self.exists(obs_type) \
+               and weewx.xtypes.get_aggregate(obs_type, timespan, 'count', self)[0]
+
     def addRecord(self, record_obj,
                   accumulator=None,
                   progress_fn=None,
@@ -1014,19 +1029,6 @@ class DaySummaryManager(Manager):
         _stats_dict.updateHiLo(accumulator)
         # Then save the results:
         self._set_day_summary(_stats_dict, accumulator.timespan.stop, cursor)
-
-    def exists(self, obs_type):
-        """Checks whether the observation type exists in the database."""
-
-        # Check to see if this is a valid daily summary type:
-        return obs_type in self.daykeys
-
-    def has_data(self, obs_type, timespan):
-        """Checks whether the observation type exists in the database and whether it has any
-        data.
-        """
-
-        return self.exists(obs_type) and self.getAggregate(timespan, obs_type, 'count')[0] != 0
 
     def backfill_day_summary(self, start_d=None, stop_d=None,
                              progress_fn=show_progress, trans_days=5):
