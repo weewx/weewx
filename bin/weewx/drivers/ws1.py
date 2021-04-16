@@ -344,50 +344,50 @@ class StationSocket(object):
         if DEBUG_READ >= 2:
             log.debug("Attempting to find record start..")
 
-        buff = ''
+        buf = ''
         while True:
             data = self.get_data()
             if DEBUG_READ >= 2:
-                log.debug("(searching...) buff: %s" % buff)
+                log.debug("(searching...) buf: %s" % buf)
             # split on line breaks and take everything after the line break
             data = data.splitlines()[-1]
             if "!!" in data:
                 # if it contains !!, take everything after the last occurance of !! (we sometimes see a whole bunch of !)
-                buff = data.rpartition("!!")[-1]
-                if len(buff) > 0:
+                buf = data.rpartition("!!")[-1]
+                if len(buf) > 0:
                     # if there is anything left, add the !! back on and break
                     # we have effectively found everything between a line break and !!
-                    buff = "!!" + buff
+                    buf = "!!" + buf
                     if DEBUG_READ >= 2:
                         log.debug("Record start found!")
                     break
-        return buff
+        return buf
 
 
-    def fill_buffer(self, buff):
+    def fill_buffer(self, buf):
         if DEBUG_READ >= 2:
             log.debug("filling buffer with rest of record")
         while True:
             data = self.get_data()
             # split on line breaks and take everything before it
             data = data.splitlines()[0]
-            buff = buff + data
+            buf = buf + data
             if DEBUG_READ >= 2:
-                log.debug("buff is %s" % buff)
-            if len(buff) == 50:
+                log.debug("buf is %s" % buf)
+            if len(buf) == 50:
                 if DEBUG_READ >= 2:
-                    log.debug("filled record %s" % buff)
+                    log.debug("filled record %s" % buf)
                 break
-        return buff
+        return buf
 
     def get_readings(self):
-        buff = self.find_record_start()
+        buf = self.find_record_start()
         if DEBUG_READ >= 2:
-            log.debug("record start: %s" % buff)
-        buff = self.fill_buffer(buff)
+            log.debug("record start: %s" % buf)
+        buf = self.fill_buffer(buf)
         if DEBUG_READ >= 1:
-            log.debug("Got data record: %s" % buff)
-        return buff
+            log.debug("Got data record: %s" % buf)
+        return buf
 
     def get_readings_with_retry(self, max_tries=5, wait_before_retry=10):
         for _ in range(max_tries):
@@ -406,7 +406,7 @@ class StationSocket(object):
                 # errors and timeouts.
 
                 if DEBUG_READ >= 1:
-                    log.debug("buf: %s (%d bytes)" % (buff, len(buff)))
+                    log.debug("buf: %s (%d bytes)" % (buf, len(buf)))
 
                 time.sleep(wait_before_retry)
         else:
