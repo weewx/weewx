@@ -201,6 +201,14 @@ FALSE#slurp
       <td>$emit_boolean($current.nonsense.has_data)</td>
     </tr>
     <tr>
+      <td>Test tag "has_data" for the last hour: \$hour.outTemp.has_data</td>
+      <td>$emit_boolean($hour.outTemp.has_data)</td>
+    </tr>
+    <tr>
+      <td>Test tag "has_data" for the last hour of a nonsense type: \$hour.nonsense.has_data</td>
+      <td>$emit_boolean($hour.nonsense.has_data)</td>
+    </tr>
+    <tr>
       <td>Test for a bad observation type on a \$current tag: \$current.foobar</td>
       <td>$current.foobar</td>
     </tr>
