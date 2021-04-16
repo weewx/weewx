@@ -581,7 +581,7 @@ class TimePlot(GeneralPlot) :
             self.xscale = weeplot.utilities.scaletime(xmin, xmax)
 
     def _calcXLabelFormat(self):
-        """Specialized version for time plots."""
+        """Specialized version for time plots. Assumes that time is in unix epoch time."""
         if self.x_label_format is None:
             (xmin, xmax) = self._calcXMinMax()
             if xmin is not None and xmax is not None:
@@ -594,6 +594,7 @@ class TimePlot(GeneralPlot) :
                     self.x_label_format = u"%X"
         
     def _genXLabel(self, x):
+        """Specialized version for time plots. Assumes that time is in unix epoch time."""
         if self.x_label_format is None:
             return u''
         time_tuple = time.localtime(x)

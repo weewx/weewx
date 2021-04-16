@@ -204,9 +204,7 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                             stop_vec_t[1],                                          # Unit
                             stop_vec_t[2])                                          # Unit group
 
-                    # Do any necessary unit conversions:
-                    new_start_vec_t = self.converter.convert(start_vec_t)
-                    new_stop_vec_t  = self.converter.convert(stop_vec_t)
+                    # Convert the data to the requested units
                     new_data_vec_t = self.converter.convert(data_vec_t)
 
                     # Add a unit label. NB: all will get overwritten except the last. Get the label
@@ -244,7 +242,7 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                             if vector_rotate_str is not None else None
                     elif plot_type == 'bar':
                         interval_vec = [x[1] - x[0] for x in
-                                        zip(new_start_vec_t.value, new_stop_vec_t.value)]
+                                        zip(start_vec_t.value, stop_vec_t.value)]
                     elif plot_type == 'line':
                         gap_fraction = to_float(line_options.get('line_gap_fraction'))
                         if gap_fraction is not None and not 0 < gap_fraction < 1:
@@ -265,7 +263,7 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                     
                     # Add the line to the emerging plot:
                     plot.addLine(weeplot.genplot.PlotLine(
-                        new_stop_vec_t[0], new_data_vec_t[0],
+                        stop_vec_t[0], new_data_vec_t[0],
                         label         = label,
                         color         = color,
                         fill_color    = fill_color,
