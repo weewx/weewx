@@ -273,9 +273,6 @@ class StationSocket(object):
                  wait_before_retry=10):
         import socket
 
-        ip_addr = None
-        ip_port = None
-
         self.max_tries = max_tries
         self.wait_before_retry = wait_before_retry
 
@@ -284,9 +281,7 @@ class StationSocket(object):
             self.conn_info[1] = int(self.conn_info[1], 10)
             self.conn_info = tuple(self.conn_info)
         else:
-            ip_addr = addr
-            ip_port = DEFAULT_TCP_PORT
-            self.conn_info = (ip_addr, ip_port)
+            self.conn_info = (addr, DEFAULT_TCP_PORT)
 
         try:
             if protocol == 'tcp':
