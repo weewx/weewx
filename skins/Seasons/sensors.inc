@@ -45,7 +45,7 @@
 #if $have_conn or $have_battery_status or $have_voltage
 <div id='sensors_widget' class="widget">
   <div class="widget_title">
-    <a href="telemetry.html">Sensor Status</a>
+    <a href="telemetry.html">$obs.label.sensor_status_title</a>
     <a class="widget_control"
       onclick="toggle_widget('sensors')">&diams;</a>
   </div>

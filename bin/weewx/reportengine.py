@@ -254,6 +254,51 @@ class StdReportEngine(threading.Thread):
         for scalar in self.config_dict['StdReport'].scalars:
             skin_dict[scalar] = self.config_dict['StdReport'][scalar]
 
+        #######################################################################
+        # localization support
+
+        # If a localization is defined, get it.
+        if 'lang_file' in self.config_dict['StdReport'][report]:
+            # 'lang_file' defines the file name directly
+            lang_config = self.config_dict['StdReport'][report]['lang_file']
+        elif 'lang' in self.config_dict['StdReport'][report]:
+            # 'lang' defines a language code like 'en' or 'de'
+            # The file is located in subdirectory 'lang' of the skin directory then.
+            lang_config = "lang/%s.conf" % self.config_dict['StdReport'][report]['lang']
+        else:
+            # No localization defined. Use defaults.
+            lang_config = None
+        
+        # If a localization file could be determined, read it.
+        if lang_config:
+        
+            # Now add the options in the report's localization file. Start by figuring where it is located.
+            lang_config_path = os.path.join(
+                self.config_dict['WEEWX_ROOT'],
+                self.config_dict['StdReport']['SKIN_ROOT'],
+                self.config_dict['StdReport'][report].get('skin', ''),
+                lang_config)
+        
+            # Now retrieve the language dictionary for the skin. Wrap it in a try block in case we fail.  It is ok if
+            # there is no file - everything for a skin might be defined in the weewx configuration.
+            try:
+                merge_dict = configobj.ConfigObj(lang_config_path, file_error=True, encoding='utf-8')
+                log.debug("Found localization file %s for report '%s'", lang_config_path, report)
+                # Merge the skin config file in:
+                weeutil.config.merge_config(skin_dict, merge_dict)
+                if self.first_run:
+                    log.info("Using localization file %s for report '%s'" % 
+                             (lang_config_path, report))
+            except IOError as e:
+                log.debug("Cannot read localization file %s for report '%s': %s",
+                          lang_config_path, report, e)
+            except SyntaxError as e:
+                log.error("Failed to read localization file %s for report '%s': %s",
+                          lang_config_path, report, e)
+                raise
+        
+        #######################################################################
+        
         # Finally, inject any overrides for this specific report. Because this is the last merge, it will have the
         # final say.
         weeutil.config.merge_config(skin_dict, self.config_dict['StdReport'][report])

@@ -6,7 +6,7 @@
 
 <div id='about_widget' class="widget">
   <div class="widget_title">
-    About this weather station
+    $obs.label.about_title
     <a class="widget_control"
       onclick="toggle_widget('about')">&diams;</a>
   </div>

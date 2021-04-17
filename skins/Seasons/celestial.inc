@@ -49,7 +49,7 @@
 
 <div id="celestial_widget" class="widget">
   <div class="widget_title">
-    Celestial
+    $obs.label.celestial_title
   </div>
   <div class="widget_contents">
   #if $almanac.hasExtras

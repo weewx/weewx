@@ -6,7 +6,7 @@
 
 <div id='current_widget' class="widget">
   <div class="widget_title">
-    Current Conditions
+    $obs.label.current_conditions_title
     <a class="widget_control"
       onclick="toggle_widget('current')">&diams;</a>
   </div>

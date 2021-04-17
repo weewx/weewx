@@ -27,7 +27,7 @@
 
 <div id="sunmoon_widget" class="widget">
   <div class="widget_title">
-    <a href="celestial.html">Celestial</a>
+    <a href="celestial.html">$obs.label.celestial_title</a>
     <a class="widget_control"
        onclick="toggle_widget('sunmoon')">&diams;</a>
   </div>

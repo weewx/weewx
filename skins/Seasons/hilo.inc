@@ -8,7 +8,7 @@
 
 <div id='hilo_widget' class="widget">
   <div class="widget_title">
-    <a href="statistics.html">High/Low</a>
+    <a href="statistics.html">$obs.label.hilo_title</a>
     <a class="widget_control"
       onclick="toggle_widget('hilo')">&diams;</a>
   </div>
@@ -18,11 +18,12 @@
     <tbody>
       <tr>
         <td></td>
-        <th>&nbsp;<br/>Today</th>
-        <th class="hilo_week">&nbsp;<br/>Week</th>
-        <th class="hilo_month">&nbsp;<br/>Month</th>
+        <th>&nbsp;<br/>$obs.label.hilo_today</th>
+        <th class="hilo_week">&nbsp;<br/>$obs.label.hilo_week</th>
+        <th class="hilo_month">&nbsp;<br/>$obs.label.hilo_month</th>
         <th class="hilo_year">
-            <a onclick="toggle_rainyear()">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br/>Year</a>
+            <a
+            onclick="toggle_rainyear()">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br/>$obs.label.hilo_year</a>
         </th>
         <th class="hilo_rainyear">
             <a onclick="toggle_rainyear()">Rain<br/>Year</a>

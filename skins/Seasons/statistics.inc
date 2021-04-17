@@ -8,7 +8,7 @@
 
 <div id="statistics_widget" class="widget">
   <div class="widget_title">
-    Statistics
+    $obs.label.statistics_title
   </div>
   <div class="widget_contents">
 
@@ -17,11 +17,11 @@
         <tr>
           <td></td>
           <td></td>
-          <th>Today</th>
-          <th class="hilo_week">Week</th>
-          <th class="hilo_month">Month</th>
-          <th class="hilo_year">Year</th>
-          <th class="hilo_rainyear">Rain year</th>
+          <th>$obs.label.hilo_today</th>
+          <th class="hilo_week">$obs.label.hilo_week</th>
+          <th class="hilo_month">$obs.label.hilo_month</th>
+          <th class="hilo_year">$obs.label.hilo_year</th>
+          <th class="hilo_rainyear">$obs.label.hilo_rainyear</th>
         </tr>
         <tr>
           <td class="label">$obs.label.outTemp</td>
