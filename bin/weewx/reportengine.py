@@ -255,9 +255,9 @@ class StdReportEngine(threading.Thread):
             skin_dict[scalar] = self.config_dict['StdReport'][scalar]
 
         #######################################################################
-        # localization support
+        # internationalization support
 
-        # If a localization is defined, get it.
+        # If an localization file is defined, get it.
         if 'lang_file' in self.config_dict['StdReport'][report]:
             # 'lang_file' defines the file name directly
             lang_config = self.config_dict['StdReport'][report]['lang_file']
@@ -269,7 +269,7 @@ class StdReportEngine(threading.Thread):
             # No localization defined. Use defaults.
             lang_config = None
         
-        # If a localization file could be determined, read it.
+        # If an localization file could be determined, read it.
         if lang_config:
         
             # Now add the options in the report's localization file. Start by figuring where it is located.

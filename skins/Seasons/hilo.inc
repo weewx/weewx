@@ -8,7 +8,7 @@
 
 <div id='hilo_widget' class="widget">
   <div class="widget_title">
-    <a href="statistics.html">$obs.label.hilo_title</a>
+    <a href="statistics.html">$gettext("HiLo")</a>
     <a class="widget_control"
       onclick="toggle_widget('hilo')">&diams;</a>
   </div>

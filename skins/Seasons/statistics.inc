@@ -8,7 +8,7 @@
 
 <div id="statistics_widget" class="widget">
   <div class="widget_title">
-    $obs.label.statistics_title
+    $gettext("Title",$page)
   </div>
   <div class="widget_contents">
 
