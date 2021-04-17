@@ -342,6 +342,9 @@ class StationSocket(object):
         buf = ''
         while True:
             data = self.get_data()
+            if len(data) == 0:
+                raise weewx.WeeWxIOError("No data recieved")
+
             if DEBUG_READ >= 2:
                 log.debug("(searching...) buf: %s" % buf)
             # split on line breaks and take everything after the line break
