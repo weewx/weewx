@@ -18,15 +18,15 @@
     <tbody>
       <tr>
         <td></td>
-        <th>&nbsp;<br/>$obs.label.hilo_today</th>
-        <th class="hilo_week">&nbsp;<br/>$obs.label.hilo_week</th>
-        <th class="hilo_month">&nbsp;<br/>$obs.label.hilo_month</th>
+        <th>&nbsp;<br/>$gettext("Today")</th>
+        <th class="hilo_week">&nbsp;<br/>$gettext("Week")</th>
+        <th class="hilo_month">&nbsp;<br/>$gettext("Month")</th>
         <th class="hilo_year">
             <a
-            onclick="toggle_rainyear()">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br/>$obs.label.hilo_year</a>
+            onclick="toggle_rainyear()">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br/>$gettext("Year")</a>
         </th>
         <th class="hilo_rainyear">
-            <a onclick="toggle_rainyear()">Rain<br/>Year</a>
+            <a onclick="toggle_rainyear()">$gettext("Rainyear1")<br/>$gettext("Rainyear2")</a>
         </th>
         <td></td>
       </tr>

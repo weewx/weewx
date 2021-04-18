@@ -17,11 +17,11 @@
         <tr>
           <td></td>
           <td></td>
-          <th>$obs.label.hilo_today</th>
-          <th class="hilo_week">$obs.label.hilo_week</th>
-          <th class="hilo_month">$obs.label.hilo_month</th>
-          <th class="hilo_year">$obs.label.hilo_year</th>
-          <th class="hilo_rainyear">$obs.label.hilo_rainyear</th>
+          <th>$gettext("Today")</th>
+          <th class="hilo_week">$gettext("Week")</th>
+          <th class="hilo_month">$gettext("Month")</th>
+          <th class="hilo_year">$gettext("Year")</th>
+          <th class="hilo_rainyear">$gettext("Rainyear")</th>
         </tr>
         <tr>
           <td class="label">$obs.label.outTemp</td>

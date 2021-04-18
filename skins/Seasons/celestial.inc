@@ -62,7 +62,7 @@
             <td class="data">$almanac(horizon=-6).sun(use_center=1).rise</td>
           </tr>
           <tr>
-            <td class="label">Rise</td>
+            <td class="label">$gettext("Rise",$page)</td>
             <td class="data">$almanac.sun.rise.format(None_string=$sun_None)</td>
           </tr>
           <tr>
@@ -70,7 +70,7 @@
             <td class="data">$almanac.sun.transit</td>
           </tr>
           <tr>
-            <td class="label">Set</td>
+            <td class="label">$gettext("Set",$page)</td>
             <td class="data">$almanac.sun.set.format(None_string=$sun_None)</td>
           </tr>
           <tr>
@@ -78,19 +78,19 @@
             <td class="data">$almanac(horizon=-6).sun(use_center=1).set</td>
           </tr>
           <tr>
-            <td class="label">Azimuth</td>
+            <td class="label">$gettext("Azimuth",$page)</td>
             <td class="data">$("%.1f&deg;" % $almanac.sun.az)</td>
           </tr>
           <tr>
-            <td class="label">Altitude</td>
+            <td class="label">$gettext("AstroAltitude",$page)</td>
             <td class="data">$("%.1f&deg;" % $sun_altitude)</td>
           </tr>
           <tr>
-            <td class="label">Right ascension</td>
+            <td class="label">$gettext("Right ascension",$page)</td>
             <td class="data">$("%.1f&deg;" % $almanac.sun.ra)</td>
           </tr>
           <tr>
-            <td class="label">Declination</td>
+            <td class="label">$gettext("Declination",$page)</td>
             <td class="data">$("%.1f&deg;" % $almanac.sun.dec)</td>
           </tr>
           #if $almanac.next_equinox.raw < $almanac.next_solstice.raw
@@ -115,7 +115,7 @@
             </tr>
           #end if
           <tr>
-            <td class="label">Total daylight</td>
+            <td class="label">$gettext("Daylight",$page)</td>
             <td class="data">$daylight_str</td>
           </tr>
         </table>
@@ -125,7 +125,7 @@
           <tr><th>&#9789; $gettext("Moon",$page)</th><th></th></tr>
           <tr><td class="label">&nbsp;</td><td class="data">&nbsp;</td></tr>
           <tr>
-            <td class="label">Rise</td>
+            <td class="label">$gettext("Rise",$page)</td>
             <td class="data">$almanac.moon.rise</td>
           </tr>
           <tr>
@@ -133,24 +133,24 @@
             <td class="data">$almanac.moon.transit</td>
           </tr>
           <tr>
-            <td class="label">Set</td>
+            <td class="label">$gettext("Set",$page)</td>
             <td class="data">$almanac.moon.set</td>
           </tr>
           <tr><td class="label">&nbsp;</td><td class="data">&nbsp;</td></tr>
           <tr>
-            <td class="label">Azimuth</td>
+            <td class="label">$gettext("Azimuth",$page)</td>
             <td class="data">$("%.1f&deg;" % $almanac.moon.az)</td>
           </tr>
           <tr>
-            <td class="label">Altitude</td>
+            <td class="label">$gettext("AstroAltitude",$page)</td>
             <td class="data">$("%.1f&deg;" % $almanac.moon.alt)</td>
           </tr>
           <tr>
-            <td class="label">Right ascension</td>
+            <td class="label">$gettext("Right ascension",$page)</td>
             <td class="data">$("%.1f&deg;" % $almanac.moon.ra)</td>
           </tr>
           <tr>
-            <td class="label">Declination</td>
+            <td class="label">$gettext("Declination",$page)</td>
             <td class="data">$("%.1f&deg;" % $almanac.moon.dec)</td>
           </tr>
           #if $almanac.next_full_moon.raw < $almanac.next_new_moon.raw

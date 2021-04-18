@@ -18,7 +18,7 @@
       <td class="data">$station.longitude[0]&deg; $station.longitude[1]' $station.longitude[2]</td>
     </tr>
     <tr>
-      <td class="label">$gettext("Altitude")</td>
+      <td class="label">$gettext("GeoAltitude")</td>
       <td class="data">$station.altitude</td>
     </tr>
     <tr>
