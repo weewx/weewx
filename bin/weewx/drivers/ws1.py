@@ -307,6 +307,7 @@ class StationSocket(object):
         import socket
 
         log.debug("Connecting to %s:%d." % (self.conn_info[0], self.conn_info[1]))
+
         for conn_attempt in range(self.max_tries):
             try:
                 if conn_attempt > 1:
@@ -515,8 +516,8 @@ if __name__ == '__main__':
         exit(0)
 
     if options.debug:
-        weewx.debug = 1
-        DEBUG_READ = 1
+        weewx.debug = 2
+        DEBUG_READ = 2
 
     weeutil.logger.setup('ws1', {})
 
