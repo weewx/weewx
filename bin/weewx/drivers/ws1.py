@@ -328,34 +328,37 @@ class StationSocket(object):
                       % (self.conn_info[0], self.conn_info[1], ex))
             raise weewx.WeeWxIOError(ex)
 
-    def get_data(self, bytes=8, encoding="utf-8"):
+    def get_data(self, bytes=8):
         import socket
         try:
-            return self.net_socket.recv(bytes, socket.MSG_WAITALL).decode(encoding)
-        except (socket.error, socket.timeout) as ex:
+            data = self.net_socket.recv(bytes, socket.MSG_WAITALL)
+        except Exception as ex:
             raise weewx.WeeWxIOError(ex)
+        else:
+            if len(data) == 0:
+                raise weewx.WeeWxIOError("No data recieved")
+
+            return data
 
     def find_record_start(self):
         if DEBUG_READ >= 2:
             log.debug("Attempting to find record start..")
 
-        buf = ''
+        buf = bytes("", "utf-8")
         while True:
             data = self.get_data()
-            if len(data) == 0:
-                raise weewx.WeeWxIOError("No data recieved")
 
             if DEBUG_READ >= 2:
                 log.debug("(searching...) buf: %s" % buf)
             # split on line breaks and take everything after the line break
             data = data.splitlines()[-1]
-            if "!!" in data:
+            if b"!!" in data:
                 # if it contains !!, take everything after the last occurance of !! (we sometimes see a whole bunch of !)
-                buf = data.rpartition("!!")[-1]
+                buf = data.rpartition(b"!!")[-1]
                 if len(buf) > 0:
                     # if there is anything left, add the !! back on and break
                     # we have effectively found everything between a line break and !!
-                    buf = "!!" + buf
+                    buf = b"!!" + buf
                     if DEBUG_READ >= 2:
                         log.debug("Record start found!")
                     break
@@ -367,6 +370,7 @@ class StationSocket(object):
             log.debug("filling buffer with rest of record")
         while True:
             data = self.get_data()
+
             # split on line breaks and take everything before it
             data = data.splitlines()[0]
             buf = buf + data
@@ -389,11 +393,9 @@ class StationSocket(object):
 
     def get_readings_with_retry(self, max_tries=5, wait_before_retry=10):
         for _ in range(max_tries):
-            buf = ''
+            buf = bytes("", "utf-8")
             try:
                 buf = self.get_readings()
-                # validate_string actually expects bytes
-                buf = buf.encode()
                 StationData.validate_string(buf)
                 return buf
             except (weewx.WeeWxIOError) as e:
