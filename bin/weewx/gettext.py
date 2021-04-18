@@ -1,6 +1,52 @@
 # Simple localization for WeeWX
 # Copyright (C) 2021 Johanna Roedenbeck
 
+#    See the file LICENSE.txt for your full rights.
+
+"""
+  provides tag $gettext(key, page)
+  
+  Language dependent texts are stored in special localization files.
+  The are merged into skin_dict in reportengine.py according to the
+  language the user chooses in weewx.conf for the given report. 
+  Different reports can be in different languages.
+  
+  The file defines language dependent label texts as well as other
+  texts used in skins. 
+  
+  The values provided by $gettext(key, page) are found in the file
+  in the [Texts] section. Subsections in the [Texts] section can
+  provide special texts for certain templates. To get values from
+  subsections $gettext() is called with special tag $page for the
+  parameter page. That is especially useful in include files that
+  are included in multiple templates. 
+
+  Examples:
+  
+  Assume the localization file to be:
+  
+  [Texts]
+    Key1 = Text1
+    [[index]]
+      Title = Text2
+    [[othertemplate]]
+      Title = Text3
+  
+  With that file is:
+  
+  $gettext("Key1")           ==> Text1
+  
+  $gettext("Title",$page)    ==> is Text2 if included in template "index"
+                                 and Text3 if included in template 
+                                 "othertemplate"
+                                
+  $gettext(page=$page).Title ==> same as before
+  
+  You can use "speaking" key names. If they contain whitespace they need
+  to be enclosed in quotes in the localization file
+  
+"""
+
 from weewx.cheetahgenerator import SearchList
 from weewx.units import ValueTuple,ValueHelper
 import configobj
@@ -69,33 +115,62 @@ class Gettext(SearchList):
                 else:
                     raise KeyError
                 if page:
+                    # page is specified --> get subsection "page"
                     d = d[sec][page]
                     if not isinstance(d,dict):
                         d={page:d}
                 else:
+                    # otherwise get root section
                     d = d[sec]
-            except (KeyError,IndexError,ValueError,TypeError):
+            except (KeyError,IndexError,ValueError,TypeError) as e:
+                # in case of errors get an empty dict
+                logerr("could not read %s %s: %s" % (sec,page,e))
                 d = {}
-                    
+            
+            # if key is not empty, get the value for key        
             if key:
             
                 if key in d:
+                    # key is in dict d --> return value of key
                     val = d[key]
                 else:
+                    # otherwise return key as value
                     val = key
                 
                 return val
         
+            # if key is empty but page is not return further class instance
             if page:
                 cheetah_dict={}
-                if 'CheetahGenerator' in self.generator.skin_dict:
-                    if page in self.generator.skin_dict['CheetahGenerator']:
-                        cheetah_dict = self.generator.skin_dict['CheetahGenerator'][page]
+                cheetah_dict_key = 'CheetahGenerator'
+                if "FileGenerator" in self.generator.skin_dict and 'CheetahGenerator' not in self.generator.skin_dict:
+                    cheetah_dict_key = "FileGenerator"
+                if cheetah_dict_key in self.generator.skin_dict:
+                    cheetah_dict = _get_cheetah_dict(self.generator.skin_dict[cheetah_dict_key],page)
+                    
+                labels_dict={}
+                if 'Labels' in self.generator.skin_dict:
+                    if 'Generic' in self.generator.skin_dict['Labels']:
+                        labels_dict = self.generator.skin_dict['Labels']['Generic']
 
                 # 
-                return FilesBinder(page,d,self.generator.skin_dict['Labels']['Generic'] if 'Generic' in self.generator.skin_dict else {},cheetah_dict)
+                return FilesBinder(page,d,labels_dict,cheetah_dict)
                 
+            # if key as well as page are empty
+            return FilesBinder('N/A',d,{},{})
+            
         return [{'gettext':locale_label}]
+        
+    def _get_cheetah_dict(cheetah_dict,page):
+        """ find section page in cheetah_dict recursively """
+    
+        for ii in cheetah_dict.sections:
+            jj = _get_cheetah_dict(cheetah_dict[ii],page)
+            if jj is not None:
+                return jj
+        if page in cheetah_dict:
+            return cheetah_dict[page]
+        return None
 
 
 class FilesBinder(object):
@@ -115,20 +190,20 @@ class FilesBinder(object):
             # entry found [CheetahGenerator] subsection
             return self.cheetah_dict[attr]
         elif attr=='nav':
-            # if $locale(file='xxx').nav not in localization file, try 
+            # if $gettext(page='xxx').nav not in localization file, try 
             # nav_xxx in [Labels][[Generic]] section of skin.conf
+            # helpful for extending Belchertown skin
             if 'nav_'+self.page in self.skin_labels_dict:
                 return self.skin_labels_dict['nav_'+self.page]
         elif attr=='page_header':
-            # if $locale(file='xxx').page_header not in localization file, 
+            # if $gettext(page='xxx').page_header not in localization file, 
             # try xxx_page_header in [Labels][[Generic]] section of skin.conf
+            # helpful for extending Belchertown skin
             x=self.page+'_page_header'
             if x in self.skin_labels_dict:
                 return self.skin_labels_dict[x]
         elif attr in self.skin_labels_dict:
             # finally look in [Labels][[Generic]] section if skin.conf
-            #if attr=='html_description':
-            #   loginf("html_description: %s" % self.skin_labels_dict[attr])
             return str(self.skin_labels_dict[attr])
         return '$%s.%s' % (self.page,attr)
 
