@@ -328,10 +328,17 @@ class StationSocket(object):
                       % (self.conn_info[0], self.conn_info[1], ex))
             raise weewx.WeeWxIOError(ex)
 
-    def get_data(self, bytes=8):
+    def get_data(self, num_bytes=8):
+        """Get data from the socket connection
+        Args:
+            num_bytes: The number of bytes to request.
+        Returns:
+            bytes: The data from the remote device.
+        """
+
         import socket
         try:
-            data = self.net_socket.recv(bytes, socket.MSG_WAITALL)
+            data = self.net_socket.recv(num_bytes, socket.MSG_WAITALL)
         except Exception as ex:
             raise weewx.WeeWxIOError(ex)
         else:
@@ -341,6 +348,11 @@ class StationSocket(object):
             return data
 
     def find_record_start(self):
+        """Find the start of a data record by requesting data from the remote
+           device until we find it.
+        Returns:
+            bytes: The start of a data record from the remote device.
+        """
         if DEBUG_READ >= 2:
             log.debug("Attempting to find record start..")
 
@@ -366,6 +378,12 @@ class StationSocket(object):
 
 
     def fill_buffer(self, buf):
+        """Get the remainder of the data record from the remote device.
+        Args:
+            buf: The beginning of the data record.
+        Returns:
+            bytes: The data from the remote device.
+        """
         if DEBUG_READ >= 2:
             log.debug("filling buffer with rest of record")
         while True:
