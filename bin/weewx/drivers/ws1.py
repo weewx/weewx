@@ -361,7 +361,7 @@ class StationSocket(object):
             data = self.get_data()
 
             if DEBUG_READ >= 2:
-                log.debug("(searching...) buf: %s" % buf)
+                log.debug("(searching...) buf: %s" % buf.decode('utf-8'))
             # split on line breaks and take everything after the line break
             data = data.splitlines()[-1]
             if b"!!" in data:
@@ -393,20 +393,20 @@ class StationSocket(object):
             data = data.splitlines()[0]
             buf = buf + data
             if DEBUG_READ >= 2:
-                log.debug("buf is %s" % buf)
+                log.debug("buf is %s" % buf.decode('utf-8'))
             if len(buf) == 50:
                 if DEBUG_READ >= 2:
-                    log.debug("filled record %s" % buf)
+                    log.debug("filled record %s" % buf.decode('utf-8'))
                 break
         return buf
 
     def get_readings(self):
         buf = self.find_record_start()
         if DEBUG_READ >= 2:
-            log.debug("record start: %s" % buf)
+            log.debug("record start: %s" % buf.decode('utf-8'))
         buf = self.fill_buffer(buf)
         if DEBUG_READ >= 1:
-            log.debug("Got data record: %s" % buf)
+            log.debug("Got data record: %s" % buf.decode('utf-8'))
         return buf
 
     def get_readings_with_retry(self, max_tries=5, wait_before_retry=10):
@@ -424,7 +424,7 @@ class StationSocket(object):
                 # errors and timeouts.
 
                 if DEBUG_READ >= 1:
-                    log.debug("buf: %s (%d bytes)" % (buf, len(buf)))
+                    log.debug("buf: %s (%d bytes)" % (buf.decode('utf-8'), len(buf)))
 
                 time.sleep(wait_before_retry)
         else:
