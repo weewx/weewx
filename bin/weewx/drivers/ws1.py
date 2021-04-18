@@ -296,11 +296,17 @@ class StationSocket(object):
 
         self.net_socket.settimeout(timeout)
 
+    def __enter__(self):
+        self.open()
+        return self
+
+    def __exit__(self, _, value, traceback):  # @UnusedVariable
+        self.close()
+
     def open(self):
         import socket
 
         log.debug("Connecting to %s:%d." % (self.conn_info[0], self.conn_info[1]))
-
         for conn_attempt in range(self.max_tries):
             try:
                 if conn_attempt > 1:
@@ -480,6 +486,7 @@ class WS1ConfEditor(weewx.drivers.AbstractConfEditor):
 # engine and service overhead.  invoke this as follows from the weewx root dir:
 #
 # PYTHONPATH=bin python bin/weewx/drivers/ws1.py
+# PYTHONPATH=/usr/share/weewx python3 /usr/share/weewx/weewx/drivers/ws1.py
 
 if __name__ == '__main__':
     import optparse
@@ -487,24 +494,36 @@ if __name__ == '__main__':
     import weewx
     import weeutil.logger
 
-    weewx.debug = 2
-
-    weeutil.logger.setup('ws1', {})
-
     usage = """%prog [options] [--help]"""
 
     parser = optparse.OptionParser(usage=usage)
     parser.add_option('--version', dest='version', action='store_true',
                       help='display driver version')
+    parser.add_option('--debug', dest='debug', action='store_true',
+                      help='provide additional debug output in log')
+    parser.add_option('--port', dest='port', metavar='PORT',
+                      help='serial port to which the station is connected to use Serial mode',
+                      default=DEFAULT_SER_PORT)
     parser.add_option('--addr', dest='addr', metavar='ADDR',
-                      help='ip address and port',
+                      help='ip address and port to use TCP mode',
                       default=DEFAULT_TCP_ADDR)
+    
     (options, args) = parser.parse_args()
 
     if options.version:
         print("ADS WS1 driver version %s" % DRIVER_VERSION)
         exit(0)
 
-    with StationSocket(options.addr) as s:
+    if options.debug:
+        weewx.debug = 1
+        DEBUG_READ = 1
+
+    weeutil.logger.setup('ws1', {})
+
+    Station = StationSerial
+    if options.addr is not None:
+        Station = StationSocket
+
+    with Station(options.addr) as s:
         while True:
-            print(time.time(), s.get_readings())
+            print(time.time(), s.get_readings().decode("utf-8"))
