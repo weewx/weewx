@@ -159,7 +159,7 @@ class Gettext(SearchList):
             # if key as well as page are empty
             return FilesBinder('N/A',d,{},{})
             
-        return [{'gettext':locale_label}]
+        return [{'gettext':locale_label,'text':locale_label,'_':locale_label}]
         
     def _get_cheetah_dict(cheetah_dict,page):
         """ find section page in cheetah_dict recursively """
