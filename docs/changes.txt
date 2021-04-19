@@ -10,6 +10,9 @@ characters.
 Fixed problem where unit labels would not render correctly under Python 2.7 if
 they were set by a 3rd party extension. Fixes issue #662.
 
+Added TCP support to the WS1 driver. Thanks to user Mike Juniper! Fixes issue
+#664.
+
 
 4.5.0 04/02/2021
 
