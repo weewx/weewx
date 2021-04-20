@@ -270,12 +270,15 @@ class StdReportEngine(threading.Thread):
         if 'lang' in self.config_dict['StdReport'][report]:
             # 'lang' is set in weewx.conf
             lang_config = "%s.conf" % self.config_dict['StdReport'][report]['lang']
-        elif 'lang' in self.skin_dict:
+            log.debug("config_dict lang_config=%s for report %s" % (lang_config,report))
+        elif 'lang' in skin_dict:
             # 'lang' is set in skin.conf
-            lang_config = "%s.conf" % self.skin_dict['lang']
+            lang_config = "%s.conf" % skin_dict['lang']
+            log.debug("skin_dict lang_config=%s for report" % (lang_config,report))
         else:
             # No localization defined. Use defaults.
             lang_config = None
+            log.debug("no language defined for report %s" % report)
         
         # If an localization file name could be determined, read the file.
         if lang_config:
