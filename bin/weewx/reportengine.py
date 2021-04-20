@@ -257,19 +257,27 @@ class StdReportEngine(threading.Thread):
         #######################################################################
         # internationalization support
 
-        # If an localization file is defined, get it.
-        if 'lang_file' in self.config_dict['StdReport'][report]:
-            # 'lang_file' defines the file name directly
-            lang_config = self.config_dict['StdReport'][report]['lang_file']
-        elif 'lang' in self.config_dict['StdReport'][report]:
-            # 'lang' defines a language code like 'en' or 'de'
-            # The file is located in subdirectory 'lang' of the skin directory then.
-            lang_config = "lang/%s.conf" % self.config_dict['StdReport'][report]['lang']
+        # The key 'lang' defines a language code like 'en' or 'de'. It is
+        # used as a file name for a language file that is located in the
+        # 'lang' subdirectory of the skin directory. Like it is with the
+        # other path settings, a complete path overwrites the skin
+        # directory setting.
+
+        # If an localization file is defined, determine the path.
+        # As config_dict is not merged into skin_dict so far, we
+        # need to check both. config_dict (weewx.conf) has the final say,
+        # so check it first.
+        if 'lang' in self.config_dict['StdReport'][report]:
+            # 'lang' is set in weewx.conf
+            lang_config = "%s.conf" % self.config_dict['StdReport'][report]['lang']
+        elif 'lang' in self.skin_dict:
+            # 'lang' is set in skin.conf
+            lang_config = "%s.conf" % self.skin_dict['lang']
         else:
             # No localization defined. Use defaults.
             lang_config = None
         
-        # If an localization file could be determined, read it.
+        # If an localization file name could be determined, read the file.
         if lang_config:
         
             # Now add the options in the report's localization file. Start by figuring where it is located.
@@ -277,6 +285,7 @@ class StdReportEngine(threading.Thread):
                 self.config_dict['WEEWX_ROOT'],
                 self.config_dict['StdReport']['SKIN_ROOT'],
                 self.config_dict['StdReport'][report].get('skin', ''),
+                'lang',
                 lang_config)
         
             # Now retrieve the language dictionary for the skin. Wrap it in a try block in case we fail.  It is ok if

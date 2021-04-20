@@ -108,11 +108,11 @@ class Gettext(SearchList):
 
             # get the appropriate section for page
             try:
-                if 'Templates' in d:
+                if 'Templates' in d and 'Texts' not in d:
                     sec = 'Templates'
-                elif 'Texts' in d:
-                    sec = 'Texts'
                 else:
+                    sec = 'Texts'
+                if sec not in d:
                     raise KeyError
                 if page:
                     # page is specified --> get subsection "page"
@@ -124,7 +124,7 @@ class Gettext(SearchList):
                     d = d[sec]
             except (KeyError,IndexError,ValueError,TypeError) as e:
                 # in case of errors get an empty dict
-                logerr("could not read %s %s: %s" % (sec,page,e))
+                logerr("could not read [%s] [[%s]]: %s" % (sec,page,e))
                 d = {}
             
             # if key is not empty, get the value for key        
@@ -159,7 +159,7 @@ class Gettext(SearchList):
             # if key as well as page are empty
             return FilesBinder('N/A',d,{},{})
             
-        return [{'gettext':locale_label,'text':locale_label,'_':locale_label}]
+        return [{'gettext':locale_label,'text':locale_label}]
         
     def _get_cheetah_dict(cheetah_dict,page):
         """ find section page in cheetah_dict recursively """
