@@ -94,7 +94,29 @@ class Gettext(SearchList):
         """Create an instance of the class"""
         super(Gettext,self).__init__(generator)
         
+        self.lang = self.generator.skin_dict.get('lang','undefined')
+        _idx = self.lang.rfind('/')
+        if _idx>=0:
+            self.lang = self.lang[_idx+1:]
+        _idx = self.lang.rfind('.conf')
+        if _idx>=0:
+            self.lang = self.lang[:_idx]
+        
+        self.labels_dict={}
+        if 'Labels' in self.generator.skin_dict:
+            if 'Generic' in self.generator.skin_dict['Labels']:
+                self.labels_dict = self.generator.skin_dict['Labels']['Generic']
 
+        d=self.generator.skin_dict
+        if 'Texts' in d:
+            self.text_dict = d['Texts']
+        elif 'Templates' in d:
+            self.text_dict = d['Templates']
+        else:
+            self.text_dict = {}
+        if not isinstance(self.text_dict,dict):
+            self.text_dict = {}
+        
     def get_extension_list(self,timespan,db_lookup):
             
         def locale_label(key='',page=''):
@@ -104,27 +126,18 @@ class Gettext(SearchList):
                 page: section name  
                 
             """
-            d=self.generator.skin_dict
+            d=self.text_dict
 
-            # get the appropriate section for page
+            # get the appropriate section for page if defined
             try:
-                if 'Templates' in d and 'Texts' not in d:
-                    sec = 'Templates'
-                else:
-                    sec = 'Texts'
-                if sec not in d:
-                    raise KeyError
                 if page:
                     # page is specified --> get subsection "page"
-                    d = d[sec][page]
+                    d = d[page]
                     if not isinstance(d,dict):
                         d={page:d}
-                else:
-                    # otherwise get root section
-                    d = d[sec]
             except (KeyError,IndexError,ValueError,TypeError) as e:
                 # in case of errors get an empty dict
-                logerr("could not read [%s] [[%s]]: %s" % (sec,page,e))
+                logerr("could not read [[%s]]: %s" % (page,e))
                 d = {}
             
             # if key is not empty, get the value for key        
@@ -146,26 +159,20 @@ class Gettext(SearchList):
                 if "FileGenerator" in self.generator.skin_dict and 'CheetahGenerator' not in self.generator.skin_dict:
                     cheetah_dict_key = "FileGenerator"
                 if cheetah_dict_key in self.generator.skin_dict:
-                    cheetah_dict = _get_cheetah_dict(self.generator.skin_dict[cheetah_dict_key],page)
-                    
-                labels_dict={}
-                if 'Labels' in self.generator.skin_dict:
-                    if 'Generic' in self.generator.skin_dict['Labels']:
-                        labels_dict = self.generator.skin_dict['Labels']['Generic']
-
-                # 
-                return FilesBinder(page,d,labels_dict,cheetah_dict)
+                    cheetah_dict = Gettext._get_cheetah_dict(self.generator.skin_dict[cheetah_dict_key],page)
+                return FilesBinder(page,d,self.labels_dict,cheetah_dict)
                 
             # if key as well as page are empty
-            return FilesBinder('N/A',d,{},{})
+            return FilesBinder('N/A',d,{},{'lang':self.lang})
             
         return [{'gettext':locale_label,'text':locale_label}]
-        
+
+    @staticmethod
     def _get_cheetah_dict(cheetah_dict,page):
         """ find section page in cheetah_dict recursively """
     
         for ii in cheetah_dict.sections:
-            jj = _get_cheetah_dict(cheetah_dict[ii],page)
+            jj = Gettext._get_cheetah_dict(cheetah_dict[ii],page)
             if jj is not None:
                 return jj
         if page in cheetah_dict:
