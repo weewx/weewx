@@ -165,7 +165,7 @@ class Gettext(SearchList):
             # if key as well as page are empty
             return FilesBinder('N/A',d,{},{'lang':self.lang})
             
-        return [{'gettext':locale_label,'text':locale_label}]
+        return [{'gettext':locale_label}]
 
     @staticmethod
     def _get_cheetah_dict(cheetah_dict,page):
