@@ -6,7 +6,7 @@
 #encoding UTF-8
 ##
 <!DOCTYPE html>
-<html lang="en">
+<html lang="$gettext.lang">
   <head>
     ## This choice should match the #encoding directive above
     <meta charset="UTF-8">
@@ -160,8 +160,7 @@
     </div>
 
     <p class="footnote">
-      This station is controlled by <a href="http://weewx.com/">WeeWX</a>, an
-      experimental weather software system written in Python.
+      $gettext("footnote1")<a href="http://weewx.com/">WeeWX</a>$gettext("footnote2")
     </p>
 
     #include "analytics.inc"
