@@ -137,7 +137,10 @@ class Gettext(SearchList):
                         d={page:d}
             except (KeyError,IndexError,ValueError,TypeError) as e:
                 # in case of errors get an empty dict
-                logerr("could not read [[%s]]: %s" % (page,e))
+                if self.text_dict:
+                    logerr("could not read section [Texts][[%s]] for report %s: %s" % (page,self.generator.skin_dict.get('REPORT_NAME','unknown'),e))
+                else:
+                    logerr("no section [Texts] found for report %s: %s" % (self.generator.skin_dict.get('REPORT_NAME','unknown'),e))
                 d = {}
             
             # if key is not empty, get the value for key        

@@ -309,6 +309,54 @@ class StdReportEngine(threading.Thread):
                           lang_config_path, report, e)
                 raise
         
+        # The key 'target_unit' or 'unit_system' defines the target unit
+        # system to be used with the report. The value can be 'US',
+        # 'METRIC', 'METRICWX', or 'METRICDE'
+        
+        # Check if a target unit system is defined.
+        if 'target_unit' in self.config_dict['StdReport'][report]:
+            # 'target_unit' is set in weewx.conf
+            target_unit = self.config_dict['StdReport'][report]['target_unit']
+        elif 'unit_system' in self.config_dict['StdReport'][report]:
+            # 'unit_system' is set in weewx.conf
+            target_unit = self.config_dict['StdReport'][report]['unit_system']
+        elif 'target_unit' in skin_dict:
+            # 'target_unit' is set in skin.conf
+            target_unit = skin_dict['target_unit']
+        elif 'unit_system' in skin_dict:
+            # 'unit_system' is set in skin.conf
+            target_unit = skin_dict['unit_system']
+        else:
+            # No unit system defined. Use defaults.
+            target_unit = None
+        log.debug("target unit system for report '%s': %s" % (report,target_unit))
+
+        # If a target unit system is defined get the appropriate dict
+        # out of units.py.
+        if target_unit:
+        
+            try:
+                merge_dict = weewx.units.std_groups[weewx.units.unit_constants[target_unit]]
+            except (KeyError,IndexError):
+                if target_unit=='METRICDE':
+                    merge_dict = weewx.units.MetricUnits
+                    merge_dict.prepend({
+                        'group_rain':'mm',
+                        'group_rainrate':'mm_per_hour'})
+                else:
+                    merge_dict = {}
+                
+            merge_dict = {'Units':{'Groups':merge_dict}}
+
+            try:            
+                weeutil.config.merge_config(skin_dict, merge_dict)
+                if self.first_run:
+                    log.info("Using unit system %s for report '%s'" % 
+                             (target_unit, report))
+            except (SyntaxError,TypeError,IOError) as e:
+                log.error("error merging target unit system for report '%s'" % report)
+                pass
+                
         #######################################################################
         
         # Finally, inject any overrides for this specific report. Because this is the last merge, it will have the
