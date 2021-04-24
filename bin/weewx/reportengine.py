@@ -338,13 +338,7 @@ class StdReportEngine(threading.Thread):
             try:
                 merge_dict = weewx.units.std_groups[weewx.units.unit_constants[target_unit]]
             except (KeyError,IndexError):
-                if target_unit=='METRICDE':
-                    merge_dict = weewx.units.MetricUnits
-                    merge_dict.prepend({
-                        'group_rain':'mm',
-                        'group_rainrate':'mm_per_hour'})
-                else:
-                    merge_dict = {}
+                merge_dict = {}
                 
             merge_dict = {'Units':{'Groups':merge_dict}}
 
