@@ -3094,10 +3094,138 @@ $month.outTemp.series(aggregate_type='max', aggregate_interval='day', time_serie
           Internationalization support with 
           <span class="code">$gettext</span>
         </h3>
+        <p>
+          Web pages and other files to be created do not only contain
+          observation values and their labels but also static text.
+          The <span class="code">$gettext</span> tag provides 
+          internationalization support for those static texts.
+          To support internationalization do not write static
+          text into to template or include files but use 
+          <span class="code">$gettext</span> there to define it.
+        </p>
+        <p>
+          Suppose you write a skin called 
+          "<span class="code">YourSkin</span>" 
+          and
+          you want to have a head line in there, that
+          is "Current Conditions" in English, but "aktuelle Werte"
+          in german, "Conditions actuelles" in french etc. Then
+          the template file could contain:
+        </p>
+        <pre class="tty">...
+&lt;h1&gt;$gettext("Current Conditions")&lt;/h1&gt;
+...</pre>
+        <p>
+          The section of <span class="code">weewx.conf</span>
+          configuring your skin could now look like this:
+        </p>
+        <pre class="tty">...
+[StdReport]
+    ...
+    [[YourSkinReport]]
+        skin = YourSkin
+        lang = fr
+    ...</pre>
+        <p>
+          With <span class="code">lang = fr</span> the report
+          is in french. To get it in English, replace the language
+          code <span class="code">fr</span> by the code for English
+          <span class="code">en</span>. And to get it in german
+          use <span class="code">de</span>.
+        </p>
+        <p>
+          To make that work a language file has to be created for
+          each language supported. The language files reside in
+          the <span class="code">lang</span> subdirectory of the
+          skin directory that is defined by the 
+          <span class="code">skin</span> option. The file name
+          of the language file is the language code appended
+          by <span class="code">.conf</span>, for example
+          <span class="code">en.conf</span>, 
+          <span class="code">de.conf</span>, or
+          <span class="code">fr.conf</span>.
+        </p>
+        <p>
+          The language file has the same layout as 
+          <span class="code">skin.conf</span>, i.e.
+          you can put language specific versions of the labels there.
+          Additionally a section <span class="code">[Texts]</span>
+          can be defined to hold the static texts used in the skin.
+          For the example above the language files would contain
+          the following:
+        </p>
+        <p class="code">en.conf</p>
+        <pre class="tty">...
+[Texts]
+    "Current Conditions" = Current Conditions
+    ...</pre>
+        <p class="code">de.conf</p>
+        <pre class="tty">...
+[Texts]
+    "Current Conditions" = Aktuelle Werte
+    ...</pre>
+        <p class="code">fr.conf</p>
+        <pre class="tty">...
+[Texts]
+    "Current Conditions" = Conditions actuelles
+        </pre>
+        <p>
+          While it is not technically necessary we recommend to use
+          the whole English text for key. The template is easier to
+          read then. And it is easier for the person who translates
+          the texts if the original English version of the text is
+          found on the left side. But there are cases when that is 
+          not possible, and then you can use any string you find
+          reasonable enough to describe the entry.
+        </p>
+        <p>
+          See the <span class="symcode">SKIN_ROOT</span><span class="code">/Seasons/lang</span>
+          subdirectory for examples of language files. 
+        </p>
         
         <p>
-          
+          If your skin is big and there are lots of texts to define
+          you can structure the <span class="code">[Texts]</span>
+          section by subsections. Each template can have its own
+          subsection. The subsections need to be called identically
+          to the respective sections in <span class="code">skin.conf</span>.
+        <p/p>
+        <p>
+          Assuming you have a template section called 
+          <span class="code">[[[index]]]</span> and another
+          section called <span class="code">[[[othertemplate]]]</span>,
+          then the language files could look like this:
         </p>
+        <pre class="tty">...
+[Texts]
+    ...some general texts here...
+    [[index]]
+        ...some texts for template index here, for example
+        Key = Some text
+    [[othertemplate]]
+        ...some texts for template othertemplate here, for example
+        Key = Some other text</pre>
+        <p>
+          To refer to these template specific texts add 
+          <span class="code">$page</span> as parameter to
+          <span class="code">$gettext()</span>. For example:
+        </p>
+        <pre class="tty">...
+$gettext("Key",$page)
+...</pre>
+        <p>
+          If template "index" is processed, the entry "Key" in
+          subsection <span class="code">[[index]]</span> is
+          used, and the value is "Some text". 
+          If template "othertemplate" is processed, the
+          entry "Key" in subsection 
+          <span class="code">[[othertemplate]]</span>
+          is used, and the value is "Some other text". 
+          You can place this tag in an include file
+          that is called by both "index" and "othertemplate",
+          and the value is chosen from the appropriate subsection.
+        </p>
+        
         
         <h2>Almanac</h2>
 
