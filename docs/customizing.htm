@@ -44,7 +44,7 @@
         <div class="logoref">
             <a href='https://weewx.com'> <img src='images/logo-weewx.png' class='logo' style="float:right"
                                              alt="weewx logo"/> </a><br/> <span class='version'>
-Version: 4.5
+Version: 4.6
     </span>
         </div>
         <div class="title">WeeWX Customization Guide</div>
@@ -4444,10 +4444,49 @@ class MyStats(SearchList):                                                   # 1
         <h1 id="localization">Localization</h1>
 
         <p>
-            This section is provides suggestions for localization, including translation to different languages and
+            This section provides suggestions for localization, 
+            including translation to different languages and
             display of data in formats specific to a locale.
         </p>
+        
+        <h2>If localization is already done</h2>
+        <p>
+            First look whether the skin already came with a localization
+            for your language. If there is a 
+            <span class="code">lang</span> subdirectory in the skin
+            directory, look into it. There you find a file for each
+            language this skin is already localized to. If your
+            language is there, all you need to do is to select it
+            in <span class="code">weewx.conf</span>:
+        </p>
+        <pre class="tty">...
+[StdReport]
+    ...
+    [[TheSkin]]
+        skin = skin_directory
+        <span class="highlight">lang = language_code</span>
+        ...</pre>
 
+        <h2>If only your language is missing</h2>
+        
+        <p>
+            If the <span class="code">lang</span> subdirectory
+            is present in the skin directory the skin is
+            probably prepared already for localization. 
+            The only thing to do then is translating. 
+            To do so, copy the file 
+            <span class="code">en.conf</span> and name it
+            according to the language code of your language.
+            Then translate all the strings on the right
+            side of the equal signs to your language. 
+            The skin author may be interested in your
+            language file to ship it together with the
+            skin for the use of other users.
+            Last set the language code in
+            <span class="code">weewx.conf</span>
+            as described in the previous section.
+        </p>
+        
         <h2>How to localize a single report</h2>
 
         <p>
@@ -4456,15 +4495,37 @@ class MyStats(SearchList):                                                   # 1
             formats and language.
         </p>
 
+        <h3>Create the language file</h3>
+        
+        <p>
+            Create a subdirectory called <span class="code">lang</span> 
+            in the skin directory.
+            
+            Then create a file named by the language code with the
+            suffix <span class="code">.conf</span>. For example, if
+            you want to translate to spanish, name the file 
+            <span class="code">es.conf</span>. 
+            The next step is
+            to make the templates language-aware as described in the
+            following section.
+        </p>
+        
         <h3>Translate the templates</h3>
 
         <p>
-            In every HTML template (these typically have a file suffix of <span class="code">.html.tmpl</span>) change
-            the HTML "lang" attribute to the target language. For example, for Spanish use <span class="code">es</span>:
+            Open the template file and the language file in different
+            editor windows. It is much easier if you can change both
+            files simultaneously.
+        </p>
+        
+        <p>
+            In every HTML template (these typically have a file suffix of 
+            <span class="code">.html.tmpl</span>) change
+            the HTML "lang" attribute to a configurable value.
         </p>
         <pre class="tty">
 &lt;!DOCTYPE html&gt;
-&lt;html lang="<span class="highlight">es</span>"&gt;
+&lt;html lang="<span class="highlight">$gettext.lang</span>"&gt;
   &lt;head&gt;
     &lt;meta charset="UTF-8"&gt;
     ...
@@ -4497,12 +4558,26 @@ class MyStats(SearchList):                                                   # 1
         <pre class="tty">
 &lt;div id='current_widget' class="widget"&gt;
   &lt;div class="widget_title"&gt;
-    <span class="highlight">Conditions Actuelle</span>
+    <span class="highlight">$gettext("Current Conditions")</span>
     &lt;a class="widget_control"
       onclick="toggle_widget('current')"&gt;&amp;diams;&lt;/a&gt;
   &lt;/div&gt;
         </pre>
-
+        <p>
+            In the language file start a 
+            <span class="code">[Texts]</span> section and place the
+            translation there like:
+        </p>
+        <pre class="tty">...
+[Texts]
+    ...
+    "Current Conditions" = Conditions Actuelles
+    ...</pre>
+        <p>
+            Repeat that for all strings you find. Make sure not
+            to replace HTML tags and HTML options.
+        </p>
+        
         <h3>Translate labels and modify local options</h3>
 
         <p>
@@ -4619,13 +4694,21 @@ class MyStats(SearchList):                                                   # 1
             locales? This example shows how to translate the <em>Seasons</em> skin for multiple languages.
         </p>
         <p>
-            Create a directory for each language. Each directory contains template files and a skin configuration file.
-            Any text in each template file should be in the target language. Ensure that each HTML template file has the
-            <span class="code">lang</span> set properly.
+            Create a subdirectory called 
+            <span class="code">lang</span> in the skin directory.
+            The language files containing the language dependent
+            information go there. Start creating a language file
+            for the primary language and save it to the 
+            <span class="code">lang</span> directory. The name
+            of the file consists of the language code of the
+            target language and the suffix 
+            <span class="code">.conf</span>. Later on you can 
+            create language files for each language you want
+            to support based on that file.
         </p>
         <p>
-            Translate observation names and other labels, and put them into the skin configuration files. There should
-            be one configuration file for each language.
+            Translate observation names and other labels, and put them 
+            into the created language file. 
         </p>
         <p>
             Ensure that any locale-specific formatting is specified properly. For example, consider the <span
@@ -4637,19 +4720,27 @@ class MyStats(SearchList):                                                   # 1
             whatever locale is set in the environment in which WeeWX is running.
         </p>
         <p>
-            The result will be a directory of templates and configurations, with one directory for each
+            Static texts are localized using the 
+            <span class="code">$gettext(</span><span class="symcode">"original text"</span><span class="code">)</span> tag. 
+            Create a section <span class="code">[Texts]</span>
+            in the language file and place a line
+        </p>
+        <pre class="tty">"original text" = translated text</pre>
+        <p>
+            there in each language file. In the template file you refer
+            to those texts by 
+        </p>
+        <pre class="tty">$gettext("original text")</pre>
+        <p>
+            According to the language setting of the report the tag
+            stands for the text in the appropriate language.
+        </p>
+        
+        <p>
+            The result will be a directory of language files
+            with one file for each
             language/localization.
         </p>
-        <pre class="tty">
-skins/Seasons/
-skins/Seasons/en/skin.conf
-skins/Seasons/en/index.html.tmpl
-skins/Seasons/es/skin.conf
-skins/Seasons/es/index.html.tmpl
-skins/Seasons/de/skin.conf
-skins/Seasons/de/index.html.tmpl
-skins/Seasons/fr/skin.conf
-skins/Seasons/fr/index.html.tmpl</pre>
 
         <p>
             Users will then create each report in the WeeWX configuration file.
@@ -4657,16 +4748,20 @@ skins/Seasons/fr/index.html.tmpl</pre>
         <pre class="tty">
 [StdReport]
     [[Seasons_en]]
-        skin = Seasons/en
+        skin = Seasons
+        lang = en
         HTML_ROOT = public_html/en
     [[Seasons_es]]
-        skin = Seasons/es
+        skin = Seasons
+        lang = es
         HTML_ROOT = public_html/es
     [[Seasons_de]]
-        skin = Seasons/de
+        skin = Seasons
+        lang = de
         HTML_ROOT = public_html/de
     [[Seasons_fr]]
-        skin = Seasons/fr
+        skin = Seasons
+        lang = fr
         HTML_ROOT = public_html/fr</pre>
         <p>
             The result is multiple reports, each in a different language and localization, independent of the locale of
@@ -5961,7 +6056,23 @@ xstats/bin/user/xstats.py</pre>
 
         <p>
             This section contains the options available in the skin configuration file, <span
-            class="code">skin.conf</span>.
+            class="code">skin.conf</span>. The same options apply to the
+            language files found in the subdirectory 
+            <span class="code">lang</span>, like 
+            <span class="code">lang/en.conf for English</span>. 
+        </p>
+        <p>
+            We recommend to put
+            <ul>
+              <li>
+                options that control the behavior of the skin into 
+                <span class="code">skin.conf</span> and 
+              </li>
+              <li>
+                language dependent labels and texts into the 
+                language files.
+              </li>
+            </ul>
         </p>
 
         <p>
@@ -6369,10 +6480,48 @@ growing_base = 50.0, degree_F</pre>
             class="code">time_delta</span> will be accepted. Default is 300 seconds.
         </p>
 
-
+        <h2 class="config_section" id="texts">[Texts]</h2>
+        
+        <p>
+          This section applies to language files only.
+        </p>
+        <p>
+          The section <span class="code">[Texts]</span> holds 
+          static texts that are used in the templates. 
+          Generally there are multiple language files, each file
+          for one language and named by the language code
+          defined in <a
+          href="https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes"
+            target="_blank">ISO&nbsp;639-1</a>.
+          The entries
+          give the translation of the texts to the target language, like
+        </p>
+        <pre class="tty">"English text" = same text in the target language</pre>
+        <p>
+          or define texts by keys that can be refereced within the template.
+        </p>
+        <pre class="tty">"Key" = some text to display</pre>
+        <p>
+          To use the English text for the key is recommended, because
+          the template is easier to read then and while translating
+          you see the original English text on the left side.
+        </p>
+        <p class="warning">
+          <strong>Note!</strong><br/>
+          Strings that include commas must be included in single or
+          double quotes.
+        </p>
+        <p>
+          There may be subsections, named like the template
+          subsections in the 
+          <span class="code">[CheetahGenerator]</span> section of
+          <span class="code">skin.conf</span>. The entries defined
+          in such subsections apply to the respective template only.
+        
         <h2 id="CheetahGenerator">[CheetahGenerator]</h2>
 
-        <p>This section contains the options for the Cheetah generator.</p>
+        <p>This section contains the options for the Cheetah generator.
+        It applies to <span class="code">skin.conf</span> only.</p>
 
         <p class="config_option">search_list</p>
 
