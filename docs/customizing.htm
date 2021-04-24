@@ -808,6 +808,16 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
                 <td>Highest precedence. Has the final say.</td>
             </tr>
             <tr>
+                <td class="code">skins/<span
+                class="symcode">report_name</span>/ lang/<span
+                class="symcode">language_code</span>.conf</td>
+                <td></td>
+                <td>Affects only the report <span class="symcode">report_name</span>.</td>
+                <td class="code">[Labels] / [[Generic]]</td>
+                <td>Internationalization support. Preferably
+                supplied by the skin author.</td>
+            </tr>
+            <tr>
                 <td class="code">weewx.conf</td>
                 <td class="code"><a href="#change_defaults">[StdReport] / [[Defaults]]</a></td>
                 <td>Affects <em>all</em> reports.</td>
@@ -884,6 +894,46 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
             wants to use the string <span class="code">Exterior Temperature</span>, instead of <span class="code">Outside Temperature</span>
             for the label for <span class="code">outTemp</span>. The file includes no definition for <span class="code">inTemp</span>.
         </p>
+        
+        <p>
+            Now suppose the skin author took care of internationalization
+            and provided language files. In this case s/he would not have
+            set the label in <span class="code">skin.conf</span> but in
+            a language file, for English in 
+            <span class="code">lang/en.conf</span>, for german in
+            <span class="code">lang/de.conf</span> etc.
+        </p>
+        <p> 
+            <span class="code">lang/en.conf</span> would contain
+            what was defined in <span class="code">skin.conf</span>
+            before:
+        </p>
+        <pre class="tty">
+...
+[Labels]
+    ...
+    [[Generic]]
+        ...
+        outTemp = Exterior Temperature
+</pre>
+        <p>
+            <span class="code">lang/de.conf</span> would contain:
+        </p>
+        <pre class="tty">
+...
+[Labels]
+    ...
+    [[Generic]]
+        ...
+        outTemp = Außentemperatur
+        inTemp = Innentemperatur
+</pre>
+        <p>
+            The user sets the language by the optional
+            <span class="code">lang</span> option in 
+            <span class="code">weewx.conf</span>.
+        </p>
+
         <p>
             Finally, for purposes of illustrating precedence, suppose the <span class="code">[StdReport]</span> section
             of <span class="code">weewx.conf</span> contains this:
@@ -904,6 +954,10 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
         [[[Labels]]]
             [[[[Generic]]]]
                 outTemp = Barn Temperature
+                
+    [[LifeC]]
+        skin = Life
+        lang = de
 </pre>
 
         <p>
@@ -931,20 +985,31 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
                 <td>Inside Temperature</td>
                 <td>Barn Temperature</td>
             </tr>
+            <tr>
+                <td>LifeC</td>
+                <td>Innentemperatur</td>
+                <td>Außentemperatur</td>
+            </tr>
         </table>
 
         <p>
-            Note how the values specified for <span class="code">inTemp</span> are not overridden anywhere, so the value
+            Note how the values specified for <span class="code">inTemp</span> 
+            are not overridden anywhere, except 
+            <span class="clode">lang/de.conf</span>, so the value
             specified in <span class="code">weewx/defaults.py</span>, that is, <span
-            class="code">Inside Temperature</span>, is used for all reports.</p>
+            class="code">Inside Temperature</span>, is used for all reports,
+            except <span class="code">LifeC</span>.</p>
         <p>
             The value for <span class="code">outTemp</span> is not overridden for report <span class="code">SeasonsA</span>,
             so it uses the label specified in <span class="code">weewx/defaults.py</span>, that is, <span class="code">Outside Temperature</span>.
             By contrast, for the "Life" reports, a value for <span class="code">outTemp</span>
             was specified in the skin so, in the absence of any user override, its value, <span class="code">Exterior
-            Temperature</span> will be used as the new default. Finally, for the report <span class="code">LifeB</span>,
+            Temperature</span> will be used as the new default. For the report <span class="code">LifeB</span>,
             the user <em>has</em> specified an override for <span class="code">outTemp</span>, so that value,
             <span class="code">Barn Temperature</span>, is used.
+            Finally, for the report <span class="code">LifeC</span>
+            a language has been set, so the labels are taken from the
+            specified language file.
         </p>
 
         <p>
@@ -1119,7 +1184,40 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
         </p>
         <p>
             To accomplish this, we will generate two reports, one using the defaults, the other using overrides to
-            change the target unit system and the target directory. The section <span class="code">[StdReport]</span>
+            change the target unit system and the target directory. 
+        </p>
+        <p>
+            If you only want to use one of the predefined unit systems
+            like <span class="code">US</span> or
+            <span class="code">METRIC</span> you can simply specify
+            a unit system in the report configuration like this:
+        </p>
+        <pre class="tty">
+[StdReport]
+
+    # Where the skins reside, relative to WEEWX_ROOT
+    SKIN_ROOT = skins
+
+    # Where the generated reports should go, relative to WEEWX_ROOT
+    HTML_ROOT = public_html
+
+    # The database binding indicates which data should be used in reports.
+    data_binding = wx_binding
+
+<span class="highlight">    [[SeasonsUSReport]]</span>
+        skin = Seasons
+        <span class="higlight">target_unit = US</span>
+        enable = true
+
+<span class="highlight">    [[SeasonsMetricReport]]
+        skin = Seasons
+        target_unit = METRIC
+        enable = true
+        HTML_ROOT = public_html/metric</pre>
+        <p>
+            If you need individual settings for a lot of units you
+            can specify the units directly in the report configuration.
+            In this case the section <span class="code">[StdReport]</span>
             will look like this:
         </p>
         <pre class="tty">
@@ -2928,6 +3026,79 @@ $month.outTemp.series(aggregate_type='max', aggregate_interval='day', time_serie
             <a href="https://github.com/weewx/weewx/wiki/Tags-for-series"><em>Tags for series</em></a>.
         </p>
 
+        <h3>General tags</h3>
+        
+        <p>
+           There are some general tags, that do not reflect observation
+           data but technical data of processing the template files. 
+           You can especially use them in <span class="code">#if</span>
+           expressions to control how Cheetah processes the template.
+        </p>
+        <table class="indent">
+          <tbody>
+            <tr class="first_row">
+              <td>Tag</td>
+              <td>Description</td>
+            </tr>
+            <tr>
+              <td class="code first_col">$month_name</td>
+              <td>Name of the month, the file is created for</td>
+            </tr>
+            <tr>
+              <td class="code first_col">$year_name</td>
+              <td>Year, the file is created for</td>
+            </tr>
+            <tr>
+              <td class="code first_col">$encoding</td>
+              <td>Character encoding, to which the file is converted
+              after creation. Possible values are
+              <span class="code">html_entities</span>,
+              <span class="code">strict_ascii</span>,
+              <span class="code">normalized_ascii</span>, and
+              <span class="code">utf-8</span>.
+              </td>
+            </tr>
+            <tr>
+              <td class="code first_col">$page</td>
+              <td>Name of the page that is actually processed.
+              This is the section name from 
+              <span class="code">skin.conf</span>
+              where the template is described. You can especially
+              use it in include files that are included in multiple
+              templates. So parts of the content defined in the include
+              file can depend on the template file, for example
+              header lines. You can also use it together with
+              <span class="code">$gettext</span> to structure
+              the language file.</td>
+            </tr>
+            <tr>
+              <td class="code first_col">$gettext.lang</td>
+              <td>Language code set by the 
+              <span class="code">lang</span> option
+              for the report. You can use this tag in
+              <span class="code">#if</span> expressions and
+              to include language codes where the HTML
+              specification requires them.
+            </tr>
+            <tr>
+              <td class="code first_col">$gettext(page=$page).template</td>
+              <td>
+                File name of the template actually processed
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+
+        <h3 id="Tag_$gettext">
+          Internationalization support with 
+          <span class="code">$gettext</span>
+        </h3>
+        
+        <p>
+          
+        </p>
+        
         <h2>Almanac</h2>
 
         <p>
