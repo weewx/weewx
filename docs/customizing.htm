@@ -443,7 +443,8 @@ Version: 4.6
 
         <p>
             Each report has a <em>skin</em> associated with it. For most reports, the relationship with the skin is an
-            obvious one: it contains the templates, any auxiliary files such as background GIFs or CSS style sheets, and
+            obvious one: it contains the templates, any auxiliary files such as background
+            GIFs or CSS style sheets, files with localization data, and
             a <em>skin configuration file</em>, <span class="code">skin.conf</span>. If you will, the skin controls the
             <em>look and feel </em>of the report. Note that more than one report can use the same skin. For example, you
             might want to run a report that uses US Customary units, then run another report against the same skin, but
@@ -1206,12 +1207,12 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
 
 <span class="highlight">    [[SeasonsUSReport]]</span>
         skin = Seasons
-        <span class="higlight">target_unit = US</span>
+        <span class="higlight">unit_system = US</span>
         enable = true
 
 <span class="highlight">    [[SeasonsMetricReport]]
         skin = Seasons
-        target_unit = METRIC
+        unit_system = METRIC
         enable = true
         HTML_ROOT = public_html/metric</pre>
         <p>

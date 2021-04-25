@@ -48,44 +48,27 @@
 """
 
 from weewx.cheetahgenerator import SearchList
-from weewx.units import ValueTuple,ValueHelper
-import configobj
-import weeutil.weeutil
-import weeutil.config
-import os
-import os.path
+#from weewx.units import ValueTuple,ValueHelper
+#import configobj
+#import weeutil.weeutil
+#import weeutil.config
+#import os
+#import os.path
 
-try:
-    # Test for new-style weewx v4 logging by trying to import weeutil.logger
-    import weeutil.logger
-    import logging
+# Test for new-style weewx v4 logging by trying to import weeutil.logger
+import weeutil.logger
+import logging
 
-    log = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
-    def logdbg(msg):
-        log.debug(msg)
+def logdbg(msg):
+    log.debug(msg)
 
-    def loginf(msg):
-        log.info(msg)
+def loginf(msg):
+    log.info(msg)
 
-    def logerr(msg):
-        log.error(msg)
-
-except ImportError:
-    # Old-style weewx logging
-    import syslog
-
-    def logmsg(level, msg):
-        syslog.syslog(level, 'gettext: %s' % msg)
-
-    def logdbg(msg):
-        logmsg(syslog.LOG_DEBUG, msg)
-
-    def loginf(msg):
-        logmsg(syslog.LOG_INFO, msg)
-
-    def logerr(msg):
-        logmsg(syslog.LOG_ERR, msg)
+def logerr(msg):
+    log.error(msg)
 
 
 class Gettext(SearchList):
@@ -94,6 +77,8 @@ class Gettext(SearchList):
         """Create an instance of the class"""
         super(Gettext,self).__init__(generator)
         
+        # get the set language code
+        # (needed for things like <html lang="...">
         self.lang = self.generator.skin_dict.get('lang','undefined')
         _idx = self.lang.rfind('/')
         if _idx>=0:
@@ -102,16 +87,17 @@ class Gettext(SearchList):
         if _idx>=0:
             self.lang = self.lang[:_idx]
         
+        # check if skin_dict contains a section [Labels][[Generic]]
+        # get it, if it is there, otherwise use an empty dict
         self.labels_dict={}
         if 'Labels' in self.generator.skin_dict:
             if 'Generic' in self.generator.skin_dict['Labels']:
                 self.labels_dict = self.generator.skin_dict['Labels']['Generic']
 
-        d=self.generator.skin_dict
-        if 'Texts' in d:
-            self.text_dict = d['Texts']
-        elif 'Templates' in d:
-            self.text_dict = d['Templates']
+        # check if skin_dict contains a section [Texts]
+        # get if it is there, otherwise use an empty dict
+        if 'Texts' in self.generator.skin_dict:
+            self.text_dict = self.generator.skin_dict['Texts']
         else:
             self.text_dict = {}
         if not isinstance(self.text_dict,dict):

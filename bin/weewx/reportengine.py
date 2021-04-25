@@ -309,34 +309,28 @@ class StdReportEngine(threading.Thread):
                           lang_config_path, report, e)
                 raise
         
-        # The key 'target_unit' or 'unit_system' defines the target unit
+        # The key 'unit_system' defines the target unit
         # system to be used with the report. The value can be 'US',
         # 'METRIC', 'METRICWX', or 'METRICDE'
         
         # Check if a target unit system is defined.
-        if 'target_unit' in self.config_dict['StdReport'][report]:
-            # 'target_unit' is set in weewx.conf
-            target_unit = self.config_dict['StdReport'][report]['target_unit']
-        elif 'unit_system' in self.config_dict['StdReport'][report]:
+        if 'unit_system' in self.config_dict['StdReport'][report]:
             # 'unit_system' is set in weewx.conf
-            target_unit = self.config_dict['StdReport'][report]['unit_system']
-        elif 'target_unit' in skin_dict:
-            # 'target_unit' is set in skin.conf
-            target_unit = skin_dict['target_unit']
+            unit_system = self.config_dict['StdReport'][report]['unit_system']
         elif 'unit_system' in skin_dict:
             # 'unit_system' is set in skin.conf
-            target_unit = skin_dict['unit_system']
+            unit_system = skin_dict['unit_system']
         else:
             # No unit system defined. Use defaults.
-            target_unit = None
-        log.debug("target unit system for report '%s': %s" % (report,target_unit))
+            unit_system = None
+        log.debug("unit system for report '%s': %s" % (report,unit_system))
 
-        # If a target unit system is defined get the appropriate dict
+        # If a unit system is defined get the appropriate dict
         # out of units.py.
-        if target_unit:
+        if unit_system:
         
             try:
-                merge_dict = weewx.units.std_groups[weewx.units.unit_constants[target_unit]]
+                merge_dict = weewx.units.std_groups[weewx.units.unit_constants[unit_system]]
             except (KeyError,IndexError):
                 merge_dict = {}
                 
@@ -346,7 +340,7 @@ class StdReportEngine(threading.Thread):
                 weeutil.config.merge_config(skin_dict, merge_dict)
                 if self.first_run:
                     log.info("Using unit system %s for report '%s'" % 
-                             (target_unit, report))
+                             (unit_system, report))
             except (SyntaxError,TypeError,IOError) as e:
                 log.error("error merging target unit system for report '%s'" % report)
                 pass
