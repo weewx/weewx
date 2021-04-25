@@ -45,15 +45,12 @@
   You can use "speaking" key names. If they contain whitespace they need
   to be enclosed in quotes in the localization file
   
+  If the value contains commas you must enclose it in single or double
+  quotes. Otherwise an array instead of a string is returned.
+  
 """
 
 from weewx.cheetahgenerator import SearchList
-#from weewx.units import ValueTuple,ValueHelper
-#import configobj
-#import weeutil.weeutil
-#import weeutil.config
-#import os
-#import os.path
 
 # Test for new-style weewx v4 logging by trying to import weeutil.logger
 import weeutil.logger
@@ -100,6 +97,7 @@ class Gettext(SearchList):
             self.text_dict = self.generator.skin_dict['Texts']
         else:
             self.text_dict = {}
+        # if 'Texts' is not a section but an option, use an empty dict
         if not isinstance(self.text_dict,dict):
             self.text_dict = {}
         
@@ -112,29 +110,29 @@ class Gettext(SearchList):
                 page: section name  
                 
             """
-            d=self.text_dict
+            _text_dict = self.text_dict
 
             # get the appropriate section for page if defined
             try:
                 if page:
                     # page is specified --> get subsection "page"
-                    d = d[page]
-                    if not isinstance(d,dict):
-                        d={page:d}
+                    _text_dict = _text_dict[page]
+                    if not isinstance(_text_dict,dict):
+                        _text_dict={page:_text_dict}
             except (KeyError,IndexError,ValueError,TypeError) as e:
                 # in case of errors get an empty dict
                 if self.text_dict:
                     logerr("could not read section [Texts][[%s]] for report %s: %s" % (page,self.generator.skin_dict.get('REPORT_NAME','unknown'),e))
                 else:
                     logerr("no section [Texts] found for report %s: %s" % (self.generator.skin_dict.get('REPORT_NAME','unknown'),e))
-                d = {}
+                _text_dict = {}
             
             # if key is not empty, get the value for key        
             if key:
             
-                if key in d:
-                    # key is in dict d --> return value of key
-                    val = d[key]
+                if key in _text_dict:
+                    # key is in dict _text_dict --> return value of key
+                    val = _text_dict[key]
                 else:
                     # otherwise return key as value
                     val = key
@@ -149,10 +147,10 @@ class Gettext(SearchList):
                     cheetah_dict_key = "FileGenerator"
                 if cheetah_dict_key in self.generator.skin_dict:
                     cheetah_dict = Gettext._get_cheetah_dict(self.generator.skin_dict[cheetah_dict_key],page)
-                return FilesBinder(page,d,self.labels_dict,cheetah_dict)
+                return FilesBinder(page,_text_dict,self.labels_dict,cheetah_dict)
                 
             # if key as well as page are empty
-            return FilesBinder('N/A',d,{},{'lang':self.lang})
+            return FilesBinder('N/A',_text_dict,{},{'lang':self.lang})
             
         return [{'gettext':locale_label}]
 
@@ -160,10 +158,10 @@ class Gettext(SearchList):
     def _get_cheetah_dict(cheetah_dict,page):
         """ find section page in cheetah_dict recursively """
     
-        for ii in cheetah_dict.sections:
-            jj = Gettext._get_cheetah_dict(cheetah_dict[ii],page)
-            if jj is not None:
-                return jj
+        for section in cheetah_dict.sections:
+            subsection = Gettext._get_cheetah_dict(cheetah_dict[section],page)
+            if subsection is not None:
+                return subsection
         if page in cheetah_dict:
             return cheetah_dict[page]
         return None
