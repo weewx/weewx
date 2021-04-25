@@ -309,16 +309,19 @@ class StdReportEngine(threading.Thread):
                           lang_config_path, report, e)
                 raise
         
-        # The key 'unit_system' defines the target unit
-        # system to be used with the report. The value can be 'US',
-        # 'METRIC', 'METRICWX', or 'METRICDE'
+        # The key 'unit_system' defines the unit system to be used with 
+        # the report. The value can be 'US', 'METRIC', or 'METRICWX'
         
         # Check if a target unit system is defined.
+        # As config_dict is not merged into skin_dict so far, we
+        # need to check both. config_dict (weewx.conf) has the final say,
+        # so check it first.
         if 'unit_system' in self.config_dict['StdReport'][report]:
             # 'unit_system' is set in weewx.conf
             unit_system = self.config_dict['StdReport'][report]['unit_system']
         elif 'unit_system' in skin_dict:
-            # 'unit_system' is set in skin.conf
+            # 'unit_system' is set in skin_dict, which is merged from
+            # serveral sources including skin.conf
             unit_system = skin_dict['unit_system']
         else:
             # No unit system defined. Use defaults.
@@ -326,16 +329,20 @@ class StdReportEngine(threading.Thread):
         log.debug("unit system for report '%s': %s" % (report,unit_system))
 
         # If a unit system is defined get the appropriate dict
-        # out of units.py.
+        # out of units.py. If the user defined addtional units or
+        # unit groups, they are included here automatically.
         if unit_system:
         
+            # get the chosen unit system out of units.py
             try:
                 merge_dict = weewx.units.std_groups[weewx.units.unit_constants[unit_system]]
             except (KeyError,IndexError):
                 merge_dict = {}
                 
+            # build dict to merge
             merge_dict = {'Units':{'Groups':merge_dict}}
 
+            # merge into skin_dict
             try:            
                 weeutil.config.merge_config(skin_dict, merge_dict)
                 if self.first_run:
