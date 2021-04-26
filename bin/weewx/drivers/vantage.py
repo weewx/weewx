@@ -18,6 +18,7 @@ import struct
 import sys
 import time
 
+import six
 from six import int2byte, indexbytes, byte2int
 from six.moves import map
 from six.moves import zip
@@ -573,7 +574,14 @@ class Vantage(weewx.drivers.AbstractDevice):
         # Fetch a packet...
         _buffer = self.port.read(99)
         # ... see if it passes the CRC test ...
-        if crc16(_buffer):
+        crc = crc16(_buffer)
+        if crc:
+            if weewx.debug > 1:
+                log.error("LOOP buffer failed CRC check. Calculated CRC=%d" % crc)
+                if six.PY2:
+                    log.error("Buffer: " + "".join("\\x%02x" % ord(c) for c in _buffer))
+                else:
+                    log.error("Buffer: %s", _buffer)
             raise weewx.CRCError("LOOP buffer failed CRC check")
         # ... decode it ...
         loop_packet = self._unpackLoopPacket(_buffer[:95])
