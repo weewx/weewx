@@ -112,7 +112,7 @@ class Gettext(SearchList):
                 return FilesBinder(page,_text_dict,self.generator.skin_dict.get('Labels',{}).get('Generic',{}),cheetah_dict)
                 
             # if key as well as page are empty
-            return FilesBinder('N/A',_text_dict,{},{})
+            return _text_dict
             
         return [{'gettext':locale_label}]
 
