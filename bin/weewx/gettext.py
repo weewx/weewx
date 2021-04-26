@@ -1,5 +1,5 @@
 # Simple localization for WeeWX
-# Copyright (C) 2021 Johanna Roedenbeck
+# Copyright (C) 2021 Johanna Karen Roedenbeck
 
 #    See the file LICENSE.txt for your full rights.
 
@@ -58,15 +58,6 @@ import logging
 
 log = logging.getLogger(__name__)
 
-def logdbg(msg):
-    log.debug(msg)
-
-def loginf(msg):
-    log.info(msg)
-
-def logerr(msg):
-    log.error(msg)
-
 
 class Gettext(SearchList):
 
@@ -84,22 +75,6 @@ class Gettext(SearchList):
         if _idx>=0:
             self.lang = self.lang[:_idx]
         
-        # check if skin_dict contains a section [Labels][[Generic]]
-        # get it, if it is there, otherwise use an empty dict
-        self.labels_dict={}
-        if 'Labels' in self.generator.skin_dict:
-            if 'Generic' in self.generator.skin_dict['Labels']:
-                self.labels_dict = self.generator.skin_dict['Labels']['Generic']
-
-        # check if skin_dict contains a section [Texts]
-        # get if it is there, otherwise use an empty dict
-        if 'Texts' in self.generator.skin_dict:
-            self.text_dict = self.generator.skin_dict['Texts']
-        else:
-            self.text_dict = {}
-        # if 'Texts' is not a section but an option, use an empty dict
-        if not isinstance(self.text_dict,dict):
-            self.text_dict = {}
         
     def get_extension_list(self,timespan,db_lookup):
             
@@ -110,24 +85,21 @@ class Gettext(SearchList):
                 page: section name  
                 
             """
-            _text_dict = self.text_dict
+            _text_dict = self.generator.skin_dict.get('Texts',{})
 
             # get the appropriate section for page if defined
-            try:
-                if page:
-                    # page is specified --> get subsection "page"
-                    _text_dict = _text_dict[page]
-                    if not isinstance(_text_dict,dict):
-                        _text_dict={page:_text_dict}
-            except (KeyError,IndexError,ValueError,TypeError) as e:
-                # in case of errors get an empty dict
-                if self.text_dict:
-                    logerr("could not read section [Texts][[%s]] for report %s: %s" % (page,self.generator.skin_dict.get('REPORT_NAME','unknown'),e))
-                else:
-                    logerr("no section [Texts] found for report %s: %s" % (self.generator.skin_dict.get('REPORT_NAME','unknown'),e))
-                _text_dict = {}
+            # Note: no hierarchy here
+            if page:
+                if not page in _text_dict:
+                    log.error("could not find section [Texts][[%s]] for report %s" % (page,self.generator.skin_dict.get('REPORT_NAME','unknown')))
+                # Note: no 'else:' here, because we need the empty dict
+                # page is specified --> get subsection "page"
+                _text_dict = _text_dict.get(page,{})
+                # if the result is not a dict, make it a dict
+                if not isinstance(_text_dict,dict):
+                    _text_dict={page:_text_dict}
             
-            # if key is not empty, get the value for key        
+            # if key is not empty, get the value for key
             if key:
             
                 if key in _text_dict:
@@ -147,7 +119,7 @@ class Gettext(SearchList):
                     cheetah_dict_key = "FileGenerator"
                 if cheetah_dict_key in self.generator.skin_dict:
                     cheetah_dict = Gettext._get_cheetah_dict(self.generator.skin_dict[cheetah_dict_key],page)
-                return FilesBinder(page,_text_dict,self.labels_dict,cheetah_dict)
+                return FilesBinder(page,_text_dict,self.generator.skin_dict.get('Labels',{}).get('Generic',{}),cheetah_dict)
                 
             # if key as well as page are empty
             return FilesBinder('N/A',_text_dict,{},{'lang':self.lang})

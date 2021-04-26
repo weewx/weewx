@@ -296,6 +296,10 @@ class StdReportEngine(threading.Thread):
             try:
                 merge_dict = configobj.ConfigObj(lang_config_path, file_error=True, encoding='utf-8')
                 log.debug("Found localization file %s for report '%s'", lang_config_path, report)
+                # make sure 'Texts' is a dict (section)
+                if not isinstance(merge_dict.get('Texts',{}),dict):
+                    log.error("'Texts' is not a section in '%s'" % lang_config_path)
+                    merge_dict['Texts']={}
                 # Merge the skin config file in:
                 weeutil.config.merge_config(skin_dict, merge_dict)
                 if self.first_run:
