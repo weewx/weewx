@@ -24,7 +24,7 @@ xtypes = []
 class XType(object):
     """Base class for extensions to the WeeWX type system."""
 
-    def get_scalar(self, obs_type, record, db_manager=None):
+    def get_scalar(self, obs_type, record, db_manager=None, **option_dict):
         """Calculate a scalar. Specializing versions should raise...
         
         - an exception of type `weewx.UnknownType`, if the type `obs_type` is unknown to the
@@ -35,7 +35,7 @@ class XType(object):
         raise weewx.UnknownType
 
     def get_series(self, obs_type, timespan, db_manager, aggregate_type=None,
-                   aggregate_interval=None):
+                   aggregate_interval=None, **option_dict):
         """Calculate a series, possibly with aggregation. Specializing versions should raise...
 
         - an exception of type `weewx.UnknownType`, if the type `obs_type` is unknown to the
@@ -64,13 +64,13 @@ class XType(object):
 
 # ##################### Retrieval functions ###########################
 
-def get_scalar(obs_type, record, db_manager=None):
+def get_scalar(obs_type, record, db_manager=None, **option_dict):
     """Return a scalar value"""
     # Search the list, looking for a get_scalar() method that does not raise an exception
     for xtype in xtypes:
         try:
             # Try this function. It will raise an exception if it does not know about the type.
-            return xtype.get_scalar(obs_type, record, db_manager)
+            return xtype.get_scalar(obs_type, record, db_manager, **option_dict)
         except weewx.UnknownType:
             # This function does not know about the type. Move on to the next one.
             pass
@@ -78,14 +78,15 @@ def get_scalar(obs_type, record, db_manager=None):
     raise weewx.UnknownType(obs_type)
 
 
-def get_series(obs_type, timespan, db_manager, aggregate_type=None, aggregate_interval=None):
+def get_series(obs_type, timespan, db_manager, aggregate_type=None, aggregate_interval=None, 
+               **option_dict):
     """Return a series (aka vector) of, possibly aggregated, values."""
     # Search the list, looking for a get_series() method that does not raise an exception
     for xtype in xtypes:
         try:
             # Try this function. It will raise an exception if it does not know about the type.
             return xtype.get_series(obs_type, timespan, db_manager, aggregate_type,
-                                    aggregate_interval)
+                                    aggregate_interval, **option_dict)
         except (weewx.UnknownType, weewx.UnknownAggregation):
             # This function does not know about the type and/or aggregation.
             # Move on to the next one.
@@ -116,7 +117,8 @@ class ArchiveTable(XType):
     """Calculate types and aggregates directly from the archive table"""
 
     @staticmethod
-    def get_series(obs_type, timespan, db_manager, aggregate_type=None, aggregate_interval=None):
+    def get_series(obs_type, timespan, db_manager, aggregate_type=None, aggregate_interval=None, 
+                   **option_dict):
         """Get a series, possibly with aggregation, from the main archive database.
 
         The general strategy is that if aggregation is asked for, chop the series up into separate
@@ -517,7 +519,8 @@ class DailySummaries(XType):
     }
 
     @staticmethod
-    def get_series(obs_type, timespan, db_manager, aggregate_type=None, aggregate_interval=None):
+    def get_series(obs_type, timespan, db_manager, aggregate_type=None, aggregate_interval=None, 
+                   **option_dict):
 
         # We cannot use the daily summaries if there is no aggregation
         if not aggregate_type:
@@ -725,7 +728,8 @@ class WindVec(XType):
                        'AND dateTime <= ?'
 
     @staticmethod
-    def get_series(obs_type, timespan, db_manager, aggregate_type=None, aggregate_interval=None):
+    def get_series(obs_type, timespan, db_manager, aggregate_type=None, aggregate_interval=None, 
+                   **option_dict):
         """Get a series, possibly with aggregation, for special 'wind vector' types. These are
         typically used for the wind vector plots.
         """
@@ -937,7 +941,8 @@ class XTypeTable(XType):
     been requested."""
 
     @staticmethod
-    def get_series(obs_type, timespan, db_manager, aggregate_type=None, aggregate_interval=None):
+    def get_series(obs_type, timespan, db_manager, aggregate_type=None, aggregate_interval=None, 
+                   **option_dict):
         """Get a series of an xtype, by using the main archive table. Works only for no
         aggregation. """
 
