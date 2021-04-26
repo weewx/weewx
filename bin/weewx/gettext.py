@@ -65,16 +65,6 @@ class Gettext(SearchList):
         """Create an instance of the class"""
         super(Gettext,self).__init__(generator)
         
-        # get the set language code
-        # (needed for things like <html lang="...">
-        self.lang = self.generator.skin_dict.get('lang','undefined')
-        _idx = self.lang.rfind('/')
-        if _idx>=0:
-            self.lang = self.lang[_idx+1:]
-        _idx = self.lang.rfind('.conf')
-        if _idx>=0:
-            self.lang = self.lang[:_idx]
-        
         
     def get_extension_list(self,timespan,db_lookup):
             
@@ -122,7 +112,7 @@ class Gettext(SearchList):
                 return FilesBinder(page,_text_dict,self.generator.skin_dict.get('Labels',{}).get('Generic',{}),cheetah_dict)
                 
             # if key as well as page are empty
-            return FilesBinder('N/A',_text_dict,{},{'lang':self.lang})
+            return FilesBinder('N/A',_text_dict,{},{})
             
         return [{'gettext':locale_label}]
 
