@@ -51,6 +51,8 @@
 """
 
 from weewx.cheetahgenerator import SearchList
+from weeutil.weeutil import KeyDict
+import weeutil.config
 
 # Test for new-style weewx v4 logging by trying to import weeutil.logger
 import weeutil.logger
@@ -61,11 +63,6 @@ log = logging.getLogger(__name__)
 
 class Gettext(SearchList):
 
-    def __init__(self,generator):
-        """Create an instance of the class"""
-        super(Gettext,self).__init__(generator)
-        
-        
     def get_extension_list(self,timespan,db_lookup):
             
         def locale_label(key='',page=''):
@@ -80,36 +77,30 @@ class Gettext(SearchList):
             # get the appropriate section for page if defined
             # Note: no hierarchy here
             if page:
-                if not page in _text_dict:
+                if page not in _text_dict:
                     log.error("could not find section [Texts][[%s]] for report %s" % (page,self.generator.skin_dict.get('REPORT_NAME','unknown')))
                 # Note: no 'else:' here, because we need the empty dict
                 # page is specified --> get subsection "page"
                 _text_dict = _text_dict.get(page,{})
-                # if the result is not a dict, make it a dict
-                if not isinstance(_text_dict,dict):
-                    _text_dict={page:_text_dict}
             
             # if key is not empty, get the value for key
             if key:
-            
-                if key in _text_dict:
-                    # key is in dict _text_dict --> return value of key
-                    val = _text_dict[key]
-                else:
-                    # otherwise return key as value
-                    val = key
+                # return the value for key
+                # if key not in _text_dict return key instead
+                return KeyDict(_text_dict)[key]
                 
-                return val
-        
+
             # if key is empty but page is not return further class instance
             if page:
-                cheetah_dict={}
-                cheetah_dict_key = 'CheetahGenerator'
-                if "FileGenerator" in self.generator.skin_dict and 'CheetahGenerator' not in self.generator.skin_dict:
-                    cheetah_dict_key = "FileGenerator"
-                if cheetah_dict_key in self.generator.skin_dict:
-                    cheetah_dict = Gettext._get_cheetah_dict(self.generator.skin_dict[cheetah_dict_key],page)
-                return FilesBinder(page,_text_dict,self.generator.skin_dict.get('Labels',{}).get('Generic',{}),cheetah_dict)
+                _page_dict = weeutil.config.config_from_str('')
+                merge_dict = self.generator.skin_dict.get('Labels',{}).get('Generic',{})
+                if merge_dict:
+                    weeutil.config.merge_config(_page_dict,merge_dict)
+                merge_dict = Gettext._get_cheetah_dict(self.generator.skin_dict.get('CheetahGenerator',{}),page)
+                if merge_dict:
+                    weeutil.config.merge_config(_page_dict,merge_dict)
+                weeutil.config.merge_config(_page_dict,_text_dict)
+                return _page_dict
                 
             # if key as well as page are empty
             return _text_dict
@@ -128,39 +119,5 @@ class Gettext(SearchList):
             return cheetah_dict[page]
         return None
 
-
-class FilesBinder(object):
-    """ special labels for a specific page to be created by Cheetah """
-
-    def __init__(self,page,lang_files_dict,skin_labels_dict,cheetah_dict):
-        self.page=page
-        self.lang_files_dict=lang_files_dict
-        self.skin_labels_dict=skin_labels_dict
-        self.cheetah_dict=cheetah_dict
-        
-    def __getattr__(self,attr):
-        if attr in self.lang_files_dict:
-            # entry found in localization file
-            return self.lang_files_dict[attr]
-        elif attr in self.cheetah_dict:
-            # entry found [CheetahGenerator] subsection
-            return self.cheetah_dict[attr]
-        elif attr=='nav':
-            # if $gettext(page='xxx').nav not in localization file, try 
-            # nav_xxx in [Labels][[Generic]] section of skin.conf
-            # helpful for extending Belchertown skin
-            if 'nav_'+self.page in self.skin_labels_dict:
-                return self.skin_labels_dict['nav_'+self.page]
-        elif attr=='page_header':
-            # if $gettext(page='xxx').page_header not in localization file, 
-            # try xxx_page_header in [Labels][[Generic]] section of skin.conf
-            # helpful for extending Belchertown skin
-            x=self.page+'_page_header'
-            if x in self.skin_labels_dict:
-                return self.skin_labels_dict[x]
-        elif attr in self.skin_labels_dict:
-            # finally look in [Labels][[Generic]] section if skin.conf
-            return str(self.skin_labels_dict[attr])
-        return '$%s.%s' % (self.page,attr)
 
             

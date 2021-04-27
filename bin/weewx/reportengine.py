@@ -259,28 +259,14 @@ class StdReportEngine(threading.Thread):
 
         # The key 'lang' defines a language code like 'en' or 'de'. It is
         # used as a file name for a language file that is located in the
-        # 'lang' subdirectory of the skin directory. Like it is with the
-        # other path settings, a complete path overwrites the skin
-        # directory setting.
+        # 'lang' subdirectory of the skin directory. 
 
-        # If an localization file is defined, determine the path.
-        # As config_dict is not merged into skin_dict so far, we
-        # need to check both. config_dict (weewx.conf) has the final say,
-        # so check it first.
-        if 'lang' in self.config_dict['StdReport'][report]:
-            # 'lang' is set in weewx.conf
-            lang_config = "%s.conf" % self.config_dict['StdReport'][report]['lang']
-            log.debug("config_dict lang_config=%s for report %s" % (lang_config,report))
-        elif 'lang' in skin_dict:
-            # 'lang' is set in skin.conf
-            lang_config = "%s.conf" % skin_dict['lang']
-            log.debug("skin_dict lang_config=%s for report" % (lang_config,report))
-        else:
-            # No localization defined. Use defaults.
-            lang_config = None
-            log.debug("no language defined for report %s" % report)
+        # get the language option if defined
+        # (As config_dict is not merged into skin_dict so far, 
+        # skin_dict['lang'] has not the final value here. We
+        # have to take config_dict into account, too.)
+        lang_config = self.config_dict['StdReport'][report].get('lang',skin_dict.get('lang',None))
         
-        # If an localization file name could be determined, read the file.
         if lang_config:
         
             # Now add the options in the report's localization file. Start by figuring where it is located.
@@ -289,7 +275,7 @@ class StdReportEngine(threading.Thread):
                 self.config_dict['StdReport']['SKIN_ROOT'],
                 self.config_dict['StdReport'][report].get('skin', ''),
                 'lang',
-                lang_config)
+                lang_config+'.conf')
         
             # Now retrieve the language dictionary for the skin. Wrap it in a try block in case we fail.  It is ok if
             # there is no file - everything for a skin might be defined in the weewx configuration.
@@ -316,49 +302,22 @@ class StdReportEngine(threading.Thread):
                           lang_config_path, report, e)
                 raise
         
-        # The key 'unit_system' defines the unit system to be used with 
-        # the report. The value can be 'US', 'METRIC', or 'METRICWX'
-        
-        # Check if a target unit system is defined.
-        # As config_dict is not merged into skin_dict so far, we
-        # need to check both. config_dict (weewx.conf) has the final say,
-        # so check it first.
-        if 'unit_system' in self.config_dict['StdReport'][report]:
-            # 'unit_system' is set in weewx.conf
-            unit_system = self.config_dict['StdReport'][report]['unit_system']
-        elif 'unit_system' in skin_dict:
-            # 'unit_system' is set in skin_dict, which is merged from
-            # serveral sources including skin.conf
-            unit_system = skin_dict['unit_system']
-        else:
-            # No unit system defined. Use defaults.
-            unit_system = None
-        log.debug("unit system for report '%s': %s" % (report,unit_system))
+        # See if the user wants this report based on another unit system than US.
+        # The value can be US, METRIC, or METRICWX.
+        # (As config_dict is not merged into skin_dict so far, 
+        # skin_dict['units_base'] has not the final value here. We
+        # have to take config_dict into account, too.)
+        report_units_base = self.config_dict['StdReport'][report].get('units_base',skin_dict.get('units_base',None))
 
-        # If a unit system is defined get the appropriate dict
-        # out of units.py. If the user defined addtional units or
-        # unit groups, they are included here automatically.
-        if unit_system:
-        
-            # get the chosen unit system out of units.py
+        if report_units_base:
+            # Get the chosen unit system out of units.py. Copy it to prevent
+            # the original from being changed. Merge it into skin_dict.
             try:
-                merge_dict = weewx.units.std_groups[weewx.units.unit_constants[unit_system]]
-            except (KeyError,IndexError):
-                merge_dict = {}
-                
-            # build dict to merge
-            merge_dict = {'Units':{'Groups':merge_dict}}
+                merge_dict = weewx.units.std_groups[weewx.units.unit_constants[report_units_base]].copy()
+                weeutil.config.merge_config(skin_dict, {'Units':{'Groups':merge_dict}})
+            except (SyntaxError,TypeError,IndexError,ValueError,IOError) as e:
+                log.error("error merging unit system '%s' for report '%s'" % (report_units_base,report))
 
-            # merge into skin_dict
-            try:            
-                weeutil.config.merge_config(skin_dict, merge_dict)
-                if self.first_run:
-                    log.info("Using unit system %s for report '%s'" % 
-                             (unit_system, report))
-            except (SyntaxError,TypeError,IOError) as e:
-                log.error("error merging target unit system for report '%s'" % report)
-                pass
-                
         #######################################################################
         
         # Finally, inject any overrides for this specific report. Because this is the last merge, it will have the
