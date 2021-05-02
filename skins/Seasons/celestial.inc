@@ -58,7 +58,7 @@
         <table class="celestial">
           <tr><th>&#9728; $gettext("Sun",$page)</th><th></th></tr>
           <tr>
-            <td class="label">Start civil twilight</td>
+            <td class="label">$gettext("Start civil twilight",$page)</td>
             <td class="data">$almanac(horizon=-6).sun(use_center=1).rise</td>
           </tr>
           <tr>
@@ -66,7 +66,7 @@
             <td class="data">$almanac.sun.rise.format(None_string=$sun_None)</td>
           </tr>
           <tr>
-            <td class="label">Transit</td>
+            <td class="label">$gettext("Transit",$page)</td>
             <td class="data">$almanac.sun.transit</td>
           </tr>
           <tr>
@@ -74,7 +74,7 @@
             <td class="data">$almanac.sun.set.format(None_string=$sun_None)</td>
           </tr>
           <tr>
-            <td class="label">End civil twilight</td>
+            <td class="label">$gettext("End civil twilight",$page)</td>
             <td class="data">$almanac(horizon=-6).sun(use_center=1).set</td>
           </tr>
           <tr>
@@ -96,21 +96,21 @@
           #if $almanac.next_equinox.raw < $almanac.next_solstice.raw
             ## The equinox is before the solstice. Display them in order.
             <tr>
-              <td class="label">Equinox</td>
+              <td class="label">$gettext("Equinox",$page)</td>
               <td class="data">$almanac.next_equinox</td>
             </tr>
             <tr>
-              <td class="label">Solstice</td>
+              <td class="label">$gettext("Solstice",$page)</td>
               <td class="data">$almanac.next_solstice</td>
             </tr>
           #else
             ## The solstice is before the equinox. Display them in order.
             <tr>
-              <td class="label">Solstice</td>
+              <td class="label">$gettext("Solstice",$page)</td>
               <td class="data">$almanac.next_solstice</td>
             </tr>
             <tr>
-              <td class="label">Equinox</td>
+              <td class="label">$gettext("Equinox",$page)</td>
               <td class="data">$almanac.next_equinox</td>
             </tr>
           #end if
@@ -129,7 +129,7 @@
             <td class="data">$almanac.moon.rise</td>
           </tr>
           <tr>
-            <td class="label">Transit</td>
+            <td class="label">$gettext("Transit",$page)</td>
             <td class="data">$almanac.moon.transit</td>
           </tr>
           <tr>
@@ -155,25 +155,25 @@
           </tr>
           #if $almanac.next_full_moon.raw < $almanac.next_new_moon.raw
             <tr>
-              <td class="label">Full moon</td>
+              <td class="label">$gettext("Full moon",$page)</td>
               <td class="data">$almanac.next_full_moon</td>
             </tr>
             <tr>
-              <td class="label">New moon</td>
+              <td class="label">$gettext("New moon",$page)</td>
               <td class="data">$almanac.next_new_moon</td>
             </tr>
           #else
             <tr>
-              <td class="label">New moon</td>
+              <td class="label">$gettext("New moon",$page)</td>
               <td class="data">$almanac.next_new_moon</td>
             </tr>
             <tr>
-              <td class="label">Full moon</td>
+              <td class="label">$gettext("Full moon",$page)</td>
               <td class="data">$almanac.next_full_moon</td>
             </tr>
           #end if
           <tr>
-            <td class="label">Phase</td>
+            <td class="label">$gettext("Phase",$page)</td>
             <td class="data">$almanac.moon_phase<br/>
               $almanac.moon_fullness% full</td>
           </tr>

@@ -50,6 +50,7 @@
   
 """
 
+from six.moves import collections_abc
 from weewx.cheetahgenerator import SearchList
 from weeutil.weeutil import KeyDict
 import weeutil.config
@@ -93,9 +94,9 @@ class Gettext(SearchList):
             # if key is empty but page is not return further class instance
             if page:
                 _page_dict = weeutil.config.config_from_str('')
-                merge_dict = self.generator.skin_dict.get('Labels',{}).get('Generic',{})
-                if merge_dict:
-                    weeutil.config.merge_config(_page_dict,merge_dict)
+                #merge_dict = self.generator.skin_dict.get('Labels',{}).get('Generic',{})
+                #if merge_dict:
+                #    weeutil.config.merge_config(_page_dict,merge_dict)
                 merge_dict = Gettext._get_cheetah_dict(self.generator.skin_dict.get('CheetahGenerator',{}),page)
                 if merge_dict:
                     weeutil.config.merge_config(_page_dict,merge_dict)
@@ -103,7 +104,7 @@ class Gettext(SearchList):
                 return _page_dict
                 
             # if key as well as page are empty
-            return _text_dict
+            return ParallelDict(_text_dict)
             
         return [{'gettext':locale_label}]
 
@@ -121,3 +122,21 @@ class Gettext(SearchList):
 
 
             
+class ParallelDict(collections_abc.Mapping):
+
+    def __init__(self, source):
+        self.source = source
+
+    def __getitem__(self, key):
+        try:
+            return self.source[key]
+        except KeyError:
+            return key
+        
+
+    def __len__(self):
+        return self.source.__len__()
+
+    def __iter__(self):
+        for key in self.source:
+            yield key

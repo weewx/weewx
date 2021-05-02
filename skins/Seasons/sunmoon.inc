@@ -27,7 +27,7 @@
 
 <div id="sunmoon_widget" class="widget">
   <div class="widget_title">
-    <a href="celestial.html">$gettext("Celestial")</a>
+    <a href="celestial.html">$gettext["Celestial"]</a>
     <a class="widget_control"
        onclick="toggle_widget('sunmoon')">&diams;</a>
   </div>
@@ -37,17 +37,17 @@
       <table class="celestial">
         <tr><th>&#9728;</th><td></td><td></td><th>&#9789;</th><td></td></tr>
         <tr>
-          <td class="label">$gettext("Rise","celestial")</td>
+          <td class="label">$gettext["celestial"]["Rise"]</td>
           <td class="data">$almanac.sun.rise.format(None_string=$sun_None)</td>
           <td>&nbsp;</td>
-          <td class="label">$gettext("Rise","celestial")</td>
+          <td class="label">$gettext["celestial"]["Rise"]</td>
           <td class="data">$almanac.moon.rise</td>
         </tr>
         <tr>
-          <td class="label">$gettext("Set","celestial")</td>
+          <td class="label">$gettext["celestial"]["Set"]</td>
           <td class="data">$almanac.sun.set.format(None_string=$sun_None)</td>
           <td>&nbsp;</td>
-          <td class="label">$gettext("Set","celestial")</td>
+          <td class="label">$gettext["celestial"]["Set"]</td>
           <td class="data">$almanac.moon.set</td>
         </tr>
         <tr>

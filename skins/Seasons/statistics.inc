@@ -8,7 +8,7 @@
 
 <div id="statistics_widget" class="widget">
   <div class="widget_title">
-    $gettext("Title",$page)
+    $gettext[$page].Title
   </div>
   <div class="widget_contents">
 
@@ -17,11 +17,11 @@
         <tr>
           <td></td>
           <td></td>
-          <th>$gettext("Today")</th>
-          <th class="hilo_week">$gettext("Week")</th>
-          <th class="hilo_month">$gettext("Month")</th>
-          <th class="hilo_year">$gettext("Year")</th>
-          <th class="hilo_rainyear">$gettext("Rainyear")</th>
+          <th>$gettext["Today"]</th>
+          <th class="hilo_week">$gettext["Week"]</th>
+          <th class="hilo_month">$gettext["Month"]</th>
+          <th class="hilo_year">$gettext["Year"]</th>
+          <th class="hilo_rainyear">$gettext["Rainyear"]</th>
         </tr>
         <tr>
           <td class="label">$obs.label.outTemp</td>
