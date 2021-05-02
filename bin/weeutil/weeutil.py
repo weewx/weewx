@@ -1449,6 +1449,11 @@ except ImportError:
         def prepend(self, m):
             self.maps.insert(0, m)
 
+        def copy(self):
+            return self.__class__(self.maps[0].copy(), *self.maps[1:])
+
+        __copy__ = copy
+
 
 class KeyDict(dict):
     """A dictionary that returns the key for an unsuccessful lookup."""
