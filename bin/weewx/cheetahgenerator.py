@@ -90,7 +90,8 @@ default_search_list = [
     "weewx.cheetahgenerator.Stats",
     "weewx.cheetahgenerator.UnitInfo",
     "weewx.cheetahgenerator.Extras",
-    "weewx.cheetahgenerator.JSONHelpers"]
+    "weewx.cheetahgenerator.JSONHelpers",
+    "weewx.gettext.Gettext"]
 
 
 # =============================================================================
@@ -149,7 +150,7 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
         self.initExtensions(gen_dict[section_name])
 
         # Generate any templates in the given dictionary:
-        ngen = self.generate(gen_dict[section_name], self.gen_ts)
+        ngen = self.generate(gen_dict[section_name], section_name, self.gen_ts)
 
         self.teardown()
 
@@ -198,7 +199,7 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
         while len(self.search_list_objs):
             del self.search_list_objs[-1]
 
-    def generate(self, section, gen_ts):
+    def generate(self, section, section_name, gen_ts):
         """Generate one or more reports for the indicated section.  Each
         section in a period is a report.  A report has one or more templates.
 
@@ -219,7 +220,7 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
                 if subsection in CheetahGenerator.generator_dict:
                     section[subsection]['summarize_by'] = subsection
             # Call recursively, to generate any templates in this subsection
-            ngen += self.generate(section[subsection], gen_ts)
+            ngen += self.generate(section[subsection], subsection, gen_ts)
 
         # We have finished recursively processing any subsections in this
         # section. Time to do the section itself. If there is no option
@@ -308,7 +309,7 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
                     pass
 
             searchList = self._getSearchList(encoding, timespan,
-                                             default_binding)
+                                             default_binding, section_name)
             tmpname = _fullname + '.tmp'
 
             try:
@@ -369,14 +370,15 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
 
         return ngen
 
-    def _getSearchList(self, encoding, timespan, default_binding):
+    def _getSearchList(self, encoding, timespan, default_binding, section_name):
         """Get the complete search list to be used by Cheetah."""
 
         # Get the basic search list
         timespan_start_tt = time.localtime(timespan.start)
         searchList = [{'month_name' : time.strftime("%b", timespan_start_tt),
                        'year_name'  : timespan_start_tt[0],
-                       'encoding'   : encoding},
+                       'encoding'   : encoding,
+                       'page'       : section_name},
                       self.outputted_dict]
 
         # Bind to the default_binding:

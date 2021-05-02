@@ -2273,8 +2273,11 @@ longitude = -77.0366</pre>
 
         <p>
             These are the four reports that actually generate HTML files and plots. They all ship in the standard WeeWX
-            distribution. They all use US Customary units by default, but this can be changed by editing section <a
-            href="#Section_Defaults"><span class="code">[Defaults]</span></a>.
+            distribution. They all use US Customary units by default, but this can be changed 
+            by setting the option <span
+            class="code">units_base</span> or
+            by editing section <a href="#Section_Defaults"><span
+            class="code">[StdReport][[Defaults]]</span></a>.
         </p>
         <p>They all have the following options in common.</p>
 
@@ -2284,6 +2287,55 @@ longitude = -77.0366</pre>
             the directory should be any templates used by the skin and a skin configuration file, <span class="code">skin.conf</span>.
         </p>
 
+        <p class="config_important">lang</p>
+        <p>
+            Which language to display the skin. 
+            The value to this option is a two-character language code as defined in <a 
+            href="https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes"
+            target="_blank">ISO&nbsp;639-1</a>.
+            It defines the language the skin shall be displayed in.
+            For each language, that a certain skin can display, an appropriate 
+            language file resides in the 
+            <span class="code">lang</span> subdirectory of the
+            skin directory. It is named by the language code, appended
+            by <span class="code">.conf</span>, for example
+            <span class="code">en.conf</span> for English.
+            If there is no file for your language,
+            copy <span class="code">en.conf</span> and translate
+            the texts on the right side of the equal signs to the
+            language you want to use. It is important that you name
+            the file according to the list in ISO&nbsp;639-1.
+        </p>
+        
+        <p><span class="config_option">units_base</span></p>
+        <p>
+            Which unit system to use with the skin. That can be
+            <span class="code">US</span>, 
+            <span class="code">METRIC</span>, or
+            <span class="code">METRICWX</span>.
+            If the option is not set, the units set in the
+            <span class="code">[StdReport][[Defaults]]</span>
+             section are used. If no defaults are
+            set, <span class="code">US</span> is the default.
+            See the section "<a
+            href="customizing.htm#Changing_the_unit_system">Changing
+            the unit system</a>" in the "<a
+            href="customizing.htm">Customization Guide</a>" 
+            for more details.
+            The difference between <span class="code">METRICDE</span>
+            and the other metric unit systems is that it uses
+            <span class="code">mm</span> for rain and
+            <span class="code">km/h</span> for wind.
+            Settings in the section 
+            <span class="code">[[[Units]]][[[[Groups]]]]</span>
+            overwrite the unit settings resulting from this option 
+            for individual observation types. See "<a
+            href="customizing.htm#how_to_change_units">How to
+            change units</a>" in the "<a
+            href="customizing.htm">Customization Guide</a>" 
+            for more details.
+        </p>
+        
         <p class="config_important">enable</p>
         <p>
             Set to <span class="code">true</span> to enable the processing of this skin. Set to <span
@@ -2422,6 +2474,28 @@ longitude = -77.0366</pre>
             deleted on the remote server. Valid values are 1 to enable and 0 to disable. Required. Default is 0.
         </p>
 
+        <h3 class="config_section" id="Section_Defaults">[[Defaults]]</h3>
+        
+        <p>
+          This section defines default values for all skins. You can set:
+          <ul>
+            <li>units to be used with observation types</li>
+            <li>number and time formats</li>
+            <li>labels</li>
+            <li>calculation options for some derived values</li>
+          </ul>
+          See the <a href="customizing.htm">Customization Guide</a>
+          for more details.
+        </p>
+        <p>
+          If the skin you use comes with internationalization
+          support and you set a language by the 
+          <span class="code">lang</span> option, the settings 
+          resulting from this option overwrite the settings in
+          the <span class="code">[[Defaults]]</span> section.
+        </p>
+        
+        
         <h2 class="config_section" id="StdConvert">[StdConvert]</h2>
 
         <p>This section is for configuring the <span class="code">StdConvert</span> service. This service acts as a
@@ -3079,12 +3153,6 @@ longitude = -77.0366</pre>
 
         <p>The type of MySQL database storage engine to be used. This should not be changed without a good reason.
             Default is <span class="code">INNODB</span>.
-        </p>
-
-        <h2 class="config_section" id="Section_Defaults">[Defaults]</h2>
-        <p>
-            This section covers a suite of default values, which control things such as which unit system should be
-            used in reports, what label to be used for an observation type, and how it should be formatted.
         </p>
 
         <h2 class="config_section">[Engine]</h2>

@@ -254,6 +254,72 @@ class StdReportEngine(threading.Thread):
         for scalar in self.config_dict['StdReport'].scalars:
             skin_dict[scalar] = self.config_dict['StdReport'][scalar]
 
+        #######################################################################
+        # internationalization support
+
+        # The key 'lang' defines a language code like 'en' or 'de'. It is
+        # used as a file name for a language file that is located in the
+        # 'lang' subdirectory of the skin directory. 
+
+        # get the language option if defined
+        # (As config_dict is not merged into skin_dict so far, 
+        # skin_dict['lang'] has not the final value here. We
+        # have to take config_dict into account, too.)
+        lang_config = self.config_dict['StdReport'][report].get('lang',skin_dict.get('lang',None))
+        
+        if lang_config:
+        
+            # Now add the options in the report's localization file. Start by figuring where it is located.
+            lang_config_path = os.path.join(
+                self.config_dict['WEEWX_ROOT'],
+                self.config_dict['StdReport']['SKIN_ROOT'],
+                self.config_dict['StdReport'][report].get('skin', ''),
+                'lang',
+                lang_config+'.conf')
+        
+            # Now retrieve the language dictionary for the skin. Wrap it in a try block in case we fail.  It is ok if
+            # there is no file - everything for a skin might be defined in the weewx configuration.
+            try:
+                merge_dict = configobj.ConfigObj(lang_config_path, file_error=True, encoding='utf-8')
+                log.debug("Found localization file %s for report '%s'", lang_config_path, report)
+                # make sure 'Texts' is present and a dict (section)
+                if not isinstance(merge_dict.get('Texts',None),dict):
+                    if 'Texts' in merge_dict:
+                        log.error("'Texts' is not a section in '%s'" % lang_config_path)
+                    merge_dict['Texts']={}
+                # set language code for $gettext.lang
+                merge_dict['Texts']['lang'] = os.path.basename(lang_config_path).split('.')[0]
+                # Merge the skin config file in:
+                weeutil.config.merge_config(skin_dict, merge_dict)
+                if self.first_run:
+                    log.info("Using localization file %s for report '%s'" % 
+                             (lang_config_path, report))
+            except IOError as e:
+                log.debug("Cannot read localization file %s for report '%s': %s",
+                          lang_config_path, report, e)
+            except SyntaxError as e:
+                log.error("Failed to read localization file %s for report '%s': %s",
+                          lang_config_path, report, e)
+                raise
+        
+        # See if the user wants this report based on another unit system than US.
+        # The value can be US, METRIC, or METRICWX.
+        # (As config_dict is not merged into skin_dict so far, 
+        # skin_dict['units_base'] has not the final value here. We
+        # have to take config_dict into account, too.)
+        report_units_base = self.config_dict['StdReport'][report].get('units_base',skin_dict.get('units_base',None))
+
+        if report_units_base:
+            # Get the chosen unit system out of units.py. Copy it to prevent
+            # the original from being changed. Merge it into skin_dict.
+            try:
+                merge_dict = weewx.units.std_groups[weewx.units.unit_constants[report_units_base]].copy()
+                weeutil.config.merge_config(skin_dict, {'Units':{'Groups':merge_dict}})
+            except (SyntaxError,TypeError,IndexError,ValueError,IOError) as e:
+                log.error("error merging unit system '%s' for report '%s'" % (report_units_base,report))
+
+        #######################################################################
+        
         # Finally, inject any overrides for this specific report. Because this is the last merge, it will have the
         # final say.
         weeutil.config.merge_config(skin_dict, self.config_dict['StdReport'][report])

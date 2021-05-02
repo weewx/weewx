@@ -443,7 +443,8 @@ Version: 4.6
 
         <p>
             Each report has a <em>skin</em> associated with it. For most reports, the relationship with the skin is an
-            obvious one: it contains the templates, any auxiliary files such as background GIFs or CSS style sheets, and
+            obvious one: it contains the templates, any auxiliary files such as background
+            GIFs or CSS style sheets, files with localization data, and
             a <em>skin configuration file</em>, <span class="code">skin.conf</span>. If you will, the skin controls the
             <em>look and feel </em>of the report. Note that more than one report can use the same skin. For example, you
             might want to run a report that uses US Customary units, then run another report against the same skin, but
@@ -808,6 +809,16 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
                 <td>Highest precedence. Has the final say.</td>
             </tr>
             <tr>
+                <td class="code">skins/<span
+                class="symcode">report_name</span>/ lang/<span
+                class="symcode">language_code</span>.conf</td>
+                <td></td>
+                <td>Affects only the report <span class="symcode">report_name</span>.</td>
+                <td class="code">[Labels] / [[Generic]]</td>
+                <td>Internationalization support. Preferably
+                supplied by the skin author.</td>
+            </tr>
+            <tr>
                 <td class="code">weewx.conf</td>
                 <td class="code"><a href="#change_defaults">[StdReport] / [[Defaults]]</a></td>
                 <td>Affects <em>all</em> reports.</td>
@@ -884,6 +895,46 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
             wants to use the string <span class="code">Exterior Temperature</span>, instead of <span class="code">Outside Temperature</span>
             for the label for <span class="code">outTemp</span>. The file includes no definition for <span class="code">inTemp</span>.
         </p>
+        
+        <p>
+            Now suppose the skin author took care of internationalization
+            and provided language files. In this case s/he would not have
+            set the label in <span class="code">skin.conf</span> but in
+            a language file, for English in 
+            <span class="code">lang/en.conf</span>, for german in
+            <span class="code">lang/de.conf</span> etc.
+        </p>
+        <p> 
+            <span class="code">lang/en.conf</span> would contain
+            what was defined in <span class="code">skin.conf</span>
+            before:
+        </p>
+        <pre class="tty">
+...
+[Labels]
+    ...
+    [[Generic]]
+        ...
+        outTemp = Exterior Temperature
+</pre>
+        <p>
+            <span class="code">lang/de.conf</span> would contain:
+        </p>
+        <pre class="tty">
+...
+[Labels]
+    ...
+    [[Generic]]
+        ...
+        outTemp = Außentemperatur
+        inTemp = Innentemperatur
+</pre>
+        <p>
+            The user sets the language by the optional
+            <span class="code">lang</span> option in 
+            <span class="code">weewx.conf</span>.
+        </p>
+
         <p>
             Finally, for purposes of illustrating precedence, suppose the <span class="code">[StdReport]</span> section
             of <span class="code">weewx.conf</span> contains this:
@@ -904,6 +955,10 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
         [[[Labels]]]
             [[[[Generic]]]]
                 outTemp = Barn Temperature
+                
+    [[LifeC]]
+        skin = Life
+        lang = de
 </pre>
 
         <p>
@@ -931,20 +986,31 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
                 <td>Inside Temperature</td>
                 <td>Barn Temperature</td>
             </tr>
+            <tr>
+                <td>LifeC</td>
+                <td>Innentemperatur</td>
+                <td>Außentemperatur</td>
+            </tr>
         </table>
 
         <p>
-            Note how the values specified for <span class="code">inTemp</span> are not overridden anywhere, so the value
+            Note how the values specified for <span class="code">inTemp</span> 
+            are not overridden anywhere, except 
+            <span class="clode">lang/de.conf</span>, so the value
             specified in <span class="code">weewx/defaults.py</span>, that is, <span
-            class="code">Inside Temperature</span>, is used for all reports.</p>
+            class="code">Inside Temperature</span>, is used for all reports,
+            except <span class="code">LifeC</span>.</p>
         <p>
             The value for <span class="code">outTemp</span> is not overridden for report <span class="code">SeasonsA</span>,
             so it uses the label specified in <span class="code">weewx/defaults.py</span>, that is, <span class="code">Outside Temperature</span>.
             By contrast, for the "Life" reports, a value for <span class="code">outTemp</span>
             was specified in the skin so, in the absence of any user override, its value, <span class="code">Exterior
-            Temperature</span> will be used as the new default. Finally, for the report <span class="code">LifeB</span>,
+            Temperature</span> will be used as the new default. For the report <span class="code">LifeB</span>,
             the user <em>has</em> specified an override for <span class="code">outTemp</span>, so that value,
             <span class="code">Barn Temperature</span>, is used.
+            Finally, for the report <span class="code">LifeC</span>
+            a language has been set, so the labels are taken from the
+            specified language file.
         </p>
 
         <p>
@@ -1119,7 +1185,40 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
         </p>
         <p>
             To accomplish this, we will generate two reports, one using the defaults, the other using overrides to
-            change the target unit system and the target directory. The section <span class="code">[StdReport]</span>
+            change the target unit system and the target directory. 
+        </p>
+        <p>
+            If you only want to use one of the predefined unit systems
+            like <span class="code">US</span> or
+            <span class="code">METRIC</span> you can simply specify
+            a unit system in the report configuration like this:
+        </p>
+        <pre class="tty">
+[StdReport]
+
+    # Where the skins reside, relative to WEEWX_ROOT
+    SKIN_ROOT = skins
+
+    # Where the generated reports should go, relative to WEEWX_ROOT
+    HTML_ROOT = public_html
+
+    # The database binding indicates which data should be used in reports.
+    data_binding = wx_binding
+
+<span class="highlight">    [[SeasonsUSReport]]</span>
+        skin = Seasons
+        <span class="higlight">units_base = US</span>
+        enable = true
+
+<span class="highlight">    [[SeasonsMetricReport]]
+        skin = Seasons
+        units_base = METRIC
+        enable = true
+        HTML_ROOT = public_html/metric</pre>
+        <p>
+            If you need individual settings for a lot of units you
+            can specify the units directly in the report configuration.
+            In this case the section <span class="code">[StdReport]</span>
             will look like this:
         </p>
         <pre class="tty">
@@ -2962,6 +3061,207 @@ $month.outTemp.series(aggregate_type='max', aggregate_interval='day', time_serie
             <a href="https://github.com/weewx/weewx/wiki/Tags-for-series"><em>Tags for series</em></a>.
         </p>
 
+        <h3>General tags</h3>
+        
+        <p>
+           There are some general tags, that do not reflect observation
+           data but technical data of processing the template files. 
+           You can especially use them in <span class="code">#if</span>
+           expressions to control how Cheetah processes the template.
+        </p>
+        <table class="indent">
+          <tbody>
+            <tr class="first_row">
+              <td>Tag</td>
+              <td>Description</td>
+            </tr>
+            <tr>
+              <td class="code first_col">$month_name</td>
+              <td>Name of the month, the file is created for</td>
+            </tr>
+            <tr>
+              <td class="code first_col">$year_name</td>
+              <td>Year, the file is created for</td>
+            </tr>
+            <tr>
+              <td class="code first_col">$encoding</td>
+              <td>Character encoding, to which the file is converted
+              after creation. Possible values are
+              <span class="code">html_entities</span>,
+              <span class="code">strict_ascii</span>,
+              <span class="code">normalized_ascii</span>, and
+              <span class="code">utf-8</span>.
+              </td>
+            </tr>
+            <tr>
+              <td class="code first_col">$page</td>
+              <td>Name of the page that is actually processed.
+              This is the section name from 
+              <span class="code">skin.conf</span>
+              where the template is described. You can especially
+              use it in include files that are included in multiple
+              templates. So parts of the content defined in the include
+              file can depend on the template file, for example
+              header lines. You can also use it together with
+              <span class="code">$gettext</span> to structure
+              the language file.</td>
+            </tr>
+            <tr>
+              <td class="code first_col">$gettext.lang</td>
+              <td>Language code set by the 
+              <span class="code">lang</span> option
+              for the report. You can use this tag in
+              <span class="code">#if</span> expressions and
+              to include language codes where the HTML
+              specification requires them.
+            </tr>
+            <tr>
+              <td class="code first_col">$gettext(page=$page).template</td>
+              <td>
+                File name of the template actually processed
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+
+        <h3 id="Tag_$gettext">
+          Internationalization support with 
+          <span class="code">$gettext</span>
+        </h3>
+        <p>
+          Web pages and other files to be created do not only contain
+          observation values and their labels but also static text.
+          The <span class="code">$gettext</span> tag provides 
+          internationalization support for those static texts.
+          To support internationalization do not write static
+          text into to template or include files but use 
+          <span class="code">$gettext</span> there to define it.
+        </p>
+        <p>
+          Suppose you write a skin called 
+          "<span class="code">YourSkin</span>" 
+          and
+          you want to have a head line in there, that
+          is "Current Conditions" in English, but "aktuelle Werte"
+          in german, "Conditions actuelles" in french etc. Then
+          the template file could contain:
+        </p>
+        <pre class="tty">...
+&lt;h1&gt;$gettext("Current Conditions")&lt;/h1&gt;
+...</pre>
+        <p>
+          The section of <span class="code">weewx.conf</span>
+          configuring your skin could now look like this:
+        </p>
+        <pre class="tty">...
+[StdReport]
+    ...
+    [[YourSkinReport]]
+        skin = YourSkin
+        lang = fr
+    ...</pre>
+        <p>
+          With <span class="code">lang = fr</span> the report
+          is in french. To get it in English, replace the language
+          code <span class="code">fr</span> by the code for English
+          <span class="code">en</span>. And to get it in german
+          use <span class="code">de</span>.
+        </p>
+        <p>
+          To make that work a language file has to be created for
+          each language supported. The language files reside in
+          the <span class="code">lang</span> subdirectory of the
+          skin directory that is defined by the 
+          <span class="code">skin</span> option. The file name
+          of the language file is the language code appended
+          by <span class="code">.conf</span>, for example
+          <span class="code">en.conf</span>, 
+          <span class="code">de.conf</span>, or
+          <span class="code">fr.conf</span>.
+        </p>
+        <p>
+          The language file has the same layout as 
+          <span class="code">skin.conf</span>, i.e.
+          you can put language specific versions of the labels there.
+          Additionally a section <span class="code">[Texts]</span>
+          can be defined to hold the static texts used in the skin.
+          For the example above the language files would contain
+          the following:
+        </p>
+        <p class="code">en.conf</p>
+        <pre class="tty">...
+[Texts]
+    "Current Conditions" = Current Conditions
+    ...</pre>
+        <p class="code">de.conf</p>
+        <pre class="tty">...
+[Texts]
+    "Current Conditions" = Aktuelle Werte
+    ...</pre>
+        <p class="code">fr.conf</p>
+        <pre class="tty">...
+[Texts]
+    "Current Conditions" = Conditions actuelles
+        </pre>
+        <p>
+          While it is not technically necessary we recommend to use
+          the whole English text for key. The template is easier to
+          read then. And it is easier for the person who translates
+          the texts if the original English version of the text is
+          found on the left side. But there are cases when that is 
+          not possible, and then you can use any string you find
+          reasonable enough to describe the entry.
+        </p>
+        <p>
+          See the <span class="symcode">SKIN_ROOT</span><span class="code">/Seasons/lang</span>
+          subdirectory for examples of language files. 
+        </p>
+        
+        <p>
+          If your skin is big and there are lots of texts to define
+          you can structure the <span class="code">[Texts]</span>
+          section by subsections. Each template can have its own
+          subsection. The subsections need to be called identically
+          to the respective sections in <span class="code">skin.conf</span>.
+        <p/p>
+        <p>
+          Assuming you have a template section called 
+          <span class="code">[[[index]]]</span> and another
+          section called <span class="code">[[[othertemplate]]]</span>,
+          then the language files could look like this:
+        </p>
+        <pre class="tty">...
+[Texts]
+    ...some general texts here...
+    [[index]]
+        ...some texts for template index here, for example
+        Key = Some text
+    [[othertemplate]]
+        ...some texts for template othertemplate here, for example
+        Key = Some other text</pre>
+        <p>
+          To refer to these template specific texts add 
+          <span class="code">$page</span> as parameter to
+          <span class="code">$gettext()</span>. For example:
+        </p>
+        <pre class="tty">...
+$gettext("Key",$page)
+...</pre>
+        <p>
+          If template "index" is processed, the entry "Key" in
+          subsection <span class="code">[[index]]</span> is
+          used, and the value is "Some text". 
+          If template "othertemplate" is processed, the
+          entry "Key" in subsection 
+          <span class="code">[[othertemplate]]</span>
+          is used, and the value is "Some other text". 
+          You can place this tag in an include file
+          that is called by both "index" and "othertemplate",
+          and the value is chosen from the appropriate subsection.
+        </p>
+        
+        
         <h2>Almanac</h2>
 
         <p>
@@ -4179,10 +4479,49 @@ class MyStats(SearchList):                                                   # 1
         <h1 id="localization">Localization</h1>
 
         <p>
-            This section is provides suggestions for localization, including translation to different languages and
+            This section provides suggestions for localization, 
+            including translation to different languages and
             display of data in formats specific to a locale.
         </p>
+        
+        <h2>If localization is already done</h2>
+        <p>
+            First look whether the skin already came with a localization
+            for your language. If there is a 
+            <span class="code">lang</span> subdirectory in the skin
+            directory, look into it. There you find a file for each
+            language this skin is already localized to. If your
+            language is there, all you need to do is to select it
+            in <span class="code">weewx.conf</span>:
+        </p>
+        <pre class="tty">...
+[StdReport]
+    ...
+    [[TheSkin]]
+        skin = skin_directory
+        <span class="highlight">lang = language_code</span>
+        ...</pre>
 
+        <h2>If only your language is missing</h2>
+        
+        <p>
+            If the <span class="code">lang</span> subdirectory
+            is present in the skin directory the skin is
+            probably prepared already for localization. 
+            The only thing to do then is translating. 
+            To do so, copy the file 
+            <span class="code">en.conf</span> and name it
+            according to the language code of your language.
+            Then translate all the strings on the right
+            side of the equal signs to your language. 
+            The skin author may be interested in your
+            language file to ship it together with the
+            skin for the use of other users.
+            Last set the language code in
+            <span class="code">weewx.conf</span>
+            as described in the previous section.
+        </p>
+        
         <h2>How to localize a single report</h2>
 
         <p>
@@ -4191,15 +4530,37 @@ class MyStats(SearchList):                                                   # 1
             formats and language.
         </p>
 
+        <h3>Create the language file</h3>
+        
+        <p>
+            Create a subdirectory called <span class="code">lang</span> 
+            in the skin directory.
+            
+            Then create a file named by the language code with the
+            suffix <span class="code">.conf</span>. For example, if
+            you want to translate to spanish, name the file 
+            <span class="code">es.conf</span>. 
+            The next step is
+            to make the templates language-aware as described in the
+            following section.
+        </p>
+        
         <h3>Translate the templates</h3>
 
         <p>
-            In every HTML template (these typically have a file suffix of <span class="code">.html.tmpl</span>) change
-            the HTML "lang" attribute to the target language. For example, for Spanish use <span class="code">es</span>:
+            Open the template file and the language file in different
+            editor windows. It is much easier if you can change both
+            files simultaneously.
+        </p>
+        
+        <p>
+            In every HTML template (these typically have a file suffix of 
+            <span class="code">.html.tmpl</span>) change
+            the HTML "lang" attribute to a configurable value.
         </p>
         <pre class="tty">
 &lt;!DOCTYPE html&gt;
-&lt;html lang="<span class="highlight">es</span>"&gt;
+&lt;html lang="<span class="highlight">$gettext.lang</span>"&gt;
   &lt;head&gt;
     &lt;meta charset="UTF-8"&gt;
     ...
@@ -4232,12 +4593,26 @@ class MyStats(SearchList):                                                   # 1
         <pre class="tty">
 &lt;div id='current_widget' class="widget"&gt;
   &lt;div class="widget_title"&gt;
-    <span class="highlight">Conditions Actuelle</span>
+    <span class="highlight">$gettext("Current Conditions")</span>
     &lt;a class="widget_control"
       onclick="toggle_widget('current')"&gt;&amp;diams;&lt;/a&gt;
   &lt;/div&gt;
         </pre>
-
+        <p>
+            In the language file start a 
+            <span class="code">[Texts]</span> section and place the
+            translation there like:
+        </p>
+        <pre class="tty">...
+[Texts]
+    ...
+    "Current Conditions" = Conditions Actuelles
+    ...</pre>
+        <p>
+            Repeat that for all strings you find. Make sure not
+            to replace HTML tags and HTML options.
+        </p>
+        
         <h3>Translate labels and modify local options</h3>
 
         <p>
@@ -4354,13 +4729,21 @@ class MyStats(SearchList):                                                   # 1
             locales? This example shows how to translate the <em>Seasons</em> skin for multiple languages.
         </p>
         <p>
-            Create a directory for each language. Each directory contains template files and a skin configuration file.
-            Any text in each template file should be in the target language. Ensure that each HTML template file has the
-            <span class="code">lang</span> set properly.
+            Create a subdirectory called 
+            <span class="code">lang</span> in the skin directory.
+            The language files containing the language dependent
+            information go there. Start creating a language file
+            for the primary language and save it to the 
+            <span class="code">lang</span> directory. The name
+            of the file consists of the language code of the
+            target language and the suffix 
+            <span class="code">.conf</span>. Later on you can 
+            create language files for each language you want
+            to support based on that file.
         </p>
         <p>
-            Translate observation names and other labels, and put them into the skin configuration files. There should
-            be one configuration file for each language.
+            Translate observation names and other labels, and put them 
+            into the created language file. 
         </p>
         <p>
             Ensure that any locale-specific formatting is specified properly. For example, consider the <span
@@ -4372,19 +4755,27 @@ class MyStats(SearchList):                                                   # 1
             whatever locale is set in the environment in which WeeWX is running.
         </p>
         <p>
-            The result will be a directory of templates and configurations, with one directory for each
+            Static texts are localized using the 
+            <span class="code">$gettext(</span><span class="symcode">"original text"</span><span class="code">)</span> tag. 
+            Create a section <span class="code">[Texts]</span>
+            in the language file and place a line
+        </p>
+        <pre class="tty">"original text" = translated text</pre>
+        <p>
+            there in each language file. In the template file you refer
+            to those texts by 
+        </p>
+        <pre class="tty">$gettext("original text")</pre>
+        <p>
+            According to the language setting of the report the tag
+            stands for the text in the appropriate language.
+        </p>
+        
+        <p>
+            The result will be a directory of language files
+            with one file for each
             language/localization.
         </p>
-        <pre class="tty">
-skins/Seasons/
-skins/Seasons/en/skin.conf
-skins/Seasons/en/index.html.tmpl
-skins/Seasons/es/skin.conf
-skins/Seasons/es/index.html.tmpl
-skins/Seasons/de/skin.conf
-skins/Seasons/de/index.html.tmpl
-skins/Seasons/fr/skin.conf
-skins/Seasons/fr/index.html.tmpl</pre>
 
         <p>
             Users will then create each report in the WeeWX configuration file.
@@ -4392,16 +4783,20 @@ skins/Seasons/fr/index.html.tmpl</pre>
         <pre class="tty">
 [StdReport]
     [[Seasons_en]]
-        skin = Seasons/en
+        skin = Seasons
+        lang = en
         HTML_ROOT = public_html/en
     [[Seasons_es]]
-        skin = Seasons/es
+        skin = Seasons
+        lang = es
         HTML_ROOT = public_html/es
     [[Seasons_de]]
-        skin = Seasons/de
+        skin = Seasons
+        lang = de
         HTML_ROOT = public_html/de
     [[Seasons_fr]]
-        skin = Seasons/fr
+        skin = Seasons
+        lang = fr
         HTML_ROOT = public_html/fr</pre>
         <p>
             The result is multiple reports, each in a different language and localization, independent of the locale of
@@ -5696,7 +6091,23 @@ xstats/bin/user/xstats.py</pre>
 
         <p>
             This section contains the options available in the skin configuration file, <span
-            class="code">skin.conf</span>.
+            class="code">skin.conf</span>. The same options apply to the
+            language files found in the subdirectory 
+            <span class="code">lang</span>, like 
+            <span class="code">lang/en.conf for English</span>. 
+        </p>
+        <p>
+            We recommend to put
+            <ul>
+              <li>
+                options that control the behavior of the skin into 
+                <span class="code">skin.conf</span> and 
+              </li>
+              <li>
+                language dependent labels and texts into the 
+                language files.
+              </li>
+            </ul>
         </p>
 
         <p>
@@ -6104,10 +6515,48 @@ growing_base = 50.0, degree_F</pre>
             class="code">time_delta</span> will be accepted. Default is 300 seconds.
         </p>
 
-
+        <h2 class="config_section" id="texts">[Texts]</h2>
+        
+        <p>
+          This section applies to language files only.
+        </p>
+        <p>
+          The section <span class="code">[Texts]</span> holds 
+          static texts that are used in the templates. 
+          Generally there are multiple language files, each file
+          for one language and named by the language code
+          defined in <a
+          href="https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes"
+            target="_blank">ISO&nbsp;639-1</a>.
+          The entries
+          give the translation of the texts to the target language, like
+        </p>
+        <pre class="tty">"English text" = same text in the target language</pre>
+        <p>
+          or define texts by keys that can be refereced within the template.
+        </p>
+        <pre class="tty">"Key" = some text to display</pre>
+        <p>
+          To use the English text for the key is recommended, because
+          the template is easier to read then and while translating
+          you see the original English text on the left side.
+        </p>
+        <p class="warning">
+          <strong>Note!</strong><br/>
+          Strings that include commas must be included in single or
+          double quotes.
+        </p>
+        <p>
+          There may be subsections, named like the template
+          subsections in the 
+          <span class="code">[CheetahGenerator]</span> section of
+          <span class="code">skin.conf</span>. The entries defined
+          in such subsections apply to the respective template only.
+        
         <h2 id="CheetahGenerator">[CheetahGenerator]</h2>
 
-        <p>This section contains the options for the Cheetah generator.</p>
+        <p>This section contains the options for the Cheetah generator.
+        It applies to <span class="code">skin.conf</span> only.</p>
 
         <p class="config_option">search_list</p>
 
