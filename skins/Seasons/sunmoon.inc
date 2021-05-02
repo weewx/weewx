@@ -51,7 +51,7 @@
           <td class="data">$almanac.moon.set</td>
         </tr>
         <tr>
-          <td class="label">$gettext("Daylight",$page)</td>
+          <td class="label">$gettext[$page]["Daylight"]</td>
           <td class="data">$daylight_str</td>
           <td>&nbsp;</td>
           <td class="label"></td>
