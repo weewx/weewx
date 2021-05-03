@@ -67,7 +67,7 @@ Support for over 70 types of hardware including, but not limited to:
 * Argent Data Systems WS1;
 * KlimaLogg Pro;
 * New Mountain;
-* AirMar 150WX;
+* AirMar weatherstations (150WX, 200WX, etc) and other NMEA 2000 or NMEA 0183 compliant devices;
 * Texas Weather Instruments;
 * Dyacon;
 * Meteostick;
