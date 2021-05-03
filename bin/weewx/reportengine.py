@@ -311,9 +311,10 @@ class StdReportEngine(threading.Thread):
         # skin_dict['units'] has not the final value here. We
         # have to take config_dict into account, too.)
         report_units_base = self.config_dict['StdReport'][report].get('units',
-                                                                      skin_dict.get('units')).upper()
+                                                                      skin_dict.get('units'))
 
         if report_units_base:
+            report_units_base = report_units_base.upper()
             # Get the chosen unit system out of units.py. Copy it to prevent
             # the original from being changed. Merge it into skin_dict.
             try:
