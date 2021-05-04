@@ -3115,12 +3115,6 @@ $month.outTemp.series(aggregate_type='max', aggregate_interval='day', time_serie
               to include language codes where the HTML
               specification requires them.
             </tr>
-            <tr>
-              <td class="code first_col">$gettext(page=$page).template</td>
-              <td>
-                File name of the template actually processed
-              </td>
-            </tr>
           </tbody>
         </table>
 
@@ -3148,7 +3142,7 @@ $month.outTemp.series(aggregate_type='max', aggregate_interval='day', time_serie
           the template file could contain:
         </p>
         <pre class="tty">...
-&lt;h1&gt;$gettext("Current Conditions")&lt;/h1&gt;
+&lt;h1&gt;$gettext["Current Conditions"]&lt;/h1&gt;
 ...</pre>
         <p>
           The section of <span class="code">weewx.conf</span>
@@ -3243,10 +3237,10 @@ $month.outTemp.series(aggregate_type='max', aggregate_interval='day', time_serie
         <p>
           To refer to these template specific texts add 
           <span class="code">$page</span> as parameter to
-          <span class="code">$gettext()</span>. For example:
+          <span class="code">$gettext[]</span>. For example:
         </p>
         <pre class="tty">...
-$gettext("Key",$page)
+$gettext[$page]["Key"]
 ...</pre>
         <p>
           If template "index" is processed, the entry "Key" in
@@ -4593,7 +4587,7 @@ class MyStats(SearchList):                                                   # 1
         <pre class="tty">
 &lt;div id='current_widget' class="widget"&gt;
   &lt;div class="widget_title"&gt;
-    <span class="highlight">$gettext("Current Conditions")</span>
+    <span class="highlight">$gettext["Current Conditions"]</span>
     &lt;a class="widget_control"
       onclick="toggle_widget('current')"&gt;&amp;diams;&lt;/a&gt;
   &lt;/div&gt;
@@ -4756,7 +4750,8 @@ class MyStats(SearchList):                                                   # 1
         </p>
         <p>
             Static texts are localized using the 
-            <span class="code">$gettext(</span><span class="symcode">"original text"</span><span class="code">)</span> tag. 
+            <span class="code">$gettext[</span><span class="symcode">"original text"</span><span
+            class="code">]</span> tag. 
             Create a section <span class="code">[Texts]</span>
             in the language file and place a line
         </p>
@@ -4765,7 +4760,7 @@ class MyStats(SearchList):                                                   # 1
             there in each language file. In the template file you refer
             to those texts by 
         </p>
-        <pre class="tty">$gettext("original text")</pre>
+        <pre class="tty">$gettext["original text"]</pre>
         <p>
             According to the language setting of the report the tag
             stands for the text in the appropriate language.
@@ -6546,12 +6541,6 @@ growing_base = 50.0, degree_F</pre>
           Strings that include commas must be included in single or
           double quotes.
         </p>
-        <p>
-          There may be subsections, named like the template
-          subsections in the 
-          <span class="code">[CheetahGenerator]</span> section of
-          <span class="code">skin.conf</span>. The entries defined
-          in such subsections apply to the respective template only.
         
         <h2 id="CheetahGenerator">[CheetahGenerator]</h2>
 
