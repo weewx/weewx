@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2020 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2021 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -320,7 +320,7 @@ class StdReportEngine(threading.Thread):
             try:
                 units_dict = weewx.units.std_groups[
                     weewx.units.unit_constants[report_units_base]].copy()
-                weeutil.config.merge_config(skin_dict, {'Units': {'Groups': units_dict}})
+                skin_dict['Units']['Groups'].update(units_dict)
             except (SyntaxError, TypeError, IndexError, ValueError, IOError) as e:
                 log.error("Error ('%s') merging unit system '%s' for report '%s'",
                           e, report_units_base, report)
