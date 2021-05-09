@@ -43,10 +43,17 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
 
     def setup(self):
         try:
-            d = self.skin_dict['Labels']['Generic']
+            g = self.skin_dict['Labels']['Generic']
         except KeyError:
-            d = {}
-        self.title_dict = weeutil.weeutil.KeyDict(d)
+            g = {}
+        try:
+            t = self.skin_dict['Texts']['Images']
+        except KeyError:
+            t = {}
+        # generic_dict will contain "generic" labels, such as "Outside Temperature"
+        self.generic_dict = weeutil.weeutil.KeyDict(g)
+        # text_dict contains translated text strings
+        self.text_dict = weeutil.weeutil.KeyDict(t)
         self.image_dict = self.skin_dict['ImageGenerator']
         self.formatter  = weewx.units.Formatter.fromSkinDict(self.skin_dict)
         self.converter  = weewx.units.Converter.fromSkinDict(self.skin_dict)
@@ -216,11 +223,14 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
 
                     # See if a line label has been explicitly requested:
                     label = line_options.get('label')
-                    if not label:
+                    if label:
+                        # Yes. Get the text translation
+                        label = self.text_dict[label]
+                    else:
                         # No explicit label. Look up a generic one.
-                        # NB: title_dict is a KeyDict which will substitute the key if the value is
-                        # not in the dictionary.
-                        label = self.title_dict[var_type]
+                        # NB: generic_dict is a KeyDict which will substitute the key
+                        # if the value is not in the dictionary.
+                        label = self.generic_dict[var_type]
 
                     # See if a color has been explicitly requested.
                     color = line_options.get('color')
