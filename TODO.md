@@ -6,8 +6,6 @@ section that `skin.conf` has little influence. Consider commenting many of them 
 Along the same line, the new I18N strategy does not depend on them at all. Consider
 deleting them.
 
-Update the documentation. I think the I18N sections still use `gettext()` rather than
-`gettext[]`.
+Review the I18N documentation.
 
-Update the test suites to use `lang` and `units`.
-
+Modify installation software so the user can pick a translation.
