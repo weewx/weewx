@@ -2,6 +2,9 @@ WeeWX change history
 --------------------
 
 4.6.0 MM/DD/YYYY
+Easy localization of all skins that come with WeeWX. Big thanks to user Karen,
+who drove the effort! PR #665.
+
 Allow options --date, --from, and --to to be used with wee_database --reweight.
 PR #659. Thanks to user edi-x!
 
