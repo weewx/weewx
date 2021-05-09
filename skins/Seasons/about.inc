@@ -13,7 +13,7 @@
   <div class="widget_contents">
   <table>
     <tr>
-      <td class="label">Hardware</td>
+      <td class="label">$gettext["Hardware"]</td>
       <td class="data">$station.hardware</td>
     </tr>
     <tr>
@@ -29,15 +29,15 @@
       <td class="data">$station.altitude</td>
     </tr>
     <tr>
-      <td class="label">Server uptime</td>
+      <td class="label">$gettext["Server uptime"]</td>
       <td class="data">$station.os_uptime</td>
     </tr>
     <tr>
-      <td class="label">WeeWX uptime</td>
+      <td class="label">$gettext["WeeWX uptime"]</td>
       <td class="data">$station.uptime</td>
     </tr>
     <tr>
-      <td class="label">WeeWX version</td>
+      <td class="label">$gettext["WeeWX version"]</td>
       <td class="data">$station.version</td>
     </tr>
   </table>

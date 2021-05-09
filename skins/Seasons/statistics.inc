@@ -112,7 +112,7 @@
           </tr>
 		#end if
         <tr>
-          <td class="label">Wind Max</td>
+          <td class="label">$gettext["Max Wind"]</td>
           <td class="units">
             $unit.label.wind<br/>
             $unit.label.windDir
@@ -126,7 +126,7 @@
           #end for
         </tr>
         <tr>
-          <td class="label">Wind Average</td>
+          <td class="label">$gettext["Average Wind"]</td>
           <td class="units">$unit.label.wind</td>
           #for $archive in $archive_data
           <td class="data new_row">
@@ -134,7 +134,7 @@
           #end for
         </tr>
         <tr>
-          <td class="label">Wind RMS</td>
+          <td class="label">$gettext["RMS Wind"]</td>
           <td class="units">$unit.label.wind</td>
           #for $archive in $archive_data
           <td class="data new_row">$archive.wind.rms.format(add_label=False)</td>
@@ -143,8 +143,8 @@
 
         <tr>
           <td class="label">
-            Vector Average<br/>
-            Average Direction
+            $gettext["Vector Average"]<br/>
+            $gettext["Vector Direction"]
           </td>
           <td class="units">
             $unit.label.wind<br/>

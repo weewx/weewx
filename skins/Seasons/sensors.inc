@@ -53,7 +53,7 @@
   <table>
 
 #if $have_conn
-    <tr><th>Connectivity</th><th></th></tr>
+    <tr><th>$gettext["Connectivity"]</th><th></th></tr>
 #if $day.rxCheckPercent.has_data
     <tr>
       <td class="label">$obs.label.rxCheckPercent</td>
