@@ -20,6 +20,7 @@ class BasicInstaller(ExtensionInstaller):
                 'StdReport': {
                     'basic': {
                         'skin': 'basic',
+                        'enable' : 'True',
                         'HTML_ROOT': 'basic',
                         'lang': 'en',
                         'units': 'US'
@@ -33,9 +34,9 @@ class BasicInstaller(ExtensionInstaller):
                   'skins/basic/favicon.ico',
                   'skins/basic/hilo.inc',
                   'skins/basic/index.html.tmpl',
-                  'skins/basic/skin.conf']),
-                ('skins/basic/lang',
-                 ['skins/basic/lang/en.conf',
-                  'skins/basic/lang/fr.conf'])
+                  'skins/basic/skin.conf',
+                  'skins/basic/lang/en.conf',
+                  'skins/basic/lang/fr.conf',
+                  ]),
             ]
         )
