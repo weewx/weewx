@@ -22,7 +22,7 @@ import sys
 import configobj
 
 import weecfg
-from weecfg import Logger
+from weecfg import Logger, prompt_with_options
 from weewx import all_service_groups
 import weeutil.config
 import weeutil.weeutil
@@ -34,6 +34,12 @@ class InstallError(Exception):
 
 class ExtensionInstaller(dict):
     """Base class for extension installers."""
+
+    def do_configure(self, engine):
+        pass
+
+    def configure(self, engine):
+        """Override in a subclass"""
 
 
 class ExtensionEngine(object):
@@ -177,13 +183,18 @@ class ExtensionEngine(object):
                                 pass
                             shutil.copy(source_path, destination_path)
                             N += 1
+                    # We've completed at least one destination directory that we recognized.
                     break
             else:
-                sys.exit("Skipped file %s: Unknown destination directory %s"
-                         % (source_tuple[1], source_tuple[0]))
+                # No 'break' occurred, meaning that we didn't recognize any target directories.
+                sys.exit("Unknown destination directory %s. Skipped file(s) %s"
+                         % (source_tuple[0], source_tuple[1]))
         self.logger.log("Copied %d files" % N, level=2)
 
         save_config = False
+
+        # Configure any skins that the extension might have
+        installer.configure(self)
 
         # Look for options that have to be injected into the configuration file
         if 'config' in installer:
@@ -462,3 +473,69 @@ class ExtensionEngine(object):
         idx = path.find('/')
         if idx >= 0:
             return path[idx + 1:]
+
+
+def get_languages(skin_dir):
+    """ Return all languages supported by the skin
+
+    Args:
+        skin_dir (str): The path to the skin subdirectory.
+
+    Returns:
+        (dict): A dictionary where the key is the language code, and the value is the natural
+            language name of the language. The value 'None' is returned if skin_dir does not exist.
+    """
+    # Get the path to the "./lang" subdirectory
+    lang_dir = os.path.join(skin_dir, './lang')
+    # Get all the files in the subdirectory. If the subdirectory does not exist, an exception
+    # will be raised. Be prepared to catch it.
+    try:
+        lang_files = os.listdir(lang_dir)
+    except OSError:
+        # No 'lang' subdirectory. Return None
+        return None
+
+    languages = {}
+
+    # Go through the files...
+    for lang_file in lang_files:
+        # ... get its full path ...
+        lang_full_path = os.path.join(lang_dir, lang_file)
+        # ... make sure it's a file ...
+        if os.path.isfile(lang_full_path):
+            # ... then get the language code for that file.
+            code = lang_file.split('.')[0]
+            # Retrieve the ConfigObj for this language
+            lang_dict = configobj.ConfigObj(lang_full_path, encoding='utf-8')
+            # See if it has a natural language version of the language code:
+            try:
+                language = lang_dict['Texts']['Language']
+            except KeyError:
+                # It doesn't. Just label it 'Unknown'
+                language = 'Unknown'
+            # Add the code, plus the language
+            languages[code] = language
+    return languages
+
+
+def pick_language(languages, default='en'):
+    """
+    Given a choice of languages, pick one.
+
+    Args:
+        languages (list): As returned by function get_languages() above
+        default (str): The language code of the default
+
+    Returns:
+        (str): The chosen language code
+    """
+    keys = sorted(languages.keys())
+    if default not in keys:
+        default = None
+    msg = "Available languages\nCode  | Language\n"
+    for code in keys:
+        msg += "%4s  | %-20s\n" % (code, languages[code])
+    msg += "Pick a code"
+    value = prompt_with_options(msg, default, keys)
+
+    return value
