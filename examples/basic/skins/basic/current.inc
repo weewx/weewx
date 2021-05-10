@@ -40,23 +40,23 @@
       $day.barometer.max.formatted<br/>
       $day.barometer.min.formatted</td>
     <td class='metric_units'>$unit.label.barometer<br/>
-<!-- note: these thresholds are for millibar, not inHg -->
+## NOTE: these thresholds are for millibar, not inHg
 #if $varExists('trend')
-#if $trend.barometer.raw is not None:
-#if $trend.barometer.raw > 6
-      &#8679;&#8679;&#8679;
-#elif $trend.barometer.raw > 3
-      &#8679;&#8679;
-#elif $trend.barometer.raw > 0.5
-      &#8679;
-#elif $trend.barometer.raw < -6
-      &#8681;&#8681;&#8681;
-#elif $trend.barometer.raw < -3
-      &#8681;&#8681;
-#elif $trend.barometer.raw < 0.5
-      &#8681;
-#end if
-#end if
+    #if $trend.barometer.raw is not None:
+        #if $trend.barometer.raw > 6
+              &#8679;&#8679;&#8679;
+        #elif $trend.barometer.raw > 3
+              &#8679;&#8679;
+        #elif $trend.barometer.raw > 0.5
+              &#8679;
+        #elif $trend.barometer.raw < -6
+              &#8681;&#8681;&#8681;
+        #elif $trend.barometer.raw < -3
+              &#8681;&#8681;
+        #elif $trend.barometer.raw < 0.5
+              &#8681;
+        #end if
+    #end if
 #end if
     </td>
   </tr>
@@ -75,25 +75,25 @@
 #if $current.windDir.raw is None:
       -
 #else
-#if $current.windDir.raw < 22.5
-      &#8593;
-#elif $current.windDir.raw < 67.5
-      &#8599;
-#elif $current.windDir.raw < 112.5
-      &#8594;
-#elif $current.windDir.raw < 157.5
-      &#8600;
-#elif $current.windDir.raw < 202.5
-      &#8595;
-#elif $current.windDir.raw < 247.5
-      &#8601;
-#elif $current.windDir.raw < 292.5
-      &#8592;
-#elif $current.windDir.raw < 337.5
-      &#8598;
-#else
-      &#8593;
-#end if
+    #if $current.windDir.raw < 22.5
+          &#8593;
+    #elif $current.windDir.raw < 67.5
+          &#8599;
+    #elif $current.windDir.raw < 112.5
+          &#8594;
+    #elif $current.windDir.raw < 157.5
+          &#8600;
+    #elif $current.windDir.raw < 202.5
+          &#8595;
+    #elif $current.windDir.raw < 247.5
+          &#8601;
+    #elif $current.windDir.raw < 292.5
+          &#8592;
+    #elif $current.windDir.raw < 337.5
+          &#8598;
+    #else
+          &#8593;
+    #end if
 #end if
       </a>
       </td>
@@ -105,13 +105,13 @@
     </td>
     <td class='metric_units'>$unit.label.windSpeed<br/>
 #if $varExists('trend')
-#if $trend.windSpeed.raw is not None:
-#if $trend.windSpeed.formatted > 0
-      &#8679;
-#elif $trend.windSpeed.formatted < 0
-      &#8681;
-#end if
-#end if
+    #if $trend.windSpeed.raw is not None:
+        #if $trend.windSpeed.raw > 0
+              &#8679;
+        #elif $trend.windSpeed.raw < 0
+              &#8681;
+        #end if
+    #end if
 #end if
     </td>
   </tr>
