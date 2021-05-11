@@ -29,17 +29,15 @@ import weeutil.weeutil
 
 
 class InstallError(Exception):
-    """Exception thrown when installing an extension."""
+    """Exception raised when installing an extension."""
 
 
 class ExtensionInstaller(dict):
     """Base class for extension installers."""
 
-    def do_configure(self, engine):
-        pass
-
     def configure(self, engine):
-        """Override in a subclass"""
+        """Can be overridden by installers. It should return True if the installer modifies
+        the configuration dictionary."""
 
 
 class ExtensionEngine(object):
@@ -193,13 +191,6 @@ class ExtensionEngine(object):
 
         save_config = False
 
-        # Configure any skins that the extension might have
-        installer.configure(self)
-
-        # Look for options that have to be injected into the configuration file
-        if 'config' in installer:
-            save_config |= self._inject_config(installer['config'], extension_name)
-
         # Go through all the possible service groups and see if the extension
         # includes any services that belong in any of them.
         self.logger.log("Adding services to service lists", level=2)
@@ -220,6 +211,13 @@ class ExtensionEngine(object):
                         self.logger.log("Added new service %s to %s"
                                         % (svc, service_group), level=3)
 
+        # Give the installer a chance to do any customized configuration
+        save_config |= installer.configure(self)
+
+        # Look for options that have to be injected into the configuration file
+        if 'config' in installer:
+            save_config |= self._inject_config(installer['config'], extension_name)
+
         # Save the extension's install.py file in the extension's installer
         # directory for later use enumerating and uninstalling
         extension_installer_dir = os.path.join(self.root_dict['EXT_ROOT'], extension_name)
@@ -234,6 +232,13 @@ class ExtensionEngine(object):
         if save_config:
             backup_path = weecfg.save_with_backup(self.config_dict, self.config_path)
             self.logger.log("Saved configuration dictionary. Backup copy at %s" % backup_path)
+
+    def get_lang_code(self, skin, default_code):
+        """Convenience function for picking a language code"""
+        skin_path = os.path.join(self.root_dict['SKIN_ROOT'], skin)
+        languages = get_languages(skin_path)
+        code = pick_language(languages, default_code)
+        return code
 
     def _inject_config(self, extension_config, extension_name):
         """Injects any additions to the configuration file that the extension might have.

@@ -40,3 +40,10 @@ class BasicInstaller(ExtensionInstaller):
                   ]),
             ]
         )
+
+    def configure(self, engine):
+        """Customized configuration that sets a language code"""
+        # TODO: Set a units code as well
+        code = engine.get_lang_code('basic', 'en')
+        self['config']['StdReport']['basic']['lang'] = code
+        return True
