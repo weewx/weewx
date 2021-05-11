@@ -12,13 +12,13 @@ class BasicInstaller(ExtensionInstaller):
     def __init__(self):
         super(BasicInstaller, self).__init__(
             version="0.3",
-            name='basic',
+            name='Basic',
             description='Very basic skin for weewx.',
             author="Matthew Wall",
             author_email="mwall@users.sourceforge.net",
             config={
                 'StdReport': {
-                    'basic': {
+                    'BasicReport': {
                         'skin': 'basic',
                         'enable' : 'True',
                         'HTML_ROOT': 'basic',
@@ -45,5 +45,5 @@ class BasicInstaller(ExtensionInstaller):
         """Customized configuration that sets a language code"""
         # TODO: Set a units code as well
         code = engine.get_lang_code('basic', 'en')
-        self['config']['StdReport']['basic']['lang'] = code
+        self['config']['StdReport']['BasicReport']['lang'] = code
         return True
