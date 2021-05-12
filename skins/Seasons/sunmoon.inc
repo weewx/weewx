@@ -63,15 +63,15 @@
         ## No extended almanac information available. Fall back to basic info.
       <table class="celestial">
         <tr>
-          <td class="label">Sunrise</td>
+          <td class="label">$gettext[$page]["Sunrise"]</td>
           <td class="data">$almanac.sunrise</td>
         </tr>
         <tr>
-          <td class="label">Sunset</td>
+          <td class="label">$gettext[$page]["Sunset"]</td>
           <td class="data">$almanac.sunset</td>
         </tr>
         <tr>
-          <td class="label">Moon Phase</td>
+          <td class="label">$gettext[$page]["Moon Phase"]</td>
           <td class="data">$almanac.moon_phase<br/>
             $almanac.moon_fullness%</td>
         </tr>
