@@ -63,7 +63,7 @@
 #end if
 
 #if $have_battery_status
-    <tr><th>Battery Status</th><th></th></tr>
+    <tr><th>$gettext["Battery Status"]</th><th></th></tr>
 #if $day.txBatteryStatus.has_data
     <tr>
       <td class="label">$obs.label.txBatteryStatus</td>
@@ -97,7 +97,7 @@
 #end if
 
 #if $have_voltage
-    <tr><th>Voltage</th><th></th></tr>
+    <tr><th>$gettext["Voltage"]</th><th></th></tr>
 #if $day.consBatteryVoltage.has_data
     <tr>
       <td class="label">$obs.label.consBatteryVoltage</td>
