@@ -8,4 +8,8 @@ deleting them.
 
 Review the I18N documentation.
 
-Modify installation software so the user can pick a translation.
+Modify installation software so the user can pick a unit system.
+
+Parameterize PIL fonts on the basis of `lang`.
+
+Allow downloading and memoizing fonts, so we don't have to ship every font out there.
