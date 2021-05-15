@@ -83,6 +83,8 @@ Version: 4.6
         </p>
 
 
+        <!-- -------------------------------------------------------------- -->
+
         <h1 id="introduction">Introduction</h1>
 
         <h2>Overall system architecture</h2>
@@ -758,6 +760,8 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
         </p>
 
 
+        <!-- -------------------------------------------------------------- -->
+
         <h1 id="customizing_reports">Customizing reports</h1>
 
         <p>
@@ -796,37 +800,41 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
             <tr class="first_row">
                 <td>File</td>
                 <td>Section</td>
+                <td>Options</td>
                 <td>Scope</td>
                 <td>Nesting example</td>
                 <td>Comments</td>
             </tr>
             <tr>
                 <td class="code">weewx.conf</td>
-                <td class="code">[StdReport] / [[<span class="symcode">report_name</span>]]
-                </td>
+                <td class="code">[StdReport] / [[<span class="symcode">report_name</span>]]</td>
+                <td></td>
                 <td>Affects only the report <span class="symcode">report_name</span>.</td>
                 <td class="code">[[[Labels]]] / [[[[Generic]]]]</td>
                 <td>Highest precedence. Has the final say.</td>
             </tr>
             <tr>
-                <td class="code">skins/<span
-                class="symcode">report_name</span>/ lang/<span
-                class="symcode">language_code</span>.conf</td>
-                <td></td>
+                <td class="code">weewx.conf</td>
+                <td class="code">[StdReport] / [[<span class="symcode">report_name</span>]]</td>
+                <td class="code">lang<br/>units</td>
                 <td>Affects only the report <span class="symcode">report_name</span>.</td>
-                <td class="code">[Labels] / [[Generic]]</td>
-                <td>Internationalization support. Preferably
-                supplied by the skin author.</td>
+                <td></td>
+                <td>Internationalization support. Option <span class="code">lang</span> only works for skins that
+                have been internationalized and have a corresponding language configuration file. <br/>
+                    Option <span class="code">units</span> works for all skins.</td>
             </tr>
             <tr>
                 <td class="code">weewx.conf</td>
-                <td class="code"><a href="#change_defaults">[StdReport] / [[Defaults]]</a></td>
+                <td class="code">[StdReport] / [[Defaults]]</td>
+                <td></td>
                 <td>Affects <em>all</em> reports.</td>
                 <td class="code">[[[Labels]]] / [[[[Generic]]]]</td>
-                <td>Normal mechanism for an user to modify the parameters in a report, such as units.</td>
+                <td>Deprecated. Use options <span class="code">lang</span> and <span class="code">units</span>
+                instead. Can still be used to localize skins that do not support option <span class="code">lang</span>.</td>
             </tr>
             <tr>
                 <td class="code">skins/<span class="symcode">report_name</span>/skin.conf</td>
+                <td></td>
                 <td></td>
                 <td>Affects only the report <span class="symcode">report_name</span>.</td>
                 <td class="code">[Labels] / [[Generic]]</td>
@@ -837,6 +845,7 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
             <tr>
                 <td class="code">weewx/defaults.py</td>
                 <td class="code"></td>
+                <td></td>
                 <td>Affects <em>all</em> reports.</td>
                 <td class="code">[Labels] / [[Generic]]</td>
                 <td>Acts as a backstop, in the case an option is not specified anywhere else. Not generally modified by
@@ -855,9 +864,41 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
 
         <h2 id="how_to_change_labels">Changing labels</h2>
         <p>
-            Let's look at an example. If you take a look inside the file <span class="code">weewx/defaults.py</span>,
-            you will see it contains what looks like a big configuration file. Among other things, it has two entries
-            that look like this:
+            Every observation type is associated with a default <em>label</em>. For example, in the English language,
+            the default label for observation type <span class="code">outTemp</span> is generally <b>Outside
+            Temperature</b>. You can change this label by <em>overriding</em> the default. How you do so will depend on
+            whether the skin you are using has been <em>internationalized</em> and, if so, whether it offers your local
+            language.
+        </p>
+        <h3 id="internationalized_skins">Internationalized skins</h3>
+        <p>
+            All of the skins included with WeeWX have been internationalized, so if you're working with one of them,
+            this is the section you want. Next, you need to check whether there is a <em>localization</em> file for your
+            language. To check, look in the contents of subdirectory <span class="code">lang</span> in skin's directory.
+            For example, if you used a package installer and are using the <em>Seasons</em> skin, you will want to look
+            in <span class="code">/etc/weewx/skins/Seasons/lang</span>. Inside, you will see something like this:
+        </p>
+        <pre class="tty">ls -l /etc/weewx/skins/Seasons/lang
+total 32
+-rw-rw-r-- 1 root root  7967 May 14 08:26 de.conf
+-rw-rw-r-- 1 root root  7671 May 14 05:25 en.conf
+-rw-rw-r-- 1 root root 12511 May 14 06:45 th.conf
+        </pre>
+
+        <p>
+            This means the skin has been localized in the German (<span class="code">de.conf</span>), English (<span
+            class="code">en.conf</span>), and Thai (<span class="code">th.conf</span>) languages. If you are working
+            with one of these languages, you can simply override the defaults supplied by the localization file. If you
+            are working with a language for which there is no localization file, you will have to supply one first. See
+            the section XXX.
+        </p>
+
+        <h4>Overriding the localization file</h4>
+
+        <p>
+            Let's look at an example. If you take a look inside the file <span
+            class="code">skins/Seasons/lang/en.conf</span>, you will see it contains what looks like a big configuration
+            file. Among other things, it has two entries that look like this:
         </p>
         <pre class="tty">
 ...
@@ -871,327 +912,73 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
 
         <p>
             This tells the report generators that when it comes time to label the observation variables <span
-            class="code">inTemp</span> and <span class="code">outTemp</span>, use the strings
-            <span class="code">Inside Temperature</span> and <span class="code">Outside Temperature</span>,
-            respectively. Because <span class="code">weewx/defaults.py</span> has the lowest precedence, these strings
-            will be used only when nothing else is available.
+            class="code">inTemp</span> and <span class="code">outTemp</span>, use the strings <span class="code">Inside
+            Temperature</span> and <span class="code">Outside Temperature</span>, respectively.
         </p>
         <p>
-            Now suppose we have a skin called <em>Life</em> . Its configuration file will be located at <span
-            class="code">skins/Life/skin.conf</span>. Suppose, among other things, it contains an excerpt
-        </p>
-
-        <pre class="tty">
-...
-[Labels]
-    ...
-    [[Generic]]
-        ...
-        outTemp = Exterior Temperature
-</pre>
-
-        <p>
-            What this says is that the author of <span class="code">Life</span>, for whatever reasons, decided that s/he
-            wants to use the string <span class="code">Exterior Temperature</span>, instead of <span class="code">Outside Temperature</span>
-            for the label for <span class="code">outTemp</span>. The file includes no definition for <span class="code">inTemp</span>.
-        </p>
-        
-        <p>
-            Now suppose the skin author took care of internationalization
-            and provided language files. In this case s/he would not have
-            set the label in <span class="code">skin.conf</span> but in
-            a language file, for English in 
-            <span class="code">lang/en.conf</span>, for german in
-            <span class="code">lang/de.conf</span> etc.
-        </p>
-        <p> 
-            <span class="code">lang/en.conf</span> would contain
-            what was defined in <span class="code">skin.conf</span>
-            before:
+            However, let's say that we have actually located our outside temperature sensor in the barn, and wish to
+            label it accordingly. We need to <em>override</em> the label that comes in the localization file. We could
+            just change the localization file <span class="code">en.conf</span>, but then if the author of the skin came
+            out with a new version, our change could get lost. Better to override the default by making the change
+            in <span class="code">weewx.conf</span>. To do this, make the following changes
+            in <span class="code">weewx.conf</span>:
         </p>
         <pre class="tty">
-...
-[Labels]
-    ...
-    [[Generic]]
-        ...
-        outTemp = Exterior Temperature
-</pre>
-        <p>
-            <span class="code">lang/de.conf</span> would contain:
-        </p>
-        <pre class="tty">
-...
-[Labels]
-    ...
-    [[Generic]]
-        ...
-        outTemp = Außentemperatur
-        inTemp = Innentemperatur
-</pre>
-        <p>
-            The user sets the language by the optional
-            <span class="code">lang</span> option in 
-            <span class="code">weewx.conf</span>.
-        </p>
-
-        <p>
-            Finally, for purposes of illustrating precedence, suppose the <span class="code">[StdReport]</span> section
-            of <span class="code">weewx.conf</span> contains this:
-        </p>
-
-        <pre class="tty">
-[StdReport]
-    ...
-
-    [[SeasonsA]]
+    [[SeasonsReport]]
+        # The SeasonsReport uses the 'Seasons' skin, which contains the
+        # images, templates and plots for the report.
         skin = Seasons
-
-    [[LifeA]]
-        skin = Life
-
-    [[LifeB]]
-        skin = Life
+        lang = en
+        units = US
+        enable = true
         [[[Labels]]]
             [[[[Generic]]]]
-                outTemp = Barn Temperature
-                
-    [[LifeC]]
-        skin = Life
-        lang = de
-</pre>
+                <span class=highlight>outTemp = Barn Temperature</span>
+        </pre>
 
         <p>
-            This will result in reports with the following values:
+            This will cause the default label <b>Outside Temperature</b> to be replaced with the new label <b>Barn
+            Temperature</b> everywhere in your report. The label for type <span class="code">inTemp</span> will be
+            untouched.
         </p>
 
-        <table class="indent" style="width: 80%">
-            <tr class="first_row">
-                <td>Report</td>
-                <td>Label for <span class="code">inTemp</span></td>
-                <td>Label for <span class="code">outTemp</span></td>
-            </tr>
-            <tr>
-                <td>SeasonsA</td>
-                <td>Inside Temperature</td>
-                <td>Outside Temperature</td>
-            </tr>
-            <tr>
-                <td>LifeA</td>
-                <td>Inside Temperature</td>
-                <td>Exterior Temperature</td>
-            </tr>
-            <tr>
-                <td>LifeB</td>
-                <td>Inside Temperature</td>
-                <td>Barn Temperature</td>
-            </tr>
-            <tr>
-                <td>LifeC</td>
-                <td>Innentemperatur</td>
-                <td>Außentemperatur</td>
-            </tr>
-        </table>
-
-        <p>
-            Note how the values specified for <span class="code">inTemp</span> 
-            are not overridden anywhere, except 
-            <span class="clode">lang/de.conf</span>, so the value
-            specified in <span class="code">weewx/defaults.py</span>, that is, <span
-            class="code">Inside Temperature</span>, is used for all reports,
-            except <span class="code">LifeC</span>.</p>
-        <p>
-            The value for <span class="code">outTemp</span> is not overridden for report <span class="code">SeasonsA</span>,
-            so it uses the label specified in <span class="code">weewx/defaults.py</span>, that is, <span class="code">Outside Temperature</span>.
-            By contrast, for the "Life" reports, a value for <span class="code">outTemp</span>
-            was specified in the skin so, in the absence of any user override, its value, <span class="code">Exterior
-            Temperature</span> will be used as the new default. For the report <span class="code">LifeB</span>,
-            the user <em>has</em> specified an override for <span class="code">outTemp</span>, so that value,
-            <span class="code">Barn Temperature</span>, is used.
-            Finally, for the report <span class="code">LifeC</span>
-            a language has been set, so the labels are taken from the
-            specified language file.
-        </p>
-
-        <p>
-            One more example. This time, suppose the <span class="code">[StdReport]</span> section of <span
-            class="code">weewx.conf</span> contains this:
-        </p>
-
-        <pre class="tty">
-[StdReport]
-    ...
-
-<span class="highlight">    [[Defaults]]
-        [[[Labels]]]
-            [[[[Generic]]]]
-                outTemp = Shed Temperature</span>
-
-    [[SeasonsA]]
-        skin = Seasons
-
-    [[LifeA]]
-        skin = Life
-
-    [[LifeB]]
-        skin = Life
-        [[[Labels]]]
-            [[[[Generic]]]]
-                outTemp = Barn Temperature
-</pre>
-        <p>
-            We have added a new section (<span class="highlight">highlighted</span>), where the user has specified a new
-            default for the observation type <span class="code">outTemp</span>, that is, <span class="code">Shed Temperature</span>.
-            Unless overridden, this is the value that will now be used instead of what the skin author specified. The
-            final tally looks like this:
-        </p>
-
-        <table class="indent" style="width: 80%">
-            <tr class="first_row">
-                <td>Report</td>
-                <td>Label for <span class="code">inTemp</span></td>
-                <td>Label for <span class="code">outTemp</span></td>
-            </tr>
-            <tr>
-                <td>SeasonsA</td>
-                <td>Inside Temperature</td>
-                <td>Shed Temperature</td>
-            </tr>
-            <tr>
-                <td>LifeA</td>
-                <td>Inside Temperature</td>
-                <td>Shed Temperature</td>
-            </tr>
-            <tr>
-                <td>LifeB</td>
-                <td>Inside Temperature</td>
-                <td>Barn Temperature</td>
-            </tr>
-        </table>
 
         <h2 id="how_to_change_units">How to change units</h2>
 
         <p>
-            Some users prefer to see metric units, others prefer US customary units. And there are other cases where
-            metric/US is not enough; some sites need metric units for most measurements, but wind speeds in <span
-            class="code">knots</span>, or some sites need rainfall in <span class="code">mm</span> whereas others need
-            <span class="code">cm</span>.
+            Option <a href="usersguide.htm#option-units"><span class="code">units</span></a> controls what unit system
+             will be used in your reports. The available choices are <span class="code">US</span>, <span
+            class="code">METRIC</span>, or <span class="code">METRICWX</span>. See the <a
+            href="#units"><em>Appendix Units</em></a> for definitions of these unit systems.
         </p>
         <p>
-            This section shows how to specify exactly what units you want to use for which reports. The examples use the
-            skin <em>Seasons</em>, which comes with the distribution.
+            However, what if you want a mix? For example, suppose you generally want US Customary units, but you
+            want barometric pressures to be in millibars? This can be done by <em>overriding</em> the appropriate unit
+            group.
         </p>
 
-        <h3 id="change_defaults">Change units for all reports </h3>
-        <p>
-            With this approach, you change an option under the <span class="code">[[Defaults]]</span> subsection,
-            located under <span class="code">[StdReport]</span> in <span class="code">weewx.conf.</span> Changes here
-            will affect <em>all</em> reports.
-        </p>
-
-        <p>
-            For example, suppose you wish to use metric units for all your reports, instead of the default US Customary
-            Units. The section that controls units is <span class="code">[StdReport] / [[Defaults]] / [[[Units]]] / [[[[Groups]]]]</span>.
-            It looks like this:
-        </p>
         <pre class="tty">
-[StdReport]
-
-    # Where the skins reside, relative to WEEWX_ROOT
-    SKIN_ROOT = skins
-
-    # Where the generated reports should go, relative to WEEWX_ROOT
-    HTML_ROOT = public_html
-
-    # The database binding indicates which data should be used in reports.
-    data_binding = wx_binding
-
-    # The following section contains defaults that will apply to *all* skins
-    [[Defaults]]
-
-        # The following section determines the selection and formatting of units.
+    [[SeasonsReport]]
+        # The SeasonsReport uses the 'Seasons' skin, which contains the
+        # images, templates and plots for the report.
+        skin = Seasons
+        lang = en
+        units = US
+        enable = true
         [[[Units]]]
-
-            # The following section sets what unit to use for each unit group.
-            # NB: The unit is always in the singular. I.e., 'mile_per_hour',
-            # NOT 'miles_per_hour'
             [[[[Groups]]]]
-
-                group_altitude     = foot                 # Options are 'foot' or 'meter'
-                group_degree_day   = degree_F_day         # Options are 'degree_F_day' or 'degree_C_day'
-                group_distance     = mile                 # Options are 'mile' or 'km'
-                group_pressure     = inHg                 # Options are 'inHg', 'mmHg', 'mbar', 'hPa', or 'kPa'
-                group_pressurerate = inHg_per_hour        # Options are 'inHg_per_hour', 'mmHg_per_hour', 'mbar_per_hour', 'hPa_per_hour', or 'kPa_per_hour'
-                group_rain         = inch                 # Options are 'inch', 'cm', or 'mm'
-                group_rainrate     = inch_per_hour        # Options are 'inch_per_hour', 'cm_per_hour', or 'mm_per_hour'
-                group_speed        = mile_per_hour        # Options are 'mile_per_hour', 'km_per_hour', 'knot', or 'meter_per_second'
-                group_speed2       = mile_per_hour2       # Options are 'mile_per_hour2', 'km_per_hour2', 'knot2', or 'meter_per_second2'
-                group_temperature  = degree_F             # Options are 'degree_F' or 'degree_C'
+                <span class=highlight>group_pressure = mbar</span>
 </pre>
 
-        <p>
-            To use metric units for all your skins, you would edit this section to read:
-        </p>
-        <pre class="tty">
-[StdReport]
 
-    # Where the skins reside, relative to WEEWX_ROOT
-    SKIN_ROOT = skins
+        <h3 id="change_units">Multiple unit systems</h3>
 
-    # Where the generated reports should go, relative to WEEWX_ROOT
-    HTML_ROOT = public_html
-
-    # The database binding indicates which data should be used in reports.
-    data_binding = wx_binding
-
-    # The following section contains defaults that will apply to *all* skins
-    [[Defaults]]
-
-        # The following section determines the selection and formatting of units.
-        [[[Units]]]
-
-            # The following section sets what unit to use for each unit group.
-            # NB: The unit is always in the singular. I.e., 'mile_per_hour',
-            # NOT 'miles_per_hour'
-            [[[[Groups]]]]
-
-                group_altitude     = <span class="highlight">meter</span>                # Options are 'foot' or 'meter'
-                group_degree_day   = <span class="highlight">degree_C_day</span>         # Options are 'degree_F_day' or 'degree_C_day'
-                group_distance     = <span class="highlight">km</span>                   # Options are 'mile' or 'km'
-                group_pressure     = <span class="highlight">mbar</span>                 # Options are 'inHg', 'mmHg', 'mbar', 'hPa', or 'kPa'
-                group_pressurerate = <span class="highlight">mbar_per_hour</span>        # Options are 'inHg_per_hour', 'mmHg_per_hour', 'mbar_per_hour', 'hPa_per_hour', or 'kPa_per_hour'
-                group_rain         = <span class="highlight">mm</span>                   # Options are 'inch', 'cm', or 'mm'
-                group_rainrate     = <span class="highlight">mm_per_hour</span>          # Options are 'inch_per_hour', 'cm_per_hour', or 'mm_per_hour'
-                group_speed        = <span class="highlight">meter_per_second</span>     # Options are 'mile_per_hour', 'km_per_hour', 'knot', or 'meter_per_second'
-                group_speed2       = <span class="highlight">meter_per_second2</span>    # Options are 'mile_per_hour2', 'km_per_hour2', 'knot2', or 'meter_per_second2'
-                group_temperature  = <span class="highlight">degree_C</span>             # Options are 'degree_F' or 'degree_C'
-</pre>
-        <p>
-            The options that were changed have been <span class="highlight">&nbsp;highlighted&nbsp;</span>. Note that
-            the changes occurred under the subsection <span class="code">[[Defaults]]</span>, so they will affect <em>all</em>
-            reports.
-        </p>
-
-        <h3 id="change_units">Change units for a single report </h3>
-
-        <p>
-            With this approach you can change an option for a single report.
-        </p>
-
-        <p>
-            Suppose you want two reports, one in US Customary, the other in Metric. The first, call it <em>SeasonsUSReport</em>,
-            will go in the regular directory <span class="symcode">HTML_ROOT</span>. However, the latter, call it <em>SeasonsMetricReport</em>,
+        <p>Another example. Suppose we want to generate <em>two</em> reports, one in the US Customary system, the other
+        using the <span class="code">METRICWX</span> system. The first, call it <em>SeasonsUSReport</em>,
+            will go in the regular directory <span class="symcode">HTML_ROOT</span>. However, the latter, call
+            it <em>SeasonsMetricReport</em>,
             will go in a subdirectory, <span class="symcode">HTML_ROOT</span><span class="code">/metric</span>.
-        </p>
-        <p>
-            To accomplish this, we will generate two reports, one using the defaults, the other using overrides to
-            change the target unit system and the target directory. 
-        </p>
-        <p>
-            If you only want to use one of the predefined unit systems
-            like <span class="code">US</span> or
-            <span class="code">METRIC</span> you can simply specify
-            a unit system in the report configuration like this:
+            Here's how you would do it
         </p>
         <pre class="tty">
 [StdReport]
@@ -1204,90 +991,25 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
 
     # The database binding indicates which data should be used in reports.
     data_binding = wx_binding
-
-<span class="highlight">    [[SeasonsUSReport]]</span>
-        skin = Seasons
-        <span class="higlight">units = US</span>
-        enable = true
-
-<span class="highlight">    [[SeasonsMetricReport]]
-        skin = Seasons
-        units = METRIC
-        enable = true
-        HTML_ROOT = public_html/metric</pre>
-        <p>
-            If you need individual settings for a lot of units you
-            can specify the units directly in the report configuration.
-            In this case the section <span class="code">[StdReport]</span>
-            will look like this:
-        </p>
-        <pre class="tty">
-[StdReport]
-
-    # Where the skins reside, relative to WEEWX_ROOT
-    SKIN_ROOT = skins
-
-    # Where the generated reports should go, relative to WEEWX_ROOT
-    HTML_ROOT = public_html
-
-    # The database binding indicates which data should be used in reports.
-    data_binding = wx_binding
-
-    # The following section contains defaults that will apply to *all* skins
-    [[Defaults]]
-        [[[Units]]]
-            [[[[Groups]]]]
-                group_altitude     = foot                 # Options are 'foot' or 'meter'
-                group_degree_day   = degree_F_day         # Options are 'degree_F_day' or 'degree_C_day'
-                group_distance     = mile                 # Options are 'mile' or 'km'
-                group_pressure     = inHg                 # Options are 'inHg', 'mmHg', 'mbar', 'hPa', or 'kPa'
-                group_pressurerate = inHg_per_hour        # Options are 'inHg_per_hour', 'mmHg_per_hour', 'mbar_per_hour', 'hPa_per_hour', or 'kPa_per_hour'
-                group_rain         = inch                 # Options are 'inch', 'cm', or 'mm'
-                group_rainrate     = inch_per_hour        # Options are 'inch_per_hour', 'cm_per_hour', or 'mm_per_hour'
-                group_speed        = mile_per_hour        # Options are 'mile_per_hour', 'km_per_hour', 'knot', or 'meter_per_second'
-                group_speed2       = mile_per_hour2       # Options are 'mile_per_hour2', 'km_per_hour2', 'knot2', or 'meter_per_second2'
-                group_temperature  = degree_F             # Options are 'degree_F' or 'degree_C'
 
     <span class="highlight">[[SeasonsUSReport]]</span>
         skin = Seasons
+        <span class="higlight">units = us</span>
         enable = true
 
-<span class="highlight">    [[SeasonsMetricReport]]
+    <span class="highlight">[[SeasonsMetricReport]]</span>
         skin = Seasons
-        enable = true
+        units = metricwx
         HTML_ROOT = public_html/metric
-        [[[Units]]]
-            [[[[Groups]]]]
-                group_altitude     = meter                # Options are 'foot' or 'meter'
-                group_degree_day   = degree_C_day         # Options are 'degree_F_day' or 'degree_C_day'
-                group_distance     = km                   # Options are 'mile' or 'km'
-                group_pressure     = mbar                 # Options are 'inHg', 'mmHg', 'mbar', 'hPa', or 'kPa'
-                group_pressurerate = mbar_per_hour        # Options are 'inHg_per_hour', 'mmHg_per_hour', 'mbar_per_hour', 'hPa_per_hour', or 'kPa_per_hour'
-                group_rain         = mm                   # Options are 'inch', 'cm', or 'mm'
-                group_rainrate     = mm_per_hour          # Options are 'inch_per_hour', 'cm_per_hour', or 'mm_per_hour'
-                group_speed        = meter_per_second     # Options are 'mile_per_hour', 'km_per_hour', 'knot', or 'meter_per_second'
-                group_speed2       = meter_per_second2    # Options are 'mile_per_hour2', 'km_per_hour2', 'knot2', or 'meter_per_second2'
-                group_temperature  = degree_C             # Options are 'degree_F' or 'degree_C'</span>
+        enable = true
 </pre>
-        <p>
-            Two things are different from the stock section <span class="code">[StdReport]</span>. First (1), we have
-            renamed the first report from <em>SeasonsReport</em> to <em>SeasonsUSReport</em> for clarity; and second
-            (2), we have introduced a new report <em>SeasonsMetricReport</em>, which is just like the first, except it
-            puts its results in a different subdirectory and uses different units. Both use the same skin, the <em>Seasons</em>
-            skin.
-        </p>
 
         <p>
-            The reason this works is that the report <em>SeasonsUSReport</em> uses all of the defaults, which include US
-            Customary units, and the default value for <a href="usersguide.htm#HTML_ROOT"><span
-            class="code">HTML_ROOT</span></a> (which specifies the location for where HTML files are to be put).
+            Note how both reports use the same <em>skin</em>, but different unit systems, and different destinations.
+            The first, <em>SeasonsUSReport</em> sets option <span class="code">units</span> to <span class="code">us</span>,
+            and uses the default destination. By contrast, the second, <em>SeasonsMetricReport</em>, uses unit system
+            <span class="code">metricwx</span>, and a different destination, <span class="code">public_html/metric</span>.
         </p>
-
-        <p>
-            By contrast, <em>SeasonsMetricReport</em> cannot use these defaults, so it overrides the units to be used,
-            and the value of <span class="code">HTML_ROOT</span>.
-        </p>
-
 
         <h2 id="customizing_gen_time">Scheduling report generation</h2>
 
@@ -1689,6 +1411,8 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
             utility.
         </p>
 
+
+        <!-- -------------------------------------------------------------- -->
 
         <h1 id="customizing_templates">The Cheetah generator</h1>
 
@@ -4018,6 +3742,8 @@ class MyStats(SearchList):                                                   # 1
         <pre class="tty">export PYTHONPATH=/home/me/secret_location</pre>
 
 
+        <!-- -------------------------------------------------------------- -->
+
         <h1 id="image_generator">The Image generator</h1>
 
         <p class="note">
@@ -4307,6 +4033,8 @@ class MyStats(SearchList):                                                   # 1
     [[[[barometer]]]]</pre>
 
 
+        <!-- -------------------------------------------------------------- -->
+
         <h1 id="Using_multiple_bindings">Using multiple bindings</h1>
 
         <p>
@@ -4470,6 +4198,8 @@ class MyStats(SearchList):                                                   # 1
         </p>
 
 
+        <!-- -------------------------------------------------------------- -->
+
         <h1 id="localization">Localization</h1>
 
         <p>
@@ -4478,53 +4208,88 @@ class MyStats(SearchList):                                                   # 1
             display of data in formats specific to a locale.
         </p>
         
-        <h2>If localization is already done</h2>
+        <h2>If the skin has been internationalized</h2>
         <p>
-            First look whether the skin already came with a localization
-            for your language. If there is a 
-            <span class="code">lang</span> subdirectory in the skin
-            directory, look into it. There you find a file for each
-            language this skin is already localized to. If your
-            language is there, all you need to do is to select it
-            in <span class="code">weewx.conf</span>:
+            All of the skins that come with WeeWX have been <em>internationalized</em>, although they may not have
+            been <em>localized</em> to your specific language. See the section <a href="#internationalized_skins">
+            Internationalized skins</a> for how to tell.
+        </a>
+        </p>
+        <h3>Internationalized, local language is available</h3>
+        <p>
+            This is the easy case: the skin has been internationalized, and your locale is available.
+            In this case, all you need to do is to select it
+            in <span class="code">weewx.conf</span>. For example, to select German (code <span class="code">de</span>):
         </p>
         <pre class="tty">...
 [StdReport]
     ...
     [[TheSkin]]
         skin = skin_directory
-        <span class="highlight">lang = language_code</span>
+        <span class="highlight">lang = de</span>
         ...</pre>
 
-        <h2>If only your language is missing</h2>
-        
-        <p>
-            If the <span class="code">lang</span> subdirectory
-            is present in the skin directory the skin is
-            probably prepared already for localization. 
-            The only thing to do then is translating. 
-            To do so, copy the file 
-            <span class="code">en.conf</span> and name it
-            according to the language code of your language.
-            Then translate all the strings on the right
-            side of the equal signs to your language. 
-            The skin author may be interested in your
-            language file to ship it together with the
-            skin for the use of other users.
-            Last set the language code in
-            <span class="code">weewx.conf</span>
-            as described in the previous section.
-        </p>
-        
-        <h2>How to localize a single report</h2>
+        <h3>Internationalized, but your language is missing</h3>
 
         <p>
-            What happens when you come accross a report that you like, but it is written in another language, or uses
+            If the <span class="code">lang</span> subdirectory is present in the skin directory, then the skin has been
+            internationalized. However, you will have to <em>localize</em> it to your language. To do so, copy the file
+            <span class="code">en.conf</span> and name it according to the language code of your language. Then
+            translate all the strings on the right side of the equal signs to your language. For example, say you
+            want to localize the skin in the French language. Then copy <span class="code">en.conf</span> to
+            <span class="code">fr.conf</span>
+        </p>
+        <pre class="cmd tty">cp en.conf fr.conf</pre>
+        <p>
+            Then change things that look like this:
+        </p>
+        <pre class="tty">
+...
+[Texts]
+    "Language" = English
+
+    "Average Wind Speed" = Average Wind Speed
+    "Current Weather Conditions" = "Current Weather Conditions"
+    "Inside" = Inside
+    ...
+</pre>
+        <p>to something that looks like this:</p>
+        <pre class="tty">
+...
+[Texts]
+    "Language" = Français
+
+    "Average Wind Speed" = Vitesse Moyenne du Vent
+    "Current Weather Conditions" = Conditions Météorologiques Actuelles
+    "Inside" = à l'Intérieur
+    ...
+</pre>
+        <p>
+            And so on. When you're done, the skin author may be interested in your language file to ship it together
+            with the skin for the use of other users.
+        </p>
+        <p>
+            Finally, set the option <span class="code">lang</span> in <span class="code">weewx.conf</span> to your
+            language code (<span class="code">fr</span> in this example) as described in the
+            <a href="usersguide.htm#lang-code">User's Guide</a>.
+        </p>
+
+        <h2>How to internationalize a skin</h2>
+
+        <p>
+            What happens when you come across a report that you like, but it is written in another language, or uses
             time formats that are foreign to your customs? This section explains how to convert the report to local
             formats and language.
         </p>
 
-        <h3>Create the language file</h3>
+        <p>
+            Internationalization of WeeWX templates uses a pattern very similar to the well-known
+            GNU "<a href="https://www.gnu.org/software/gettext/"><span class="code">gettext</span></a>" approach. The
+            only difference is that we have leveraged the <span class="code">ConfigObj</span> facility used throughout
+            WeeWX.
+        </p>
+
+        <h3>Create the localization file</h3>
         
         <p>
             Create a subdirectory called <span class="code">lang</span> 
@@ -4532,21 +4297,89 @@ class MyStats(SearchList):                                                   # 1
             
             Then create a file named by the language code with the
             suffix <span class="code">.conf</span>. For example, if
-            you want to translate to spanish, name the file 
-            <span class="code">es.conf</span>. 
-            The next step is
-            to make the templates language-aware as described in the
-            following section.
-        </p>
-        
-        <h3>Translate the templates</h3>
+            you want to translate to Spanish, name the file
+            <span class="code">es.conf</span>. Include the following in the file:</p>
+        <pre class="tty">
+[Units]
+
+    [[Labels]]
+
+        day               = " day",    " days"
+        hour              = " hour",   " hours"
+        minute            = " minute", " minutes"
+        second            = " second", " seconds"
+
+    [[Ordinates]]
+
+        # Ordinal directions. The last one should be for no wind direction
+        directions = N, NNE, NE, ENE, E, ESE, SE, SSE, S, SSW, SW, WSW, W, WNW, NW, NNW, N/A
+
+[Labels]
+
+    # Set to hemisphere abbreviations suitable for your location:
+    hemispheres = N, S, E, W
+
+    # Generic labels, keyed by an observation type.
+    [[Generic]]
+        altimeter              = Altimeter                # QNH
+        altimeterRate          = Altimeter Change Rate
+        appTemp                = Apparent Temperature
+        appTemp1               = Apparent Temperature
+        barometer              = Barometer                # QFF
+        barometerRate          = Barometer Change Rate
+        cloudbase              = Cloud Base
+        dateTime               = Time
+        dewpoint               = Dew Point
+        ET                     = ET
+        extraTemp1             = Temperature1
+        extraTemp2             = Temperature2
+        extraTemp3             = Temperature3
+        heatindex              = Heat Index
+        inDewpoint             = Inside Dew Point
+        inHumidity             = Inside Humidity
+        inTemp                 = Inside Temperature
+        interval               = Interval
+        lightning_distance     = Lightning Distance
+        lightning_strike_count = Lightning Strikes
+        outHumidity            = Outside Humidity
+        outTemp                = Outside Temperature
+        pressure               = Pressure                 # QFE
+        pressureRate           = Pressure Change Rate
+        radiation              = Radiation
+        rain                   = Rain
+        rainRate               = Rain Rate
+        THSW                   = THSW Index
+        UV                     = UV Index
+        wind                   = Wind
+        windchill              = Wind Chill
+        windDir                = Wind Direction
+        windGust               = Gust Speed
+        windGustDir            = Gust Direction
+        windgustvec            = Gust Vector
+        windrun                = Wind Run
+        windSpeed              = Wind Speed
+        windvec                = Wind Vector
+
+
+[Almanac]
+
+    # The labels to be used for the phases of the moon:
+    moon_phases = New, Waxing crescent, First quarter, Waxing gibbous, Full, Waning gibbous, Last quarter, Waning crescent
+
+[Texts]
+
+    Language              = Español # Replace with the language you are targeting
+        </pre>
 
         <p>
-            Open the template file and the language file in different
-            editor windows. It is much easier if you can change both
-            files simultaneously.
+            Go through the file, translating all phrases to your target language, Spanish in this example.
         </p>
-        
+        <p>
+            Open the template file and the language file in different editor windows.
+            It is much easier if you can change both files simultaneously.
+        </p>
+
+        <h4>Change the <span class="code">html lang</span> attribute</h4>
         <p>
             In every HTML template (these typically have a file suffix of 
             <span class="code">.html.tmpl</span>) change
@@ -4554,7 +4387,7 @@ class MyStats(SearchList):                                                   # 1
         </p>
         <pre class="tty">
 &lt;!DOCTYPE html&gt;
-&lt;html lang="<span class="highlight">$gettext.lang</span>"&gt;
+&lt;html lang="<span class="highlight">$gettext["lang"]</span>"&gt;
   &lt;head&gt;
     &lt;meta charset="UTF-8"&gt;
     ...
@@ -4569,52 +4402,63 @@ class MyStats(SearchList):                                                   # 1
             href="https://www.w3schools.com/tags/ref_country_codes.asp">country codes</a><br/>
         </p>
 
+        <h4>Change the body text</h4>
         <p>
-            Then, go through each template file in the skin, translating any text to your target language. For example,
-            suppose you were localizing the <em>Seasons</em> skin to the French language. Search all the template
-            files for English phrases that need to be translated. As an example, the file <span class="code">current.inc</span>
-            has a section that looks like this:
+            The next step is to go through the templates and change all natural language phrases into lookups using
+            <span class="code">$gettext</span>. For example, suppose your skin has a section that looks like this:
+        </p>
+
+       <pre class="tty">
+&lt;div&gt;
+    Current Conditions
+    &lt;table&gt;
+        &lt;tr&gt;
+            &lt;td&gt;Outside Temperature&lt;/td&gt;
+            &lt;td&gt;$current.outTemp&lt;/td&gt;
+        &lt;/tr&gt;
+    &lt;/table&gt;>
+&lt;/div&gt;
+</pre>
+
+        <p>
+            There are two natural language phrases here: <em>Current Conditions</em> and <em>Outside Temperature</em>.
+            They would be changed to:
         </p>
        <pre class="tty">
-&lt;div id='current_widget' class="widget"&gt;
-  &lt;div class="widget_title"&gt;
-    Current Conditions
-    &lt;a class="widget_control"
-      onclick="toggle_widget('current')"&gt;&amp;diams;&lt;/a&gt;
-  &lt;/div&gt;
-        </pre>
-<p>This would need to be changed to this:</p>
-        <pre class="tty">
-&lt;div id='current_widget' class="widget"&gt;
-  &lt;div class="widget_title"&gt;
+&lt&lt;div&gt&gt;
     <span class="highlight">$gettext["Current Conditions"]</span>
-    &lt;a class="widget_control"
-      onclick="toggle_widget('current')"&gt;&amp;diams;&lt;/a&gt;
-  &lt;/div&gt;
-        </pre>
+    &lt;table&gt;
+        &lt;tr&gt;
+            &lt;td&gt;<span class="highlight">$units.label.outTemp</span>&lt;/td&gt;
+            &lt;td&gt;$current.outTemp&lt;/td&gt;
+        &lt;/tr&gt;
+    &lt;/table&gt;
+&lt&lt;/div&gt;
+</pre>
         <p>
-            In the language file start a 
-            <span class="code">[Texts]</span> section and place the
-            translation there like:
+            We have done two replacements here. For the phrase <em>Current Conditions</em>, we substituted
+            <span class="code">$gettext["Current Conditions"]</span>. This will cause the Cheetah Generator to look up
+            the localized version of "Current Conditions" in the localization file and substitute it. We could have
+            done something similar for <em>Outside Temperature</em>, but in this case, we chose to use the localized
+            label for type <span class="code">outTemp</span>, which you should have provided in your localization file.
+        </p>
+        <p>
+            In the localization file, include the translation for <em>Current Conditions</em> under the <span class="code">[Texts]</span> section:
         </p>
         <pre class="tty">...
 [Texts]
-    ...
-    "Current Conditions" = Conditions Actuelles
+
+    Language             = Español
+    <span class="highlight">"Current Conditions" = Condiciones Actuales</span>
     ...</pre>
         <p>
-            Repeat that for all strings you find. Make sure not
-            to replace HTML tags and HTML options.
+            Note how we had to put the key "Current Conditions" in quotation marks because it includes more than one
+            word. Repeat this process for all the strings that you find. Make sure not to replace HTML tags and HTML
+            options.
         </p>
-        
-        <h3>Translate labels and modify local options</h3>
 
-        <p>
-            Go through the report options that are used by the skin, translating labels and modifying formats to follow
-            local conventions. You can easily localize all of your reports by doing this in the section <span
-            class="code">[StdReport] / [[Defaults]]</span> in the WeeWX configuration file <span
-            class="code">weewx.conf</span>.
-        </p>
+        <h3>Think about time</h3>
+
         <p>
             The default time formats should use whatever locale is defined on the computer running WeeWX. For example,
             the format for current time, <span class="code">current = %x %X</span>, results in <span class="code">01/13/19 10:01:01</span>
@@ -4637,13 +4481,6 @@ class MyStats(SearchList):                                                   # 1
     [[Defaults]]
         [[[Units]]]
             ...
-            [[[[Labels]]]]
-                ...
-                day               = <span class="highlight">" day",    " days"</span>
-                hour              = <span class="highlight">" hour",   " hours"</span>
-                minute            = <span class="highlight">" minute", " minutes"</span>
-                second            = <span class="highlight">" second", " seconds"</span>
-
             [[[[TimeFormats]]]]
                 day        = <span class="highlight">%X</span>
                 week       = <span class="highlight">%X (%A)</span>
@@ -4653,53 +4490,6 @@ class MyStats(SearchList):                                                   # 1
                 current    = <span class="highlight">%x %X</span>
                 ephem_day  = <span class="highlight">%X</span>
                 ephem_year = <span class="highlight">%x %X</span>
-
-            [[[[Ordinates]]]]
-                directions = <span class="highlight">N, NNE, NE, ENE, E, ESE, SE, SSE, S, SSW, SW, WSW, W, WNW, NW, NNW, N/A</span>
-
-        [[[Labels]]]
-            hemispheres = <span class="highlight">N, S, E, W</span>
-            latlon_formats = "%02d", "%03d", "%05.2f"
-            [[[[Generic]]]]
-                barometer      = <span class="highlight">Barometer</span>
-                barometerRate  = <span class="highlight">Barometer Change Rate</span>
-                dewpoint       = <span class="highlight">Dew Point</span>
-                ET             = <span class="highlight">ET</span>
-                heatindex      = <span class="highlight">Heat Index</span>
-                inHumidity     = <span class="highlight">Inside Humidity</span>
-                inTemp         = <span class="highlight">Inside Temperature</span>
-                outHumidity    = <span class="highlight">Humidity</span>
-                outTemp        = <span class="highlight">Temperature</span>
-                radiation      = <span class="highlight">Radiation</span>
-                rain           = <span class="highlight">Rain</span>
-                rainRate       = <span class="highlight">Rain Rate</span>
-                UV             = <span class="highlight">UV Index</span>
-                windDir        = <span class="highlight">Wind Direction</span>
-                windGust       = <span class="highlight">Gust Speed</span>
-                windGustDir    = <span class="highlight">Gust Direction</span>
-                windSpeed      = <span class="highlight">Wind Speed</span>
-                windchill      = <span class="highlight">Wind Chill</span>
-                windgustvec    = <span class="highlight">Gust Vector</span>
-                windvec        = <span class="highlight">Wind Vector</span>
-                extraTemp1     = <span class="highlight">Temperature1</span>
-                extraTemp2     = <span class="highlight">Temperature2</span>
-                extraTemp3     = <span class="highlight">Temperature3</span>
-
-                # Sensor status indicators
-
-                rxCheckPercent       = <span class="highlight">Signal Quality</span>
-                txBatteryStatus      = <span class="highlight">Transmitter Battery</span>
-                windBatteryStatus    = <span class="highlight">Wind Battery</span>
-                rainBatteryStatus    = <span class="highlight">Rain Battery</span>
-                outTempBatteryStatus = <span class="highlight">Outside Temperature Battery</span>
-                inTempBatteryStatus  = <span class="highlight">Inside Temperature Battery</span>
-                consBatteryVoltage   = <span class="highlight">Console Battery</span>
-                heatingVoltage       = <span class="highlight">Heating Voltage</span>
-                supplyVoltage        = <span class="highlight">Supply Voltage</span>
-                referenceVoltage     = <span class="highlight">Reference Voltage</span>
-
-        [[[Almanac]]]
-            moon_phases = <span class="highlight">New, Waxing crescent, First quarter, Waxing gibbous, Full, Waning gibbous, Last quarter, Waning crescent</span>
 </pre>
 
         <h3 id="environment_variable_LANG">
@@ -4716,88 +4506,7 @@ class MyStats(SearchList):                                                   # 1
             The decimal point for numbers will also be modified appropriately.
         </p>
 
-        <h2>How to create a skin for multiple locales</h2>
-
-        <p>
-            Let's say that you have created a new skin. How do you package that skin for use in other languages and
-            locales? This example shows how to translate the <em>Seasons</em> skin for multiple languages.
-        </p>
-        <p>
-            Create a subdirectory called 
-            <span class="code">lang</span> in the skin directory.
-            The language files containing the language dependent
-            information go there. Start creating a language file
-            for the primary language and save it to the 
-            <span class="code">lang</span> directory. The name
-            of the file consists of the language code of the
-            target language and the suffix 
-            <span class="code">.conf</span>. Later on you can 
-            create language files for each language you want
-            to support based on that file.
-        </p>
-        <p>
-            Translate observation names and other labels, and put them 
-            into the created language file. 
-        </p>
-        <p>
-            Ensure that any locale-specific formatting is specified properly. For example, consider the <span
-            class="code">current</span> time, which is parameterized in <span class="code">[Units][[TimeFormats]]</span>.
-            Users in a locale that uses 24-hour time expect the format <span class="code">%H:%M</span> whereas users in
-            a locale that uses 12-hour time expect <span class="code">%I:%M %p</span>. To make each translation
-            independent of the computer on which the reports will be generated, you must use the specific localization;
-            if you specify the generic format <span class="code">%X</span>, that will result in the format used by
-            whatever locale is set in the environment in which WeeWX is running.
-        </p>
-        <p>
-            Static texts are localized using the 
-            <span class="code">$gettext[</span><span class="symcode">"original text"</span><span
-            class="code">]</span> tag. 
-            Create a section <span class="code">[Texts]</span>
-            in the language file and place a line
-        </p>
-        <pre class="tty">"original text" = translated text</pre>
-        <p>
-            there in each language file. In the template file you refer
-            to those texts by 
-        </p>
-        <pre class="tty">$gettext["original text"]</pre>
-        <p>
-            According to the language setting of the report the tag
-            stands for the text in the appropriate language.
-        </p>
-        
-        <p>
-            The result will be a directory of language files
-            with one file for each
-            language/localization.
-        </p>
-
-        <p>
-            Users will then create each report in the WeeWX configuration file.
-        </p>
-        <pre class="tty">
-[StdReport]
-    [[Seasons_en]]
-        skin = Seasons
-        lang = en
-        HTML_ROOT = public_html/en
-    [[Seasons_es]]
-        skin = Seasons
-        lang = es
-        HTML_ROOT = public_html/es
-    [[Seasons_de]]
-        skin = Seasons
-        lang = de
-        HTML_ROOT = public_html/de
-    [[Seasons_fr]]
-        skin = Seasons
-        lang = fr
-        HTML_ROOT = public_html/fr</pre>
-        <p>
-            The result is multiple reports, each in a different language and localization, independent of the locale of
-            the computer on which they were generated.
-        </p>
-
+        <!-- -------------------------------------------------------------- -->
 
         <h1 id="service_engine">Customizing the WeeWX service engine </h1>
 
@@ -5222,6 +4931,8 @@ class AddElectricity(StdService):
         report_services = weewx.engine.StdPrint, weewx.engine.StdReport
 </pre>
 
+        <!-- -------------------------------------------------------------- -->
+
         <h1 id="archive_database">Customizing the database</h1>
 
         <p>
@@ -5540,6 +5251,8 @@ mysql&gt;<span class="cmd"> RENAME TABLE weewx_new.archive TO weewx.archive;</sp
         <pre class="tty cmd">wee_database weewx.conf --rebuild-daily</pre>
 
 
+        <!-- -------------------------------------------------------------- -->
+
         <h1 id="customizing_units">Customizing units and unit groups</h1>
 
         <p class="warning">
@@ -5686,6 +5399,8 @@ weewx.units.conversionDict['pound']  = {'newton': lambda x : x * 4.44822}
         </table>
 
 
+        <!-- -------------------------------------------------------------- -->
+
         <h1>Adding new, derived types</h1>
         <p>
             In the section <a href="#Adding_2nd_source"><em>Adding a second data source</em></a>, we saw an example of
@@ -5702,6 +5417,8 @@ weewx.units.conversionDict['pound']  = {'newton': lambda x : x * 4.44822}
             See the Wiki article <a href="https://github.com/weewx/weewx/wiki/WeeWX-V4-user-defined-types"><em>WeeWX V4
             user defined types</em></a> for complete details on how the XTypes system works.
         </p>
+
+        <!-- -------------------------------------------------------------- -->
 
         <h1 id="porting">Porting to new hardware</h1>
 
@@ -5947,6 +5664,8 @@ weewx.units.conversionDict['pound']  = {'newton': lambda x : x * 4.44822}
                 <span class="code">weewx-development</span> forum</a>.
         </p>
 
+        <!-- -------------------------------------------------------------- -->
+
         <h1 id="extensions">Extensions</h1>
 
         <p>
@@ -6081,6 +5800,8 @@ xstats/bin/user/xstats.py</pre>
             In the case of drivers, use the configuration editor to prompt for this type of required value.
         </p>
 
+
+        <!-- -------------------------------------------------------------- -->
 
         <h1 id="report_options">Reference: report options</h1>
 
@@ -7127,6 +6848,8 @@ growing_base = 50.0, degree_F</pre>
         <p>The Standard skin uses three generators: CheetahGenerator, ImageGenerator, and CopyGenerator.</p>
 
 
+        <!-- -------------------------------------------------------------- -->
+
         <h1 id="aggregation_types">Appendix: Aggregation types</h1>
 
         <table class="indent">
@@ -7328,6 +7051,8 @@ growing_base = 50.0, degree_F</pre>
             </tr>
             </tbody>
         </table>
+
+        <!-- -------------------------------------------------------------- -->
 
         <h1 id="units">Appendix: Units</h1>
 
@@ -7657,6 +7382,8 @@ growing_base = 50.0, degree_F</pre>
             </tr>
             </tbody>
         </table>
+
+        <!-- -------------------------------------------------------------- -->
 
         <h1 id="ValueTuple">Appendix: <span class="code">ValueTuples</span></h1>
         <p>
