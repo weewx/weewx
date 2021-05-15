@@ -4372,18 +4372,20 @@ class MyStats(SearchList):                                                   # 1
         </pre>
 
         <p>
-            Go through the file, translating all phrases to your target language, Spanish in this example.
+            Go through the file, translating all phrases on the right hand side of the equal signs to your target
+            language (Spanish in this example).
         </p>
+        <h3>Internationalize the template</h3>
         <p>
-            Open the template file and the language file in different editor windows.
+            You will need to internationalize every HTML template (these typically have a file suffix of
+            <span class="code">.html.tmpl</span>). This is most easily done
+            by opening the template and the language file in different editor windows.
             It is much easier if you can change both files simultaneously.
         </p>
 
         <h4>Change the <span class="code">html lang</span> attribute</h4>
         <p>
-            In every HTML template (these typically have a file suffix of 
-            <span class="code">.html.tmpl</span>) change
-            the HTML "lang" attribute to a configurable value.
+            At the top of the template, change the the HTML "lang" attribute to a configurable value.
         </p>
         <pre class="tty">
 &lt;!DOCTYPE html&gt;
@@ -4393,8 +4395,7 @@ class MyStats(SearchList):                                                   # 1
     ...
 </pre>
         <p>
-            The <span class="code">lang</span> can be language-only, e.g., <span class="code">en</span>, or it can be a
-            full language-country code, e.g., <span class="code">en-US</span>.
+            The value <span class="code">$gettext["lang"]</span> will get replaced by the actual language to be used.
         </p>
 
         <p>
@@ -4416,7 +4417,7 @@ class MyStats(SearchList):                                                   # 1
             &lt;td&gt;Outside Temperature&lt;/td&gt;
             &lt;td&gt;$current.outTemp&lt;/td&gt;
         &lt;/tr&gt;
-    &lt;/table&gt;>
+    &lt;/table&gt;
 &lt;/div&gt;
 </pre>
 
@@ -4425,22 +4426,23 @@ class MyStats(SearchList):                                                   # 1
             They would be changed to:
         </p>
        <pre class="tty">
-&lt&lt;div&gt&gt;
+&lt;div&gt;
     <span class="highlight">$gettext["Current Conditions"]</span>
     &lt;table&gt;
         &lt;tr&gt;
-            &lt;td&gt;<span class="highlight">$units.label.outTemp</span>&lt;/td&gt;
+            &lt;td&gt;<span class="highlight">$obs.label.outTemp</span>&lt;/td&gt;
             &lt;td&gt;$current.outTemp&lt;/td&gt;
         &lt;/tr&gt;
     &lt;/table&gt;
-&lt&lt;/div&gt;
+&lt;/div&gt;
 </pre>
         <p>
             We have done two replacements here. For the phrase <em>Current Conditions</em>, we substituted
             <span class="code">$gettext["Current Conditions"]</span>. This will cause the Cheetah Generator to look up
             the localized version of "Current Conditions" in the localization file and substitute it. We could have
             done something similar for <em>Outside Temperature</em>, but in this case, we chose to use the localized
-            label for type <span class="code">outTemp</span>, which you should have provided in your localization file.
+            name for type <span class="code">outTemp</span>, which you should have provided in your localization file,
+            under section <span class="code">[Labels] / [[Generic]]</span>.
         </p>
         <p>
             In the localization file, include the translation for <em>Current Conditions</em> under the <span class="code">[Texts]</span> section:
@@ -4460,37 +4462,43 @@ class MyStats(SearchList):                                                   # 1
         <h3>Think about time</h3>
 
         <p>
-            The default time formats should use whatever locale is defined on the computer running WeeWX. For example,
-            the format for current time, <span class="code">current = %x %X</span>, results in <span class="code">01/13/19 10:01:01</span>
-            when the locale is United States english (<span class="code">en_US</span>), but results in <span
-            class="code">13.01.2019 10:01:01</span> when the locale is German (<span class="code">de_DE</span>).
-        </p>
-        <p>
-            First try the generic date (<span class="code">%x</span>), time (<span class="code">%X</span>), and day
-            (<span class="code">%A</span>) formats &mdash; these will use the locale of your computer. If you still find
-            those foreign, you can customize using the <a
-            href="https://docs.python.org/3/library/datetime.html#strftime-and-strptime-behavior">specific
-            directives</a>.
-        </p>
-        <p>
-            Here is a list of the options in <span class="code">[StdReport] / [[Defaults]]</span>, with the options you
-            may need to change <span class="highlight">highlighted.</span>:
+            Whenever a time is used in a template, it will need a format. WeeWX comes with the following set of
+            defaults, defined in <span class="code">defaults.py</span>:
         </p>
         <pre class="tty">
-[StdReport]
-    [[Defaults]]
-        [[[Units]]]
-            ...
-            [[[[TimeFormats]]]]
-                day        = <span class="highlight">%X</span>
-                week       = <span class="highlight">%X (%A)</span>
-                month      = <span class="highlight">%x %X</span>
-                year       = <span class="highlight">%x %X</span>
-                rainyear   = <span class="highlight">%x %X</span>
-                current    = <span class="highlight">%x %X</span>
-                ephem_day  = <span class="highlight">%X</span>
-                ephem_year = <span class="highlight">%x %X</span>
+[Units]
+    ...
+    [[TimeFormats]]
+        day        = <span class="highlight">%X</span>
+        week       = <span class="highlight">%X (%A)</span>
+        month      = <span class="highlight">%x %X</span>
+        year       = <span class="highlight">%x %X</span>
+        rainyear   = <span class="highlight">%x %X</span>
+        current    = <span class="highlight">%x %X</span>
+        ephem_day  = <span class="highlight">%X</span>
+        ephem_year = <span class="highlight">%x %X</span>
 </pre>
+
+        <p>
+            These defaults will give something readable in every locale, but they may not be very pretty. Therefore,
+            you may want to change them to something more suitable for the locale you are targeting, using the Python
+            <a href="https://docs.python.org/3/library/datetime.html#strftime-and-strptime-behavior"><span class="code">strftime()</span>
+                specific directives</a>.
+        </p>
+        <p>
+            Example: the default time formatting for "Current" conditions is <span class="code">%x %x</span>, which will
+            show today's date as 14/05/21 10:00:00 in the Spanish locale. Suppose you would rather see
+            14-mayo-2021 10:00. You would add the following to your
+            Spanish localization file <span class="code">es.conf</span>:
+        </p>
+        <pre class="tty">
+...
+
+[Units]
+    [[TimeFormats]]
+        current = <span class="highlight">%d-%B-%Y %H:%M</span>
+
+...     </pre>
 
         <h3 id="environment_variable_LANG">
             Set the environment variable <span class="code">LANG</span>
