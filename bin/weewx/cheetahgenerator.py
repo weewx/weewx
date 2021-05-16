@@ -309,7 +309,10 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
                     pass
 
             searchList = self._getSearchList(encoding, timespan,
-                                             default_binding, section_name)
+                                             default_binding, section_name,
+                                             os.path.join(
+                                               os.path.dirname(report_dict['template']),
+                                               _filename))
             tmpname = _fullname + '.tmp'
 
             try:
@@ -370,7 +373,7 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
 
         return ngen
 
-    def _getSearchList(self, encoding, timespan, default_binding, section_name):
+    def _getSearchList(self, encoding, timespan, default_binding, section_name, file_name):
         """Get the complete search list to be used by Cheetah."""
 
         # Get the basic search list
@@ -378,7 +381,8 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
         searchList = [{'month_name' : time.strftime("%b", timespan_start_tt),
                        'year_name'  : timespan_start_tt[0],
                        'encoding'   : encoding,
-                       'page'       : section_name},
+                       'page'       : section_name,
+                       'filename'   : file_name},
                       self.outputted_dict]
 
         # Bind to the default_binding:
