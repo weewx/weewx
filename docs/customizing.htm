@@ -3113,7 +3113,15 @@ $month.outTemp.series(aggregate_type='max', aggregate_interval='day', time_serie
               for the report. You can use this tag in
               <span class="code">#if</span> expressions and
               to include language codes where the HTML
-              specification requires them.
+              specification requires them.</td>
+            </tr>
+            <tr>
+              <td class="code first_col">$filename</td>
+              <td>
+                Name of the file to be created including relative path.
+                Can be used to set the canonical URL for Google.
+                <pre class="tty">&lt;link rel="canonical" href="$station.station_url/$filename" /&gt;</pre>
+              </td>
             </tr>
           </tbody>
         </table>
