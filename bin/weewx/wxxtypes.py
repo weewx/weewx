@@ -690,7 +690,7 @@ class StdWXXTypes(weewx.engine.StdService):
         # Add to the xtypes system
         weewx.xtypes.xtypes.append(self.wxxtypes)
 
-    def shut_down(self):
+    def shutDown(self):
         """Engine shutting down. """
         # Remove from the XTypes system:
         weewx.xtypes.xtypes.remove(self.wxxtypes)
@@ -722,7 +722,7 @@ class StdPressureCooker(weewx.engine.StdService):
         # Add pressure_cooker to the XTypes system
         weewx.xtypes.xtypes.append(self.pressure_cooker)
 
-    def shut_down(self):
+    def shutDown(self):
         """Engine shutting down. """
         weewx.xtypes.xtypes.remove(self.pressure_cooker)
 
@@ -753,7 +753,7 @@ class StdRainRater(weewx.engine.StdService):
 
         self.bind(weewx.NEW_LOOP_PACKET, self.new_loop_packet)
 
-    def shut_down(self):
+    def shutDown(self):
         """Engine shutting down. """
         # Remove from the XTypes system:
         weewx.xtypes.xtypes.remove(self.rain_rater)
