@@ -16,6 +16,9 @@ celestial.inc now explicitly use unix_epoch.
 Added almanac attribute "visible". For example, $almanac.sun.visible would
 return the amount of daylight.
 
+Fixed problem that could cause weather xtypes services not to shut down
+properly. PR #672. Thanks again to user edi-x!
+
 
 4.5.1 04/02/2021
 Reverted the wview schema back to the V3 style.
