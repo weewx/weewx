@@ -98,12 +98,16 @@ class AlmanacTest(unittest.TestCase):
         self.assertIsNone(almanac(horizon=-6).sun(use_center=1).rise.raw)
         self.assertIsNone(almanac(horizon=-6).sun(use_center=1).set.raw)
         self.assertEqual(almanac(horizon=-6).sun(use_center=1).visible.raw, 86400)
+        self.assertEqual(str(almanac(horizon=-6).sun(use_center=1).visible),
+                         "24 hours, 0 minutes, 0 seconds")
 
         # Now where the sun is always down:
         almanac = Almanac(t, -74.0, 0.0)
         self.assertIsNone(almanac(horizon=-6).sun(use_center=1).rise.raw)
         self.assertIsNone(almanac(horizon=-6).sun(use_center=1).set.raw)
         self.assertEqual(almanac(horizon=-6).sun(use_center=1).visible.raw, 0)
+        self.assertEqual(str(almanac(horizon=-6).sun(use_center=1).visible),
+                         "0 hours, 0 minutes, 0 seconds")
 
     def test_naval_observatory(self):
         #

@@ -591,9 +591,8 @@ default_unit_label_dict = {
     "NONE"              : u""
 }
 
-# Default strftime formatting to be used in the absence of a skin
-# configuration file. The entry for delta_time uses a special
-# encoding.
+# Default strftime formatting to be used in the absence of a skin configuration file. The entries
+# for short_delta and long_delta use special encodings.
 default_time_format_dict = {
     "day"        : "%H:%M",
     "week"       : "%H:%M on %A",
@@ -603,9 +602,13 @@ default_time_format_dict = {
     "current"    : "%d-%b-%Y %H:%M",
     "ephem_day"  : "%H:%M",
     "ephem_year" : "%d-%b-%Y %H:%M",
-    "delta_time" : "%(day)d%(day_label)s, %(hour)d%(hour_label)s, "
+    "short_delta": "%(hour)d%(hour_label)s, %(minute)d%(minute_label)s, "
+                   "%(second)d%(second_label)s",
+    "long_delta" : "%(day)d%(day_label)s, %(hour)d%(hour_label)s, "
                    "%(minute)d%(minute_label)s"
 }
+# Backwards compatibility:
+default_time_format_dict['delta_time'] = default_time_format_dict['long_delta']
 
 # Default mapping from compass degrees to ordinals
 default_ordinate_names = [
@@ -883,8 +886,8 @@ class Formatter(object):
         elif val_t[2] == "group_deltatime":
             # Get a delta-time format string. Use a default if the user did not supply one:
             if useThisFormat is None:
-                format_string = self.time_format_dict.get("delta_time",
-                                                          default_time_format_dict["delta_time"])
+                format_string = self.time_format_dict.get(context,
+                                                          default_time_format_dict[context])
             else:
                 format_string = useThisFormat
             # Now format the delta time, using the function delta_secs_to_string:
@@ -939,6 +942,9 @@ class Formatter(object):
             etime_dict[label] = amt
             etime_dict[label + '_label'] = self.get_label_string(label, not amt == 1)
             secs %= interval
+        if 'day' not in label_format:
+            # If 'day' does not appear in the formatting string, add its time to hours
+            etime_dict['hour'] += 24 * etime_dict['day']
         ans = locale.format_string(label_format, etime_dict)
         return ans
 

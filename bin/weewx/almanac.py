@@ -390,6 +390,23 @@ class AlmanacBinder(object):
                                        formatter=self.almanac.formatter,
                                        converter=self.almanac.converter)
 
+    def visible_change(self, days_ago=1):
+        """Change in visibility of the heavenly body compared to 'days_ago'."""
+        # Visibility for today:
+        today_visible = self.visible
+        # The time to compare to
+        then_time = self.almanac.time_ts - days_ago * 86400
+        # Get a new almanac, set up for the time back then
+        then_almanac=self.almanac(almanac_time=then_time)
+        # Find the visibility back then
+        then_visible = getattr(then_almanac, self.heavenly_body).visible
+        # Take the difference
+        diff = today_visible.raw - then_visible.raw
+        return weewx.units.ValueHelper((diff, "second", "group_deltatime"),
+                                       context="short_delta",
+                                       formatter=self.almanac.formatter,
+                                       converter=self.almanac.converter)
+
     def __getattr__(self, attr):
         """Get the requested observation, such as when the body will rise."""
 
