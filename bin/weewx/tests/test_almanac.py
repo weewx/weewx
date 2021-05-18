@@ -5,10 +5,13 @@
 #
 """Test module weewx.almanac"""
 import os
-import time
 import unittest
 from weewx.almanac import *
 
+LATITUDE = 46.0
+LONGITUDE = -122.0
+SPRING_TIMESTAMP = 1238180400  # 2009-03-27 12:00:00 PDT
+FALL_TIMESTAMP   = 1254078000  # 2009-09-27 12:00:00 PDT
 
 class AlmanacTest(unittest.TestCase):
 
@@ -16,8 +19,8 @@ class AlmanacTest(unittest.TestCase):
         os.environ['TZ'] = 'America/Los_Angeles'
         time.tzset()
         # Unix epoch time
-        self.ts_ue = 1238180400  # 2009-03-27 12:00:00 PDT (1238180400)
-        self.almanac = Almanac(self.ts_ue, 46.0, -122.0)
+        self.ts_ue = SPRING_TIMESTAMP
+        self.almanac = Almanac(self.ts_ue, LATITUDE, LONGITUDE)
 
     def test_Dublin(self):
         # Dublin julian days
@@ -69,6 +72,11 @@ class AlmanacTest(unittest.TestCase):
 
         # Visible time
         self.assertEqual(str(self.almanac.sun.visible), "12 hours, 34 minutes, 4 seconds")
+        # Change in visible time:
+        self.assertEqual(str(self.almanac.sun.visible_change()), "0 hours, 3 minutes, 15 seconds")
+        # Do it again, but in the fall when daylight is decreasing:
+        almanac = Almanac(FALL_TIMESTAMP, LATITUDE, LONGITUDE)
+        self.assertEqual(str(almanac.sun.visible_change()), "0 hours, 3 minutes, 13 seconds")
 
     def test_mars(self):
         self.assertEqual(str(self.almanac.mars.rise), "06:08")

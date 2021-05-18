@@ -6,44 +6,21 @@
 
 ## If extended almanac information is available, do extra calculations.
 #if $almanac.hasExtras
-
+  ## Pick a "None string" on the basis of whether the sun is above or below the horizon
   #set $sun_altitude = $almanac.sun.alt
   #if $sun_altitude < 0
-    #set $sun_None="<i>(Always down)</i>"
-    #set $daylight_str = "00:00"
+    #set $sun_None='<i>$gettext[$page]["Always down"]</i>'
   #else
-    #set $sun_None="<i>(Always up)</i>"
-    #set $daylight_str = "24:00"
+    #set $sun_None='<i>$gettext[$page]["Always up"]</i>'
   #end if
 
-  #set $sunrise_ts = $almanac.sun.rise.unix_epoch.raw
-  #set $sunset_ts = $almanac.sun.set.unix_epoch.raw
-  #if $sunrise_ts and $sunset_ts
-
-    #set $now = $current.dateTime.unix_epoch.raw
-    #set $today_daylight = $sunset_ts -  $sunrise_ts
-
-    #set $seconds = $today_daylight
-    #set $hours = $seconds // 3600
-    #set $seconds %= 3600
-    #set $minutes = $seconds // 60
-    #set $seconds %= 60
-    #set $daylight_str = "%d hours, %d minutes, %d seconds" % ($hours, $minutes, $seconds)
-
-    #set $yesterday = $now - 24 * 3600
-    #set $yesterday_daylight = $almanac($almanac_time=$yesterday).sun.set.unix_epoch.raw - $almanac($almanac_time=$yesterday).sun.rise.unix_epoch.raw
-    #set $difference = $today_daylight - $yesterday_daylight
-    #if $difference
-      #set $delta = abs($difference)
-      #set $amt_str = "%s%d seconds" % (str(int($delta) // 60) + ' minutes, ' if ($delta // 60) > 0 else '', $delta % 60 if ($delta // 60) > 0 else $delta)
-      #if $difference > 0
-        #set $delta_str = "%s more than yesterday" % $amt_str
-      #else
-        #set $delta_str = "%s less than yesterday" % $amt_str
-      #end if
-      #set $daylight_str = "%s<br/>%s" % ($daylight_str, $delta_str)
-    #end if
-
+  ## For the change in daylight, pick a string to indicate whether it is more or
+  ## less than yesterday:
+  #set $sun_visible_change = $almanac.sun.visible_change
+  #if $sun_visible_change.raw < 0
+    #set $change_str = $gettext[$page]["less than yesterday"]
+  #else
+    #set $change_str = $gettext[$page]["more than yesterday"]
   #end if
 #end if
 
@@ -116,7 +93,7 @@
           #end if
           <tr>
             <td class="label">$gettext[$page]["Daylight"]</td>
-            <td class="data">$daylight_str</td>
+            <td class="data">$almanac.sun.visible<br/>$sun_visible_change $change_str</td>
           </tr>
         </table>
       </div>
@@ -175,7 +152,7 @@
           <tr>
             <td class="label">$gettext[$page]["Phase"]</td>
             <td class="data">$almanac.moon_phase<br/>
-              $almanac.moon_fullness% full</td>
+              $almanac.moon_fullness% $gettext[$page]["full"]</td>
           </tr>
         </table>
       </div>

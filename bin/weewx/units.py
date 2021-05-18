@@ -937,6 +937,7 @@ class Formatter(object):
         3 days, 21 hours, 7 minutes
         """
         etime_dict = {}
+        secs = abs(secs)
         for (label, interval) in (('day', 86400), ('hour', 3600), ('minute', 60), ('second', 1)):
             amt = int(secs // interval)
             etime_dict[label] = amt
