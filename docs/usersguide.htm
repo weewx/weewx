@@ -47,7 +47,7 @@
         <div class="logoref">
             <a href='https://weewx.com'> <img src='images/logo-weewx.png' class='logo' style="float:right"
                                              alt="weewx logo"/> </a><br/> <span class='version'>
-Version: 4.5
+Version: 4.6
     </span>
         </div>
         <div class="title">User's Guide to WeeWX</div>
@@ -1725,10 +1725,20 @@ longitude = -77.0366</pre>
 
         <p>This section is for options relating to the Argent Data Systems WS1 weather stations.</p>
 
+        <p class="config_important">mode</p>
+
+        <p>
+            Select whether to connect via a serial line (option <span class="code">serial</span>), or via an IP
+            connection using TCP (option <span class="code">tcp</span>), or UDP (option <span class="code">udp</span>).
+            Default is <span class="code">serial</span>.
+        </p>
+
         <p class="config_important">port</p>
 
-        <p>The serial port, e.g., <span class='code'>/dev/ttyS0</span>. When using a USB-Serial converter, the port will
-            be something like <span class='code'>/dev/ttyUSB0</span>. Default is <span class='code'>/dev/ttyUSB0</span>
+        <p>
+            The port to be used. For a serial connection, this will be something like <span
+            class='code'>/dev/ttyUSB0</span>. For a TCP or UDP connection, it will be an IP address and port, such as
+            <span class="code">192.168.1.12:3000</span> Default is <span class='code'>/dev/ttyUSB0</span>.
         </p>
 
         <p class='config_option'>polling_interval</p>
@@ -2174,7 +2184,7 @@ longitude = -77.0366</pre>
 
         <h2 class="config_section" id="Reports">[StdReport]</h2>
 
-        <p>This section is for configuring the <span class="code">StdReport</span> service, which controls which reports
+        <p>This section is for configuring the <span class="code">StdReport</span> service, which controls what reports
             are to be generated. While it can be highly customized for your individual situation, this documentation
             describes the section as shipped in the standard distribution.
         </p>
@@ -2262,22 +2272,44 @@ longitude = -77.0366</pre>
           [[StandardReport]]</h3>
 
         <p>
-            These are the four reports that actually generate HTML files and plots. They all ship in the standard WeeWX
-            distribution. They all use US Customary units by default, but this can be changed by editing section <a
-            href="#Section_Defaults"><span class="code">[Defaults]</span></a>.
+            These are the four reports that are included in the standard distribution of WeeWX, and which actually
+            generate HTML files and plots. They all use US Customary units by default, but this can be changed by
+            setting the option <span class="code">units</span>.
         </p>
+
         <p>They all have the following options in common.</p>
 
-        <p class="config_option">skin</p>
+        <p class="config_important" id="lang-code">lang</p>
+
         <p>
-            Where to find the skin. This should be a subdirectory under <span class="symcode">SKIN_ROOT</span>. Inside
-            the directory should be any templates used by the skin and a skin configuration file, <span class="code">skin.conf</span>.
+            Which language the skin should be localized in. The value is a two-character
+            language code as defined in <a href="https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes"
+            target="_blank">ISO&nbsp;639-1</a>. This option only works with skins that have been internationalized. All
+            skins that ship with WeeWX have been internationalized, but only a handful of languages are included. To
+            see which language a skin supports, look in the subdirectory <span class="code">lang</span> in the skin's
+            directory. For example, if you see a file <span class="code">fr.conf</span>, then the skin can be localized
+            in French.
+        </p>
+
+        <p id="option-units"><span class="config_important">units</span></p>
+        <p>
+            Which unit system to use with the skin. Choices are <span class="code">US</span>, <span
+            class="code">METRIC</span>, or <span class="code">METRICWX</span>. See the <a
+            href="customizing.htm#units"><em>Appendix Units</em></a> in the Customizing Guide for definitions of these
+            unit systems. Individual units can be overridden. See "<a href="customizing.htm#how_to_change_units">How to
+            change units</a>" in the "<a href="customizing.htm">Customization Guide</a>" for more details.
         </p>
 
         <p class="config_important">enable</p>
         <p>
             Set to <span class="code">true</span> to enable the processing of this skin. Set to <span
             class="code">false</span> to disable. If this option is missing, <span class="code">True</span> is assumed.
+        </p>
+
+        <p class="config_option">skin</p>
+        <p>
+            Where to find the skin. This should be a subdirectory under <span class="symcode">SKIN_ROOT</span>. Inside
+            the directory should be any templates used by the skin and a skin configuration file, <span class="code">skin.conf</span>.
         </p>
 
         <p class="config_option">HTML_ROOT</p>
@@ -2412,6 +2444,28 @@ longitude = -77.0366</pre>
             deleted on the remote server. Valid values are 1 to enable and 0 to disable. Required. Default is 0.
         </p>
 
+        <h3 class="config_section" id="Section_Defaults">[[Defaults]]</h3>
+        
+        <p>
+          This section defines default values for all skins. You can set:
+          <ul>
+            <li>units to be used with observation types</li>
+            <li>number and time formats</li>
+            <li>labels</li>
+            <li>calculation options for some derived values</li>
+          </ul>
+          See the <a href="customizing.htm">Customization Guide</a>
+          for more details.
+        </p>
+        <p>
+          If the skin you use comes with internationalization
+          support and you set a language by the 
+          <span class="code">lang</span> option, the settings 
+          resulting from this option overwrite the settings in
+          the <span class="code">[[Defaults]]</span> section.
+        </p>
+        
+        
         <h2 class="config_section" id="StdConvert">[StdConvert]</h2>
 
         <p>This section is for configuring the <span class="code">StdConvert</span> service. This service acts as a
@@ -3069,12 +3123,6 @@ longitude = -77.0366</pre>
 
         <p>The type of MySQL database storage engine to be used. This should not be changed without a good reason.
             Default is <span class="code">INNODB</span>.
-        </p>
-
-        <h2 class="config_section" id="Section_Defaults">[Defaults]</h2>
-        <p>
-            This section covers a suite of default values, which control things such as which unit system should be
-            used in reports, what label to be used for an observation type, and how it should be formatted.
         </p>
 
         <h2 class="config_section">[Engine]</h2>

@@ -72,5 +72,27 @@ class TestFilter(unittest.TestCase):
         self.assertEqual(filtered_value, u'Fine mess you got me in!?')
 
 
+class TestHelpers(unittest.TestCase):
+    "Test the helper functions"
+
+    def test_jsonize(self):
+        full = zip([0, None, 4], [1, 3, 5])
+        self.assertEqual(weewx.cheetahgenerator.JSONHelpers.jsonize(full),
+                         '[[0, 1], [null, 3], [4, 5]]')
+        self.assertEqual(weewx.cheetahgenerator.JSONHelpers.jsonize([complex(1,2), complex(3,4)]),
+                         '[[1.0, 2.0], [3.0, 4.0]]')
+
+    def test_rnd(self):
+        self.assertEqual(weewx.cheetahgenerator.JSONHelpers.rnd(1.2345, 2), 1.23)
+        self.assertEqual(weewx.cheetahgenerator.JSONHelpers.rnd(-1.2345, 2), -1.23)
+        self.assertIsNone(weewx.cheetahgenerator.JSONHelpers.rnd(None, 2))
+
+    def test_to_int(self):
+        self.assertEqual(weewx.cheetahgenerator.JSONHelpers.to_int(1.2345), 1)
+        self.assertEqual(weewx.cheetahgenerator.JSONHelpers.to_int('1.2345'), 1)
+        self.assertEqual(weewx.cheetahgenerator.JSONHelpers.to_int(-1.2345), -1)
+        self.assertIsNone(weewx.cheetahgenerator.JSONHelpers.to_int(None))
+
+
 if __name__ == '__main__':
     unittest.main()

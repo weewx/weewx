@@ -1294,6 +1294,10 @@ def to_complex(magnitude, direction):
     return value
 
 
+def to_text(x):
+    """Ensure the results are in unicode, while honoring 'None'."""
+    return six.ensure_text(x) if x is not None else None
+
 def dirN(c):
     """Given a complex number, return its phase as a compass heading"""
     if c is None:
@@ -1445,12 +1449,24 @@ except ImportError:
         def prepend(self, m):
             self.maps.insert(0, m)
 
+        def copy(self):
+            return self.__class__(self.maps[0].copy(), *self.maps[1:])
+
+        __copy__ = copy
+
 
 class KeyDict(dict):
     """A dictionary that returns the key for an unsuccessful lookup."""
 
+    class IndexStr(str):
+        def __getitem__(self, key):
+            try:
+                return super(KeyDict.IndexStr, self).__getitem__(key)
+            except TypeError:
+                return KeyDict.IndexStr(key)
+
     def __missing__(self, key):
-        return key
+        return KeyDict.IndexStr(key)
 
 
 def to_sorted_string(rec):

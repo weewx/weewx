@@ -201,6 +201,14 @@ FALSE#slurp
       <td>$emit_boolean($current.nonsense.has_data)</td>
     </tr>
     <tr>
+      <td>Test tag "has_data" for the last hour: \$hour.outTemp.has_data</td>
+      <td>$emit_boolean($hour.outTemp.has_data)</td>
+    </tr>
+    <tr>
+      <td>Test tag "has_data" for the last hour of a nonsense type: \$hour.nonsense.has_data</td>
+      <td>$emit_boolean($hour.nonsense.has_data)</td>
+    </tr>
+    <tr>
       <td>Test for a bad observation type on a \$current tag: \$current.foobar</td>
       <td>$current.foobar</td>
     </tr>
@@ -750,19 +758,46 @@ FALSE#slurp
       </tr>
   </table>
 
-  <h1>Day images</h1>
-  <p>
-  <img src="daytempdew.png" alt="temperatures" />
-  <img src="daytempchill.png" alt="heatchill" /> 
-  <img src="dayrain.png" alt="rain" />
-  <img src="daywind.png" alt="wind" />
-  <img src="daybarometer.png" alt="barometer"/>
-  <img src="daywinddir.png" alt="Hi Wind" />
-  <img src="dayinside.png"  alt="Inside" /> 
-  <img src="daywindvec.png" alt="Wind Vector" />
-  <img src="dayrx.png" alt="day rx percent"/>
-  </p>
-
+  <hr/>
+  <h1>Tests for \$gettext</h1>
+  <table>
+    <tr>
+      <td align="right">\$gettext["lang"]</td>
+      <td align="left">$gettext["lang"]</td>
+    </tr>
+    <tr>
+      <td align="right">\$page</td>
+      <td align="left">$page</td>
+    </tr>
+    <tr>
+      <td align="right">\$gettext["Foo"]</td>
+      <td align="left">$gettext["Foo"]</td>
+    </tr>
+    <tr>
+      <td align="right">\$gettext["Today"]</td>
+      <td align="left">$gettext["Today"]</td>
+    </tr>
+    <tr>
+      <td align="right">\$gettext["test"]["Plots"]</td>
+      <td align="left">$gettext["test"]["Plots"]</td>
+    </tr>
+    <tr>
+      <td align="right">\$gettext[\$page]["Plots"]</td>
+      <td align="left">$gettext[$page]["Plots"]</td>
+    </tr>
+    <tr>
+      <td align="right">\$gettext[\$page]["Something"]</td>
+      <td align="left">$gettext[$page]["Something"]</td>
+    </tr>
+    <tr>
+      <td align="right">\$gettext["Foo"]["Plots"]</td>
+      <td align="left">$gettext["Foo"]["Plots"]</td>
+    </tr>
+    <tr>
+      <td align="right">\$gettext["Foo"]["Bar"]</td>
+      <td align="left">$gettext["Foo"]["Bar"]</td>
+    </tr>
+  </table>
   <hr/>
 
 </body>

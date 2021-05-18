@@ -6,7 +6,7 @@
 
 <div id='current_widget' class="widget">
   <div class="widget_title">
-    Current Conditions
+    $gettext["Current Conditions"]
     <a class="widget_control"
       onclick="toggle_widget('current')">&diams;</a>
   </div>
@@ -47,7 +47,7 @@
         <td class="data">$current.rainRate</td>
       </tr>
       <tr>
-        <td class="label">$obs.label.rain_today</td>
+        <td class="label">$gettext["Rain today"]</td>
         <td class="data">$day.rain.sum</td>
       </tr>
 #if $day.UV.has_data

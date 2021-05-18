@@ -18,6 +18,7 @@ from __future__ import print_function
 from __future__ import with_statement
 
 import fnmatch
+import os
 import os.path
 import re
 import shutil
@@ -31,7 +32,7 @@ from distutils.command.install_lib import install_lib
 from distutils.core import setup
 from distutils.debug import DEBUG
 
-VERSION = "4.5.0"
+VERSION = "4.6.0a1"
 
 if sys.version_info < (2, 7):
     log.fatal('WeeWX requires Python V2.7 or greater.')
@@ -224,7 +225,7 @@ def find_files(directory, file_excludes=['*.pyc', "junk*"], dir_excludes=['*/__p
         # Find all the files in this directory
         for fn in os.listdir(d_path):
             filepath = os.path.join(d_path, fn)
-            # Make sure it's a file, and that it's name doesn't match the excluded pattern
+            # Make sure it's a file, and that its name doesn't match the excluded pattern
             if os.path.isfile(filepath) \
                     and not any(fnmatch.fnmatch(filepath, f) for f in file_excludes):
                 file_list.append(filepath)
@@ -276,8 +277,13 @@ def update_and_install_config(install_dir, install_scripts, install_lib, no_prom
     if DEBUG:
         log.info("Command used to invoke wee_config: %s" % args)
 
+    # Add the freshly installed WeeWX modules to PYTHONPATH, so wee_config can find them.
+    if 'PYTHONPATH' in os.environ:
+        os.environ['PYTHONPATH'] = install_lib + os.pathsep + os.environ['PYTHONPATH']
+    else:
+        os.environ['PYTHONPATH'] = install_lib
+    # Run wee_config in a subprocess.
     proc = subprocess.Popen(args,
-                            env={'PYTHONPATH': install_lib},
                             stdin=sys.stdin,
                             stdout=sys.stdout,
                             stderr=sys.stderr)

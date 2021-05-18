@@ -2,7 +2,7 @@
 
 
 NAME: Location with UTF8 characters                  
-ELEV: 100 meters    LAT: 45-41.16 N    LONG: 121-33.96 W
+ELEV: 100 m    LAT: 45-41.16 N    LONG: 121-33.96 W
 
 
                                        TEMPERATURE (C)

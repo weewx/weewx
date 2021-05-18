@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2018 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2021 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -67,6 +67,9 @@ class AlmanacTest(unittest.TestCase):
         self.assertAlmostEqual(self.almanac.sun.az, 154.14, 2)
         self.assertAlmostEqual(self.almanac.sun.alt, 44.02, 2)
 
+        # Visible time
+        self.assertEqual(str(self.almanac.sun.visible), "12 hours, 34 minutes, 4 seconds")
+
     def test_mars(self):
         self.assertEqual(str(self.almanac.mars.rise), "06:08")
         self.assertEqual(str(self.almanac.mars.transit), "11:34")
@@ -91,8 +94,16 @@ class AlmanacTest(unittest.TestCase):
     def test_always_up(self):
         # Time and location where the sun is always up
         t = 1371044003  # 2013-06-12 06:33:23 PDT (1371044003)
-        almanac = Almanac(t, 64.0, 0.0)
+        almanac = Almanac(t, 74.0, 0.0)
         self.assertIsNone(almanac(horizon=-6).sun(use_center=1).rise.raw)
+        self.assertIsNone(almanac(horizon=-6).sun(use_center=1).set.raw)
+        self.assertEqual(almanac(horizon=-6).sun(use_center=1).visible.raw, 86400)
+
+        # Now where the sun is always down:
+        almanac = Almanac(t, -74.0, 0.0)
+        self.assertIsNone(almanac(horizon=-6).sun(use_center=1).rise.raw)
+        self.assertIsNone(almanac(horizon=-6).sun(use_center=1).set.raw)
+        self.assertEqual(almanac(horizon=-6).sun(use_center=1).visible.raw, 0)
 
     def test_naval_observatory(self):
         #

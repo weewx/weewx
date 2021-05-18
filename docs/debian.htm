@@ -22,16 +22,22 @@
 </p>
 
 <h2>Configure apt</h2>
-<p>Tell <span class="code">apt</span> where to find the WeeWX releases.  This only has to be done once - the first time you install WeeWX.</p>
+<p>Tell <span class="code">apt</span> where to find the WeeWX releases.  This only has to be done once &mdash; the first time you install WeeWX.</p>
 
-Tell your system to trust weewx.com:
+<p>First, tell your system to trust weewx.com:</p>
 <pre class='tty cmd'>wget -qO - https://weewx.com/keys.html | sudo apt-key add -</pre>
 
-For Debian10 and later, use python3:
-<pre class='tty cmd'>wget -qO - https://weewx.com/apt/weewx-python3.list | sudo tee /etc/apt/sources.list.d/weewx.list</pre>
+<p>Then, run one of the following two commands to tell your system about the appropriate weewx repository.</p>
 
-For Debian9 and earlier, use python2:
-<pre class='tty cmd'>wget -qO - https://weewx.com/apt/weewx-python2.list | sudo tee /etc/apt/sources.list.d/weewx.list</pre>
+<ul>
+    <li> For Debian10 and later, use python3:
+        <pre class='tty cmd'>wget -qO - https://weewx.com/apt/weewx-python3.list | sudo tee /etc/apt/sources.list.d/weewx.list</pre>
+    </li>
+
+    <li> <em>or</em>, for Debian9 and earlier, use python2:
+        <pre class='tty cmd'>wget -qO - https://weewx.com/apt/weewx-python2.list | sudo tee /etc/apt/sources.list.d/weewx.list</pre>
+    </li>
+</ul>
 
 <h2>Install</h2>
 <p>Use <span class="code">apt-get</span> to install WeeWX. The installer will prompt for a location, latitude/longitude, altitude, station type, and parameters specific to your station hardware.

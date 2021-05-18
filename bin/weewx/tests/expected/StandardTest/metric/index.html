@@ -31,7 +31,7 @@
     </tr>
     <tr>
       <td align="right">Altitude (default unit):</td>
-      <td align="left">100 meters</td>
+      <td align="left">100 m</td>
     </tr>
     <tr>
       <td align="right">Altitude (feet):</td>
@@ -39,7 +39,7 @@
     </tr>
     <tr>
       <td align="right">Altitude (meters):</td>
-      <td align="left">100 meters</td>
+      <td align="left">100 m</td>
     </tr>
   </table>
   
@@ -100,7 +100,7 @@
       <td>   N/A</td>
     </tr>
     <tr>
-      <td>Outside Temperature trend (3 hours)</td>
+      <td>Outside Temperature trend (3 Stunden)</td>
       <td>8.4&#176;C</td>
     </tr>
     <tr>
@@ -116,7 +116,7 @@
       <td>989.1 mbar</td>
     </tr>
     <tr>
-      <td>Barometer trend where previous value is known to be None (3 hours)</td>
+      <td>Barometer trend where previous value is known to be None (3 Stunden)</td>
       <td>   N/A</td>
     </tr>
     <tr>
@@ -185,6 +185,14 @@
     </tr>
     <tr>
       <td>Test tag "has_data" for a nonsense type: $current.nonsense.has_data</td>
+      <td>FALSE</td>
+    </tr>
+    <tr>
+      <td>Test tag "has_data" for the last hour: $hour.outTemp.has_data</td>
+      <td>TRUE</td>
+    </tr>
+    <tr>
+      <td>Test tag "has_data" for the last hour of a nonsense type: $hour.nonsense.has_data</td>
       <td>FALSE</td>
     </tr>
     <tr>
@@ -564,7 +572,7 @@
     </tr>
     <tr>
        <td align="right">Moon:</td>
-       <td align="left">Waning crescent (29%full)</td>
+       <td align="left">abnehmend (29%full)</td>
     </tr>
   </table>
   
@@ -624,7 +632,7 @@
   <table>
     <tr>
       <td align="right">Tag &quot;$obs.label.outTemp&quot;</td>
-      <td align="left">Outside Temperature</td>
+      <td align="left">Au&#223;entemperatur</td>
     </tr>
   </table>
 
@@ -670,7 +678,7 @@
       </tr>
       <tr>
         <td align="right">$current.windDir.ordinal_compass</td>
-        <td align="left">SE</td>
+        <td align="left">SO</td>
       </tr>
       <tr>
         <td align="right">$current.dateTime</td>
@@ -746,19 +754,46 @@
       </tr>
   </table>
 
-  <h1>Day images</h1>
-  <p>
-  <img src="daytempdew.png" alt="temperatures" />
-  <img src="daytempchill.png" alt="heatchill" /> 
-  <img src="dayrain.png" alt="rain" />
-  <img src="daywind.png" alt="wind" />
-  <img src="daybarometer.png" alt="barometer"/>
-  <img src="daywinddir.png" alt="Hi Wind" />
-  <img src="dayinside.png"  alt="Inside" /> 
-  <img src="daywindvec.png" alt="Wind Vector" />
-  <img src="dayrx.png" alt="day rx percent"/>
-  </p>
-
+  <hr/>
+  <h1>Tests for $gettext</h1>
+  <table>
+    <tr>
+      <td align="right">$gettext["lang"]</td>
+      <td align="left">de</td>
+    </tr>
+    <tr>
+      <td align="right">$page</td>
+      <td align="left">test</td>
+    </tr>
+    <tr>
+      <td align="right">$gettext["Foo"]</td>
+      <td align="left">Foo</td>
+    </tr>
+    <tr>
+      <td align="right">$gettext["Today"]</td>
+      <td align="left">Heute</td>
+    </tr>
+    <tr>
+      <td align="right">$gettext["test"]["Plots"]</td>
+      <td align="left">Diagramme</td>
+    </tr>
+    <tr>
+      <td align="right">$gettext[$page]["Plots"]</td>
+      <td align="left">Diagramme</td>
+    </tr>
+    <tr>
+      <td align="right">$gettext[$page]["Something"]</td>
+      <td align="left">Something</td>
+    </tr>
+    <tr>
+      <td align="right">$gettext["Foo"]["Plots"]</td>
+      <td align="left">Plots</td>
+    </tr>
+    <tr>
+      <td align="right">$gettext["Foo"]["Bar"]</td>
+      <td align="left">Bar</td>
+    </tr>
+  </table>
   <hr/>
 
 </body>

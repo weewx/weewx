@@ -33,6 +33,7 @@ CM_PER_INCH    = MM_PER_INCH / 10.0
 METER_PER_MILE = 1609.34
 METER_PER_FOOT = METER_PER_MILE / 5280.0
 MILE_PER_KM    = 1000.0 / METER_PER_MILE
+SECS_PER_DAY   = 86400
 
 def CtoK(x):
     return x + 273.15
@@ -335,7 +336,7 @@ conversionDict = {
     'cubic_foot'       : {'gallon'           : lambda x : x * 7.48052,
                           'litre'            : lambda x : x * 28.3168,
                           'liter'            : lambda x : x * 28.3168},
-    'day'              : {'second'           : lambda x : x*86400.0,
+    'day'              : {'second'           : lambda x : x * SECS_PER_DAY,
                           'minute'           : lambda x : x*1440.0,
                           'hour'             : lambda x : x*24.0},
     'degree_C'         : {'degree_F'         : CtoF,
@@ -346,7 +347,9 @@ conversionDict = {
     'degree_F'         : {'degree_C'         : FtoC,
                           'degree_E'         : FtoE},
     'degree_F_day'     : {'degree_C_day'     : lambda x : x * (5.0/9.0)},
-    'dublin_jd'        : {'unix_epoch'       : lambda x : (x-25567.5) * 86400.0},
+    'dublin_jd'        : {'unix_epoch'       : lambda x : (x-25567.5) * SECS_PER_DAY,
+                          'unix_epoch_ms'    : lambda x : (x-25567.5) * SECS_PER_DAY * 1000,
+                          'unix_epoch_ns'    : lambda x : (x-25567.5) * SECS_PER_DAY * 1e06},
     'foot'             : {'meter'            : lambda x : x * METER_PER_FOOT},
     'gallon'           : {'liter'            : lambda x : x * 3.78541,
                           'litre'            : lambda x : x * 3.78541,
@@ -442,10 +445,16 @@ conversionDict = {
                           'kPa_per_hour'     : lambda x : x / 7.5006168},
     'second'           : {'hour'             : lambda x : x/3600.0,
                           'minute'           : lambda x : x/60.0,
-                          'day'              : lambda x : x/86400.0},
-    'unix_epoch'       : {'dublin_jd'        : lambda x: x / 86400.0 + 25567.5,
+                          'day'              : lambda x : x / SECS_PER_DAY},
+    'unix_epoch'       : {'dublin_jd'        : lambda x: x / SECS_PER_DAY + 25567.5,
                           'unix_epoch_ms'    : lambda x : x * 1000,
                           'unix_epoch_ns'    : lambda x : x * 1000000},
+    'unix_epoch_ms'    : {'dublin_jd'        : lambda x: x / (SECS_PER_DAY * 1000) + 25567.5,
+                          'unix_epoch'       : lambda x : x / 1000,
+                          'unix_epoch_ns'    : lambda x : x * 1000},
+    'unix_epoch_ns'    : {'dublin_jd'        : lambda x: x / (SECS_PER_DAY * 1e06) + 25567.5,
+                          'unix_epoch'       : lambda x : x / 1e06,
+                          'unix_epoch_ms'    : lambda x : x / 1000},
     'watt'             : {'kilowatt'         : lambda x : x / 1000.0},
     'watt_hour'        : {'kilowatt_hour'    : lambda x : x / 1000.0,
                           'mega_joule'       : lambda x : x * 0.0036,

@@ -11,20 +11,20 @@
   </div>
   <div id="rss_link"><a href="rss.xml">RSS</a></div>
   <div id="reports">
-    Monthly Reports:
+    $gettext["Monthly Reports"]:
     <select name="reports" onchange="openTabularFile(value)">
       #for $monthYear in $SummaryByMonth
       <option value="$monthYear">$monthYear</option>
       #end for
-      <option selected>- Select Month -</option>
+      <option selected>- $gettext["select month"] -</option>
     </select>
     <br/>
-    Yearly Reports:
+    $gettext["Yearly Reports"]:
     <select name="reports" onchange="openTabularFile(value)">
       #for $yr in $SummaryByYear
       <option value="$yr">$yr</option>
       #end for
-      <option selected>- Select Year -</option>
+      <option selected>- $gettext["select year"] -</option>
     </select>
     <br/>
   </div>

@@ -1,6 +1,35 @@
 WeeWX change history
 --------------------
 
+4.6.0 MM/DD/YYYY
+Easy localization of all skins that come with WeeWX. Big thanks to user Karen,
+who drove the effort! PR #665.
+
+Allow options --date, --from, and --to to be used with wee_database --reweight.
+PR #659. Thanks to user edi-x!
+
+Added Cheetah helper functions $jsonize(), $rnd(), and $to_int().
+
+Added conversions for unix_epoch_ms and unix_epoch_ns. Calculations in
+celestial.inc now explicitly use unix_epoch.
+
+Added almanac attribute "visible". For example, $almanac.sun.visible would
+return the amount of daylight.
+
+
+4.5.1 04/02/2021
+Reverted the wview schema back to the V3 style.
+
+Fixed problem where setup.py would fail if the station description used UTF-8
+characters.
+
+Fixed problem where unit labels would not render correctly under Python 2.7 if
+they were set by a 3rd party extension. Fixes issue #662.
+
+Added TCP support to the WS1 driver. Thanks to user Mike Juniper! Fixes issue
+#664.
+
+
 4.5.0 04/02/2021
 
 The utility wee_database has new options --add-column, --rename-column, and

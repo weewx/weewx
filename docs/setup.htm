@@ -275,11 +275,18 @@ sudo ./bin/weewxd</pre>
         </button>
     </nav>
     <div id='startup-debian' class="tab-content">
-        <pre class="tty cmd">cd /home/weewx
+        <pre class="tty cmd"> #-- preferred option - use systemd
+cd /home/weewx
+sudo cp util/systemd/weewx.service /etc/systemd/system
+sudo systemctl enable weewx
+sudo systemctl start weewx
+
+#-- option 2 - use the old init.d method if your os is ancient
+cd /home/weewx
 sudo cp util/init.d/weewx.debian /etc/init.d/weewx
 sudo chmod +x /etc/init.d/weewx
 sudo update-rc.d weewx defaults 98
-sudo /etc/init.d/weewx start</pre>
+sudo /etc/init.d/weewx start </pre>
     </div>
     <div id='startup-redhat' class="tab-content">
         <pre class="tty cmd">cd /home/weewx
@@ -328,11 +335,17 @@ sudo /etc/init.d/weewx start</pre>
 <h2>Uninstall</h2>
 
 <p>
-    To uninstall, simply delete the directory <span class='code'>/home/weewx</span>. This will delete WeeWX,
-    configuration files, and data.
+    To uninstall, simply stop weewx and delete the directory <span class='code'>/home/weewx</span>. This will delete WeeWX,
+    configuration files, and data.  Also remove the startup file previously put into place.
 </p>
 <pre class='tty cmd'>sudo rm -r /home/weewx
-sudo rm /etc/init.d/weewx</pre>
+
+# if you used the systemd startup file method in step (4) above
+sudo rm /etc/systemd/system/weewx.service
+
+# or if you used the init.d startup file method in step (4)  above
+sudo rm /etc/init.d/weewx
+</pre>
 
 <h2>Layout</h2>
 

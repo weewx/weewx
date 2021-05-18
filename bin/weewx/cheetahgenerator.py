@@ -1,6 +1,8 @@
 #
 #    Copyright (c) 2009-2020 Tom Keffer <tkeffer@gmail.com>
 #
+#    Class Gettext is Copyright (C) 2021 Johanna Karen Roedenbeck
+#
 #    See the file LICENSE.txt for your full rights.
 #
 """Generate files from templates using the Cheetah template engine.
@@ -77,7 +79,7 @@ import weewx.station
 import weewx.tags
 import weewx.units
 from weeutil.config import search_up, accumulateLeaves, deep_copy
-from weeutil.weeutil import to_bool, to_int, timestamp_to_string
+from weeutil.weeutil import to_bool, to_int, timestamp_to_string, KeyDict
 
 log = logging.getLogger(__name__)
 
@@ -90,7 +92,8 @@ default_search_list = [
     "weewx.cheetahgenerator.Stats",
     "weewx.cheetahgenerator.UnitInfo",
     "weewx.cheetahgenerator.Extras",
-    "weewx.cheetahgenerator.JSONHelpers"]
+    "weewx.cheetahgenerator.JSONHelpers",
+    "weewx.cheetahgenerator.Gettext"]
 
 
 # =============================================================================
@@ -149,7 +152,7 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
         self.initExtensions(gen_dict[section_name])
 
         # Generate any templates in the given dictionary:
-        ngen = self.generate(gen_dict[section_name], self.gen_ts)
+        ngen = self.generate(gen_dict[section_name], section_name, self.gen_ts)
 
         self.teardown()
 
@@ -198,7 +201,7 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
         while len(self.search_list_objs):
             del self.search_list_objs[-1]
 
-    def generate(self, section, gen_ts):
+    def generate(self, section, section_name, gen_ts):
         """Generate one or more reports for the indicated section.  Each
         section in a period is a report.  A report has one or more templates.
 
@@ -219,7 +222,7 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
                 if subsection in CheetahGenerator.generator_dict:
                     section[subsection]['summarize_by'] = subsection
             # Call recursively, to generate any templates in this subsection
-            ngen += self.generate(section[subsection], gen_ts)
+            ngen += self.generate(section[subsection], subsection, gen_ts)
 
         # We have finished recursively processing any subsections in this
         # section. Time to do the section itself. If there is no option
@@ -308,7 +311,7 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
                     pass
 
             searchList = self._getSearchList(encoding, timespan,
-                                             default_binding)
+                                             default_binding, section_name)
             tmpname = _fullname + '.tmp'
 
             try:
@@ -369,14 +372,15 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
 
         return ngen
 
-    def _getSearchList(self, encoding, timespan, default_binding):
+    def _getSearchList(self, encoding, timespan, default_binding, section_name):
         """Get the complete search list to be used by Cheetah."""
 
         # Get the basic search list
         timespan_start_tt = time.localtime(timespan.start)
         searchList = [{'month_name' : time.strftime("%b", timespan_start_tt),
                        'year_name'  : timespan_start_tt[0],
-                       'encoding'   : encoding},
+                       'encoding'   : encoding,
+                       'page'       : section_name},
                       self.outputted_dict]
 
         # Bind to the default_binding:
@@ -653,10 +657,47 @@ class JSONHelpers(SearchList):
         """
         return weeutil.weeutil.rounder(arg, ndigits)
 
+    @staticmethod
+    def to_int(arg):
+        """Convert the argument into an integer, honoring 'None'
+
+        Args:
+            arg (None, float, str):
+
+        Returns:
+            int: The argument converted to an integer.
+        """
+        return weeutil.weeutil.to_int(arg)
+
+
+class Gettext(SearchList):
+    """Values provided by $gettext[] are found in the localization file in the [Texts] section.
+    Lookups can be nested.
+    """
+    def get_extension_list(self, timespan, db_lookup):
+        # copy section [Text] and convert all subsections to KeyDict
+        # in order to return key instead of generating an error in
+        # case key does not exist
+        return [{'gettext': Gettext._deep_copy_to_keydict(
+            self.generator.skin_dict.get('Texts', weeutil.config.config_from_str('lang = en')))}]
+
+    @staticmethod
+    def _deep_copy_to_keydict(text_dict):
+        """ convert configObj to KeyDict including subsections """
+        _dict = KeyDict({})
+        # process subsections
+        for section in text_dict.sections:
+            _dict[section] = Gettext._deep_copy_to_keydict(text_dict[section])
+        # copy entries of this section
+        for scalar in text_dict.scalars:
+            _dict[scalar] = text_dict[scalar]
+        # return result
+        return _dict
+
+
 # =============================================================================
 # Filter
 # =============================================================================
-
 
 class AssureUnicode(Cheetah.Filters.Filter):
     """Assures that whatever a search list extension might return, it will be converted into
