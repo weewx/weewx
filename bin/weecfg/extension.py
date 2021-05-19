@@ -38,6 +38,7 @@ class ExtensionInstaller(dict):
     def configure(self, engine):
         """Can be overridden by installers. It should return True if the installer modifies
         the configuration dictionary."""
+        return False
 
 
 class ExtensionEngine(object):
