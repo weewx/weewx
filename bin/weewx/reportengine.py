@@ -298,11 +298,12 @@ class StdReportEngine(threading.Thread):
                     log.info("Using localization file %s for report '%s'",
                              lang_config_path, report)
             except IOError as e:
-                log.debug("Cannot read localization file %s for report '%s': %s",
-                          lang_config_path, report, e)
+                log.info("Cannot read localization file %s for report '%s': %s",
+                         lang_config_path, report, e)
+                log.info("**** Using defaults instead.")
             except SyntaxError as e:
-                log.error("Failed to read localization file %s for report '%s': %s",
-                          lang_config_path, report, e)
+                log.error("Error while reading localization file %s for report '%s'",
+                          lang_config_path, report)
                 raise
         
         # See if the user wants this report based on another unit system than US.
