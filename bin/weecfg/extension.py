@@ -237,8 +237,8 @@ class ExtensionEngine(object):
     def get_lang_code(self, skin, default_code):
         """Convenience function for picking a language code"""
         skin_path = os.path.join(self.root_dict['SKIN_ROOT'], skin)
-        languages = get_languages(skin_path)
-        code = pick_language(languages, default_code)
+        languages = weecfg.get_languages(skin_path)
+        code = weecfg.pick_language(languages, default_code)
         return code
 
     def _inject_config(self, extension_config, extension_name):
@@ -479,69 +479,3 @@ class ExtensionEngine(object):
         idx = path.find('/')
         if idx >= 0:
             return path[idx + 1:]
-
-
-def get_languages(skin_dir):
-    """ Return all languages supported by the skin
-
-    Args:
-        skin_dir (str): The path to the skin subdirectory.
-
-    Returns:
-        (dict): A dictionary where the key is the language code, and the value is the natural
-            language name of the language. The value 'None' is returned if skin_dir does not exist.
-    """
-    # Get the path to the "./lang" subdirectory
-    lang_dir = os.path.join(skin_dir, './lang')
-    # Get all the files in the subdirectory. If the subdirectory does not exist, an exception
-    # will be raised. Be prepared to catch it.
-    try:
-        lang_files = os.listdir(lang_dir)
-    except OSError:
-        # No 'lang' subdirectory. Return None
-        return None
-
-    languages = {}
-
-    # Go through the files...
-    for lang_file in lang_files:
-        # ... get its full path ...
-        lang_full_path = os.path.join(lang_dir, lang_file)
-        # ... make sure it's a file ...
-        if os.path.isfile(lang_full_path):
-            # ... then get the language code for that file.
-            code = lang_file.split('.')[0]
-            # Retrieve the ConfigObj for this language
-            lang_dict = configobj.ConfigObj(lang_full_path, encoding='utf-8')
-            # See if it has a natural language version of the language code:
-            try:
-                language = lang_dict['Texts']['Language']
-            except KeyError:
-                # It doesn't. Just label it 'Unknown'
-                language = 'Unknown'
-            # Add the code, plus the language
-            languages[code] = language
-    return languages
-
-
-def pick_language(languages, default='en'):
-    """
-    Given a choice of languages, pick one.
-
-    Args:
-        languages (list): As returned by function get_languages() above
-        default (str): The language code of the default
-
-    Returns:
-        (str): The chosen language code
-    """
-    keys = sorted(languages.keys())
-    if default not in keys:
-        default = None
-    msg = "Available languages\nCode  | Language\n"
-    for code in keys:
-        msg += "%4s  | %-20s\n" % (code, languages[code])
-    msg += "Pick a code"
-    value = prompt_with_options(msg, default, keys)
-
-    return value
