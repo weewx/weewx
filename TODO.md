@@ -1,10 +1,9 @@
 # To do
 
-Modify celestial.inc so it uses `$almanac.sun.visible`
+Review the I18N documentation. Needs some text on the hierarchy of setting `lang`
+and `units`. 
 
-Review the I18N documentation.
-
-Modify installation software so the user can pick a unit system.
+Modify installation software so that the user can pick a unit system.
 
 NICE TO DO:
 Parameterize PIL fonts on the basis of `lang`.
