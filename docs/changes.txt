@@ -244,6 +244,9 @@ Fixed problem in WMR200 driver where missing UV reports as index 255.
 
 Added option 'force_direction' for working around a WU bug. Fixes issue #614.
 
+Fixed problem where null bytes in an import data file would cause wee_import to
+fail.
+
 
 4.1.1 06/01/2020
 
