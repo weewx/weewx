@@ -87,10 +87,24 @@ class StdWXCalculate(weewx.engine.StdService):
         data_binding = config_dict.get('StdWXCalculate',
                                        {'data_binding': 'wx_binding'}).get('data_binding',
                                                                            'wx_binding')
+        # Log the data binding we are to use
+        log.info("StdWXCalculate will use data binding %s" % data_binding)
+        # If StdArchive and StdWXCalculate use different data bindings it could
+        # be a problem. Get the data binding to be used by StdArchive.
+        std_arch_data_binding = config_dict.get('StdArchive', {}).get('data_binding',
+                                                                      'wx_binding')
+        # Is the data binding the same as will be used by StdArchive?
+        if data_binding != std_arch_data_binding:
+            # The data bindings are different, don't second guess the user but
+            # log the difference as this could be an oversight
+            log.warning("The StdWXCalculate data binding (%s) does not "
+                        "match the StdArchive data binding (%s).",
+                        data_binding, std_arch_data_binding)
+        # Now obtain a database manager using the data binding
+        self.db_manager = engine.db_binder.get_manager(data_binding=data_binding,
+                                                       initialize=True)
 
-        self.db_manager = engine.db_binder.get_manager(data_binding=data_binding, initialize=True)
-
-        # we will process both loop and archive events
+        # We will process both loop and archive events
         self.bind(weewx.NEW_LOOP_PACKET, self.new_loop_packet)
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
 

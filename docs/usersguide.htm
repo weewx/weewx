@@ -2660,6 +2660,21 @@ longitude = -77.0366</pre>
             (XTypes)</em></a> for how to do this.
         </p>
 
+        <p class="config_option">data_binding</p>
+
+        <p>
+            The data source to be used for historical data when calculating derived quantities. It should match a
+            binding given in section <a href="#DataBindings"><span class="code">[DataBindings]</span></a> below.
+            Optional. Default is <span class="code">wx_binding</span>.
+        </p>
+
+        <p class="note">
+            <b>Note:</b><br/>
+            The data binding used by the <span class="code">StdWXCalculate</span> service should normally match the data
+            binding used by the <span class="code">StdArchive</span> service. User's who use custom or additional data
+            bindings should take care to ensure the correct data bindings are used by both services.
+        </p>
+
         <h3 class="config_section">[[Calculations]]</h3>
 
         <p>
