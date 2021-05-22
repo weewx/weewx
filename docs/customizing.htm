@@ -890,7 +890,8 @@ total 32
             class="code">en.conf</span>), and Thai (<span class="code">th.conf</span>) languages. If you are working
             with one of these languages, you can simply override the defaults supplied by the localization file. If you
             are working with a language for which there is no localization file, you will have to supply one first. See
-            the section XXX.
+            the section <a href="#Internationalized,_but_your_language_is_missing"><em>Internationalized, but your
+            language is missing</em></a>.
         </p>
 
         <h4>Overriding the localization file</h4>
@@ -2862,7 +2863,7 @@ $month.outTemp.series(aggregate_type='max', aggregate_interval='day', time_serie
           and
           you want to have a head line in there, that
           is "Current Conditions" in English, but "aktuelle Werte"
-          in german, "Conditions actuelles" in french etc. Then
+          in German, "Conditions actuelles" in French etc. Then
           the template file could contain:
         </p>
         <pre class="tty">...
@@ -2881,9 +2882,9 @@ $month.outTemp.series(aggregate_type='max', aggregate_interval='day', time_serie
     ...</pre>
         <p>
           With <span class="code">lang = fr</span> the report
-          is in french. To get it in English, replace the language
+          is in French. To get it in English, replace the language
           code <span class="code">fr</span> by the code for English
-          <span class="code">en</span>. And to get it in german
+          <span class="code">en</span>. And to get it in German
           use <span class="code">de</span>.
         </p>
         <p>
@@ -4215,10 +4216,10 @@ class MyStats(SearchList):                                                   # 1
             Internationalized skins</a> for how to tell.
         </a>
         </p>
-        <h3>Internationalized, local language is available</h3>
+        <h3>Internationalized, your language is available</h3>
         <p>
             This is the easy case: the skin has been internationalized, and your locale is available.
-            In this case, all you need to do is to select it
+            In this case, all you need to do is to select your locale
             in <span class="code">weewx.conf</span>. For example, to select German (code <span class="code">de</span>):
         </p>
         <pre class="tty">...
@@ -4265,8 +4266,10 @@ class MyStats(SearchList):                                                   # 1
     ...
 </pre>
         <p>
-            And so on. When you're done, the skin author may be interested in your language file to ship it together
-            with the skin for the use of other users.
+            And so on. When you're done, the skin author may be interested in your localization file to ship it together
+            with the skin for the use of other users. If the skin is one that came with WeeWX contact the WeeWX team
+            via a post to the <a href="https://groups.google.com/forum/#!forum/weewx-user">weewx-user group</a> and
+            with your permission we may include your localization file in a future WeeWX release.
         </p>
         <p>
             Finally, set the option <span class="code">lang</span> in <span class="code">weewx.conf</span> to your
