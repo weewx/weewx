@@ -29,40 +29,6 @@ major_comment_block = ["", "####################################################
 
 DEFAULT_URL = 'http://acme.com'
 
-# ==============================================================================
-
-unit_systems = {
-    'us': {'group_altitude': 'foot',
-           'group_degree_day': 'degree_F_day',
-           'group_distance': 'mile',
-           'group_pressure': 'inHg',
-           'group_rain': 'inch',
-           'group_rainrate': 'inch_per_hour',
-           'group_speed': 'mile_per_hour',
-           'group_speed2': 'mile_per_hour2',
-           'group_temperature': 'degree_F'},
-
-    'metric': {'group_altitude': 'meter',
-               'group_degree_day': 'degree_C_day',
-               'group_distance': 'km',
-               'group_pressure': 'mbar',
-               'group_rain': 'cm',
-               'group_rainrate': 'cm_per_hour',
-               'group_speed': 'km_per_hour',
-               'group_speed2': 'km_per_hour2',
-               'group_temperature': 'degree_C'},
-
-    'metricwx': {'group_altitude': 'meter',
-                 'group_degree_day': 'degree_C_day',
-                 'group_distance': 'km',
-                 'group_pressure': 'mbar',
-                 'group_rain': 'mm',
-                 'group_rainrate': 'mm_per_hour',
-                 'group_speed': 'meter_per_second',
-                 'group_speed2': 'meter_per_second2',
-                 'group_temperature': 'degree_C'}
-}
-
 
 class ExtensionError(IOError):
     """Errors when installing or uninstalling an extension"""
@@ -296,9 +262,9 @@ def modify_config(config_dict, stn_info, logger, debug=False):
                 if debug:
                     logger.log("Using %s for %s" % (stn_info[p], p), level=2)
                 config_dict['Station'][p] = stn_info[p]
-        # Update units display with any stn_info overrides
-        if 'units' in stn_info and 'StdReport' in config_dict:
-            update_units(config_dict, stn_info['units'], logger, debug)
+
+        if 'StdReport' in config_dict and 'units' in stn_info and stn_info['units'] != 'custom':
+            config_dict['StdReport']['units'] = stn_info['units']
 
         if 'register_this_station' in stn_info \
                 and 'StdRESTful' in config_dict \
@@ -1278,21 +1244,6 @@ def update_to_v43(config_dict):
     config_dict['version'] = '4.3.0'
 
 
-def update_units(config_dict, unit_system_name, logger=None, debug=False):
-    """Update [StdReport][Defaults] with the desired unit system"""
-
-    if unit_system_name == 'mixed':
-        return
-    elif unit_system_name is not None:
-        try:
-            config_dict['StdReport']['Defaults']['Units']['Groups'].update(unit_systems[unit_system_name])
-        except KeyError:
-            # We are missing the [StdReport] / [[Defaults]] / [[[Units]]] / [[[[Groups]]]] section.
-            # Create a section, then merge it into the ConfigObj.
-            unit_dict = weeutil.config.config_from_str(UNIT_DEFAULTS)
-            weeutil.config.merge_config(config_dict, unit_dict)
-
-
 # ==============================================================================
 #              Utilities that extract from ConfigObj objects
 # ==============================================================================
@@ -1315,7 +1266,7 @@ def get_version_info(config_dict):
     return major, minor
 
 
-def get_station_info(config_dict):
+def get_station_info_from_config(config_dict):
     """Extract station info from config dictionary.
 
     Returns:
@@ -1339,16 +1290,16 @@ def get_station_info(config_dict):
                 if stn_info['station_type'] in config_dict:
                     stn_info['driver'] = config_dict[stn_info['station_type']]['driver']
 
-            # Try to figure out what unit system the user is using.
-            try:
-                # First look for a [Defaults] section.
-                stn_info['units'] = get_unit_info(config_dict['StdReport']['Defaults'])
-            except KeyError:
-                # If that didn't work, look for an override in the [[StandardReport]] section.
-                try:
-                    stn_info['units'] = get_unit_info(config_dict['StdReport']['StandardReport'])
-                except KeyError:
-                    pass
+        try:
+            stn_info['lang'] = config_dict['StdReport']['lang']
+        except KeyError:
+            pass
+        try:
+            # Look for option 'units' in [StdReport]
+            stn_info['units'] = config_dict['StdReport']['units']
+        except KeyError:
+            # Not there. It's a custom system
+            stn_info['units'] = 'custom'
         try:
             stn_info['register_this_station'] \
                 = config_dict['StdRESTful']['StationRegistry']['register_this_station']
@@ -1360,31 +1311,6 @@ def get_station_info(config_dict):
             pass
 
     return stn_info
-
-
-def get_unit_info(test_dict):
-    """Intuit what unit system the reports are in.
-
-    Returns:
-        'us':       US Customary system
-        'metric':   METRIC system
-        'metricwx': METRICWX system
-        'mixed':    Mixed unit system
-        None:       There is no information about the unit system.
-    """
-    try:
-        group_dict = test_dict['Units']['Groups']
-    except KeyError:
-        return None
-
-    # Test all unit systems ('us', 'metric', 'metricwx'):
-    for unit_system in unit_systems:
-        # For this unit system, make sure there is an exact match
-        if all(group_dict[group] == unit_systems[unit_system][group]
-               for group in unit_systems[unit_system]):
-            return unit_system
-    # No exact match. In in a mix of unit systems
-    return 'mixed'
 
 
 # ==============================================================================
@@ -1574,8 +1500,8 @@ def load_driver_editor(driver_module_name):
 #                Utilities that seek info from the command line
 # ==============================================================================
 
-def prompt_for_info(location=None, latitude='90.000', longitude='0.000',
-                    altitude=['0', 'meter'], units='metric',
+def prompt_for_info(location=None, latitude='0.000', longitude='0.000',
+                    altitude=['0', 'meter'], units='metricwx',
                     register_this_station='false',
                     station_url=DEFAULT_URL, **kwargs):
     stn_info = {}
@@ -1644,18 +1570,10 @@ def prompt_for_info(location=None, latitude='90.000', longitude='0.000',
     else:
         stn_info['register_this_station'] = 'false'
 
-    #
-    # Display units. Accept only 'us' or 'metric', where 'metric'
-    # is a synonym for 'metricwx'.
-    #
-    options = ['us', 'metric']
-    if units == 'mixed':
-        options += [units]
+    # Get what unit system the user wants
+    options = ['us', 'metric', 'metricwx']
     print("\nIndicate the preferred units for display: %s" % options)
-    default = units if units != 'metricwx' else 'metric'
-    uni = prompt_with_options("units", default, options)
-    if uni == 'metric':
-        uni = 'metricwx'
+    uni = prompt_with_options("units", units, options)
     stn_info['units'] = uni
 
     return stn_info

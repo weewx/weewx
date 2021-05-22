@@ -190,7 +190,7 @@ class ValueHelperTest(unittest.TestCase):
         
     def testElapsedTime(self):
         value_t = (2*86400 + 1*3600 + 5*60 + 12, "second", "group_deltatime")
-        vh = weewx.units.ValueHelper(value_t)
+        vh = weewx.units.ValueHelper(value_t, context='long_delta')
         self.assertEqual(vh.string(), "2 days, 1 hour, 5 minutes")
         format_label = "%(day)d%(day_label)s, %(hour)d%(hour_label)s, " \
                        "%(minute)d%(minute_label)s, %(second)d%(second_label)s"

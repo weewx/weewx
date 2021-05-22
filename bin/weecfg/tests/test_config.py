@@ -250,7 +250,7 @@ class ConfigTest(LineTest):
                            side_effect=['Anytown', '', '', '', '', '']):
                     stn_info = weecfg.prompt_for_info()
                     self.assertEqual(stn_info, {'altitude': ['0', 'meter'],
-                                                'latitude': '90.000',
+                                                'latitude': '0.000',
                                                 'location': 'Anytown',
                                                 'longitude': '0.000',
                                                 'register_this_station': 'false',
@@ -478,12 +478,12 @@ class ConfigTest(LineTest):
         # Use the current weewx.conf
         config_dict = configobj.ConfigObj(current_config_dict_path, encoding='utf-8')
 
-        stn_info = weecfg.get_station_info(config_dict)
+        stn_info = weecfg.get_station_info_from_config(config_dict)
 
         self.assertEqual(stn_info,
                          {'station_type': 'unspecified', 'altitude': ['700', 'foot'],
                           'longitude': '0.00', 'units': 'us', 'location': 'My Little Town, Oregon',
-                          'latitude': '0.00', 'register_this_station': 'false'})
+                          'latitude': '0.00', 'register_this_station': 'false', 'lang': 'en'})
 
         # Modify the station info, to reflect a hardware choice
         stn_info['station_type'] = 'Vantage'

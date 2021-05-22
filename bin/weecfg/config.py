@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2020 Tom Keffer <tkeffer@gmail.com> and
+#    Copyright (c) 2009-2021 Tom Keffer <tkeffer@gmail.com> and
 #                            Matthew Wall
 #
 #    See the file LICENSE.txt for your full rights.
@@ -26,6 +26,7 @@ stn_info_defaults = {
     'register_this_station': 'false',
     'station_type': 'Simulator',
     'driver': 'weewx.drivers.simulator',
+    'lang' : 'en',
 }
 
 
@@ -133,7 +134,7 @@ class ConfigEngine(object):
         for values."""
 
         # Start with values from the config file:
-        stn_info = weecfg.get_station_info(config_dict)
+        stn_info = weecfg.get_station_info_from_config(config_dict)
 
         # Get command line overrides, and apply them to stn_info. If that leaves a value
         # unspecified, then get it from the defaults.

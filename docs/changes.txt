@@ -13,8 +13,9 @@ Added Cheetah helper functions $jsonize(), $rnd(), and $to_int().
 Added conversions for unix_epoch_ms and unix_epoch_ns. Calculations in
 celestial.inc now explicitly use unix_epoch.
 
-Added almanac attribute "visible". For example, $almanac.sun.visible would
-return the amount of daylight.
+Added almanac attribute "visible" and "visible_change". For example,
+$almanac.sun.visible returns the amount of daylight, $almanac.sun.visible_change
+the difference since yesterday.
 
 Fixed problem that could cause weather xtypes services not to shut down
 properly. PR #672. Thanks again to user edi-x!
