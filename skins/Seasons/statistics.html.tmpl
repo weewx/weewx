@@ -9,6 +9,9 @@
     <title>$station.location Statistics</title>
     <link rel="icon" type="image/png" href="favicon.ico" />
     <link rel="stylesheet" type="text/css" href="seasons.css"/>
+    #if $station.station_url
+    <link rel="canonical" href="$station.station_url/$filename" />
+    #end if
     <script src="seasons.js"></script>
     <style>
 #statistics_widget th {
