@@ -190,12 +190,23 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                     # Now its time to find and hit the database:
                     binding = line_options['data_binding']
                     db_manager = self.db_binder.get_manager(binding)
+                    # we need to pass the line options and plotgen_ts to our xtype
+                    # first get a copy of line_options
+                    option_dict = dict(line_options)
+                    # but we need to pop off aggregate_type and
+                    # aggregate_interval as they are used as explicit arguments
+                    # in our xtypes call
+                    option_dict.pop('aggregate_type', None)
+                    option_dict.pop('aggregate_interval', None)
+                    # then add plotgen_ts
+                    option_dict['plotgen_ts'] = plotgen_ts
                     start_vec_t, stop_vec_t ,data_vec_t = weewx.xtypes.get_series(
                         var_type,
                         TimeSpan(minstamp, maxstamp),
                         db_manager,
                         aggregate_type=aggregate_type,
-                        aggregate_interval=aggregate_interval)
+                        aggregate_interval=aggregate_interval,
+                        **option_dict)
 
                     # Get the type of plot ("bar', 'line', or 'vector')
                     plot_type = line_options.get('plot_type', 'line').lower()
