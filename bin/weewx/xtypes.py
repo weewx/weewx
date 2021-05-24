@@ -66,13 +66,28 @@ class XType(object):
 
 def get_scalar(obs_type, record, db_manager=None, **option_dict):
     """Return a scalar value"""
-    # Search the list, looking for a get_scalar() method that does not raise an exception
+    # Search the list, looking for a get_scalar() method that does not raise an
+    # exception
     for xtype in xtypes:
         try:
-            # Try this function. It will raise an exception if it does not know about the type.
+            # Try this function. Be prepared to catch the TypeError exception
+            # if it is a legacy style XType that does not accept kwargs. It
+            # will raise a weewx.UnknownType exception if it does not know
+            # about the type.
             return xtype.get_scalar(obs_type, record, db_manager, **option_dict)
+        except TypeError:
+            try:
+                # We likely have a legacy style XType so try calling it again
+                # but this time without the kwargs. It will raise an exception
+                # if it does not know about the type.
+                return xtype.get_scalar(obs_type, record, db_manager)
+            except weewx.UnknownType:
+                # This function does not know about the type. Move on to the
+                # next one.
+                pass
         except weewx.UnknownType:
-            # This function does not know about the type. Move on to the next one.
+            # This function does not know about the type. Move on to the next
+            # one.
             pass
     # None of the functions worked.
     raise weewx.UnknownType(obs_type)
@@ -81,12 +96,27 @@ def get_scalar(obs_type, record, db_manager=None, **option_dict):
 def get_series(obs_type, timespan, db_manager, aggregate_type=None, aggregate_interval=None, 
                **option_dict):
     """Return a series (aka vector) of, possibly aggregated, values."""
-    # Search the list, looking for a get_series() method that does not raise an exception
+    # Search the list, looking for a get_series() method that does not raise an
+    # exception
     for xtype in xtypes:
         try:
-            # Try this function. It will raise an exception if it does not know about the type.
+            # Try this function. Be prepared to catch the TypeError exception
+            # if it is a legacy style XType that does not accept kwargs. It
+            # will raise a weewx.UnknownType or weewx.UnknownAggregation
+            # exception if it does not know about the type.
             return xtype.get_series(obs_type, timespan, db_manager, aggregate_type,
                                     aggregate_interval, **option_dict)
+        except TypeError:
+            # We likely have a legacy style XType so try calling it again
+            # but this time without the kwargs. It will raise an exception
+            # if it does not know about the type.
+            try:
+                return xtype.get_series(obs_type, timespan, db_manager, aggregate_type,
+                                        aggregate_interval)
+            except (weewx.UnknownType, weewx.UnknownAggregation):
+                # This function does not know about the type and/or aggregation.
+                # Move on to the next one.
+                pass
         except (weewx.UnknownType, weewx.UnknownAggregation):
             # This function does not know about the type and/or aggregation.
             # Move on to the next one.
