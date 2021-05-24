@@ -258,6 +258,54 @@ sudo apt-get install weewx</pre>
 
         <h1><a id="Instructions_for_specific_versions">Instructions for specific versions</a></h1>
 
+        <h2>Upgrading to V4.6</h2>
+        <h3>API changes</h3>
+        <h4>Elapsed time calls may have to be changed</h4>
+        <p>
+            If you use group <span class="code">group_elapsed</span> to display elapsed time, you may have to change
+            the call. For example,
+        </p>
+
+        <table>
+            <tr class="first_row">
+                <td style='width:50%'>V4.5 and earlier</td>
+                <td>4.6</td>
+            </tr>
+            <tr>
+                <td>
+                    <pre class='tty'>
+            #
+            # Some calculation that comes with an elapsed time of 1655 seconds happens here...
+            #
+            vt = ValueTuple(1655, 'second', 'group_deltatime')
+            vh = ValueHelper(vt,
+                             formatter=self.generator.formatter,
+                             converter=self.generator.converter)
+            return vh
+</pre>
+                </td>
+                <td>
+                    <pre class='tty'>
+            #
+            # Some calculation that comes with an elapsed time of 1655 seconds happens here...
+            #
+            vt = ValueTuple(1655, 'second', 'group_deltatime')
+            vh = ValueHelper(vt,
+                             <span class="added">context='short_delta',</span>
+                             formatter=self.generator.formatter,
+                             converter=self.generator.converter)
+            return vh
+</pre>
+                </td>
+            </tr>
+        </table>
+
+        <p>
+            In summary, you will need to indicate the "context". There are two choices, <span class="code">short_delta</span>
+            for elapsed times less than a day, and <span class="code">long_delta</span> for time spans more than
+            a day.
+        </p>
+
         <h2>Upgrading to V4.5</h2>
         <p>
             Version 4.5 changes are unlikely to affect anyone, except extension writers who are deep in the internals of
