@@ -20,6 +20,9 @@ the difference since yesterday.
 Fixed problem that could cause weather xtypes services not to shut down
 properly. PR #672. Thanks again to user edi-x!
 
+Added Cheetah tag $filename, the relative path of the generated file. Useful
+for setting canonical URLs. PR #671. Thanks again to user Karen!
+
 
 4.5.1 04/02/2021
 Reverted the wview schema back to the V3 style.
