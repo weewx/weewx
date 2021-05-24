@@ -82,7 +82,7 @@ class WXXTypes(weewx.xtypes.XType):
         self.maxSolarRad_algo = maxSolarRad_algo.lower()
         self.heat_index_algo = heat_index_algo.lower()
 
-    def get_scalar(self, obs_type, record, db_manager):
+    def get_scalar(self, obs_type, record, db_manager, **option_dict):
         """Invoke the proper method for the desired observation type."""
         try:
             # Form the method name, then call it with arguments
@@ -374,7 +374,7 @@ class PressureCooker(weewx.xtypes.XType):
 
         return self.temp_12h_vt
 
-    def get_scalar(self, key, record, dbmanager):
+    def get_scalar(self, key, record, dbmanager, **option_dict):
         if key == 'pressure':
             return self.pressure(record, dbmanager)
         elif key == 'altimeter':
@@ -503,7 +503,7 @@ class RainRater(weewx.xtypes.XType):
             self.rain_events = [x for x in self.rain_events
                                 if x[0] >= packet['dateTime'] - self.rain_period]
 
-    def get_scalar(self, key, record, db_manager):
+    def get_scalar(self, key, record, db_manager, **option_dict):
         """Calculate the rainRate"""
         if key != 'rainRate':
             raise weewx.UnknownType(key)
@@ -582,7 +582,7 @@ class Delta(weewx.xtypes.XType):
         #   {'rain' : ['totalRain', None]}
         self.totals = {k: [delta_config[k]['input'], None] for k in delta_config}
 
-    def get_scalar(self, key, record, db_manager):
+    def get_scalar(self, key, record, db_manager, **option_dict):
         # See if we know how to handle this type
         if key not in self.totals:
             raise weewx.UnknownType(key)
