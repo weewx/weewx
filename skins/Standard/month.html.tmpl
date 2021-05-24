@@ -11,6 +11,9 @@
     <title>$station.location $gettext["Monthly Weather Summary"]</title>
     <link rel="stylesheet" type="text/css" href="weewx.css"/>
     <link rel="icon" type="image/png" href="favicon.ico" />
+    #if $station.station_url
+    <link rel="canonical" href="$station.station_url/$filename" />
+    #end if
     <script type="text/javascript">
       function openURL(urlname)
       {
