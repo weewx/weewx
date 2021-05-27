@@ -242,7 +242,7 @@ class ConfigTest(LineTest):
                                                 'longitude': '180.0',
                                                 'register_this_station': 'true',
                                                 'station_url': 'weewx.com',
-                                                'units': 'us',
+                                                'unit_system': 'us',
                                                 })
 
                 # Test for a default input
@@ -254,7 +254,7 @@ class ConfigTest(LineTest):
                                                 'location': 'Anytown',
                                                 'longitude': '0.000',
                                                 'register_this_station': 'false',
-                                                'units': 'metricwx',
+                                                'unit_system': 'metricwx',
                                                 })
 
                 # Test for an out-of-bounds latitude with retry
@@ -267,7 +267,7 @@ class ConfigTest(LineTest):
                                                 'location': 'Anytown',
                                                 'longitude': '180.0',
                                                 'register_this_station': 'false',
-                                                'units': 'us'})
+                                                'unit_system': 'us'})
 
                 # Test for a bad length unit type with retry
                 with patch('weecfg.input',
@@ -279,7 +279,7 @@ class ConfigTest(LineTest):
                                                 'location': 'Anytown',
                                                 'longitude': '180.0',
                                                 'register_this_station': 'false',
-                                                'units': 'us'})
+                                                'unit_system': 'us'})
 
                 # Test for a bad display unit with retry
                 with patch('weecfg.input',
@@ -291,7 +291,7 @@ class ConfigTest(LineTest):
                                                 'location': 'Anytown',
                                                 'longitude': '180.0',
                                                 'register_this_station': 'false',
-                                                'units': 'us'})
+                                                'unit_system': 'us'})
             # Restore stdout:
             sys.stdout = save_stdout
 
@@ -482,7 +482,7 @@ class ConfigTest(LineTest):
 
         self.assertEqual(stn_info,
                          {'station_type': 'unspecified', 'altitude': ['700', 'foot'],
-                          'longitude': '0.00', 'units': 'us', 'location': 'My Little Town, Oregon',
+                          'longitude': '0.00', 'unit_system': 'us', 'location': 'My Little Town, Oregon',
                           'latitude': '0.00', 'register_this_station': 'false', 'lang': 'en'})
 
         # Modify the station info, to reflect a hardware choice

@@ -263,8 +263,10 @@ def modify_config(config_dict, stn_info, logger, debug=False):
                     logger.log("Using %s for %s" % (stn_info[p], p), level=2)
                 config_dict['Station'][p] = stn_info[p]
 
-        if 'StdReport' in config_dict and 'units' in stn_info and stn_info['units'] != 'custom':
-            config_dict['StdReport']['units'] = stn_info['units']
+        if 'StdReport' in config_dict \
+                and 'unit_system' in stn_info \
+                and stn_info['unit_system'] != 'custom':
+            config_dict['StdReport']['unit_system'] = stn_info['unit_system']
 
         if 'register_this_station' in stn_info \
                 and 'StdRESTful' in config_dict \
@@ -1295,11 +1297,11 @@ def get_station_info_from_config(config_dict):
         except KeyError:
             pass
         try:
-            # Look for option 'units' in [StdReport]
-            stn_info['units'] = config_dict['StdReport']['units']
+            # Look for option 'unit_system' in [StdReport]
+            stn_info['unit_system'] = config_dict['StdReport']['unit_system']
         except KeyError:
             # Not there. It's a custom system
-            stn_info['units'] = 'custom'
+            stn_info['unit_system'] = 'custom'
         try:
             stn_info['register_this_station'] \
                 = config_dict['StdRESTful']['StationRegistry']['register_this_station']
@@ -1501,7 +1503,7 @@ def load_driver_editor(driver_module_name):
 # ==============================================================================
 
 def prompt_for_info(location=None, latitude='0.000', longitude='0.000',
-                    altitude=['0', 'meter'], units='metricwx',
+                    altitude=['0', 'meter'], unit_system='metricwx',
                     register_this_station='false',
                     station_url=DEFAULT_URL, **kwargs):
     stn_info = {}
@@ -1573,8 +1575,8 @@ def prompt_for_info(location=None, latitude='0.000', longitude='0.000',
     # Get what unit system the user wants
     options = ['us', 'metric', 'metricwx']
     print("\nIndicate the preferred units for display: %s" % options)
-    uni = prompt_with_options("units", units, options)
-    stn_info['units'] = uni
+    uni = prompt_with_options("unit system", unit_system, options)
+    stn_info['unit_system'] = uni
 
     return stn_info
 

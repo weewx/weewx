@@ -73,10 +73,10 @@ class AlmanacTest(unittest.TestCase):
         # Visible time
         self.assertEqual(str(self.almanac.sun.visible), "12 hours, 34 minutes, 4 seconds")
         # Change in visible time:
-        self.assertEqual(str(self.almanac.sun.visible_change()), "0 hours, 3 minutes, 15 seconds")
+        self.assertEqual(str(self.almanac.sun.visible_change()), "3 minutes, 15 seconds")
         # Do it again, but in the fall when daylight is decreasing:
         almanac = Almanac(FALL_TIMESTAMP, LATITUDE, LONGITUDE)
-        self.assertEqual(str(almanac.sun.visible_change()), "0 hours, 3 minutes, 13 seconds")
+        self.assertEqual(str(almanac.sun.visible_change()), "3 minutes, 13 seconds")
 
     def test_mars(self):
         self.assertEqual(str(self.almanac.mars.rise), "06:08")

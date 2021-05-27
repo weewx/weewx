@@ -32,7 +32,7 @@ cp -rp skins/basic /home/weewx/skins
         skin = basic
         HTML_ROOT = public_html/basic
         lang = en
-        units = us
+        unit_system = us
 
 3) Restart WeeWX
 

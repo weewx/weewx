@@ -22,7 +22,7 @@ stn_info_defaults = {
     'latitude' : "0.0",
     'longitude': "0.0",
     'altitude': "0, meter",
-    'units': 'metricwx',
+    'unit_system': 'metricwx',
     'register_this_station': 'false',
     'station_type': 'Simulator',
     'driver': 'weewx.drivers.simulator',

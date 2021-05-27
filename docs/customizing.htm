@@ -816,12 +816,12 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
             <tr>
                 <td class="code">weewx.conf</td>
                 <td class="code">[StdReport] / [[<span class="symcode">report_name</span>]]</td>
-                <td class="code">lang<br/>units</td>
+                <td class="code">lang<br/>unit_system</td>
                 <td>Affects only the report <span class="symcode">report_name</span>.</td>
                 <td></td>
                 <td>Internationalization support. Option <span class="code">lang</span> only works for skins that
                 have been internationalized and have a corresponding language configuration file. <br/>
-                    Option <span class="code">units</span> works for all skins.</td>
+                    Option <span class="code">unit_system</span> works for all skins.</td>
             </tr>
             <tr>
                 <td class="code">weewx.conf</td>
@@ -829,7 +829,7 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
                 <td></td>
                 <td>Affects <em>all</em> reports.</td>
                 <td class="code">[[[Labels]]] / [[[[Generic]]]]</td>
-                <td>Deprecated. Use options <span class="code">lang</span> and <span class="code">units</span>
+                <td>Deprecated. Use options <span class="code">lang</span> and <span class="code">unit_system</span>
                 instead. Can still be used to localize skins that do not support option <span class="code">lang</span>.</td>
             </tr>
             <tr>
@@ -930,7 +930,7 @@ total 32
         # images, templates and plots for the report.
         skin = Seasons
         lang = en
-        units = US
+        unit_system = US
         enable = true
         [[[Labels]]]
             [[[[Generic]]]]
@@ -947,7 +947,7 @@ total 32
         <h2 id="how_to_change_units">How to change units</h2>
 
         <p>
-            Option <a href="usersguide.htm#option-units"><span class="code">units</span></a> controls what unit system
+            Option <a href="usersguide.htm#option-unit-system"><span class="code">unit_system</span></a> controls what unit system
              will be used in your reports. The available choices are <span class="code">US</span>, <span
             class="code">METRIC</span>, or <span class="code">METRICWX</span>. See the <a
             href="#units"><em>Appendix Units</em></a> for definitions of these unit systems.
@@ -964,7 +964,7 @@ total 32
         # images, templates and plots for the report.
         skin = Seasons
         lang = en
-        units = US
+        unit_system = US
         enable = true
         [[[Units]]]
             [[[[Groups]]]]
@@ -995,21 +995,22 @@ total 32
 
     <span class="highlight">[[SeasonsUSReport]]</span>
         skin = Seasons
-        <span class="higlight">units = us</span>
+        <span class="higlight">unit_system = us</span>
         enable = true
 
     <span class="highlight">[[SeasonsMetricReport]]</span>
         skin = Seasons
-        units = metricwx
+        unit_system = metricwx
         HTML_ROOT = public_html/metric
         enable = true
 </pre>
 
         <p>
-            Note how both reports use the same <em>skin</em>, but different unit systems, and different destinations.
-            The first, <em>SeasonsUSReport</em> sets option <span class="code">units</span> to <span class="code">us</span>,
-            and uses the default destination. By contrast, the second, <em>SeasonsMetricReport</em>, uses unit system
-            <span class="code">metricwx</span>, and a different destination, <span class="code">public_html/metric</span>.
+            Note how both reports use the same <em>skin</em> (that is, skin <em>Seasons</em>), but different unit
+            systems, and different destinations. The first, <em>SeasonsUSReport</em> sets option <span
+            class="code">unit_system</span> to <span class="code">us</span>, and uses the default destination. By
+            contrast, the second, <em>SeasonsMetricReport</em>, uses unit system <span class="code">metricwx</span>, and
+            a different destination, <span class="code">public_html/metric</span>.
         </p>
 
         <h2 id="customizing_gen_time">Scheduling report generation</h2>

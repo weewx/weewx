@@ -306,13 +306,9 @@ class StdReportEngine(threading.Thread):
                           lang_config_path, report)
                 raise
         
-        # See if the user wants this report based on another unit system than US.
-        # The value can be US, METRIC, or METRICWX.
-        # (As config_dict is not merged into skin_dict so far, 
-        # skin_dict['units'] has not the final value here. We
-        # have to take config_dict into account, too.)
-        report_units_base = self.config_dict['StdReport'][report].get('units',
-                                                                      skin_dict.get('units'))
+        # See what unit system, if any, the user has specified.
+        report_units_base = self.config_dict['StdReport'][report].get('unit_system',
+                                                                      skin_dict.get('unit_system'))
 
         if report_units_base:
             report_units_base = report_units_base.upper()
