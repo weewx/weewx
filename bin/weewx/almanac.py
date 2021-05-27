@@ -403,7 +403,7 @@ class AlmanacBinder(object):
         # Take the difference
         diff = today_visible.raw - then_visible.raw
         return weewx.units.ValueHelper((diff, "second", "group_deltatime"),
-                                       context="short_delta",
+                                       context="brief_delta",
                                        formatter=self.almanac.formatter,
                                        converter=self.almanac.converter)
 

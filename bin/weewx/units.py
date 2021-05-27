@@ -602,6 +602,7 @@ default_time_format_dict = {
     "current"    : "%d-%b-%Y %H:%M",
     "ephem_day"  : "%H:%M",
     "ephem_year" : "%d-%b-%Y %H:%M",
+    "brief_delta": "%(minute)d%(minute_label)s, %(second)d%(second_label)s",
     "short_delta": "%(hour)d%(hour_label)s, %(minute)d%(minute_label)s, "
                    "%(second)d%(second_label)s",
     "long_delta" : "%(day)d%(day_label)s, %(hour)d%(hour_label)s, "
