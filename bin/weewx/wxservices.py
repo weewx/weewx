@@ -126,22 +126,25 @@ class StdWXCalculate(weewx.engine.StdService):
 
         # Go through the list of potential calculations and see which ones need to be done
         for obs in calc_dict:
-            directive = calc_dict[obs]
             # Keys in calc_dict are in unicode. Keys in packets and records are in native strings.
             # Just to keep things consistent, convert.
             obs_type = str(obs)
-            if directive == 'software' or directive == 'prefer_hardware' \
-                    and (obs_type not in data_dict or data_dict[obs_type] is None):
+            if calc_dict[obs] == 'software' \
+                    or (calc_dict[obs] == 'prefer_hardware' and data_dict.get(obs_type) is None):
+                # We need to do a calculation for type 'obs_type'. This may raise an exception,
+                # so be prepared to catch it.
                 try:
-                    # We need to do a calculation for type 'obs_type'. This may raise an exception.
                     new_value = weewx.xtypes.get_scalar(obs_type, data_dict, self.db_manager)
                 except weewx.CannotCalculate:
-                    pass
+                    # XTypes is aware of the type, but can't calculate it, probably because of
+                    # missing data. Set the type to None.
+                    data_dict[obs_type] = None
                 except weewx.UnknownType as e:
                     log.debug("Unknown extensible type '%s'" % e)
                 except weewx.UnknownAggregation as e:
                     log.debug("Unknown aggregation '%s'" % e)
                 else:
-                    # If there was no exception, add the results to the dictionary
+                    # If there was no exception, then all is good.
+                    # Add the results to the dictionary
                     data_dict[obs_type] = new_value[0]
 

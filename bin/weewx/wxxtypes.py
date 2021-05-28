@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2020 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2021 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -8,9 +8,6 @@ from __future__ import absolute_import
 
 import logging
 import threading
-
-import configobj
-from six.moves import StringIO
 
 import weedb
 import weeutil.config
