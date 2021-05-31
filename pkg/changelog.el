@@ -1,3 +1,5 @@
+* Sun May 30 2021 Thomas Keffer (Author of weewx) <tkeffer@gmail.com> - 4.6.0a4-1
+- new upstream release
 * Mon May 24 2021 Thomas Keffer (Author of weewx) <tkeffer@gmail.com> - 4.6.0a3-1
 - new upstream release
 * Fri Apr 02 2021 Thomas Keffer (Author of weewx) <tkeffer@gmail.com> - 4.5.1-1
