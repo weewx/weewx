@@ -79,6 +79,14 @@ class ConfigEngine(object):
         if options.altitude:
             options.altitude = options.altitude.split(",")
 
+        # Option "--unit-system" used to be called "--units". For backwards compatibility, allow
+        # both.
+        if options.units:
+            if options.unit_system:
+                sys.exit("Specify either option --units or option --unit-system, but not both")
+            options.unit_system = options.units
+            delattr(options, "units")
+
         if options.install or options.upgrade:
             # These options require a distribution config file.
             # Open it up and parse it:

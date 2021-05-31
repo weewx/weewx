@@ -146,13 +146,10 @@ install_weewxconf() {
         driver=weewx.drivers.ws28xx
     fi
 
-    units=us
     db_get weewx/units
-    if [ "$RET" = "Metric" ]; then
-        units=metric
-    fi
+    units=$RET
 
-    $cfgapp --install --dist-config=$cfgfile --output=$cfgfile --driver=$driver --units=$units --no-prompt --no-backup
+    $cfgapp --install --dist-config=$cfgfile --output=$cfgfile --driver=$driver --unit-system=$units --no-prompt --no-backup
 
     insert_debconf_variables
 }
