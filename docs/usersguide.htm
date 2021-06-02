@@ -1811,28 +1811,28 @@ longitude = -77.0366</pre>
         <h3 class="config_section" id="station_registry">[[StationRegistry]]</h3>
 
         <p> A registry of WeeWX weather stations is maintained at <span class="code">weewx.com</span>. Stations are
-            displayed on a map and a list at <a href="http://weewx.com/stations.html">http://weewx.com/stations.html</a>
+            displayed on a map and a list at <a href="https://weewx.com/stations.html">https://weewx.com/stations.html</a>
         </p>
 
-        <p>How does the registry work? Individual weather stations periodically contact the registry. Each station
-            provides a URL to identify itself, plus other information such as the station type and WeeWX version. No
-            personal information, nor any meteorological data, is sent.
+        <p>
+            How does the registry work? Individual weather stations periodically contact the registry. Each station
+            provides a unique URL to identify itself, plus other information such as the station type and WeeWX version.
+            No personal information, nor any meteorological data, is sent.
         </p>
 
         <p>To add your station to this list, you must do two things:</p>
         <ol>
-            <li>Enable the StationRegistry in <span class="code">weewx.conf</span> by setting the option <span
-                class="code">register_this_station</span> to <span class="code">True</span>. Your station will contact
-                the registry once per week. If your station does not contact the registry for about a month, it will be
+            <li>
+                Enable the station registry by setting option <span class="code">register_this_station</span> to
+                <span class="code">True</span> in <span class="code">weewx.conf</span> . Your station will contact the
+                registry once per week. If your station does not contact the registry for about a month, it will be
                 removed from the list.
             </li>
-            <li>Provide a <span class="code">station_url</span>, either in section <a href="#station_url"><span
-                class='code'>[Station]</span></a>, or in the <span class='code'>[[StationRegistry]]</span> section.
+            <li>Provide a value for option <span class="code">station_url</span> in section <a href="#station_url"><span
+                class='code'>[Station]</span></a>. This value must be unique, so choose it carefully.
             </li>
         </ol>
-        <p>The <span class='code'>station_url</span> is used to uniquely identify each station, so choose it carefully
-            before you set <span class='code'>register_this_station</span> to <span class='code'>True</span>.
-        </p>
+
         <pre class="tty">[StdRestful]
     [[StationRegistry]]
         register_this_station = True</pre>
