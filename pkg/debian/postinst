@@ -150,15 +150,18 @@ install_weewxconf() {
     units=us
     # get the system's unit system from debconf
     db_get weewx/units
-    units=$RET
     # sanitize the input.  for backward compatibility, we recognize the older
     # keywords 'US' and 'Metric', which might still be in the system's debconf
-    # otherwise, assume that debconf contains one of 'us', 'metric', or
+    # otherwise, ensure that debconf contains one of 'us', 'metric', or
     # 'metricwx'
-    if [ "$units" = "US" ]; then
+    if [ "$RET" = "US" ]; then
         units=us
-    elif [ "$units" = "Metric" ]; then
+    elif [ "$RET" = "Metric" ]; then
         units=metric
+    elif [ "$RET" = "metric" ]; then
+        units=metric
+    elif [ "$RET" = "metricwx" ]; then
+        units=metricwx
     fi
 
     $cfgapp --install --dist-config=$cfgfile --output=$cfgfile --driver=$driver --unit-system=$units --no-prompt --no-backup
