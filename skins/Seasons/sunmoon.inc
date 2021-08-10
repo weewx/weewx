@@ -37,21 +37,21 @@
       <table class="celestial">
         <tr><th>&#9728;</th><td></td><td></td><th>&#9789;</th><td></td></tr>
         <tr>
-          <td class="label">$gettext["celestial"]["Rise"]</td>
+          <td class="label">$gettext["Rise"]</td>
           <td class="data">$almanac.sun.rise.format(None_string=$sun_None)</td>
           <td>&nbsp;</td>
-          <td class="label">$gettext["celestial"]["Rise"]</td>
+          <td class="label">$gettext["Rise"]</td>
           <td class="data">$almanac.moon.rise</td>
         </tr>
         <tr>
-          <td class="label">$gettext["celestial"]["Set"]</td>
+          <td class="label">$gettext["Set"]</td>
           <td class="data">$almanac.sun.set.format(None_string=$sun_None)</td>
           <td>&nbsp;</td>
-          <td class="label">$gettext["celestial"]["Set"]</td>
+          <td class="label">$gettext["Set"]</td>
           <td class="data">$almanac.moon.set</td>
         </tr>
         <tr>
-          <td class="label">$gettext[$page]["Daylight"]</td>
+          <td class="label">$gettext["Daylight"]</td>
           <td class="data">$daylight_str</td>
           <td>&nbsp;</td>
           <td class="label"></td>
@@ -63,15 +63,15 @@
         ## No extended almanac information available. Fall back to basic info.
       <table class="celestial">
         <tr>
-          <td class="label">$gettext[$page]["Sunrise"]</td>
+          <td class="label">$gettext["Sunrise"]</td>
           <td class="data">$almanac.sunrise</td>
         </tr>
         <tr>
-          <td class="label">$gettext[$page]["Sunset"]</td>
+          <td class="label">$gettext["Sunset"]</td>
           <td class="data">$almanac.sunset</td>
         </tr>
         <tr>
-          <td class="label">$gettext[$page]["Moon Phase"]</td>
+          <td class="label">$gettext["Moon Phase"]</td>
           <td class="data">$almanac.moon_phase<br/>
             $almanac.moon_fullness%</td>
         </tr>

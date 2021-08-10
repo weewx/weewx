@@ -6,7 +6,7 @@
 
 <div id='about_widget' class="widget">
   <div class="widget_title">
-    $gettext["About"]
+    $gettext["About this weather station"]
     <a class="widget_control"
       onclick="toggle_widget('about')">&diams;</a>
   </div>
