@@ -879,15 +879,22 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
             in <span class="code">/etc/weewx/skins/Seasons/lang</span>. Inside, you will see something like this:
         </p>
         <pre class="tty">ls -l /etc/weewx/skins/Seasons/lang
-total 32
--rw-rw-r-- 1 root root  7967 May 14 08:26 de.conf
--rw-rw-r-- 1 root root  7671 May 14 05:25 en.conf
--rw-rw-r-- 1 root root 12511 May 14 06:45 th.conf
+total 80
+-rw-rw-r-- 1 tkeffer tkeffer  7870 Aug 10 16:45 cz.conf
+-rw-rw-r-- 1 tkeffer tkeffer  7659 Aug 10 16:45 de.conf
+-rw-rw-r-- 1 tkeffer tkeffer  7345 Aug 10 16:45 en.conf
+-rw-rw-r-- 1 tkeffer tkeffer  8307 Aug 10 16:45 es.conf
+-rw-rw-r-- 1 tkeffer tkeffer  8036 Aug 10 16:45 fr.conf
+-rw-rw-r-- 1 tkeffer tkeffer  9373 Aug 10 16:45 gr.conf
+-rw-rw-r-- 1 tkeffer tkeffer  7528 Aug 10 16:45 nl.conf
+-rw-rw-r-- 1 tkeffer tkeffer 12530 Aug 10 16:45 th.conf
         </pre>
 
         <p>
-            This means the skin has been localized in the German (<span class="code">de.conf</span>), English (<span
-            class="code">en.conf</span>), and Thai (<span class="code">th.conf</span>) languages. If you are working
+            This means the skin has been localized in the Czeck (<span class="code">cz.conf</span>), German (<span
+            class="code">de.conf</span>), English (<span class="code">en.conf</span>), Spanish (<span class="code">es.conf</span>),
+            French (<span class="code">fr.conf</span>), Greek (<span class="code">gr.conf</span>), Dutch (<span
+            class="code">nl.conf</span>), and Thai (<span class="code">th.conf</span>) languages. If you are working
             with one of these languages, you can simply override the defaults supplied by the localization file. If you
             are working with a language for which there is no localization file, you will have to supply one first. See
             the section <a href="#Internationalized,_but_your_language_is_missing"><em>Internationalized, but your
@@ -4229,13 +4236,17 @@ class MyStats(SearchList):                                                   # 1
         <p>
             This is the easy case: the skin has been internationalized, and your locale is available.
             In this case, all you need to do is to select your locale
-            in <span class="code">weewx.conf</span>. For example, to select German (code <span class="code">de</span>):
+            in <span class="code">weewx.conf</span>. For example, to select German (code <span class="code">de</span>)
+            for the <em>Seasons</em> skin, just add the highlighted line (or change, if it's already there):
         </p>
         <pre class="tty">...
 [StdReport]
     ...
-    [[TheSkin]]
-        skin = skin_directory
+    [[SeasonsReport]]
+        # The SeasonsReport uses the 'Seasons' skin, which contains the
+        # images, templates and plots for the report.
+        skin = Seasons
+        enable = true
         <span class="highlight">lang = de</span>
         ...</pre>
 
@@ -4243,11 +4254,11 @@ class MyStats(SearchList):                                                   # 1
 
         <p>
             If the <span class="code">lang</span> subdirectory is present in the skin directory, then the skin has been
-            internationalized. However, you will have to <em>localize</em> it to your language. To do so, copy the file
-            <span class="code">en.conf</span> and name it according to the language code of your language. Then
-            translate all the strings on the right side of the equal signs to your language. For example, say you
-            want to localize the skin in the French language. Then copy <span class="code">en.conf</span> to
-            <span class="code">fr.conf</span>
+            internationalized. However, if your language code is not included in the subdirectory, then you will have to
+            <em>localize</em> it to your language. To do so, copy the file <span class="code">en.conf</span> and name it
+            according to the language code of your language. Then translate all the strings on the right side of the
+            equal signs to your language. For example, say you want to localize the skin in the French language. Then
+            copy <span class="code">en.conf</span> to <span class="code">fr.conf</span>
         </p>
         <pre class="cmd tty">cp en.conf fr.conf</pre>
         <p>
@@ -4256,29 +4267,29 @@ class MyStats(SearchList):                                                   # 1
         <pre class="tty">
 ...
 [Texts]
-    "Language" = English
+    "Language" = "English"
 
-    "Average Wind Speed" = Average Wind Speed
-    "Current Weather Conditions" = "Current Weather Conditions"
-    "Inside" = Inside
+    "7-day" = "7-day"
+    "24h" = "24h"
+    "About this weather station" = "About this weather station"
     ...
 </pre>
         <p>to something that looks like this:</p>
         <pre class="tty">
 ...
 [Texts]
-    "Language" = Français
+    Language = French
 
-    "Average Wind Speed" = Vitesse Moyenne du Vent
-    "Current Weather Conditions" = Conditions Météorologiques Actuelles
-    "Inside" = à l'Intérieur
+    "7-day" = "7-jours"
+    "24h" = "24h"
+    "About this weather station" = "A propos de cette station"
     ...
 </pre>
         <p>
             And so on. When you're done, the skin author may be interested in your localization file to ship it together
-            with the skin for the use of other users. If the skin is one that came with WeeWX contact the WeeWX team
-            via a post to the <a href="https://groups.google.com/forum/#!forum/weewx-user">weewx-user group</a> and
-            with your permission we may include your localization file in a future WeeWX release.
+            with the skin for the use of other users. If the skin is one that came with WeeWX, contact the WeeWX team
+            via a post to the <a href="https://groups.google.com/forum/#!forum/weewx-user">weewx-user group</a> and,
+            with your permission, we may include your localization file in a future WeeWX release.
         </p>
         <p>
             Finally, set the option <span class="code">lang</span> in <span class="code">weewx.conf</span> to your
