@@ -293,7 +293,7 @@
               <td class="data">$station.longitude[0]&deg; $station.longitude[1]' $station.longitude[2]</td>
             </tr>
             <tr>
-              <td class="label">$gettext["GeoAltitude"]:</td>
+              <td class="label">$gettext["Geographic"]["Altitude"]:</td>
               <td class="data">$station.altitude</td>
             </tr>
           </table>
@@ -305,7 +305,6 @@
             $gettext["footnote4"]
           </p>
           <p><a href="RSS/weewx_rss.xml">$gettext["RSS feed"]</a></p>
-          <p><a href="mobile.html">$gettext["Mobile formatted"]</a></p>
           <p><a href="smartphone/index.html">$gettext["Smartphone formatted"]</a></p>
           <p>$gettext["WeeWX uptime"]:  $station.uptime<br/>
              $gettext["Server uptime"]: $station.os_uptime<br/>
@@ -353,7 +352,7 @@
                   <td class="data">$("%.1f&deg;" % $almanac.sun.az)</td>
                 </tr>
                 <tr>
-                  <td class="label">$gettext["AstroAltitude"]:</td>
+                  <td class="label">$gettext["Astronomical"]["Altitude"]:</td>
                   <td class="data">$("%.1f&deg;" % $sun_altitude)</td>
                 </tr>
                 <tr>
@@ -407,7 +406,7 @@
                   <td class="data">$("%.1f&deg;" % $almanac.moon.az)</td>
                 </tr>
                 <tr>
-                  <td class="label">$gettext["AstroAltitude"]:</td>
+                  <td class="label">$gettext["Astronomical"]["Altitude"]:</td>
                   <td class="data">$("%.1f&deg;" % $almanac.moon.alt)</td>
                 </tr>
                 <tr>
@@ -486,24 +485,24 @@
       </div> <!-- End id "content" -->
 
       <div id="navbar">
-        <input type="button" value=$gettext["navbar"]["Current"] onclick="openURL('index.html')" />
-        <input type="button" value=$gettext["navbar"]["Week"] onclick="openURL('week.html')" />
-        <input type="button" value=$gettext["navbar"]["Month"] onclick="openURL('month.html')" />
-        <input type="button" value=$gettext["navbar"]["Year"] onclick="openURL('year.html')" />
-        <p>$gettext["navbar"]["Monthly summary"]:&nbsp;
+        <input type="button" value=$gettext["Buttons"]["Current"] onclick="openURL('index.html')" />
+        <input type="button" value=$gettext["Buttons"]["Week"] onclick="openURL('week.html')" />
+        <input type="button" value=$gettext["Buttons"]["Month"] onclick="openURL('month.html')" />
+        <input type="button" value=$gettext["Buttons"]["Year"] onclick="openURL('year.html')" />
+        <p>$gettext["Monthly summary"]:&nbsp;
         <select NAME=noaaselect onchange="openNoaaFile(value)">
         #for $monthYear in $SummaryByMonth
             <option value="$monthYear">$monthYear</option>
         #end for
-	    <option selected>-$gettext["navbar"]["Select month"]-</option>
+	    <option selected>-$gettext["Select month"]-</option>
         </select>
         <br/>
-        Yearly summary:&nbsp;
+        $gettext["Yearly summary"]:&nbsp;
         <select NAME=noaaselect onchange="openNoaaFile(value)">
         #for $yr in $SummaryByYear
             <option value="$yr">$yr</option>
         #end for
-	    <option selected>-$gettext["navbar"]["Select year"]-</option>
+	    <option selected>-$gettext["Select year"]-</option>
         </select>
         </p>
       </div>
