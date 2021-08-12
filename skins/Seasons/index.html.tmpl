@@ -23,6 +23,7 @@
       <div id="widget_group">
         #include "current.inc"
         #include "sunmoon.inc"
+        #include "totals.inc"
         #include "hilo.inc"
         #include "sensors.inc"
         #include "about.inc"
@@ -67,6 +68,9 @@
             #if $day.extraTemp1.has_data or $day.extraTemp2.has_data or $day.extraTemp3.has_data
             <img src="daytemp.png"      alt="$obs.label.extraTemp1" />
             #end if
+            #if $day.ET.has_data
+            <img src="dayET.png"        alt="$obs.label.ET"/>
+            #end if
             #if $day.rxCheckPercent.has_data
             <img src="dayrx.png"        alt="$obs.label.rxCheckPercent"/>
             #end if
@@ -94,6 +98,9 @@
             #end if
             #if $week.extraTemp1.has_data or $week.extraTemp2.has_data or $week.extraTemp3.has_data
             <img src="weektemp.png"      alt="$obs.label.extraTemp1" />
+            #end if
+            #if $week.ET.has_data
+            <img src="weekET.png"        alt="$obs.label.ET"/>
             #end if
             #if $week.rxCheckPercent.has_data
             <img src="weekrx.png"        alt="$obs.label.rxCheckPercent"/>
@@ -123,6 +130,9 @@
             #if $month.extraTemp1.has_data or $month.extraTemp2.has_data or $month.extraTemp3.has_data
             <img src="monthtemp.png"      alt="$obs.label.extraTemp1" />
             #end if
+            #if $month.ET.has_data
+            <img src="monthET.png"        alt="$obs.label.ET"/>
+            #end if
             #if $month.rxCheckPercent.has_data
             <img src="monthrx.png"        alt="$obs.label.rxCheckPercent"/>
             #end if
@@ -150,6 +160,9 @@
             #end if
             #if $year.extraTemp1.has_data or $year.extraTemp2.has_data or $year.extraTemp3.has_data
             <img src="yeartemp.png"      alt="$obs.label.extraTemp1" />
+            #end if
+            #if $year.ET.has_data
+            <img src="yearET.png"        alt="$obs.label.ET"/>
             #end if
             #if $year.rxCheckPercent.has_data
             <img src="yearrx.png"        alt="$obs.label.rxCheckPercent"/>

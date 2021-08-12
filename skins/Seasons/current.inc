@@ -46,20 +46,10 @@
         <td class="label">$obs.label.rainRate</td>
         <td class="data">$current.rainRate</td>
       </tr>
-      <tr>
-        <td class="label">$gettext["Rain today"]</td>
-        <td class="data">$day.rain.sum</td>
-      </tr>
 #if $day.UV.has_data
       <tr>
         <td class="label">$obs.label.UV</td>
         <td class="data">$current.UV</td>
-      </tr>
-#end if
-#if $day.ET.has_data and $day.ET.sum.raw is not None and $day.ET.sum.raw > 0.0
-      <tr>
-        <td class="label">$obs.label.ET</td>
-        <td class="data">$current.ET</td>
       </tr>
 #end if
 #if $day.radiation.has_data

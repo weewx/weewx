@@ -2018,7 +2018,7 @@ DEFAULTS = UNIT_DEFAULTS + """
             [[[[Generic]]]]
                 barometer      = Barometer
                 dewpoint       = Dew Point
-                ET             = ET
+                ET             = Evapotranspiration
                 heatindex      = Heat Index
                 inHumidity     = Inside Humidity
                 inTemp         = Inside Temperature

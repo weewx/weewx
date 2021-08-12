@@ -99,14 +99,6 @@
         <td class="units">$unit.label.barometer</td>
       </tr>
       <tr>
-        <td class="label">$obs.label.rain</td>
-        #for $archive in $archive_data
-        <td class="data new_row hilo_$archive[0]">
-          $archive[1].rain.sum.format(add_label=False)</td>
-        #end for
-        <td class="units">$unit.label.rain</td>
-      </tr>
-      <tr>
         <td class="label">$obs.label.rainRate</td>
         #for $archive in $archive_data
         <td class="data new_row hilo_$archive[0]">
@@ -176,21 +168,6 @@
         </td>
         #end for
         <td class="units">$unit.label.UV</td>
-      </tr>
-      #end if
-
-      #if $day.ET.has_data and $day.ET.sum.raw > 0.0
-      <tr>
-        <td class="label">$obs.label.ET</td>
-        #for $archive in $archive_data
-        <td class="data new_row hilo_$archive[0]">
-          <span title="$archive[1].ET.maxtime">
-            $archive[1].ET.max.format(add_label=False)</span><br/>
-          <span title="$archive[1].ET.mintime">
-            $archive[1].ET.min.format(add_label=False)</span>
-        </td>
-        #end for
-        <td class="units">$unit.label.ET</td>
       </tr>
       #end if
 

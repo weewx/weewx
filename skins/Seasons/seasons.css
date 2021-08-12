@@ -253,6 +253,19 @@ a:hover {
     padding-left: 10px;
 }
 
+#totals_widget table th {
+    font-size: 80%;
+    text-align: right;
+    border-bottom: none;
+}
+
+#totals_widget .data {
+    font-weight: bold;
+    font-size: 80%;
+    text-align: right;
+    padding-left: 10px;
+}
+
 #sensors_widget table th {
     padding-top: 10px;
 }
