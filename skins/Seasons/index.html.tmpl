@@ -53,6 +53,9 @@
             <img src="daywinddir.png"   alt="$obs.label.windDir" />
             <img src="daywindvec.png"   alt="$obs.label.windvec" />
             <img src="dayrain.png"      alt="$obs.label.rain" />
+            #if $day.ET.has_data
+            <img src="dayET.png"        alt="$obs.label.ET"/>
+            #end if
             #if $day.UV.has_data
             <img src="dayuv.png"        alt="$obs.label.UV" />
             #end if
@@ -68,9 +71,6 @@
             #if $day.extraTemp1.has_data or $day.extraTemp2.has_data or $day.extraTemp3.has_data
             <img src="daytemp.png"      alt="$obs.label.extraTemp1" />
             #end if
-            #if $day.ET.has_data
-            <img src="dayET.png"        alt="$obs.label.ET"/>
-            #end if
             #if $day.rxCheckPercent.has_data
             <img src="dayrx.png"        alt="$obs.label.rxCheckPercent"/>
             #end if
@@ -84,6 +84,9 @@
             <img src="weekwinddir.png"   alt="$obs.label.windDir" />
             <img src="weekwindvec.png"   alt="$obs.label.windvec" />
             <img src="weekrain.png"      alt="$obs.label.rain" />
+            #if $week.ET.has_data
+            <img src="weekET.png"        alt="$obs.label.ET"/>
+            #end if
             #if $week.UV.has_data
             <img src="weekuv.png"        alt="$obs.label.UV" />
             #end if
@@ -99,9 +102,6 @@
             #if $week.extraTemp1.has_data or $week.extraTemp2.has_data or $week.extraTemp3.has_data
             <img src="weektemp.png"      alt="$obs.label.extraTemp1" />
             #end if
-            #if $week.ET.has_data
-            <img src="weekET.png"        alt="$obs.label.ET"/>
-            #end if
             #if $week.rxCheckPercent.has_data
             <img src="weekrx.png"        alt="$obs.label.rxCheckPercent"/>
             #end if
@@ -115,6 +115,9 @@
             <img src="monthwinddir.png"   alt="$obs.label.windDir" />
             <img src="monthwindvec.png"   alt="$obs.label.windvec" />
             <img src="monthrain.png"      alt="$obs.label.rain" />
+            #if $month.ET.has_data
+            <img src="monthET.png"        alt="$obs.label.ET"/>
+            #end if
             #if $month.UV.has_data
             <img src="monthuv.png"        alt="$obs.label.UV" />
             #end if
@@ -130,9 +133,6 @@
             #if $month.extraTemp1.has_data or $month.extraTemp2.has_data or $month.extraTemp3.has_data
             <img src="monthtemp.png"      alt="$obs.label.extraTemp1" />
             #end if
-            #if $month.ET.has_data
-            <img src="monthET.png"        alt="$obs.label.ET"/>
-            #end if
             #if $month.rxCheckPercent.has_data
             <img src="monthrx.png"        alt="$obs.label.rxCheckPercent"/>
             #end if
@@ -146,6 +146,9 @@
             <img src="yearwinddir.png"   alt="$obs.label.windDir" />
             <img src="yearwindvec.png"   alt="$obs.label.windvec" />
             <img src="yearrain.png"      alt="$obs.label.rain" />
+            #if $year.ET.has_data
+            <img src="yearET.png"        alt="$obs.label.ET"/>
+            #end if
             #if $year.UV.has_data
             <img src="yearuv.png"        alt="$obs.label.UV" />
             #end if
@@ -160,9 +163,6 @@
             #end if
             #if $year.extraTemp1.has_data or $year.extraTemp2.has_data or $year.extraTemp3.has_data
             <img src="yeartemp.png"      alt="$obs.label.extraTemp1" />
-            #end if
-            #if $year.ET.has_data
-            <img src="yearET.png"        alt="$obs.label.ET"/>
             #end if
             #if $year.rxCheckPercent.has_data
             <img src="yearrx.png"        alt="$obs.label.rxCheckPercent"/>

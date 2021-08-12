@@ -8,7 +8,7 @@
 
 <div id='totals_widget' class="widget">
   <div class="widget_title">
-    <a href="statistics.html">Totals</a>
+    <a href="statistics.html">$gettext["Totals"]</a>
     <a class="widget_control"
       onclick="toggle_widget('totals')">&diams;</a>
   </div>
@@ -18,14 +18,14 @@
     <tbody>
       <tr>
         <td></td>
-        <th>&nbsp;<br/>Today</th>
-        <th class="totals_week">&nbsp;<br/>Week</th>
-        <th class="totals_month">&nbsp;<br/>Month</th>
+        <th>&nbsp;<br/>$gettext["Today"]</th>
+        <th class="totals_week">&nbsp;<br/>$gettext["Week"]</th>
+        <th class="totals_month">&nbsp;<br/>$gettext["Month"]</th>
         <th class="totals_year">
-            <a onclick="toggle_rainyear()">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br/>Year</a>
+            <a onclick="toggle_rainyear()">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br/>$gettext["Year"]</a>
         </th>
         <th class="totals_rainyear">
-            <a onclick="toggle_rainyear()">Rain<br/>Year</a>
+            <a onclick="toggle_rainyear()">$gettext["Rain<br/>Year"]</a>
         </th>
         <td></td>
       </tr>
