@@ -2827,26 +2827,14 @@ $month.outTemp.series(aggregate_type='max', aggregate_interval='day', time_serie
               </td>
             </tr>
             <tr>
-              <td class="code first_col">$page</td>
-              <td>Name of the page that is actually processed.
-              This is the section name from 
-              <span class="code">skin.conf</span>
-              where the template is described. You can especially
-              use it in include files that are included in multiple
-              templates. So parts of the content defined in the include
-              file can depend on the template file, for example
-              header lines. You can also use it together with
-              <span class="code">$gettext</span> to structure
-              the language file.</td>
+                <td class="code first_col">$page</td>
+                <td>The section name from <span class="code">skin.conf</span> where the template is described.</td>
             </tr>
             <tr>
-              <td class="code first_col">$gettext.lang</td>
-              <td>Language code set by the 
-              <span class="code">lang</span> option
-              for the report. You can use this tag in
-              <span class="code">#if</span> expressions and
-              to include language codes where the HTML
-              specification requires them.</td>
+                <td class="code first_col">$gettext["lang"]</td>
+                <td>Language code set by the <span class="code">lang</span> option for the report. For example,
+                    <span class="code">fr</span>, or <span class="code">gr</span>.
+                </td>
             </tr>
             <tr>
               <td class="code first_col">$filename</td>
