@@ -26,6 +26,12 @@ for setting canonical URLs. PR #671. Thanks again to user Karen!
 XType get_scalar() and get_series() calls can now take extra keyword arguments.
 PR #673.
 
+Fixed problem where a bad clock packet could crash the WMR100 driver.
+
+Davis documentation for LOOP2 10-minute wind gusts is wrong. The Vantage
+actually emits mph, not tenths of mph. Changed driver so it now decodes the
+field correctly. Fixes issue #686.
+
 
 4.5.1 04/02/2021
 Reverted the wview schema back to the V3 style.

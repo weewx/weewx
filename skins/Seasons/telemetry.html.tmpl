@@ -18,10 +18,10 @@
 #end def
 
 <!DOCTYPE html>
-<html lang="$gettext.lang">
+<html lang="$gettext['lang']">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>$station.location $gettext["telemetry"]["Telemetry"]</title>
+    <title>$station.location $gettext["Telemetry"]</title>
     <link rel="icon" type="image/png" href="favicon.ico" />
     <link rel="stylesheet" type="text/css" href="seasons.css"/>
     #if $station.station_url
@@ -42,7 +42,7 @@
 
       <div id="plot_group">
         <div id="history_widget" class="widget">
-          <div id="plot_title" class="widget_title">$gettext["telemetry"]["Telemetry"]:&nbsp;&nbsp;
+          <div id="plot_title" class="widget_title">$gettext["Telemetry"]:&nbsp;&nbsp;
             <a class="button_selected" id="button_history_day"
                onclick="choose_history('day')">$gettext["Day"]</a>
             <a class="button" id="button_history_week"

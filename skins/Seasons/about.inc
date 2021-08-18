@@ -6,7 +6,7 @@
 
 <div id='about_widget' class="widget">
   <div class="widget_title">
-    $gettext["About"]
+    $gettext["About this weather station"]
     <a class="widget_control"
       onclick="toggle_widget('about')">&diams;</a>
   </div>
@@ -25,7 +25,7 @@
       <td class="data">$station.longitude[0]&deg; $station.longitude[1]' $station.longitude[2]</td>
     </tr>
     <tr>
-      <td class="label">$gettext["GeoAltitude"]</td>
+      <td class="label">$gettext["Geographical"]["Altitude"]</td>
       <td class="data">$station.altitude</td>
     </tr>
     <tr>

@@ -4,7 +4,7 @@
 #encoding UTF-8
 ##
 <!DOCTYPE html>
-<html lang=$gettext.lang>
+<html lang="$gettext['lang']">
   <head>
     ## Specifying an encoding of UTF-8 is usually safe:
     <meta charset="UTF-8">
@@ -257,10 +257,10 @@
       </div> <!-- End id "content" -->
 
       <div id="navbar">
-        <input type="button" value=$gettext["navbar"]["Current"] onclick="openURL('index.html')" />
-        <input type="button" value=$gettext["navbar"]["Week"] onclick="openURL('week.html')" />
-        <input type="button" value=$gettext["navbar"]["Month"] onclick="openURL('month.html')" />
-        <input type="button" value=$gettext["navbar"]["Year"] onclick="openURL('year.html')" />
+        <input type="button" value=$gettext["Buttons"]["Current"] onclick="openURL('index.html')" />
+        <input type="button" value=$gettext["Buttons"]["Week"] onclick="openURL('week.html')" />
+        <input type="button" value=$gettext["Buttons"]["Month"] onclick="openURL('month.html')" />
+        <input type="button" value=$gettext["Buttons"]["Year"] onclick="openURL('year.html')" />
       </div>
     </div> <!-- End id "container" -->
 

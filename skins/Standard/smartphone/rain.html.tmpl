@@ -15,16 +15,16 @@
       <h1>$obs.label.rain</h1>
    </div>
    <div data-role="content">
-     <h4>$gettext["Mobile"]["24h"] $obs.label.rain</h4>
+     <h4>$gettext["24h"] $obs.label.rain</h4>
      <img src="../dayrain.png"/>
      <ul data-role="listview" data-inset="true" data-divider-theme="b">
        <li data-role="list-divider">Today's data</li>
        <li>$gettext["Today's Rain"]: $day.rain.sum</li>
-       <li>$gettext["Mobile"]["Min rate"]: $day.rainRate.min $gettext["at"] $day.rainRate.mintime</li>
-       <li>$gettext["Mobile"]["Max rate"]: $day.rainRate.max $gettext["at"] $day.rainRate.maxtime</li>
+       <li>$gettext["Min rate"]: $day.rainRate.min $gettext["at"] $day.rainRate.mintime</li>
+       <li>$gettext["Max rate"]: $day.rainRate.max $gettext["at"] $day.rainRate.maxtime</li>
      </ul>
 
-     <h4>$obs.label.rain $gettext["Mobile"]["last 30 days"]</h4>
+     <h4>$obs.label.rain $gettext["last 30 days"]</h4>
      <img src="../monthrain.png" />
     </div>
     <div data-role="footer">

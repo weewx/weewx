@@ -8,7 +8,7 @@
 
 <div id="statistics_widget" class="widget">
   <div class="widget_title">
-    $gettext[$page].Title
+    $gettext["Statistics"]
   </div>
   <div class="widget_contents">
 
@@ -21,7 +21,7 @@
           <th class="hilo_week">$gettext["Week"]</th>
           <th class="hilo_month">$gettext["Month"]</th>
           <th class="hilo_year">$gettext["Year"]</th>
-          <th class="hilo_rainyear">$gettext["Rainyear"]</th>
+          <th class="hilo_rainyear">$gettext["Rain Year"]</th>
         </tr>
         <tr>
           <td class="label">$obs.label.outTemp</td>
