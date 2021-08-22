@@ -2700,7 +2700,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
                 # same units used by the database:
                 converted_generator = weewx.units.GenWithConvert(station.genArchiveDump(), archive.std_unit_system)
                 print("Starting dump ...")
-                for record in converted_generator:
+                for record in list(converted_generator):
                     archive.addRecord(record)
                     nrecs += 1
                     if nrecs % 10 == 0:
