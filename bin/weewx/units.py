@@ -499,7 +499,7 @@ default_unit_format_dict = {
     "meter"              : "%.0f",
     "meter_per_second"   : "%.0f",
     "meter_per_second2"  : "%.1f",
-    "microgram_per_meter_cubed": "%.3f",
+    "microgram_per_meter_cubed": "%.0f",
     "mile"               : "%.1f",
     "mile_per_hour"      : "%.0f",
     "mile_per_hour2"     : "%.1f",
@@ -516,7 +516,7 @@ default_unit_format_dict = {
     "watt_second"        : "%.0f",
     "watt_hour"          : "%.1f",
     "watt_per_meter_squared" : "%.0f",
-    "NONE"              : u"   N/A"
+    "NONE"              : u"N/A"
 }
 
 # Default unit labels to be used in the absence of a skin configuration file
@@ -562,7 +562,7 @@ default_unit_label_dict = {
     "meter"             : u" meters",
     "meter_per_second"  : u" m/s",
     "meter_per_second2" : u" m/s",
-    "microgram_per_meter_cubed": u"µg/m³",
+    "microgram_per_meter_cubed": u" µg/m³",
     "mile"              : u" mile",
     "mile_per_hour"     : u" mph",
     "mile_per_hour2"    : u" mph",
