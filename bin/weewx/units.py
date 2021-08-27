@@ -516,7 +516,7 @@ default_unit_format_dict = {
     "watt_second"        : "%.0f",
     "watt_hour"          : "%.1f",
     "watt_per_meter_squared" : "%.0f",
-    "NONE"              : u"N/A"
+    "NONE"              : u"   N/A"
 }
 
 # Default unit labels to be used in the absence of a skin configuration file
