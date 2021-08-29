@@ -60,7 +60,7 @@ class Manager(object):
 
     last_timestamp: The timestamp of the last record in the table."""
 
-    def __init__(self, connection, table_name='archive', schema=None):
+    def __init__(self, connection, table_name='archive', schema=None, check_patch=True):
         """Initialize an object of type Manager.
 
         connection: A weedb connection to the database to be managed.
@@ -70,6 +70,10 @@ class Manager(object):
         schema: The schema to be used. Optional. If not supplied, then an exception of type
         weedb.ProgrammingError will be raised if the database does not exist, and of type
         weedb.UnitializedDatabase if it exists, but has not been initialized.
+
+        check_patch: Whether or not to check the database version and patch the daily
+        summaries when the database is opened. Default is True. Used by db managers
+        with daily summaries but included here for completeness.
         """
 
         self.connection = connection
@@ -99,7 +103,7 @@ class Manager(object):
         Manager._sync(self)
 
     @classmethod
-    def open(cls, database_dict, table_name='archive'):
+    def open(cls, database_dict, table_name='archive', check_patch=True):
         """Open and return a Manager or a subclass of Manager.
 
         database_dict: A database dictionary holding the information necessary to open the
@@ -122,6 +126,9 @@ class Manager(object):
             }
 
         table_name: The name of the table to be used in the database. Default is 'archive'.
+
+        check_patch: Whether or not to check the database version and patch the daily
+        summaries when the database is opened. Default is True.
         """
 
         # This will raise a weedb.OperationalError if the database does not exist. The 'open'
@@ -129,11 +136,11 @@ class Manager(object):
         connection = weedb.connect(database_dict)
 
         # Create an instance of the right class and return it:
-        dbmanager = cls(connection, table_name)
+        dbmanager = cls(connection, table_name, check_patch=check_patch)
         return dbmanager
 
     @classmethod
-    def open_with_create(cls, database_dict, table_name='archive', schema=None):
+    def open_with_create(cls, database_dict, table_name='archive', schema=None, check_patch=True):
         """Open and return a Manager or a subclass of Manager, initializing if necessary.
 
         database_dict: A database dictionary holding the information necessary to open the
@@ -144,6 +151,9 @@ class Manager(object):
         schema: The schema to be used. If not supplied, then an exception of type
         weedb.OperationalError will be raised if the database does not exist, and of type
         weedb.Uninitialized if it exists, but has not been initialized.
+
+        check_patch: Whether or not to check the database version and patch the daily
+        summaries when the database is opened. Default is True.
         """
 
         # This will raise a weedb.OperationalError if the database does not exist.
@@ -161,7 +171,8 @@ class Manager(object):
             connection = weedb.connect(database_dict)
 
         # Create an instance of the right class and return it:
-        dbmanager = cls(connection, table_name=table_name, schema=schema)
+        dbmanager = cls(connection, table_name=table_name,
+                        schema=schema, check_patch=check_patch)
         return dbmanager
 
     @property
@@ -741,24 +752,27 @@ def get_manager_dict(bindings_dict, databases_dict, data_binding,
                                         default_binding_dict)
 
 
-def open_manager(manager_dict, initialize=False):
+def open_manager(manager_dict, initialize=False, check_patch=True):
     manager_cls = weeutil.weeutil.get_object(manager_dict['manager'])
     if initialize:
         return manager_cls.open_with_create(manager_dict['database_dict'],
                                             manager_dict['table_name'],
-                                            manager_dict['schema'])
+                                            manager_dict['schema'],
+                                            check_patch=check_patch)
     else:
         return manager_cls.open(manager_dict['database_dict'],
-                                manager_dict['table_name'])
+                                manager_dict['table_name'],
+                                check_patch=check_patch)
 
 
 def open_manager_with_config(config_dict, data_binding,
-                             initialize=False, default_binding_dict=default_binding_dict):
+                             initialize=False, default_binding_dict=default_binding_dict,
+                             check_patch=True):
     """Given a binding name, returns an open manager object."""
     manager_dict = get_manager_dict_from_config(config_dict,
                                                 data_binding=data_binding,
                                                 default_binding_dict=default_binding_dict)
-    return open_manager(manager_dict, initialize)
+    return open_manager(manager_dict, initialize, check_patch=check_patch)
 
 
 def drop_database(manager_dict):
@@ -871,7 +885,7 @@ class DaySummaryManager(Manager):
     meta_replace_str = "REPLACE INTO %s_day__metadata VALUES(?, ?)"
     meta_select_str = "SELECT value FROM %s_day__metadata WHERE name=?"
 
-    def __init__(self, connection, table_name='archive', schema=None):
+    def __init__(self, connection, table_name='archive', schema=None, check_patch=True):
         """Initialize an instance of DaySummaryManager
 
         connection: A weedb connection to the database to be managed.
@@ -881,9 +895,13 @@ class DaySummaryManager(Manager):
         schema: The schema to be used. Optional. If not supplied, then an exception of type
         weedb.OperationalError will be raised if the database does not exist, and of type
         weedb.Uninitialized if it exists, but has not been initialized.
+
+        check_patch: Whether or not to check the database version and patch the daily
+        summaries when the database is opened. Check and patch may be disabled if
+        required, eg wee_database --check-strings/--fix-strings. Default is True.
         """
         # Initialize my superclass:
-        super(DaySummaryManager, self).__init__(connection, table_name, schema)
+        super(DaySummaryManager, self).__init__(connection, table_name, schema, check_patch)
 
         # Has the database been initialized with the daily summaries?
         if '%s_day__metadata' % self.table_name not in self.connection.tables():
@@ -893,7 +911,9 @@ class DaySummaryManager(Manager):
         self.version = None
         self.daykeys = None
         DaySummaryManager._create_sync(self)
-        self.patch_sums()
+        # Do we need to check and patch the daily summaries?
+        if check_patch:
+            self.patch_sums()
 
     def close(self):
         self.version = None

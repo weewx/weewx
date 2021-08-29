@@ -170,20 +170,14 @@ def main():
     if options.rename_column and not options.to_name:
         sys.exit("Option --rename-column requires option --to-name")
 
-    if options.date and not (options.calc_missing or options.rebuild_daily
-                             or options.reweight):
-        sys.exit("Option --date can only be used with options "
-                 "--calc-missing, --rebuild-daily, or --reweight")
+    if options.date and not (options.calc_missing or options.rebuild_daily):
+        sys.exit("Option --date can only be used with options --calc-missing or --rebuild-daily")
 
-    if options.from_date and not (options.calc_missing or options.rebuild_daily
-                                  or options.reweight):
-        sys.exit("Option --from can only be used with options "
-                 "--calc-missing, --rebuild-daily, or --reweight")
+    if options.from_date and not (options.calc_missing or options.rebuild_daily):
+        sys.exit("Option --from can only be used with options --calc-missing or --rebuild-daily")
 
-    if options.to_date and not (options.calc_missing or options.rebuild_daily
-                                or options.reweight):
-        sys.exit("Option --to can only be used with options "
-                 "--calc-missing, --rebuild-daily, or --reweight")
+    if options.to_date and not (options.calc_missing or options.rebuild_daily):
+        sys.exit("Option --to can only be used with options --calc-missing or --rebuild-daily")
 
     if options.dest_binding and not options.transfer:
         sys.exit("Option --dest-binding can only be used with option --transfer")
@@ -199,18 +193,8 @@ def main():
     weeutil.logger.setup('wee_database', config_dict)
 
     db_binding = options.binding
-    # Get the db name, be prepared to catch the error if the binding does not
-    # exist
-    try:
-        database = config_dict['DataBindings'][db_binding]['database']
-    except KeyError:
-        # Couldn't find the database name, maybe the binding does not exist.
-        # Notify the user and exit.
-        print("Error obtaining database name from binding '%s'" % db_binding)
-        sys.exit("Perhaps you need to specify a different binding using --binding")
-    else:
-        print("Using database binding '%s', which is bound to database '%s'" % (db_binding,
-                                                                                database))
+    database = config_dict['DataBindings'][db_binding]['database']
+    print("Using database binding '%s', which is bound to database '%s'" % (db_binding, database))
 
     if options.create:
         createMainDatabase(config_dict, db_binding)
@@ -776,16 +760,11 @@ def calc_missing(config_dict, db_binding, options):
     msg = "Preparing to calculate missing derived observations..."
     log.info(msg)
 
-    # get a db manager dict given the config dict and binding
     manager_dict = weewx.manager.get_manager_dict_from_config(config_dict,
                                                               db_binding)
-    # Get the table_name used by the binding, it could be different to the
-    # default 'archive'. If for some reason it is not specified then fail hard.
-    table_name = manager_dict['table_name']
     # get the first and last good timestamps from the archive, these represent
     # our overall bounds for calculating missing derived obs
-    with weewx.manager.Manager.open(manager_dict['database_dict'],
-                                    table_name=table_name) as dbmanager:
+    with weewx.manager.Manager.open(manager_dict['database_dict']) as dbmanager:
         first_ts = dbmanager.firstGoodStamp()
         last_ts = dbmanager.lastGoodStamp()
     # process any command line options that may limit the period over which
@@ -840,25 +819,11 @@ def calc_missing(config_dict, db_binding, options):
     msg = "Calculating missing derived observations..."
     log.info(msg)
     print(msg)
-    # Calculate and store any missing observations. Be prepared to
-    # catch any exceptions from CalcMissing.
-    try:
-        calc_missing_obj.run()
-    except weewx.UnknownBinding as e:
-        # We have an unknown binding, this could occur if we are using a
-        # non-default binding and StdWXCalculate has not been told (via
-        # weewx.conf) to use the same binding. Log it and notify the user then
-        # exit.
-        _msg = "Error: '%s'" % e
-        print(_msg)
-        log.error(_msg)
-        print("Perhaps StdWXCalculate is using a different binding. Check "
-              "configuration file [StdWXCalculate] stanza")
-        sys.exit("Nothing done. Aborting.")
-    else:
-        msg = "Missing derived observations calculated in %0.2f seconds" % (time.time() - t1)
-        log.info(msg)
-        print(msg)
+    # calculate and store any missing observations
+    calc_missing_obj.run()
+    msg = "Missing derived observations calculated in %0.2f seconds" % (time.time() - t1)
+    log.info(msg)
+    print(msg)
 
 
 def _fix_wind(config_dict, db_binding, options):
@@ -944,8 +909,11 @@ def check_strings(config_dict, db_binding, options, fix=False):
         if options.dry_run:
             print("This is a dry run: null strings will be detected but not fixed")
 
-    # open up the main database archive table
-    with weewx.manager.open_manager_with_config(config_dict, db_binding) as dbmanager:
+    # open up the main database archive table making sure we disable any
+    # database checking and patching
+    with weewx.manager.open_manager_with_config(config_dict,
+                                                db_binding,
+                                                check_patch=False) as dbmanager:
 
         obs_list = []
         obs_type_list = []

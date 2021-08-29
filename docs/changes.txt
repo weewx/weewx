@@ -32,6 +32,9 @@ Davis documentation for LOOP2 10-minute wind gusts is wrong. The Vantage
 actually emits mph, not tenths of mph. Changed driver so it now decodes the
 field correctly. Fixes issue #686.
 
+Fixed bug in wee_database/manager.py that prevented 'null strings' being
+checked/fixed in databases that are not patched to the latest patch level. Fixes
+issue #695.
 
 4.5.1 04/02/2021
 Reverted the wview schema back to the V3 style.
