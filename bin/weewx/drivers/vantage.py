@@ -693,6 +693,9 @@ class Vantage(weewx.drivers.AbstractDevice):
         
         # Cycle through the pages...
         for ipage in range(512):
+            # Provide users with some status as the dumper
+            if ipage % 16 == 0:
+                log.debug("Requesting page %d / 512 of archive", ipage)
             # ... get a page of archive data
             _page = self.port.get_data_with_crc16(267, prompt=_ack, max_tries=self.max_tries)
             # Now extract each record from the page
@@ -2045,9 +2048,9 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
                           help="Dump all data to the archive. "
                                "NB: This may result in many duplicate primary key errors.")
         parser.add_option("--dump-quick", action="store_true", dest="dump_quick",
-                          help="Dump all data to the archive, fetching all data off the console"
-                               "before inserting to the archive. This can improve performance, but"
-                               "requires sufficient memory to hold all station data."
+                          help="Dump all data to the archive, fetching all data off the console "
+                               "before inserting to the archive. This can improve performance, but "
+                               "requires sufficient memory to hold all station data. "
                                "NB: This may result in many duplicate primary key errors.")
         parser.add_option("--logger-summary", type="string",
                           dest="logger_summary", metavar="FILE",
