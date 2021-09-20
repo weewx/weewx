@@ -32,6 +32,12 @@ Davis documentation for LOOP2 10-minute wind gusts is wrong. The Vantage
 actually emits mph, not tenths of mph. Changed driver so it now decodes the
 field correctly. Fixes issue #686.
 
+Sending a HUP signal to weewxd no longer causes the configuration file to be
+reread.
+
+Logging is not done until after the configuration file has been read. This
+allows customized logging to start from the very beginning. Fixes issue #699.
+
 
 4.5.1 04/02/2021
 Reverted the wview schema back to the V3 style.

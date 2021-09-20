@@ -583,14 +583,6 @@ Version: 4.6
             seconds for a Vantage station, or considerably longer for some other stations.
         </p>
 
-        <p>You can tell a running instance of WeeWX to reread its configuration file by sending it the <span
-            class="code">HUP</span> signal. First run <span class="code">ps</span> to find out the Process ID (PID)
-            number of the instance, then send it the <span class="code">HUP</span> signal:
-        </p>
-        <pre class="tty"><span class="cmd">ps -a</span>          # Note the PID of the weewxd process
-<span class="cmd">kill -HUP <em>pid</em></span>  # Send it a HUP signal</pre>
-        <p>Note that this <em>only</em> rereads the configuration file. It will not reload any code.</p>
-
         <h2 id="Running_as_a_daemon">Running as a daemon</h2>
 
         <p>For unattended operations it is best to have WeeWX run as a daemon, started automatically when the server is
