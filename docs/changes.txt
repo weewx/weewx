@@ -41,6 +41,9 @@ allows customized logging to start from the very beginning. Fixes issue #699.
 Simplified the logging of Cheetah exceptions to show only what's relevant.
 Fixes issue #700.
 
+Include a requirements.txt file, for installing using pip. Thanks to user
+Clément! PR #691.
+
 
 4.5.1 04/02/2021
 Reverted the wview schema back to the V3 style.
