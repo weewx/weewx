@@ -38,7 +38,7 @@
   #if $x == 'wind'
         #if $year.wind.has_data
         <tr>
-          <td class="label">$gettext["Wind Max Wind"]</td>
+          <td class="label">$gettext["Max Wind"]</td>
           <td class="units">
             $unit.label.wind<br/>
             $unit.label.windDir
@@ -52,7 +52,7 @@
           #end for
         </tr>
         <tr>
-          <td class="label">$gettext["Wind Average"]</td>
+          <td class="label">$gettext["Average Wind"]</td>
           <td class="units">$unit.label.wind</td>
           #for $archive in $archive_data
           <td class="data new_row">
@@ -60,7 +60,7 @@
           #end for
         </tr>
         <tr>
-          <td class="label">$gettext["Wind RMS"]</td>
+          <td class="label">$gettext["RMS Wind"]</td>
           <td class="units">$unit.label.wind</td>
           #for $archive in $archive_data
           <td class="data new_row">$archive.wind.rms.format(add_label=False)</td>
