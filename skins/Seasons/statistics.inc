@@ -14,7 +14,7 @@
 #set $obs_sum = ['rain', 'ET', 'hail', 'snow']
 
 ## Some observations display only the max value
-#set $obs_max_only = ['rainRate', 'hailRate']
+#set $obs_max_only = ['rainRate', 'hailRate', 'snowRate']
 
 <div id="statistics_widget" class="widget">
   <div class="widget_title">
