@@ -44,6 +44,9 @@ Fixes issue #700.
 Include a requirements.txt file, for installing using pip. Thanks to user
 Clément! PR #691.
 
+Fixed problem where ConfigObj interpolation would interfere with setting
+logging formats.
+
 
 4.5.1 04/02/2021
 Reverted the wview schema back to the V3 style.
