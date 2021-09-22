@@ -693,6 +693,9 @@ class Vantage(weewx.drivers.AbstractDevice):
         
         # Cycle through the pages...
         for ipage in range(512):
+            # Provide users with some status as the dumper
+            if ipage % 16 == 0:
+                log.debug("Requesting page %d / 512 of archive", ipage)
             # ... get a page of archive data
             _page = self.port.get_data_with_crc16(267, prompt=_ack, max_tries=self.max_tries)
             # Now extract each record from the page
@@ -2044,6 +2047,11 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
         parser.add_option("--dump", action="store_true",
                           help="Dump all data to the archive. "
                                "NB: This may result in many duplicate primary key errors.")
+        parser.add_option("--dump-quick", action="store_true", dest="dump_quick",
+                          help="Dump all data to the archive, fetching all data off the console "
+                               "before inserting to the archive. This can improve performance, but "
+                               "requires sufficient memory to hold all station data. "
+                               "NB: This may result in many duplicate primary key errors.")
         parser.add_option("--logger-summary", type="string",
                           dest="logger_summary", metavar="FILE",
                           help="Save diagnostic summary to FILE (for debugging the logger).")
@@ -2099,6 +2107,8 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
             self.stop_logger(station)
         if options.dump:
             self.dump_logger(station, config_dict, options.noprompt)
+        if options.dump_quick:
+            self.dump_logger(station, config_dict, options.noprompt, True)
         if options.logger_summary:
             self.logger_summary(station, options.logger_summary)
 
@@ -2687,7 +2697,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
         print("Logger stopped")
 
     @staticmethod
-    def dump_logger(station, config_dict, noprompt):
+    def dump_logger(station, config_dict, noprompt, dump_quick=False):
         import weewx.manager
         ans = weeutil.weeutil.y_or_n("Proceeding will dump all data in the logger.\n"
                                      "Are you sure you want to proceed (y/n)? ",
@@ -2700,6 +2710,12 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
                 # same units used by the database:
                 converted_generator = weewx.units.GenWithConvert(station.genArchiveDump(), archive.std_unit_system)
                 print("Starting dump ...")
+                if dump_quick:
+                    # Wrapping the generator in the list forces all data to be fetched off
+                    # the console before inserts appear. This can help if your archive database
+                    # is located on a high-latency/jitter connection, where inserts are slow.
+                    converted_generator = list(converted_generator)
+
                 for record in converted_generator:
                     archive.addRecord(record)
                     nrecs += 1
