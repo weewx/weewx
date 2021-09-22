@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 #
-#    Copyright (c) 2009-2019 Tom Keffer <tkeffer@gmail.com> and
-#                            Matthew Wall
+#    Copyright (c) 2009-2021 Tom Keffer <tkeffer@gmail.com> and Matthew Wall
 #
 #    See the file LICENSE.txt for your rights.
 #
@@ -10,10 +9,12 @@ from __future__ import absolute_import
 import optparse
 import sys
 
+import weewx
 import weecfg.extension
 import weeutil.logger
 from weecfg import Logger
 from weecfg.extension import ExtensionEngine
+from weeutil.weeutil import to_int
 
 # Redirect the import of setup:
 sys.modules['setup'] = weecfg.extension
@@ -37,9 +38,6 @@ Actions:
 --uninstall: Uninstall the specified extension."""
 
 def main():
-
-    # Set defaults for logging:
-    weeutil.logger.setup('wee_extension', {})
 
     parser = optparse.OptionParser(usage=usage)
     parser.add_option('--list', action="store_true", dest="list_extensions", 
@@ -66,6 +64,12 @@ def main():
 
     config_path, config_dict = weecfg.read_config(options.config, _args)
     
+    # Set weewx.debug as necessary:
+    weewx.debug = to_int(config_dict.get('debug', 0))
+
+    # Customize the logging with user settings.
+    weeutil.logger.setup('wee_extension', config_dict)
+
     ext = ExtensionEngine(config_path=config_path,
                           config_dict=config_dict,
                           tmpdir=options.tmpdir,
