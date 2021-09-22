@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 #
-#    Copyright (c) 2009-2019 Gary Roderick, Tom Keffer <tkeffer@gmail.com> and
-#                            Matthew Wall
+#    Copyright (c) 2009-2021 Gary Roderick, Tom Keffer <tkeffer@gmail.com>, and Matthew Wall
 #
 #    See the file LICENSE.txt for your rights.
 #
@@ -10,7 +9,6 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
-import copy
 import optparse
 import os
 import platform
@@ -22,15 +20,15 @@ from configobj import ConfigObj
 # weewx imports
 import weecfg
 import weedb
-import weeutil.logger
 import weewx.manager
 import weewx.units
+import weeutil.config
 from weecfg.extension import ExtensionEngine
 from weeutil.weeutil import TimeSpan, timestamp_to_string
 from weewx.manager import DaySummaryManager
 
 VERSION = weewx.__version__
-WEE_DEBUG_VERSION = '0.8'
+WEE_DEBUG_VERSION = '0.9'
 
 # keys/setting names to obfuscate in weewx.conf, key value will be obfuscated
 # if the key starts any element in the list. Can add additional string elements
@@ -77,9 +75,6 @@ the user should thoroughly check the generated output for personal/private
 information before posting the information publicly."""
 
 def main():
-
-    # Set defaults for logging:
-    weeutil.logger.setup('wee_debug', {})
 
     # Create a command line parser:
     parser = optparse.OptionParser(usage = usage,
@@ -298,18 +293,26 @@ def generateDebugInfo(config_dict, config_path, db_binding_wx, verbosity):
 def generateDebugConf(config_dict):
     """ Generate a parsed and obfuscated weewx.conf and write to sys.stdout """
 
-    # obfuscate config_dict
-    _obs_config_dict = obfuscateKey(config_dict,
-                                    OBFUSCATE_MAP['obfuscate'],
-                                    OBFUSCATE_MAP['do_not_obfuscate'])
+    # Make a deep copy first, as we may be altering values.
+    config_dict_copy = weeutil.config.deep_copy(config_dict)
+
+    # Turn off interpolation on the copy, so it doesn't interfere with faithful representation of
+    # the values
+    config_dict_copy.interpolation = False
+
+    # Now obfuscate any sensitive keys
+    obfuscate_dict(config_dict_copy,
+                   OBFUSCATE_MAP['obfuscate'],
+                   OBFUSCATE_MAP['do_not_obfuscate'])
+
     # put obfuscated config_dict into weewx.conf form
     if six.PY2:
-        _obs_config_dict.write(sys.stdout)
+        config_dict_copy.write(sys.stdout)
     else:
         # The ConfigObj.write() method always writes in binary,
         # which is not accepted by Python 3 for output to stdout.
         # So write to sys.stdout.buffer
-        _obs_config_dict.write(sys.stdout.buffer)
+        config_dict_copy.write(sys.stdout.buffer)
 
 
 def generateSysInfo(verbosity):
@@ -339,26 +342,19 @@ def generateSysInfo(verbosity):
 
     print()
 
-def obfuscateKey(src_dict, obfuscate_list, retain_list):
-    """ Obfuscate any dictionary items whose key is contained in passed list.
-        Uses recursion to obfuscate any nested keys.
-    """
 
-    # make a copy of our source dict as we may need to alter some entries
-    _dict = copy.deepcopy(src_dict)
-    # step through each key and value pair
-    for k, v in src_dict.items():
-        # if its a dict then recurse
-        if isinstance(v, dict):
-            _dict[k] = obfuscateKey(v, obfuscate_list, retain_list)
-        # must be a value so obfuscate if in our list or leave it if its not
-        else:
-            if (any(k.startswith(key) for key in obfuscate_list)
-                and not k in retain_list):
-                _dict[k] = "XXX obfuscated by wee_debug XXX"
-            else:
-                _dict[k] = v
-    return _dict
+def obfuscate_dict(src_dict, obfuscate_list, retain_list):
+    """ Obfuscate any dictionary items whose key is contained in passed list. """
+
+    # We need a function to be passed on to the 'walk()' function.
+    def obfuscate_value(section, key):
+        # Check to see if the key is in the obfuscation list. If so, then obfuscate it.
+        if any(key.startswith(k) for k in obfuscate_list) and key not in retain_list:
+            section[key]= "XXX obfuscated by wee_debug XXX"
+
+    # Now walk the configuration dictionary, using the function
+    src_dict.walk(obfuscate_value)
+
 
 def get_binding(config_dict):
     """ Get db_binding for the weewx database """
