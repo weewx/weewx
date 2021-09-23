@@ -84,10 +84,9 @@
           #end for
         </tr>
     #else
-      #set $units = '' if not $hasattr($unit.label, $x) else $getattr($unit.label, $x)
         <tr>
           <td class="label">$obs.label[$x]</td>
-          <td class="units">$units</td>
+          <td class="units">$getattr($unit.label, $x, '')</td>
       #if $x in $obs_sum
         #for $archive in $archive_data
           <td class="data new_row">$getattr($archive, $x).sum.format(add_label=False)</td>

@@ -91,7 +91,6 @@
         </td>
       </tr>
     #else
-      #set $units = '' if not $hasattr($unit.label, $x) else $getattr($unit.label, $x)
       <tr>
         <td class="label">$obs.label[$x]</td>
       #if $x in $obs_sum
@@ -116,7 +115,7 @@
         </td>
         #end for
       #end if
-        <td class="units">$units</td>
+        <td class="units">$getattr($unit.label, $x, '')</td>
       </tr>
     #end if
   #end if
