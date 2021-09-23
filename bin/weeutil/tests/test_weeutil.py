@@ -774,6 +774,22 @@ class WeeutilTest(unittest.TestCase):
         seq = [x for x in tester(g_with_peek)]
         self.assertEqual(seq, ["0", "1", "peek: 2", "2", "3", "peek: 4", "4"])
 
+    def test_GenByBatch(self):
+        # Define a generator function:
+        def genfunc(N):
+            for i in range(N):
+                yield i
+
+        # Now wrap it with the GenByBatch object. First fetch everything in one batch:
+        seq = [x for x in GenByBatch(genfunc(10), 0)]
+        self.assertEqual(seq, list(range(10)))
+        # Now try it again, fetching in batches of 2:
+        seq = [x for x in GenByBatch(genfunc(10), 2)]
+        self.assertEqual(seq, list(range(10)))
+        # Oddball batch size
+        seq = [x for x in GenByBatch(genfunc(10), 3)]
+        self.assertEqual(seq, list(range(10)))
+
     def test_to_bool(self):
 
         self.assertTrue(to_bool('TRUE'))

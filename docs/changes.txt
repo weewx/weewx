@@ -67,6 +67,8 @@ that is, 'hour', 'day', 'week', 'month', or 'year'.
 Options "log_success" and "log_failure" are now honored by the StdArchive
 service.
 
+Added option --batch-size to the Vantage version of wee_device. See PR #693.
+
 
 4.4.0 01/30/2021
 

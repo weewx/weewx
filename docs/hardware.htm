@@ -2543,21 +2543,30 @@ confirmation before proceeding.
 
     <pre class="tty">
 Using configuration file /home/weewx/weewx.conf
-Using Vantage driver version 3.0.10 (weewx.drivers.vantage)
-Usage: wee_device [config_file] [--help] [--info] [--clear-memory]
-    [--set-interval=MINUTES]
-    [--set-latitude=DEGREE] [--set-longitude=DEGREE]
-    [--set-altitude=FEET] [--set-barometer=inHg]
-    [--set-wind-cup=CODE] [--set-bucket=CODE]
-    [--set-rain-year-start=MM]
-    [--set-offset=VARIABLE,OFFSET]
-    [--set-transmitter-type=CHANNEL,TYPE,TEMP,HUM,REPEATER_ID]
-    [--set-retransmit=[OFF|ON|ON,CHANNEL]]
-    [--set-temperature-logging=[LAST|AVERAGE]]
-    [--set-time] [--set-dst=[AUTO|ON|OFF]]
-    [--set-tz-code=TZCODE] [--set-tz-offset=HHMM]
-    [--set-lamp=[ON|OFF]] [--dump] [--logger-summary=FILE]
-    [--start | --stop]
+Using Vantage driver version 3.2.3 (weewx.drivers.vantage)
+Usage: wee_device --help
+       wee_device --info [config_file]
+       wee_device --clear-memory [config_file] [-y]
+       wee_device --set-interval=MINUTES [config_file] [-y]
+       wee_device --set-latitude=DEGREE [config_file] [-y]
+       wee_device --set-longitude=DEGREE [config_file] [-y]
+       wee_device --set-altitude=FEET [config_file] [-y]
+       wee_device --set-barometer=inHg [config_file] [-y]
+       wee_device --set-wind-cup=CODE [config_file] [-y]
+       wee_device --set-bucket=CODE [config_file] [-y]
+       wee_device --set-rain-year-start=MM [config_file] [-y]
+       wee_device --set-offset=VARIABLE,OFFSET [config_file] [-y]
+       wee_device --set-transmitter-type=CHANNEL,TYPE,TEMP,HUM,REPEATER_ID [config_file] [-y]
+       wee_device --set-retransmit=[OFF|ON|ON,CHANNEL] [config_file] [-y]
+       wee_device --set-temperature-logging=[LAST|AVERAGE] [config_file] [-y]
+       wee_device --set-time [config_file] [-y]
+       wee_device --set-dst=[AUTO|ON|OFF] [config_file] [-y]
+       wee_device --set-tz-code=TZCODE [config_file] [-y]
+       wee_device --set-tz-offset=HHMM [config_file] [-y]
+       wee_device --set-lamp=[ON|OFF] [config_file]
+       wee_device --dump [--batch-size=BATCH_SIZE] [config_file] [-y]
+       wee_device --logger-summary=FILE [config_file] [-y]
+       wee_device [--start | --stop] [config_file]
 
 Configures the Davis Vantage weather station.
 
@@ -2583,6 +2592,8 @@ Options:
   --set-barometer=inHg  Sets the barometer reading of the station to a known
                         correct value in inches of mercury. Specify 0 (zero)
                         to have the console pick a sensible value.
+  --set-wind-cup=CODE   Set the type of wind cup. Specify '0' for small size;
+                        '1' for large size
   --set-bucket=CODE     Set the type of rain bucket. Specify '0' for 0.01
                         inches; '1' for 0.2 mm; '2' for 0.1 mm
   --set-rain-year-start=MM
@@ -2598,7 +2609,7 @@ Options:
                         6=leaf, 7=soil, 8=leaf_soil, 9=sensorlink, 10=none),
                         as extra TEMP station and extra HUM station (both 1-7,
                         if applicable), REPEATER_ID ('A'-'H', if used)
-  --set-retransmit=[OFF|ON|ON,CHANNEL]
+  --set-retransmit=OFF|ON|ON,CHANNEL
                         Turn console retransmit function 'ON' or 'OFF'.
   --set-temperature-logging=LAST|AVERAGE
                         Set console temperature logging to either 'LAST' or
@@ -2611,16 +2622,24 @@ Options:
   --set-tz-offset=HHMM  Set timezone offset to HHMM. E.g. '-0800' for U.S.
                         Pacific Time.
   --set-lamp=ON|OFF     Turn the console lamp 'ON' or 'OFF'.
-  --start               Start the logger.
-  --stop                Stop the logger.
   --dump                Dump all data to the archive. NB: This may result in
                         many duplicate primary key errors.
+  --batch-size=BATCH_SIZE
+                        Use with option --dump. Pages are read off the console
+                        in batches of BATCH_SIZE. A BATCH_SIZE of zero means
+                        dump all data first, then put it in the database. This
+                        can improve performance in high-latency environments,
+                        but requires sufficient memory to hold all station
+                        data. Default is 1 (one).
   --logger-summary=FILE
                         Save diagnostic summary to FILE (for debugging the
                         logger).
+  --start               Start the logger.
+  --stop                Stop the logger.
 
 Be sure to stop weewx first before using. Mutating actions will request
-confirmation before proceeding.</pre>
+confirmation before proceeding.
+</pre>
 
         <h3 id="vantage_info">
             Action <span class="code">--info</span></h3>
@@ -2840,17 +2859,6 @@ confirmation before proceeding.</pre>
 
         <p>Use this command to turn the console lamp on or off.</p>
 
-        <h3>Action <span class="code">--start</span></h3>
-
-        <p>Use this command to start the logger. There are occasions when an
-            out-of-the-box logger needs this command.</p>
-
-        <h3>Action <span class="code">--stop</span></h3>
-
-        <p>Use this command to stop the logger. I can't think of a good reason
-            why you would need to do this, but the
-            command is included for completeness.</p>
-
         <h3 id="vantage_dumping_the_logger_memory">
             Action <span class="code">--dump</span></h3>
 
@@ -2871,6 +2879,17 @@ confirmation before proceeding.</pre>
             timestamp in each page and index slot to the file <span class="code">FILE</span>.</p>
         <p>Example:</p>
         <pre class="tty cmd">wee_device --logger-summary=/var/tmp/summary.txt</pre>
+
+        <h3>Action <span class="code">--start</span></h3>
+
+        <p>Use this command to start the logger. There are occasions when an
+            out-of-the-box logger needs this command.</p>
+
+        <h3>Action <span class="code">--stop</span></h3>
+
+        <p>Use this command to stop the logger. I can't think of a good reason
+            why you would need to do this, but the
+            command is included for completeness.</p>
 
         <h2 id="vantage_data">Station data</h2>
 
