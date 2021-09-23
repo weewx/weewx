@@ -315,8 +315,8 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
                                              os.path.join(
                                                os.path.dirname(report_dict['template']),
                                                _filename))
-            tmpname = _fullname + '.tmp'
 
+            # First, compile the template
             try:
                 # TODO: Look into caching the compiled template.
                 # Under Python 2, Cheetah V2 will crash if given a template file name in Unicode,
@@ -326,46 +326,58 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
                     searchList=searchList,
                     filter='AssureUnicode',
                     filtersLib=weewx.cheetahgenerator)
-
-                # We have a compiled template in hand. Evaluate it. The result will be a long
-                # Unicode string.
-                unicode_string = compiled_template.respond()
-
-                # Time to write it out. Determine the strategy for encoding any non-ascii
-                # chartacters.
-                if encoding == 'html_entities':
-                    byte_string = unicode_string.encode('ascii', 'xmlcharrefreplace')
-                elif encoding == 'strict_ascii':
-                    byte_string = unicode_string.encode('ascii', 'ignore')
-                elif encoding == 'normalized_ascii':
-                    # Normalize the string, replacing accented characters with non-accented
-                    # equivalents
-                    normalized = unicodedata.normalize('NFD', unicode_string)
-                    byte_string = normalized.encode('ascii', 'ignore')
-                else:
-                    byte_string = unicode_string.encode(encoding)
-
-                # Open in binary mode. We are writing a byte-string, not a string
-                with open(tmpname, mode='wb') as fd:
-                    fd.write(byte_string)
-                os.rename(tmpname, _fullname)
-
             except Exception as e:
-                # We would like to get better feedback when there are cheetah
-                # compiler failures, but there seem to be no hooks for this.
-                # For example, if we could get cheetah to emit the source
-                # on which the compiler is working, one could compare that with
-                # the template to figure out exactly where the problem is.
-                # In Cheetah.Compile.ModuleCompiler the source is manipulated
-                # a bit then handed off to parserClass.  Unfortunately there
-                # are no hooks to intercept the source and spit it out.  So
-                # the best we can do is indicate the template that was being
-                # processed when the failure ocurred.
-                log.error("Generate failed with exception '%s'", type(e))
+                log.error("Compilation of template %s failed with exception '%s'", template, type(e))
                 log.error("**** Ignoring template %s", template)
                 log.error("**** Reason: %s", e)
                 weeutil.logger.log_traceback(log.error, "****  ")
+                continue
+
+            # Second, evaluate the compiled template
+            try:
+                # We have a compiled template in hand. Evaluate it. The result will be a long
+                # Unicode string.
+                unicode_string = compiled_template.respond()
+            except Cheetah.Parser.ParseError as e:
+                log.error("Parse error while evaluating file %s", template)
+                log.error("**** Ignoring template %s", template)
+                log.error("**** Reason: %s", e)
+                continue
+            except Cheetah.NameMapper.NotFound as e:
+                log.error("Evaluation of template %s failed.", template)
+                log.error("**** Ignoring template %s", template)
+                log.error("**** Reason: %s", e)
+                log.error("**** To debug, try inserting '#errorCatcher Echo' at top of template")
+                continue
+            except Exception as e:
+                log.error("Evaluation of template %s failed with exception '%s'", template, type(e))
+                log.error("**** Ignoring template %s", template)
+                log.error("**** Reason: %s", e)
+                weeutil.logger.log_traceback(log.error, "****  ")
+                continue
+
+            # Third, convert the results to a byte string, using the strategy chosen by the user.
+            if encoding == 'html_entities':
+                byte_string = unicode_string.encode('ascii', 'xmlcharrefreplace')
+            elif encoding == 'strict_ascii':
+                byte_string = unicode_string.encode('ascii', 'ignore')
+            elif encoding == 'normalized_ascii':
+                # Normalize the string, replacing accented characters with non-accented
+                # equivalents
+                normalized = unicodedata.normalize('NFD', unicode_string)
+                byte_string = normalized.encode('ascii', 'ignore')
             else:
+                byte_string = unicode_string.encode(encoding)
+
+            # Finally, write the byte string to the target file
+            try:
+                # Write to a temporary file first
+                tmpname = _fullname + '.tmp'
+                # Open it in binary mode. We are writing a byte-string, not a string
+                with open(tmpname, mode='wb') as fd:
+                    fd.write(byte_string)
+                # Now move the temporary file into place
+                os.rename(tmpname, _fullname)
                 ngen += 1
             finally:
                 try:

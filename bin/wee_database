@@ -61,9 +61,6 @@ Many of its actions are irreversible!"""
 
 
 def main():
-    # Set defaults for logging:
-    weeutil.logger.setup('wee_database', {})
-
     # Create a command line parser:
     parser = optparse.OptionParser(usage=usage, epilog=epilog)
 
@@ -133,7 +130,7 @@ def main():
                       help="Print what would happen but do not do it. Default is False.")
 
     # Now we are ready to parse the command line:
-    (options, args) = parser.parse_args()
+    options, args = parser.parse_args()
 
     if len(args) > 1:
         print("wee_database takes at most a single argument (the path to the configuration file).",
@@ -195,7 +192,7 @@ def main():
     # Set weewx.debug as necessary:
     weewx.debug = to_int(config_dict.get('debug', 0))
 
-    # Now we can set up the user customized logging:
+    # Customize the logging with user settings.
     weeutil.logger.setup('wee_database', config_dict)
 
     db_binding = options.binding
@@ -206,7 +203,7 @@ def main():
     except KeyError:
         # Couldn't find the database name, maybe the binding does not exist.
         # Notify the user and exit.
-        print("Error obtaining database name from binding '%s'" % db_binding)
+        print("Error obtaining database name from binding '%s'" % db_binding, file=sys.stderr)
         sys.exit("Perhaps you need to specify a different binding using --binding")
     else:
         print("Using database binding '%s', which is bound to database '%s'" % (db_binding,

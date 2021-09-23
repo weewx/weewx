@@ -1,15 +1,17 @@
-configobj
+# Required packages when installing using pip.
 
-# Cheetah or Cheetah3 depending on Python version
+configobj
+pyserial
+pyusb
+
+# Cheetah or Cheetah3, depending on Python version
 Cheetah; python_version < '3.0'
 Cheetah3; python_version >= '3.0'
 
-# Pillow with fixed version depending on Python version
+# Python 2.7 requires an older version of Pillow.
 Pillow==5.1; python_version < '3.0'
+# Python 3.x can use a current version.
 Pillow; python_version >= '3.0'
-
-pyserial
-pyusb
 
 # Ephem is optional, you can comment this line if you don't intent to use it
 pyephem
