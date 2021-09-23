@@ -17,7 +17,7 @@
 #end def
 
 #set $conns = [ "rxCheckPercent", "signal1", "signal2", "signal3", "signal4", "signal5", "signal6", "signal7", "signal8" ]
-#set $battery_statuses = [ "batteryStatus1", "batteryStatus2", "batteryStatus3", "batteryStatus4", "batteryStatus5", "batteryStatus6", "batteryStatus7", "batteryStatus8" ]
+#set $battery_statuses = [ "outTempBatteryStatus", "inTempBatteryStatus", "rainBatteryStatus", "hailBatteryStatus", "snowBatteryStatus", "windBatteryStatus", "uvBatteryStatus", "txBatteryStatus", "batteryStatus1", "batteryStatus2", "batteryStatus3", "batteryStatus4", "batteryStatus5", "batteryStatus6", "batteryStatus7", "batteryStatus8" ]
 #set $voltages = [ "consBatteryVoltage", "heatingVoltage", "supplyVoltage", "referenceVoltage" ]
 
 ## first see what sensor data are available
