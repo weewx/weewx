@@ -1197,6 +1197,46 @@ class GenWithPeek(object):
     __next__ = next
 
 
+class GenByBatch(object):
+    """Generator wrapper. Calls the wrapped generator in batches of a specified size."""
+
+    def __init__(self, generator, batch_size=0):
+        """Initialize an instance of GenWithConvert
+
+        generator: An iterator which will be wrapped.
+
+        batch_size: The number of items to fetch in a batch.
+        """
+        self.generator = generator
+        self.batch_size = batch_size
+        self.batch_buffer = []
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        # If there isn't anything in the buffer, fetch new items
+        if not self.batch_buffer:
+            # Fetch in batches of 'batch_size'.
+            count = 0
+            for item in self.generator:
+                self.batch_buffer.append(item)
+                count += 1
+                # If batch_size is zero, that means fetch everything in one big batch, so keep
+                # going. Otherwise, break when we have fetched 'batch_size" items.
+                if self.batch_size and count >= self.batch_size:
+                    break
+        # If there's still nothing in the buffer, we're done. Stop the iteration. Otherwise,
+        # return the first item in the buffer.
+        if self.batch_buffer:
+            return self.batch_buffer.pop(0)
+        else:
+            raise StopIteration
+
+    # For Python 2:
+    next = __next__
+
+
 def tobool(x):
     """Convert an object to boolean.
     
