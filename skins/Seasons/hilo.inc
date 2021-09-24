@@ -40,7 +40,10 @@
             $archive[1].outTemp.min.format(add_label=False)</span>
         </td>
         #end for
-        <td class="units">$unit.label.outTemp</td>
+        <td class="units">
+	        $unit.label.outTemp<br/>
+	        $unit.label.outTemp
+        </td>
       </tr>
       <tr>
         <td class="label">$obs.label.heatindex</td>
@@ -72,7 +75,10 @@
             $archive[1].dewpoint.min.format(add_label=False)</span>
         </td>
         #end for
-        <td class="units">$unit.label.dewpoint</td>
+        <td class="units">
+          $unit.label.dewpoint<br/>
+          $unit.label.dewpoint
+        </td>
       </tr>
       <tr>
         <td class="label">$obs.label.outHumidity</td>
@@ -84,7 +90,10 @@
             $archive[1].outHumidity.min.format(add_label=False)</span>
         </td>
         #end for
-        <td class="units">$unit.label.outHumidity</td>
+        <td class="units">
+          $unit.label.outHumidity<br/>
+          $unit.label.outHumidity
+        </td>
       </tr>
       <tr>
         <td class="label">$obs.label.barometer</td>
@@ -96,7 +105,10 @@
             $archive[1].barometer.min.format(add_label=False)</span>
         </td>
         #end for
-        <td class="units">$unit.label.barometer</td>
+        <td class="units">
+          $unit.label.barometer<br/>
+          $unit.label.barometer
+        </td>
       </tr>
       <tr>
         <td class="label">$obs.label.rainRate</td>
@@ -167,7 +179,10 @@
             $archive[1].UV.min.format(add_label=False)</span>
         </td>
         #end for
-        <td class="units">$unit.label.UV</td>
+        <td class="units">
+          $unit.label.UV<br/>
+          $unit.label.UV
+        </td>
       </tr>
       #end if
 
@@ -182,7 +197,10 @@
             $archive[1].radiation.min.format(add_label=False)</span>
         </td>
         #end for
-        <td class="units">$unit.label.radiation</td>
+        <td class="units">
+          $unit.label.radiation<br/>
+          $unit.label.radiation
+        </td>
       </tr>
       #end if
 
@@ -197,7 +215,10 @@
             $archive[1].inTemp.min.format(add_label=False)</span>
         </td>
         #end for
-        <td class="units">$unit.label.inTemp</td>
+        <td class="units">
+          $unit.label.inTemp<br/>
+          $unit.label.inTemp
+        </td>
       </tr>
       #end if
 
@@ -212,7 +233,10 @@
             $archive[1].inHumidity.min.format(add_label=False)</span>
         </td>
         #end for
-        <td class="units">$unit.label.inHumidity</td>
+        <td class="units">
+          $unit.label.inHumidity<br/>
+          $unit.label.inHumidity
+        </td>
       </tr>
       #end if
 
@@ -227,7 +251,10 @@
             $archive[1].extraTemp1.min.format(add_label=False)</span>
         </td>
         #end for
-        <td class="units">$unit.label.extraTemp1</td>
+        <td class="units">
+          $unit.label.extraTemp1<br/>
+          $unit.label.extraTemp1
+        </td>
       </tr>
       #end if
 
@@ -242,7 +269,10 @@
             $archive[1].extraTemp2.min.format(add_label=False)</span>
         </td>
         #end for
-        <td class="units">$unit.label.extraTemp2</td>
+        <td class="units">
+          $unit.label.extraTemp2<br/>
+          $unit.label.extraTemp2
+        </td>
       </tr>
       #end if
 
@@ -257,7 +287,10 @@
             $archive[1].extraTemp3.min.format(add_label=False)</span>
         </td>
         #end for
-        <td class="units">$unit.label.extraTemp3</td>
+        <td class="units">
+          $unit.label.extraTemp3<br/>
+          $unit.label.extraTemp3
+        </td>
       </tr>
       #end if
     </tbody>
