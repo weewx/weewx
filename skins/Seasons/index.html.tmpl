@@ -67,10 +67,13 @@
             <img src="${x}tempin.png"    alt="$obs.label.inTemp" />
             #end if
             #if $year.inHumidity.has_data
-            <img src="${x}humin.png"    alt="$obs.label.inHumidity" />
+            <img src="${x}humin.png"     alt="$obs.label.inHumidity" />
             #end if
             #if $year.extraTemp1.has_data or $year.extraTemp2.has_data or $year.extraTemp3.has_data
-            <img src="${x}temp.png"      alt="$obs.label.extraTemp1" />
+            <img src="${x}tempext.png"      alt="$obs.label.extraTemp1" />
+            #end if
+            #if $year.extraHumid1.has_data or $year.extraHumid2.has_data or $year.extraHumid3.has_data
+            <img src="${x}humext.png"    alt="$obs.label.extraHumid1" />
             #end if
           </div>
 #end for
