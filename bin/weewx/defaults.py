@@ -61,6 +61,7 @@ log_failure = False
         group_volume       = gallon
 
         # The following are used internally and should not be changed:
+        group_boolean      = boolean
         group_count        = count
         group_interval     = minute
         group_time         = unix_epoch
@@ -69,10 +70,11 @@ log_failure = False
     # The following section sets the formatting for each type of unit.
     [[StringFormats]]
 
+        boolean            = %d
         centibar           = %.0f
         cm                 = %.2f
         cm_per_hour        = %.2f
-        count              = %.0f
+        count              = %d
         degree_C           = %.1f
         degree_F           = %.1f
         degree_compass     = %.0f
@@ -107,6 +109,7 @@ log_failure = False
     # The following section sets the label to be used for each type of unit
     [[Labels]]
 
+        boolean           = ""
         centibar          = " cb"
         cm                = " cm"
         cm_per_hour       = " cm/h"

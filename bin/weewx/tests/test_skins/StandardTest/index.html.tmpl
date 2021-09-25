@@ -458,7 +458,15 @@ FALSE#slurp
       <td>Test tag "has_data" with existent type that has data \$day.outTemp.has_data</td>
       <td>$emit_boolean($day.outTemp.has_data)</td>
     </tr>
-      <tr>
+    <tr>
+      <td>Test tag "not_null" with existent type that has no data \$day.UV.not_null</td>
+      <td>$day.UV.not_null</td>
+    </tr>
+    <tr>
+      <td>Test tag "not_null" with existent type that has data \$day.outTemp.not_null</td>
+      <td>$day.outTemp.not_null</td>
+    </tr>
+    <tr>
       <td>Test for a bad observation type on a \$day tag: \$day.foobar.min</td>
       <td>$day.foobar.min</td>
     </tr>

@@ -240,6 +240,8 @@ class ArchiveTable(XType):
         'mintime': "SELECT dateTime FROM %(table_name)s "
                    "WHERE dateTime > %(start)s AND dateTime <= %(stop)s "
                    "AND %(obs_type)s IS NOT NULL ORDER BY %(obs_type)s ASC LIMIT 1",
+        'not_null': "SELECT %(obs_type)s IS NOT NULL FROM %(table_name)s "
+                    "WHERE dateTime > %(start)s AND dateTime <= %(stop)s LIMIT 1",
         'tderiv': "SELECT (b.%(obs_type)s - a.%(obs_type)s) / (b.dateTime-a.dateTime) "
                   "FROM archive a, archive b "
                   "WHERE b.dateTime = (SELECT MAX(dateTime) FROM archive "
@@ -383,6 +385,8 @@ class DailySummaries(XType):
                    "WHERE dateTime >= %(start)s AND dateTime < %(stop)s "
                    "AND mintime IS NOT NULL "
                    "ORDER BY min ASC, mintime ASC LIMIT 1",
+        'not_null': "SELECT count>0 FROM %(table_name)s_day_%(obs_key)s "
+                 "WHERE dateTime >= %(start)s AND dateTime < %(stop)s LIMIT 1",
         'rms': "SELECT SUM(wsquaresum),SUM(sumtime) FROM %(table_name)s_day_%(obs_key)s "
                "WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
         'sum': "SELECT SUM(sum) FROM %(table_name)s_day_%(obs_key)s "
@@ -469,7 +473,7 @@ class DailySummaries(XType):
 
         elif aggregate_type in ['mintime', 'maxmintime', 'maxtime', 'minmaxtime', 'maxsumtime',
                                 'minsumtime', 'count', 'max_ge', 'max_le', 'min_ge', 'min_le',
-                                'sum_ge', 'sum_le', 'avg_ge', 'avg_le']:
+                                'not_null', 'sum_ge', 'sum_le', 'avg_ge', 'avg_le']:
             # These aggregates are always integers:
             value = int(row[0])
 
