@@ -119,6 +119,9 @@ Added option --batch-size to the Vantage version of wee_device. See PR #693.
 Slightly faster evaluation of the tag suffix 'has_data'.
 New aggregation type 'not_null'.
 
+Added plot option 'skip_if_empty'. If set to true and there is nothing but null
+data in the plot, then the plot will not be generated at all. See PR #702.
+
 
 4.4.0 01/30/2021
 

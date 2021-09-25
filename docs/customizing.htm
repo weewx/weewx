@@ -6410,17 +6410,11 @@ growing_base = 50.0, degree_F</pre>
 
         <p>These are options that affect the overall image.</p>
 
-        <p class="config_option">
-            image_width<br/> image_height
-        </p>
-
-        <p>The width and height of the image in pixels. Optional. Default is 300 x 180 pixels.</p>
-
-        <p class="config_option">image_background_color</p>
+        <p class="config_option">anti_alias</p>
 
         <p>
-            The background color of the whole image. Optional. Default is <span class='code'>#f5f5f5</span>
-            ("SmokeGray")
+            Setting to 2 or more might give a sharper image, with fewer jagged edges. Experimentation is in order.
+            Default is <span class="code">1</span>.
         </p>
 
         <p class="config_option">chart_background_color</p>
@@ -6451,31 +6445,10 @@ growing_base = 50.0, degree_F</pre>
                 </div>
             </div>
         </div>
-        <p class="config_option">anti_alias</p>
-
-        <p>
-            Setting to 2 or more might give a sharper image, with fewer jagged edges. Experimentation is in order.
-            Default is <span class="code">1</span>.
-        </p>
-
-        <p class="config_option">show_daynight</p>
-
-        <p>
-            Set to <span class="code">true</span> to show day/night bands in an image. Otherwise, set to false. This
-            only looks good with day or week plots. Optional. Default is <span class="code">false</span>.
-        </p>
-
         <p class="config_option">daynight_day_color</p>
 
         <p>
             The color to be used for the daylight band. Optional. Default is <span class="code">#ffffff</span>.
-        </p>
-
-        <p class="config_option">daynight_night_color</p>
-
-        <p>
-            The color to be used for the nighttime band. Optional. Default is <span class="code">#f0f0f0</span>, a dark
-            gray.
         </p>
 
         <p class="config_option">daynight_edge_color</p>
@@ -6485,41 +6458,75 @@ growing_base = 50.0, degree_F</pre>
             a mid-gray.
         </p>
 
+        <p class="config_option">daynight_night_color</p>
+
+        <p>
+            The color to be used for the nighttime band. Optional. Default is <span class="code">#f0f0f0</span>, a dark
+            gray.
+        </p>
+
+        <p class="config_option">image_background_color</p>
+
+        <p>
+            The background color of the whole image. Optional. Default is <span class='code'>#f5f5f5</span>
+            ("SmokeGray")
+        </p>
+
+        <p class="config_option">
+            image_width<br/> image_height
+        </p>
+
+        <p>The width and height of the image in pixels. Optional. Default is 300 x 180 pixels.</p>
+
+        <p class="config_option">show_daynight</p>
+
+        <p>
+            Set to <span class="code">true</span> to show day/night bands in an image. Otherwise, set to false. This
+            only looks good with day or week plots. Optional. Default is <span class="code">false</span>.
+        </p>
+
+        <p class="config_option">skip_if_empty</p>
+
+        <p>
+            Skip the generation of the image if all data in it are null. Choices are <span class="code">true</span> or
+            <span class="code">false</span>. Default is <span class="code">false</span>.
+        </p>
+
+        <p class="config_option">stale_age</p>
+
+        <p>
+            Image file staleness age, in seconds. If the image file is older than this age it will be generated. If no
+            <span class="code">stale_age</span> is specified, then the image file will be generated every time the
+            generator runs.
+        </p>
 
         <h3>Various label options</h3>
 
         <p>These are options for the various labels used in the image.</p>
 
-        <p class="config_option">top_label_font_path</p>
+        <p class="config_option">axis_label_font_color</p>
 
         <p>
-            The path to the font to be use for the top label. Optional. If not given, or if WeeWX cannot find the font,
-            then the default PIL font will be used.
+            The color of the x- and y-axis label font. Optional. Default is <span class='code'>black</span>.
         </p>
 
-        <p class="config_option">top_label_font_size</p>
+        <p class="config_option">axis_label_font_path</p>
 
         <p>
-            The size of the top label in pixels. Optional. The default is <span class='code'>10</span>.
+            The path to the font to be use for the x- and y-axis labels. Optional. If not given, or if WeeWX cannot find
+            the font, then the default PIL font will be used.
         </p>
 
-        <p class="config_option">unit_label_font_path</p>
+        <p class="config_option">axis_label_font_size</p>
 
         <p>
-            The path to the font to be use for the unit label. Optional. If not given, or if WeeWX cannot find the font,
-            then the default PIL font will be used.
+            The size of the x- and y-axis labels in pixels. Optional. The default is <span class='code'>10</span>.
         </p>
 
-        <p class="config_option">unit_label_font_size</p>
+        <p class="config_option">bottom_label_font_color</p>
 
         <p>
-            The size of the unit label in pixels. Optional. The default is <span class='code'>10</span>.
-        </p>
-
-        <p class="config_option">unit_label_font_color</p>
-
-        <p>
-            The color of the unit label font. Optional. Default is <span class='code'>black</span>.
+            The color of the bottom label font. Optional. Default is <span class='code'>black</span>.
         </p>
 
         <p class="config_option">bottom_label_font_path</p>
@@ -6535,12 +6542,6 @@ growing_base = 50.0, degree_F</pre>
             The size of the bottom label in pixels. Optional. The default is <span class='code'>10</span>.
         </p>
 
-        <p class="config_option">bottom_label_font_color</p>
-
-        <p>
-            The color of the bottom label font. Optional. Default is <span class='code'>black</span>.
-        </p>
-
         <p class="config_option">bottom_label_format</p>
 
         <p>
@@ -6554,23 +6555,43 @@ growing_base = 50.0, degree_F</pre>
 
         <p>The margin of the bottom label from the bottom of the plot. Default is 3.</p>
 
-        <p class="config_option">axis_label_font_path</p>
+        <p class="config_option">top_label_font_path</p>
 
         <p>
-            The path to the font to be use for the x- and y-axis labels. Optional. If not given, or if WeeWX cannot find
-            the font, then the default PIL font will be used.
+            The path to the font to be use for the top label. Optional. If not given, or if WeeWX cannot find the font,
+            then the default PIL font will be used.
         </p>
 
-        <p class="config_option">axis_label_font_size</p>
+        <p class="config_option">top_label_font_size</p>
 
         <p>
-            The size of the x- and y-axis labels in pixels. Optional. The default is <span class='code'>10</span>.
+            The size of the top label in pixels. Optional. The default is <span class='code'>10</span>.
         </p>
 
-        <p class="config_option">axis_label_font_color</p>
+        <p class="config_option">unit_label_font_color</p>
 
         <p>
-            The color of the x- and y-axis label font. Optional. Default is <span class='code'>black</span>.
+            The color of the unit label font. Optional. Default is <span class='code'>black</span>.
+        </p>
+
+        <p class="config_option">unit_label_font_path</p>
+
+        <p>
+            The path to the font to be use for the unit label. Optional. If not given, or if WeeWX cannot find the font,
+            then the default PIL font will be used.
+        </p>
+
+        <p class="config_option">unit_label_font_size</p>
+
+        <p>
+            The size of the unit label in pixels. Optional. The default is <span class='code'>10</span>.
+        </p>
+
+        <p class="config_option">x_interval</p>
+
+        <p>
+            The time interval in seconds between x-axis tick marks. Optional. If not given, a suitable default will be
+            chosen.
         </p>
 
         <p class="config_option">x_label_format</p>
@@ -6581,24 +6602,10 @@ growing_base = 50.0, degree_F</pre>
             Optional. If not given, a sensible format will be chosen automatically.
         </p>
 
-        <p class="config_option">x_interval</p>
-
-        <p>
-            The time interval in seconds between x-axis tick marks. Optional. If not given, a suitable default will be
-            chosen.
-        </p>
-
         <p class="config_option">x_label_spacing</p>
 
         <p>
             Specifies the ordinal increment between labels on the x-axis: For example, 3 means a label every 3rd tick
-            mark. Optional. The default is <span class='code'>2</span>.
-        </p>
-
-        <p class="config_option">y_label_spacing</p>
-
-        <p>
-            Specifies the ordinal increment between labels on the y-axis: For example, 3 means a label every 3rd tick
             mark. Optional. The default is <span class='code'>2</span>.
         </p>
 
@@ -6610,18 +6617,17 @@ growing_base = 50.0, degree_F</pre>
             <span class='code'>both</span>.  Optional.  Default is <span class='code'>left</span>.
         </p>
 
+        <p class="config_option">y_label_spacing</p>
+
+        <p>
+            Specifies the ordinal increment between labels on the y-axis: For example, 3 means a label every 3rd tick
+            mark. Optional. The default is <span class='code'>2</span>.
+        </p>
+
         <p class="config_option">y_nticks</p>
 
         <p>
             The nominal number of ticks along the y-axis. The default is <span class='code'>10</span>.
-        </p>
-
-        <p class="config_option">stale_age</p>
-
-        <p>
-            Image file staleness age, in seconds. If the image file is older than this age it will be generated. If no
-            <span class="code">stale_age</span> is specified, then the image file will be generated every time the
-            generator runs.
         </p>
 
 
@@ -6723,6 +6729,15 @@ growing_base = 50.0, degree_F</pre>
 
         <p>These are options that are set for individual lines.</p>
 
+        <p class="config_option">aggregate_interval</p>
+
+        <p>
+            The time period over which the data should be aggregated, in seconds. Required if
+            <span class="code">aggregate_type</span> has been set. Alternatively, the time can be specified by using
+            one of the "shortcuts" (that is, <span class="code">hour</span>, <span class="code">day</span>,
+            <span class="code">week</span>, <span class="code">month</span>, or <span class="code">year</span>).
+        </p>
+
         <p class="config_option">aggregate_type</p>
 
         <p>
@@ -6734,27 +6749,19 @@ growing_base = 50.0, degree_F</pre>
             class="code">tderiv</span>.
         </p>
 
-        <p class="config_option">aggregate_interval</p>
-
-        <p>
-            The time period over which the data should be aggregated, in seconds. Required if
-            <span class="code">aggregate_type</span> has been set. Alternatively, the time can be specified by using
-            one of the "shortcuts" (that is, <span class="code">hour</span>, <span class="code">day</span>,
-            <span class="code">week</span>, <span class="code">month</span>, or <span class="code">year</span>).
-        </p>
-
-        <p class="config_option">plot_type</p>
-
-        <p>
-            The type of plot for this line. Choices are <span class="code">line</span>, <span class="code">bar</span>,
-            or <span class="code">vector</span>. Optional. Default is <span class="code">line</span>.
-        </p>
-
         <p class="config_option">color</p>
 
         <p>
             This option is to override the color for an individual line. Optional. Default is to use the color in <span
             class="code">chart_line_colors</span>.
+        </p>
+
+        <p class="config_option">data_type</p>
+
+        <p>
+            The SQL data type to be used for this plot line. For more information, see the section <em><a
+            href="#including_same_sql_type_2x">Including a type more than once in a plot</a></em>. Optional. The default
+            is to use the section name.
         </p>
 
         <p class="config_option">fill_color</p>
@@ -6764,25 +6771,10 @@ growing_base = 50.0, degree_F</pre>
             class="code">chart_fill_colors</span>.
         </p>
 
-        <p class="config_option">line_type</p>
+        <p class="config_option">label</p>
 
-        <p>
-            The type of line to be used. Choices are <span class="code">solid</span> or <span class="code">none</span>.
-            Optional. Default is <span class="code">solid</span>.
-        </p>
-
-        <p class="config_option">marker_type</p>
-
-        <p>
-            The type of marker to be used to mark each data point. Choices are <span class="code">cross</span>, <span
-            class="code">x</span>, <span class="code">circle</span>, <span class="code">box</span>, or <span
-            class="code">none</span>. Optional. Default is <span class="code">none</span>.
-        </p>
-
-        <p class="config_option">marker_size</p>
-
-        <p>
-            The size of the marker. Optional. Default is <span class="code">8</span>.
+        <p>The label to be used for this plot line in the top label. Optional. The default is to use the SQL variable
+            name.
         </p>
 
         <p class="config_option">line_gap_fraction</p>
@@ -6793,25 +6785,39 @@ growing_base = 50.0, degree_F</pre>
             default is to always draw the line.
         </p>
 
+        <p class="config_option">line_type</p>
+
+        <p>
+            The type of line to be used. Choices are <span class="code">solid</span> or <span class="code">none</span>.
+            Optional. Default is <span class="code">solid</span>.
+        </p>
+
+        <p class="config_option">marker_size</p>
+
+        <p>
+            The size of the marker. Optional. Default is <span class="code">8</span>.
+        </p>
+
+        <p class="config_option">marker_type</p>
+
+        <p>
+            The type of marker to be used to mark each data point. Choices are <span class="code">cross</span>, <span
+            class="code">x</span>, <span class="code">circle</span>, <span class="code">box</span>, or <span
+            class="code">none</span>. Optional. Default is <span class="code">none</span>.
+        </p>
+
+        <p class="config_option">plot_type</p>
+
+        <p>
+            The type of plot for this line. Choices are <span class="code">line</span>, <span class="code">bar</span>,
+            or <span class="code">vector</span>. Optional. Default is <span class="code">line</span>.
+        </p>
+
         <p class="config_option">width</p>
 
         <p>
             This option is to override the line widthfor an individual line. Optional. Default is to use the width in
             <span class="code">chart_line_width</span>.
-        </p>
-
-        <p class="config_option">label</p>
-
-        <p>The label to be used for this plot line in the top label. Optional. The default is to use the SQL variable
-            name.
-        </p>
-
-        <p class="config_option">data_type</p>
-
-        <p>
-            The SQL data type to be used for this plot line. For more information, see the section <em><a
-            href="#including_same_sql_type_2x">Including a type more than once in a plot</a></em>. Optional. The default
-            is to use the section name.
         </p>
 
 
