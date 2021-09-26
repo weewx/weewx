@@ -122,6 +122,8 @@ New aggregation type 'not_null'.
 Added plot option 'skip_if_empty'. If set to true and there is nothing but null
 data in the plot, then the plot will not be generated at all. See PR #702.
 
+A string in the database no longer raises an error. Fixes issue #695.
+
 
 4.4.0 01/30/2021
 
