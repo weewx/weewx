@@ -47,6 +47,16 @@ Clément! PR #691.
 Fixed problem where ConfigObj interpolation would interfere with setting
 logging formats.
 
+Added option --batch-size to the Vantage version of wee_device. See PR #693.
+
+Slightly faster evaluation of the tag suffix 'has_data'.
+New aggregation type 'not_null'.
+
+Added plot option 'skip_if_empty'. If set to true and there is nothing but null
+data in the plot, then the plot will not be generated at all. See PR #702.
+
+A string in the database no longer raises an error. Fixes issue #695.
+
 
 4.5.1 04/02/2021
 Reverted the wview schema back to the V3 style.
@@ -113,16 +123,6 @@ that is, 'hour', 'day', 'week', 'month', or 'year'.
 
 Options "log_success" and "log_failure" are now honored by the StdArchive
 service.
-
-Added option --batch-size to the Vantage version of wee_device. See PR #693.
-
-Slightly faster evaluation of the tag suffix 'has_data'.
-New aggregation type 'not_null'.
-
-Added plot option 'skip_if_empty'. If set to true and there is nothing but null
-data in the plot, then the plot will not be generated at all. See PR #702.
-
-A string in the database no longer raises an error. Fixes issue #695.
 
 
 4.4.0 01/30/2021
