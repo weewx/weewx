@@ -766,7 +766,7 @@
   <h1>Tests for $gettext</h1>
   <table>
     <tr>
-      <td align="right">$gettext["lang"]</td>
+      <td align="right">$gettext("lang")</td>
       <td align="left">en</td>
     </tr>
     <tr>
@@ -774,31 +774,31 @@
       <td align="left">test</td>
     </tr>
     <tr>
-      <td align="right">$gettext["Foo"]</td>
+      <td align="right">$gettext("Foo")</td>
       <td align="left">Foo</td>
     </tr>
     <tr>
-      <td align="right">$gettext["Today"]</td>
+      <td align="right">$gettext("Today")</td>
       <td align="left">Today</td>
     </tr>
     <tr>
-      <td align="right">$gettext["test"]["Plots"]</td>
+      <td align="right">$pgettext("test","Plots")</td>
+      <td align="left">test</td>
+    </tr>
+    <tr>
+      <td align="right">$pgettext($page,"Plots")</td>
       <td align="left">History</td>
     </tr>
     <tr>
-      <td align="right">$gettext[$page]["Plots"]</td>
-      <td align="left">History</td>
-    </tr>
-    <tr>
-      <td align="right">$gettext[$page]["Something"]</td>
+      <td align="right">$pgettext($page,"Something")</td>
       <td align="left">Something</td>
     </tr>
     <tr>
-      <td align="right">$gettext["Foo"]["Plots"]</td>
+      <td align="right">$pgettext("Foo","Plots")</td>
       <td align="left">Plots</td>
     </tr>
     <tr>
-      <td align="right">$gettext["Foo"]["Bar"]</td>
+      <td align="right">$pgettext("Foo","Bar")</td>
       <td align="left">Bar</td>
     </tr>
   </table>

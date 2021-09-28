@@ -6,7 +6,7 @@
 
 <div id='current_widget' class="widget">
   <div class="widget_title">
-    $gettext["Current Conditions"]
+    $gettext("Current Conditions")
     <a class="widget_control"
       onclick="toggle_widget('current')">&diams;</a>
   </div>

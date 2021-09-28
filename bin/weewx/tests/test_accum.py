@@ -166,11 +166,12 @@ class AccumTest(unittest.TestCase):
         for i, record in enumerate(self.dataset):
             record['stringType'] = "AString%d" % i
 
-        # Trying to add a string to the default accumulators should result in an exception
-        with self.assertRaises(ValueError):
-            accum = weewx.accum.Accum(TimeSpan(start_ts, stop_ts))
-            for record in self.dataset:
-                accum.addRecord(record)
+        # As of V4.6, adding a string to the default accumulators should no longer result in an
+        # exception
+        accum = weewx.accum.Accum(TimeSpan(start_ts, stop_ts))
+        for record in self.dataset:
+            accum.addRecord(record)
+
         # Try it again, but this time specifying a FirstLast accumulator for type 'stringType':
         weewx.accum.accum_dict.extend({'stringType': {'accumulator': 'firstlast', 'extractor': 'last'}})
         accum = weewx.accum.Accum(TimeSpan(start_ts, stop_ts))

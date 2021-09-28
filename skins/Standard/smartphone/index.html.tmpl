@@ -2,7 +2,7 @@
 <!DOCTYPE html>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-  <title>$station.location $gettext["Current Weather Conditions"]</title>
+  <title>$station.location $gettext("Current Weather Conditions")</title>
   <link rel="stylesheet" href="https://code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.css" />
   <link rel="apple-touch-icon" href="icons/icon_iphone_x1.png" />
   <link rel="apple-touch-icon" sizes="72x72" href="icons/icon_ipad_x2.png" />
@@ -21,7 +21,7 @@
     <div data-role="content">
 
       <ul data-role="listview" data-inset="true" data-divider-theme="c">
-	<li data-role="list-divider">$gettext["Time"]: $current.dateTime</li>
+	<li data-role="list-divider">$gettext("Time"): $current.dateTime</li>
         <li><a href="temp_outside.html">$obs.label.outTemp: $current.outTemp [$day.outTemp.min, $day.outTemp.max]</a></li>
         <li><a href="rain.html">$obs.label.rainRate: $current.rainRate ($day.rain.sum)</a></li>
 	<li><a href="barometer.html">$obs.label.barometer: $current.barometer</a></li>
@@ -29,8 +29,8 @@
       </ul>
 
       <ul data-role="listview" data-inset="true" data-divider-theme="b">
-        <li><a href="radar.html">$gettext["Radar"]</a></li>
-        <li><a href="../index.html" rel="external">$gettext["Big Page"]</a></li>
+        <li><a href="radar.html">$gettext("Radar")</a></li>
+        <li><a href="../index.html" rel="external">$gettext("Big Page")</a></li>
       </ul>
 
     </div>

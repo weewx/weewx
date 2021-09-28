@@ -8,7 +8,7 @@
 
 <div id="statistics_widget" class="widget">
   <div class="widget_title">
-    $gettext["Statistics"]
+    $gettext("Statistics")
   </div>
   <div class="widget_contents">
 
@@ -17,11 +17,11 @@
         <tr>
           <td></td>
           <td></td>
-          <th>$gettext["Today"]</th>
-          <th class="hilo_week">$gettext["Week"]</th>
-          <th class="hilo_month">$gettext["Month"]</th>
-          <th class="hilo_year">$gettext["Year"]</th>
-          <th class="hilo_rainyear">$gettext["Rain Year"]</th>
+          <th>$gettext("Today")</th>
+          <th class="hilo_week">$gettext("Week")</th>
+          <th class="hilo_month">$gettext("Month")</th>
+          <th class="hilo_year">$gettext("Year")</th>
+          <th class="hilo_rainyear">$gettext("Rain Year")</th>
         </tr>
         <tr>
           <td class="label">$obs.label.outTemp</td>
@@ -112,7 +112,7 @@
           </tr>
 		#end if
         <tr>
-          <td class="label">$gettext["Max Wind"]</td>
+          <td class="label">$gettext("Max Wind")</td>
           <td class="units">
             $unit.label.wind<br/>
             $unit.label.windDir
@@ -126,7 +126,7 @@
           #end for
         </tr>
         <tr>
-          <td class="label">$gettext["Average Wind"]</td>
+          <td class="label">$gettext("Average Wind")</td>
           <td class="units">$unit.label.wind</td>
           #for $archive in $archive_data
           <td class="data new_row">
@@ -134,7 +134,7 @@
           #end for
         </tr>
         <tr>
-          <td class="label">$gettext["RMS Wind"]</td>
+          <td class="label">$gettext("RMS Wind")</td>
           <td class="units">$unit.label.wind</td>
           #for $archive in $archive_data
           <td class="data new_row">$archive.wind.rms.format(add_label=False)</td>
@@ -143,8 +143,8 @@
 
         <tr>
           <td class="label">
-            $gettext["Vector Average"]<br/>
-            $gettext["Vector Direction"]
+            $gettext("Vector Average")<br/>
+            $gettext("Vector Direction")
           </td>
           <td class="units">
             $unit.label.wind<br/>

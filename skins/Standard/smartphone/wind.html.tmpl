@@ -2,7 +2,7 @@
 <!DOCTYPE html>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-  <title>$obs.label.wind $gettext["in"] $station.location</title>
+  <title>$obs.label.wind $gettext("in") $station.location</title>
   <link rel="stylesheet" href="https://code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.css" />
   <script src="https://code.jquery.com/jquery-1.7.1.min.js"></script>
   <script type="text/javascript" src="https://code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.js"></script>
@@ -14,20 +14,20 @@
       <h1>$obs.label.wind</h1>
    </div>
    <div data-role="content">
-     <h4>$gettext["24h"] $obs.label.wind</h4>
+     <h4>$gettext("24h") $obs.label.wind</h4>
      <img src="../daywind.png"/>
      <img src="../daywinddir.png"/>
       <ul>
-        <li>$gettext["Today's min"]: $day.windSpeed.min $gettext["at"] $day.windSpeed.mintime</li>
-        <li>$gettext["Today's max"]: $day.windSpeed.max $gettext["at"] $day.windSpeed.maxtime</li>
+        <li>$gettext("Today's min"): $day.windSpeed.min $gettext("at") $day.windSpeed.mintime</li>
+        <li>$gettext("Today's max"): $day.windSpeed.max $gettext("at") $day.windSpeed.maxtime</li>
       </ul>
 
-     <h4>$gettext["7-day"] $obs.label.wind</h4>
+     <h4>$gettext("7-day") $obs.label.wind</h4>
      <img src="../weekwind.png" />
      <img src="../weekwinddir.png" />
       <ul>
-        <li>$gettext["This week's min"]: $week.windSpeed.min $gettext["at"] $week.windSpeed.mintime</li>
-        <li>$gettext["This week's max"]: $week.windSpeed.max $gettext["at"] $week.windSpeed.maxtime</li>
+        <li>$gettext("This week's min"): $week.windSpeed.min $gettext("at") $week.windSpeed.mintime</li>
+        <li>$gettext("This week's max"): $week.windSpeed.max $gettext("at") $week.windSpeed.maxtime</li>
       </ul>
     </div>
     <div data-role="footer">

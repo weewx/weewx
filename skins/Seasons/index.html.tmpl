@@ -3,7 +3,7 @@
 #errorCatcher Echo
 ##
 <!DOCTYPE html>
-<html lang="$gettext['lang']">
+<html lang="$gettext('lang')">
   <head>
     ##
     <meta charset="UTF-8">
@@ -34,15 +34,15 @@
 
       <div id="plot_group">
         <div id="history_widget" class="widget">
-          <div id="plot_title" class="widget_title">$gettext["History"]:&nbsp;&nbsp;
+          <div id="plot_title" class="widget_title">$gettext("History"):&nbsp;&nbsp;
             <a class="button_selected" id="button_history_day"
-               onclick="choose_history('day')">$gettext["Day"]</a>
+               onclick="choose_history('day')">$gettext("Day")</a>
             <a class="button" id="button_history_week"
-               onclick="choose_history('week')">$gettext["Week"]</a>
+               onclick="choose_history('week')">$gettext("Week")</a>
             <a class="button" id="button_history_month"
-               onclick="choose_history('month')">$gettext["Month"]</a>
+               onclick="choose_history('month')">$gettext("Month")</a>
             <a class="button" id="button_history_year"
-               onclick="choose_history('year')">$gettext["Year"]</a>
+               onclick="choose_history('year')">$gettext("Year")</a>
           </div>
           <div id="history_day" class="plot_container">
             <img src="daybarometer.png" alt="$obs.label.barometer"/>
@@ -173,7 +173,7 @@
     </div>
 
     <p class="footnote">
-      $gettext["This station is controlled by <a href='https://weewx.com'>WeeWX</a>, an experimental weather software system written in Python."]
+      $gettext("This station is controlled by <a href='https://weewx.com'>WeeWX</a>, an experimental weather software system written in Python.")
     </p>
 
     #include "analytics.inc"

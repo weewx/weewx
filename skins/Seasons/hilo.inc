@@ -8,7 +8,7 @@
 
 <div id='hilo_widget' class="widget">
   <div class="widget_title">
-    <a href="statistics.html">$gettext["High/Low"]</a>
+    <a href="statistics.html">$gettext("High/Low")</a>
     <a class="widget_control"
       onclick="toggle_widget('hilo')">&diams;</a>
   </div>
@@ -18,15 +18,15 @@
     <tbody>
       <tr>
         <td></td>
-        <th>&nbsp;<br/>$gettext["Today"]</th>
-        <th class="hilo_week">&nbsp;<br/>$gettext["Week"]</th>
-        <th class="hilo_month">&nbsp;<br/>$gettext["Month"]</th>
+        <th>&nbsp;<br/>$gettext("Today")</th>
+        <th class="hilo_week">&nbsp;<br/>$gettext("Week")</th>
+        <th class="hilo_month">&nbsp;<br/>$gettext("Month")</th>
         <th class="hilo_year">
             <a
-            onclick="toggle_rainyear()">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br/>$gettext["Year"]</a>
+            onclick="toggle_rainyear()">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br/>$gettext("Year")</a>
         </th>
         <th class="hilo_rainyear">
-            <a onclick="toggle_rainyear()">$gettext["Rain<br/>Year"]</a>
+            <a onclick="toggle_rainyear()">$gettext("Rain<br/>Year")</a>
         </th>
         <td></td>
       </tr>
@@ -109,7 +109,7 @@
         <td class="units">$unit.label.rainRate</td>
       </tr>
       <tr>
-        <td class="label">$gettext["Max Wind"]</td>
+        <td class="label">$gettext("Max Wind")</td>
         #for $archive in $archive_data
         <td class="data new_row hilo_$archive[0]">
           <span title="$archive[1].wind.maxtime">
@@ -123,7 +123,7 @@
         </td>
       </tr>
       <tr>
-        <td class="label">$gettext["Average Wind"]</td>
+        <td class="label">$gettext("Average Wind")</td>
         #for $archive in $archive_data
         <td class="data new_row hilo_$archive[0]">
           $archive[1].wind.avg.format(add_label=False)</td>
@@ -131,7 +131,7 @@
         <td class="units">$unit.label.wind</td>
       </tr>
       <tr>
-        <td class="label">$gettext["RMS Wind"]</td>
+        <td class="label">$gettext("RMS Wind")</td>
         #for $archive in $archive_data
         <td class="data new_row hilo_$archive[0]">
           $archive[1].wind.rms.format(add_label=False)</td>
@@ -141,8 +141,8 @@
 
       <tr>
         <td class="label">
-          $gettext["Vector Average"]<br/>
-          $gettext["Vector Direction"]
+          $gettext("Vector Average")<br/>
+          $gettext("Vector Direction")
         </td>
         #for $archive in $archive_data
         <td class="data new_row hilo_$archive[0]">

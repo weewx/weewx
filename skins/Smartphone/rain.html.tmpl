@@ -1,9 +1,9 @@
 #encoding UTF-8
 <!DOCTYPE html>
-<html lang="$gettext['lang']">
+<html lang="$gettext('lang')">
 <head>
   <meta charset="UTF-8">
-  <title>$obs.label.rain $gettext["in"] $station.location</title>
+  <title>$obs.label.rain $gettext("in") $station.location</title>
   <link rel="stylesheet" href="https://code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.css" />
   <script src="https://code.jquery.com/jquery-1.7.1.min.js"></script>
   <script type="text/javascript" src="https://code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.js"></script>
@@ -15,23 +15,23 @@
       <h1>$obs.label.rain</h1>
     </div>
     <div data-role="content">
-      <h4>$gettext["24h rain"]</h4>
+      <h4>$gettext("24h rain")</h4>
       <img src="dayrain.png"/>
       <p>
-        $gettext["Total"]: $day.rain.sum<br/>
-        $gettext["Max rate"]: $day.rainRate.max at $day.rainRate.maxtime
+        $gettext("Total"): $day.rain.sum<br/>
+        $gettext("Max rate"): $day.rainRate.max at $day.rainRate.maxtime
       </p>
-      <h4>$obs.label.rain $gettext["Last 7 days"]</h4>
+      <h4>$obs.label.rain $gettext("Last 7 days")</h4>
       <img src="weekrain.png" />
       <p>
-        $gettext["Total"]: $week.rain.sum<br/>
-        $gettext["Max rate"]: $week.rainRate.max at $week.rainRate.maxtime
+        $gettext("Total"): $week.rain.sum<br/>
+        $gettext("Max rate"): $week.rainRate.max at $week.rainRate.maxtime
       </p>
-      <h4>$obs.label.rain $gettext["Last 30 days"]</h4>
+      <h4>$obs.label.rain $gettext("Last 30 days")</h4>
       <img src="monthrain.png" />
       <p>
-        $gettext["Total"]: $month.rain.sum<br/>
-        $gettext["Max rate"]: $month.rainRate.max $gettext["at"] $month.rainRate.maxtime
+        $gettext("Total"): $month.rain.sum<br/>
+        $gettext("Max rate"): $month.rainRate.max $gettext("at") $month.rainRate.maxtime
       </p>
     </div>
     <div data-role="footer">

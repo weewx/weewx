@@ -1,9 +1,9 @@
 #encoding UTF-8
 <!DOCTYPE html>
-<html lang="$gettext['lang']">
+<html lang="$gettext('lang')">
 <head>
   <meta charset="UTF-8">
-  <title>$obs.label.barometer $gettext["in"] $station.location</title>
+  <title>$obs.label.barometer $gettext("in") $station.location</title>
   <link rel="stylesheet" href="https://code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.css" />
   <script src="https://code.jquery.com/jquery-1.7.1.min.js"></script>
   <script type="text/javascript" src="https://code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.js"></script>
@@ -15,18 +15,18 @@
       <h1>$obs.label.barometer</h1>
    </div>
    <div data-role="content">
-     <h4>$gettext["24h barometer"]</h4>
+     <h4>$gettext("24h barometer")</h4>
      <img src="daybarometer.png"/>
      <p>
-       $gettext["min"]: $day.barometer.min $gettext["at"] $day.barometer.mintime<br/>
-       $gettext["max"]: $day.barometer.max $gettext["at"] $day.barometer.maxtime
+       $gettext("min"): $day.barometer.min $gettext("at") $day.barometer.mintime<br/>
+       $gettext("max"): $day.barometer.max $gettext("at") $day.barometer.maxtime
      </p>
 
-     <h4>$gettext["7-day barometer"]</h4>
+     <h4>$gettext("7-day barometer")</h4>
      <img src="weekbarometer.png" />
      <p>
-       $gettext["min"]: $week.barometer.min $gettext["at"] $week.barometer.mintime<br/>
-       $gettext["max"]: $week.barometer.max $gettext["at"] $week.barometer.maxtime
+       $gettext("min"): $week.barometer.min $gettext("at") $week.barometer.mintime<br/>
+       $gettext("max"): $week.barometer.max $gettext("at") $week.barometer.maxtime
      </p>
     </div>
     <div data-role="footer">
