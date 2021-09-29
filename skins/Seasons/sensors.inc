@@ -49,7 +49,7 @@
 #if $have_conn or $have_battery_status or $have_voltage
 <div id='sensors_widget' class="widget">
   <div class="widget_title">
-    <a href="telemetry.html">$gettext["Sensor Status"]</a>
+    <a href="telemetry.html">$gettext("Sensor Status")</a>
     <a class="widget_control"
       onclick="toggle_widget('sensors')">&diams;</a>
   </div>
@@ -57,7 +57,7 @@
   <table>
 
 #if $have_conn
-    <tr><th>$gettext["Connectivity"]</th><th></th></tr>
+    <tr><th>$gettext("Connectivity")</th><th></th></tr>
 #for $x in $conns
   #if $getattr($current, $x).has_data
     <tr>
@@ -69,7 +69,7 @@
 #end if
 
 #if $have_battery_status
-    <tr><th>$gettext["Battery Status"]</th><th></th></tr>
+    <tr><th>$gettext("Battery Status")</th><th></th></tr>
 #for $x in $battery_statuses
   #if $getattr($current, $x).has_data
     <tr>
@@ -81,7 +81,7 @@
 #end if
 
 #if $have_voltage
-    <tr><th>$gettext["Voltage"]</th><th></th></tr>
+    <tr><th>$gettext("Voltage")</th><th></th></tr>
 #for $x in $voltages
   #if $getattr($current, $x).has_data
     <tr>
