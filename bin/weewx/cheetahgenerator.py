@@ -687,29 +687,24 @@ class JSONHelpers(SearchList):
 
 
 class Gettext(SearchList):
-    """Values provided by $gettext[] are found in the localization file in the [Texts] section.
-    Lookups can be nested.
-    """
-    def get_extension_list(self, timespan, db_lookup):
-        # copy section [Text] and convert all subsections to KeyDict
-        # in order to return key instead of generating an error in
-        # case key does not exist
-        return [{'gettext': Gettext._deep_copy_to_keydict(
-            self.generator.skin_dict.get('Texts', weeutil.config.config_from_str('lang = en')))}]
+    """Values provided by $gettext() are found in the [Texts] section of the localization file."""
 
-    @staticmethod
-    def _deep_copy_to_keydict(text_dict):
-        """ convert configObj to KeyDict including subsections """
-        _dict = KeyDict({})
-        # process subsections
-        for section in text_dict.sections:
-            _dict[section] = Gettext._deep_copy_to_keydict(text_dict[section])
-        # copy entries of this section
-        for scalar in text_dict.scalars:
-            _dict[scalar] = text_dict[scalar]
-        # return result
-        return _dict
+    def gettext(self, key):
+        try:
+            v = self.generator.skin_dict['Texts'].get(key, key)
+        except KeyError:
+            v = key
+        return v
 
+    def pgettext(self, context, key):
+        try:
+            v = self.generator.skin_dict['Texts'][context].get(key, key)
+        except KeyError:
+            v = key
+        return v
+
+    # An underscore is a common alias for gettext:
+    _ = gettext
 
 # =============================================================================
 # Filter

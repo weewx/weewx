@@ -227,6 +227,7 @@ agg_group = {
     'min_le'     : "group_count",
     'minmaxtime' : "group_time",
     'mintime'    : "group_time",
+    'not_null'   : "group_boolean",
     'sum_ge'     : "group_count",
     'sum_le'     : "group_count",
     'vecdir'     : "group_direction",
@@ -239,6 +240,7 @@ agg_group = {
 USUnits = ListOfDicts({
     "group_altitude"    : "foot",
     "group_amp"         : "amp",
+    "group_boolean"     : "boolean",
     "group_concentration": "microgram_per_meter_cubed",
     "group_count"       : "count",
     "group_data"        : "byte",
@@ -276,6 +278,7 @@ USUnits = ListOfDicts({
 MetricUnits = ListOfDicts({
     "group_altitude"    : "meter",
     "group_amp"         : "amp",
+    "group_boolean"     : "boolean",
     "group_concentration": "microgram_per_meter_cubed",
     "group_count"       : "count",
     "group_data"        : "byte",
@@ -468,6 +471,7 @@ conversionDict = {
 default_unit_format_dict = {
     "amp"                : "%.1f",
     "bit"                : "%.0f",
+    "boolean"            : "%d",
     "byte"               : "%.0f",
     "centibar"           : "%.0f",
     "cm"                 : "%.2f",

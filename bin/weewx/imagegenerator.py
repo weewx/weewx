@@ -161,6 +161,8 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                                  weeplot.utilities.tobgr(plot_options.get('daynight_edge_color',
                                                                           '0xefefef')))
 
+                have_some_data = False
+
                 # Loop over each line to be added to the plot.
                 for line_name in self.image_dict[timespan][plotname].sections:
 
@@ -297,15 +299,20 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                         vector_rotate = vector_rotate,
                         gap_fraction  = gap_fraction))
 
-                # OK, the plot is ready. Render it onto an image
-                image = plot.render()
+                    # Any data in this line? If so, then set have_some_data to True
+                    have_some_data |= any(x for x in new_data_vec_t[0] if x is not None)
 
-                try:
-                    # Now save the image
-                    image.save(img_file)
-                    ngen += 1
-                except IOError as e:
-                    log.error("Unable to save to file '%s' %s:", img_file, e)
+                # We can skip this plot if skip_if_empty is True, and there's nothing in the plot
+                if not to_bool(plot_options.get('skip_if_empty', False)) or have_some_data:
+                    # OK, the plot is ready. Render it onto an image
+                    image = plot.render()
+
+                    try:
+                        # Now save the image
+                        image.save(img_file)
+                        ngen += 1
+                    except IOError as e:
+                        log.error("Unable to save to file '%s' %s:", img_file, e)
         t2 = time.time()
 
         if log_success:

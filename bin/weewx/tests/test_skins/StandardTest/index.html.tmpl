@@ -458,7 +458,15 @@ FALSE#slurp
       <td>Test tag "has_data" with existent type that has data \$day.outTemp.has_data</td>
       <td>$emit_boolean($day.outTemp.has_data)</td>
     </tr>
-      <tr>
+    <tr>
+      <td>Test tag "not_null" with existent type that has no data \$day.UV.not_null</td>
+      <td>$day.UV.not_null</td>
+    </tr>
+    <tr>
+      <td>Test tag "not_null" with existent type that has data \$day.outTemp.not_null</td>
+      <td>$day.outTemp.not_null</td>
+    </tr>
+    <tr>
       <td>Test for a bad observation type on a \$day tag: \$day.foobar.min</td>
       <td>$day.foobar.min</td>
     </tr>
@@ -762,40 +770,40 @@ FALSE#slurp
   <h1>Tests for \$gettext</h1>
   <table>
     <tr>
-      <td align="right">\$gettext["lang"]</td>
-      <td align="left">$gettext["lang"]</td>
+      <td align="right">\$gettext("lang")</td>
+      <td align="left">$gettext("lang")</td>
     </tr>
     <tr>
       <td align="right">\$page</td>
       <td align="left">$page</td>
     </tr>
     <tr>
-      <td align="right">\$gettext["Foo"]</td>
-      <td align="left">$gettext["Foo"]</td>
+      <td align="right">\$gettext("Foo")</td>
+      <td align="left">$gettext("Foo")</td>
     </tr>
     <tr>
-      <td align="right">\$gettext["Today"]</td>
-      <td align="left">$gettext["Today"]</td>
+      <td align="right">\$gettext("Today")</td>
+      <td align="left">$gettext("Today")</td>
     </tr>
     <tr>
-      <td align="right">\$gettext["test"]["Plots"]</td>
-      <td align="left">$gettext["test"]["Plots"]</td>
+      <td align="right">\$pgettext("test","Plots")</td>
+      <td align="left">$pgettext("Plots", "test")</td>
     </tr>
     <tr>
-      <td align="right">\$gettext[\$page]["Plots"]</td>
-      <td align="left">$gettext[$page]["Plots"]</td>
+      <td align="right">\$pgettext(\$page,"Plots")</td>
+      <td align="left">$pgettext($page,"Plots")</td>
     </tr>
     <tr>
-      <td align="right">\$gettext[\$page]["Something"]</td>
-      <td align="left">$gettext[$page]["Something"]</td>
+      <td align="right">\$pgettext(\$page,"Something")</td>
+      <td align="left">$pgettext($page,"Something")</td>
     </tr>
     <tr>
-      <td align="right">\$gettext["Foo"]["Plots"]</td>
-      <td align="left">$gettext["Foo"]["Plots"]</td>
+      <td align="right">\$pgettext("Foo","Plots")</td>
+      <td align="left">$pgettext("Foo","Plots")</td>
     </tr>
     <tr>
-      <td align="right">\$gettext["Foo"]["Bar"]</td>
-      <td align="left">$gettext["Foo"]["Bar"]</td>
+      <td align="right">\$pgettext("Foo","Bar")</td>
+      <td align="left">$pgettext("Foo","Bar")</td>
     </tr>
   </table>
   <hr/>
