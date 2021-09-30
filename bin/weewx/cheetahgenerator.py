@@ -198,7 +198,8 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
     def teardown(self):
         """Delete any extension objects we created to prevent back references
         from slowing garbage collection"""
-        while len(self.search_list_objs):
+        while self.search_list_objs:
+            self.search_list_objs[-1].finalize()
             del self.search_list_objs[-1]
 
     def generate(self, section, section_name, gen_ts):
@@ -501,6 +502,9 @@ class SearchList(object):
                    binding will be used.
         """
         return [self]
+
+    def finalize(self):
+        """Called when the extension is no longer needed"""
 
 
 class Almanac(SearchList):
