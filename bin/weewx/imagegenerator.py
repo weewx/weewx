@@ -202,13 +202,17 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                     option_dict.pop('aggregate_interval', None)
                     # then add plotgen_ts
                     option_dict['plotgen_ts'] = plotgen_ts
-                    start_vec_t, stop_vec_t ,data_vec_t = weewx.xtypes.get_series(
-                        var_type,
-                        TimeSpan(minstamp, maxstamp),
-                        db_manager,
-                        aggregate_type=aggregate_type,
-                        aggregate_interval=aggregate_interval,
-                        **option_dict)
+                    try:
+                        start_vec_t, stop_vec_t ,data_vec_t = weewx.xtypes.get_series(
+                            var_type,
+                            TimeSpan(minstamp, maxstamp),
+                            db_manager,
+                            aggregate_type=aggregate_type,
+                            aggregate_interval=aggregate_interval,
+                            **option_dict)
+                    except weewx.UnknownType:
+                        if not to_bool(plot_options.get('skip_if_empty', False)):
+                            raise
 
                     # Get the type of plot ("bar', 'line', or 'vector')
                     plot_type = line_options.get('plot_type', 'line').lower()
