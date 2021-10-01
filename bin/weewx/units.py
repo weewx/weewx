@@ -1510,7 +1510,7 @@ class ObsInfoHelper(object):
 #==============================================================================
 #                             Helper functions
 #==============================================================================
-def _getUnitGroup(obs_type, agg_type=None):
+def getUnitGroup(obs_type, agg_type=None):
     """Given an observation type and an aggregation type, what unit group
     does it belong to?
 
@@ -1540,6 +1540,10 @@ def _getUnitGroup(obs_type, agg_type=None):
         return agg_group[agg_type]
     else:
         return obs_group_dict.get(obs_type)
+
+
+# For backwards compatibility:
+_getUnitGroup = getUnitGroup
 
 
 def convert(val_t, target_unit):

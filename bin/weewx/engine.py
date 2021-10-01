@@ -452,8 +452,16 @@ class StdQC(StdService):
     def __init__(self, engine, config_dict):
         super(StdQC, self).__init__(engine, config_dict)
 
-        # Get a QC object to apply the QC checks to our data
-        self.qc = weewx.qc.QC(config_dict)
+        # If the 'StdQC' or 'MinMax' sections do not exist in the configuration
+        # dictionary, then an exception will get thrown and nothing will be
+        # done.
+        try:
+            mm_dict = config_dict['StdQC']['MinMax']
+        except KeyError:
+            log.info("No QC information in config file.")
+            return
+
+        self.qc = weewx.qc.QC(mm_dict)
 
         self.bind(weewx.NEW_LOOP_PACKET, self.new_loop_packet)
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
