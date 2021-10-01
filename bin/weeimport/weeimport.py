@@ -1,6 +1,5 @@
 #
-#    Copyright (c) 2009-2019 Tom Keffer <tkeffer@gmail.com> and
-#                            Gary Roderick
+#    Copyright (c) 2009-2021 Tom Keffer <tkeffer@gmail.com> and Gary Roderick
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -176,7 +175,11 @@ class Source(object):
             self.archive_unit_sys = self.dbm.std_unit_system
 
         # get ourselves a QC object to do QC on imported records
-        self.import_QC = weewx.qc.QC(config_dict, parent='weeimport')
+        try:
+            mm_dict = config_dict['StdQC']['MinMax']
+        except KeyError:
+            mm_dict = {}
+        self.import_QC = weewx.qc.QC(mm_dict)
 
         # Process our command line options
         self.dry_run = options.dry_run
