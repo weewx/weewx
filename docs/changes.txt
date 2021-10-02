@@ -57,6 +57,10 @@ data in the plot, then the plot will not be generated at all. See PR #702.
 
 A string in the database no longer raises an error. Fixes issue #695.
 
+Parameterized the Seasons skin, making it considerably smaller (730 lines,
+instead of 1140). It now also includes all types found in the wview-extended
+schema. See PR #702.
+
 
 4.5.1 04/02/2021
 Reverted the wview schema back to the V3 style.
