@@ -304,7 +304,7 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                         gap_fraction  = gap_fraction))
 
                     # Any data in this line? If so, then set have_some_data to True
-                    have_some_data |= any(x for x in new_data_vec_t[0] if x is not None)
+                    have_some_data |= any(x is not None for x in new_data_vec_t[0])
 
                 # We can skip this plot if skip_if_empty is True, and there's nothing in the plot
                 if not to_bool(plot_options.get('skip_if_empty', False)) or have_some_data:
