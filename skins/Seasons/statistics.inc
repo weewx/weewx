@@ -6,6 +6,16 @@
 
 #set $archive_data = [$day, $week, $month, $year, $rainyear]
 
+## The list of observations determines which database fields will be shown in
+## the summary as well as the order in which they will be displayed.
+#set $observations = ['outTemp', 'heatindex', 'windchill', 'dewpoint', 'outHumidity', 'barometer', 'rain', 'rainRate', 'ET', 'hail', 'hailRate', 'snow', 'wind', 'UV', 'radiation', 'inTemp', 'inHumidity', 'extraTemp1', 'extraHumid1', 'extraTemp2', 'extraHumid2', 'extraTemp3', 'extraHumid3', 'extraTemp4', 'extraHumid4', 'extraTemp5', 'extraHumid5', 'extraTemp6', 'extraHumid6', 'extraTemp7', 'extraHumid7', 'extraTemp8', 'extraHumid8', 'leafTemp1', 'leafTemp2', 'leafWet1', 'leafWet2', 'soilTemp1', 'soilTemp2', 'soilTemp3', 'soilTemp4', 'soilMoist1', 'soilMoist2', 'soilMoist3', 'soilMoist4', 'pm1_0', 'pm2_5', 'pm10_0', 'co', 'co2', 'nh3', 'no2', 'o3', 'so2']
+
+## Some observations display a sum rather than min/max values
+#set $obs_sum = ['rain', 'ET', 'hail', 'snow']
+
+## Some observations display only the max value
+  #set $obs_max_only = ['rainRate', 'hailRate', 'snowRate', 'UV']
+
 <div id="statistics_widget" class="widget">
   <div class="widget_title">
     $gettext("Statistics")
@@ -23,94 +33,10 @@
           <th class="hilo_year">$gettext("Year")</th>
           <th class="hilo_rainyear">$gettext("Rain Year")</th>
         </tr>
-        <tr>
-          <td class="label">$obs.label.outTemp</td>
-          <td class="units">$unit.label.outTemp</td>
-          #for $archive in $archive_data
-          <td class="data new_row">$archive.outTemp.max.format(add_label=False)<br/>
-            <span class="timestamp">$archive.outTemp.maxtime</span><br/>
-            $archive.outTemp.min.format(add_label=False)<br/>
-            <span class="timestamp">$archive.outTemp.mintime</span>
-          </td>
-          #end for
-        </tr>
-        <tr>
-          <td class="label">$obs.label.heatindex</td>
-          <td class="units">$unit.label.heatindex</td>
-          #for $archive in $archive_data
-          <td class="data new_row">$archive.heatindex.max.format(add_label=False)<br/>
-            <span class="timestamp">$archive.heatindex.maxtime</span>
-          </td>
-          #end for
-        </tr>
-        <tr>
-          <td class="label">$obs.label.windchill</td>
-          <td class="units">$unit.label.windchill</td>
-          #for $archive in $archive_data
-          <td class="data new_row">$archive.windchill.min.format(add_label=False)<br/>
-            <span class="timestamp">$archive.windchill.mintime</span>
-          </td>
-          #end for
-        </tr>
-        <tr>
-          <td class="label">$obs.label.dewpoint</td>
-          <td class="units">$unit.label.dewpoint</td>
-          #for $archive in $archive_data
-          <td class="data new_row">$archive.dewpoint.max.format(add_label=False)<br/>
-            <span class="timestamp">$archive.dewpoint.maxtime</span><br/>
-            $archive.dewpoint.min.format(add_label=False)<br/>
-            <span class="timestamp">$archive.dewpoint.mintime</span>
-          </td>
-          #end for
-        </tr>
-        <tr>
-          <td class="label">$obs.label.outHumidity</td>
-          <td class="units">$unit.label.outHumidity</td>
-          #for $archive in $archive_data
-          <td class="data new_row">$archive.outHumidity.max.format(add_label=False)<br/>
-            <span class="timestamp">$archive.outHumidity.maxtime</span><br/>
-            $archive.outHumidity.min.format(add_label=False)<br/>
-            <span class="timestamp">$archive.outHumidity.mintime</span>
-          </td>
-          #end for
-        </tr>
-        <tr>
-          <td class="label">$obs.label.barometer</td>
-          <td class="units">$unit.label.barometer</td>
-          #for $archive in $archive_data
-          <td class="data new_row">$archive.barometer.max.format(add_label=False)<br/>
-            <span class="timestamp">$archive.barometer.maxtime</span><br/>
-            $archive.barometer.min.format(add_label=False)<br/>
-            <span class="timestamp">$archive.barometer.mintime</span>
-          </td>
-          #end for
-        </tr>
-        <tr>
-          <td class="label">$obs.label.rain</td>
-          <td class="units">$unit.label.rain</td>
-          #for $archive in $archive_data
-          <td class="data new_row">$archive.rain.sum.format(add_label=False)</td>
-          #end for
-        </tr>
-        <tr>
-          <td class="label">$obs.label.rainRate</td>
-          <td class="units">$unit.label.rainRate</td>
-          #for $archive in $archive_data
-          <td class="data new_row">
-            $archive.rainRate.max.format(add_label=False)<br/>
-            <span class="timestamp">$archive.rainRate.maxtime</span>
-          </td>
-          #end for
-        </tr>
-		#if $day.ET.has_data and $day.ET.sum.raw > 0.0
-          <tr>
-	      <td class="label">$obs.label.ET</td>
-          <td class="units">$unit.label.ET</td>
-          #for $archive in $archive_data
-          <td class="data new_row">$archive.ET.sum.format(add_label=False)</td>
-          #end for
-          </tr>
-		#end if
+
+#for $x in $observations
+  #if $getattr($year, $x).has_data
+    #if $x == 'wind'
         <tr>
           <td class="label">$gettext("Max Wind")</td>
           <td class="units">
@@ -157,111 +83,36 @@
           </td>
           #end for
         </tr>
-
-        #if $day.UV.has_data
+    #else
         <tr>
-          <td class="label">$obs.label.UV</td>
-          <td class="units">$unit.label.UV</td>
-          #for $archive in $archive_data
+          <td class="label">$obs.label[$x]</td>
+          <td class="units">$getattr($unit.label, $x, '')</td>
+      #if $x in $obs_sum
+        #for $archive in $archive_data
+          <td class="data new_row">$getattr($archive, $x).sum.format(add_label=False)</td>
+        #end for
+      #elif $x in $obs_max_only
+        #for $archive in $archive_data
           <td class="data new_row">
-            $archive.UV.max.format(add_label=False)<br/>
-            <span class="timestamp">$archive.UV.maxtime</span><br/>
-            $archive.UV.min.format(add_label=False)<br/>
-            <span class="timestamp">$archive.UV.mintime</span>
+            $getattr($archive, $x).max.format(add_label=False)<br/>
+            <span class="timestamp">$getattr($archive, $x).maxtime</span>
           </td>
-          #end for
+        #end for
+      #else
+        #for $archive in $archive_data
+          <td class="data new_row">
+            $getattr($archive, $x).max.format(add_label=False)<br/>
+            <span class="timestamp">$getattr($archive, $x).maxtime</span><br/>
+            $getattr($archive, $x).min.format(add_label=False)<br/>
+            <span class="timestamp">$getattr($archive, $x).mintime</span>
+          </td>
+        #end for
+      #end if
         </tr>
-        #end if
+    #end if
+  #end if
+#end for
 
-        #if $day.radiation.has_data
-        <tr>
-          <td class="label">$obs.label.radiation</td>
-          <td class="units">$unit.label.radiation</td>
-          #for $archive in $archive_data
-          <td class="data new_row">
-            $archive.radiation.max.format(add_label=False)<br/>
-            <span class="timestamp">$archive.radiation.maxtime</span><br/>
-            $archive.radiation.min.format(add_label=False)<br/>
-            <span class="timestamp">$archive.radiation.mintime</span>
-          </td>
-          #end for
-        </tr>
-        #end if
-
-        #if $day.inTemp.has_data
-        <tr>
-          <td class="label">$obs.label.inTemp</td>
-          <td class="units">$unit.label.inTemp</td>
-          #for $archive in $archive_data
-          <td class="data new_row">
-            $archive.inTemp.max.format(add_label=False)<br/>
-            <span class="timestamp">$archive.inTemp.maxtime</span><br/>
-            $archive.inTemp.min.format(add_label=False)<br/>
-            <span class="timestamp">$archive.inTemp.mintime</span>
-          </td>
-          #end for
-        </tr>
-        #end if
-
-        #if $day.inHumidity.has_data
-        <tr>
-          <td class="label">$obs.label.inHumidity</td>
-          <td class="units">$unit.label.inHumidity</td>
-          #for $archive in $archive_data
-          <td class="data new_row">
-            $archive.inHumidity.max.format(add_label=False)<br/>
-            <span class="timestamp">$archive.inHumidity.maxtime</span><br/>
-            $archive.inHumidity.min.format(add_label=False)<br/>
-            <span class="timestamp">$archive.inHumidity.mintime</span>
-          </td>
-          #end for
-        </tr>
-        #end if
-
-        #if $day.extraTemp1.has_data
-        <tr>
-          <td class="label">$obs.label.extraTemp1</td>
-          <td class="units">$unit.label.extraTemp1</td>
-          #for $archive in $archive_data
-          <td class="data new_row">
-            $archive.extraTemp1.max.format(add_label=False)<br/>
-            <span class="timestamp">$archive.extraTemp1.maxtime</span><br/>
-            $archive.extraTemp1.min.format(add_label=False)<br/>
-            <span class="timestamp">$archive.extraTemp1.mintime</span>
-          </td>
-          #end for
-        </tr>
-        #end if
-
-        #if $day.extraTemp2.has_data
-        <tr>
-          <td class="label">$obs.label.extraTemp2</td>
-          <td class="units">$unit.label.extraTemp2</td>
-          #for $archive in $archive_data
-          <td class="data new_row">
-            $archive.extraTemp2.max.format(add_label=False)<br/>
-            <span class="timestamp">$archive.extraTemp2.maxtime</span><br/>
-            $archive.extraTemp2.min.format(add_label=False)<br/>
-            <span class="timestamp">$archive.extraTemp2.mintime</span>
-          </td>
-          #end for
-        </tr>
-        #end if
-
-        #if $day.extraTemp3.has_data
-        <tr>
-          <td class="label">$obs.label.extraTemp3</td>
-          <td class="units">$unit.label.extraTemp3</td>
-          #for $archive in $archive_data
-          <td class="data new_row">
-            $archive.extraTemp3.max.format(add_label=False)<br/>
-            <span class="timestamp">$archive.extraTemp3.maxtime</span><br/>
-            $archive.extraTemp3.min.format(add_label=False)<br/>
-            <span class="timestamp">$archive.extraTemp3.mintime</span>
-          </td>
-          #end for
-        </tr>
-        #end if
       </tbody>
     </table>
 

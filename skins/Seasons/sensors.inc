@@ -16,25 +16,29 @@
 #end if
 #end def
 
+#set $conns = [ "rxCheckPercent", "signal1", "signal2", "signal3", "signal4", "signal5", "signal6", "signal7", "signal8" ]
+#set $battery_statuses = [ "outTempBatteryStatus", "inTempBatteryStatus", "rainBatteryStatus", "hailBatteryStatus", "snowBatteryStatus", "windBatteryStatus", "uvBatteryStatus", "txBatteryStatus", "batteryStatus1", "batteryStatus2", "batteryStatus3", "batteryStatus4", "batteryStatus5", "batteryStatus6", "batteryStatus7", "batteryStatus8" ]
+#set $voltages = [ "consBatteryVoltage", "heatingVoltage", "supplyVoltage", "referenceVoltage" ]
+
 ## first see what sensor data are available
 
 #set $have_conn = 0
-#for $x in [$day.rxCheckPercent]
-  #if $x.has_data
+#for $x in $conns
+  #if $getattr($current, $x).has_data
     #set $have_conn = 1
   #end if
 #end for
 
 #set $have_battery_status = 0
-#for $x in [$day.txBatteryStatus, $day.windBatteryStatus, $day.rainBatteryStatus, $day.outTempBatteryStatus, $day.inTempBatteryStatus]
-  #if $x.has_data
+#for $x in $battery_statuses
+  #if $getattr($current, $x).has_data
     #set $have_battery_status = 1
   #end if
 #end for
 
 #set $have_voltage = 0
-#for $x in [$day.consBatteryVoltage, $day.heatingVoltage, $day.supplyVoltage, $day.referenceVoltage]
-  #if $x.has_data
+#for $x in $voltages
+  #if $getattr($current, $x).has_data
     #set $have_voltage = 1
   #end if
 #end for
@@ -54,75 +58,40 @@
 
 #if $have_conn
     <tr><th>$gettext("Connectivity")</th><th></th></tr>
-#if $day.rxCheckPercent.has_data
+#for $x in $conns
+  #if $getattr($current, $x).has_data
     <tr>
-      <td class="label">$obs.label.rxCheckPercent</td>
-      <td class="data">$current.rxCheckPercent</td>
+      <td class="label">$obs.label[$x]</td>
+      <td class="data">$getattr($current, $x)</td>
     </tr>
-#end if
+  #end if
+#end for
 #end if
 
 #if $have_battery_status
     <tr><th>$gettext("Battery Status")</th><th></th></tr>
-#if $day.txBatteryStatus.has_data
+#for $x in $battery_statuses
+  #if $getattr($current, $x).has_data
     <tr>
-      <td class="label">$obs.label.txBatteryStatus</td>
-      <td class="data">$get_battery_status($current.txBatteryStatus.raw)</td>
+      <td class="label">$obs.label[$x]</td>
+      <td class="data">$getattr($current, $x)</td>
     </tr>
-#end if
-#if $day.windBatteryStatus.has_data
-    <tr>
-      <td class="label">$obs.label.windBatteryStatus</td>
-      <td class="data">$get_battery_status($current.windBatteryStatus.raw)</td>
-    </tr>
-#end if
-#if $day.rainBatteryStatus.has_data
-    <tr>
-      <td class="label">$obs.label.rainBatteryStatus</td>
-      <td class="data">$get_battery_status($current.rainBatteryStatus.raw)</td>
-    </tr>
-#end if
-#if $day.outTempBatteryStatus.has_data
-    <tr>
-      <td class="label">$obs.label.outTempBatteryStatus</td>
-      <td class="data">$get_battery_status($current.outTempBatteryStatus.raw)</td>
-    </tr>
-#end if
-#if $day.inTempBatteryStatus.has_data
-    <tr>
-      <td class="label">$obs.label.inTempBatteryStatus</td>
-      <td class="data">$get_battery_status($current.inTempBatteryStatus.raw)</td>
-    </tr>
-#end if
+  #end if
+#end for
 #end if
 
 #if $have_voltage
     <tr><th>$gettext("Voltage")</th><th></th></tr>
-#if $day.consBatteryVoltage.has_data
+#for $x in $voltages
+  #if $getattr($current, $x).has_data
     <tr>
-      <td class="label">$obs.label.consBatteryVoltage</td>
-      <td class="data">$current.consBatteryVoltage</td>
+      <td class="label">$obs.label[$x]</td>
+      <td class="data">$getattr($current, $x)</td>
     </tr>
+  #end if
+#end for
 #end if
-#if $day.heatingVoltage.has_data
-    <tr>
-      <td class="label">$obs.label.heatingVoltage</td>
-      <td class="data">$current.heatingVoltage</td>
-    </tr>
-#end if
-#if $day.supplyVoltage.has_data
-    <tr>
-      <td class="label">$obs.label.supplyVoltage</td>
-      <td class="data">$current.supplyVoltage</td>
-    </tr>
-#end if
-#if $day.referenceVoltage.has_data
-    <tr>
-      <td class="label">$obs.label.referenceVoltage</td>
-      <td class="data">$current.referenceVoltage</td>
-    </tr>
-#end if
-#end if
+
   </table>
   </div>
 
