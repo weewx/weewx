@@ -280,11 +280,10 @@ class StdReportEngine(threading.Thread):
             try:
                 merge_dict = configobj.ConfigObj(lang_config_path, file_error=True,
                                                  encoding='utf-8')
-                log.debug("Found localization file %s for report '%s'", lang_config_path, report)
                 # make sure 'Texts' is present
                 if 'Texts' not in merge_dict:
                     merge_dict['Texts'] = {}
-                # set language code for $gettext.lang
+                # set language code for $gettext(lang)
                 merge_dict['Texts']['lang'] = lang_spec
                 # Merge into skin_dict
                 weeutil.config.merge_config(skin_dict, merge_dict)
