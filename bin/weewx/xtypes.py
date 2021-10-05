@@ -926,8 +926,8 @@ class WindVecDaily(XType):
             # We can't handle it.
             raise weewx.UnknownType(obs_type)
 
-        # We can only do 'avg''
-        if aggregate_type != 'avg':
+        # We can only do 'avg' or 'not_null
+        if aggregate_type not in ['avg', 'not_null']:
             raise weewx.UnknownAggregation(aggregate_type)
 
         # We cannot use the day summaries if the starting and ending times of the aggregation
@@ -937,8 +937,13 @@ class WindVecDaily(XType):
                 or not (isStartOfDay(timespan.stop) or timespan.stop == db_manager.last_timestamp):
             raise weewx.UnknownAggregation(aggregate_type)
 
-        sql = 'SELECT SUM(xsum), SUM(ysum), SUM(dirsumtime) ' \
-              'FROM %s_day_wind WHERE dateTime>=? AND dateTime<?;' % db_manager.table_name
+        if aggregate_type == 'avg':
+            sql = 'SELECT SUM(xsum), SUM(ysum), SUM(dirsumtime) ' \
+                  'FROM %s_day_wind WHERE dateTime>=? AND dateTime<?;' % db_manager.table_name
+        else:
+            # Aggregate type must be 'not_null'. This is actually run against 'wind'.
+            return DailySummaries.get_aggregate('wind', timespan, 'not_null', db_manager,
+                                                **option_dict)
 
         row = db_manager.getSql(sql, timespan)
 

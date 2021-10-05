@@ -713,6 +713,18 @@ def archiveRainYearSpan(time_ts, sory_mon, grace=1):
                     int(time.mktime((_year + 1, sory_mon, 1, 0, 0, 0, 0, 0, -1))))
 
 
+def timespan_by_name(label, time_ts, **kwargs):
+    """Calculate an an appropriate TimeSpan"""
+    return {
+        'hour' : archiveHoursAgoSpan,
+        'day' : archiveDaySpan,
+        'week' : archiveWeekSpan,
+        'month' : archiveMonthSpan,
+        'year' : archiveYearSpan,
+        'rainyear' : archiveRainYearSpan
+    }[label](time_ts, **kwargs)
+
+
 def genHourSpans(start_ts, stop_ts):
     """Generator function that generates start/stop of hours in an inclusive range.
 
