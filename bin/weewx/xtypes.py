@@ -720,8 +720,9 @@ class AggregateHeatCool(XType):
 # ############################# WindVec extensions #########################################
 
 class WindVec(XType):
-    """Extensions for calculating special observation types 'windvec' and 'windgustvec'. It
-    provides functions for calculating series, and for calculating aggregates.
+    """Extensions for calculating special observation types 'windvec' and 'windgustvec' from the
+    main archive table. It provides functions for calculating series, and for calculating
+    aggregates.
     """
 
     windvec_types = {
@@ -744,6 +745,8 @@ class WindVec(XType):
         'max': "SELECT %(mag)s, %(dir)s, usUnits FROM %(table_name)s "
                "WHERE dateTime > %(start)s AND dateTime <= %(stop)s  AND %(mag)s IS NOT NULL "
                "ORDER BY %(mag)s DESC LIMIT 1;",
+        'not_null' : "SELECT %(mag)s IS NOT NULL, usUnits FROM %(table_name)s "
+               "WHERE dateTime > %(start)s AND dateTime <= %(stop)s LIMIT 1;"
     }
     # for types 'avg', 'sum'
     complex_sql_wind = 'SELECT %(mag)s, %(dir)s, usUnits FROM %(table_name)s WHERE dateTime > ? ' \
@@ -851,7 +854,7 @@ class WindVec(XType):
             select_stmt = WindVec.agg_sql_dict[aggregate_type] % interpolation_dict
             row = db_manager.getSql(select_stmt)
             if row:
-                if aggregate_type == 'count':
+                if aggregate_type in ['count', 'not_null']:
                     value, std_unit_system = row
                 else:
                     magnitude, direction, std_unit_system = row
@@ -937,13 +940,13 @@ class WindVecDaily(XType):
                 or not (isStartOfDay(timespan.stop) or timespan.stop == db_manager.last_timestamp):
             raise weewx.UnknownAggregation(aggregate_type)
 
-        if aggregate_type == 'avg':
-            sql = 'SELECT SUM(xsum), SUM(ysum), SUM(dirsumtime) ' \
-                  'FROM %s_day_wind WHERE dateTime>=? AND dateTime<?;' % db_manager.table_name
-        else:
-            # Aggregate type must be 'not_null'. This is actually run against 'wind'.
+        if aggregate_type == 'not_null':
+            # Aggregate type 'not_null' is actually run against 'wind'.
             return DailySummaries.get_aggregate('wind', timespan, 'not_null', db_manager,
                                                 **option_dict)
+
+        sql = 'SELECT SUM(xsum), SUM(ysum), SUM(dirsumtime) ' \
+              'FROM %s_day_wind WHERE dateTime>=? AND dateTime<?;' % db_manager.table_name
 
         row = db_manager.getSql(sql, timespan)
 

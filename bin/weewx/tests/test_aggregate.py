@@ -260,6 +260,13 @@ class TestAggregate(unittest.TestCase):
             self.assertAlmostEqual(vt[0].real, 9.683, 3)
             self.assertAlmostEqual(vt[0].imag, -15.572, 3)
 
+            vt = weewx.xtypes.WindVec.get_aggregate('windvec',
+                                                    TimeSpan(hour_start_ts, hour_stop_ts),
+                                                    'not_null', db_manager)
+            self.assertTrue(vt[0])
+            self.assertEqual(vt[1], 'boolean')
+            self.assertEqual(vt[2], 'group_boolean')
+
     def test_get_aggregate_expression(self):
         """Test using an expression in an aggregate"""
         with weewx.manager.open_manager_with_config(self.config_dict, 'wx_binding') as db_manager:
