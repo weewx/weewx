@@ -38,11 +38,20 @@ SECS_PER_DAY   = 86400
 def CtoK(x):
     return x + 273.15
 
+def KtoC(x):
+    return x - 273.15
+
+def KtoF(x):
+    return CtoF(KtoC(x))
+
+def FtoK(x):
+    return CtoK(FtoC(x))
+
 def CtoF(x):
     return x * 1.8 + 32.0
 
 def FtoC(x):
-    return (x - 32.0) * 5.0 / 9.0
+    return (x - 32.0) / 1.8
 
 # Conversions to and from Felsius.
 # For the definition of Felsius, see https://xkcd.com/1923/
@@ -343,13 +352,17 @@ conversionDict = {
                           'minute'           : lambda x : x*1440.0,
                           'hour'             : lambda x : x*24.0},
     'degree_C'         : {'degree_F'         : CtoF,
-                          'degree_E'         : CtoE},
+                          'degree_E'         : CtoE,
+                          'degree_K'         : CtoK},
     'degree_C_day'     : {'degree_F_day'     : lambda x : x * (9.0/5.0)},
     'degree_E'         : {'degree_C'         : EtoC,
                           'degree_F'         : EtoF},
     'degree_F'         : {'degree_C'         : FtoC,
-                          'degree_E'         : FtoE},
+                          'degree_E'         : FtoE,
+                          'degree_K'         : FtoK},
     'degree_F_day'     : {'degree_C_day'     : lambda x : x * (5.0/9.0)},
+    'degree_K'         : {'degree_C'         : KtoC,
+                          'degreeF'          : KtoF},
     'dublin_jd'        : {'unix_epoch'       : lambda x : (x-25567.5) * SECS_PER_DAY,
                           'unix_epoch_ms'    : lambda x : (x-25567.5) * SECS_PER_DAY * 1000,
                           'unix_epoch_ns'    : lambda x : (x-25567.5) * SECS_PER_DAY * 1e06},
@@ -485,6 +498,7 @@ default_unit_format_dict = {
     "degree_E"           : "%.1f",
     "degree_F"           : "%.1f",
     "degree_F_day"       : "%.1f",
+    "degree_K"           : "%.1f",
     "degree_compass"     : "%.0f",
     "foot"               : "%.0f",
     "gallon"             : "%.1f",
@@ -548,6 +562,7 @@ default_unit_label_dict = {
     "degree_E"          : u"°E",
     "degree_F"          : u"°F",
     "degree_F_day"      : u"°F-day",
+    "degree_K"          : u"°K",
     "degree_compass"    : u"°",
     "foot"              : u" feet",
     "gallon"            : u" gal",
