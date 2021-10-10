@@ -1001,10 +1001,13 @@ class XTypeTable(XType):
                     std_unit_system = record['usUnits']
 
                 # Given a record, use the xtypes system to calculate a value:
-                value = get_scalar(obs_type, record, db_manager)
+                try:
+                    value = get_scalar(obs_type, record, db_manager)
+                    data_vec.append(value[0])
+                except weewx.CannotCalculate:
+                    data_vec.append(None)
                 start_vec.append(record['dateTime'] - record['interval'] * 60)
                 stop_vec.append(record['dateTime'])
-                data_vec.append(value[0])
 
             unit, unit_group = weewx.units.getStandardUnitType(std_unit_system, obs_type)
 
