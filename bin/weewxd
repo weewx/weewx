@@ -143,6 +143,14 @@ def main():
         try:
             log.debug("Initializing engine")
 
+            # determine how weewx was installed for station registration
+            if config_path == '/etc/weewx/weewx.conf':
+                config_dict['installer'] = 'packaged'
+            elif config_path == '/home/weewx/weewx.conf':
+                config_dict['installer'] = 'setup'
+            else:
+                config_dict['installer'] = 'other'
+
             # Create and initialize the engine
             engine = weewx.engine.StdEngine(config_dict)
 
