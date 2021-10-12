@@ -74,7 +74,7 @@
   #if $getattr($current, $x).has_data
     <tr>
       <td class="label">$obs.label[$x]</td>
-      <td class="data">$getattr($current, $x)</td>
+      <td class="data">$get_battery_status($getattr($current, $x).raw)</td>
     </tr>
   #end if
 #end for
