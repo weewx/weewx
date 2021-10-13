@@ -1,7 +1,7 @@
-#    Copyright (c) 2009-2015 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2021 Tom Keffer <tkeffer@gmail.com>
 #    See the file LICENSE.txt for your rights.
 
-"""Example of how to implement a low battery alarm in weewx. 
+"""Example of how to implement a low battery alarm in WeeWX.
 
 *******************************************************************************
 
@@ -61,20 +61,27 @@ report_services.
 *******************************************************************************
 """
 
+import logging
 import time
 import smtplib
 from email.mime.text import MIMEText
 import threading
-import syslog
 
 import weewx
 from weewx.engine import StdService
 from weeutil.weeutil import timestamp_to_string, option_as_list
 
+log = logging.getLogger(__name__)
+
+
 # Inherit from the base class StdService:
 class BatteryAlarm(StdService):
     """Service that sends email if one of the batteries is low"""
-    
+
+    battery_flags = ['txBatteryStatus', 'windBatteryStatus',
+                     'rainBatteryStatus', 'inTempBatteryStatus',
+                     'outTempBatteryStatus']
+
     def __init__(self, engine, config_dict):
         # Pass the initialization information on to my superclass:
         super(BatteryAlarm, self).__init__(engine, config_dict)
@@ -97,24 +104,23 @@ class BatteryAlarm(StdService):
             self.SUBJECT         = config_dict['Alarm'].get('subject', "Low battery alarm message from weewx")
             self.FROM            = config_dict['Alarm'].get('from', 'alarm@example.com')
             self.TO              = option_as_list(config_dict['Alarm']['mailto'])
-            syslog.syslog(syslog.LOG_INFO, "lowBattery: LowBattery alarm enabled. Count threshold is %d" % self.count_threshold)
-
-            # If we got this far, it's ok to start intercepting events:
-            self.bind(weewx.NEW_LOOP_PACKET,    self.newLoopPacket)
-            self.bind(weewx.NEW_ARCHIVE_RECORD, self.newArchiveRecord)
         except KeyError as e:
-            syslog.syslog(syslog.LOG_INFO, "lowBattery: No alarm set.  Missing parameter: %s" % e)
+            log.info("No alarm set.  Missing parameter: %s", e)
+        else:
+            # If we got this far, it's ok to start intercepting events:
+            self.bind(weewx.NEW_LOOP_PACKET,    self.new_loop_packet)
+            self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
+            log.info("LowBattery alarm enabled. Count threshold is %d", self.count_threshold)
 
-    def newLoopPacket(self, event):
+    def new_loop_packet(self, event):
         """This function is called on each new LOOP packet."""
 
-        # If any battery status flag is non-zero, a battery is low
-        low_batteries = dict()
-        for flag in ['txBatteryStatus', 'windBatteryStatus',
-                     'rainBatteryStatus', 'inTempBatteryStatus',
-                     'outTempBatteryStatus']:
-            if flag in event.packet and event.packet[flag]:
-                low_batteries[flag] = event.packet[flag]
+        packet = event.packet
+
+        # If any battery status flag is non-zero, a battery is low. Use dictionary comprehension
+        # to build a new dictionary that just holds the non-zero values.
+        low_batteries = {k : packet[k] for k in BatteryAlarm.battery_flags
+                         if k in packet and packet[k]}
 
         # If there are any low batteries, see if we need to send an alarm
         if low_batteries:
@@ -131,33 +137,33 @@ class BatteryAlarm(StdService):
                     timestamp = event.packet['dateTime']
                     # Launch in a separate thread so it does not block the
                     # main LOOP thread:
-                    t  = threading.Thread(target=BatteryAlarm.soundTheAlarm,
-                                          args=(self, timestamp,
-                                                low_batteries,
-                                                self.alarm_count))
+                    t = threading.Thread(target=BatteryAlarm.sound_the_alarm,
+                                         args=(self, timestamp,
+                                               low_batteries,
+                                               self.alarm_count))
                     t.start()
                     # Record when the message went out:
                     self.last_msg_ts = time.time()
         
-    def newArchiveRecord(self, event):  # @UnusedVariable
+    def new_archive_record(self, event):
         """This function is called on each new archive record."""
         
         # Reset the alarm counter
         self.alarm_count = 0
 
-    def soundTheAlarm(self, timestamp, battery_flags, alarm_count):
+    def sound_the_alarm(self, timestamp, battery_flags, alarm_count):
         """This function is called when the alarm has been triggered."""
         
         # Get the time and convert to a string:
         t_str = timestamp_to_string(timestamp)
 
         # Log it in the system log:
-        syslog.syslog(syslog.LOG_INFO, "lowBattery: Low battery status sounded at %s: %s" % (t_str, battery_flags))
+        log.info("Low battery status sounded at %s: %s" % (t_str, battery_flags))
 
         # Form the message text:
         indicator_strings = []
         for bat in battery_flags:
-            indicator_strings.append("%s: %04x" % (bat, battery_flags[bat]))
+            indicator_strings.append("%s: %04x" % (bat, int(battery_flags[bat])))
         msg_text = """
 The low battery indicator has been seen %d times since the last archive period.
 
@@ -178,7 +184,7 @@ Low battery indicators:
         try:
             # First try end-to-end encryption
             s=smtplib.SMTP_SSL(self.smtp_host)
-            syslog.syslog(syslog.LOG_DEBUG, "lowBattery: using SMTP_SSL")
+            log.debug("Using SMTP_SSL")
         except AttributeError:
             # If that doesn't work, try creating an insecure host, then upgrading
             s = smtplib.SMTP(self.smtp_host)
@@ -188,29 +194,90 @@ Low battery indicators:
                 s.ehlo()
                 s.starttls()
                 s.ehlo()
-                syslog.syslog(syslog.LOG_DEBUG,
-                              "lowBattery: using SMTP encrypted transport")
+                log.debug("Using SMTP encrypted transport")
             except smtplib.SMTPException:
-                syslog.syslog(syslog.LOG_DEBUG,
-                              "lowBattery: using SMTP unencrypted transport")
+                log.debug("Using SMTP unencrypted transport")
 
         try:
             # If a username has been given, assume that login is required
             # for this host:
             if self.smtp_user:
                 s.login(self.smtp_user, self.smtp_password)
-                syslog.syslog(syslog.LOG_DEBUG,
-                              "lowBattery: logged in as %s" % self.smtp_user)
+                log.debug("Logged in as %s", self.smtp_user)
 
             # Send the email:
             s.sendmail(msg['From'], self.TO,  msg.as_string())
             # Log out of the server:
             s.quit()
         except Exception as e:
-            syslog.syslog(syslog.LOG_ERR,
-                          "lowBattery: send email failed: %s" % (e,))
+            log.error("Send email failed: %s", e)
             raise
         
         # Log sending the email:
-        syslog.syslog(syslog.LOG_INFO,
-                      "lowBattery: email sent to: %s" % self.TO)
+        log.info("Email sent to: %s", self.TO)
+
+
+if __name__ == '__main__':
+    """This section is used to test lowBattery.py. It uses a record that is guaranteed to
+    sound a battery alert.
+
+     You will need a valid weewx.conf configuration file with an [Alarm]
+     section that has been set up as illustrated at the top of this file."""
+
+    from optparse import OptionParser
+    import weecfg
+    import weeutil.logger
+
+    usage = """Usage: python lowBattery.py --help    
+       python lowBattery.py [CONFIG_FILE|--config=CONFIG_FILE]
+
+Arguments:
+
+      CONFIG_PATH: Path to weewx.conf """
+
+    epilog = """You must be sure the WeeWX modules are in your PYTHONPATH. For example:
+
+    PYTHONPATH=/home/weewx/bin python lowBattery.py --help"""
+
+    # Force debug:
+    weewx.debug = 1
+
+    # Create a command line parser:
+    parser = OptionParser(usage=usage,
+                          epilog=epilog)
+    parser.add_option("--config", dest="config_path", metavar="CONFIG_FILE",
+                      help="Use configuration file CONFIG_FILE.")
+    # Parse the arguments and options
+    (options, args) = parser.parse_args()
+
+    try:
+        config_path, config_dict = weecfg.read_config(options.config_path, args)
+    except IOError as e:
+        exit("Unable to open configuration file: %s" % e)
+
+    print("Using configuration file %s" % config_path)
+
+    # Set logging configuration:
+    weeutil.logger.setup('lowBattery', config_dict)
+
+    if 'Alarm' not in config_dict:
+        exit("No [Alarm] section in the configuration file %s" % config_path)
+
+    # This is the fake packet that we'll use
+    pack = {'txBatteryStatus': 1.0,
+            'dateTime': int(time.time())}
+
+    # We need the main WeeWX engine in order to bind to the event, but we don't need
+    # for it to completely start up. So get rid of all services:
+    config_dict['Engine']['Services'] = {}
+    # Now we can instantiate our slim engine, using the DummyEngine class...
+    engine = weewx.engine.DummyEngine(config_dict)
+    # ... and set the alarm using it.
+    alarm = BatteryAlarm(engine, config_dict)
+
+    # Create a NEW_LOOP_PACKET event
+    event = weewx.Event(weewx.NEW_LOOP_PACKET, packet=pack)
+
+    # Trigger the alarm enough that we reach the threshold
+    for count in range(alarm.count_threshold):
+        alarm.new_loop_packet(event)
