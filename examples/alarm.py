@@ -1,11 +1,12 @@
-#    Copyright (c) 2009-2019 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2021 Tom Keffer <tkeffer@gmail.com>
 #    See the file LICENSE.txt for your rights.
 
 """Example of how to implement an alarm in WeeWX.
 
 *******************************************************************************
 
-To use this alarm, add the following to the weewx configuration file:
+To use this alarm, add the following somewhere in your configuration file
+weewx.conf:
 
 [Alarm]
     expression = "outTemp < 40.0"
@@ -59,9 +60,9 @@ services to report_services.
 *******************************************************************************
 """
 
+import logging
 import smtplib
 import socket
-import syslog
 import threading
 import time
 from email.mime.text import MIMEText
@@ -69,6 +70,8 @@ from email.mime.text import MIMEText
 import weewx
 from weeutil.weeutil import timestamp_to_string, option_as_list
 from weewx.engine import StdService
+
+log = logging.getLogger(__name__)
 
 
 # Inherit from the base class StdService:
@@ -95,13 +98,13 @@ class MyAlarm(StdService):
             self.SUBJECT       = config_dict['Alarm'].get('subject', "Alarm message from weewx")
             self.FROM          = config_dict['Alarm'].get('from', 'alarm@example.com')
             self.TO            = option_as_list(config_dict['Alarm']['mailto'])
-            syslog.syslog(syslog.LOG_INFO, "alarm: Alarm set for expression: '%s'" % self.expression)
-            
+        except KeyError as e:
+            log.info("No alarm set.  Missing parameter: %s", e)
+        else:
             # If we got this far, it's ok to start intercepting events:
             self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)    # NOTE 1
-        except KeyError as e:
-            syslog.syslog(syslog.LOG_INFO, "alarm: No alarm set.  Missing parameter: %s" % e)
-            
+            log.info("Alarm set for expression: '%s'", self.expression)
+
     def new_archive_record(self, event):
         """Gets called on a new archive record event."""
         
@@ -126,35 +129,36 @@ class MyAlarm(StdService):
                     self.last_msg_ts = time.time()
             except NameError as e:
                 # The record was missing a named variable. Log it.
-                syslog.syslog(syslog.LOG_DEBUG, "alarm: %s" % e)
+                log.info("%s", e)
 
-    def sound_the_alarm(self, rec):
+    def sound_the_alarm(self, record):
         """Sound the alarm in a 'try' block"""
 
         # Wrap the attempt in a 'try' block so we can log a failure.
         try:
-            self.do_alarm(rec)
+            self.do_alarm(record)
         except socket.gaierror:
             # A gaierror exception is usually caused by an unknown host
-            syslog.syslog(syslog.LOG_CRIT, "alarm: unknown host %s" % self.smtp_host)
+            log.critical("Unknown host %s", self.smtp_host)
             # Reraise the exception. This will cause the thread to exit.
             raise
         except Exception as e:
-            syslog.syslog(syslog.LOG_CRIT, "alarm: unable to sound alarm. Reason: %s" % e)
+            log.critical("Unable to sound alarm. Reason: %s", e)
             # Reraise the exception. This will cause the thread to exit.
             raise
 
-    def do_alarm(self, rec):
+    def do_alarm(self, record):
         """Send an email out"""
 
         # Get the time and convert to a string:
-        t_str = timestamp_to_string(rec['dateTime'])
+        t_str = timestamp_to_string(record['dateTime'])
 
         # Log the alarm
-        syslog.syslog(syslog.LOG_INFO, 'alarm: Alarm expression "%s" evaluated True at %s' % (self.expression, t_str))
+        log.info('Alarm expression "%s" evaluated True at %s' % (self.expression, t_str))
 
         # Form the message text:
-        msg_text = 'Alarm expression "%s" evaluated True at %s\nRecord:\n%s' % (self.expression, t_str, str(rec))
+        msg_text = 'Alarm expression "%s" evaluated True at %s\nRecord:\n%s' \
+                   % (self.expression, t_str, str(record))
         # Convert to MIME:
         msg = MIMEText(msg_text)
         
@@ -166,9 +170,9 @@ class MyAlarm(StdService):
         try:
             # First try end-to-end encryption
             s = smtplib.SMTP_SSL(self.smtp_host, timeout=self.timeout)
-            syslog.syslog(syslog.LOG_DEBUG, "alarm: using SMTP_SSL")
-        except (AttributeError, socket.timeout, socket.error):
-            syslog.syslog(syslog.LOG_DEBUG, "alarm: unable to use SMTP_SSL connection.")
+            log.debug("Using SMTP_SSL")
+        except (AttributeError, socket.timeout, socket.error) as e:
+            log.debug("Unable to use SMTP_SSL connection. Reason: %s", e)
             # If that doesn't work, try creating an insecure host, then upgrading
             s = smtplib.SMTP(self.smtp_host, timeout=self.timeout)
             try:
@@ -177,28 +181,26 @@ class MyAlarm(StdService):
                 s.ehlo()
                 s.starttls()
                 s.ehlo()
-                syslog.syslog(syslog.LOG_DEBUG,
-                              "alarm: using SMTP encrypted transport")
-            except smtplib.SMTPException:
-                syslog.syslog(syslog.LOG_DEBUG,
-                              "alarm: using SMTP unencrypted transport")
+                log.debug("Using SMTP encrypted transport")
+            except smtplib.SMTPException as e:
+                log.debug("Using SMTP unencrypted transport. Reason: %s", e)
 
         try:
             # If a username has been given, assume that login is required for this host:
             if self.smtp_user:
                 s.login(self.smtp_user, self.smtp_password)
-                syslog.syslog(syslog.LOG_DEBUG, "alarm: logged in with user name %s" % self.smtp_user)
+                log.debug("Logged in with user name %s", self.smtp_user)
             
             # Send the email:
             s.sendmail(msg['From'], self.TO,  msg.as_string())
             # Log out of the server:
             s.quit()
         except Exception as e:
-            syslog.syslog(syslog.LOG_ERR, "alarm: SMTP mailer refused message with error %s" % e)
+            log.error("SMTP mailer refused message with error %s", e)
             raise
         
         # Log sending the email:
-        syslog.syslog(syslog.LOG_INFO, "alarm: email sent to: %s" % self.TO)
+        log.info("Email sent to: %s", self.TO)
 
 
 if __name__ == '__main__':
@@ -210,6 +212,7 @@ if __name__ == '__main__':
 
     from optparse import OptionParser
     import weecfg
+    import weeutil.logger
 
     usage = """Usage: python alarm.py --help    
        python alarm.py [CONFIG_FILE|--config=CONFIG_FILE]
@@ -222,11 +225,8 @@ Arguments:
     
     PYTHONPATH=/home/weewx/bin python alarm.py --help"""
 
+    # Force debug:
     weewx.debug = 1
-
-    # Set defaults for the system logger:
-    syslog.openlog('alarm.py', syslog.LOG_PID | syslog.LOG_CONS)
-    syslog.setlogmask(syslog.LOG_UPTO(syslog.LOG_DEBUG))
 
     # Create a command line parser:
     parser = OptionParser(usage=usage,
@@ -243,6 +243,9 @@ Arguments:
 
     print("Using configuration file %s" % config_path)
 
+    # Set logging configuration:
+    weeutil.logger.setup('alarm', config_dict)
+
     if 'Alarm' not in config_dict:
         exit("No [Alarm] section in the configuration file %s" % config_path)
 
@@ -257,8 +260,8 @@ Arguments:
     # We need the main WeeWX engine in order to bind to the event, but we don't need
     # for it to completely start up. So get rid of all services:
     config_dict['Engine']['Services'] = {}
-    # Now we can instantiate our slim engine...
-    engine = weewx.engine.StdEngine(config_dict)
+    # Now we can instantiate our slim engine, using the DummyEngine class...
+    engine = weewx.engine.DummyEngine(config_dict)
     # ... and set the alarm using it.
     alarm = MyAlarm(engine, config_dict)
 
