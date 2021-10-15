@@ -105,6 +105,10 @@ def main():
     log.info("Using configuration file %s", config_path)
     log.info("Debug is %s", weewx.debug)
 
+    # save the full path to the invoked weewxd for station registration
+    config_dict['entrypoint'] = os.path.realpath(__file__)
+    log.info("Entrypoint is %s", config_dict['entrypoint'])
+
     # If no command line --loop-on-init was specified, look in the config file.
     if options.loop_on_init is None:
         loop_on_init = to_bool(config_dict.get('loop_on_init', False))
@@ -142,14 +146,6 @@ def main():
 
         try:
             log.debug("Initializing engine")
-
-            # determine how weewx was installed for station registration
-            if config_path == '/etc/weewx/weewx.conf':
-                config_dict['installer'] = 'packaged'
-            elif config_path == '/home/weewx/weewx.conf':
-                config_dict['installer'] = 'setup'
-            else:
-                config_dict['installer'] = 'other'
 
             # Create and initialize the engine
             engine = weewx.engine.StdEngine(config_dict)
