@@ -33,7 +33,7 @@
       </tr>
     #elif $x == 'rain'
       <tr>
-        <td class="label">$obs.label.rain_today</td>
+        <td class="label">$gettext("Rain Today")</td>
         <td class="data">$day.rain.sum</td>
       </tr>
     #else
