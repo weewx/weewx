@@ -4,7 +4,7 @@
 #errorCatcher Echo
 #encoding UTF-8
 
-#set $archive_data = [('day', $day), ('week', $week), ('month', $month), ('year', $year), ('rainyear', $rainyear)]
+#set $timespans = ['day', 'week', 'month', 'year', 'rainyear']
 
 ## Get the list of observations from the configuration file, otherwise fallback
 ## to a very rudimentary set of observations.
@@ -41,11 +41,11 @@
     #if $x == 'windSpeed'
       <tr>
         <td class="label">$gettext("Max Wind")</td>
-        #for $archive in $archive_data
-        <td class="data new_row hilo_$archive[0]">
-          <span title="$archive[1].wind.maxtime">
-            $archive[1].wind.max.format(add_label=False)</span><br/>
-          $archive[1].wind.gustdir.format(add_label=False)
+        #for $timespan in $timespans
+        <td class="data new_row hilo_$timespan">
+          <span title="$getVar($timespan).wind.maxtime">
+            $getVar($timespan).wind.max.format(add_label=False)</span><br/>
+          $getVar($timespan).wind.gustdir.format(add_label=False)
         </td>
         #end for
         <td class="units">
@@ -55,17 +55,17 @@
       </tr>
       <tr>
         <td class="label">$gettext("Average Wind")</td>
-        #for $archive in $archive_data
-        <td class="data new_row hilo_$archive[0]">
-          $archive[1].wind.avg.format(add_label=False)</td>
+        #for $timespan in $timespans
+        <td class="data new_row hilo_$timespan">
+          $getVar($timespan).wind.avg.format(add_label=False)</td>
         #end for
         <td class="units">$unit.label.wind</td>
       </tr>
       <tr>
         <td class="label">$gettext("RMS Wind")</td>
-        #for $archive in $archive_data
-        <td class="data new_row hilo_$archive[0]">
-          $archive[1].wind.rms.format(add_label=False)</td>
+        #for $timespan in $timespans
+        <td class="data new_row hilo_$timespan">
+          $getVar($timespan).wind.rms.format(add_label=False)</td>
         #end for
         <td class="units">$unit.label.wind</td>
       </tr>
@@ -75,10 +75,10 @@
           $gettext("Vector Average")<br/>
           $gettext("Vector Direction")
         </td>
-        #for $archive in $archive_data
-        <td class="data new_row hilo_$archive[0]">
-          $archive[1].wind.vecavg.format(add_label=False)<br/>
-          $archive[1].wind.vecdir.format(add_label=False)
+        #for $timespan in $timespans
+        <td class="data new_row hilo_$timespan">
+          $getVar($timespan).wind.vecavg.format(add_label=False)<br/>
+          $getVar($timespan).wind.vecdir.format(add_label=False)
         </td>
         #end for
         <td class="units">
@@ -90,24 +90,24 @@
       <tr>
         <td class="label">$obs.label[$x]</td>
       #if $x in $obs_sum
-        #for $archive in $archive_data
-        <td class="data new_row hilo_$archive[0]">
-          $getattr($archive[1], $x).sum.format(add_label=False)</td>
+        #for $timespan in $timespans
+        <td class="data new_row hilo_$timespan">
+          $getVar('%s.%s' % ($timespan, $x)).sum.format(add_label=False)</td>
         #end for
       #elif $x in $obs_max_only
-        #for $archive in $archive_data
-        <td class="data new_row hilo_$archive[0]">
-          <span title="$getattr($archive[1], $x).maxtime">
-            $getattr($archive[1], $x).max.format(add_label=False)</span>
+        #for $timespan in $timespans
+        <td class="data new_row hilo_$timespan">
+          <span title="$getVar('%s.%s' % ($timespan, $x)).maxtime>
+            $getVar('%s.%s' % ($timespan, $x)).max.format(add_label=False)</span>'
         </td>
         #end for
       #else
-        #for $archive in $archive_data
-        <td class="data new_row hilo_$archive[0]">
-          <span title="$getattr($archive[1], $x).maxtime">
-            $getattr($archive[1], $x).max.format(add_label=False)</span><br/>
-          <span title="$getattr($archive[1], $x).mintime">
-            $getattr($archive[1], $x).min.format(add_label=False)</span>
+        #for $timespan in $timespans
+        <td class="data new_row hilo_$timespan">
+          <span title="$getVar('%s.%s' % ($timespan, $x)).maxtime">
+            $getVar('%s.%s' % ($timespan, $x)).max.format(add_label=False)</span><br/>
+          <span title="$getVar('%s.%s' % ($timespan, $x)).mintime">
+            $getVar('%s.%s' % ($timespan, $x)).min.format(add_label=False)</span>
         </td>
         #end for
       #end if

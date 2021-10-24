@@ -17,7 +17,7 @@
 
 #if 'observations_current' in $Extras
 #for $x in $Extras.observations_current
-  #if $getattr($year, $x).has_data
+  #if $getVar('year.%s.has_data' % $x)
     #if $x == 'barometer'
       <tr>
         <td class="label">$obs.label.barometer</td>
@@ -36,7 +36,7 @@
     #else
       <tr>
         <td class="label">$obs.label[$x]</td>
-        <td class="data">$getattr($current, $x)</td>
+        <td class="data">$getVar('current.' + $x)</td>
       </tr>
     #end if
   #end if

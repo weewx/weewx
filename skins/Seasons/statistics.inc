@@ -4,7 +4,7 @@
 #errorCatcher Echo
 #encoding UTF-8
 
-#set $archive_data = [$day, $week, $month, $year, $rainyear]
+#set $time_tags = [$day, $week, $month, $year, $rainyear]
 
 ## Get the list of observations from the configuration file, otherwise fallback
 ## to a very rudimentary set of observations.
@@ -39,27 +39,27 @@
             $unit.label.wind<br/>
             $unit.label.windDir
           </td>
-          #for $archive in $archive_data
+          #for $time_tag in $time_tags
           <td class="data new_row">
-            $archive.wind.max.format(add_label=False)<br/>
-            $archive.wind.gustdir.format(add_label=False)<br/>
-            <span class="timestamp">$archive.wind.maxtime</span>
+            $time_tag.wind.max.format(add_label=False)<br/>
+            $time_tag.wind.gustdir.format(add_label=False)<br/>
+            <span class="timestamp">$time_tag.wind.maxtime</span>
           </td>
           #end for
         </tr>
         <tr>
           <td class="label">$gettext("Average Wind")</td>
           <td class="units">$unit.label.wind</td>
-          #for $archive in $archive_data
+          #for $time_tag in $time_tags
           <td class="data new_row">
-            $archive.wind.avg.format(add_label=False)</td>
+            $time_tag.wind.avg.format(add_label=False)</td>
           #end for
         </tr>
         <tr>
           <td class="label">$gettext("RMS Wind")</td>
           <td class="units">$unit.label.wind</td>
-          #for $archive in $archive_data
-          <td class="data new_row">$archive.wind.rms.format(add_label=False)</td>
+          #for $time_tag in $time_tags
+          <td class="data new_row">$time_tag.wind.rms.format(add_label=False)</td>
           #end for
         </tr>
 
@@ -72,10 +72,10 @@
             $unit.label.wind<br/>
             $unit.label.windDir
           </td>
-          #for $archive in $archive_data
+          #for $time_tag in $time_tags
           <td class="data new_row">
-            $archive.wind.vecavg.format(add_label=False)<br/>
-            $archive.wind.vecdir.format(add_label=False)
+            $time_tag.wind.vecavg.format(add_label=False)<br/>
+            $time_tag.wind.vecdir.format(add_label=False)
           </td>
           #end for
         </tr>
@@ -84,23 +84,23 @@
           <td class="label">$obs.label[$x]</td>
           <td class="units">$getattr($unit.label, $x, '')</td>
       #if $x in $obs_sum
-        #for $archive in $archive_data
-          <td class="data new_row">$getattr($archive, $x).sum.format(add_label=False)</td>
+        #for $time_tag in $time_tags
+          <td class="data new_row">$getattr($time_tag, $x).sum.format(add_label=False)</td>
         #end for
       #elif $x in $obs_max_only
-        #for $archive in $archive_data
+        #for $time_tag in $time_tags
           <td class="data new_row">
-            $getattr($archive, $x).max.format(add_label=False)<br/>
-            <span class="timestamp">$getattr($archive, $x).maxtime</span>
+            $getattr($time_tag, $x).max.format(add_label=False)<br/>
+            <span class="timestamp">$getattr($time_tag, $x).maxtime</span>
           </td>
         #end for
       #else
-        #for $archive in $archive_data
+        #for $time_tag in $time_tags
           <td class="data new_row">
-            $getattr($archive, $x).max.format(add_label=False)<br/>
-            <span class="timestamp">$getattr($archive, $x).maxtime</span><br/>
-            $getattr($archive, $x).min.format(add_label=False)<br/>
-            <span class="timestamp">$getattr($archive, $x).mintime</span>
+            $getattr($time_tag, $x).max.format(add_label=False)<br/>
+            <span class="timestamp">$getattr($time_tag, $x).maxtime</span><br/>
+            $getattr($time_tag, $x).min.format(add_label=False)<br/>
+            <span class="timestamp">$getattr($time_tag, $x).mintime</span>
           </td>
         #end for
       #end if

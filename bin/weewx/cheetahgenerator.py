@@ -642,7 +642,7 @@ class Extras(SearchList):
         # If the user has supplied an '[Extras]' section in the skin
         # dictionary, include it in the search list. Otherwise, just include
         # an empty dictionary.
-        self.Extras = ExtraDict(generator.skin_dict['Extras'] if 'Extras' in generator.skin_dict else {})
+        self.Extras = ExtraDict(generator.skin_dict.get('Extras', {}))
 
 
 class JSONHelpers(SearchList):
