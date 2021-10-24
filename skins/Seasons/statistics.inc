@@ -8,15 +8,9 @@
 
 ## Get the list of observations from the configuration file, otherwise fallback
 ## to a very rudimentary set of observations.
-#if 'observations' in $Extras
-#set $observations = $Extras.observations
-#set $obs_sum = $Extras.obs_sum
-#set $obs_max_only = $Extras.obs_max_only
-#else
-#set $observations = ['outTemp', 'windSpeed', 'rain']
-#set $obs_sum = ['rain']
-#set $obs_max_only = ['rainRate']
-#end if
+#set $observations = $Extras.get('observations', ['outTemp', 'windSpeed', 'rain'])
+#set $obs_sum = $Extras.get('obs_sum', ['rain'])
+#set $obs_max_only = $Extras.get('obs_max_only', ['rainRate'])
 
 <div id="statistics_widget" class="widget">
   <div class="widget_title">
