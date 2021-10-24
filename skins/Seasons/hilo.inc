@@ -8,7 +8,7 @@
 
 ## Get the list of observations from the configuration file, otherwise fallback
 ## to a very rudimentary set of observations.
-#if $Extras.has_key('observations')
+#if 'observations' in $Extras
 #set $observations = $Extras.observations
 #set $obs_sum = $Extras.obs_sum
 #set $obs_max_only = $Extras.obs_max_only

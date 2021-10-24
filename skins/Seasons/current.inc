@@ -15,7 +15,7 @@
   <table>
     <tbody>
 
-#if $Extras.has_key('observations_current')
+#if 'observations_current' in $Extras
 #for $x in $Extras.observations_current
   #if $getattr($year, $x).has_data
     #if $x == 'barometer'

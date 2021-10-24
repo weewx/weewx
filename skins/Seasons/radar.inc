@@ -4,7 +4,7 @@
 #errorCatcher Echo
 #encoding UTF-8
 
-#if $Extras.has_key('radar_img')
+#if 'radar_img' in $Extras
 <div id='radar_widget' class="widget">
   <div class="widget_title">
     Radar
@@ -13,11 +13,11 @@
   </div>
 
   <div class="widget_contents">
-    #if $Extras.has_key('radar_url')
+    #if 'radar_url' in $Extras
     <a  href="$Extras.radar_url">
     #end if
       <img src="$Extras.radar_img" alt="Radar" />
-    #if $Extras.has_key('radar_url')
+    #if 'radar_url' in $Extras
     </a>
     #end if
   </div>
