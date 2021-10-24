@@ -6,15 +6,17 @@
 
 #set $archive_data = [$day, $week, $month, $year, $rainyear]
 
-## The list of observations determines which database fields will be shown in
-## the summary as well as the order in which they will be displayed.
-#set $observations = ['outTemp', 'heatindex', 'windchill', 'dewpoint', 'outHumidity', 'barometer', 'rain', 'rainRate', 'ET', 'hail', 'hailRate', 'snow', 'windSpeed', 'UV', 'radiation', 'inTemp', 'inHumidity', 'extraTemp1', 'extraHumid1', 'extraTemp2', 'extraHumid2', 'extraTemp3', 'extraHumid3', 'extraTemp4', 'extraHumid4', 'extraTemp5', 'extraHumid5', 'extraTemp6', 'extraHumid6', 'extraTemp7', 'extraHumid7', 'extraTemp8', 'extraHumid8', 'leafTemp1', 'leafTemp2', 'leafWet1', 'leafWet2', 'soilTemp1', 'soilTemp2', 'soilTemp3', 'soilTemp4', 'soilMoist1', 'soilMoist2', 'soilMoist3', 'soilMoist4', 'pm1_0', 'pm2_5', 'pm10_0', 'co', 'co2', 'nh3', 'no2', 'o3', 'so2']
-
-## Some observations display a sum rather than min/max values
-#set $obs_sum = ['rain', 'ET', 'hail', 'snow']
-
-## Some observations display only the max value
-  #set $obs_max_only = ['rainRate', 'hailRate', 'snowRate', 'UV']
+## Get the list of observations from the configuration file, otherwise fallback
+## to a very rudimentary set of observations.
+#if $Extras.has_key('observations')
+#set $observations = $Extras.observations
+#set $obs_sum = $Extras.obs_sum
+#set $obs_max_only = $Extras.obs_max_only
+#else
+#set $observations = ['outTemp', 'windSpeed', 'rain']
+#set $obs_sum = ['rain']
+#set $obs_max_only = ['rainRate']
+#end if
 
 <div id="statistics_widget" class="widget">
   <div class="widget_title">
