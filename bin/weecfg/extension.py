@@ -280,35 +280,6 @@ class ExtensionEngine(object):
             # Inject any new config data into the configuration file
             weeutil.config.conditional_merge(self.config_dict, cfg)
 
-            # For ConfigObj type objects, mark each new section with a major comment block.
-            # If cfg is not a ConfigObj type object, an exception will occur, so be prepared to
-            # catch it.
-            try:
-                for section_name in cfg.sections:
-                    # The very first section has to be handled differently because it needs not
-                    # only a major comment block, but its comments are held in "initial_comment",
-                    # not in the attribute .comments like other sections. Quirk of how ConfigObj
-                    # works.
-                    if section_name == cfg.sections[0]:
-                        # Is there an initial comment?
-                        if any([x.strip() for x in cfg.initial_comment]):
-                            # There is an initial comment. Include not only the major comment
-                            # block, but also the initial_comment
-                            self.config_dict.comments[section_name] \
-                                = weecfg.major_comment_block + cfg.initial_comment
-                        else:
-                            # No initial comment. Include the major comment block, plus a
-                            # synthesized new comment.
-                            self.config_dict.comments[section_name] \
-                                = weecfg.major_comment_block \
-                                  + ["# Options for '%s'" % section_name]
-                    else:
-                        # Not the first section. Just add a major comment block in front of any
-                        # existing comments.
-                        self.config_dict.comments[section_name][0:0] = weecfg.major_comment_block
-            except AttributeError:
-                pass
-
             self._reorder(cfg)
             save_config = True
 
