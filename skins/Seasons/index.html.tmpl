@@ -1,11 +1,22 @@
 ## Copyright 2009-2018 Tom Keffer, Matthew Wall
 ## Distributed under terms of GPLv3.  See LICENSE.txt for your rights.
 #errorCatcher Echo
-##
+
+#set $periods = ['day', 'week', 'month', 'year']
+
+## The plot info is an array of pairs, where each pair is the plot name and an
+## array of observations in the plot.  These should correspond with the plot
+## definitions in the ImageGenerator configuration.
+
+## FIXME: given a plot name, we should be able to query the ImageGenerator
+## configuration dictionary to determine the observations that are required
+## for that plot
+
+#set $plot_info = [ ('barometer', ['barometer']), ('tempdew', ['outTemp', 'dewpoint']), ('tempfeel', ['windchill', 'heatindex']), ('hum', ['outHumidity']), ('wind', ['windSpeed']), ('winddir', ['windSpeed']), ('windvec', ['windSpeed']), ('rain', ['rain']), ('ET', ['ET']), ('UV', ['UV']), ('radiation', ['radiation']), ('tempin', ['inTemp']), ('humin', ['inHumidity']), ('tempext', ['extraTemp1', 'extraTemp2', 'extraTemp3']), ('humext', ['extraHumid1', 'extraHumid2', 'extraHumid3']), ('templeaf', ['leafTemp1', 'leafTemp2']), ('wetleaf', ['leafWet1', 'leafWet2']), ('tempsoil', ['soilTemp1', 'soilTemp2', 'soilTemp3', 'soilTemp4']), ('moistsoil', ['soilMoist1', 'soilMoist2', 'soilMoist3', 'soilMoist4']), ('pm', ['pm1_0', 'pm2_5', 'pm10_0']) ]
+
 <!DOCTYPE html>
 <html lang="$gettext('lang')">
   <head>
-    ##
     <meta charset="UTF-8">
     <title>$station.location</title>
     <link rel="icon" type="image/png" href="favicon.ico" />
@@ -44,52 +55,19 @@
                onclick="choose_history('year')">$gettext("Year")</a>
           </div>
 
-#for x in ['day', 'week', 'month', 'year']
-          <div id="history_${x}" class="plot_container">
-            <img src="${x}barometer.png" alt="$obs.label.barometer"/>
-            <img src="${x}tempdew.png"   alt="$obs.label.outTemp" />
-            <img src="${x}tempfeel.png"  alt="$obs.label.feel" />
-            <img src="${x}hum.png"       alt="$obs.label.outHumidity" />
-            <img src="${x}wind.png"      alt="$obs.label.windSpeed" />
-            <img src="${x}winddir.png"   alt="$obs.label.windDir" />
-            <img src="${x}windvec.png"   alt="$obs.label.windvec" />
-            <img src="${x}rain.png"      alt="$obs.label.rain" />
-            #if $year.ET.has_data
-            <img src="${x}ET.png"        alt="$obs.label.ET"/>
-            #end if
-            #if $year.UV.has_data
-            <img src="${x}uv.png"        alt="$obs.label.UV" />
-            #end if
-            #if $year.radiation.has_data
-            <img src="${x}radiation.png" alt="$obs.label.radiation" />
-            #end if
-            #if $year.inTemp.has_data
-            <img src="${x}tempin.png"    alt="$obs.label.inTemp" />
-            #end if
-            #if $year.inHumidity.has_data
-            <img src="${x}humin.png"     alt="$obs.label.inHumidity" />
-            #end if
-            #if $year.extraTemp1.has_data or $year.extraTemp2.has_data or $year.extraTemp3.has_data
-            <img src="${x}tempext.png"      alt="$obs.label.extraTemp1" />
-            #end if
-            #if $year.extraHumid1.has_data or $year.extraHumid2.has_data or $year.extraHumid3.has_data
-            <img src="${x}humext.png"    alt="$obs.label.extraHumid1" />
-            #end if
-            #if $year.leafTemp1.has_data or $year.leafTemp2.has_data
-            <img src="${x}templeaf.png"    alt="$obs.label.leafTemp1" />
-            #end if
-            #if $year.leafWet1.has_data or $year.leafWet2.has_data
-            <img src="${x}wetleaf.png"    alt="$obs.label.leafWet1" />
-            #end if
-            #if $year.soilTemp1.has_data or $year.soilTemp2.has_data or $year.soilTemp3.has_data or $year.soilTemp4.has_data
-            <img src="${x}tempsoil.png"    alt="$obs.label.soilTemp1" />
-            #end if
-            #if $year.soilMoist1.has_data or $year.soilMoist2.has_data or $year.soilMoist3.has_data or $year.soilMoist4.has_data
-            <img src="${x}moistsoil.png"    alt="$obs.label.soilMoist1" />
-            #end if
-            #if $year.pm1_0.has_data or $year.pm2_5.has_data or $year.pm10_0.has_data
-            <img src="${x}pm.png"    alt="$obs.label.pm1_0" />
-            #end if
+#for period in $periods
+          <div id="history_${period}" class="plot_container">
+  #for plot_name, plot_data in $plot_info
+    #set $show_plot = 0
+    #for data in $plot_data
+      #if $getVar('year.%s.has_data' % $data)
+        #set $show_plot = 1
+      #end if
+    #end for
+    #if $show_plot
+            <img src="${period}${plot_name}.png" alt="${period}${plot_name}"/>
+    #end if
+  #end for
           </div>
 #end for
 

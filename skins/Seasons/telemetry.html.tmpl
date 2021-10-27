@@ -3,19 +3,13 @@
 #errorCatcher Echo
 #encoding UTF-8
 
-#def period_plots($period, $label)
-<div id="history_${label}" class="plot_containter" style="display:none">
-#for $x in [
-{'data': $period.rxCheckPercent, 'img': 'rx', 'alt': 'signal'},
-{'data': $period.consBatteryVoltage, 'img': 'volt', 'alt': 'voltage'}
-]
-#if $x['data'].has_data
-#set $img = "%s%s.png" % ($label, $x['img'])
-<img src="$img" alt="$x['alt']" />
-#end if
-#end for
-</div>
-#end def
+#set $periods = ['day', 'week', 'month', 'year']
+
+## The plot info is an array of pairs, where each pair is the plot name and an
+## array of observations in the plot.  These should correspond with the plot
+## definitions in the ImageGenerator configuration.
+
+#set $plot_info = [ ('rx', ['rxCheckPercent']), ('volt', ['consBatteryVoltage', 'heatingVoltage', 'supplyVoltage', 'referenceVoltage']) ]
 
 <!DOCTYPE html>
 <html lang="$gettext('lang')">
@@ -52,13 +46,23 @@
             <a class="button" id="button_history_year"
                onclick="choose_history('year')">$gettext("Year")</a>
           </div>
-          $period_plots($day, 'day')
-          
-          $period_plots($week, 'week')
 
-          $period_plots($month, 'month')
+#for period in $periods
+          <div id="history_${period}" class="plot_container" style="display:none">
+  #for plot_name, plot_data in $plot_info
+    #set $show_plot = 0
+    #for data in $plot_data
+      #if $getVar('year.%s.has_data' % $data)
+        #set $show_plot = 1
+      #end if
+    #end for
+    #if $show_plot
+            <img src="${period}${plot_name}.png" alt="${period}${plot_name}"/>
+    #end if
+  #end for
+          </div>
+#end for
 
-          $period_plots($year, 'year')
         </div>
       </div>
 
