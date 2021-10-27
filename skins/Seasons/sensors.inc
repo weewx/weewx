@@ -16,29 +16,31 @@
 #end if
 #end def
 
-#set $conns = [ "rxCheckPercent", "signal1", "signal2", "signal3", "signal4", "signal5", "signal6", "signal7", "signal8" ]
-#set $battery_statuses = [ "outTempBatteryStatus", "inTempBatteryStatus", "rainBatteryStatus", "hailBatteryStatus", "snowBatteryStatus", "windBatteryStatus", "uvBatteryStatus", "txBatteryStatus", "batteryStatus1", "batteryStatus2", "batteryStatus3", "batteryStatus4", "batteryStatus5", "batteryStatus6", "batteryStatus7", "batteryStatus8" ]
-#set $voltages = [ "consBatteryVoltage", "heatingVoltage", "supplyVoltage", "referenceVoltage" ]
+## Get the list of sensor observations from the configuration file, otherwise
+## fallback to a very rudimentary set.
+#set $sensor_connections = $Extras.get('sensor_connections', ['rxCheckPercent'])
+#set $sensor_batteries = $Extras.get('sensor_batteries', ['outTempBatteryStatus', 'inTempBatteryStatus', 'rainBatteryStatus', 'windBatteryStatus', 'uvBatteryStatus', 'txBatteryStatus'])
+#set $sensor_voltages = $Extras.get(['consBatteryVoltage', 'heatingVoltage', 'supplyVoltage', 'referenceVoltage'])
 
 ## first see what sensor data are available
 
 #set $have_conn = 0
-#for $x in $conns
-  #if $getattr($current, $x).has_data
+#for $x in $sensor_connections
+  #if $getVar('year.%s.has_data' % $x)
     #set $have_conn = 1
   #end if
 #end for
 
-#set $have_battery_status = 0
-#for $x in $battery_statuses
-  #if $getattr($current, $x).has_data
-    #set $have_battery_status = 1
+#set $have_battery = 0
+#for $x in $sensor_batteries
+  #if $getVar('year.%s.has_data' % $x)
+    #set $have_battery = 1
   #end if
 #end for
 
 #set $have_voltage = 0
-#for $x in $voltages
-  #if $getattr($current, $x).has_data
+#for $x in $sensor_voltages
+  #if $getVar('year.%s.has_data' % $x)
     #set $have_voltage = 1
   #end if
 #end for
@@ -46,35 +48,34 @@
 
 ## now display the available data only
 
-#if $have_conn or $have_battery_status or $have_voltage
+#if $have_conn or $have_battery or $have_voltage
 <div id='sensors_widget' class="widget">
   <div class="widget_title">
     <a href="telemetry.html">$gettext("Sensor Status")</a>
-    <a class="widget_control"
-      onclick="toggle_widget('sensors')">&diams;</a>
+    <a class="widget_control" onclick="toggle_widget('sensors')">&diams;</a>
   </div>
   <div class="widget_contents">
   <table>
 
 #if $have_conn
     <tr><th>$gettext("Connectivity")</th><th></th></tr>
-#for $x in $conns
-  #if $getattr($current, $x).has_data
+#for $x in $sensor_connections
+  #if $getVar('year.%s.has_data' % $x)
     <tr>
       <td class="label">$obs.label[$x]</td>
-      <td class="data">$getattr($current, $x)</td>
+      <td class="data">$getVar('current.' + $x)</td>
     </tr>
   #end if
 #end for
 #end if
 
-#if $have_battery_status
+#if $have_battery
     <tr><th>$gettext("Battery Status")</th><th></th></tr>
-#for $x in $battery_statuses
-  #if $getattr($current, $x).has_data
+#for $x in $sensor_batteries
+  #if $getVar('year.%s.has_data' % $x)
     <tr>
       <td class="label">$obs.label[$x]</td>
-      <td class="data">$get_battery_status($getattr($current, $x).raw)</td>
+      <td class="data">$get_battery_status($getVar('current.' + $x + '.raw'))</td>
     </tr>
   #end if
 #end for
@@ -82,11 +83,11 @@
 
 #if $have_voltage
     <tr><th>$gettext("Voltage")</th><th></th></tr>
-#for $x in $voltages
-  #if $getattr($current, $x).has_data
+#for $x in $sensor_voltages
+  #if $getVar('year.%s.has_data' % $x)
     <tr>
       <td class="label">$obs.label[$x]</td>
-      <td class="data">$getattr($current, $x)</td>
+      <td class="data">$getVar('current.' + $x)</td>
     </tr>
   #end if
 #end for

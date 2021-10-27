@@ -37,7 +37,7 @@
       </tr>
 
 #for $x in $observations
-  #if $getattr($year, $x).has_data
+  #if $getVar('year.%s.has_data' % $x)
     #if $x == 'windSpeed'
       <tr>
         <td class="label">$gettext("Max Wind")</td>
