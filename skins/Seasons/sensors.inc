@@ -20,7 +20,7 @@
 ## fallback to a very rudimentary set.
 #set $sensor_connections = $Extras.get('sensor_connections', ['rxCheckPercent'])
 #set $sensor_batteries = $Extras.get('sensor_batteries', ['outTempBatteryStatus', 'inTempBatteryStatus', 'rainBatteryStatus', 'windBatteryStatus', 'uvBatteryStatus', 'txBatteryStatus'])
-#set $sensor_voltages = $Extras.get(['consBatteryVoltage', 'heatingVoltage', 'supplyVoltage', 'referenceVoltage'])
+#set $sensor_voltages = $Extras.get('sensor_voltages', ['consBatteryVoltage', 'heatingVoltage', 'supplyVoltage', 'referenceVoltage'])
 
 ## first see what sensor data are available
 
