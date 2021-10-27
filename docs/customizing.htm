@@ -770,9 +770,9 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
         </p>
 
         <p>
-            Options are specified in configuration files and are organized hierarchically into stanzas. For example, the
-            <span class="code">[Labels]</span> stanza contains the text that should be displayed for each observation.
-            The <span class="code">[Units]</span> stanza contains other stanzas, each of which contains parameters that
+            Configuration files are organized hierarchically into stanzas. For example, the <span
+            class="code">[Labels]</span> stanza contains the text that should be displayed for each observation. The
+            <span class="code">[Units]</span> stanza contains other stanzas, each of which contains parameters that
             control the display of units.
         </p>
 
@@ -802,42 +802,66 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
                 <td>Section</td>
                 <td>Options</td>
                 <td>Scope</td>
-                <td>Nesting example</td>
+                <td>Example</td>
                 <td>Comments</td>
             </tr>
             <tr>
                 <td class="code">weewx.conf</td>
-                <td class="code">[StdReport] / [[<span class="symcode">report_name</span>]]</td>
+                <td class="code">[StdReport]<br/>&nbsp;&nbsp;[[<span class="symcode">report_name</span>]]</td>
                 <td></td>
                 <td>Affects only the report <span class="symcode">report_name</span>.</td>
-                <td class="code">[[[Labels]]] / [[[[Generic]]]]</td>
+                <td class="code">
+                    [StdReport]<br/>
+                    &nbsp;&nbsp;[[Seasons]]<br/>
+                    &nbsp;&nbsp;&nbsp;&nbsp;[[[Labels]]]<br/>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[[[[Generic]]]]<br/>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;rain=Rainfall</td>
                 <td>Highest precedence. Has the final say.</td>
             </tr>
             <tr>
                 <td class="code">weewx.conf</td>
-                <td class="code">[StdReport] / [[<span class="symcode">report_name</span>]]</td>
+                <td class="code">[StdReport]<br/>&nbsp;&nbsp;[[<span class="symcode">report_name</span>]]</td>
                 <td class="code">lang<br/>unit_system</td>
                 <td>Affects only the report <span class="symcode">report_name</span>.</td>
-                <td></td>
+                <td class="code">
+                    [StdReport]<br/>
+                    &nbsp;&nbsp;[[Seasons]]<br/>
+                    &nbsp;&nbsp;&nbsp;&nbsp;lang = de<br/>
+                    &nbsp;&nbsp;&nbsp;&nbsp;unit_system=metricwx</td>
                 <td>Internationalization support. Option <span class="code">lang</span> only works for skins that
                 have been internationalized and have a corresponding language configuration file. <br/>
                     Option <span class="code">unit_system</span> works for all skins.</td>
             </tr>
             <tr>
                 <td class="code">weewx.conf</td>
-                <td class="code">[StdReport] / [[Defaults]]</td>
+                <td class="code">[StdReport]<br/>&nbsp;&nbsp;[[Defaults]]</td>
                 <td></td>
                 <td>Affects <em>all</em> reports.</td>
-                <td class="code">[[[Labels]]] / [[[[Generic]]]]</td>
-                <td>Deprecated. Use options <span class="code">lang</span> and <span class="code">unit_system</span>
-                instead. Can still be used to localize skins that do not support option <span class="code">lang</span>.</td>
+                <td class="code">
+                    [StdReport]<br/>
+                    &nbsp;&nbsp;[[Defaults]]<br/>
+                    &nbsp;&nbsp;&nbsp;&nbsp;[[[Labels]]]<br/>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[[[[Generic]]]]<br/>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;rain=Rainfall</td>
+                <td><a href="#deprecated-defaults">Deprecated</a>. Can still be used to localize skins that do not
+                    support option <span class="code">lang</span>.</td>
             </tr>
+            <div id="deprecated-defaults" class="modal-dialog">
+                <div>
+                           <a href="#close" title="Close" class="close-dialog">X</a>
+                    Override options for an individual skin instead. This allows the
+                    internationalization features of V4.6 to work.
+                </div>
+            </div>
             <tr>
                 <td class="code">skins/<span class="symcode">report_name</span>/skin.conf</td>
                 <td></td>
                 <td></td>
                 <td>Affects only the report <span class="symcode">report_name</span>.</td>
-                <td class="code">[Labels] / [[Generic]]</td>
+                <td class="code">
+                    [Units]<br/>
+                    &nbsp;&nbsp;[[Labels]]<br/>
+                    &nbsp;&nbsp;&nbsp;&nbsp;mbar=" hPa"</td>
                 <td>Generally supplied by the skin author, not the user. Parameters specified here define the baseline
                     behavior.
                 </td>
@@ -847,7 +871,7 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
                 <td class="code"></td>
                 <td></td>
                 <td>Affects <em>all</em> reports.</td>
-                <td class="code">[Labels] / [[Generic]]</td>
+                <td class="code">[Units]<br/>&nbsp;&nbsp;[[Labels]]<br/>&nbsp;&nbsp;&nbsp;&nbsp;mbar=" mbar"</td>
                 <td>Acts as a backstop, in the case an option is not specified anywhere else. Not generally modified by
                     the user, although this could change in the future.
                 </td>
@@ -872,7 +896,7 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
         <h3 id="internationalized_skins">Internationalized skins</h3>
         <p>
             All of the skins included with WeeWX have been internationalized, so if you're working with one of them,
-            this is the section you want. Next, you need to check whether there is a <em>localization</em> file for your
+            this is the section you want. Next, you need to check whether there is a <em>localization</em> file for your particular
             language. To check, look in the contents of subdirectory <span class="code">lang</span> in the skin's directory.
             For example, if you used a package installer and are using the <em>Seasons</em> skin, you will want to look
             in <span class="code">/etc/weewx/skins/Seasons/lang</span>. Inside, you will see something like this:
@@ -914,8 +938,9 @@ total 80
         </pre>
         <p>
             By contrast, if the skin has been internationalized, but there is no localization file for your language,
-            you will have to supply one. See the section <a href="#Internationalized,_but_your_language_is_missing"><em>Internationalized,
-            but your language is missing</em></a>
+            then you will have to supply one. See the section <a
+            href="#Internationalized,_but_your_language_is_missing"><em>Internationalized, but your language is
+            missing</em></a>
         </p>
 
 
@@ -1567,10 +1592,17 @@ total 80
             </li>
         </ol>
         <p>
-            The encoding for text files is <span class="code">utf8</span>, whereas the encoding for html files
-            is <span class="code">html_entities</span>. This was specified by declaring <span class="code">encoding = html_entities</span>
-            at the top level of <span class="code">[CheetahGenerator]</span> then <span class="code">encoding = utf8</span>
-            for each text file.
+            Because the option
+        </p>
+        <pre class="tty">
+    encoding = html_entities
+        </pre>
+        <p>
+            appears directly under <span class="code">[StdReport]</span>, this will be the default encoding of the
+            generated files unless explicitly overridden. We see an example of this under <span class="code">[SummaryByMonth]</span>
+            and <span class="code">
+            [SummaryByYear]</span>, which use option <span class="code">normalized_ascii</span> instead (replaces
+            accented characters with a non-accented analog).
         </p>
 
         <p>
@@ -5283,7 +5315,7 @@ mysql&gt;<span class="cmd"> RENAME TABLE weewx_new.archive TO weewx.archive;</sp
         <h1 id="customizing_units">Customizing units and unit groups</h1>
 
         <p class="warning">
-            <strong>Warning!</strong><br/> This is an area that is rapidly changing in WeeWX. Presently, new units and
+            <strong>Warning!</strong><br/> This is an area that is changing rapidly in WeeWX. Presently, new units and
             unit groups are added by manipulating the internal dictionaries in WeeWX (as described below). In the
             future, they may be specified in <span class='code'>weewx.conf</span>.
         </p>
@@ -5325,11 +5357,11 @@ class AddElectricity(StdService):
             have to define these new units, as well as the unit group they can belong to.
         </p>
         <p>
-            We assume we have a new observation type, <span class='code'>force</span>, that we are measuring over time,
+            We assume we have a new observation type, <span class='code'>rocketForce</span>, which we are measuring over time,
             for a service named <span class="code">Rocket</span>, located in <span class='code'>
         user/rocket.py</span>. We will create a new unit group, <span class='code'>group_force</span>, and new units,
             <span class='code'>newton</span> and <span class='code'>pound</span>. Our new observation, <span
-            class='code'>force</span>, will belong to <span class='code'>group_force</span>, and will be measured in
+            class='code'>rocketForce</span>, will belong to <span class='code'>group_force</span>, and will be measured in
             units of <span class='code'>newton</span> or <span class='code'>pound</span>.
         </p>
         <p>
@@ -5339,7 +5371,7 @@ class AddElectricity(StdService):
             <li>As before, we start by specifying what group our new observation type belongs to:
                 <pre class='tty'>
 import weewx.units
-weewx.units.obs_group_dict['force'] = 'group_force'</pre>
+weewx.units.obs_group_dict['rocketForce'] = 'group_force'</pre>
             </li>
             <li>Next, we specify what unit is used to measure force in the three standard unit systems used by weewx.
                 <pre class='tty'>
