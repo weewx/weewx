@@ -10,7 +10,7 @@
 ## to a very rudimentary set of observations.
 #set $observations = $DisplayOptions.get('observations', ['outTemp', 'windSpeed', 'rain'])
 #set $obs_type_sum = $DisplayOptions.get('obs_type_sum', ['rain'])
-#set $obs_type_max_only = $DisplayOptions.get('obs_type_max_only', ['rainRate'])
+#set $obs_type_max = $DisplayOptions.get('obs_type_max', ['rainRate'])
 
 <div id='hilo_widget' class="widget">
   <div class="widget_title">
@@ -94,7 +94,7 @@
         <td class="data new_row hilo_$timespan">
           $getVar('%s.%s' % ($timespan, $x)).sum.format(add_label=False)</td>
         #end for
-      #elif $x in $obs_type_max_only
+      #elif $x in $obs_type_max
         #for $timespan in $timespans
         <td class="data new_row hilo_$timespan">
           <span title="$getVar('%s.%s' % ($timespan, $x)).maxtime>

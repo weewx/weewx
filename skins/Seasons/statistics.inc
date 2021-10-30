@@ -10,7 +10,7 @@
 ## to a very rudimentary set of observations.
 #set $observations = $DisplayOptions.get('observations', ['outTemp', 'windSpeed', 'rain'])
 #set $obs_type_sum = $DisplayOptions.get('obs_type_sum', ['rain'])
-#set $obs_type_max_only = $DisplayOptions.get('obs_type_max_only', ['rainRate'])
+#set $obs_type_max = $DisplayOptions.get('obs_type_max', ['rainRate'])
 
 <div id="statistics_widget" class="widget">
   <div class="widget_title">
@@ -87,7 +87,7 @@
         #for $time_tag in $time_tags
           <td class="data new_row">$getattr($time_tag, $x).sum.format(add_label=False)</td>
         #end for
-      #elif $x in $obs_type_max_only
+      #elif $x in $obs_type_max
         #for $time_tag in $time_tags
           <td class="data new_row">
             $getattr($time_tag, $x).max.format(add_label=False)<br/>
