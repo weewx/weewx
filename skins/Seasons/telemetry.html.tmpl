@@ -3,13 +3,8 @@
 #errorCatcher Echo
 #encoding UTF-8
 
-#set $periods = ['day', 'week', 'month', 'year']
-
-## The plot info is an array of pairs, where each pair is the plot name and an
-## array of observations in the plot.  These should correspond with the plot
-## definitions in the ImageGenerator configuration.
-
-#set $plot_info = [ ('rx', ['rxCheckPercent']), ('volt', ['consBatteryVoltage', 'heatingVoltage', 'supplyVoltage', 'referenceVoltage']) ]
+#set $periods = $Extras.get('periods', ['day', 'week', 'month', 'year'])
+#set $telemetry_plot_names = $Extras.get('telemetry_plot_names', ['rx'])
 
 <!DOCTYPE html>
 <html lang="$gettext('lang')">
@@ -49,10 +44,10 @@
 
 #for period in $periods
           <div id="history_${period}" class="plot_container" style="display:none">
-  #for plot_name, plot_data in $plot_info
-    #set $show_plot = 0
-    #for data in $plot_data
-      #if $getVar('year.%s.has_data' % $data)
+  #for plot_name in $telemetry_plot_names
+    #set $show_plot = 0            
+    #for obs in $getobs('%s%s' % ($period, $plot_name))
+      #if $getVar('year.%s.has_data' % $obs)
         #set $show_plot = 1
       #end if
     #end for

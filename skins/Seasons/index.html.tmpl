@@ -2,17 +2,8 @@
 ## Distributed under terms of GPLv3.  See LICENSE.txt for your rights.
 #errorCatcher Echo
 
-#set $periods = ['day', 'week', 'month', 'year']
-
-## The plot info is an array of pairs, where each pair is the plot name and an
-## array of observations in the plot.  These should correspond with the plot
-## definitions in the ImageGenerator configuration.
-
-## FIXME: given a plot name, we should be able to query the ImageGenerator
-## configuration dictionary to determine the observations that are required
-## for that plot
-
-#set $plot_info = [ ('barometer', ['barometer']), ('tempdew', ['outTemp', 'dewpoint']), ('tempfeel', ['windchill', 'heatindex']), ('hum', ['outHumidity']), ('wind', ['windSpeed']), ('winddir', ['windSpeed']), ('windvec', ['windSpeed']), ('rain', ['rain']), ('ET', ['ET']), ('UV', ['UV']), ('radiation', ['radiation']), ('tempin', ['inTemp']), ('humin', ['inHumidity']), ('tempext', ['extraTemp1', 'extraTemp2', 'extraTemp3']), ('humext', ['extraHumid1', 'extraHumid2', 'extraHumid3']), ('templeaf', ['leafTemp1', 'leafTemp2']), ('wetleaf', ['leafWet1', 'leafWet2']), ('tempsoil', ['soilTemp1', 'soilTemp2', 'soilTemp3', 'soilTemp4']), ('moistsoil', ['soilMoist1', 'soilMoist2', 'soilMoist3', 'soilMoist4']), ('pm', ['pm1_0', 'pm2_5', 'pm10_0']) ]
+#set $periods = $Extras.get('periods', ['day', 'week', 'month', 'year'])
+#set $plot_names = $Extras.get('plot_names', ['tempdew', 'wind', 'rain'])
 
 <!DOCTYPE html>
 <html lang="$gettext('lang')">
@@ -56,11 +47,11 @@
           </div>
 
 #for period in $periods
-          <div id="history_${period}" class="plot_container">
-  #for plot_name, plot_data in $plot_info
-    #set $show_plot = 0
-    #for data in $plot_data
-      #if $getVar('year.%s.has_data' % $data)
+          <div id="history_${period}" class="plot_container" style="display:none">
+  #for plot_name in $plot_names
+    #set $show_plot = 0            
+    #for obs in $getobs('%s%s' % ($period, $plot_name))
+      #if $getVar('year.%s.has_data' % $obs)
         #set $show_plot = 1
       #end if
     #end for
@@ -81,6 +72,6 @@
 
     #include "analytics.inc"
 
-</body>
+  </body>
 
 </html>

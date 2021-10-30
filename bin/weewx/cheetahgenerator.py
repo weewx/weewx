@@ -93,7 +93,9 @@ default_search_list = [
     "weewx.cheetahgenerator.UnitInfo",
     "weewx.cheetahgenerator.Extras",
     "weewx.cheetahgenerator.JSONHelpers",
-    "weewx.cheetahgenerator.Gettext"]
+    "weewx.cheetahgenerator.Gettext",
+    "weewx.cheetahgenerator.PlotInfo",
+]
 
 
 # =============================================================================
@@ -709,6 +711,34 @@ class Gettext(SearchList):
 
     # An underscore is a common alias for gettext:
     _ = gettext
+
+
+class PlotInfo(SearchList):
+    """Return information about plots, based on ImageGenerator configuration"""
+
+    def getobs(self, plot_name):
+        """
+        Given a plot name, return the list of observations in that plot.
+        If there is no plot by the indicated name, return an empty array.
+        """
+        obs = []
+        imggen_dict = self.generator.skin_dict.get('ImageGenerator', {})
+        for timespan_name in imggen_dict:
+            try:
+                plot_dict = imggen_dict[timespan_name].get(plot_name, {})
+                for obs_name in plot_dict:
+                    try:
+                        # make sure that this is not a scalar
+                        dummy = plot_dict[obs_name].get('dummy')
+                        obs.append(obs_name)
+                    except (AttributeError, TypeError):
+                        # skip any non-dict children
+                        pass
+            except (AttributeError, TypeError):
+                # skip any non-dict children
+                pass
+        return obs
+
 
 # =============================================================================
 # Filter
