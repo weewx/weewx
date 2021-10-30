@@ -3,8 +3,8 @@
 #errorCatcher Echo
 #encoding UTF-8
 
-#set $periods = $Extras.get('periods', ['day', 'week', 'month', 'year'])
-#set $telemetry_plot_names = $Extras.get('telemetry_plot_names', ['rx'])
+#set $periods = $DisplayOptions.get('periods', ['day', 'week', 'month', 'year'])
+#set $telemetry_plot_names = $DisplayOptions.get('telemetry_plot_names', ['rx'])
 
 <!DOCTYPE html>
 <html lang="$gettext('lang')">

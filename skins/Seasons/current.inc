@@ -15,8 +15,8 @@
   <table>
     <tbody>
 
-#if 'observations_current' in $Extras
-#for $x in $Extras.observations_current
+#if 'observations_current' in $DisplayOptions
+#for $x in $DisplayOptions.observations_current
   #if $getVar('year.%s.has_data' % $x)
     #if $x == 'barometer'
       <tr>

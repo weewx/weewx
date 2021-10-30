@@ -86,6 +86,7 @@ log = logging.getLogger(__name__)
 # The default search list includes standard information sources that should be
 # useful in most templates.
 default_search_list = [
+    "weewx.cheetahgenerator.SkinInfo",
     "weewx.cheetahgenerator.Almanac",
     "weewx.cheetahgenerator.Station",
     "weewx.cheetahgenerator.Current",
@@ -95,6 +96,7 @@ default_search_list = [
     "weewx.cheetahgenerator.JSONHelpers",
     "weewx.cheetahgenerator.Gettext",
     "weewx.cheetahgenerator.PlotInfo",
+    "weewx.cheetahgenerator.DisplayOptions",
 ]
 
 
@@ -626,13 +628,13 @@ class UnitInfo(SearchList):
 if six.PY3:
     # Dictionaries in Python 3 no longer have the "has_key()" function.
     # This will break a lot of skins. Use a wrapper to provide it
-    class ExtraDict(dict):
+    class TemplateDict(dict):
 
         def has_key(self, key):
             return key in self
 else:
     # Not necessary in Python 2
-    ExtraDict = dict
+    TemplateDict = dict
 
 
 class Extras(SearchList):
@@ -644,7 +646,7 @@ class Extras(SearchList):
         # If the user has supplied an '[Extras]' section in the skin
         # dictionary, include it in the search list. Otherwise, just include
         # an empty dictionary.
-        self.Extras = ExtraDict(generator.skin_dict.get('Extras', {}))
+        self.Extras = TemplateDict(generator.skin_dict.get('Extras', {}))
 
 
 class JSONHelpers(SearchList):
@@ -738,6 +740,28 @@ class PlotInfo(SearchList):
                 # skip any non-dict children
                 pass
         return obs
+
+
+class DisplayOptions(SearchList):
+    """Class for exposing the [DisplayOptions] section in the skin config
+    dictionary as tag $DisplayOptions."""
+
+    def __init__(self, generator):
+        SearchList.__init__(self, generator)
+        # If the user has supplied an '[DisplayOptions]' section in the skin
+        # dictionary, include it in the search list. Otherwise, just include
+        # an empty dictionary.
+        self.DisplayOptions = TemplateDict(generator.skin_dict.get('DisplayOptions', {}))
+
+
+class SkinInfo(SearchList):
+    """Class for exposing information about the skin."""
+
+    def __init__(self, generator):
+        SearchList.__init__(self, generator)
+        self.SkinInfo = TemplateDict()
+        for field in ['SKIN_NAME', 'SKIN_VERSION']:
+            self.SkinInfo[field] = generator.skin_dict.get(field, 'unknown')
 
 
 # =============================================================================

@@ -2,8 +2,8 @@
 ## Distributed under terms of GPLv3.  See LICENSE.txt for your rights.
 #errorCatcher Echo
 
-#set $periods = $Extras.get('periods', ['day', 'week', 'month', 'year'])
-#set $plot_names = $Extras.get('plot_names', ['tempdew', 'wind', 'rain'])
+#set $periods = $DisplayOptions.get('periods', ['day', 'week', 'month', 'year'])
+#set $plot_names = $DisplayOptions.get('plot_names', ['tempdew', 'wind', 'rain'])
 
 <!DOCTYPE html>
 <html lang="$gettext('lang')">

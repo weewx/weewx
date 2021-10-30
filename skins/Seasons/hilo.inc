@@ -8,9 +8,9 @@
 
 ## Get the list of observations from the configuration file, otherwise fallback
 ## to a very rudimentary set of observations.
-#set $observations = $Extras.get('observations', ['outTemp', 'windSpeed', 'rain'])
-#set $obs_sum = $Extras.get('obs_sum', ['rain'])
-#set $obs_max_only = $Extras.get('obs_max_only', ['rainRate'])
+#set $observations = $DisplayOptions.get('observations', ['outTemp', 'windSpeed', 'rain'])
+#set $obs_type_sum = $DisplayOptions.get('obs_type_sum', ['rain'])
+#set $obs_type_max_only = $DisplayOptions.get('obs_type_max_only', ['rainRate'])
 
 <div id='hilo_widget' class="widget">
   <div class="widget_title">
@@ -89,12 +89,12 @@
     #else
       <tr>
         <td class="label">$obs.label[$x]</td>
-      #if $x in $obs_sum
+      #if $x in $obs_type_sum
         #for $timespan in $timespans
         <td class="data new_row hilo_$timespan">
           $getVar('%s.%s' % ($timespan, $x)).sum.format(add_label=False)</td>
         #end for
-      #elif $x in $obs_max_only
+      #elif $x in $obs_type_max_only
         #for $timespan in $timespans
         <td class="data new_row hilo_$timespan">
           <span title="$getVar('%s.%s' % ($timespan, $x)).maxtime>

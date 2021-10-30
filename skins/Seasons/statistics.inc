@@ -8,9 +8,9 @@
 
 ## Get the list of observations from the configuration file, otherwise fallback
 ## to a very rudimentary set of observations.
-#set $observations = $Extras.get('observations', ['outTemp', 'windSpeed', 'rain'])
-#set $obs_sum = $Extras.get('obs_sum', ['rain'])
-#set $obs_max_only = $Extras.get('obs_max_only', ['rainRate'])
+#set $observations = $DisplayOptions.get('observations', ['outTemp', 'windSpeed', 'rain'])
+#set $obs_type_sum = $DisplayOptions.get('obs_type_sum', ['rain'])
+#set $obs_type_max_only = $DisplayOptions.get('obs_type_max_only', ['rainRate'])
 
 <div id="statistics_widget" class="widget">
   <div class="widget_title">
@@ -83,11 +83,11 @@
         <tr>
           <td class="label">$obs.label[$x]</td>
           <td class="units">$getattr($unit.label, $x, '')</td>
-      #if $x in $obs_sum
+      #if $x in $obs_type_sum
         #for $time_tag in $time_tags
           <td class="data new_row">$getattr($time_tag, $x).sum.format(add_label=False)</td>
         #end for
-      #elif $x in $obs_max_only
+      #elif $x in $obs_type_max_only
         #for $time_tag in $time_tags
           <td class="data new_row">
             $getattr($time_tag, $x).max.format(add_label=False)<br/>
