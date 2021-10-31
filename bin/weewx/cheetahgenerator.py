@@ -766,10 +766,9 @@ class SkinInfo(SearchList):
 
     def __init__(self, generator):
         SearchList.__init__(self, generator)
-        self.SkinInfo = {
-            generator.skin_dict.get('SKIN_NAME', 'unknown'),
-            generator.skin_dict.get('SKIN_VERSION', 'unknown'),
-        }
+        for k in ['SKIN_ROOT', 'HTML_ROOT', 'REPORT_NAME',
+                  'SKIN_NAME', 'SKIN_VERSION', 'lang', 'unit_system']:
+            setattr(self, k, generator.skin_dict.get(k, 'unknown'))
 
 
 # =============================================================================
