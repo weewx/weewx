@@ -262,13 +262,13 @@
 
         <p>&nbsp;</p>
 
-        #if $Extras.has_key('radar_img')
+        #if 'radar_img' in $Extras
         <div id="radar_img">
-          #if $Extras.has_key('radar_url')
+          #if 'radar_url' in $Extras
           <a  href="$Extras.radar_url">
           #end if
             <img src="$Extras.radar_img" alt="Radar" />
-          #if $Extras.has_key('radar_url')
+          #if 'radar_url' in $Extras
           </a>
           <p>Click image for expanded radar loop</p>
           #end if
@@ -509,7 +509,7 @@
     </div>
 
     ## Include the Google Analytics code if the user has supplied an ID:
-    #if $Extras.has_key('googleAnalyticsId')
+    #if 'googleAnalyticsId' in $Extras
     <script type="text/javascript">
         var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
         document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));

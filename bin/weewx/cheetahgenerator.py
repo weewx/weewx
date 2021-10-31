@@ -628,13 +628,13 @@ class UnitInfo(SearchList):
 if six.PY3:
     # Dictionaries in Python 3 no longer have the "has_key()" function.
     # This will break a lot of skins. Use a wrapper to provide it
-    class TemplateDict(dict):
+    class ExtraDict(dict):
 
         def has_key(self, key):
             return key in self
 else:
     # Not necessary in Python 2
-    TemplateDict = dict
+    ExtraDict = dict
 
 
 class Extras(SearchList):
@@ -646,7 +646,7 @@ class Extras(SearchList):
         # If the user has supplied an '[Extras]' section in the skin
         # dictionary, include it in the search list. Otherwise, just include
         # an empty dictionary.
-        self.Extras = TemplateDict(generator.skin_dict.get('Extras', {}))
+        self.Extras = ExtraDict(generator.skin_dict.get('Extras', {}))
 
 
 class JSONHelpers(SearchList):
@@ -720,10 +720,10 @@ class PlotInfo(SearchList):
 
     def getobs(self, plot_name):
         """
-        Given a plot name, return the list of observations in that plot.
-        If there is no plot by the indicated name, return an empty array.
+        Given a plot name, return the set of observations in that plot.
+        If there is no plot by the indicated name, return an empty set.
         """
-        obs = []
+        obs = set()
         imggen_dict = self.generator.skin_dict.get('ImageGenerator', {})
         for timespan_name in imggen_dict:
             try:
@@ -737,9 +737,9 @@ class PlotInfo(SearchList):
                         # for data_type does that.
                         data_type = plot_dict[obs_name].get('data_type')
                         if data_type:
-                            obs.append(data_type)
+                            obs.add(data_type)
                         else:
-                            obs.append(obs_name)
+                            obs.add(obs_name)
                     except (AttributeError, TypeError):
                         # skip any non-dict children
                         pass
@@ -758,7 +758,7 @@ class DisplayOptions(SearchList):
         # If the user has supplied an '[DisplayOptions]' section in the skin
         # dictionary, include it in the search list. Otherwise, just include
         # an empty dictionary.
-        self.DisplayOptions = TemplateDict(generator.skin_dict.get('DisplayOptions', {}))
+        self.DisplayOptions = generator.skin_dict.get('DisplayOptions', {})
 
 
 class SkinInfo(SearchList):
@@ -766,7 +766,7 @@ class SkinInfo(SearchList):
 
     def __init__(self, generator):
         SearchList.__init__(self, generator)
-        self.SkinInfo = TemplateDict()
+        self.SkinInfo = {}
         for field in ['SKIN_NAME', 'SKIN_VERSION']:
             self.SkinInfo[field] = generator.skin_dict.get(field, 'unknown')
 

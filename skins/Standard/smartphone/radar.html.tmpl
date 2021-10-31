@@ -14,7 +14,7 @@
       <h1>$gettext("Radar")</h1>
     </div>
     <div data-role="content">
-      #if $Extras.has_key('radar_img')
+      #if 'radar_img' in $Extras
       <a  href="$Extras.radar_url">
         <img src="$Extras.radar_img" alt="Radar" /></a>
       #else

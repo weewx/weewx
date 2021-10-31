@@ -33,17 +33,17 @@
         <li><a href="rain.html">$obs.label.rainRate: $current.rainRate ($day.rain.sum)</a></li>
 	<li><a href="wind.html">$obs.label.wind: $current.windSpeed from $current.windDir.ordinal_compass ($current.windDir)</a></li>
       </ul>
-      #if $Extras.has_key('radar_img') and $Extras.has_key('radar_url')
+      #if 'radar_img' in $Extras and 'radar_url' in $Extras
     </div>
     <div data-role="content">
       <a  href="$Extras.radar_url">
         <img src="$Extras.radar_img" class="radar" alt="Radar" />
       </a>
-      #elif $Extras.has_key('radar_img')
+      #elif 'radar_img' in $Extras
     </div>
     <div data-role="content">
       <img src="$Extras.radar_img" class="radar" alt="Radar" />
-      #elif $Extras.has_key('radar_url')
+      #elif 'radar_url' in $Extras
       <ul data-role="listview" data-inset="true" data-divider-theme="c">
         <li><a  href="$Extras.radar_url">Radar</a></li>
       </ul>

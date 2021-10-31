@@ -65,13 +65,13 @@ function hideURLbar() {
 </div>
 
 
-#if $Extras.has_key('radar_img')
+#if 'radar_img' in $Extras
 <div class="radar">
-  #if $Extras.has_key('radar_url')
+  #if 'radar_url' in $Extras
   <a  href="$Extras.radar_url">
   #end if
     <img src="$Extras.radar_img" alt="Radar" />
-  #if $Extras.has_key('radar_url')
+  #if 'radar_url' in $Extras
   </a>
   #end if
 </div>

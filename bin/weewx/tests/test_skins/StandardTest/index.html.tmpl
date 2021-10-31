@@ -561,7 +561,7 @@ FALSE#slurp
   <h1>Tests for tag \$Extras</h1>
   <table>
     <tr>
-      #if $Extras.has_key('radar_url') 
+      #if 'radar_url' in $Extras
       <td>Radar URL</td>
       <td>&quot;$Extras.radar_url&quot;</td>
       #else
