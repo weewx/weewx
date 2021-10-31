@@ -172,6 +172,7 @@ obs_group_dict = ListOfDicts({
     "o3"                        : "group_fraction",
     "outHumidity"               : "group_percent",
     "outTemp"                   : "group_temperature",
+    "outWetbulb"                : "group_temperature",
     "pb"                        : "group_fraction",
     "pm1_0"                     : "group_concentration",
     "pm2_5"                     : "group_concentration",
@@ -209,6 +210,7 @@ obs_group_dict = ListOfDicts({
     "wind"                      : "group_speed",
     "windchill"                 : "group_temperature",
     "windDir"                   : "group_direction",
+    "windDir10"                 : "group_direction",
     "windGust"                  : "group_speed",
     "windGustDir"               : "group_direction",
     "windgustvec"               : "group_speed",
@@ -543,6 +545,7 @@ default_unit_format_dict = {
     "watt_second"        : "%.0f",
     "watt_hour"          : "%.1f",
     "watt_per_meter_squared" : "%.0f",
+    "kilowatt"           : "%.1f",
     "NONE"              : u"   N/A"
 }
 
@@ -607,6 +610,7 @@ default_unit_label_dict = {
     "watt_second"       : u" Ws",
     "watt_hour"         : u" Wh",
     "watt_per_meter_squared" : u" W/m²",
+    "kilowatt"          : u" kW",
     "NONE"              : u""
 }
 
