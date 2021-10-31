@@ -730,9 +730,16 @@ class PlotInfo(SearchList):
                 plot_dict = imggen_dict[timespan_name].get(plot_name, {})
                 for obs_name in plot_dict:
                     try:
-                        # make sure that this is not a scalar
-                        dummy = plot_dict[obs_name].get('dummy')
-                        obs.append(obs_name)
+                        # the observation name might be specified directly,
+                        # or it might be specified by the data_type field.
+                        # either way, we must ensure that this item from the
+                        # plot dictionary is a dict, not a scalar.  the check
+                        # for data_type does that.
+                        data_type = plot_dict[obs_name].get('data_type')
+                        if data_type:
+                            obs.append(data_type)
+                        else:
+                            obs.append(obs_name)
                     except (AttributeError, TypeError):
                         # skip any non-dict children
                         pass
