@@ -86,17 +86,17 @@ log = logging.getLogger(__name__)
 # The default search list includes standard information sources that should be
 # useful in most templates.
 default_search_list = [
-    "weewx.cheetahgenerator.SkinInfo",
     "weewx.cheetahgenerator.Almanac",
-    "weewx.cheetahgenerator.Station",
     "weewx.cheetahgenerator.Current",
+    "weewx.cheetahgenerator.DisplayOptions",
+    "weewx.cheetahgenerator.Extras",
+    "weewx.cheetahgenerator.Gettext",
+    "weewx.cheetahgenerator.JSONHelpers",
+    "weewx.cheetahgenerator.PlotInfo",
+    "weewx.cheetahgenerator.SkinInfo",
+    "weewx.cheetahgenerator.Station",
     "weewx.cheetahgenerator.Stats",
     "weewx.cheetahgenerator.UnitInfo",
-    "weewx.cheetahgenerator.Extras",
-    "weewx.cheetahgenerator.JSONHelpers",
-    "weewx.cheetahgenerator.Gettext",
-    "weewx.cheetahgenerator.PlotInfo",
-    "weewx.cheetahgenerator.DisplayOptions",
 ]
 
 
@@ -766,9 +766,10 @@ class SkinInfo(SearchList):
 
     def __init__(self, generator):
         SearchList.__init__(self, generator)
-        self.SkinInfo = {}
-        for field in ['SKIN_NAME', 'SKIN_VERSION']:
-            self.SkinInfo[field] = generator.skin_dict.get(field, 'unknown')
+        self.SkinInfo = {
+            generator.skin_dict.get('SKIN_NAME', 'unknown'),
+            generator.skin_dict.get('SKIN_VERSION', 'unknown'),
+        }
 
 
 # =============================================================================

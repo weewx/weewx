@@ -2822,6 +2822,28 @@ $month.dateTime.format("%B"): Min, max temperatures: $month.outTemp.min $month.o
                     class="code">None</span> are passed through.
                 </td>
             </tr>
+            <tr>
+                <td class="first_col code">$getobs(plot_name)</td>
+                <td>
+                    For a given plot name, this function will return the set of all observation types used by the plot.
+                    <a href="#getobs-more-info">More information.</a>
+                </td>
+                <div id="getobs-more-info" class="modal-dialog">
+                    <div>
+                        <a href="#close" title="Close" class="close-dialog">X</a>
+                        <p>
+                            For example, consider a plot that is defined in <span class="code">[ImageGenerator]</span> as
+                        <pre class="tty">    [[[daytempleaf]]]
+        [[[[leafTemp1]]]]
+        [[[[leafTemp2]]]]
+        [[[[temperature]]]]
+            data_type = outTemp
+</pre></p>
+                        <p>The tag <span class="code">$getobs('daytempleaf')</span> would return the
+                        set <span class="code">{'leafTemp1', 'leafTemp2', 'outTemp'}</span>.</p>
+                    </div>
+                </div>
+            </tr>
             </tbody>
         </table>
 
@@ -2907,6 +2929,21 @@ $month.outTemp.series(aggregate_type='max', aggregate_interval='day', time_serie
                 Can be used to set the canonical URL for search engines.
                 <pre class="tty">&lt;link rel="canonical" href="$station.station_url/$filename" /&gt;</pre>
               </td>
+            </tr>
+            <tr>
+                <td class="code first_col">$SKIN_NAME</td>
+                <td>
+                    All skins included with WeeWX include the tag <span class="code">$SKIN_NAME</span>. For example, for
+                    the <em>Seasons</em> skin, <span class="code">$SKIN_NAME</span> would return
+                    <span class="code">Seasons</span>.
+                </td>
+            </tr>
+                <td class="code first_col">$SKIN_VERSION</td>
+                <td>
+                    All skins included with WeeWX include the tag <span class="code">$SKIN_VERSION</span>, which returns
+                    the WeeWX version number of when the skin was installed. Because skins are not touched during the
+                    upgrade process, this shows the origin of the skin.
+                </td>
             </tr>
           </tbody>
         </table>
