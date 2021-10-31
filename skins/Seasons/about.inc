@@ -42,7 +42,7 @@
     </tr>
     <tr>
       <td class="label">$gettext("Skin")</td>
-      <td class="data">$SkinInfo.get('SKIN_NAME') $SkinInfo.get('SKIN_VERSION')</td>
+      <td class="data">$SKIN_NAME $SKIN_VERSION</td>
     </tr>
   </table>
   </div>
