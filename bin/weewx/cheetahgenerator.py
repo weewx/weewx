@@ -755,7 +755,10 @@ class DisplayOptions(SearchList):
         # If the user has supplied an '[DisplayOptions]' section in the skin
         # dictionary, include it in the search list. Otherwise, just include
         # an empty dictionary.
-        self.DisplayOptions = generator.skin_dict.get('DisplayOptions', {})
+        display_options = generator.skin_dict.get('DisplayOptions', {})
+        #  Make sure all entries are actually lists.
+        self.DisplayOptions = {k: weeutil.weeutil.option_as_list(display_options[k])
+                               for k in display_options}
 
 
 class SkinInfo(SearchList):
