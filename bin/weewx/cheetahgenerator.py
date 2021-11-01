@@ -713,7 +713,7 @@ class Gettext(SearchList):
 
 
 class PlotInfo(SearchList):
-    """Return information about plots, based on ImageGenerator configuration"""
+    """Return information about plots, based on what's in the [ImageGenerator] section."""
 
     def getobs(self, plot_name):
         """
@@ -721,28 +721,26 @@ class PlotInfo(SearchList):
         If there is no plot by the indicated name, return an empty set.
         """
         obs = set()
-        imggen_dict = self.generator.skin_dict.get('ImageGenerator', {})
-        for timespan_name in imggen_dict:
-            try:
-                plot_dict = imggen_dict[timespan_name].get(plot_name, {})
-                for obs_name in plot_dict:
-                    try:
-                        # the observation name might be specified directly,
-                        # or it might be specified by the data_type field.
-                        # either way, we must ensure that this item from the
-                        # plot dictionary is a dict, not a scalar.  the check
-                        # for data_type does that.
-                        data_type = plot_dict[obs_name].get('data_type')
-                        if data_type:
-                            obs.add(data_type)
-                        else:
-                            obs.add(obs_name)
-                    except (AttributeError, TypeError):
-                        # skip any non-dict children
-                        pass
-            except (AttributeError, TypeError):
-                # skip any non-dict children
-                pass
+        # If there is no [ImageGenerator] section, return the empty set.
+        try:
+            timespan_names = self.generator.skin_dict['ImageGenerator'].sections
+        except (KeyError, AttributeError):
+            return obs
+
+        # Scan all the timespans, looking for plot_name
+        for timespan_name in timespan_names:
+            if plot_name in self.generator.skin_dict['ImageGenerator'][timespan_name]:
+                # Found it. To make things manageable, get just the plot dictionary:
+                plot_dict = self.generator.skin_dict['ImageGenerator'][timespan_name][plot_name]
+                # Now extract all observation names from it
+                for obs_name in plot_dict.sections:
+                    # The observation name might be specified directly,
+                    # or it might be specified by the data_type field.
+                    if 'data_type' in plot_dict[obs_name]:
+                        obs.add(plot_dict[obs_name]['data_type'])
+                    else:
+                        obs.add(obs_name)
+                break
         return obs
 
 
