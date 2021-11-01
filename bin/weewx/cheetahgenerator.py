@@ -167,9 +167,7 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
 
     def setup(self):
         # This dictionary will hold the formatted dates of all generated files
-        self.outputted_dict = {}
-        for k in CheetahGenerator.generator_dict:
-            self.outputted_dict[k] = []
+        self.outputted_dict = {k: [] for k in CheetahGenerator.generator_dict}
 
         self.formatter = weewx.units.Formatter.fromSkinDict(self.skin_dict)
         self.converter = weewx.units.Converter.fromSkinDict(self.skin_dict)
@@ -178,13 +176,12 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
         """Load the search list"""
         self.search_list_objs = []
 
-        search_list = weeutil.weeutil.option_as_list(gen_dict.get('search_list'))
-        if search_list is None:
-            search_list = list(default_search_list)
-
-        search_list_ext = weeutil.weeutil.option_as_list(gen_dict.get('search_list_extensions'))
-        if search_list_ext is not None:
-            search_list.extend(search_list_ext)
+        # The option 'search_list' holds a starting search list. Usually it's just the default.
+        search_list = weeutil.weeutil.option_as_list(gen_dict.get('search_list',
+                                                                  default_search_list))
+        # Option 'search_list_extensions' holds user extensions.
+        search_list.extend(weeutil.weeutil.option_as_list(gen_dict.get('search_list_extensions',
+                                                                       [])))
 
         # provide feedback about the requested search list objects
         log.debug("Using search list %s", search_list)
@@ -195,9 +192,9 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
             x = c.strip()
             if x:
                 # Get the class
-                class_ = weeutil.weeutil.get_object(x)
+                klass = weeutil.weeutil.get_object(x)
                 # Then instantiate the class, passing self as the sole argument
-                self.search_list_objs.append(class_(self))
+                self.search_list_objs.append(klass(self))
 
     def teardown(self):
         """Delete any extension objects we created to prevent back references
@@ -397,21 +394,21 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
 
         # Get the basic search list
         timespan_start_tt = time.localtime(timespan.start)
-        searchList = [{'month_name' : time.strftime("%b", timespan_start_tt),
-                       'year_name'  : timespan_start_tt[0],
-                       'encoding'   : encoding,
-                       'page'       : section_name,
-                       'filename'   : file_name},
-                      self.outputted_dict]
+        search_list = [{'month_name' : time.strftime("%b", timespan_start_tt),
+                        'year_name'  : timespan_start_tt[0],
+                        'encoding'   : encoding,
+                        'page'       : section_name,
+                        'filename'   : file_name},
+                       self.outputted_dict]
 
         # Bind to the default_binding:
         db_lookup = self.db_binder.bind_default(default_binding)
 
         # Then add the V3.X style search list extensions
         for obj in self.search_list_objs:
-            searchList += obj.get_extension_list(timespan, db_lookup)
+            search_list += obj.get_extension_list(timespan, db_lookup)
 
-        return searchList
+        return search_list
 
     def _getFileName(self, template, ref_tt):
         """Calculate a destination filename given a template filename.
@@ -766,8 +763,9 @@ class SkinInfo(SearchList):
 
     def __init__(self, generator):
         SearchList.__init__(self, generator)
-        for k in ['SKIN_ROOT', 'HTML_ROOT', 'REPORT_NAME',
-                  'SKIN_NAME', 'SKIN_VERSION', 'lang', 'unit_system']:
+        for k in ['HTML_ROOT', 'lang', 'REPORT_NAME', 'skin',
+                  'SKIN_NAME', 'SKIN_ROOT', 'SKIN_VERSION', 'unit_system'
+        ]:
             setattr(self, k, generator.skin_dict.get(k, 'unknown'))
 
 

@@ -283,8 +283,6 @@ class StdReportEngine(threading.Thread):
                 # make sure 'Texts' is present
                 if 'Texts' not in merge_dict:
                     merge_dict['Texts'] = {}
-                # set language code for $gettext(lang)
-                merge_dict['Texts']['lang'] = lang_spec
                 # Merge into skin_dict
                 weeutil.config.merge_config(skin_dict, merge_dict)
                 if self.first_run:

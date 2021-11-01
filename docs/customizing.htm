@@ -2881,26 +2881,17 @@ $month.outTemp.series(aggregate_type='max', aggregate_interval='day', time_serie
         </p>
 
         <h3>General tags</h3>
-        
+
         <p>
-           There are some general tags, that do not reflect observation
-           data but technical data of processing the template files. 
-           You can especially use them in <span class="code">#if</span>
-           expressions to control how Cheetah processes the template.
+            There are some general tags that do not reflect observation data, but technical information about the
+            template files. They are frequently useful in <span class="code">#if</span> expressions to control how
+            Cheetah processes the template.
         </p>
         <table class="indent">
           <tbody>
             <tr class="first_row">
               <td>Tag</td>
               <td>Description</td>
-            </tr>
-            <tr>
-              <td class="code first_col">$month_name</td>
-              <td>Name of the month, the file is created for</td>
-            </tr>
-            <tr>
-              <td class="code first_col">$year_name</td>
-              <td>Year, the file is created for</td>
             </tr>
             <tr>
               <td class="code first_col">$encoding</td>
@@ -2913,16 +2904,6 @@ $month.outTemp.series(aggregate_type='max', aggregate_interval='day', time_serie
               </td>
             </tr>
             <tr>
-                <td class="code first_col">$page</td>
-                <td>The section name from <span class="code">skin.conf</span> where the template is described.</td>
-            </tr>
-            <tr>
-                <td class="code first_col">$gettext("lang")</td>
-                <td>Language code set by the <span class="code">lang</span> option for the report. For example,
-                    <span class="code">fr</span>, or <span class="code">gr</span>.
-                </td>
-            </tr>
-            <tr>
               <td class="code first_col">$filename</td>
               <td>
                 Name of the file to be created including relative path.
@@ -2931,19 +2912,44 @@ $month.outTemp.series(aggregate_type='max', aggregate_interval='day', time_serie
               </td>
             </tr>
             <tr>
+                <td class="code first_col">$lang</td>
+                <td>Language code set by the <span class="code">lang</span> option for the report. For example,
+                    <span class="code">fr</span>, or <span class="code">gr</span>.
+                </td>
+            </tr>
+            <tr>
+              <td class="code first_col">$month_name</td>
+              <td>Name of the month, the file is created for</td>
+            </tr>
+            <tr>
+                <td class="code first_col">$page</td>
+                <td>The section name from <span class="code">skin.conf</span> where the template is described.</td>
+            </tr>
+            <tr>
+                <td class="code first_col">$skin</td>
+                <td>The value of option <span class="code">skin</span> in <span class="code">weewx.conf</span>.</td>
+            </tr>
+            <tr>
                 <td class="code first_col">$SKIN_NAME</td>
                 <td>
-                    All skins included with WeeWX include the tag <span class="code">$SKIN_NAME</span>. For example, for
+                    All skin included with WeeWX, version 4.6 or later, include the tag
+                    <span class="code">$SKIN_NAME</span>. For example, for
                     the <em>Seasons</em> skin, <span class="code">$SKIN_NAME</span> would return
                     <span class="code">Seasons</span>.
                 </td>
             </tr>
+            <tr>
                 <td class="code first_col">$SKIN_VERSION</td>
                 <td>
-                    All skins included with WeeWX include the tag <span class="code">$SKIN_VERSION</span>, which returns
-                    the WeeWX version number of when the skin was installed. Because skins are not touched during the
-                    upgrade process, this shows the origin of the skin.
+                    All skin included with WeeWX, version 4.6 or later, include the tag
+                    <span class="code">$SKIN_VERSION</span>, which returns the WeeWX version number of when the skin was
+                    installed. Because skins are not touched during the upgrade process, this shows the origin of the
+                    skin.
                 </td>
+            </tr>
+            <tr>
+              <td class="code first_col">$year_name</td>
+              <td>Year, the file is created for</td>
             </tr>
           </tbody>
         </table>
@@ -6370,12 +6376,9 @@ growing_base = 50.0, degree_F</pre>
             This is the list of search list objects that will be scanned by the template engine, looking for tags. See
             the section <em><a href="#defining_new_tags">Defining new tags</a></em> and the <a
             href="http://pythonhosted.org/Cheetah/users_guide">Cheetah documentation</a> for details on search lists. If
-            no <span class="config_option">search_list</span> is specified, a default list will be used. The default
-            list is:
-        </p>
-        <pre class="tty">search_list = weewx.cheetahgenerator.Almanac, weewx.cheetahgenerator.Station, weewx.cheetahgenerator.Stats, weewx.cheetahgenerator.UnitInfo, weewx.cheetahgenerator.Extras</pre>
-        <p class="config_option">search_list_extensions</p>
+            no <span class="config_option">search_list</span> is specified, a default list will be used.
 
+        <p class="config_option">search_list_extensions</p>
         <p>
             This defines one or more search list objects that will be appended to the <span class="config_option">search_list</span>.
             For example, the following adds alltime and forecast variables to the search list.
