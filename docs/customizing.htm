@@ -789,11 +789,11 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
             each plot, the colors of plot elements, <em>etc</em>.
         </p>
         <p>
-            Options are processed in a specific order.
-            Generally, the values from skin configuration (<span class="code">skin.conf</span>) and internationalization files (<em>e.g.</em>, <span class="code">lang/en.conf</span>) are processed first,
-            then options in the WeeWX configuration file (nominally <span class="code">weewx.conf</span>) are applied last.
-            This order allows skin authors to specify the look and feel of a report, while ensuring
-            that skin users will have the final say.
+            Options are processed in a specific order. Generally, the values from skin configuration (<span
+            class="code">skin.conf</span>) and internationalization files (<em>e.g.</em>,
+            <span class="code">lang/en.conf</span>) are processed first, then options in the WeeWX configuration file
+            (nominally <span class="code">weewx.conf</span>) are applied last. This order allows skin authors to specify
+            the look and feel of a report, while ensuring that skin users have the final say.
         </p>
         <p>
           Although it is possible to modify the options at any level, as the
@@ -803,10 +803,10 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
           updates the skin, and your customizations will not be overwritten.
         </p>
         <p>
-          If you are a skin author, then you should provide the skin
-          configuration file (<span class="code">skin.conf</span>), and put in
-          it only the options necessary to make the skin render the way you
-          intend it.
+            If you are a skin author, then you should provide the skin configuration file (<span
+            class="code">skin.conf</span>), and put in it only the options necessary to make the skin render the way you
+            intend it. Any options that are likely to be localized for a specific language (in particular, text), should
+            be put in the appropriate language file.
         </p>
 
         <p>
@@ -814,46 +814,39 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
         </p>
         <ul>
             <li>
-              First, a set of options defined in the Python module
-              <span class="code">weewx.defaults</span> serve as the starting
-              point.
+                First, a set of options defined in the Python module <span class="code">weewx.defaults</span> serve as
+                the starting point.
             </li>
             <li>
-              Next, options from the configuration file for <em>Seasons</em>,
-              located in <span class="code">skins/Seasons/skin.conf</span>, are
-              merged.
+                Next, options from the configuration file for <em>Seasons</em>, located in
+                <span class="code">skins/Seasons/skin.conf</span>, are merged.
             </li>
             <li>
-              If a unit system has been specified (using the option
-              <span class="code">unit_system</span>), then the set of units
-              associated with that <span class="code">unit_system</span> are
-              merged.
+                If a unit system has been specified (using the option
+                <a href="#how_to_change_units"><span class="code">unit_system</span>)</a>,
+                then the set of units associated with that <span class="code">unit_system</span> are merged.
             </li>
             <li>
-              If a language has been specified (using the option
-              <span class="code">lang</span>), and the specified language is
-              available (not all skins support language files), then
-              the options in the appropriate language specification file (such
-              as <span class="code">skins/Seasons/lang/en.conf</span> or
-              <span class="code">skins/Seasons/lang/de.conf</span>) are
-              merged.
+                If a language has been specified (using the option <a href="#internationalized_skins"><span
+                class="code">lang</span>)</a>, and the specified language is available (not all skins support language
+                files), then the options in the appropriate language specification file (such as
+                <span class="code">skins/Seasons/lang/en.conf</span>
+                or <span class="code">skins/Seasons/lang/de.conf</span>) are merged.
             </li>
             <li>
-              Next, any options options that apply to all skins, specified in
-              the <span class="code">[StdReport] / [[Defaults]]</span> section
-              of the WeeWX configuration file, are merged.
+                Next, any options that apply to all skins, specified in the
+                <span class="code">[StdReport] / [[Defaults]]</span>
+                section of the WeeWX configuration file, are merged.
             </li>
             <li>
-              Finally, any skin-specific options, specified in the
-              <span class="code">[StdReport] / [[Seasons]]</span> section of
-              the WeeWX configuration, are merged.
+                Finally, any skin-specific options, specified in the <span class="code">[StdReport] / [[Seasons]]</span>
+                section of the WeeWX configuration, are merged.
             </li>
         </ul>
 
         <p>
-          Other skins are processed in a similar manner although, of course,
-          the name will be different. The result is the following option
-          hierarchy, listed in order of decreasing precedence.
+            Other skins are processed in a similar manner although, of course, the name will be different. The result is
+            the following option hierarchy, listed in order of decreasing precedence.
         </p>
 
         <table class="indent" style="width: 90%">
@@ -872,10 +865,9 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[[[[Generic]]]]<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;rain=Rainfall</td>
                 <td>
-                  Options specified here apply to a single report.  This
-                  example indicates that the string 'Rainfall' should be used
-                  for the observation 'rain', in only the <em>Seasons</em>
-                  report.
+                    Highest precedence. Has the final say. Options specified here apply to a single report. This example
+                    indicates that the string 'Rainfall' should be used for the observation 'rain', in only the
+                    <em>Seasons</em> report.
                 </td>
             </tr>
             <tr>
@@ -899,11 +891,9 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
 &nbsp;&nbsp;[[Defaults]]<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;lang=de<br/>
                 <td>
-                  The option <span class="code">lang</span> only works for
-                  skins that have been internationalized and have a language
-                  configuration file for each translation. This example
-                  specifies the German language for all reports that have
-                  translations.
+                    The option <span class="code">lang</span> only works for skins that have been internationalized and
+                    have a language configuration file for the chosen language (<span class="code">de</span>, or German,
+                    in this case). This example specifies the German language for all reports, if available.
                 </td>
             </tr>
             <tr>
@@ -926,9 +916,8 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
 &nbsp;&nbsp;[[Labels]]<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;mbar=" hPa"</td>
                 <td>
-                  Supplied by the skin author, the skin configuration file
-                  contains options that define the baseline behavior of the
-                  skin.
+                  Supplied by the skin author, the skin configuration file, <span class="code">skin.conf</span>,
+                  contains options that define the baseline behavior of the skin.
                 </td>
             </tr>
             <tr>
@@ -955,7 +944,7 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
             <span class="code">skin.conf</span> and <span class="code">defaults.py</span> are at the root level.
         </p>
 
-        <h2>Changing languages</h2>
+        <h2 id="changing_languages">Changing languages</h2>
         <p>
             By default, the skins that come with WeeWX are set up for the English language, but suppose you wish to switch
             to another language. How you do so will depend on whether the skin you are using has been
@@ -1004,11 +993,10 @@ total 80
         unit_system = us
 </pre>
 
-        </pre>
         <p>
             By contrast, if the skin has been internationalized, but there is no localization file for your language,
             then you will have to supply one. See the section <a
-            href="#Internationalized,_but_your_language_is_missing"><em>Internationalized, but your language is
+            href="#internationalized-missing-language"><em>Internationalized, but your language is
             missing</em></a>
         </p>
 
@@ -2896,22 +2884,23 @@ $month.dateTime.format("%B"): Min, max temperatures: $month.outTemp.min $month.o
                 <td>
                     For a given plot name, this function will return the set of all observation types used by the plot.
                     <a href="#getobs-more-info">More information.</a>
-                </td>
                 <div id="getobs-more-info" class="modal-dialog">
                     <div>
                         <a href="#close" title="Close" class="close-dialog">X</a>
                         <p>
                             For example, consider a plot that is defined in <span class="code">[ImageGenerator]</span> as
+                        </p>
                         <pre class="tty">    [[[daytempleaf]]]
         [[[[leafTemp1]]]]
         [[[[leafTemp2]]]]
         [[[[temperature]]]]
             data_type = outTemp
-</pre></p>
+</pre>
                         <p>The tag <span class="code">$getobs('daytempleaf')</span> would return the
                         set <span class="code">{'leafTemp1', 'leafTemp2', 'outTemp'}</span>.</p>
                     </div>
                 </div>
+                </td>
             </tr>
             </tbody>
         </table>
@@ -2988,7 +2977,8 @@ $month.outTemp.series(aggregate_type='max', aggregate_interval='day', time_serie
             </tr>
             <tr>
               <td class="code first_col">$month_name</td>
-              <td>Name of the month, the file is created for</td>
+              <td>For templates listed under <span class="code">SummaryByMonth</span>, this will contain the localized
+                  month name (<em>e.g.</em>, "<em>Sep</em>").</td>
             </tr>
             <tr>
                 <td class="code first_col">$page</td>
@@ -3018,7 +3008,8 @@ $month.outTemp.series(aggregate_type='max', aggregate_interval='day', time_serie
             </tr>
             <tr>
               <td class="code first_col">$year_name</td>
-              <td>Year, the file is created for</td>
+                <td>For templates listed under <span class="code">SummaryByMonth</span> or
+                    <span class="code">SummaryByYear</span>, this will contain the year (<em>e.g.</em>, "2018").</td>
             </tr>
           </tbody>
         </table>
@@ -3095,7 +3086,8 @@ $month.outTemp.series(aggregate_type='max', aggregate_interval='day', time_serie
     ...</pre>
         <p>
             While it is not technically necessary, we recommend using the whole English text for the key. This makes the
-            template easier to read, and easier for the translator.
+            template easier to read, and easier for the translator. In the absence of a translation, it will also
+            be the default, so the skin will still be usable, even if a translation is not available.
         </p>
         <p>
           See the subdirectory <span class="symcode">SKIN_ROOT</span><span class="code">/Seasons/lang</span>
@@ -3140,7 +3132,7 @@ $month.outTemp.series(aggregate_type='max', aggregate_interval='day', time_serie
         <h2>Almanac</h2>
 
         <p>
-            If module <a href="http://rhodesmill.org/pyephem">pyephem</a> has been installed, then WeeWX can generate
+            If module <a href="https://rhodesmill.org/pyephem">pyephem</a> has been installed, then WeeWX can generate
             extensive almanac information for the Sun, Moon, Venus, Mars, Jupiter, and other heavenly bodies, including
             their rise, transit and set times, as well as their azimuth and altitude. Other information is also
             available.
@@ -3259,7 +3251,7 @@ Sunrise, sunset: $almanac.sunrise $almanac.sunset
             To accurately calculate these times, WeeWX automatically uses the present temperature and pressure to
             calculate refraction effects. However, you can override these values, which will be necessary if you wish to
             match the almanac times published by the Naval Observatory <a
-            href="http://rhodesmill.org/pyephem/rise-set.html">as explained in the pyephem documentation</a>. For
+            href="https://rhodesmill.org/pyephem/rise-set.html">as explained in the pyephem documentation</a>. For
             example, to match the sunrise time as published by the Observatory, instead of
         </p>
         <pre class="tty">$almanac.sun.rise</pre>
@@ -4370,7 +4362,6 @@ class MyStats(SearchList):                                                   # 1
             All of the skins that come with WeeWX have been <em>internationalized</em>, although they may not have
             been <em>localized</em> to your specific language. See the section <a href="#internationalized_skins">
             Internationalized skins</a> for how to tell.
-        </a>
         </p>
         <h3>Internationalized, your language is available</h3>
         <p>
@@ -4390,7 +4381,7 @@ class MyStats(SearchList):                                                   # 1
         <span class="highlight">lang = de</span>
         ...</pre>
 
-        <h3>Internationalized, but your language is missing</h3>
+        <h3 id="internationalized-missing-language">Internationalized, but your language is missing</h3>
 
         <p>
             If the <span class="code">lang</span> subdirectory is present in the skin directory, then the skin has been
@@ -5985,17 +5976,17 @@ xstats/bin/user/xstats.py</pre>
         </p>
         <p>
             We recommend to put
+        </p>
             <ul>
               <li>
                 options that control the behavior of the skin into 
-                <span class="code">skin.conf</span> and 
+                <span class="code">skin.conf</span>; and
               </li>
               <li>
                 language dependent labels and texts into the 
                 language files.
               </li>
             </ul>
-        </p>
 
         <p>
             The most important options, the ones you are likely to have to customize, are <span
@@ -6064,7 +6055,7 @@ xstats/bin/user/xstats.py</pre>
         <p class="config_option">googleAnalyticsId</p>
 
         <p>
-            If you have a <a href="http://www.google.com/analytics/">Google Analytics ID</a>, you can set it here. The
+            If you have a <a href="https://www.google.com/analytics/">Google Analytics ID</a>, you can set it here. The
             Google Analytics Javascript code will then be included, enabling analytics of your website usage. If
             commented out, the code will not be included.
         </p>
@@ -6283,7 +6274,7 @@ inch     = %.2f</pre>
         <p>
             would specify that the given string formats are to be used when formatting any temperature measured in
             degrees Celsius or any precipitation amount measured in inches, respectively. The <a
-            href="http://docs.python.org/library/string.html#format-specification-mini-language"> formatting codes are
+            href="https://docs.python.org/library/string.html#format-specification-mini-language"> formatting codes are
             those used by Python</a>, and are very similar to C's <span class="code">sprintf()</span> codes.
         </p>
 
@@ -6326,18 +6317,16 @@ second = " second", " seconds"</pre>
         </p>
         <pre class='tty'>
     [[TimeFormats]]
-        # This section sets the string format to be used for each time scale.
-        # The values below will work in every locale, but may not look
-        # particularly attractive. See the Customization Guide for alternatives.
-
-        day        = %X
-        week       = %X (%A)
-        month      = %x %X
-        year       = %x %X
-        rainyear   = %x %X
-        current    = %x %X
-        ephem_day  = %X
-        ephem_year = %x %X</pre>
+        hour        = %H:%M
+        day         = %X
+        week        = %X (%A)
+        month       = %x %X
+        year        = %x %X
+        rainyear    = %x %X
+        current     = %x %X
+        ephem_day   = %X
+        ephem_year  = %x %X
+</pre>
 
         <p>
             The specifiers <span class='code'>%x</span>, <span class='code'>%X</span>, and <span class='code'>%A</span>
@@ -6403,30 +6392,18 @@ growing_base = 50.0, degree_F</pre>
         </p>
 
         <h2 class="config_section" id="texts">[Texts]</h2>
-        
+
         <p>
-          This section applies to language files only.
+            The section <span class="code">[Texts]</span> holds static texts that are used in the templates. Generally
+            there are multiple language files, one for each supported language, named by the language codes defined in
+            <a href="https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes" target="_blank">ISO&nbsp;639-1</a>. The
+            entries give the translation of the texts to the target language. For example,
         </p>
+        <pre class="tty">[Texts]
+    "Current Conditions" = "Aktuelle Werte"</pre>
         <p>
-          The section <span class="code">[Texts]</span> holds 
-          static texts that are used in the templates. 
-          Generally there are multiple language files, each file
-          for one language and named by the language code
-          defined in <a
-          href="https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes"
-            target="_blank">ISO&nbsp;639-1</a>.
-          The entries
-          give the translation of the texts to the target language, like
-        </p>
-        <pre class="tty">"English text" = same text in the target language</pre>
-        <p>
-          or define texts by keys that can be refereced within the template.
-        </p>
-        <pre class="tty">"Key" = some text to display</pre>
-        <p>
-          To use the English text for the key is recommended, because
-          the template is easier to read then and while translating
-          you see the original English text on the left side.
+            would cause "Aktuelle Werte" to be used whereever <span class="code">$gettext("Current Conditions"</span>
+            appeared. See the section on <a href="#Tag_$gettext"><span class="code">$gettext</span></a>.
         </p>
         <p class="warning">
           <strong>Note!</strong><br/>
@@ -6444,7 +6421,7 @@ growing_base = 50.0, degree_F</pre>
         <p>
             This is the list of search list objects that will be scanned by the template engine, looking for tags. See
             the section <em><a href="#defining_new_tags">Defining new tags</a></em> and the <a
-            href="http://pythonhosted.org/Cheetah/users_guide">Cheetah documentation</a> for details on search lists. If
+            href="https://cheetahtemplate.org/">Cheetah documentation</a> for details on search lists. If
             no <span class="config_option">search_list</span> is specified, a default list will be used.
 
         <p class="config_option">search_list_extensions</p>
