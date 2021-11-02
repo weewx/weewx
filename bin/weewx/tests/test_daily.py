@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-#    Copyright (c) 2009-2020 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2021 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -50,6 +50,7 @@ skin_dict = {'Units': {'Trend': {'time_delta': 3600, 'time_grace': 300},
                        'DegreeDay': {'heating_base': "65, degree_F",
                                      'cooling_base': "65, degree_C"}}}
 
+default_formatter = weewx.units.get_default_formatter()
 
 class Common(object):
 
@@ -224,6 +225,7 @@ class Common(object):
                 start_ts = spans[span].start
                 stop_ts = spans[span].stop
                 tagStats = weewx.tags.TimeBinder(db_lookup, stop_ts,
+                                                 formatter=default_formatter,
                                                  rain_year_start=1,
                                                  skin_dict=skin_dict)
 
@@ -251,48 +253,49 @@ class Common(object):
 
             # Do the tests for a report time of midnight, 1-Apr-2010
             tagStats = weewx.tags.TimeBinder(db_lookup, spans['month'].stop,
+                                             formatter=default_formatter,
                                              rain_year_start=1,
                                              skin_dict=skin_dict)
             self.assertEqual(str(tagStats.day().barometer.avg), "29.333 inHg")
             self.assertEqual(str(tagStats.day().barometer.min), "29.000 inHg")
             self.assertEqual(str(tagStats.day().barometer.max), "29.935 inHg")
-            self.assertEqual(str(tagStats.day().barometer.mintime), "01:00")
-            self.assertEqual(str(tagStats.day().barometer.maxtime), "00:00")
+            self.assertEqual(str(tagStats.day().barometer.mintime), "01:00:00")
+            self.assertEqual(str(tagStats.day().barometer.maxtime), "00:00:00")
             self.assertEqual(str(tagStats.week().barometer.avg), "30.097 inHg")
             self.assertEqual(str(tagStats.week().barometer.min), "29.000 inHg")
             self.assertEqual(str(tagStats.week().barometer.max), "31.000 inHg")
-            self.assertEqual(str(tagStats.week().barometer.mintime), "01:00 on Wednesday")
-            self.assertEqual(str(tagStats.week().barometer.maxtime), "01:00 on Monday")
+            self.assertEqual(str(tagStats.week().barometer.mintime), "01:00:00 (Wednesday)")
+            self.assertEqual(str(tagStats.week().barometer.maxtime), "01:00:00 (Monday)")
             self.assertEqual(str(tagStats.month().barometer.avg), "29.979 inHg")
             self.assertEqual(str(tagStats.month().barometer.min), "29.000 inHg")
             self.assertEqual(str(tagStats.month().barometer.max), "31.000 inHg")
-            self.assertEqual(str(tagStats.month().barometer.mintime), "03-Mar-2010 00:00")
-            self.assertEqual(str(tagStats.month().barometer.maxtime), "05-Mar-2010 00:00")
+            self.assertEqual(str(tagStats.month().barometer.mintime), "03/03/10 00:00:00")
+            self.assertEqual(str(tagStats.month().barometer.maxtime), "03/05/10 00:00:00")
             self.assertEqual(str(tagStats.year().barometer.avg), "29.996 inHg")
             self.assertEqual(str(tagStats.year().barometer.min), "29.000 inHg")
             self.assertEqual(str(tagStats.year().barometer.max), "31.000 inHg")
-            self.assertEqual(str(tagStats.year().barometer.mintime), "02-Jan-2010 00:00")
-            self.assertEqual(str(tagStats.year().barometer.maxtime), "04-Jan-2010 00:00")
+            self.assertEqual(str(tagStats.year().barometer.mintime), "01/02/10 00:00:00")
+            self.assertEqual(str(tagStats.year().barometer.maxtime), "01/04/10 00:00:00")
             self.assertEqual(str(tagStats.day().outTemp.avg), "38.4°F")
             self.assertEqual(str(tagStats.day().outTemp.min), "18.5°F")
             self.assertEqual(str(tagStats.day().outTemp.max), "58.9°F")
-            self.assertEqual(str(tagStats.day().outTemp.mintime), "04:00")
-            self.assertEqual(str(tagStats.day().outTemp.maxtime), "16:00")
+            self.assertEqual(str(tagStats.day().outTemp.mintime), "04:00:00")
+            self.assertEqual(str(tagStats.day().outTemp.maxtime), "16:00:00")
             self.assertEqual(str(tagStats.week().outTemp.avg), "38.7°F")
             self.assertEqual(str(tagStats.week().outTemp.min), "16.5°F")
             self.assertEqual(str(tagStats.week().outTemp.max), "60.9°F")
-            self.assertEqual(str(tagStats.week().outTemp.mintime), "04:00 on Sunday")
-            self.assertEqual(str(tagStats.week().outTemp.maxtime), "16:00 on Saturday")
+            self.assertEqual(str(tagStats.week().outTemp.mintime), "04:00:00 (Sunday)")
+            self.assertEqual(str(tagStats.week().outTemp.maxtime), "16:00:00 (Saturday)")
             self.assertEqual(str(tagStats.month().outTemp.avg), "28.8°F")
             self.assertEqual(str(tagStats.month().outTemp.min), "-1.0°F")
             self.assertEqual(str(tagStats.month().outTemp.max), "58.9°F")
-            self.assertEqual(str(tagStats.month().outTemp.mintime), "01-Mar-2010 03:00")
-            self.assertEqual(str(tagStats.month().outTemp.maxtime), "31-Mar-2010 16:00")
+            self.assertEqual(str(tagStats.month().outTemp.mintime), "03/01/10 03:00:00")
+            self.assertEqual(str(tagStats.month().outTemp.maxtime), "03/31/10 16:00:00")
             self.assertEqual(str(tagStats.year().outTemp.avg), "48.3°F")
             self.assertEqual(str(tagStats.year().outTemp.min), "-20.0°F")
             self.assertEqual(str(tagStats.year().outTemp.max), "100.0°F")
-            self.assertEqual(str(tagStats.year().outTemp.mintime), "01-Jan-2010 03:00")
-            self.assertEqual(str(tagStats.year().outTemp.maxtime), "02-Jul-2010 16:00")
+            self.assertEqual(str(tagStats.year().outTemp.mintime), "01/01/10 03:00:00")
+            self.assertEqual(str(tagStats.year().outTemp.maxtime), "07/02/10 16:00:00")
 
             # Check the special aggregate types "exists" and "has_data":
             self.assertTrue(tagStats.year().barometer.exists)
@@ -311,16 +314,20 @@ class Common(object):
         six_hour_span = weeutil.weeutil.TimeSpan(time.mktime((2010, 3, 14, 1, 0, 0, 0, 0, -1)),
                                                  time.mktime((2010, 3, 14, 8, 0, 0, 0, 0, -1)))
 
-        tsb = weewx.tags.TimespanBinder(six_hour_span, db_lookup)
+        tsb = weewx.tags.TimespanBinder(six_hour_span,
+                                        db_lookup,
+                                        formatter=default_formatter)
         self.assertEqual(str(tsb.outTemp.max), "17.2°F")
-        self.assertEqual(str(tsb.outTemp.maxtime), "14-Mar-2010 08:00")
+        self.assertEqual(str(tsb.outTemp.maxtime), "03/14/10 08:00:00")
         self.assertEqual(str(tsb.outTemp.min), "7.1°F")
-        self.assertEqual(str(tsb.outTemp.mintime), "14-Mar-2010 04:00")
+        self.assertEqual(str(tsb.outTemp.mintime), "03/14/10 04:00:00")
         self.assertEqual(str(tsb.outTemp.avg), "10.0°F")
 
         rain_span = weeutil.weeutil.TimeSpan(time.mktime((2010, 3, 14, 20, 10, 0, 0, 0, -1)),
                                              time.mktime((2010, 3, 14, 23, 10, 0, 0, 0, -1)))
-        tsb = weewx.tags.TimespanBinder(rain_span, db_lookup)
+        tsb = weewx.tags.TimespanBinder(rain_span,
+                                        db_lookup,
+                                        formatter=default_formatter)
         self.assertEqual(str(tsb.rain.sum), "0.36 in")
 
     def test_agg(self):
@@ -347,12 +354,14 @@ class Common(object):
         stop_ts = time.mktime((2011, 1, 1, 0, 0, 0, 0, 0, -1))
         # Check for a rain year starting 1-Jan
         tagStats = weewx.tags.TimeBinder(db_lookup, stop_ts,
+                                         formatter=default_formatter,
                                          rain_year_start=1)
 
         self.assertEqual(str(tagStats.rainyear().rain.sum), "79.36 in")
 
         # Do it again, for starting 1-Oct:
         tagStats = weewx.tags.TimeBinder(db_lookup, stop_ts,
+                                         formatter=default_formatter,
                                          rain_year_start=6)
         self.assertEqual(str(tagStats.rainyear().rain.sum), "30.72 in")
 
@@ -363,6 +372,7 @@ class Common(object):
         stop_ts = time.mktime((2011, 1, 1, 0, 0, 0, 0, 0, -1))
 
         tagStats = weewx.tags.TimeBinder(db_lookup, stop_ts,
+                                         formatter=default_formatter,
                                          skin_dict=skin_dict)
 
         self.assertEqual(str(tagStats.year().heatdeg.sum), "5125.1°F-day")
