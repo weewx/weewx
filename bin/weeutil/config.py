@@ -91,9 +91,7 @@ def accumulateLeaves(d, max_level=99):
             cum_dict = configobj.ConfigObj()
 
     # Now merge my scalars into the results:
-    merge_dict = {}
-    for k in d.scalars:
-        merge_dict[k] = d[k]
+    merge_dict = {k: d[k] for k in d.scalars}
     cum_dict.merge(merge_dict)
     return cum_dict
 
@@ -111,9 +109,10 @@ def patch_config(self_config, indict):
 
     Example:
     >>> import sys
-    >>> c = ConfigObj(StringIO('''[Section1]
+    >>> from six.moves import StringIO
+    >>> c = configobj.ConfigObj(StringIO('''[Section1]
     ... option1 = bar'''))
-    >>> d = ConfigObj(StringIO('''[Section1]
+    >>> d = configobj.ConfigObj(StringIO('''[Section1]
     ...     # This is a Section2 comment
     ...     [[Section2]]
     ...     option2 = foo
@@ -268,3 +267,12 @@ def deep_copy(old_dict, parent=None, depth=None, main=None):
         # a simple assignment will work:
         new_dict.inline_comments[entry] = old_dict.inline_comments[entry]
     return new_dict
+
+if __name__ == "__main__":
+    import six
+    if not six.PY3:
+        exit("units.py doctest must be run under Python 3")
+    import doctest
+
+    if not doctest.testmod().failed:
+        print("PASSED")

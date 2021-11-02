@@ -793,7 +793,7 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
             class="code">skin.conf</span>) and internationalization files (<em>e.g.</em>,
             <span class="code">lang/en.conf</span>) are processed first, then options in the WeeWX configuration file
             (nominally <span class="code">weewx.conf</span>) are applied last. This order allows skin authors to specify
-            the look and feel of a report, while ensuring that skin users have the final say.
+            the look and feel of a report, while ensuring that users of the skin have the final say.
         </p>
         <p>
           Although it is possible to modify the options at any level, as the
@@ -820,11 +820,6 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
             <li>
                 Next, options from the configuration file for <em>Seasons</em>, located in
                 <span class="code">skins/Seasons/skin.conf</span>, are merged.
-            </li>
-            <li>
-                If a unit system has been specified (using the option
-                <a href="#how_to_change_units"><span class="code">unit_system</span>)</a>,
-                then the set of units associated with that <span class="code">unit_system</span> are merged.
             </li>
             <li>
                 If a language has been specified (using the option <a href="#internationalized_skins"><span
@@ -866,7 +861,7 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;rain=Rainfall</td>
                 <td>
                     Highest precedence. Has the final say. Options specified here apply to a single report. This example
-                    indicates that the string 'Rainfall' should be used for the observation 'rain', in only the
+                    indicates that the string 'Rainfall' should be used for the observation 'rain', for only the
                     <em>Seasons</em> report.
                 </td>
             </tr>
@@ -894,19 +889,6 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
                     The option <span class="code">lang</span> only works for skins that have been internationalized and
                     have a language configuration file for the chosen language (<span class="code">de</span>, or German,
                     in this case). This example specifies the German language for all reports, if available.
-                </td>
-            </tr>
-            <tr>
-                <td class="code">weewx.conf</td>
-                <td class="code">
-[StdReport]<br/>
-&nbsp;&nbsp;[[Seasons]]<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;unit_system=metricwx<br/>
-                <td>
-                  If a unit system is specified, then the set of options for
-                  that unit system are included.  This example specifies a
-                  metric system suitable for weather reports
-                  for the <em>Seasons</em> skin only.
                 </td>
             </tr>
             <tr>
