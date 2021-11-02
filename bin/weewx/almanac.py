@@ -196,8 +196,8 @@ class Almanac(object):
                  pressure=None,
                  horizon=None,
                  moon_phases=weeutil.Moon.moon_phases,
-                 formatter=weewx.units.Formatter(),
-                 converter=weewx.units.Converter()):
+                 formatter=None,
+                 converter=None):
         """Initialize an instance of Almanac
 
         Args:
@@ -233,8 +233,8 @@ class Almanac(object):
         self.pressure     = pressure if pressure is not None else 1010.0
         self.horizon      = horizon if horizon is not None else 0.0
         self.moon_phases  = moon_phases
-        self.formatter    = formatter
-        self.converter    = converter
+        self.formatter    = formatter or weewx.units.Formatter()
+        self.converter    = converter or weewx.units.Converter()
         self._precalc()
 
     def _precalc(self):

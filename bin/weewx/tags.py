@@ -30,7 +30,8 @@ class TimeBinder(object):
     """
 
     def __init__(self, db_lookup, report_time,
-                 formatter=weewx.units.Formatter(), converter=weewx.units.Converter(),
+                 formatter=None,
+                 converter=None,
                  **option_dict):
         """Initialize an instance of DatabaseBinder.
 
@@ -50,8 +51,8 @@ class TimeBinder(object):
         """
         self.db_lookup = db_lookup
         self.report_time = report_time
-        self.formatter = formatter
-        self.converter = converter
+        self.formatter = formatter or weewx.units.Formatter()
+        self.converter = converter or weewx.units.Converter()
         self.option_dict = option_dict
 
     # What follows is the list of time period attributes:
@@ -150,8 +151,9 @@ class TimespanBinder(object):
     """
 
     def __init__(self, timespan, db_lookup, data_binding=None, context='current',
-                 formatter=weewx.units.Formatter(),
-                 converter=weewx.units.Converter(), **option_dict):
+                 formatter=None,
+                 converter=None,
+                 **option_dict):
         """Initialize an instance of TimespanBinder.
 
         timespan: An instance of weeutil.Timespan with the time span over which the statistics are
@@ -179,8 +181,8 @@ class TimespanBinder(object):
         self.db_lookup = db_lookup
         self.data_binding = data_binding
         self.context = context
-        self.formatter = formatter
-        self.converter = converter
+        self.formatter = formatter or weewx.units.Formatter()
+        self.converter = converter or weewx.units.Converter()
         self.option_dict = option_dict
 
     # Iterate over all records in the time period:
@@ -283,7 +285,8 @@ class ObservationBinder(object):
     """
 
     def __init__(self, obs_type, timespan, db_lookup, data_binding, context,
-                 formatter=weewx.units.Formatter(), converter=weewx.units.Converter(),
+                 formatter=None,
+                 converter=None,
                  **option_dict):
         """ Initialize an instance of ObservationBinder
 
@@ -314,8 +317,8 @@ class ObservationBinder(object):
         self.db_lookup = db_lookup
         self.data_binding = data_binding
         self.context = context
-        self.formatter = formatter
-        self.converter = converter
+        self.formatter = formatter or weewx.units.Formatter()
+        self.converter = converter or weewx.units.Converter()
         self.option_dict = option_dict
 
     def __getattr__(self, aggregate_type):
@@ -418,7 +421,7 @@ class AggTypeBinder(object):
     for a query."""
 
     def __init__(self, aggregate_type, obs_type, timespan, db_lookup, data_binding, context,
-                 formatter=weewx.units.Formatter(), converter=weewx.units.Converter(),
+                 formatter=None, converter=None,
                  **option_dict):
         self.aggregate_type = aggregate_type
         self.obs_type = obs_type
@@ -426,8 +429,8 @@ class AggTypeBinder(object):
         self.db_lookup = db_lookup
         self.data_binding = data_binding
         self.context = context
-        self.formatter = formatter
-        self.converter = converter
+        self.formatter = formatter or weewx.units.Formatter()
+        self.converter = converter or weewx.units.Converter()
         self.option_dict = option_dict
 
     def __call__(self, *args, **kwargs):
@@ -483,12 +486,12 @@ class AggTypeBinder(object):
 class RecordBinder(object):
 
     def __init__(self, db_lookup, report_time,
-                 formatter=weewx.units.Formatter(), converter=weewx.units.Converter(),
+                 formatter=None, converter=None,
                  record=None):
         self.db_lookup = db_lookup
         self.report_time = report_time
-        self.formatter = formatter
-        self.converter = converter
+        self.formatter = formatter or weewx.units.Formatter()
+        self.converter = converter or weewx.units.Converter()
         self.record = record
 
     def current(self, timestamp=None, max_delta=None, data_binding=None):

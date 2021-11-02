@@ -786,94 +786,112 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
         <p>
             Options are used in WeeWX to specify how your reports will look and what they will contain. For example,
             they control what units to use, how to format a string, which plot lines to include, and what color they
-            should be, <em>etc</em>. They all work the same way and obey a hierarchy, allowing skin authors to specify a
-            look and feel of a report, while ensuring that you still have the final say of how it will come out.
+            should be, <em>etc</em>.
+        </p>
+        <p>
+            Options are processed in a specific order, such that later values can overlay and replace earlier values.
+            Generally, default values from skin configuration and internationalization files are processed first,
+            then overrides in <span class="code">weewx.conf</span> last.
+            This allows skin authors to specify the default look and feel of a report, while ensuring
+            that you will have the final say.
         </p>
 
         <p>
-            Here are the places where options are specified, including their <em>scope</em> and <em>precedence</em>,
-            listed in order of decreasing precedence.
+            To illustrate the processing order, here are the steps for the skin <em>Seasons</em>:
+        </p>
+        <ul>
+            <li>First, a set of default options from the module <span
+                class="code">weewx.defaults</span> serve as the starting point.
+            </li>
+            <li>Then options from the configuration file for <em>Seasons</em>, located in
+                <span class="code">skins/Seasons/skin.conf</span>, are read and merged into the results.
+            </li>
+            <li>
+                If the user has specified a unit system through option <span class="code">unit_system</span>, then the
+                appropriate set of unit choices are then merged into the results.
+            </li>
+            <li>Next, if the user has specified a language through option <span class="code">lang</span> and the
+                specified language is available (not all skins support language files), then
+                the appropriate language specification file (such as
+                <span class="code">skins/Seasons/lang/en.conf</span> or
+                <span class="code">skins/Seasons/lang/de.conf</span>) is read and merged into the results.
+            </li>
+            <li>Next the options under <span class="code">[StdReport] / [[Defaults]]</span> are merged.</li>
+            <li>Finally, the skin-specific options, under <span class="code">[StdReport] / [[Seasons]]</span> are
+                merged.
+            </li>
+        </ul>
+
+
+        <p>
+            All skins are processed in a similar manner although, of course, the name will be different.
+            This results in the following option hierarchy, listed in order of decreasing precedence.
         </p>
 
         <table class="indent" style="width: 90%">
             <caption>Option hierarchy, highest to lowest</caption>
             <tr class="first_row">
                 <td>File</td>
-                <td>Section</td>
-                <td>Options</td>
-                <td>Scope</td>
                 <td>Example</td>
                 <td>Comments</td>
             </tr>
             <tr>
                 <td class="code">weewx.conf</td>
-                <td class="code">[StdReport]<br/>&nbsp;&nbsp;[[<span class="symcode">report_name</span>]]</td>
-                <td></td>
-                <td>Affects only the report <span class="symcode">report_name</span>.</td>
                 <td class="code">
-                    [StdReport]<br/>
-                    &nbsp;&nbsp;[[Seasons]]<br/>
-                    &nbsp;&nbsp;&nbsp;&nbsp;[[[Labels]]]<br/>
-                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[[[[Generic]]]]<br/>
-                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;rain=Rainfall</td>
-                <td>Highest precedence. Has the final say.</td>
+[StdReport]<br/>
+&nbsp;&nbsp;[[Seasons]]<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;[[[Labels]]]<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[[[[Generic]]]]<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;rain=Rainfall</td>
+                <td>Report specific. Has the highest precedence and final say.</td>
             </tr>
             <tr>
                 <td class="code">weewx.conf</td>
-                <td class="code">[StdReport]<br/>&nbsp;&nbsp;[[<span class="symcode">report_name</span>]]</td>
-                <td class="code">lang<br/>unit_system</td>
-                <td>Affects only the report <span class="symcode">report_name</span>.</td>
                 <td class="code">
-                    [StdReport]<br/>
-                    &nbsp;&nbsp;[[Seasons]]<br/>
-                    &nbsp;&nbsp;&nbsp;&nbsp;lang = de<br/>
-                    &nbsp;&nbsp;&nbsp;&nbsp;unit_system=metricwx</td>
+[StdReport]<br/>
+&nbsp;&nbsp;[[Defaults]]<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;[[[Labels]]]<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[[[[Generic]]]]<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;rain=Rainfall</td>
+                <td>User defaults. Will apply to <em>all</em> skins.</td>
+            </tr>
+            <tr>
+                <td class="code">weewx.conf</td>
+                <td class="code">
+[StdReport]<br/>
+&nbsp;&nbsp;[[Seasons]]<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;lang=de<br/>
                 <td>Internationalization support. Option <span class="code">lang</span> only works for skins that
-                have been internationalized and have a corresponding language configuration file. <br/>
-                    Option <span class="code">unit_system</span> works for all skins.</td>
+                have been internationalized and have a corresponding language configuration file. This example
+                specifies the German language for the <em>Seasons</em> skin.</td>
             </tr>
             <tr>
                 <td class="code">weewx.conf</td>
-                <td class="code">[StdReport]<br/>&nbsp;&nbsp;[[Defaults]]</td>
-                <td></td>
-                <td>Affects <em>all</em> reports.</td>
                 <td class="code">
-                    [StdReport]<br/>
-                    &nbsp;&nbsp;[[Defaults]]<br/>
-                    &nbsp;&nbsp;&nbsp;&nbsp;[[[Labels]]]<br/>
-                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[[[[Generic]]]]<br/>
-                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;rain=Rainfall</td>
-                <td><a href="#deprecated-defaults">Deprecated</a>. Can still be used to localize skins that do not
-                    support option <span class="code">lang</span>.</td>
+[StdReport]<br/>
+&nbsp;&nbsp;[[Seasons]]<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;unit_system=metricwx<br/>
+                <td>Which unit system to use. This example specifies a metric system suitable for weather reports
+                for the <em>Seasons</em> skin.</td>
             </tr>
-            <div id="deprecated-defaults" class="modal-dialog">
-                <div>
-                           <a href="#close" title="Close" class="close-dialog">X</a>
-                    Override options for an individual skin instead. This allows the
-                    internationalization features of V4.6 to work.
-                </div>
-            </div>
             <tr>
-                <td class="code">skins/<span class="symcode">report_name</span>/skin.conf</td>
-                <td></td>
-                <td></td>
-                <td>Affects only the report <span class="symcode">report_name</span>.</td>
+                <td class="code">skins/Seasons/skin.conf</td>
                 <td class="code">
-                    [Units]<br/>
-                    &nbsp;&nbsp;[[Labels]]<br/>
-                    &nbsp;&nbsp;&nbsp;&nbsp;mbar=" hPa"</td>
-                <td>Generally supplied by the skin author, not the user. Parameters specified here define the baseline
-                    behavior.
+[Units]<br/>
+&nbsp;&nbsp;[[Labels]]<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;mbar=" hPa"</td>
+                <td>Generally supplied by the skin author, not the user. Options specified here define the baseline
+                    behavior of the skin.
                 </td>
             </tr>
             <tr>
                 <td class="code">weewx/defaults.py</td>
-                <td class="code"></td>
-                <td></td>
-                <td>Affects <em>all</em> reports.</td>
-                <td class="code">[Units]<br/>&nbsp;&nbsp;[[Labels]]<br/>&nbsp;&nbsp;&nbsp;&nbsp;mbar=" mbar"</td>
-                <td>Acts as a backstop, in the case an option is not specified anywhere else. Not generally modified by
-                    the user, although this could change in the future.
+                <td class="code">
+[Units]<br/>
+&nbsp;&nbsp;[[Labels]]<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;mbar=" mbar"</td>
+                <td>Acts as a backstop, in the case an option is not specified anywhere else. Should not be modified by
+                    the user.
                 </td>
             </tr>
         </table>
