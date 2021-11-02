@@ -623,7 +623,7 @@ class Source(object):
 
             # usUnits. We don't have to have a mapping for usUnits but if we
             # don't then we must have 'units' specified for each field mapping.
-            if 'usUnits' not in _map:
+            if 'usUnits' not in _map or _map['usUnits'].get('field_name') is None:
                 # no unit system mapping do we have units specified for
                 # each individual field
                 for _key, _val in six.iteritems(_map):
@@ -631,7 +631,8 @@ class Source(object):
                     if _key not in ['dateTime', 'usUnits']:
                         if 'units' in _val:
                             # we have a units field, do we know about it
-                            if _val['units'] not in weewx.units.default_unit_format_dict:
+                            if _val['units'] not in weewx.units.conversionDict \
+                                    and _val['units'] not in weewx.units.USUnits.values():
                                 # we have an invalid unit string so tell the
                                 # user and exit
                                 _msg = "Unknown units '%s' specified for " \
