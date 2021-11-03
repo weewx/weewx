@@ -59,9 +59,9 @@ data in the plot, then the plot will not be generated at all. If set to
 a time domain (such as 'year'), then it will do the check over that domain.
 See PR #702.
 
-Parameterized the Seasons skin, making it considerably smaller (730 lines,
-instead of 1140). It now includes all types found in the wview-extended schema.
-See PR #702.
+Parameterized the Seasons skin, making it considerably smaller, while requiring
+less configuration. It now includes all types found in the wview-extended
+schema. See PR #702.
 
 
 4.5.1 04/02/2021
