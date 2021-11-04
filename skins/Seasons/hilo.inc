@@ -8,7 +8,7 @@
 
 ## Get the list of observations from the configuration file, otherwise fallback
 ## to a very rudimentary set of observations.
-#set $observations = $DisplayOptions.get('observations', ['outTemp', 'windSpeed', 'rain'])
+#set $observations = $DisplayOptions.get('observations_stats', ['outTemp', 'windSpeed', 'rain'])
 #set $obs_type_sum = $DisplayOptions.get('obs_type_sum', ['rain'])
 #set $obs_type_max = $DisplayOptions.get('obs_type_max', ['rainRate'])
 
