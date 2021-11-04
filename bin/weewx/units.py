@@ -1589,7 +1589,7 @@ def get_default_formatter():
     """Get a default formatter. Useful for the test suites."""
     import weewx.defaults
     weewx.defaults.defaults.interpolation = False
-    formatter = weewx.units.Formatter(
+    formatter = Formatter(
         unit_format_dict=weewx.defaults.defaults['Units']['StringFormats'],
         unit_label_dict=weewx.defaults.defaults['Units']['Labels'],
         time_format_dict=weewx.defaults.defaults['Units']['TimeFormats'],

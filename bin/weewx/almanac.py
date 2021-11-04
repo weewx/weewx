@@ -74,7 +74,7 @@ class Almanac(object):
     >>> print("%.0f" % djd_to_timestamp(t_djd))
     1238180400
     
-    >>> almanac = Almanac(t, 46.0, -122.0)
+    >>> almanac = Almanac(t, 46.0, -122.0, formatter=weewx.units.get_default_formatter())
     
     Test backwards compatibility with attribute 'moon_fullness':
     >>> print("Fullness of the moon (rounded) is %.2f%% [%s]" % (almanac._moon_fullness, almanac.moon_phase))
@@ -85,24 +85,24 @@ class Almanac(object):
     Fullness of the moon (more precise) is 1.70%
 
     Test backwards compatibility with attributes 'sunrise' and 'sunset'
-    >>> print("Sunrise, sunset: %s %s" % (almanac.sunrise, almanac.sunset))
-    Sunrise, sunset: 06:56 19:30
+    >>> print("Sunrise, sunset: %s, %s" % (almanac.sunrise, almanac.sunset))
+    Sunrise, sunset: 06:56:36, 19:30:41
 
     Get sunrise, sun transit, and sunset using the new 'ephem' syntax:
-    >>> print("Sunrise, sun transit, sunset: %s %s %s" % (almanac.sun.rise, almanac.sun.transit, almanac.sun.set))
-    Sunrise, sun transit, sunset: 06:56 13:13 19:30
+    >>> print("Sunrise, sun transit, sunset: %s, %s, %s" % (almanac.sun.rise, almanac.sun.transit, almanac.sun.set))
+    Sunrise, sun transit, sunset: 06:56:36, 13:13:13, 19:30:41
     
     Do the same with the moon:
-    >>> print("Moon rise, transit, set: %s %s %s" % (almanac.moon.rise, almanac.moon.transit, almanac.moon.set))
-    Moon rise, transit, set: 06:59 14:01 21:20
+    >>> print("Moon rise, transit, set: %s, %s, %s" % (almanac.moon.rise, almanac.moon.transit, almanac.moon.set))
+    Moon rise, transit, set: 06:59:14, 14:01:57, 21:20:06
     
     And Mars
-    >>> print("Mars rise, transit, set: %s %s %s" % (almanac.mars.rise, almanac.mars.transit, almanac.mars.set))
-    Mars rise, transit, set: 06:08 11:34 17:00
+    >>> print("Mars rise, transit, set: %s, %s, %s" % (almanac.mars.rise, almanac.mars.transit, almanac.mars.set))
+    Mars rise, transit, set: 06:08:57, 11:34:13, 17:00:04
     
     Finally, try a star
-    >>> print("Rigel rise, transit, set: %s %s %s" % (almanac.rigel.rise, almanac.rigel.transit, almanac.rigel.set))
-    Rigel rise, transit, set: 12:32 18:00 23:28
+    >>> print("Rigel rise, transit, set: %s, %s, %s" % (almanac.rigel.rise, almanac.rigel.transit, almanac.rigel.set))
+    Rigel rise, transit, set: 12:32:33, 18:00:38, 23:28:43
 
     Exercise sidereal time
     >>> print("%.4f" % almanac.sidereal_time)
@@ -110,23 +110,23 @@ class Almanac(object):
 
     Exercise equinox, solstice routines
     >>> print(almanac.next_vernal_equinox)
-    20-Mar-2010 10:32
+    03/20/10 10:32:11
     >>> print(almanac.next_autumnal_equinox)
-    22-Sep-2009 14:18
+    09/22/09 14:18:39
     >>> print(almanac.next_summer_solstice)
-    20-Jun-2009 22:45
+    06/20/09 22:45:40
     >>> print(almanac.previous_winter_solstice)
-    21-Dec-2008 04:03
+    12/21/08 04:03:36
     >>> print(almanac.next_winter_solstice)
-    21-Dec-2009 09:46
+    12/21/09 09:46:38
     
     Exercise moon state routines
     >>> print(almanac.next_full_moon)
-    09-Apr-2009 07:55
+    04/09/09 07:55:49
     >>> print(almanac.next_new_moon)
-    24-Apr-2009 20:22
+    04/24/09 20:22:33
     >>> print(almanac.next_first_quarter_moon)
-    02-Apr-2009 07:33
+    04/02/09 07:33:42
     
     Now location of the sun and moon
     >>> print("Solar azimuth, altitude = (%.2f, %.2f)" % (almanac.sun.az, almanac.sun.alt))
@@ -140,7 +140,7 @@ class Almanac(object):
     2013-06-12 06:33:23 PDT (1371044003)
     >>> almanac = Almanac(t, 64.0, 0.0)
     >>> print(almanac(horizon=-6).sun(use_center=1).rise)
-       N/A
+    N/A
 
     Try the pyephem "Naval Observatory" example.
     >>> t = 1252256400
