@@ -97,8 +97,8 @@
       #elif $x in $obs_type_max
         #for $timespan in $timespans
         <td class="data new_row hilo_$timespan">
-          <span title="$getVar('%s.%s' % ($timespan, $x)).maxtime>
-            $getVar('%s.%s' % ($timespan, $x)).max.format(add_label=False)</span>'
+          <span title="$getVar('%s.%s' % ($timespan, $x)).maxtime">
+            $getVar('%s.%s' % ($timespan, $x)).max.format(add_label=False)</span>
         </td>
         #end for
       #else
