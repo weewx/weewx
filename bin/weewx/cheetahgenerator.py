@@ -79,7 +79,7 @@ import weewx.station
 import weewx.tags
 import weewx.units
 from weeutil.config import search_up, accumulateLeaves, deep_copy
-from weeutil.weeutil import to_bool, to_int, timestamp_to_string, KeyDict
+from weeutil.weeutil import to_bool, to_int, timestamp_to_string
 
 log = logging.getLogger(__name__)
 
