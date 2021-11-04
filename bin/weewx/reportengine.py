@@ -253,7 +253,7 @@ class StdReportEngine(threading.Thread):
             log.debug("Found configuration file %s for report '%s'", skin_config_path, report)
             # There may or may not be a unit system specified. If so, honor it.
             if 'unit_system' in merge_dict:
-                merge_unit_system(merge_dict['unit_system'], skin_dict, report)
+                merge_unit_system(merge_dict['unit_system'], skin_dict)
             # Merge the rest of the config file in:
             weeutil.config.merge_config(skin_dict, merge_dict)
 
@@ -296,7 +296,7 @@ class StdReportEngine(threading.Thread):
                     merge_dict['Texts'] = {}
                 # There may or may not be a unit system specified. If so, honor it.
                 if 'unit_system' in merge_dict:
-                    merge_unit_system(merge_dict['unit_system'], skin_dict, report)
+                    merge_unit_system(merge_dict['unit_system'], skin_dict)
                 # Merge the rest of the config file in:
                 weeutil.config.merge_config(skin_dict, merge_dict)
 
@@ -309,7 +309,7 @@ class StdReportEngine(threading.Thread):
             merge_dict = weeutil.config.deep_copy(self.config_dict)['StdReport']['Defaults']
             # There may or may not be a unit system specified. If so, honor it.
             if 'unit_system' in merge_dict:
-                merge_unit_system(merge_dict['unit_system'], skin_dict, report)
+                merge_unit_system(merge_dict['unit_system'], skin_dict)
             # Merge the rest of the section in:
             weeutil.config.merge_config(skin_dict, merge_dict)
 
@@ -324,24 +324,19 @@ class StdReportEngine(threading.Thread):
         merge_dict = weeutil.config.deep_copy(self.config_dict)['StdReport'][report]
         # There may or may not be a unit system specified. If so, honor it.
         if 'unit_system' in merge_dict:
-            merge_unit_system(merge_dict['unit_system'], skin_dict, report)
+            merge_unit_system(merge_dict['unit_system'], skin_dict)
         # Merge the rest of the section in:
         weeutil.config.merge_config(skin_dict, merge_dict)
 
         return skin_dict
 
 
-def merge_unit_system(report_units_base, skin_dict, report):
+def merge_unit_system(report_units_base, skin_dict):
     report_units_base = report_units_base.upper()
-    # Get the chosen unit system out of units.py. Copy it to prevent
-    # the original from being changed. Merge it into skin_dict.
-    try:
-        units_dict = weewx.units.std_groups[
-            weewx.units.unit_constants[report_units_base]].copy()
-        skin_dict['Units']['Groups'].update(units_dict)
-    except KeyError as e:
-        log.error("Error ('%s') merging unit system '%s' for report '%s'",
-                  e, report_units_base, report)
+    # Get the chosen unit system out of units.py, then merge it into skin_dict.
+    units_dict = weewx.units.std_groups[
+        weewx.units.unit_constants[report_units_base]]
+    skin_dict['Units']['Groups'].update(units_dict)
 
 
 # =============================================================================
