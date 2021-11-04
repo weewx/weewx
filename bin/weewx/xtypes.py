@@ -240,8 +240,9 @@ class ArchiveTable(XType):
         'mintime': "SELECT dateTime FROM %(table_name)s "
                    "WHERE dateTime > %(start)s AND dateTime <= %(stop)s "
                    "AND %(obs_type)s IS NOT NULL ORDER BY %(obs_type)s ASC LIMIT 1",
-        'not_null': "SELECT %(obs_type)s IS NOT NULL FROM %(table_name)s "
-                    "WHERE dateTime > %(start)s AND dateTime <= %(stop)s LIMIT 1",
+        'not_null': "SELECT 1 FROM %(table_name)s "
+                    "WHERE dateTime > %(start)s AND dateTime <= %(stop)s "
+                    "AND %(obs_type)s IS NOT NULL LIMIT 1",
         'tderiv': "SELECT (b.%(obs_type)s - a.%(obs_type)s) / (b.dateTime-a.dateTime) "
                   "FROM archive a, archive b "
                   "WHERE b.dateTime = (SELECT MAX(dateTime) FROM archive "
@@ -293,7 +294,10 @@ class ArchiveTable(XType):
         except weedb.NoColumnError:
             raise weewx.UnknownType(aggregate_type)
 
-        value = row[0] if row else None
+        if aggregate_type == 'not_null':
+            value = row is not None
+        else:
+            value = row[0] if row else None
 
         # Look up the unit type and group of this combination of observation type and aggregation:
         u, g = weewx.units.getStandardUnitType(db_manager.std_unit_system, obs_type,
@@ -385,8 +389,8 @@ class DailySummaries(XType):
                    "WHERE dateTime >= %(start)s AND dateTime < %(stop)s "
                    "AND mintime IS NOT NULL "
                    "ORDER BY min ASC, mintime ASC LIMIT 1",
-        'not_null': "SELECT count>0 FROM %(table_name)s_day_%(obs_key)s "
-                 "WHERE dateTime >= %(start)s AND dateTime < %(stop)s LIMIT 1",
+        'not_null': "SELECT count>0 as c FROM %(table_name)s_day_%(obs_key)s "
+                 "WHERE dateTime >= %(start)s AND dateTime < %(stop)s ORDER BY c DESC LIMIT 1",
         'rms': "SELECT SUM(wsquaresum),SUM(sumtime) FROM %(table_name)s_day_%(obs_key)s "
                "WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
         'sum': "SELECT SUM(sum) FROM %(table_name)s_day_%(obs_key)s "
@@ -745,8 +749,9 @@ class WindVec(XType):
         'max': "SELECT %(mag)s, %(dir)s, usUnits FROM %(table_name)s "
                "WHERE dateTime > %(start)s AND dateTime <= %(stop)s  AND %(mag)s IS NOT NULL "
                "ORDER BY %(mag)s DESC LIMIT 1;",
-        'not_null' : "SELECT %(mag)s IS NOT NULL, usUnits FROM %(table_name)s "
-               "WHERE dateTime > %(start)s AND dateTime <= %(stop)s LIMIT 1;"
+        'not_null' : "SELECT 1, usUnits FROM %(table_name)s "
+                     "WHERE dateTime > %(start)s AND dateTime <= %(stop)s "
+                     "AND %(mag)s IS NOT NULL LIMIT 1;"
     }
     # for types 'avg', 'sum'
     complex_sql_wind = 'SELECT %(mag)s, %(dir)s, usUnits FROM %(table_name)s WHERE dateTime > ? ' \
@@ -853,15 +858,20 @@ class WindVec(XType):
             # statement.
             select_stmt = WindVec.agg_sql_dict[aggregate_type] % interpolation_dict
             row = db_manager.getSql(select_stmt)
-            if row:
-                if aggregate_type in ['count', 'not_null']:
-                    value, std_unit_system = row
-                else:
-                    magnitude, direction, std_unit_system = row
-                    value = weeutil.weeutil.to_complex(magnitude, direction)
-            else:
+
+            if aggregate_type == 'not_null':
+                value = row is not None
                 std_unit_system = db_manager.std_unit_system
-                value = None
+            else:
+                if row:
+                    if aggregate_type == 'count':
+                        value, std_unit_system = row
+                    else:
+                        magnitude, direction, std_unit_system = row
+                        value = weeutil.weeutil.to_complex(magnitude, direction)
+                else:
+                    std_unit_system = db_manager.std_unit_system
+                    value = None
         else:
             # The requested aggregation must be either 'sum' or 'avg', which will require some
             # arithmetic in Python, so it cannot be done by a simple query.
