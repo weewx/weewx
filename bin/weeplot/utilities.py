@@ -595,19 +595,19 @@ def _rel_approx_equal(x, y, rel=1e-7):
     """Relative test for equality.
     
     Example 
-    >>> rel_approx_equal(1.23456, 1.23457)
+    >>> _rel_approx_equal(1.23456, 1.23457)
     False
-    >>> rel_approx_equal(1.2345678, 1.2345679)
+    >>> _rel_approx_equal(1.2345678, 1.2345679)
     True
-    >>> rel_approx_equal(0.0, 0.0)
+    >>> _rel_approx_equal(0.0, 0.0)
     True
-    >>> rel_approx_equal(0.0, 0.1)
+    >>> _rel_approx_equal(0.0, 0.1)
     False
-    >>> rel_approx_equal(0.0, 1e-9)
+    >>> _rel_approx_equal(0.0, 1e-9)
     False
-    >>> rel_approx_equal(1.0, 1.0+1e-9)
+    >>> _rel_approx_equal(1.0, 1.0+1e-9)
     True
-    >>> rel_approx_equal(1e8, 1e8+1e-3)
+    >>> _rel_approx_equal(1e8, 1e8+1e-3)
     True
     """
     return abs(x - y) <= rel * max(abs(x), abs(y))
