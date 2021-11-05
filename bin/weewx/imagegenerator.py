@@ -384,7 +384,7 @@ def _skip_this_plot(time_ts, plot_options, img_file):
                 return True
         except os.error:
             pass
-    return False
+    return True
 
 
 def _get_check_domain(skip_if_empty, x_domain):
