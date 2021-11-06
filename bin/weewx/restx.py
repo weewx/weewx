@@ -109,6 +109,7 @@ from weeutil.weeutil import to_int, to_float, to_bool, timestamp_to_string, to_s
 
 log = logging.getLogger(__name__)
 
+
 class FailedPost(IOError):
     """Raised when a post fails, and is unlikely to succeed if retried."""
 
@@ -299,8 +300,9 @@ class RESTThread(threading.Thread):
                     % dbmanager.table_name, (_time_ts - 3600.0, _time_ts))
                 if _result is not None and _result[0] is not None:
                     if not _result[1] == _result[2] == record['usUnits']:
-                        raise ValueError("Inconsistent units (%s vs %s vs %s) when querying for hourRain"
-                                         % (_result[1], _result[2], record['usUnits']))
+                        raise ValueError(
+                            "Inconsistent units (%s vs %s vs %s) when querying for hourRain"
+                            % (_result[1], _result[2], record['usUnits']))
                     _datadict['hourRain'] = _result[0]
                 else:
                     _datadict['hourRain'] = None
@@ -313,8 +315,9 @@ class RESTThread(threading.Thread):
                     % dbmanager.table_name, (_time_ts - 24 * 3600.0, _time_ts))
                 if _result is not None and _result[0] is not None:
                     if not _result[1] == _result[2] == record['usUnits']:
-                        raise ValueError("Inconsistent units (%s vs %s vs %s) when querying for rain24"
-                                         % (_result[1], _result[2], record['usUnits']))
+                        raise ValueError(
+                            "Inconsistent units (%s vs %s vs %s) when querying for rain24"
+                            % (_result[1], _result[2], record['usUnits']))
                     _datadict['rain24'] = _result[0]
                 else:
                     _datadict['rain24'] = None
@@ -331,8 +334,9 @@ class RESTThread(threading.Thread):
                     % dbmanager.table_name, (_sod_ts, _time_ts))
                 if _result is not None and _result[0] is not None:
                     if not _result[1] == _result[2] == record['usUnits']:
-                        raise ValueError("Inconsistent units (%s vs %s vs %s) when querying for dayRain"
-                                         % (_result[1], _result[2], record['usUnits']))
+                        raise ValueError(
+                            "Inconsistent units (%s vs %s vs %s) when querying for dayRain"
+                            % (_result[1], _result[2], record['usUnits']))
                     _datadict['dayRain'] = _result[0]
                 else:
                     _datadict['dayRain'] = None
@@ -394,7 +398,8 @@ class RESTThread(threading.Thread):
             except FailedPost as e:
                 if self.log_failure:
                     _time_str = timestamp_to_string(_record['dateTime'])
-                    log.error("%s: Failed to publish record %s: %s" % (self.protocol_name, _time_str, e))
+                    log.error("%s: Failed to publish record %s: %s"
+                              % (self.protocol_name, _time_str, e))
             except ssl.SSLError as e:
                 if self.retry_ssl:
                     log.error("%s: SSL error (%s); waiting %s minutes then retrying",
@@ -584,6 +589,7 @@ class RESTThread(threading.Thread):
     def format_url(self, _):
         raise NotImplementedError
 
+
 # ==============================================================================
 #                    Ambient protocols
 # ==============================================================================
@@ -631,7 +637,8 @@ class StdWunderground(StdRESTful):
                 **_ambient_dict)
             self.archive_thread.start()
             self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
-            log.info("Wunderground-PWS: Data for station %s will be posted", _ambient_dict['station'])
+            log.info("Wunderground-PWS: Data for station %s will be posted",
+                     _ambient_dict['station'])
 
         if do_rapidfire_post:
             _ambient_dict.setdefault('server_url', StdWunderground.rf_url)
@@ -650,7 +657,8 @@ class StdWunderground(StdRESTful):
                 **_ambient_dict)
             self.loop_thread.start()
             self.bind(weewx.NEW_LOOP_PACKET, self.new_loop_packet)
-            log.info("Wunderground-RF: Data for station %s will be posted", _ambient_dict['station'])
+            log.info("Wunderground-RF: Data for station %s will be posted",
+                     _ambient_dict['station'])
 
     def new_loop_packet(self, event):
         """Puts new LOOP packets in the loop queue"""
@@ -895,7 +903,7 @@ class AmbientThread(RESTThread):
     }
 
     _INDOOR_FORMATS = {
-        'inTemp'    : 'indoortempf=%.1f',
+        'inTemp': 'indoortempf=%.1f',
         'inHumidity': 'indoorhumidity=%.0f'}
 
     def format_url(self, incoming_record):
@@ -976,7 +984,7 @@ class AmbientLoopThread(AmbientThread):
                  softwaretype="weewx-%s" % weewx.__version__,
                  skip_upload=False,
                  force_direction=False,
-                 rtfreq=2.5     # This is the only one added by AmbientLoopThread
+                 rtfreq=2.5  # This is the only one added by AmbientLoopThread
                  ):
         """
         Initializer for the AmbientLoopThread class.
@@ -1033,17 +1041,17 @@ class WOWThread(AmbientThread):
     """Class for posting to the WOW variant of the Ambient protocol."""
 
     # Types and formats of the data to be published:
-    _FORMATS = {'dateTime'   : 'dateutc=%s',
-                'barometer'  : 'baromin=%.3f',
-                'outTemp'    : 'tempf=%.1f',
+    _FORMATS = {'dateTime': 'dateutc=%s',
+                'barometer': 'baromin=%.3f',
+                'outTemp': 'tempf=%.1f',
                 'outHumidity': 'humidity=%.0f',
-                'windSpeed'  : 'windspeedmph=%.0f',
-                'windDir'    : 'winddir=%.0f',
-                'windGust'   : 'windgustmph=%.0f',
+                'windSpeed': 'windspeedmph=%.0f',
+                'windDir': 'winddir=%.0f',
+                'windGust': 'windgustmph=%.0f',
                 'windGustDir': 'windgustdir=%.0f',
-                'dewpoint'   : 'dewptf=%.1f',
-                'hourRain'   : 'rainin=%.2f',
-                'dayRain'    : 'dailyrainin=%.3f'}
+                'dewpoint': 'dewptf=%.1f',
+                'hourRain': 'rainin=%.2f',
+                'dayRain': 'dailyrainin=%.3f'}
 
     def format_url(self, incoming_record):
         """Return an URL for posting using WOW's version of the Ambient
@@ -1063,7 +1071,8 @@ class WOWThread(AmbientThread):
             # Check to make sure the type is not null
             if _v is not None:
                 if _key == 'dateTime':
-                    _v = urllib.parse.quote_plus(datetime.datetime.utcfromtimestamp(_v).isoformat(' '))
+                    _v = urllib.parse.quote_plus(
+                        datetime.datetime.utcfromtimestamp(_v).isoformat(' '))
                 # Format the value, and accumulate in _liststr:
                 _liststr.append(WOWThread._FORMATS[_key] % _v)
         # Now stick all the pieces together with an ampersand between them:
@@ -1106,7 +1115,6 @@ class StdCWOP(StdRESTful):
     default_servers = ['cwop.aprs.net:14580', 'cwop.aprs.net:23']
 
     def __init__(self, engine, config_dict):
-
         super(StdCWOP, self).__init__(engine, config_dict)
 
         _cwop_dict = get_site_dict(config_dict, 'CWOP', 'station')
@@ -1263,7 +1271,7 @@ class CWOPThread(RESTThread):
         if _humidity is None:
             _humid_str = "h.."
         else:
-            _humid_str = ("h%02d" % int(_humidity + 0.5) ) if _humidity < 99.5 else "h00"
+            _humid_str = ("h%02d" % int(_humidity + 0.5)) if _humidity < 99.5 else "h00"
 
         # Radiation:
         _radiation = record.get('radiation')
@@ -1299,7 +1307,8 @@ class CWOPThread(RESTThread):
                 _server, _port_str = _serv_addr_str.split(":")
                 _port = int(_port_str)
             except ValueError:
-                log.error("%s: Bad server address: '%s'; ignored" , self.protocol_name, _serv_addr_str)
+                log.error("%s: Bad server address: '%s'; ignored", self.protocol_name,
+                          _serv_addr_str)
                 continue
 
             # Try each combination up to max_tries times:
@@ -1418,7 +1427,8 @@ class StdStationRegistry(StdRESTful):
             log.info("StationRegistry: Station will not be registered: no station_url specified.")
             return
 
-        _registry_dict.setdefault('station_type', config_dict['Station'].get('station_type', 'Unknown'))
+        _registry_dict.setdefault('station_type',
+                                  config_dict['Station'].get('station_type', 'Unknown'))
         _registry_dict.setdefault('description', self.engine.stn_info.location)
         _registry_dict.setdefault('latitude', self.engine.stn_info.latitude_f)
         _registry_dict.setdefault('longitude', self.engine.stn_info.longitude_f)
@@ -1497,28 +1507,28 @@ class StationRegistryThread(RESTThread):
 
     def get_record(self, dummy_record, dummy_archive):
         _record = {
-            'station_url'   : self.station_url,
-            'description'   : self.description,
-            'latitude'      : self.latitude,
-            'longitude'     : self.longitude,
-            'station_type'  : self.station_type,
-            'station_model' : self.station_model,
-            'python_info'   : platform.python_version(),
-            'platform_info' :  platform.platform(),
-            'weewx_info'    : weewx.__version__,
-            'usUnits'       : weewx.US,
+            'station_url': self.station_url,
+            'description': self.description,
+            'latitude': self.latitude,
+            'longitude': self.longitude,
+            'station_type': self.station_type,
+            'station_model': self.station_model,
+            'python_info': platform.python_version(),
+            'platform_info': platform.platform(),
+            'weewx_info': weewx.__version__,
+            'usUnits': weewx.US,
         }
         return _record
 
-    _FORMATS = {'station_url'  : 'station_url=%s',
-                'description'  : 'description=%s',
-                'latitude'     : 'latitude=%.4f',
-                'longitude'    : 'longitude=%.4f',
-                'station_type' : 'station_type=%s',
+    _FORMATS = {'station_url': 'station_url=%s',
+                'description': 'description=%s',
+                'latitude': 'latitude=%.4f',
+                'longitude': 'longitude=%.4f',
+                'station_type': 'station_type=%s',
                 'station_model': 'station_model=%s',
-                'python_info'  : 'python_info=%s',
+                'python_info': 'python_info=%s',
                 'platform_info': 'platform_info=%s',
-                'weewx_info'   : 'weewx_info=%s'}
+                'weewx_info': 'weewx_info=%s'}
 
     def format_url(self, record):
         """Return an URL for posting using the StationRegistry protocol."""
@@ -1658,18 +1668,18 @@ AWEKAS = StdAWEKAS
 
 class AWEKASThread(RESTThread):
     _SERVER_URL = 'http://data.awekas.at/eingabe_pruefung.php'
-    _FORMATS = {'barometer'  : '%.3f',
-                'outTemp'    : '%.1f',
+    _FORMATS = {'barometer': '%.3f',
+                'outTemp': '%.1f',
                 'outHumidity': '%.0f',
-                'windSpeed'  : '%.1f',
-                'windDir'    : '%.0f',
-                'windGust'   : '%.1f',
-                'dewpoint'   : '%.1f',
-                'hourRain'   : '%.2f',
-                'dayRain'    : '%.2f',
-                'radiation'  : '%.2f',
-                'UV'         : '%.2f',
-                'rainRate'   : '%.2f'}
+                'windSpeed': '%.1f',
+                'windDir': '%.0f',
+                'windGust': '%.1f',
+                'dewpoint': '%.1f',
+                'hourRain': '%.2f',
+                'dayRain': '%.2f',
+                'radiation': '%.2f',
+                'UV': '%.2f',
+                'rainRate': '%.2f'}
 
     def __init__(self, q, username, password, latitude, longitude,
                  manager_dict,

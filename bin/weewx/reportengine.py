@@ -332,6 +332,15 @@ class StdReportEngine(threading.Thread):
 
 
 def merge_unit_system(report_units_base, skin_dict):
+    """
+    Given a unit system, merge its unit groups into a configuration dictionary
+    Args:
+        report_units_base (str): A unit base (such as 'us', or 'metricwx')
+        skin_dict (dict): A configuration dictionary
+
+    Returns:
+        None
+    """
     report_units_base = report_units_base.upper()
     # Get the chosen unit system out of units.py, then merge it into skin_dict.
     units_dict = weewx.units.std_groups[
