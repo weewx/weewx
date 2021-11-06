@@ -176,9 +176,10 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
         """Load the search list"""
         self.search_list_objs = []
 
-        # The option 'search_list' holds a starting search list. Usually it's just the default.
+        # The option 'search_list' holds a starting search list (usually just the default).
+        # Because we'll be modifying search_list, make a copy of the default before assignment.
         search_list = weeutil.weeutil.option_as_list(gen_dict.get('search_list',
-                                                                  default_search_list))
+                                                                  list(default_search_list)))
         # Option 'search_list_extensions' holds user extensions.
         search_list.extend(weeutil.weeutil.option_as_list(gen_dict.get('search_list_extensions',
                                                                        [])))
