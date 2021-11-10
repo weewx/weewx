@@ -8,10 +8,10 @@
 #if $almanac.hasExtras
   #set $sun_altitude = $almanac.sun.alt
   #if $sun_altitude < 0
-    #set $sun_None="<i>(Always down)</i>"
+    #set $sun_None='<i>%s</i>' % $gettext("Always down")
     #set $daylight_str = "00:00"
   #else
-    #set $sun_None="<i>(Always up)</i>"
+    #set $sun_None='<i>%s</i>' % $gettext("Always up")
     #set $daylight_str = "24:00"
   #end if
 

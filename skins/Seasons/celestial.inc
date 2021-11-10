@@ -9,9 +9,9 @@
   ## Pick a "None string" on the basis of whether the sun is above or below the horizon
   #set $sun_altitude = $almanac.sun.alt
   #if $sun_altitude < 0
-    #set $sun_None='<i>$gettext("Always down")</i>'
+    #set $sun_None='<i>%s</i>' % $gettext("Always down")
   #else
-    #set $sun_None='<i>$gettext("Always up")</i>'
+    #set $sun_None='<i>%s</i>' % $gettext("Always up")
   #end if
 
   ## For the change in daylight, pick a string to indicate whether it is more or
