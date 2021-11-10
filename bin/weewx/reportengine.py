@@ -313,10 +313,13 @@ class StdReportEngine(threading.Thread):
             # Merge the rest of the section in:
             weeutil.config.merge_config(skin_dict, merge_dict)
 
-        # Inject any scalar overrides. This is for backwards compatibility. These options should
-        # now go under [StdReport][[Defaults]].
+        # Inject any scalar overrides..
         for scalar in self.config_dict['StdReport'].scalars:
             skin_dict[scalar] = self.config_dict['StdReport'][scalar]
+
+        # If a unit_system was specified, honor it.
+        if 'unit_system' in self.config_dict['StdReport']:
+            merge_unit_system(self.config_dict['StdReport']['unit_system'], skin_dict)
 
         #######################################################################
         # Finally, inject any overrides for this specific report. Because this is the last merge,
