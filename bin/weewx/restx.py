@@ -1121,8 +1121,9 @@ class StdCWOP(StdRESTful):
         if _cwop_dict is None:
             return
 
+        if 'passcode' not in _cwop_dict or _cwop_dict['passcode'] == 'replace_me':
+            _cwop_dict['passcode'] = '-1'
         _cwop_dict['station'] = _cwop_dict['station'].upper()
-        _cwop_dict.setdefault('passcode', '-1')
         _cwop_dict.setdefault('latitude', self.engine.stn_info.latitude_f)
         _cwop_dict.setdefault('longitude', self.engine.stn_info.longitude_f)
         _cwop_dict.setdefault('station_type', config_dict['Station'].get(
