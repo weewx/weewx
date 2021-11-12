@@ -447,6 +447,7 @@ class AcuRiteDriver(weewx.drivers.AbstractDevice):
         self.r3_max_fail = 3
         self.r1_next_read = 0
         self.r2_next_read = 0
+        self.cached = dict()
         global DEBUG_RAW
         DEBUG_RAW = int(stn_dict.get('debug_raw', 0))
 
@@ -481,11 +482,19 @@ class AcuRiteDriver(weewx.drivers.AbstractDevice):
                                 log.debug("R3: %s" % _fmt_bytes(row))
                 if raw1:
                     packet.update(Station.decode_R1(raw1))
+                    if 'outTemp' in packet:
+                        # Cache the current outside temp for barometer calculations
+                        self.cached['outTemp'] = packet['outTemp']
+                        self.cached['timestamp'] = time.time()
                 if raw2:
                     Station.check_pt_constants(last_raw2, raw2)
                     last_raw2 = raw2
                     packet.update(Station.decode_R2(
                             raw2, self.use_constants, self.ignore_bounds))
+
+                    # Make sure we have a recent outside temperature reading to feed the barometer calculation
+                    if 'outTemp' not in packet and 'outTemp' in self.cached and 'timestamp' in self.cached and self.cached['timestamp'] > time.time() - 60:
+                        packet['outTemp'] = self.cached['outTemp']
                 self._augment_packet(packet)
                 ntries = 0
                 yield packet
