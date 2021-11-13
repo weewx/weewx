@@ -649,7 +649,7 @@ class Formatter(object):
         # Is the label a tuple or list?
         if isinstance(label, (tuple, list)):
             # Yes. Return the singular or plural version as requested
-            return label[1] if plural else label[0]
+            return label[1] if plural and len(label) > 1 else label[0]
         else:
             # No singular/plural version. It's just a string. Return it.
             return label
