@@ -45,7 +45,7 @@
 #for period in $periods
           <div id="history_${period}" class="plot_container" style="display:none">
   #for plot_name in $telemetry_plot_names
-    #set $show_plot = 0            
+    #set $show_plot = 0
     #for obs in $getobs('%s%s' % ($period, $plot_name))
       #if $getVar('year.%s.has_data' % $obs)
         #set $show_plot = 1
