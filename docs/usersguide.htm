@@ -194,12 +194,10 @@ Version: 4.6
                 size, etc. You may have to follow directions given by your hardware manufacturer, or you may be able to
                 use the utility <a href="utilities.htm#wee_device_utility"><span class="code">wee_device</span>.</a>
             </li>
-            <li>Launch the <span class="code">weewxd</span> program. It can be run either as a <a
-                href="#Running_as_a_daemon">daemon</a>, or <a href="#Running_directly">directly from the command
-                line</a>.
+            <li>Launch the <span class="code">weewxd</span> program. It is run from the command line, either as a <a
+                href="#Running_as_a_daemon">daemon</a>, or <a href="#Running_directly">directly</a>.
             </li>
-            <li>Tune the installation. Typically this is done by changing settings in the <a href="#weewxconf"><span
-                class="code">weewx.conf</span></a> configuration file. For example, you might want to <a
+            <li>Tune the installation. Typically this is done by changing settings in the WeeWX configuration file. For example, you might want to <a
                 href="#station_registry">register your station</a>, so it shows up on a world-wide map of WeeWX
                 installations.
             </li>
@@ -224,10 +222,10 @@ Version: 4.6
 
         <p>
             Installation using <span class="code">setup.py</span> is the recommended method for those who plan to write
-            custom services and reports for WeeWX. It will put everything in a single directory, specified by the
-            parameter <span class='code'>home</span> in the <span class='code'>setup.cfg</span> file, making it easier
-            to modify WeeWX. This file is not used by the other installation methods. If the user installing WeeWX has
-            permission to write to the directory, root privileges will not be required to install, run, or modify WeeWX.
+            custom services and reports for WeeWX. It will put everything in a single directory, making it easier
+            to modify WeeWX.  If the user installing WeeWX has permission to write to the directory, root privileges
+            will not be required to install, run, or modify WeeWX.  However, root privileges might be required to
+            communicate with hardware.
         </p>
 
         <h2><a href='debian.htm'>Installing from DEB package</a></h2>
@@ -253,8 +251,7 @@ Version: 4.6
         <h2><a href='setup.htm'>Installing using the Python tool setup.py</a></h2>
 
         <p>For all other operating systems, follow the <a href='setup.htm'><span class="code">setup.py</span>
-            instructions</a>. This method can also be used on Debian-, Redhat-, and SUSE-based operating systems as
-            well, and may be a better choice if you intend to heavily customize WeeWX.
+            instructions</a>. This method can also be used on Debian-, Redhat-, and SUSE-based operating systems.
         </p>
 
         <h2 id="Where_to_find_things">Where to find things</h2>
