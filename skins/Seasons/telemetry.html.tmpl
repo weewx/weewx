@@ -4,7 +4,7 @@
 #encoding UTF-8
 
 #set $periods = $DisplayOptions.get('periods', ['day', 'week', 'month', 'year'])
-#set $telemetry_plot_names = $DisplayOptions.get('telemetry_plot_names', ['rx'])
+#set $telemetry_plot_groups = $DisplayOptions.get('telemetry_plot_groups', ['rx'])
 
 <!DOCTYPE html>
 <html lang="$lang">
@@ -44,15 +44,20 @@
 
 #for period in $periods
           <div id="history_${period}" class="plot_container" style="display:none">
-  #for plot_name in $telemetry_plot_names
+  #for plot_group in $telemetry_plot_groups
     #set $show_plot = 0
-    #for obs in $getobs('%s%s' % ($period, $plot_name))
+    #*
+      The plot name is just the concatenation of the period and the plot group.
+      For example, 'year' + 'tempdew' yields 'yeartempdew'.
+    *#
+    #set $plot_name = $period + $plot_group
+    #for obs in $getobs($plot_name)
       #if $getVar('year.%s.has_data' % $obs)
         #set $show_plot = 1
       #end if
     #end for
     #if $show_plot
-            <img src="${period}${plot_name}.png" alt="${period}${plot_name}"/>
+            <img src="${plot_name}.png" alt="${plot_name}"/>
     #end if
   #end for
           </div>

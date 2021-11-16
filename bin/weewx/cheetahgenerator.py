@@ -738,9 +738,16 @@ class PlotInfo(SearchList):
                     # The observation name might be specified directly,
                     # or it might be specified by the data_type field.
                     if 'data_type' in plot_dict[obs_name]:
-                        obs.add(plot_dict[obs_name]['data_type'])
+                        data_name = plot_dict[obs_name]['data_type']
                     else:
-                        obs.add(obs_name)
+                        data_name = obs_name
+                    # A data type of 'windvec' or 'windgustvec' requires special treatment
+                    if data_name == 'windvec':
+                        data_name = 'windSpeed'
+                    elif data_name == 'windgustvec':
+                        data_name = 'windGust'
+
+                    obs.add(data_name)
                 break
         return obs
 

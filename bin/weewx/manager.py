@@ -259,7 +259,7 @@ class Manager(object):
         """
 
         return self.exists(obs_type) \
-               and weewx.xtypes.get_aggregate(obs_type, timespan, 'not_null', self)[0]
+               and bool(weewx.xtypes.get_aggregate(obs_type, timespan, 'not_null', self)[0])
 
     def addRecord(self, record_obj,
                   accumulator=None,
