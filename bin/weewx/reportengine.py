@@ -434,7 +434,7 @@ class FtpGenerator(ReportGenerator):
 
 
 # =============================================================================
-#                    Class RsynchGenerator
+#                    Class RsyncGenerator
 # =============================================================================
 
 class RsyncGenerator(ReportGenerator):
