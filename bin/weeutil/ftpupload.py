@@ -124,12 +124,39 @@ class FtpUpload(object):
                                 conn.__class__ = ReusedSslSocket
                             return conn, size
                     log.debug("Reusing SSL connections.")
-                    ftp_server = WeeFTPTLS(encoding=self.encoding)
+                    # Python 3.8 and earlier do not support the encoding 
+                    # parameter. Be prepared to catch the TypeError that may 
+                    # occur with python 3.8 and earlier.
+                    try:
+                        ftp_server = WeeFTPTLS(encoding=self.encoding)
+                    except TypeError:
+                        # we likely have python 3.8 or earlier, so try again
+                        # without encoding
+                        ftp_server = WeeFTPTLS()
+                        log.debug("FTP encoding not supported, ignoring.")
                 else:
-                    ftp_server = ftplib.FTP_TLS(encoding=self.encoding)
+                    # Python 3.8 and earlier do not support the encoding 
+                    # parameter. Be prepared to catch the TypeError that may 
+                    # occur with python 3.8 and earlier.
+                    try:
+                        ftp_server = ftplib.FTP_TLS(encoding=self.encoding)
+                    except TypeError:
+                        # we likely have python 3.8 or earlier, so try again
+                        # without encoding
+                        ftp_server = ftplib.FTP_TLS()
+                        log.debug("FTP encoding not supported, ignoring.")
             else:
                 log.debug("Attempting connection to %s", self.server)
-                ftp_server = ftplib.FTP(encoding=self.encoding)
+                # Python 3.8 and earlier do not support the encoding parameter. 
+                # Be prepared to catch the TypeError that may occur with 
+                # python 3.8 and earlier.
+                try:
+                    ftp_server = ftplib.FTP(encoding=self.encoding)
+                except TypeError:
+                    # we likely have python 3.8 or earlier, so try again
+                    # without encoding
+                    ftp_server = ftplib.FTP()
+                    log.debug("FTP encoding not supported, ignoring.")
 
             if self.debug >= 2:
                 ftp_server.set_debuglevel(self.debug)
