@@ -409,7 +409,8 @@ class FtpGenerator(ReportGenerator):
                 secure=to_bool(self.skin_dict.get('secure_ftp', False)),
                 debug=weewx.debug,
                 secure_data=to_bool(self.skin_dict.get('secure_data', True)),
-                reuse_ssl=to_bool(self.skin_dict.get('reuse_ssl', False))
+                reuse_ssl=to_bool(self.skin_dict.get('reuse_ssl', False)),
+                encoding=self.skin_dict.get('ftp_encoding', 'utf-8')
             )
         except KeyError:
             log.debug("ftpgenerator: FTP upload not requested. Skipped.")

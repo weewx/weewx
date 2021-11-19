@@ -41,7 +41,8 @@ class FtpUpload(object):
                  secure=False,
                  debug=0,
                  secure_data=True,
-                 reuse_ssl=False):
+                 reuse_ssl=False,
+                 encoding='utf-8'):
         """Initialize an instance of FtpUpload.
         
         After initializing, call method run() to perform the upload.
@@ -69,6 +70,9 @@ class FtpUpload(object):
 
         reuse_ssl: Work around a bug in the Python library that closes ssl sockets that should
         be reused. See https://bit.ly/3dKq4JY [Optional. Default is False]
+
+        encoding: The vast majority of FTP servers chat using UTF-8. However, there are a few
+        oddballs that use Latin-1.
         """
         self.server = server
         self.user = user
@@ -82,6 +86,7 @@ class FtpUpload(object):
         self.debug = debug
         self.secure_data = secure_data
         self.reuse_ssl = reuse_ssl
+        self.encoding = encoding
 
         if self.reuse_ssl and sys.version < '3.6':
             raise ValueError("Reusing an SSL connection requires Python version 3.6 or greater")
@@ -119,12 +124,12 @@ class FtpUpload(object):
                                 conn.__class__ = ReusedSslSocket
                             return conn, size
                     log.debug("Reusing SSL connections.")
-                    ftp_server = WeeFTPTLS()
+                    ftp_server = WeeFTPTLS(encoding=self.encoding)
                 else:
-                    ftp_server = ftplib.FTP_TLS()
+                    ftp_server = ftplib.FTP_TLS(encoding=self.encoding)
             else:
                 log.debug("Attempting connection to %s", self.server)
-                ftp_server = ftplib.FTP()
+                ftp_server = ftplib.FTP(encoding=self.encoding)
 
             if self.debug >= 2:
                 ftp_server.set_debuglevel(self.debug)
