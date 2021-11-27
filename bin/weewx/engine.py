@@ -819,6 +819,14 @@ class StdReport(StdService):
         self.launch_time = None
         self.record = None
 
+        # check if pyephem is installed and make a suitable log entry
+        try:
+            import ephem
+            log.info("'pyephem' detected, extended almanac data is available")
+            del ephem
+        except ImportError:
+            log.info("'pyephem' not detected, extended almanac data is not available")
+
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
         self.bind(weewx.POST_LOOP, self.launch_report_thread)
 
