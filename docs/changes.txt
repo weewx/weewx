@@ -66,6 +66,9 @@ schema. See PR #702.
 New FTP option 'ftp_encoding' for oddball FTP servers that send their responses
 back in something other than UTF-8.
 
+Availability of the pyephem module and extended almanac data is now logged
+during startup.
+
 
 4.5.1 04/02/2021
 Reverted the wview schema back to the V3 style.
