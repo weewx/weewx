@@ -829,6 +829,11 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
                 or <span class="code">skins/Seasons/lang/de.conf</span>) are merged.
             </li>
             <li>
+                If a unit system has been specified, then the appropriate unit groups are set. For example, if
+                <span class="code">unit_system=metricwx</span>, then the unit for group pressure will be set to
+                <span class="code">mbar</span>. Other unit groups are treated similarly.
+            </li>
+            <li>
                 Next, any options that apply to all skins, specified in the
                 <span class="code">[StdReport] / [[Defaults]]</span>
                 section of the WeeWX configuration file, are merged.
@@ -841,66 +846,15 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
 
         <p>
             Other skins are processed in a similar manner although, of course, the name will be different. The result is
-            the following option hierarchy, listed in order of decreasing precedence.
+            the following option hierarchy, listed in order of increasing precedence.
         </p>
 
         <table class="indent" style="width: 90%">
-            <caption>Option hierarchy, highest to lowest</caption>
+            <caption>Option hierarchy, lowest to highest</caption>
             <tr class="first_row">
                 <td>File</td>
                 <td>Example</td>
                 <td>Comments</td>
-            </tr>
-            <tr>
-                <td class="code">weewx.conf</td>
-                <td class="code">
-[StdReport]<br/>
-&nbsp;&nbsp;[[Seasons]]<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;[[[Labels]]]<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[[[[Generic]]]]<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;rain=Rainfall</td>
-                <td>
-                    Highest precedence. Has the final say. Options specified here apply to a single report. This example
-                    indicates that the string 'Rainfall' should be used for the observation 'rain', for only the
-                    <em>Seasons</em> report.
-                </td>
-            </tr>
-            <tr>
-                <td class="code">weewx.conf</td>
-                <td class="code">
-[StdReport]<br/>
-&nbsp;&nbsp;[[Defaults]]<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;[[[Labels]]]<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[[[[Generic]]]]<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;rain=Rainfall</td>
-                <td>
-                  Options specified here apply to <em>all</em> reports.  This
-                  example indicates that the string 'Rainfall' should be used
-                  for the observation 'rain', in all reports.
-                </td>
-            </tr>
-            <tr>
-                <td class="code">weewx.conf</td>
-                <td class="code">
-[StdReport]<br/>
-&nbsp;&nbsp;[[Defaults]]<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;lang=de<br/>
-                <td>
-                    The option <span class="code">lang</span> only works for skins that have been internationalized and
-                    have a language configuration file for the chosen language (<span class="code">de</span>, or German,
-                    in this case). This example specifies the German language for all reports, if available.
-                </td>
-            </tr>
-            <tr>
-                <td class="code">skin.conf</td>
-                <td class="code">
-[Units]<br/>
-&nbsp;&nbsp;[[Labels]]<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;mbar=" hPa"</td>
-                <td>
-                  Supplied by the skin author, the skin configuration file, <span class="code">skin.conf</span>,
-                  contains options that define the baseline behavior of the skin.
-                </td>
             </tr>
             <tr>
                 <td class="code">weewx/defaults.py</td>
@@ -916,14 +870,80 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
                   software is updated.
                 </td>
             </tr>
+            <tr>
+                <td class="code">skin.conf</td>
+                <td class="code">
+[Units]<br/>
+&nbsp;&nbsp;[[Labels]]<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;mbar=" hPa"</td>
+                <td>
+                    Supplied by the skin author, the skin configuration file, <span class="code">skin.conf</span>,
+                    contains options that define the baseline behavior of the skin. In this example, for whatever
+                    reasons, the skin author has decided that the label for units in millibars should be
+                    <span class="code">" hPa"</span> (which is equivalent).
+                </td>
+            </tr>
+            <tr>
+                <td class="code">weewx.conf</td>
+                <td class="code">
+[StdReport]<br/>
+&nbsp;&nbsp;[[Defaults]]<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;lang=de<br/>
+                <td>
+                    The language is resolved. The option <span class="code">lang</span> only works for skins that have
+                    been internationalized and have a language configuration file for the chosen language. This example
+                    specifies the German language (<span class="code">de</span>) for all reports, if available.
+                </td>
+            </tr>
+            <tr>
+                <td class="code">weewx.conf</td>
+                <td class="code">
+[StdReport]<br/>
+&nbsp;&nbsp;[[Defaults]]<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;unit_system=metricwx<br/>
+                </td>
+                <td>
+                    The unit system is resolved. Specifying a unit system causes the appropriate unit groups to be set.
+                    In this example, all unit groups would be set to use units appropriate for the metric system.
+                </td>
+            </tr>
+            <tr>
+                <td class="code">weewx.conf</td>
+                <td class="code">
+[StdReport]<br/>
+&nbsp;&nbsp;[[Defaults]]<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;[[[Labels]]]<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[[[[Generic]]]]<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;rain=Rainfall</td>
+                <td>
+                    Options specified under <span class="code">[[Defaults]]</span> apply to <em>all</em> reports. This
+                    example indicates that the label <span class="code">Rainfall</span> should be used for the
+                    observation 'rain', in all reports.
+                </td>
+            </tr>
+            <tr>
+                <td class="code">weewx.conf</td>
+                <td class="code">
+[StdReport]<br/>
+&nbsp;&nbsp;[[SeasonsReport]]<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;[[[Labels]]]<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[[[[Generic]]]]<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;rain=Rainfall</td>
+                <td>
+                    Highest precedence. Has the final say. Options specified here apply to a <em>single</em> report.
+                    This example indicates that the string <span class="code">Rainfall</span> should be used for the observation
+                    'rain', but only for the report <em>SeasonsReport</em>.
+                </td>
+            </tr>
         </table>
 
         <p>
-            When specifying options, you must pay attention to the number of brackets! In the table above, there are two different nesting depths
-            used: one for <span class="code">weewx.conf</span>, and one for <span class="code">weewx/defaults.py</span>
+            When specifying options, you must pay attention to the number of brackets! In the table above, there are two
+            different nesting depths used: one for <span class="code">weewx.conf</span>, and one for <span class="code">weewx/defaults.py</span>
             and <span class="code">skin.conf</span>. This is because the stanzas defined in <span class="code">weewx.conf</span>
             start two levels down in the hierarchy <span class="code">[StdReport]</span>, whereas the stanzas defined in
             <span class="code">skin.conf</span> and <span class="code">defaults.py</span> are at the root level.
+            Therefore, options specified in <span class="code">weewx.conf</span> must use two extra sets of brackets.
         </p>
 
         <h2 id="changing_languages">Changing languages</h2>
@@ -955,17 +975,64 @@ total 80
         </pre>
 
         <p>
-            This means the skin has been localized in the Czeck (<span class="code">cz.conf</span>), German (<span
-            class="code">de.conf</span>), English (<span class="code">en.conf</span>), Spanish (<span class="code">es.conf</span>),
-            French (<span class="code">fr.conf</span>), Italian (<span class="code">it.conf</span>), Greek (<span
-            class="code">gr.conf</span>), Dutch (<span class="code">nl.conf</span>), and Thai (<span class="code">th.conf</span>)
-            languages. If you are working with one of these languages, then you are in luck: you can simply override
-            the <span class="code">lang</span> option. For example,
-            to change the language displayed by the Seasons skin from English to German, edit <span class="code">weewx.conf</span>,
+            This means that the <em>Seasons</em> skin has been localized for the following languages:
+        </p>
+
+        <table class="indent" style="width:30%">
+            <tbody>
+            <tr class="first_row">
+                <td>File</td>
+                <td>Language</td>
+            </tr>
+            <tr>
+                <td class="code">cz.conf</td>
+                <td>Czeck</td>
+            </tr>
+            <tr>
+                <td class="code">de.conf</td>
+                <td>German</td>
+            </tr>
+            <tr>
+                <td class="code">en.conf</td>
+                <td>English</td>
+            </tr>
+            <tr>
+                <td class="code">es.conf</td>
+                <td>Spanish</td>
+            </tr>
+            <tr>
+                <td class="code">fr.conf</td>
+                <td>French</td>
+            </tr>
+            <tr>
+                <td class="code">it.conf</td>
+                <td>Italian</td>
+            </tr>
+            <tr>
+                <td class="code">gr.conf</td>
+                <td>Greek</td>
+            </tr>
+            <tr>
+                <td class="code">nl.conf</td>
+                <td>Dutch</td>
+            </tr>
+            <tr>
+                <td class="code">th.conf</td>
+                <td>Thai</td>
+            </tr>
+            </tbody>
+        </table>
+
+        <p>
+            If you want to use the <em>Seasons</em> skin and are working with one of these languages, then you are in
+            luck: you can simply override the <span class="code">lang</span> option. For example, to change the language
+            displayed by the <em>Seasons</em> skin from English to German, edit <span class="code">weewx.conf</span>,
             and change the highlighted section:
         </p>
 
         <pre class="tty">
+[StdReport]
+    ...
     [[SeasonsReport]]
         # The SeasonsReport uses the 'Seasons' skin, which contains the
         # images, templates and plots for the report.
@@ -979,7 +1046,7 @@ total 80
             By contrast, if the skin has been internationalized, but there is no localization file for your language,
             then you will have to supply one. See the section <a
             href="#internationalized-missing-language"><em>Internationalized, but your language is
-            missing</em></a>
+            missing</em></a>.
         </p>
 
 
@@ -990,7 +1057,34 @@ total 80
              will be used in your reports. The available choices are <span class="code">US</span>, <span
             class="code">METRIC</span>, or <span class="code">METRICWX</span>. See the <a
             href="#units"><em>Appendix Units</em></a> for definitions of these unit systems.
+            By default, WeeWX uses <span class="code">US</span> (US Customary) system.
         </p>
+        <p>
+            Suppose you would rather use the <span class="code">METRICWX</span> system for all your reports? Then
+            change this
+        </p>
+
+        <pre class="tty">
+[StdReport]
+    ...
+    [[Defaults]]
+
+        # Which unit system to use for all reports. Choices are 'us', 'metric', or 'metricwx'.
+        # You can override this for individual reports.
+        <span class="highlight">unit_system = us</span></pre>
+        <p>
+            to this
+        </p>
+
+        <pre class="tty">
+[StdReport]
+    ...
+    [[Defaults]]
+
+        # Which unit system to use for all reports. Choices are 'us', 'metric', or 'metricwx'.
+        # You can override this for individual reports.
+        <span class="highlight">unit_system = metricwx</span></pre>
+
         <p>
             However, what if you want a mix? For example, suppose you generally want US Customary units, but you
             want barometric pressures to be in millibars? This can be done by <em>overriding</em> the appropriate unit
@@ -998,21 +1092,23 @@ total 80
         </p>
 
         <pre class="tty">
-    [[SeasonsReport]]
-        # The SeasonsReport uses the 'Seasons' skin, which contains the
-        # images, templates and plots for the report.
-        skin = Seasons
-        lang = en
-        unit_system = US
-        enable = true
-        [[[Units]]]
-            [[[[Groups]]]]
+[StdReport]
+    ...
+    [[Defaults]]
+
+        # Which unit system to use for all reports. Choices are 'us', 'metric', or 'metricwx'.
+        # You can override this for individual reports.
+        unit_system = us
+
+        # Override the units used for pressure:
+        <span class=highlight>[[[Units]]]</span>
+            <span class=highlight>[[[[Groups]]]]</span>
                 <span class=highlight>group_pressure = mbar</span>
 </pre>
 
         <p>
-            This says you generally want the <span class="code">US</span> systems of units, but want pressure to
-            be reported in <em>millibars</em>. Other units can be overridden in a similar manner.
+            This says that you generally want the <span class="code">US</span> systems of units for all reports,
+            but want pressure to be reported in <em>millibars</em>. Other units can be overridden in a similar manner.
         </p>
 
         <h3 id="change_units">Multiple unit systems</h3>
@@ -1105,8 +1201,8 @@ total 80
         lang = en
         unit_system = US
         enable = true
-        [[[Labels]]]
-            [[[[Generic]]]]
+        <span class=highlight>[[[Labels]]]</span>
+            <span class=highlight>[[[[Generic]]]]</span>
                 <span class=highlight>outTemp = Barn Temperature</span>
         </pre>
 
