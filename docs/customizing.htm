@@ -796,11 +796,12 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
             the look and feel of a report, while ensuring that users of the skin have the final say.
         </p>
         <p>
-          Although it is possible to modify the options at any level, as the
-          user of a skin, usually it is best to keep your modifications in the
-          WeeWX configuration file (<span class="code">weewx.conf</span>).
-          That way you will get any fixes or changes when the skin author
-          updates the skin, and your customizations will not be overwritten.
+            Although it is possible to modify the options at any level, as the user of a skin, it is usually best to
+            keep your modifications in the WeeWX configuration file (<span class="code">weewx.conf</span>). That way you
+            can apply any fixes or changes when the skin author updates the skin, and your customizations will not be
+            overwritten. However, there are some customizations that cannot be done in <span
+            class="code">weewx.conf</span> (most notably, the templates themselves), and so you will have to modify the
+            skin directly.
         </p>
         <p>
             If you are a skin author, then you should provide the skin configuration file (<span
@@ -822,27 +823,23 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
                 <span class="code">skins/Seasons/skin.conf</span>, are merged.
             </li>
             <li>
-                If a language has been specified (using the option <a href="#internationalized_skins"><span
-                class="code">lang</span>)</a>, and the specified language is available (not all skins support language
-                files), then the options in the appropriate language specification file (such as
-                <span class="code">skins/Seasons/lang/en.conf</span>
-                or <span class="code">skins/Seasons/lang/de.conf</span>) are merged.
-            </li>
-            <li>
-                If a unit system has been specified, then the appropriate unit groups are set. For example, if
-                <span class="code">unit_system=metricwx</span>, then the unit for group pressure will be set to
-                <span class="code">mbar</span>. Other unit groups are treated similarly.
-            </li>
-            <li>
                 Next, any options that apply to all skins, specified in the
                 <span class="code">[StdReport] / [[Defaults]]</span>
                 section of the WeeWX configuration file, are merged.
             </li>
             <li>
                 Finally, any skin-specific options, specified in the <span class="code">[StdReport] / [[Seasons]]</span>
-                section of the WeeWX configuration, are merged.
+                section of the WeeWX configuration, are merged. These options have the final say.
             </li>
         </ul>
+
+        <p>
+            At all four steps, if a language specification is encountered (option <span class="code">lang</span>), then
+            the corresponding language file will be read and merged. If a unit specification (option
+            <span class="code">unit_system</span>) is encountered,
+            then the appropriate unit groups are set. For example, if <span class="code">unit_system=metricwx</span>,
+            then the unit for group pressure will be set to <span class="code">mbar</span>, etc.
+        </p>
 
         <p>
             Other skins are processed in a similar manner although, of course, the name will be different. The result is
@@ -888,36 +885,12 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
                 <td class="code">
 [StdReport]<br/>
 &nbsp;&nbsp;[[Defaults]]<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;lang=de<br/>
-                <td>
-                    The language is resolved. The option <span class="code">lang</span> only works for skins that have
-                    been internationalized and have a language configuration file for the chosen language. This example
-                    specifies the German language (<span class="code">de</span>) for all reports, if available.
-                </td>
-            </tr>
-            <tr>
-                <td class="code">weewx.conf</td>
-                <td class="code">
-[StdReport]<br/>
-&nbsp;&nbsp;[[Defaults]]<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;unit_system=metricwx<br/>
-                </td>
-                <td>
-                    The unit system is resolved. Specifying a unit system causes the appropriate unit groups to be set.
-                    In this example, all unit groups would be set to use units appropriate for the metric system.
-                </td>
-            </tr>
-            <tr>
-                <td class="code">weewx.conf</td>
-                <td class="code">
-[StdReport]<br/>
-&nbsp;&nbsp;[[Defaults]]<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;[[[Labels]]]<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[[[[Generic]]]]<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;rain=Rainfall</td>
                 <td>
                     Options specified under <span class="code">[[Defaults]]</span> apply to <em>all</em> reports. This
-                    example indicates that the label <span class="code">Rainfall</span> should be used for the
+                    example indicates that the label <span class="example_text">Rainfall</span> should be used for the
                     observation 'rain', in all reports.
                 </td>
             </tr>
@@ -928,11 +901,11 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
 &nbsp;&nbsp;[[SeasonsReport]]<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;[[[Labels]]]<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[[[[Generic]]]]<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;rain=Rainfall</td>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;inTemp=Kitchen temperature</td>
                 <td>
                     Highest precedence. Has the final say. Options specified here apply to a <em>single</em> report.
-                    This example indicates that the string <span class="code">Rainfall</span> should be used for the observation
-                    'rain', but only for the report <em>SeasonsReport</em>.
+                    This example indicates that the label <span class="example_text">Kitchen temperature</span> should
+                    be used for the observation 'inTemp', but only for the report <em>SeasonsReport</em>.
                 </td>
             </tr>
         </table>
@@ -1039,7 +1012,6 @@ total 80
         skin = Seasons
         enable = true
         lang = <span class="highlight">de</span>
-        unit_system = us
 </pre>
 
         <p>
@@ -1057,7 +1029,7 @@ total 80
              will be used in your reports. The available choices are <span class="code">US</span>, <span
             class="code">METRIC</span>, or <span class="code">METRICWX</span>. See the <a
             href="#units"><em>Appendix Units</em></a> for definitions of these unit systems.
-            By default, WeeWX uses <span class="code">US</span> (US Customary) system.
+            By default, WeeWX uses <span class="code">US</span> (US Customary) system. The option is case-insensitive.
         </p>
         <p>
             Suppose you would rather use the <span class="code">METRICWX</span> system for all your reports? Then
@@ -1182,8 +1154,9 @@ total 80
 
         <p>
             This tells the report generators that when it comes time to label the observation variables <span
-            class="code">inTemp</span> and <span class="code">outTemp</span>, use the strings <span class="code">Inside
-            Temperature</span> and <span class="code">Outside Temperature</span>, respectively.
+            class="code">inTemp</span> and <span class="code">outTemp</span>, use the strings
+            <span class="example_text">Inside Temperature</span> and <span class="example_text">Outside
+            Temperature</span>, respectively.
         </p>
         <p>
             However, let's say that we have actually located our outside temperature sensor in the barn, and wish to
@@ -1207,8 +1180,9 @@ total 80
         </pre>
 
         <p>
-            This will cause the default label <b>Outside Temperature</b> to be replaced with the new label <b>Barn
-            Temperature</b> everywhere in your report. The label for type <span class="code">inTemp</span> will be
+            This will cause the default label <span class="example_text">Outside Temperature</span> to be replaced
+            with the new label <span class="example_text">Barn
+            Temperature</span> everywhere in your report. The label for type <span class="code">inTemp</span> will be
             untouched.
         </p>
 

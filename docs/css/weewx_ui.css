@@ -317,6 +317,12 @@ p .symcode {
     display: inline-block;
 }
 
+.example_text {
+    font-family: 'Noto Sans', sans-serif;
+    font-weight: bold;
+    background-color: #ecf3f3;
+}
+
 .image {
     padding: 5px;
 }
