@@ -24,8 +24,8 @@
 <h2>Configure apt</h2>
 <p>Tell <span class="code">apt</span> where to find the WeeWX releases.  This only has to be done once &mdash; the first time you install WeeWX.</p>
 
-<p>First, tell your system to trust weewx.com:</p>
-<pre class='tty cmd'>wget -qO - https://weewx.com/keys.html | sudo apt-key add -</pre>
+Tell your system to trust weewx.com:
+<pre class='tty cmd'>wget -qO - https://weewx.com/keys.html | sudo gpg --dearmor > /etc/apt/trusted.gpg.d/weewx.gpg</pre>
 
 <p>Then, run one of the following two commands to tell your system about the appropriate weewx repository.</p>
 
