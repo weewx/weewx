@@ -432,7 +432,7 @@ Version: 4.6
             <tr>
                 <td class="code first_col">RSYNC</td>
                 <td>Transfer everything in the <span class="symcode">HTML_ROOT</span> directory to a remote server using
-                    rsync.
+                    the utility <a href="https://man7.org/linux/man-pages/man1/rsync.1.html">rsync</a>.
                 </td>
             </tr>
             </tbody>
@@ -445,14 +445,13 @@ Version: 4.6
 
         <p>
             Each report has a <em>skin</em> associated with it. For most reports, the relationship with the skin is an
-            obvious one: it contains the templates, any auxiliary files such as background
-            GIFs or CSS style sheets, files with localization data, and
-            a <em>skin configuration file</em>, <span class="code">skin.conf</span>. If you will, the skin controls the
-            <em>look and feel </em>of the report. Note that more than one report can use the same skin. For example, you
-            might want to run a report that uses US Customary units, then run another report against the same skin, but
-            using metric units and put the results in a different place. All this is possible by either overriding
-            configuration options in the WeeWX configuration file <span class="code">weewx.conf</span> or the skin
-            configuration file <span class="code">skin.conf</span>.
+            obvious one: it contains the templates, any auxiliary files such as background GIFs or CSS style sheets,
+            files with localization data, and a <em>skin configuration file</em>, <span class="code">skin.conf</span>.
+            If you will, the skin controls the <em>look and feel</em> of the report. Note that more than one report can
+            use the same skin. For example, you might want to run a report that uses US Customary units, then run
+            another report against the same skin, but using metric units and put the results in a different place. All
+            this is possible by either overriding configuration options in the WeeWX configuration file <span
+            class="code">weewx.conf</span> or the skin configuration file <span class="code">skin.conf</span>.
         </p>
 
         <p>Like all reports, the FTP and RSYNC "reports" also use a skin, and include a skin configuration file,
@@ -769,11 +768,12 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
             or change the template files. The former is generally easier, but occasionally the latter is necessary.
         </p>
 
+        <h2 id="How_options_work">Options</h2>
+
         <p>
-            Configuration files are organized hierarchically into stanzas. For example, the <span
-            class="code">[Labels]</span> stanza contains the text that should be displayed for each observation. The
-            <span class="code">[Units]</span> stanza contains other stanzas, each of which contains parameters that
-            control the display of units.
+            Options are used to specify how reports will look and what they will contain. For example, they control
+            which units to use, how to format dates and times, which data should be in each plot, the colors of plot
+            elements, <em>etc</em>.
         </p>
 
         <p class="note">
@@ -781,35 +781,79 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
             report options</em></a>.
         </p>
 
-        <h2 id="How_options_work">How options work</h2>
+        <p>
+            Options are read from three different types of <em>configuration files:</em>
+        </p>
+        <table class="indent" style="width:60%">
+            <caption>Configuration files</caption>
+            <thead>
+            <tr class="first_row">
+                <td>File</td>
+                <td>Use</td>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td class="code">weewx.conf</td>
+                <td>Holds general configuration information, such which drivers and services to load, as well as which
+                    reports to run.
+                </td>
+            </tr>
+            <tr>
+                <td class="code">skin.conf</td>
+                <td>Holds information specific to a <em>skin</em>, in particular, which template files to process, and
+                    which plots to generate. Generally supplied by the skin author.
+                </td>
+            </tr>
+            <tr>
+                <td class="code">en.conf<br/>de.conf<br/>fr.conf<br/><em>etc.</em></td>
+                <td>Holds language and locale information for a specific skin.</td>
+            </tr>
+            </tbody>
+        </table>
 
         <p>
-            Options are used to specify how reports will look and what they will contain. For example,
-            they control which units to use, how to format dates and times, which data should be in
-            each plot, the colors of plot elements, <em>etc</em>.
+            Configuration files are read and processed using the Python utility <a
+            href="https://configobj.readthedocs.io/en/latest/configobj.html">ConfigObj</a>, using a format similar to
+            the MS-DOS <a href="https://en.wikipedia.org/wiki/INI_file">"INI" format</a>. Here's a simple example:
         </p>
+        <pre class="tty">
+[Section1]
+    # A comment
+    key1 = value1
+    [[SubSectionA]]
+        key2 = value2
+[Section2]
+    key3=value3</pre>
         <p>
-            Options are processed in a specific order. Generally, the values from skin configuration (<span
-            class="code">skin.conf</span>) and internationalization files (<em>e.g.</em>,
-            <span class="code">lang/en.conf</span>) are processed first, then options in the WeeWX configuration file
-            (nominally <span class="code">weewx.conf</span>) are applied last. This order allows skin authors to specify
-            the look and feel of a report, while ensuring that users of the skin have the final say.
+            This example uses two sections at root level (sections <span class="code">Section1</span> and <span
+            class="code">Section2</span>), and one sub-section (<span class="code">SubSectionA</span>), which is nested
+            under <span class="code">Section1</span>. The option <span class="code">key1</span> is nested under <span
+            class="code">Section1</span>, option <span class="code">key3</span> is nested under <span class="code">Section2</span>,
+            while option <span class="code">key2</span> is nested under sub-section <span
+            class="code">SubSectionA</span>.
         </p>
-        <p>
-            Although it is possible to modify the options at any level, as the user of a skin, it is usually best to
-            keep your modifications in the WeeWX configuration file (<span class="code">weewx.conf</span>). That way you
-            can apply any fixes or changes when the skin author updates the skin, and your customizations will not be
-            overwritten. However, there are some customizations that cannot be done in <span
-            class="code">weewx.conf</span> (most notably, the templates themselves), and so you will have to modify the
-            skin directly.
-        </p>
-        <p>
-            If you are a skin author, then you should provide the skin configuration file (<span
-            class="code">skin.conf</span>), and put in it only the options necessary to make the skin render the way you
-            intend it. Any options that are likely to be localized for a specific language (in particular, text), should
-            be put in the appropriate language file.
+        <p class="note">
+            Note that while this example indents sub-sections and options, this is strictly for readability &mdash; this
+            isn't Python! It's the number of brackets that counts in determining nesting, not the indentation!
         </p>
 
+        <p>
+            Configuration files take advantage of <span class="code">ConfigObj's</span> ability to organize options
+            hierarchically into <em>stanzas</em>. For example, the <span class="code">[Labels]</span> stanza contains
+            the text that should be displayed for each observation. The <span class="code">[Units]</span> stanza
+            contains other stanzas, each of which contains parameters that control the display of units.
+        </p>
+
+
+        <h3>Processing order</h3>
+        <p>
+            Configuration files and their sections are processed in a specific order. Generally, the values from the
+            skin configuration file (<span class="code">skin.conf</span>) are processed first, then options in the WeeWX
+            configuration file (nominally <span class="code">weewx.conf</span>) are applied last. This order allows skin
+            authors to specify the basic look and feel of a report, while ensuring that users of the skin have the final
+            say.
+        </p>
         <p>
             To illustrate the processing order, here are the steps for the skin <em>Seasons</em>:
         </p>
@@ -819,12 +863,11 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
                 the starting point.
             </li>
             <li>
-                Next, options from the configuration file for <em>Seasons</em>, located in
-                <span class="code">skins/Seasons/skin.conf</span>, are merged.
+                Next, options from the configuration file for <em>Seasons</em>, located in <span class="code">skins/Seasons/skin.conf</span>,
+                are merged.
             </li>
             <li>
-                Next, any options that apply to all skins, specified in the
-                <span class="code">[StdReport] / [[Defaults]]</span>
+                Next, any options that apply to all skins, specified in the <span class="code">[StdReport] / [[Defaults]]</span>
                 section of the WeeWX configuration file, are merged.
             </li>
             <li>
@@ -835,104 +878,118 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
 
         <p>
             At all four steps, if a language specification is encountered (option <span class="code">lang</span>), then
-            the corresponding language file will be read and merged. If a unit specification (option
-            <span class="code">unit_system</span>) is encountered,
-            then the appropriate unit groups are set. For example, if <span class="code">unit_system=metricwx</span>,
+            the corresponding language file will be read and merged. If a unit specification (option <span class="code">unit_system</span>)
+            is encountered, then the appropriate unit groups are set. For example, if <span class="code">unit_system=metricwx</span>,
             then the unit for group pressure will be set to <span class="code">mbar</span>, etc.
         </p>
 
         <p>
-            Other skins are processed in a similar manner although, of course, the name will be different. The result is
-            the following option hierarchy, listed in order of increasing precedence.
+            The result is the following option hierarchy, listed in order of increasing precedence.
         </p>
 
         <table class="indent" style="width: 90%">
             <caption>Option hierarchy, lowest to highest</caption>
+            <thead>
             <tr class="first_row">
                 <td>File</td>
                 <td>Example</td>
                 <td>Comments</td>
             </tr>
+            </thead>
+            <tbody>
             <tr>
                 <td class="code">weewx/defaults.py</td>
                 <td class="code">
-[Units]<br/>
-&nbsp;&nbsp;[[Labels]]<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;mbar=" mbar"</td>
+                    [Units]<br/> &nbsp;&nbsp;[[Labels]]<br/> &nbsp;&nbsp;&nbsp;&nbsp;mbar=" mbar"
+                </td>
                 <td>
-                  These are the hard-coded default values for every option.
-                  They are used when an option is not specified anywhere else.
-                  These should not be modified unless you propose a change to
-                  the WeeWX code; any changes made here will be lost when the
-                  software is updated.
+                    These are the hard-coded default values for every option. They are used when an option is not
+                    specified anywhere else. These should not be modified unless you propose a change to the WeeWX code;
+                    any changes made here will be lost when the software is updated.
                 </td>
             </tr>
             <tr>
                 <td class="code">skin.conf</td>
                 <td class="code">
-[Units]<br/>
-&nbsp;&nbsp;[[Labels]]<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;mbar=" hPa"</td>
+                    [Units]<br/> &nbsp;&nbsp;[[Labels]]<br/> &nbsp;&nbsp;&nbsp;&nbsp;mbar=" hPa"
+                </td>
                 <td>
                     Supplied by the skin author, the skin configuration file, <span class="code">skin.conf</span>,
                     contains options that define the baseline behavior of the skin. In this example, for whatever
-                    reasons, the skin author has decided that the label for units in millibars should be
-                    <span class="code">" hPa"</span> (which is equivalent).
+                    reasons, the skin author has decided that the label for units in millibars should be <span
+                    class="code">" hPa"</span> (which is equivalent).
                 </td>
             </tr>
             <tr>
                 <td class="code">weewx.conf</td>
                 <td class="code">
-[StdReport]<br/>
-&nbsp;&nbsp;[[Defaults]]<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;[[[Labels]]]<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[[[[Generic]]]]<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;rain=Rainfall</td>
+                    [StdReport]<br/> &nbsp;&nbsp;[[Defaults]]<br/> &nbsp;&nbsp;&nbsp;&nbsp;[[[Labels]]]<br/> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[[[[Generic]]]]<br/>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;rain=Rainfall
+                </td>
                 <td>
                     Options specified under <span class="code">[[Defaults]]</span> apply to <em>all</em> reports. This
                     example indicates that the label <span class="example_text">Rainfall</span> should be used for the
-                    observation 'rain', in all reports.
+                    observation <span class="code">rain</span>, in all reports.
                 </td>
             </tr>
             <tr>
                 <td class="code">weewx.conf</td>
                 <td class="code">
-[StdReport]<br/>
-&nbsp;&nbsp;[[SeasonsReport]]<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;[[[Labels]]]<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[[[[Generic]]]]<br/>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;inTemp=Kitchen temperature</td>
+                    [StdReport]<br/> &nbsp;&nbsp;[[SeasonsReport]]<br/> &nbsp;&nbsp;&nbsp;&nbsp;[[[Labels]]]<br/> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[[[[Generic]]]]<br/>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;inTemp=Kitchen&nbsp;temperature
+                </td>
                 <td>
                     Highest precedence. Has the final say. Options specified here apply to a <em>single</em> report.
                     This example indicates that the label <span class="example_text">Kitchen temperature</span> should
-                    be used for the observation 'inTemp', but only for the report <em>SeasonsReport</em>.
+                    be used for the observation <span class="code">inTemp</span>, but only for the report <em>SeasonsReport</em>.
                 </td>
             </tr>
+            </tbody>
         </table>
 
+        <p class="note">
+            <strong>Note:</strong> When specifying options, you must pay attention to the number of brackets! In the
+            table above, there are two different nesting depths used: one for <span class="code">weewx.conf</span>, and
+            one for <span class="code">weewx/defaults.py</span> and <span class="code">skin.conf</span>. This is because
+            the stanzas defined in <span class="code">weewx.conf</span> start two levels down in the hierarchy <span
+            class="code">[StdReport]</span>, whereas the stanzas defined in <span class="code">skin.conf</span> and
+            <span class="code">defaults.py</span> are at the root level. Therefore, options specified in <span
+            class="code">weewx.conf</span> must use two extra sets of brackets.
+        </p>
+
         <p>
-            When specifying options, you must pay attention to the number of brackets! In the table above, there are two
-            different nesting depths used: one for <span class="code">weewx.conf</span>, and one for <span class="code">weewx/defaults.py</span>
-            and <span class="code">skin.conf</span>. This is because the stanzas defined in <span class="code">weewx.conf</span>
-            start two levels down in the hierarchy <span class="code">[StdReport]</span>, whereas the stanzas defined in
-            <span class="code">skin.conf</span> and <span class="code">defaults.py</span> are at the root level.
-            Therefore, options specified in <span class="code">weewx.conf</span> must use two extra sets of brackets.
+            Other skins are processed in a similar manner although, of course, their name will be something other
+            than <em>Seasons</em>.
+        </p>
+
+        <p>
+            Although it is possible to modify the options at any level, as the user of a skin, it is usually best to
+            keep your modifications in the WeeWX configuration file (<span class="code">weewx.conf</span>) if you can.
+            That way you can apply any fixes or changes when the skin author updates the skin, and your customizations
+            will not be overwritten.
+        </p>
+        <p>
+            If you are a skin author, then you should provide the skin configuration file (<span
+            class="code">skin.conf</span>), and put in it only the options necessary to make the skin render the way you
+            intend it. Any options that are likely to be localized for a specific language (in particular, text), should
+            be put in the appropriate language file.
         </p>
 
         <h2 id="changing_languages">Changing languages</h2>
         <p>
-            By default, the skins that come with WeeWX are set up for the English language, but suppose you wish to switch
-            to another language. How you do so will depend on whether the skin you are using has been
-            <em>internationalized</em> and, if so, whether it offers your local language.
+            By default, the skins that come with WeeWX are set up for the English language, but suppose you wish to
+            switch to another language. How you do so will depend on whether the skin you are using has been <em>internationalized</em>
+            and, if so, whether it offers your local language.
         </p>
 
         <h3 id="internationalized_skins">Internationalized skins</h3>
         <p>
             All of the skins included with WeeWX have been internationalized, so if you're working with one of them,
-            this is the section you want. Next, you need to check whether there is a <em>localization</em> file for your particular
-            language. To check, look in the contents of subdirectory <span class="code">lang</span> in the skin's directory.
-            For example, if you used a package installer and are using the <em>Seasons</em> skin, you will want to look
-            in <span class="code">/etc/weewx/skins/Seasons/lang</span>. Inside, you will see something like this:
+            this is the section you want. Next, you need to check whether there is a <em>localization</em> file for your
+            particular language. To check, look in the contents of subdirectory <span class="code">lang</span> in the
+            skin's directory. For example, if you used a package installer and are using the <em>Seasons</em> skin, you
+            will want to look in <span class="code">/etc/weewx/skins/Seasons/lang</span>. Inside, you will see something
+            like this:
         </p>
         <pre class="tty">ls -l /etc/weewx/skins/Seasons/lang
 total 80
@@ -1016,24 +1073,23 @@ total 80
 
         <p>
             By contrast, if the skin has been internationalized, but there is no localization file for your language,
-            then you will have to supply one. See the section <a
-            href="#internationalized-missing-language"><em>Internationalized, but your language is
-            missing</em></a>.
+            then you will have to supply one. See the section <a href="#internationalized-missing-language"><em>Internationalized,
+            but your language is missing</em></a>.
         </p>
 
 
         <h2 id="how_to_change_units">Changing unit systems</h2>
 
         <p>
-            Option <a href="usersguide.htm#option-unit-system"><span class="code">unit_system</span></a> controls what unit system
-             will be used in your reports. The available choices are <span class="code">US</span>, <span
-            class="code">METRIC</span>, or <span class="code">METRICWX</span>. See the <a
-            href="#units"><em>Appendix Units</em></a> for definitions of these unit systems.
-            By default, WeeWX uses <span class="code">US</span> (US Customary) system. The option is case-insensitive.
+            Option <a href="usersguide.htm#option-unit-system"><span class="code">unit_system</span></a> controls what
+            unit system will be used in your reports. The available choices are <span class="code">US</span>, <span
+            class="code">METRIC</span>, or <span class="code">METRICWX</span>. See the <a href="#units"><em>Appendix
+            Units</em></a> for definitions of these unit systems. By default, WeeWX uses <span class="code">US</span>
+            (US Customary) system. The option is case-insensitive.
         </p>
         <p>
-            Suppose you would rather use the <span class="code">METRICWX</span> system for all your reports? Then
-            change this
+            Suppose you would rather use the <span class="code">METRICWX</span> system for all your reports? Then change
+            this
         </p>
 
         <pre class="tty">
@@ -1058,9 +1114,8 @@ total 80
         <span class="highlight">unit_system = metricwx</span></pre>
 
         <p>
-            However, what if you want a mix? For example, suppose you generally want US Customary units, but you
-            want barometric pressures to be in millibars? This can be done by <em>overriding</em> the appropriate unit
-            group.
+            However, what if you want a mix? For example, suppose you generally want US Customary units, but you want
+            barometric pressures to be in millibars? This can be done by <em>overriding</em> the appropriate unit group.
         </p>
 
         <pre class="tty">
@@ -1079,18 +1134,17 @@ total 80
 </pre>
 
         <p>
-            This says that you generally want the <span class="code">US</span> systems of units for all reports,
-            but want pressure to be reported in <em>millibars</em>. Other units can be overridden in a similar manner.
+            This says that you generally want the <span class="code">US</span> systems of units for all reports, but
+            want pressure to be reported in <em>millibars</em>. Other units can be overridden in a similar manner.
         </p>
 
         <h3 id="change_units">Multiple unit systems</h3>
 
         <p>Another example. Suppose we want to generate <em>two</em> reports, one in the US Customary system, the other
-        using the <span class="code">METRICWX</span> system. The first, call it <em>SeasonsUSReport</em>,
-            will go in the regular directory <span class="symcode">HTML_ROOT</span>. However, the latter, call
-            it <em>SeasonsMetricReport</em>,
-            will go in a subdirectory, <span class="symcode">HTML_ROOT</span><span class="code">/metric</span>.
-            Here's how you would do it
+            using the <span class="code">METRICWX</span> system. The first, call it <em>SeasonsUSReport</em>, will go in
+            the regular directory <span class="symcode">HTML_ROOT</span>. However, the latter, call it <em>SeasonsMetricReport</em>,
+            will go in a subdirectory, <span class="symcode">HTML_ROOT</span><span class="code">/metric</span>. Here's
+            how you would do it
         </p>
         <pre class="tty">
 [StdReport]
@@ -1118,10 +1172,9 @@ total 80
 
         <p>
             Note how both reports use the same <em>skin</em> (that is, skin <em>Seasons</em>), but different unit
-            systems, and different destinations. The first, <em>SeasonsUSReport</em> sets option <span
-            class="code">unit_system</span> to <span class="code">us</span>, and uses the default destination. By
-            contrast, the second, <em>SeasonsMetricReport</em>, uses unit system <span class="code">metricwx</span>, and
-            a different destination, <span class="code">public_html/metric</span>.
+            systems, and different destinations. The first, <em>SeasonsUSReport</em> sets option <span class="code">unit_system</span>
+            to <span class="code">us</span>, and uses the default destination. By contrast, the second, <em>SeasonsMetricReport</em>,
+            uses unit system <span class="code">metricwx</span>, and a different destination, <span class="code">public_html/metric</span>.
         </p>
 
 
@@ -1154,17 +1207,16 @@ total 80
 
         <p>
             This tells the report generators that when it comes time to label the observation variables <span
-            class="code">inTemp</span> and <span class="code">outTemp</span>, use the strings
-            <span class="example_text">Inside Temperature</span> and <span class="example_text">Outside
+            class="code">inTemp</span> and <span class="code">outTemp</span>, use the strings <span
+            class="example_text">Inside Temperature</span> and <span class="example_text">Outside
             Temperature</span>, respectively.
         </p>
         <p>
             However, let's say that we have actually located our outside temperature sensor in the barn, and wish to
             label it accordingly. We need to <em>override</em> the label that comes in the localization file. We could
             just change the localization file <span class="code">en.conf</span>, but then if the author of the skin came
-            out with a new version, our change could get lost. Better to override the default by making the change
-            in <span class="code">weewx.conf</span>. To do this, make the following changes
-            in <span class="code">weewx.conf</span>:
+            out with a new version, our change could get lost. Better to override the default by making the change in
+            <span class="code">weewx.conf</span>. To do this, make the following changes in <span class="code">weewx.conf</span>:
         </p>
         <pre class="tty">
     [[SeasonsReport]]
@@ -1180,8 +1232,8 @@ total 80
         </pre>
 
         <p>
-            This will cause the default label <span class="example_text">Outside Temperature</span> to be replaced
-            with the new label <span class="example_text">Barn
+            This will cause the default label <span class="example_text">Outside Temperature</span> to be replaced with
+            the new label <span class="example_text">Barn
             Temperature</span> everywhere in your report. The label for type <span class="code">inTemp</span> will be
             untouched.
         </p>
@@ -3113,7 +3165,7 @@ $month.outTemp.series(aggregate_type='max', aggregate_interval='day', time_serie
             or <span class="code">fr.conf</span>.
         </p>
         <p>
-          The language file has the same layout as 
+          The language file has the same layout as
           <span class="code">skin.conf</span>, i.e.
           you can put language specific versions of the labels there.
           Additionally a section <span class="code">[Texts]</span>
@@ -4404,11 +4456,11 @@ class MyStats(SearchList):                                                   # 1
         <h1 id="localization">Localization</h1>
 
         <p>
-            This section provides suggestions for localization, 
+            This section provides suggestions for localization,
             including translation to different languages and
             display of data in formats specific to a locale.
         </p>
-        
+
         <h2>If the skin has been internationalized</h2>
         <p>
             All of the skins that come with WeeWX have been <em>internationalized</em>, although they may not have
@@ -6022,20 +6074,20 @@ xstats/bin/user/xstats.py</pre>
         <p>
             This section contains the options available in the skin configuration file, <span
             class="code">skin.conf</span>. The same options apply to the
-            language files found in the subdirectory 
-            <span class="code">lang</span>, like 
-            <span class="code">lang/en.conf for English</span>. 
+            language files found in the subdirectory
+            <span class="code">lang</span>, like
+            <span class="code">lang/en.conf for English</span>.
         </p>
         <p>
             We recommend to put
         </p>
             <ul>
               <li>
-                options that control the behavior of the skin into 
+                options that control the behavior of the skin into
                 <span class="code">skin.conf</span>; and
               </li>
               <li>
-                language dependent labels and texts into the 
+                language dependent labels and texts into the
                 language files.
               </li>
             </ul>
@@ -6249,8 +6301,7 @@ UV      = UV Index</pre>
 
         <p>
             The measurement unit to be used for pressure. Possible options are one of <span class="code">inHg</span>
-            (inches of mercury), <span class="code">mbar</span>, <span class="code">hPa</span>, or
-            <span class="code">kPa</span>.
+            (inches of mercury), <span class="code">mbar</span>, <span class="code">hPa</span>, or <span class="code">kPa</span>.
         </p>
 
         <p class="config_important">group_pressurerate</p>
@@ -6462,7 +6513,7 @@ growing_base = 50.0, degree_F</pre>
           Strings that include commas must be included in single or
           double quotes.
         </p>
-        
+
         <h2 id="CheetahGenerator">[CheetahGenerator]</h2>
 
         <p>This section contains the options for the Cheetah generator.
