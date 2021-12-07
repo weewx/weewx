@@ -29,7 +29,15 @@
 
 <p>Step one: tell your system to trust weewx.com:</p>
 
-<pre class='tty cmd'>wget -qO - https://weewx.com/keys.html | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/weewx.gpg</pre>
+<ul>
+<li> For all systems:
+
+  <pre class='tty cmd'>wget -qO - https://weewx.com/keys.html | sudo gpg --dearmor --output /etc/apt/trusted.gpg.d/weewx.gpg</pre>
+</li>
+
+This command should return quietly, which indicates success.  If you see any errors, please consult the <a href='https://github.com/weewx/weewx/wiki/faq-apt-key-problems'>FAQ</a> for this step in order to complete this step successfully.
+
+</ul>
 
 <p>
     Step two: run one of the following two commands to tell <span class="code">apt</span> about the appropriate WeeWX
@@ -47,6 +55,9 @@
 
         <pre class='tty cmd'>wget -qO - https://weewx.com/apt/weewx-python2.list | sudo tee /etc/apt/sources.list.d/weewx.list</pre>
     </li>
+
+These commands should also return successfully.  If you see errrors from the wget command, the same fixes for step-one above apply.
+
 </ul>
 
 <h2>Install</h2>
