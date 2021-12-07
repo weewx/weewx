@@ -22,25 +22,38 @@
 </p>
 
 <h2>Configure apt</h2>
-<p>Tell <span class="code">apt</span> where to find the WeeWX releases.  This only has to be done once &mdash; the first time you install WeeWX.</p>
+<p>
+    The first time you install WeeWX, you must configure <span class="code">apt</span> so that it knows to trust
+    weewx.com, and knows where to find the WeeWX releases.
+</p>
 
-Tell your system to trust weewx.com:
-<pre class='tty cmd'>wget -qO - https://weewx.com/keys.html | sudo gpg --dearmor > /etc/apt/trusted.gpg.d/weewx.gpg</pre>
+<p>Step one: tell your system to trust weewx.com:</p>
 
-<p>Then, run one of the following two commands to tell your system about the appropriate weewx repository.</p>
+<pre class='tty cmd'>wget -qO - https://weewx.com/keys.html | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/weewx.gpg</pre>
+
+<p>
+    Step two: run one of the following two commands to tell <span class="code">apt</span> about the appropriate WeeWX
+    repository.</p>
 
 <ul>
-    <li> For Debian10 and later, use python3:
+    <li>
+        <p>For Debian10 and later, use Python 3:</p>
+
         <pre class='tty cmd'>wget -qO - https://weewx.com/apt/weewx-python3.list | sudo tee /etc/apt/sources.list.d/weewx.list</pre>
     </li>
 
-    <li> <em>or</em>, for Debian9 and earlier, use python2:
+    <li>
+        <p><em>or</em>, for Debian9 and earlier, use Python 2:</p>
+
         <pre class='tty cmd'>wget -qO - https://weewx.com/apt/weewx-python2.list | sudo tee /etc/apt/sources.list.d/weewx.list</pre>
     </li>
 </ul>
 
 <h2>Install</h2>
-<p>Use <span class="code">apt-get</span> to install WeeWX. The installer will prompt for a location, latitude/longitude, altitude, station type, and parameters specific to your station hardware.
+<p>
+    Having configured <span class="code">apt</span>, you can now use <span class="code">apt-get</span> to install WeeWX.
+    The installer will prompt for a location, latitude/longitude, altitude, station type, and parameters specific to
+    your station hardware.
 </p>
 
 <pre class='tty cmd'>sudo apt-get update
