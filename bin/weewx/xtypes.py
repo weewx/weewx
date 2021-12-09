@@ -108,8 +108,12 @@ def get_series(obs_type, timespan, db_manager, aggregate_type=None, aggregate_in
             # This function does not know about the type and/or aggregation.
             # Move on to the next one.
             pass
-    # None of the functions worked.
-    raise weewx.UnknownType(obs_type)
+    # None of the functions worked. Raise an exception with a hopefully helpful error message.
+    if aggregate_type:
+        msg = "'%s' or '%s'" % (obs_type, aggregate_type)
+    else:
+        msg = obs_type
+    raise weewx.UnknownType(msg)
 
 
 def get_aggregate(obs_type, timespan, aggregate_type, db_manager, **option_dict):
