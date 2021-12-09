@@ -92,7 +92,7 @@ class TestReportEngine(unittest.TestCase):
         skin_dict = _build_skin_dict(self.config_dict, 'SeasonsReport')
         self.assertEqual(skin_dict['Units']['Groups']['group_pressure'], 'mbar')
 
-    def test_override_unit_system_in_report_and_unit_in_defaults(self):
+    def test_override_unit_system_in_report_and_defaults(self):
         """Test specifying a unit system for a specific report, versus overriding a unit
         in the [[Defaults]] section"""
         # Specify that US be used for this specific report
