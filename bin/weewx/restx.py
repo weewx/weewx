@@ -239,7 +239,7 @@ class RESTThread(threading.Thread):
           """
         # Initialize my superclass:
         threading.Thread.__init__(self, name=protocol_name)
-        self.setDaemon(True)
+        self.daemon = True
 
         self.queue = q
         self.protocol_name = protocol_name
