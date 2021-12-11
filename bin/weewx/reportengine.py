@@ -262,22 +262,33 @@ def _build_skin_dict(config_dict, report):
         weeutil.config.merge_config(skin_dict, merge_dict)
 
     #######################################################################
-    # Now merge in the [[Defaults]] section, then the report-specific section.
-    for section in ['Defaults', report]:
-        if section in config_dict['StdReport']:
-            # Because we will be modifying the results, make a deep copy of the section.
-            merge_dict = weeutil.config.deep_copy(config_dict)['StdReport'][section]
-            # If a language is specified, honor it
-            if 'lang' in merge_dict:
-                merge_lang(merge_dict['lang'], config_dict, report, skin_dict)
-            # If a unit_system is specified, honor it
-            if 'unit_system' in merge_dict:
-                merge_unit_system(merge_dict['unit_system'], skin_dict)
-            weeutil.config.merge_config(skin_dict, merge_dict)
+    # Merge in the [[Defaults]] section
+    if 'Defaults' in config_dict['StdReport']:
+        # Because we will be modifying the results, make a deep copy of the section.
+        merge_dict = weeutil.config.deep_copy(config_dict)['StdReport']['Defaults']
+        # If a language is specified, honor it
+        if 'lang' in merge_dict:
+            merge_lang(merge_dict['lang'], config_dict, report, skin_dict)
+        # If a unit_system is specified, honor it
+        if 'unit_system' in merge_dict:
+            merge_unit_system(merge_dict['unit_system'], skin_dict)
+        weeutil.config.merge_config(skin_dict, merge_dict)
 
-    # Finally, inject any scalar overrides..
+    # Any scalar overrides have lower-precedence than teport-specific options, so do them now.
     for scalar in config_dict['StdReport'].scalars:
         skin_dict[scalar] = config_dict['StdReport'][scalar]
+
+    # Finally the report-specific section.
+    if report in config_dict['StdReport']:
+        # Because we will be modifying the results, make a deep copy of the section.
+        merge_dict = weeutil.config.deep_copy(config_dict)['StdReport'][report]
+        # If a language is specified, honor it
+        if 'lang' in merge_dict:
+            merge_lang(merge_dict['lang'], config_dict, report, skin_dict)
+        # If a unit_system is specified, honor it
+        if 'unit_system' in merge_dict:
+            merge_unit_system(merge_dict['unit_system'], skin_dict)
+        weeutil.config.merge_config(skin_dict, merge_dict)
 
     return skin_dict
 

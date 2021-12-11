@@ -185,6 +185,11 @@ class TestReportEngine(unittest.TestCase):
         # The unit_system override should win. NB: 'metric' uses cm for rain. 'metricwx' uses mm.
         self.assertEqual(skin_dict['Units']['Groups']['group_rain'], 'cm')
 
+    def test_override_root(self):
+        self.config_dict['StdReport']['SeasonsReport']['SKIN_ROOT'] = 'alt_skins'
+        skin_dict = _build_skin_dict(self.config_dict, 'SeasonsReport')
+        self.assertEqual(skin_dict['SKIN_ROOT'], 'alt_skins')
+
 
 if __name__ == '__main__':
     unittest.main()
