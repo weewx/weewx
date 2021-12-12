@@ -505,7 +505,7 @@ complex_conversions = {
     'y': lambda c: c.imag if c is not None else None,
     'magnitude': lambda c: abs(c) if c is not None else None,
     'direction': weeutil.weeutil.dirN,
-    'polar': lambda c: (abs(c), weeutil.weeutil.dirN(c)) if c is not None else None,
+    'polar': lambda c: weeutil.weeutil.Polar.from_complex(c) if c is not None else None,
 }
 
 class ValueTuple(tuple):

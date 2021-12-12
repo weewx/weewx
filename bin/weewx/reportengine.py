@@ -274,7 +274,7 @@ def _build_skin_dict(config_dict, report):
             merge_unit_system(merge_dict['unit_system'], skin_dict)
         weeutil.config.merge_config(skin_dict, merge_dict)
 
-    # Any scalar overrides have lower-precedence than teport-specific options, so do them now.
+    # Any scalar overrides have lower-precedence than report-specific options, so do them now.
     for scalar in config_dict['StdReport'].scalars:
         skin_dict[scalar] = config_dict['StdReport'][scalar]
 

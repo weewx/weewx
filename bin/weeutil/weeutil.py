@@ -1363,6 +1363,25 @@ def dirN(c):
     return value
 
 
+class Polar(tuple):
+    """Polar notation, except the direction is a compass heading."""
+
+    def __new__(cls, mag, dir):
+        return tuple.__new__(cls, (mag, dir))
+
+    @classmethod
+    def from_complex(cls, c):
+        return cls(abs(c), dirN(c))
+
+    @property
+    def mag(self):
+        return self[0]
+
+    @property
+    def dir(self):
+        return self[1]
+
+
 def rounder(x, ndigits):
     """Round a number, or sequence of numbers, to a specified number of decimal digits
 
@@ -1382,6 +1401,8 @@ def rounder(x, ndigits):
         return None
     elif isinstance(x, complex):
         return complex(round(x.real, ndigits), round(x.imag, ndigits))
+    elif isinstance(x, Polar):
+        return Polar(round(x.mag, ndigits), round(x.dir, ndigits))
     elif isinstance(x, float):
         return round(x, ndigits) if ndigits else int(x)
     elif hasattr(x, '__iter__'):
