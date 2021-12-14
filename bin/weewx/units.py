@@ -22,7 +22,7 @@ import six
 
 import weewx
 import weeutil.weeutil
-from weeutil.weeutil import ListOfDicts, Polar
+from weeutil.weeutil import ListOfDicts, Polar, is_iterable
 
 log = logging.getLogger(__name__)
 
@@ -677,7 +677,7 @@ class Formatter(object):
         """
 
         # Check to see if the ValueTuple holds an iterable:
-        if hasattr(val_t[0], '__iter__'):
+        if is_iterable(val_t[0]):
             # Yes. Format each element individually, then stick them all together.
             s_list = [self._to_string((v, val_t[1], val_t[2]),
                                       context, addLabel, useThisFormat, None_string, localize)

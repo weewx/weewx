@@ -37,6 +37,9 @@ class WeeutilTest(unittest.TestCase):
         self.assertEqual(rounder([complex(1.2345, -2.1191), complex(5.1921, 11.2092)], 2),
                          [complex(1.23, -2.12), complex(5.19, 11.21)])
         self.assertIsNone(rounder(None, 2))
+        self.assertEqual(rounder(1.2345, None), 1.2345)
+        self.assertEqual(rounder(Polar(1.2345, 6.7890), 2), Polar(1.23,6.79))
+        self.assertEqual(rounder('abc', 2), 'abc')
 
     def test_option_as_list(self):
 
@@ -408,6 +411,14 @@ class WeeutilTest(unittest.TestCase):
         dic[tright] = 'tright'
 
         self.assertEqual(dic[t], 't')
+
+        self.assertTrue(t.includesArchiveTime(1230000001))
+        self.assertFalse(t.includesArchiveTime(1230000000))
+
+        self.assertEqual(t.length, 1231000000 - 1230000000)
+
+        with self.assertRaises(ValueError):
+            no_t = TimeSpan(1231000000, 1230000000)
 
     def test_genYearSpans(self):
 
@@ -824,6 +835,21 @@ class WeeutilTest(unittest.TestCase):
         self.assertIsNone(to_float('NONE'))
         self.assertIsNone(to_float(u'NONE'))
 
+    def test_to_complex(self):
+        self.assertAlmostEqual(to_complex(1.0, 0.0), complex(0.0, 1.0), 6)
+        self.assertAlmostEqual(to_complex(1.0, 90), complex(1.0, 0.0), 6)
+        self.assertIsNone(to_complex(None, 90.0))
+        self.assertEqual(to_complex(0.0, 90.0), complex(0.0, 0.0))
+        self.assertIsNone(to_complex(1.0, None))
+
+    def test_Polar(self):
+        p = Polar(1.0, 90.0)
+        self.assertEqual(p.mag, 1.0)
+        self.assertEqual(p.dir, 90.0)
+        p = Polar.from_complex(complex(1.0, 0.0))
+        self.assertEqual(p.mag, 1.0)
+        self.assertEqual(p.dir, 90.0)
+        self.assertEqual(str(p), '(1.0, 90.0)')
 
     # def test_to_unicode(self):
     #
@@ -870,6 +896,21 @@ class WeeutilTest(unittest.TestCase):
         kd = KeyDict(a_dict)
         self.assertEqual(kd['a'], 1)
         self.assertEqual(kd['bad_key'], 'bad_key')
+
+
+    def test_is_iterable(self):
+        self.assertFalse(is_iterable('abc'))
+        self.assertTrue(is_iterable([1,2,3]))
+        i = iter([1,2,3])
+        self.assertTrue(is_iterable(i))
+
+    def test_secs_to_string(self):
+        self.assertEqual(secs_to_string(86400+3600+312), '1 day, 1 hour, 5 minutes')
+
+
+    def test_latlon_string(self):
+        self.assertEqual(latlon_string(-12.3, ('N', 'S'), 'lat'), ('12', '18.00', 'S'))
+        self.assertEqual(latlon_string(-123.3, ('E', 'W'), 'long'), ('123', '18.00', 'W'))
 
 
 if __name__ == '__main__':

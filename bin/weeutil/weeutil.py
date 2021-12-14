@@ -1377,6 +1377,9 @@ class Polar(object):
     def __str__(self):
         return "(%s, %s)" % (self.mag, self.dir)
 
+    def __eq__(self, other):
+        return self.mag == other.mag and self.dir == other.dir
+
 
 def rounder(x, ndigits):
     """Round a number, or sequence of numbers, to a specified number of decimal digits
@@ -1401,7 +1404,7 @@ def rounder(x, ndigits):
         return Polar(round(x.mag, ndigits), round(x.dir, ndigits))
     elif isinstance(x, float):
         return round(x, ndigits) if ndigits else int(x)
-    elif hasattr(x, '__iter__'):
+    elif is_iterable(x):
         return [rounder(v, ndigits) for v in x]
     return x
 
@@ -1590,6 +1593,10 @@ def deep_copy_path(path, dest_dir):
         shutil.copy(path, d)
         ncopy += 1
     return ncopy
+
+def is_iterable(x):
+    """Test if something is iterable, but not a string"""
+    return hasattr(x, '__iter__') and not isinstance(x, (bytes, six.string_types))
 
 
 if __name__ == '__main__':
