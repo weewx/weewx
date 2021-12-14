@@ -266,7 +266,11 @@ def modify_config(config_dict, stn_info, logger, debug=False):
         if 'StdReport' in config_dict \
                 and 'unit_system' in stn_info \
                 and stn_info['unit_system'] != 'custom':
-            config_dict['StdReport']['unit_system'] = stn_info['unit_system']
+            # Make sure the default unit system sits under [[Defaults]]. First, get rid of anything
+            # under [StdReport]
+            config_dict['StdReport'].pop('unit_system', None)
+            # Then add it under [[Defaults]]
+            config_dict['StdReport']['Defaults']['unit_system'] = stn_info['unit_system']
 
         if 'register_this_station' in stn_info \
                 and 'StdRESTful' in config_dict \
@@ -1295,13 +1299,19 @@ def get_station_info_from_config(config_dict):
         try:
             stn_info['lang'] = config_dict['StdReport']['lang']
         except KeyError:
-            pass
+            try:
+                stn_info['lang'] = config_dict['StdReport']['Defaults']['lang']
+            except KeyError:
+                pass
         try:
             # Look for option 'unit_system' in [StdReport]
             stn_info['unit_system'] = config_dict['StdReport']['unit_system']
         except KeyError:
-            # Not there. It's a custom system
-            stn_info['unit_system'] = 'custom'
+            try:
+                stn_info['unit_system'] = config_dict['StdReport']['Defaults']['unit_system']
+            except KeyError:
+                # Not there. It's a custom system
+                stn_info['unit_system'] = 'custom'
         try:
             stn_info['register_this_station'] \
                 = config_dict['StdRESTful']['StationRegistry']['register_this_station']
