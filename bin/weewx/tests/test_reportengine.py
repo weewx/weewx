@@ -10,6 +10,7 @@ from __future__ import print_function
 from __future__ import with_statement
 
 import logging
+import os.path
 import sys
 import unittest
 
@@ -30,7 +31,9 @@ WEEWX_ROOT = '../../..'
         skin = Seasons
     [[Defaults]]
 """
+# Find WEEWX_ROOT by working up from this file's location:
 CONFIG_DICT = weeutil.config.config_from_str(CONFIG_DICT_INI)
+CONFIG_DICT['WEEWX_ROOT'] = os.path.normpath(os.path.join(os.path.dirname(__file__), '../../..'))
 
 # For MacOS, the default logging logs to /var/log/weewx.log, which is a privileged location.
 # Change to something unprivileged, so we don't have to run test suites as root.
