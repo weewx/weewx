@@ -26,6 +26,7 @@ from six.moves import input
 # For backwards compatibility:
 from weeutil.config import accumulateLeaves, search_up
 
+
 def convertToFloat(seq):
     """Convert a sequence with strings to floats, honoring 'Nones'"""
 
@@ -398,7 +399,8 @@ def archiveHoursAgoSpan(time_ts, hours_ago=0, grace=1):
                     time.mktime(stop_span_dt.timetuple()))
 
 
-def archiveSpanSpan(time_ts, time_delta=0, hour_delta=0, day_delta=0, week_delta=0, month_delta=0, year_delta=0):
+def archiveSpanSpan(time_ts, time_delta=0, hour_delta=0, day_delta=0, week_delta=0, month_delta=0,
+                    year_delta=0):
     """ Returns a TimeSpan for the last xxx seconds where xxx equals
         time_delta sec + hour_delta hours + day_delta days + week_delta weeks + month_delta months + year_delta years
 
@@ -447,7 +449,8 @@ def archiveSpanSpan(time_ts, time_delta=0, hour_delta=0, day_delta=0, week_delta
 
     # Use a datetime.timedelta so that it can take DST into account:
     time_dt = datetime.datetime.fromtimestamp(time_ts)
-    time_dt -= datetime.timedelta(weeks=week_delta, days=day_delta, hours=hour_delta, seconds=time_delta)
+    time_dt -= datetime.timedelta(weeks=week_delta, days=day_delta, hours=hour_delta,
+                                  seconds=time_delta)
 
     # Now add the deltas for months and years. Because these can be variable in length,
     # some special arithmetic is needed. Start by calculating the number of
@@ -716,12 +719,12 @@ def archiveRainYearSpan(time_ts, sory_mon, grace=1):
 def timespan_by_name(label, time_ts, **kwargs):
     """Calculate an an appropriate TimeSpan"""
     return {
-        'hour' : archiveHoursAgoSpan,
-        'day' : archiveDaySpan,
-        'week' : archiveWeekSpan,
-        'month' : archiveMonthSpan,
-        'year' : archiveYearSpan,
-        'rainyear' : archiveRainYearSpan
+        'hour': archiveHoursAgoSpan,
+        'day': archiveDaySpan,
+        'week': archiveWeekSpan,
+        'month': archiveMonthSpan,
+        'year': archiveYearSpan,
+        'rainyear': archiveRainYearSpan
     }[label](time_ts, **kwargs)
 
 
@@ -1141,7 +1144,8 @@ def get_object(module_class):
     except AttributeError:
         # Can't find something. Give a more informative error message:
         raise AttributeError(
-            "Module '%s' has no attribute '%s' when searching for '%s'" % (mod.__name__, part, module_class))
+            "Module '%s' has no attribute '%s' when searching for '%s'"
+            % (mod.__name__, part, module_class))
     return mod
 
 
@@ -1354,6 +1358,7 @@ def to_text(x):
     """Ensure the results are in unicode, while honoring 'None'."""
     return six.ensure_text(x) if x is not None else None
 
+
 def dirN(c):
     """Given a complex number, return its phase as a compass heading"""
     if c is None:
@@ -1450,13 +1455,16 @@ def move_with_timestamp(filepath):
     shutil.move(filepath, newpath)
     return newpath
 
+
 try:
     # Python 3
     from collections import ChainMap
 
+
     class ListOfDicts(ChainMap):
         def extend(self, m):
             self.maps.append(m)
+
         def prepend(self, m):
             self.maps.insert(0, m)
 
@@ -1593,6 +1601,7 @@ def deep_copy_path(path, dest_dir):
         shutil.copy(path, d)
         ncopy += 1
     return ncopy
+
 
 def is_iterable(x):
     """Test if something is iterable, but not a string"""
