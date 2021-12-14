@@ -1019,16 +1019,18 @@ def getDayNightTransitions(start_ts, end_ts, lat, lon):
     return first, values
 
 
-def secs_to_string(secs):
-    """Convert seconds to a string with days, hours, and minutes"""
-    str_list = []
-    for (label, interval) in (('day', 86400), ('hour', 3600), ('minute', 60)):
-        amt = int(secs / interval)
-        plural = u'' if amt == 1 else u's'
-        str_list.append(u"%d %s%s" % (amt, label, plural))
-        secs %= interval
-    ans = ', '.join(str_list)
-    return ans
+# The following has been replaced by the I18N-aware function delta_secs_to_string in units.py:
+
+# def secs_to_string(secs):
+#     """Convert seconds to a string with days, hours, and minutes"""
+#     str_list = []
+#     for (label, interval) in (('day', 86400), ('hour', 3600), ('minute', 60)):
+#         amt = int(secs / interval)
+#         plural = u'' if amt == 1 else u's'
+#         str_list.append(u"%d %s%s" % (amt, label, plural))
+#         secs %= interval
+#     ans = ', '.join(str_list)
+#     return ans
 
 
 def timestamp_to_string(ts, format_str="%Y-%m-%d %H:%M:%S %Z"):
