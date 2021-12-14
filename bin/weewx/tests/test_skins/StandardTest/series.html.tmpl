@@ -56,6 +56,7 @@
     <pre>$day.outTemp.series(time_series='stop').format(order_by='column')</pre>
 
 	<hr/>
+
 	<h2>Aggregated series</h2>
 	<p>Aggregated series: \$month.outTemp.series(aggregate_type='max', aggregate_interval=86400).round(5).json():</p>
     <pre>$month.outTemp.series(aggregate_type='max', aggregate_interval=86400).round(5)json()</pre>
@@ -76,7 +77,24 @@
 
 
     <hr/>
-    <h2>Complex conversions</h2>
+
+    <h2>Aggregated series of wind vectors</h2>
+
+    <p>Aggregated wind seriex (<em>not JSON)</em>), complex notation
+        \$month.windvec.series(aggregate_type='max', aggregate_interval='day')</p>
+    <pre>$month.windvec.series(aggregate_type='max', aggregate_interval='day')</pre>
+
+    <p>Aggregated wind seriex (<em>not JSON)</em>), complex notation with formatting
+        \$month.windvec.series(aggregate_type='max', aggregate_interval='day').format("%.5f")</p>
+    <pre>$month.windvec.series(aggregate_type='max', aggregate_interval='day').format("%.5f")</pre>
+
+    <p>Aggregated wind seriex (<em>not JSON</em>), polar notation
+        \$month.windvec.series(aggregate_type='max', aggregate_interval='day').polar.format("%.5f")</p>
+    <pre>$month.windvec.series(aggregate_type='max', aggregate_interval='day').polar.format("%.5f")</pre>
+
+    <hr/>
+
+    <h2>Aggregated series of wind vectors with conversions</h2>
 
     <p>Starting series: \$month.windvec.series(aggregate_type='max', aggregate_interval='day').json()</p>
     <pre>

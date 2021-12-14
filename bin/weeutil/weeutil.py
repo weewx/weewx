@@ -1363,23 +1363,19 @@ def dirN(c):
     return value
 
 
-class Polar(tuple):
+class Polar(object):
     """Polar notation, except the direction is a compass heading."""
 
-    def __new__(cls, mag, dir):
-        return tuple.__new__(cls, (mag, dir))
+    def __init__(self, mag, dir):
+        self.mag = mag
+        self.dir = dir
 
     @classmethod
     def from_complex(cls, c):
         return cls(abs(c), dirN(c))
 
-    @property
-    def mag(self):
-        return self[0]
-
-    @property
-    def dir(self):
-        return self[1]
+    def __str__(self):
+        return "(%s, %s)" % (self.mag, self.dir)
 
 
 def rounder(x, ndigits):

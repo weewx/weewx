@@ -22,7 +22,7 @@ import six
 
 import weewx
 import weeutil.weeutil
-from weeutil.weeutil import ListOfDicts
+from weeutil.weeutil import ListOfDicts, Polar
 
 log = logging.getLogger(__name__)
 
@@ -677,7 +677,7 @@ class Formatter(object):
         """
 
         # Check to see if the ValueTuple holds an iterable:
-        if isinstance(val_t[0], (list, tuple)):
+        if hasattr(val_t[0], '__iter__'):
             # Yes. Format each element individually, then stick them all together.
             s_list = [self._to_string((v, val_t[1], val_t[2]),
                                       context, addLabel, useThisFormat, None_string, localize)
@@ -705,6 +705,25 @@ class Formatter(object):
                 else:
                     # Coerce to a string.
                     val_str = str(None_string)
+            addLabel = False
+        elif type(val_t[0]) is complex:
+            # The type is complex. Break it up into real and imaginary, then format
+            # them separately. No label --- it will get added later
+            r = ValueTuple(val_t[0].real, val_t[1], val_t[2])
+            i = ValueTuple(val_t[0].imag, val_t[1], val_t[2])
+            val_str = "(%s, %s)" % (self._to_string(r, context, False,
+                                                    useThisFormat, None_string, localize),
+                                    self._to_string(i, context, False,
+                                                    useThisFormat, None_string, localize))
+        elif type(val_t[0]) is Polar:
+            # The type is a Polar number. Break it up into magnitude and direction, then format
+            # them separately.
+            mag = ValueTuple(val_t[0].mag, val_t[1], val_t[2])
+            dir = ValueTuple(val_t[0].dir, "degree_compass", "group_direction")
+            val_str = "(%s, %s)" % (self._to_string(mag, context, addLabel,
+                                                    useThisFormat, None_string, localize),
+                                    self._to_string(dir, context, addLabel,
+                                                    None, None_string, localize))
             addLabel = False
         elif val_t[1] in {"unix_epoch", "unix_epoch_ms", "unix_epoch_ns"}:
             # Different formatting routines are used if the value is a time.
@@ -1576,11 +1595,14 @@ def as_value_tuple(record_dict, obs_type):
 
 
 class ComplexEncoder(json.JSONEncoder):
-    """Custom encoder that knows how to encode complex objects"""
+    """Custom encoder that knows how to encode complex and polar objects"""
     def default(self, obj):
         if isinstance(obj, complex):
             # Return as tuple
             return obj.real, obj.imag
+        elif isinstance(obj, Polar):
+            # Return as tuple:
+            return obj.mag, obj.dir
         # Otherwise, let the base class handle it
         return json.JSONEncoder.default(self, obj)
 

@@ -113,6 +113,7 @@
 46.8&#176;F, 44.9&#176;F, 43.1&#176;F,    N/A, 40.5&#176;F, 39.6&#176;F, 39.1&#176;F, 38.9&#176;F, 39.1&#176;F, 39.6&#176;F, 40.4&#176;F, 41.6&#176;F, 43.0&#176;F, 44.7&#176;F, 46.7&#176;F, 48.8&#176;F, 51.2&#176;F, 53.6&#176;F, 56.2&#176;F, 58.8&#176;F, 61.4&#176;F, 63.9&#176;F</pre>
 
 	<hr/>
+
 	<h2>Aggregated series</h2>
 	<p>Aggregated series: $month.outTemp.series(aggregate_type='max', aggregate_interval=86400).round(5).json():</p>
     <pre>[[1283324400, 1283410800, 79.82582], [1283410800, 1283497200, 79.22488], [1283497200, 1283583600, 63.92146]]</pre>
@@ -131,7 +132,30 @@
 
 
     <hr/>
-    <h2>Complex conversions</h2>
+
+    <h2>Aggregated series of wind vectors</h2>
+
+    <p>Aggregated wind seriex (<em>not JSON)</em>), complex notation
+        $month.windvec.series(aggregate_type='max', aggregate_interval='day')</p>
+    <pre>01-Sep-2010 00:00, 02-Sep-2010 00:00, (-1, 9) mph
+02-Sep-2010 00:00, 03-Sep-2010 00:00, (20, 1) mph
+03-Sep-2010 00:00, 04-Sep-2010 00:00, (20, 0) mph</pre>
+
+    <p>Aggregated wind seriex (<em>not JSON)</em>), complex notation with formatting
+        $month.windvec.series(aggregate_type='max', aggregate_interval='day').format("%.5f")</p>
+    <pre>01-Sep-2010 00:00, 02-Sep-2010 00:00, (-0.61126, 9.32596) mph
+02-Sep-2010 00:00, 03-Sep-2010 00:00, (19.93581, 1.30666) mph
+03-Sep-2010 00:00, 04-Sep-2010 00:00, (20.00000, 0.00000) mph</pre>
+
+    <p>Aggregated wind seriex (<em>not JSON</em>), polar notation
+        $month.windvec.series(aggregate_type='max', aggregate_interval='day').polar.format("%.5f")</p>
+    <pre>01-Sep-2010 00:00, 02-Sep-2010 00:00, (9.34597 mph, 356&#176;)
+02-Sep-2010 00:00, 03-Sep-2010 00:00, (19.97859 mph, 86&#176;)
+03-Sep-2010 00:00, 04-Sep-2010 00:00, (20.00000 mph, 90&#176;)</pre>
+
+    <hr/>
+
+    <h2>Aggregated series of wind vectors with conversions</h2>
 
     <p>Starting series: $month.windvec.series(aggregate_type='max', aggregate_interval='day').json()</p>
     <pre>
