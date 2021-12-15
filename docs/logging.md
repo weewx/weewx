@@ -30,7 +30,7 @@ different for MacOS):
     # Root logger
     [[root]]
       level = {log_level}
-      handlers = rotate,
+      handlers = syslog,
     
     # Additional loggers would go in the following section. This is useful for tailoring logging
     # for individual modules.
@@ -39,22 +39,14 @@ different for MacOS):
     # Definitions of possible logging destinations
     [[handlers]]
 
-        # Log to a set of rotating files    
-        [[[rotate]]]
+        # Log to syslog
+        [[[syslog]]]
             level = DEBUG
             formatter = standard
-            class = logging.handlers.RotatingFileHandler
-            filename = /var/log/weewx.log
-            maxBytes = 10000000
-            backupCount = 4
+            class = logging.handlers.SysLogHandler
+            address = {address}
+            facility = {facility}
 
-        # Log to console
-        [[[console]]]
-            level = DEBUG
-            formatter = verbose
-            class = logging.StreamHandler
-            # Alternate choice is 'ext://sys.stderr'
-            stream = ext://sys.stdout
 
     # How to format log messages
     [[formatters]]
@@ -81,6 +73,15 @@ not (the default), then `log_level` is `INFO`, otherwise, `DEBUG`.
 
 The value for `{process_name}` is passed in when setting up the logging facility. For the WeeWX 
 main program, it is `weewxd` (see below).
+
+### Default log handler
+By default WeeWX is configured with a log handler that writes to Syslog.  In some instances (ie. running in a Docker container) this is undesirable and using StdOut as the default handler would be preferred.  This can be accomplished by specifying the `WEEWX_LOGGING_DEFAULT_STDOUT` environment variable, for example:
+```bash 
+export WEEWX_LOGGING_DEFAULT_STDOUT=true
+./weewxd
+```
+
+---
 
 ## Specifying other handlers
 An example. Say you want logs to go to not only the system log (the default), but to the console as 

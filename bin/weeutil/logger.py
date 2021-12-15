@@ -7,9 +7,11 @@
 
 from __future__ import absolute_import
 
+import os
 import sys
 import logging.config
 import six
+from textwrap import indent
 from six.moves import StringIO
 
 import configobj
@@ -21,14 +23,28 @@ import weewx
 #  {value}: these are plugged in by the function setup().
 #  %(value)s: these are plugged in by the Python logging module.
 #
-LOGGING_STR = """[Logging]
+LOGGING_CONSOLE_HANLDER = """level = DEBUG
+formatter = verbose
+class = logging.StreamHandler
+# Alternate choice is 'ext://sys.stderr'
+stream = ext://sys.stdout"""
+
+LOGGING_SYSLOG_HANDLER = """level = DEBUG
+formatter = standard
+class = logging.handlers.SysLogHandler
+address = {address}
+facility = {facility}"""
+
+
+def _get_default_logging_config(handler_name, handler_config):
+    return """[Logging]
     version = 1
     disable_existing_loggers = False
 
     # Root logger
     [[root]]
       level = {log_level}
-      handlers = syslog,
+      handlers = """ + handler_name + """,
 
     # Additional loggers would go in the following section. This is useful for tailoring logging
     # for individual modules.
@@ -37,21 +53,10 @@ LOGGING_STR = """[Logging]
     # Definitions of possible logging destinations
     [[handlers]]
 
-        # System logger
-        [[[syslog]]]
-            level = DEBUG
-            formatter = standard
-            class = logging.handlers.SysLogHandler
-            address = {address}
-            facility = {facility}
+        # Log to """ + handler_name + """
+        [[[""" + handler_name + """]]]
+""" + indent(handler_config, "            ") + """
 
-        # Log to console
-        [[[console]]]
-            level = DEBUG
-            formatter = verbose
-            class = logging.StreamHandler
-            # Alternate choice is 'ext://sys.stderr'
-            stream = ext://sys.stdout
 
     # How to format log messages
     [[formatters]]
@@ -65,56 +70,19 @@ LOGGING_STR = """[Logging]
             datefmt = %Y-%m-%d %H:%M:%S
 """
 
+
 # These values are known only at runtime
 if sys.platform == "darwin":
     address = '/var/run/syslog'
     facility = 'local1'
 
-    # Mac uses slightly different logging setup
-    LOGGING_STR = """[Logging]
-        version = 1
-        disable_existing_loggers = False
-
-        # Root logger
-        [[root]]
-          level = {log_level}
-          handlers = rotate,
-    
-        # Additional loggers would go in the following section. This is useful for tailoring logging
-        # for individual modules.
-        [[loggers]]
-
-        # Definitions of possible logging destinations
-        [[handlers]]
-
-            # Log to a set of rotating files    
-            [[[rotate]]]
-                level = DEBUG
-                formatter = standard
-                class = logging.handlers.RotatingFileHandler
-                filename = /var/log/weewx.log
-                maxBytes = 10000000
-                backupCount = 4
-
-            # Log to console
-            [[[console]]]
-                level = DEBUG
-                formatter = verbose
-                class = logging.StreamHandler
-                # Alternate choice is 'ext://sys.stderr'
-                stream = ext://sys.stdout
-
-        # How to format log messages
-        [[formatters]]
-            [[[simple]]]
-                format = "%(levelname)s %(message)s"
-            [[[standard]]]
-                format = "{process_name}[%(process)d] %(levelname)s %(name)s: %(message)s" 
-            [[[verbose]]]
-                format = "%(asctime)s  {process_name}[%(process)d] %(levelname)s %(name)s: %(message)s"
-                # Format to use for dates and times:
-                datefmt = %Y-%m-%d %H:%M:%S
-    """
+    # Mac uses slightly different syslog handler
+    LOGGING_SYSLOG_HANDLER = """level = DEBUG
+formatter = standard
+class = logging.handlers.RotatingFileHandler
+filename = /var/log/weewx.log
+maxBytes = 10000000
+backupCount = 4"""
 elif sys.platform.startswith('linux'):
     address = '/dev/log'
     facility = 'user'
@@ -132,12 +100,21 @@ else:
     facility = 'user'
 
 
-def setup(process_name, user_log_dict):
+def _is_default_logging_stdout():
+    return os.environ.get('WEEWX_LOGGING_DEFAULT_STDOUT') is not None
+
+
+def setup(process_name, user_log_dict, default_to_stdout=_is_default_logging_stdout()):
     """Set up the weewx logging facility"""
 
     # Create a ConfigObj from the default string. No interpolation (it interferes with the
     # interpolation directives embedded in the string).
-    log_config = configobj.ConfigObj(StringIO(LOGGING_STR), interpolation=False, encoding='utf-8')
+    default_handler_name = 'console' if default_to_stdout else 'syslog'
+    default_handler_config = LOGGING_CONSOLE_HANLDER if default_to_stdout \
+        else LOGGING_SYSLOG_HANDLER
+    default_logging_config = _get_default_logging_config("console", default_handler_config)
+    log_config = configobj.ConfigObj(StringIO(default_logging_config), interpolation=False,
+                                     encoding='utf-8')
 
     # Turn off interpolation in the incoming dictionary. First save the old
     # value, then restore later. However, the incoming dictionary may be a simple
