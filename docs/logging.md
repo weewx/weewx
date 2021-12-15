@@ -81,8 +81,6 @@ export WEEWX_LOGGING_DEFAULT_STDOUT=true
 ./weewxd
 ```
 
----
-
 ## Specifying other handlers
 An example. Say you want logs to go to not only the system log (the default), but to the console as 
 well. Then add this to your `weewx.conf` file:
