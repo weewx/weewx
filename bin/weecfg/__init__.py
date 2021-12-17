@@ -1923,6 +1923,19 @@ DEFAULTS = """[StdReport]
         unit_system = us
 
         [[[Units]]]
+            # Option "unit_system" above sets the general unit system, but overriding specific unit
+            # groups is possible. These are popular choices. Uncomment and set as appropriate.
+            # NB: The unit is always in the singular. I.e., 'mile_per_hour',
+            # NOT 'miles_per_hour'
+            [[[[Groups]]]]
+                # group_altitude     = meter              # Options are 'foot' or 'meter'
+                # group_pressure     = mbar               # Options are 'inHg', 'mmHg', 'mbar', or 'hPa'
+                # group_rain         = mm                 # Options are 'inch', 'cm', or 'mm'
+                # group_rainrate     = mm_per_hour        # Options are 'inch_per_hour', 'cm_per_hour', or 'mm_per_hour'
+                # The following line is used to keep the above lines indented properly.
+                # It can be ignored.
+                unused = unused
+
             # Uncommenting the following section frequently results in more
             # attractive formatting of times and dates, but may not work in
             # your locale.
