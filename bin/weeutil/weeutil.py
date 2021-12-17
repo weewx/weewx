@@ -1544,15 +1544,8 @@ except ImportError:
 class KeyDict(dict):
     """A dictionary that returns the key for an unsuccessful lookup."""
 
-    class IndexStr(str):
-        def __getitem__(self, key):
-            try:
-                return super(KeyDict.IndexStr, self).__getitem__(key)
-            except TypeError:
-                return KeyDict.IndexStr(key)
-
     def __missing__(self, key):
-        return KeyDict.IndexStr(key)
+        return key
 
 
 def to_sorted_string(rec):
