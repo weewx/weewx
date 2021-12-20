@@ -75,7 +75,8 @@
   #if $getVar('year.%s.has_data' % $x)
     <tr>
       <td class="label">$obs.label[$x]</td>
-      <td class="data">$get_battery_status($getVar('current.' + $x + '.raw'))</td>
+      <td class="data">$get_battery_status($getVar('current.%s.raw' % $x))</td>
+      <td class="data">$getVar('year.%s.lasttime' % $x)</td>
     </tr>
   #end if
 #end for
