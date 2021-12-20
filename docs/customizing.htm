@@ -104,7 +104,7 @@ Version: 4.6
         <ul>
             <li>
                 A WeeWX process normally handles the monitoring of one station &mdash; <i>e.g.</i> a
-                weather station. The process is configured using a file with the name
+                weather station. The process is configured using options in a configuration file, typically called 
                 <span class="code">weewx.conf</span>.
             </li>
 
@@ -445,13 +445,12 @@ Version: 4.6
 
         <p>
             Each report has a <em>skin</em> associated with it. For most reports, the relationship with the skin is an
-            obvious one: it contains the templates, any auxiliary files such as background GIFs or CSS style sheets,
+            obvious one: the skin contains the templates, any auxiliary files such as background GIFs or CSS style sheets,
             files with localization data, and a <em>skin configuration file</em>, <span class="code">skin.conf</span>.
             If you will, the skin controls the <em>look and feel</em> of the report. Note that more than one report can
             use the same skin. For example, you might want to run a report that uses US Customary units, then run
             another report against the same skin, but using metric units and put the results in a different place. All
-            this is possible by either overriding configuration options in the WeeWX configuration file <span
-            class="code">weewx.conf</span> or the skin configuration file <span class="code">skin.conf</span>.
+            this is possible by either overriding configuration options in the WeeWX configuration file or the skin configuration file.
         </p>
 
         <p>Like all reports, the FTP and RSYNC "reports" also use a skin, and include a skin configuration file,
@@ -795,19 +794,19 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
             <tbody>
             <tr>
                 <td class="code">weewx.conf</td>
-                <td>Holds general configuration information, such which drivers and services to load, as well as which
-                    reports to run.
+                <td>This is the application configuration file.  It contains general configuration information, such which drivers and services to load, as well as which
+                    reports to run.  Report options can also be specified in this file.
                 </td>
             </tr>
             <tr>
                 <td class="code">skin.conf</td>
-                <td>Holds information specific to a <em>skin</em>, in particular, which template files to process, and
-                    which plots to generate. Generally supplied by the skin author.
+                <td>This is the skin configuration file.  It contains information specific to a <em>skin</em>, in particular, which template files to process, and
+                    which plots to generate. Typically this file is supplied by the skin author.
                 </td>
             </tr>
             <tr>
                 <td class="code">en.conf<br/>de.conf<br/>fr.conf<br/><em>etc.</em></td>
-                <td>Holds language and locale information for a specific skin.</td>
+                <td>These are internationalization files.  They contain language and locale information for a specific <em>skin</em>.</td>
             </tr>
             </tbody>
         </table>
@@ -1078,18 +1077,71 @@ total 80
         </p>
 
 
+        <h2 id="how_to_change_datetime_format">Changing date and time formats</h2>
+        <p>
+          Date and time formats are specified using the same format strings used by <a href="https://docs.python.org/3/library/datetime.html#strftime-strptime-behavior"> strftime()</a>.  For example, <span class="code">%Y</span> indicates the 4-digit year, and <span class="code">%H:%M</span> indicates the time in hours:minutes.  The default values for date and time formats are generally <span class="code">%x %X</span>, which indicates "use the format for the locale of the computer".
+        </p>
+        <p>
+          Since date formats default to the locale of the computer, a date might appear with the format of "month/day/year".  What if you prefer dates to have the format "year.month.day"?  How do you indicate 24-hour time format versus 12-hour?
+        </p>
+        <p>
+          Dates and times generally appear in two places: in plots and in tags.
+        </p>
+
+        <h3 id="datetime_format_images">Date and time formats in images</h3>
+        <p>
+          Most plots have a label on the horizontal axis that indicates when the plot was generated.  By default, the format for this label uses the locale of the computer on which WeeWX is running, but you can modify the format by specifying the option <span class="code">bottom_label_format</span>.
+        </p>
+        <p>
+          For example, this would result in a date/time string such as "2021.12.13 12:45" no matter what the computer's locale:
+        </p>
+
+        <pre class="tty">
+[StdReport]
+    ...
+    [[Defaults]]
+        [[[ImageGenerator]]]
+            [[[[day_images]]]]
+                bottom_label_format = %Y.%m.%d %H:%M
+            [[[[week_images]]]]
+                bottom_label_format = %Y.%m.%d %H:%M
+            [[[[month_images]]]]
+                bottom_label_format = %Y.%m.%d %H:%M
+            [[[[year_images]]]]
+                bottom_label_format = %Y.%m.%d %H:%M</pre>
+
+        <h3 id="datetime_format_tags">Date and time formats for tags</h3>
+        <p>
+          Each aggregation period has a format for the times associated with that period.  These formats are defined in the <span class="code">TimeFormats</span> section.  The default format for each uses the date and/or time for the computer of the locale on which WeeWX is running.
+        </p>
+        <p>
+          For example, this would result in a date/time string such as "2021.12.13 12:45" no matter what the computer's locale:
+        </p>
+
+        <pre class="tty">
+[StdReport]
+    ...
+    [[Defaults]]
+        [[[Units]]]
+            [[[[TimeFormats]]]]
+                hour        = %H:%M
+                day         = %Y.%m.%d
+                week        = %Y.%m.%d (%A)
+                month       = %Y.%m.%d %H:%M
+                year        = %Y.%m.%d %H:%M
+                rainyear    = %Y.%m.%d %H:%M
+                current     = %Y.%m.%d %H:%M
+                ephem_day   = %H:%M
+                ephem_year  = %Y.%m.%d %H:%M</pre>
+
         <h2 id="how_to_change_units">Changing unit systems</h2>
 
         <p>
-            Option <a href="usersguide.htm#option-unit-system"><span class="code">unit_system</span></a> controls what
+            Each <em>unit system</em> is a set of units.  For example, the <span class="code">METRIC</span> unit system uses millimeters for rain, kilometers per hour for wind speed, and degree Celsius for temperature.  The option <a href="usersguide.htm#option-unit-system"><span class="code">unit_system</span></a> controls which
             unit system will be used in your reports. The available choices are <span class="code">US</span>, <span
-            class="code">METRIC</span>, or <span class="code">METRICWX</span>. See the <a href="#units"><em>Appendix
-            Units</em></a> for definitions of these unit systems. By default, WeeWX uses <span class="code">US</span>
-            (US Customary) system. The option is case-insensitive.
+            class="code">METRIC</span>, or <span class="code">METRICWX</span>.  The option is case-insensitive. See the <a href="#units"><em>Appendix Units</em></a> for the unit defined in each of these unit systems.
         </p>
-        <p>
-            Suppose you would rather use the <span class="code">METRICWX</span> system for all your reports? Then change
-            this
+        By default, WeeWX uses <span class="code">US</span> (US Customary) system.  Suppose you would rather use the <span class="code">METRICWX</span> system for all your reports? Then change this
         </p>
 
         <pre class="tty">
@@ -1113,6 +1165,7 @@ total 80
         # You can override this for individual reports.
         <span class="highlight">unit_system = metricwx</span></pre>
 
+        <h3 id="mixed_units">Mixed units</h3>
         <p>
             However, what if you want a mix? For example, suppose you generally want US Customary units, but you want
             barometric pressures to be in millibars? This can be done by <em>overriding</em> the appropriate unit group.
@@ -1181,14 +1234,11 @@ total 80
         <h2 id="how_to_change_labels">Changing labels</h2>
         <p>
             Every observation type is associated with a default <em>label</em>. For example, in the English language,
-            the default label for observation type <span class="code">outTemp</span> is generally <b>Outside
-            Temperature</b>. You can change this label by <em>overriding</em> the default. How you do so will depend on
+            the default label for observation type <span class="code">outTemp</span> is generally <span class="example_text">Outside
+            Temperature</span>. You can change this label by <em>overriding</em> the default. How you do so will depend on
             whether the skin you are using has been <em>internationalized</em> and, if so, whether it offers your local
             language.
         </p>
-
-
-        <h4>Overriding the localization file</h4>
 
         <p>
             Let's look at an example. If you take a look inside the file <span
