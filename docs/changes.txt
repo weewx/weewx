@@ -69,6 +69,9 @@ back in something other than UTF-8.
 Availability of the pyephem module and extended almanac data is now logged
 during startup.
 
+Added column for 'last contact' in the sensor status table in the Season skin
+to help diagnose missing/flaky sensors.
+
 
 4.5.1 04/02/2021
 Reverted the wview schema back to the V3 style.
