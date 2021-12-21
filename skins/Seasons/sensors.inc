@@ -8,13 +8,41 @@
 ## battery status, and various voltages.  if there are no data available,
 ## then this degenerates to nothing displayed.
 
+#import time
+#set $now = time.time()
+
 #def get_battery_status($x)
-#if $x == 0
-<span class="status_ok">OK</span>
-#else
+#if $x is None
+<span class="status_unknown">UNKNOWN</span>
+#elif $x == 1
 <span class="status_low">LOW</span>
+#else
+<span class="status_ok">OK</span>
 #end if
 #end def
+
+## provide an indication of how much time has passed since the last sensor
+## reading.
+#def get_time_delta($last_ts, $now)
+  #if $last_ts
+    #set $delta = int($now - $last_ts)
+    #if $delta < 60
+ 
+#elif $delta < 3600
+      #set $minutes = int($delta / 60)
+$minutes $gettext('minutes ago')
+    #elif $delta < 86400
+      #set $hours = int($delta / 3600)
+$hours $gettext('hours ago')
+    #else
+      #set $days = int($delta / 86400)
+$days $gettext('days ago')
+    #end if
+  #else
+never
+  #end if
+#end def
+
 
 ## Get the list of sensor observations from the configuration file, otherwise
 ## fallback to a very rudimentary set.
@@ -64,6 +92,7 @@
     <tr>
       <td class="label">$obs.label[$x]</td>
       <td class="data">$getVar('current.' + $x)</td>
+      <td class="timestamp">$get_time_delta($getVar('year.%s.lasttime.raw' % $x), $now)</td>
     </tr>
   #end if
 #end for
@@ -76,7 +105,7 @@
     <tr>
       <td class="label">$obs.label[$x]</td>
       <td class="data">$get_battery_status($getVar('current.%s.raw' % $x))</td>
-      <td class="data">$getVar('year.%s.lasttime' % $x)</td>
+      <td class="timestamp">$get_time_delta($getVar('year.%s.lasttime.raw' % $x), $now)</td>
     </tr>
   #end if
 #end for
@@ -89,6 +118,7 @@
     <tr>
       <td class="label">$obs.label[$x]</td>
       <td class="data">$getVar('current.' + $x)</td>
+      <td class="timestamp">$get_time_delta($getVar('year.%s.lasttime.raw' % $x), $now)</td>
     </tr>
   #end if
 #end for

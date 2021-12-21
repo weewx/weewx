@@ -19,6 +19,7 @@
     --loval-color:#4444aa;
     --ok-color:#44aa44;
     --low-color:#aa4444;
+    --unknown-color:#dfdfdf;
 }
 
 /* use the fonts from google */
@@ -177,6 +178,10 @@ a:hover {
 
 .status_low {
     color: var(--low-color);
+}
+
+.status_unknown {
+    color: var(--unknown-color);
 }
 
 .button {
