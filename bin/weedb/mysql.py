@@ -11,7 +11,7 @@ import six
 try:
     import MySQLdb
 except ImportError:
-    # OpenSUSE uses Python2-PyMySQL
+    # Some installs use 'pymysql' instead of 'MySQLdb'
     import pymysql as MySQLdb
     from pymysql import DatabaseError as MySQLDatabaseError
 else:
