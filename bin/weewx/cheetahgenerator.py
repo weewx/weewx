@@ -130,12 +130,22 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
                    'SummaryByMonth': "%Y-%m",
                    'SummaryByYear' : "%Y"}
 
+    def __init__(self, config_dict, skin_dict, *args, **kwargs):
+        """Initialize an instance of CheetahGenerator"""
+        # Initialize my superclass
+        weewx.reportengine.ReportGenerator.__init__(self, config_dict, skin_dict, *args, **kwargs)
+
+        self.search_list_objs = []
+        self.formatter = weewx.units.Formatter.fromSkinDict(skin_dict)
+        self.converter = weewx.units.Converter.fromSkinDict(skin_dict)
+
+        # This dictionary will hold the formatted dates of all generated files
+        self.outputted_dict = {k: [] for k in CheetahGenerator.generator_dict}
+
     def run(self):
         """Main entry point for file generation using Cheetah Templates."""
 
         t1 = time.time()
-
-        self.setup()
 
         # Make a deep copy of the skin dictionary (we will be modifying it):
         gen_dict = deep_copy(self.skin_dict)
@@ -153,7 +163,7 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
         log_success = to_bool(search_up(gen_dict[section_name], 'log_success', True))
 
         # configure the search list extensions
-        self.initExtensions(gen_dict[section_name])
+        self.init_extensions(gen_dict[section_name])
 
         # Generate any templates in the given dictionary:
         ngen = self.generate(gen_dict[section_name], section_name, self.gen_ts)
@@ -165,30 +175,21 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
             log.info("Generated %d files for report %s in %.2f seconds",
                      ngen, self.skin_dict['REPORT_NAME'], elapsed_time)
 
-    def setup(self):
-        # This dictionary will hold the formatted dates of all generated files
-        self.outputted_dict = {k: [] for k in CheetahGenerator.generator_dict}
-
-        self.formatter = weewx.units.Formatter.fromSkinDict(self.skin_dict)
-        self.converter = weewx.units.Converter.fromSkinDict(self.skin_dict)
-
-    def initExtensions(self, gen_dict):
+    def init_extensions(self, gen_dict):
         """Load the search list"""
-        self.search_list_objs = []
 
-        # The option 'search_list' holds a starting search list (usually just the default).
-        # Because we'll be modifying search_list, make a copy of the default before assignment.
-        search_list = weeutil.weeutil.option_as_list(gen_dict.get('search_list',
-                                                                  list(default_search_list)))
-        # Option 'search_list_extensions' holds user extensions.
-        search_list.extend(weeutil.weeutil.option_as_list(gen_dict.get('search_list_extensions',
-                                                                       [])))
+        # Build the search list. Start with user extensions:
+        search_list = weeutil.weeutil.option_as_list(gen_dict.get('search_list_extensions', []))
 
-        # provide feedback about the requested search list objects
+        # Add on the default search list:
+        search_list.extend(weeutil.weeutil.option_as_list(gen_dict.get('search_list',
+                                                                       default_search_list)))
+
+        # Provide feedback about the final list
         log.debug("Using search list %s", search_list)
 
         # Now go through search_list (which is a list of strings holding the
-        # names of the extensions):
+        # names of the extensions), and instantiate each one
         for c in search_list:
             x = c.strip()
             if x:
