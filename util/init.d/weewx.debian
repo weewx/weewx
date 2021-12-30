@@ -34,7 +34,7 @@ NAME=weewx
 WEEWX_BIN=/home/weewx/bin/weewxd
 WEEWX_CFG=/home/weewx/weewx.conf
 WEEWX_PID=/var/run/$NAME.pid
-WEEWX_USER=root:root 
+WEEWX_USER=root
 
 # Read configuration variable file if it is present
 [ -r /etc/default/$NAME ] && . /etc/default/$NAME
@@ -81,7 +81,7 @@ do_stop() {
     if [ ! -f $WEEWX_PID ]; then
         return 1
     fi
-    start-stop-daemon --stop --pidfile $WEEWX_PID
+    start-stop-daemon --stop --user $WEEWX_USER --pidfile $WEEWX_PID
     # we cannot trust the return value from start-stop-daemon
     RETVAL=2
     c=0
@@ -105,7 +105,7 @@ do_stop() {
 
 # send a SIGHUP to the daemon/service
 do_reload() {
-    start-stop-daemon --stop --signal 1 --quiet --pidfile $WEEWX_PID
+    start-stop-daemon --stop --signal 1 --quiet --user $WEEWX_USER --pidfile $WEEWX_PID
     return 0
 }
 
