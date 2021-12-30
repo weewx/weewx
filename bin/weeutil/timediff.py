@@ -41,7 +41,7 @@ class TimeDerivative(object):
                 # Calculate the time derivative only if there is a delta in time,
                 # and the old record is not too old.
                 if record['dateTime'] != self.old_timestamp \
-                        and ['dateTime'] - self.old_timestamp <= self.stale_age:
+                        and (record['dateTime'] - self.old_timestamp) <= self.stale_age:
                     # All OK.
                     derivative = (record[self.obs_type] - self.old_value) \
                                  / (record['dateTime'] - self.old_timestamp)
