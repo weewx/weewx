@@ -77,6 +77,9 @@ Fix the weewx.debian and weewx-multi init scripts to work with non-root user.
 Added sample tmpfiles configuration to ensure run directory on modern systems
 when running weewx as non-root user.
 
+Fixed bug that prevented the ssh port from being specified when using rsync.
+Fixes issue #725.
+
 
 4.5.1 04/02/2021
 Reverted the wview schema back to the V3 style.

@@ -64,17 +64,17 @@ class RsyncUpload(object):
         else:
             rsynclocalspec = self.local_root + os.sep
 
-        if self.user is not None and len(self.user.strip()) > 0:
+        if self.user:
             rsyncremotespec = "%s@%s:%s" % (self.user, self.server, self.remote_root)
         else:
             rsyncremotespec = "%s:%s" % (self.server, self.remote_root)
 
-        if self.port is not None and len(self.port.strip()) > 0:
-            rsyncsshstring = "ssh -p %s" % (self.port,)
+        if self.port:
+            rsyncsshstring = "ssh -p %s" % self.port
         else:
             rsyncsshstring = "ssh"
 
-        if self.ssh_options is not None and len(self.ssh_options.strip()) > 0:
+        if self.ssh_options:
             rsyncsshstring = rsyncsshstring + " " + self.ssh_options
 
         cmd = ['rsync']
@@ -93,7 +93,8 @@ class RsyncUpload(object):
             cmd.extend(["--compress"])
         if self.timeout is not None:
             cmd.extend(["--timeout=%s" % self.timeout])
-        cmd.extend(["-e %s" % rsyncsshstring])
+        cmd.extend(["-e"])
+        cmd.extend([rsyncsshstring])
         cmd.extend([rsynclocalspec])
         cmd.extend([rsyncremotespec])
 
