@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2021 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2022 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -28,7 +28,7 @@ import weeutil.weeutil
 import weewx.defaults
 import weewx.manager
 import weewx.units
-from weeutil.weeutil import to_bool
+from weeutil.weeutil import to_bool, to_int
 
 log = logging.getLogger(__name__)
 
@@ -452,6 +452,9 @@ class RsyncGenerator(ReportGenerator):
 
     def run(self):
         import weeutil.rsyncupload
+        log_success = to_bool(weeutil.config.search_up(self.skin_dict, 'log_success', True))
+        log_failure = to_bool(weeutil.config.search_up(self.skin_dict, 'log_failure', True))
+
         # We don't try to collect performance statistics about rsync, because
         # rsync will report them for us.  Check the debug log messages.
         try:
@@ -462,11 +465,13 @@ class RsyncGenerator(ReportGenerator):
                 remote_root=self.skin_dict['path'],
                 server=self.skin_dict['server'],
                 user=self.skin_dict.get('user'),
-                port=self.skin_dict.get('port'),
+                port=to_int(self.skin_dict.get('port')),
                 ssh_options=self.skin_dict.get('ssh_options'),
                 compress=to_bool(self.skin_dict.get('compress', False)),
                 delete=to_bool(self.skin_dict.get('delete', False)),
-                log_success=to_bool(weeutil.config.search_up(self.skin_dict, 'log_success', True)))
+                log_success=log_success,
+                log_failure=log_failure
+            )
         except KeyError:
             log.debug("rsyncgenerator: Rsync upload not requested. Skipped.")
             return
