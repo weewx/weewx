@@ -121,10 +121,11 @@ class RsyncUpload(object):
         if 'rsync error' not in stroutput:
             # No rsync error message. Parse the status message for useful information.
             if self.log_success:
-                # Create a dictionary of message : values.
-                rsyncinfo = dict([line.split(':', 1)
-                                  for line in stroutput.splitlines()
-                                  if ':' in line])
+                # Create a dictionary of message and their values. kv_list is a list of
+                # (key, value) tuples.
+                kv_list = [line.split(':', 1) for line in stroutput.splitlines() if ':' in line]
+                # Now convert to dictionary, while stripping the keys and values
+                rsyncinfo = {k.strip(): v.strip() for k, v in kv_list}
                 # Get number of files and bytes transferred, and produce an appropriate message
                 N = rsyncinfo.get('Number of regular files transferred',
                                   rsyncinfo.get('Number of files transferred'))
