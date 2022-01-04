@@ -98,6 +98,8 @@ def main():
     # Although the report engine inherits from Thread, we can just run it in the main thread:
     t.run()
 
+    # Shut down any running services, 
+    engine.shutDown()
 
 if __name__ == "__main__":
     main()
