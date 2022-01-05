@@ -99,6 +99,15 @@ class WeeutilTest(unittest.TestCase):
                                   1370070000, 1372662000, 1375340400, 1378018800, 1380610800,
                                   1383289200, 1385884800, 1388563200])
 
+    def test_nominal_spans(self):
+
+        self.assertEqual(nominal_spans(1800), 1800)
+        self.assertEqual(nominal_spans('hour'), 3600)
+        self.assertEqual(nominal_spans('HOUR'), 3600)
+        self.assertIsNone(nominal_spans(None))
+        with self.assertRaises(KeyError):
+            nominal_spans('foo')
+
     def test_intervalgen(self):
 
         os.environ['TZ'] = 'America/Los_Angeles'
@@ -411,12 +420,12 @@ class WeeutilTest(unittest.TestCase):
         tright = TimeSpan(1232000000, 1233000000)
         self.assertFalse(t.includes(tright))
 
+        # Test dictionary lookups. This will test hash and equality.
         dic = {}
         dic[t] = 't'
         dic[tsub] = 'tsub'
         dic[tleft] = 'tleft'
         dic[tright] = 'tright'
-
         self.assertEqual(dic[t], 't')
 
         self.assertTrue(t.includesArchiveTime(1230000001))
