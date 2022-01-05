@@ -245,11 +245,6 @@ class TimeSpan(tuple):
     def __hash__(self):
         return hash(self.start) ^ hash(self.stop)
 
-    def __cmp__(self, other):
-        if self.start < other.start:
-            return - 1
-        return 0 if self.start == other.start else 1
-
 
 nominal_intervals = {
     'hour': 3600,
