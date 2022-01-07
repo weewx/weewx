@@ -16,6 +16,7 @@ import cmath
 import datetime
 import math
 import os
+import re
 import shutil
 import time
 
@@ -1543,9 +1544,48 @@ class KeyDict(dict):
         return key
 
 
-def to_sorted_string(rec):
-    import locale
-    return ", ".join(["%s: %s" % (k, rec.get(k)) for k in sorted(rec, key=locale.strxfrm)])
+def natural_sort_keys(source_dict):
+    """Return a naturally sorted list of keys for a dict."""
+
+    def atoi(text):
+        return int(text) if text.isdigit() else text
+
+    def natural_keys(text):
+        """Natural key sort.
+
+        Allows use of key=natural_keys to sort a list in human order, eg:
+            alist.sort(key=natural_keys)
+
+        http://nedbatchelder.com/blog/200712/human_sorting.html
+        """
+
+        return [atoi(c) for c in re.split(r'(\d+)', text.lower())]
+
+    # create a list of keys in the dict
+    keys_list = list(source_dict.keys())
+    # naturally sort the list of keys such that, for example, xxxxx16 appears
+    # after xxxxx1
+    keys_list.sort(key=natural_keys)
+    # return the sorted list
+    return keys_list
+
+
+def to_sorted_string(rec, simple_sort=False):
+    """Return a string representation of a dict sorted by key.
+
+    Default action is to perform a 'natural' sort by key, ie 'xxx1' appears
+    before 'xxx16'. If called with simple_sort=True a simple alphanumeric sort
+    is performed instead which will result in 'xxx16' appearing before 'xxx1'.
+    """
+
+    if simple_sort:
+        import locale
+        return ", ".join(["%s: %s" % (k, rec.get(k)) for k in sorted(rec, key=locale.strxfrm)])
+    else:
+        # first obtain a list of key:value pairs sorted naturally by key
+        sorted_dict = ["'%s': '%s'" % (k, rec[k]) for k in natural_sort_keys(rec)]
+        # return as a string of comma separated key:value pairs in braces
+        return ", ".join(sorted_dict)
 
 
 def y_or_n(msg, noprompt=False):
