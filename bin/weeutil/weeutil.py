@@ -1544,22 +1544,27 @@ class KeyDict(dict):
         return key
 
 
+def atoi(text):
+    return int(text) if text.isdigit() else text
+
+
+def natural_keys(text):
+    """Natural key sort.
+
+    Allows use of key=natural_keys to sort a list in human order, eg:
+        alist.sort(key=natural_keys)
+
+    http://nedbatchelder.com/blog/200712/human_sorting.html
+    """
+
+    return [atoi(c) for c in natural_keys.compiled_re(text.lower())]
+
+
+natural_keys.compiled_re = re.split(r'(\d+)')
+
+
 def natural_sort_keys(source_dict):
     """Return a naturally sorted list of keys for a dict."""
-
-    def atoi(text):
-        return int(text) if text.isdigit() else text
-
-    def natural_keys(text):
-        """Natural key sort.
-
-        Allows use of key=natural_keys to sort a list in human order, eg:
-            alist.sort(key=natural_keys)
-
-        http://nedbatchelder.com/blog/200712/human_sorting.html
-        """
-
-        return [atoi(c) for c in re.split(r'(\d+)', text.lower())]
 
     # create a list of keys in the dict
     keys_list = list(source_dict.keys())
