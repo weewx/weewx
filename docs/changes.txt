@@ -80,6 +80,9 @@ when running weewx as non-root user.
 Fixed bug that prevented the ssh port from being specified when using rsync.
 Fixes issue #725.
 
+Improved alphanumeric sorting of loop packet/archive record fields displayed
+when WeeWX is run directly.
+
 
 4.5.1 04/02/2021
 Reverted the wview schema back to the V3 style.
