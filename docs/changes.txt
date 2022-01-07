@@ -144,8 +144,8 @@ Updated the version of six.py included with WeeWX to 1.15.0. Fixes issue #657.
 Option aggregate_interval can now be specified by using one of the "shortcuts",
 that is, 'hour', 'day', 'week', 'month', or 'year'.
 
-Options "log_success" and "log_failure" are now honored by the StdArchive
-service.
+Options "log_success" and "log_failure" are now honored by the StdArchive and
+StdQC services. Fixes issues #727.
 
 
 4.4.0 01/30/2021

@@ -24,7 +24,7 @@ log = logging.getLogger(__name__)
 class QC(object):
     """Class to apply quality checks to a record."""
 
-    def __init__(self, mm_dict):
+    def __init__(self, mm_dict, log_failure=True):
         """
         Initialize
         Args:
@@ -34,6 +34,8 @@ class QC(object):
             (min, max, unit), where min and max are as before, but the value 'unit' is the unit the
             min and max values are in. If 'unit' is not specified, then the values must be in the
             same unit as the incoming record (a risky supposition!).
+
+            log_failure: True to log values outside of their limits. False otherwise.
         """
 
         self.mm_dict = {}
@@ -43,6 +45,8 @@ class QC(object):
             # Convert to floats.
             self.mm_dict[obs_type][0] = to_float(self.mm_dict[obs_type][0])
             self.mm_dict[obs_type][1] = to_float(self.mm_dict[obs_type][1])
+
+        self.log_failure = log_failure
 
     def apply_qc(self, data_dict, data_type=''):
         """Apply quality checks to the data in a record"""
@@ -62,7 +66,8 @@ class QC(object):
                     max_v = converter.convert((max_v, min_max_unit, group))[0]
 
                 if not min_v <= data_dict[obs_type] <= max_v:
-                    log.warning("%s %s value '%s' %s outside limits (%s, %s)",
-                                weeutil.weeutil.timestamp_to_string(data_dict['dateTime']),
-                                data_type, obs_type, data_dict[obs_type], min_v, max_v)
+                    if self.log_failure:
+                        log.warning("%s %s value '%s' %s outside limits (%s, %s)",
+                                    weeutil.weeutil.timestamp_to_string(data_dict['dateTime']),
+                                    data_type, obs_type, data_dict[obs_type], min_v, max_v)
                     data_dict[obs_type] = None

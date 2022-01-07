@@ -460,8 +460,10 @@ class StdQC(StdService):
         except KeyError:
             log.info("No QC information in config file.")
             return
+        log_failure = to_bool(weeutil.config.search_up(config_dict['StdQC'],
+                                                       'log_failure', True))
 
-        self.qc = weewx.qc.QC(mm_dict)
+        self.qc = weewx.qc.QC(mm_dict, log_failure)
 
         self.bind(weewx.NEW_LOOP_PACKET, self.new_loop_packet)
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
