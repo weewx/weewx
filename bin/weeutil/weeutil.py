@@ -1557,10 +1557,10 @@ def natural_keys(text):
     http://nedbatchelder.com/blog/200712/human_sorting.html
     """
 
-    return [atoi(c) for c in natural_keys.compiled_re(text.lower())]
+    return [atoi(c) for c in re.split(natural_keys.compiled_re, text.lower())]
 
 
-natural_keys.compiled_re = re.split(r'(\d+)')
+natural_keys.compiled_re = re.compile(r'(\d+)')
 
 
 def natural_sort_keys(source_dict):
