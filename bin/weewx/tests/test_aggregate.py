@@ -101,6 +101,24 @@ class TestAggregate(unittest.TestCase):
                                                  'sum', db_manager)
             self.assertAlmostEqual(sum_vt[0], 10.24, 2)
 
+            not_null_vt = aggregate_obj.get_aggregate('outTemp', TimeSpan(start_ts, stop_ts),
+                                                      'not_null', db_manager)
+            self.assertTrue(not_null_vt[0])
+            self.assertEqual(not_null_vt[1], 'boolean')
+            self.assertEqual(not_null_vt[2], 'group_boolean')
+
+            null_vt = aggregate_obj.get_aggregate('inTemp', TimeSpan(start_ts, stop_ts),
+                                                  'not_null', db_manager)
+            self.assertFalse(null_vt[0])
+
+            # Values for inTemp in the test database are null for early May, but not null for later
+            # in the month. So, for all of May, the aggregate 'not_null' should be True.
+            null_start_ts = time.mktime((2010, 5, 1, 0, 0, 0, 0, 0, -1))
+            null_stop_ts = time.mktime((2010, 6, 1, 0, 0, 0, 0, 0, -1))
+            null_vt = aggregate_obj.get_aggregate('inTemp', TimeSpan(null_start_ts, null_stop_ts),
+                                                  'not_null', db_manager)
+            self.assertTrue(null_vt[0])
+
             # The ArchiveTable version has a few extra aggregate types:
             if aggregate_obj == weewx.xtypes.ArchiveTable:
                 first_vt = aggregate_obj.get_aggregate('outTemp', TimeSpan(start_ts, stop_ts),
@@ -259,6 +277,13 @@ class TestAggregate(unittest.TestCase):
             self.assertAlmostEqual(abs(vt[0]), 18.337, 3)
             self.assertAlmostEqual(vt[0].real, 9.683, 3)
             self.assertAlmostEqual(vt[0].imag, -15.572, 3)
+
+            vt = weewx.xtypes.WindVec.get_aggregate('windvec',
+                                                    TimeSpan(hour_start_ts, hour_stop_ts),
+                                                    'not_null', db_manager)
+            self.assertTrue(vt[0])
+            self.assertEqual(vt[1], 'boolean')
+            self.assertEqual(vt[2], 'group_boolean')
 
     def test_get_aggregate_expression(self):
         """Test using an expression in an aggregate"""

@@ -87,10 +87,24 @@ class StdWXCalculate(weewx.engine.StdService):
         data_binding = config_dict.get('StdWXCalculate',
                                        {'data_binding': 'wx_binding'}).get('data_binding',
                                                                            'wx_binding')
+        # Log the data binding we are to use
+        log.info("StdWXCalculate will use data binding %s" % data_binding)
+        # If StdArchive and StdWXCalculate use different data bindings it could
+        # be a problem. Get the data binding to be used by StdArchive.
+        std_arch_data_binding = config_dict.get('StdArchive', {}).get('data_binding',
+                                                                      'wx_binding')
+        # Is the data binding the same as will be used by StdArchive?
+        if data_binding != std_arch_data_binding:
+            # The data bindings are different, don't second guess the user but
+            # log the difference as this could be an oversight
+            log.warning("The StdWXCalculate data binding (%s) does not "
+                        "match the StdArchive data binding (%s).",
+                        data_binding, std_arch_data_binding)
+        # Now obtain a database manager using the data binding
+        self.db_manager = engine.db_binder.get_manager(data_binding=data_binding,
+                                                       initialize=True)
 
-        self.db_manager = engine.db_binder.get_manager(data_binding=data_binding, initialize=True)
-
-        # we will process both loop and archive events
+        # We will process both loop and archive events
         self.bind(weewx.NEW_LOOP_PACKET, self.new_loop_packet)
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
 
@@ -112,22 +126,25 @@ class StdWXCalculate(weewx.engine.StdService):
 
         # Go through the list of potential calculations and see which ones need to be done
         for obs in calc_dict:
-            directive = calc_dict[obs]
             # Keys in calc_dict are in unicode. Keys in packets and records are in native strings.
             # Just to keep things consistent, convert.
             obs_type = str(obs)
-            if directive == 'software' or directive == 'prefer_hardware' \
-                    and (obs_type not in data_dict or data_dict[obs_type] is None):
+            if calc_dict[obs] == 'software' \
+                    or (calc_dict[obs] == 'prefer_hardware' and data_dict.get(obs_type) is None):
+                # We need to do a calculation for type 'obs_type'. This may raise an exception,
+                # so be prepared to catch it.
                 try:
-                    # We need to do a calculation for type 'obs_type'. This may raise an exception.
                     new_value = weewx.xtypes.get_scalar(obs_type, data_dict, self.db_manager)
                 except weewx.CannotCalculate:
-                    pass
+                    # XTypes is aware of the type, but can't calculate it, probably because of
+                    # missing data. Set the type to None.
+                    data_dict[obs_type] = None
                 except weewx.UnknownType as e:
                     log.debug("Unknown extensible type '%s'" % e)
                 except weewx.UnknownAggregation as e:
                     log.debug("Unknown aggregation '%s'" % e)
                 else:
-                    # If there was no exception, add the results to the dictionary
+                    # If there was no exception, then all is good.
+                    # Add the results to the dictionary
                     data_dict[obs_type] = new_value[0]
 

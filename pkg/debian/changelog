@@ -1,3 +1,24 @@
+weewx (4.6.0b7-1) unstable; urgency=low
+  * new upstream release
+ -- Thomas Keffer (Author of weewx) <tkeffer@gmail.com>  Sat, 06 Nov 2021 15:13:04 -0700
+weewx (4.6.0b6-1) unstable; urgency=low
+  * new upstream release
+ -- Thomas Keffer (Author of weewx) <tkeffer@gmail.com>  Tue, 02 Nov 2021 15:34:16 -0700
+weewx (4.6.0b3-1) unstable; urgency=low
+  * new upstream release
+ -- Thomas Keffer (Author of weewx) <tkeffer@gmail.com>  Tue, 05 Oct 2021 15:03:48 -0700
+weewx (4.6.0b2-1) unstable; urgency=low
+  * new upstream release
+ -- Thomas Keffer (Author of weewx) <tkeffer@gmail.com>  Tue, 28 Sep 2021 15:56:05 -0700
+weewx (4.6.0b1-1) unstable; urgency=low
+  * new upstream release
+ -- Thomas Keffer (Author of weewx) <tkeffer@gmail.com>  Fri, 13 Aug 2021 09:48:47 -0700
+weewx (4.6.0a4-1) unstable; urgency=low
+  * new upstream release
+ -- Thomas Keffer (Author of weewx) <tkeffer@gmail.com>  Sun, 30 May 2021 16:47:43 -0700
+weewx (4.6.0a3-1) unstable; urgency=low
+  * new upstream release
+ -- Thomas Keffer (Author of weewx) <tkeffer@gmail.com>  Mon, 24 May 2021 10:01:01 -0700
 weewx (4.5.1-1) unstable; urgency=low
   * new upstream release
  -- Thomas Keffer (Author of weewx) <tkeffer@gmail.com>  Fri, 02 Apr 2021 13:15:41 -0700

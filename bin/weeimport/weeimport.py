@@ -1,6 +1,5 @@
 #
-#    Copyright (c) 2009-2019 Tom Keffer <tkeffer@gmail.com> and
-#                            Gary Roderick
+#    Copyright (c) 2009-2021 Tom Keffer <tkeffer@gmail.com> and Gary Roderick
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -176,7 +175,11 @@ class Source(object):
             self.archive_unit_sys = self.dbm.std_unit_system
 
         # get ourselves a QC object to do QC on imported records
-        self.import_QC = weewx.qc.QC(config_dict, parent='weeimport')
+        try:
+            mm_dict = config_dict['StdQC']['MinMax']
+        except KeyError:
+            mm_dict = {}
+        self.import_QC = weewx.qc.QC(mm_dict)
 
         # Process our command line options
         self.dry_run = options.dry_run
@@ -620,7 +623,7 @@ class Source(object):
 
             # usUnits. We don't have to have a mapping for usUnits but if we
             # don't then we must have 'units' specified for each field mapping.
-            if 'usUnits' not in _map:
+            if 'usUnits' not in _map or _map['usUnits'].get('field_name') is None:
                 # no unit system mapping do we have units specified for
                 # each individual field
                 for _key, _val in six.iteritems(_map):
@@ -628,7 +631,8 @@ class Source(object):
                     if _key not in ['dateTime', 'usUnits']:
                         if 'units' in _val:
                             # we have a units field, do we know about it
-                            if _val['units'] not in weewx.units.default_unit_format_dict:
+                            if _val['units'] not in weewx.units.conversionDict \
+                                    and _val['units'] not in weewx.units.USUnits.values():
                                 # we have an invalid unit string so tell the
                                 # user and exit
                                 _msg = "Unknown units '%s' specified for " \

@@ -15,6 +15,7 @@ from weeutil.weeutil import *  # @UnusedWildImport
 os.environ['TZ'] = 'America/Los_Angeles'
 time.tzset()
 
+
 def timestamp_to_local(ts):
     """Return a string in local time"""
     return timestamp_to_string(ts, "%Y-%m-%d %H:%M:%S")
@@ -37,6 +38,9 @@ class WeeutilTest(unittest.TestCase):
         self.assertEqual(rounder([complex(1.2345, -2.1191), complex(5.1921, 11.2092)], 2),
                          [complex(1.23, -2.12), complex(5.19, 11.21)])
         self.assertIsNone(rounder(None, 2))
+        self.assertEqual(rounder(1.2345, None), 1.2345)
+        self.assertEqual(rounder(Polar(1.2345, 6.7890), 2), Polar(1.23, 6.79))
+        self.assertEqual(rounder('abc', 2), 'abc')
 
     def test_option_as_list(self):
 
@@ -94,6 +98,15 @@ class WeeutilTest(unittest.TestCase):
         self.assertEqual(result, [1357027200, 1359705600, 1362124800, 1364799600, 1367391600,
                                   1370070000, 1372662000, 1375340400, 1378018800, 1380610800,
                                   1383289200, 1385884800, 1388563200])
+
+    def test_nominal_spans(self):
+
+        self.assertEqual(nominal_spans(1800), 1800)
+        self.assertEqual(nominal_spans('hour'), 3600)
+        self.assertEqual(nominal_spans('HOUR'), 3600)
+        self.assertIsNone(nominal_spans(None))
+        with self.assertRaises(KeyError):
+            nominal_spans('foo')
 
     def test_intervalgen(self):
 
@@ -209,10 +222,12 @@ class WeeutilTest(unittest.TestCase):
         time.tzset()
         time_ts = time.mktime(time.strptime("2015-07-21 09:05:35", "%Y-%m-%d %H:%M:%S"))
         self.assertEqual(time_ts, 1437433535)
-        self.assertEqual(archiveSpanSpan(time_ts, time_delta=3600), TimeSpan(1437429935, 1437433535))
+        self.assertEqual(archiveSpanSpan(time_ts, time_delta=3600),
+                         TimeSpan(1437429935, 1437433535))
         self.assertEqual(archiveSpanSpan(time_ts, hour_delta=6), TimeSpan(1437411935, 1437433535))
         self.assertEqual(archiveSpanSpan(time_ts, day_delta=1), TimeSpan(1437347135, 1437433535))
-        self.assertEqual(archiveSpanSpan(time_ts, time_delta=3600, day_delta=1), TimeSpan(1437343535, 1437433535))
+        self.assertEqual(archiveSpanSpan(time_ts, time_delta=3600, day_delta=1),
+                         TimeSpan(1437343535, 1437433535))
         self.assertEqual(archiveSpanSpan(time_ts, week_delta=4), TimeSpan(1435014335, 1437433535))
         self.assertEqual(archiveSpanSpan(time_ts, month_delta=1), TimeSpan(1434841535, 1437433535))
         self.assertEqual(archiveSpanSpan(time_ts, year_delta=1), TimeSpan(1405897535, 1437433535))
@@ -233,14 +248,18 @@ class WeeutilTest(unittest.TestCase):
     def test_isMidnight(self):
         os.environ['TZ'] = 'America/Los_Angeles'
         time.tzset()
-        self.assertFalse(isMidnight(time.mktime(time.strptime("2013-07-04 01:57:35", "%Y-%m-%d %H:%M:%S"))))
-        self.assertTrue(isMidnight(time.mktime(time.strptime("2013-07-04 00:00:00", "%Y-%m-%d %H:%M:%S"))))
+        self.assertFalse(isMidnight(time.mktime(time.strptime("2013-07-04 01:57:35",
+                                                              "%Y-%m-%d %H:%M:%S"))))
+        self.assertTrue(isMidnight(time.mktime(time.strptime("2013-07-04 00:00:00",
+                                                             "%Y-%m-%d %H:%M:%S"))))
 
     def test_isStartOfDay(self):
         os.environ['TZ'] = 'America/Los_Angeles'
         time.tzset()
-        self.assertFalse(isStartOfDay(time.mktime(time.strptime("2013-07-04 01:57:35", "%Y-%m-%d %H:%M:%S"))))
-        self.assertTrue(isStartOfDay(time.mktime(time.strptime("2013-07-04 00:00:00", "%Y-%m-%d %H:%M:%S"))))
+        self.assertFalse(isStartOfDay(time.mktime(time.strptime("2013-07-04 01:57:35",
+                                                                "%Y-%m-%d %H:%M:%S"))))
+        self.assertTrue(isStartOfDay(time.mktime(time.strptime("2013-07-04 00:00:00",
+                                                               "%Y-%m-%d %H:%M:%S"))))
 
         # Brazilian DST starts at midnight
         os.environ['TZ'] = 'America/Sao_Paulo'
@@ -401,13 +420,21 @@ class WeeutilTest(unittest.TestCase):
         tright = TimeSpan(1232000000, 1233000000)
         self.assertFalse(t.includes(tright))
 
+        # Test dictionary lookups. This will test hash and equality.
         dic = {}
         dic[t] = 't'
         dic[tsub] = 'tsub'
         dic[tleft] = 'tleft'
         dic[tright] = 'tright'
-
         self.assertEqual(dic[t], 't')
+
+        self.assertTrue(t.includesArchiveTime(1230000001))
+        self.assertFalse(t.includesArchiveTime(1230000000))
+
+        self.assertEqual(t.length, 1231000000 - 1230000000)
+
+        with self.assertRaises(ValueError):
+            no_t = TimeSpan(1231000000, 1230000000)
 
     def test_genYearSpans(self):
 
@@ -420,8 +447,9 @@ class WeeutilTest(unittest.TestCase):
 
         yearlist = [span for span in genYearSpans(start_ts, stop_ts)]
 
-        expected = ["[2007-01-01 00:00:00 PST (1167638400) -> 2008-01-01 00:00:00 PST (1199174400)]",
-                    "[2008-01-01 00:00:00 PST (1199174400) -> 2009-01-01 00:00:00 PST (1230796800)]"]
+        expected = [
+            "[2007-01-01 00:00:00 PST (1167638400) -> 2008-01-01 00:00:00 PST (1199174400)]",
+            "[2008-01-01 00:00:00 PST (1199174400) -> 2009-01-01 00:00:00 PST (1230796800)]"]
 
         for got, expect in zip(yearlist, expected):
             self.assertEqual(str(got), expect)
@@ -437,9 +465,10 @@ class WeeutilTest(unittest.TestCase):
 
         monthlist = [span for span in genMonthSpans(start_ts, stop_ts)]
 
-        expected = ["[2007-12-01 00:00:00 PST (1196496000) -> 2008-01-01 00:00:00 PST (1199174400)]",
-                    "[2008-01-01 00:00:00 PST (1199174400) -> 2008-02-01 00:00:00 PST (1201852800)]",
-                    "[2008-02-01 00:00:00 PST (1201852800) -> 2008-03-01 00:00:00 PST (1204358400)]"]
+        expected = [
+            "[2007-12-01 00:00:00 PST (1196496000) -> 2008-01-01 00:00:00 PST (1199174400)]",
+            "[2008-01-01 00:00:00 PST (1199174400) -> 2008-02-01 00:00:00 PST (1201852800)]",
+            "[2008-02-01 00:00:00 PST (1201852800) -> 2008-03-01 00:00:00 PST (1204358400)]"]
 
         for got, expect in zip(monthlist, expected):
             self.assertEqual(str(got), expect)
@@ -450,10 +479,11 @@ class WeeutilTest(unittest.TestCase):
 
         monthlist = [span for span in genMonthSpans(start_ts, stop_ts)]
 
-        expected = ["[2007-12-01 00:00:00 PST (1196496000) -> 2008-01-01 00:00:00 PST (1199174400)]",
-                    "[2008-01-01 00:00:00 PST (1199174400) -> 2008-02-01 00:00:00 PST (1201852800)]",
-                    "[2008-02-01 00:00:00 PST (1201852800) -> 2008-03-01 00:00:00 PST (1204358400)]",
-                    "[2008-03-01 00:00:00 PST (1204358400) -> 2008-04-01 00:00:00 PDT (1207033200)]"]
+        expected = [
+            "[2007-12-01 00:00:00 PST (1196496000) -> 2008-01-01 00:00:00 PST (1199174400)]",
+            "[2008-01-01 00:00:00 PST (1199174400) -> 2008-02-01 00:00:00 PST (1201852800)]",
+            "[2008-02-01 00:00:00 PST (1201852800) -> 2008-03-01 00:00:00 PST (1204358400)]",
+            "[2008-03-01 00:00:00 PST (1204358400) -> 2008-04-01 00:00:00 PDT (1207033200)]"]
 
         for got, expect in zip(monthlist, expected):
             self.assertEqual(str(got), expect)
@@ -469,20 +499,21 @@ class WeeutilTest(unittest.TestCase):
 
         daylist = [span for span in genDaySpans(start_ts, stop_ts)]
 
-        expected = ["[2007-12-23 00:00:00 PST (1198396800) -> 2007-12-24 00:00:00 PST (1198483200)]",
-                    "[2007-12-24 00:00:00 PST (1198483200) -> 2007-12-25 00:00:00 PST (1198569600)]",
-                    "[2007-12-25 00:00:00 PST (1198569600) -> 2007-12-26 00:00:00 PST (1198656000)]",
-                    "[2007-12-26 00:00:00 PST (1198656000) -> 2007-12-27 00:00:00 PST (1198742400)]",
-                    "[2007-12-27 00:00:00 PST (1198742400) -> 2007-12-28 00:00:00 PST (1198828800)]",
-                    "[2007-12-28 00:00:00 PST (1198828800) -> 2007-12-29 00:00:00 PST (1198915200)]",
-                    "[2007-12-29 00:00:00 PST (1198915200) -> 2007-12-30 00:00:00 PST (1199001600)]",
-                    "[2007-12-30 00:00:00 PST (1199001600) -> 2007-12-31 00:00:00 PST (1199088000)]",
-                    "[2007-12-31 00:00:00 PST (1199088000) -> 2008-01-01 00:00:00 PST (1199174400)]",
-                    "[2008-01-01 00:00:00 PST (1199174400) -> 2008-01-02 00:00:00 PST (1199260800)]",
-                    "[2008-01-02 00:00:00 PST (1199260800) -> 2008-01-03 00:00:00 PST (1199347200)]",
-                    "[2008-01-03 00:00:00 PST (1199347200) -> 2008-01-04 00:00:00 PST (1199433600)]",
-                    "[2008-01-04 00:00:00 PST (1199433600) -> 2008-01-05 00:00:00 PST (1199520000)]",
-                    "[2008-01-05 00:00:00 PST (1199520000) -> 2008-01-06 00:00:00 PST (1199606400)]"]
+        expected = [
+            "[2007-12-23 00:00:00 PST (1198396800) -> 2007-12-24 00:00:00 PST (1198483200)]",
+            "[2007-12-24 00:00:00 PST (1198483200) -> 2007-12-25 00:00:00 PST (1198569600)]",
+            "[2007-12-25 00:00:00 PST (1198569600) -> 2007-12-26 00:00:00 PST (1198656000)]",
+            "[2007-12-26 00:00:00 PST (1198656000) -> 2007-12-27 00:00:00 PST (1198742400)]",
+            "[2007-12-27 00:00:00 PST (1198742400) -> 2007-12-28 00:00:00 PST (1198828800)]",
+            "[2007-12-28 00:00:00 PST (1198828800) -> 2007-12-29 00:00:00 PST (1198915200)]",
+            "[2007-12-29 00:00:00 PST (1198915200) -> 2007-12-30 00:00:00 PST (1199001600)]",
+            "[2007-12-30 00:00:00 PST (1199001600) -> 2007-12-31 00:00:00 PST (1199088000)]",
+            "[2007-12-31 00:00:00 PST (1199088000) -> 2008-01-01 00:00:00 PST (1199174400)]",
+            "[2008-01-01 00:00:00 PST (1199174400) -> 2008-01-02 00:00:00 PST (1199260800)]",
+            "[2008-01-02 00:00:00 PST (1199260800) -> 2008-01-03 00:00:00 PST (1199347200)]",
+            "[2008-01-03 00:00:00 PST (1199347200) -> 2008-01-04 00:00:00 PST (1199433600)]",
+            "[2008-01-04 00:00:00 PST (1199433600) -> 2008-01-05 00:00:00 PST (1199520000)]",
+            "[2008-01-05 00:00:00 PST (1199520000) -> 2008-01-06 00:00:00 PST (1199606400)]"]
 
         for got, expect in zip(daylist, expected):
             self.assertEqual(str(got), expect)
@@ -491,7 +522,8 @@ class WeeutilTest(unittest.TestCase):
         daylist = [span for span in genDaySpans(time.mktime((2007, 12, 1, 0, 0, 0, 0, 0, -1)),
                                                 time.mktime((2007, 12, 2, 0, 0, 0, 0, 0, -1)))]
 
-        expected = ["[2007-12-01 00:00:00 PST (1196496000) -> 2007-12-02 00:00:00 PST (1196582400)]"]
+        expected = [
+            "[2007-12-01 00:00:00 PST (1196496000) -> 2007-12-02 00:00:00 PST (1196582400)]"]
         for got, expect in zip(daylist, expected):
             self.assertEqual(str(got), expect)
 
@@ -506,14 +538,15 @@ class WeeutilTest(unittest.TestCase):
 
         hourlist = [span for span in genHourSpans(start_ts, stop_ts)]
 
-        expected = ["[2007-12-23 20:00:00 PST (1198468800) -> 2007-12-23 21:00:00 PST (1198472400)]",
-                    "[2007-12-23 21:00:00 PST (1198472400) -> 2007-12-23 22:00:00 PST (1198476000)]",
-                    "[2007-12-23 22:00:00 PST (1198476000) -> 2007-12-23 23:00:00 PST (1198479600)]",
-                    "[2007-12-23 23:00:00 PST (1198479600) -> 2007-12-24 00:00:00 PST (1198483200)]",
-                    "[2007-12-24 00:00:00 PST (1198483200) -> 2007-12-24 01:00:00 PST (1198486800)]",
-                    "[2007-12-24 01:00:00 PST (1198486800) -> 2007-12-24 02:00:00 PST (1198490400)]",
-                    "[2007-12-24 02:00:00 PST (1198490400) -> 2007-12-24 03:00:00 PST (1198494000)]",
-                    "[2007-12-24 03:00:00 PST (1198494000) -> 2007-12-24 04:00:00 PST (1198497600)]", ]
+        expected = [
+            "[2007-12-23 20:00:00 PST (1198468800) -> 2007-12-23 21:00:00 PST (1198472400)]",
+            "[2007-12-23 21:00:00 PST (1198472400) -> 2007-12-23 22:00:00 PST (1198476000)]",
+            "[2007-12-23 22:00:00 PST (1198476000) -> 2007-12-23 23:00:00 PST (1198479600)]",
+            "[2007-12-23 23:00:00 PST (1198479600) -> 2007-12-24 00:00:00 PST (1198483200)]",
+            "[2007-12-24 00:00:00 PST (1198483200) -> 2007-12-24 01:00:00 PST (1198486800)]",
+            "[2007-12-24 01:00:00 PST (1198486800) -> 2007-12-24 02:00:00 PST (1198490400)]",
+            "[2007-12-24 02:00:00 PST (1198490400) -> 2007-12-24 03:00:00 PST (1198494000)]",
+            "[2007-12-24 03:00:00 PST (1198494000) -> 2007-12-24 04:00:00 PST (1198497600)]", ]
 
         for got, expect in zip(hourlist, expected):
             self.assertEqual(str(got), expect)
@@ -522,7 +555,8 @@ class WeeutilTest(unittest.TestCase):
         hourlist = [span for span in genHourSpans(time.mktime((2007, 12, 1, 3, 0, 0, 0, 0, -1)),
                                                   time.mktime((2007, 12, 1, 4, 0, 0, 0, 0, -1)))]
 
-        expected = ["[2007-12-01 03:00:00 PST (1196506800) -> 2007-12-01 04:00:00 PST (1196510400)]"]
+        expected = [
+            "[2007-12-01 03:00:00 PST (1196506800) -> 2007-12-01 04:00:00 PST (1196510400)]"]
 
         for got, expect in zip(hourlist, expected):
             self.assertEqual(str(got), expect)
@@ -736,10 +770,12 @@ class WeeutilTest(unittest.TestCase):
                 self.assertEqual("%s %s" % (timestamp_to_gmtime(t[0]), timestamp_to_local(t[0])),
                                  expected[i][j][1],
                                  msg="times=%s; location=%s" % (t, l))
-                self.assertEqual("%s %s" % (timestamp_to_gmtime(values[0]), timestamp_to_local(values[0])),
+                self.assertEqual("%s %s" % (timestamp_to_gmtime(values[0]),
+                                            timestamp_to_local(values[0])),
                                  expected[i][j][2],
                                  msg="times=%s; location=%s" % (t, l))
-                self.assertEqual("%s %s" % (timestamp_to_gmtime(values[1]), timestamp_to_local(values[1])),
+                self.assertEqual("%s %s" % (timestamp_to_gmtime(values[1]),
+                                            timestamp_to_local(values[1])),
                                  expected[i][j][3],
                                  msg="times=%s; location=%s" % (t, l))
                 self.assertEqual("%s %s" % (timestamp_to_gmtime(t[1]), timestamp_to_local(t[1])),
@@ -773,6 +809,22 @@ class WeeutilTest(unittest.TestCase):
 
         seq = [x for x in tester(g_with_peek)]
         self.assertEqual(seq, ["0", "1", "peek: 2", "2", "3", "peek: 4", "4"])
+
+    def test_GenByBatch(self):
+        # Define a generator function:
+        def genfunc(N):
+            for i in range(N):
+                yield i
+
+        # Now wrap it with the GenByBatch object. First fetch everything in one batch:
+        seq = [x for x in GenByBatch(genfunc(10), 0)]
+        self.assertEqual(seq, list(range(10)))
+        # Now try it again, fetching in batches of 2:
+        seq = [x for x in GenByBatch(genfunc(10), 2)]
+        self.assertEqual(seq, list(range(10)))
+        # Oddball batch size
+        seq = [x for x in GenByBatch(genfunc(10), 3)]
+        self.assertEqual(seq, list(range(10)))
 
     def test_to_bool(self):
 
@@ -808,6 +860,21 @@ class WeeutilTest(unittest.TestCase):
         self.assertIsNone(to_float('NONE'))
         self.assertIsNone(to_float(u'NONE'))
 
+    def test_to_complex(self):
+        self.assertAlmostEqual(to_complex(1.0, 0.0), complex(0.0, 1.0), 6)
+        self.assertAlmostEqual(to_complex(1.0, 90), complex(1.0, 0.0), 6)
+        self.assertIsNone(to_complex(None, 90.0))
+        self.assertEqual(to_complex(0.0, 90.0), complex(0.0, 0.0))
+        self.assertIsNone(to_complex(1.0, None))
+
+    def test_Polar(self):
+        p = Polar(1.0, 90.0)
+        self.assertEqual(p.mag, 1.0)
+        self.assertEqual(p.dir, 90.0)
+        p = Polar.from_complex(complex(1.0, 0.0))
+        self.assertEqual(p.mag, 1.0)
+        self.assertEqual(p.dir, 90.0)
+        self.assertEqual(str(p), '(1.0, 90.0)')
 
     # def test_to_unicode(self):
     #
@@ -854,6 +921,19 @@ class WeeutilTest(unittest.TestCase):
         kd = KeyDict(a_dict)
         self.assertEqual(kd['a'], 1)
         self.assertEqual(kd['bad_key'], 'bad_key')
+
+    def test_is_iterable(self):
+        self.assertFalse(is_iterable('abc'))
+        self.assertTrue(is_iterable([1, 2, 3]))
+        i = iter([1, 2, 3])
+        self.assertTrue(is_iterable(i))
+
+    # def test_secs_to_string(self):
+    #     self.assertEqual(secs_to_string(86400 + 3600 + 312), '1 day, 1 hour, 5 minutes')
+
+    def test_latlon_string(self):
+        self.assertEqual(latlon_string(-12.3, ('N', 'S'), 'lat'), ('12', '18.00', 'S'))
+        self.assertEqual(latlon_string(-123.3, ('E', 'W'), 'long'), ('123', '18.00', 'W'))
 
 
 if __name__ == '__main__':

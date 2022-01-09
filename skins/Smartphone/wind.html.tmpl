@@ -1,9 +1,9 @@
 #encoding UTF-8
 <!DOCTYPE html>
-<html lang="$gettext.lang">
+<html lang="$lang">
 <head>
   <meta charset="UTF-8">
-  <title>$obs.label.wind $gettext["in"] $station.location</title>
+  <title>$obs.label.wind $gettext("in") $station.location</title>
   <link rel="stylesheet" href="http://code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.css" />
   <script src="http://code.jquery.com/jquery-1.7.1.min.js"></script>
   <script type="text/javascript" src="http://code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.js"></script>
@@ -15,26 +15,26 @@
       <h1>$obs.label.wind</h1>
     </div>
     <div data-role="content">
-      <h4>$gettext["24h"] $obs.label.wind</h4>
+      <h4>$gettext("24h wind")</h4>
       <img src="daywind.png"/>
       <img src="daywinddir.png"/>
       <p>
-	$gettext["max"]: $day.windSpeed.max $gettext["at"] $day.windSpeed.maxtime
-	$gettext["max gust"]: $day.windGust.max $gettext["at"] $day.windGust.maxtime
+	$gettext("max"): $day.windSpeed.max $gettext("at") $day.windSpeed.maxtime
+	$gettext("max gust"): $day.windGust.max $gettext("at") $day.windGust.maxtime
       </p>      
-      <h4>$gettext["Last 7 days"] $obs.label.wind</h4>
+      <h4>$gettext("Last 7 days") $obs.label.wind</h4>
       <img src="weekwind.png" />
       <img src="weekwinddir.png" />
       <p>
-	$gettext["max"]: $week.windSpeed.max $gettext["at"] $week.windSpeed.maxtime
-	$gettext["max gust"]: $week.windGust.max $gettext["at"] $week.windGust.maxtime
+	$gettext("max"): $week.windSpeed.max $gettext("at") $week.windSpeed.maxtime
+	$gettext("max gust"): $week.windGust.max $gettext("at") $week.windGust.maxtime
       </p>
-      <h4>$gettext["Last 30 days"] $obs.label.wind</h4>
+      <h4>$gettext("Last 30 days") $obs.label.wind</h4>
       <img src="monthwind.png" />
       <img src="monthwinddir.png" />
       <p>
-	$gettext["max"]: $month.windSpeed.max $gettext["at"] $month.windSpeed.maxtime
-	$gettext["max gust"]: $month.windGust.max $gettext["at"] $month.windGust.maxtime
+	$gettext("max"): $month.windSpeed.max $gettext("at") $month.windSpeed.maxtime
+	$gettext("max gust"): $month.windGust.max $gettext("at") $month.windGust.maxtime
       </p>
     </div>
     <div data-role="footer">

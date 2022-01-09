@@ -1,9 +1,9 @@
 #encoding UTF-8
 <!DOCTYPE html>
-<html lang="$gettext.lang">
+<html lang="$lang">
 <head>
   <meta charset="UTF-8">
-  <title>$obs.label.outTemp $gettext["in"] $station.location</title>
+  <title>$obs.label.outTemp $gettext("in") $station.location</title>
   <link rel="stylesheet" href="https://code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.css" />
   <script src="https://code.jquery.com/jquery-1.7.1.min.js"></script>
   <script type="text/javascript" src="https://code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.js"></script>
@@ -15,23 +15,23 @@
       <h1>$obs.label.outTemp</h1>
     </div>
     <div data-role="content">
-      <h4>$gettext["24h"] $obs.label.outTemp</h4>
+      <h4>$gettext("24h outside temperature")</h4>
       <img src="daytempdew.png"/>
       <p>
-	$gettext["min"]: $day.outTemp.min $gettext["at"] $day.outTemp.mintime<br/>
-	$gettext["max"]: $day.outTemp.max $gettext["at"] $day.outTemp.maxtime
+	$gettext("min"): $day.outTemp.min $gettext("at") $day.outTemp.mintime<br/>
+	$gettext("max"): $day.outTemp.max $gettext("at") $day.outTemp.maxtime
       </p>
-      <h4>$gettext["Last 7 days"] $obs.label.outTemp</h4>
+      <h4>$gettext("Last 7 days") $obs.label.outTemp</h4>
       <img src="weektempdew.png"/>
       <p>
-	$gettext["min"]: $week.outTemp.min $gettext["at"] $week.outTemp.mintime<br/>
-	$gettext["max"]: $week.outTemp.max $gettext["at"] $week.outTemp.maxtime
+	$gettext("min"): $week.outTemp.min $gettext("at") $week.outTemp.mintime<br/>
+	$gettext("max"): $week.outTemp.max $gettext("at") $week.outTemp.maxtime
       </p>
-      <h4>$gettext["Last 30 days"] $obs.label.outTemp</h4>
+      <h4>$gettext("Last 30 days") $obs.label.outTemp</h4>
       <img src="monthtempdew.png"/>
       <p>
-	$gettext["min"]: $month.outTemp.min $gettext["at"] $month.outTemp.mintime<br/>
-	$gettext["max"]: $month.outTemp.max $gettext["at"] $month.outTemp.maxtime
+	$gettext("min"): $month.outTemp.min $gettext("at") $month.outTemp.mintime<br/>
+	$gettext("max"): $month.outTemp.max $gettext("at") $month.outTemp.maxtime
       </p>
     </div>
     <div data-role="footer">

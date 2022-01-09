@@ -22,7 +22,7 @@ import six
 
 import weewx
 import weeutil.weeutil
-from weeutil.weeutil import ListOfDicts
+from weeutil.weeutil import ListOfDicts, Polar, is_iterable
 
 log = logging.getLogger(__name__)
 
@@ -38,11 +38,20 @@ SECS_PER_DAY   = 86400
 def CtoK(x):
     return x + 273.15
 
+def KtoC(x):
+    return x - 273.15
+
+def KtoF(x):
+    return CtoF(KtoC(x))
+
+def FtoK(x):
+    return CtoK(FtoC(x))
+
 def CtoF(x):
     return x * 1.8 + 32.0
 
 def FtoC(x):
-    return (x - 32.0) * 5.0 / 9.0
+    return (x - 32.0) / 1.8
 
 # Conversions to and from Felsius.
 # For the definition of Felsius, see https://xkcd.com/1923/
@@ -163,6 +172,7 @@ obs_group_dict = ListOfDicts({
     "o3"                        : "group_fraction",
     "outHumidity"               : "group_percent",
     "outTemp"                   : "group_temperature",
+    "outWetbulb"                : "group_temperature",
     "pb"                        : "group_fraction",
     "pm1_0"                     : "group_concentration",
     "pm2_5"                     : "group_concentration",
@@ -200,6 +210,7 @@ obs_group_dict = ListOfDicts({
     "wind"                      : "group_speed",
     "windchill"                 : "group_temperature",
     "windDir"                   : "group_direction",
+    "windDir10"                 : "group_direction",
     "windGust"                  : "group_speed",
     "windGustDir"               : "group_direction",
     "windgustvec"               : "group_speed",
@@ -227,6 +238,7 @@ agg_group = {
     'min_le'     : "group_count",
     'minmaxtime' : "group_time",
     'mintime'    : "group_time",
+    'not_null'   : "group_boolean",
     'sum_ge'     : "group_count",
     'sum_le'     : "group_count",
     'vecdir'     : "group_direction",
@@ -239,6 +251,7 @@ agg_group = {
 USUnits = ListOfDicts({
     "group_altitude"    : "foot",
     "group_amp"         : "amp",
+    "group_boolean"     : "boolean",
     "group_concentration": "microgram_per_meter_cubed",
     "group_count"       : "count",
     "group_data"        : "byte",
@@ -276,6 +289,7 @@ USUnits = ListOfDicts({
 MetricUnits = ListOfDicts({
     "group_altitude"    : "meter",
     "group_amp"         : "amp",
+    "group_boolean"     : "boolean",
     "group_concentration": "microgram_per_meter_cubed",
     "group_count"       : "count",
     "group_data"        : "byte",
@@ -340,13 +354,17 @@ conversionDict = {
                           'minute'           : lambda x : x*1440.0,
                           'hour'             : lambda x : x*24.0},
     'degree_C'         : {'degree_F'         : CtoF,
-                          'degree_E'         : CtoE},
+                          'degree_E'         : CtoE,
+                          'degree_K'         : CtoK},
     'degree_C_day'     : {'degree_F_day'     : lambda x : x * (9.0/5.0)},
     'degree_E'         : {'degree_C'         : EtoC,
                           'degree_F'         : EtoF},
     'degree_F'         : {'degree_C'         : FtoC,
-                          'degree_E'         : FtoE},
+                          'degree_E'         : FtoE,
+                          'degree_K'         : FtoK},
     'degree_F_day'     : {'degree_C_day'     : lambda x : x * (5.0/9.0)},
+    'degree_K'         : {'degree_C'         : KtoC,
+                          'degreeF'          : KtoF},
     'dublin_jd'        : {'unix_epoch'       : lambda x : (x-25567.5) * SECS_PER_DAY,
                           'unix_epoch_ms'    : lambda x : (x-25567.5) * SECS_PER_DAY * 1000,
                           'unix_epoch_ns'    : lambda x : (x-25567.5) * SECS_PER_DAY * 1e06},
@@ -464,151 +482,19 @@ conversionDict = {
                           'watt_hour'        : lambda x : x / 3600.0},
 }
 
-# Default unit formatting when nothing specified in skin configuration file
-default_unit_format_dict = {
-    "amp"                : "%.1f",
-    "bit"                : "%.0f",
-    "byte"               : "%.0f",
-    "centibar"           : "%.0f",
-    "cm"                 : "%.2f",
-    "cm_per_hour"        : "%.2f",
-    "count"              : "%d",
-    "cubic_foot"         : "%.1f",
-    "day"                : "%.1f",
-    "dB"                 : "%.0f",
-    "degree_C"           : "%.1f",
-    "degree_C_day"       : "%.1f",
-    "degree_E"           : "%.1f",
-    "degree_F"           : "%.1f",
-    "degree_F_day"       : "%.1f",
-    "degree_compass"     : "%.0f",
-    "foot"               : "%.0f",
-    "gallon"             : "%.1f",
-    "hPa"                : "%.1f",
-    "hPa_per_hour"       : "%.3f",
-    "hour"               : "%.1f",
-    "inHg"               : "%.3f",
-    "inHg_per_hour"      : "%.5f",
-    "inch"               : "%.2f",
-    "inch_per_hour"      : "%.2f",
-    "kilowatt_hour"      : "%.1f",
-    "km"                 : "%.1f",
-    "km_per_hour"        : "%.0f",
-    "km_per_hour2"       : "%.1f",
-    "knot"               : "%.0f",
-    "knot2"              : "%.1f",
-    "kPa"                : "%.2f",
-    "kPa_per_hour"       : "%.4f",
-    "liter"              : "%.1f",
-    "litre"              : "%.1f",
-    "lux"                : "%.0f",
-    "mbar"               : "%.1f",
-    "mbar_per_hour"      : "%.4f",
-    "mega_joule"         : "%.0f",
-    "meter"              : "%.0f",
-    "meter_per_second"   : "%.0f",
-    "meter_per_second2"  : "%.1f",
-    "microgram_per_meter_cubed": "%.3f",
-    "mile"               : "%.1f",
-    "mile_per_hour"      : "%.0f",
-    "mile_per_hour2"     : "%.1f",
-    "mm"                 : "%.1f",
-    "mmHg"               : "%.1f",
-    "mmHg_per_hour"      : "%.4f",
-    "mm_per_hour"        : "%.1f",
-    "percent"            : "%.0f",
-    "ppm"                : "%.0f",
-    "second"             : "%.0f",
-    "uv_index"           : "%.1f",
-    "volt"               : "%.1f",
-    "watt"               : "%.1f",
-    "watt_second"        : "%.0f",
-    "watt_hour"          : "%.1f",
-    "watt_per_meter_squared" : "%.0f",
-    "NONE"              : u"   N/A"
-}
 
-# Default unit labels to be used in the absence of a skin configuration file
-default_unit_label_dict = {
-    "amp"               : u" amp",
-    "bit"               : u" b",
-    "byte"              : u" B",
-    "centibar"          : u" cb",
-    "cm"                : u" cm",
-    "cm_per_hour"       : u" cm/h",
-    "cubic_foot"        : u" ft³",
-    "day"               : (u" day", u" days"),
-    "dB"                : u" dB",
-    "degree_C"          : u"°C",
-    "degree_C_day"      : u"°C-day",
-    "degree_E"          : u"°E",
-    "degree_F"          : u"°F",
-    "degree_F_day"      : u"°F-day",
-    "degree_compass"    : u"°",
-    "foot"              : u" feet",
-    "gallon"            : u" gal",
-    "hPa"               : u" hPa",
-    "hPa_per_hour"      : u" hPa/h",
-    "inHg"              : u" inHg",
-    "inHg_per_hour"     : u" inHg/h",
-    "hour"              : (u" hour", u" hours"),
-    "inch"              : u" in",
-    "inch_per_hour"     : u" in/h",
-    "kilowatt_hour"     : u" kWh",
-    "km"                : u" km",
-    "km_per_hour"       : u" kph",
-    "km_per_hour2"      : u" kph",
-    "knot"              : u" knots",
-    "knot2"             : u" knots",
-    "kPa"               : u" kPa",
-    "kPa_per_hour"      : u" kPa/h",
-    "liter"             : u" l",
-    "litre"             : u" l",
-    "lux"               : u" lx",
-    "mbar"              : u" mbar",
-    "mbar_per_hour"     : u" mbar/h",
-    "mega_joule"        : u" MJ",
-    "meter"             : u" meters",
-    "meter_per_second"  : u" m/s",
-    "meter_per_second2" : u" m/s",
-    "microgram_per_meter_cubed": u"µg/m³",
-    "mile"              : u" mile",
-    "mile_per_hour"     : u" mph",
-    "mile_per_hour2"    : u" mph",
-    "minute"            : (u" minute", u" minutes"),
-    "mm"                : u" mm",
-    "mmHg"              : u" mmHg",
-    "mm_per_hour"       : u" mm/h",
-    "mmHg_per_hour"     : u" mmHg/h",
-    "percent"           : u"%",
-    "second"            : (u" second", u" seconds"),
-    "uv_index"          : u"",
-    "volt"              : u" V",
-    "watt"              : u" W",
-    "watt_second"       : u" Ws",
-    "watt_hour"         : u" Wh",
-    "watt_per_meter_squared" : u" W/m²",
-    "NONE"              : u""
-}
+# These used to hold default values for formats and labels, but that has since been moved
+# to units.defaults. However, they are still used by modules that extend the unit system
+# programmatically.
+default_unit_format_dict = {}
+default_unit_label_dict = {}
 
-# Default strftime formatting to be used in the absence of a skin
-# configuration file. The entry for delta_time uses a special
-# encoding.
-default_time_format_dict = {
-    "day"        : "%H:%M",
-    "week"       : "%H:%M on %A",
-    "month"      : "%d-%b-%Y %H:%M",
-    "year"       : "%d-%b-%Y %H:%M",
-    "rainyear"   : "%d-%b-%Y %H:%M",
-    "current"    : "%d-%b-%Y %H:%M",
-    "ephem_day"  : "%H:%M",
-    "ephem_year" : "%d-%b-%Y %H:%M",
-    "delta_time" : "%(day)d%(day_label)s, %(hour)d%(hour_label)s, "
-                   "%(minute)d%(minute_label)s"
-}
+DEFAULT_DELTATIME_FORMAT = "%(day)d%(day_label)s, " \
+                           "%(hour)d%(hour_label)s, " \
+                           "%(minute)d%(minute_label)s"
 
 # Default mapping from compass degrees to ordinals
-default_ordinate_names = [
+DEFAULT_ORDINATE_NAMES = [
     'N', 'NNE','NE', 'ENE', 'E', 'ESE', 'SE', 'SSE',
     'S', 'SSW','SW', 'WSW', 'W', 'WNW', 'NW', 'NNW',
     'N/A'
@@ -619,7 +505,7 @@ complex_conversions = {
     'y': lambda c: c.imag if c is not None else None,
     'magnitude': lambda c: abs(c) if c is not None else None,
     'direction': weeutil.weeutil.dirN,
-    'polar': lambda c: (abs(c), weeutil.weeutil.dirN(c)) if c is not None else None,
+    'polar': lambda c: weeutil.weeutil.Polar.from_complex(c) if c is not None else None,
 }
 
 class ValueTuple(tuple):
@@ -674,54 +560,12 @@ class ValueTuple(tuple):
 #==============================================================================
 
 class Formatter(object):
-    """Holds formatting information for the various unit types.
-    
-    Examples (using the default formatters):
-    >>> import os
-    >>> os.environ['TZ'] = 'America/Los_Angeles'
-    >>> time.tzset()
-    >>> f = Formatter()
-    >>> print(f.toString((20.0, "degree_C", "group_temperature")))
-    20.0°C
-    >>> print(f.toString((83.2, "degree_F", "group_temperature")))
-    83.2°F
-    >>> # Try the Spanish locale, which will use comma decimal separators.
-    >>> # For this to work, the Spanish locale must have been installed.
-    >>> # You can do this with the command:
-    >>> #     sudo locale-gen es_ES.UTF-8 && sudo update-locale
-    >>> x = locale.setlocale(locale.LC_NUMERIC, 'es_ES.utf-8')
-    >>> print(f.toString((83.2, "degree_F", "group_temperature"), localize=True))
-    83,2°F
-    >>> # Try it again, but overriding the localization:
-    >>> print(f.toString((83.2, "degree_F", "group_temperature"), localize=False))
-    83.2°F
-    >>> # Set locale back to default
-    >>> x = locale.setlocale(locale.LC_NUMERIC, '')
-    >>> print(f.toString((123456789,  "unix_epoch", "group_time")))
-    29-Nov-1973 13:33
-    >>> print(f.to_ordinal_compass((5.0, "degree_compass", "group_direction")))
-    N
-    >>> print(f.to_ordinal_compass((0.0, "degree_compass", "group_direction")))
-    N
-    >>> print(f.to_ordinal_compass((12.5, "degree_compass", "group_direction")))
-    NNE
-    >>> print(f.to_ordinal_compass((360.0, "degree_compass", "group_direction")))
-    N
-    >>> print(f.to_ordinal_compass((None, "degree_compass", "group_direction")))
-    N/A
-    >>> print(f.toString((1*86400 + 1*3600 + 16*60 + 42, "second", "group_deltatime")))
-    1 day, 1 hour, 16 minutes
-    >>> delta_format = "%(day)d%(day_label)s, %(hour)d%(hour_label)s, "\
-           "%(minute)d%(minute_label)s, %(second)d%(second_label)s"
-    >>> print(f.toString((2*86400 + 3*3600 +  5*60 +  2, "second", "group_deltatime"),
-    ...    useThisFormat=delta_format))
-    2 days, 3 hours, 5 minutes, 2 seconds
-    """
+    """Holds formatting information for the various unit types. """
 
-    def __init__(self, unit_format_dict = default_unit_format_dict,
-                       unit_label_dict  = default_unit_label_dict,
-                       time_format_dict = default_time_format_dict,
-                       ordinate_names   = default_ordinate_names):
+    def __init__(self, unit_format_dict = None,
+                 unit_label_dict  = None,
+                 time_format_dict = None,
+                 ordinate_names   = None):
         """
 
         Args:
@@ -734,15 +578,10 @@ class Formatter(object):
             ordinate_names(list): A list containing ordinal compass names (e.g., ['N', 'NNE', etc.]
         """
 
-        self.unit_format_dict = unit_format_dict
-        self.unit_label_dict  = unit_label_dict
-        # Make a copy of the time format dictionary. This will stop the
-        # unwanted interpolation of key delta_time.
-        self.time_format_dict = dict(time_format_dict)
-        self.ordinate_names    = ordinate_names
-        # Add new keys for backwards compatibility on old skin dictionaries:
-        self.time_format_dict.setdefault('ephem_day', "%H:%M")
-        self.time_format_dict.setdefault('ephem_year', "%d-%b-%Y %H:%M")
+        self.unit_format_dict = unit_format_dict or {}
+        self.unit_label_dict  = unit_label_dict or {}
+        self.time_format_dict = time_format_dict or {}
+        self.ordinate_names    = ordinate_names or DEFAULT_ORDINATE_NAMES
 
     @staticmethod
     def fromSkinDict(skin_dict):
@@ -750,23 +589,23 @@ class Formatter(object):
         try:
             unit_format_dict = skin_dict['Units']['StringFormats']
         except KeyError:
-            unit_format_dict = default_unit_format_dict
+            unit_format_dict = {}
 
         try:
             unit_label_dict = skin_dict['Units']['Labels']
         except KeyError:
-            unit_label_dict = default_unit_label_dict
+            unit_label_dict = {}
 
         try:
             time_format_dict = skin_dict['Units']['TimeFormats']
         except KeyError:
-            time_format_dict = default_time_format_dict
+            time_format_dict = {}
 
         try:
             ordinate_names = weeutil.weeutil.option_as_list(
                 skin_dict['Units']['Ordinates']['directions'])
         except KeyError:
-            ordinate_names = default_ordinate_names
+            ordinate_names = {}
 
         return Formatter(unit_format_dict,
                          unit_label_dict,
@@ -776,12 +615,12 @@ class Formatter(object):
     def get_format_string(self, unit):
         """Return a suitable format string."""
 
-        # First, try my internal format dict
-        if unit in self.unit_format_dict:
-            return self.unit_format_dict[unit]
-        # If that didn't work, try the default dict:
-        elif unit in default_unit_format_dict:
+        # First, try the (misnamed) custom unit format dictionary
+        if unit in default_unit_format_dict:
             return default_unit_format_dict[unit]
+        # If that didn't work, try my internal format dictionary
+        elif unit in self.unit_format_dict:
+            return self.unit_format_dict[unit]
         else:
             # Can't find one. Return a generic formatter:
             return '%f'
@@ -797,12 +636,12 @@ class Formatter(object):
         plural version.
         """
 
-        # First, try my internal label dictionary:
-        if unit in self.unit_label_dict:
-            label = self.unit_label_dict[unit]
-        # If that didn't work, try the default label dictionary:
-        elif unit in default_unit_label_dict:
+        # First, try the (misnamed) custom dictionary
+        if unit in default_unit_label_dict:
             label = default_unit_label_dict[unit]
+        # Then try my internal label dictionary:
+        elif unit in self.unit_label_dict:
+            label = self.unit_label_dict[unit]
         else:
             # Can't find a label. Just return an empty string:
             return u''
@@ -810,7 +649,7 @@ class Formatter(object):
         # Is the label a tuple or list?
         if isinstance(label, (tuple, list)):
             # Yes. Return the singular or plural version as requested
-            return label[1] if plural else label[0]
+            return label[1] if plural and len(label) > 1 else label[0]
         else:
             # No singular/plural version. It's just a string. Return it.
             return label
@@ -838,7 +677,7 @@ class Formatter(object):
         """
 
         # Check to see if the ValueTuple holds an iterable:
-        if isinstance(val_t[0], (list, tuple)):
+        if is_iterable(val_t[0]):
             # Yes. Format each element individually, then stick them all together.
             s_list = [self._to_string((v, val_t[1], val_t[2]),
                                       context, addLabel, useThisFormat, None_string, localize)
@@ -867,6 +706,25 @@ class Formatter(object):
                     # Coerce to a string.
                     val_str = str(None_string)
             addLabel = False
+        elif type(val_t[0]) is complex:
+            # The type is complex. Break it up into real and imaginary, then format
+            # them separately. No label --- it will get added later
+            r = ValueTuple(val_t[0].real, val_t[1], val_t[2])
+            i = ValueTuple(val_t[0].imag, val_t[1], val_t[2])
+            val_str = "(%s, %s)" % (self._to_string(r, context, False,
+                                                    useThisFormat, None_string, localize),
+                                    self._to_string(i, context, False,
+                                                    useThisFormat, None_string, localize))
+        elif type(val_t[0]) is Polar:
+            # The type is a Polar number. Break it up into magnitude and direction, then format
+            # them separately.
+            mag = ValueTuple(val_t[0].mag, val_t[1], val_t[2])
+            dir = ValueTuple(val_t[0].dir, "degree_compass", "group_direction")
+            val_str = "(%s, %s)" % (self._to_string(mag, context, addLabel,
+                                                    useThisFormat, None_string, localize),
+                                    self._to_string(dir, context, addLabel,
+                                                    None, None_string, localize))
+            addLabel = False
         elif val_t[1] in {"unix_epoch", "unix_epoch_ms", "unix_epoch_ns"}:
             # Different formatting routines are used if the value is a time.
             t = val_t[0]
@@ -883,8 +741,7 @@ class Formatter(object):
         elif val_t[2] == "group_deltatime":
             # Get a delta-time format string. Use a default if the user did not supply one:
             if useThisFormat is None:
-                format_string = self.time_format_dict.get("delta_time",
-                                                          default_time_format_dict["delta_time"])
+                format_string = self.time_format_dict.get(context, DEFAULT_DELTATIME_FORMAT)
             else:
                 format_string = useThisFormat
             # Now format the delta time, using the function delta_secs_to_string:
@@ -925,20 +782,17 @@ class Formatter(object):
         return self.ordinate_names[_sector]
 
     def delta_secs_to_string(self, secs, label_format):
-        """Convert elapsed seconds to a string
-        
-        Example:
-        >>> f = Formatter()
-        >>> print(f.delta_secs_to_string(3*86400+21*3600+7*60+11,
-        ...         default_time_format_dict["delta_time"]))
-        3 days, 21 hours, 7 minutes
-        """
+        """Convert elapsed seconds to a string """
         etime_dict = {}
+        secs = abs(secs)
         for (label, interval) in (('day', 86400), ('hour', 3600), ('minute', 60), ('second', 1)):
             amt = int(secs // interval)
             etime_dict[label] = amt
             etime_dict[label + '_label'] = self.get_label_string(label, not amt == 1)
             secs %= interval
+        if 'day' not in label_format:
+            # If 'day' does not appear in the formatting string, add its time to hours
+            etime_dict['hour'] += 24 * etime_dict['day']
         ans = locale.format_string(label_format, etime_dict)
         return ans
 
@@ -1085,29 +939,7 @@ StdUnitConverters = {weewx.US       : Converter(USUnits),
 
 class ValueHelper(object):
     """A helper class that binds a value tuple together with everything needed to do a
-    context sensitive formatting
-    
-    Example:
-    
-    >>> value_t = (68.01, "degree_F", "group_temperature")
-    >>> # Use the default converter and formatter:
-    >>> vh = ValueHelper(value_t)
-    >>> print(vh)
-    68.0°F
-    
-    Try explicit unit conversion:
-    >>> print(vh.degree_C)
-    20.0°C
-    
-    Do it again, but using a converter:
-    >>> vh = ValueHelper(value_t, converter=Converter(MetricUnits))
-    >>> print(vh)
-    20.0°C
-    
-    Extract just the raw value:
-    >>> print("%.1f" % vh.raw)
-    20.0
-    """
+    context sensitive formatting """
     def __init__(self, value_t, context='current', formatter=Formatter(), converter=None):
         """Initialize a ValueHelper
 
@@ -1498,7 +1330,7 @@ class ObsInfoHelper(object):
 #==============================================================================
 #                             Helper functions
 #==============================================================================
-def _getUnitGroup(obs_type, agg_type=None):
+def getUnitGroup(obs_type, agg_type=None):
     """Given an observation type and an aggregation type, what unit group
     does it belong to?
 
@@ -1528,6 +1360,10 @@ def _getUnitGroup(obs_type, agg_type=None):
         return agg_group[agg_type]
     else:
         return obs_group_dict.get(obs_type)
+
+
+# For backwards compatibility:
+_getUnitGroup = getUnitGroup
 
 
 def convert(val_t, target_unit):
@@ -1759,13 +1595,28 @@ def as_value_tuple(record_dict, obs_type):
 
 
 class ComplexEncoder(json.JSONEncoder):
-    """Custom encoder that knows how to encode complex objects"""
+    """Custom encoder that knows how to encode complex and polar objects"""
     def default(self, obj):
         if isinstance(obj, complex):
             # Return as tuple
             return obj.real, obj.imag
+        elif isinstance(obj, Polar):
+            # Return as tuple:
+            return obj.mag, obj.dir
         # Otherwise, let the base class handle it
         return json.JSONEncoder.default(self, obj)
+
+
+def get_default_formatter():
+    """Get a default formatter. Useful for the test suites."""
+    import weewx.defaults
+    weewx.defaults.defaults.interpolation = False
+    formatter = Formatter(
+        unit_format_dict=weewx.defaults.defaults['Units']['StringFormats'],
+        unit_label_dict=weewx.defaults.defaults['Units']['Labels'],
+        time_format_dict=weewx.defaults.defaults['Units']['TimeFormats'],
+        ordinate_names=weewx.defaults.defaults['Units']['Ordinates']['directions'])
+    return formatter
 
 
 if __name__ == "__main__":

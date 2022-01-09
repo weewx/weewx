@@ -6,4 +6,4 @@ app=wee_config
 WEEWX_BINDIR=/home/weewx/bin
 WEEWX_PYTHON=python3
 [ -r /etc/default/weewx ] && . /etc/default/weewx
-$WEEWX_PYTHON $WEEWX_BINDIR/$app $*
+exec "$WEEWX_PYTHON" $WEEWX_PYTHON_ARGS "$WEEWX_BINDIR/$app" "$@"

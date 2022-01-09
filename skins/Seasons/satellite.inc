@@ -4,7 +4,7 @@
 #errorCatcher Echo
 #encoding UTF-8
 
-#if $Extras.has_key('satellite_img')
+#if 'satellite_img' in $Extras
 <div id='satellite_widget' class="widget">
   <div class="widget_title">
     Satellite
@@ -13,7 +13,7 @@
   </div>
 
   <div class="widget_contents">
-    #if $Extras.has_key('satellite_url')
+    #if 'satellite_url' in $Extras
     #set $saturl = $Extras.satellite_url
     #else
     #set $saturl = $Extras.satellite_img

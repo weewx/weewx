@@ -23,7 +23,7 @@ class BasicInstaller(ExtensionInstaller):
                         'enable' : 'True',
                         'HTML_ROOT': 'basic',
                         'lang': 'en',
-                        'units': 'US'
+                        'unit_system': 'US'
                     }
                 }
             },

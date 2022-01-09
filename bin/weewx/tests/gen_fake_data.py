@@ -58,16 +58,24 @@ weather_rain_total = 0.5  # This is inches per weather cycle
 avg_baro = 30.0
 
 
-def configDatabases(config_dict, database_type):
+def make_nulls_filter(record):
+    """Values of inTemp for the first half of the database will have nulls,
+    the second half will not."""
+    if record['dateTime'] > (start_ts + stop_ts)/2:
+        record['inTemp'] = 68.0
+    return record
+
+
+def configDatabases(config_dict, database_type, record_filter=make_nulls_filter):
     config_dict['DataBindings']['wx_binding']['database'] = "archive_" + database_type
-    configDatabase(config_dict, 'wx_binding')
+    configDatabase(config_dict, 'wx_binding', record_filter=record_filter)
     config_dict['DataBindings']['alt_binding']['database'] = "alt_" + database_type
-    configDatabase(config_dict, 'alt_binding', start_ts=alt_start, amplitude=0.5)
+    configDatabase(config_dict, 'alt_binding', start_ts=alt_start, amplitude=0.5, record_filter=record_filter)
 
 
 def configDatabase(config_dict, binding, start_ts=start_ts, stop_ts=stop_ts, interval=interval, amplitude=1.0,
                    day_phase_offset=math.pi / 4.0, annual_phase_offset=0.0,
-                   weather_phase_offset=0.0, year_start=start_ts):
+                   weather_phase_offset=0.0, year_start=start_ts, record_filter=lambda r: r):
     """Configures the archive databases."""
 
     # Check to see if it already exists and is configured correctly.
@@ -111,14 +119,18 @@ def configDatabase(config_dict, binding, start_ts=start_ts, stop_ts=stop_ts, int
 
         # Now generate and add the fake records to populate the database:
         t1 = time.time()
-        archive.addRecord(genFakeRecords(start_ts=start_ts, stop_ts=stop_ts,
-                                         interval=interval,
-                                         amplitude=amplitude,
-                                         day_phase_offset=day_phase_offset,
-                                         annual_phase_offset=annual_phase_offset,
-                                         weather_phase_offset=weather_phase_offset,
-                                         year_start=start_ts,
-                                         db_manager=archive))
+        archive.addRecord(
+            filter(record_filter,
+                   genFakeRecords(start_ts=start_ts, stop_ts=stop_ts,
+                                  interval=interval,
+                                  amplitude=amplitude,
+                                  day_phase_offset=day_phase_offset,
+                                  annual_phase_offset=annual_phase_offset,
+                                  weather_phase_offset=weather_phase_offset,
+                                  year_start=start_ts,
+                                  db_manager=archive)
+                   )
+                          )
         t2 = time.time()
         delta = t2 - t1
         print("\nTime to create synthetic database '%s' = %6.2fs"

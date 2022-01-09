@@ -29,40 +29,6 @@ major_comment_block = ["", "####################################################
 
 DEFAULT_URL = 'http://acme.com'
 
-# ==============================================================================
-
-unit_systems = {
-    'us': {'group_altitude': 'foot',
-           'group_degree_day': 'degree_F_day',
-           'group_distance': 'mile',
-           'group_pressure': 'inHg',
-           'group_rain': 'inch',
-           'group_rainrate': 'inch_per_hour',
-           'group_speed': 'mile_per_hour',
-           'group_speed2': 'mile_per_hour2',
-           'group_temperature': 'degree_F'},
-
-    'metric': {'group_altitude': 'meter',
-               'group_degree_day': 'degree_C_day',
-               'group_distance': 'km',
-               'group_pressure': 'mbar',
-               'group_rain': 'cm',
-               'group_rainrate': 'cm_per_hour',
-               'group_speed': 'km_per_hour',
-               'group_speed2': 'km_per_hour2',
-               'group_temperature': 'degree_C'},
-
-    'metricwx': {'group_altitude': 'meter',
-                 'group_degree_day': 'degree_C_day',
-                 'group_distance': 'km',
-                 'group_pressure': 'mbar',
-                 'group_rain': 'mm',
-                 'group_rainrate': 'mm_per_hour',
-                 'group_speed': 'meter_per_second',
-                 'group_speed2': 'meter_per_second2',
-                 'group_temperature': 'degree_C'}
-}
-
 
 class ExtensionError(IOError):
     """Errors when installing or uninstalling an extension"""
@@ -296,9 +262,15 @@ def modify_config(config_dict, stn_info, logger, debug=False):
                 if debug:
                     logger.log("Using %s for %s" % (stn_info[p], p), level=2)
                 config_dict['Station'][p] = stn_info[p]
-        # Update units display with any stn_info overrides
-        if 'units' in stn_info and 'StdReport' in config_dict:
-            update_units(config_dict, stn_info['units'], logger, debug)
+
+        if 'StdReport' in config_dict \
+                and 'unit_system' in stn_info \
+                and stn_info['unit_system'] != 'custom':
+            # Make sure the default unit system sits under [[Defaults]]. First, get rid of anything
+            # under [StdReport]
+            config_dict['StdReport'].pop('unit_system', None)
+            # Then add it under [[Defaults]]
+            config_dict['StdReport']['Defaults']['unit_system'] = stn_info['unit_system']
 
         if 'register_this_station' in stn_info \
                 and 'StdRESTful' in config_dict \
@@ -1045,7 +1017,8 @@ def update_to_v39(config_dict):
 
     - New top-level options log_success and log_failure
     - New subsections [[SeasonsReport]], [[SmartphoneReport]], and [[MobileReport]]
-    - New section [StdReport][[Defaults]]
+    - New section [StdReport][[Defaults]]. Prior to V4.6, it had lots of entries. With the
+      introduction of V4.6, it has been pared back to the minimum.
     """
 
     major, minor = get_version_info(config_dict)
@@ -1278,21 +1251,6 @@ def update_to_v43(config_dict):
     config_dict['version'] = '4.3.0'
 
 
-def update_units(config_dict, unit_system_name, logger=None, debug=False):
-    """Update [StdReport][Defaults] with the desired unit system"""
-
-    if unit_system_name == 'mixed':
-        return
-    elif unit_system_name is not None:
-        try:
-            config_dict['StdReport']['Defaults']['Units']['Groups'].update(unit_systems[unit_system_name])
-        except KeyError:
-            # We are missing the [StdReport] / [[Defaults]] / [[[Units]]] / [[[[Groups]]]] section.
-            # Create a section, then merge it into the ConfigObj.
-            unit_dict = weeutil.config.config_from_str(UNIT_DEFAULTS)
-            weeutil.config.merge_config(config_dict, unit_dict)
-
-
 # ==============================================================================
 #              Utilities that extract from ConfigObj objects
 # ==============================================================================
@@ -1315,7 +1273,7 @@ def get_version_info(config_dict):
     return major, minor
 
 
-def get_station_info(config_dict):
+def get_station_info_from_config(config_dict):
     """Extract station info from config dictionary.
 
     Returns:
@@ -1339,16 +1297,22 @@ def get_station_info(config_dict):
                 if stn_info['station_type'] in config_dict:
                     stn_info['driver'] = config_dict[stn_info['station_type']]['driver']
 
-            # Try to figure out what unit system the user is using.
+        try:
+            stn_info['lang'] = config_dict['StdReport']['lang']
+        except KeyError:
             try:
-                # First look for a [Defaults] section.
-                stn_info['units'] = get_unit_info(config_dict['StdReport']['Defaults'])
+                stn_info['lang'] = config_dict['StdReport']['Defaults']['lang']
             except KeyError:
-                # If that didn't work, look for an override in the [[StandardReport]] section.
-                try:
-                    stn_info['units'] = get_unit_info(config_dict['StdReport']['StandardReport'])
-                except KeyError:
-                    pass
+                pass
+        try:
+            # Look for option 'unit_system' in [StdReport]
+            stn_info['unit_system'] = config_dict['StdReport']['unit_system']
+        except KeyError:
+            try:
+                stn_info['unit_system'] = config_dict['StdReport']['Defaults']['unit_system']
+            except KeyError:
+                # Not there. It's a custom system
+                stn_info['unit_system'] = 'custom'
         try:
             stn_info['register_this_station'] \
                 = config_dict['StdRESTful']['StationRegistry']['register_this_station']
@@ -1360,31 +1324,6 @@ def get_station_info(config_dict):
             pass
 
     return stn_info
-
-
-def get_unit_info(test_dict):
-    """Intuit what unit system the reports are in.
-
-    Returns:
-        'us':       US Customary system
-        'metric':   METRIC system
-        'metricwx': METRICWX system
-        'mixed':    Mixed unit system
-        None:       There is no information about the unit system.
-    """
-    try:
-        group_dict = test_dict['Units']['Groups']
-    except KeyError:
-        return None
-
-    # Test all unit systems ('us', 'metric', 'metricwx'):
-    for unit_system in unit_systems:
-        # For this unit system, make sure there is an exact match
-        if all(group_dict[group] == unit_systems[unit_system][group]
-               for group in unit_systems[unit_system]):
-            return unit_system
-    # No exact match. In in a mix of unit systems
-    return 'mixed'
 
 
 # ==============================================================================
@@ -1574,8 +1513,8 @@ def load_driver_editor(driver_module_name):
 #                Utilities that seek info from the command line
 # ==============================================================================
 
-def prompt_for_info(location=None, latitude='90.000', longitude='0.000',
-                    altitude=['0', 'meter'], units='metric',
+def prompt_for_info(location=None, latitude='0.000', longitude='0.000',
+                    altitude=['0', 'meter'], unit_system='metricwx',
                     register_this_station='false',
                     station_url=DEFAULT_URL, **kwargs):
     stn_info = {}
@@ -1644,19 +1583,11 @@ def prompt_for_info(location=None, latitude='90.000', longitude='0.000',
     else:
         stn_info['register_this_station'] = 'false'
 
-    #
-    # Display units. Accept only 'us' or 'metric', where 'metric'
-    # is a synonym for 'metricwx'.
-    #
-    options = ['us', 'metric']
-    if units == 'mixed':
-        options += [units]
+    # Get what unit system the user wants
+    options = ['us', 'metric', 'metricwx']
     print("\nIndicate the preferred units for display: %s" % options)
-    default = units if units != 'metricwx' else 'metric'
-    uni = prompt_with_options("units", default, options)
-    if uni == 'metric':
-        uni = 'metricwx'
-    stn_info['units'] = uni
+    uni = prompt_with_options("unit system", unit_system, options)
+    stn_info['unit_system'] = uni
 
     return stn_info
 
@@ -1704,6 +1635,72 @@ def prompt_for_driver_settings(driver, config_dict):
     except AttributeError:
         pass
     return settings
+
+
+def get_languages(skin_dir):
+    """ Return all languages supported by the skin
+
+    Args:
+        skin_dir (str): The path to the skin subdirectory.
+
+    Returns:
+        (dict): A dictionary where the key is the language code, and the value is the natural
+            language name of the language. The value 'None' is returned if skin_dir does not exist.
+    """
+    # Get the path to the "./lang" subdirectory
+    lang_dir = os.path.join(skin_dir, './lang')
+    # Get all the files in the subdirectory. If the subdirectory does not exist, an exception
+    # will be raised. Be prepared to catch it.
+    try:
+        lang_files = os.listdir(lang_dir)
+    except OSError:
+        # No 'lang' subdirectory. Return None
+        return None
+
+    languages = {}
+
+    # Go through the files...
+    for lang_file in lang_files:
+        # ... get its full path ...
+        lang_full_path = os.path.join(lang_dir, lang_file)
+        # ... make sure it's a file ...
+        if os.path.isfile(lang_full_path):
+            # ... then get the language code for that file.
+            code = lang_file.split('.')[0]
+            # Retrieve the ConfigObj for this language
+            lang_dict = configobj.ConfigObj(lang_full_path, encoding='utf-8')
+            # See if it has a natural language version of the language code:
+            try:
+                language = lang_dict['Texts']['Language']
+            except KeyError:
+                # It doesn't. Just label it 'Unknown'
+                language = 'Unknown'
+            # Add the code, plus the language
+            languages[code] = language
+    return languages
+
+
+def pick_language(languages, default='en'):
+    """
+    Given a choice of languages, pick one.
+
+    Args:
+        languages (list): As returned by function get_languages() above
+        default (str): The language code of the default
+
+    Returns:
+        (str): The chosen language code
+    """
+    keys = sorted(languages.keys())
+    if default not in keys:
+        default = None
+    msg = "Available languages\nCode  | Language\n"
+    for code in keys:
+        msg += "%4s  | %-20s\n" % (code, languages[code])
+    msg += "Pick a code"
+    value = prompt_with_options(msg, default, keys)
+
+    return value
 
 
 def prompt_with_options(prompt, default=None, options=None):
@@ -1908,166 +1905,65 @@ MOBILE_REPORT = """[StdReport]
         enable = false
         HTML_ROOT = public_html/mobile"""
 
-UNIT_DEFAULTS = """[StdReport]
+DEFAULTS = """[StdReport]
 
     ####
 
-    # Various options for customizing your reports.
-
+    # Options in the [[Defaults]] section below will apply to all reports.
+    # What follows are a few of the more popular options you may want to
+    # uncomment, then change.
     [[Defaults]]
 
-        # The following section determines the selection and formatting of units.
-        [[[Units]]]
+        # Which language to use for all reports. Not all skins support all languages.
+        # You can override this for individual reports.
+        lang = en
 
-            # The following section sets what unit to use for each unit group.
+        # Which unit system to use for all reports. Choices are 'us', 'metric', or 'metricwx'.
+        # You can override this for individual reports.
+        unit_system = us
+
+        [[[Units]]]
+            # Option "unit_system" above sets the general unit system, but overriding specific unit
+            # groups is possible. These are popular choices. Uncomment and set as appropriate.
             # NB: The unit is always in the singular. I.e., 'mile_per_hour',
             # NOT 'miles_per_hour'
             [[[[Groups]]]]
+                # group_altitude     = meter              # Options are 'foot' or 'meter'
+                # group_pressure     = mbar               # Options are 'inHg', 'mmHg', 'mbar', or 'hPa'
+                # group_rain         = mm                 # Options are 'inch', 'cm', or 'mm'
+                # group_rainrate     = mm_per_hour        # Options are 'inch_per_hour', 'cm_per_hour', or 'mm_per_hour'
+                # The following line is used to keep the above lines indented properly.
+                # It can be ignored.
+                unused = unused
 
-                group_altitude     = foot                 # Options are 'foot' or 'meter'
-                group_degree_day   = degree_F_day         # Options are 'degree_F_day' or 'degree_C_day'
-                group_distance     = mile                 # Options are 'mile' or 'km'
-                group_pressure     = inHg                 # Options are 'inHg', 'mmHg', 'mbar', or 'hPa'
-                group_rain         = inch                 # Options are 'inch', 'cm', or 'mm'
-                group_rainrate     = inch_per_hour        # Options are 'inch_per_hour', 'cm_per_hour', or 'mm_per_hour'
-                group_speed        = mile_per_hour        # Options are 'mile_per_hour', 'km_per_hour', 'knot', or 'meter_per_second'
-                group_speed2       = mile_per_hour2       # Options are 'mile_per_hour2', 'km_per_hour2', 'knot2', or 'meter_per_second2'
-                group_temperature  = degree_F             # Options are 'degree_F' or 'degree_C'
-"""
-
-DEFAULTS = UNIT_DEFAULTS + """
-
-            # The following section sets the formatting for each type of unit.
-            [[[[StringFormats]]]]
-
-                centibar           = %.0f
-                cm                 = %.2f
-                cm_per_hour        = %.2f
-                degree_C           = %.1f
-                degree_F           = %.1f
-                degree_compass     = %.0f
-                foot               = %.0f
-                hPa                = %.1f
-                hour               = %.1f
-                inHg               = %.3f
-                inch               = %.2f
-                inch_per_hour      = %.2f
-                km_per_hour        = %.0f
-                km_per_hour2       = %.1f
-                knot               = %.0f
-                knot2              = %.1f
-                mbar               = %.1f
-                meter              = %.0f
-                meter_per_second   = %.1f
-                meter_per_second2  = %.1f
-                mile_per_hour      = %.0f
-                mile_per_hour2     = %.1f
-                mm                 = %.1f
-                mmHg               = %.1f
-                mm_per_hour        = %.1f
-                percent            = %.0f
-                second             = %.0f
-                uv_index           = %.1f
-                volt               = %.1f
-                watt_per_meter_squared = %.0f
-                NONE               = "   N/A"
-
-            # The following section sets the label to be used for each type of unit
-            [[[[Labels]]]]
-
-                day               = " day",    " days"
-                hour              = " hour",   " hours"
-                minute            = " minute", " minutes"
-                second            = " second", " seconds"
-                NONE              = ""
-
-            # The following section sets the format to be used for each time scale.
-            # The values below will work in every locale, but they may not look
-            # particularly attractive. See the Customization Guide for alternatives.
+            # Uncommenting the following section frequently results in more
+            # attractive formatting of times and dates, but may not work in
+            # your locale.
             [[[[TimeFormats]]]]
+                # day        = %H:%M
+                # week       = %H:%M on %A
+                # month      = %d-%b-%Y %H:%M
+                # year       = %d-%b-%Y %H:%M
+                # rainyear   = %d-%b-%Y %H:%M
+                # current    = %d-%b-%Y %H:%M
+                # ephem_day  = %H:%M
+                # ephem_year = %d-%b-%Y %H:%M
+                # The following line is used to keep the above lines indented properly.
+                # It can be ignored.
+                unused = unused
 
-                hour       = %H:%M
-                day        = %X
-                week       = %X (%A)
-                month      = %x %X
-                year       = %x %X
-                rainyear   = %x %X
-                current    = %x %X
-                ephem_day  = %X
-                ephem_year = %x %X
-
-            [[[[Ordinates]]]]
-
-                # Ordinal directions. The last one should be for no wind direction
-                directions = N, NNE, NE, ENE, E, ESE, SE, SSE, S, SSW, SW, WSW, W, WNW, NW, NNW, N/A
-
-            # The following section sets the base temperatures used for the
-            #  calculation of heating and cooling degree-days.
-            [[[[[DegreeDays]]]]]
-
-                # Base temperature for heating days, with unit:
-                heating_base = 65, degree_F
-                # Base temperature for cooling days, with unit:
-                cooling_base = 65, degree_F
-
-            # A trend takes a difference across a time period. The following
-            # section sets the time period, and how big an error is allowed to
-            # still be counted as the start or end of a period.
-            [[[[[Trend]]]]]
-
-                time_delta = 10800  # 3 hours
-                time_grace = 300    # 5 minutes
-
-        # The labels to be used for each observation type
         [[[Labels]]]
-
-            # Set to hemisphere abbreviations suitable for your location:
-            hemispheres = N, S, E, W
-
-            # Formats to be used for latitude whole degrees, longitude whole
-            # degrees, and minutes:
-            latlon_formats = "%02d", "%03d", "%05.2f"
-
-            # Generic labels, keyed by an observation type.
+            # Users frequently change the labels for these observation types
             [[[[Generic]]]]
-                barometer      = Barometer
-                dewpoint       = Dew Point
-                ET             = ET
-                heatindex      = Heat Index
-                inHumidity     = Inside Humidity
-                inTemp         = Inside Temperature
-                outHumidity    = Humidity
-                outTemp        = Outside Temperature
-                radiation      = Radiation
-                rain           = Rain
-                rainRate       = Rain Rate
-                UV             = UV Index
-                windDir        = Wind Direction
-                windGust       = Gust Speed
-                windGustDir    = Gust Direction
-                windSpeed      = Wind Speed
-                windchill      = Wind Chill
-                windgustvec    = Gust Vector
-                windvec        = Wind Vector
-                extraTemp1     = Temperature1
-                extraTemp2     = Temperature2
-                extraTemp3     = Temperature3
+                # inHumidity     = Inside Humidity
+                # inTemp         = Inside Temperature
+                # outHumidity    = Outside Humidity
+                # outTemp        = Outside Temperature
+                # extraTemp1     = Temperature1
+                # extraTemp2     = Temperature2
+                # extraTemp3     = Temperature3
+                # The following line is used to keep the above lines indented properly.
+                # It can be ignored.
+                unused = unused
 
-                # Sensor status indicators
-
-                rxCheckPercent       = Signal Quality
-                txBatteryStatus      = Transmitter Battery
-                windBatteryStatus    = Wind Battery
-                rainBatteryStatus    = Rain Battery
-                outTempBatteryStatus = Outside Temperature Battery
-                inTempBatteryStatus  = Inside Temperature Battery
-                consBatteryVoltage   = Console Battery
-                heatingVoltage       = Heating Battery
-                supplyVoltage        = Supply Voltage
-                referenceVoltage     = Reference Voltage
-
-        [[[Almanac]]]
-
-            # The labels to be used for the phases of the moon:
-            moon_phases = New, Waxing crescent, First quarter, Waxing gibbous, Full, Waning gibbous, Last quarter, Waning crescent
 """

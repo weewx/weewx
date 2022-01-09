@@ -1,9 +1,9 @@
 Template: weewx/units
 Type: select
-Default: US
-Choices: US, Metric
+Default: us
+Choices: us, metric, metricwx
 Description: display units:
- Data can be displayed in any combination of units.  The default display is either US (F, inHg, in, mph) or Metric (C, mbar, mm, km/h).  The units can be changed later without affecting any existing data.
+ Choose a standard unit system: us (F, inHg, in, mph), metric (C, mbar, cm, km/h), or metricwx (C, mbar, mm, m/s).  Your choice can be modified later to any combination of units.
 
 Template: weewx/location
 Type: string

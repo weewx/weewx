@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # ===============================================================================
-# Copyright (c) 2009-2020 Tom Keffer <tkeffer@gmail.com>
+# Copyright (c) 2009-2021 Tom Keffer <tkeffer@gmail.com>
 # 
 # This software may be used and redistributed under the
 # terms of the GNU General Public License version 3.0
@@ -156,9 +156,6 @@ def main():
 
     global epsilon
 
-    # Set defaults for logging:
-    weeutil.logger.setup('wunderfixer', {})
-
     parser = optparse.OptionParser(usage=usagestr, epilog=epilog)
     parser.add_option("-c", "--config", metavar="CONFIG_PATH",
                       help="Use configuration file CONFIG_PATH. "
@@ -197,7 +194,6 @@ def main():
 
     socket.setdefaulttimeout(options.timeout)
 
-    weeutil.logger.setup('wunderfixer', {})
     if options.verbose:
         weewx.debug = 1
     else:
@@ -205,11 +201,12 @@ def main():
 
     # get our config file
     config_fn, config_dict = weecfg.read_config(options.config, args)
-    print("Using configuration file %s." % config_fn)
-    log.info("Using weewx configuration file %s." % config_fn)
 
     # Now we can set up the user-customized logging:
     weeutil.logger.setup('wunderfixer', config_dict)
+
+    print("Using configuration file %s." % config_fn)
+    log.info("Using weewx configuration file %s." % config_fn)
 
     # Retrieve the station ID and password from the config file
     try:

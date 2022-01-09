@@ -1,5 +1,3 @@
-# Tags for series
-
 ## Overview
 WeeWX Version 4.5 introduces limited support of tags for working with _series_. The results
 can be formatted either as JSON, or as a string. This document describes the syntax.
@@ -423,7 +421,7 @@ Start date	Max temperature
 ## Working with JSON
 ### Helper function `$jsonize()`
 We saw some examples above where the results of a tag can be formatted as JSON. However, there are
-cases when you need to combine several queries together to get the results you desire. Here's a
+cases where you need to combine several queries together to get the results you desire. Here's a
 common example: you wish to create a JSON structure with the minimum and maximum temperature for
 each day in a month.
 
@@ -445,10 +443,10 @@ but how do you combine them into a single structure? Here's one way to do it:
 ```
 
 The values `$min_sh` and `$max_sh` are `SeriesHelper`, each of which have three attributes:
-`.start`, `.stop`, and `.data`, respectively, the start times, stop times, and data.
+`.start`, `.stop`, and `.data`, which are, respectively, the start times, stop times, and data.
 
 So, `$min_sh.start` will be a series with just the start times. Similarly, `$min_sh.data` will a
-series with the aggregated minimum values, `$max_sh.data` a series with the aggregated the maximum
+series with the aggregated minimum values, `$max_sh.data` a series with the aggregated maximum
 values.
 
 We then use the Python function [`zip()`](https://docs.python.org/3/library/functions.html#zip) to

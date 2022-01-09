@@ -1,0 +1,20 @@
+# Required packages when installing using pip.
+
+configobj
+pyserial
+pyusb
+
+# Cheetah or Cheetah3, depending on Python version
+Cheetah; python_version < '3.0'
+Cheetah3; python_version >= '3.0'
+
+# Python 2.7 requires an older version of Pillow.
+Pillow==5.1; python_version < '3.0'
+# Python 3.x can use a current version.
+Pillow; python_version >= '3.0'
+
+# Ephem is optional, you can comment this line if you don't intent to use it
+pyephem
+
+# MySQL is optional, you can comment this line if you don't intent to use it
+mysqlclient

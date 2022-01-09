@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-#    Copyright (c) 2020 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2021 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -60,7 +60,8 @@ class TestFilter(unittest.TestCase):
         self.assertEqual(filtered_value, u"27.9")
 
     def test_ValueHelper(self):
-        val_vh = ValueHelper(ValueTuple(20.0, 'degree_C', 'group_temperature'))
+        val_vh = ValueHelper(ValueTuple(20.0, 'degree_C', 'group_temperature'),
+                             formatter=weewx.units.get_default_formatter())
         au = weewx.cheetahgenerator.AssureUnicode()
         filtered_value = au.filter(val_vh)
         self.assertEqual(filtered_value, u"20.0°C")

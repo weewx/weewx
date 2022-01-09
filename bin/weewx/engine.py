@@ -452,8 +452,18 @@ class StdQC(StdService):
     def __init__(self, engine, config_dict):
         super(StdQC, self).__init__(engine, config_dict)
 
-        # Get a QC object to apply the QC checks to our data
-        self.qc = weewx.qc.QC(config_dict)
+        # If the 'StdQC' or 'MinMax' sections do not exist in the configuration
+        # dictionary, then an exception will get thrown and nothing will be
+        # done.
+        try:
+            mm_dict = config_dict['StdQC']['MinMax']
+        except KeyError:
+            log.info("No QC information in config file.")
+            return
+        log_failure = to_bool(weeutil.config.search_up(config_dict['StdQC'],
+                                                       'log_failure', True))
+
+        self.qc = weewx.qc.QC(mm_dict, log_failure)
 
         self.bind(weewx.NEW_LOOP_PACKET, self.new_loop_packet)
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
@@ -810,6 +820,14 @@ class StdReport(StdService):
         self.thread = None
         self.launch_time = None
         self.record = None
+
+        # check if pyephem is installed and make a suitable log entry
+        try:
+            import ephem
+            log.info("'pyephem' detected, extended almanac data is available")
+            del ephem
+        except ImportError:
+            log.info("'pyephem' not detected, extended almanac data is not available")
 
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
         self.bind(weewx.POST_LOOP, self.launch_report_thread)

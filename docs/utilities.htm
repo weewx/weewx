@@ -303,7 +303,7 @@ website, or WeatherUnderground link).
 Include station in the station registry (y/n)? [y]:
 Unique URL: [http://weewx.com]:
 
-Indicate the preferred units for display: 'metric' or 'us'
+Indicate the preferred units for display: ['us', 'metric', 'metricwx']
 units [us]:
 
 Installed drivers include:
@@ -685,6 +685,16 @@ wee_database --calc-missing --from=YYYY-mm-dd[THH:MM] --to=YYYY-mm-dd[THH:MM]</p
                     start of <span class="code">YYYY-mm-dd</span> up to and including midnight at the end of
                     <span class="code">YYYY-mm-dd</span>, in effect the same as
                     <span class="code">--from=YYYY-mm-ddT00:00 --to=YYYY-mm-dd+1T00:00</span>.
+                </p>
+
+                <p class="note">
+                    <strong>Note</strong><br/><span class="code">--calc-missing</span> uses the
+                    <span class="code">StdWXCalculate</span> service to calculate missing derived observations. The data
+                    binding used by the <span class="code">StdWXCalculate</span> service should normally match the data
+                    binding of the database being operated on by <span class="code">--calc-missing</span>. User's who
+                    use custom or additional data bindings should take care to ensure the correct data bindings are used
+                    by both <span class="code">--calc-missing</span> and the <span class="code">StdWXCalculate</span>
+                    service. User's who use the default data binding need take no special precautions.
                 </p>
 
         <h3 id="wee_database_utility_check_strings">Action <span class="code">--check-strings</span></h3>

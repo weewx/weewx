@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-#    Copyright (c) 2009-2020 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2021 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your rights.
 #
@@ -36,9 +36,6 @@ def disable_timing(section, key):
 
 
 def main():
-    # Set defaults for logging:
-    weeutil.logger.setup('wee_reports', {})
-
     # Create a command line parser:
     parser = optparse.OptionParser(description=description, usage=usage)
 
@@ -51,16 +48,16 @@ def main():
     config_path, config_dict = weecfg.read_config(options.config_path, args)
     print("Using configuration file %s" % config_path)
 
+    # Look for the debug flag. If set, ask for extra logging
+    weewx.debug = int(config_dict.get('debug', 0))
+
+    # Set logging configuration:
+    weeutil.logger.setup('wee_reports', config_dict)
+
     # For wee_reports we want to generate all reports irrespective of any
     # report_timing settings that may exist. The easiest way to do this is walk
     # the config dict resetting any report_timing settings found.
     config_dict.walk(disable_timing)
-
-    # Look for the debug flag. If set, ask for extra logging
-    weewx.debug = int(config_dict.get('debug', 0))
-
-    # Set final configuration for logging:
-    weeutil.logger.setup('wee_reports', config_dict)
 
     socket.setdefaulttimeout(10)
 
@@ -98,6 +95,8 @@ def main():
     # Although the report engine inherits from Thread, we can just run it in the main thread:
     t.run()
 
+    # Shut down any running services, 
+    engine.shutDown()
 
 if __name__ == "__main__":
     main()

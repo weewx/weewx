@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-#    Copyright (c) 2009-2020 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2021 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your rights.
 #
@@ -71,24 +71,45 @@ def main():
                       default="weewx", metavar="LABEL")
 
     # Get the command line options and arguments:
-    (options, args) = parser.parse_args()
+    options, args = parser.parse_args()
 
     if options.version:
         print(weewx.__version__)
         sys.exit(0)
 
-    # Set up a minimal logging facility to be used until we read the config file.
-    weeutil.logger.setup(options.log_label, {})
-
     if args and options.config_path:
-        print("Specify CONFIG_PATH as an argument, or by using --config, not both",
+        print("Specify CONFIG_PATH as an argument, or by using --config, but not both",
               file=sys.stderr)
         sys.exit(weewx.CMD_ERROR)
 
+    # Read the configuration file
+    try:
+        # Pass in a copy of the command line arguments. read_config() will change it.
+        config_path, config_dict = weecfg.read_config(options.config_path, list(args))
+    except (IOError, configobj.ConfigObjError) as e:
+        print("Error parsing config file: %s" % e, file=sys.stderr)
+        weeutil.logger.log_traceback(log.critical, "    ****  ")
+        sys.exit(weewx.CMD_ERROR)
+
+    weewx.debug = int(config_dict.get('debug', 0))
+
+    # Now that we have the config_dict and debug setting, we can customize the
+    # logging with user additions
+    weeutil.logger.setup(options.log_label, config_dict)
+
+    # Log key bits of information.
     log.info("Initializing weewx version %s", weewx.__version__)
     log.info("Using Python %s", sys.version)
     log.info("Platform %s", platform.platform())
     log.info("Locale is '%s'", locale.setlocale(locale.LC_ALL))
+    log.info("Using configuration file %s", config_path)
+    log.info("Debug is %s", weewx.debug)
+
+    # If no command line --loop-on-init was specified, look in the config file.
+    if options.loop_on_init is None:
+        loop_on_init = to_bool(config_dict.get('loop_on_init', False))
+    else:
+        loop_on_init = options.loop_on_init
 
     # Save the current working directory. A service might
     # change it. In case of a restart, we need to change it back.
@@ -107,8 +128,7 @@ def main():
         time.sleep(0.5)
         weewx.launchtime_ts = time.time()
 
-    # Set up the signal handlers.
-    signal.signal(signal.SIGHUP, sigHUPhandler)
+    # Set up a handler for a termination signal
     signal.signal(signal.SIGTERM, sigTERMhandler)
 
     if options.daemon:
@@ -119,30 +139,6 @@ def main():
     while True:
 
         os.chdir(cwd)
-
-        # Read (or, possibly, re-read) the configuration file
-        try:
-            # Pass in a copy of the command line arguments. read_config() will change it.
-            config_path, config_dict = weecfg.read_config(options.config_path, list(args))
-        except (IOError, configobj.ConfigObjError) as e:
-            log.error("Error parsing config file: %s" % e)
-            weeutil.logger.log_traceback(log.critical, "    ****  ")
-            print(e, file=sys.stderr)
-            sys.exit(weewx.CMD_ERROR)      
-
-        log.info("Using configuration file %s", config_path)
-        weewx.debug = int(config_dict.get('debug', 0))
-        log.info("Debug is %s", weewx.debug)
-
-        # Now that we have the config_dict and debug setting, we can customize the
-        # logging with user additions
-        weeutil.logger.setup(options.log_label, config_dict)
-
-        # If no command line --loop-on-init was specified, look in the config file.
-        if options.loop_on_init is None:
-            loop_on_init = to_bool(config_dict.get('loop_on_init', False))
-        else:
-            loop_on_init = options.loop_on_init
 
         try:
             log.debug("Initializing engine")
@@ -211,9 +207,6 @@ def main():
             time.sleep(10)
             log.info("retrying...")
 
-        except Restart:
-            log.info("Received signal HUP. Restarting.")
-
         except Terminate:
             log.info("Terminating weewx version %s", weewx.__version__)
             weeutil.logger.log_traceback(log.debug, "    ****  ")
@@ -241,15 +234,6 @@ def main():
 # ==============================================================================
 #                       Signal handlers
 # ==============================================================================
-
-class Restart(Exception):
-    """Exception raised when restarting the engine is desired."""
-
-
-def sigHUPhandler(_signum, _frame):
-    log.info("Received signal HUP. Initiating restart.")
-    raise Restart
-
 
 class Terminate(Exception):
     """Exception raised when terminating the engine."""

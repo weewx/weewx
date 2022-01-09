@@ -9,7 +9,7 @@
 # the MySQLdb interface acts the way we think it should.
 #
 # It uses two MySQL users, weewx1 and weewx2. The companion
-# script "setup_mysql" will set them up with the necessary permissions.
+# script "setup_mysql.sh" will set them up with the necessary permissions.
 #
 from __future__ import absolute_import
 from __future__ import with_statement

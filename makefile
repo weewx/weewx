@@ -154,13 +154,18 @@ upload-docs:
 # update the version in all relevant places
 VDOCS=readme.htm customizing.htm devnotes.htm hardware.htm usersguide.htm upgrading.htm utilities.htm
 VCONFIGS=weewx.conf bin/weecfg/tests/expected/weewx43_user_expected.conf
+VSKINS=skins/Ftp/skin.conf skins/Mobile/skin.conf skins/Rsync/skin.conf skins/Seasons/skin.conf skins/Smartphone/skin.conf skins/Standard/skin.conf
 version:
 	for f in $(VDOCS); do \
   sed -e 's/^Version: [0-9].*/Version: $(MMVERSION)/' docs/$$f > docs/$$f.tmp; \
   mv docs/$$f.tmp docs/$$f; \
 done
 	for f in $(VCONFIGS); do \
-  sed -e 's/version = .*/version = $(VERSION)/' $$f > $$f.tmp; \
+  sed -e 's/version = [0-9].*/version = $(VERSION)/' $$f > $$f.tmp; \
+  mv $$f.tmp $$f; \
+done
+	for f in $(VSKINS); do \
+  sed -e 's/^SKIN_VERSION = [0-9].*/SKIN_VERSION = $(VERSION)/' $$f > $$f.tmp; \
   mv $$f.tmp $$f; \
 done
 	sed -e 's/^VERSION = .*/VERSION = "$(VERSION)"/' setup.py > setup.py.tmp

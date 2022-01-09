@@ -12,7 +12,7 @@
 #encoding UTF-8
 ##
 <!DOCTYPE html>
-<html lang="$gettext.lang">
+<html lang="$lang">
   <head>
     ## Specifying an encoding of UTF-8 is usually safe:
     <meta charset="UTF-8">
@@ -38,10 +38,10 @@ function hideURLbar() {
       <td><a href="daytempdew.png">$obs.label.outTemp / $obs.label.dewpoint:</a></td><td class="data"> $current.outTemp / $current.dewpoint </td>
     </tr>
     <tr class="alt">
-      <td>High Temp:</td><td class="data"> $day.outTemp.max $gettext["at"] $day.outTemp.maxtime </td>
+      <td>$gettext("High Temp"):</td><td class="data"> $day.outTemp.max $gettext("at") $day.outTemp.maxtime </td>
     </tr>
     <tr>            
-      <td>Low Temp:</td><td class="data"> $day.outTemp.min $gettext["at"] $day.outTemp.mintime </td>
+      <td>$gettext("Low Temp"):</td><td class="data"> $day.outTemp.min $gettext("at") $day.outTemp.mintime </td>
     </tr>
     <tr class="alt">
       <td><a href="daytempfeel.png">$obs.label.heatindex / $obs.label.windchill:</a></td><td class="data"> $current.heatindex / $current.windchill </td>
@@ -53,25 +53,25 @@ function hideURLbar() {
       <td><a href="dayrain.png">$obs.label.rain:</a></td><td class="data"> $day.rain.sum </td>
     </tr>
     <tr>
-      <td>$gettext["High Rain Rate"]:</td><td class="data"> $day.rainRate.max $gettext["at"] $day.rainRate.maxtime </td>
+      <td>$gettext("High Rain Rate"):</td><td class="data"> $day.rainRate.max $gettext("at") $day.rainRate.maxtime </td>
     </tr>
     <tr class="alt">
       <td><a href="daywind.png">$obs.label.windSpeed:</a></td><td class="data"> $current.windSpeed </td>
     </tr>
     <tr>            
-      <td>$gettext["High Wind"]:</td><td class="data"> $day.wind.max $gettext["at"] $day.wind.maxtime </td>
+      <td>$gettext("High Wind"):</td><td class="data"> $day.wind.max $gettext("at") $day.wind.maxtime </td>
     </tr>
   </table>
 </div>
 
 
-#if $Extras.has_key('radar_img')
+#if 'radar_img' in $Extras
 <div class="radar">
-  #if $Extras.has_key('radar_url')
+  #if 'radar_url' in $Extras
   <a  href="$Extras.radar_url">
   #end if
     <img src="$Extras.radar_img" alt="Radar" />
-  #if $Extras.has_key('radar_url')
+  #if 'radar_url' in $Extras
   </a>
   #end if
 </div>
