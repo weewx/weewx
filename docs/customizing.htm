@@ -2066,17 +2066,17 @@ $month.outTemp.max</pre>
         </p>
 
         <p>The most general tag for an aggregation over time looks like:</p>
-        <pre
-            class="tty">$<em>period</em>($data_binding=<em>binding_name</em>, <em>$optional_ago</em>=<em>delta</em>).<em>statstype</em>.<em>aggregation</em>[.<em>optional_unit_conversion</em>][.<em>optional_rounding</em>][.<em>optional_formatting</em>]</pre>
+        <pre class="tty">$<em>period</em>($data_binding=<em>binding_name</em>, <em>$optional_ago</em>=<em>delta</em>).<em>statstype</em>.<em>aggregation</em>[.<em>optional_unit_conversion</em>][.<em>optional_rounding</em>][.<em>optional_formatting</em>]
+        </pre>
         <p>Where:</p>
 
         <p class="indent">
-            <span class="code">period</span> is the time period over which the aggregation is to be done. Possible
-            choices are listed in a table below.
+            <span class="code"><em>period</em></span> is the time period over which the aggregation is to be done. Possible
+            choices are listed in the <a href="#aggregation_periods">table below</a>.
         </p>
 
         <p class="indent">
-            <span class="code">binding_name</span> is a <em>binding name</em> to a database. An example would be <span
+            <span class="code"><em>binding_name</em></span> is a <em>binding name</em> to a database. An example would be <span
             class="code">wx_binding</span>. See the section <em><a href="#binding_names">Binding names</a></em> for more
             details.
         </p>
@@ -2088,45 +2088,46 @@ $month.outTemp.max</pre>
         </p>
 
         <p class="indent">
-            <span class="code">delta</span> is an integer indicating which aggregation period is desired. For example
+            <span class="code"><em>delta</em></span> is an integer indicating which aggregation period is desired. For example
             <span class="code">$week($weeks_ago=1)</span> indicates last week, <span
             class="code">$day($days_ago=2)</span> would be the day-before-yesterday, <i>etc</i>. The default is zero:
             that is, this aggregation period.
         </p>
 
         <p class="indent">
-            <span class="code">statstype</span> is a <em>statistical type</em>. This is generally any observation type
+            <span class="code"><em>statstype</em></span> is a <em>statistical type</em>. This is generally any observation type
             that appears in the database, as well as a few synthetic types (such as heating and cooling degree-days).
             Not all aggregations are supported for all types.
         </p>
 
         <p class="indent">
-            <span class="code">aggregation</span> is an <em>aggregation type</em>. If you ask for <span class="code">$month.outTemp.avg</span>
+            <span class="code"><em>aggregation</em></span> is an <em>aggregation type</em>. If you ask for <span class="code">$month.outTemp.avg</span>
             you are asking for the <em>average</em> outside temperature for the month. Possible aggregation types are
             given in <em><a href="#aggregation_types">Appendix: Aggregation types</a></em>.
         </p>
 
         <p class="indent">
-            <span class="code">optional_unit_conversion</span> is an optional unit conversion tag. If provided, the
+            <span class="code"><em>optional_unit_conversion</em></span> is an optional unit conversion tag. If provided, the
             results will be converted into the specified units, otherwise the default units specified in the skin
             configuration file (in section <span class="code">[Units][[Groups]]</span>) will be used. See the section
             <em><a href="#unit_conversion_options">Unit Conversion Options</a></em>.
         </p>
 
         <p class="indent">
-            <span class="code">optional_rounding</span> allows the results to be rounded to a fixed number of decimal
+            <span class="code"><em>optional_rounding</em></span> allows the results to be rounded to a fixed number of decimal
             digits. See the section <em><a href="#optional_rounding">Optional rounding</a></em>
         </p>
 
         <p class="indent">
-            <span class="code">optional_formatting</span> is a set of optional formatting tags, which control how the
+            <span class="code"><em>optional_formatting</em></span> is a set of optional formatting tags, which control how the
             value will appear. See the section <em><a href="#formatting_options">Formatting Options</a></em> below.
         </p>
 
         <p>
             There are several different <em>aggregation periods</em> that can be used:
         </p>
-        <table class="indent" style="width: 80%">
+        <table id="aggregation_periods" class="indent" style="width: 80%">
+            <caption>Aggregation periods</caption>
             <tbody>
             <tr class="first_row">
                 <td>Aggregation period</td>
@@ -2181,6 +2182,16 @@ $month.outTemp.max</pre>
                 <td class="code">$rainyear.rain.sum</td>
                 <td>The total rainfall for this rain year. The start of the rain year is set by option <a
                     href="usersguide.htm#rain_year_start"><span class="code">rain_year_start</span></a>.
+                </td>
+            </tr>
+            <tr>
+                <td class="first_col code">$alltime</td>
+                <td>
+                    All records in the database given by <span class="code"><em>binding_name</em></span>.
+                </td>
+                <td class="code">$alltime.outTemp.max</td>
+                <td>
+                    The maximum outside temperature in the default database.
                 </td>
             </tr>
 
@@ -3835,18 +3846,11 @@ $station.altitude</pre>
         </p>
 
         <p>
-            Let's look at an example. The regular version of WeeWX offers statistical summaries by day, week, month, and
-            year. Suppose we would like to add two more:
+            Let's look at an example. The regular version of WeeWX offers statistical summaries by day, week, month,
+            year, rain year, and all time. While WeeWX offers the tag <span class="code">$week</span>, this is
+            statistics <em>since Sunday at midnight</em>. Suppose we would like to have statistics for a full week, that
+            is since midnight seven days ago.
         </p>
-        <ul>
-            <li>All-time statistics. This would allow us to display statistics such as the all-time high or low
-                temperature seen at your station;
-            </li>
-            <li>Seven days statistics. While WeeWX offers the tag <span class="code">$week</span>, this is statistics
-                <em>since Sunday at midnight</em>. We would like to have statistics for a full week, that is since
-                midnight seven days ago.
-            </li>
-        </ul>
         <p>
             This example is included in the distribution as <span class="code">examples/stats.py</span>. If you wish to
             use or modify it, first copy it over to <span class="code">user/stats.py</span>, then modify it there.
@@ -3859,7 +3863,6 @@ from weewx.tags import TimespanBinder
 from weeutil.weeutil import TimeSpan
 
 class MyStats(SearchList):                                                   # 1
-    """My search list extension"""
 
     def __init__(self, generator):                                           # 2
         SearchList.__init__(self, generator)
@@ -3877,24 +3880,13 @@ class MyStats(SearchList):                                                   # 1
                      object.
         """
 
-        # First, create TimespanBinder object for all time. This one is easy
-        # because the object timespan already holds all valid times to be
-        # used in the report.
-        all_stats = TimespanBinder(timespan,
-                                   db_lookup,
-                                   context='year',
-                                   formatter=self.generator.formatter,
-                                   converter=self.generator.converter,
-                                   skin_dict=self.generator.skin_dict)       # 4
-
-        # Now get a TimespanBinder object for the last seven days. This one we
-        # will have to calculate. First, calculate the time at midnight, seven
-        # days ago. The variable week_dt will be an instance of datetime.date.
+        # Create a TimespanBinder object for the last seven days. First, calculate
+        # the time at midnight, seven days ago. The variable week_dt will be an instance of
+        # datetime.date.
         week_dt = datetime.date.fromtimestamp(timespan.stop) \
-                  - datetime.timedelta(weeks=1)                              # 5
+                  - datetime.timedelta(weeks=1)                              # 4
         # Convert it to unix epoch time:
-        week_ts = time.mktime(week_dt.timetuple())                           # 6
-
+        week_ts = time.mktime(week_dt.timetuple())                           # 5
         # Form a TimespanBinder object, using the time span we just
         # calculated:
         seven_day_stats = TimespanBinder(TimeSpan(week_ts, timespan.stop),
@@ -3902,14 +3894,14 @@ class MyStats(SearchList):                                                   # 1
                                          context='week',
                                          formatter=self.generator.formatter,
                                          converter=self.generator.converter,
-                                         skin_dict=self.generator.skin_dict) # 7
+                                         skin_dict=self.generator.skin_dict) # 6
 
-        # Now create a small dictionary with keys 'alltime' and 'seven_day':
-        search_list_extension = {'alltime'   : all_stats,
-                                 'seven_day' : seven_day_stats}              # 8
+        # Now create a small dictionary with the key 'seven_day':
+        search_list_extension = {'seven_day' : seven_day_stats}              # 7
 
         # Finally, return our extension as a list:
-        return [search_list_extension]                                       # 9</pre>
+        return [search_list_extension]                                       # 8
+</pre>
 
         <p>Going through the example, line by line:</p>
         <ol>
@@ -3941,15 +3933,22 @@ class MyStats(SearchList):                                                   # 1
                     </li>
                 </ul>
             </li>
+            <li>The object <span class="code">timespan</span> holds the domain of all valid times for the template,
+                but in order to calculate statistics for the last seven days, we need not the earliest valid time,
+                but the time at midnight seven days ago. So, we do a little Python date arithmetic to calculate this.
+                The object <span class="code">week_dt</span> will be an instance of
+                <span class="code">datetime.date</span>.
+            </li>
+            <li>We convert it to unix epoch time and assign it to variable <span class="code">week_ts</span>.</li>
             <li>The class <span class="code">TimespanBinder</span> represents a statistical calculation over a time
                 period. We have already met it in the introduction <em><a href="#how_tags_work">How tags work</a></em>.
-                In our case, we will set it up to represent the statistics over all possible times. The class takes 6
+                In our case, we will set it up to represent the statistics over the last seven days. The class takes 6
                 parameters.
                 <ul>
-                    <li>The first, <span class='code'>timespan</span>, is the timespan over which the calculation is to
-                        be done. Here, we have a lucky coincidence: the variable <span class="code">timespan</span>
-                        already holds a <span class="code">TimeSpan</span> object representing the domain of all valid
-                        timespans, so we simply pass it in.
+                    <li>The first is the timespan over which the calculation is to be done, which, in our case, is the
+                        last seven days. In step 5, we calculated the start of the seven days. The end is "now", that
+                        is, the end of the reporting period. This is given by the end point of <span class="code">timespan</span>,
+                        <span class="code">timespan.stop</span>.
                     </li>
                     <li>The second, <span class='code'>db_lookup</span>, is the database lookup function to be used. We
                         simply pass in <span class="code">db_lookup</span>.
@@ -3957,9 +3956,9 @@ class MyStats(SearchList):                                                   # 1
                     <li>The third, <span class="code">context</span>, is the time <em>context</em> to be used when
                         formatting times. The set of possible choices is given by sub-section <a
                             href="#Units_TimeFormats"><span class="code">[[TimeFormats]]</span></a> in the configuration
-                        file. Because a tag like <span class="code">$alltime</span> is likely to span many years, we
-                        pass in <span class="code">'year'</span>, indicating that we want a time format that is suitable
-                        for long-time periods.
+                        file. Our new tag like <span class="code">$seven_day</span> is pretty similar to <span
+                            class="code">$week</span>, so we will just use <span class="code">'week'</span>, indicating
+                        that we want a time format that is suitable for a week-long period.
                     </li>
                     <li>The fourth, <span class="code">formatter</span>, should be an instance of class <span
                         class="code">weewx.units.Formatter</span>, which contains information about how the results
@@ -3976,28 +3975,12 @@ class MyStats(SearchList):                                                   # 1
                     </li>
                 </ul>
             </li>
-        </ol>
-        <p>
-            That one was relatively easy because we already had an instance of <span class="code">TimeSpan</span>, that
-            is, <span class="code">timespan</span>, which represented the time over which we wanted to do the
-            calculations. Setting up an instance that will work for the last seven days is a bit trickier. Continuing
-            our example...
-        </p>
-        <ol start="5">
-            <li>The object <span class="code">timespan</span> holds the domain of all valid times, but in order to
-                calculate statistics for the last seven days, we need not the earliest valid time, but the time at
-                midnight seven days ago. So, we do a little Python date arithmetic to calculate this. The object <span
-                    class="code">week_dt</span> will be an instance of <span class="code">datetime.date</span>.
-            </li>
-            <li>We convert it to unix epoch time.</li>
-            <li>Now we are ready to initialize an appropriate <span class="code">TimespanBinder</span> object. It's the
-                same as in step #4, except we use our new <span class="code">timespan</span> object and specify
-                a different time <span class="code">context</span>, one that is more suitable for a time span of a week.
-            </li>
-            <li>Create a small dictionary with two keys, <span class="code">alltime</span>, and <span class="code">seven_day</span>.
+            <li>Create a small dictionary with a single key, <span class="code">seven_day</span>, whose value will
+                be the <span class="code">TimespanBinder</span> that we just constructed.
             </li>
             <li>Return the dictionary in a list</li>
         </ol>
+
         <p>
             The final step that we need to do is to tell the template engine where to find our extension. You do that by
             going into the skin configuration file, <span class="code">skin.conf</span>, and adding the option <span
@@ -4023,25 +4006,25 @@ class MyStats(SearchList):                                                   # 1
 
         <p>
             Now, if the Cheetah engine encounters the tag <span class="code">
-          $alltime</span>, it will scan the search list, looking for an attribute or key that matches <span
-            class="code">alltime</span>. When it gets to the little dictionary we provided, it will find a matching key,
+          $seven_day</span>, it will scan the search list, looking for an attribute or key that matches <span
+            class="code">seven_day</span>. When it gets to the little dictionary we provided, it will find a matching key,
             allowing it to retrieve the appropriate <span class="code">TimespanBinder</span> object.
         </p>
 
-        <p>With this approach, you can now include "all time" or "seven day" statistics in your HTML templates:</p>
+        <p>With this approach, you can now include "seven day" statistics in your HTML templates:</p>
         <pre class="tty">
 &lt;table&gt;
     &lt;tr&gt;
-        &lt;td&gt;Maximum temperature to date: &lt;/td&gt;
-        &lt;td&gt;$alltime.outTemp.max&lt;/td&gt;
+        &lt;td&gt;Maximum temperature over the last seven days:&lt;/td&gt;
+        &lt;td&gt;$seven_day.outTemp.max&lt;/td&gt;
     &lt;/tr&gt;
     &lt;tr&gt;
-        &lt;td&gt;Minimum temperature to date: &lt;/td&gt;
-        &lt;td&gt;$alltime.outTemp.min
+        &lt;td&gt;Minimum temperature over the last seven days:&lt;/td&gt;
+        &lt;td&gt;$seven_day.outTemp.min&lt;/td&gt;
     &lt;/tr&gt;
     &lt;tr&gt;
-        &lt;td&gt;Rain over the last seven days: &lt;/td&gt;
-        &lt;td&gt;$seven_day.rain.sum
+        &lt;td&gt;Rain over the last seven days:&lt;/td&gt;
+        &lt;td&gt;$seven_day.rain.sum&lt;/td&gt;
     &lt;/tr&gt;
 &lt;/table&gt;</pre>
         <p>

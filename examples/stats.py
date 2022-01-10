@@ -5,10 +5,7 @@
 
 *******************************************************************************
 
-This search list extension offers two extra tags:
-
-    'alltime':   All time statistics.
-                 For example, "what is the all time high temperature?"
+This search list extension offers an extra tag:
 
     'seven_day': Statistics for the last seven days.
                  That is, since midnight seven days ago.
@@ -27,8 +24,7 @@ this:
 [CheetahGenerator]
     search_list_extensions = user.stats.MyStats
 
-You can then use tags such as $alltime.outTemp.max for the all-time max
-temperature, or $seven_day.rain.sum for the total rainfall in the last
+You can then use tags such as $seven_day.rain.sum for the total rainfall in the last
 seven days.
 
 *******************************************************************************
@@ -58,23 +54,13 @@ class MyStats(SearchList):                                                   # 1
                      object.
         """
 
-        # First, create TimespanBinder object for all time. This one is easy
-        # because the object timespan already holds all valid times to be
-        # used in the report.
-        all_stats = TimespanBinder(timespan, 
-                                   db_lookup,
-                                   context='year',
-                                   formatter=self.generator.formatter,
-                                   converter=self.generator.converter,
-                                   skin_dict=self.generator.skin_dict)       # 4
-        
-        # Now get a TimespanBinder object for the last seven days. This one we
-        # will have to calculate. First, calculate the time at midnight, seven
-        # days ago. The variable week_dt will be an instance of datetime.date.
+        # Create a TimespanBinder object for the last seven days. First, calculate
+        # the time at midnight, seven days ago. The variable week_dt will be an instance of
+        # datetime.date.
         week_dt = datetime.date.fromtimestamp(timespan.stop) \
-                  - datetime.timedelta(weeks=1)                              # 5
+                  - datetime.timedelta(weeks=1)                              # 4
         # Convert it to unix epoch time:
-        week_ts = time.mktime(week_dt.timetuple())                           # 6
+        week_ts = time.mktime(week_dt.timetuple())                           # 5
         # Form a TimespanBinder object, using the time span we just
         # calculated:
         seven_day_stats = TimespanBinder(TimeSpan(week_ts, timespan.stop),
@@ -82,11 +68,10 @@ class MyStats(SearchList):                                                   # 1
                                          context='week',
                                          formatter=self.generator.formatter,
                                          converter=self.generator.converter,
-                                         skin_dict=self.generator.skin_dict) # 7
+                                         skin_dict=self.generator.skin_dict) # 6
 
-        # Now create a small dictionary with keys 'alltime' and 'seven_day':
-        search_list_extension = {'alltime'   : all_stats,
-                                 'seven_day' : seven_day_stats}              # 8
+        # Now create a small dictionary with the key 'seven_day':
+        search_list_extension = {'seven_day' : seven_day_stats}              # 7
         
         # Finally, return our extension as a list:
-        return [search_list_extension]                                       # 9
+        return [search_list_extension]                                       # 8

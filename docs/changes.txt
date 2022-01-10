@@ -10,6 +10,8 @@ PR #659. Thanks to user edi-x!
 
 Added Cheetah helper functions $jsonize(), $rnd(), and $to_int().
 
+The tag $alltime, formerly available as an example, is now a part of WeeWX core.
+
 Added conversions for unix_epoch_ms and unix_epoch_ns. Calculations in
 celestial.inc now explicitly use unix_epoch.
 

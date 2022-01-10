@@ -104,6 +104,17 @@ class TimeBinder(object):
             context='year', formatter=self.formatter, converter=self.converter,
             **self.option_dict)
 
+    def alltime(self, data_binding=None):
+        manager = self.db_lookup(data_binding)
+        # We do not need to worry about 'first' being None, because CheetahGenerator would not
+        # start the generation if this was the case.
+        first = manager.firstGoodStamp()
+        return TimespanBinder(
+            weeutil.weeutil.TimeSpan(first, self.report_time),
+            self.db_lookup, data_binding=data_binding,
+            context='year', formatter=self.formatter, converter=self.converter,
+            **self.option_dict)
+
     def rainyear(self, data_binding=None):
         rain_year_start = to_int(self.option_dict.get('rain_year_start', 1))
         return TimespanBinder(
