@@ -1,4 +1,4 @@
-#    Copyright (c) 2009-2015 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2021 Tom Keffer <tkeffer@gmail.com>
 #    See the file LICENSE.txt for your rights.
 
 """Example of how to extend the search list used by the Cheetah generator.
@@ -22,7 +22,7 @@ the name of this extension.  When you're done, it will look something like
 this:
 
 [CheetahGenerator]
-    search_list_extensions = user.stats.MyStats
+    search_list_extensions = user.seven_day.SevenDay
 
 You can then use tags such as $seven_day.rain.sum for the total rainfall in the last
 seven days.
@@ -36,7 +36,7 @@ from weewx.cheetahgenerator import SearchList
 from weewx.tags import TimespanBinder
 from weeutil.weeutil import TimeSpan
 
-class MyStats(SearchList):                                                   # 1
+class SevenDay(SearchList):                                                  # 1
 
     def __init__(self, generator):                                           # 2
         SearchList.__init__(self, generator)

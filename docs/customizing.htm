@@ -3852,8 +3852,9 @@ $station.altitude</pre>
             is since midnight seven days ago.
         </p>
         <p>
-            This example is included in the distribution as <span class="code">examples/stats.py</span>. If you wish to
-            use or modify it, first copy it over to <span class="code">user/stats.py</span>, then modify it there.
+            This example is included in the distribution as <span class="code">examples/seven_day.py</span>. If you wish to
+            use or modify it, first copy it over to <span class="code">user/seven_day.py</span>, then modify it there.
+            Otherwise, at the next upgrade you will lose any changes you have made.
         </p>
         <pre class="tty">import datetime
 import time
@@ -3862,7 +3863,7 @@ from weewx.cheetahgenerator import SearchList
 from weewx.tags import TimespanBinder
 from weeutil.weeutil import TimeSpan
 
-class MyStats(SearchList):                                                   # 1
+class SevenDay(SearchList):                                                  # 1
 
     def __init__(self, generator):                                           # 2
         SearchList.__init__(self, generator)
@@ -3905,7 +3906,7 @@ class MyStats(SearchList):                                                   # 1
 
         <p>Going through the example, line by line:</p>
         <ol>
-            <li>Create a new class called <span class="code">MyStats</span>, which will inherit from class <span
+            <li>Create a new class called <span class="code">SevenDay</span>, which will inherit from class <span
                 class="code">SearchList</span>. All search list extensions must inherit from this class.
             </li>
             <li>Create an initializer for our new class. In this case, the initializer is not really necessary and does
@@ -3994,7 +3995,7 @@ class MyStats(SearchList):                                                   # 1
     # Possible encodings include 'html_entities', 'strict_ascii', 'normalized_ascii',
     # as well as those listed in https://docs.python.org/3/library/codecs.html#standard-encodings
     encoding = html_entities
-    <span class="highlight">search_list_extensions = user.stats.MyStats</span>
+    <span class="highlight">search_list_extensions = user.seven_day.SevenDay</span>
 
     [[SummaryByMonth]]
     ...
@@ -6573,9 +6574,10 @@ growing_base = 50.0, degree_F</pre>
         <p class="config_option">search_list_extensions</p>
         <p>
             This defines one or more search list objects that will be appended to the <span class="config_option">search_list</span>.
-            For example, the following adds alltime and forecast variables to the search list.
+            For example, if you are using the "seven day" and "forecast" search list extensions, the option would
+            look like
         </p>
-        <pre class="tty">search_list_extensions = user.stats.MyStats, user.forecast.ForecastVariables</pre>
+        <pre class="tty">search_list_extensions = user.seven_day.SevenDay, user.forecast.ForecastVariables</pre>
         <p class="config_option" id='option_encoding'>encoding</p>
 
         <p>
