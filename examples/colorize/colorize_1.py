@@ -7,7 +7,7 @@
 
 This search list extension offers an extra tag:
 
-    'colorize': Returns a color depending on temperature
+    'colorize': Returns a color depending on a temperature measured in Celsius.
 
 *******************************************************************************
 
@@ -22,38 +22,34 @@ the name of this extension.  When you're done, it will look something like this:
     [CheetahGenerator]
         search_list_extensions = user.colorize_1.Colorize
 
-
 You can then colorize backgrounds. For example, to colorize an HTML table cell:
 
 <table>
   <tr>
     <td>Outside temperature</td>
-    <td style="background-color:$colorize($current.outTemp)">$current.outTemp</td>
+    <td style="background-color:$colorize($current.outTemp.raw)">$current.outTemp</td>
   </tr>
 </table>
 
 *******************************************************************************
 """
-import weewx.units
+
 from weewx.cheetahgenerator import SearchList
 
 
 class Colorize(SearchList):                                          # 1
 
-    def colorize(self, value_vh):                                    # 2
-        """Choose a color string on the basis of a temperature value"""
+    def colorize(self, t_c):                                         # 2
+        """Choose a color on the basis of temperature
 
-        # Extract the ValueTuple part out of the ValueHelper
-        value_vt = value_vh.value_t                                  # 3
+        Args:
+            t_c (float): The temperature in degrees Celsius
 
-        # Convert to Celsius:
-        t_celsius = weewx.units.convert(value_vt, 'degree_C')        # 4
+        Returns:
+            str: A color string
+        """
 
-        # The variable "t_celsius" is a ValueTuple. Get just the value:
-        t_c = t_celsius.value                                        # 5
-
-        # Pick a color based on the temperature
-        if t_c is None:                                              # 6
+        if t_c is None:                                              # 3
             return ""
         elif t_c < -10:
             return "magenta"
