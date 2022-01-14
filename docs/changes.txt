@@ -12,6 +12,8 @@ Added Cheetah helper functions $jsonize(), $rnd(), and $to_int().
 
 The tag $alltime, formerly available as an example, is now a part of WeeWX core.
 
+New SLE example $colorize(). New document on how to write SLEs.
+
 Added conversions for unix_epoch_ms and unix_epoch_ns. Calculations in
 celestial.inc now explicitly use unix_epoch.
 

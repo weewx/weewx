@@ -1,7 +1,7 @@
 #    Copyright (c) 2009-2021 Tom Keffer <tkeffer@gmail.com>
 #    See the file LICENSE.txt for your rights.
 
-"""Example of how to extend the search list used by the Cheetah generator.
+"""Implementation of a $seven_day search list extension.
 
 *******************************************************************************
 

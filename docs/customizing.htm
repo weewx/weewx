@@ -3912,7 +3912,7 @@ class SevenDay(SearchList):                                                  # 1
             <li>Create an initializer for our new class. In this case, the initializer is not really necessary and does
                 nothing except pass its only parameter, <span class="code">generator</span>, a reference to the calling
                 generator, on to its superclass, <span class="code">SearchList</span>, which will then store it in
-                <span class="code">self</span>.
+                <span class="code">self</span>. Nevertheless, we include the initializer in case you wish to modify it.
             </li>
             <li>Override member function <span class="code">get_extension_list()</span>. This function will be called
                 when the generator is ready to accept your new search list extension. The parameters that will be passed

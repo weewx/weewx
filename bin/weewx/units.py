@@ -1422,7 +1422,6 @@ def convertStd(val_t, target_std_unit_system):
         >>> value_t = (1.2, 'inch', 'group_rain')
         >>> print("(%.2f, %s, %s)" % convertStd(value_t, weewx.METRICWX))
         (30.48, mm, group_rain)
-
     Args:
         val_t (ValueTuple): The ValueTuple to be converted.
         target_std_unit_system (int):  A standardized WeeWX unit system (weewx.US, weewx.METRIC,
@@ -1432,6 +1431,10 @@ def convertStd(val_t, target_std_unit_system):
         ValueTuple. A value tuple in the given standardized unit system.
     """
     return StdUnitConverters[target_std_unit_system].convert(val_t)
+
+def convertStdName(val_t, target_nickname):
+    """Convert to a target standard unit system, using the unit system's nickname"""
+    return convertStd(val_t, unit_constants[target_nickname.upper()])
 
 def getStandardUnitType(target_std_unit_system, obs_type, agg_type=None):
     """Given a standard unit system (weewx.US, weewx.METRIC, weewx.METRICWX),
