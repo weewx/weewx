@@ -30,6 +30,7 @@ allow you to colorize both temperature and UV values:
         [[group_temperature]]
             unit_system = metricwx
             default = tomato
+            None = gray
             [[[upper_bounds]]]
                 -10 = magenta
                 0 = violet
@@ -93,9 +94,14 @@ class Colorize(SearchList):                                               # 1
         unit_system = self.color_tables[unit_group]['unit_system']        # 6
         converted_vt = weewx.units.convertStdName(value_vt, unit_system)  # 7
 
-        # Now search for the value in the color table:
-        for upper_bound in self.color_tables[unit_group]['upper_bounds']: # 8
-            if converted_vt.value <= float(upper_bound):                  # 9
+        # Check for a value of None
+        if converted_vt.value is None:                                    # 8
+            return self.color_tables[unit_group].get('none') \
+                   or self.color_tables[unit_group].get('None', "")
+
+        # Search for the value in the color table:
+        for upper_bound in self.color_tables[unit_group]['upper_bounds']: # 9
+            if converted_vt.value <= float(upper_bound):                  # 10
                 return self.color_tables[unit_group]['upper_bounds'][upper_bound]
 
-        return self.color_tables[unit_group].get('default', "")           # 10
+        return self.color_tables[unit_group].get('default', "")           # 11

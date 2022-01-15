@@ -703,14 +703,15 @@ class Colorize(SearchList):                                          # 1
     [[group_temperature]]       # 2
         unit_system = metricwx  # 3
         default = tomato        # 4
-        [[[upper_bounds]]]      # 5
-            -10 = magenta       # 6
-            0 = violet          # 7
+        None = lightgray        # 5
+        [[[upper_bounds]]]      # 6
+            -10 = magenta       # 7
+            0 = violet          # 8
             10 = lavender
             20 = mocassin
             30 = yellow
             40 = coral
-    [[group_uv]]                # 8
+    [[group_uv]]                # 9
         unit_system = metricwx
         default = darkviolet
         [[[upper_bounds]]]
@@ -739,6 +740,10 @@ class Colorize(SearchList):                                          # 1
             <li>
                 In case we do not find a value in the table, we need a default. We will use the color <span
                 class="code">tomato</span>.
+            </li>
+            <li>
+                In case the value is Python None, return the color given by option <span class="code">None</span>. We
+                will use <span class="code">lightgray</span>.
             </li>
             <li>
                 The sub-subsecction <span class="code">[[[upper_bounds]]]</span> lists the upper (max) value of each of
@@ -794,12 +799,17 @@ class Colorize(SearchList):                                               # 1
         unit_system = self.color_tables[unit_group]['unit_system']        # 6
         converted_vt = weewx.units.convertStdName(value_vt, unit_system)  # 7
 
-        # Now search for the value in the color table:
-        for upper_bound in self.color_tables[unit_group]['upper_bounds']: # 8
-            if converted_vt.value <= float(upper_bound):                  # 9
+        # Check for a value of None
+        if converted_vt.value is None:                                    # 8
+            return self.color_tables[unit_group].get('none') \
+                   or self.color_tables[unit_group].get('None', "")
+
+        # Search for the value in the color table:
+        for upper_bound in self.color_tables[unit_group]['upper_bounds']: # 9
+            if converted_vt.value <= float(upper_bound):                  # 10
                 return self.color_tables[unit_group]['upper_bounds'][upper_bound]
 
-        return self.color_tables[unit_group].get('default', "")           # 10
+        return self.color_tables[unit_group].get('default', "")           # 11
 </pre>
         <ol>
             <li>
@@ -832,6 +842,12 @@ class Colorize(SearchList):                                               # 1
                 Convert the incoming value so it uses the same units as the color table.
             </li>
             <li>
+                We must always be vigilant for values of Python None! The expression <span class="code">
+                self.color_tables[unit_group].get('none') or self.color_tables[unit_group].get('None', "")</span> is
+                just a trick to allow us to accept either "<span class="code">none</span>" or "<span
+                class="code">None</span>" in the configuration file.
+            </li>
+            <li>
                 Now start searching the color table to find a band that is less than or equal to the value we have in
                 hand.
             </li>
@@ -845,10 +861,10 @@ class Colorize(SearchList):                                               # 1
                     class="code">.value</span>.
                 </p>
                 <p>
-                    Second, WeeWX uses the configuration utility <span class="code">ConfigObj</span>. When <span
-                    class="code">ConfigObj</span> reads and returns the skin configuration dictionaries, the values will
-                    be <em>strings</em>. We must convert these to floats before doing the comparison. You must be
-                    constantly vigilant about this when working with configuration information.
+                    Second, WeeWX uses the utility <span class="code">ConfigObj</span> to read configuration files. When
+                    <span class="code">ConfigObj</span> returns its results, the values will be <em>strings</em>. We
+                    must convert these to floats before doing the comparison. You must be constantly vigilant about this
+                    when working with configuration information.
                 </p>
                 <p>
                     If we find a band with an upper bound greater than our value, we have a hit. Return the
