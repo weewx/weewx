@@ -50,7 +50,7 @@ class Colorize(SearchList):                                          # 1
         """
 
         if t_c is None:                                              # 3
-            return ""
+            return "#00000000"
         elif t_c < -10:
             return "magenta"
         elif t_c < 0:
@@ -58,7 +58,7 @@ class Colorize(SearchList):                                          # 1
         elif t_c < 10:
             return "lavender"
         elif t_c < 20:
-            return "mocassin"
+            return "moccasin"
         elif t_c < 30:
             return "yellow"
         elif t_c < 40:

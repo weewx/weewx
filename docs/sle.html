@@ -455,7 +455,7 @@ class Colorize(SearchList):                                          # 1
         """
 
         if t_c is None:                                              # 3
-            return ""
+            return "#00000000"
         elif t_c < -10:
             return "magenta"
         elif t_c < 0:
@@ -493,7 +493,8 @@ class Colorize(SearchList):                                          # 1
             <li>
                 The function relies on a big if/else statement to pick a color on the basis of the temperature value.
                 Note how it starts by checking whether the value could be Python None. WeeWX uses None to represent
-                missing or invalid data. One must be always vigilant in guarding against a None value.
+                missing or invalid data. One must be always vigilant in guarding against a None value. If None is found,
+                then the color #00000000 is returned, which is transparent and will have no effect.
             </li>
         </ol>
 
@@ -601,7 +602,7 @@ class Colorize(SearchList):                                          # 1
 
         # Pick a color based on the temperature
         if t_c is None:                                              # 6
-            return ""
+            return "#00000000"
         elif t_c < -10:
             return "magenta"
         elif t_c < 0:
@@ -771,7 +772,7 @@ class Colorize(SearchList):                                          # 1
         <h4>Annotated code</h4>
         <p>
             Here's the alternative version of <span class="code">colorize()</span>, which will use the values in the
-            configuration file. It can also be found in <span class="code">examples/colorize/colorize_2.py</span>.
+            configuration file. It can also be found in <span class="code">examples/colorize/colorize_3.py</span>.
         </p>
         <pre class="tty">
 import weewx.units
@@ -842,10 +843,10 @@ class Colorize(SearchList):                                               # 1
                 Convert the incoming value so it uses the same units as the color table.
             </li>
             <li>
-                We must always be vigilant for values of Python None! The expression <span class="code">
-                self.color_tables[unit_group].get('none') or self.color_tables[unit_group].get('None', "")</span> is
-                just a trick to allow us to accept either "<span class="code">none</span>" or "<span
-                class="code">None</span>" in the configuration file.
+                We must always be vigilant for values of Python None! The expression
+                <pre class="tty">self.color_tables[unit_group].get('none') or self.color_tables[unit_group].get('None', "")</pre>
+                is just a trick to allow us to accept either "<span class="code">none</span>" or "<span class="code">None</span>"
+                in the configuration file.
             </li>
             <li>
                 Now start searching the color table to find a band that is less than or equal to the value we have in
@@ -878,7 +879,9 @@ class Colorize(SearchList):                                               # 1
         </ol>
 
 
-        <h1 id="ValueTuple">Appendix: class <span class="code">ValueTuple</span></h1>
+        <h1>Appendix</h1>
+
+        <h2 id="ValueTuple">Class <span class="code">ValueTuple</span></h2>
         <p>
             Class <span class="code">ValueTuple</span> is a 3-way tuple with a named tuple interface: values can be
             accessed by index or by attribute name. You can think of it as a unit-aware value, useful for converting to
@@ -921,22 +924,45 @@ class Colorize(SearchList):                                               # 1
             in). In this case, you won't be able to convert it to another unit.
         </p>
 
-        <h1 id="ValueHelper">Appendix: class <span class="code">ValueHelper</span></h1>
+        <h2 id="ValueHelper">Class <span class="code">ValueHelper</span></h2>
         <p>
             Class <span class="code">ValueHelper</span> contains all the information necessary to do the proper
             formatting of a value, including a unit label.
         </p>
-        <p>
-            Instance attribute:
-        </p>
-        <p class="code">ValueHelper.value_t</p>
-        <p style="margin-left:40px">Returns the <span class="code">ValueTuple</span> instance held internally.</p>
 
-        <p>
-            Instance method:
+        <h4>Instance attribute</h4>
+        <p class="code">ValueHelper.<b>value_t</b></p>
+        <p class="indent">Returns the <span class="code">ValueTuple</span> instance held internally.</p>
+
+        <h4>Instance methods</h4>
+        <p class="code">ValueHelper.<b>__str__</b>()</p>
+        <p class="indent">Formats the value as a string, including a unit label, and returns it.</p>
+
+        <p class="code">
+            ValueHelper.<b>format</b>(<em>format_string=None, None_string=None, add_label=True, localize=True</em>)
         </p>
-        <p class="code">ValueHelper.__str__()</p>
-        <p style="margin-left:40px">Formats the value as a string, including a unit label, and returns it.</p>
+        <div class="indent">
+            <p>
+                Format the value as a string, using various specified options, and return it. Unless otherwise
+                specified, a label is included.
+            </p>
+            <p>
+                <span class="code">format_string</span> A string to be used for formatting. It must include one, and
+                only one, <a href="https://docs.python.org/3/library/string.html#formatspec">format specifier</a>.
+            </p>
+            <p>
+                <span class="code">None_string</span> In the event of a value of Python None, this string will be
+                substituted. If None, then a default string from <span class="code">skin.conf</span> will be used.
+            </p>
+            <p>
+                <span class="code">add_label</span> If truthy, then an appropriate unit label will be attached.
+                Otherwise, no label is attached.
+            </p>
+            <p>
+                <span class="code">localize</span> If truthy, then the results will be localized. For example, in some
+                locales, a comma will be used as the decimal specifier.
+            </p>
+        </div>
 
     </div> <!-- End id 'technical_content' -->
 </div>  <!-- End class 'main' -->

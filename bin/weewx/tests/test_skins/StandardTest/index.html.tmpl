@@ -24,7 +24,7 @@ FALSE#slurp
   }
 </style>
 </head>
-<body>
+<body style="background-color:aliceblue">
 
   <h1>Tests for tag \$station</h1>
   <table>
@@ -554,6 +554,37 @@ FALSE#slurp
       from $seven_day.wind.gustdir <br/>
       at $seven_day.wind.maxtime
       </td>
+    </tr>
+  </table>
+
+  <h1>Test for various versions of \$colorize</h1>
+  <table>
+    <tr>
+      <td align="right">Current temperature using \$colorize_1</td>
+      <td align="left" style="background-color:$colorize_1($current.outTemp.degree_C.raw)">$current.outTemp</td>
+    </tr>
+    <tr>
+      <td align="right">Current temperature using \$colorize_2</td>
+      <td align="left" style="background-color:$colorize_2($current.outTemp)">$current.outTemp</td>
+    </tr>
+    <tr>
+      <td align="right">Current temperature using \$colorize_3</td>
+      <td align="left" style="background-color:$colorize_3($current.outTemp)">$current.outTemp</td>
+    </tr>
+  </table>
+  <p>Tests at timestamp 1280692800, when the temperature is null:</p>
+  <table>
+    <tr>
+      <td align="right">Null temperature using \$colorize_1</td>
+      <td align="left" style="background-color:$colorize_1($current(timestamp=1280692800).outTemp.degree_C.raw)">$current(timestamp=1280692800).outTemp</td>
+    </tr>
+    <tr>
+      <td align="right">Null temperature using \$colorize_2</td>
+      <td align="left" style="background-color:$colorize_2($current(timestamp=1280692800).outTemp)">$current(timestamp=1280692800).outTemp</td>
+    </tr>
+    <tr>
+      <td align="right">Null temperature using \$colorize_3</td>
+      <td align="left" style="background-color:$colorize_3($current(timestamp=1280692800).outTemp)">$current(timestamp=1280692800).outTemp</td>
     </tr>
   </table>
 

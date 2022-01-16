@@ -13,7 +13,7 @@
   }
 </style>
 </head>
-<body>
+<body style="background-color:aliceblue">
 
   <h1>Tests for tag $station</h1>
   <table>
@@ -554,6 +554,37 @@
       from 90&#176; <br/>
       at 01:00 on Monday
       </td>
+    </tr>
+  </table>
+
+  <h1>Test for various versions of $colorize</h1>
+  <table>
+    <tr>
+      <td align="right">Current temperature using $colorize_1</td>
+      <td align="left" style="background-color:moccasin">63.9&#176;F</td>
+    </tr>
+    <tr>
+      <td align="right">Current temperature using $colorize_2</td>
+      <td align="left" style="background-color:moccasin">63.9&#176;F</td>
+    </tr>
+    <tr>
+      <td align="right">Current temperature using $colorize_3</td>
+      <td align="left" style="background-color:moccasin">63.9&#176;F</td>
+    </tr>
+  </table>
+  <p>Tests at timestamp 1280692800, when the temperature is null:</p>
+  <table>
+    <tr>
+      <td align="right">Null temperature using $colorize_1</td>
+      <td align="left" style="background-color:#00000000">   N/A</td>
+    </tr>
+    <tr>
+      <td align="right">Null temperature using $colorize_2</td>
+      <td align="left" style="background-color:#00000000">   N/A</td>
+    </tr>
+    <tr>
+      <td align="right">Null temperature using $colorize_3</td>
+      <td align="left" style="background-color:lightgray">   N/A</td>
     </tr>
   </table>
 

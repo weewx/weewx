@@ -30,12 +30,12 @@ allow you to colorize both temperature and UV values:
         [[group_temperature]]
             unit_system = metricwx
             default = tomato
-            None = gray
+            None = lightgray
             [[[upper_bounds]]]
                 -10 = magenta
                 0 = violet
                 10 = lavender
-                20 = mocassin
+                20 = moccasin
                 30 = yellow
                 40 = coral
         [[group_uv]]
