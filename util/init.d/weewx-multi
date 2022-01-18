@@ -169,23 +169,23 @@ RETVAL=0
 case "$CMD" in
     start)
         for i in $INSTANCES; do
-            [ "$VERBOSE" != no ] && log_daemon_msg "Starting $DESC" "$i"
+            log_daemon_msg "Starting $DESC" "$i"
             do_start $i
             case "$?" in
-                0) [ "$VERBOSE" != no ] && log_end_msg 0 ;;
-                1) [ "$VERBOSE" != no ] && log_action_cont_msg " already running" && log_end_msg 0 ;;
-                2) [ "$VERBOSE" != no ] && log_end_msg 1; $RETVAL=1 ;;
+                0) log_end_msg 0 ;;
+                1) log_action_cont_msg " already running" && log_end_msg 0 ;;
+                2) log_end_msg 1; $RETVAL=1 ;;
             esac
         done
         ;;
     stop)
         for i in $INSTANCES; do
-            [ "$VERBOSE" != no ] && log_daemon_msg "Stopping $DESC" "$i"
+            log_daemon_msg "Stopping $DESC" "$i"
             do_stop $i
             case "$?" in
-                0) [ "$VERBOSE" != no ] && log_end_msg 0 ;;
-                1) [ "$VERBOSE" != no ] && log_action_cont_msg " not running" && log_end_msg 0 ;;
-                2) [ "$VERBOSE" != no ] && log_end_msg 1; $RETVAL=1 ;;
+                0) log_end_msg 0 ;;
+                1) log_action_cont_msg " not running" && log_end_msg 0 ;;
+                2) log_end_msg 1; $RETVAL=1 ;;
             esac
         done
         ;;
@@ -203,19 +203,19 @@ case "$CMD" in
         ;;
     restart)
         for i in $INSTANCES; do
-            [ "$VERBOSE" != no ] && log_daemon_msg "Restarting $DESC" "$i"
+            log_daemon_msg "Restarting $DESC" "$i"
             do_stop $i
             case "$?" in
                 0|1)
                     do_start $i
                     case "$?" in
-                        0) [ "$VERBOSE" != no ] && log_end_msg 0 ;;
-                        1) [ "$VERBOSE" != no ] && log_end_msg 1; RETVAL=1 ;; # Old process is still running
-                        *) [ "$VERBOSE" != no ] && log_end_msg 1; RETVAL=1 ;; # Failed to start
+                        0) log_end_msg 0 ;;
+                        1) log_end_msg 1; RETVAL=1 ;; # Old process is still running
+                        *) log_end_msg 1; RETVAL=1 ;; # Failed to start
                     esac
                     ;;
                 *)
-                    [ "$VERBOSE" != no ] && log_end_msg 1
+                    log_end_msg 1
                     RETVAL=1
                     ;;
             esac
