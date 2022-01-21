@@ -12,6 +12,10 @@
 #set $obs_type_sum = $DisplayOptions.get('obs_type_sum', ['rain'])
 #set $obs_type_max = $DisplayOptions.get('obs_type_max', ['rainRate'])
 
+## use this span to determine whether there are any data to consider.
+#set $recent=$span($day_delta=30)
+##set $recent=$year
+
 <div id='hilo_widget' class="widget">
   <div class="widget_title">
     <a href="statistics.html">$gettext("Statistics")</a>
@@ -37,7 +41,7 @@
       </tr>
 
 #for $x in $observations
-  #if $getVar('year.%s.has_data' % $x)
+  #if getattr($recent, $x).has_data
     #if $x == 'windSpeed'
       <tr>
         <td class="label">$gettext("Max Wind")</td>

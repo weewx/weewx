@@ -5,6 +5,10 @@
 #set $periods = $DisplayOptions.get('periods', ['day', 'week', 'month', 'year'])
 #set $plot_groups = $DisplayOptions.get('plot_groups', ['tempdew', 'wind', 'rain'])
 
+## use this span to determine whether there are any data to consider.
+#set $recent=$span($day_delta=30)
+##set $recent=$year
+
 <!DOCTYPE html>
 <html lang="$lang">
   <head>
@@ -56,7 +60,7 @@
     *#
     #set $plot_name = $period + $plot_group
     #for obs in $getobs($plot_name)
-      #if $getVar('year.%s.has_data' % $obs)
+      #if getattr($recent, $obs).has_data
         #set $show_plot = 1
       #end if
     #end for

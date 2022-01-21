@@ -8,16 +8,21 @@
 ## battery status, and various voltages.  if there are no data available,
 ## then this degenerates to nothing displayed.
 
+## remember the current time - we will use it more than once.
 #import time
 #set $now = time.time()
 
+## use this span to determine whether there are any data to consider.
+#set $recent=$span($day_delta=30)
+##set $recent=$year
+
 #def get_battery_status($x)
 #if $x is None
-<span class="status_unknown">UNKNOWN</span>
+<span class="status_unknown">$gettext('UNKNOWN')</span>
 #elif $x == 1
-<span class="status_low">LOW</span>
+<span class="status_low">$gettext('LOW')</span>
 #else
-<span class="status_ok">OK</span>
+<span class="status_ok">$gettext('OK')</span>
 #end if
 #end def
 
@@ -39,7 +44,7 @@ $hours $gettext('hours ago')
 $days $gettext('days ago')
     #end if
   #else
-never
+$gettext('never')
   #end if
 #end def
 
@@ -54,21 +59,21 @@ never
 
 #set $have_conn = 0
 #for $x in $sensor_connections
-  #if $getVar('year.%s.has_data' % $x)
+  #if getattr($recent, $x).has_data
     #set $have_conn = 1
   #end if
 #end for
 
 #set $have_battery = 0
 #for $x in $sensor_batteries
-  #if $getVar('year.%s.has_data' % $x)
+  #if getattr($recent, $x).has_data
     #set $have_battery = 1
   #end if
 #end for
 
 #set $have_voltage = 0
 #for $x in $sensor_voltages
-  #if $getVar('year.%s.has_data' % $x)
+  #if getattr($recent, $x).has_data
     #set $have_voltage = 1
   #end if
 #end for
@@ -88,11 +93,12 @@ never
 #if $have_conn
     <tr><th>$gettext("Connectivity")</th><th></th></tr>
 #for $x in $sensor_connections
-  #if $getVar('year.%s.has_data' % $x)
+  #if getattr($recent, $x).has_data
     <tr>
       <td class="label">$obs.label[$x]</td>
       <td class="data">$getVar('current.' + $x)</td>
-      <td class="timestamp">$get_time_delta($getVar('year.%s.lasttime.raw' % $x), $now)</td>
+#set $lasttime = getattr($recent, $x).lasttime.raw
+      <td class="timestamp">$get_time_delta($lasttime, $now)</td>
     </tr>
   #end if
 #end for
@@ -101,11 +107,12 @@ never
 #if $have_battery
     <tr><th>$gettext("Battery Status")</th><th></th></tr>
 #for $x in $sensor_batteries
-  #if $getVar('year.%s.has_data' % $x)
+  #if getattr($recent, $x).has_data
     <tr>
       <td class="label">$obs.label[$x]</td>
       <td class="data">$get_battery_status($getVar('current.%s.raw' % $x))</td>
-      <td class="timestamp">$get_time_delta($getVar('year.%s.lasttime.raw' % $x), $now)</td>
+#set $lasttime = getattr($recent, $x).lasttime.raw
+      <td class="timestamp">$get_time_delta($lasttime, $now)</td>
     </tr>
   #end if
 #end for
@@ -114,11 +121,12 @@ never
 #if $have_voltage
     <tr><th>$gettext("Voltage")</th><th></th></tr>
 #for $x in $sensor_voltages
-  #if $getVar('year.%s.has_data' % $x)
+  #if getattr($recent, $x).has_data
     <tr>
       <td class="label">$obs.label[$x]</td>
       <td class="data">$getVar('current.' + $x)</td>
-      <td class="timestamp">$get_time_delta($getVar('year.%s.lasttime.raw' % $x), $now)</td>
+#set $lasttime = getattr($recent, $x).lasttime.raw
+      <td class="timestamp">$get_time_delta($lasttime, $now)</td>
     </tr>
   #end if
 #end for
