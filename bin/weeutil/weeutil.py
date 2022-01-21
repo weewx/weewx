@@ -191,8 +191,16 @@ def startOfInterval(time_ts, interval):
     return start_interval_ts
 
 
-def _ord_to_ts(_ord):
-    d = datetime.date.fromordinal(_ord)
+def _ord_to_ts(ord):
+    """Convert from ordinal date to unix epoch time.
+
+    Args:
+        ord (int): A proleptic Gregorian ordinal.
+
+    Returns:
+        int: Unix epoch time of the start of the corresponding day.
+    """
+    d = datetime.date.fromordinal(ord)
     t = int(time.mktime(d.timetuple()))
     return t
 
@@ -396,7 +404,7 @@ def archiveHoursAgoSpan(time_ts, hours_ago=0, grace=1):
 
 
 def archiveSpanSpan(time_ts, time_delta=0, hour_delta=0, day_delta=0, week_delta=0, month_delta=0,
-                    year_delta=0):
+                    year_delta=0, boundary=None):
     """ Returns a TimeSpan for the last xxx seconds where xxx equals
         time_delta sec + hour_delta hours + day_delta days + week_delta weeks + month_delta months + year_delta years
 
@@ -459,10 +467,15 @@ def archiveSpanSpan(time_ts, time_delta=0, hour_delta=0, day_delta=0, week_delta
     start_dt = time_dt.replace(year=year, month=month)
 
     # Finally, convert to unix epoch time
-    start_ts = int(time.mktime(start_dt.timetuple()))
+    if boundary is None:
+        start_ts = int(time.mktime(start_dt.timetuple()))
+        if start_ts == time_ts:
+            start_ts -= 1
+    elif boundary.lower() == 'midnight':
+        start_ts = _ord_to_ts(start_dt.toordinal())
+    else:
+        return weewx.ViolatedPrecondition("Unknown boundary %s" % boundary)
 
-    if start_ts == time_ts:
-        start_ts -= 1
     return TimeSpan(start_ts, time_ts)
 
 

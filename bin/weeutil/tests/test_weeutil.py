@@ -218,9 +218,10 @@ class WeeutilTest(unittest.TestCase):
         self.assertIsNone(archiveHoursAgoSpan(None, hours_ago=24))
 
     def test_archiveSpanSpan(self):
+        """Test archiveSpanSpan() using Brisbane time"""
         os.environ['TZ'] = 'Australia/Brisbane'
         time.tzset()
-        time_ts = time.mktime(time.strptime("2015-07-21 09:05:35", "%Y-%m-%d %H:%M:%S"))
+        time_ts = int(time.mktime(time.strptime("2015-07-21 09:05:35", "%Y-%m-%d %H:%M:%S")))
         self.assertEqual(time_ts, 1437433535)
         self.assertEqual(archiveSpanSpan(time_ts, time_delta=3600),
                          TimeSpan(1437429935, 1437433535))
@@ -232,6 +233,17 @@ class WeeutilTest(unittest.TestCase):
         self.assertEqual(archiveSpanSpan(time_ts, month_delta=1), TimeSpan(1434841535, 1437433535))
         self.assertEqual(archiveSpanSpan(time_ts, year_delta=1), TimeSpan(1405897535, 1437433535))
         self.assertEqual(archiveSpanSpan(time_ts), TimeSpan(1437433534, 1437433535))
+
+        # Test forcing to midnight boundary:
+        self.assertEqual(archiveSpanSpan(time_ts, hour_delta=6, boundary='midnight'),
+                         TimeSpan(1437400800, 1437433535))
+        self.assertEqual(archiveSpanSpan(time_ts, day_delta=1, boundary='midnight'),
+                         TimeSpan(1437314400, 1437433535))
+        self.assertEqual(archiveSpanSpan(time_ts, time_delta=3600, day_delta=1, boundary='midnight'),
+                         TimeSpan(1437314400, 1437433535))
+        self.assertEqual(archiveSpanSpan(time_ts, week_delta=4, boundary='midnight'),
+                         TimeSpan(1434981600, 1437433535))
+
 
         # Test over a DST boundary. Because Brisbane does not observe DST, we need to
         # switch timezones.

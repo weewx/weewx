@@ -124,12 +124,12 @@ class TimeBinder(object):
             **self.option_dict)
 
     def span(self, data_binding=None, time_delta=0, hour_delta=0, day_delta=0, week_delta=0,
-             month_delta=0, year_delta=0):
+             month_delta=0, year_delta=0, boundary=None):
         return TimespanBinder(
             weeutil.weeutil.archiveSpanSpan(self.report_time, time_delta=time_delta,
                                             hour_delta=hour_delta, day_delta=day_delta,
                                             week_delta=week_delta, month_delta=month_delta,
-                                            year_delta=year_delta),
+                                            year_delta=year_delta, boundary=boundary),
             self.db_lookup, data_binding=data_binding,
             context='day', formatter=self.formatter, converter=self.converter,
             **self.option_dict)

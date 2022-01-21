@@ -2700,17 +2700,21 @@ or in foobar units: $day.barometer.min.foobar
             the current time. Its most general form looks like:
         </p>
 
-        <pre class="tty">$<em>span</em>([$data_binding=<em>binding_name</em>][,<em>$optional_delta</em>=<em>delta</em>]).<em>obstype</em>.<em>aggregation</em>[.<em>optional_unit_conversion</em>][.<em>optional_formatting</em>]</pre>
+        <pre class="tty">$<em>span</em>([data_binding=<em>binding_name</em>][,<em>optional_delta</em>=<em>delta</em>][,boundary=[None|'midnight'])
+            .<em>obstype</em>
+            .<em>aggregation</em>
+            [.<em>optional_unit_conversion</em>]
+            [.<em>optional_formatting</em>]</pre>
 
         <p>Where:</p>
         <p class="indent">
-            <span class="code">binding_name</span> is a <em>binding name</em> to a database. An example would be <span
+            <em><span class="code">binding_name</span></em> is a <em>binding name</em> to a database. An example would be <span
             class="code">wx_binding</span>. See the section <em><a href="#binding_names">Binding names</a></em> for more
             details.
         </p>
 
         <p class="indent">
-            <span class="code"><em>$optional_delta</em>=<em>delta</em></span> is one or more comma separated delta
+            <span class="code"><em>optional_delta</em>=<em>delta</em></span> is one or more comma separated delta
             settings from the table below. If more than one delta setting is included then the period used for the
             aggregate is the sum of the individual delta settings. If no delta setting is included, or all included
             delta settings are zero, the returned aggregate is based on the current <span class="code">obstype</span>
@@ -2718,21 +2722,27 @@ or in foobar units: $day.barometer.min.foobar
         </p>
 
         <p class="indent">
-            <span class="code">obstype</span> is a observation type, such as <span class="code">outTemp</span>.
+            <span class="code">boundary</span> is an optional specifier that can force the starting time to a time
+            boundary. If set to 'midnight', then the starting time will be at the previous midnight. If left out,
+            then the start time will be the sum of the optional deltas.
         </p>
 
         <p class="indent">
-            <span class="code">aggregation</span> is an <em>aggregation type</em>. Possible aggregation types are given
+            <em><span class="code">obstype</span></em> is a observation type, such as <span class="code">outTemp</span>.
+        </p>
+
+        <p class="indent">
+            <em><span class="code">aggregation</span></em> is an <em>aggregation type</em>. Possible aggregation types are given
             in <em><a href="#aggregation_types"> Appendix: Aggregation types</a></em>.
         </p>
 
         <p class="indent">
-            <span class="code">optional_unit_conversion</span> is an optional unit conversion tag. See the section
+            <em><span class="code">optional_unit_conversion</span></em> is an optional unit conversion tag. See the section
             <em><a href="#unit_conversion_options"> Unit conversion options</a></em>.
         </p>
 
         <p class="indent">
-            <span class="code">optional_formatting</span> is an optional formatting tag that controls how the value will
+            <em><span class="code">optional_formatting</span></em> is an optional formatting tag that controls how the value will
             appear. See the section <em><a href="#formatting_options">Formatting options</a></em>.
         </p>
         <p>There are several different delta settings that can be used:</p>
