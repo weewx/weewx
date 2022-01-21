@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Search list extensions</title>
+    <title>Search List Extensions</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <link rel="icon" href="images/favicon.png" type="image/png"/>
@@ -109,15 +109,15 @@ $station.altitude</pre>
         <p id="return_ValueHelper">
             What this attribute returns is not a raw value, say <span class="code">700</span>, nor even a string.
             Instead, it returns an instance of the class <span class="code">ValueHelper</span>, a special class defined
-            in module <span class="code">weewx.units</span>. Details about it can be found in <a
-            href="#ValueHelper"><em>Appendix: <span class="code">ValueHelper</span></em></a>. Internally, it holds not
-            only the raw value, but also references to the formats, labels, and conversion targets you specified in your
-            configuration file. Its job is to make sure that the final output reflects these preferences. Cheetah
-            doesn't know anything about this class. What it needs, when it has finished evaluating the expression <span
-            class="code">$station.altitude</span>, is a <em>string</em>. In order to convert the <span class="code">ValueHelper</span>
-            it has in hand into a string, it does what every other Python object does when faced with this problem: it
-            calls the special method <span class="code"><a style="text-decoration: none"
-                                                           href="https://docs.python.org/3/reference/datamodel.html#object.__str__">__str__</a></span>.
+            in module <span class="code">weewx.units</span>. Details about it can be found in the appendix<a
+            href="customizing.htm#ValueHelper"><em><span class="code">ValueHelper</span></em></a> in the <em>Customizing
+            Guide</em>. Internally, it holds not only the raw value, but also references to the formats, labels, and
+            conversion targets you specified in your configuration file. Its job is to make sure that the final output
+            reflects these preferences. Cheetah doesn't know anything about this class. What it needs, when it has
+            finished evaluating the expression <span class="code">$station.altitude</span>, is a <em>string</em>. In
+            order to convert the <span class="code">ValueHelper</span> it has in hand into a string, it does what every
+            other Python object does when faced with this problem: it calls the special method <span class="code"><a
+            style="text-decoration: none" href="https://docs.python.org/3/reference/datamodel.html#object.__str__">__str__</a></span>.
             Class <span class="code">ValueHelper</span> has a definition for this method. Evaluating this function
             triggers the final steps in this process. Any necessary unit conversions are done, then formatting occurs
             and, finally, a label is attached. The result is a string something like
@@ -629,8 +629,8 @@ class Colorize(SearchList):                                          # 1
             <li>
                 <p>
                     However, in this example, notice that the argument to <span class="code">colorize()</span> is an
-                    instance of class <a href="#ValueHelper"><span class="code">ValueHelper</span></a>, instead of a
-                    simple float.
+                    instance of class <a href="customizing.htm#ValueHelper"><span class="code">ValueHelper</span></a>,
+                    instead of a simple float.
                 </p>
                 <p>
                     As before, we do not define an initializer, <span class="code">__init__()</span>, and, instead, rely
@@ -639,8 +639,9 @@ class Colorize(SearchList):                                          # 1
             </li>
             <li>
                 The argument <span class="code">value_vh</span> will contain many things, including formatting and
-                preferred units, but, for now, we are only interested in the <a href="#ValueTuple"><span class="code">ValueTuple</span></a>
-                contained within, which can be extracted with the attribute <span class="code">value_t</span>.
+                preferred units, but, for now, we are only interested in the <a href="customizing.htm#ValueTuple"><span
+                class="code">ValueTuple</span></a> contained within, which can be extracted with the attribute <span
+                class="code">value_t</span>.
             </li>
             <li>
                 The variable <span class="code">value_vt</span> could be in any unit that measures temperature. Our code
@@ -794,7 +795,7 @@ class Colorize(SearchList):                                               # 1
         # specifies a unit system.
         if unit_group not in self.color_tables \
                 or 'unit_system' not in self.color_tables[unit_group]:    # 5
-            return ""
+            return "#00000000"
 
         # Convert the value to the same unit used by the color table:
         unit_system = self.color_tables[unit_group]['unit_system']        # 6
@@ -803,14 +804,14 @@ class Colorize(SearchList):                                               # 1
         # Check for a value of None
         if converted_vt.value is None:                                    # 8
             return self.color_tables[unit_group].get('none') \
-                   or self.color_tables[unit_group].get('None', "")
+                   or self.color_tables[unit_group].get('None', "#00000000")
 
         # Search for the value in the color table:
         for upper_bound in self.color_tables[unit_group]['upper_bounds']: # 9
             if converted_vt.value <= float(upper_bound):                  # 10
                 return self.color_tables[unit_group]['upper_bounds'][upper_bound]
 
-        return self.color_tables[unit_group].get('default', "")           # 11
+        return self.color_tables[unit_group].get('default', "#00000000")  # 11
 </pre>
         <ol>
             <li>
@@ -831,8 +832,8 @@ class Colorize(SearchList):                                               # 1
             <li>
                 What if the user is requesting a color for a unit group that we don't know anything about? We must check
                 that the unit group is in our color table. We must also check that a unit system has been supplied for
-                the color table. If either of these checks fail, then return an empty string, which will have no effect
-                in setting a background color.
+                the color table. If either of these checks fail, then return the color <span
+                class="code">#00000000</span>, which will have no effect in setting a background color.
             </li>
             <li>
                 Thanks to the checks we did in step 5, we know that this line will not raise a <span class="code">KeyError</span>
@@ -844,9 +845,10 @@ class Colorize(SearchList):                                               # 1
             </li>
             <li>
                 We must always be vigilant for values of Python None! The expression
-                <pre class="tty">self.color_tables[unit_group].get('none') or self.color_tables[unit_group].get('None', "")</pre>
+                <pre class="tty">self.color_tables[unit_group].get('none') or self.color_tables[unit_group].get('None', "#00000000")</pre>
                 is just a trick to allow us to accept either "<span class="code">none</span>" or "<span class="code">None</span>"
-                in the configuration file.
+                in the configuration file. If neither is present, then we return the color <span
+                class="code">#00000000</span>, which will have no effect.
             </li>
             <li>
                 Now start searching the color table to find a band that is less than or equal to the value we have in
@@ -874,95 +876,10 @@ class Colorize(SearchList):                                               # 1
             </li>
             <li>
                 If we make it all the way through the table without a hit, then we must have a value greater than
-                anything in the table. Return the default, or an empty string if there is no default.
+                anything in the table. Return the default, or the color <span class="code">#00000000</span> if there is
+                no default.
             </li>
         </ol>
-
-
-        <h1>Appendix</h1>
-
-        <h2 id="ValueTuple">Class <span class="code">ValueTuple</span></h2>
-        <p>
-            Class <span class="code">ValueTuple</span> is a 3-way tuple with a named tuple interface: values can be
-            accessed by index or by attribute name. You can think of it as a unit-aware value, useful for converting to
-            and from other units.
-        </p>
-        <p>
-            The following values are present:
-        </p>
-        <table>
-            <tr class="first_row">
-                <td>Index</td>
-                <td>Attribute</td>
-                <td>Meaning</td>
-            </tr>
-            <tr>
-                <td>0</td>
-                <td class="code">value</td>
-                <td>The data value(s). Can be a series (e.g., <span class="code">[20.2, 23.2, ...]</span>) or a scalar
-                    (e.g., <span class="code">20.2</span>)
-                </td>
-            </tr>
-            <tr>
-                <td>1</td>
-                <td class="code">unit</td>
-                <td>The unit it is in (<span class="code">"degree_C"</span>)</td>
-            </tr>
-            <tr>
-                <td>2</td>
-                <td class="code">group</td>
-                <td>The unit group (<span class="code">"group_temperature"</span>)</td>
-            </tr>
-        </table>
-
-        <p>
-            It is valid to have a datum value of None.
-        </p>
-
-        <p>
-            It is also valid to have a unit type of None (meaning there is no information about the unit the value is
-            in). In this case, you won't be able to convert it to another unit.
-        </p>
-
-        <h2 id="ValueHelper">Class <span class="code">ValueHelper</span></h2>
-        <p>
-            Class <span class="code">ValueHelper</span> contains all the information necessary to do the proper
-            formatting of a value, including a unit label.
-        </p>
-
-        <h4>Instance attribute</h4>
-        <p class="code">ValueHelper.<b>value_t</b></p>
-        <p class="indent">Returns the <span class="code">ValueTuple</span> instance held internally.</p>
-
-        <h4>Instance methods</h4>
-        <p class="code">ValueHelper.<b>__str__</b>()</p>
-        <p class="indent">Formats the value as a string, including a unit label, and returns it.</p>
-
-        <p class="code">
-            ValueHelper.<b>format</b>(<em>format_string=None, None_string=None, add_label=True, localize=True</em>)
-        </p>
-        <div class="indent">
-            <p>
-                Format the value as a string, using various specified options, and return it. Unless otherwise
-                specified, a label is included.
-            </p>
-            <p>
-                <span class="code">format_string</span> A string to be used for formatting. It must include one, and
-                only one, <a href="https://docs.python.org/3/library/string.html#formatspec">format specifier</a>.
-            </p>
-            <p>
-                <span class="code">None_string</span> In the event of a value of Python None, this string will be
-                substituted. If None, then a default string from <span class="code">skin.conf</span> will be used.
-            </p>
-            <p>
-                <span class="code">add_label</span> If truthy, then an appropriate unit label will be attached.
-                Otherwise, no label is attached.
-            </p>
-            <p>
-                <span class="code">localize</span> If truthy, then the results will be localized. For example, in some
-                locales, a comma will be used as the decimal specifier.
-            </p>
-        </div>
 
     </div> <!-- End id 'technical_content' -->
 </div>  <!-- End class 'main' -->

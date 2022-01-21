@@ -2164,13 +2164,13 @@ $month.outTemp.max</pre>
             </tr>
             <tr>
                 <td class="first_col code">$month</td>
-                <td>This month.</td>
+                <td>This month (since the first of the month).</td>
                 <td class="code">$month.outTemp.min</td>
                 <td>The minimum temperature this month.</td>
             </tr>
             <tr>
                 <td class="first_col code">$year</td>
-                <td>This year.</td>
+                <td>This year (since 1-Jan).</td>
                 <td class="code">$year.outTemp.max</td>
                 <td>The max temperature since the start of the year.</td>
             </tr>
@@ -6827,7 +6827,9 @@ growing_base = 50.0, degree_F</pre>
 
         <!-- -------------------------------------------------------------- -->
 
-        <h1 id="aggregation_types">Appendix: Aggregation types</h1>
+        <h1>Appendix</h1>
+
+        <h2 id="aggregation_types">Aggregation types</h2>
 
         <table class="indent">
             <caption>Aggregation types</caption>
@@ -7037,7 +7039,7 @@ growing_base = 50.0, degree_F</pre>
 
         <!-- -------------------------------------------------------------- -->
 
-        <h1 id="units">Appendix: Units</h1>
+        <h2 id="units">Units</h2>
 
         <p>
             WeeWX offers three different <em>unit systems</em>:
@@ -7376,41 +7378,50 @@ growing_base = 50.0, degree_F</pre>
 
         <!-- -------------------------------------------------------------- -->
 
-        <h1 id="ValueTuple">Appendix: <span class="code">ValueTuples</span></h1>
+        <h2 id="ValueTuple">Class <span class="code">ValueTuple</span></h2>
         <p>
-            A value, along with the unit it is in, can be represented by a 3-way tuple called a "value tuple". They
-            are used throughout WeeWX. All WeeWX
-            routines can accept a simple unadorned 3-way tuple as a value tuple, but they return the type <span
-            class="code">ValueTuple</span>. It is useful because its contents can be accessed using named attributes.
+            A value, along with the unit it is in, can be represented by a 3-way tuple called a "value tuple". They are
+            used throughout WeeWX. All WeeWX routines can accept a simple unadorned 3-way tuple as a value tuple, but
+            they return the type <span class="code">ValueTuple</span>. It is useful because its contents can be accessed
+            using named attributes. You can think of it as a unit-aware value, useful for converting to and from other
+            units.
         </p>
-
+        <p>
+            The following attributes, and their index, are present:
+        </p>
         <table>
-            <caption>Attributes of a <span class="code">ValueTuple</span>.</caption>
-            <tbody>
             <tr class="first_row">
-                <td>Item</td><td>attribute</td><td>Meaning</td>
+                <td>Index</td>
+                <td>Attribute</td>
+                <td>Meaning</td>
             </tr>
             <tr>
-                <td class="code first_col">0</td><td class="code">value</td><td>The datum value (eg, 20.2)</td>
+                <td>0</td>
+                <td class="code">value</td>
+                <td>The data value(s). Can be a series (e.g., <span class="code">[20.2, 23.2, ...]</span>) or a scalar
+                    (e.g., <span class="code">20.2</span>)
+                </td>
             </tr>
             <tr>
-                <td class="code first_col">1</td><td class="code">unit</td><td>The unit it is in ("<span class="code">degree_C</span>")</td>
+                <td>1</td>
+                <td class="code">unit</td>
+                <td>The unit it is in (<span class="code">"degree_C"</span>)</td>
             </tr>
             <tr>
-                <td class="code first_col">2</td><td class="code">group</td><td>The unit group ("<span class="code">group_temperature</span>")</td>
+                <td>2</td>
+                <td class="code">group</td>
+                <td>The unit group (<span class="code">"group_temperature"</span>)</td>
             </tr>
-            </tbody>
         </table>
 
         <p>
-            It is valid to have a datum value of <span class="code">None</span>.
+            It is valid to have a datum value of None.
         </p>
 
         <p>
-            It is also valid to have a unit type of <span class="code">None</span> (meaning there is no information about
-            the unit the value is in). In this case, you won't be able to convert it to another unit.
+            It is also valid to have a unit type of None (meaning there is no information about the unit the value is
+            in). In this case, you won't be able to convert it to another unit.
         </p>
-
         <p>Here are some examples:</p>
         <pre class="tty">
 from weewx.units import ValueTuple
@@ -7419,6 +7430,46 @@ freezing_vt = ValueTuple(0.0, "degree_C", "group_temperature")
 body_temperature_vt = ValueTuple(98.6, "degree_F", group_temperature")
 station_altitude_vt = ValueTuple(120.0, "meter", "group_altitude")
         </pre>
+
+        <h2 id="ValueHelper">Class <span class="code">ValueHelper</span></h2>
+        <p>
+            Class <span class="code">ValueHelper</span> contains all the information necessary to do the proper
+            formatting of a value, including a unit label.
+        </p>
+
+        <h4>Instance attribute</h4>
+        <p class="code">ValueHelper.<b>value_t</b></p>
+        <p class="indent">Returns the <span class="code">ValueTuple</span> instance held internally.</p>
+
+        <h4>Instance methods</h4>
+        <p class="code">ValueHelper.<b>__str__</b>()</p>
+        <p class="indent">Formats the value as a string, including a unit label, and returns it.</p>
+
+        <p class="code">
+            ValueHelper.<b>format</b>(<em>format_string=None, None_string=None, add_label=True, localize=True</em>)
+        </p>
+        <div class="indent">
+            <p>
+                Format the value as a string, using various specified options, and return it. Unless otherwise
+                specified, a label is included.
+            </p>
+            <p>
+                <span class="code">format_string</span> A string to be used for formatting. It must include one, and
+                only one, <a href="https://docs.python.org/3/library/string.html#formatspec">format specifier</a>.
+            </p>
+            <p>
+                <span class="code">None_string</span> In the event of a value of Python None, this string will be
+                substituted. If None, then a default string from <span class="code">skin.conf</span> will be used.
+            </p>
+            <p>
+                <span class="code">add_label</span> If truthy, then an appropriate unit label will be attached.
+                Otherwise, no label is attached.
+            </p>
+            <p>
+                <span class="code">localize</span> If truthy, then the results will be localized. For example, in some
+                locales, a comma will be used as the decimal specifier.
+            </p>
+
     </div>
     <!-- end id technical_content -->
 

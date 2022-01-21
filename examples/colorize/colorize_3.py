@@ -88,7 +88,7 @@ class Colorize(SearchList):                                               # 1
         # specifies a unit system.
         if unit_group not in self.color_tables \
                 or 'unit_system' not in self.color_tables[unit_group]:    # 5
-            return ""
+            return "#00000000"
 
         # Convert the value to the same unit used by the color table:
         unit_system = self.color_tables[unit_group]['unit_system']        # 6
@@ -97,11 +97,11 @@ class Colorize(SearchList):                                               # 1
         # Check for a value of None
         if converted_vt.value is None:                                    # 8
             return self.color_tables[unit_group].get('none') \
-                   or self.color_tables[unit_group].get('None', "")
+                   or self.color_tables[unit_group].get('None', "#00000000")
 
         # Search for the value in the color table:
         for upper_bound in self.color_tables[unit_group]['upper_bounds']: # 9
             if converted_vt.value <= float(upper_bound):                  # 10
                 return self.color_tables[unit_group]['upper_bounds'][upper_bound]
 
-        return self.color_tables[unit_group].get('default', "")           # 11
+        return self.color_tables[unit_group].get('default', "#00000000")  # 11
