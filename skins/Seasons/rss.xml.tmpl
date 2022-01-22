@@ -1,136 +1,103 @@
 <?xml version="1.0"?>
 <rss version="2.0" 
-     xmlns:content="http://purl.org/rss/1.0/modules/content/"
-     xmlns:geo="http://www.w3.org/2003/01/geo/wgs84_pos#" >
-   <channel>
-      <title>$station.location, $gettext("Weather Conditions")</title>
+  xmlns:content="http://purl.org/rss/1.0/modules/content/"
+  xmlns:geo="http://www.w3.org/2003/01/geo/wgs84_pos#" >
+
+#set $timespans = [{"span": $day, "label": "Daily Weather Summary as of"}, {"span": $month, "label": "Monthly Weather Summary as of"}, {"span": $year, "label": "Yearly Weather Summary as of"}]
+
+#set $observations = $DisplayOptions.get('observations_rss', ['outTemp', 'inTemp', 'barometer', 'wind', 'rain', 'rainRate'])
+#set $obs_type_sum = $DisplayOptions.get('obs_type_sum', ['rain'])
+#set $obs_type_max = $DisplayOptions.get('obs_type_max', ['rainRate'])
+
+  <channel>
+    <title>$gettext("Weather Conditions") : $station.location</title>
+    <link>$station.station_url</link>
+    <description>$gettext("Current conditions, and daily, monthly, and yearly summaries")</description>
+    <language>"$lang"</language>
+    <pubDate>$current.dateTime.format("%a, %d %b %Y %H:%M:%S %Z")</pubDate>
+
+    <lastBuildDate>$current.dateTime.format("%a, %d %b %Y %H:%M:%S %Z")</lastBuildDate>
+    <docs>http://blogs.law.harvard.edu/tech/rss</docs>
+    <generator>weewx $station.version</generator>
+    <ttl>$current.interval.string('')</ttl>
+
+    <item>
+      <title>$gettext("Weather Conditions at") $current.dateTime</title>
       <link>$station.station_url</link>
-      <description>$gettext("Current conditions, and daily, monthly, and yearly summaries")</description>
-      <language>"$lang"</language>
+      <description>
+#for $x in $observations
+  #if $getattr($current, $x).has_data
+    #if $x == 'wind'
+        $obs.label.wind: $current.windSpeed $gettext("from") $current.windDir;
+    #else
+        $obs.label[$x]: $getattr($current, $x);
+    #end if
+  #end if
+#end for
+      </description>
       <pubDate>$current.dateTime.format("%a, %d %b %Y %H:%M:%S %Z")</pubDate>
-
-      <lastBuildDate>$current.dateTime.format("%a, %d %b %Y %H:%M:%S %Z")</lastBuildDate>
-      <docs>http://blogs.law.harvard.edu/tech/rss</docs>
-      <generator>weewx $station.version</generator>
-      <ttl>$current.interval.string('')</ttl>
-      
-      <item>
-         <title>$gettext("Weather Conditions at") $current.dateTime</title>
-         <link>$station.station_url</link>
-         <description>
-           $obs.label.outTemp: $current.outTemp; 
-           $obs.label.barometer: $current.barometer; 
-           $obs.label.wind: $current.windSpeed $gettext("from") $current.windDir; 
-           $obs.label.rainRate: $current.rainRate; 
-           $obs.label.inTemp: $current.inTemp
-         </description>
-         <pubDate>$current.dateTime.format("%a, %d %b %Y %H:%M:%S %Z")</pubDate>
-	     <geo:lat>$station.latitude_f</geo:lat>
-    	 <geo:long>$station.longitude_f</geo:long>
- 		 <content:encoded><![CDATA[
-           <p>
-             $obs.label.dateTime: $current.dateTime<br/>
-             $obs.label.outTemp: $current.outTemp<br/>
-             $obs.label.inTemp:  $current.inTemp<br/>
-             $obs.label.windchill: $current.windchill<br/>
-             $obs.label.heatindex: $current.heatindex<br/>
-             $obs.label.dewpoint: $current.dewpoint<br/>
-             $obs.label.outHumidity: $current.outHumidity<br/>
-             $obs.label.barometer: $current.barometer<br/>
-             $obs.label.wind: $current.windSpeed $gettext("from") $current.windDir<br/>
-             $obs.label.rainRate: $current.rainRate<br/>
-        </p>
+      <geo:lat>$station.latitude_f</geo:lat>
+      <geo:long>$station.longitude_f</geo:long>
+      <content:encoded><![CDATA[
+      <p>
+      $obs.label.dateTime: $current.dateTime<br/>
+#for $x in $observations
+  #if $getattr($current, $x).has_data
+    #if $x == 'wind'
+        $obs.label.wind: $current.windSpeed $gettext("from") $current.windDir;
+    #else
+        $obs.label[$x]: $getattr($current, $x)<br/>
+    #end if
+  #end if
+#end for
+      </p>
       ]]></content:encoded>
-      </item>
+    </item>
 
-      <item>
-         <title>$gettext("Daily Weather Summary as of") $current.dateTime</title>
-         <link>$station.station_url</link>
-         <description>
-	        $gettext("Min outside temperature"): $day.outTemp.min at $day.outTemp.mintime;
-         	$gettext("Max outside temperature"): $day.outTemp.max at $day.outTemp.maxtime;
-	        $gettext("Min inside temperature"):  $day.inTemp.min at $day.inTemp.mintime;
-	        $gettext("Max inside temperature"):  $day.inTemp.max at $day.inTemp.maxtime;
-	        $gettext("Min barometer"):           $day.barometer.min at $day.barometer.mintime;
-	        $gettext("Max barometer"):           $day.barometer.max at $day.barometer.maxtime;
-            $gettext("Max wind") :               $day.wind.max $gettext("from") $day.wind.gustdir at $day.wind.maxtime;
-            $gettext("Rain Today"):              $day.rain.sum
-         </description>
-         <pubDate>$current.dateTime.format("%a, %d %b %Y %H:%M:%S %Z")</pubDate>
-	     <geo:lat>$station.latitude_f</geo:lat>
-    	 <geo:long>$station.longitude_f</geo:long>
- 		 <content:encoded><![CDATA[
-           <p>
-             $gettext("Day"): $day.dateTime.format("%d %b %Y")<br/>
-	         $gettext("Min outside temperature"): $day.outTemp.min at $day.outTemp.mintime<br/>
-	         $gettext("Max outside temperature"): $day.outTemp.max at $day.outTemp.maxtime<br/>
-	         $gettext("Min inside temperature"):  $day.inTemp.min at $day.inTemp.mintime<br/>
-	         $gettext("Max inside temperature"):  $day.inTemp.max at $day.inTemp.maxtime<br/>
-	         $gettext("Min barometer"):           $day.barometer.min at $day.barometer.mintime<br/>
-	         $gettext("Max barometer"):           $day.barometer.max at $day.barometer.maxtime<br/>
-             $gettext("Max wind") :               $day.wind.max $gettext("from") $day.wind.gustdir at $day.wind.maxtime<br/>
-             $gettext("Rain Today"):              $day.rain.sum<br/>
-        </p>
+#for $timespan in $timespans
+    <item>
+      <title>$gettext($timespan['label']) $current.dateTime</title>
+      <link>$station.station_url</link>
+      <description>
+  #for $x in $observations
+    #if $getattr($timespan['span'], $x).has_data
+      #if $x == 'wind'
+        $gettext("Max") $obs.label.wind: $timespan['span'].wind.max $gettext("from") $timespan['span'].wind.gustdir at $timespan['span'].wind.maxtime;
+      #elif $x in $obs_type_sum
+        $obs.label[$x]: $getattr($timespan['span'], $x).sum;
+      #elif $x in $obs_type_max
+        $gettext("Max") $obs.label[$x]: $getattr($timespan['span'], $x).max;
+      #else
+        $gettext("Min") $obs.label.$x: $getattr($timespan['span'], $x).min at $getattr($timespan['span'], $x).mintime;
+        $gettext("Max") $obs.label.$x: $getattr($timespan['span'], $x).max at $getattr($timespan['span'], $x).maxtime;
+      #end if
+    #end if
+  #end for
+      </description>
+      <pubDate>$current.dateTime.format("%a, %d %b %Y %H:%M:%S %Z")</pubDate>
+      <geo:lat>$station.latitude_f</geo:lat>
+      <geo:long>$station.longitude_f</geo:long>
+      <content:encoded><![CDATA[
+      <p>
+      $gettext("Day"): $timespan['span'].dateTime.format("%d %b %Y")<br/>
+  #for $x in $observations
+    #if $getattr($timespan['span'], $x).has_data
+      #if $x == 'wind'
+        $gettext("Max") $obs.label.wind: $timespan['span'].wind.max $gettext("from") $timespan['span'].wind.gustdir at $timespan['span'].wind.maxtime<br/>
+      #elif $x in $obs_type_sum
+        $obs.label[$x]: $getattr($timespan['span'], $x).sum<br/>
+      #elif $x in $obs_type_max
+        $gettext("Max") $obs.label[$x]: $getattr($timespan['span'], $x).max<br/>
+      #else
+        $gettext("Min") $obs.label.$x: $getattr($timespan['span'], $x).min at $getattr($timespan['span'], $x).mintime<br/>
+        $gettext("Max") $obs.label.$x: $getattr($timespan['span'], $x).max at $getattr($timespan['span'], $x).maxtime<br/>
+      #end if
+    #end if
+  #end for
+      </p>
       ]]></content:encoded>
-      </item>
+    </item>
+#end for
 
-      <item>
-         <title>$gettext("Monthly Weather Summary as of") $current.dateTime</title>
-         <link>$station.station_url</link>
-         <description>
-	        $gettext("Min outside temperature"): $month.outTemp.min at $month.outTemp.mintime;
-         	$gettext("Max outside temperature"): $month.outTemp.max at $month.outTemp.maxtime;
-	        $gettext("Min inside temperature"):  $month.inTemp.min at $month.inTemp.mintime;
-	        $gettext("Max inside temperature"):  $month.inTemp.max at $month.inTemp.maxtime;
-	        $gettext("Min barometer"):           $month.barometer.min at $month.barometer.mintime;
-	        $gettext("Max barometer"):           $month.barometer.max at $month.barometer.maxtime;
-            $gettext("Max wind") :               $month.wind.max $gettext("from") $month.wind.gustdir at $month.wind.maxtime;
-            $gettext("Rain total for month"):    $month.rain.sum
-         </description>
-         <pubDate>$current.dateTime.format("%a, %d %b %Y %H:%M:%S %Z")</pubDate>
- 		 <content:encoded><![CDATA[
-           <p>
-             $gettext("Month"): $month.dateTime.format("%B %Y")<br/>
-	         $gettext("Max outside temperature"): $month.outTemp.max at $month.outTemp.maxtime<br/>
-	         $gettext("Min outside temperature"): $month.outTemp.min at $month.outTemp.mintime<br/>
-	         $gettext("Max inside temperature"):  $month.inTemp.max at $month.inTemp.maxtime<br/>
-	         $gettext("Min inside temperature"):  $month.inTemp.min at $month.inTemp.mintime<br/>
-	         $gettext("Min barometer"):           $month.barometer.min at $month.barometer.mintime<br/>
-	         $gettext("Max barometer"):           $month.barometer.max at $month.barometer.maxtime<br/>
-             $gettext("Max wind") :               $month.wind.max $gettext("from") $month.wind.gustdir at $month.wind.maxtime<br/>
-             $gettext("Rain total for month"):    $month.rain.sum<br/>
-        </p>
-      ]]></content:encoded>
-      </item>
-
-      <item>
-         <title>$gettext("Yearly Weather Summary as of") $current.dateTime</title>
-         <link>$station.station_url</link>
-         <description>
-	        $gettext("Min outside temperature"): $year.outTemp.min at $year.outTemp.mintime;
-         	$gettext("Max outside temperature"): $year.outTemp.max at $year.outTemp.maxtime;
-	        $gettext("Min inside temperature"):  $year.inTemp.min at $year.inTemp.mintime;
-	        $gettext("Max inside temperature"):  $year.inTemp.max at $year.inTemp.maxtime;
-	        $gettext("Min barometer"):           $year.barometer.min at $year.barometer.mintime;
-	        $gettext("Max barometer"):           $year.barometer.max at $year.barometer.maxtime;
-            $gettext("Max wind") :               $year.wind.max $gettext("from") $year.wind.gustdir at $year.wind.maxtime;
-            $gettext("Rain total for year"):     $year.rain.sum
-         </description>
-         <pubDate>$current.dateTime.format("%a, %d %b %Y %H:%M:%S %Z")</pubDate>
- 		 <content:encoded><![CDATA[
-           <p>
-             $gettext("Year"): $year.dateTime.format("%Y")<br/>
-	         $gettext("Max outside temperature"): $year.outTemp.max at $year.outTemp.maxtime<br/>
-	         $gettext("Min outside temperature"): $year.outTemp.min at $year.outTemp.mintime<br/>
-	         $gettext("Max inside temperature"):  $year.inTemp.max at $year.inTemp.maxtime<br/>
-	         $gettext("Min inside temperature"):  $year.inTemp.min at $year.inTemp.mintime<br/>
-	         $gettext("Min barometer"):           $year.barometer.min at $year.barometer.mintime<br/>
-	         $gettext("Max barometer"):           $year.barometer.max at $year.barometer.maxtime<br/>
-             $gettext("Max wind") :               $year.wind.max $gettext("from") $year.wind.gustdir at $year.wind.maxtime<br/>
-             $gettext("Rain total for year"):     $year.rain.sum<br/>
-        </p>
-      ]]></content:encoded>
-      </item>
-
-   </channel>
+  </channel>
 </rss>
