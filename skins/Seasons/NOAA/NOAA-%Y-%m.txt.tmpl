@@ -28,12 +28,13 @@ ELEV: $station.altitude    LAT: $station.latitude[0]-$station.latitude[1] $stati
 DAY   TEMP   HIGH   TIME    LOW   TIME   DAYS   DAYS   RAIN  SPEED   HIGH   TIME    DIR
 ---------------------------------------------------------------------------------------
 #for $day in $month.days
-#if $day.outTemp.count.raw or $day.rain.count.raw or $day.wind.count.raw
+#if $day.outTemp.has_data or $day.rain.has_data or $day.wind.has_data
 $day.dateTime.format($D, add_label=False) $day.outTemp.avg.format($Temp,$NONE,add_label=False) $day.outTemp.max.format($Temp,$NONE,add_label=False) $day.outTemp.maxtime.format($Time,add_label=False) $day.outTemp.min.format($Temp,$NONE,add_label=False) $day.outTemp.mintime.format($Time,add_label=False) $day.heatdeg.sum.format($Temp,$NONE,add_label=False) $day.cooldeg.sum.format($Temp,$NONE,add_label=False) $day.rain.sum.format($Rain,$NONE,add_label=False) $day.wind.avg.format($Wind,$NONE,add_label=False) $day.wind.max.format($Wind,$NONE,add_label=False) $day.wind.maxtime.format($Time,add_label=False) $day.wind.vecdir.format($Dir,$NONE,add_label=False)
 #else
 $day.dateTime.format($D)
 #end if
 #end for
+#if $month.outTemp.has_data or $month.rain.has_data or $month.wind.has_data
 ---------------------------------------------------------------------------------------
     $month.outTemp.avg.format($Temp,$NONE,add_label=False) $month.outTemp.max.format($Temp,$NONE,add_label=False)    $month.outTemp.maxtime.format($D,add_label=False) $month.outTemp.min.format($Temp,$NONE,add_label=False)    $month.outTemp.mintime.format($D,add_label=False) $month.heatdeg.sum.format($Temp,$NONE,add_label=False) $month.cooldeg.sum.format($Temp,$NONE,add_label=False) $month.rain.sum.format($Rain,$NONE,add_label=False) $month.wind.avg.format($Wind,$NONE,add_label=False) $month.wind.max.format($Wind,$NONE,add_label=False)    $month.wind.maxtime.format($D,add_label=False) $month.wind.vecdir.format($Dir,add_label=False)
-    
+#end if
