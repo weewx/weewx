@@ -68,8 +68,8 @@
       #elif $x in $obs_type_max
         $gettext("Max") $obs.label[$x]: $getattr($timespan['span'], $x).max;
       #else
-        $gettext("Min") $obs.label.$x: $getattr($timespan['span'], $x).min at $getattr($timespan['span'], $x).mintime;
-        $gettext("Max") $obs.label.$x: $getattr($timespan['span'], $x).max at $getattr($timespan['span'], $x).maxtime;
+        $gettext("Min") $obs.label[$x]: $getattr($timespan['span'], $x).min at $getattr($timespan['span'], $x).mintime;
+        $gettext("Max") $obs.label[$x]: $getattr($timespan['span'], $x).max at $getattr($timespan['span'], $x).maxtime;
       #end if
     #end if
   #end for
@@ -89,8 +89,8 @@
       #elif $x in $obs_type_max
         $gettext("Max") $obs.label[$x]: $getattr($timespan['span'], $x).max<br/>
       #else
-        $gettext("Min") $obs.label.$x: $getattr($timespan['span'], $x).min at $getattr($timespan['span'], $x).mintime<br/>
-        $gettext("Max") $obs.label.$x: $getattr($timespan['span'], $x).max at $getattr($timespan['span'], $x).maxtime<br/>
+        $gettext("Min") $obs.label[$x]: $getattr($timespan['span'], $x).min at $getattr($timespan['span'], $x).mintime<br/>
+        $gettext("Max") $obs.label[$x]: $getattr($timespan['span'], $x).max at $getattr($timespan['span'], $x).maxtime<br/>
       #end if
     #end if
   #end for
