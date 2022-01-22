@@ -13,8 +13,7 @@
 #set $obs_type_max = $DisplayOptions.get('obs_type_max', ['rainRate'])
 
 ## use this span to determine whether there are any data to consider.
-#set $recent=$span($day_delta=30)
-##set $recent=$year
+#set $recent=$span($day_delta=30, boundary='midnight')
 
 <div id='hilo_widget' class="widget">
   <div class="widget_title">

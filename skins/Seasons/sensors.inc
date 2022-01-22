@@ -13,8 +13,7 @@
 #set $now = time.time()
 
 ## use this span to determine whether there are any data to consider.
-#set $recent=$span($day_delta=30)
-##set $recent=$year
+#set $recent=$span($day_delta=30, boundary='midnight')
 
 #def get_battery_status($x)
 #if $x is None
