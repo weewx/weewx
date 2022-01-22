@@ -861,7 +861,10 @@ class WindVec(XType):
             # For these types (e.g., first, last, etc.), we can do the aggregation in a SELECT
             # statement.
             select_stmt = WindVec.agg_sql_dict[aggregate_type] % interpolation_dict
-            row = db_manager.getSql(select_stmt)
+            try:
+                row = db_manager.getSql(select_stmt)
+            except weedb.NoColumnError as e:
+                raise weewx.UnknownType(e)
 
             if aggregate_type == 'not_null':
                 value = row is not None
