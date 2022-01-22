@@ -4,12 +4,18 @@
 #errorCatcher Echo
 #encoding UTF-8
 
+#set $show_rss = $DisplayOptions.get('show_rss', True)
+#set $show_reports = $DisplayOptions.get('show_reports', True)
+
 <div id="title_bar">
   <div id="title">
     <h1 class="page_title">$station.location</h1>
     <p class="lastupdate">$current.dateTime</p>
   </div>
+#if $show_rss
   <div id="rss_link"><a href="rss.xml">RSS</a></div>
+#end if
+#if $show_reports
   <div id="reports">
     $gettext("Monthly Reports"):
     <select name="reports" onchange="openTabularFile(value)">
@@ -28,4 +34,5 @@
     </select>
     <br/>
   </div>
+#end if
 </div>
