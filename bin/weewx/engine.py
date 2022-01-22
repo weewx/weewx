@@ -603,18 +603,25 @@ class StdArchive(StdService):
         # Do we have an accumulator at all? If not, create one:
         if not self.accumulator:
             self.accumulator = self._new_accumulator(event.packet['dateTime'])
-
+        
+        loop_packet_weight = 1
+        if 'loop_packet_weight' in event.packet:
+            if type(event.packet['loop_packet_weight']) == int or type(event.packet['loop_packet_weight']) == float:
+                loop_packet_weight = event.packet.pop("loop_packet_weight")
+            else:
+                log.warning("Loop packet weight is not a numeric datatype: %s" % event.packet['loop_packet_weight'])
+                
         # Try adding the LOOP packet to the existing accumulator. If the
         # timestamp is outside the timespan of the accumulator, an exception
         # will be thrown:
         try:
-            self.accumulator.addRecord(event.packet, add_hilo=self.loop_hilo)
+            self.accumulator.addRecord(event.packet, add_hilo=self.loop_hilo, weight=loop_packet_weight)
         except weewx.accum.OutOfSpan:
             # Shuffle accumulators:
             (self.old_accumulator, self.accumulator) = \
                 (self.accumulator, self._new_accumulator(event.packet['dateTime']))
             # Try again:
-            self.accumulator.addRecord(event.packet, add_hilo=self.loop_hilo)
+            self.accumulator.addRecord(event.packet, add_hilo=self.loop_hilo, weight=loop_packet_weight)
 
     def check_loop(self, event):
         """Called after any loop packets have been processed. This is the opportunity
