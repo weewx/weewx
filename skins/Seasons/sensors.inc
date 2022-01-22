@@ -58,21 +58,21 @@ $gettext('never')
 
 #set $have_conn = 0
 #for $x in $sensor_connections
-  #if getattr($recent, $x).has_data
+  #if $getattr($recent, $x).has_data
     #set $have_conn = 1
   #end if
 #end for
 
 #set $have_battery = 0
 #for $x in $sensor_batteries
-  #if getattr($recent, $x).has_data
+  #if $getattr($recent, $x).has_data
     #set $have_battery = 1
   #end if
 #end for
 
 #set $have_voltage = 0
 #for $x in $sensor_voltages
-  #if getattr($recent, $x).has_data
+  #if $getattr($recent, $x).has_data
     #set $have_voltage = 1
   #end if
 #end for
@@ -92,11 +92,11 @@ $gettext('never')
 #if $have_conn
     <tr><th>$gettext("Connectivity")</th><th></th></tr>
 #for $x in $sensor_connections
-  #if getattr($recent, $x).has_data
+  #if $getattr($recent, $x).has_data
     <tr>
       <td class="label">$obs.label[$x]</td>
       <td class="data">$getVar('current.' + $x)</td>
-#set $lasttime = getattr($recent, $x).lasttime.raw
+#set $lasttime = $getattr($recent, $x).lasttime.raw
       <td class="timestamp">$get_time_delta($lasttime, $now)</td>
     </tr>
   #end if
@@ -106,11 +106,11 @@ $gettext('never')
 #if $have_battery
     <tr><th>$gettext("Battery Status")</th><th></th></tr>
 #for $x in $sensor_batteries
-  #if getattr($recent, $x).has_data
+  #if $getattr($recent, $x).has_data
     <tr>
       <td class="label">$obs.label[$x]</td>
       <td class="data">$get_battery_status($getVar('current.%s.raw' % $x))</td>
-#set $lasttime = getattr($recent, $x).lasttime.raw
+#set $lasttime = $getattr($recent, $x).lasttime.raw
       <td class="timestamp">$get_time_delta($lasttime, $now)</td>
     </tr>
   #end if
@@ -120,11 +120,11 @@ $gettext('never')
 #if $have_voltage
     <tr><th>$gettext("Voltage")</th><th></th></tr>
 #for $x in $sensor_voltages
-  #if getattr($recent, $x).has_data
+  #if $getattr($recent, $x).has_data
     <tr>
       <td class="label">$obs.label[$x]</td>
       <td class="data">$getVar('current.' + $x)</td>
-#set $lasttime = getattr($recent, $x).lasttime.raw
+#set $lasttime = $getattr($recent, $x).lasttime.raw
       <td class="timestamp">$get_time_delta($lasttime, $now)</td>
     </tr>
   #end if
