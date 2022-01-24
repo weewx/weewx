@@ -91,7 +91,6 @@ def compare_dicts(section_name, a, b, a_only, b_only, diffs):
 
     for x in b.scalars:
         if x not in found:
-            print("not found: %s" % x)
             label = "%s.%s" % (section_name, x) if section_name else x
             b_only[label] = b[x]
 
