@@ -1,0 +1,106 @@
+#!/usr/bin/env python
+# Copyright (c) 2022 Matthew Wall
+"""Utility for managing translated strings in skins."""
+
+import sys
+import glob
+import os
+from optparse import OptionParser
+import configobj
+
+__version__ = '0.1'
+
+usagestr = """Usage: show-strings --help
+       show-strings --version
+       show-strings --skin=PATH_TO_SKIN
+
+  Utility to manage translated strings in WeeWX skins.
+"""
+
+def main():
+    parser = OptionParser(usage=usagestr)
+    parser.add_option("--version", action="store_true", dest="version",
+                      help="Display version then exit")
+    parser.add_option("--skin", dest="skin_dir", type=str, metavar="SKIN",
+                      help="Specify the path to the desired skin")
+
+    options, args = parser.parse_args()
+
+    if options.version:
+        print(__version__)
+        sys.exit(0)
+
+    skin_dir = options.skin_dir
+    if not skin_dir:
+        print("No skin specified")
+        sys.exit(1)
+
+    while skin_dir.endswith('/'):
+        skin_dir = skin_dir.rstrip('/')
+    if not os.path.isdir(skin_dir):
+        print("No skin found at %s" % skin_dir)
+        sys.exit(1)
+    print("Using skin: %s" % skin_dir)
+
+    lang_dir = "%s/lang" % skin_dir
+    if not os.path.isdir(lang_dir):
+        print("No language directory found at %s" % lang_dir)
+        sys.exit(0)
+
+    en_conf = "%s/en.conf" % lang_dir
+    if not os.path.isfile(en_conf):
+        print("No en.conf found at %s" % en_conf)
+        sys.exit(0)
+
+    results = dict()
+    confs = glob.glob("%s/*.conf" % lang_dir)
+    for f in confs:
+        if f != en_conf:
+            results[f] = compare_files(en_conf, f)
+    prettyp(results)
+
+    sys.exit(0)
+
+
+def compare_files(fn1, fn2):
+    """Print discrepancies between two files."""
+    cfg_dict1 = configobj.ConfigObj(fn1, file_error=True,
+                                    encoding='utf-8', default_encoding='utf-8')
+    cfg_dict2 = configobj.ConfigObj(fn2, file_error=True,
+                                    encoding='utf-8', default_encoding='utf-8')
+    a_only = dict() # {label: a_val, ...}
+    b_only = dict() # {label: b_val, ...}
+    diffs = dict() # {label: (a_val, b_val), ...}
+    compare_dicts('', cfg_dict1, cfg_dict2, a_only, b_only, diffs)
+    return {'a_only': a_only, 'b_only': b_only}
+
+def compare_dicts(section_name, a, b, a_only, b_only, diffs):
+    for x in a.sections:
+        label = "%s.%s" % (section_name, x) if section_name else x
+        compare_dicts(label, a[x], b.get(x), a_only, b_only, diffs)
+
+    found = []
+    for x in a.scalars:
+        label = "%s.%s" % (section_name, x) if section_name else x
+        if x in b:
+            found.append(x)
+            if a[x] != b[x]:
+                diffs[label] = (a[x], b[x])
+        else:
+            a_only[label] = a[x]
+
+    for x in b.scalars:
+        if x not in found:
+            print("not found: %s" % x)
+            label = "%s.%s" % (section_name, x) if section_name else x
+            b_only[label] = b[x]
+
+def prettyp(d, indent=0):
+    for key, value in d.items():
+        if isinstance(value, dict):
+            print('  ' * indent + str(key))
+            prettyp(value, indent+1)
+        else:
+            print('  ' * indent + str(key) + "=" + str(value))
+
+main()
