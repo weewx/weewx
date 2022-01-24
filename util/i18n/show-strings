@@ -72,7 +72,7 @@ def compare_files(fn1, fn2):
     b_only = dict() # {label: b_val, ...}
     diffs = dict() # {label: (a_val, b_val), ...}
     compare_dicts('', cfg_dict1, cfg_dict2, a_only, b_only, diffs)
-    return {'a_only': a_only, 'b_only': b_only}
+    return {'found only in %s:' % fn1: a_only, 'found only in %s:' % fn2: b_only}
 
 def compare_dicts(section_name, a, b, a_only, b_only, diffs):
     for x in a.sections:
