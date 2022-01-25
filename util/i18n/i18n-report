@@ -81,8 +81,15 @@ def main():
             confs = glob.glob("%s/*.conf" % lang_dir)
         results = dict()
         for f in confs:
-            if f != en_conf:
-                results[f] = compare_files(en_conf, f)
+            if f == en_conf:
+                continue
+            a, b = compare_files(en_conf, f)
+            if a or b:
+                results[f] = dict()
+                if a:
+                    results[f]["found only in %s:" % en_conf] = a
+                if b:
+                    results[f]["found only in %s:" % f] = b
         prettyp(results)
 
     # report any mismatched strings, i.e., strings that are used in the skin
@@ -129,7 +136,7 @@ def compare_files(fn1, fn2):
     b_only = dict() # {label: b_val, ...}
     diffs = dict() # {label: (a_val, b_val), ...}
     compare_dicts('', cfg_dict1, cfg_dict2, a_only, b_only, diffs)
-    return {'found only in %s:' % fn1: a_only, 'found only in %s:' % fn2: b_only}
+    return (a_only, b_only)
 
 def compare_dicts(section_name, a, b, a_only, b_only, diffs):
     for x in a.sections:
@@ -157,7 +164,7 @@ def prettyp(d, indent=0):
             print('  ' * indent + str(key))
             prettyp(value, indent+1)
         else:
-            print('  ' * indent + str(key) + "=" + str(value))
+            print('  ' * indent + "%s=%s" % (key, value))
 
 def get_gettext_strings(dir_name, ext_list, string_list=set()):
     """get all of the gettext strings from a skin"""
