@@ -6312,6 +6312,15 @@ growing_base = 50.0, degree_F</pre>
             for the month of March, 2010.
         </p>
 
+        <p class="config_option" id="generate_once">generate_once
+
+        <p>
+            When set to <span class="code">true</span>, the template is only processed on the first invocation of the report engine service.
+            The default is <span class="code">false</span>.
+            This can be used for files that can be configured but do not change when data values change.
+            This is things like the html that defines the page layout.
+        </p>        
+
         <p class="config_option" id="stale_age">stale_age</p>
 
         <p>
