@@ -10,12 +10,13 @@ import configobj
 
 __version__ = '0.1'
 
-usagestr = """Usage: show-strings --help
-       show-strings --version
-       show-strings --skin=PATH_TO_SKIN
+usagestr = """Usage: show-strings --skin=PATH_TO_SKIN [--help] [--version]
 
-  Utility to manage translated strings in WeeWX skins.
-"""
+Examples:
+  show-strings --skin=PATH_TO_SKIN
+  show-strings --skin=PATH_TO_SKIN --lang=XX
+
+  Utility to manage translated strings in WeeWX skins."""
 
 def main():
     parser = OptionParser(usage=usagestr)
@@ -23,6 +24,8 @@ def main():
                       help="Display version then exit")
     parser.add_option("--skin", dest="skin_dir", type=str, metavar="SKIN",
                       help="Specify the path to the desired skin")
+    parser.add_option("--lang", type=str, metavar="LANGUAGE",
+                      help="Specify two-letter language identifier")
 
     options, args = parser.parse_args()
 
@@ -30,11 +33,11 @@ def main():
         print(__version__)
         sys.exit(0)
 
+    # figure out which skin we should look at
     skin_dir = options.skin_dir
     if not skin_dir:
         print("No skin specified")
         sys.exit(1)
-
     while skin_dir.endswith('/'):
         skin_dir = skin_dir.rstrip('/')
     if not os.path.isdir(skin_dir):
@@ -42,18 +45,25 @@ def main():
         sys.exit(1)
     print("Using skin: %s" % skin_dir)
 
+    # check for the lang files in the specified skin
     lang_dir = "%s/lang" % skin_dir
     if not os.path.isdir(lang_dir):
         print("No language directory found at %s" % lang_dir)
         sys.exit(0)
-
     en_conf = "%s/en.conf" % lang_dir
     if not os.path.isfile(en_conf):
         print("No en.conf found at %s" % en_conf)
         sys.exit(0)
 
+    # report any untranslated strings.  if a lang was specified, only report
+    # about that language.  otherwise report on every language that is found.
+    lang = options.lang
+    confs = []
+    if lang:
+        confs.append("%s/%s.conf" % (lang_dir, lang))
+    else:
+        confs = glob.glob("%s/*.conf" % lang_dir)
     results = dict()
-    confs = glob.glob("%s/*.conf" % lang_dir)
     for f in confs:
         if f != en_conf:
             results[f] = compare_files(en_conf, f)
