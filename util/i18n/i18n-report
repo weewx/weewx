@@ -70,6 +70,13 @@ def main():
 
     action = options.action
 
+    # list all of the lang files that we find
+    if action == 'all' or action == 'list-languages':
+        confs = glob.glob("%s/*.conf" % lang_dir)
+        print("language files found:")
+        for f in confs:
+            print("  %s" % f)
+
     # report any untranslated strings.  if a lang was specified, only report
     # about that language.  otherwise report on every language that is found.
     if action == 'all' or action == 'untranslated':
@@ -116,10 +123,10 @@ def main():
         for x in known_strings:
             if not x in str_list:
                 unused.add(x)
-        print("listed in en.conf but not found in the skin:")
+        print("strings in en.conf but not found in the skin:")
         for x in unused:
             print("  %s" % x)
-        print("not listed in en.conf:")
+        print("strings in skin but not found in en.conf:")
         for x in unlisted:
             print("  %s" % x)
 
