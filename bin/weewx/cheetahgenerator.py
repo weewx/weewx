@@ -249,8 +249,6 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
                               self.skin_dict['SKIN_ROOT'],
                               self.skin_dict.get('skin', '')))
 
-        report_dict = accumulateLeaves(section)
-
         (template, dest_dir, encoding, default_binding) = self._prepGen(report_dict)
 
         # Get start and stop times        
