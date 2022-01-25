@@ -14,11 +14,11 @@ import configobj
 
 __version__ = '0.1'
 
-usagestr = """Usage: show-strings --skin=PATH_TO_SKIN [--help] [--version]
+usagestr = """Usage: i18n-report --skin=PATH_TO_SKIN [--help] [--version]
 
 Examples:
-  show-strings --skin=PATH_TO_SKIN
-  show-strings --skin=PATH_TO_SKIN --lang=XX
+  i18n-report --skin=PATH_TO_SKIN
+  i18n-report --skin=PATH_TO_SKIN --lang=XX
 
   Utility to manage translated strings in WeeWX skins."""
 
