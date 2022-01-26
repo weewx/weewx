@@ -18,7 +18,8 @@ usagestr = """Usage: i18n-report --skin=PATH_TO_SKIN [--help] [--version]
 
 Examples:
   i18n-report --skin=PATH_TO_SKIN
-  i18n-report --skin=PATH_TO_SKIN --lang=XX
+  i18n-report --skin=PATH_TO_SKIN --action translations --lang=XX
+  i18n-report --skin=PATH_TO_SKIN --action strings
 
   Utility to manage translated strings in WeeWX skins."""
 
@@ -30,9 +31,8 @@ def main():
                       help="Specify the path to the desired skin")
     parser.add_option("--lang", type=str, metavar="LANGUAGE",
                       help="Specify two-letter language identifier")
-    parser.add_option("--action", type=str, metavar="ACTION",
-                      default='all',
-                      help="Options include: all, untranslated, unlisted")
+    parser.add_option("--action", type=str, metavar="ACTION", default='all',
+                      help="Options include: all, languages, translations, strings")
 
     options, args = parser.parse_args()
 
@@ -71,7 +71,7 @@ def main():
     action = options.action
 
     # list all of the lang files that we find
-    if action == 'all' or action == 'list-languages':
+    if action == 'all' or action == 'languages':
         confs = glob.glob("%s/*.conf" % lang_dir)
         print("language files found:")
         for f in confs:
@@ -79,7 +79,7 @@ def main():
 
     # report any untranslated strings.  if a lang was specified, only report
     # about that language.  otherwise report on every language that is found.
-    if action == 'all' or action == 'untranslated':
+    if action == 'all' or action == 'translations':
         lang = options.lang
         confs = []
         if lang:
@@ -107,7 +107,7 @@ def main():
     #       be feasible, since html/xml and other formats might use strings
     #       that should not be part of translation.  of course if we find
     #       strings within xml delimiters we could ignore those...
-    if action == 'all' or action == 'unlisted':
+    if action == 'all' or action == 'strings':
         known_strings = read_texts(en_conf)
         ext_list = ['tmpl', 'inc']
         str_list = set()
