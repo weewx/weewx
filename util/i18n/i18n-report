@@ -2,7 +2,6 @@
 # Copyright (c) 2022 Matthew Wall
 """Utility for managing translated strings in skins."""
 
-# FIXME: this regex pattern only finds one gettext per line
 # FIXME: improve the dotted notation to find pgettext instances
 
 import sys
@@ -12,7 +11,7 @@ from optparse import OptionParser
 import re
 import configobj
 
-__version__ = '0.1'
+__version__ = '0.2'
 
 usagestr = """Usage: i18n-report --skin=PATH_TO_SKIN [--help] [--version]
 
@@ -123,12 +122,14 @@ def main():
         for x in known_strings:
             if not x in str_list:
                 unused.add(x)
-        print("strings in en.conf but not found in the skin:")
-        for x in unused:
-            print("  %s" % x)
-        print("strings in skin but not found in en.conf:")
-        for x in unlisted:
-            print("  %s" % x)
+        if unused:
+            print("strings in en.conf but not found in the skin:")
+            for x in unused:
+                print("  %s" % x)
+        if unlisted:
+            print("strings in skin but not found in en.conf:")
+            for x in unlisted:
+                print("  %s" % x)
 
     sys.exit(0)
 
@@ -185,12 +186,10 @@ def get_gettext_strings(dir_name, ext_list, string_list=set()):
             if found:
                 with open(fn) as file:
                     for line in file:
-                        match = re.search(r'\$pgettext\(\s*\"([^\"]*)\",\s*\"([^\"]*)\"\s*\)', line)
-                        if match:
-                            string_list.add(match.group(2))
-                        match = re.search(r'\$gettext\(\s*[\'\"]([^\)]*)[\'\"]\s*\)', line)
-                        if match:
-                            string_list.add(match.group(1))
+                        for m in re.findall(r'\$pgettext\(\s*\"([^\"]*)\",\s*\"([^\"]*)\"\s*\)', line):
+                            string_list.add(m.group(2))
+                        for m in re.findall(r'\$gettext\(\s*[\'\"]([^\)]*)[\'\"]\s*\)', line):
+                            string_list.add(m)
         elif os.path.isdir(fn):
             get_gettext_strings(fn, ext_list, string_list)
 
