@@ -90,6 +90,8 @@ when WeeWX is run directly.
 Added sample weewxd init file for 'service' based init on freebsd.  Thanks to
 user ryan.
 
+Added i18n-report utility to help check skins for translated strings.
+
 
 4.5.1 04/02/2021
 Reverted the wview schema back to the V3 style.
