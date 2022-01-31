@@ -3,7 +3,7 @@
   xmlns:content="http://purl.org/rss/1.0/modules/content/"
   xmlns:geo="http://www.w3.org/2003/01/geo/wgs84_pos#" >
 
-#set $timespans = [{"span": $day, "label": "Daily Weather Summary as of"}, {"span": $month, "label": "Monthly Weather Summary as of"}, {"span": $year, "label": "Yearly Weather Summary as of"}]
+#set $timespans = [{"span": $day, "label": "Daily summary as of"}, {"span": $month, "label": "Monthly summary as of"}, {"span": $year, "label": "Yearly summary as of"}]
 
 #set $observations = $DisplayOptions.get('observations_rss', ['outTemp', 'inTemp', 'barometer', 'wind', 'rain', 'rainRate'])
 #set $obs_type_sum = $DisplayOptions.get('obs_type_sum', ['rain'])
@@ -79,7 +79,7 @@
       <geo:long>$station.longitude_f</geo:long>
       <content:encoded><![CDATA[
       <p>
-      $gettext("Day"): $timespan['span'].dateTime.format("%d %b %Y")<br/>
+      $gettext($timespan['label']) $timespan['span'].dateTime.format("%d %b %Y")<br/>
   #for $x in $observations
     #if $getattr($timespan['span'], $x).has_data
       #if $x == 'wind'

@@ -92,6 +92,7 @@ if sys.platform == "darwin":
                 level = DEBUG
                 formatter = standard
                 class = logging.handlers.RotatingFileHandler
+                # Writing to this file will require root privileges:
                 filename = /var/log/weewx.log
                 maxBytes = 10000000
                 backupCount = 4
