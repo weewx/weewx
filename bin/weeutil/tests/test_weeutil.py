@@ -243,7 +243,8 @@ class WeeutilTest(unittest.TestCase):
                          TimeSpan(1437314400, 1437433535))
         self.assertEqual(archiveSpanSpan(time_ts, week_delta=4, boundary='midnight'),
                          TimeSpan(1434981600, 1437433535))
-
+        with self.assertRaises(ValueError):
+            archiveSpanSpan(time_ts, hour_delta=6, boundary='foo')
 
         # Test over a DST boundary. Because Brisbane does not observe DST, we need to
         # switch timezones.

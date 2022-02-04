@@ -474,7 +474,7 @@ def archiveSpanSpan(time_ts, time_delta=0, hour_delta=0, day_delta=0, week_delta
     elif boundary.lower() == 'midnight':
         start_ts = _ord_to_ts(start_dt.toordinal())
     else:
-        return weewx.ViolatedPrecondition("Unknown boundary %s" % boundary)
+        raise ValueError("Unknown boundary %s" % boundary)
 
     return TimeSpan(start_ts, time_ts)
 
