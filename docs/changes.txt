@@ -1,7 +1,7 @@
 WeeWX change history
 --------------------
 
-4.6.0 MM/DD/YYYY
+4.6.0 02/04/2022
 Easy localization of all skins that come with WeeWX. Big thanks to user Karen,
 who drove the effort! PR #665.
 
