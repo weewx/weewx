@@ -250,6 +250,13 @@ sudo apt-get install weewx</pre>
         <h1><a id="Instructions_for_specific_versions">Instructions for specific versions</a></h1>
 
         <h2>Upgrading to V4.6</h2>
+        <h3>Ordering of search list changed</h3>
+        <p>
+            In previous versions, user-supplied search list extensions were <em>appended</em> to the search list.
+            Starting with V4.6, they are now <em>prepended</em> to the list. This means that when Cheetah is evaluating
+            the list, looking for a tag, it will encounter user-supplied extensions first, allowing extensions to
+            override the built-in tags and change their behavior.
+        </p>
         <h3>Tag <span class="code">$alltime</span></h3>
         <p>
             The tag <span class="code">$alltime</span>, formerly included as an example, is now a part of the core of
