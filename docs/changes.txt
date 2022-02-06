@@ -1,6 +1,11 @@
 WeeWX change history
 --------------------
 
+4.6.1 MM/DD/YYYY
+Observaton types that use the `sum` extractor are set to None if no LOOP packets
+contributed to the accumulator. Fixes issue #737.
+
+
 4.6.0 02/04/2022
 Easy localization of all skins that come with WeeWX. Big thanks to user Karen,
 who drove the effort! PR #665.
