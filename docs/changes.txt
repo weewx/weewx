@@ -1,6 +1,11 @@
 WeeWX change history
 --------------------
 
+4.6.1 MM/DD/YYYY
+
+Added ppm as default group_fraction.  Added default label string for ppm.
+
+
 4.6.0 02/04/2022
 Easy localization of all skins that come with WeeWX. Big thanks to user Karen,
 who drove the effort! PR #665.
