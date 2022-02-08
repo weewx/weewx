@@ -62,14 +62,14 @@
   #for $x in $observations
     #if $getattr($timespan['span'], $x).has_data
       #if $x == 'wind'
-        $gettext("Max") $obs.label.wind: $timespan['span'].wind.max $gettext("from") $timespan['span'].wind.gustdir at $timespan['span'].wind.maxtime;
+        $gettext("Max") $obs.label.wind: $timespan['span'].wind.max $gettext("from") $timespan['span'].wind.gustdir $gettext("at") $timespan['span'].wind.maxtime;
       #elif $x in $obs_type_sum
         $obs.label[$x]: $getattr($timespan['span'], $x).sum;
       #elif $x in $obs_type_max
         $gettext("Max") $obs.label[$x]: $getattr($timespan['span'], $x).max;
       #else
-        $gettext("Min") $obs.label[$x]: $getattr($timespan['span'], $x).min at $getattr($timespan['span'], $x).mintime;
-        $gettext("Max") $obs.label[$x]: $getattr($timespan['span'], $x).max at $getattr($timespan['span'], $x).maxtime;
+        $gettext("Min") $obs.label[$x]: $getattr($timespan['span'], $x).min $gettext("at") $getattr($timespan['span'], $x).mintime;
+        $gettext("Max") $obs.label[$x]: $getattr($timespan['span'], $x).max $gettext("at") $getattr($timespan['span'], $x).maxtime;
       #end if
     #end if
   #end for
@@ -83,14 +83,14 @@
   #for $x in $observations
     #if $getattr($timespan['span'], $x).has_data
       #if $x == 'wind'
-        $gettext("Max") $obs.label.wind: $timespan['span'].wind.max $gettext("from") $timespan['span'].wind.gustdir at $timespan['span'].wind.maxtime<br/>
+        $gettext("Max") $obs.label.wind: $timespan['span'].wind.max $gettext("from") $timespan['span'].wind.gustdir $gettext("at") $timespan['span'].wind.maxtime<br/>
       #elif $x in $obs_type_sum
         $obs.label[$x]: $getattr($timespan['span'], $x).sum<br/>
       #elif $x in $obs_type_max
         $gettext("Max") $obs.label[$x]: $getattr($timespan['span'], $x).max<br/>
       #else
-        $gettext("Min") $obs.label[$x]: $getattr($timespan['span'], $x).min at $getattr($timespan['span'], $x).mintime<br/>
-        $gettext("Max") $obs.label[$x]: $getattr($timespan['span'], $x).max at $getattr($timespan['span'], $x).maxtime<br/>
+        $gettext("Min") $obs.label[$x]: $getattr($timespan['span'], $x).min $gettext("at") $getattr($timespan['span'], $x).mintime<br/>
+        $gettext("Max") $obs.label[$x]: $getattr($timespan['span'], $x).max $gettext("at") $getattr($timespan['span'], $x).maxtime<br/>
       #end if
     #end if
   #end for
