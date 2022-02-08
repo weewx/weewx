@@ -119,6 +119,15 @@ class StatsTest(unittest.TestCase):
         # windGustDir should match the windDir seen at max wind:
         self.assertEqual(accum_record['windGustDir'], windMaxDir)
 
+    def test_issue_737(self):
+        accum = weewx.accum.Accum(TimeSpan(start_ts, stop_ts))
+        for packet in self.dataset:
+            packet['windrun'] = None
+            accum.addRecord(packet)
+        # Extract the record out of the accumulator
+        record = accum.getRecord()
+        self.assertIsNone(record['windrun'])
+
 
 class AccumTest(unittest.TestCase):
 
