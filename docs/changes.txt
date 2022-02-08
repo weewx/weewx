@@ -7,6 +7,8 @@ contributed to the accumulator. Fixes issue #737.
 
 Added ppm as default group_fraction.  Added default label string for ppm.
 
+Added Norwegian translations. Thanks to user Aslak! PR #742.
+
 
 4.6.0 02/04/2022
 Easy localization of all skins that come with WeeWX. Big thanks to user Karen,
