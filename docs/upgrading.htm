@@ -279,27 +279,21 @@ sudo apt-get install weewx</pre>
             <tr>
                 <td>
                     <pre class='tty'>
-            #
-            # Some calculation that comes with an elapsed time of 1655 seconds happens here...
-            #
-            vt = ValueTuple(1655, 'second', 'group_deltatime')
-            vh = ValueHelper(vt,
-                             formatter=self.generator.formatter,
-                             converter=self.generator.converter)
-            return vh
+# Create an elapsed time of 1655 seconds
+vt = ValueTuple(1655, 'second', 'group_deltatime')
+vh = ValueHelper(vt,
+                 formatter=self.generator.formatter,
+                 converter=self.generator.converter)
 </pre>
                 </td>
                 <td>
                     <pre class='tty'>
-            #
-            # Some calculation that comes with an elapsed time of 1655 seconds happens here...
-            #
-            vt = ValueTuple(1655, 'second', 'group_deltatime')
-            vh = ValueHelper(vt,
-                             <span class="added">context='short_delta',</span>
-                             formatter=self.generator.formatter,
-                             converter=self.generator.converter)
-            return vh
+# Create an elapsed time of 1655 seconds
+vt = ValueTuple(1655, 'second', 'group_deltatime')
+vh = ValueHelper(vt,
+                 formatter=self.generator.formatter,
+                 converter=self.generator.converter,
+                 <span class="added">context='short_delta'</span>)
 </pre>
                 </td>
             </tr>

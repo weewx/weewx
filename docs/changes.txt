@@ -5,6 +5,8 @@ WeeWX change history
 Observaton types that use the `sum` extractor are set to None if no LOOP packets
 contributed to the accumulator. Fixes issue #737.
 
+Added ppm as default group_fraction.  Added default label string for ppm.
+
 
 4.6.0 02/04/2022
 Easy localization of all skins that come with WeeWX. Big thanks to user Karen,
