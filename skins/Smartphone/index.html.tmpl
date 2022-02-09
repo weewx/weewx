@@ -31,7 +31,7 @@
         <li><a href="temp.html">$obs.label.outTemp: $current.outTemp [$day.outTemp.min, $day.outTemp.max]</a></li>
         <li><a href="humidity.html">$obs.label.outHumidity: $current.outHumidity [$day.outHumidity.min, $day.outHumidity.max]</a></li>
         <li><a href="rain.html">$obs.label.rainRate: $current.rainRate ($day.rain.sum)</a></li>
-	<li><a href="wind.html">$obs.label.wind: $current.windSpeed from $current.windDir.ordinal_compass ($current.windDir)</a></li>
+	<li><a href="wind.html">$obs.label.wind: $current.windSpeed $gettext("from") $current.windDir.ordinal_compass ($current.windDir)</a></li>
       </ul>
       #if 'radar_img' in $Extras and 'radar_url' in $Extras
     </div>
