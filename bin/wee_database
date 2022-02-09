@@ -905,7 +905,7 @@ def check_type(val, expected):
         return isinstance(val, six.integer_types)
     elif expected == 'REAL':
         return isinstance(val, float)
-    elif expected == 'STR':
+    elif expected == 'STR' or expected == 'TEXT':
         return isinstance(val, six.string_types)
     else:
         raise ValueError("Unknown type %s" % expected)
@@ -916,7 +916,7 @@ def set_type(val, target):
         return int(val)
     elif target == 'REAL':
         return float(val)
-    elif target == 'STR':
+    elif target == 'STR' or target == 'TEXT':
         return six.ensure_str(val)
     else:
         raise ValueError("Unknown type %s" % target)

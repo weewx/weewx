@@ -9,6 +9,9 @@ Added ppm as default group_fraction.  Added default label string for ppm.
 
 Added Norwegian translations. Thanks to user Aslak! PR #742.
 
+Fixed problem that caused wee_database --check-strings/--fix-strings to fail on
+TEXT fields. Fixes issue #738.
+
 
 4.6.0 02/04/2022
 Easy localization of all skins that come with WeeWX. Big thanks to user Karen,
