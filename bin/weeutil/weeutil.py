@@ -42,6 +42,7 @@ def option_as_list(option):
         return None
     return [option] if not isinstance(option, list) else option
 
+to_list = option_as_list
 
 def list_as_string(option):
     """Returns the argument as a string.

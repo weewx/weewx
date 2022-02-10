@@ -4,13 +4,18 @@
 #errorCatcher Echo
 #encoding UTF-8
 
-#set $show_rss = $DisplayOptions.get('show_rss', True)
-#set $show_reports = $DisplayOptions.get('show_reports', True)
+#set $show_rss = $to_bool($DisplayOptions.get('show_rss', True))
+#set $show_reports = $to_bool($DisplayOptions.get('show_reports', True))
 
 <div id="title_bar">
   <div id="title">
     <h1 class="page_title">$station.location</h1>
     <p class="lastupdate">$current.dateTime</p>
+<p>$show_rss $show_reports</p>
+<p>$DisplayOptions.get('observations_current', ['foo'])</p>
+<p>$DisplayOptions.get('observations_current', ['foo'])</p>
+<p>$to_list($DisplayOptions.get('observations_current_def', ['foo']))</p>
+<p>$to_list($DisplayOptions.get('observations_current_def', 'foo'))</p>
   </div>
 #if $show_rss
   <div id="rss_link"><a href="rss.xml">RSS</a></div>

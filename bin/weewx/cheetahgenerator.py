@@ -692,6 +692,15 @@ class JSONHelpers(SearchList):
         """
         return weeutil.weeutil.to_int(arg)
 
+    @staticmethod
+    def to_bool(arg):
+        """Convert the argument to boolean True or False, if possible."""
+        return weeutil.weeutil.to_bool(arg)
+
+    @staticmethod
+    def to_list(arg):
+        """Convert the argment into a list"""
+        return weeutil.weeutil.to_list(arg)
 
 class Gettext(SearchList):
     """Values provided by $gettext() are found in the [Texts] section of the localization file."""
@@ -759,13 +768,7 @@ class DisplayOptions(SearchList):
 
     def __init__(self, generator):
         SearchList.__init__(self, generator)
-        # If the user has supplied an '[DisplayOptions]' section in the skin
-        # dictionary, include it in the search list. Otherwise, just include
-        # an empty dictionary.
-        display_options = generator.skin_dict.get('DisplayOptions', {})
-        #  Make sure all entries are actually lists.
-        self.DisplayOptions = {k: weeutil.weeutil.option_as_list(display_options[k])
-                               for k in display_options}
+        self.DisplayOptions = dict(generator.skin_dict.get('DisplayOptions', {}))
 
 
 class SkinInfo(SearchList):

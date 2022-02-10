@@ -3,11 +3,11 @@
   xmlns:content="http://purl.org/rss/1.0/modules/content/"
   xmlns:geo="http://www.w3.org/2003/01/geo/wgs84_pos#" >
 
-#set $timespans = [{"span": $day, "label": "Daily summary as of"}, {"span": $month, "label": "Monthly summary as of"}, {"span": $year, "label": "Yearly summary as of"}]
+#set $timespans = [{"span": $day, "label": $gettext("Daily summary as of")}, {"span": $month, "label": $gettext("Monthly summary as of")}, {"span": $year, "label": $gettext("Yearly summary as of")}]
 
-#set $observations = $DisplayOptions.get('observations_rss', ['outTemp', 'inTemp', 'barometer', 'wind', 'rain', 'rainRate'])
-#set $obs_type_sum = $DisplayOptions.get('obs_type_sum', ['rain'])
-#set $obs_type_max = $DisplayOptions.get('obs_type_max', ['rainRate'])
+#set $observations = $to_list($DisplayOptions.get('observations_rss', ['outTemp', 'inTemp', 'barometer', 'wind', 'rain', 'rainRate']))
+#set $obs_type_sum = $to_list($DisplayOptions.get('obs_type_sum', ['rain']))
+#set $obs_type_max = $to_list($DisplayOptions.get('obs_type_max', ['rainRate']))
 
   <channel>
     <title>$gettext("Weather Conditions") : $station.location</title>
@@ -56,7 +56,7 @@
 
 #for $timespan in $timespans
     <item>
-      <title>$gettext($timespan['label']) $current.dateTime</title>
+      <title>$timespan['label'] $current.dateTime</title>
       <link>$station.station_url</link>
       <description>
   #for $x in $observations

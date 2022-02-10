@@ -2,8 +2,8 @@
 ## Distributed under terms of GPLv3.  See LICENSE.txt for your rights.
 #errorCatcher Echo
 
-#set $periods = $DisplayOptions.get('periods', ['day', 'week', 'month', 'year'])
-#set $plot_groups = $DisplayOptions.get('plot_groups', ['tempdew', 'wind', 'rain'])
+#set $periods = $to_list($DisplayOptions.get('periods', ['day', 'week', 'month', 'year']))
+#set $plot_groups = $to_list($DisplayOptions.get('plot_groups', ['tempdew', 'wind', 'rain']))
 
 ## use this span to determine whether there are any data to consider.
 #set $recent=$span($day_delta=30, boundary='midnight')
