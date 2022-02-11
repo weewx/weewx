@@ -1,6 +1,11 @@
 WeeWX change history
 --------------------
 
+4.6.2 02/10/2022
+Removed diagnostic code that was inadverently left in the titlebar.inc file
+in Seasons skin.
+
+
 4.6.1 02/10/2022
 Make the show_rss and show_reports flags work properly.  Fixes issue #739.
 
