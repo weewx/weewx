@@ -11,11 +11,6 @@
   <div id="title">
     <h1 class="page_title">$station.location</h1>
     <p class="lastupdate">$current.dateTime</p>
-<p>$show_rss $show_reports</p>
-<p>$DisplayOptions.get('observations_current', ['foo'])</p>
-<p>$DisplayOptions.get('observations_current', ['foo'])</p>
-<p>$to_list($DisplayOptions.get('observations_current_def', ['foo']))</p>
-<p>$to_list($DisplayOptions.get('observations_current_def', 'foo'))</p>
   </div>
 #if $show_rss
   <div id="rss_link"><a href="rss.xml">RSS</a></div>
