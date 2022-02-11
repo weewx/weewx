@@ -1,3 +1,5 @@
+* Thu Feb 10 2022 Matthew Wall (weewx) <mwall@users.sourceforge.net> - 4.6.1-1
+- new upstream release
 * Fri Feb 04 2022 Matthew Wall (weewx) <mwall@users.sourceforge.net> - 4.6.0-1
 - new upstream release
 * Sat Nov 06 2021 Thomas Keffer (Author of weewx) <tkeffer@gmail.com> - 4.6.0b7-1
