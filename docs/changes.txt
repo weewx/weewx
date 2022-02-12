@@ -1,7 +1,30 @@
 WeeWX change history
 --------------------
 
-4.6.0 MM/DD/YYYY
+4.6.2 02/10/2022
+Removed diagnostic code that was inadverently left in the titlebar.inc file
+in Seasons skin.
+
+
+4.6.1 02/10/2022
+Make the show_rss and show_reports flags work properly.  Fixes issue #739.
+
+Added $to_list() utility for use in Cheetah templates.
+
+Fixed a few more untranslated fields in Seasons skin.
+
+Observaton types that use the `sum` extractor are set to None if no LOOP
+packets contributed to the accumulator. Fixes issue #737.
+
+Added ppm as default group_fraction.  Added default label string for ppm.
+
+Added Norwegian translations. Thanks to user Aslak! PR #742.
+
+Fixed problem that caused wee_database --check-strings/--fix-strings to fail on
+TEXT fields. Fixes issue #738.
+
+
+4.6.0 02/04/2022
 Easy localization of all skins that come with WeeWX. Big thanks to user Karen,
 who drove the effort! PR #665.
 

@@ -3,8 +3,8 @@
 #errorCatcher Echo
 #encoding UTF-8
 
-#set $periods = $DisplayOptions.get('periods', ['day', 'week', 'month', 'year'])
-#set $telemetry_plot_groups = $DisplayOptions.get('telemetry_plot_groups', ['rx'])
+#set $periods = $to_list($DisplayOptions.get('periods', ['day', 'week', 'month', 'year']))
+#set $telemetry_plot_groups = $to_list($DisplayOptions.get('telemetry_plot_groups', ['rx']))
 
 <!DOCTYPE html>
 <html lang="$lang">

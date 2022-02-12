@@ -203,8 +203,7 @@ sudo apt-get install weewx</pre>
         </p>
 
         <p class="note">
-            The vast majority of the time you will want to choose <span class="code">N</span> (the default), and keep
-            your old version of <span class="code">weewx.conf</span>.
+            The vast majority of the time you will want to choose <span class="code">N</span> (the default).
         </p>
 
         <h1><a id="Upgrading_using_RPM_package">Upgrading using RPM package</a></h1>
@@ -235,30 +234,29 @@ sudo apt-get install weewx</pre>
 
         <pre class='tty'>warning: /etc/weewx/weewx.conf created as /etc/weewx/weewx.conf.rpmnew</pre>
 
-        <h1>Upgrading the configuration file, <span class="code">weewx.conf</span></h1>
+        <h1>Upgrading the WeeWX configuration file</h1>
 
         <p>
-            It doesn't happen very often, but occasionally the configuration file, <span class="code">weewx.conf</span>
-            needs some changes when a new version arrives, perhaps because a new feature requires some configuration
-            information. Normally the installer, whether it is <span class="code">setup.py</span>, or a package installer, takes
-            care of upgrading the file and you do not need to worry about it.
+            It does not happen very often, but occasionally a new release will <em>require</em> changes to the WeeWX configuration file.  When this happens, the installer, whether it is <span class="code">setup.py</span>, or a package installer, takes care of upgrading the file and you do not need to worry about it.
         </p>
         <p>
-            However, there are some occasions when you may need to upgrade the file yourself. In particular, this happens
-            when you run several instances of <span class="code">weewxd</span> on the same machine, each with its own
-            configuration file, and each with a different name. The one named <span class="code">weewx.conf</span> will
-            get upgraded, but what about the others?
+            However, there are some occasions when you may need to upgrade the file yourself. In particular, this happens when you run several instances of <span class="code">weewxd</span> on the same machine, each with its own configuration file. The configuration file named <span class="code">weewx.conf</span> will get upgraded, but what about the others?
         </p>
-
         <p>
-            See the section on <a href="utilities.htm#wee_config_utility_upgrade"><span class="code">wee_config --upgrade</span></a>
-            in the Utilities Guide for how to do this.
+          Use <span class="code">wee_config</span> to upgrade each configuration file.  See the section on <a href="utilities.htm#wee_config_utility_upgrade"><span class="code">wee_config --upgrade</span></a> in the Utilities Guide for how to do this.
         </p>
 
 
         <h1><a id="Instructions_for_specific_versions">Instructions for specific versions</a></h1>
 
         <h2>Upgrading to V4.6</h2>
+        <h3>Ordering of search list changed</h3>
+        <p>
+            In previous versions, user-supplied search list extensions were <em>appended</em> to the search list.
+            Starting with V4.6, they are now <em>prepended</em> to the list. This means that when Cheetah is evaluating
+            the list, looking for a tag, it will encounter user-supplied extensions first, allowing extensions to
+            override the built-in tags and change their behavior.
+        </p>
         <h3>Tag <span class="code">$alltime</span></h3>
         <p>
             The tag <span class="code">$alltime</span>, formerly included as an example, is now a part of the core of
@@ -281,27 +279,21 @@ sudo apt-get install weewx</pre>
             <tr>
                 <td>
                     <pre class='tty'>
-            #
-            # Some calculation that comes with an elapsed time of 1655 seconds happens here...
-            #
-            vt = ValueTuple(1655, 'second', 'group_deltatime')
-            vh = ValueHelper(vt,
-                             formatter=self.generator.formatter,
-                             converter=self.generator.converter)
-            return vh
+# Create an elapsed time of 1655 seconds
+vt = ValueTuple(1655, 'second', 'group_deltatime')
+vh = ValueHelper(vt,
+                 formatter=self.generator.formatter,
+                 converter=self.generator.converter)
 </pre>
                 </td>
                 <td>
                     <pre class='tty'>
-            #
-            # Some calculation that comes with an elapsed time of 1655 seconds happens here...
-            #
-            vt = ValueTuple(1655, 'second', 'group_deltatime')
-            vh = ValueHelper(vt,
-                             <span class="added">context='short_delta',</span>
-                             formatter=self.generator.formatter,
-                             converter=self.generator.converter)
-            return vh
+# Create an elapsed time of 1655 seconds
+vt = ValueTuple(1655, 'second', 'group_deltatime')
+vh = ValueHelper(vt,
+                 formatter=self.generator.formatter,
+                 converter=self.generator.converter,
+                 <span class="added">context='short_delta'</span>)
 </pre>
                 </td>
             </tr>
@@ -326,7 +318,7 @@ sudo apt-get install weewx</pre>
             held in the target unit system, rather than being converted at time of use.
         </p>
 
-        <h5>Defaults for <span class="code">ValueHelper</span> have changed</h5>
+        <h4>Defaults for <span class="code">ValueHelper</span> have changed</h4>
         <p>
             Before, when constructing a new <span class="code">ValueHelper</span>, if no converter was included in the
             constructor, a default converter, which converts to US Units, was supplied. Now, if no converter is included
@@ -335,7 +327,7 @@ sudo apt-get install weewx</pre>
             class="code">ValueHelper</span> constructor.
         </p>
 
-        <h5>Function <span class="code">as_value_tuple()</span> may raise <span class="code">KeyError</span></h5>
+        <h4>Function <span class="code">as_value_tuple()</span> may raise <span class="code">KeyError</span></h4>
         <p>
             Previously, if the function <span class="code">as_value_tuple()</span> was asked to return a
             <span class="code">ValueTuple</span> of a non-existent type, it returned a <span class="code">ValueTuple</span>

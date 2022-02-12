@@ -8,9 +8,9 @@
 
 ## Get the list of observations from the configuration file, otherwise fallback
 ## to a very rudimentary set of observations.
-#set $observations = $DisplayOptions.get('observations_stats', ['outTemp', 'windSpeed', 'rain'])
-#set $obs_type_sum = $DisplayOptions.get('obs_type_sum', ['rain'])
-#set $obs_type_max = $DisplayOptions.get('obs_type_max', ['rainRate'])
+#set $observations = $to_list($DisplayOptions.get('observations_stats', ['outTemp', 'windSpeed', 'rain']))
+#set $obs_type_sum = $to_list($DisplayOptions.get('obs_type_sum', ['rain']))
+#set $obs_type_max = $to_list($DisplayOptions.get('obs_type_max', ['rainRate']))
 
 ## use this span to determine whether there are any data to consider.
 #set $recent=$span($day_delta=30, boundary='midnight')

@@ -4,8 +4,8 @@
 #errorCatcher Echo
 #encoding UTF-8
 
-#set $show_rss = $DisplayOptions.get('show_rss', True)
-#set $show_reports = $DisplayOptions.get('show_reports', True)
+#set $show_rss = $to_bool($DisplayOptions.get('show_rss', True))
+#set $show_reports = $to_bool($DisplayOptions.get('show_reports', True))
 
 <div id="title_bar">
   <div id="title">

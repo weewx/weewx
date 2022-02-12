@@ -50,9 +50,9 @@ $gettext('never')
 
 ## Get the list of sensor observations from the configuration file, otherwise
 ## fallback to a very rudimentary set.
-#set $sensor_connections = $DisplayOptions.get('sensor_connections', ['rxCheckPercent'])
-#set $sensor_batteries = $DisplayOptions.get('sensor_batteries', ['outTempBatteryStatus', 'inTempBatteryStatus', 'rainBatteryStatus', 'windBatteryStatus', 'uvBatteryStatus', 'txBatteryStatus'])
-#set $sensor_voltages = $DisplayOptions.get('sensor_voltages', ['consBatteryVoltage', 'heatingVoltage', 'supplyVoltage', 'referenceVoltage'])
+#set $sensor_connections = $to_list($DisplayOptions.get('sensor_connections', ['rxCheckPercent']))
+#set $sensor_batteries = $to_list($DisplayOptions.get('sensor_batteries', ['outTempBatteryStatus', 'inTempBatteryStatus', 'rainBatteryStatus', 'windBatteryStatus', 'uvBatteryStatus', 'txBatteryStatus']))
+#set $sensor_voltages = $to_list($DisplayOptions.get('sensor_voltages', ['consBatteryVoltage', 'heatingVoltage', 'supplyVoltage', 'referenceVoltage']))
 
 ## first see what sensor data are available
 

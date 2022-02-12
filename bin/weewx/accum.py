@@ -579,7 +579,7 @@ class Accum(dict):
             record['windGustDir'] = self[obs_type].max_dir
 
     def extract_sum(self, record, obs_type):
-        record[obs_type] = self[obs_type].sum
+        record[obs_type] = self[obs_type].sum if self[obs_type].count else None
 
     def extract_last(self, record, obs_type):
         record[obs_type] = self[obs_type].last

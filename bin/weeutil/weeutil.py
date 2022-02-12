@@ -42,6 +42,7 @@ def option_as_list(option):
         return None
     return [option] if not isinstance(option, list) else option
 
+to_list = option_as_list
 
 def list_as_string(option):
     """Returns the argument as a string.
@@ -474,7 +475,7 @@ def archiveSpanSpan(time_ts, time_delta=0, hour_delta=0, day_delta=0, week_delta
     elif boundary.lower() == 'midnight':
         start_ts = _ord_to_ts(start_dt.toordinal())
     else:
-        return weewx.ViolatedPrecondition("Unknown boundary %s" % boundary)
+        raise ValueError("Unknown boundary %s" % boundary)
 
     return TimeSpan(start_ts, time_ts)
 

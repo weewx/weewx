@@ -15,8 +15,9 @@
   <table>
     <tbody>
 
-#if 'observations_current' in $DisplayOptions
-#for $x in $DisplayOptions.observations_current
+#set $observations = $to_list($DisplayOptions.get('observations_current', ['outTemp', 'barometer']))
+
+#for $x in $observations
   #if $getVar('year.%s.has_data' % $x)
     #if $x == 'barometer'
       <tr>
@@ -41,9 +42,6 @@
     #end if
   #end if
 #end for
-#else
-    <tr><td>No observations specified</td></tr>
-#end if
 
     </tbody>
   </table>
