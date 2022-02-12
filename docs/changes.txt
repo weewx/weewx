@@ -39,7 +39,8 @@ PR #659. Thanks to user edi-x!
 
 Added Cheetah helper functions $jsonize(), $rnd(), and $to_int().
 
-The tag $alltime, formerly available as an example, is now a part of WeeWX core.
+The tag $alltime, formerly available as an example, is now a part of WeeWX
+core.
 
 New SLE example $colorize(). New document on how to write SLEs.
 
@@ -47,8 +48,8 @@ Added conversions for unix_epoch_ms and unix_epoch_ns. Calculations in
 celestial.inc now explicitly use unix_epoch.
 
 Added almanac attribute "visible" and "visible_change". For example,
-$almanac.sun.visible returns the amount of daylight, $almanac.sun.visible_change
-the difference since yesterday.
+$almanac.sun.visible returns the amount of daylight,
+ $almanac.sun.visible_change the difference since yesterday.
 
 Fixed problem that could cause weather xtypes services not to shut down
 properly. PR #672. Thanks again to user edi-x!
@@ -146,7 +147,8 @@ experimental and subject to change! Addresses issue #341.
 
 New optional tag ".json()" for formatting results as JSON.
 
-New optional tag ".round()". Useful for rounding results of .raw and .json tags.
+New optional tag ".round()". Useful for rounding results of .raw and .json
+tags.
 
 Improved performance when calculating series using aggregation periods that are
 multiples of a day.
@@ -197,8 +199,8 @@ records, or both. PR #630. Thanks to user g-eddy!
 Introduced aggregate types "avg_ge" and "avg_le". PR #631. Thanks to user
 edi-x!
 
-NOAA reports now use a 'utf8' encoding instead of 'strict_ascii'. This will only
-affect new installations. Fixes issue #644.
+NOAA reports now use a 'utf8' encoding instead of 'strict_ascii'. This will
+only affect new installations. Fixes issue #644.
 
 Introduced new encoding type 'normalized_ascii', which replaces characters that
 have accented marks with analogous ascii characters. For example, ö gets
@@ -258,7 +260,8 @@ Fixes issue #620.
 Fixed problem where wind gust direction is not available when using software
 record generation.
 
-Added --no-prompt action to wee_import allowing wee_import to be run unattended.
+Added --no-prompt action to wee_import allowing wee_import to be run
+unattended.
 
 Fixed problem that prevented option `observations` from being used in the
 simulator. Thanks to user Graham!
@@ -316,8 +319,9 @@ Constantine and Jacques!
 
 Improved auto-scaling of plot axes.
 
-Fixed problem where aggregates of windvec and windgustvec returned the aggregate
-since start of day, not the start of the aggregation period. Fixes issue #590.
+Fixed problem where aggregates of windvec and windgustvec returned the
+aggregate since start of day, not the start of the aggregation period.
+Fixes issue #590.
 
 New unit "beaufort", included in "group_speed". Treating beaufort as a separate
 type has been deprecated. Fixes issue #591.
@@ -387,8 +391,8 @@ without syslog.
 Allow expressions to be used as a datatype when plotting.
 
 Added option 'reuse_ssl' to FTP. This activates a workaround for a bug in the
-Python ftp library that causes long-lived connections to get closed prematurely.
-Works only with Python 3.6 and greater.
+Python ftp library that causes long-lived connections to get closed
+prematurely. Works only with Python 3.6 and greater.
 
 The cc3000 driver will automatically reboot the hardware if it stops sending
 observations. PR #549.
@@ -428,8 +432,8 @@ as Python 2.7. Support for Python 2.5 and 2.6 has been dropped.
 New facility for creating new user-defined derived types. See the Wiki article
 https://github.com/weewx/weewx/wiki/WeeWX-V4-user-defined-types
 
-WeeWX now uses the Python 'logging' facility. This means log, formats, and other
-things can now be customized. Fixes issue #353.
+WeeWX now uses the Python 'logging' facility. This means log, formats, and
+other things can now be customized. Fixes issue #353.
 
 Strings appearing in the data stream no longer cause a TypeError if they can be
 converted to a number.
@@ -440,8 +444,8 @@ possible to include them in the database schemas.
 The utility wee_reports now loads services, allowing it to use user-supplied
 extensions. Fixes issue #95.
 
-New default schema ("wview_extended") that offers many new types. The old schema
-is still supported. Fixes issue #115.
+New default schema ("wview_extended") that offers many new types. The old
+schema is still supported. Fixes issue #115.
 
 Optional, more flexible, way of specifying schemas for the daily summaries. The
 old way is still supported.
@@ -467,8 +471,8 @@ Added new aggregation types 'first' (similar to 'last'), 'diff' (the difference
 between last and first value in the aggregation interval), and 'tderiv' (the
 difference divided by the time difference).
 
-Created new unit group 'group_energy2', defined as watt-seconds. Useful for high
-resolution energy monitors.
+Created new unit group 'group_energy2', defined as watt-seconds. Useful for
+high resolution energy monitors.
 
 An observation type known to the system, but not in a record, will now return a
 proper ValueTuple, rather than UnknownType.
@@ -485,7 +489,7 @@ Catch SSL certificate errors in uploaders. Retry after an hour. Fixes issue
 #413.
 
 Wunderfixer has been ported to the new WU API. This API requires an API key,
-which you can get from the WU. Put it in weewx.conf. Added option --upload-only.
+which you can get from WU. Put it in weewx.conf. Added option --upload-only.
 Thanks to user Leon Shaner! Fixes issues #414 and #445.
 
 Wee_import can now import Weather Display monthly log files.
@@ -513,8 +517,8 @@ Thanks to user Rich Bell!
 Fixed bug that caused windrun to be calculated wrongly under METRICWX unit
 system. Fixes issue #452.
 
-If a bad value of 'interval' is encountered in a record, the program will simply
-ignore it, rather than stopping. Address issue #375.
+If a bad value of 'interval' is encountered in a record, the program will
+simply ignore it, rather than stopping. Address issue #375.
 
 Change in how the archive timespan is calculated in the engine. This allows
 oddball archive intervals. Fixes issue #469.
@@ -548,8 +552,8 @@ consistent with "meter". The spelling "litre" is still accepted.
 Systemd type changed from "simple" to "forking". Thanks to user Jaap de Munck
 for figuring this one out!
 
-The configuration file is now an optional argument when running weewxd directly.
-This means most users will be able to use the simple command line 'sudo weewxd'.
+The configuration file is now an optional argument. This means most users will
+be able to use the simple command line 'sudo weewxd'.
 
 Use correct log path for netbsd and openbsd in logger setup.
 
