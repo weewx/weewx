@@ -1,6 +1,12 @@
 WeeWX change history
 --------------------
 
+4.6.3 MM/DD/YYYY
+Fixed two typos in the Standard skin.
+
+Fixed spelling mistakes in the Norwegian translations.  Thanks to Aslak! PR#746
+
+
 4.6.2 02/10/2022
 Removed diagnostic code that was inadverently left in the titlebar.inc file
 in Seasons skin.
