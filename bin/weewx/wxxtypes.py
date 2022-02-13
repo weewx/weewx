@@ -98,11 +98,18 @@ class WXXTypes(weewx.xtypes.XType):
         return ValueTuple(val, 'degree_compass', 'group_direction')
 
     def calc_windGustDir(self, key, data, db_manager):
-        # Return the current gust direction if windGust is non-zero, otherwise, None
-        if 'windGust' not in data or 'windGustDir' not in data:
+        """If windGustDir is missing, substitute windDir.
+        Set windGustDir to None if windGust is zero."""
+        if 'windGust' not in data:
             raise weewx.CannotCalculate
         if self.force_null and data['windGust'] == 0:
+            # windGust is zero. Force windGustDir to None
             val = None
+        elif 'windGustDir' not in data:
+            # windGustDir is missing. If available, substitute windDir.
+            if 'windDir' not in data:
+                raise weewx.CannotCalculate
+            val = data['windDir']
         else:
             val = data['windGustDir']
         return ValueTuple(val, 'degree_compass', 'group_direction')

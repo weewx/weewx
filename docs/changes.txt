@@ -9,6 +9,8 @@ Fixed spelling mistakes in the Norwegian translations.  Thanks to Aslak! PR#746
 Supply a sensible default context for group_deltatime when no context has been
 specified.
 
+If windGustDir is missing, substitute windDir.
+
 
 4.6.2 02/10/2022
 Removed diagnostic code that was inadverently left in the titlebar.inc file
