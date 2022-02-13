@@ -741,6 +741,10 @@ class Formatter(object):
         elif val_t[2] == "group_deltatime":
             # Get a delta-time format string. Use a default if the user did not supply one:
             if useThisFormat is None:
+                # For group_deltatime formatting, the default context cannot be 'current'.
+                # Change it to something sensible.
+                if context == 'current':
+                    context = 'delta_time'
                 format_string = self.time_format_dict.get(context, DEFAULT_DELTATIME_FORMAT)
             else:
                 format_string = useThisFormat
