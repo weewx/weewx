@@ -40,6 +40,7 @@ log_failure = False
         group_amp          = amp
         group_concentration= microgram_per_meter_cubed
         group_data         = byte
+        group_db           = dB
         group_degree_day   = degree_F_day         # Options are 'degree_F_day' or 'degree_C_day'
         group_deltatime    = second
         group_direction    = degree_compass
@@ -47,10 +48,13 @@ log_failure = False
         group_energy       = watt_hour
         group_energy2      = watt_second
         group_fraction     = ppm
+        group_illuminance  = lux
         group_length       = inch
         group_moisture     = centibar
         group_percent      = percent
+        group_power        = watt
         group_pressure     = inHg                 # Options are 'inHg', 'mmHg', 'mbar', or 'hPa'
+        group_pressure_rate= inHq_per_hour
         group_radiation    = watt_per_meter_squared
         group_rain         = inch                 # Options are 'inch', 'cm', or 'mm'
         group_rainrate     = inch_per_hour        # Options are 'inch_per_hour', 'cm_per_hour', or 'mm_per_hour'
@@ -64,9 +68,9 @@ log_failure = False
         # The following are used internally and should not be changed:
         group_boolean      = boolean
         group_count        = count
+        group_elapsed      = second
         group_interval     = minute
         group_time         = unix_epoch
-        group_elapsed      = second
 
     # The following section sets the formatting for each type of unit.
     [[StringFormats]]
@@ -120,6 +124,7 @@ log_failure = False
         mile               = %.1f
         mile_per_hour      = %.0f
         mile_per_hour2     = %.1f
+        minute             = %.1f
         mm                 = %.1f
         mm_per_hour        = %.1f
         mmHg               = %.1f
@@ -130,6 +135,7 @@ log_failure = False
         uv_index           = %.1f
         volt               = %.1f
         watt               = %.1f
+        watt_hour          = %.1f
         watt_per_meter_squared = %.0f
         watt_second        = %.0f
         NONE               = "   N/A"
@@ -193,8 +199,12 @@ log_failure = False
         percent           =   %
         ppm               = " ppm"
         second            = " second", " seconds"
+        uv_index          = ""
         volt              = " V"
+        watt              = " W"
+        watt_hour         = " Wh"
         watt_per_meter_squared = " W/m²"
+        watt_second       = " Ws"
         NONE              = ""
 
     # The following section sets the format to be used for each time scale.
