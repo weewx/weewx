@@ -9,7 +9,7 @@ Fixed spelling mistakes in the Norwegian translations.  Thanks to Aslak! PR#746
 Supply a sensible default context for group_deltatime when no context has been
 specified.
 
-If windGustDir is missing, substitute windDir.
+If windGustDir is missing, extract a value from the accumulators.
 
 
 4.6.2 02/10/2022
@@ -24,7 +24,7 @@ Added $to_list() utility for use in Cheetah templates.
 
 Fixed a few more untranslated fields in Seasons skin.
 
-Observaton types that use the `sum` extractor are set to None if no LOOP
+Observation types that use the `sum` extractor are set to None if no LOOP
 packets contributed to the accumulator. Fixes issue #737.
 
 Added ppm as default group_fraction.  Added default label string for ppm.

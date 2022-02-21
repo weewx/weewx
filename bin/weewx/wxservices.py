@@ -139,6 +139,9 @@ class StdWXCalculate(weewx.engine.StdService):
                     # XTypes is aware of the type, but can't calculate it, probably because of
                     # missing data. Set the type to None.
                     data_dict[obs_type] = None
+                except weewx.NoCalculate:
+                    # XTypes is aware of the type, but does not need to calculate it.
+                    pass
                 except weewx.UnknownType as e:
                     log.debug("Unknown extensible type '%s'" % e)
                 except weewx.UnknownAggregation as e:

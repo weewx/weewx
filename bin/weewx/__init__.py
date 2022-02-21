@@ -83,6 +83,10 @@ class UnknownAggregation(ValueError):
 class CannotCalculate(ValueError):
     """Exception raised when a type cannot be calculated."""
 
+class NoCalculate(Exception):
+    """Exception raised when a type does not need to be calculated."""
+
+
 # =============================================================================
 #                       Possible event types.
 # =============================================================================

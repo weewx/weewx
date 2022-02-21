@@ -90,11 +90,11 @@ class TestSimpleFunctions(unittest.TestCase):
         self.assertIsNone(result[0])
 
     def test_windDir_no_ignore(self):
-        # Now let's not ignore zero wind
+        # Now let's not ignore zero wind. This should become a No-op, which is signaled by
+        # raising weewx.NoCalculate
         wx_calc = weewx.wxxtypes.WXXTypes(altitude_vt, latitude, longitude, force_null=False)
-        result = wx_calc.get_scalar('windDir', self.record, None)
-        self.assertIsNotNone(result[0])
-        self.assertEqual(result[0], self.record['windDir'])
+        with self.assertRaises(weewx.NoCalculate):
+            wx_calc.get_scalar('windDir', self.record, None)
 
     def calc(self, key, *crits):
         """Calculate derived type 'key'. Parameters in "crits" are required to perform the
