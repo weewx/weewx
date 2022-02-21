@@ -10,7 +10,7 @@
 # Thanks to Mark Teel for the te923 implementation in wview:
 #   http://www.wviewweather.com/
 # Thanks to mrbalky:
-#   http://www.mrbalky.com/tag/te923/
+#   https://github.com/mrbalky/te923/blob/master/README.md
 
 """Classes and functions for interfacing with te923 weather stations.
 
