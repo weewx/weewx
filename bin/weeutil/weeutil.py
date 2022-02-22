@@ -1550,6 +1550,14 @@ except ImportError:
 
         __copy__ = copy
 
+        def keys(self):
+            """Return a list of all keys in the maps."""
+            return [i for s in self.maps for i in s.keys()]
+
+        def values(self):
+            """Return a list of all values in the maps."""
+            return [i for s in self.maps for i in s.values()]
+
 
 class KeyDict(dict):
     """A dictionary that returns the key for an unsuccessful lookup."""
