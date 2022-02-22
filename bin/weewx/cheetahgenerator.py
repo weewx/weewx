@@ -234,6 +234,12 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
         if 'template' not in section:
             return ngen
 
+        report_dict = accumulateLeaves(section)
+
+        generate_once = to_bool(report_dict.get('generate_once', False))
+        if generate_once and not self.first_run:
+            return ngen
+
         # Change directory to the skin subdirectory.  We use absolute paths
         # for cheetah, so the directory change is not necessary for generating
         # files.  However, changing to the skin directory provides a known
@@ -242,8 +248,6 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
         os.chdir(os.path.join(self.config_dict['WEEWX_ROOT'],
                               self.skin_dict['SKIN_ROOT'],
                               self.skin_dict.get('skin', '')))
-
-        report_dict = accumulateLeaves(section)
 
         (template, dest_dir, encoding, default_binding) = self._prepGen(report_dict)
 
