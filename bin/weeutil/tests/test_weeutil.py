@@ -914,20 +914,44 @@ class WeeutilTest(unittest.TestCase):
         # Try an empty dictionary:
         lod = ListOfDicts()
         self.assertEqual(lod.get('b'), None)
-        # Now initialize with a starting dictionary:
-        lod = ListOfDicts({'a': 1, 'b': 2, 'c': 3})
-        # Look up a key known to be in there:
+        # Now initialize with a starting dictionary, using an overlap:
+        lod = ListOfDicts({'a': 1, 'b': 2, 'c': 3, 'd': 5}, {'d': 4, 'e': 5, 'f': 6})
+        # Look up some keys known to be in there:
         self.assertEqual(lod['b'], 2)
+        self.assertEqual(lod['e'], 5)
+        self.assertEqual(lod['d'], 5)
         # Look for a non-existent key
-        self.assertEqual(lod.get('d'), None)
-        # Now extend the dictionary:
-        lod.extend({'d': 4, 'e': 5})
+        self.assertEqual(lod.get('g'), None)
+        # Now extend the dictionary some more:
+        lod.extend({'g': 7, 'h': 8})
         # And try the lookup:
-        self.assertEqual(lod['d'], 4)
+        self.assertEqual(lod['g'], 7)
         # Explicitly add a new key to the dictionary:
-        lod['f'] = 6
+        lod['i'] = 9
         # Try it:
-        self.assertEqual(lod['f'], 6)
+        self.assertEqual(lod['i'], 9)
+
+        # Now check .keys()
+        lod2 = ListOfDicts({k : str(k) for k in range(5)},
+                           {k : str(k) for k in range(5, 10)})
+        self.assertEqual(set(lod2.keys()), set(range(10)))
+        self.assertIn(3, lod2.keys())
+        self.assertIn(6, lod2.keys())
+        self.assertNotIn(11, lod2.keys())
+        s = set(lod2.keys())
+        self.assertIn(3, s)
+        self.assertIn(6, s)
+        self.assertNotIn(11, s)
+
+        # ... and check .values()
+        self.assertEqual(set(lod2.values()), set(str(i) for i in range(10)))
+        self.assertIn('3', lod2.values())
+        self.assertIn('6', lod2.values())
+        self.assertNotIn('11', lod2.values())
+        s = set(lod2.values())
+        self.assertIn('3', s)
+        self.assertIn('6', s)
+        self.assertNotIn('11', s)
 
     def test_KeyDict(self):
         a_dict = {'a': 1, 'b': 2}

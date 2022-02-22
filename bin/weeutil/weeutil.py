@@ -1551,12 +1551,12 @@ except ImportError:
         __copy__ = copy
 
         def keys(self):
-            """Return a list of all keys in the maps."""
-            return [i for s in self.maps for i in s.keys()]
+            """Return an iterator of all keys in the maps."""
+            return iter(i for s in self.maps for i in s)
 
         def values(self):
-            """Return a list of all values in the maps."""
-            return [i for s in self.maps for i in s.values()]
+            """Return an iterator of all values in the maps."""
+            return iter(i for s in self.maps for i in s.values())
 
 
 class KeyDict(dict):
