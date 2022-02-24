@@ -46,7 +46,7 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
         try:
             self.generic_dict = self.skin_dict['Labels']['Generic']
         except KeyError:
-            self.generic.dict = {}
+            self.generic_dict = {}
         # text_dict contains translated text strings
         self.text_dict = self.skin_dict.get('Texts', {})
         self.image_dict = self.skin_dict['ImageGenerator']
