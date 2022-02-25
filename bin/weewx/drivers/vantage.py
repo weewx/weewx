@@ -1769,7 +1769,7 @@ _loop_map = {
     'altimeter'       : lambda p, k: float(p[k]) / 1000.0 if p[k] else None,
     'bar_calibration' : lambda p, k: float(p[k]) / 1000.0 if p[k] else None,
     'bar_offset'      : lambda p, k: float(p[k]) / 1000.0 if p[k] else None,
-    'bar_reduction'   : lambda p, k: float(p[k]) / 1000.0 if p[k] else None,
+    'bar_reduction'   : lambda p, k: p[k],
     'barometer'       : lambda p, k: float(p[k]) / 1000.0 if p[k] else None,
     'consBatteryVoltage': lambda p, k: float((p[k] * 300) >> 9) / 100.0,
     'dayET'           : lambda p, k: float(p[k]) / 1000.0,

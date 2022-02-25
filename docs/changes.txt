@@ -14,6 +14,8 @@ If windGustDir is missing, extract a value from the accumulators.
 Fixed typo that shows itself if no [Labels]/[[Generic]] section is supplied.
 Fixes issue #752.
 
+Fixed calculation of field "bar_reduction" for Vantage type 2 LOOP packets.
+
 
 4.6.2 02/10/2022
 Removed diagnostic code that was inadverently left in the titlebar.inc file
