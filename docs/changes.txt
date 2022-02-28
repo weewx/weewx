@@ -16,8 +16,8 @@ Fixes issue #752.
 
 Fixed calculation of field "bar_reduction" for Vantage type 2 LOOP packets.
 
-Fix problem that prevents windSpeed and windDir from being displayed
-in the "current" section of the RSS feed. Fixes issue #755.
+Fix problem that prevents windSpeed and windDir from being displayed in
+the RSS feed. Fixes issue #755.
 
 
 4.6.2 02/10/2022

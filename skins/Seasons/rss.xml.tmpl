@@ -61,7 +61,7 @@
       <description>
   #for $x in $observations
     #if $getattr($timespan['span'], $x).has_data
-      #if $x == 'wind'
+      #if $x == 'windSpeed'
         $gettext("Max") $obs.label.wind: $timespan['span'].wind.max $gettext("from") $timespan['span'].wind.gustdir $gettext("at") $timespan['span'].wind.maxtime;
       #elif $x in $obs_type_sum
         $obs.label[$x]: $getattr($timespan['span'], $x).sum;
@@ -82,7 +82,7 @@
       $gettext($timespan['label']) $timespan['span'].dateTime.format("%d %b %Y")<br/>
   #for $x in $observations
     #if $getattr($timespan['span'], $x).has_data
-      #if $x == 'wind'
+      #if $x == 'windSpeed'
         $gettext("Max") $obs.label.wind: $timespan['span'].wind.max $gettext("from") $timespan['span'].wind.gustdir $gettext("at") $timespan['span'].wind.maxtime<br/>
       #elif $x in $obs_type_sum
         $obs.label[$x]: $getattr($timespan['span'], $x).sum<br/>
