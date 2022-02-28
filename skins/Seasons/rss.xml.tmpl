@@ -5,7 +5,7 @@
 
 #set $timespans = [{"span": $day, "label": $gettext("Daily summary as of")}, {"span": $month, "label": $gettext("Monthly summary as of")}, {"span": $year, "label": $gettext("Yearly summary as of")}]
 
-#set $observations = $to_list($DisplayOptions.get('observations_rss', ['outTemp', 'inTemp', 'barometer', 'wind', 'rain', 'rainRate']))
+#set $observations = $to_list($DisplayOptions.get('observations_rss', ['outTemp', 'inTemp', 'barometer', 'windSpeed', 'rain', 'rainRate']))
 #set $obs_type_sum = $to_list($DisplayOptions.get('obs_type_sum', ['rain']))
 #set $obs_type_max = $to_list($DisplayOptions.get('obs_type_max', ['rainRate']))
 
@@ -27,7 +27,7 @@
       <description>
 #for $x in $observations
   #if $getattr($current, $x).has_data
-    #if $x == 'wind'
+    #if $x == 'windSpeed'
         $obs.label.wind: $current.windSpeed $gettext("from") $current.windDir;
     #else
         $obs.label[$x]: $getattr($current, $x);
@@ -43,7 +43,7 @@
       $obs.label.dateTime: $current.dateTime<br/>
 #for $x in $observations
   #if $getattr($current, $x).has_data
-    #if $x == 'wind'
+    #if $x == 'windSpeed'
         $obs.label.wind: $current.windSpeed $gettext("from") $current.windDir;
     #else
         $obs.label[$x]: $getattr($current, $x)<br/>
@@ -61,7 +61,7 @@
       <description>
   #for $x in $observations
     #if $getattr($timespan['span'], $x).has_data
-      #if $x == 'wind'
+      #if $x == 'windSpeed'
         $gettext("Max") $obs.label.wind: $timespan['span'].wind.max $gettext("from") $timespan['span'].wind.gustdir $gettext("at") $timespan['span'].wind.maxtime;
       #elif $x in $obs_type_sum
         $obs.label[$x]: $getattr($timespan['span'], $x).sum;
@@ -82,7 +82,7 @@
       $gettext($timespan['label']) $timespan['span'].dateTime.format("%d %b %Y")<br/>
   #for $x in $observations
     #if $getattr($timespan['span'], $x).has_data
-      #if $x == 'wind'
+      #if $x == 'windSpeed'
         $gettext("Max") $obs.label.wind: $timespan['span'].wind.max $gettext("from") $timespan['span'].wind.gustdir $gettext("at") $timespan['span'].wind.maxtime<br/>
       #elif $x in $obs_type_sum
         $obs.label[$x]: $getattr($timespan['span'], $x).sum<br/>
