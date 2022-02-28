@@ -2546,6 +2546,7 @@ Using configuration file /home/weewx/weewx.conf
 Using Vantage driver version 3.2.3 (weewx.drivers.vantage)
 Usage: wee_device --help
        wee_device --info [config_file]
+       wee_device --current [config_file]
        wee_device --clear-memory [config_file] [-y]
        wee_device --set-interval=MINUTES [config_file] [-y]
        wee_device --set-latitude=DEGREE [config_file] [-y]
@@ -2576,6 +2577,7 @@ Options:
   -y                    answer yes to every prompt
   --info                To print configuration, reception, and barometer
                         calibration information about your weather station.
+  --current             To print current LOOP information.
   --clear-memory        To clear the memory of your weather station.
   --set-interval=MINUTES
                         Sets the archive interval to the specified number of
@@ -2720,6 +2722,10 @@ confirmation before proceeding.
         <p><span class="highlight">Highlighted</span> values can be modified using the
             various <a href="utilities.htm#wee_device_utility"><span class='code'>wee_device</span></a>
             commands below.</p>
+
+        <h3 id="vantage_current">
+            Action <span class="code">--current</span></h3>
+        <p>This command will print a single LOOP packet.</p>
 
         <h3 id="vantage_clear_console_memory">
             Action <span class="code">--clear-memory</span></h3>

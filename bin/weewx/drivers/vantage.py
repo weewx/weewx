@@ -27,7 +27,7 @@ import weeutil.weeutil
 import weewx.drivers
 import weewx.engine
 import weewx.units
-from weeutil.weeutil import to_int
+from weeutil.weeutil import to_int, to_sorted_string
 from weewx.crc16 import crc16
 
 log = logging.getLogger(__name__)
@@ -1975,6 +1975,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
     def usage(self):
         return """%prog --help
        %prog --info [config_file]
+       %prog --current [config_file]
        %prog --clear-memory [config_file] [-y]
        %prog --set-interval=MINUTES [config_file] [-y]
        %prog --set-latitude=DEGREE [config_file] [-y]
@@ -2002,6 +2003,8 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
         parser.add_option("--info", action="store_true", dest="info",
                           help="To print configuration, reception, and barometer "
                                "calibration information about your weather station.")
+        parser.add_option("--current", action="store_true",
+                          help="To print current LOOP information.")
         parser.add_option("--clear-memory", action="store_true", dest="clear_memory",
                           help="To clear the memory of your weather station.")
         parser.add_option("--set-interval", type=int, dest="set_interval",
@@ -2082,7 +2085,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
         parser.add_option("--stop", action="store_true",
                           help="Stop the logger.")
 
-    def do_options(self, options, parser, config_dict, prompt):  # @UnusedVariable        
+    def do_options(self, options, parser, config_dict, prompt):
         if options.start and options.stop:
             parser.error("Cannot specify both --start and --stop")
         if options.set_tz_code and options.set_tz_offset:
@@ -2091,6 +2094,8 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
         station = Vantage(**config_dict[DRIVER_NAME])
         if options.info:
             self.show_info(station)
+        if options.current:
+            self.current(station)
         if options.set_interval is not None:
             self.set_interval(station, options.set_interval, options.noprompt)
         if options.set_latitude is not None:
@@ -2303,6 +2308,14 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
                         print("      Leaf Temperature %d:           %+.1f F"
                               % (leaf, calibration_dict["leafTemp%d" % leaf]), file=dest)
         print("", file=dest)
+
+    @staticmethod
+    def current(station):
+        """Print a single, current LOOP packet."""
+        print('Querying the station for current weather data...')
+        for pack in station.genDavisLoopPackets(1):
+            print(weeutil.weeutil.timestamp_to_string(pack['dateTime']),
+                  to_sorted_string(pack))
 
     @staticmethod
     def set_interval(station, new_interval_minutes, noprompt):
