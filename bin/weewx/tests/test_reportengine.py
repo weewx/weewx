@@ -128,7 +128,6 @@ class TestReportEngine(unittest.TestCase):
         # That should change the unit system, as well as make translation texts available.
         self.assertEqual(skin_dict['Units']['Groups']['group_rain'], 'mm')
         self.assertEqual(skin_dict['Units']['Labels']['day'], [" Tag", " Tage"])
-        self.assertEqual(skin_dict['Texts']['Language'], "Deutsch")
 
     def test_report_lang(self):
         """Test adding a lang spec to a specific report"""
@@ -140,7 +139,6 @@ class TestReportEngine(unittest.TestCase):
         # The results should reflect German
         self.assertEqual(skin_dict['Units']['Groups']['group_rain'], 'mm')
         self.assertEqual(skin_dict['Units']['Labels']['day'], [" Tag", " Tage"])
-        self.assertEqual(skin_dict['Texts']['Language'], "Deutsch")
 
     def test_override_lang(self):
         """Test using a language spec in Defaults, as well as overriding a label."""
