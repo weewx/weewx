@@ -1,6 +1,11 @@
 WeeWX change history
 --------------------
 
+4.7.1 MM/DD/YYYY
+
+Fixed problem that prevented wind from appearing in NOAA yearly summaries.
+
+
 4.7.0 03/01/2022
 Introduced new option "generate_once". If True, templates will be generated
 only on the first run of the reporting engine. Thanks to user Rich! PR #748.
