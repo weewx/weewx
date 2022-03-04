@@ -1669,7 +1669,7 @@ longitude = -77.0366</pre>
             or <a href="http://www.wxqa.com/">CWOP</a>.
         </p>
 
-        <p class="config_important">log_success</p>
+        <p class="config_option">log_success</p>
         <p>
             If you set a value for <span class="code">log_success</span> here, it will override the value set at the <a
             href="#global_log_success">top-level</a> and will apply only to RESTful services. In addition, <span
@@ -1677,7 +1677,7 @@ longitude = -77.0366</pre>
             subsection (<i>e.g.,</i> <span class="code">[[CWOP]]</span>).
         </p>
 
-        <p class="config_important">log_failure</p>
+        <p class="config_option">log_failure</p>
         <p>
             If you set a value for <span class="code">log_failure</span> here, it will override the value set at the <a
             href="#global_log_failure">top-level</a> and will apply only to RESTful services. In addition, <span
@@ -1733,11 +1733,16 @@ longitude = -77.0366</pre>
 
         <p class='config_option'>log_success</p>
 
-        <p>In case of success, make a note in the system log. The default is <span class='code'>True</span>.</p>
+        <p>
+            If you set a value here, it will apply only to the station registry.
+        </p>
 
         <p class='config_option'>log_failure</p>
 
-        <p>In case of failure, make a note in the system log. The default is <span class='code'>True</span>.</p>
+        <p>
+            If you set a value here, it will apply only to the station registry.
+        </p>
+
 
         <h3 class="config_section">[[AWEKAS]]</h3>
 
@@ -1771,11 +1776,15 @@ longitude = -77.0366</pre>
 
         <p class='config_option'>log_success</p>
 
-        <p>In case of success, make a note in the system log. The default is <span class='code'>True</span>.</p>
+        <p>
+            If you set a value here, it will apply only to logging for AWEKAS.
+        </p>
 
         <p class='config_option'>log_failure</p>
 
-        <p>In case of failure, make a note in the system log. The default is <span class='code'>True</span>.</p>
+        <p>
+            If you set a value here, it will apply only to logging for AWEKAS.
+        </p>
 
         <p class='config_option'>retry_login</p>
 
@@ -1844,11 +1853,16 @@ longitude = -77.0366</pre>
 
         <p class='config_option'>log_success</p>
 
-        <p>In case of success, make a note in the system log. The default is <span class='code'>True</span>.</p>
+        <p>
+            If you set a value here, it will apply only to logging for CWOP.
+        </p>
 
         <p class='config_option'>log_failure</p>
 
-        <p>In case of failure, make a note in the system log. The default is <span class='code'>True</span>.</p>
+        <p>
+            If you set a value here, it will apply only to logging for CWOP.
+        </p>
+
 
         <h3 class="config_section">[[PWSweather]]</h3>
 
@@ -1879,11 +1893,15 @@ longitude = -77.0366</pre>
 
         <p class='config_option'>log_success</p>
 
-        <p>In case of success, make a note in the system log. The default is <span class='code'>True</span>.</p>
+        <p>
+            If you set a value here, it will apply only to logging for PWSweather.
+        </p>
 
         <p class='config_option'>log_failure</p>
 
-        <p>In case of failure, make a note in the system log. The default is <span class='code'>True</span>.</p>
+        <p>
+            If you set a value here, it will apply only to logging for PWSweather.
+        </p>
 
         <p class='config_option'>retry_login</p>
 
@@ -1931,11 +1949,15 @@ longitude = -77.0366</pre>
 
         <p class='config_option'>log_success</p>
 
-        <p>In case of success, make a note in the system log. The default is <span class='code'>True</span>.</p>
+        <p>
+            If you set a value here, it will apply only to logging for WOW.
+        </p>
 
         <p class='config_option'>log_failure</p>
 
-        <p>In case of failure, make a note in the system log. The default is <span class='code'>True</span>.</p>
+        <p>
+            If you set a value here, it will apply only to logging for WOW.
+        </p>
 
         <p class='config_option'>retry_login</p>
 
@@ -2019,15 +2041,14 @@ longitude = -77.0366</pre>
         </p>
 
         <p class='config_option'>log_success</p>
-
-        <p>In case of success, make a note in the system log. The default is <span class='code'>False</span> for
-            Rapidfire mode, <span class='code'>True</span> for PWS mode.
+        <p>
+            If you set a value here, it will apply only to logging for the Weather Underground.
         </p>
 
         <p class='config_option'>log_failure</p>
 
-        <p>In case of failure, make a note in the system log. The default is <span class='code'>False</span> for
-            Rapidfire mode, <span class='code'>True</span> for PWS mode.
+        <p>
+            If you set a value here, it will apply only to logging for the Weather Underground.
         </p>
 
         <p class='config_option'>retry_login</p>
@@ -2124,6 +2145,22 @@ longitude = -77.0366</pre>
 
         <p>The target directory for the generated files. A relative path is relative to <span
             class="symcode">WEEWX_ROOT</span>. Generated files and images will be put here.
+        </p>
+
+        <p class="config_option">log_success</p>
+        <p>
+            If you set a value for <span class="code">log_success</span> here, it will override the value set at the <a
+            href="#global_log_success">top-level</a> and will apply only to reporting. In addition, <span
+            class="code">log_success</span> can be set for individual reports by putting them under the appropriate
+            subsection (<i>e.g.,</i> <span class="code">[[Seasons]]</span>).
+        </p>
+
+        <p class="config_option">log_failure</p>
+        <p>
+            If you set a value for <span class="code">log_failure</span> here, it will override the value set at the <a
+            href="#global_log_failure">top-level</a> and will apply only to reporting. In addition, <span
+            class="code">log_failure</span> can be set for individual reports by putting them under the appropriate
+            subsection (<i>e.g.,</i> <span class="code">[[Seasons]]</span>).
         </p>
 
         <p class="config_option">data_binding</p>
@@ -2816,22 +2853,22 @@ longitude = -77.0366</pre>
                 class="code">True</span>.
         </p>
 
-        <p class="config_option">data_binding</p>
-
-        <p>The data binding to be used to store the data. This should match one of the bindings in the <span
-            class="code">[DataBindings]</span> section, below. Optional. Default is <span class="code">wx_binding</span>.
-        </p>
-
         <p class="config_option">log_success</p>
         <p>
-            Set to <span class="code">True</span> to log successful insertions into the database. Otherwise,
-            <span class="code">False</span>. Default is <span class="code">True</span>.
+            If you set a value for <span class="code">log_success</span> here, it will override the value set at the <a
+            href="#global_log_success">top-level</a> and will apply only to archiving operations.
         </p>
 
         <p class="config_option">log_failure</p>
         <p>
-            Set to <span class="code">True</span> to log unsuccessful insertions into the database. Otherwise,
-            <span class="code">False</span>. Default is <span class="code">True</span>.
+            If you set a value for <span class="code">log_failure</span> here, it will override the value set at the <a
+            href="#global_log_failure">top-level</a> and will apply only to archiving operations.
+        </p>
+
+        <p class="config_option">data_binding</p>
+
+        <p>The data binding to be used to store the data. This should match one of the bindings in the <span
+            class="code">[DataBindings]</span> section, below. Optional. Default is <span class="code">wx_binding</span>.
         </p>
 
         <h2 class="config_section">[StdTimeSynch]</h2>
