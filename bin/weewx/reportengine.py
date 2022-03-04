@@ -227,6 +227,13 @@ def _build_skin_dict(config_dict, report):
     skin_dict['REPORT_NAME'] = report
 
     #######################################################################
+    # Add in the global values for log_success and log_failure:
+    if 'log_success' in config_dict:
+        skin_dict['log_success'] = to_bool(config_dict['log_success'])
+    if 'log_failure' in config_dict:
+        skin_dict['log_failure'] = to_bool(config_dict['log_failure'])
+
+    #######################################################################
     # Now add the options in the report's skin.conf file.
     # Start by figuring out where it is located.
     skin_config_path = os.path.join(

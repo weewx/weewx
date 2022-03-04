@@ -3,7 +3,9 @@ WeeWX change history
 
 4.7.1 MM/DD/YYYY
 
-Fixed problem that prevented wind from appearing in NOAA yearly summaries.
+Fix problem that prevented wind from appearing in NOAA yearly summaries.
+
+Fix honoring global values for log_success and log_failure. Fix issue #757.
 
 
 4.7.0 03/01/2022
