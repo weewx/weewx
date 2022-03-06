@@ -1,4 +1,4 @@
-                   TEST MONTHLY CLIMATOLOGICAL SUMMARY for Apr 2010
+                   MONTHLY CLIMATOLOGICAL SUMMARY for Apr 2010
 
 
 NAME: Location with UTF8 characters                  
@@ -43,4 +43,3 @@ DAY   TEMP   HIGH   TIME    LOW   TIME   DAYS   DAYS   RAIN  SPEED   HIGH   TIME
  30   14.9   26.0  16:00    3.6  04:00    3.4    0.0    0.0    5.2   18.0  00:00    334
 ---------------------------------------------------------------------------------------
        9.6   26.0     30   -7.1     01  262.3    0.0  227.6   15.4   38.6     04     90
-    

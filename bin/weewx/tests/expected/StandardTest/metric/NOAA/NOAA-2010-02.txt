@@ -1,4 +1,4 @@
-                   TEST MONTHLY CLIMATOLOGICAL SUMMARY for Feb 2010
+                   MONTHLY CLIMATOLOGICAL SUMMARY for Feb 2010
 
 
 NAME: Location with UTF8 characters                  
@@ -41,4 +41,3 @@ DAY   TEMP   HIGH   TIME    LOW   TIME   DAYS   DAYS   RAIN  SPEED   HIGH   TIME
  28   -7.7    3.7  15:00  -18.7  03:00   26.0    0.0    0.0    5.7   18.7  00:30    204
 ---------------------------------------------------------------------------------------
      -11.3    3.7     28  -25.8     01  829.2    0.0  227.6   16.1   38.6     03     90
-    

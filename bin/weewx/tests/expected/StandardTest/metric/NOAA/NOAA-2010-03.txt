@@ -1,4 +1,4 @@
-                   TEST MONTHLY CLIMATOLOGICAL SUMMARY for Mar 2010
+                   MONTHLY CLIMATOLOGICAL SUMMARY for Mar 2010
 
 
 NAME: Location with UTF8 characters                  
@@ -44,4 +44,3 @@ DAY   TEMP   HIGH   TIME    LOW   TIME   DAYS   DAYS   RAIN  SPEED   HIGH   TIME
  31    3.6   14.9  16:00   -7.5  04:00   14.8    0.0   19.3   26.8   38.6  01:00    127
 ---------------------------------------------------------------------------------------
       -1.8   14.9     31  -18.3     01  624.0    0.0  260.1   16.4   38.6     03     89
-    

@@ -1,4 +1,4 @@
-                   TEST MONTHLY CLIMATOLOGICAL SUMMARY for Jun 2010
+                   MONTHLY CLIMATOLOGICAL SUMMARY for Jun 2010
 
 
 NAME: Location with UTF8 characters                  
@@ -43,4 +43,3 @@ DAY   TEMP   HIGH   TIME    LOW   TIME   DAYS   DAYS   RAIN  SPEED   HIGH   TIME
  30   26.7   37.8  16:00   15.5  04:00    0.0    8.3   13.2   25.8   38.6  00:00     48
 ---------------------------------------------------------------------------------------
       25.5   37.8     30   12.4     01    0.0  216.1  240.8   16.1   38.6     03     85
-    

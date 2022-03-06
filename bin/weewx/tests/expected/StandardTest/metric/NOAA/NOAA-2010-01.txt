@@ -1,4 +1,4 @@
-                   TEST MONTHLY CLIMATOLOGICAL SUMMARY for Jan 2010
+                   MONTHLY CLIMATOLOGICAL SUMMARY for Jan 2010
 
 
 NAME: Location with UTF8 characters                  
@@ -44,4 +44,3 @@ DAY   TEMP   HIGH   TIME    LOW   TIME   DAYS   DAYS   RAIN  SPEED   HIGH   TIME
  31  -15.0   -3.6  15:00  -26.0  03:00   33.3    0.0    0.0    5.7   18.7  00:30    204
 ---------------------------------------------------------------------------------------
      -16.7   -3.6     31  -28.9     01 1087.2    0.0  260.1   16.4   38.6     02     91
-    

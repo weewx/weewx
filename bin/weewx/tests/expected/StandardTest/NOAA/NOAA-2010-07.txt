@@ -1,4 +1,4 @@
-                   TEST MONTHLY CLIMATOLOGICAL SUMMARY for Jul 2010
+                   MONTHLY CLIMATOLOGICAL SUMMARY for Jul 2010
 
 
 NAME: Location with UTF8 characters                  
@@ -44,4 +44,3 @@ DAY   TEMP   HIGH   TIME    LOW   TIME   DAYS   DAYS   RAIN  SPEED   HIGH   TIME
  31   75.5   95.1  16:00   55.2  04:00    0.0   10.5   0.00    3.3   11.2  00:00    335
 ---------------------------------------------------------------------------------------
       78.4  100.0     02   55.2     31    0.0  415.1   9.72    9.8   24.0     01     94
-    

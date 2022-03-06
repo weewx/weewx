@@ -1,4 +1,4 @@
-                   TEST MONTHLY CLIMATOLOGICAL SUMMARY for Aug 2010
+                   MONTHLY CLIMATOLOGICAL SUMMARY for Aug 2010
 
 
 NAME: Location with UTF8 characters                  
@@ -44,4 +44,3 @@ DAY   TEMP   HIGH   TIME    LOW   TIME   DAYS   DAYS   RAIN  SPEED   HIGH   TIME
  31   60.9   80.4  16:00   40.7  04:00    4.1    0.0   0.00    4.0   12.4  00:30    201
 ---------------------------------------------------------------------------------------
       68.3   94.7     01   40.7     31   19.8  121.0  10.24   10.2   24.0     02     91
-    

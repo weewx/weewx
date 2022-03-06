@@ -1,4 +1,4 @@
-                   TEST MONTHLY CLIMATOLOGICAL SUMMARY for May 2010
+                   MONTHLY CLIMATOLOGICAL SUMMARY for May 2010
 
 
 NAME: Location with UTF8 characters                  
@@ -44,4 +44,3 @@ DAY   TEMP   HIGH   TIME    LOW   TIME   DAYS   DAYS   RAIN  SPEED   HIGH   TIME
  31   74.1   94.1  16:00   53.9  04:00    0.0    9.1   0.00    4.0   12.4  00:30    202
 ---------------------------------------------------------------------------------------
       67.3   94.1     31   39.1     01   31.2  101.4  10.24   10.2   24.0     02     91
-    
