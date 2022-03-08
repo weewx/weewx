@@ -3855,7 +3855,9 @@ ephem.Eros = eros</pre>
             <img src="images/sample_monthtempdew.png" alt="Monthly temperature and dewpoint"/>
         </p>
 
-        <h2 id="including_same_sql_type_2x">Including a type more than once in a plot</h2>
+        <h2>Including expressions in a plot</h2>
+
+        <h3 id="including_same_sql_type_2x">Including a type more than once in a plot</h3>
 
         <p>
             Another example. Say you want a plot of the day's temperature, overlaid with hourly averages. Here, you are
@@ -3914,6 +3916,29 @@ ephem.Eros = eros</pre>
 
         <p>
             <img style="width:300px; height:180px" alt="Daily highs and lows" src="images/yearhilow.png"/>
+        </p>
+
+        <h3 id="arbitrary_expressions_in_plot">Including arbitrary expressions</h3>
+        <p>
+            The option <span class="code">data_type</span> can actually be <em>any arbitrary SQL expression,
+            which is valid in the context of the available types in the schema</em>. For
+            example, say you wanted to plot the difference between inside and outside temperature for the year. This
+            could be done with:
+        </p>
+        <pre class="tty">[[year_images]]
+    [[[yeardiff]]]
+        [[[[diff]]]]
+            data_type = inTemp-outTemp
+            label = Inside - Outside
+</pre>
+
+        <p>
+            Note that the option <span class="code">data_type</span> is now an expression representing the difference
+            between <span class="code">inTemp</span> and <span class="code">outTemp</span>, the inside and outside
+            temperature, respectively. This results in a plot <span class="code">yeardiff.png</span>:</p>
+
+        <p>
+            <img style="width:300px; height:180px" alt="Inside - outside temperature" src="images/yeardiff.png"/>
         </p>
 
         <h2 id="line_gaps">Line gaps</h2>
