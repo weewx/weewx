@@ -7,6 +7,8 @@ Fix problem that prevented wind from appearing in NOAA yearly summaries.
 
 Fix honoring global values for log_success and log_failure. Fix issue #757.
 
+wee_import CSV imports now allow import of text fields. Addresses issue #732.
+
 
 4.7.0 03/01/2022
 Introduced new option "generate_once". If True, templates will be generated

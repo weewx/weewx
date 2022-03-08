@@ -1793,7 +1793,7 @@ summaries using the wee_database utility.</pre>
         <h4 class='config_option' id='csv_fieldmap'>[[FieldMap]]</h4>
 
         <p>The <span class='code'>[[FieldMap]]</span> stanza defines the mapping from the source data fields to WeeWX
-            archive fields. The map consists of one row per field using either of the following formats:
+            archive fields. The map consists of one row per field being imported using either of the following formats:
         </p>
 
         <pre class="tty">weewx_archive_field_name = csv_field_name, weewx_unit_name</pre>
@@ -1828,7 +1828,7 @@ summaries using the wee_database utility.</pre>
             required for every WeeWX archive field (e.g., the source may not provide inside temperature so
             no <span class="code">inTemp</span> field mapping is required) and neither does every CSV field need to
             be included in a mapping (e.g., the source data field <span class="code">monthrain</span> may have no
-            use if the source data field <span class="code">dayrain</span> provides the data for the WeeWX archive
+            use if the source data field <span class="code">rain</span> provides the data for the WeeWX archive
             <span class="code">rain</span> field). Unused field mapping lines will not be used and may be omitted.
         </p>
 
