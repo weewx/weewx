@@ -28,8 +28,8 @@
 /* use the local fonts */
 @font-face {
     font-family: 'Open Sans';
-    src: url('font/OpenSans.woff') format('woff'),
-    url('font/OpenSans.woff2') format('woff2');
+    src: url('font/OpenSans.woff2') format('woff2'),
+        url('font/OpenSans.woff') format('woff');
 }
 
 body {

@@ -12,6 +12,9 @@ wee_import CSV imports now allow import of text fields. Addresses issue #732.
 Explain in the Customizing Guide how to include arbitrary SQL expressions
 in a plot.
 
+Reorder font download order, for slightly faster downloads.
+Fix issue #760.
+
 
 4.7.0 03/01/2022
 Introduced new option "generate_once". If True, templates will be generated
