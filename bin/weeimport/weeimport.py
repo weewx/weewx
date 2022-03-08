@@ -28,6 +28,7 @@ from six.moves import input
 import weecfg
 import weecfg.database
 import weewx
+import weewx.accum
 import weewx.qc
 import weewx.wxservices
 
@@ -173,6 +174,10 @@ class Source(object):
         else:
             # get our unit system from the archive db
             self.archive_unit_sys = self.dbm.std_unit_system
+
+        # initialise the accum dict with any Accumulator config in the config
+        # dict
+        weewx.accum.initialize(self.config_dict)
 
         # get ourselves a QC object to do QC on imported records
         try:
@@ -632,7 +637,8 @@ class Source(object):
                         if 'units' in _val:
                             # we have a units field, do we know about it
                             if _val['units'] not in weewx.units.conversionDict \
-                                    and _val['units'] not in weewx.units.USUnits.values():
+                                    and _val['units'] not in weewx.units.USUnits.values() \
+                                    and _val['units'] != 'text':
                                 # we have an invalid unit string so tell the
                                 # user and exit
                                 _msg = "Unknown units '%s' specified for " \
@@ -658,7 +664,10 @@ class Source(object):
                 if 'field_name' in _val:
                     _units_msg = ""
                     if 'units' in _val:
-                        _units_msg = " in units '%s'" % _val['units']
+                        if _val['units'] == 'text':
+                            _units_msg = " as text"
+                        else:
+                            _units_msg = " in units '%s'" % _val['units']
                     _msg = "     source field '%s'%s --> WeeWX field '%s'" % (_val['field_name'],
                                                                               _units_msg,
                                                                               _key)
@@ -813,122 +822,130 @@ class Source(object):
                 else:
                     # is our mapped field in the record
                     if self.map[_field]['field_name'] in _row:
-                        # Yes it is. Try to get a value for the obs but if we
-                        # can't catch the error
-                        try:
-                            _temp = float(_row[self.map[_field]['field_name']].strip())
-                        except AttributeError:
-                            # the data has no strip() attribute so chances are
-                            # it's a number already
-                            if isinstance(_row[self.map[_field]['field_name']], numbers.Number):
-                                _temp = _row[self.map[_field]['field_name']]
-                            elif _row[self.map[_field]['field_name']] is None:
-                                _temp = None
-                            else:
-                                # it's not a string and its not a number so raise an error
-                                _msg = "%s: cannot convert '%s' to float at " \
-                                       "timestamp '%s'." % (_field,
-                                                            _row[self.map[_field]['field_name']],
-                                                            timestamp_to_string(_rec['dateTime']))
-                                raise ValueError(_msg)
-                        except TypeError:
-                            # perhaps we have a None, so return None for our field
-                            _temp = None
-                        except ValueError:
-                            # most likely have non-numeric, non-None data
-
-                            # if this is a csv import and we are mapping to a
-                            # direction field perhaps we have a string
-                            # representation of a cardinal, intercardinal or
-                            # secondary intercardinal direction that we can
-                            # convert to degrees
-
-                            # set a flag to indicate whether we matched the data to a value
-                            matched = False
-                            if hasattr(self, 'wind_dir_map') and self.map[_field]['units'] == 'degree_compass':
-                                # we have a csv import and we are mapping to a
-                                # direction field
-
-                                # first strip any whitespace and hyphens from
-                                # the data
-                                _stripped = re.sub(r'[\s-]+', '', _row[self.map[_field]['field_name']])
-                                # try to use the data as the key in a dict
-                                # mapping directions to degrees, if there is no
-                                # match we will have None returned
-                                dir_degrees = self.wind_dir_map.get(_stripped.upper())
-                                # if we have a non-None value use it
-                                if dir_degrees is not None:
-                                    _temp = dir_degrees
-                                    # we have a match so set our flag
-                                    matched = True
-                            # if we did not get a match perhaps we can ignore
-                            # the invalid data, that will depend on the
-                            # ignore_invalid_data property
-                            if not matched and self.ignore_invalid_data:
-                                # we ignore the invalid data so set our result 
-                                # to None
-                                _temp = None
-                                # set our matched flag
-                                matched = True
-                            # if we did not find a match raise the error
-                            if not matched:
-                                _msg = "%s: cannot convert '%s' to float at " \
-                                       "timestamp '%s'." % (_field,
-                                                            _row[self.map[_field]['field_name']],
-                                                            timestamp_to_string(_rec['dateTime']))
-                                raise ValueError(_msg)
-                        # some fields need some special processing
-
-                        # rain - if our imported 'rain' field is cumulative
-                        # (self.rain == 'cumulative') then we need to calculate
-                        # the discrete rainfall for this archive period
-                        if _field == "rain" and self.rain == "cumulative":
-                            _rain = self.getRain(_last_rain, _temp)
-                            _last_rain = _temp
-                            _temp = _rain
-
-                        # wind - check any wind direction fields are within our
-                        # bounds and convert to 0 to 360 range
-                        if _field == "windDir" or _field == "windGustDir":
-                            if _temp is not None and (self.wind_dir[0] <= _temp <= self.wind_dir[1]):
-                                # normalise to 0 to 360
-                                _temp %= 360
-                            else:
-                                # outside our bounds so set to None
-                                _temp = None
-
-                        # UV - if there was no UV sensor used to create the
-                        # imported data then we need to set the imported value
-                        # to None
-                        if _field == 'UV' and not self.UV_sensor:
-                            _temp = None
-
-                        # solar radiation - if there was no solar radiation
-                        # sensor used to create the imported data then we need
-                        # to set the imported value to None
-                        if _field == 'radiation' and not self.solar_sensor:
-                            _temp = None
-
-                        # check and ignore if required temperature and humidity
-                        # values of 255.0 and greater
-                        if self.ignore_extr_th \
-                                and self.map[_field]['units'] in ['degree_C', 'degree_F', 'percent'] \
-                                and _temp >= 255.0:
-                            _temp = None
-
-                        # if no mapped field for a unit system we have to do
-                        # field by field unit conversions
-                        if _units is None:
-                            _temp_vt = ValueTuple(_temp,
-                                                  self.map[_field]['units'],
-                                                  weewx.units.obs_group_dict[_field])
-                            _conv_vt = convertStd(_temp_vt, unit_sys)
-                            _rec[_field] = _conv_vt.value
+                        # yes it is
+                        # first check to see if this is a text field
+                        if 'units' in self.map[_field] and self.map[_field]['units'] == 'text':
+                            # we have a text field, so accept the field
+                            # contents as is
+                            _rec[_field] = _row[self.map[_field]['field_name']]
                         else:
-                            # we do have a mapped field for a unit system so
-                            # save the field in our record and continue, any
-                            # unit conversion will be done in bulk later
-                            _rec[_field] = _temp
+                            # we have a non-text field so try to get a value
+                            # for the obs but if we can't catch the error
+
+                            try:
+                                _temp = float(_row[self.map[_field]['field_name']].strip())
+                            except AttributeError:
+                                # the data has no strip() attribute so chances are
+                                # it's a number already
+                                if isinstance(_row[self.map[_field]['field_name']], numbers.Number):
+                                    _temp = _row[self.map[_field]['field_name']]
+                                elif _row[self.map[_field]['field_name']] is None:
+                                    _temp = None
+                                else:
+                                    # it's not a string and its not a number so raise an error
+                                    _msg = "%s: cannot convert '%s' to float at " \
+                                           "timestamp '%s'." % (_field,
+                                                                _row[self.map[_field]['field_name']],
+                                                                timestamp_to_string(_rec['dateTime']))
+                                    raise ValueError(_msg)
+                            except TypeError:
+                                # perhaps we have a None, so return None for our field
+                                _temp = None
+                            except ValueError:
+                                # most likely have non-numeric, non-None data
+
+                                # if this is a csv import and we are mapping to a
+                                # direction field perhaps we have a string
+                                # representation of a cardinal, inter-cardinal or
+                                # secondary inter-cardinal direction that we can
+                                # convert to degrees
+
+                                # set a flag to indicate whether we matched the data to a value
+                                matched = False
+                                if hasattr(self, 'wind_dir_map') and self.map[_field]['units'] == 'degree_compass':
+                                    # we have a csv import and we are mapping to a
+                                    # direction field
+
+                                    # first strip any whitespace and hyphens from
+                                    # the data
+                                    _stripped = re.sub(r'[\s-]+', '', _row[self.map[_field]['field_name']])
+                                    # try to use the data as the key in a dict
+                                    # mapping directions to degrees, if there is no
+                                    # match we will have None returned
+                                    dir_degrees = self.wind_dir_map.get(_stripped.upper())
+                                    # if we have a non-None value use it
+                                    if dir_degrees is not None:
+                                        _temp = dir_degrees
+                                        # we have a match so set our flag
+                                        matched = True
+                                # if we did not get a match perhaps we can ignore
+                                # the invalid data, that will depend on the
+                                # ignore_invalid_data property
+                                if not matched and self.ignore_invalid_data:
+                                    # we ignore the invalid data so set our result
+                                    # to None
+                                    _temp = None
+                                    # set our matched flag
+                                    matched = True
+                                # if we did not find a match raise the error
+                                if not matched:
+                                    _msg = "%s: cannot convert '%s' to float at " \
+                                           "timestamp '%s'." % (_field,
+                                                                _row[self.map[_field]['field_name']],
+                                                                timestamp_to_string(_rec['dateTime']))
+                                    raise ValueError(_msg)
+                            # some fields need some special processing
+
+                            # rain - if our imported 'rain' field is cumulative
+                            # (self.rain == 'cumulative') then we need to calculate
+                            # the discrete rainfall for this archive period
+                            if _field == "rain" and self.rain == "cumulative":
+                                _rain = self.getRain(_last_rain, _temp)
+                                _last_rain = _temp
+                                _temp = _rain
+
+                            # wind - check any wind direction fields are within our
+                            # bounds and convert to 0 to 360 range
+                            if _field == "windDir" or _field == "windGustDir":
+                                if _temp is not None and (self.wind_dir[0] <= _temp <= self.wind_dir[1]):
+                                    # normalise to 0 to 360
+                                    _temp %= 360
+                                else:
+                                    # outside our bounds so set to None
+                                    _temp = None
+
+                            # UV - if there was no UV sensor used to create the
+                            # imported data then we need to set the imported value
+                            # to None
+                            if _field == 'UV' and not self.UV_sensor:
+                                _temp = None
+
+                            # solar radiation - if there was no solar radiation
+                            # sensor used to create the imported data then we need
+                            # to set the imported value to None
+                            if _field == 'radiation' and not self.solar_sensor:
+                                _temp = None
+
+                            # check and ignore if required temperature and humidity
+                            # values of 255.0 and greater
+                            if self.ignore_extr_th \
+                                    and self.map[_field]['units'] in ['degree_C', 'degree_F', 'percent'] \
+                                    and _temp >= 255.0:
+                                _temp = None
+
+                            # if there is no mapped field for a unit system we
+                            # have to do field by field unit conversions
+                            if _units is None:
+                                _temp_vt = ValueTuple(_temp,
+                                                      self.map[_field]['units'],
+                                                      weewx.units.obs_group_dict[_field])
+                                _conv_vt = convertStd(_temp_vt, unit_sys)
+                                _rec[_field] = _conv_vt.value
+                            else:
+                                # we do have a mapped field for a unit system so
+                                # save the field in our record and continue, any
+                                # unit conversion will be done in bulk later
+                                _rec[_field] = _temp
                     else:
                         # No it's not. Set the field in our output to None
                         _rec[_field] = None
