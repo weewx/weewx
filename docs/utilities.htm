@@ -1793,21 +1793,50 @@ summaries using the wee_database utility.</pre>
         <h4 class='config_option' id='csv_fieldmap'>[[FieldMap]]</h4>
 
         <p>The <span class='code'>[[FieldMap]]</span> stanza defines the mapping from the source data fields to WeeWX
-            archive fields. The map consists of one row per field using the format:
+            archive fields. The map consists of one row per field using either of the following formats:
         </p>
 
         <pre class="tty">weewx_archive_field_name = csv_field_name, weewx_unit_name</pre>
 
-        <p>Where <span class="code">weewx_archive_field_name</span> is a field name in the in-use WeeWX archive table
-            schema, <span class="code">csv_field_name</span> is the name of a field from the CSV file and
-            <span class="code">weewx_unit_name</span> is the WeeWX unit name of the units used by <span class="code">csv_field_name</span>.
+        <p>or</p>
+
+        <pre class="tty">weewx_archive_field_name = csv_field_name, text</pre>
+
+        <p>Where:</p>
+
+        <ul>
+            <li>
+                <span class="code">weewx_archive_field_name</span> is a field name in the in-use WeeWX archive table
+            schema
+            </li>
+            <li>
+                <span class="code">csv_field_name</span> is the name of a field from the CSV file
+            </li>
+            <li>
+                <span class="code">weewx_unit_name</span> is the WeeWX unit name of the units used by <span class="code">csv_field_name</span>
+            </li>
+            <li>
+                <span class="code">text</span> is the literal word text
+            </li>
+        </ul>
+
+        <p>
             This mapping allows <span class="code">wee_import</span> to take a source data field, do the appropriate
-            unit conversion and store the resulting value in the appropriate WeeWX archive field. A mapping is not
+            unit conversion and store the resulting value in the appropriate WeeWX archive field. Source data text
+            fields may be mapped to a WeeWX text archive field by using the second form of the field map entry where
+            the literal <span class="code">text</span> is used in place of a WeeWX unit name. A mapping is not
             required for every WeeWX archive field (e.g., the source may not provide inside temperature so
             no <span class="code">inTemp</span> field mapping is required) and neither does every CSV field need to
             be included in a mapping (e.g., the source data field <span class="code">monthrain</span> may have no
             use if the source data field <span class="code">dayrain</span> provides the data for the WeeWX archive
             <span class="code">rain</span> field). Unused field mapping lines will not be used and may be omitted.
+        </p>
+
+        <p class="note">
+            <strong>Note</strong><br/>Importing of text data into text fields in the WeeWX archive is only supported for
+            WeeWX archive fields that have been configured as text fields. Refer to the Wiki page
+            <a href="https://github.com/weewx/weewx/wiki/Storing-text-in-the-database">Storing text in the database</a>
+            for details.
         </p>
 
         <p>If the source data includes a field that contains a WeeWX unit system code (i.e. the equivalent of the
@@ -2604,14 +2633,14 @@ summaries using the wee_database utility.</pre>
 
         <p>A CSV file suitable for import by <span class="code">wee_import</span> may look like this:</p>
 
-        <pre class="tty">Time,Barometer,Temp,Humidity,Windspeed,Dir,Gust,Dayrain,Radiation,Uv
-28/11/2017 08:00:00,1016.9,24.6,84,1.8,113,8,0,359,3.8
-28/11/2017 08:05:00,1016.9,25.1,82,4.8,135,11.3,0,775,4.7
-28/11/2017 08:10:00,1016.9,25.4,80,4.4,127,11.3,0,787,5.1
-28/11/2017 08:15:00,1017,25.7,79,3.5,74,11.3,0,800,5.4
-28/11/2017 08:20:00,1016.9,25.9,79,1.6,95,9.7,0,774,5.5
-28/11/2017 08:25:00,1017,25.5,78,2.9,48,9.7,0,303,3.4
-28/11/2017 08:30:00,1017.1,25.1,80,3.1,54,9.7,0,190,3.6</pre>
+        <pre class="tty">Time,Barometer,Temp,Humidity,Windspeed,Dir,Gust,Dayrain,Radiation,Uv,Comment
+28/11/2017 08:00:00,1016.9,24.6,84,1.8,113,8,0,359,3.8,"start of observations"
+28/11/2017 08:05:00,1016.9,25.1,82,4.8,135,11.3,0,775,4.7,
+28/11/2017 08:10:00,1016.9,25.4,80,4.4,127,11.3,0,787,5.1,"note temperature"
+28/11/2017 08:15:00,1017,25.7,79,3.5,74,11.3,0,800,5.4,
+28/11/2017 08:20:00,1016.9,25.9,79,1.6,95,9.7,0,774,5.5,
+28/11/2017 08:25:00,1017,25.5,78,2.9,48,9.7,0,303,3.4,"forecast received"
+28/11/2017 08:30:00,1017.1,25.1,80,3.1,54,9.7,0,190,3.6,</pre>
 
         <p>or this:</p>
 
