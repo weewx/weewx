@@ -3187,6 +3187,24 @@ $month.outTemp.series(aggregate_type='max', aggregate_interval='day', time_serie
                 </td>
             </tr>
             <tr>
+                <td class="code first_col">$SummaryByDay</td>
+                <td>A list of year-month-days (<em>e.g.</em>, <span class="code">["2018-12-31", "2019-01-01"]</span>) for which a summary-by-day has been generated. 
+                    If the tag is used in a template before a <span class="code">SummaryByDay</span> template is processed,
+                    no files will have been generated and the list will empty.</td>
+            </tr>
+            <tr>
+                <td class="code first_col">$SummaryByMonth</td>
+                <td>A list of year-months (<em>e.g.</em>, <span class="code">["2018-12", "2019-01"]</span>)for which a summary-by-month has been generated. 
+                    If the tag is used in a template before a <span class="code">SummaryByMonth</span> template is processed,
+                    no files will have been generated and the list will empty.</td>
+            </tr>
+            <tr>
+                <td class="code first_col">$SummaryByYear</td>
+                <td>A list of years (<em>e.g.</em>, <span class="code">["2018", "2019"]</span>) for which a summary-by-year has been generated. 
+                If the tag is used in a template before a <span class="code">SummaryByYear</span> template is processed,
+                no files will have been generated and the list will empty.</td>
+            </tr>            
+            <tr>
               <td class="code first_col">$year_name</td>
                 <td>For templates listed under <span class="code">SummaryByMonth</span> or
                     <span class="code">SummaryByYear</span>, this will contain the year (<em>e.g.</em>, "2018").</td>
