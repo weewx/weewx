@@ -19,6 +19,7 @@
     --loval-color:#4444aa;
     --ok-color:#44aa44;
     --low-color:#aa4444;
+    --unknown-color:#dfdfdf;
 }
 
 /* use the fonts from google */
@@ -27,8 +28,8 @@
 /* use the local fonts */
 @font-face {
     font-family: 'Open Sans';
-    src: url('font/OpenSans.woff') format('woff'),
-    url('font/OpenSans.woff2') format('woff2');
+    src: url('font/OpenSans.woff2') format('woff2'),
+        url('font/OpenSans.woff') format('woff');
 }
 
 body {
@@ -179,6 +180,10 @@ a:hover {
     color: var(--low-color);
 }
 
+.status_unknown {
+    color: var(--unknown-color);
+}
+
 .button {
     cursor: pointer;
     padding-left: 10px;
@@ -247,6 +252,19 @@ a:hover {
 }
 
 #hilo_widget .data {
+    font-weight: bold;
+    font-size: 80%;
+    text-align: right;
+    padding-left: 10px;
+}
+
+#totals_widget table th {
+    font-size: 80%;
+    text-align: right;
+    border-bottom: none;
+}
+
+#totals_widget .data {
     font-weight: bold;
     font-size: 80%;
     text-align: right;

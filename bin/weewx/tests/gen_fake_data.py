@@ -18,7 +18,6 @@ import math
 import os
 import time
 
-import schemas.wview_extended
 import weecfg.database
 import weedb
 import weewx.manager
@@ -58,22 +57,26 @@ weather_wind_range = 10.0
 weather_rain_total = 0.5  # This is inches per weather cycle
 avg_baro = 30.0
 
-schema = schemas.wview_extended.schema
+
+def make_nulls_filter(record):
+    """Values of inTemp for the first half of the database will have nulls,
+    the second half will not."""
+    if record['dateTime'] > (start_ts + stop_ts)/2:
+        record['inTemp'] = 68.0
+    return record
 
 
-def configDatabases(config_dict, database_type):
+def configDatabases(config_dict, database_type, record_filter=make_nulls_filter):
     config_dict['DataBindings']['wx_binding']['database'] = "archive_" + database_type
-    configDatabase(config_dict, 'wx_binding')
+    configDatabase(config_dict, 'wx_binding', record_filter=record_filter)
     config_dict['DataBindings']['alt_binding']['database'] = "alt_" + database_type
-    configDatabase(config_dict, 'alt_binding', start_ts=alt_start, amplitude=0.5)
+    configDatabase(config_dict, 'alt_binding', start_ts=alt_start, amplitude=0.5, record_filter=record_filter)
 
 
 def configDatabase(config_dict, binding, start_ts=start_ts, stop_ts=stop_ts, interval=interval, amplitude=1.0,
                    day_phase_offset=math.pi / 4.0, annual_phase_offset=0.0,
-                   weather_phase_offset=0.0, year_start=start_ts):
+                   weather_phase_offset=0.0, year_start=start_ts, record_filter=lambda r: r):
     """Configures the archive databases."""
-
-    global schema
 
     # Check to see if it already exists and is configured correctly.
     try:
@@ -93,7 +96,7 @@ def configDatabase(config_dict, binding, start_ts=start_ts, stop_ts=stop_ts, int
 
     # Delete anything that might already be there.
     try:
-        log.info("Dropping database %s" % config_dict['DataBindings']['wx_binding']['database'])
+        log.info("Dropping database %s" % config_dict['DataBindings'][binding]['database'])
         weewx.manager.drop_database_with_config(config_dict, binding)
     except weedb.DatabaseError:
         pass
@@ -108,7 +111,7 @@ def configDatabase(config_dict, binding, start_ts=start_ts, stop_ts=stop_ts, int
 
     with weewx.manager.open_manager_with_config(monkey_dict, binding, initialize=True) as archive:
 
-        log.info("Creating synthetic database %s" % config_dict['DataBindings']['wx_binding']['database'])
+        log.info("Creating synthetic database %s" % config_dict['DataBindings'][binding]['database'])
 
         # Because this can generate voluminous log information,
         # suppress all but the essentials:
@@ -116,18 +119,22 @@ def configDatabase(config_dict, binding, start_ts=start_ts, stop_ts=stop_ts, int
 
         # Now generate and add the fake records to populate the database:
         t1 = time.time()
-        archive.addRecord(genFakeRecords(start_ts=start_ts, stop_ts=stop_ts,
-                                         interval=interval,
-                                         amplitude=amplitude,
-                                         day_phase_offset=day_phase_offset,
-                                         annual_phase_offset=annual_phase_offset,
-                                         weather_phase_offset=weather_phase_offset,
-                                         year_start=start_ts,
-                                         db_manager=archive))
+        archive.addRecord(
+            filter(record_filter,
+                   genFakeRecords(start_ts=start_ts, stop_ts=stop_ts,
+                                  interval=interval,
+                                  amplitude=amplitude,
+                                  day_phase_offset=day_phase_offset,
+                                  annual_phase_offset=annual_phase_offset,
+                                  weather_phase_offset=weather_phase_offset,
+                                  year_start=start_ts,
+                                  db_manager=archive)
+                   )
+                          )
         t2 = time.time()
         delta = t2 - t1
         print("\nTime to create synthetic database '%s' = %6.2fs"
-              % (config_dict['DataBindings']['wx_binding']['database'], delta))
+              % (config_dict['DataBindings'][binding]['database'], delta))
 
         # Restore the logging
         logging.disable(logging.NOTSET)
@@ -140,13 +147,13 @@ def configDatabase(config_dict, binding, start_ts=start_ts, stop_ts=stop_ts, int
         tdiff = time.time() - t1
         if nrecs:
             print("\nProcessed %d records to backfill %d day summaries in database '%s' in %.2f seconds"
-                  % (nrecs, ndays, config_dict['DataBindings']['wx_binding']['database'], tdiff))
+                  % (nrecs, ndays, config_dict['DataBindings'][binding]['database'], tdiff))
         else:
             print("Daily summaries in database '%s' up to date."
-                  % config_dict['DataBindings']['wx_binding']['database'])
+                  % config_dict['DataBindings'][binding]['database'])
 
         t1 = time.time()
-        patch_database(config_dict)
+        patch_database(config_dict, binding)
         tdiff = time.time() - t1
         print("\nTime to patch database with derived types: %.2f seconds" % tdiff)
 
@@ -154,6 +161,13 @@ def configDatabase(config_dict, binding, start_ts=start_ts, stop_ts=stop_ts, int
 def genFakeRecords(start_ts=start_ts, stop_ts=stop_ts, interval=interval,
                    amplitude=1.0, day_phase_offset=0.0, annual_phase_offset=0.0,
                    weather_phase_offset=0.0, year_start=start_ts, db_manager=None):
+    """Generate records from start_ts to stop_ts, inclusive.
+    start_ts: Starting timestamp in unix epoch time. This timestamp will be included in the results.
+
+    stop_ts: Stopping timestamp in unix epoch time. This timestamp will be included in the results.
+
+    interval: The interval between timestamps IN SECONDS!
+    """
     count = 0
 
     for ts in range(start_ts, stop_ts + interval, interval):
@@ -195,10 +209,10 @@ def genFakeRecords(start_ts=start_ts, stop_ts=stop_ts, interval=interval,
 
 
 
-def patch_database(config_dict):
+def patch_database(config_dict, binding='wx_binding'):
     calc_missing_config_dict = {
         'name': 'Patch gen_fake_data',
-        'binding': 'wx_binding',
+        'binding': binding,
         'start_ts': start_ts,
         'stop_ts': stop_ts,
         'dry_run': False,

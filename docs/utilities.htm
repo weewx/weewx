@@ -5,10 +5,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <link rel="icon" href="images/favicon.png" type="image/png"/>
-    <link rel="stylesheet" href="css/tocbot-4.3.1.css">
+    <link rel="stylesheet" href="css/tocbot-4.12.0.css">
     <link rel="stylesheet" href="css/weewx_ui.css"/>
     <script src="js/cash.min.js"></script>
-    <script src="js/tocbot-4.3.1.min.js"></script>
+    <script src="js/tocbot-4.12.0.min.js"></script>
     <script src="js/weewx.js"></script>
     <script>
         $(function () {
@@ -47,9 +47,9 @@
 
     <div class="header">
         <div class="logoref">
-            <a href='http://weewx.com'> <img src='images/logo-weewx.png' class='logo' style="float:right"
+            <a href='https://weewx.com'> <img src='images/logo-weewx.png' class='logo' style="float:right"
                                              alt="weewx logo"/> </a><br/> <span class='version'>
-Version: 4.3
+Version: 4.7
     </span>
         </div>
         <div class="title">WeeWX Utilities Guide</div>
@@ -214,7 +214,6 @@ Module name              Driver name    Version  Status
   weewx.drivers.ultimeter  Ultimeter      0.13
   weewx.drivers.vantage    Vantage        3.0
   weewx.drivers.wmr100     WMR100         3.0      No module named usb
-  weewx.drivers.wmr200     WMR200         3.0      No module named usb
   weewx.drivers.wmr9x8     WMR9x8         3.0
   weewx.drivers.ws1        WS1            0.19
   weewx.drivers.ws23xx     WS23xx         0.24
@@ -243,7 +242,7 @@ Module name              Driver name    Version  Status
 
         <pre class="tty cmd">wee_config --reconfigure --driver=user.netatmo --no-prompt</pre>
 
-        <h2>Example: changing the driver</h2>
+        <h4>Example: changing the driver</h4>
 
         <p>Say that you originally installed WeeWX with the Simulator. Now you've bought a Davis Vantage and you want to
             switch to that. Here's how you do it. First, use the action <span class="code">--list-drivers</span> to see
@@ -261,7 +260,6 @@ Module name              Driver name    Version  Status
   weewx.drivers.ultimeter  Ultimeter      0.13
   weewx.drivers.vantage    Vantage        3.0
   weewx.drivers.wmr100     WMR100         3.0      
-  weewx.drivers.wmr200     WMR200         3.0      
   weewx.drivers.wmr9x8     WMR9x8         3.0
   weewx.drivers.ws1        WS1            0.19
   weewx.drivers.ws23xx     WS23xx         0.24
@@ -305,7 +303,7 @@ website, or WeatherUnderground link).
 Include station in the station registry (y/n)? [y]:
 Unique URL: [http://weewx.com]:
 
-Indicate the preferred units for display: 'metric' or 'us'
+Indicate the preferred units for display: ['us', 'metric', 'metricwx']
 units [us]:
 
 Installed drivers include:
@@ -317,12 +315,11 @@ Installed drivers include:
   5) Ultimeter       (weewx.drivers.ultimeter)
   6) Vantage         (weewx.drivers.vantage)
   7) WMR100          (weewx.drivers.wmr100)
-  8) WMR200          (weewx.drivers.wmr200)
-  9) WMR300          (weewx.drivers.wmr300)
- 10) WMR9x8          (weewx.drivers.wmr9x8)
- 11) WS1             (weewx.drivers.ws1)
- 12) WS23xx          (weewx.drivers.ws23xx)
- 13) WS28xx          (weewx.drivers.ws28xx)
+  8) WMR300          (weewx.drivers.wmr300)
+  9) WMR9x8          (weewx.drivers.wmr9x8)
+ 10) WS1             (weewx.drivers.ws1)
+ 11) WS23xx          (weewx.drivers.ws23xx)
+ 12) WS28xx          (weewx.drivers.ws28xx)
 choose a driver [3]:
 Saved backup to /home/weewx/weewx.conf.20200328054724</pre>
 
@@ -332,6 +329,56 @@ Saved backup to /home/weewx/weewx.conf.20200328054724</pre>
 
         <p>This will accept all the defaults, including your new device driver, without asking for any input.</p>
 
+        <h3 id="wee_config_utility_upgrade">Action <span class="code">--upgrade</span></h3>
+        <p>
+            Use this action to upgrade a configuration file, such as <span class="code">weewx.conf</span>. Normally,
+            this is done automatically by the installer, but there are occasions when it must be done manually. In
+            particular, this can happen when you run several instances of <span class="code">weewxd</span> on the same
+            machine and each has its own, unique, configuration file. The one named <span class="code">weewx.conf</span>
+            will get upgraded, but not the others.
+        </p>
+        <p>
+            Say you have an additonal configuration file, <span class="code">foo.conf</span>, located in <span
+            class="code">/etc/weewx/foo.conf</span>. Here's how you can upgrade it:
+        </p>
+        <ol>
+            <li>
+                <p>
+                    First, locate the "distribution configuration file." This is the version of <span class="code">weewx.conf</span>
+                    that came with the new version of WeeWX.
+                </p>
+                <p>
+                    If you used the <span class="code">setup.py</span> install method, it will be in <span class="code">/home/weewx/weewx.conf.X.Y.Z</span>,
+                    where <span class="code">X.Y.Z</span> is the version number.
+                </p>
+                <p>
+                    If you used a package installer, it will be in <span class="code">/etc/weewx/weewx.conf.dist</span>.
+                </p>
+
+            </li>
+            <li>
+                <p>
+                    Next use the utility to upgrade it:
+                </p>
+
+                <pre
+                    class="cmd tty">sudo wee_config --upgrade --config=/etc/weewx/foo.conf --dist-config=path-to-dist-config</pre>
+
+                <p>
+                    where <span class="code">path-to-dist-config</span> is the path to the distribution configuration
+                    file identified above.
+                </p>
+            </li>
+        </ol>
+
+        <p>
+            Your old version of <span class="code">foo.conf</span> will be copied to a timestamped backup.
+            Then, it will upgraded and the results will replace the old copy.
+        </p>
+        <p>
+            The option <span class="code">--upgrade</span> is idempotent. That is, subsequent invocations do not change
+            the result (although they will leave multiple backups behind).
+        </p>
 
         <!-- ======== -->
 
@@ -349,11 +396,18 @@ Usage: wee_database --help
        wee_database --create
        wee_database --reconfigure
        wee_database --transfer --dest-binding=BINDING_NAME [--dry-run]
+       wee_database --add-column=NAME [--type=(REAL|INTEGER)]
+       wee_database --rename-column=NAME --to-name=NEW_NAME
+       wee_database --drop-columns=NAME1,NAME2,...
        wee_database --check
        wee_database --update [--dry-run]
        wee_database --drop-daily
        wee_database --rebuild-daily [--date=YYYY-mm-dd |
                                     [--from=YYYY-mm-dd] [--to=YYYY-mm-dd]]
+                                    [--dry-run]
+       wee_database --reweight [--date=YYYY-mm-dd |
+                               [--from=YYYY-mm-dd] [--to=YYYY-mm-dd]]
+                               [--dry-run]
        wee_database --calc-missing [--date=YYYY-mm-dd |
                                    [--from=YYYY-mm-dd[THH:MM]] [--to=YYYY-mm-dd[THH:MM]]]
        wee_database --check-strings
@@ -376,6 +430,14 @@ Options:
                         the end.
   --transfer            Transfer the WeeWX archive from source database to
                         destination database.
+  --add-column=NAME     Add new column NAME to database.
+  --type=TYPE           New database column type (INTEGER|REAL) (option --add-
+                        column only).  Default is 'REAL'.
+  --rename-column=NAME  Rename the column with name NAME.
+  --to-name=NEW_NAME    New name of the column (option --rename-column only).
+  --drop-columns=NAME1,NAME2,...
+                        Drop one or more columns. Names must be separated by
+                        commas, with NO SPACES.
   --check               Check the calculations in the daily summary tables.
   --update              Update the daily summary tables if required and
                         recalculate the daily summary maximum windSpeed
@@ -387,6 +449,7 @@ Options:
   --drop-daily          Drop the daily summary tables from a database.
   --rebuild-daily       Rebuild the daily summaries from data in the archive
                         table.
+  --reweight            Recalculate the weighted sums in the daily summaries.
   --config=CONFIG_FILE  Use configuration file CONFIG_FILE.
   --date=YYYY-mm-dd     This date only (options --calc-missing and --rebuild-
                         daily only).
@@ -415,9 +478,10 @@ Options:
         <pre class="tty cmd">wee_database --create</pre>
 
         <h3>Action <span class="code">--reconfigure</span></h3>
-        <p>This action is useful for changing the schema in your database.</p>
+        <p>This action is useful for changing the schema or unit system in your database.</p>
 
-        <p>It creates a new database with the same name as the old, except with the suffix <span
+        <p>
+            It creates a new database with the same name as the old, except with the suffix <span
             class="code">_new</span> attached at the end (nominally, <span class="code">weewx.sdb_new</span> if you are
             using SQLite, <span class="code">weewx_new</span> if you are using MySQL). It then initializes it with the
             schema specified in <span class="code">weewx.conf</span>. Finally, it copies over the data from your old
@@ -426,8 +490,9 @@ Options:
 
         <pre class="tty cmd">wee_database --reconfigure</pre>
 
-        <p>See the section <a href="customizing.htm#add_archive_type">Adding a new type to the database</a> in
-            the Customization Guide for step-by-step instructions that use this option.
+        <p>
+            See the section <a href="customizing.htm#Changing_the_unit_system">Changing the database unit system in
+            an existing database</a> in the Customization Guide for step-by-step instructions that use this option.
         </p>
 
         <h3>Action <span class="code">--transfer</span></h3>
@@ -447,6 +512,52 @@ wee_database --transfer --dest-binding=dest_binding</pre>
             to MySQL</a>, and from <a
             href="https://github.com/weewx/weewx/wiki/Transfer%20from%20MySQL%20to%20sqlite#using-wee_database">MySQL to
             SQLite</a>, using <span class="code">wee_database</span>.
+        </p>
+
+        <h3>Action <span class="code">--add-column</span></h3>
+        <p>
+            This action adds a new database observation type (column) to the database. If used without the
+            <span class="code">--type</span> option, the type will default to <span class="code">REAL</span>.
+        </p>
+
+        <pre class="tty cmd">wee_database --add-column</pre>
+
+        <p>
+            Optionally, option <span class="code">--type</span> can be used with a SQL type
+            <span class="code">REAL</span>, <span class="code">INTEGER</span>,
+            or any other SQL column definition (such as <span class="code">INTEGER DEFAULT 0</span>).
+        </p>
+
+        <pre class="tty cmd">wee_database --add-column=NAME --type=TYPE</pre>
+
+        <h3>Action <span class="code">--rename-column</span></h3>
+        <p>
+            Use this action to rename a database observation type (column) to a new name. It requires the option
+            <span class="code">--to-name</span>.
+        </p>
+        <pre class="tty cmd">wee_database --rename-column=NAME --to-name=NEW_NAME</pre>
+        <p>
+            For example, to rename the column <span class="code">luminosity</span> in your schema to
+            <span class="code">illuminance</span>:
+        </p>
+
+        <pre class="tty cmd">wee_database --rename-column=luminosity --to-name=illuminance</pre>
+
+        <h3>Action <span class="code">--drop-columns</span></h3>
+        <p>
+            This action will drop one or more observation types (columns) from the database. If more than one column
+            name is given, they should be separated by commas and <em>no spaces</em>.
+        </p>
+        <p>
+            It is an error to attempt to drop a non-existing column. In this case, nothing will be done.
+        </p>
+        <pre class="tty cmd">wee_database --drop-columns=NAME1,NAME2</pre>
+
+        <p class="note">
+            NOTE: When dropping columns from a SQLite database, the entire database must be copied except for the
+            dropped columns. Because this can be quite slow, if you are dropping more than one column, it is better
+            to do them all in one pass. This is why option <span class="code">--drop-columns</span> accepts more than
+            one name.
         </p>
 
         <h3>Action <span class="code">--check</span></h3>
@@ -523,6 +634,18 @@ wee_database --rebuild-daily --from=YYYY-mm-dd --to=YYYY-mm-dd</pre>
                     and the day defined by <span class="code">--to</span> and all days in between.
                 </p>
 
+        <h3>Action <span class="code">--reweight</span></h3>
+        <p>
+            As an alternative to dropping and rebuilding the daily summaries, this action simply rebuilds the weighted
+            daily sums (used to calculate averages) from the archive data. It does not touch the highs and lows. It is
+            much faster than <span class="code">--rebuild-daily</span>, and has the advantage that the highs and lows
+            remain unchanged.
+        </p>
+        <p>
+            Other options are as in <span class="code">--rebuild-daily</span>.
+        </p>
+
+
         <h3>Action <span class="code">--calc-missing</span></h3>
         <p>This action calculates derived observations for archive records in the database and then stores the calculated
             observations in the database. This can be useful if erroneous archive data is corrected or some additional
@@ -562,6 +685,16 @@ wee_database --calc-missing --from=YYYY-mm-dd[THH:MM] --to=YYYY-mm-dd[THH:MM]</p
                     start of <span class="code">YYYY-mm-dd</span> up to and including midnight at the end of
                     <span class="code">YYYY-mm-dd</span>, in effect the same as
                     <span class="code">--from=YYYY-mm-ddT00:00 --to=YYYY-mm-dd+1T00:00</span>.
+                </p>
+
+                <p class="note">
+                    <strong>Note</strong><br/><span class="code">--calc-missing</span> uses the
+                    <span class="code">StdWXCalculate</span> service to calculate missing derived observations. The data
+                    binding used by the <span class="code">StdWXCalculate</span> service should normally match the data
+                    binding of the database being operated on by <span class="code">--calc-missing</span>. User's who
+                    use custom or additional data bindings should take care to ensure the correct data bindings are used
+                    by both <span class="code">--calc-missing</span> and the <span class="code">StdWXCalculate</span>
+                    service. User's who use the default data binding need take no special precautions.
                 </p>
 
         <h3 id="wee_database_utility_check_strings">Action <span class="code">--check-strings</span></h3>
@@ -899,7 +1032,6 @@ wee_debug report successfully generated
             <li><a href="hardware.htm#ultimeter_notes">Ultimeter</a></li>
             <li><a href="hardware.htm#vantage_notes">Vantage</a></li>
             <li><a href="hardware.htm#wmr100_notes">WMR100</a></li>
-            <li><a href="hardware.htm#wmr200_notes">WMR200</a></li>
             <li><a href="hardware.htm#wmr300_notes">WMR300</a></li>
             <li><a href="hardware.htm#wmr9x8_notes">WMR9x8</a></li>
             <li><a href="hardware.htm#ws1_notes">WS1</a></li>
@@ -1083,6 +1215,7 @@ No extensions installed</pre>
             [--date=YYYY-mm-dd | --from=YYYY-mm-dd[THH:MM] --to=YYYY-mm-dd[THH:MM]]
             [--dry-run]
             [--verbose]
+            [--no-prompt]
             [--suppress-warnings]
 
 
@@ -1102,6 +1235,8 @@ Options:
                         Import data up until this date or date-time. Format is
                         YYYY-mm-dd[THH:MM].
   --verbose             Print and log useful extra output.
+  --no-prompt           Do not prompt. Accept relevant defaults and all y/n
+                        prompts.
   --suppress-warnings   Suppress warnings to stdout. Warnings are still
                         logged.
   --version             Display wee_import version number.
@@ -1173,8 +1308,8 @@ summaries using the wee_database utility.</pre>
             </tr>
             <tr>
                 <td class="code first_col">--date=2015-12-22</td>
-                <td>All records from 2015-12-22 00:00 (inclusive) to 2015-12-23 00:00 (exclusive)</td>
-                <td>All records from 2015-12-22 00:00 (inclusive) to 2015-12-23 00:00 (exclusive)</td>
+                <td>All records from 2015-12-22 00:00 (exclusive) to 2015-12-23 00:00 (inclusive)</td>
+                <td>All records from 2015-12-22 00:00 (exclusive) to 2015-12-23 00:00 (inclusive)</td>
             </tr>
             </tbody>
         </table>
@@ -1183,6 +1318,13 @@ summaries using the wee_database utility.</pre>
             <strong>Note</strong><br/>If the <span class="code">--date</span>, <span class="code">--from</span> and
             <span class="code">--to</span> options are omitted the default is to import today's records only when
             importing from Weather Underground or to import all available records when importing from any other source.
+        </p>
+
+        <p class="note">
+            <strong>Note</strong><br/>WeeWX considers an archive record to represent an aggregation of data over the
+            archive interval preceding the archive record's timestamp. For this reason imports which are to be limited
+            to a given date with the <span class="code">--date</span> option will only import records timestamped after
+            midnight at the start of the day concerned and up to and including midnight at the end of the day concerned.
         </p>
 
         <h3>Options <span class="code">--from</span> and <span class="code">--to</span></h3>
@@ -1225,26 +1367,26 @@ summaries using the wee_database utility.</pre>
             <tr>
                 <td class="code first_col">--from=2015-12-22</td>
                 <td class="code first_col">--to=2015-12-29</td>
-                <td>All records from 2015-12-22 00:00 (inclusive) to 2015-12-30 00:00 (exclusive)</td>
-                <td>All records from 2015-12-22 00:00 (inclusive) to 2015-12-30 00:00 (exclusive)</td>
+                <td>All records from 2015-12-22 00:00 (exclusive) to 2015-12-30 00:00 (inclusive)</td>
+                <td>All records from 2015-12-22 00:00 (exclusive) to 2015-12-30 00:00 (inclusive)</td>
             </tr>
             <tr>
                 <td class="code first_col">--from=2016-7-18T15:29</td>
                 <td class="code first_col">--to=2016-7-25</td>
-                <td>All records from 2016-7-18 15:29 (inclusive) to 2016-7-26 22:00 (exclusive)</td>
-                <td>All records from 2016-7-18 15:29 (inclusive) to 2016-7-26 22:00 (exclusive)</td>
+                <td>All records from 2016-7-18 15:29 (exclusive) to 2016-7-26 00:00 (inclusive)</td>
+                <td>All records from 2016-7-18 15:29 (exclusive) to 2016-7-26 00:00 (inclusive)</td>
             </tr>
             <tr>
                 <td class="code first_col">--from=2016-5-12</td>
                 <td class="code first_col">--to=2016-7-22T22:15</td>
-                <td>All records from 2016-5-12 00:00 (inclusive) to 2016-7-22 22:15 (exclusive)</td>
-                <td>All records from 2016-5-12 00:00 (inclusive) to 2016-7-22 22:15 (exclusive)</td>
+                <td>All records from 2016-5-12 00:00 (exclusive) to 2016-7-22 22:15 (inclusive)</td>
+                <td>All records from 2016-5-12 00:00 (exclusive) to 2016-7-22 22:15 (inclusive)</td>
             </tr>
             <tr>
                 <td class="code first_col">--from=2016-3-18T15:29</td>
                 <td class="code first_col">--to=2016-6-20T22:00</td>
-                <td>All records from 2016-3-18 15:29 (inclusive) to 2016-6-20 22:00 (exclusive)</td>
-                <td>All records from 2016-3-18 15:29 (inclusive) to 2016-6-20 22:00 (exclusive)</td>
+                <td>All records from 2016-3-18 15:29 (exclusive) to 2016-6-20 22:00 (inclusive)</td>
+                <td>All records from 2016-3-18 15:29 (exclusive) to 2016-6-20 22:00 (inclusive)</td>
             </tr>
             </tbody>
         </table>
@@ -1255,6 +1397,15 @@ summaries using the wee_database utility.</pre>
             importing from Weather Underground or to import all available records when importing from any other source.
         </p>
 
+        <p class="note">
+            <strong>Note</strong><br/>WeeWX considers an archive record to represent an aggregation of data over the
+            archive interval preceding the archive record's timestamp. For this reason imports which are to be limited
+            to a given timespan with the <span class="code">--from</span> and <span class="code">--to</span> options
+            will only import records timestamped after the timestamp represented by the <span class="code">--from</span>
+            option and up to and including the timestamp represented by the <span class="code">--to</span>
+            option.
+        </p>
+
         <h3>Option <span class="code">--verbose</span></h3>
 
         <p>Inclusion of the <span class="code">--verbose</span> option will cause additional information to be printed
@@ -1263,6 +1414,23 @@ summaries using the wee_database utility.</pre>
 
         <pre class="tty cmd">wee_import --import-config=/directory/import.conf --verbose
 </pre>
+
+        <h3>Option <span class="code">--no-prompt</span></h3>
+
+        <p>Inclusion of the <span class="code">--no-prompt</span> option will run <span class="code">wee_import</span>
+            without prompts. Relevant defaults will be used and all y/n prompts are automatically accepted as 'y'. This
+            may be useful for unattended use of <span class="code">wee_import</span>.
+        </p>
+
+        <pre class="tty cmd">wee_import --import-config=/directory/import.conf --no-prompt
+</pre>
+
+        <p class="warning">
+            <strong>Warning!</strong><br/>Care must be taken when using the <span class="code">--no-prompt</span>
+            option as ignoring warnings during the import process can lead to unexpected results. Whilst existing data
+            will be protected, the use or acceptance of an incorrect or unexpected parameter or default may lead to
+            significant amounts of unwanted data being imported.
+        </p>
 
         <h3>Option <span class="code">--suppress-warnings</span></h3>
 
@@ -1625,21 +1793,50 @@ summaries using the wee_database utility.</pre>
         <h4 class='config_option' id='csv_fieldmap'>[[FieldMap]]</h4>
 
         <p>The <span class='code'>[[FieldMap]]</span> stanza defines the mapping from the source data fields to WeeWX
-            archive fields. The map consists of one row per field using the format:
+            archive fields. The map consists of one row per field being imported using either of the following formats:
         </p>
 
         <pre class="tty">weewx_archive_field_name = csv_field_name, weewx_unit_name</pre>
 
-        <p>Where <span class="code">weewx_archive_field_name</span> is a field name in the in-use WeeWX archive table
-            schema, <span class="code">csv_field_name</span> is the name of a field from the CSV file and
-            <span class="code">weewx_unit_name</span> is the WeeWX unit name of the units used by <span class="code">csv_field_name</span>.
+        <p>or</p>
+
+        <pre class="tty">weewx_archive_field_name = csv_field_name, text</pre>
+
+        <p>Where:</p>
+
+        <ul>
+            <li>
+                <span class="code">weewx_archive_field_name</span> is a field name in the in-use WeeWX archive table
+            schema
+            </li>
+            <li>
+                <span class="code">csv_field_name</span> is the name of a field from the CSV file
+            </li>
+            <li>
+                <span class="code">weewx_unit_name</span> is the WeeWX unit name of the units used by <span class="code">csv_field_name</span>
+            </li>
+            <li>
+                <span class="code">text</span> is the literal word text
+            </li>
+        </ul>
+
+        <p>
             This mapping allows <span class="code">wee_import</span> to take a source data field, do the appropriate
-            unit conversion and store the resulting value in the appropriate WeeWX archive field. A mapping is not
+            unit conversion and store the resulting value in the appropriate WeeWX archive field. Source data text
+            fields may be mapped to a WeeWX text archive field by using the second form of the field map entry where
+            the literal <span class="code">text</span> is used in place of a WeeWX unit name. A mapping is not
             required for every WeeWX archive field (e.g., the source may not provide inside temperature so
             no <span class="code">inTemp</span> field mapping is required) and neither does every CSV field need to
             be included in a mapping (e.g., the source data field <span class="code">monthrain</span> may have no
-            use if the source data field <span class="code">dayrain</span> provides the data for the WeeWX archive
+            use if the source data field <span class="code">rain</span> provides the data for the WeeWX archive
             <span class="code">rain</span> field). Unused field mapping lines will not be used and may be omitted.
+        </p>
+
+        <p class="note">
+            <strong>Note</strong><br/>Importing of text data into text fields in the WeeWX archive is only supported for
+            WeeWX archive fields that have been configured as text fields. Refer to the Wiki page
+            <a href="https://github.com/weewx/weewx/wiki/Storing-text-in-the-database">Storing text in the database</a>
+            for details.
         </p>
 
         <p>If the source data includes a field that contains a WeeWX unit system code (i.e. the equivalent of the
@@ -2436,14 +2633,14 @@ summaries using the wee_database utility.</pre>
 
         <p>A CSV file suitable for import by <span class="code">wee_import</span> may look like this:</p>
 
-        <pre class="tty">Time,Barometer,Temp,Humidity,Windspeed,Dir,Gust,Dayrain,Radiation,Uv
-28/11/2017 08:00:00,1016.9,24.6,84,1.8,113,8,0,359,3.8
-28/11/2017 08:05:00,1016.9,25.1,82,4.8,135,11.3,0,775,4.7
-28/11/2017 08:10:00,1016.9,25.4,80,4.4,127,11.3,0,787,5.1
-28/11/2017 08:15:00,1017,25.7,79,3.5,74,11.3,0,800,5.4
-28/11/2017 08:20:00,1016.9,25.9,79,1.6,95,9.7,0,774,5.5
-28/11/2017 08:25:00,1017,25.5,78,2.9,48,9.7,0,303,3.4
-28/11/2017 08:30:00,1017.1,25.1,80,3.1,54,9.7,0,190,3.6</pre>
+        <pre class="tty">Time,Barometer,Temp,Humidity,Windspeed,Dir,Gust,Dayrain,Radiation,Uv,Comment
+28/11/2017 08:00:00,1016.9,24.6,84,1.8,113,8,0,359,3.8,"start of observations"
+28/11/2017 08:05:00,1016.9,25.1,82,4.8,135,11.3,0,775,4.7,
+28/11/2017 08:10:00,1016.9,25.4,80,4.4,127,11.3,0,787,5.1,"note temperature"
+28/11/2017 08:15:00,1017,25.7,79,3.5,74,11.3,0,800,5.4,
+28/11/2017 08:20:00,1016.9,25.9,79,1.6,95,9.7,0,774,5.5,
+28/11/2017 08:25:00,1017,25.5,78,2.9,48,9.7,0,303,3.4,"forecast received"
+28/11/2017 08:30:00,1017.1,25.1,80,3.1,54,9.7,0,190,3.6,</pre>
 
         <p>or this:</p>
 

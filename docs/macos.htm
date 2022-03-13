@@ -31,7 +31,7 @@
 
 <p>
     Download the source archive <span class='code'>weewx-X.Y.Z.tar.gz</span> from <a
-    href="http://weewx.com/downloads"><span class="code">weewx.com/downloads</span></a>.
+    href="https://weewx.com/downloads"><span class="code">weewx.com/downloads</span></a>.
 </p>
 
 <h2>Install prerequisites</h2>
@@ -145,12 +145,12 @@ sudo python3 -m pip install pyephem</pre>
     </nav>
     <div id="run-py2" class="tab-content">
 <pre class="tty cmd">cd /Users/Shared/weewx
-python2 ./bin/weewxd weewx.conf</pre>
+sudo python2 ./bin/weewxd weewx.conf</pre>
     </div>
 
     <div id="run-py3" class="tab-content">
 <pre class="tty cmd">cd /Users/Shared/weewx
-python3 ./bin/weewxd weewx.conf</pre>
+sudo python3 ./bin/weewxd weewx.conf</pre>
     </div>
 </div>
 
@@ -159,10 +159,22 @@ python3 ./bin/weewxd weewx.conf</pre>
 <pre class="tty cmd">sudo cp /Users/Shared/weewx/util/launchd/com.weewx.weewxd.plist /Library/LaunchDaemons
 sudo launchctl load /Library/LaunchDaemons/com.weewx.weewxd.plist</pre>
 
-<h2>Status</h2>
-<p>To make sure things are running properly, look in the system log for messages from WeeWX. Run the <span class="code">Console</span>
-    application and select <span class="code">All Messages</span>.
+<h2>Logging</h2>
+<p>
+    On the Mac, WeeWX logs to <span class="code">/var/log/weewx.log</span> by default. Note that this is a privileged
+    location: you will need root privileges to run the WeeWX applications.
 </p>
+<p>
+    An alternative is to log to an unprivileged location, allowing you to run applications as any user. For example, to
+    log to <span class="code">/var/tmp/weewx.log</span> (an unprivileged location) add this to the end of <span
+    class="code">weewx.conf</span>:
+</p>
+<pre class="tty">
+[Logging]
+    [[handlers]]
+        [[[rotate]]]
+            filename = <span class="highlight">/var/tmp/weewx.log</span>
+</pre>
 
 <h2>Verify</h2>
 <p>After about 5 minutes, open the station web page in a web browser. You should see your station information and data.

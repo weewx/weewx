@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-#    Copyright (c) 2009-2019 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2021 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -13,6 +13,9 @@ import six
 
 import weewx.units
 from weewx.units import ValueTuple
+
+
+default_formatter = weewx.units.get_default_formatter()
 
 
 class ConstantsTest(unittest.TestCase):
@@ -141,7 +144,7 @@ class ValueHelperTest(unittest.TestCase):
     
     def testFormatting(self):
         value_t = (68.01, "degree_F", "group_temperature")
-        vh = weewx.units.ValueHelper(value_t)
+        vh = weewx.units.ValueHelper(value_t, formatter=default_formatter)
         self.assertEqual(vh.string(), u"68.0°F")
         self.assertEqual(vh.nolabel("T=%.3f"), u"T=68.010")
         self.assertEqual(vh.formatted, u"68.0")
@@ -156,7 +159,7 @@ class ValueHelperTest(unittest.TestCase):
 
         # Test None_string
         value_t = (None, "degree_F", "group_temperature")
-        vh = weewx.units.ValueHelper(value_t)
+        vh = weewx.units.ValueHelper(value_t, formatter=default_formatter)
         self.assertEqual(vh.format(None_string='foo'), u'foo')
         self.assertTrue(isinstance(vh.format(None_string='foo'), six.text_type))
         # This one cannot be done with ASCII codec:
@@ -166,7 +169,7 @@ class ValueHelperTest(unittest.TestCase):
     def testFormattingWithConversion(self):
         value_t = (68.01, "degree_F", "group_temperature")
         c_m = weewx.units.Converter(weewx.units.MetricUnits)
-        vh = weewx.units.ValueHelper(value_t, converter=c_m)
+        vh = weewx.units.ValueHelper(value_t, formatter=default_formatter, converter=c_m)
         self.assertEqual(six.text_type(vh), u"20.0°C")
         self.assertEqual(six.text_type(vh.degree_F), u"68.0°F")
         self.assertEqual(six.text_type(vh.degree_C), u"20.0°C")
@@ -175,28 +178,48 @@ class ValueHelperTest(unittest.TestCase):
 
     def testExplicitConversion(self):
         value_t = (10.0, "meter_per_second", "group_speed")
-        vh = weewx.units.ValueHelper(value_t)
+        # Default converter converts to US Units
+        vh = weewx.units.ValueHelper(value_t, formatter=default_formatter, converter=weewx.units.Converter())
         self.assertEqual(six.text_type(vh), "22 mph")
+        # Now explicitly convert to knots:
         self.assertEqual(six.text_type(vh.knot), "19 knots")
 
     def testNoneValue(self):
         value_t = (None, "degree_C", "group_temperature")
         converter = weewx.units.Converter()
-        vh = weewx.units.ValueHelper(value_t, converter=converter)
+        vh = weewx.units.ValueHelper(value_t, formatter=default_formatter, converter=converter)
         self.assertEqual(six.text_type(vh), "   N/A")
         self.assertEqual(six.text_type(vh.degree_C), "   N/A")
         
     def testElapsedTime(self):
         value_t = (2*86400 + 1*3600 + 5*60 + 12, "second", "group_deltatime")
-        vh = weewx.units.ValueHelper(value_t)
+        vh = weewx.units.ValueHelper(value_t, formatter=default_formatter, context='long_delta')
         self.assertEqual(vh.string(), "2 days, 1 hour, 5 minutes")
         format_label = "%(day)d%(day_label)s, %(hour)d%(hour_label)s, " \
                        "%(minute)d%(minute_label)s, %(second)d%(second_label)s"
         self.assertEqual(vh.format(format_label), "2 days, 1 hour, 5 minutes, 12 seconds")
         # Now try a 'None' value:
-        vh = weewx.units.ValueHelper((None, "second", "group_deltatime"))
+        vh = weewx.units.ValueHelper((None, "second", "group_deltatime"), formatter=default_formatter)
         self.assertEqual(vh.string(), "   N/A")
-        
+
+    def test_JSON(self):
+        value_t = (68.1283, "degree_F", "group_temperature")
+        vh = weewx.units.ValueHelper(value_t, formatter=default_formatter)
+        self.assertEqual(vh.json(), "68.1283")
+        self.assertEqual(vh.round(2).json(), "68.13")
+        # Test sequence:
+        vh = weewx.units.ValueHelper(([68.1283, 65.201, None, 69.911],
+                                      "degree_F", "group_temperature"),
+                                     formatter=default_formatter)
+        self.assertEqual(vh.json(), "[68.1283, 65.201, null, 69.911]")
+        self.assertEqual(vh.round(2).json(), "[68.13, 65.2, null, 69.91]")
+        # Test sequence of complex
+        vh = weewx.units.ValueHelper(([complex(1.234, 2.3456), complex(9.1891, 2.764), None],
+                                      "degree_F", "group_temperature"),
+                                     formatter=default_formatter)
+        self.assertEqual(vh.json(), "[[1.234, 2.3456], [9.1891, 2.764], null]")
+        self.assertEqual(vh.round(2).json(), "[[1.23, 2.35], [9.19, 2.76], null]")
+
+
 if __name__ == '__main__':
     unittest.main()
-    

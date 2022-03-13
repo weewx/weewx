@@ -3,27 +3,19 @@
 #errorCatcher Echo
 #encoding UTF-8
 
-#def period_plots($period, $label)
-<div id="history_${label}" class="plot_containter" style="display:none">
-#for $x in [
-{'data': $period.rxCheckPercent, 'img': 'rx', 'alt': 'signal'},
-{'data': $period.consBatteryVoltage, 'img': 'volt', 'alt': 'voltage'}
-]
-#if $x['data'].has_data
-#set $img = "%s%s.png" % ($label, $x['img'])
-<img src="$img" alt="$x['alt']" />
-#end if
-#end for
-</div>
-#end def
+#set $periods = $to_list($DisplayOptions.get('periods', ['day', 'week', 'month', 'year']))
+#set $telemetry_plot_groups = $to_list($DisplayOptions.get('telemetry_plot_groups', ['rx']))
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="$lang">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>$station.location Telemetry</title>
+    <title>$station.location $gettext("Telemetry")</title>
     <link rel="icon" type="image/png" href="favicon.ico" />
     <link rel="stylesheet" type="text/css" href="seasons.css"/>
+    #if $station.station_url
+    <link rel="canonical" href="$station.station_url/$filename" />
+    #end if
     <script src="seasons.js"></script>
   </head>
 
@@ -31,7 +23,7 @@
     #include "titlebar.inc"
     
     <div id="contents">
-      <p><a href="index.html">&#10096; Current Conditions</a></p>
+      <p><a href="index.html">&#10096; $gettext("Current Conditions")</a></p>
 
       <div id="widget_group">
         #include "sensors.inc"
@@ -39,23 +31,38 @@
 
       <div id="plot_group">
         <div id="history_widget" class="widget">
-          <div id="plot_title" class="widget_title">Telemetry:&nbsp;&nbsp;
+          <div id="plot_title" class="widget_title">$gettext("Telemetry"):&nbsp;&nbsp;
             <a class="button_selected" id="button_history_day"
-               onclick="choose_history('day')">Day</a>
+               onclick="choose_history('day')">$gettext("Day")</a>
             <a class="button" id="button_history_week"
-               onclick="choose_history('week')">Week</a>
+               onclick="choose_history('week')">$gettext("Week")</a>
             <a class="button" id="button_history_month"
-               onclick="choose_history('month')">Month</a>
+               onclick="choose_history('month')">$gettext("Month")</a>
             <a class="button" id="button_history_year"
-               onclick="choose_history('year')">Year</a>
+               onclick="choose_history('year')">$gettext("Year")</a>
           </div>
-          $period_plots($day, 'day')
-          
-          $period_plots($week, 'week')
 
-          $period_plots($month, 'month')
+#for period in $periods
+          <div id="history_${period}" class="plot_container" style="display:none">
+  #for plot_group in $telemetry_plot_groups
+    #set $show_plot = 0
+    #*
+      The plot name is just the concatenation of the period and the plot group.
+      For example, 'year' + 'tempdew' yields 'yeartempdew'.
+    *#
+    #set $plot_name = $period + $plot_group
+    #for obs in $getobs($plot_name)
+      #if $getVar('year.%s.has_data' % $obs)
+        #set $show_plot = 1
+      #end if
+    #end for
+    #if $show_plot
+            <img src="${plot_name}.png" alt="${plot_name}"/>
+    #end if
+  #end for
+          </div>
+#end for
 
-          $period_plots($year, 'year')
         </div>
       </div>
 

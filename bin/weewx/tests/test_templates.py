@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-#    Copyright (c) 2009-2019 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2022 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -50,9 +50,26 @@ time.tzset()
 # http://docs.python.org/2/library/locale.html#locale.setlocale
 locale.setlocale(locale.LC_ALL, '')
 
-# Find the configuration file. It's assumed to be in the same directory as me:
-config_path = os.path.join(os.path.dirname(__file__), "testgen.conf")
-cwd = None
+# Find the configuration file. It's assumed to be in the same directory as me, so first figure
+# out where that is.
+my_dir = os.path.normpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
+# The full path to the configuration file:
+config_path = os.path.join(my_dir, "testgen.conf")
+
+# These tests also test the examples in the 'example' subdirectory.
+# Patch PYTHONPATH to find them.
+example_dir = os.path.normpath(os.path.join(my_dir, '../../../examples'))
+sys.path.append(example_dir)
+sys.path.append(os.path.join(example_dir, './colorize'))
+
+import colorize_1
+import colorize_2
+import colorize_3
+
+# Monkey patch to create SLEs with unambiguous names. We will test using these names.
+colorize_1.Colorize.colorize_1 = colorize_1.Colorize.colorize
+colorize_2.Colorize.colorize_2 = colorize_2.Colorize.colorize
+colorize_3.Colorize.colorize_3 = colorize_3.Colorize.colorize
 
 
 # We will be testing the ability to extend the unit system, so set that up first:
@@ -87,13 +104,6 @@ class Common(object):
 
     def setUp(self):
         global config_path
-        global cwd
-
-        # Save and set the current working directory in case some service changes it.
-        if not cwd:
-            cwd = os.getcwd()
-        else:
-            os.chdir(cwd)
 
         try:
             self.config_dict = configobj.ConfigObj(config_path, file_error=True, encoding='utf-8')
@@ -107,7 +117,8 @@ class Common(object):
 
         # Remove the old directory:
         try:
-            test_html_dir = os.path.join(self.config_dict['WEEWX_ROOT'], self.config_dict['StdReport']['HTML_ROOT'])
+            test_html_dir = os.path.join(self.config_dict['WEEWX_ROOT'],
+                                         self.config_dict['StdReport']['HTML_ROOT'])
             shutil.rmtree(test_html_dir)
         except OSError as e:
             if os.path.exists(test_html_dir):
@@ -149,7 +160,8 @@ class Common(object):
         t.run()
         print("Done.")
 
-        test_html_dir = os.path.join(t.config_dict['WEEWX_ROOT'], t.config_dict['StdReport']['HTML_ROOT'])
+        test_html_dir = os.path.join(t.config_dict['WEEWX_ROOT'],
+                                     t.config_dict['StdReport']['HTML_ROOT'])
         expected_dir = os.path.join(test_dir, 'expected')
 
         # Walk the directory of expected results to discover all the generated files we should
@@ -174,7 +186,8 @@ class Common(object):
                             self.assertEqual(actual_line,
                                              expected_line,
                                              msg="%s[%d]:\n%r vs\n%r"
-                                                 % (actual_filename_abs, n, actual_line, expected_line))
+                                                 % (actual_filename_abs, n, actual_line,
+                                                    expected_line))
 
                         print("Checked %d lines" % n)
 

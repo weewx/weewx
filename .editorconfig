@@ -9,7 +9,7 @@ root = true
     max_line_length = 99
 
 # HTML files
-[*.htm]
+[*.{htm,html}]
     max_line_length = 120
 
 # Cheetah templates:

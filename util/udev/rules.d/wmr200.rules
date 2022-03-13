@@ -1,2 +1,0 @@
-# make the oregon scientific wmr200 connected via usb accessible to non-root
-SUBSYSTEM=="usb", ATTRS{idVendor}=="0FDE", ATTRS{idProduct}=="CA01", MODE="0666"

@@ -9,7 +9,7 @@
 # the MySQLdb interface acts the way we think it should.
 #
 # It uses two MySQL users, weewx1 and weewx2. The companion
-# script "setup_mysql" will set them up with the necessary permissions.
+# script "setup_mysql.sh" will set them up with the necessary permissions.
 #
 from __future__ import absolute_import
 from __future__ import with_statement
@@ -106,9 +106,9 @@ class TestMySQL(unittest.TestCase):
 
     def test_select_nonexistent_database(self):
         with Cursor(user='weewx1', passwd='weewx1') as cursor:
-            with self.assertRaises(ProgrammingError) as e:
-                cursor.execute("SELECT foo from test_weewx1.bar")
-            self.assertEqual(get_error(e), 1146)
+            with self.assertRaises(OperationalError) as e:
+                cursor.execute("SELECT foo from test_foo.bar")
+            self.assertEqual(get_error(e), 1049)
 
     def test_select_nonexistent_table(self):
         with Cursor(user='weewx1', passwd='weewx1') as cursor:

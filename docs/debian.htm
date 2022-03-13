@@ -22,19 +22,47 @@
 </p>
 
 <h2>Configure apt</h2>
-<p>Tell <span class="code">apt</span> where to find the WeeWX releases.  This only has to be done once - the first time you install WeeWX.</p>
+<p>
+    The first time you install WeeWX, you must configure <span class="code">apt</span> so that it knows to trust
+    weewx.com, and knows where to find the WeeWX releases.
+</p>
 
-Tell your system to trust weewx.com:
-<pre class='tty cmd'>wget -qO - http://weewx.com/keys.html | sudo apt-key add -</pre>
+<p>
+    Step one: tell your system to trust weewx.com. If you see any errors, please consult the
+    <a href='https://github.com/weewx/weewx/wiki/faq-apt-key-problems'>FAQ</a>.
+</p>
 
-For Debian10 and later, use python3:
-<pre class='tty cmd'>wget -qO - http://weewx.com/apt/weewx-python3.list | sudo tee /etc/apt/sources.list.d/weewx.list</pre>
+  <pre class='tty cmd'>wget -qO - https://weewx.com/keys.html | sudo gpg --dearmor --output /etc/apt/trusted.gpg.d/weewx.gpg</pre>
 
-For Debian9 and earlier, use python2:
-<pre class='tty cmd'>wget -qO - http://weewx.com/apt/weewx-python2.list | sudo tee /etc/apt/sources.list.d/weewx.list</pre>
+
+
+</ul>
+
+<p>
+    Step two: run one of the following two commands to tell <span class="code">apt</span> where to find the appropriate WeeWX
+    repository.
+</p>
+
+<ul>
+    <li>
+        <p>For Debian10 and later, use Python 3:</p>
+
+        <pre class='tty cmd'>wget -qO - https://weewx.com/apt/weewx-python3.list | sudo tee /etc/apt/sources.list.d/weewx.list</pre>
+    </li>
+
+    <li>
+        <p><em>or</em>, for Debian9 and earlier, use Python 2:</p>
+
+        <pre class='tty cmd'>wget -qO - https://weewx.com/apt/weewx-python2.list | sudo tee /etc/apt/sources.list.d/weewx.list</pre>
+    </li>
+
+</ul>
 
 <h2>Install</h2>
-<p>Use <span class="code">apt-get</span> to install WeeWX. The installer will prompt for a location, latitude/longitude, altitude, station type, and parameters specific to your station hardware.
+<p>
+    Having configured <span class="code">apt</span>, you can now use <span class="code">apt-get</span> to install WeeWX.
+    The installer will prompt for a location, latitude/longitude, altitude, station type, and parameters specific to
+    your station hardware.
 </p>
 
 <pre class='tty cmd'>sudo apt-get update

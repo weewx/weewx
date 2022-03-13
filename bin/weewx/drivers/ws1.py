@@ -29,7 +29,7 @@ import weewx.wxformulas
 log = logging.getLogger(__name__)
 
 DRIVER_NAME = 'WS1'
-DRIVER_VERSION = '0.41'
+DRIVER_VERSION = '0.5'
 
 
 def loader(config_dict, _):
@@ -273,9 +273,6 @@ class StationSocket(object):
                  wait_before_retry=10):
         import socket
 
-        ip_addr = None
-        ip_port = None
-
         self.max_tries = max_tries
         self.wait_before_retry = wait_before_retry
 
@@ -284,9 +281,7 @@ class StationSocket(object):
             self.conn_info[1] = int(self.conn_info[1], 10)
             self.conn_info = tuple(self.conn_info)
         else:
-            ip_addr = addr
-            ip_port = DEFAULT_TCP_PORT
-            self.conn_info = (ip_addr, ip_port)
+            self.conn_info = (addr, DEFAULT_TCP_PORT)
 
         try:
             if protocol == 'tcp':
@@ -300,7 +295,13 @@ class StationSocket(object):
             raise weewx.WeeWxIOError(ex)
 
         self.net_socket.settimeout(timeout)
-        self.rec_start = False
+
+    def __enter__(self):
+        self.open()
+        return self
+
+    def __exit__(self, _, value, traceback):  # @UnusedVariable
+        self.close()
 
     def open(self):
         import socket
@@ -334,91 +335,103 @@ class StationSocket(object):
                       % (self.conn_info[0], self.conn_info[1], ex))
             raise weewx.WeeWxIOError(ex)
 
-    def get_readings(self):
-        import socket
-        if self.rec_start is not True:
-            # Find the record start
-            if DEBUG_READ >= 1:
-                log.debug("Attempting to find record start..")
-            buf = ''
-            while True:
-                try:
-                    buf += self.net_socket.recv(8, socket.MSG_WAITALL)
-                except (socket.error, socket.timeout) as ex:
-                    raise weewx.WeeWxIOError(ex)
-                if DEBUG_READ >= 1:
-                    log.debug("(searching...) buf: %s" % buf)
-                if '!!' in buf:
-                    self.rec_start = True
-                    if DEBUG_READ >= 1:
-                        log.debug("Record start found!")
-                    # Cut to the record start
-                    buf = buf[buf.find('!!'):]
-                    if DEBUG_READ >= 1:
-                        log.debug("(found!) buf: %s" % buf)
-                    break
-            # Add the rest of the record
-            try:
-                buf += self.net_socket.recv(
-                    PACKET_SIZE - len(buf), socket.MSG_WAITALL)
-            except (socket.error, socket.timeout) as ex:
-                raise weewx.WeeWxIOError(ex)
-        else:
-            # Keep receiving data until we find an exclamation point or two
-            try:
-                buf = self.net_socket.recv(2, socket.MSG_WAITALL)
-            except (socket.error, socket.timeout) as ex:
-                raise weewx.WeeWxIOError(ex)
-            while True:
-                if buf == '\r\n':
-                    # CRLF is expected
-                    if DEBUG_READ >= 2:
-                        log.debug("buf is CRLF")
-                    buf = ''
-                    break
-                elif '!' in buf:
-                    excmks = buf.count('!')
-                    # Assuming exclamation points are at the end of the buffer
-                    buf = buf[len(buf) - excmks:]
-                    if DEBUG_READ >= 2:
-                        log.debug("buf has %d exclamation points." % (excmks))
-                    break
-                else:
-                    try:
-                        buf = self.net_socket.recv(2, socket.MSG_WAITALL)
-                    except (socket.error, socket.timeout) as ex:
-                        raise weewx.WeeWxIOError(ex)
-                    if DEBUG_READ >= 2:
-                        log.debug("buf: %s" % ' '.join(['%02X' % byte2int(bc) for bc in buf]))
-            try:
-                buf += self.net_socket.recv(
-                    PACKET_SIZE - len(buf), socket.MSG_WAITALL)
-            except (socket.error, socket.timeout) as ex:
-                raise weewx.WeeWxIOError(ex)
-        if DEBUG_READ >= 2:
-            log.debug("buf: %s" % buf)
+    def get_data(self, num_bytes=8):
+        """Get data from the socket connection
+        Args:
+            num_bytes: The number of bytes to request.
+        Returns:
+            bytes: The data from the remote device.
+        """
 
-        buf.strip()
+        import socket
+        try:
+            data = self.net_socket.recv(num_bytes, socket.MSG_WAITALL)
+        except Exception as ex:
+            raise weewx.WeeWxIOError(ex)
+        else:
+            if len(data) == 0:
+                raise weewx.WeeWxIOError("No data recieved")
+
+            return data
+
+    def find_record_start(self):
+        """Find the start of a data record by requesting data from the remote
+           device until we find it.
+        Returns:
+            bytes: The start of a data record from the remote device.
+        """
+        if DEBUG_READ >= 2:
+            log.debug("Attempting to find record start..")
+
+        buf = bytes("", "utf-8")
+        while True:
+            data = self.get_data()
+
+            if DEBUG_READ >= 2:
+                log.debug("(searching...) buf: %s" % buf.decode('utf-8'))
+            # split on line breaks and take everything after the line break
+            data = data.splitlines()[-1]
+            if b"!!" in data:
+                # if it contains !!, take everything after the last occurance of !! (we sometimes see a whole bunch of !)
+                buf = data.rpartition(b"!!")[-1]
+                if len(buf) > 0:
+                    # if there is anything left, add the !! back on and break
+                    # we have effectively found everything between a line break and !!
+                    buf = b"!!" + buf
+                    if DEBUG_READ >= 2:
+                        log.debug("Record start found!")
+                    break
+        return buf
+
+
+    def fill_buffer(self, buf):
+        """Get the remainder of the data record from the remote device.
+        Args:
+            buf: The beginning of the data record.
+        Returns:
+            bytes: The data from the remote device.
+        """
+        if DEBUG_READ >= 2:
+            log.debug("filling buffer with rest of record")
+        while True:
+            data = self.get_data()
+
+            # split on line breaks and take everything before it
+            data = data.splitlines()[0]
+            buf = buf + data
+            if DEBUG_READ >= 2:
+                log.debug("buf is %s" % buf.decode('utf-8'))
+            if len(buf) == 50:
+                if DEBUG_READ >= 2:
+                    log.debug("filled record %s" % buf.decode('utf-8'))
+                break
+        return buf
+
+    def get_readings(self):
+        buf = self.find_record_start()
+        if DEBUG_READ >= 2:
+            log.debug("record start: %s" % buf.decode('utf-8'))
+        buf = self.fill_buffer(buf)
+        if DEBUG_READ >= 1:
+            log.debug("Got data record: %s" % buf.decode('utf-8'))
         return buf
 
     def get_readings_with_retry(self, max_tries=5, wait_before_retry=10):
         for _ in range(max_tries):
-            buf = ''
+            buf = bytes("", "utf-8")
             try:
                 buf = self.get_readings()
                 StationData.validate_string(buf)
                 return buf
             except (weewx.WeeWxIOError) as e:
                 log.debug("Failed to get data. Reason: %s" % e)
-                self.rec_start = False
 
                 # NOTE: WeeWx IO Errors may not always occur because of
                 # invalid data. These kinds of errors are also caused by socket
                 # errors and timeouts.
 
                 if DEBUG_READ >= 1:
-                    log.debug("buf: %s (%d bytes), rec_start: %r"
-                              % (buf, len(buf), self.rec_start))
+                    log.debug("buf: %s (%d bytes)" % (buf.decode('utf-8'), len(buf)))
 
                 time.sleep(wait_before_retry)
         else:
@@ -474,6 +487,7 @@ class WS1ConfEditor(weewx.drivers.AbstractConfEditor):
 # engine and service overhead.  invoke this as follows from the weewx root dir:
 #
 # PYTHONPATH=bin python bin/weewx/drivers/ws1.py
+# PYTHONPATH=/usr/share/weewx python3 /usr/share/weewx/weewx/drivers/ws1.py
 
 if __name__ == '__main__':
     import optparse
@@ -481,24 +495,36 @@ if __name__ == '__main__':
     import weewx
     import weeutil.logger
 
-    weewx.debug = 1
-
-    weeutil.logger.setup('ws1', {})
-
     usage = """%prog [options] [--help]"""
 
     parser = optparse.OptionParser(usage=usage)
     parser.add_option('--version', dest='version', action='store_true',
                       help='display driver version')
+    parser.add_option('--debug', dest='debug', action='store_true',
+                      help='provide additional debug output in log')
     parser.add_option('--port', dest='port', metavar='PORT',
-                      help='serial port to which the station is connected',
+                      help='serial port to which the station is connected to use Serial mode',
                       default=DEFAULT_SER_PORT)
+    parser.add_option('--addr', dest='addr', metavar='ADDR',
+                      help='ip address and port to use TCP mode',
+                      default=DEFAULT_TCP_ADDR)
+    
     (options, args) = parser.parse_args()
 
     if options.version:
         print("ADS WS1 driver version %s" % DRIVER_VERSION)
         exit(0)
 
-    with StationSerial(options.port) as s:
+    if options.debug:
+        weewx.debug = 2
+        DEBUG_READ = 2
+
+    weeutil.logger.setup('ws1', {})
+
+    Station = StationSerial
+    if options.addr is not None:
+        Station = StationSocket
+
+    with Station(options.addr) as s:
         while True:
-            print(time.time(), s.get_readings())
+            print(time.time(), s.get_readings().decode("utf-8"))

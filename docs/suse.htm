@@ -26,13 +26,13 @@
 <p>Tell <span class="code">zypper</span> where to find the WeeWX releases.  This only has to be done once - the first time you install WeeWX.</p>
 
 Tell your system to trust weewx.com:
-<pre class='tty cmd'>sudo rpm --import http://weewx.com/keys.html</pre>
+<pre class='tty cmd'>sudo rpm --import https://weewx.com/keys.html</pre>
 
 For SUSE 15 use python3:
-<pre class='tty cmd'>curl -s http://weewx.com/suse/weewx-suse15.repo | sudo tee /etc/zypp/repos.d/weewx.repo</pre>
+<pre class='tty cmd'>curl -s https://weewx.com/suse/weewx-suse15.repo | sudo tee /etc/zypp/repos.d/weewx.repo</pre>
 
 For SUSE 12 use python2:
-<pre class='tty cmd'>curl -s http://weewx.com/suse/weewx-suse12.repo | sudo tee /etc/zypp/repos.d/weewx.repo</pre>
+<pre class='tty cmd'>curl -s https://weewx.com/suse/weewx-suse12.repo | sudo tee /etc/zypp/repos.d/weewx.repo</pre>
 
 <h2>Install WeeWX</h2>
 

@@ -24,7 +24,7 @@ FALSE#slurp
   }
 </style>
 </head>
-<body>
+<body style="background-color:aliceblue">
 
   <h1>Tests for tag \$station</h1>
   <table>
@@ -199,6 +199,14 @@ FALSE#slurp
     <tr>
       <td>Test tag "has_data" for a nonsense type: \$current.nonsense.has_data</td>
       <td>$emit_boolean($current.nonsense.has_data)</td>
+    </tr>
+    <tr>
+      <td>Test tag "has_data" for the last hour: \$hour.outTemp.has_data</td>
+      <td>$emit_boolean($hour.outTemp.has_data)</td>
+    </tr>
+    <tr>
+      <td>Test tag "has_data" for the last hour of a nonsense type: \$hour.nonsense.has_data</td>
+      <td>$emit_boolean($hour.nonsense.has_data)</td>
     </tr>
     <tr>
       <td>Test for a bad observation type on a \$current tag: \$current.foobar</td>
@@ -391,8 +399,8 @@ FALSE#slurp
       <td>$day.outTemp.min.mbar</td>
     </tr>
     <tr>
-      <td>Max value for a type with no data: \$day.soilMoist3.max</td>
-      <td>$day.soilMoist3.max</td>
+      <td>Max value for a type with no data: \$day.UV.max</td>
+      <td>$day.UV.max</td>
     </tr>
     <tr>
       <td>Sum aggregation (rain)</td>
@@ -415,19 +423,19 @@ FALSE#slurp
       <td>$day.wind.avg</td>
     </tr>
     <tr>
-      <td>High Wind from "\$day.windSpeed.avg"</td>
+      <td>Average wind from "\$day.windSpeed.avg"</td>
       <td>$day.windSpeed.avg</td>
     </tr>
     <tr>
-      <td>Average aggregation (wind)</td>
-      <td>$day.wind.avg</td>
+      <td>Average wind w/alt_binding: "\$day(data_binding='alt_binding').wind.avg"</td>
+      <td>$day(data_binding='alt_binding').wind.avg</td>
     </tr>
     <tr>
-      <td>RMS aggregation(wind)</td>
+      <td>RMS aggregation: "\$day.wind.rms"</td>
       <td>$day.wind.rms</td>
     </tr>
     <tr>
-      <td>Aggregation Vector Average (wind)</td>
+      <td>Vector average: "\$day.wind.vecavg"</td>
       <td>$day.wind.vecavg</td>
     </tr>
     <tr>
@@ -439,18 +447,26 @@ FALSE#slurp
       <td>$emit_boolean($day.nonsense.has_data)</td>
     </tr>
     <tr>
-      <td>Test tag "exists" with an existing type that has no data \$day.soilMoist3.exists</td>
-      <td>$emit_boolean($day.soilMoist3.exists)</td>
+      <td>Test tag "exists" with an existing type that has no data \$day.UV.exists</td>
+      <td>$emit_boolean($day.UV.exists)</td>
     </tr>
     <tr>
-      <td>Test tag "has_data" with existent type that has no data \$day.soilMoist3.has_data</td>
-      <td>$emit_boolean($day.soilMoist3.has_data)</td>
+      <td>Test tag "has_data" with existent type that has no data \$day.UV.has_data</td>
+      <td>$emit_boolean($day.UV.has_data)</td>
     </tr>
     <tr>
       <td>Test tag "has_data" with existent type that has data \$day.outTemp.has_data</td>
       <td>$emit_boolean($day.outTemp.has_data)</td>
     </tr>
-      <tr>
+    <tr>
+      <td>Test tag "not_null" with existent type that has no data \$day.UV.not_null</td>
+      <td>$day.UV.not_null</td>
+    </tr>
+    <tr>
+      <td>Test tag "not_null" with existent type that has data \$day.outTemp.not_null</td>
+      <td>$day.outTemp.not_null</td>
+    </tr>
+    <tr>
       <td>Test for a bad observation type on a \$day tag: \$day.foobar.min</td>
       <td>$day.foobar.min</td>
     </tr>
@@ -541,11 +557,42 @@ FALSE#slurp
     </tr>
   </table>
 
+  <h1>Test for various versions of \$colorize</h1>
+  <table>
+    <tr>
+      <td align="right">Current temperature using \$colorize_1</td>
+      <td align="left" style="background-color:$colorize_1($current.outTemp.degree_C.raw)">$current.outTemp</td>
+    </tr>
+    <tr>
+      <td align="right">Current temperature using \$colorize_2</td>
+      <td align="left" style="background-color:$colorize_2($current.outTemp)">$current.outTemp</td>
+    </tr>
+    <tr>
+      <td align="right">Current temperature using \$colorize_3</td>
+      <td align="left" style="background-color:$colorize_3($current.outTemp)">$current.outTemp</td>
+    </tr>
+  </table>
+  <p>Tests at timestamp 1280692800, when the temperature is null:</p>
+  <table>
+    <tr>
+      <td align="right">Null temperature using \$colorize_1</td>
+      <td align="left" style="background-color:$colorize_1($current(timestamp=1280692800).outTemp.degree_C.raw)">$current(timestamp=1280692800).outTemp</td>
+    </tr>
+    <tr>
+      <td align="right">Null temperature using \$colorize_2</td>
+      <td align="left" style="background-color:$colorize_2($current(timestamp=1280692800).outTemp)">$current(timestamp=1280692800).outTemp</td>
+    </tr>
+    <tr>
+      <td align="right">Null temperature using \$colorize_3</td>
+      <td align="left" style="background-color:$colorize_3($current(timestamp=1280692800).outTemp)">$current(timestamp=1280692800).outTemp</td>
+    </tr>
+  </table>
+
   <hr/>
   <h1>Tests for tag \$Extras</h1>
   <table>
     <tr>
-      #if $Extras.has_key('radar_url') 
+      #if 'radar_url' in $Extras
       <td>Radar URL</td>
       <td>&quot;$Extras.radar_url&quot;</td>
       #else
@@ -740,21 +787,56 @@ FALSE#slurp
         <td align="right">\$year.rain.sum_le((0.1, 'inch', 'group_rain'))</td>
         <td align="left">$year.rain.sum_le((0.1, 'inch', 'group_rain'))</td>
       </tr>
+      <tr>
+        <td align="right">\$year.outTemp.avg_ge((41, 'degree_F', 'group_temperature'))</td>
+        <td align="left">$year.outTemp.avg_ge((41, 'degree_F', 'group_temperature'))</td>
+      </tr>
+      <tr>
+        <td align="right">\$year.outTemp.avg_le((32, 'degree_F', 'group_temperature'))</td>
+        <td align="left">$year.outTemp.avg_le((32, 'degree_F', 'group_temperature'))</td>
+      </tr>
   </table>
 
-  <h1>Day images</h1>
-  <p>
-  <img src="daytempdew.png" alt="temperatures" />
-  <img src="daytempchill.png" alt="heatchill" /> 
-  <img src="dayrain.png" alt="rain" />
-  <img src="daywind.png" alt="wind" />
-  <img src="daybarometer.png" alt="barometer"/>
-  <img src="daywinddir.png" alt="Hi Wind" />
-  <img src="dayinside.png"  alt="Inside" /> 
-  <img src="daywindvec.png" alt="Wind Vector" />
-  <img src="dayrx.png" alt="day rx percent"/>
-  </p>
-
+  <hr/>
+  <h1>Tests for \$gettext</h1>
+  <table>
+    <tr>
+      <td align="right">\$lang</td>
+      <td align="left">$lang</td>
+    </tr>
+    <tr>
+      <td align="right">\$page</td>
+      <td align="left">$page</td>
+    </tr>
+    <tr>
+      <td align="right">\$gettext("Foo")</td>
+      <td align="left">$gettext("Foo")</td>
+    </tr>
+    <tr>
+      <td align="right">\$gettext("Today")</td>
+      <td align="left">$gettext("Today")</td>
+    </tr>
+    <tr>
+      <td align="right">\$pgettext("test","Plots")</td>
+      <td align="left">$pgettext("Plots", "test")</td>
+    </tr>
+    <tr>
+      <td align="right">\$pgettext(\$page,"Plots")</td>
+      <td align="left">$pgettext($page,"Plots")</td>
+    </tr>
+    <tr>
+      <td align="right">\$pgettext(\$page,"Something")</td>
+      <td align="left">$pgettext($page,"Something")</td>
+    </tr>
+    <tr>
+      <td align="right">\$pgettext("Foo","Plots")</td>
+      <td align="left">$pgettext("Foo","Plots")</td>
+    </tr>
+    <tr>
+      <td align="right">\$pgettext("Foo","Bar")</td>
+      <td align="left">$pgettext("Foo","Bar")</td>
+    </tr>
+  </table>
   <hr/>
 
 </body>

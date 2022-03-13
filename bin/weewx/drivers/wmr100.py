@@ -198,7 +198,7 @@ class WMR100(weewx.drivers.AbstractDevice):
                 if _packet_type in WMR100._dispatch_dict:
                     # get the observations from the packet
                     _raw = WMR100._dispatch_dict[_packet_type](self, _packet)
-                    if _raw is not None:
+                    if _raw:
                         # map the packet labels to schema fields
                         _record = dict()
                         for k in self.sensor_map:
@@ -404,7 +404,11 @@ class WMR100(weewx.drivers.AbstractDevice):
         """The clock packet is not used by weewx.  However, the last time is
         saved in case getTime() is called."""
         tt = (2000 + packet[8], packet[7], packet[6], packet[5], packet[4], 0, 0, 0, -1)
-        self.last_time = time.mktime(tt)
+        try:
+            self.last_time = time.mktime(tt)
+        except OverflowError:
+            log.error("Bad clock packet: %s", packet)
+            log.error("**** ignored.")
         return None
     
     # Dictionary that maps a measurement code, to a function that can decode it

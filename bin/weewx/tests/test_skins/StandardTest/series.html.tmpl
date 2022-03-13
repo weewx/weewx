@@ -1,0 +1,164 @@
+#errorCatcher Echo
+## Copyright 2009-2021 Tom Keffer
+## Distributed under terms of GPLv3.  See LICENSE.txt for your rights.
+##
+## This template tests tags used for generating series
+##
+##
+## Specifying an encoding of UTF-8 is usually safe:
+#encoding UTF-8
+##
+<!DOCTYPE HTML>
+<html lang="en">
+  <head>
+      <meta charset="UTF-8">
+      <title>Test the ".series" tag</title>
+      <style>
+          p {
+              font-weight: bold;
+          }
+          table, th, td {
+              border: 1px solid black;
+              border-collapse: collapse;
+          }    </style>
+  </head>
+
+  <body>
+    <h2>Unaggregated series </h2>
+	<p>Unaggregated series in json: \$day.outTemp.series.round(5).json():</p>
+    <pre>$day.outTemp.series.round(5).json()</pre>
+
+	<p>Unaggregated series, in json with just start times: \$day.outTemp.series(time_series='start').round(5).json:</p>
+    <pre>$day.outTemp.series(time_series='start').round(5).json</pre>
+
+	<p>Unaggregated series, in json with start times in milliseconds: \$day.outTemp.series(time_series='start', time_unit='unix_epoch_ms').round(5).json:</p>
+    <pre>$day.outTemp.series(time_series='start', time_unit='unix_epoch_ms').round(5).json</pre>
+
+    <p>Unaggregated series, in json, in degrees C, rounded to 5 decimal places: \$day.outTemp.series.degree_C.round(5).json</p>
+    <pre>$day.outTemp.series.degree_C.round(5).json</pre>
+
+    <p>Unaggregated series, as a formatted string (<em>not JSON</em>) : \$day.outTemp.series:</p>
+    <pre>$day.outTemp.series</pre>
+
+    <p>Unaggregated series, start time only, as a formatted string (<em>not JSON</em>) : \$day.outTemp.series(time_series='start'):</p>
+    <pre>$day.outTemp.series(time_series='start')</pre>
+
+    <p>Unaggregated series, stop time only, as a formatted string (<em>not JSON</em>) : \$day.outTemp.series(time_series='stop'):</p>
+    <pre>$day.outTemp.series(time_series='stop')</pre>
+
+    <p>Unaggregated series, by column, as a formatted string (<em>not JSON</em>) \$day.outTemp.series.format(order_by='column'):</p>
+    <pre>$day.outTemp.series.format(order_by='column')</pre>
+
+    <p>Unaggregated series, by column, start times only, as a formatted string (<em>not JSON</em>) \$day.outTemp.series(time_series='start').format(order_by='column'):</p>
+    <pre>$day.outTemp.series(time_series='start').format(order_by='column')</pre>
+
+    <p>Unaggregated series, by column, stop times only, as a formatted string (<em>not JSON</em>) \$day.outTemp.series(time_series='stop').format(order_by='column'):</p>
+    <pre>$day.outTemp.series(time_series='stop').format(order_by='column')</pre>
+
+	<hr/>
+
+	<h2>Aggregated series</h2>
+	<p>Aggregated series: \$month.outTemp.series(aggregate_type='max', aggregate_interval=86400).round(5).json():</p>
+    <pre>$month.outTemp.series(aggregate_type='max', aggregate_interval=86400).round(5)json()</pre>
+
+	<p>Using shortcut 'day': \$month.outTemp.series(aggregate_type='max', aggregate_interval='day').round(5).json():</p>
+    <pre>$month.outTemp.series(aggregate_type='max', aggregate_interval='day').round(5).json()</pre>
+
+	<p>Order by column: \$month.outTemp.series(aggregate_type='max', aggregate_interval=86400).round(5).json(order_by="column"):</p>
+    <pre>$month.outTemp.series(aggregate_type='max', aggregate_interval=86400).round(5).json(order_by="column")</pre>
+
+    <p>Aggregated series, using \$jsonize():
+    \$jsonize(\$zip(\$min.start.unix_epoch_ms.raw, \$min.data.degree_C.round(2).raw, \$max.data.degree_C.round(2).raw))
+    #set $min = $month.outTemp.series(aggregate_type='min', aggregate_interval='day')
+    #set $max = $month.outTemp.series(aggregate_type='max', aggregate_interval='day')
+    <pre>
+    $jsonize($zip($min.start.unix_epoch_ms.raw, $min.data.degree_C.round(2).raw, $max.data.degree_C.round(2).raw))
+    </pre>
+
+
+    <hr/>
+
+    <h2>Aggregated series of wind vectors</h2>
+
+    <p>Aggregated wind seriex (<em>not JSON)</em>), complex notation
+        \$month.windvec.series(aggregate_type='max', aggregate_interval='day')</p>
+    <pre>$month.windvec.series(aggregate_type='max', aggregate_interval='day')</pre>
+
+    <p>Aggregated wind seriex (<em>not JSON)</em>), complex notation with formatting
+        \$month.windvec.series(aggregate_type='max', aggregate_interval='day').format("%.5f")</p>
+    <pre>$month.windvec.series(aggregate_type='max', aggregate_interval='day').format("%.5f")</pre>
+
+    <p>Aggregated wind seriex (<em>not JSON</em>), polar notation
+        \$month.windvec.series(aggregate_type='max', aggregate_interval='day').polar.format("%.5f")</p>
+    <pre>$month.windvec.series(aggregate_type='max', aggregate_interval='day').polar.format("%.5f")</pre>
+
+    <hr/>
+
+    <h2>Aggregated series of wind vectors with conversions</h2>
+
+    <p>Starting series: \$month.windvec.series(aggregate_type='max', aggregate_interval='day').json()</p>
+    <pre>
+    $month.windvec.series(aggregate_type='max', aggregate_interval='day').json()
+    </pre>
+
+    <p> X-component: \$month.windvec.series(aggregate_type='max', aggregate_interval='day').x.json()</p>
+    <pre>
+    $month.windvec.series(aggregate_type='max', aggregate_interval='day').x.json()
+    </pre>
+
+    <p> x-component, in knots: \$month.windvec.series(aggregate_type='max', aggregate_interval='day').x.knot.json()</p>
+    <pre>
+    $month.windvec.series(aggregate_type='max', aggregate_interval='day').x.knot.json()
+    </pre>
+
+    <p>Y-component: \$month.windvec.series(aggregate_type='max', aggregate_interval='day').y.json()</p>
+    <pre>
+    $month.windvec.series(aggregate_type='max', aggregate_interval='day').y.json()
+    </pre>
+
+    <p>magnitude: \$month.windvec.series(aggregate_type='max', aggregate_interval='day').magnitude.json()</p>
+    <pre>
+    $month.windvec.series(aggregate_type='max', aggregate_interval='day').magnitude.json()
+    </pre>
+
+    <p>direction: \$month.windvec.series(aggregate_type='max', aggregate_interval='day').direction.json()</p>
+    <pre>
+    $month.windvec.series(aggregate_type='max', aggregate_interval='day').direction.json()
+    </pre>
+
+    <p>polar: \$month.windvec.series(aggregate_type='max', aggregate_interval='day').polar.json()</p>
+    <pre>
+    $month.windvec.series(aggregate_type='max', aggregate_interval='day').polar.json()
+    </pre>
+
+    <p>polar in knots: \$month.windvec.series(aggregate_type='max', aggregate_interval='day').knot.polar.round(5).json()</p>
+    <pre>
+    $month.windvec.series(aggregate_type='max', aggregate_interval='day').knot.polar.round(5).json()
+    </pre>
+
+  <hr/>
+  <h2>Iterate over an aggregated series</h2>
+  <pre>
+    \#for (\$start, \$stop, \$data) in \$month.outTemp.series(aggregate_type='max', aggregate_interval='day')
+      ...
+    \#end for
+  </pre>
+
+    <table>
+      <tr>
+        <td>Start date</td>
+        <td>Stop date</td>
+        <td>Max temperature</td>
+      </tr>
+    #for ($start, $stop, $data) in $month.outTemp.series(aggregate_type='max', aggregate_interval='day')
+      <tr>
+        <td>$start.format("%Y-%m-%d")</td>
+        <td>$stop.format("%Y-%m-%d")</td>
+        <td>$data.format("%.2f")</td>
+      </tr>
+    #end for
+    </table>
+
+  </body>
+
+</html>

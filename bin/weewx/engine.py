@@ -336,8 +336,13 @@ class StdConvert(StdService):
         # Initialize my base class:
         super(StdConvert, self).__init__(engine, config_dict)
 
-        # Get the target unit nickname (something like 'US' or 'METRIC'):
-        target_unit_nickname = config_dict['StdConvert']['target_unit']
+        # Get the target unit nickname (something like 'US' or 'METRIC'). If there is no
+        # target, then do nothing
+        try:
+            target_unit_nickname = config_dict['StdConvert']['target_unit']
+        except KeyError:
+            # Missing target unit.
+            return
         # Get the target unit: weewx.US, weewx.METRIC, weewx.METRICWX
         self.target_unit = weewx.units.unit_constants[target_unit_nickname.upper()]
         # Bind self.converter to the appropriate standard converter
@@ -447,8 +452,18 @@ class StdQC(StdService):
     def __init__(self, engine, config_dict):
         super(StdQC, self).__init__(engine, config_dict)
 
-        # Get a QC object to apply the QC checks to our data
-        self.qc = weewx.qc.QC(config_dict)
+        # If the 'StdQC' or 'MinMax' sections do not exist in the configuration
+        # dictionary, then an exception will get thrown and nothing will be
+        # done.
+        try:
+            mm_dict = config_dict['StdQC']['MinMax']
+        except KeyError:
+            log.info("No QC information in config file.")
+            return
+        log_failure = to_bool(weeutil.config.search_up(config_dict['StdQC'],
+                                                       'log_failure', True))
+
+        self.qc = weewx.qc.QC(mm_dict, log_failure)
 
         self.bind(weewx.NEW_LOOP_PACKET, self.new_loop_packet)
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
@@ -487,6 +502,8 @@ class StdArchive(StdService):
         software_interval = to_int(archive_dict.get('archive_interval', 300))
         self.loop_hilo = to_bool(archive_dict.get('loop_hilo', True))
         self.record_augmentation = to_bool(archive_dict.get('record_augmentation', True))
+        self.log_success = to_bool(weeutil.config.search_up(archive_dict, 'log_success', True))
+        self.log_failure = to_bool(weeutil.config.search_up(archive_dict, 'log_failure', True))
 
         log.info("Archive will use data binding %s", self.data_binding)
         log.info("Record generation will be attempted in '%s'", self.record_generation)
@@ -655,7 +672,10 @@ class StdArchive(StdService):
             self.old_accumulator.augmentRecord(event.record)
 
         dbmanager = self.engine.db_binder.get_manager(self.data_binding)
-        dbmanager.addRecord(event.record, accumulator=self.old_accumulator)
+        dbmanager.addRecord(event.record,
+                            accumulator=self.old_accumulator,
+                            log_success=self.log_success,
+                            log_failure=self.log_failure)
 
     def _catchup(self, generator):
         """Pull any unarchived records off the console and archive them.
@@ -800,6 +820,14 @@ class StdReport(StdService):
         self.thread = None
         self.launch_time = None
         self.record = None
+
+        # check if pyephem is installed and make a suitable log entry
+        try:
+            import ephem
+            log.info("'pyephem' detected, extended almanac data is available")
+            del ephem
+        except ImportError:
+            log.info("'pyephem' not detected, extended almanac data is not available")
 
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
         self.bind(weewx.POST_LOOP, self.launch_report_thread)

@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2020 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2021 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -139,8 +139,8 @@ class ConfigTest(LineTest):
             self.assertRaises(IOError, weecfg.find_file,
                               None, file_name=filename + "foo", locations=['/usr/bin', dir_path])
 
-    def test_utilities(self):
-        global X_STR, Y_STR
+    def test_reorder_before(self):
+        global X_STR
 
         xio = StringIO(X_STR)
         x_dict = configobj.ConfigObj(xio, encoding='utf-8')
@@ -157,7 +157,10 @@ class ConfigTest(LineTest):
         d = 4
 """)
 
-        xio.seek(0)
+    def test_reorder_after(self):
+        global X_STR
+
+        xio = StringIO(X_STR)
         x_dict = configobj.ConfigObj(xio, encoding='utf-8')
         weecfg.reorder_sections(x_dict, 'section_c', 'section_b', after=True)
         x_dict_str = convert_to_str(x_dict)
@@ -171,6 +174,9 @@ class ConfigTest(LineTest):
 [section_d]
         d = 4
 """)
+
+    def test_conditional_merge(self):
+        global X_STR, Y_STR
 
         xio = StringIO(X_STR)
         yio = StringIO(Y_STR)
@@ -191,6 +197,9 @@ class ConfigTest(LineTest):
         c = 15
 """)
 
+    def test_remove_and_prune(self):
+        global X_STR, Y_STR
+
         xio = StringIO(X_STR)
         yio = StringIO(Y_STR)
         x_dict = configobj.ConfigObj(xio, encoding='utf-8')
@@ -204,6 +213,7 @@ class ConfigTest(LineTest):
         d = 4
 """)
 
+    def test_reorder_scalars(self):
         test_list = ['a', 'b', 'd', 'c']
         weecfg.reorder_scalars(test_list, 'c', 'd')
         self.assertEqual(test_list, ['a', 'b', 'c', 'd'])
@@ -232,7 +242,7 @@ class ConfigTest(LineTest):
                                                 'longitude': '180.0',
                                                 'register_this_station': 'true',
                                                 'station_url': 'weewx.com',
-                                                'units': 'us',
+                                                'unit_system': 'us',
                                                 })
 
                 # Test for a default input
@@ -240,11 +250,11 @@ class ConfigTest(LineTest):
                            side_effect=['Anytown', '', '', '', '', '']):
                     stn_info = weecfg.prompt_for_info()
                     self.assertEqual(stn_info, {'altitude': ['0', 'meter'],
-                                                'latitude': '90.000',
+                                                'latitude': '0.000',
                                                 'location': 'Anytown',
                                                 'longitude': '0.000',
                                                 'register_this_station': 'false',
-                                                'units': 'metricwx',
+                                                'unit_system': 'metricwx',
                                                 })
 
                 # Test for an out-of-bounds latitude with retry
@@ -257,7 +267,7 @@ class ConfigTest(LineTest):
                                                 'location': 'Anytown',
                                                 'longitude': '180.0',
                                                 'register_this_station': 'false',
-                                                'units': 'us'})
+                                                'unit_system': 'us'})
 
                 # Test for a bad length unit type with retry
                 with patch('weecfg.input',
@@ -269,7 +279,7 @@ class ConfigTest(LineTest):
                                                 'location': 'Anytown',
                                                 'longitude': '180.0',
                                                 'register_this_station': 'false',
-                                                'units': 'us'})
+                                                'unit_system': 'us'})
 
                 # Test for a bad display unit with retry
                 with patch('weecfg.input',
@@ -281,7 +291,7 @@ class ConfigTest(LineTest):
                                                 'location': 'Anytown',
                                                 'longitude': '180.0',
                                                 'register_this_station': 'false',
-                                                'units': 'us'})
+                                                'unit_system': 'us'})
             # Restore stdout:
             sys.stdout = save_stdout
 
@@ -419,6 +429,20 @@ class ConfigTest(LineTest):
 
         self._check_against_expected(config_dict, 'expected/weewx42_expected.conf')
 
+    def test_upgrade_v43(self):
+        """Test an upgrade of the stock v4.1 weewx.conf to V4.2"""
+
+        # Start with the Version 4.1 weewx.conf file:
+        config_dict = configobj.ConfigObj('weewx42.conf', encoding='utf-8')
+
+        # Upgrade the V4.2 configuration dictionary to V4.3:
+        weecfg.update_to_v43(config_dict)
+
+        # with open('expected/weewx43_expected.conf', 'wb') as fd:
+        #     config_dict.write(fd)
+
+        self._check_against_expected(config_dict, 'expected/weewx43_expected.conf')
+
     def test_merge(self):
         """Test an upgrade against a typical user's configuration file"""
 
@@ -431,10 +455,10 @@ class ConfigTest(LineTest):
         # First update, then merge:
         weecfg.update_and_merge(config_dict, template)
 
-        # with open('expected/weewx42_user_expected.conf', 'wb') as fd:
+        # with open('expected/weewx43_user_expected.conf', 'wb') as fd:
         #     config_dict.write(fd)
 
-        self._check_against_expected(config_dict, 'expected/weewx42_user_expected.conf')
+        self._check_against_expected(config_dict, 'expected/weewx43_user_expected.conf')
 
     def test_driver_info(self):
         """Test the discovery and listing of drivers."""
@@ -454,12 +478,12 @@ class ConfigTest(LineTest):
         # Use the current weewx.conf
         config_dict = configobj.ConfigObj(current_config_dict_path, encoding='utf-8')
 
-        stn_info = weecfg.get_station_info(config_dict)
+        stn_info = weecfg.get_station_info_from_config(config_dict)
 
         self.assertEqual(stn_info,
                          {'station_type': 'unspecified', 'altitude': ['700', 'foot'],
-                          'longitude': '0.00', 'units': 'us', 'location': 'My Little Town, Oregon',
-                          'latitude': '0.00', 'register_this_station': 'false'})
+                          'longitude': '0.00', 'unit_system': 'us', 'location': 'My Little Town, Oregon',
+                          'latitude': '0.00', 'register_this_station': 'false', 'lang': 'en'})
 
         # Modify the station info, to reflect a hardware choice
         stn_info['station_type'] = 'Vantage'

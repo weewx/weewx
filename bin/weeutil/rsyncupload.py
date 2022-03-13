@@ -2,17 +2,20 @@
 #    Copyright (c) 2012 Will Page <compenguy@gmail.com>
 #    Derivative of ftpupload.py, credit to Tom Keffer <tkeffer@gmail.com>
 #
+#    Refactored by tk 3-Jan-2021
+#
 #    See the file LICENSE.txt for your full rights.
 #
 """For uploading files to a remove server via Rsync"""
 
 from __future__ import absolute_import
 from __future__ import print_function
+
+import errno
 import logging
 import os
-import errno
-import sys
 import subprocess
+import sys
 import time
 
 log = logging.getLogger(__name__)
@@ -25,7 +28,8 @@ class RsyncUpload(object):
 
     def __init__(self, local_root, remote_root,
                  server, user=None, delete=False, port=None,
-                 ssh_options=None, compress=False, log_success=True,
+                 ssh_options=None, compress=False,
+                 log_success=True, log_failure=True,
                  timeout=None):
         """Initialize an instance of RsyncUpload.
         
@@ -47,6 +51,7 @@ class RsyncUpload(object):
         self.ssh_options = ssh_options
         self.compress = compress
         self.log_success = log_success
+        self.log_failure = log_failure
         self.timeout = timeout
 
     def run(self):
@@ -64,17 +69,17 @@ class RsyncUpload(object):
         else:
             rsynclocalspec = self.local_root + os.sep
 
-        if self.user is not None and len(self.user.strip()) > 0:
+        if self.user:
             rsyncremotespec = "%s@%s:%s" % (self.user, self.server, self.remote_root)
         else:
             rsyncremotespec = "%s:%s" % (self.server, self.remote_root)
 
-        if self.port is not None and len(self.port.strip()) > 0:
-            rsyncsshstring = "ssh -p %s" % (self.port,)
+        if self.port:
+            rsyncsshstring = "ssh -p %d" % self.port
         else:
             rsyncsshstring = "ssh"
 
-        if self.ssh_options is not None and len(self.ssh_options.strip()) > 0:
+        if self.ssh_options:
             rsyncsshstring = rsyncsshstring + " " + self.ssh_options
 
         cmd = ['rsync']
@@ -93,7 +98,8 @@ class RsyncUpload(object):
             cmd.extend(["--compress"])
         if self.timeout is not None:
             cmd.extend(["--timeout=%s" % self.timeout])
-        cmd.extend(["-e %s" % rsyncsshstring])
+        cmd.extend(["-e"])
+        cmd.extend([rsyncsshstring])
         cmd.extend([rsynclocalspec])
         cmd.extend([rsyncremotespec])
 
@@ -109,40 +115,32 @@ class RsyncUpload(object):
                           "this system. (errno %d, '%s')" % (e.errno, e.strerror))
             raise
 
-        # we have some output from rsync so generate an appropriate message
-        if stroutput.find('rsync error:') < 0:
-            # no rsync error message so parse rsync --stats results
-            rsyncinfo = {}
-            for line in iter(stroutput.splitlines()):
-                if line.find(':') >= 0:
-                    (n, v) = line.split(':', 1)
-                    rsyncinfo[n.strip()] = v.strip()
-            # get number of files and bytes transferred and produce an
-            # appropriate message
-            try:
-                if 'Number of regular files transferred' in rsyncinfo:
-                    N = rsyncinfo['Number of regular files transferred']
-                else:
-                    N = rsyncinfo['Number of files transferred']
-
-                Nbytes = rsyncinfo['Total transferred file size']
-                if N is not None and Nbytes is not None:
-                    rsync_message = "rsync'd %d files (%s) in %%0.2f seconds" % (int(N), Nbytes)
-                else:
-                    rsync_message = "rsync executed in %0.2f seconds"
-            except:
-                rsync_message = "rsync executed in %0.2f seconds"
-        else:
-            # suspect we have an rsync error so tidy stroutput
-            # and display a message
-            stroutput = stroutput.replace("\n", ". ")
-            stroutput = stroutput.replace("\r", "")
-            log.error("[%s] reported errors: %s" % (cmd, stroutput))
-            rsync_message = "rsync executed in %0.2f seconds"
-
         t2 = time.time()
-        if self.log_success:
-            log.info(rsync_message % (t2 - t1))
+
+        # we have some output from rsync so generate an appropriate message
+        if 'rsync error' not in stroutput:
+            # No rsync error message. Parse the status message for useful information.
+            if self.log_success:
+                # Create a dictionary of message and their values. kv_list is a list of
+                # (key, value) tuples.
+                kv_list = [line.split(':', 1) for line in stroutput.splitlines() if ':' in line]
+                # Now convert to dictionary, while stripping the keys and values
+                rsyncinfo = {k.strip(): v.strip() for k, v in kv_list}
+                # Get number of files and bytes transferred, and produce an appropriate message
+                N = rsyncinfo.get('Number of regular files transferred',
+                                  rsyncinfo.get('Number of files transferred'))
+                Nbytes = rsyncinfo.get('Total transferred file size')
+                if N is not None and Nbytes is not None:
+                    log.info("rsync'd %s files (%s) in %0.2f seconds", N.strip(),
+                             Nbytes.strip(), t2 - t1)
+                else:
+                    log.info("rsync executed in %0.2f seconds", t2 - t1)
+        else:
+            # rsync error message found. If requested, log it
+            if self.log_failure:
+                log.error("rsync reported errors. Original command: %s", cmd)
+                for line in stroutput.splitlines():
+                    log.error("**** %s", line)
 
 
 if __name__ == '__main__':

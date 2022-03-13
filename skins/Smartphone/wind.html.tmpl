@@ -1,7 +1,9 @@
+#encoding UTF-8
 <!DOCTYPE html>
+<html lang="$lang">
 <head>
-  <meta charset="utf-8" />
-  <title>Wind in $station.location</title>
+  <meta charset="UTF-8">
+  <title>$obs.label.wind $gettext("in") $station.location</title>
   <link rel="stylesheet" href="http://code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.css" />
   <script src="http://code.jquery.com/jquery-1.7.1.min.js"></script>
   <script type="text/javascript" src="http://code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.js"></script>
@@ -10,33 +12,33 @@
 <body>
   <div data-role="page" data-add-back-btn="true" data-theme="a">
     <div data-role="header">
-      <h1>Wind</h1>
+      <h1>$obs.label.wind</h1>
     </div>
     <div data-role="content">
-      <h4>24h</h4>
+      <h4>$gettext("24h wind")</h4>
       <img src="daywind.png"/>
       <img src="daywinddir.png"/>
       <p>
-	max: $day.windSpeed.max at $day.windSpeed.maxtime
-	max gust: $day.windGust.max at $day.windGust.maxtime
+	$gettext("max"): $day.windSpeed.max $gettext("at") $day.windSpeed.maxtime
+	$gettext("max gust"): $day.windGust.max $gettext("at") $day.windGust.maxtime
       </p>      
-      <h4>Last 7 days</h4>
+      <h4>$gettext("Last 7 days") $obs.label.wind</h4>
       <img src="weekwind.png" />
       <img src="weekwinddir.png" />
       <p>
-	max: $week.windSpeed.max at $week.windSpeed.maxtime
-	max gust: $week.windGust.max at $week.windGust.maxtime
+	$gettext("max"): $week.windSpeed.max $gettext("at") $week.windSpeed.maxtime
+	$gettext("max gust"): $week.windGust.max $gettext("at") $week.windGust.maxtime
       </p>
-      <h4>Last 30 days</h4>
+      <h4>$gettext("Last 30 days") $obs.label.wind</h4>
       <img src="monthwind.png" />
       <img src="monthwinddir.png" />
       <p>
-	max: $month.windSpeed.max at $month.windSpeed.maxtime
-	max gust: $month.windGust.max at $month.windGust.maxtime
+	$gettext("max"): $month.windSpeed.max $gettext("at") $month.windSpeed.maxtime
+	$gettext("max gust"): $month.windGust.max $gettext("at") $month.windGust.maxtime
       </p>
     </div>
     <div data-role="footer">
-      <h4>weewx v $station.version</h4>
+      <h4>WeeWX v$station.version</h4>
     </div>
   </div>
 </body>

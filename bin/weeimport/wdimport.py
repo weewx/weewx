@@ -260,7 +260,10 @@ class WDSource(weeimport.Source):
                 # temperature
                 temp_u = wd_config_dict['Units'].get('temperature')
                 if temp_u is not None:
-                    if temp_u in weewx.units.default_unit_format_dict:
+                    # temperature units vary between unit systems so we can verify a
+                    # valid temperature unit simply by checking for membership of
+                    # weewx.units.conversionDict keys
+                    if temp_u in weewx.units.conversionDict.keys():
                         self._header_map['temperature']['units'] = temp_u
                         self._header_map['dewpoint']['units'] = temp_u
                         self._header_map['heatindex']['units'] = temp_u

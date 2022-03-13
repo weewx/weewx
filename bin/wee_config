@@ -15,12 +15,12 @@ usage = """Usage: wee_config --help
        wee_config --version
        wee_config --list-drivers
        wee_config --reconfigure CONFIG_FILE|--config=CONFIG_FILE
-           [--driver=DRIVER]  [--units=(us|metric)]
+           [--driver=DRIVER]  [--unit-system=(us|metric|metricwx)]
            [--latitude=yy.y] [--longitude=xx.x] [--altitude=zz.z,(foot|meter)] 
            [--location="Home Sweet Home"] [--register=(y,n)]
            [--output=OUT_CONFIG] [--no-prompt] [--no-backup] [--verbosity=N]
        wee_config --install --dist-config=DIST_CONFIG --output=OUT_CONFIG
-           [--driver=DRIVER]  [--units=(us|metric)]
+           [--driver=DRIVER]  [--unit-system=(us|metric|metricwx)]
            [--latitude=yy.y] [--longitude=xx.x] [--altitude=zz.z,(foot|meter)] 
            [--location="Home Sweet Home"] [--register=(y,n)]
            [--no-prompt] [--no-backup] [--verbosity=N]
@@ -47,7 +47,7 @@ System actions (not normally done by users):
 
 Station parameters:
 
-  --driver      --units
+  --driver      --unit-system
   --latitude    --longitude
   --altitude    --location
   --register
@@ -91,8 +91,13 @@ def main():
     parser.add_option("--location",
                       help="""A text description of the station."""
                       """ For example, "Santa's workshop, North Pole" """)
-    parser.add_option("--units", choices=["us", "metric"], metavar="(metric|us)",
-                      help="Set display units to 'metric' or 'us'.")
+    parser.add_option("--unit-system", choices=["us", "metric", "metricwx"],
+                      metavar="(us|metric|metricwx)",
+                      help="Set display units to \n'us' (F, inHg, in, mph), "
+                           "'metric' (C, mbar, cm, km/h), or 'metricwx' (C, mbar, mm, m/s).")
+    parser.add_option("--units", choices=["us", "metric", "metricwx"],
+                      metavar="(us|metric|metricwx)",
+                      help="DEPRECATED. Use option --unit-system instead.")
     parser.add_option("--register", dest='register_this_station', choices=['y', 'n'],
                       metavar="(y/n)",
                       help="Register this station in the weewx registry?")

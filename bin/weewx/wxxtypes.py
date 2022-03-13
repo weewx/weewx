@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2020 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2021 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -8,9 +8,6 @@ from __future__ import absolute_import
 
 import logging
 import threading
-
-import configobj
-from six.moves import StringIO
 
 import weedb
 import weeutil.config
@@ -49,7 +46,7 @@ DEFAULTS_INI = """
     [[[rain]]]
       input = totalRain
 """
-defaults_dict = configobj.ConfigObj(StringIO(DEFAULTS_INI), encoding='utf-8')
+defaults_dict = weeutil.config.config_from_str(DEFAULTS_INI)
 
 first_time = True
 
@@ -82,7 +79,7 @@ class WXXTypes(weewx.xtypes.XType):
         self.maxSolarRad_algo = maxSolarRad_algo.lower()
         self.heat_index_algo = heat_index_algo.lower()
 
-    def get_scalar(self, obs_type, record, db_manager):
+    def get_scalar(self, obs_type, record, db_manager, **option_dict):
         """Invoke the proper method for the desired observation type."""
         try:
             # Form the method name, then call it with arguments
@@ -91,24 +88,20 @@ class WXXTypes(weewx.xtypes.XType):
             raise weewx.UnknownType(obs_type)
 
     def calc_windDir(self, key, data, db_manager):
-        # Return the current wind direction if windSpeed is non-zero, otherwise, None
-        if 'windSpeed' not in data:
-            raise weewx.CannotCalculate
-        if self.force_null and data['windSpeed'] == 0:
-            val = None
-        else:
-            val = data.get('windDir')
-        return ValueTuple(val, 'degree_compass', 'group_direction')
+        """ Set windDir to None if windSpeed is zero. Otherwise, raise weewx.NoCalculate. """
+        if 'windSpeed' not in data \
+                or not self.force_null\
+                or data['windSpeed']:
+            raise weewx.NoCalculate
+        return ValueTuple(None, 'degree_compass', 'group_direction')
 
     def calc_windGustDir(self, key, data, db_manager):
-        # Return the current gust direction if windGust is non-zero, otherwise, None
-        if 'windGust' not in data:
-            raise weewx.CannotCalculate
-        if self.force_null and data['windGust'] == 0:
-            val = None
-        else:
-            val = data.get('windGustDir')
-        return ValueTuple(val, 'degree_compass', 'group_direction')
+        """ Set windGustDir to None if windGust is zero. Otherwise, raise weewx.NoCalculate.If"""
+        if 'windGust' not in data \
+                or not self.force_null\
+                or data['windGust']:
+            raise weewx.NoCalculate
+        return ValueTuple(None, 'degree_compass', 'group_direction')
 
     def calc_maxSolarRad(self, key, data, db_manager):
         altitude_m = weewx.units.convert(self.altitude_vt, 'meter')[0]
@@ -235,9 +228,14 @@ class WXXTypes(weewx.xtypes.XType):
         if data['usUnits'] == weewx.US:
             val = weewx.wxformulas.windchillF(data['outTemp'], data['windSpeed'])
             u = 'degree_F'
-        else:
-            val = weewx.wxformulas.windchillC(data['outTemp'], data['windSpeed'])
+        elif data['usUnits'] == weewx.METRIC:
+            val = weewx.wxformulas.windchillMetric(data['outTemp'], data['windSpeed'])
             u = 'degree_C'
+        elif data['usUnits'] == weewx.METRICWX:
+            val = weewx.wxformulas.windchillMetricWX(data['outTemp'], data['windSpeed'])
+            u = 'degree_C'
+        else:
+            raise weewx.ViolatedPrecondition("Unknown unit system %s" % data['usUnits'])
         return weewx.units.convertStd((val, u, 'group_temperature'), data['usUnits'])
 
     def calc_heatindex(self, key, data, db_manager=None):
@@ -369,7 +367,7 @@ class PressureCooker(weewx.xtypes.XType):
 
         return self.temp_12h_vt
 
-    def get_scalar(self, key, record, dbmanager):
+    def get_scalar(self, key, record, dbmanager, **option_dict):
         if key == 'pressure':
             return self.pressure(record, dbmanager)
         elif key == 'altimeter':
@@ -498,7 +496,7 @@ class RainRater(weewx.xtypes.XType):
             self.rain_events = [x for x in self.rain_events
                                 if x[0] >= packet['dateTime'] - self.rain_period]
 
-    def get_scalar(self, key, record, db_manager):
+    def get_scalar(self, key, record, db_manager, **option_dict):
         """Calculate the rainRate"""
         if key != 'rainRate':
             raise weewx.UnknownType(key)
@@ -577,7 +575,7 @@ class Delta(weewx.xtypes.XType):
         #   {'rain' : ['totalRain', None]}
         self.totals = {k: [delta_config[k]['input'], None] for k in delta_config}
 
-    def get_scalar(self, key, record, db_manager):
+    def get_scalar(self, key, record, db_manager, **option_dict):
         # See if we know how to handle this type
         if key not in self.totals:
             raise weewx.UnknownType(key)
@@ -585,6 +583,8 @@ class Delta(weewx.xtypes.XType):
         # Get the key of the type to be used for the cumulative total. This is
         # something like 'totalRain':
         total_key = self.totals[key][0]
+        if total_key not in record:
+            raise weewx.CannotCalculate(key)
         # Calculate the delta
         delta = weewx.wxformulas.calculate_delta(record[total_key],
                                                  self.totals[key][1],
@@ -683,7 +683,7 @@ class StdWXXTypes(weewx.engine.StdService):
         # Add to the xtypes system
         weewx.xtypes.xtypes.append(self.wxxtypes)
 
-    def shut_down(self):
+    def shutDown(self):
         """Engine shutting down. """
         # Remove from the XTypes system:
         weewx.xtypes.xtypes.remove(self.wxxtypes)
@@ -715,7 +715,7 @@ class StdPressureCooker(weewx.engine.StdService):
         # Add pressure_cooker to the XTypes system
         weewx.xtypes.xtypes.append(self.pressure_cooker)
 
-    def shut_down(self):
+    def shutDown(self):
         """Engine shutting down. """
         weewx.xtypes.xtypes.remove(self.pressure_cooker)
 
@@ -746,7 +746,7 @@ class StdRainRater(weewx.engine.StdService):
 
         self.bind(weewx.NEW_LOOP_PACKET, self.new_loop_packet)
 
-    def shut_down(self):
+    def shutDown(self):
         """Engine shutting down. """
         # Remove from the XTypes system:
         weewx.xtypes.xtypes.remove(self.rain_rater)

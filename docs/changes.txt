@@ -1,7 +1,276 @@
-weewx change history
+WeeWX change history
 --------------------
 
-4.3.0 MM/DD/YYYY
+4.7.1 MM/DD/YYYY
+
+Fix problem that prevented wind from appearing in NOAA yearly summaries.
+
+Fix honoring global values for log_success and log_failure. Fix issue #757.
+
+wee_import CSV imports now allow import of text fields. Addresses issue #732.
+
+Explain in the Customizing Guide how to include arbitrary SQL expressions
+in a plot.
+
+Reorder font download order, for slightly faster downloads.
+Fix issue #760.
+
+
+4.7.0 03/01/2022
+Introduced new option "generate_once". If True, templates will be generated
+only on the first run of the reporting engine. Thanks to user Rich! PR #748.
+
+Added option wee_device --current for vantage.
+
+Fixed two typos in the Standard skin.
+
+Fixed spelling mistakes in the Norwegian translations.  Thanks to Aslak! PR#746
+
+Supply a sensible default context for group_deltatime when no context has been
+specified.
+
+If windGustDir is missing, extract a value from the accumulators.
+
+Fixed typo that shows itself if no [Labels]/[[Generic]] section is supplied.
+Fixes issue #752.
+
+Fixed calculation of field "bar_reduction" for Vantage type 2 LOOP packets.
+
+Fix problem that prevents windSpeed and windDir from being displayed in
+the RSS feed. Fixes issue #755.
+
+
+4.6.2 02/10/2022
+Removed diagnostic code that was inadverently left in the titlebar.inc file
+in Seasons skin.
+
+
+4.6.1 02/10/2022
+Make the show_rss and show_reports flags work properly.  Fixes issue #739.
+
+Added $to_list() utility for use in Cheetah templates.
+
+Fixed a few more untranslated fields in Seasons skin.
+
+Observation types that use the `sum` extractor are set to None if no LOOP
+packets contributed to the accumulator. Fixes issue #737.
+
+Added ppm as default group_fraction.  Added default label string for ppm.
+
+Added Norwegian translations. Thanks to user Aslak! PR #742.
+
+Fixed problem that caused wee_database --check-strings/--fix-strings to fail on
+TEXT fields. Fixes issue #738.
+
+
+4.6.0 02/04/2022
+Easy localization of all skins that come with WeeWX. Big thanks to user Karen,
+who drove the effort! PR #665.
+
+Allow options --date, --from, and --to to be used with wee_database --reweight.
+PR #659. Thanks to user edi-x!
+
+Added Cheetah helper functions $jsonize(), $rnd(), and $to_int().
+
+The tag $alltime, formerly available as an example, is now a part of WeeWX
+core.
+
+New SLE example $colorize(). New document on how to write SLEs.
+
+Added conversions for unix_epoch_ms and unix_epoch_ns. Calculations in
+celestial.inc now explicitly use unix_epoch.
+
+Added almanac attribute "visible" and "visible_change". For example,
+$almanac.sun.visible returns the amount of daylight,
+ $almanac.sun.visible_change the difference since yesterday.
+
+Fixed problem that could cause weather xtypes services not to shut down
+properly. PR #672. Thanks again to user edi-x!
+
+Added Cheetah tag $filename, the relative path of the generated file. Useful
+for setting canonical URLs. PR #671. Thanks again to user Karen!
+
+XType get_scalar() and get_series() calls can now take extra keyword arguments.
+PR #673.
+
+Fixed problem where a bad clock packet could crash the WMR100 driver.
+
+Davis documentation for LOOP2 10-minute wind gusts is wrong. The Vantage
+actually emits mph, not tenths of mph. Changed driver so it now decodes the
+field correctly. Fixes issue #686.
+
+Sending a HUP signal to weewxd no longer causes the configuration file to be
+reread.
+
+Logging is not done until after the configuration file has been read. This
+allows customized logging to start from the very beginning. Fixes issue #699.
+
+Simplified the logging of Cheetah exceptions to show only what's relevant.
+Fixes issue #700.
+
+Include a requirements.txt file, for installing using pip. Thanks to user
+Clément! PR #691.
+
+Fixed problem where ConfigObj interpolation would interfere with setting
+logging formats.
+
+Added option --batch-size to the Vantage version of wee_device. See PR #693.
+
+Slightly faster evaluation of the tag suffix 'has_data'.
+New aggregation type 'not_null'.
+
+A string in the database no longer raises an error. Fixes issue #695.
+
+Added plot option 'skip_if_empty'. If set to True, and there is no non-null
+data in the plot, then the plot will not be generated at all. If set to
+a time domain (such as 'year'), then it will do the check over that domain.
+See PR #702.
+
+Parameterized the Seasons skin, making it considerably smaller, while requiring
+less configuration. It now includes all types found in the wview-extended
+schema. See PR #702.
+
+New FTP option 'ftp_encoding' for oddball FTP servers that send their responses
+back in something other than UTF-8.
+
+Availability of the pyephem module and extended almanac data is now logged
+during startup.
+
+Added column for 'last contact' in the sensor status table in the Season skin
+to help diagnose missing/flaky sensors.
+
+Fix the weewx.debian and weewx-multi init scripts to work with non-root user.
+
+Added sample tmpfiles configuration to ensure run directory on modern systems
+when running weewx as non-root user.
+
+Fixed bug that prevented the ssh port from being specified when using rsync.
+Fixes issue #725.
+
+Improved alphanumeric sorting of loop packet/archive record fields displayed
+when WeeWX is run directly.
+
+Added sample weewxd init file for 'service' based init on freebsd.  Thanks to
+user ryan.
+
+Added i18n-report utility to help check skins for translated strings.
+
+
+4.5.1 04/02/2021
+Reverted the wview schema back to the V3 style.
+
+Fixed problem where setup.py would fail if the station description used UTF-8
+characters.
+
+Fixed problem where unit labels would not render correctly under Python 2.7 if
+they were set by a 3rd party extension. Fixes issue #662.
+
+Added TCP support to the WS1 driver. Thanks to user Mike Juniper! Fixes issue
+#664.
+
+
+4.5.0 04/02/2021
+
+The utility wee_database has new options --add-column, --rename-column, and
+--drop-columns for adding, renaming, and deleting columns in the database.
+
+New optional tag ".series()", for creating and formatting series in templates.
+See the document series_tags.md in the docs subdirectory. This is still
+experimental and subject to change! Addresses issue #341.
+
+New optional tag ".json()" for formatting results as JSON.
+
+New optional tag ".round()". Useful for rounding results of .raw and .json
+tags.
+
+Improved performance when calculating series using aggregation periods that are
+multiples of a day.
+
+Changed NOAA reports to use the 'normalized_ascii' encoding instead of 'utf8'
+(which did not display correctly for most browsers). Fixes issue #646.
+
+Plots longer than 2 years use a 6 month time increment.
+
+Uploads to PWSWeather and WOW now use HTTPS. Fixes issue #650.
+
+Fixed bug that prevented the Vantage driver from waiting before a wakeup retry.
+Thanks to user Les Niles!
+
+Changed the way of expressing the old "wview" schema to the new V4 way.
+Hopefully, this will lead to fewer support issues. Fixes issue #651.
+
+Fixed problem where iterating over a time period without an aggregation would
+wrongly include the record on the left.
+
+Fixed bug that caused the incorrect label to be applied to plots where the
+aggregation type changes the unit. Fixes issue #654.
+
+Plots now locate the x-coordinate in the middle of the aggregation interval for
+all aggregation types (not just min, max, avg). Revisits PR #232.
+
+Added new time units 'unix_epoch_ms' and 'unix_epoch_ns', which are unix epoch
+time in milliseconds and nanoseconds, respectively.
+
+The FTP uploader now calculates and saves a hash value for each uploaded file.
+If it does not change, the file is not uploaded, resulting in significant
+time savings. PR #655. Thanks to user Karen!
+
+Updated the version of six.py included with WeeWX to 1.15.0. Fixes issue #657.
+
+Option aggregate_interval can now be specified by using one of the "shortcuts",
+that is, 'hour', 'day', 'week', 'month', or 'year'.
+
+Options "log_success" and "log_failure" are now honored by the StdArchive and
+StdQC services. Fixes issues #727.
+
+
+4.4.0 01/30/2021
+
+StdWXCalculate can now do calculations for only LOOP packets, only archive
+records, or both. PR #630. Thanks to user g-eddy!
+
+Introduced aggregate types "avg_ge" and "avg_le". PR #631. Thanks to user
+edi-x!
+
+NOAA reports now use a 'utf8' encoding instead of 'strict_ascii'. This will
+only affect new installations. Fixes issue #644.
+
+Introduced new encoding type 'normalized_ascii', which replaces characters that
+have accented marks with analogous ascii characters. For example, ö gets
+replaced with o.
+
+Patching process is more forgiving about records with interval less than or
+equal to zero.
+
+Fixed problem where invalid mintime or maxtime was returned for days with no
+data. Fixes issue #635.
+
+Syntax errors in weewx.conf are now logged. PR #637. Thanks to user Rich Bell!
+
+Fixed problem where plots could fail if the data range was outside of a
+specified axes range. Fixes issue #638.
+
+Fixed problem that could cause reporting to fail under Python2.7 if the
+configuration dictionary contained a comment with a UTF-8 character. Fixes
+issue #639.
+
+Fixed problem that could cause program to crash if asking for deltas of a non-
+existent key.
+
+The version 4.3.0 patch to fix the incorrect calculation of sums in the daily
+summary tables itself contained a bug. This version includes a patch to fix the
+problem. It runs once at startup. Fixes issue #642.
+
+
+4.3.0 01/04/2020
+
+Version 4.2.0 had a bug, which caused the sums in the daily summary to be
+incorrectly calculated. This version includes a patch to fix the problem. It
+runs once at startup. Fixes issue #623.
+
+The WMR200 driver is no longer supported. An unsupported version can be found
+at https://github.com/weewx/weewx-wmr200. Support for LaCrosse WS23xx and
+Oregon WMR300 will continue.
 
 Service weewx.wxxtypes.StdDelta was inadvertently left out of the list of
 services to be run. Fortunately, it is not used. Yet. Added it back in.
@@ -14,12 +283,6 @@ changed to 'force_null', and it has been moved. See the Upgrading Guide.
 
 Documented the various [StdWXCalculate] options.
 
-
-4.2.1 MM/DD/YYYY
-
-Service weewx.wxxtypes.StdDelta was inadvertently left out of the list of
-services to be run. Fortunately, it is not used. Yet. Added it back in.
-
 Fixed corner case for windDir when using software record generation,
 ignore_zero_wind=True, and windSpeed=0 for entire record interval. Now emits
 last windDir value.
@@ -27,7 +290,22 @@ last windDir value.
 Fixed problem when looking up stars with more than one word in their name.
 Fixes issue #620.
 
-Fixed problem that caused daily summary weights to revert to V1.0 style weights.
+Fixed problem where wind gust direction is not available when using software
+record generation.
+
+Added --no-prompt action to wee_import allowing wee_import to be run
+unattended.
+
+Fixed problem that prevented option `observations` from being used in the
+simulator. Thanks to user Graham!
+
+Fixed problem where wind chill was calculated incorrectly for METRICWX
+databases. PR #627. Thanks to user edi-x!
+
+Allow wind vectors to be converted to unit of beaufort. Fixes issue #629.
+
+Option log_failure under [StdReport] is set to True by the upgrade process.
+See the Upgrading Guide.
 
 
 4.2.0 10/26/2020
@@ -74,8 +352,9 @@ Constantine and Jacques!
 
 Improved auto-scaling of plot axes.
 
-Fixed problem where aggregates of windvec and windgustvec returned the aggregate
-since start of day, not the start of the aggregation period. Fixes issue #590.
+Fixed problem where aggregates of windvec and windgustvec returned the
+aggregate since start of day, not the start of the aggregation period.
+Fixes issue #590.
 
 New unit "beaufort", included in "group_speed". Treating beaufort as a separate
 type has been deprecated. Fixes issue #591.
@@ -102,6 +381,9 @@ Fixed problem where old daily summaries may not have a version number.
 Fixed problem in WMR200 driver where missing UV reports as index 255.
 
 Added option 'force_direction' for working around a WU bug. Fixes issue #614.
+
+Fixed problem where null bytes in an import data file would cause wee_import to
+fail.
 
 
 4.1.1 06/01/2020
@@ -142,8 +424,8 @@ without syslog.
 Allow expressions to be used as a datatype when plotting.
 
 Added option 'reuse_ssl' to FTP. This activates a workaround for a bug in the
-Python ftp library that causes long-lived connections to get closed prematurely.
-Works only with Python 3.6 and greater.
+Python ftp library that causes long-lived connections to get closed
+prematurely. Works only with Python 3.6 and greater.
 
 The cc3000 driver will automatically reboot the hardware if it stops sending
 observations. PR #549.
@@ -183,8 +465,8 @@ as Python 2.7. Support for Python 2.5 and 2.6 has been dropped.
 New facility for creating new user-defined derived types. See the Wiki article
 https://github.com/weewx/weewx/wiki/WeeWX-V4-user-defined-types
 
-WeeWX now uses the Python 'logging' facility. This means log, formats, and other
-things can now be customized. Fixes issue #353.
+WeeWX now uses the Python 'logging' facility. This means log, formats, and
+other things can now be customized. Fixes issue #353.
 
 Strings appearing in the data stream no longer cause a TypeError if they can be
 converted to a number.
@@ -195,8 +477,8 @@ possible to include them in the database schemas.
 The utility wee_reports now loads services, allowing it to use user-supplied
 extensions. Fixes issue #95.
 
-New default schema ("wview_extended") that offers many new types. The old schema
-is still supported. Fixes issue #115.
+New default schema ("wview_extended") that offers many new types. The old
+schema is still supported. Fixes issue #115.
 
 Optional, more flexible, way of specifying schemas for the daily summaries. The
 old way is still supported.
@@ -222,8 +504,8 @@ Added new aggregation types 'first' (similar to 'last'), 'diff' (the difference
 between last and first value in the aggregation interval), and 'tderiv' (the
 difference divided by the time difference).
 
-Created new unit group 'group_energy2', defined as watt-seconds. Useful for high
-resolution energy monitors.
+Created new unit group 'group_energy2', defined as watt-seconds. Useful for
+high resolution energy monitors.
 
 An observation type known to the system, but not in a record, will now return a
 proper ValueTuple, rather than UnknownType.
@@ -240,7 +522,7 @@ Catch SSL certificate errors in uploaders. Retry after an hour. Fixes issue
 #413.
 
 Wunderfixer has been ported to the new WU API. This API requires an API key,
-which you can get from the WU. Put it in weewx.conf. Added option --upload-only.
+which you can get from WU. Put it in weewx.conf. Added option --upload-only.
 Thanks to user Leon Shaner! Fixes issues #414 and #445.
 
 Wee_import can now import Weather Display monthly log files.
@@ -268,8 +550,8 @@ Thanks to user Rich Bell!
 Fixed bug that caused windrun to be calculated wrongly under METRICWX unit
 system. Fixes issue #452.
 
-If a bad value of 'interval' is encountered in a record, the program will simply
-ignore it, rather than stopping. Address issue #375.
+If a bad value of 'interval' is encountered in a record, the program will
+simply ignore it, rather than stopping. Address issue #375.
 
 Change in how the archive timespan is calculated in the engine. This allows
 oddball archive intervals. Fixes issue #469.
@@ -303,8 +585,8 @@ consistent with "meter". The spelling "litre" is still accepted.
 Systemd type changed from "simple" to "forking". Thanks to user Jaap de Munck
 for figuring this one out!
 
-The configuration file is now an optional argument when running weewxd directly.
-This means most users will be able to use the simple command line 'sudo weewxd'.
+The configuration file is now an optional argument. This means most users will
+be able to use the simple command line 'sudo weewxd'.
 
 Use correct log path for netbsd and openbsd in logger setup.
 

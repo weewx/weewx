@@ -4,12 +4,15 @@
 #encoding UTF-8
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="$lang">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>$station.location</title>
     <link rel="icon" type="image/png" href="favicon.ico" />
     <link rel="stylesheet" type="text/css" href="seasons.css"/>
+    #if $station.station_url
+    <link rel="canonical" href="$station.station_url/$filename" />
+    #end if
     <script type="text/javascript" src="seasons.js"></script>
     <style>
 .tabular {
@@ -23,7 +26,7 @@
     #include "titlebar.inc"
     
     <div id="contents">
-      <p><a href="index.html">&#10096; Current Conditions</a></p>
+      <p><a href="index.html">&#10096; $gettext("Current Conditions")</a></p>
       <div id="report" class="tabular"></div>
     </div>
 

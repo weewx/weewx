@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2019 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2021 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -11,7 +11,7 @@ import six
 try:
     import MySQLdb
 except ImportError:
-    # OpenSUSE uses Python2-PyMySQL
+    # Some installs use 'pymysql' instead of 'MySQLdb'
     import pymysql as MySQLdb
     from pymysql import DatabaseError as MySQLDatabaseError
 else:
@@ -33,6 +33,7 @@ exception_map = {
     1049: weedb.NoDatabaseError,
     1050: weedb.TableExistsError,
     1054: weedb.NoColumnError,
+    1091: weedb.NoColumnError,
     1062: weedb.IntegrityError,
     1146: weedb.NoTableError,
     1927: weedb.CannotConnectError,
@@ -42,7 +43,8 @@ exception_map = {
     2006: weedb.DisconnectError,
     2013: weedb.DisconnectError,
     None: weedb.DatabaseError
-    }
+}
+
 
 def guard(fn):
     """Decorator function that converts MySQL exceptions into weedb exceptions."""
@@ -69,6 +71,7 @@ def connect(host='localhost', user='', password='', database_name='',
     return Connection(host=host, port=int(port), user=user, password=password,
                       database_name=database_name, engine=engine, autocommit=autocommit, **kwargs)
 
+
 def create(host='localhost', user='', password='', database_name='',
            driver='', port=3306, engine=DEFAULT_ENGINE, autocommit=True, **kwargs):
     """Create the specified database. If it already exists,
@@ -90,8 +93,9 @@ def create(host='localhost', user='', password='', database_name='',
         connect.close()
 
 
-def drop(host='localhost', user='', password='', database_name='', 
-         driver='', port=3306, engine=DEFAULT_ENGINE, autocommit=True, **kwargs):  # @UnusedVariable
+def drop(host='localhost', user='', password='', database_name='',
+         driver='', port=3306, engine=DEFAULT_ENGINE, autocommit=True,
+         **kwargs):  # @UnusedVariable
     """Drop (delete) the specified database."""
     # Open up a connection
     connect = Connection(host=host,
@@ -192,7 +196,7 @@ class Connection(weedb.Connection):
                 else:
                     coltype = str(row[1]).upper()
                 is_primary = True if row[3] == 'PRI' else False
-                can_be_null = False if row[2]=='' else to_bool(row[2])
+                can_be_null = False if row[2] == '' else to_bool(row[2])
                 yield (irow, colname, coltype, can_be_null, row[4], is_primary)
                 irow += 1
         finally:
@@ -268,6 +272,17 @@ class Cursor(object):
         # filter below
         return _massage(self.cursor.fetchone())
 
+    def drop_columns(self, table, column_names):
+        """Drop the set of 'column_names' from table 'table'.
+
+        table: The name of the table from which the column(s) are to be dropped.
+
+        column_names: A set (or list) of column names to be dropped. It is not an error to try to drop
+        a non-existent column.
+        """
+        for column_name in column_names:
+            self.execute("ALTER TABLE %s DROP COLUMN %s;" % (table, column_name))
+
     def close(self):
         try:
             self.cursor.close()
@@ -296,6 +311,7 @@ class Cursor(object):
     def __exit__(self, etyp, einst, etb):  # @UnusedVariable
         self.close()
 
+
 #
 # This is a utility function for converting a result set that might contain
 # longs or decimal.Decimals (which MySQLdb uses) to something containing just ints.
@@ -303,7 +319,8 @@ class Cursor(object):
 def _massage(seq):
     # Return the _massaged sequence if it exists, otherwise, return None
     if seq is not None:
-        return [int(i) if isinstance(i, six.integer_types) or isinstance(i, decimal.Decimal) else i for i in seq]
+        return [int(i) if isinstance(i, (six.integer_types, decimal.Decimal)) else i for i in seq]
+
 
 def set_engine(connect, engine):
     """Set the default MySQL storage engine."""

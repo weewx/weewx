@@ -8,10 +8,10 @@
 #if $almanac.hasExtras
   #set $sun_altitude = $almanac.sun.alt
   #if $sun_altitude < 0
-    #set $sun_None="<i>(Always down)</i>"
+    #set $sun_None='<i>%s</i>' % $gettext("Always down")
     #set $daylight_str = "00:00"
   #else
-    #set $sun_None="<i>(Always up)</i>"
+    #set $sun_None='<i>%s</i>' % $gettext("Always up")
     #set $daylight_str = "24:00"
   #end if
 
@@ -27,7 +27,7 @@
 
 <div id="sunmoon_widget" class="widget">
   <div class="widget_title">
-    <a href="celestial.html">Celestial</a>
+    <a href="celestial.html">$gettext("Celestial")</a>
     <a class="widget_control"
        onclick="toggle_widget('sunmoon')">&diams;</a>
   </div>
@@ -37,21 +37,21 @@
       <table class="celestial">
         <tr><th>&#9728;</th><td></td><td></td><th>&#9789;</th><td></td></tr>
         <tr>
-          <td class="label">Rise</td>
+          <td class="label">$gettext("Rise")</td>
           <td class="data">$almanac.sun.rise.format(None_string=$sun_None)</td>
           <td>&nbsp;</td>
-          <td class="label">Rise</td>
+          <td class="label">$gettext("Rise")</td>
           <td class="data">$almanac.moon.rise</td>
         </tr>
         <tr>
-          <td class="label">Set</td>
+          <td class="label">$gettext("Set")</td>
           <td class="data">$almanac.sun.set.format(None_string=$sun_None)</td>
           <td>&nbsp;</td>
-          <td class="label">Set</td>
+          <td class="label">$gettext("Set")</td>
           <td class="data">$almanac.moon.set</td>
         </tr>
         <tr>
-          <td class="label">Daylight</td>
+          <td class="label">$gettext("Daylight")</td>
           <td class="data">$daylight_str</td>
           <td>&nbsp;</td>
           <td class="label"></td>
@@ -63,15 +63,15 @@
         ## No extended almanac information available. Fall back to basic info.
       <table class="celestial">
         <tr>
-          <td class="label">Sunrise</td>
+          <td class="label">$gettext("Sunrise")</td>
           <td class="data">$almanac.sunrise</td>
         </tr>
         <tr>
-          <td class="label">Sunset</td>
+          <td class="label">$gettext("Sunset")</td>
           <td class="data">$almanac.sunset</td>
         </tr>
         <tr>
-          <td class="label">Moon Phase</td>
+          <td class="label">$gettext("Moon Phase")</td>
           <td class="data">$almanac.moon_phase<br/>
             $almanac.moon_fullness%</td>
         </tr>

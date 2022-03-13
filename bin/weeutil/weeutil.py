@@ -1,6 +1,6 @@
 # This Python file uses the following encoding: utf-8
 #
-#    Copyright (c) 2009-2018 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2021 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -12,9 +12,11 @@ from __future__ import absolute_import
 from __future__ import print_function
 
 import calendar
+import cmath
 import datetime
 import math
 import os
+import re
 import shutil
 import time
 
@@ -24,6 +26,7 @@ from six.moves import input
 
 # For backwards compatibility:
 from weeutil.config import accumulateLeaves, search_up
+
 
 def convertToFloat(seq):
     """Convert a sequence with strings to floats, honoring 'Nones'"""
@@ -39,6 +42,7 @@ def option_as_list(option):
         return None
     return [option] if not isinstance(option, list) else option
 
+to_list = option_as_list
 
 def list_as_string(option):
     """Returns the argument as a string.
@@ -188,8 +192,16 @@ def startOfInterval(time_ts, interval):
     return start_interval_ts
 
 
-def _ord_to_ts(_ord):
-    d = datetime.date.fromordinal(_ord)
+def _ord_to_ts(ord):
+    """Convert from ordinal date to unix epoch time.
+
+    Args:
+        ord (int): A proleptic Gregorian ordinal.
+
+    Returns:
+        int: Unix epoch time of the start of the corresponding day.
+    """
+    d = datetime.date.fromordinal(ord)
     t = int(time.mktime(d.timetuple()))
     return t
 
@@ -243,10 +255,27 @@ class TimeSpan(tuple):
     def __hash__(self):
         return hash(self.start) ^ hash(self.stop)
 
-    def __cmp__(self, other):
-        if self.start < other.start:
-            return - 1
-        return 0 if self.start == other.start else 1
+
+nominal_intervals = {
+    'hour': 3600,
+    'day': 86400,
+    'week': 7 * 86400,
+    'month': int(365.25 / 12 * 86400),
+    'year': int(365.25 * 86400),
+}
+
+
+def nominal_spans(label):
+    """Convert a (possible) string into an integer time."""
+    if label is None:
+        return None
+    try:
+        # Is the label either an integer, or something that can be converted into an integer?
+        interval = int(label)
+    except ValueError:
+        # Is it in our list of nominal spans? If not, fail hard.
+        interval = nominal_intervals[label.lower()]
+    return interval
 
 
 def intervalgen(start_ts, stop_ts, interval):
@@ -311,6 +340,9 @@ def intervalgen(start_ts, stop_ts, interval):
     dt1 = datetime.datetime.fromtimestamp(start_ts)
     stop_dt = datetime.datetime.fromtimestamp(stop_ts)
 
+    # If a string was passed in, convert to seconds using nominal time intervals.
+    interval = nominal_spans(interval)
+
     if interval == 365.25 / 12 * 24 * 3600:
         # Interval is a nominal month. This algorithm is 
         # necessary because not all months have the same length.
@@ -372,7 +404,8 @@ def archiveHoursAgoSpan(time_ts, hours_ago=0, grace=1):
                     time.mktime(stop_span_dt.timetuple()))
 
 
-def archiveSpanSpan(time_ts, time_delta=0, hour_delta=0, day_delta=0, week_delta=0, month_delta=0, year_delta=0):
+def archiveSpanSpan(time_ts, time_delta=0, hour_delta=0, day_delta=0, week_delta=0, month_delta=0,
+                    year_delta=0, boundary=None):
     """ Returns a TimeSpan for the last xxx seconds where xxx equals
         time_delta sec + hour_delta hours + day_delta days + week_delta weeks + month_delta months + year_delta years
 
@@ -421,7 +454,8 @@ def archiveSpanSpan(time_ts, time_delta=0, hour_delta=0, day_delta=0, week_delta
 
     # Use a datetime.timedelta so that it can take DST into account:
     time_dt = datetime.datetime.fromtimestamp(time_ts)
-    time_dt -= datetime.timedelta(weeks=week_delta, days=day_delta, hours=hour_delta, seconds=time_delta)
+    time_dt -= datetime.timedelta(weeks=week_delta, days=day_delta, hours=hour_delta,
+                                  seconds=time_delta)
 
     # Now add the deltas for months and years. Because these can be variable in length,
     # some special arithmetic is needed. Start by calculating the number of
@@ -434,10 +468,15 @@ def archiveSpanSpan(time_ts, time_delta=0, hour_delta=0, day_delta=0, week_delta
     start_dt = time_dt.replace(year=year, month=month)
 
     # Finally, convert to unix epoch time
-    start_ts = int(time.mktime(start_dt.timetuple()))
+    if boundary is None:
+        start_ts = int(time.mktime(start_dt.timetuple()))
+        if start_ts == time_ts:
+            start_ts -= 1
+    elif boundary.lower() == 'midnight':
+        start_ts = _ord_to_ts(start_dt.toordinal())
+    else:
+        raise ValueError("Unknown boundary %s" % boundary)
 
-    if start_ts == time_ts:
-        start_ts -= 1
     return TimeSpan(start_ts, time_ts)
 
 
@@ -685,6 +724,18 @@ def archiveRainYearSpan(time_ts, sory_mon, grace=1):
     _year = _day_date.year if _day_date.month >= sory_mon else _day_date.year - 1
     return TimeSpan(int(time.mktime((_year, sory_mon, 1, 0, 0, 0, 0, 0, -1))),
                     int(time.mktime((_year + 1, sory_mon, 1, 0, 0, 0, 0, 0, -1))))
+
+
+def timespan_by_name(label, time_ts, **kwargs):
+    """Calculate an an appropriate TimeSpan"""
+    return {
+        'hour': archiveHoursAgoSpan,
+        'day': archiveDaySpan,
+        'week': archiveWeekSpan,
+        'month': archiveMonthSpan,
+        'year': archiveYearSpan,
+        'rainyear': archiveRainYearSpan
+    }[label](time_ts, **kwargs)
 
 
 def genHourSpans(start_ts, stop_ts):
@@ -978,16 +1029,18 @@ def getDayNightTransitions(start_ts, end_ts, lat, lon):
     return first, values
 
 
-def secs_to_string(secs):
-    """Convert seconds to a string with days, hours, and minutes"""
-    str_list = []
-    for (label, interval) in (('day', 86400), ('hour', 3600), ('minute', 60)):
-        amt = int(secs / interval)
-        plural = u'' if amt == 1 else u's'
-        str_list.append(u"%d %s%s" % (amt, label, plural))
-        secs %= interval
-    ans = ', '.join(str_list)
-    return ans
+# The following has been replaced by the I18N-aware function delta_secs_to_string in units.py:
+
+# def secs_to_string(secs):
+#     """Convert seconds to a string with days, hours, and minutes"""
+#     str_list = []
+#     for (label, interval) in (('day', 86400), ('hour', 3600), ('minute', 60)):
+#         amt = int(secs / interval)
+#         plural = u'' if amt == 1 else u's'
+#         str_list.append(u"%d %s%s" % (amt, label, plural))
+#         secs %= interval
+#     ans = ', '.join(str_list)
+#     return ans
 
 
 def timestamp_to_string(ts, format_str="%Y-%m-%d %H:%M:%S %Z"):
@@ -1065,21 +1118,25 @@ def utc_to_local_tt(y, m, d, hrs_utc):
 
 def latlon_string(ll, hemi, which, format_list=None):
     """Decimal degrees into a string for degrees, and one for minutes.
-    ll: The decimal latitude or longitude
-    hemi: A tuple holding strings representing positive or negative values. E.g.: ('N', 'S')
-    which: 'lat' for latitude, 'long' for longitude
-    format_list: A list or tuple holding the format strings to be used. These are [whole degrees latitude, 
-                 whole degrees longitude, minutes]
-                 
+
+    Args:
+        ll (float): The decimal latitude or longitude
+        hemi (list or tuple): A tuple holding strings representing positive or negative values.
+            E.g.: ('N', 'S')
+        which (str): 'lat' for latitude, 'long' for longitude
+        format_list (list or tuple): A list or tuple holding the format strings to be used.
+            These are [whole degrees latitude, whole degrees longitude, minutes]
+
     Returns:
-    A 3-way tuple holding (latlon whole degrees, latlon minutes, hemisphere designator). 
-    Example: (022, 08.3, 'N') """
+        tuple: A 3-way tuple holding (latlon whole degrees, latlon minutes,
+            hemisphere designator). Example: ('022', '08.3', 'N')
+    """
     labs = abs(ll)
-    (frac, deg) = math.modf(labs)
+    frac, deg = math.modf(labs)
     minutes = frac * 60.0
-    if format_list is None:
-        format_list = ["%02d", "%03d", "%05.2f"]
-    return ((format_list[0] if which == 'lat' else format_list[1]) % (deg,), format_list[2] % (minutes,),
+    format_list = format_list or ["%02d", "%03d", "%05.2f"]
+    return ((format_list[0] if which == 'lat' else format_list[1]) % deg,
+            format_list[2] % minutes,
             hemi[0] if ll >= 0 else hemi[1])
 
 
@@ -1099,7 +1156,8 @@ def get_object(module_class):
     except AttributeError:
         # Can't find something. Give a more informative error message:
         raise AttributeError(
-            "Module '%s' has no attribute '%s' when searching for '%s'" % (mod.__name__, part, module_class))
+            "Module '%s' has no attribute '%s' when searching for '%s'"
+            % (mod.__name__, part, module_class))
     return mod
 
 
@@ -1171,6 +1229,46 @@ class GenWithPeek(object):
     __next__ = next
 
 
+class GenByBatch(object):
+    """Generator wrapper. Calls the wrapped generator in batches of a specified size."""
+
+    def __init__(self, generator, batch_size=0):
+        """Initialize an instance of GenWithConvert
+
+        generator: An iterator which will be wrapped.
+
+        batch_size: The number of items to fetch in a batch.
+        """
+        self.generator = generator
+        self.batch_size = batch_size
+        self.batch_buffer = []
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        # If there isn't anything in the buffer, fetch new items
+        if not self.batch_buffer:
+            # Fetch in batches of 'batch_size'.
+            count = 0
+            for item in self.generator:
+                self.batch_buffer.append(item)
+                count += 1
+                # If batch_size is zero, that means fetch everything in one big batch, so keep
+                # going. Otherwise, break when we have fetched 'batch_size" items.
+                if self.batch_size and count >= self.batch_size:
+                    break
+        # If there's still nothing in the buffer, we're done. Stop the iteration. Otherwise,
+        # return the first item in the buffer.
+        if self.batch_buffer:
+            return self.batch_buffer.pop(0)
+        else:
+            raise StopIteration
+
+    # For Python 2:
+    next = __next__
+
+
 def tobool(x):
     """Convert an object to boolean.
     
@@ -1196,9 +1294,9 @@ def tobool(x):
     """
 
     try:
-        if x.lower() in ['true', 'yes', 'y']:
+        if x.lower() in ('true', 'yes', 'y'):
             return True
-        elif x.lower() in ['false', 'no', 'n']:
+        elif x.lower() in ('false', 'no', 'n'):
             return False
     except AttributeError:
         pass
@@ -1268,6 +1366,66 @@ def to_complex(magnitude, direction):
     return value
 
 
+def to_text(x):
+    """Ensure the results are in unicode, while honoring 'None'."""
+    return six.ensure_text(x) if x is not None else None
+
+
+def dirN(c):
+    """Given a complex number, return its phase as a compass heading"""
+    if c is None:
+        value = None
+    else:
+        value = (450 - math.degrees(cmath.phase(c))) % 360.0
+    return value
+
+
+class Polar(object):
+    """Polar notation, except the direction is a compass heading."""
+
+    def __init__(self, mag, dir):
+        self.mag = mag
+        self.dir = dir
+
+    @classmethod
+    def from_complex(cls, c):
+        return cls(abs(c), dirN(c))
+
+    def __str__(self):
+        return "(%s, %s)" % (self.mag, self.dir)
+
+    def __eq__(self, other):
+        return self.mag == other.mag and self.dir == other.dir
+
+
+def rounder(x, ndigits):
+    """Round a number, or sequence of numbers, to a specified number of decimal digits
+
+    Args:
+        x (None, float, complex, list): The number or sequence of numbers to be rounded. If the
+            argument is None, then None will be returned.
+        ndigits (int): The number of decimal digits to retain.
+
+    Returns:
+        None, float, complex, list: Returns the number, or sequence of numbers, with the requested
+            number of decimal digits. If 'None', no rounding is done, and the function returns
+            the original value.
+    """
+    if ndigits is None:
+        return x
+    elif x is None:
+        return None
+    elif isinstance(x, complex):
+        return complex(round(x.real, ndigits), round(x.imag, ndigits))
+    elif isinstance(x, Polar):
+        return Polar(round(x.mag, ndigits), round(x.dir, ndigits))
+    elif isinstance(x, float):
+        return round(x, ndigits) if ndigits else int(x)
+    elif is_iterable(x):
+        return [rounder(v, ndigits) for v in x]
+    return x
+
+
 def min_with_none(x_seq):
     """Find the minimum in a (possibly empty) sequence, ignoring Nones"""
     xmin = None
@@ -1309,13 +1467,16 @@ def move_with_timestamp(filepath):
     shutil.move(filepath, newpath)
     return newpath
 
+
 try:
     # Python 3
     from collections import ChainMap
 
+
     class ListOfDicts(ChainMap):
         def extend(self, m):
             self.maps.append(m)
+
         def prepend(self, m):
             self.maps.insert(0, m)
 
@@ -1384,6 +1545,19 @@ except ImportError:
         def prepend(self, m):
             self.maps.insert(0, m)
 
+        def copy(self):
+            return self.__class__(self.maps[0].copy(), *self.maps[1:])
+
+        __copy__ = copy
+
+        def keys(self):
+            """Return an iterator of all keys in the maps."""
+            return iter(i for s in self.maps for i in s)
+
+        def values(self):
+            """Return an iterator of all values in the maps."""
+            return iter(i for s in self.maps for i in s.values())
+
 
 class KeyDict(dict):
     """A dictionary that returns the key for an unsuccessful lookup."""
@@ -1392,9 +1566,53 @@ class KeyDict(dict):
         return key
 
 
-def to_sorted_string(rec):
-    import locale
-    return ", ".join(["%s: %s" % (k, rec.get(k)) for k in sorted(rec, key=locale.strxfrm)])
+def atoi(text):
+    return int(text) if text.isdigit() else text
+
+
+def natural_keys(text):
+    """Natural key sort.
+
+    Allows use of key=natural_keys to sort a list in human order, eg:
+        alist.sort(key=natural_keys)
+
+    http://nedbatchelder.com/blog/200712/human_sorting.html
+    """
+
+    return [atoi(c) for c in re.split(natural_keys.compiled_re, text.lower())]
+
+
+natural_keys.compiled_re = re.compile(r'(\d+)')
+
+
+def natural_sort_keys(source_dict):
+    """Return a naturally sorted list of keys for a dict."""
+
+    # create a list of keys in the dict
+    keys_list = list(source_dict.keys())
+    # naturally sort the list of keys such that, for example, xxxxx16 appears
+    # after xxxxx1
+    keys_list.sort(key=natural_keys)
+    # return the sorted list
+    return keys_list
+
+
+def to_sorted_string(rec, simple_sort=False):
+    """Return a string representation of a dict sorted by key.
+
+    Default action is to perform a 'natural' sort by key, ie 'xxx1' appears
+    before 'xxx16'. If called with simple_sort=True a simple alphanumeric sort
+    is performed instead which will result in 'xxx16' appearing before 'xxx1'.
+    """
+
+    if simple_sort:
+        import locale
+        return ", ".join(["%s: %s" % (k, rec.get(k)) for k in sorted(rec, key=locale.strxfrm)])
+    else:
+        # first obtain a list of key:value pairs sorted naturally by key
+        sorted_dict = ["'%s': '%s'" % (k, rec[k]) for k in natural_sort_keys(rec)]
+        # return as a string of comma separated key:value pairs in braces
+        return ", ".join(sorted_dict)
 
 
 def y_or_n(msg, noprompt=False):
@@ -1440,6 +1658,11 @@ def deep_copy_path(path, dest_dir):
         shutil.copy(path, d)
         ncopy += 1
     return ncopy
+
+
+def is_iterable(x):
+    """Test if something is iterable, but not a string"""
+    return hasattr(x, '__iter__') and not isinstance(x, (bytes, six.string_types))
 
 
 if __name__ == '__main__':

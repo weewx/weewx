@@ -84,10 +84,6 @@ insert_debconf_variables() {
             db_get weewx/wmr100_model
             sed -i "/\[WMR100\]/,/\[.*\]/ s%[# ]*model[ ]*=.*%    model = $RET%" $cfgfile
         fi
-        if [ "$RET" = "WMR200" ]; then
-            db_get weewx/wmr200_model
-            sed -i "/\[WMR200\]/,/\[.*\]/ s%[# ]*model[ ]*=.*%    model = $RET%" $cfgfile
-        fi
         if [ "$RET" = "WMR300" ]; then
             db_get weewx/wmr300_model
             sed -i "/\[WMR300\]/,/\[.*\]/ s%[# ]*model[ ]*=.*%    model = $RET%" $cfgfile
@@ -138,8 +134,6 @@ install_weewxconf() {
         driver=weewx.drivers.vantage
     elif [ "$RET" = "WMR100" ]; then
         driver=weewx.drivers.wmr100
-    elif [ "$RET" = "WMR200" ]; then
-        driver=weewx.drivers.wmr200
     elif [ "$RET" = "WMR300" ]; then
         driver=weewx.drivers.wmr300
     elif [ "$RET" = "WMR9x8" ]; then
@@ -152,13 +146,25 @@ install_weewxconf() {
         driver=weewx.drivers.ws28xx
     fi
 
+    # default to US unit system
     units=us
+    # get the system's unit system from debconf
     db_get weewx/units
-    if [ "$RET" = "Metric" ]; then
+    # sanitize the input.  for backward compatibility, we recognize the older
+    # keywords 'US' and 'Metric', which might still be in the system's debconf
+    # otherwise, ensure that debconf contains one of 'us', 'metric', or
+    # 'metricwx'
+    if [ "$RET" = "US" ]; then
+        units=us
+    elif [ "$RET" = "Metric" ]; then
         units=metric
+    elif [ "$RET" = "metric" ]; then
+        units=metric
+    elif [ "$RET" = "metricwx" ]; then
+        units=metricwx
     fi
 
-    $cfgapp --install --dist-config=$cfgfile --output=$cfgfile --driver=$driver --units=$units --no-prompt --no-backup
+    $cfgapp --install --dist-config=$cfgfile --output=$cfgfile --driver=$driver --unit-system=$units --no-prompt --no-backup
 
     insert_debconf_variables
 }

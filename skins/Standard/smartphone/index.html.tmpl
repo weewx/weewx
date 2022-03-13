@@ -2,7 +2,7 @@
 <!DOCTYPE html>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-  <title>$station.location Current Weather Conditions</title>
+  <title>$station.location $gettext("Current Weather Conditions")</title>
   <link rel="stylesheet" href="https://code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.css" />
   <link rel="apple-touch-icon" href="icons/icon_iphone_x1.png" />
   <link rel="apple-touch-icon" sizes="72x72" href="icons/icon_ipad_x2.png" />
@@ -21,21 +21,21 @@
     <div data-role="content">
 
       <ul data-role="listview" data-inset="true" data-divider-theme="c">
-	<li data-role="list-divider">Time: $current.dateTime</li>
-        <li><a href="temp_outside.html">Temp: $current.outTemp [$day.outTemp.min, $day.outTemp.max]</a></li>
-        <li><a href="rain.html">Rain: $current.rainRate ($day.rain.sum)</a></li>
-	<li><a href="barometer.html">Barometer: $current.barometer</a></li>
-	<li><a href="wind.html">Wind: $current.windSpeed from $current.windDir</a></li>
+	<li data-role="list-divider">$gettext("Time"): $current.dateTime</li>
+        <li><a href="temp_outside.html">$obs.label.outTemp: $current.outTemp [$day.outTemp.min, $day.outTemp.max]</a></li>
+        <li><a href="rain.html">$obs.label.rainRate: $current.rainRate ($day.rain.sum)</a></li>
+	<li><a href="barometer.html">$obs.label.barometer: $current.barometer</a></li>
+	<li><a href="wind.html">$obs.label.windSpeed: $current.windSpeed $gettext("from") $current.windDir</a></li>
       </ul>
 
       <ul data-role="listview" data-inset="true" data-divider-theme="b">
-        <li><a href="radar.html">Radar</a></li>
-        <li><a href="../index.html" rel="external">Big page</a></li>
+        <li><a href="radar.html">$gettext("Radar")</a></li>
+        <li><a href="../index.html" rel="external">$gettext("Big Page")</a></li>
       </ul>
 
     </div>
     <div data-role="footer">
-      <h4>weewx v$station.version</h4>
+      <h4>WeeWX v$station.version</h4>
     </div>
   </div> 
 </body>

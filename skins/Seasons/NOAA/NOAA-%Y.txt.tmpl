@@ -53,14 +53,16 @@ ELEV: $station.altitude    LAT: $station.latitude[0]-$station.latitude[1] $stati
  YR  MO   MAX    MIN    MEAN  DAYS    DAYS      HI  DAY     LOW  DAY $ShowInt($Hot) $ShowInt($Cold) $ShowInt($Cold) $ShowInt($VeryCold)
 ------------------------------------------------------------------------------------------------
 #for $month in $year.months
-#if $month.outTemp.count.raw
+#if $month.outTemp.has_data
 $month.dateTime.format($YM) $month.outTemp.meanmax.format($Temp,$NONE,add_label=False) $month.outTemp.meanmin.format($Temp,$NONE,add_label=False) $month.outTemp.avg.format($Temp,$NONE,add_label=False) $month.heatdeg.sum.format($Temp,$NONE,add_label=False) $month.cooldeg.sum.format($Temp,$NONE,add_label=False)  $month.outTemp.max.format($Temp,$NONE,add_label=False) $month.outTemp.maxtime.format($D,$NODAY)  $month.outTemp.min.format($Temp,$NONE,add_label=False) $month.outTemp.mintime.format($D,$NODAY) $month.outTemp.max_ge($Hot).format($Count,$NONE,add_label=False) $month.outTemp.max_le($Cold).format($Count,$NONE,add_label=False) $month.outTemp.min_le($Cold).format($Count,$NONE,add_label=False) $month.outTemp.min_le($VeryCold).format($Count,$NONE,add_label=False)
 #else
 $month.dateTime.format($YM)
 #end if
 #end for
+#if $year.outTemp.has_data
 ------------------------------------------------------------------------------------------------
         $year.outTemp.meanmax.format($Temp,$NONE,add_label=False) $year.outTemp.meanmin.format($Temp,$NONE,add_label=False) $year.outTemp.avg.format($Temp,$NONE,add_label=False) $year.heatdeg.sum.format($Temp,$NONE,add_label=False) $year.cooldeg.sum.format($Temp,$NONE,add_label=False)  $year.outTemp.max.format($Temp,$NONE,add_label=False) $year.outTemp.maxtime.format($M,$NODAY)  $year.outTemp.min.format($Temp,$NONE,add_label=False) $year.outTemp.mintime.format($M,$NODAY) $year.outTemp.max_ge($Hot).format($Count,$NONE,add_label=False) $year.outTemp.max_le($Cold).format($Count,$NONE,add_label=False) $year.outTemp.min_le($Cold).format($Count,$NONE,add_label=False) $year.outTemp.min_le($VeryCold).format($Count,$NONE,add_label=False)
+#end if
 
 
                   PRECIPITATION ($unit.label.rain.strip())
@@ -70,14 +72,16 @@ $month.dateTime.format($YM)
  YR  MO  TOTAL    DAY  DATE $ShowFloat(Trace) $ShowFloat($SomeRain) $ShowFloat($Soak)
 ------------------------------------------------
 #for $month in $year.months
-#if $month.rain.count.raw
+#if $month.rain.has_data
 $month.dateTime.format($YM) $month.rain.sum.format($Rain,$NONE,add_label=False) $month.rain.maxsum.format($Rain,$NONE,add_label=False)  $month.rain.maxsumtime.format($D,$NODAY) $month.rain.sum_ge($Trace).format($Count,$NONE,add_label=False) $month.rain.sum_ge($SomeRain).format($Count,$NONE,add_label=False) $month.rain.sum_ge($Soak).format($Count,$NONE,add_label=False)
 #else
 $month.dateTime.format($YM)
 #end if
 #end for
+#if $year.rain.has_data
 ------------------------------------------------
         $year.rain.sum.format($Rain,$NONE,add_label=False) $year.rain.maxsum.format($Rain,$NONE,add_label=False)  $year.rain.maxsumtime.format($M,$NODAY) $year.rain.sum_ge($Trace).format($Count,$NONE,add_label=False) $year.rain.sum_ge($SomeRain).format($Count,$NONE,add_label=False) $year.rain.sum_ge($Soak).format($Count,$NONE,add_label=False)
+#end if
 
 
            WIND SPEED ($unit.label.windSpeed.strip())
@@ -86,11 +90,13 @@ $month.dateTime.format($YM)
  YR  MO    AVG     HI   DATE    DIR
 -----------------------------------
 #for $month in $year.months
-#if $month.wind.count.raw
+#if $month.wind.has_data
 $month.dateTime.format($YM) $month.wind.avg.format($Wind,$NONE,add_label=False) $month.wind.max.format($Wind,$NONE,add_label=False)   $month.wind.maxtime.format($D,$NODAY) $month.wind.vecdir.format($Dir,$NONE,add_label=False)
 #else
 $month.dateTime.format($YM)
 #end if
 #end for
+#if $year.wind.has_data
 -----------------------------------
         $year.wind.avg.format($Wind,$NONE,add_label=False) $year.wind.max.format($Wind,$NONE,add_label=False)   $year.wind.maxtime.format($M,$NODAY) $year.wind.vecdir.format($Dir,$NONE,add_label=False)
+#end if

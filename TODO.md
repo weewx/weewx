@@ -1,9 +1,6 @@
 # To do
 
-Should Ultimeter driver actually emit `rain24` and `dayRain`? See
-this email thread: https://groups.google.com/forum/#!topic/weewx-user/FM9QANjo1cc
+## Nice to do
+Parameterize PIL fonts on the basis of `lang`.
 
-# For Version 4.1
-Implement a `$gettext()` extension.
-
-Be able to add arbitrary lines to graphics.
+Allow downloading and memoizing fonts, so we don't have to ship every font out there.

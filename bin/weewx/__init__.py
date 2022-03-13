@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2020 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2021 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -7,7 +7,7 @@
 from __future__ import absolute_import
 import time
 
-__version__="4.3.0a1"
+__version__="4.7.0"
 
 # Holds the program launch time in unix epoch seconds:
 # Useful for calculating 'uptime.'
@@ -82,6 +82,10 @@ class UnknownAggregation(ValueError):
 
 class CannotCalculate(ValueError):
     """Exception raised when a type cannot be calculated."""
+
+class NoCalculate(Exception):
+    """Exception raised when a type does not need to be calculated."""
+
 
 # =============================================================================
 #                       Possible event types.

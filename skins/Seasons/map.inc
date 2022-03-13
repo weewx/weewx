@@ -4,7 +4,7 @@
 #errorCatcher Echo
 #encoding UTF-8
 
-#if $Extras.has_key('google_map_apikey')
+#if 'google_map_apikey' in $Extras
 <div id='map_widget' class="widget">
   <div class="widget_title">
     Location

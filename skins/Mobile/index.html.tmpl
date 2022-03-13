@@ -8,11 +8,14 @@
 ##
 ## vince@skahan.net - 1/16/2010
 ##
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
-         "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+#errorCatcher Echo
+#encoding UTF-8
+##
+<!DOCTYPE html>
+<html lang="$lang">
   <head>
-    <title> $station.location Weather Conditions</title>
+    ## Specifying an encoding of UTF-8 is usually safe:
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=320; initial-scale=1.0; maximum-scale=1.0;"/>
     <script type="application/x-javascript">
 if (navigator.userAgent.indexOf('iPhone') != -1) {
@@ -32,43 +35,43 @@ function hideURLbar() {
 <div>
   <table class="readings"> 
     <tr>            
-      <td><a href="daytempdew.png">Temp / Dewpoint:</a></td><td class="data"> $current.outTemp / $current.dewpoint </td>
+      <td><a href="daytempdew.png">$obs.label.outTemp / $obs.label.dewpoint:</a></td><td class="data"> $current.outTemp / $current.dewpoint </td>
     </tr>
     <tr class="alt">
-      <td>High Temp:</td><td class="data"> $day.outTemp.max at $day.outTemp.maxtime </td>
+      <td>$gettext("High Temp"):</td><td class="data"> $day.outTemp.max $gettext("at") $day.outTemp.maxtime </td>
     </tr>
     <tr>            
-      <td>Low Temp:</td><td class="data"> $day.outTemp.min at $day.outTemp.mintime </td>
+      <td>$gettext("Low Temp"):</td><td class="data"> $day.outTemp.min $gettext("at") $day.outTemp.mintime </td>
     </tr>
     <tr class="alt">
-      <td><a href="daytempfeel.png">Heat Index / Wind Chill:</a></td><td class="data"> $current.heatindex / $current.windchill </td>
+      <td><a href="daytempfeel.png">$obs.label.heatindex / $obs.label.windchill:</a></td><td class="data"> $current.heatindex / $current.windchill </td>
     </tr>
     <tr>
-      <td>Humidity:</td><td class="data"> $current.outHumidity </td>
+      <td>$obs.label.outHumidity:</td><td class="data"> $current.outHumidity </td>
     </tr>
     <tr class="alt">
-      <td><a href="dayrain.png">Rainfall:</a></td><td class="data"> $day.rain.sum </td>
+      <td><a href="dayrain.png">$obs.label.rain:</a></td><td class="data"> $day.rain.sum </td>
     </tr>
     <tr>
-      <td>High Rain Rate:</td><td class="data"> $day.rainRate.max at $day.rainRate.maxtime </td>
+      <td>$gettext("High Rain Rate"):</td><td class="data"> $day.rainRate.max $gettext("at") $day.rainRate.maxtime </td>
     </tr>
     <tr class="alt">
-      <td><a href="daywind.png">Wind Speed:</a></td><td class="data"> $current.windSpeed </td>
+      <td><a href="daywind.png">$obs.label.windSpeed:</a></td><td class="data"> $current.windSpeed </td>
     </tr>
     <tr>            
-      <td>High Wind Speed:</td><td class="data"> $day.wind.max at $day.wind.maxtime </td>
+      <td>$gettext("High Wind"):</td><td class="data"> $day.wind.max $gettext("at") $day.wind.maxtime </td>
     </tr>
   </table>
 </div>
 
 
-#if $Extras.has_key('radar_img')
+#if 'radar_img' in $Extras
 <div class="radar">
-  #if $Extras.has_key('radar_url')
+  #if 'radar_url' in $Extras
   <a  href="$Extras.radar_url">
   #end if
     <img src="$Extras.radar_img" alt="Radar" />
-  #if $Extras.has_key('radar_url')
+  #if 'radar_url' in $Extras
   </a>
   #end if
 </div>

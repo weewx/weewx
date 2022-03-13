@@ -1,8 +1,8 @@
 basic - a very basic WeeWX skin
 Copyright 2014 Matthew Wall
 
-This example illustrates how to implement a skin and package it so that it
-can be installed by the extension installer.
+This example illustrates how to implement a skin and package it so that it can be installed by the
+extension installer. It also illustrates how to internationalize a skin.
 
 
 Installation instructions
@@ -31,6 +31,8 @@ cp -rp skins/basic /home/weewx/skins
     [[basic]]
         skin = basic
         HTML_ROOT = public_html/basic
+        lang = en
+        unit_system = us
 
 3) Restart WeeWX
 

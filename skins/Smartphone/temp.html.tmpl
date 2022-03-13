@@ -1,8 +1,9 @@
 #encoding UTF-8
 <!DOCTYPE html>
+<html lang="$lang">
 <head>
-  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-  <title>Outside temperature in $station.location</title>
+  <meta charset="UTF-8">
+  <title>$obs.label.outTemp $gettext("in") $station.location</title>
   <link rel="stylesheet" href="https://code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.css" />
   <script src="https://code.jquery.com/jquery-1.7.1.min.js"></script>
   <script type="text/javascript" src="https://code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.js"></script>
@@ -11,30 +12,30 @@
 <body>
   <div data-role="page" data-add-back-btn="true" data-theme="a">
     <div data-role="header">
-      <h1>Outside temperature</h1>
+      <h1>$obs.label.outTemp</h1>
     </div>
     <div data-role="content">
-      <h4>24h temperature</h4>
+      <h4>$gettext("24h outside temperature")</h4>
       <img src="daytempdew.png"/>
       <p>
-	min: $day.outTemp.min at $day.outTemp.mintime<br/>
-	max: $day.outTemp.max at $day.outTemp.maxtime
+	$gettext("min"): $day.outTemp.min $gettext("at") $day.outTemp.mintime<br/>
+	$gettext("max"): $day.outTemp.max $gettext("at") $day.outTemp.maxtime
       </p>
-      <h4>7-day temperature</h4>
+      <h4>$gettext("Last 7 days") $obs.label.outTemp</h4>
       <img src="weektempdew.png"/>
       <p>
-	min: $week.outTemp.min at $week.outTemp.mintime<br/>
-	max: $week.outTemp.max at $week.outTemp.maxtime
+	$gettext("min"): $week.outTemp.min $gettext("at") $week.outTemp.mintime<br/>
+	$gettext("max"): $week.outTemp.max $gettext("at") $week.outTemp.maxtime
       </p>
-      <h4>30-day temperature</h4>
+      <h4>$gettext("Last 30 days") $obs.label.outTemp</h4>
       <img src="monthtempdew.png"/>
       <p>
-	min: $month.outTemp.min at $month.outTemp.mintime<br/>
-	max: $month.outTemp.max at $month.outTemp.maxtime
+	$gettext("min"): $month.outTemp.min $gettext("at") $month.outTemp.mintime<br/>
+	$gettext("max"): $month.outTemp.max $gettext("at") $month.outTemp.maxtime
       </p>
     </div>
     <div data-role="footer">
-      <h4>weewx v$station.version</h4>
+      <h4>WeeWX v$station.version</h4>
     </div>
   </div>
 </body>

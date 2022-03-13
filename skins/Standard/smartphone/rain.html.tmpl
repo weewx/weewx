@@ -3,7 +3,7 @@
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <meta charset="utf-8" />
-  <title>Rain in $station.location</title>
+  <title>$obs.label.rain $gettext("in") $station.location</title>
   <link rel="stylesheet" href="https://code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.css" />
   <script src="https://code.jquery.com/jquery-1.7.1.min.js"></script>
   <script type="text/javascript" src="https://code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.js"></script>
@@ -12,23 +12,23 @@
 <body>
   <div data-role="page" data-add-back-btn="true" data-theme="a">
     <div data-role="header">
-      <h1>Rain</h1>
+      <h1>$obs.label.rain</h1>
    </div>
    <div data-role="content">
-     <h4>24h rain</h4>
+     <h4>$gettext("24h") $obs.label.rain</h4>
      <img src="../dayrain.png"/>
      <ul data-role="listview" data-inset="true" data-divider-theme="b">
        <li data-role="list-divider">Today's data</li>
-       <li>Total: $day.rain.sum</li>
-       <li>Min rate: $day.rainRate.min at $day.rainRate.mintime</li>
-       <li>Max rate: $day.rainRate.max at $day.rainRate.maxtime</li>
+       <li>$gettext("Today's Rain"): $day.rain.sum</li>
+       <li>$gettext("Min rate"): $day.rainRate.min $gettext("at") $day.rainRate.mintime</li>
+       <li>$gettext("Max rate"): $day.rainRate.max $gettext("at") $day.rainRate.maxtime</li>
      </ul>
 
-     <h4>Rain last 30 days</h4>
+     <h4>$obs.label.rain $gettext("last 30 days")</h4>
      <img src="../monthrain.png" />
     </div>
     <div data-role="footer">
-      <h4>weewx v $station.version</h4>
+      <h4>WeeWX v$station.version</h4>
     </div>
   </div>
 </body>

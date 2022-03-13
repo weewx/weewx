@@ -4073,8 +4073,8 @@ class CCommunicationService(object):
         log.debug('startRFThread: spawning RF thread')
         self.running = True
         self.child = threading.Thread(target=self.doRF)
-        self.child.setName('RFComm')
-        self.child.setDaemon(True)
+        self.child.name = 'RFComm'
+        self.child.daemon = True
         self.child.start()
 
     def stopRFThread(self):

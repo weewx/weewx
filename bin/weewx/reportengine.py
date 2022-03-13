@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2020 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2022 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -18,8 +18,8 @@ import time
 import traceback
 
 # 3rd party imports
-from six.moves import zip
 import configobj
+from six.moves import zip
 
 # WeeWX imports:
 import weeutil.config
@@ -27,7 +27,8 @@ import weeutil.logger
 import weeutil.weeutil
 import weewx.defaults
 import weewx.manager
-from weeutil.weeutil import to_bool
+import weewx.units
+from weeutil.weeutil import to_bool, to_int
 
 log = logging.getLogger(__name__)
 
@@ -138,7 +139,7 @@ class StdReportEngine(threading.Thread):
 
             # Fetch and build the skin_dict:
             try:
-                skin_dict = self._build_skin_dict(report)
+                skin_dict = _build_skin_dict(self.config_dict, report)
             except SyntaxError as e:
                 log.error("Syntax error: %s", e)
                 log.error("   ****       Report ignored")
@@ -210,55 +211,158 @@ class StdReportEngine(threading.Thread):
             else:
                 log.debug("No generators specified for report '%s'", report)
 
-    def _build_skin_dict(self, report):
-        """Find and build the skin_dict for the given report"""
 
-        # Start with the defaults in the defaults module. Because we will be modifying it, we need
-        # to make a deep copy.
-        skin_dict = weeutil.config.deep_copy(weewx.defaults.defaults)
+def _build_skin_dict(config_dict, report):
+    """Find and build the skin_dict for the given report"""
 
-        # Add the report name:
-        skin_dict['REPORT_NAME'] = report
+    #######################################################################
+    # Start with the defaults in the defaults module. Because we will be modifying it, we need
+    # to make a deep copy.
+    skin_dict = weeutil.config.deep_copy(weewx.defaults.defaults)
 
-        # Now add the options in the report's skin.conf file. Start by figuring where it is located.
-        skin_config_path = os.path.join(
-            self.config_dict['WEEWX_ROOT'],
-            self.config_dict['StdReport']['SKIN_ROOT'],
-            self.config_dict['StdReport'][report].get('skin', ''),
-            'skin.conf')
+    # Turn off interpolation for the copy. It will interfere with interpretation of delta
+    # time fields
+    skin_dict.interpolation = False
+    # Add the report name:
+    skin_dict['REPORT_NAME'] = report
 
-        # Now retrieve the configuration dictionary for the skin. Wrap it in a try block in case we fail.  It is ok if
-        # there is no file - everything for a skin might be defined in the weewx configuration.
-        try:
-            merge_dict = configobj.ConfigObj(skin_config_path, file_error=True, encoding='utf-8')
-            log.debug("Found configuration file %s for report '%s'", skin_config_path, report)
-            # Merge the skin config file in:
-            weeutil.config.merge_config(skin_dict, merge_dict)
-        except IOError as e:
-            log.debug("Cannot read skin configuration file %s for report '%s': %s",
-                      skin_config_path, report, e)
-        except SyntaxError as e:
-            log.error("Failed to read skin configuration file %s for report '%s': %s",
-                      skin_config_path, report, e)
-            raise
+    #######################################################################
+    # Add in the global values for log_success and log_failure:
+    if 'log_success' in config_dict:
+        skin_dict['log_success'] = to_bool(config_dict['log_success'])
+    if 'log_failure' in config_dict:
+        skin_dict['log_failure'] = to_bool(config_dict['log_failure'])
 
-        # Now add on the [StdReport][[Defaults]] section, if present:
-        if 'Defaults' in self.config_dict['StdReport']:
-            # Because we will be modifying the results, make a deep copy of the [[Defaults]]
-            # section.
-            merge_dict = weeutil.config.deep_copy(self.config_dict)['StdReport']['Defaults']
-            weeutil.config.merge_config(skin_dict, merge_dict)
+    #######################################################################
+    # Now add the options in the report's skin.conf file.
+    # Start by figuring out where it is located.
+    skin_config_path = os.path.join(
+        config_dict['WEEWX_ROOT'],
+        config_dict['StdReport']['SKIN_ROOT'],
+        config_dict['StdReport'][report].get('skin', ''),
+        'skin.conf')
 
-        # Inject any scalar overrides. This is for backwards compatibility. These options should now go
-        # under [StdReport][[Defaults]].
-        for scalar in self.config_dict['StdReport'].scalars:
-            skin_dict[scalar] = self.config_dict['StdReport'][scalar]
+    # Retrieve the configuration dictionary for the skin. Wrap it in a try block in case we
+    # fail.  It is ok if there is no file - everything for a skin might be defined in the weewx
+    # configuration.
+    try:
+        merge_dict = configobj.ConfigObj(skin_config_path,
+                                         encoding='utf-8',
+                                         interpolation=False,
+                                         file_error=True)
+    except IOError as e:
+        log.debug("Cannot read skin configuration file %s for report '%s': %s",
+                  skin_config_path, report, e)
+    except SyntaxError as e:
+        log.error("Failed to read skin configuration file %s for report '%s': %s",
+                  skin_config_path, report, e)
+        raise
+    else:
+        log.debug("Found configuration file %s for report '%s'", skin_config_path, report)
+        # If a language is specified, honor it.
+        if 'lang' in merge_dict:
+            merge_lang(merge_dict['lang'], config_dict, report, skin_dict)
+        # If the file has a unit_system specified, honor it.
+        if 'unit_system' in merge_dict:
+            merge_unit_system(merge_dict['unit_system'], skin_dict)
+        # Merge the rest of the config file in:
+        weeutil.config.merge_config(skin_dict, merge_dict)
 
-        # Finally, inject any overrides for this specific report. Because this is the last merge, it will have the
-        # final say.
-        weeutil.config.merge_config(skin_dict, self.config_dict['StdReport'][report])
+    #######################################################################
+    # Merge in the [[Defaults]] section
+    if 'Defaults' in config_dict['StdReport']:
+        # Because we will be modifying the results, make a deep copy of the section.
+        merge_dict = weeutil.config.deep_copy(config_dict)['StdReport']['Defaults']
+        # If a language is specified, honor it
+        if 'lang' in merge_dict:
+            merge_lang(merge_dict['lang'], config_dict, report, skin_dict)
+        # If a unit_system is specified, honor it
+        if 'unit_system' in merge_dict:
+            merge_unit_system(merge_dict['unit_system'], skin_dict)
+        weeutil.config.merge_config(skin_dict, merge_dict)
 
-        return skin_dict
+    # Any scalar overrides have lower-precedence than report-specific options, so do them now.
+    for scalar in config_dict['StdReport'].scalars:
+        skin_dict[scalar] = config_dict['StdReport'][scalar]
+
+    # Finally the report-specific section.
+    if report in config_dict['StdReport']:
+        # Because we will be modifying the results, make a deep copy of the section.
+        merge_dict = weeutil.config.deep_copy(config_dict)['StdReport'][report]
+        # If a language is specified, honor it
+        if 'lang' in merge_dict:
+            merge_lang(merge_dict['lang'], config_dict, report, skin_dict)
+        # If a unit_system is specified, honor it
+        if 'unit_system' in merge_dict:
+            merge_unit_system(merge_dict['unit_system'], skin_dict)
+        weeutil.config.merge_config(skin_dict, merge_dict)
+
+    return skin_dict
+
+
+def merge_unit_system(report_units_base, skin_dict):
+    """
+    Given a unit system, merge its unit groups into a configuration dictionary
+    Args:
+        report_units_base (str): A unit base (such as 'us', or 'metricwx')
+        skin_dict (dict): A configuration dictionary
+
+    Returns:
+        None
+    """
+    report_units_base = report_units_base.upper()
+    # Get the chosen unit system out of units.py, then merge it into skin_dict.
+    units_dict = weewx.units.std_groups[
+        weewx.units.unit_constants[report_units_base]]
+    skin_dict['Units']['Groups'].update(units_dict)
+
+
+def get_lang_dict(lang_spec, config_dict, report):
+    """Given a language specification, return its corresponding locale dictionary. """
+
+    # The language's corresponding locale file will be found in subdirectory 'lang', with
+    # a suffix '.conf'. Find the path to it:.
+    lang_config_path = os.path.join(
+        config_dict['WEEWX_ROOT'],
+        config_dict['StdReport']['SKIN_ROOT'],
+        config_dict['StdReport'][report].get('skin', ''),
+        'lang',
+        lang_spec+'.conf')
+
+    # Retrieve the language dictionary for the skin and requested language. Wrap it in a
+    # try block in case we fail.  It is ok if there is no file - everything for a skin
+    # might be defined in the weewx configuration.
+    try:
+        lang_dict = configobj.ConfigObj(lang_config_path,
+                                        encoding='utf-8',
+                                        interpolation=False,
+                                        file_error=True)
+    except IOError as e:
+        log.debug("Cannot read localization file %s for report '%s': %s",
+                  lang_config_path, report, e)
+        log.debug("**** Using defaults instead.")
+        lang_dict = configobj.ConfigObj({},
+                                        encoding='utf-8',
+                                        interpolation=False)
+    except SyntaxError as e:
+        log.error("Syntax error while reading localization file %s for report '%s': %s",
+                  lang_config_path, report, e)
+        raise
+
+    if 'Texts' not in lang_dict:
+        lang_dict['Texts'] = {}
+
+    return lang_dict
+
+
+def merge_lang(lang_spec, config_dict, report, skin_dict):
+
+    lang_dict = get_lang_dict(lang_spec, config_dict, report)
+    # There may or may not be a unit system specified. If so, honor it.
+    if 'unit_system' in lang_dict:
+        merge_unit_system(lang_dict['unit_system'], skin_dict)
+    weeutil.config.merge_config(skin_dict, lang_dict)
+    return skin_dict
 
 
 # =============================================================================
@@ -319,7 +423,8 @@ class FtpGenerator(ReportGenerator):
                 secure=to_bool(self.skin_dict.get('secure_ftp', False)),
                 debug=weewx.debug,
                 secure_data=to_bool(self.skin_dict.get('secure_data', True)),
-                reuse_ssl=to_bool(self.skin_dict.get('reuse_ssl', False))
+                reuse_ssl=to_bool(self.skin_dict.get('reuse_ssl', False)),
+                encoding=self.skin_dict.get('ftp_encoding', 'utf-8')
             )
         except KeyError:
             log.debug("ftpgenerator: FTP upload not requested. Skipped.")
@@ -344,7 +449,7 @@ class FtpGenerator(ReportGenerator):
 
 
 # =============================================================================
-#                    Class RsynchGenerator
+#                    Class RsyncGenerator
 # =============================================================================
 
 class RsyncGenerator(ReportGenerator):
@@ -354,6 +459,9 @@ class RsyncGenerator(ReportGenerator):
 
     def run(self):
         import weeutil.rsyncupload
+        log_success = to_bool(weeutil.config.search_up(self.skin_dict, 'log_success', True))
+        log_failure = to_bool(weeutil.config.search_up(self.skin_dict, 'log_failure', True))
+
         # We don't try to collect performance statistics about rsync, because
         # rsync will report them for us.  Check the debug log messages.
         try:
@@ -364,11 +472,13 @@ class RsyncGenerator(ReportGenerator):
                 remote_root=self.skin_dict['path'],
                 server=self.skin_dict['server'],
                 user=self.skin_dict.get('user'),
-                port=self.skin_dict.get('port'),
+                port=to_int(self.skin_dict.get('port')),
                 ssh_options=self.skin_dict.get('ssh_options'),
                 compress=to_bool(self.skin_dict.get('compress', False)),
                 delete=to_bool(self.skin_dict.get('delete', False)),
-                log_success=to_bool(weeutil.config.search_up(self.skin_dict, 'log_success', True)))
+                log_success=log_success,
+                log_failure=log_failure
+            )
         except KeyError:
             log.debug("rsyncgenerator: Rsync upload not requested. Skipped.")
             return

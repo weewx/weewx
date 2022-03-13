@@ -159,7 +159,7 @@ to the function.
 - An exception of type `weewx.CannotCalculate` if the type and aggregation are known to the 
 function, but all the information necessary to perform the aggregation is not there.
 
-See the extension [weewx-xstats](https://github.com/tkeffer/weewx-xstats) for an example of how to
+See the extension [weewx-xaggs](https://github.com/tkeffer/weewx-xaggs) for an example of how to
 add a new aggregate type.
 
 ### Registering your subclass
@@ -207,6 +207,7 @@ comprehensive examples used internally by WeeWX.
 from weewx.engine import StdService
 import weewx.xtypes
 
+# This is the actual XTypes extension:
 class OtherXType(weewx.xtypes.XType):
     def __init__(self, info1=1, info2=2):
         self.info1 = info1
@@ -216,6 +217,7 @@ class OtherXType(weewx.xtypes.XType):
         ...
         return value
 
+# This is a WeeWX service, whose only job is to register and unregister the extension:
 class MyService(StdService):
     def __init__(self, engine, config_dict):
         super(MyService, self).__init__(engine, config_dict)
@@ -224,7 +226,7 @@ class MyService(StdService):
         info1 = config_dict['OtherXType']['info1']
         info2 = config_dict['OtherXtype']['info2']
 
-        # Pass the options on to the OtherXType class
+        # Instantiate an instance of the class OtherXType, using the options:
         self.xt = OtherXType(info1, info2)
 
         # Register the class
@@ -241,7 +243,8 @@ class MyService(StdService):
 
 In this example, we are going to write an extension to calculate the 
 [vapor pressure of water](https://en.wikipedia.org/wiki/Vapour_pressure_of_water). The observation
-type will be called `vapor_p`, and we will offer two algorithms for calculating it.
+type will be called `vapor_p`, and we will offer two algorithms for calculating it. This example is included in WeeWX V4.3 and later in
+the `examples` subdirectory.
 
 ### The extension
 Here's what the XTypes extension looks like:
@@ -474,7 +477,7 @@ this is not an issue.
 ## Other examples
 It's worth taking a look in file `weewx/wxxtypes.py` for examples of XTypes used by WeeWX itself.
 
-See the project [`weewx-xstats`](https://github.com/tkeffer/weewx-xstats) for examples of adding
+See the project [`weewx-xaggs`](https://github.com/tkeffer/weewx-xaggs) for examples of adding
 new aggregation types, such as the historical highs and lows for a date.
 
 The repository [weepwr](https://github.com/tkeffer/weepwr) contains a more complex example. This is

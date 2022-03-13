@@ -1,8 +1,9 @@
-recursive-include docs *
-recursive-include util *
-recursive-include skins *
-recursive-include examples *
 include LICENSE.txt
 include README
 include weewx.conf
-exclude **/junk*
+recursive-include docs *
+recursive-include examples *
+recursive-include skins *
+recursive-include util *
+global-exclude junk*
+global-exclude . *~

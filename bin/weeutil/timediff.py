@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2019 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2019-2021 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -38,10 +38,13 @@ class TimeDerivative(object):
                 if record['dateTime'] < self.old_timestamp:
                     raise weewx.ViolatedPrecondition("Records presented out of order (%s vs %s)"
                                                      % (record['dateTime'], self.old_timestamp))
-                # Calculate the time derivative only if the old record is not too old.
-                if record['dateTime'] - self.old_timestamp <= self.stale_age:
-                    # It's OK.
-                    derivative = (record[self.obs_type] - self.old_value) / (record['dateTime'] - self.old_timestamp)
+                # Calculate the time derivative only if there is a delta in time,
+                # and the old record is not too old.
+                if record['dateTime'] != self.old_timestamp \
+                        and (record['dateTime'] - self.old_timestamp) <= self.stale_age:
+                    # All OK.
+                    derivative = (record[self.obs_type] - self.old_value) \
+                                 / (record['dateTime'] - self.old_timestamp)
             # Save the current values
             self.old_timestamp = record['dateTime']
             self.old_value = record[self.obs_type]

@@ -2,7 +2,7 @@
 <!DOCTYPE html>
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-  <title>Radar for $station.location</title>
+  <title>$station.location $gettext("Radar")</title>
   <link rel="stylesheet" href="https://code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.css" />
   <script src="https://code.jquery.com/jquery-1.7.1.min.js"></script>
   <script type="text/javascript" src="https://code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.js"></script>
@@ -11,18 +11,18 @@
 <body>
   <div data-role="page" data-add-back-btn="true" data-theme="a">
     <div data-role="header">
-      <h1>Radar</h1>
+      <h1>$gettext("Radar")</h1>
     </div>
     <div data-role="content">
-      #if $Extras.has_key('radar_img')
+      #if 'radar_img' in $Extras
       <a  href="$Extras.radar_url">
         <img src="$Extras.radar_img" alt="Radar" /></a>
       #else
-      Sorry, no radar image.
+      $gettext("Sorry, no radar image").
       #end if
     </div>
     <div data-role="footer">
-      <h4>weewx v$station.version</h4>
+      <h4>WeeWX v$station.version</h4>
     </div>
   </div>
 </body>

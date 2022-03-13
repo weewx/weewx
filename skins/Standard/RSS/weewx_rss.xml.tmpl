@@ -3,10 +3,10 @@
      xmlns:content="http://purl.org/rss/1.0/modules/content/"
      xmlns:geo="http://www.w3.org/2003/01/geo/wgs84_pos#" >
    <channel>
-      <title>$station.location, Weather Conditions</title>
+      <title>$station.location, $gettext("Weather Conditions")</title>
       <link>$station.station_url</link>
-      <description>Current conditions, and daily, monthly, and yearly summaries</description>
-      <language>en-us</language>
+      <description>$gettext("Current conditions, and daily, monthly, and yearly summaries")</description>
+      <language>"$lang"</language>
       <pubDate>$current.dateTime.format("%a, %d %b %Y %H:%M:%S %Z")</pubDate>
 
       <lastBuildDate>$current.dateTime.format("%a, %d %b %Y %H:%M:%S %Z")</lastBuildDate>
@@ -15,119 +15,119 @@
       <ttl>$current.interval.string('')</ttl>
       
       <item>
-         <title>Weather Conditions at $current.dateTime</title>
+         <title>$gettext("Weather Conditions at") $current.dateTime</title>
          <link>$station.station_url</link>
          <description>
-           Outside temperature: $current.outTemp; 
-           Barometer: $current.barometer; 
-           Wind: $current.windSpeed from $current.windDir; 
-           Rain rate: $current.rainRate; 
-           Inside temperature: $current.inTemp
+           $obs.label.outTemp: $current.outTemp; 
+           $obs.label.barometer: $current.barometer; 
+           $obs.label.wind: $current.windSpeed $gettext("from") $current.windDir; 
+           $obs.label.rainRate: $current.rainRate; 
+           $obs.label.inTemp: $current.inTemp
          </description>
          <pubDate>$current.dateTime.format("%a, %d %b %Y %H:%M:%S %Z")</pubDate>
 	     <geo:lat>$station.latitude_f</geo:lat>
     	 <geo:long>$station.longitude_f</geo:long>
  		 <content:encoded><![CDATA[
            <p>
-             Time:                $current.dateTime<br/>
-             Outside Temperature: $current.outTemp<br/>
-             Inside Temperature:  $current.inTemp<br/>
-             Wind Chill:          $current.windchill<br/>
-             Heat Index:          $current.heatindex<br/>
-             Dewpoint:            $current.dewpoint<br/>
-             Humidity:            $current.outHumidity<br/>
-             Barometer:           $current.barometer<br/>
-             Wind:                $current.windSpeed from $current.windDir<br/>
-             Rain Rate:           $current.rainRate<br/>
+             $obs.label.dateTime: $current.dateTime<br/>
+             $obs.label.outTemp: $current.outTemp<br/>
+             $obs.label.inTemp:  $current.inTemp<br/>
+             $obs.label.windchill: $current.windchill<br/>
+             $obs.label.heatindex: $current.heatindex<br/>
+             $obs.label.dewpoint: $current.dewpoint<br/>
+             $obs.label.outHumidity: $current.outHumidity<br/>
+             $obs.label.barometer: $current.barometer<br/>
+             $obs.label.wind: $current.windSpeed $gettext("from") $current.windDir<br/>
+             $obs.label.rainRate: $current.rainRate<br/>
         </p>
       ]]></content:encoded>
       </item>
 
       <item>
-         <title>Daily Weather Summary as of $current.dateTime</title>
+         <title>$gettext("Daily Weather Summary as of") $current.dateTime</title>
          <link>$station.station_url</link>
          <description>
-	        Min outside temperature: $day.outTemp.min at $day.outTemp.mintime;
-         	Max outside temperature: $day.outTemp.max at $day.outTemp.maxtime;
-	        Min inside temperature:  $day.inTemp.min at $day.inTemp.mintime;
-	        Max inside temperature:  $day.inTemp.max at $day.inTemp.maxtime;
-	        Min barometer:           $day.barometer.min at $day.barometer.mintime;
-	        Max barometer:           $day.barometer.max at $day.barometer.maxtime;
-            Max wind :               $day.wind.max from $day.wind.gustdir at $day.wind.maxtime;
-            Rain today:              $day.rain.sum
+	        $gettext("Min outside temperature"): $day.outTemp.min $gettext("at") $day.outTemp.mintime;
+         	$gettext("Max outside temperature"): $day.outTemp.max $gettext("at") $day.outTemp.maxtime;
+	        $gettext("Min inside temperature"):  $day.inTemp.min $gettext("at") $day.inTemp.mintime;
+	        $gettext("Max inside temperature"):  $day.inTemp.max $gettext("at") $day.inTemp.maxtime;
+	        $gettext("Min barometer"):           $day.barometer.min $gettext("at") $day.barometer.mintime;
+	        $gettext("Max barometer"):           $day.barometer.max $gettext("at") $day.barometer.maxtime;
+            $gettext("Max wind") :               $day.wind.max $gettext("from") $day.wind.gustdir $gettext("at") $day.wind.maxtime;
+            $gettext("Rain today"):              $day.rain.sum
          </description>
          <pubDate>$current.dateTime.format("%a, %d %b %Y %H:%M:%S %Z")</pubDate>
 	     <geo:lat>$station.latitude_f</geo:lat>
     	 <geo:long>$station.longitude_f</geo:long>
  		 <content:encoded><![CDATA[
            <p>
-             Day:                     $day.dateTime.format("%d %b %Y")<br/>
-	         Min Outside Temperature: $day.outTemp.min at $day.outTemp.mintime<br/>
-	         Max Outside Temperature: $day.outTemp.max at $day.outTemp.maxtime<br/>
-	         Min Inside Temperature:  $day.inTemp.min at $day.inTemp.mintime<br/>
-	         Max Inside Temperature:  $day.inTemp.max at $day.inTemp.maxtime<br/>
-	         Min Barometer:           $day.barometer.min at $day.barometer.mintime<br/>
-	         Max Barometer:           $day.barometer.max at $day.barometer.maxtime<br/>
-             Max Wind :               $day.wind.max from $day.wind.gustdir at $day.wind.maxtime<br/>
-             Rain today:              $day.rain.sum<br/>
+             $gettext("Day"): $day.dateTime.format("%d %b %Y")<br/>
+	         $gettext("Min outside temperature"): $day.outTemp.min $gettext("at") $day.outTemp.mintime<br/>
+	         $gettext("Max outside temperature"): $day.outTemp.max $gettext("at") $day.outTemp.maxtime<br/>
+	         $gettext("Min inside temperature"):  $day.inTemp.min $gettext("at") $day.inTemp.mintime<br/>
+	         $gettext("Max inside temperature"):  $day.inTemp.max $gettext("at") $day.inTemp.maxtime<br/>
+	         $gettext("Min barometer"):           $day.barometer.min $gettext("at") $day.barometer.mintime<br/>
+	         $gettext("Max barometer"):           $day.barometer.max $gettext("at") $day.barometer.maxtime<br/>
+             $gettext("Max wind") :               $day.wind.max $gettext("from") $day.wind.gustdir $gettext("at") $day.wind.maxtime<br/>
+             $gettext("Rain today"):              $day.rain.sum<br/>
         </p>
       ]]></content:encoded>
       </item>
 
       <item>
-         <title>Monthly Weather Summary as of $current.dateTime</title>
-         <link>$station.station_url/month.html</link>
+         <title>$gettext("Monthly Weather Summary as of") $current.dateTime</title>
+         <link>$station.station_url</link>
          <description>
-	        Min outside temperature: $month.outTemp.min at $month.outTemp.mintime;
-         	Max outside temperature: $month.outTemp.max at $month.outTemp.maxtime;
-	        Min inside temperature:  $month.inTemp.min at $month.inTemp.mintime;
-	        Max inside temperature:  $month.inTemp.max at $month.inTemp.maxtime;
-	        Min barometer:           $month.barometer.min at $month.barometer.mintime;
-	        Max barometer:           $month.barometer.max at $month.barometer.maxtime;
-            Max wind :               $month.wind.max from $month.wind.gustdir at $month.wind.maxtime;
-            Rain total for month:    $month.rain.sum
+	        $gettext("Min outside temperature"): $month.outTemp.min $gettext("at") $month.outTemp.mintime;
+         	$gettext("Max outside temperature"): $month.outTemp.max $gettext("at") $month.outTemp.maxtime;
+	        $gettext("Min inside temperature"):  $month.inTemp.min $gettext("at") $month.inTemp.mintime;
+	        $gettext("Max inside temperature"):  $month.inTemp.max $gettext("at") $month.inTemp.maxtime;
+	        $gettext("Min barometer"):           $month.barometer.min $gettext("at") $month.barometer.mintime;
+	        $gettext("Max barometer"):           $month.barometer.max $gettext("at") $month.barometer.maxtime;
+            $gettext("Max wind") :               $month.wind.max $gettext("from") $month.wind.gustdir $gettext("at") $month.wind.maxtime;
+            $gettext("Rain total for month"):    $month.rain.sum
          </description>
          <pubDate>$current.dateTime.format("%a, %d %b %Y %H:%M:%S %Z")</pubDate>
  		 <content:encoded><![CDATA[
            <p>
-             Month:                   $month.dateTime.format("%B %Y")<br/>
-	         Max Outside Temperature: $month.outTemp.max at $month.outTemp.maxtime<br/>
-	         Min Outside Temperature: $month.outTemp.min at $month.outTemp.mintime<br/>
-	         Max Inside Temperature:  $month.inTemp.max at $month.inTemp.maxtime<br/>
-	         Min Inside Temperature:  $month.inTemp.min at $month.inTemp.mintime<br/>
-	         Min Barometer:           $month.barometer.min at $month.barometer.mintime<br/>
-	         Max Barometer:           $month.barometer.max at $month.barometer.maxtime<br/>
-             Max Wind :               $month.wind.max from $month.wind.gustdir at $month.wind.maxtime<br/>
-             Rain total for month:    $month.rain.sum<br/>
+             $gettext("Month"): $month.dateTime.format("%B %Y")<br/>
+	         $gettext("Max outside temperature"): $month.outTemp.max $gettext("at") $month.outTemp.maxtime<br/>
+	         $gettext("Min outside temperature"): $month.outTemp.min $gettext("at") $month.outTemp.mintime<br/>
+	         $gettext("Max inside temperature"):  $month.inTemp.max $gettext("at") $month.inTemp.maxtime<br/>
+	         $gettext("Min inside temperature"):  $month.inTemp.min $gettext("at") $month.inTemp.mintime<br/>
+	         $gettext("Min barometer"):           $month.barometer.min $gettext("at") $month.barometer.mintime<br/>
+	         $gettext("Max barometer"):           $month.barometer.max $gettext("at") $month.barometer.maxtime<br/>
+             $gettext("Max wind") :               $month.wind.max $gettext("from") $month.wind.gustdir $gettext("at") $month.wind.maxtime<br/>
+             $gettext("Rain total for month"):    $month.rain.sum<br/>
         </p>
       ]]></content:encoded>
       </item>
 
       <item>
-         <title>Yearly Weather Summary as of $current.dateTime</title>
-         <link>$station.station_url/year.html</link>
+         <title>$gettext("Yearly Weather Summary as of") $current.dateTime</title>
+         <link>$station.station_url</link>
          <description>
-	        Min outside temperature: $year.outTemp.min at $year.outTemp.mintime;
-         	Max outside temperature: $year.outTemp.max at $year.outTemp.maxtime;
-	        Min inside temperature:  $year.inTemp.min at $year.inTemp.mintime;
-	        Max inside temperature:  $year.inTemp.max at $year.inTemp.maxtime;
-	        Min barometer:           $year.barometer.min at $year.barometer.mintime;
-	        Max barometer:           $year.barometer.max at $year.barometer.maxtime;
-            Max wind :               $year.wind.max from $year.wind.gustdir at $year.wind.maxtime;
-            Rain total for year:     $year.rain.sum
+	        $gettext("Min outside temperature"): $year.outTemp.min $gettext("at") $year.outTemp.mintime;
+         	$gettext("Max outside temperature"): $year.outTemp.max $gettext("at") $year.outTemp.maxtime;
+	        $gettext("Min inside temperature"):  $year.inTemp.min $gettext("at") $year.inTemp.mintime;
+	        $gettext("Max inside temperature"):  $year.inTemp.max $gettext("at") $year.inTemp.maxtime;
+	        $gettext("Min barometer"):           $year.barometer.min $gettext("at") $year.barometer.mintime;
+	        $gettext("Max barometer"):           $year.barometer.max $gettext("at") $year.barometer.maxtime;
+            $gettext("Max wind") :               $year.wind.max $gettext("from") $year.wind.gustdir $gettext("at") $year.wind.maxtime;
+            $gettext("Rain total for year"):     $year.rain.sum
          </description>
          <pubDate>$current.dateTime.format("%a, %d %b %Y %H:%M:%S %Z")</pubDate>
  		 <content:encoded><![CDATA[
            <p>
-             Year:                    $year.dateTime.format("%Y")<br/>
-	         Max Outside Temperature: $year.outTemp.max at $year.outTemp.maxtime<br/>
-	         Min Outside Temperature: $year.outTemp.min at $year.outTemp.mintime<br/>
-	         Max Inside Temperature:  $year.inTemp.max at $year.inTemp.maxtime<br/>
-	         Min Inside Temperature:  $year.inTemp.min at $year.inTemp.mintime<br/>
-	         Min Barometer:           $year.barometer.min at $year.barometer.mintime<br/>
-	         Max Barometer:           $year.barometer.max at $year.barometer.maxtime<br/>
-             Max Wind :               $year.wind.max from $year.wind.gustdir at $year.wind.maxtime<br/>
-             Rain total for year:     $year.rain.sum<br/>
+             $gettext("Year"): $year.dateTime.format("%Y")<br/>
+	         $gettext("Max outside temperature"): $year.outTemp.max $gettext("at") $year.outTemp.maxtime<br/>
+	         $gettext("Min outside temperature"): $year.outTemp.min $gettext("at") $year.outTemp.mintime<br/>
+	         $gettext("Max inside temperature"):  $year.inTemp.max $gettext("at") $year.inTemp.maxtime<br/>
+	         $gettext("Min inside temperature"):  $year.inTemp.min $gettext("at") $year.inTemp.mintime<br/>
+	         $gettext("Min barometer"):           $year.barometer.min $gettext("at") $year.barometer.mintime<br/>
+	         $gettext("Max barometer"):           $year.barometer.max $gettext("at") $year.barometer.maxtime<br/>
+             $gettext("Max wind") :               $year.wind.max $gettext("from") $year.wind.gustdir $gettext("at") $year.wind.maxtime<br/>
+             $gettext("Rain total for year"):     $year.rain.sum<br/>
         </p>
       ]]></content:encoded>
       </item>

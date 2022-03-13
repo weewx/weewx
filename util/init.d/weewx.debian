@@ -34,7 +34,7 @@ NAME=weewx
 WEEWX_BIN=/home/weewx/bin/weewxd
 WEEWX_CFG=/home/weewx/weewx.conf
 WEEWX_PID=/var/run/$NAME.pid
-WEEWX_USER=root:root 
+WEEWX_USER=root
 
 # Read configuration variable file if it is present
 [ -r /etc/default/$NAME ] && . /etc/default/$NAME
@@ -60,7 +60,7 @@ DAEMON_ARGS="--daemon --pidfile=$WEEWX_PID $WEEWX_CFG"
 do_start() {
     NPROC=$(count_procs)
     if [ $NPROC != 0 ]; then
-	return 1
+        return 1
     fi
     start-stop-daemon --start --chuid $WEEWX_USER --pidfile $WEEWX_PID --exec $DAEMON -- $DAEMON_ARGS || return 2
     return 0
@@ -81,7 +81,7 @@ do_stop() {
     if [ ! -f $WEEWX_PID ]; then
         return 1
     fi
-    start-stop-daemon --stop --pidfile $WEEWX_PID
+    start-stop-daemon --stop --user $WEEWX_USER --pidfile $WEEWX_PID
     # we cannot trust the return value from start-stop-daemon
     RETVAL=2
     c=0
@@ -90,7 +90,7 @@ do_stop() {
         # process may not really have completed, so check it
         NPROC=$(count_procs)
         if [ $NPROC = 0 ]; then
-	    RETVAL=0
+            RETVAL=0
         else
             echo -n "."
             sleep 5
@@ -105,7 +105,7 @@ do_stop() {
 
 # send a SIGHUP to the daemon/service
 do_reload() {
-    start-stop-daemon --stop --signal 1 --quiet --pidfile $WEEWX_PID
+    start-stop-daemon --stop --signal 1 --quiet --user $WEEWX_USER --pidfile $WEEWX_PID
     return 0
 }
 
@@ -117,66 +117,65 @@ count_procs() {
 RETVAL=0
 case "$1" in
     start)
-	log_daemon_msg "Starting $DESC" "$NAME"
-	do_start
-	case "$?" in
-	    0) log_end_msg 0; RETVAL=0 ;;
-	    1) log_action_cont_msg " already running" && log_end_msg 0; RETVAL=0 ;;
-	    2) log_end_msg 1; RETVAL=1 ;;
-	esac
-	;;
+        log_daemon_msg "Starting $DESC" "$NAME"
+        do_start
+        case "$?" in
+            0) log_end_msg 0; RETVAL=0 ;;
+            1) log_action_cont_msg " already running" && log_end_msg 0; RETVAL=0 ;;
+            2) log_end_msg 1; RETVAL=1 ;;
+        esac
+        ;;
     stop)
-	log_daemon_msg "Stopping $DESC" "$NAME"
-	do_stop
-	case "$?" in
-	    0) log_end_msg 0; RETVAL=0 ;;
-	    1) log_action_cont_msg " not running" && log_end_msg 0; RETVAL=0 ;;
-	    2) log_end_msg 1; RETVAL=1 ;;
-	esac
-	;;
+        log_daemon_msg "Stopping $DESC" "$NAME"
+        do_stop
+        case "$?" in
+            0) log_end_msg 0; RETVAL=0 ;;
+            1) log_action_cont_msg " not running" && log_end_msg 0; RETVAL=0 ;;
+            2) log_end_msg 1; RETVAL=1 ;;
+        esac
+        ;;
     status)
         NPROC=$(count_procs)
         if [ $NPROC -gt 1 ]; then
             MSG="running multiple times"
-	elif [ $NPROC = 1 ]; then
-	    MSG="running"
-	else
-	    MSG="not running"
-	fi
-	log_daemon_msg "Status of $DESC" "$MSG"
-	log_end_msg 0
-	RETVAL=0
-	;;
+        elif [ $NPROC = 1 ]; then
+            MSG="running"
+        else
+            MSG="not running"
+        fi
+        log_daemon_msg "Status of $DESC" "$MSG"
+        log_end_msg 0
+        RETVAL=0
+        ;;
     reload|force-reload)
-	log_daemon_msg "Reloading $DESC" "$NAME"
-	do_reload
-	RETVAL=$?
-	log_end_msg $RETVAL
-	;;
+        log_daemon_msg "Reloading $DESC" "$NAME"
+        do_reload
+        RETVAL=$?
+        log_end_msg $RETVAL
+        ;;
     restart)
-	log_daemon_msg "Restarting $DESC" "$NAME"
-	do_stop
-	case "$?" in
-	    0|1)
-		do_start
-		case "$?" in
-		    0) log_end_msg 0; RETVAL=0 ;;
-		    1) log_end_msg 1; RETVAL=1 ;; # Old process still running
-		    *) log_end_msg 1; RETVAL=1 ;; # Failed to start
-		esac
-		;;
-	    *)
-	  	# Failed to stop
-		log_end_msg 1
-		RETVAL=1
-		;;
-	esac
-	;;
+        log_daemon_msg "Restarting $DESC" "$NAME"
+        do_stop
+        case "$?" in
+            0|1)
+                do_start
+                case "$?" in
+                    0) log_end_msg 0; RETVAL=0 ;;
+                    1) log_end_msg 1; RETVAL=1 ;; # Old process still running
+                    *) log_end_msg 1; RETVAL=1 ;; # Failed to start
+                esac
+                ;;
+            *)
+      # Failed to stop
+                log_end_msg 1
+                RETVAL=1
+                ;;
+        esac
+        ;;
     *)
-	echo "Usage: $0 {start|stop|status|restart|reload}"
-	exit 3
-	;;
+        echo "Usage: $0 {start|stop|status|restart|reload}"
+        exit 3
+        ;;
 esac
 
 exit $RETVAL
-

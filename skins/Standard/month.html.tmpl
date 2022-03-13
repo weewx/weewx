@@ -1,18 +1,19 @@
+## Copyright 2009-2021 Tom Keffer
+## Distributed under terms of GPLv3.  See LICENSE.txt for your rights.
 #errorCatcher Echo
-##
-## Specifying an encoding of UTF-8 is usually safe, but if your text is 
-## actually in Latin-1, then you should replace the string "UTF-8" with "latin-1"
-## If you do this, you should also change the 'Content-Type' metadata below.
 #encoding UTF-8
 ##
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
-  <head profile="http://www.w3.org/2005/10/profile">
-    ## This choice should match the #encoding directive above
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>$station.location Monthly weather summary</title>
+<!DOCTYPE html>
+<html lang="$lang">
+  <head>
+    ## Specifying an encoding of UTF-8 is usually safe:
+    <meta charset="UTF-8">
+    <title>$station.location $gettext("Monthly Weather Summary")</title>
     <link rel="stylesheet" type="text/css" href="weewx.css"/>
     <link rel="icon" type="image/png" href="favicon.ico" />
+    #if $station.station_url
+    <link rel="canonical" href="$station.station_url/$filename" />
+    #end if
     <script type="text/javascript">
       function openURL(urlname)
       {
@@ -25,7 +26,7 @@
     <div id="container">
       <div id="masthead">
         <h1>$station.location</h1>
-        <h2>Monthly Weather Summary</h2>
+        <h2>$gettext("Monthly Weather Summary")</h2>
           <h2>$current.dateTime</h2>
       </div>
 
@@ -33,70 +34,70 @@
 
         <div class="stats">
           <div class="stats_header">
-            This Month
+            $gettext("This Month")
           </div>
 
           <table>
             <tbody>
               <tr>
                 <td class="stats_label">
-                  High Temperature<br/>
-                  Low Temperature
+                  $gettext("High Temperature")<br/>
+                  $gettext("Low Temperature")
                 </td>
                 <td class="stats_data">
-                  $month.outTemp.max at $month.outTemp.maxtime<br/>
-                  $month.outTemp.min at $month.outTemp.mintime
+                  $month.outTemp.max $gettext("at") $month.outTemp.maxtime<br/>
+                  $month.outTemp.min $gettext("at") $month.outTemp.mintime
                 </td>
               </tr>
               <tr>
                 <td class="stats_label">
-                  High Heat Index
+                  $gettext("High Heat Index")
                 </td>
                 <td class="stats_data"> 
-                  $month.heatindex.max at $month.heatindex.maxtime
+                  $month.heatindex.max $gettext("at") $month.heatindex.maxtime
                 </td>
               </tr>
               <tr>
                 <td class="stats_label"> 
-                  Low Wind Chill
+                  $gettext("Low Wind Chill")
                 </td>
                 <td class="stats_data"> 
-                  $month.windchill.min at $month.windchill.mintime
+                  $month.windchill.min $gettext("at") $month.windchill.mintime
                 </td>
               </tr>
               <tr>
                 <td class="stats_label">
-                  High Humidity<br/>
-                  Low Humidity
+                  $gettext("High Humidity")<br/>
+                  $gettext("Low Humidity")
                 </td>
                 <td class="stats_data">
-                  $month.outHumidity.max $month.outHumidity.maxtime<br/>
-                  $month.outHumidity.min $month.outHumidity.mintime
+                  $month.outHumidity.max $gettext("at") $month.outHumidity.maxtime<br/>
+                  $month.outHumidity.min $gettext("at") $month.outHumidity.mintime
                 </td>
               </tr>
               <tr>
                 <td class="stats_label">
-                  High Dewpoint<br/>
-                  Low Dewpoint
+                  $gettext("High Dewpoint")<br/>
+                  $gettext("Low Dewpoint")
                 </td>
                 <td class="stats_data">
-                  $month.dewpoint.max $month.dewpoint.maxtime<br/>
-                  $month.dewpoint.min $month.dewpoint.mintime
+                  $month.dewpoint.max $gettext("at") $month.dewpoint.maxtime<br/>
+                  $month.dewpoint.min $gettext("at") $month.dewpoint.mintime
                 </td>
               </tr>
               <tr>
                 <td class="stats_label">
-                  High Barometer<br/>
-                  Low Barometer
+                  $gettext("High Barometer")<br/>
+                  $gettext("Low Barometer")
                 </td>
                 <td class="stats_data">
-                  $month.barometer.max at $month.barometer.maxtime<br/>
-                  $month.barometer.min at $month.barometer.mintime
+                  $month.barometer.max $gettext("at") $month.barometer.maxtime<br/>
+                  $month.barometer.min $gettext("at") $month.barometer.mintime
                 </td>
               </tr>
               <tr>
                 <td class="stats_label">
-                  Rain Total
+                  $gettext("Rain Total")
                 </td>
                 <td class="stats_data">
                   $month.rain.sum
@@ -104,23 +105,23 @@
               </tr>
               <tr>
                 <td class="stats_label"> 
-                  High Rain Rate
+                  $gettext("High Rain Rate")
                 </td>
                 <td class="stats_data">
-                  $month.rainRate.max at $month.rainRate.maxtime
+                  $month.rainRate.max $gettext("at") $month.rainRate.maxtime
                 </td>
               </tr>
               <tr>
                 <td class="stats_label">
-                  High Wind Speed
+                  $gettext("High Wind")
                 </td>
                 <td class="stats_data">
-                  $month.wind.max from $month.wind.gustdir at $month.wind.maxtime
+                  $month.wind.max $gettext("from") $month.wind.gustdir $gettext("at") $month.wind.maxtime
                 </td>
               </tr>
               <tr>
                 <td class="stats_label">
-                  Average Wind
+                  $gettext("Average Wind")
                 </td>
                 <td class="stats_data">
                   $month.wind.avg
@@ -129,7 +130,7 @@
               
               <tr>
                 <td class="stats_label">
-                  RMS Wind
+                  $gettext("RMS Wind")
                 </td>
                 <td class="stats_data">
                   $month.wind.rms
@@ -138,8 +139,8 @@
 
               <tr>
                 <td class="stats_label">
-                  Vector Average Speed<br/>
-                  Vector Average Direction
+                  $gettext("Vector Average Speed")<br/>
+                  $gettext("Vector Average Direction")
                 </td>
                 <td class="stats_data">
                   $month.wind.vecavg<br/>
@@ -148,47 +149,47 @@
               </tr>
               <tr>
                 <td class="stats_label">
-                  High Inside Temperature<br/>
-                  Low Inside Temperature
+                  $gettext("High Inside Temperature")<br/>
+                  $gettext("Low Inside Temperature")
                 </td>
                 <td class="stats_data">
-                  $month.inTemp.max at $month.inTemp.maxtime<br/>
-                  $month.inTemp.min at $month.inTemp.mintime
+                  $month.inTemp.max $gettext("at") $month.inTemp.maxtime<br/>
+                  $month.inTemp.min $gettext("at") $month.inTemp.mintime
                 </td>
               </tr>
               #if $month.UV.has_data
               <tr>
                 <td class="stats_label">
-                  High UV<br/>
-                  Low UV
+                  $gettext("High UV")<br/>
+                  $gettext("Low UV")
                 </td>
                 <td class="stats_data">
-                  $month.UV.max at $month.UV.maxtime<br/>
-                  $month.UV.min at $month.UV.mintime
+                  $month.UV.max $gettext("at") $month.UV.maxtime<br/>
+                  $month.UV.min $gettext("at") $month.UV.mintime
                 </td>
               </tr>
               #end if
               #if $month.ET.has_data and $month.ET.sum.raw > 0.0
               <tr>
                 <td class="stats_label">
-                  High ET<br/>
-                  Low ET
+                  $gettext("High ET")<br/>
+                  $gettext("Low ET")
                 </td>
                 <td class="stats_data">
-                  $month.ET.max at $month.ET.maxtime<br/>
-                  $month.ET.min at $month.ET.mintime
+                  $month.ET.max $gettext("at") $month.ET.maxtime<br/>
+                  $month.ET.min $gettext("at") $month.ET.mintime
                 </td>
               </tr>
               #end if
               #if $month.radiation.has_data
               <tr>
                 <td class="stats_label">
-                  High Radiation<br/>
-                  Low Radiation
+                  $gettext("High Radiation")<br/>
+                  $gettext("Low Radiation")
                 </td>
                 <td class="stats_data">
-                  $month.radiation.max at $month.radiation.maxtime<br/>
-                  $month.radiation.min at $month.radiation.mintime
+                  $month.radiation.max $gettext("at") $month.radiation.maxtime<br/>
+                  $month.radiation.min $gettext("at") $month.radiation.mintime
                 </td>
               </tr>
               #end if
@@ -200,70 +201,70 @@
 
         <div class="stats">
           <div class="stats_header">
-            Calendar Year
+            $gettext("Calendar Year")
           </div>
 
           <table>
             <tbody>
               <tr>
                 <td class="stats_label">
-                  High Temperature<br/>
-                  Low Temperature
+                  $gettext("High Temperature")<br/>
+                  $gettext("Low Temperature")
                 </td>
                 <td class="stats_data">
-                  $year.outTemp.max at $year.outTemp.maxtime<br/>
-                  $year.outTemp.min at $year.outTemp.mintime
+                  $year.outTemp.max $gettext("at") $year.outTemp.maxtime<br/>
+                  $year.outTemp.min $gettext("at") $year.outTemp.mintime
                 </td>
               </tr>
               <tr>
                 <td class="stats_label">
-                  High Heat Index
+                  $gettext("High Heat Index")
                 </td>
                 <td class="stats_data"> 
-                  $year.heatindex.max at $year.heatindex.maxtime
+                  $year.heatindex.max $gettext("at") $year.heatindex.maxtime
                 </td>
               </tr>
               <tr>
                 <td class="stats_label"> 
-                  Low Wind Chill
+                  $gettext("Low Wind Chill")
                 </td>
                 <td class="stats_data"> 
-                  $year.windchill.min at $year.windchill.mintime
+                  $year.windchill.min $gettext("at") $year.windchill.mintime
                 </td>
               </tr>
               <tr>
                 <td class="stats_label">
-                  High Humidity<br/>
-                  Low Humidity
+                  $gettext("High Humidity")<br/>
+                  $gettext("Low Humidity")
                 </td>
                 <td class="stats_data">
-                  $year.outHumidity.max at $year.outHumidity.maxtime<br/>
-                  $year.outHumidity.min at $year.outHumidity.mintime
+                  $year.outHumidity.max $gettext("at") $year.outHumidity.maxtime<br/>
+                  $year.outHumidity.min $gettext("at") $year.outHumidity.mintime
                 </td>
               </tr>
               <tr>
                 <td class="stats_label">
-                  High Dewpoint<br/>
-                  Low Dewpoint
+                  $gettext("High Dewpoint")<br/>
+                  $gettext("Low Dewpoint")
                 </td>
                 <td class="stats_data">
-                  $year.dewpoint.max at $year.dewpoint.maxtime<br/>
-                  $year.dewpoint.min at $year.dewpoint.mintime
+                  $year.dewpoint.max $gettext("at") $year.dewpoint.maxtime<br/>
+                  $year.dewpoint.min $gettext("at") $year.dewpoint.mintime
                 </td>
               </tr>
               <tr>
                 <td class="stats_label">
-                  High Barometer<br/>
-                  Low Barometer
+                  $gettext("High Barometer")<br/>
+                  $gettext("Low Barometer")
                 </td>
                 <td class="stats_data">
-                  $year.barometer.max at $year.barometer.maxtime<br/>
-                  $year.barometer.min at $year.barometer.mintime
+                  $year.barometer.max $gettext("at") $year.barometer.maxtime<br/>
+                  $year.barometer.min $gettext("at") $year.barometer.mintime
                 </td>
               </tr>
               <tr>
                 <td class="stats_label">
-                  Rain Total
+                  $gettext("Rain Total")
                 </td>
                 <td class="stats_data">
                   $year.rain.sum
@@ -271,23 +272,23 @@
               </tr>
               <tr>
                 <td class="stats_label"> 
-                  High Rain Rate
+                  $gettext("High Rain Rate")
                 </td>
                 <td class="stats_data">
-                  $year.rainRate.max at $year.rainRate.maxtime
+                  $year.rainRate.max $gettext("at") $year.rainRate.maxtime
                 </td>
               </tr>
               <tr>
                 <td class="stats_label">
-                  High Wind Speed
+                  $gettext("High Wind")
                 </td>
                 <td class="stats_data">
-                  $year.wind.max from $year.wind.gustdir at $year.wind.maxtime
+                  $year.wind.max $gettext("from") $year.wind.gustdir $gettext("at") $year.wind.maxtime
                 </td>
               </tr>
               <tr>
                 <td class="stats_label">
-                  Average Wind
+                  $gettext("Average Wind")
                 </td>
                 <td class="stats_data">
                   $year.wind.avg
@@ -296,7 +297,7 @@
               
               <tr>
                 <td class="stats_label">
-                  RMS Wind
+                  $gettext("RMS Wind")
                 </td>
                 <td class="stats_data">
                   $year.wind.rms
@@ -305,8 +306,8 @@
 
               <tr>
                 <td class="stats_label">
-                  Vector Average Speed<br/>
-                  Vector Average Direction
+                  $gettext("Vector Average Speed")<br/>
+                  $gettext("Vector Average Direction")
                 </td>
                 <td class="stats_data">
                   $year.wind.vecavg<br/>
@@ -315,47 +316,47 @@
               </tr>
               <tr>
                 <td class="stats_label">
-                  High Inside Temperature<br/>
-                  Low Inside Temperature
+                  $gettext("High Inside Temperature")<br/>
+                  $gettext("Low Inside Temperature")
                 </td>
                 <td class="stats_data">
-                  $year.inTemp.max at $year.inTemp.maxtime<br/>
-                  $year.inTemp.min at $year.inTemp.mintime
+                  $year.inTemp.max $gettext("at") $year.inTemp.maxtime<br/>
+                  $year.inTemp.min $gettext("at") $year.inTemp.mintime
                 </td>
               </tr>
               #if $year.UV.has_data
               <tr>
                 <td class="stats_label">
-                  High UV<br/>
-                  Low UV
+                  $gettext("High UV")<br/>
+                  $gettext("Low UV")
                 </td>
                 <td class="stats_data">
-                  $year.UV.max at $year.UV.maxtime<br/>
-                  $year.UV.min at $year.UV.mintime
+                  $year.UV.max $gettext("at") $year.UV.maxtime<br/>
+                  $year.UV.min $gettext("at") $year.UV.mintime
                 </td>
               </tr>
               #end if
               #if $year.ET.has_data and $year.ET.sum.raw >0.0
               <tr>
                 <td class="stats_label">
-                  High ET<br/>
-                  Low ET
+                  $gettext("High ET")<br/>
+                  $gettext("Low ET")
                 </td>
                 <td class="stats_data">
-                  $year.ET.max at $year.ET.maxtime<br/>
-                  $year.ET.min at $year.ET.mintime
+                  $year.ET.max $gettext("at") $year.ET.maxtime<br/>
+                  $year.ET.min $gettext("at") $year.ET.mintime
                 </td>
               </tr>
               #end if
               #if $year.radiation.has_data
               <tr>
                 <td class="stats_label">
-                  High Radiation<br/>
-                  Low Radiation
+                  $gettext("High Radiation")<br/>
+                  $gettext("Low Radiation")
                 </td>
                 <td class="stats_data">
-                  $year.radiation.max at $year.radiation.maxtime<br/>
-                  $year.radiation.min at $year.radiation.mintime
+                  $year.radiation.max $gettext("at") $year.radiation.maxtime<br/>
+                  $year.radiation.min $gettext("at") $year.radiation.mintime
                 </td>
               </tr>
               #end if
@@ -368,7 +369,7 @@
       <div id="content">
         
         <div class="header">
-          <h3>Monthly Statistics and Plots</h3>
+          <h3>$gettext("Monthly Statistics and Plots")</h3>
         </div>
         <div id="plots">
           <img src="monthtempdew.png" alt="temperatures" />
@@ -393,15 +394,15 @@
       </div> <!-- End id "content" -->
 
       <div id="navbar">
-        <input type="button" value="   Current   " onclick="openURL('index.html')" />
-        <input type="button" value="    Week     " onclick="openURL('week.html')" />
-        <input type="button" value="    Month    " onclick="openURL('month.html')" />
-        <input type="button" value="    Year     " onclick="openURL('year.html')" />
+        <input type="button" value=$pgettext("Buttons","Current") onclick="openURL('index.html')" />
+        <input type="button" value=$pgettext("Buttons","Week") onclick="openURL('week.html')" />
+        <input type="button" value=$pgettext("Buttons","Month") onclick="openURL('month.html')" />
+        <input type="button" value=$pgettext("Buttons","Year") onclick="openURL('year.html')" />
       </div>
     </div> <!-- End id "container" -->
 
     ## Include the Google Analytics code if the user has supplied an ID:
-    #if $Extras.has_key('googleAnalyticsId')
+    #if 'googleAnalyticsId' in $Extras
     <script type="text/javascript">
         var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
         document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));

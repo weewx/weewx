@@ -92,6 +92,7 @@ if sys.platform == "darwin":
                 level = DEBUG
                 formatter = standard
                 class = logging.handlers.RotatingFileHandler
+                # Writing to this file will require root privileges:
                 filename = /var/log/weewx.log
                 maxBytes = 10000000
                 backupCount = 4
@@ -151,10 +152,6 @@ def setup(process_name, user_log_dict):
     # Merge in the user additions / changes:
     log_config.merge(user_log_dict)
 
-    # Restore the old interpolation value
-    if old_interpolation is not None:
-        user_log_dict.interpolation = old_interpolation
-
     # Adjust the logging level in accordance with whether or not the 'debug' flag is on
     log_level = 'DEBUG' if weewx.debug else 'INFO'
 
@@ -185,6 +182,10 @@ def setup(process_name, user_log_dict):
 
     # Finally! The dictionary is ready. Set the defaults.
     logging.config.dictConfig(log_dict)
+
+    # Restore the old interpolation value
+    if old_interpolation is not None:
+        user_log_dict.interpolation = old_interpolation
 
 
 def log_traceback(log_fn, prefix=''):

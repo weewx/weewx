@@ -5,10 +5,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <link rel="icon" href="images/favicon.png" type="image/png"/>
-    <link rel="stylesheet" href="css/tocbot-4.3.1.css">
+    <link rel="stylesheet" href="css/tocbot-4.12.0.css">
     <link rel="stylesheet" href="css/weewx_ui.css"/>
     <script src="js/cash.min.js"></script>
-    <script src="js/tocbot-4.3.1.min.js"></script>
+    <script src="js/tocbot-4.12.0.min.js"></script>
     <script src="js/weewx.js"></script>
     <script>
         $(function () {
@@ -47,7 +47,7 @@
         <div class="logoref">
             <a href='http://weewx.com'> <img src='images/logo-weewx.png' class='logo' style="float:right" alt="weewx logo"/>
             </a><br/> <span class='version'>
-Version: 4.3
+Version: 4.7
     </span>
         </div>
         <div class="title">Notes for Developers of the WeeWX Weather System</div>
@@ -234,6 +234,71 @@ next_ts = int(time.mktime(next_dt.timetuple()))</pre>
             exceptions, such as USB errors, serial errors, network connectivity errors, <i>etc.</i> All device drivers
             should catch these exceptions and convert them into an exception of type <span
                     class="code">WeeWxIOError</span> or one of its subclasses.</p>
+
+        <h1>Naming conventions</h1>
+        <p>
+            How you name variables makes a big difference in code readability. In general, long names are preferable to
+            short names. Instead of this,
+        </p>
+        <pre class="tty">p = 990.1</pre>
+        <p>use this,</p>
+        <pre class="tty">pressure = 990.1</pre>
+        <p>or, even better, this:</p>
+        <pre class="tty">pressure_mbar = 990.1</pre>
+
+        <p>
+            WeeWX uses a number of conventions to signal the variable type, although they are not used consistently.
+        </p>
+
+        <table style="width: 75%" class='indent'>
+            <caption>Variable suffix conventions</caption>
+            <tr class="first_row">
+                <td>Suffix</td>
+                <td>Example</td>
+                <td>Description</td>
+            </tr>
+            <tr>
+                <td class="code">_ts</td>
+                <td class="code">first_ts</td>
+                <td>Variable is a timestamp in <a href="https://en.wikipedia.org/wiki/Unix_time">unix epoch time</a>.
+                </td>
+            </tr>
+            <tr>
+                <td class="code">_dt</td>
+                <td class="code">start_dt</td>
+                <td>Variable is an instance of <a
+                    href="https://docs.python.org/3/library/datetime.html#datetime-objects"><span class="code">datetime.datetime</span></a>,
+                    usually in <em>local time</em>.
+                </td>
+            </tr>
+            <tr>
+                <td class="code">_d</td>
+                <td class="code">end_d</td>
+                <td>Variable is an instance of <a
+                    href="https://docs.python.org/3/library/datetime.html#date-objects"><span
+                    class="code">datetime.date</span></a>, usually in <em>local time</em>.
+                </td>
+            </tr>
+            <tr>
+                <td class="code">_tt</td>
+                <td class="code">sod_tt</td>
+                <td>Variable is an instance of <span class="code">time.struct_time</span> (a <a
+                    href="https://docs.python.org/3/library/time.html#time.struct_time"><em>time tuple</em>)</a>,
+                    usually in <em>local time</em>.
+                </td>
+            </tr>
+            <tr>
+                <td class="code">_vh</td>
+                <td class="code">pressure_vh</td>
+                <td>Variable is an instance of <span class="code">weewx.units.ValueHelper</span>.</td>
+            </tr>
+            <tr>
+                <td class="code">_vt</td>
+                <td class="code">speed_vt</td>
+                <td>Variable is an instance of <span class="code">weewx.units.ValueTuple</span>.</td>
+            </tr>
+        </table>
+
 
         <h1>Code style</h1>
         <p>Generally, we try to follow the <a href="https://www.python.org/dev/peps/pep-0008/">PEP 8 style guide</a>,

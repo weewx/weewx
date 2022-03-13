@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Search List Extensions</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <link rel="icon" href="images/favicon.png" type="image/png"/>
+    <link rel="stylesheet" href="css/tocbot-4.12.0.css">
+    <link rel="stylesheet" href="css/weewx_ui.css"/>
+    <script src="js/cash.min.js"></script>
+    <script src="js/tocbot-4.12.0.min.js"></script>
+    <script src="js/weewx.js"></script>
+    <script>
+        $(function () {
+            make_ids('#technical_content');
+            let level = get_level_from_cookie();
+            create_toc_level_control(level);
+            create_toc(level);
+        })
+    </script>
+</head>
+<body>
+<div class="sidebar">
+    <div id="toc_controls">
+        <!-- The TOC select list will be injected here -->
+    </div>
+    <div id="toc_parent">
+        <div id="toc-location" class="toc">
+            <!-- The table of contents will be injected here -->
+        </div>
+    </div>
+</div>
+
+<div class="main">
+
+    <div class="header">
+        <div class="logoref">
+            <a href='https://weewx.com'> <img src='images/logo-weewx.png' class='logo' style="float:right"
+                                              alt="weewx logo"/> </a><br/> <span class='version'>
+Version: 4.6
+    </span>
+        </div>
+        <div class="title">Writing search list extensions</div>
+    </div> <!-- End class 'header' -->
+
+    <div id="technical_content" class="content">
+        <h1>Overview</h1>
+        <p>
+            The intention of this document is to help you write new Search List Extensions (SLE). Here's the plan:
+        </p>
+        <ul>
+            <li>We start by explaining how SLEs work.</li>
+            <li>Then we will look at an example that implements an extension <span class="code">$seven_day()</span>.
+            </li>
+            <li>
+                Then we will look at another example, <span class="code">$colorize()</span>, which allows you to pick
+                background colors on the basis of a value (for example, low temperatures could show blue, while high
+                temperatures show red). It will be implemented using 3 different, increasingly sophisticated, ways:
+            </li>
+            <ul>
+                <li>A simple, hardwired version that works in only one unit system.</li>
+                <li>A version that can handle any unit system, but with the colors still hardwared.</li>
+                <li>Finally, a version that can handle any unit system, and takes its color bands from the configuration
+                    file.
+                </li>
+            </ul>
+        </ul>
+
+        <h1>How the search list works</h1>
+
+        <p>
+            Let's start by taking a look at how the Cheetah search list works.
+        </p>
+
+        <p>
+            The Cheetah template engine finds tags by scanning a search list, a Python list of objects. For example, for
+            a tag <span class="code">$foo</span>, the engine will scan down the list, trying each object in the list in
+            turn. For each object, it will first try using <span class="code">foo</span> as an attribute, that is, it
+            will try evaluating <span class="code"><em>obj</em>.foo</span>. If that raises an <span class="code">AttributeError</span>
+            exception, then it will try <span class="code">foo</span> as a key, that is <span class="code"><em>obj</em>[key]</span>.
+            If that raises a <span class="code">KeyError</span> exception, then it moves on to the next item in the
+            list. The first match that does not raise an exception is used. If no match is found, Cheetah raises a <span
+            class="code">NameMapper.NotFound</span> exception.
+        </p>
+
+        <h2 id="how_tags_work">A simple tag</h2>
+
+        <p>
+            Now let's take a look at how the search list interacts with WeeWX tags. Let's start by looking at a simple
+            example: station altitude, available as the tag
+        </p>
+        <pre class="tty">
+$station.altitude</pre>
+
+        <p>
+            As we saw in the previous section, Cheetah will run down the search list, looking for an object with a key
+            or attribute <span class="code">station</span>. In the default search list, WeeWX includes one such object,
+            an instance of the class <span class="code">weewx.cheetahgenerator.Station</span>, which has an attribute
+            <span class="code">station</span>, so it gets a hit on this object.
+        </p>
+
+        <p>
+            Cheetah will then try to evaluate the attribute <span class="code">altitude</span> on this object. Class
+            <span class="code">Station</span> has such an attribute, so Cheetah evaluates it.
+        </p>
+
+        <h4>Return value</h4>
+
+        <p id="return_ValueHelper">
+            What this attribute returns is not a raw value, say <span class="code">700</span>, nor even a string.
+            Instead, it returns an instance of the class <span class="code">ValueHelper</span>, a special class defined
+            in module <span class="code">weewx.units</span>. Details about it can be found in the appendix<a
+            href="customizing.htm#ValueHelper"><em><span class="code">ValueHelper</span></em></a> in the <em>Customizing
+            Guide</em>. Internally, it holds not only the raw value, but also references to the formats, labels, and
+            conversion targets you specified in your configuration file. Its job is to make sure that the final output
+            reflects these preferences. Cheetah doesn't know anything about this class. What it needs, when it has
+            finished evaluating the expression <span class="code">$station.altitude</span>, is a <em>string</em>. In
+            order to convert the <span class="code">ValueHelper</span> it has in hand into a string, it does what every
+            other Python object does when faced with this problem: it calls the special method <span class="code"><a
+            style="text-decoration: none" href="https://docs.python.org/3/reference/datamodel.html#object.__str__">__str__</a></span>.
+            Class <span class="code">ValueHelper</span> has a definition for this method. Evaluating this function
+            triggers the final steps in this process. Any necessary unit conversions are done, then formatting occurs
+            and, finally, a label is attached. The result is a string something like
+        </p>
+
+        <p class="example_output">700 feet</p>
+
+        <p>
+            which is what Cheetah actually puts in the generated HTML file. This is a good example of <em>lazy
+            evaluation</em>. The tags gather all the information they need, but don't do the final evaluation until the
+            last final moment, when the most context is understood. WeeWX uses this technique extensively.
+        </p>
+        <h2 id="A_slightly_more_complex_tag">A slightly more complex tag</h2>
+
+        <p>Now let's look at a more complicated example, say the maximum temperature since midnight:</p>
+        <pre class="tty">$day.outTemp.max</pre>
+        <p>
+            When this is evaluated by Cheetah, it actually produces a chain of objects. At the top of this chain is
+            class <span class="code">weewx.tags.TimeBinder</span>, an instance of which is included in the default
+            search list. Internally, this instance stores the time of the desired report (usually the time of the last
+            archive record), a cache to the databases, a default data binding, as well as references to the formatting
+            and labelling options you have chosen.
+        </p>
+
+        <p>
+            This instance is examined by Cheetah to see if it has an attribute <span class="code">day</span>. It does
+            and, when it is evaluated, it returns the next class in the chain, an instance of <span class="code">weewx.tags.TimespanBinder</span>.
+            In addition to all the other things contained in its parent <span class="code">TimeBinder</span>, class
+            <span class="code">TimespanBinder</span> adds the desired time period, that is, the time span from midnight
+            to the current time.
+        </p>
+
+        <p>
+            Cheetah then continues on down the chain and tries to find the next attribute, <span
+            class="code">outTemp</span>. There is no such hard coded attribute (hard coding all the conceivable
+            different observation types would be impossible!). Instead, class <span class="code">TimespanBinder</span>
+            defines the Python special method <span class="code">
+            <a href="https://docs.python.org/3/reference/datamodel.html#object.__getattr__">__getattr__</a></span>. If
+            Python cannot find a hard coded version of an attribute, and the method <span
+            class="code">__getattr__</span> exists, it will try it. The definition provided by <span class="code">TimespanBinder</span>
+            returns an instance of the next class in the chain, <span class="code">weewx.tags.ObservationBinder</span>,
+            which not only remembers all the previous stuff, but also adds the observation type, <span class="code">outTemp</span>.
+        </p>
+
+        <p>
+            Cheetah then tries to evaluate an attribute <span class="code">max</span> of this class, and the pattern
+            repeats. Class <span class="code">weewx.tags.ObservationBinder</span> does not have an attribute <span
+            class="code">max</span>, but it does have a method <span class="code">__getattr___</span>. This method
+            returns an instance of the next class in the chain, class <span class="code">AggTypeBinder</span>, which not
+            only remembers all the previous information, but adds the aggregation type, <span class="code">max</span>.
+        </p>
+
+        <p>
+            One final step needs to occur: Cheetah has an instance of <span class="code">AggTypeBinder</span> in hand,
+            but what it really needs is a string to put in the file being created from the template. It creates the
+            string by calling the method <span class="code">__str__()</span> of <span class="code">AggTypeBinder</span>.
+            Now, finally, the chain ends and everything comes together. The method <span class="code">__str__</span>
+            triggers the actual calculation of the value, using all the known parameters: the database binding to be
+            hit, the time span of interest, the observation type, and the type of aggregation, querying the database as
+            necessary. The database is not actually hit until the last possible moment, after everything needed to do
+            the evalation is known.
+        </p>
+
+        <p>
+            Like our previous example, the results of the evaluation are then packaged up in an instance of <span
+            class="code">ValueHelper</span>, which does the final conversion to the desired units, formats the string,
+            then adds a label. The results, something like
+        </p>
+
+        <p class="example_output">12&deg;C</p>
+
+        <p>
+            are put in the generated HTML file. As you can see, a lot of machinery is hidden behind the deceptively
+            simple expression <span class="code">$day.outTemp.max</span>!
+        </p>
+
+        <h1 id="extending_the_list">Extending the list</h1>
+
+        <p>
+            As mentioned, WeeWX comes with a number of objects already in the search list, but you can extend it. To do
+            functions for them.
+        </p>
+
+        <p>
+            The general pattern is to create a new class that inherits from <span class="code">weewx.cheetahgenerator.SearchList</span>,
+            which supplies the functionality you need. You may or may not need to override its member function <span
+            class="code">get_extension_list()</span>. If you do not, then a default is supplied.
+        </p>
+
+        <h2>Adding tag <span class="code">$seven_day</span></h2>
+
+        <p>
+            Let's look at an example. The regular version of WeeWX offers statistical summaries by day, week, month,
+            year, rain year, and all time. While WeeWX offers the tag <span class="code">$week</span>, this is
+            statistics <em>since Sunday at midnight</em>. Suppose we would like to have statistics for a full week, that
+            is since midnight seven days ago.
+        </p>
+        <p>
+            This example is included in the distribution as <span class="code">examples/seven_day.py</span>. If you wish
+            to use or modify it, first copy it over to <span class="code">user/seven_day.py</span>, then modify it
+            there. Otherwise, at the next upgrade, you will lose any changes you have made.
+        </p>
+        <pre class="tty">import datetime
+import time
+
+from weewx.cheetahgenerator import SearchList
+from weewx.tags import TimespanBinder
+from weeutil.weeutil import TimeSpan
+
+class SevenDay(SearchList):                                                  # 1
+
+    def __init__(self, generator):                                           # 2
+        SearchList.__init__(self, generator)
+
+    def get_extension_list(self, timespan, db_lookup):                       # 3
+        """Returns a search list extension with two additions.
+
+        Parameters:
+          timespan: An instance of weeutil.weeutil.TimeSpan. This will
+                    hold the start and stop times of the domain of
+                    valid times.
+
+          db_lookup: This is a function that, given a data binding
+                     as its only parameter, will return a database manager
+                     object.
+        """
+
+        # Create a TimespanBinder object for the last seven days. First, calculate
+        # the time at midnight, seven days ago. The variable week_dt will be an instance of
+        # datetime.date.
+        week_dt = datetime.date.fromtimestamp(timespan.stop) \
+                  - datetime.timedelta(weeks=1)                              # 4
+        # Convert it to unix epoch time:
+        week_ts = time.mktime(week_dt.timetuple())                           # 5
+        # Form a TimespanBinder object, using the time span we just
+        # calculated:
+        seven_day_stats = TimespanBinder(TimeSpan(week_ts, timespan.stop),
+                                         db_lookup,
+                                         context='week',
+                                         formatter=self.generator.formatter,
+                                         converter=self.generator.converter,
+                                         skin_dict=self.generator.skin_dict) # 6
+
+        # Now create a small dictionary with the key 'seven_day':
+        search_list_extension = {'seven_day' : seven_day_stats}              # 7
+
+        # Finally, return our extension as a list:
+        return [search_list_extension]                                       # 8
+</pre>
+
+        <p>Going through the example, line by line:</p>
+        <ol>
+            <li>Create a new class called <span class="code">SevenDay</span>, which will inherit from class <span
+                class="code">SearchList</span>. All search list extensions must inherit from this class.
+            </li>
+            <li>Create an initializer for our new class. In this case, the initializer is not really necessary and does
+                nothing except pass its only parameter, <span class="code">generator</span>, a reference to the calling
+                generator, on to its superclass, <span class="code">SearchList</span>, which will then store it in <span
+                    class="code">self</span>. Nevertheless, we include the initializer in case you wish to modify it.
+            </li>
+            <li>Override member function <span class="code">get_extension_list()</span>. This function will be called
+                when the generator is ready to accept your new search list extension. The parameters that will be passed
+                in are:
+                <ul>
+                    <li><span class="code">self</span> Python's way of indicating the instance we are working with;
+                    </li>
+                    <li><span class="code">timespan</span> An instance of the utility class <span
+                        class="code">TimeSpan</span>. This will contain the valid start and ending times used by the
+                        template. Normally, this is all valid times, but if your template appears under one of the <a
+                            href="#Specifying_template_files">"SummaryBy"</a> sections in the <span class="code">
+                            [CheetahGenerator]</span> section of <span class="code">skin.conf</span>, then it will
+                        contain the timespan of that time period.
+                    </li>
+                    <li><span class="code">db_lookup</span> This is a function supplied by the generator. It takes a
+                        single argument, a name of a binding. When called, it will return an instance of the database
+                        manager class for that binding. The default for the function is whatever binding you set with
+                        the option <span class="code">data_binding</span> for this report, usually <span class="code">wx_binding</span>.
+                    </li>
+                </ul>
+            </li>
+            <li>
+                The object <span class="code">timespan</span> holds the domain of all valid times for the template, but
+                in order to calculate statistics for the last seven days, we need not the earliest valid time, but the
+                time at midnight seven days ago. So, we do a little Python date arithmetic to calculate this. The object
+                <span class="code">week_dt</span> will be an instance of <span class="code">datetime.date</span>.
+            </li>
+            <li>
+                We convert it to unix epoch time and assign it to variable <span class="code">week_ts</span>.
+            </li>
+            <li>
+                The class <span class="code">TimespanBinder</span> represents a statistical calculation over a time
+                period. We have <a href="#A_slightly_more_complex_tag">already met it</a> in the introduction <em><a
+                href="#how_tags_work">How tags work</a></em>. In our case, we will set it up to represent the statistics
+                over the last seven days. The class takes 6 parameters.
+                <ul>
+                    <li>The first is the timespan over which the calculation is to be done, which, in our case, is the
+                        last seven days. In step 5, we calculated the start of the seven days. The end is "now", that
+                        is, the end of the reporting period. This is given by the end point of <span class="code">timespan</span>,
+                        <span class="code">timespan.stop</span>.
+                    </li>
+                    <li>The second, <span class='code'>db_lookup</span>, is the database lookup function to be used. We
+                        simply pass in <span class="code">db_lookup</span>.
+                    </li>
+                    <li>The third, <span class="code">context</span>, is the time <em>context</em> to be used when
+                        formatting times. The set of possible choices is given by sub-section <a
+                            href="#Units_TimeFormats"><span class="code">[[TimeFormats]]</span></a> in the configuration
+                        file. Our new tag like <span class="code">$seven_day</span> is pretty similar to <span
+                            class="code">$week</span>, so we will just use <span class="code">'week'</span>, indicating
+                        that we want a time format that is suitable for a week-long period.
+                    </li>
+                    <li>The fourth, <span class="code">formatter</span>, should be an instance of class <span
+                        class="code">weewx.units.Formatter</span>, which contains information about how the results
+                        should be formatted. We just pass in the formatter set up by the generator, <span class="code">self.generator.formatter</span>.
+                    </li>
+                    <li>The fifth, <span class="code">converter</span>, should be an instance of <span class="code">weewx.units.Converter</span>,
+                        which contains information about the target units (<i>e.g.</i>, <span
+                            class="code">degree_C</span>) that are to be used. Again, we just pass in the instance set
+                        up by the generator, <span class="code">self.generator.converter</span>.
+                    </li>
+                    <li>The sixth, <span class="code">skin_dict</span>, is an instance of <span class="code">configobj.ConfigObj</span>,
+                        and contains the contents of the skin configuration file. We pass it on in order to allow
+                        aggregations that need information from the file, such as heating and cooling degree-days.
+                    </li>
+                </ul>
+            </li>
+            <li>Create a small dictionary with a single key, <span class="code">seven_day</span>, whose value will be
+                the <span class="code">TimespanBinder</span> that we just constructed.
+            </li>
+            <li>Return the dictionary in a list</li>
+        </ol>
+
+        <p>
+            The final step that we need to do is to tell the template engine where to find our extension. You do that by
+            going into the skin configuration file, <span class="code">skin.conf</span>, and adding the option <span
+            class="code">search_list_extensions</span> with our new extension. When you're done, it will look something
+            like this:
+        </p>
+        <pre class="tty">[CheetahGenerator]
+    # This section is used by the generator CheetahGenerator, and specifies
+    # which files are to be generated from which template.
+
+    # Possible encodings include 'html_entities', 'strict_ascii', 'normalized_ascii',
+    # as well as those listed in https://docs.python.org/3/library/codecs.html#standard-encodings
+    encoding = html_entities
+    <span class="highlight">search_list_extensions = user.seven_day.SevenDay</span>
+
+    [[SummaryByMonth]]
+    ...
+</pre>
+        <p>
+            Our addition has been <span class="highlight">highlighted</span>. Note that it is in the section <span
+            class="code">[CheetahGenerator]</span>.
+        </p>
+
+        <p>
+            Now, if the Cheetah engine encounters the tag <span class="code">
+          $seven_day</span>, it will scan the search list, looking for an attribute or key that matches <span
+            class="code">seven_day</span>. When it gets to the little dictionary we provided, it will find a matching
+            key, allowing it to retrieve the appropriate <span class="code">TimespanBinder</span> object.
+        </p>
+
+        <p>With this approach, you can now include "seven day" statistics in your HTML templates:</p>
+        <pre class="tty">
+&lt;table&gt;
+    &lt;tr&gt;
+        &lt;td&gt;Maximum temperature over the last seven days:&lt;/td&gt;
+        &lt;td&gt;$seven_day.outTemp.max&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+        &lt;td&gt;Minimum temperature over the last seven days:&lt;/td&gt;
+        &lt;td&gt;$seven_day.outTemp.min&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+        &lt;td&gt;Rain over the last seven days:&lt;/td&gt;
+        &lt;td&gt;$seven_day.rain.sum&lt;/td&gt;
+    &lt;/tr&gt;
+&lt;/table&gt;</pre>
+        <p>
+            We put our addition in the file <span class="code">user/stats.py</span>, which means it will be in the
+            directory hierarchy where <span class="code">weewxd</span> resides. Python will search this hierarchy by
+            default, so it will find our addition. However, if you put the file somewhere else, you may have to specify
+            its location with the environment variable <a
+            href="https://docs.python.org/3/using/cmdline.html#envvar-PYTHONPATH"><span
+            class="code">PYTHONPATH</span></a> when you start WeeWX:
+        </p>
+        <pre class="tty">export PYTHONPATH=/home/me/secret_location</pre>
+
+        <h2>Adding tag <span class="code">$colorize</span></h2>
+        <p>
+            Let's look at another example. This one will allow you to supply a background color, depending on the
+            temperature. For example, to colorize an HTML table cell:
+        </p>
+
+        <pre class="tty">&lt;table&gt;
+
+    ...
+
+  &lt;tr&gt;
+    &lt;td&gt;Outside temperature&lt;/td&gt;
+    &lt;td style="background-color:<span class="highlight">$colorize($current.outTemp.raw)</span>"&gt;$current.outTemp&lt;/td&gt;
+  &lt;/tr&gt;
+
+    ...
+
+&lt;/table&gt;</pre>
+
+        <p>
+            The highlighted expression will return a color, depending on the value of its argument. For example, if the
+            temperature was 30.9ºF, then the output might look like:
+        </p>
+        <table style="width:30%">
+            <tr>
+                <td>Outside temperature</td>
+                <td style="background-color:violet">30.9&#176;F</td>
+            </tr>
+        </table>
+
+        <h3>A very simple implementation</h3>
+        <p>
+            We will start with a very simple version. The code can be found in <span class="code">examples/colorize/colorize_1.py</span>.
+        </p>
+        <pre class="tty">from weewx.cheetahgenerator import SearchList
+
+
+class Colorize(SearchList):                                          # 1
+
+    def colorize(self, t_c):                                         # 2
+        """Choose a color on the basis of temperature
+
+        Args:
+            t_c (float): The temperature in degrees Celsius
+
+        Returns:
+            str: A color string
+        """
+
+        if t_c is None:                                              # 3
+            return "#00000000"
+        elif t_c < -10:
+            return "magenta"
+        elif t_c < 0:
+            return "violet"
+        elif t_c < 10:
+            return "lavender"
+        elif t_c < 20:
+            return "mocassin"
+        elif t_c < 30:
+            return "yellow"
+        elif t_c < 40:
+            return "coral"
+        else:
+            return "tomato"
+</pre>
+        <p>
+            The first thing that's striking about this version is just how simple an SLE can be: just one class with a
+            single function. Let's go through the implementation line-by-line.
+        </p>
+
+        <ol>
+            <li>
+                Just like the first example, all search list extensions inherit from <span class="code">weewx.cheetahgenerator.SearchList</span>
+            </li>
+            <li>
+                <p>
+                    The class defines a single function, <span class="code">colorize()</span>, with a single argument
+                    that must be of type <span class="code">float</span>.
+                </p>
+                <p>
+                    Unlike the first example, notice how we do not define an initializer, <span
+                    class="code">__init__()</span>, and, instead, rely on our superclass to do the initialization.
+                </p>
+            </li>
+            <li>
+                The function relies on a big if/else statement to pick a color on the basis of the temperature value.
+                Note how it starts by checking whether the value could be Python None. WeeWX uses None to represent
+                missing or invalid data. One must be always vigilant in guarding against a None value. If None is found,
+                then the color #00000000 is returned, which is transparent and will have no effect.
+            </li>
+        </ol>
+
+        <h4>Registering</h4>
+        <p>
+            As before, we must register our extension with the Cheetah engine. We do this by copying the extension to
+            the user directory, then adding its location to option <span class="code">search_list_extensions</span>:
+        </p>
+        <pre class="tty">[CheetahGenerator]
+    ...
+    <span class="highlight">search_list_extensions = user.colorize_1.Colorize</span>
+    ...
+</pre>
+
+        <h4>Where is <span class="code">get_extension_list()</span>?</h4>
+        <p>
+            You might wonder, "What happened to the member function <span class="code">get_extension_list()</span>? We
+            needed it in the first example; why not now?" The answer is that we are inheriting from, and relying on, the
+            version in the superclass <span class="code">SearchList</span>, which looks like this:
+        </p>
+        <pre class="tty">    def get_extension_list(self, timespan, db_lookup):
+        return [self]
+</pre>
+        <p>
+            This returns a list, with itself (an instance of class <span class="code">Colorize</span>) as the only
+            member.
+        </p>
+        <p>
+            How do we know whether to include an instance of <span class="code">get_extension_list()</span>? Why did we
+            include a version in the first example, but not in the second?
+        </p>
+        <p>
+            The answer is that many extensions, including <span class="code">$seven_day</span>, need information that
+            can only be known when the template is being evaluated. In the case of <span class="code">$seven_day</span>,
+            this was which database binding to use, which will determine the results of the database query done in its
+            implementation. This information is not known until <span class="code">get_extension_list()</span> is
+            called, which is just before template evaluation.
+        </p>
+        <p>
+            By constrast, <span class="code">$colorize()</span> is pure static: it doesn't use the database at all, and
+            everything it needs it can get from its single function argument. So, it has no need for the information in
+            <span class="code">get_extension_list()</span>.
+        </p>
+
+        <h4>Review</h4>
+        <p>
+            Let's review the whole process. When the WeeWX Cheetah generator starts up to evaluate a template, it first
+            creates a search list. It does this by calling <span class="code">get_extension_list()</span> for each SLE
+            that has been registered with it. In our case, this will cause the function above to put an instance of
+            <span class="code">Colorize</span> in the search list &mdash; we don't have to do anything to make this
+            happen.
+        </p>
+        <p>
+            When the engine starts to process the template, it will eventually come to
+        </p>
+        <pre
+            class="tty">&lt;td style="background-color:$colorize($current.outTemp.raw)"&gt;$current.outTemp&lt;/td&gt;</pre>
+        <p>
+            It needs to evaluate the expression <span class="code">$colorize($current.outTemp.raw)</span>, so it starts
+            scanning the search list looking for something with an attribute or key <span class="code">colorize</span>.
+            When it comes to our instance of <span class="code">Colorize</span> it gets a hit because, in Python, member
+            functions are implemented as attributes. The Cheetah engine knows to call it as a function because of the
+            parenthesis that follow the name. The engine passes in the value of <span
+            class="code">$current.outTemp.raw</span> as the sole argument, where it appears under the name <span
+            class="code">t_c</span>.
+        </p>
+        <p>
+            As described above, the function <span class="code">colorize()</span> then uses the argument to choose an
+            appropriate color, returning it as a string.
+        </p>
+
+        <h4>Limitation</h4>
+        <p>
+            This example has an obvious limitation: the argument to <span class="code">$colorize()</span> must be in
+            degrees Celsius. We can guard against passing in the wrong unit by always converting to Celsius first:
+        </p>
+        <pre class="tty">&lt;td style="background-color:$colorize($current.outTemp<span
+            class="highlight">.degree_C</span>.raw)"&gt;$current.outTemp&lt;/td&gt;</pre>
+        <p>
+            but the user would have to remember to do this every time <span class="code">colorize()</span> is called.
+            The next version gets around this limitation.
+        </p>
+
+        <h3>A slightly better version</h3>
+        <p>
+            Here's an improved version that can handle an argument that uses any unit, not just degrees Celsius. The
+            code can be found in <span class="code">examples/colorize/colorize_2.py</span>.
+        </p>
+        <pre class="tty">import weewx.units
+from weewx.cheetahgenerator import SearchList
+
+class Colorize(SearchList):                                          # 1
+
+    def colorize(self, value_vh):                                    # 2
+        """Choose a color string on the basis of a temperature value"""
+
+        # Extract the ValueTuple part out of the ValueHelper
+        value_vt = value_vh.value_t                                  # 3
+
+        # Convert to Celsius:
+        t_celsius = weewx.units.convert(value_vt, 'degree_C')        # 4
+
+        # The variable "t_celsius" is a ValueTuple. Get just the value:
+        t_c = t_celsius.value                                        # 5
+
+        # Pick a color based on the temperature
+        if t_c is None:                                              # 6
+            return "#00000000"
+        elif t_c < -10:
+            return "magenta"
+        elif t_c < 0:
+            return "violet"
+        elif t_c < 10:
+            return "lavender"
+        elif t_c < 20:
+            return "mocassin"
+        elif t_c < 30:
+            return "yellow"
+        elif t_c < 40:
+            return "coral"
+        else:
+            return "tomato"
+</pre>
+        <p>
+            Going through the example, line by line:
+        </p>
+        <ol>
+            <li>
+                Just like the other examples, we must inherit from <span
+                class="code">weewx.cheetahgenerator.SearchList</span>.
+            </li>
+            <li>
+                <p>
+                    However, in this example, notice that the argument to <span class="code">colorize()</span> is an
+                    instance of class <a href="customizing.htm#ValueHelper"><span class="code">ValueHelper</span></a>,
+                    instead of a simple float.
+                </p>
+                <p>
+                    As before, we do not define an initializer, <span class="code">__init__()</span>, and, instead, rely
+                    on our superclass to do the initialization.
+                </p>
+            </li>
+            <li>
+                The argument <span class="code">value_vh</span> will contain many things, including formatting and
+                preferred units, but, for now, we are only interested in the <a href="customizing.htm#ValueTuple"><span
+                class="code">ValueTuple</span></a> contained within, which can be extracted with the attribute <span
+                class="code">value_t</span>.
+            </li>
+            <li>
+                The variable <span class="code">value_vt</span> could be in any unit that measures temperature. Our code
+                needs Celsius, so we convert to Celsius using the convenience function <span class="code">weewx.units.convert()</span>.
+                The results will be a new <span class="code">ValueTuple</span>, this time in Celsius.
+            </li>
+            <li>
+                We need just the temperature value, and not the other things in a <span class="code">ValueTuple</span>,
+                so extract it using the attribute <span class="code">value</span>. The results will be a simple instance
+                of <span class="code">float</span> or, possibly, Python <span class="code">None</span>.
+            </li>
+            <li>
+                Finally, we need a big if/else statement to choose which color to return, while making sure to test for
+                <span class="code">None</span>.
+            </li>
+        </ol>
+        <p>
+            This version uses a <span class="code">ValueHelper</span> as an argument instead of a float. How do we call
+            it? Here's an example:
+        </p>
+        <pre class="tty">&lt;table&gt;
+
+    ...
+
+  &lt;tr&gt;
+    &lt;td&gt;Outside temperature&lt;/td&gt;
+    &lt;td style="background-color:$colorize(<span class="highlight">$current.outTemp)</span>"&gt;$current.outTemp&lt;/td&gt;
+  &lt;/tr&gt;
+
+    ...
+
+&lt;/table&gt;</pre>
+
+        <p>
+            This time, we call the function with a simple <span class="code">$current.outTemp</span> (without the <span
+            class="code">.raw</span> suffix), which is actually an instance of class <span
+            class="code">ValueHelper</span>. When we met this class <a href="#return_ValueHelper">earlier</a>, the
+            Cheetah engine needed a string to put in the template, so it called the special member function <span
+            class="code">__str__()</span>. However, in this case, the results are going to be used as an argument to a
+            function, not as a string, so the engine simply passes in the <span class="code">ValueHelper</span>
+            unchanged to <span class="code">colorize()</span>, where it appears as argument <span
+            class="code">value_vh</span>.
+        </p>
+
+        <p>
+            Our new version is better than the original because it can take a temperature in any unit, not just Celsius.
+            However, it can still only handle temperature values and, even then, the color bands are still hardwired in.
+            Our next version will remove these limitations.
+        </p>
+
+
+        <h3>A more sophisticated version</h3>
+
+        <p>
+            Rather than hardwire in the values and observation type, in this version we will retrieve them from the skin
+            configuration file, <span class="code">skin.conf</span>. Here's what a typical configuration might look like
+            for this version:
+        </p>
+        <pre class="tty">
+[Colorize]                      # 1
+    [[group_temperature]]       # 2
+        unit_system = metricwx  # 3
+        default = tomato        # 4
+        None = lightgray        # 5
+        [[[upper_bounds]]]      # 6
+            -10 = magenta       # 7
+            0 = violet          # 8
+            10 = lavender
+            20 = mocassin
+            30 = yellow
+            40 = coral
+    [[group_uv]]                # 9
+        unit_system = metricwx
+        default = darkviolet
+        [[[upper_bounds]]]
+            2.4 = limegreen
+            5.4 = yellow
+            7.4 = orange
+            10.4 = red
+</pre>
+        <p>
+            Here's what the various lines in the configuration stanza mean:
+        </p>
+        <ol>
+            <li>
+                All of the configuration information needed by the SLE <span class="code">Colorize</span> can be found
+                in a stanza with the heading <span class="code">[Colorize]</span>. Linking facility with a stanza of the
+                same name is a very common pattern in WeeWX.
+            </li>
+            <li>
+                We need a separate color table for each unit group that we are going to support. This is the start of
+                the table for unit group <span class="code">group_temperature</span>.
+            </li>
+            <li>
+                We need to specify what unit system will be used by the temperature color table. In this example, we are
+                using <span class="code">metricwx</span>.
+            </li>
+            <li>
+                In case we do not find a value in the table, we need a default. We will use the color <span
+                class="code">tomato</span>.
+            </li>
+            <li>
+                In case the value is Python None, return the color given by option <span class="code">None</span>. We
+                will use <span class="code">lightgray</span>.
+            </li>
+            <li>
+                The sub-subsecction <span class="code">[[[upper_bounds]]]</span> lists the upper (max) value of each of
+                the color bands.
+            </li>
+            <li>
+                The first color band (magenta) is used for temperatures less than or equal to -10&deg;C.
+            </li>
+            <li>
+                The second band (violet) is for temperatures greater than -10&deg;C and less than or equal to 0&deg;C.
+                And so on.
+            </li>
+            <li>
+                The next subsection, <span class="code">[[group_uv]]</span>, is very similar to the one for <span
+                class="code">group_temperature</span>, except the values are for bands of the UV index.
+            </li>
+        </ol>
+
+        <p>
+            Although <span class="code">[Colorize]</span> is in <span class="code">skin.conf</span>, there is nothing
+            special about it and it can be overridden in <span class="code">weewx.conf</span>, just like any other
+            configuration information.
+        </p>
+
+        <h4>Annotated code</h4>
+        <p>
+            Here's the alternative version of <span class="code">colorize()</span>, which will use the values in the
+            configuration file. It can also be found in <span class="code">examples/colorize/colorize_3.py</span>.
+        </p>
+        <pre class="tty">
+import weewx.units
+from weewx.cheetahgenerator import SearchList
+
+class Colorize(SearchList):                                               # 1
+
+    def __init__(self, generator):                                        # 2
+        SearchList.__init__(self, generator)
+        self.color_tables = self.generator.skin_dict.get('Colorize', {})
+
+    def colorize(self, value_vh):
+
+        # Get the ValueTuple and unit group from the incoming ValueHelper
+        value_vt = value_vh.value_t                                       # 3
+        unit_group = value_vt.group                                       # 4
+
+        # Make sure unit_group is in the color table, and that the table
+        # specifies a unit system.
+        if unit_group not in self.color_tables \
+                or 'unit_system' not in self.color_tables[unit_group]:    # 5
+            return "#00000000"
+
+        # Convert the value to the same unit used by the color table:
+        unit_system = self.color_tables[unit_group]['unit_system']        # 6
+        converted_vt = weewx.units.convertStdName(value_vt, unit_system)  # 7
+
+        # Check for a value of None
+        if converted_vt.value is None:                                    # 8
+            return self.color_tables[unit_group].get('none') \
+                   or self.color_tables[unit_group].get('None', "#00000000")
+
+        # Search for the value in the color table:
+        for upper_bound in self.color_tables[unit_group]['upper_bounds']: # 9
+            if converted_vt.value <= float(upper_bound):                  # 10
+                return self.color_tables[unit_group]['upper_bounds'][upper_bound]
+
+        return self.color_tables[unit_group].get('default', "#00000000")  # 11
+</pre>
+        <ol>
+            <li>
+                As before, our class must inherit from <span class="code">SearchList</span>.
+            </li>
+            <li>
+                In this version, we supply an initializer because we are going to do some work in it: extract our color
+                table out of the skin configuration dictionary. In case the user neglects to include a <span
+                class="code">[Colorize]</span> section, we substitute an empty dictionary.
+            </li>
+            <li>
+                As before, we extract the <span class="code">ValueTuple</span> part out of the incoming <span
+                class="code">ValueHelper</span> using the attribute <span class="code">value_t</span>.
+            </li>
+            <li>
+                Retrieve the unit group used by the incoming argument. This will be something like "group_temperature".
+            </li>
+            <li>
+                What if the user is requesting a color for a unit group that we don't know anything about? We must check
+                that the unit group is in our color table. We must also check that a unit system has been supplied for
+                the color table. If either of these checks fail, then return the color <span
+                class="code">#00000000</span>, which will have no effect in setting a background color.
+            </li>
+            <li>
+                Thanks to the checks we did in step 5, we know that this line will not raise a <span class="code">KeyError</span>
+                exception. Get the unit system used by the color table for this unit group. It will be something like
+                'US', 'metric', or 'metricwx'.
+            </li>
+            <li>
+                Convert the incoming value so it uses the same units as the color table.
+            </li>
+            <li>
+                We must always be vigilant for values of Python None! The expression
+                <pre class="tty">self.color_tables[unit_group].get('none') or self.color_tables[unit_group].get('None', "#00000000")</pre>
+                is just a trick to allow us to accept either "<span class="code">none</span>" or "<span class="code">None</span>"
+                in the configuration file. If neither is present, then we return the color <span
+                class="code">#00000000</span>, which will have no effect.
+            </li>
+            <li>
+                Now start searching the color table to find a band that is less than or equal to the value we have in
+                hand.
+            </li>
+            <li>
+                <p>
+                    Two details to note.
+                </p>
+                <p>
+                    First, the variable <span class="code">converted_vt</span> is a <span class="code">ValueTuple</span>.
+                    We need the raw value in order to do the comparison. We get this through attribute <span
+                    class="code">.value</span>.
+                </p>
+                <p>
+                    Second, WeeWX uses the utility <span class="code">ConfigObj</span> to read configuration files. When
+                    <span class="code">ConfigObj</span> returns its results, the values will be <em>strings</em>. We
+                    must convert these to floats before doing the comparison. You must be constantly vigilant about this
+                    when working with configuration information.
+                </p>
+                <p>
+                    If we find a band with an upper bound greater than our value, we have a hit. Return the
+                    corresponding color.
+                </p>
+            </li>
+            <li>
+                If we make it all the way through the table without a hit, then we must have a value greater than
+                anything in the table. Return the default, or the color <span class="code">#00000000</span> if there is
+                no default.
+            </li>
+        </ol>
+
+    </div> <!-- End id 'technical_content' -->
+</div>  <!-- End class 'main' -->
+</body>
+</html>
