@@ -499,7 +499,7 @@ class Vantage(weewx.drivers.AbstractDevice):
         self.max_tries  = to_int(vp_dict.get('max_tries', 4))
         self.iss_id     = to_int(vp_dict.get('iss_id'))
         self.model_type = to_int(vp_dict.get('model_type', 2))
-        if self.model_type not in list(range(1, 3)):
+        if self.model_type not in (1, 2):
             raise weewx.UnsupportedFeature("Unknown model_type (%d)" % self.model_type)
         self.loop_request = to_int(vp_dict.get('loop_request', 1))
         log.debug("Option loop_request=%d", self.loop_request)

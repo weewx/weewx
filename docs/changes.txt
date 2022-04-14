@@ -17,6 +17,12 @@ Fix issue #760.
 
 Add observation types highOutTemp and lowOutTemp to group_temperature.
 
+Add unit groups for sunshine and rain duration, cloudcover, and pop.
+PR #765
+
+Do not allow HUP signals in the systemd service file.
+PR #766.
+
 
 4.7.0 03/01/2022
 Introduced new option "generate_once". If True, templates will be generated
