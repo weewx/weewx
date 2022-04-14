@@ -20,8 +20,11 @@ Add observation types highOutTemp and lowOutTemp to group_temperature.
 Add unit groups for sunshine and rain duration, cloudcover, and pop.
 PR #765
 
-Do not allow HUP signals in the systemd service file.
+Do not allow HUP signals (reload is not allowed as of V4.6).
 PR #766.
+
+Do not fork if using systemd.
+PR #767.
 
 
 4.7.0 03/01/2022
