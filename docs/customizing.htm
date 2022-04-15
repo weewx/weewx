@@ -3882,8 +3882,6 @@ ephem.Eros = eros</pre>
             <img src="images/sample_monthtempdew.png" alt="Monthly temperature and dewpoint"/>
         </p>
 
-        <h2>Including expressions in a plot</h2>
-
         <h3 id="including_same_sql_type_2x">Including a type more than once in a plot</h3>
 
         <p>
@@ -3945,7 +3943,7 @@ ephem.Eros = eros</pre>
             <img style="width:300px; height:180px" alt="Daily highs and lows" src="images/yearhilow.png"/>
         </p>
 
-        <h3 id="arbitrary_expressions_in_plot">Including arbitrary expressions</h3>
+        <h2 id="arbitrary_expressions_in_plot">Including arbitrary expressions</h2>
         <p>
             The option <span class="code">data_type</span> can actually be <em>any arbitrary SQL expression,
             which is valid in the context of the available types in the schema</em>. For
@@ -3966,6 +3964,45 @@ ephem.Eros = eros</pre>
 
         <p>
             <img style="width:300px; height:180px" alt="Inside - outside temperature" src="images/yeardiff.png"/>
+        </p>
+
+        <h2>Changing the unit used in a plot</h2>
+        <p>
+            Normally, the unit used in a plot is set by the unit group of the observation types in the plot.
+            For example, consider this plot of today's outside temperature and dewpoint:</p>
+        <pre class="tty">
+    [[day_images]]
+        ...
+        [[[daytempdew]]]
+            [[[[outTemp]]]]
+            [[[[dewpoint]]]]</pre>
+        <p>
+            Both <span class="code">outTemp</span> and <span class="code">dewpoint</span> belong to unit group <span
+            class="code">group_temperature</span>, so this plot will use whatever unit has been specified for that
+            group. See the section <a href="#mixed_units"><em>Mixed units</em></a> for details.
+        </p>
+        <p>
+            However, supposed you'd like to offer both Metric and US Customary versions of the same plot? You
+            can do this by using option <a href="#imagegenerator-unit"><span class="code">unit</span></a>
+            to override the unit used for individual plots:
+        </p>
+
+        <pre class="tty">
+    [[day_images]]
+        ...
+        [[[daytempdewUS]]]
+            <span class="highlight">unit = degree_F</span>
+            [[[[outTemp]]]]
+            [[[[dewpoint]]]]
+
+        [[[daytempdewMetric]]]
+            <span class="highlight">unit = degree_C</span>
+            [[[[outTemp]]]]
+            [[[[dewpoint]]]]</pre>
+
+        <p>
+            This will produce two plots: file <span class="code">daytempdewUS.png</span> will be in degrees
+            Fahrenheit, while file <span class="code">dayTempMetric.png</span> will use degrees Celsius.
         </p>
 
         <h2 id="line_gaps">Line gaps</h2>
@@ -6518,6 +6555,13 @@ growing_base = 50.0, degree_F</pre>
             Image file staleness age, in seconds. If the image file is older than this age it will be generated. If no
             <span class="code">stale_age</span> is specified, then the image file will be generated every time the
             generator runs.
+        </p>
+
+        <p class="config_option" id="imagegenerator-unit">unit</p>
+
+        <p>
+            Normally, the unit used in a plot is set by whatever <a href="#mixed_units">unit group the types are in</a>.
+            However, this option allows overriding the unit used in a specific plot.
         </p>
 
         <h3>Various label options</h3>
