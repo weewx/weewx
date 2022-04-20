@@ -26,6 +26,9 @@ PR #766.
 Do not fork if using systemd.
 PR #767.
 
+Fix problem that prevented wee_config --reconfigure from working when
+using Python 2.7, if the configuration file contained UTF-8 characters.
+
 
 4.7.0 03/01/2022
 Introduced new option "generate_once". If True, templates will be generated

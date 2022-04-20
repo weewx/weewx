@@ -17,6 +17,7 @@ import shutil
 import sys
 import tempfile
 
+import six
 from six.moves import StringIO, input
 
 import configobj
@@ -1717,7 +1718,7 @@ def prompt_with_options(prompt, default=None, options=None):
     msg = "%s [%s]: " % (prompt, default) if default is not None else "%s: " % prompt
     value = None
     while value is None:
-        value = input(msg).strip()
+        value = input(six.ensure_str(msg)).strip()
         if value:
             if options and value not in options:
                 value = None
