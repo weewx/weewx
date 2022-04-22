@@ -41,7 +41,9 @@ checklist for doing a release:
      2. make update-suse-repo
      3. make push-suse-repo
      4. ssh weewx.com rsync -arv /var/www/html/suse-test/ /var/www/html/suse
-11. Announce the release to the weewx user's group.
+11. Reshuffle files on the server
+     1. make release
+12. Announce the release to the weewx user's group.
 
 
 
