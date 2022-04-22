@@ -1,12 +1,9 @@
 WeeWX change history
 --------------------
 
-4.8.0 MM/DD/YYYY
+4.8.0 04/21/2022
 Allow unit to be overridden for a specific plot by using new option 'unit'.
 Fixes issue #729.
-
-
-4.7.1 MM/DD/YYYY
 
 Fix problem that prevented wind from appearing in NOAA yearly summaries.
 
