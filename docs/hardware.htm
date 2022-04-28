@@ -2868,13 +2868,15 @@ confirmation before proceeding.
         <h3 id="vantage_dumping_the_logger_memory">
             Action <span class="code">--dump</span></h3>
 
-        <p>Generally, WeeWX downloads only new archive records from the on-board logger in the
-            Vantage. However, occasionally the memory in the Vantage will get corrupted, making this impossible. See the
-            troubleshooting section <em><a href="usersguide.htm#html_generated_but_not_updated">WeeWX generates HTML
-                pages, but it does not update them</a></em>. The fix involves clearing the memory but, unfortunately,
-            this means you may lose any data which might have accumulated in the logger memory, but not yet downloaded.
-            By using the <span class="code">--dump</span> command before clearing the memory, you might be able to save
-            these data. Stop WeeWX first, then</p>
+        <p>
+            Generally, WeeWX downloads only new archive records from the on-board logger in the Vantage. However,
+            occasionally the memory in the Vantage will get corrupted, making this impossible. See the section <em><a
+            href="https://github.com/weewx/weewx/wiki/Troubleshooting-the-Davis-Vantage-station#weewx-generates-html-pages-but-it-does-not-update-them">WeeWX
+            generates HTML pages, but it does not update them</a></em> in the Wiki. The fix involves clearing the memory
+            but, unfortunately, this means you may lose any data which might have accumulated in the logger memory, but
+            not yet downloaded. By using the <span class="code">--dump</span> command before clearing the memory, you
+            might be able to save these data. Stop WeeWX first, then
+        </p>
         <pre class="tty cmd">wee_device --dump</pre>
         <p>This will dump all data archived in the Vantage memory directly to the database, without regard to whether or
             not they have been seen before. Because the command dumps <em>all</em> data, it may result in many duplicate
