@@ -1,6 +1,10 @@
 WeeWX change history
 --------------------
 
+4.8.1 MM/DD/YYYY
+Don't swallow syntax errors when wee_config is looking for drivers.
+
+
 4.8.0 04/21/2022
 Allow unit to be overridden for a specific plot by using new option 'unit'.
 Fixes issue #729.
