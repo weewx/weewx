@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-#    Copyright (c) 2009-2021 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2022 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -33,7 +33,7 @@ from weewx.crc16 import crc16
 log = logging.getLogger(__name__)
 
 DRIVER_NAME = 'Vantage'
-DRIVER_VERSION = '3.2.3'
+DRIVER_VERSION = '3.3.0'
 
 
 def loader(config_dict, engine):
@@ -1480,6 +1480,9 @@ class Vantage(weewx.drivers.AbstractDevice):
         }
         # Now we need to map the raw values to physical units.
         for _type in raw_loop_packet:
+            if _type in extra_sensors and self.hardware_type == 17:
+                # Vantage Vues do not support extra sensors. Skip them.
+                continue
             # Get the mapping function for this type. If there is
             # no such function, supply a lambda function that returns None
             func = _loop_map.get(_type, lambda p, k: None)
@@ -1554,6 +1557,9 @@ class Vantage(weewx.drivers.AbstractDevice):
                                                     raw_archive_record['wind_samples'])
 
         for _type in raw_archive_record:
+            if _type in extra_sensors and self.hardware_type == 17:
+                # VantageVues do not support extra sensors. Skip them.
+                continue
             # Get the mapping function for this type. If there is no such
             # function, supply a lambda function that will just return None
             func = _archive_map.get(_type, lambda p, k: None)
@@ -1671,6 +1677,15 @@ rec_types_A, fmt_A = list(zip(*rec_A_schema))
 rec_types_B, fmt_B = list(zip(*rec_B_schema))
 rec_A_struct = struct.Struct('<' + ''.join(fmt_A))
 rec_B_struct = struct.Struct('<' + ''.join(fmt_B))
+
+# These are extra sensors, not found on the Vues.
+extra_sensors = {
+    'leafTemp1', 'leafTemp2', 'leafWet1', 'leafWet2',
+    'soilTemp1', 'soilTemp2', 'soilTemp3', 'soilTemp4',
+    'extraHumid1', 'extraHumid2', 'extraTemp1', 'extraTemp2', 'extraTemp3',
+    'soilMoist1', 'soilMoist2', 'soildMoist3', 'soilMoist4'
+}
+
 
 def _rxcheck(model_type, interval, iss_id, number_of_wind_samples):
     """Gives an estimate of the fraction of packets received.
