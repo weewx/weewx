@@ -940,7 +940,7 @@ class DaySummaryManager(Manager):
             day_summaries_schemas = [(e, 'scalar') for e in self.sqlkeys if
                                      e not in ('dateTime', 'usUnits', 'interval')]
             import weewx.wxmanager
-            if type(self) == weewx.wxmanager.WXDaySummaryManager:
+            if type(self) == weewx.wxmanager.WXDaySummaryManager or 'windSpeed' in self.sqlkeys:
                 # For backwards compatibility, include 'wind'
                 day_summaries_schemas += [('wind', 'vector')]
 
