@@ -33,7 +33,7 @@ from weewx.crc16 import crc16
 log = logging.getLogger(__name__)
 
 DRIVER_NAME = 'Vantage'
-DRIVER_VERSION = '3.3.0'
+DRIVER_VERSION = '3.4.0'
 
 
 def loader(config_dict, engine):
@@ -108,15 +108,13 @@ class BaseWrapper(object):
                 if _resp == b'\n\r':
                     log.debug("Rude wake up of console successful")
                     return
-            except weewx.WeeWxIOError:
-                pass
+            except weewx.WeeWxIOError as e:
+                log.debug("Wakeup retry #%d failed: %s", count + 1, e)
+                print("Unable to wake up Vantage console... sleeping")
+                time.sleep(self.wait_before_retry)
+                print("Unable to wake up Vantage console... retrying")
 
-            log.debug("Retry #%d failed", count)
-            print("Unable to wake up console... sleeping")
-            time.sleep(self.wait_before_retry)
-            print("Unable to wake up console... retrying")
-
-        log.error("Unable to wake up console")
+        log.error("Unable to wake up Vantage console")
         raise weewx.WakeupError("Unable to wake up Vantage console")
 
     def send_data(self, data):
@@ -132,7 +130,7 @@ class BaseWrapper(object):
         # Look for the acknowledging ACK character
         _resp = self.read()
         if _resp != _ack: 
-            log.error("No <ACK> received from console")
+            log.error("No <ACK> received from Vantage console")
             raise weewx.WeeWxIOError("No <ACK> received from Vantage console")
     
     def send_data_with_crc16(self, data, max_tries=3):
@@ -155,11 +153,10 @@ class BaseWrapper(object):
                 _resp = self.read()
                 if _resp == _ack:
                     return
-            except weewx.WeeWxIOError:
-                pass
-            log.debug("send_data_with_crc16; try #%d", count + 1)
+            except weewx.WeeWxIOError as e:
+                log.debug("send_data_with_crc16; try #%d: %s", count + 1, e)
 
-        log.error("Unable to pass CRC16 check while sending data")
+        log.error("Unable to pass CRC16 check while sending data to Vantage console")
         raise weewx.CRCError("Unable to pass CRC16 check while sending data to Vantage console")
 
     def send_command(self, command, max_tries=3):
@@ -174,8 +171,8 @@ class BaseWrapper(object):
                 self.write(command)
                 # Takes some time for the Vantage to react and fill up the buffer. Sleep for a bit:
                 time.sleep(self.command_delay)
-                # Can't use function serial.readline() because the VP responds with \n\r, not just \n.
-                # So, instead find how many bytes are waiting and fetch them all
+                # Can't use function serial.readline() because the VP responds with \n\r,
+                # not just \n. So, instead find how many bytes are waiting and fetch them all
                 nc = self.queued_bytes()
                 _buffer = self.read(nc)
                 # Split the buffer on the newlines
@@ -185,15 +182,14 @@ class BaseWrapper(object):
                     # Return the rest:
                     return _buffer_list[1:]
 
-            except weewx.WeeWxIOError:
-                # Caught an error. Keep trying...
-                pass
-            log.debug("send_command; try #%d failed", count + 1)
+            except weewx.WeeWxIOError as e:
+                # Caught an error. Log, then keep trying...
+                log.debug("send_command; try #%d failed: %s", count + 1, e)
         
-        log.error("Max retries exceeded while sending command %s", command)
-        raise weewx.RetriesExceeded("Max retries exceeded while sending command %s" % command)
-    
-        
+        msg = "Max retries exceeded while sending command %s" % command
+        log.error(msg)
+        raise weewx.RetriesExceeded(msg)
+
     def get_data_with_crc16(self, nbytes, prompt=None, max_tries=3):
         """Get a packet of data and do a CRC16 check on it, asking for retransmit if necessary.
         
@@ -489,6 +485,12 @@ class Vantage(weewx.drivers.AbstractDevice):
         [Optional. Default is 2]
 
         loop_request: Requested packet type. 1=LOOP; 2=LOOP2; 3=both.
+
+        loop_batch: How many LOOP packets to get in a single  batch.
+        [Optional. Default is 200]
+
+        max_batch_errors: How many errors to allow in a batch before a restart.
+        [Optional. Default is 3]
         """
 
         log.debug('Driver version is %s', DRIVER_VERSION)
@@ -503,6 +505,8 @@ class Vantage(weewx.drivers.AbstractDevice):
             raise weewx.UnsupportedFeature("Unknown model_type (%d)" % self.model_type)
         self.loop_request = to_int(vp_dict.get('loop_request', 1))
         log.debug("Option loop_request=%d", self.loop_request)
+        self.loop_batch = to_int(vp_dict.get('loop_batch', 200))
+        self.max_batch_errors = to_int(vp_dict.get('max_batch_errors', 3))
 
         self.save_day_rain = None
         self.max_dst_jump = 7200
@@ -532,7 +536,7 @@ class Vantage(weewx.drivers.AbstractDevice):
             # Get LOOP packets in big batches This is necessary because there is
             # an undocumented limit to how many LOOP records you can request
             # on the VP (somewhere around 220).
-            for _loop_packet in self.genDavisLoopPackets(200):
+            for _loop_packet in self.genDavisLoopPackets(self.loop_batch):
                 yield _loop_packet
 
     def genDavisLoopPackets(self, N=1):
@@ -545,29 +549,30 @@ class Vantage(weewx.drivers.AbstractDevice):
         """
 
         log.debug("Requesting %d LOOP packets.", N)
-        
-        self.port.wakeup_console(self.max_tries)
-        
-        if self.loop_request == 1:
-            # If asking for old-fashioned LOOP1 data, send the older command in case the
-            # station does not support the LPS command:
-            self.port.send_data(b"LOOP %d\n" % N)
-        else:
-            # Request N packets of type "loop_request":
-            self.port.send_data(b"LPS %d %d\n" % (self.loop_request, N))
 
-        for loop in range(N):
-            for count in range(self.max_tries):
-                try:
-                    loop_packet = self._get_packet()
-                except weewx.WeeWxIOError as e:
-                    log.error("LOOP try #%d; error: %s", count + 1, e)
+        attempt = 1
+        while attempt <= self.max_batch_errors:
+            try:
+                self.port.wakeup_console(self.max_tries)
+                if self.loop_request == 1:
+                    # If asking for old-fashioned LOOP1 data, send the older command in case the
+                    # station does not support the LPS command:
+                    self.port.send_data(b"LOOP %d\n" % N)
                 else:
+                    # Request N packets of type "loop_request":
+                    self.port.send_data(b"LPS %d %d\n" % (self.loop_request, N))
+
+                for loop in range(N):
+                    loop_packet = self._get_packet()
                     yield loop_packet
-                    break
-            else:
-                log.error("LOOP max tries (%d) exceeded.", self.max_tries)
-                raise weewx.RetriesExceeded("Max tries exceeded while getting LOOP data.")
+
+            except weewx.WeeWxIOError as e:
+                log.error("LOOP batch try #%d; error: %s", attempt, e)
+                attempt += 1
+        else:
+            msg = "LOOP max batch errors (%d) exceeded." % self.max_batch_errors
+            log.error(msg)
+            raise weewx.RetriesExceeded(msg)
 
     def _get_packet(self):
         """Get a single LOOP packet"""
@@ -597,20 +602,20 @@ class Vantage(weewx.drivers.AbstractDevice):
         yields: a sequence of dictionaries containing the data
         """
 
-        count = 0
-        while count < self.max_tries:
+        count = 1
+        while count <= self.max_tries:
             try:            
                 for _record in self.genDavisArchiveRecords(since_ts):
-                    # Successfully retrieved record. Set count back to zero.
-                    count = 0
+                    # Successfully retrieved record. Set count back to one.
+                    count = 1
                     since_ts = _record['dateTime']
                     yield _record
                 # The generator loop exited. We're done.
                 return
             except weewx.WeeWxIOError as e:
-                # Problem. Increment retry count
-                count += 1
+                # Problem. Log, then increment count
                 log.error("DMPAFT try #%d; error: %s", count, e)
+                count += 1
 
         log.error("DMPAFT max tries (%d) exceeded.", self.max_tries)
         raise weewx.RetriesExceeded("Max tries exceeded while getting archive data.")
@@ -807,7 +812,7 @@ class Vantage(weewx.drivers.AbstractDevice):
                 # Caught an error. Keep retrying...
                 continue
         log.error("Max retries exceeded while getting time")
-        raise weewx.RetriesExceeded("While getting console time")
+        raise weewx.RetriesExceeded("Max retries exceeded while getting time")
             
     def setTime(self):
         """Set the clock on the Davis Vantage console"""
@@ -835,7 +840,7 @@ class Vantage(weewx.drivers.AbstractDevice):
                 # Caught an error. Keep retrying...
                 continue
         log.error("Max retries exceeded while setting time")
-        raise weewx.RetriesExceeded("While setting console time")
+        raise weewx.RetriesExceeded("Max retries exceeded while setting time")
     
     def setDST(self, dst='auto'):
         """Turn DST on or off, or set it to auto.
@@ -1161,7 +1166,7 @@ class Vantage(weewx.drivers.AbstractDevice):
                 # Caught an error. Keey trying...
                 continue
         log.error("Max retries exceeded while clearing log")
-        raise weewx.RetriesExceeded("While clearing log")
+        raise weewx.RetriesExceeded("Max retries exceeded while clearing log")
     
     def getRX(self):
         """Returns reception statistics from the console.
@@ -1411,9 +1416,10 @@ class Vantage(weewx.drivers.AbstractDevice):
                 return _value
             except weewx.WeeWxIOError:
                 continue
-        
-        log.error("Max retries exceeded while getting EEPROM data at address 0x%X", offset)
-        raise weewx.RetriesExceeded("While getting EEPROM data value at address 0x%X" % offset)
+
+        msg = "While getting EEPROM data value at address 0x%X" % offset
+        log.error(msg)
+        raise weewx.RetriesExceeded(msg)
         
     @staticmethod
     def _port_factory(vp_dict):

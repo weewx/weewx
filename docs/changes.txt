@@ -9,6 +9,10 @@ Fixes issue #771.
 
 Include 'wind' in daily summary if 'windSpeed' is present.
 
+Try waking the Vantage console before giving up on LOOP errors.
+Better Vantage diagnostics.
+Fixes issue #772.
+
 
 4.8.0 04/21/2022
 Allow unit to be overridden for a specific plot by using new option 'unit'.
