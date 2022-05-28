@@ -5,6 +5,8 @@ WeeWX change history
 Don't swallow syntax errors when wee_config is looking for drivers.
 
 Fix problem that create 'ghost' values for VantageVue stations.
+Fix problem that causes `leafWet3` and `leafWet4` to be emitted in VP2
+stations that do not have the necessary sensors.
 Fixes issue #771.
 
 Include 'wind' in daily summary if 'windSpeed' is present.

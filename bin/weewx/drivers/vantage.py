@@ -1786,6 +1786,8 @@ def _decode_windSpeed_H(p, k):
 # This dictionary maps a type key to a function. The function should be able to
 # decode a sensor value held in the LOOP packet in the internal, Davis form into US
 # units and return it.
+# NB: 5/28/2022. In a private email with Davis support, they say that leafWet3 and leafWet4 should
+# always be ignored. They are not supported.
 _loop_map = {
     'altimeter'       : lambda p, k: float(p[k]) / 1000.0 if p[k] else None,
     'bar_calibration' : lambda p, k: float(p[k]) / 1000.0 if p[k] else None,
@@ -1831,8 +1833,8 @@ _loop_map = {
     'leafTemp4'       : lambda p, k: float(p[k] - 90) if p[k] != 0xff else None,
     'leafWet1'        : lambda p, k: float(p[k]) if p[k] != 0xff else None,
     'leafWet2'        : lambda p, k: float(p[k]) if p[k] != 0xff else None,
-    'leafWet3'        : lambda p, k: float(p[k]) if p[k] != 0xff else None,
-    'leafWet4'        : lambda p, k: float(p[k]) if p[k] != 0xff else None,
+    'leafWet3'        : lambda p, k: None,  # Vantage supports only 2 leaf wetness sensors
+    'leafWet4'        : lambda p, k: None,
     'monthET'         : lambda p, k: float(p[k]) / 100.0,
     'monthRain'       : _decode_rain,
     'outHumidity'     : lambda p, k: float(p[k]) if p[k] != 0xff else None,
