@@ -20,6 +20,9 @@ Fixes issue #774.
 
 Refine translations for French skin. Thanks to user Pascal!
 
+Fix check for reuse_ssl for Python versions greater than 3.10.
+Fixes issue #775.
+
 
 4.8.0 04/21/2022
 Allow unit to be overridden for a specific plot by using new option 'unit'.

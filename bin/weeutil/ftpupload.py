@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2020 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2022 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -88,7 +88,7 @@ class FtpUpload(object):
         self.reuse_ssl = reuse_ssl
         self.encoding = encoding
 
-        if self.reuse_ssl and sys.version < '3.6':
+        if self.reuse_ssl and (sys.version_info.major < 3 or sys.version_info.minor < 6):
             raise ValueError("Reusing an SSL connection requires Python version 3.6 or greater")
 
     def run(self):
