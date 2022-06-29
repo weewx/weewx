@@ -3751,6 +3751,50 @@ ephem.Eros = eros</pre>
             a companion document <a href="sle.html"><em>Writing search list extensions</em></a>.
         </p>
 
+        <h2 id="calculation_in_templates">How to calculate values in templates</h2>
+        
+        <p>
+            While it is the best way to define calculated values by writing a search list extension or XTYPE extension,
+            sometimes it is easier or faster to include the calculation in the template. To do so, Cheetah provides 
+            the <span class="code">#set</code> directive. Here it is explained how to use it for calculations and
+            displaying the resulting values.
+        </p>
+        <p>
+            To get an observation type value in a way that can be used in formulae you can add <span class="code">.raw</span>
+            after an observation type tag.
+        </p>
+        <p>
+            Example:
+        </p>
+        <pre class="tty">$almanac.sun.rise.raw</pre>
+        <p>
+            To calculate - for example - the daylight time:
+        </p>
+        <pre>#set $daylight=$almanac.sun.set.raw-$almanac.sun.rise.raw</pre>
+        <p>
+            To display that value and make it observe the units and settings is a little bit tricky:
+        </p>
+        <pre>#from weewx.units import ValueTuple,ValueHelper 
+#set $rising=$almanac.sun.rise.raw 
+#set $setting=$almanac.sun.set.raw 
+#set $daylight=$setting-$rising
+#set $daylight_vh=ValueHelper(ValueTuple($daylight,'second','group_deltatime'),formatter=$station.formatter) 
+
+$daylight_vh</pre>
+        <p>The unit provided has to conform to the unit of the raw values used in calculation. </p>
+        <p>To get a special output format you can add <span class="code">.format(...)</code>, for example:</p>
+        <pre>$daylight_vh.format("%(hour)d%(hour_label) %(minute)d%(minute_label)s %(second)d%(second_label)s","")</pre>
+        
+        <p>
+            Another example is the difference between maximum and minimum temperature of the day in Kelvin 
+            (which is the same value as in degrees Centigrade for differences, so no unit conversion applies):
+        </p>
+        <pre>#from weewx.units import ValueTuple,ValueHelper 
+#set $maxmin=$day.outTemp.max.degree_C.raw-$day.outTemp.min.degree_C.raw
+#set $maxmin_vh=ValueHelper(ValueTuple($maxmin,'degree_C','group_temperature'),formatter=$station.formatter)
+
+$maxmin_vh.format(add_label=False) Kelvin</pre>
+
 
         <!-- -------------------------------------------------------------- -->
 
