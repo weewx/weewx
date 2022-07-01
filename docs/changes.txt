@@ -26,6 +26,9 @@ Fixes issue #775.
 Allow a custom cipher to be specified for FTP uploads. See option 'cipher'
 under [[FTP]].
 
+Add localization file for Traditional Chinese. Thanks to user lyuxingliu!
+PR #777.
+
 
 4.8.0 04/21/2022
 Allow unit to be overridden for a specific plot by using new option 'unit'.
