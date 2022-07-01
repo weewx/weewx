@@ -1,6 +1,6 @@
 # This Python file uses the following encoding: utf-8
 #
-#    Copyright (c) 2009-2021 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2022 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -911,7 +911,7 @@ def startOfDay(time_ts):
                            _time_tt.tm_mon,
                            _time_tt.tm_mday,
                            0, 0, 0, 0, 0, -1))
-    return int(_bod_ts)
+    return _bod_ts
 
 
 def startOfGregorianDay(date_greg):
@@ -955,7 +955,7 @@ def toGregorianDay(time_ts):
 
     date_dt = datetime.datetime.fromtimestamp(time_ts)
     date_greg = date_dt.toordinal()
-    if date_dt.hour == date_dt.minute == date_dt.second == 0:
+    if date_dt.hour == date_dt.minute == date_dt.second == date_dt.microsecond == 0:
         # Midnight actually belongs to the previous day
         date_greg -= 1
     return date_greg
@@ -978,7 +978,7 @@ def startOfDayUTC(time_ts):
     return int(_bod_ts)
 
 
-def startOfArchiveDay(time_ts, grace=1):
+def startOfArchiveDay(time_ts):
     """Given an archive time stamp, calculate its start of day.
     
     similar to startOfDay(), except that an archive stamped at midnight
@@ -987,12 +987,20 @@ def startOfArchiveDay(time_ts, grace=1):
     time_ts: A timestamp somewhere in the day for which the start-of-day
     is desired.
     
-    grace: The number of seconds past midnight when the following
-    day is considered to start [Optional. Default is 1 second]
-    
     returns: The timestamp for the start-of-day (00:00) in unix epoch time."""
 
-    return startOfDay(time_ts - grace)
+    time_dt = datetime.datetime.fromtimestamp(time_ts)
+    start_of_day_dt = time_dt.replace(hour=0, minute=0, second=0, microsecond=0)
+    # If we are exactly on the midnight boundary, the start of the archive day is actually
+    # the *previous* day.
+    if time_dt.hour == 0 \
+            and time_dt.minute == 0 \
+            and time_dt.second == 0 \
+            and time_dt.microsecond == 0:
+        start_of_day_dt -= datetime.timedelta(days=1)
+    start_of_day_tt = start_of_day_dt.timetuple()
+    start_of_day_ts = time.mktime(start_of_day_tt)
+    return start_of_day_ts
 
 
 def getDayNightTransitions(start_ts, end_ts, lat, lon):

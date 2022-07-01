@@ -1,6 +1,6 @@
 # This Python file uses the following encoding: utf-8
 #
-#    Copyright (c) 2009-2021 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2022 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -676,6 +676,17 @@ class WeeutilTest(unittest.TestCase):
         # Check that this is, in fact, a DST boundary:
         self.assertEqual(start_of_day, int(time.mktime((2007, 3, 11, 0, 0, 0, 0, 0, -1))))
         self.assertEqual(start2, int(time.mktime((2007, 3, 10, 0, 0, 0, 0, 0, -1))))
+
+    def test_start_of_archive_day(self):
+        """Test the function startOfArchiveDay()"""
+        os.environ['TZ'] = 'America/Los_Angeles'
+        time.tzset()
+        # Exactly midnight 1-July-2022:
+        start_dt = datetime.datetime(2022, 7, 1)
+        start_ts = time.mktime(start_dt.timetuple())
+        self.assertEqual(startOfArchiveDay(start_ts), 1656572400.0)
+        # Now try it at a smidge after midnight. Should be the next day
+        self.assertEqual(startOfArchiveDay(start_ts + 0.1), 1656658800.0)
 
     def test_dnt(self):
         """test day/night transitions"""

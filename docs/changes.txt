@@ -29,6 +29,9 @@ under [[FTP]].
 Add localization file for Traditional Chinese. Thanks to user lyuxingliu!
 PR #777.
 
+Allow timestamps that are not integers.
+Fixes issue #779.
+
 
 4.8.0 04/21/2022
 Allow unit to be overridden for a specific plot by using new option 'unit'.
