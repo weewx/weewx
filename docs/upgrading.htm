@@ -249,6 +249,27 @@ sudo apt-get install weewx</pre>
 
         <h1><a id="Instructions_for_specific_versions">Instructions for specific versions</a></h1>
 
+        <h2>Upgrading to V4.9</h2>
+        <h3><span class="code">wee_reports</span> may require <span class="code">--epoch</span> option.</h3>
+        <p>
+            In previous versions, the utility <span class="code">wee_reports</span> could take an optional
+            position argument that specified the reporting time in unix epoch time. For example,
+        </p>
+        <pre class="tty cmd">wee_reports /home/weewx/weewx.conf 1645131600</pre>
+        <p>
+            would specify that the reporting time should be 1645131600, or 17-Feb-2022 13:00 PST.
+        </p>
+        <p>
+            Starting with V4.9, the unix epoch time must be specified using the <span class="code">--epoch</span>
+            flag, so the command becomes
+        </p>
+        <pre class="tty cmd">wee_reports /home/weewx/weewx.conf --epoch=1645131600</pre>
+        <p>
+            Alternatively, the reporting time can be specified by using <span class="code">--date</span> and
+            <span class="code">--time</span> flags:
+        </p>
+        <pre class="tty cmd">wee_reports /home/weewx/weewx.conf --date=2022-02-17 --time=13:00</pre>
+
         <h2>Upgrading to V4.6</h2>
         <h3>Ordering of search list changed</h3>
         <p>

@@ -4524,16 +4524,58 @@ Aug 22 14:38:28 stretch12 weewx[863]: manager: unable to add record 2018-09-04 0
 
         <p>This results in something like this:</p>
 
-        <pre class="tty">Usage: wee_reports: [config_file] [timestamp] [--config=CONFIG_FILE] [--help]
+        <pre class="tty">usage: wee_reports --help
+       wee_reports [CONFIG_FILE | --config=CONFIG_FILE]
+       wee_reports [CONFIG_FILE | --config=CONFIG_FILE] --epoch=TIMESTAMP
+       wee_reports [CONFIG_FILE | --config=CONFIG_FILE] --date=YYYY-MM-DD --time=HH:MM
 
-Run all reports defined in the specified configuration file. Use this utility
-to run reports immediately instead of waiting for the end of an archive
-interval.
+Run all reports defined in the specified configuration file. Use this utility to run reports immediately instead of waiting for the end of
+an archive interval.
 
-Options:
+positional arguments:
+  CONFIG_FILE
+
+optional arguments:
   -h, --help            show this help message and exit
-  --config=CONFIG_FILE  Use the configuration file CONFIG_FILE
+  --config CONFIG_FILE  Use the configuration file CONFIG_FILE
+  --epoch EPOCH_TIME    Time of the report in unix epoch time
+  --date YYYY-MM-DD     Date for the report
+  --time HH:MM          Time of day for the report
+
+Specify either the positional argument CONFIG_FILE, or the optional argument --config, but not both.
 </pre>
+
+        <p>
+            By default, the reports are generated as of the last timestamp in the database, however, an explicit
+            time can be given by using either option <span class="code">--epoch</span>, or by using options
+            <span class="code">--date</span> and <span class="code">--time</span>.
+        </p>
+        <h2>Options</h2>
+        <h3>Option <span class="code">--config</span></h3>
+        <p>
+            An optional path to the configuration file (usually, <span class="code">weewx.conf</span>) can be given
+            as either a positional argument, or by using option <span class="code">--config</span> (but not both).
+            If not given, the location of the configuration file will be inferred.
+        </p>
+        <h3>Option <span class="code">--epoch</span></h3>
+        <p>
+            If given, generate the reports so that they are current as of the given unix epoch time. Example:
+        </p>
+        <pre class="tty cmd">wee_reports --epoch=1652367600</pre>
+        <p>
+            This would generate a report for unix epoch time 1652367600 (12-May-2022 at 8AM PDT).
+        </p>
+        <h3>Option <span class="code">--date</span><br/>
+        Option <span class="code">--time</span></h3>
+        <p>
+            If given, generate the reports so that they are current as of the given date and time. The date should
+            be given in the form <span class="code">YYYY-MM-DD</span> and the time should be given as
+            <span class="code">HH:DD</span>. Example:
+        </p>
+        <pre class="tty cmd">wee_reports /home/weewx/weewx.conf --date=2022-05-12 --time=08:00</pre>
+        <p>
+            This would generate a report for 12-May-2022 at 8AM (unix epoch time 1652367600).
+        </p>
 
         <!-- ======== -->
 
