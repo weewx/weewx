@@ -1,15 +1,11 @@
 WeeWX change history
 --------------------
 
-4.8.1 MM/DD/YYYY
-Don't swallow syntax errors when wee_config is looking for drivers.
-
+4.9.0 MM/DD/YYYY
 Fix problem that create 'ghost' values for VantageVue stations.
 Fix problem that causes `leafWet3` and `leafWet4` to be emitted in VP2
 stations that do not have the necessary sensors.
 Fixes issue #771.
-
-Include 'wind' in daily summary if 'windSpeed' is present.
 
 Try waking the Vantage console before giving up on LOOP errors.
 Better Vantage diagnostics.
@@ -18,19 +14,26 @@ Fixes issue #772.
 Add missing 30-day barometer graph to Smartphone skin.
 Fixes issue #774.
 
-Refine translations for French skin. Thanks to user Pascal!
-
 Fix check for reuse_ssl for Python versions greater than 3.10.
 Fixes issue #775.
 
-Allow a custom cipher to be specified for FTP uploads. See option 'cipher'
-under [[FTP]].
+The utility wee_reports can now be invoked by specifying a --date and --time.
+Fixes issue #776.
+
+Allow timestamps that are not integers.
+Fixes issue #779.
 
 Add localization file for Traditional Chinese. Thanks to user lyuxingliu!
 PR #777.
 
-Allow timestamps that are not integers.
-Fixes issue #779.
+Don't swallow syntax errors when wee_config is looking for drivers.
+
+Include 'wind' in daily summary if 'windSpeed' is present.
+
+Refine translations for French skin. Thanks to user Pascal!
+
+Allow a custom cipher to be specified for FTP uploads. See option 'cipher'
+under [[FTP]].
 
 
 4.8.0 04/21/2022
