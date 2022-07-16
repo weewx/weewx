@@ -6,6 +6,10 @@
 #
 """Various handy utilities that don't belong anywhere else.
    Works under Python 2 and Python 3.
+
+   NB: To run the doctests, this code must be run as a module. For example:
+     cd ~/git/weewx/bin
+     python -m weeutil.weeutil
 """
 
 from __future__ import absolute_import
@@ -375,9 +379,20 @@ def intervalgen(start_ts, stop_ts, interval):
             dt1 = dt2
 
 
-def archiveHoursAgoSpan(time_ts, hours_ago=0, grace=1):
-    """Returns a TimeSpan for x hours ago
-    
+def archiveHoursAgoSpan(time_ts, hours_ago=0):
+    """Returns a one-hour long TimeSpan for x hours ago that includes the given time.
+
+    Args:
+        time_ts (float): A timestamp. An hour long time span will be returned that encompasses this
+            timestamp.
+        hours_ago (int): Which hour we want. 0=this hour, 1=last hour, etc.
+
+    Returns:
+        TimeSpan: A TimeSpan object one hour long, that includes time_ts.
+
+    NB: A timestamp that falls exactly on the hour boundary is considered to belong
+    to the *previous* hour.
+
     Example:
     >>> os.environ['TZ'] = 'America/Los_Angeles'
     >>> time.tzset()
@@ -394,10 +409,20 @@ def archiveHoursAgoSpan(time_ts, hours_ago=0, grace=1):
     """
     if time_ts is None:
         return None
-    time_ts -= grace
-    dt = datetime.datetime.fromtimestamp(time_ts)
-    hour_start_dt = dt.replace(minute=0, second=0, microsecond=0)
-    start_span_dt = hour_start_dt - datetime.timedelta(hours=hours_ago)
+
+    time_dt = datetime.datetime.fromtimestamp(time_ts)
+
+    # If we are exactly at an hour boundary, the start of the archive hour is actually
+    # the *previous* hour.
+    if time_dt.minute == 0 \
+            and time_dt.second == 0 \
+            and time_dt.microsecond == 0:
+        hours_ago += 1
+
+    # Find the start of the hour
+    start_of_hour_dt = time_dt.replace(minute=0, second=0, microsecond=0)
+
+    start_span_dt = start_of_hour_dt - datetime.timedelta(hours=hours_ago)
     stop_span_dt = start_span_dt + datetime.timedelta(hours=1)
 
     return TimeSpan(time.mktime(start_span_dt.timetuple()),
@@ -527,22 +552,19 @@ def isStartOfDay(time_ts):
     return not dt1 == dt2
 
 
-def archiveDaySpan(time_ts, grace=1, days_ago=0):
-    """Returns a TimeSpan representing a day that includes a given time.
-    
-    Midnight is considered to actually belong in the previous day if
-    grace is greater than zero.
-    
-    time_ts: The day will include this timestamp. 
-    
-    grace: This many seconds past midnight marks the start of the next
-    day. Set to zero to have midnight be included in the
-    following day.  [Optional. Default is 1 second.]
-    
-    days_ago: Which day we want. 0=today, 1=yesterday, etc.
-    
-    returns: A TimeSpan object one day long. 
-    
+def archiveDaySpan(time_ts, days_ago=0):
+    """Returns a one-day long TimeSpan for x days ago that includes a given time.
+
+    Args:
+        time_ts (float): The day will include this timestamp.
+        days_ago (int): Which day we want. 0=today, 1=yesterday, etc.
+
+    Returns:
+        TimeSpan: A TimeSpan object one day long.
+
+    NB: A timestamp that falls exactly on midnight is considered to belong
+    to the *previous* day.
+
     Example, which spans the end-of-year boundary
     >>> os.environ['TZ'] = 'America/Los_Angeles'
     >>> time.tzset()
@@ -562,36 +584,46 @@ def archiveDaySpan(time_ts, grace=1, days_ago=0):
     """
     if time_ts is None:
         return None
-    time_ts -= grace
-    _day_date = datetime.date.fromtimestamp(time_ts)
-    _day_ord = _day_date.toordinal()
-    return TimeSpan(_ord_to_ts(_day_ord - days_ago), _ord_to_ts(_day_ord - days_ago + 1))
+
+    time_dt = datetime.datetime.fromtimestamp(time_ts)
+
+    # If we are exactly at midnight, the start of the archive day is actually
+    # the *previous* day
+    if time_dt.hour == 0 \
+            and time_dt.minute == 0 \
+            and time_dt.second == 0 \
+            and time_dt.microsecond == 0:
+        days_ago += 1
+
+    # Find the start of the day
+    start_of_day_dt = time_dt.replace(hour=0, minute=0, second=0, microsecond=0)
+
+    start_span_dt = start_of_day_dt - datetime.timedelta(days=days_ago)
+    stop_span_dt = start_span_dt + datetime.timedelta(days=1)
+
+    return TimeSpan(time.mktime(start_span_dt.timetuple()),
+                    time.mktime(stop_span_dt.timetuple()))
 
 
 # For backwards compatibility. Not sure if anyone is actually using this
 archiveDaysAgoSpan = archiveDaySpan
 
 
-def archiveWeekSpan(time_ts, startOfWeek=6, grace=1, weeks_ago=0):
-    """Returns a TimeSpan representing a week that includes a given time.
-    
-    The time at midnight at the end of the week is considered to
-    actually belong in the previous week.
-    
-    time_ts: The week will include this timestamp. 
-    
-    startOfWeek: The start of the week (0=Monday, 1=Tues, ..., 6 = Sun).
+def archiveWeekSpan(time_ts, startOfWeek=6, weeks_ago=0):
+    """Returns a one-week long TimeSpan for x weeks ago that includes a given time.
 
-    grace: This many seconds past midnight marks the start of the next
-    week. Set to zero to have midnight be included in the
-    following week.  [Optional. Default is 1 second.]
+    Args:
+        time_ts (float): The week will include this timestamp.
+        startOfWeek (int): The start of the week (0=Monday, 1=Tues, ..., 6 = Sun).
+        weeks_ago (int): Which week we want. 0=this week, 1=last week, etc.
     
-    weeks_ago: Which week we want. 0=this week, 1=last week, etc.
+    Returns:
+         TimeSpan: A TimeSpan object one week long that contains time_ts. It will
+            start at midnight of the day considered the start of the week.
     
-    returns: A TimeSpan object one week long that contains time_ts. It will
-    start at midnight of the day considered the start of the week, and be
-    one week long.
-    
+    NB: The time at midnight at the end of the week is considered to
+    actually belong in the previous week.
+
     Example:
     >>> os.environ['TZ'] = 'America/Los_Angeles'
     >>> time.tzset()
@@ -605,36 +637,50 @@ def archiveWeekSpan(time_ts, startOfWeek=6, grace=1, weeks_ago=0):
     """
     if time_ts is None:
         return None
-    time_ts -= grace
-    _day_date = datetime.date.fromtimestamp(time_ts)
-    _day_of_week = _day_date.weekday()
-    _delta = _day_of_week - startOfWeek
-    if _delta < 0:
-        _delta += 7
-    _sunday_date = _day_date - datetime.timedelta(days=(_delta + 7 * weeks_ago))
-    _next_sunday_date = _sunday_date + datetime.timedelta(days=7)
-    return TimeSpan(int(time.mktime(_sunday_date.timetuple())),
-                    int(time.mktime(_next_sunday_date.timetuple())))
+
+    time_dt = datetime.datetime.fromtimestamp(time_ts)
+
+    # Find the start of the day:
+    start_of_day_dt = time_dt.replace(hour=0, minute=0, second=0, microsecond=0)
+
+    # Find the relative start of the week
+    day_of_week = start_of_day_dt.weekday()
+    delta = day_of_week - startOfWeek
+    if delta < 0:
+        delta += 7
+
+    # If we are exactly at midnight, the start of the archive week is actually
+    # the *previous* week
+    if day_of_week == startOfWeek \
+            and time_dt.hour == 0 \
+            and time_dt.minute == 0 \
+            and time_dt.second == 0 \
+            and time_dt.microsecond == 0:
+        delta += 7
+
+    # Finally, find the start of the requested week.
+    delta += weeks_ago * 7
+
+    start_of_week = start_of_day_dt - datetime.timedelta(days=delta)
+    end_of_week = start_of_week + datetime.timedelta(days=7)
+
+    return TimeSpan(time.mktime(start_of_week.timetuple()),
+                    time.mktime(end_of_week.timetuple()))
 
 
-def archiveMonthSpan(time_ts, grace=1, months_ago=0):
-    """Returns a TimeSpan representing a month that includes a given time.
-    
-    Midnight of the 1st of the month is considered to actually belong
-    in the previous month.
-    
-    time_ts: The month will include this timestamp. 
-    
-    grace: This many seconds past midnight marks the start of the next
-    month. Set to zero to have midnight be included in the
-    following month.  [Optional. Default is 1 second.]
-    
-    months_ago: Which month we want. 0=this month, 1=last month, etc.
-    
-    returns: A TimeSpan object one month long that contains time_ts.
-    It will start at midnight of the start of the month, and end at midnight
-    of the start of the next month.
-    
+def archiveMonthSpan(time_ts, months_ago=0):
+    """Returns a one-month long TimeSpan for x months ago that includes a given time.
+
+     Args:
+         time_ts (float): The month will include this timestamp.
+         months_ago (int): Which month we want. 0=this month, 1=last month, etc.
+
+     Returns:
+          TimeSpan: A TimeSpan object one month long that contains time_ts.
+
+     NB: The time at midnight at the end of the month is considered to
+     actually belong in the previous week.
+
     Example:
     >>> os.environ['TZ'] = 'America/Los_Angeles'
     >>> time.tzset()
@@ -648,14 +694,23 @@ def archiveMonthSpan(time_ts, grace=1, months_ago=0):
     """
     if time_ts is None:
         return None
-    time_ts -= grace
 
-    # First find the first of the month
-    day_date = datetime.date.fromtimestamp(time_ts)
-    start_of_month_date = day_date.replace(day=1)
+    time_dt = datetime.datetime.fromtimestamp(time_ts)
+
+    # If we are exactly at midnight of the first day of the month,
+    # the start of the archive month is actually the *previous* month
+    if time_dt.day == 1 \
+            and time_dt.hour == 0 \
+            and time_dt.minute == 0 \
+            and time_dt.second == 0 \
+            and time_dt.microsecond == 0:
+        months_ago += 1
+
+    # Find the start of the month
+    start_of_month_dt = time_dt.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
 
     # Total number of months since 0AD
-    total_months = 12 * start_of_month_date.year + start_of_month_date.month - 1
+    total_months = 12 * start_of_month_dt.year + start_of_month_dt.month - 1
 
     # Adjust for the requested delta:
     total_months -= months_ago
@@ -675,53 +730,70 @@ def archiveMonthSpan(time_ts, grace=1, months_ago=0):
                     int(time.mktime(stop_date.timetuple())))
 
 
-def archiveYearSpan(time_ts, grace=1, years_ago=0):
+def archiveYearSpan(time_ts, years_ago=0):
     """Returns a TimeSpan representing a year that includes a given time.
-    
-    Midnight of the 1st of the January is considered to actually belong
+
+    Args:
+        time_ts (float): The year will include this timestamp.
+        years_ago (int): Which year we want. 0=this year, 1=last year, etc.
+
+    Returns:
+        TimeSpan: A TimeSpan object one year long that contains time_ts. It will
+            start at midnight of 1-Jan
+
+    NB: Midnight of the 1st of the January is considered to actually belong
     in the previous year.
-    
-    time_ts: The year will include this timestamp. 
-    
-    grace: This many seconds past midnight marks the start of the next
-    year. Set to zero to have midnight be included in the
-    following year.  [Optional. Default is 1 second.]
-    
-    years_ago: Which year we want. 0=this year, 1=last year, etc.
-    
-    returns: A TimeSpan object one year long that contains time_ts. It will
-    begin and end at midnight 1-Jan.
     """
+
     if time_ts is None:
         return None
-    time_ts -= grace
-    _day_date = datetime.date.fromtimestamp(time_ts)
-    return TimeSpan(int(time.mktime((_day_date.year - years_ago, 1, 1, 0, 0, 0, 0, 0, -1))),
-                    int(time.mktime((_day_date.year - years_ago + 1, 1, 1, 0, 0, 0, 0, 0, -1))))
+
+    time_dt = datetime.datetime.fromtimestamp(time_ts)
+
+    # If we are exactly at midnight 1-Jan, then the start of the archive year is actually
+    # the *previous* year
+    if time_dt.month == 1 \
+            and time_dt.day == 1 \
+            and time_dt.hour == 0 \
+            and time_dt.minute == 0 \
+            and time_dt.second == 0 \
+            and time_dt.microsecond == 0:
+        years_ago += 1
+
+    return TimeSpan(int(time.mktime((time_dt.year - years_ago, 1, 1, 0, 0, 0, 0, 0, -1))),
+                    int(time.mktime((time_dt.year - years_ago + 1, 1, 1, 0, 0, 0, 0, 0, -1))))
 
 
-def archiveRainYearSpan(time_ts, sory_mon, grace=1):
+def archiveRainYearSpan(time_ts, sory_mon, years_ago=0):
     """Returns a TimeSpan representing a rain year that includes a given time.
+
+    Args:
+        time_ts (float): The rain year will include this timestamp.
+        sory_mon (int): The start of the rain year (1=Jan, 2=Feb, etc.)
+        years_ago (int): Which rain year we want. 0=this year, 1=last year, etc.
+
+    Returns:
+        TimeSpan: A one-year long TimeSpan object containing the timestamp.
     
-    Midnight of the 1st of the month starting the rain year is considered to
+    NB: Midnight of the 1st of the month starting the rain year is considered to
     actually belong in the previous rain year.
-    
-    time_ts: The rain year will include this timestamp. 
-    
-    sory_mon: The month the rain year starts.
-    
-    grace: This many seconds past midnight marks the start of the next
-    rain year. Set to zero to have midnight be included in the
-    following rain year.  [Optional. Default is 1 second.]
-    
-    returns: A TimeSpan object one year long that contains time_ts. It will
-    begin on the 1st of the month that starts the rain year.
     """
     if time_ts is None:
         return None
-    time_ts -= grace
-    _day_date = datetime.date.fromtimestamp(time_ts)
-    _year = _day_date.year if _day_date.month >= sory_mon else _day_date.year - 1
+
+    time_dt = datetime.datetime.fromtimestamp(time_ts)
+
+    # If we are exactly at midnight of the start of the rain year, then the start is actually
+    # the *previous* year
+    if time_dt.month == sory_mon \
+            and time_dt.day == 1 \
+            and time_dt.hour == 0 \
+            and time_dt.minute == 0 \
+            and time_dt.second == 0 \
+            and time_dt.microsecond == 0:
+        years_ago += 1
+
+    _year = time_dt.year if time_dt.month >= sory_mon else time_dt.year - 1
     return TimeSpan(int(time.mktime((_year, sory_mon, 1, 0, 0, 0, 0, 0, -1))),
                     int(time.mktime((_year + 1, sory_mon, 1, 0, 0, 0, 0, 0, -1))))
 

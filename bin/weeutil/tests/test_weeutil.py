@@ -579,16 +579,15 @@ class WeeutilTest(unittest.TestCase):
         os.environ['TZ'] = 'America/Los_Angeles'
         time.tzset()
 
+        # 2007-12-13 10:15:00
         self.assertEqual(archiveDaySpan(time.mktime((2007, 12, 13, 10, 15, 0, 0, 0, -1))),
                          TimeSpan(time.mktime((2007, 12, 13, 0, 0, 0, 0, 0, -1)),
                                   time.mktime((2007, 12, 14, 0, 0, 0, 0, 0, -1))))
+        # 2007-12-13 00:00:00
         self.assertEqual(archiveDaySpan(time.mktime((2007, 12, 13, 0, 0, 0, 0, 0, -1))),
                          TimeSpan(time.mktime((2007, 12, 12, 0, 0, 0, 0, 0, -1)),
                                   time.mktime((2007, 12, 13, 0, 0, 0, 0, 0, -1))))
-        # Try it again with grace=0
-        self.assertEqual(archiveDaySpan(time.mktime((2007, 12, 13, 0, 0, 0, 0, 0, -1)), grace=0),
-                         TimeSpan(time.mktime((2007, 12, 13, 0, 0, 0, 0, 0, -1)),
-                                  time.mktime((2007, 12, 14, 0, 0, 0, 0, 0, -1))))
+        # 2007-12-13 00:00:01
         self.assertEqual(archiveDaySpan(time.mktime((2007, 12, 13, 0, 0, 1, 0, 0, -1))),
                          TimeSpan(time.mktime((2007, 12, 13, 0, 0, 0, 0, 0, -1)),
                                   time.mktime((2007, 12, 14, 0, 0, 0, 0, 0, -1))))
@@ -600,15 +599,38 @@ class WeeutilTest(unittest.TestCase):
         os.environ['TZ'] = 'America/Los_Angeles'
         time.tzset()
 
+        # Week around 2007-12-13 10:15:00 (Thursday 10:15)
         self.assertEqual(archiveWeekSpan(time.mktime((2007, 12, 13, 10, 15, 0, 0, 0, -1))),
                          TimeSpan(time.mktime((2007, 12, 9, 0, 0, 0, 0, 0, -1)),
                                   time.mktime((2007, 12, 16, 0, 0, 0, 0, 0, -1))))
+
+        # Week around 2007-12-13 00:00:00 (midnight Thursday)
+        self.assertEqual(archiveWeekSpan(time.mktime((2007, 12, 13, 0, 0, 0, 0, 0, -1))),
+                         TimeSpan(time.mktime((2007, 12, 9, 0, 0, 0, 0, 0, -1)),
+                                  time.mktime((2007, 12, 16, 0, 0, 0, 0, 0, -1))))
+
+        # Week around 2007-12-9 00:00:00 (midnight Sunday)
         self.assertEqual(archiveWeekSpan(time.mktime((2007, 12, 9, 0, 0, 0, 0, 0, -1))),
                          TimeSpan(time.mktime((2007, 12, 2, 0, 0, 0, 0, 0, -1)),
                                   time.mktime((2007, 12, 9, 0, 0, 0, 0, 0, -1))))
+
+        # Week around 2007-12-9 00:00:01 (one second after midnight on Sunday)
         self.assertEqual(archiveWeekSpan(time.mktime((2007, 12, 9, 0, 0, 1, 0, 0, -1))),
                          TimeSpan(time.mktime((2007, 12, 9, 0, 0, 0, 0, 0, -1)),
                                   time.mktime((2007, 12, 16, 0, 0, 0, 0, 0, -1))))
+
+        # Week around 2007-12-13 10:15:00 (Thursday 10:15) where the week starts on Monday
+        self.assertEqual(archiveWeekSpan(time.mktime((2007, 12, 13, 10, 15, 0, 0, 0, -1)),
+                                         startOfWeek=0),
+                         TimeSpan(time.mktime((2007, 12, 10, 0, 0, 0, 0, 0, -1)),
+                                  time.mktime((2007, 12, 17, 0, 0, 0, 0, 0, -1))))
+
+        # Previous week around 2007-12-13 10:15:00 (Thursday 10:15) where the week starts on Monday
+        self.assertEqual(archiveWeekSpan(time.mktime((2007, 12, 13, 10, 15, 0, 0, 0, -1)),
+                                         startOfWeek=0,
+                                         weeks_ago=1),
+                         TimeSpan(time.mktime((2007, 12, 3, 0, 0, 0, 0, 0, -1)),
+                                  time.mktime((2007, 12, 10, 0, 0, 0, 0, 0, -1))))
 
         self.assertIsNone(archiveWeekSpan(None))
 
@@ -617,16 +639,30 @@ class WeeutilTest(unittest.TestCase):
         os.environ['TZ'] = 'America/Los_Angeles'
         time.tzset()
 
+        # 2007-12-13 10:15:00
         self.assertEqual(archiveMonthSpan(time.mktime((2007, 12, 13, 10, 15, 0, 0, 0, -1))),
                          TimeSpan(time.mktime((2007, 12, 1, 0, 0, 0, 0, 0, -1)),
                                   time.mktime((2008, 1, 1, 0, 0, 0, 0, 0, -1))))
+        # 2007-12-01 00:00:00
         self.assertEqual(archiveMonthSpan(time.mktime((2007, 12, 1, 0, 0, 0, 0, 0, -1))),
                          TimeSpan(time.mktime((2007, 11, 1, 0, 0, 0, 0, 0, -1)),
                                   time.mktime((2007, 12, 1, 0, 0, 0, 0, 0, -1))))
+        # 2007-12-01 00:00:01
         self.assertEqual(archiveMonthSpan(time.mktime((2007, 12, 1, 0, 0, 1, 0, 0, -1))),
                          TimeSpan(time.mktime((2007, 12, 1, 0, 0, 0, 0, 0, -1)),
                                   time.mktime((2008, 1, 1, 0, 0, 0, 0, 0, -1))))
+        # 2008-01-01 00:00:00
         self.assertEqual(archiveMonthSpan(time.mktime((2008, 1, 1, 0, 0, 0, 0, 0, -1))),
+                         TimeSpan(time.mktime((2007, 12, 1, 0, 0, 0, 0, 0, -1)),
+                                  time.mktime((2008, 1, 1, 0, 0, 0, 0, 0, -1))))
+
+        # One month ago from 2008-01-01 00:00:00
+        self.assertEqual(archiveMonthSpan(time.mktime((2008, 1, 1, 0, 0, 0, 0, 0, -1)), months_ago=1),
+                         TimeSpan(time.mktime((2007, 11, 1, 0, 0, 0, 0, 0, -1)),
+                                  time.mktime((2007, 12, 1, 0, 0, 0, 0, 0, -1))))
+
+        # One month ago from 2008-01-01 00:00:01
+        self.assertEqual(archiveMonthSpan(time.mktime((2008, 1, 1, 0, 0, 1, 0, 0, -1)), months_ago=1),
                          TimeSpan(time.mktime((2007, 12, 1, 0, 0, 0, 0, 0, -1)),
                                   time.mktime((2008, 1, 1, 0, 0, 0, 0, 0, -1))))
 
@@ -653,7 +689,7 @@ class WeeutilTest(unittest.TestCase):
 
         os.environ['TZ'] = 'America/Los_Angeles'
         time.tzset()
-
+#are we testing everything?
         self.assertEqual(archiveRainYearSpan(time.mktime((2007, 2, 13, 10, 15, 0, 0, 0, -1)), 10),
                          TimeSpan(time.mktime((2006, 10, 1, 0, 0, 0, 0, 0, -1)),
                                   time.mktime((2007, 10, 1, 0, 0, 0, 0, 0, -1))))
