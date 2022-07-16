@@ -689,13 +689,28 @@ class WeeutilTest(unittest.TestCase):
 
         os.environ['TZ'] = 'America/Los_Angeles'
         time.tzset()
-#are we testing everything?
+
+        # Rain year starts 1-Jan
+        self.assertEqual(archiveRainYearSpan(time.mktime((2007, 2, 13, 10, 15, 0, 0, 0, -1)), 1),
+                         TimeSpan(time.mktime((2007, 1, 1, 0, 0, 0, 0, 0, -1)),
+                                  time.mktime((2008, 1, 1, 0, 0, 0, 0, 0, -1))))
+        self.assertEqual(archiveRainYearSpan(time.mktime((2007, 12, 13, 10, 15, 0, 0, 0, -1)), 1),
+                         TimeSpan(time.mktime((2007, 1, 1, 0, 0, 0, 0, 0, -1)),
+                                  time.mktime((2008, 1, 1, 0, 0, 0, 0, 0, -1))))
+        # Rain year starts 1-Oct
         self.assertEqual(archiveRainYearSpan(time.mktime((2007, 2, 13, 10, 15, 0, 0, 0, -1)), 10),
                          TimeSpan(time.mktime((2006, 10, 1, 0, 0, 0, 0, 0, -1)),
                                   time.mktime((2007, 10, 1, 0, 0, 0, 0, 0, -1))))
+        self.assertEqual(archiveRainYearSpan(time.mktime((2007, 2, 13, 10, 15, 0, 0, 0, -1)), 10,
+                                             years_ago=1),
+                         TimeSpan(time.mktime((2005, 10, 1, 0, 0, 0, 0, 0, -1)),
+                                  time.mktime((2006, 10, 1, 0, 0, 0, 0, 0, -1))))
         self.assertEqual(archiveRainYearSpan(time.mktime((2007, 12, 13, 10, 15, 0, 0, 0, -1)), 10),
                          TimeSpan(time.mktime((2007, 10, 1, 0, 0, 0, 0, 0, -1)),
                                   time.mktime((2008, 10, 1, 0, 0, 0, 0, 0, -1))))
+        self.assertEqual(archiveRainYearSpan(time.mktime((2007, 10, 1, 0, 0, 0, 0, 0, -1)), 10),
+                         TimeSpan(time.mktime((2006, 10, 1, 0, 0, 0, 0, 0, -1)),
+                                  time.mktime((2007, 10, 1, 0, 0, 0, 0, 0, -1))))
 
         self.assertIsNone(archiveRainYearSpan(None, 1))
 
