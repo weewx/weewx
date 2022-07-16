@@ -1896,6 +1896,16 @@ summaries using the wee_database utility.</pre>
             section of the import configuration file.
         </p>
 
+        <p class="note">
+            <strong>Note</strong><br/>The <span class="code">dateTime</span> field map entry is a special case. Whereas
+            other field map entries may use any supported WeeWX unit name, or no unit name if the
+            <span class="code">usUnits</span> field is populated, the <span class="code">dateTime</span> field map entry
+            must include the WeeWX unit name <span class="code">unix_epoch</span>. This is because
+            <span class="code">wee_import</span> uses the
+            <em><a href="#csv_raw_datetime_format">raw_datetime_format</a></em> config option to convert the supplied
+            date-time field data to a Unix epoch timestamp before the field map is applied.
+        </p>
+
         <h3 class="config_section">[WU]</h3>
 
         <p>The <span class="config_section">[WU]</span> section contains the options relating to the import of
