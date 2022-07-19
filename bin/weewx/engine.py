@@ -526,10 +526,10 @@ class StdArchive(StdService):
             # Warn if it is different than what is in config.
             try:
                 if software_interval != self.engine.console.archive_interval:
-                    log.error("The archive interval in the configuration file (%d) does not "
-                              "match the station hardware interval (%d).",
-                              software_interval,
-                              self.engine.console.archive_interval)
+                    log.info("The archive interval in the configuration file (%d) does not "
+                             "match the station hardware interval (%d).",
+                             software_interval,
+                             self.engine.console.archive_interval)
                 self.archive_interval = self.engine.console.archive_interval
                 ival_msg = "(specified by hardware)"
             except NotImplementedError:
