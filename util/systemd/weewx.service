@@ -1,9 +1,20 @@
-# systemd configuration for weewx
+# systemd unit configuration file for WeeWX
 
 [Unit]
-Description=weewx weather system
+Description=WeeWX weather system
+Documentation=https://weewx.com/docs
+#
+# Require that I run only after a time synchronization service has started.
+#
 Requires=time-sync.target
 After=time-sync.target
+#
+# NB: the above only requires that a time sync service be started, not actually synchronized!
+# To do that, enable systemd-time-wait-sync.service:
+#
+#   sudo systemctl enable --now systemd-time-wait-sync.service
+#
+
 RequiresMountsFor=/home
 
 [Service]
