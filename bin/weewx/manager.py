@@ -1398,7 +1398,7 @@ class DaySummaryManager(Manager):
         """
 
         # Get the TimeSpan for the day starting with sod_ts:
-        _timespan = weeutil.weeutil.archiveDaySpan(sod_ts, 0)
+        _timespan = weeutil.weeutil.daySpan(sod_ts)
 
         # Get an empty day accumulator:
         _day_accum = weewx.accum.Accum(_timespan, self.std_unit_system)

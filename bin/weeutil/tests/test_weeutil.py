@@ -574,6 +574,26 @@ class WeeutilTest(unittest.TestCase):
         for got, expect in zip(hourlist, expected):
             self.assertEqual(str(got), expect)
 
+    def test_daySpan(self):
+
+        os.environ['TZ'] = 'America/Los_Angeles'
+        time.tzset()
+
+        # 2007-12-13 10:15:00
+        self.assertEqual(daySpan(time.mktime((2007, 12, 13, 10, 15, 0, 0, 0, -1))),
+                         TimeSpan(time.mktime((2007, 12, 13, 0, 0, 0, 0, 0, -1)),
+                                  time.mktime((2007, 12, 14, 0, 0, 0, 0, 0, -1))))
+        # 2007-12-13 00:00:00
+        self.assertEqual(daySpan(time.mktime((2007, 12, 13, 0, 0, 0, 0, 0, -1))),
+                         TimeSpan(time.mktime((2007, 12, 13, 0, 0, 0, 0, 0, -1)),
+                                  time.mktime((2007, 12, 14, 0, 0, 0, 0, 0, -1))))
+        # 2007-12-13 00:00:01
+        self.assertEqual(daySpan(time.mktime((2007, 12, 13, 0, 0, 1, 0, 0, -1))),
+                         TimeSpan(time.mktime((2007, 12, 13, 0, 0, 0, 0, 0, -1)),
+                                  time.mktime((2007, 12, 14, 0, 0, 0, 0, 0, -1))))
+
+        self.assertIsNone(daySpan(None))
+
     def test_archiveDaySpan(self):
 
         os.environ['TZ'] = 'America/Los_Angeles'

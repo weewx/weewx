@@ -386,6 +386,34 @@ def archiveHoursAgoSpan(time_ts, hours_ago=0):
                     time.mktime(stop_span_dt.timetuple()))
 
 
+def daySpan(time_ts, days_ago=0):
+    """Returns a one-day long TimeSpan for x days ago that includes a given time.
+
+    Args:
+        time_ts (float): The day will include this timestamp.
+        days_ago (int): Which day we want. 0=today, 1=yesterday, etc.
+
+    Returns:
+        TimeSpan: A TimeSpan object one day long.
+
+    Note that this function differs from archiveDaySpan(). With this function, a timestamp of
+    midnight returns that day. With archiveDaySpan() it returns the previous day.
+    """
+    if time_ts is None:
+        return None
+
+    time_dt = datetime.datetime.fromtimestamp(time_ts)
+
+    # Find the start of the day
+    start_of_day_dt = time_dt.replace(hour=0, minute=0, second=0, microsecond=0)
+
+    start_span_dt = start_of_day_dt - datetime.timedelta(days=days_ago)
+    stop_span_dt = start_span_dt + datetime.timedelta(days=1)
+
+    return TimeSpan(time.mktime(start_span_dt.timetuple()),
+                    time.mktime(stop_span_dt.timetuple()))
+
+
 def archiveDaySpan(time_ts, days_ago=0):
     """Returns a one-day long TimeSpan for x days ago that includes a given time.
 
