@@ -545,7 +545,7 @@ Version: 4.8
             class="code">.inc</span> extension. These templates are included in other templates.
         </p>
 
-        <h2>The database</h2>
+        <h2 id="The_database">The database</h2>
 
         <p>
             WeeWX uses a single database to store and retrieve the records it needs. It can be implemented by using
@@ -642,9 +642,11 @@ Version: 4.8
 
         <p>
             In addition to the main archive table, there are a number of smaller tables inside the database, one for
-            each observation type, that hold <em>daily summaries</em> of the type. For example, the minimum and maximum
-            value seen during the day, and at what time. These tables have names such as <span class="code">archive_day_outTemp</span>
+            each observation type, which hold <em>daily summaries</em> of the type, such as the minimum and maximum value
+            seen during the day, and at what time. These tables have names such as <span class="code">archive_day_outTemp</span>
             or <span class="code">archive_day_barometer</span>. Their existence is generally transparent to the user.
+            For more details, see the section <a href="devnotes.htm#Daily_summaries"><em>Daily
+            summaries</em></a> in the document <em>Developer's Notes</em>.
         </p>
 
         <h3 id="binding_names">Binding names</h3>

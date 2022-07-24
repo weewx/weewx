@@ -175,7 +175,8 @@ Version: 4.8
             The general strategy is that measurements are converted by service <span class="code">StdConvert</span> as
             they come off the weather station into a target unit system, then stored internally in the database in that
             unit system. Then, as they come off the database to be used for a report, they are converted into a target
-            unit, specified by the skin.
+            unit, specified by a combination of the configuration file <span class="code">weewx.conf</span> and
+            the skin configuration file <span class="code">skin.conf</span>.
         </p>
 
         <h1 id="value_None">Value &quot;<span class="code">None</span>&quot;</h1>
@@ -241,9 +242,10 @@ next_ts = int(time.mktime(next_dt.timetuple()))</pre>
 
         <h2>Archive records</h2>
         <p>
-            The time represented in an archive record, whether in software or on the database, is exclusive on the left,
-            inclusive on the right. For example, for a record timestamped 05-Feb-2016 09:35, it includes data from an
-            instant after 09:30, through 09:35. Schematically:
+            An archive record's timestamp, whether in software or in the database, represents the <em>end time</em> of
+            the record. For example, a record timestamped 05-Feb-2016 09:35, includes data from an instant after 09:30,
+            through 09:35. Another way to think of it is that it is exclusive on the left, inclusive on the right.
+            Schematically:
         </p>
         <pre class="tty">09:30 < dateTime <= 09:35</pre>
         <p>
@@ -252,14 +254,205 @@ next_ts = int(time.mktime(next_dt.timetuple()))</pre>
         </p>
         <pre class="tty">SELECT MAX(outTemp) FROM archive WHERE dateTime > 1454691600 and dateTime <= 1454695200;</pre>
         <p>
-            This insures that the record at the beginning of the hour (1454691600) does not get included (it belongs to
+            This ensures that the record at the beginning of the hour (1454691600) does not get included (it belongs to
             the previous hour), while the record at the end of the hour (1454695200) does.
         </p>
         <p>
             One must be constantly be aware of this convention when working with timestamped data records.
         </p>
 
-        <h1>Daily summaries</h1>
+        <p>
+            Better yet, if you need this kind of information, use an
+            <a href="https://github.com/weewx/weewx/wiki/WeeWX-V4-user-defined-types">xtypes</a> call:
+        </p>
+        <pre class="tty">
+max_temp = weewx.xtypes.get_aggregate('outTemp',
+                                      (1454691600, 1454695200),
+                                      'max',
+                                      db_manager)
+</pre>
+        <p>
+            It will not only make sure the limits of the query are correct, but will also decide whether or not
+            the daily summary optimization can be used (<a href="#Daily_summaries">details below</a>). If not, it will
+            use the regular archive table.
+        </p>
+
+        <h1>Internationalization</h1>
+        <p>
+            Generally, WeeWX is locale aware. It will emit reports using the local formatting conventions for date,
+            times, and values.
+        </p>
+
+        <h1>Exceptions</h1>
+        <p>In general, your code should not simply swallow an exception. For example, this is bad form:</p>
+        <pre class="tty">
+    try:
+        os.rename(oldname, newname)
+    except:
+        pass</pre>
+        <p>
+            While the odds are that if an exception happens it will be because the file <span class="code">oldname</span>
+            does not exist, that is not guaranteed. It could be because of a keyboard interrupt, or a corrupted file
+            system, or something else. Instead, you should test explicitly for any expected exception, and let the rest
+            go by:
+        </p>
+        <pre class="tty">
+    try:
+        os.rename(oldname, newname)
+    except OSError:
+        pass</pre>
+        <p>
+            WeeWX has a few specialized exception types, used to rationalized all the different types of exceptions that
+            could be thrown by the underlying libraries. In particular, low-level I/O code can raise a myriad of
+            exceptions, such as USB errors, serial errors, network connectivity errors, <i>etc.</i> All device drivers
+            should catch these exceptions and convert them into an exception of type <span
+                class="code">WeeWxIOError</span> or one of its subclasses.
+        </p>
+
+        <h1>Naming conventions</h1>
+        <p>
+            How you name variables makes a big difference in code readability. In general, long names are preferable to
+            short names. Instead of this,
+        </p>
+        <pre class="tty">p = 990.1</pre>
+        <p>use this,</p>
+        <pre class="tty">pressure = 990.1</pre>
+        <p>or, even better, this:</p>
+        <pre class="tty">pressure_mbar = 990.1</pre>
+
+        <p>
+            WeeWX uses a number of conventions to signal the variable type, although they are not used consistently.
+        </p>
+
+        <table style="width: 75%" class='indent'>
+            <caption>Variable suffix conventions</caption>
+            <tr class="first_row">
+                <td>Suffix</td>
+                <td>Example</td>
+                <td>Description</td>
+            </tr>
+            <tr>
+                <td class="code">_ts</td>
+                <td class="code">first_ts</td>
+                <td>Variable is a timestamp in <a href="https://en.wikipedia.org/wiki/Unix_time">unix epoch time</a>.
+                </td>
+            </tr>
+            <tr>
+                <td class="code">_dt</td>
+                <td class="code">start_dt</td>
+                <td>Variable is an instance of <a
+                    href="https://docs.python.org/3/library/datetime.html#datetime-objects"><span class="code">datetime.datetime</span></a>,
+                    usually in <em>local time</em>.
+                </td>
+            </tr>
+            <tr>
+                <td class="code">_d</td>
+                <td class="code">end_d</td>
+                <td>Variable is an instance of <a
+                    href="https://docs.python.org/3/library/datetime.html#date-objects"><span
+                    class="code">datetime.date</span></a>, usually in <em>local time</em>.
+                </td>
+            </tr>
+            <tr>
+                <td class="code">_tt</td>
+                <td class="code">sod_tt</td>
+                <td>Variable is an instance of <span class="code">time.struct_time</span> (a <a
+                    href="https://docs.python.org/3/library/time.html#time.struct_time"><em>time tuple</em>)</a>,
+                    usually in <em>local time</em>.
+                </td>
+            </tr>
+            <tr>
+                <td class="code">_vh</td>
+                <td class="code">pressure_vh</td>
+                <td>Variable is an instance of <span class="code">weewx.units.ValueHelper</span>.</td>
+            </tr>
+            <tr>
+                <td class="code">_vt</td>
+                <td class="code">speed_vt</td>
+                <td>Variable is an instance of <span class="code">weewx.units.ValueTuple</span>.</td>
+            </tr>
+        </table>
+
+
+        <h1>Code style</h1>
+        <p>
+            Generally, we try to follow the <a href="https://www.python.org/dev/peps/pep-0008/">PEP 8 style guide</a>,
+            but there are <em>many</em> exceptions. In particular, many older WeeWX function names use camelCase, but
+            PEP 8 calls for snake_case. Please use snake_case for new code.
+        </p>
+        <p>
+            Most modern code editors, such as Eclipse, or PyCharm, have the ability to automatically format code. Resist
+            the temptation and <em>don't use this feature!</em> Two reasons:
+        </p>
+        <ul>
+            <li>
+                Unless all developers use the same tool, using the same settings, we will just thrash back and forth
+                between slightly different versions.
+            </li>
+            <li>
+                Automatic formatters play a useful role, but some of what they do are really trivial changes, such as
+                removing spaces in otherwise blank lines. Now if someone is trying to figure out what real, syntactic,
+                changes you have made, s/he will have to wade through all those extraneous "changed lines," trying to
+                find the important stuff.
+            </li>
+        </ul>
+        <p>
+            If you are working with a file where the formatting is so ragged that you really must do a reformat, then do
+            it as a separate commit. This allows the formatting changes to be clearly distinguished from more functional
+            changes.
+        </p>
+
+        <p>
+            When invoking functions or instantiating classes, use the fully qualified name. Don't do this:
+        </p>
+        <pre class="tty" style="opacity: 0.5">from datetime import datetime
+now = datetime()</pre>
+        <p>Instead, do this:</p>
+        <pre class="tty">import datetime
+now = datetime.datetime()</pre>
+
+        <h1>Git work flow</h1>
+        <p>We use git as the source control system.</p>
+        <p>
+            We generally follow Vincent Driessen's <a href="http://nvie.com/posts/a-successful-git-branching-model/">branching
+            model</a>. Ignore the complicated diagram at the beginning of the article, and just focus on the text. In
+            this model, there are two key branches:
+        </p>
+
+        <ul>
+            <li>
+                <span class="code">master</span>. Fixes go into this branch. We tend to use fewer "hot fix" branches
+                and, instead, just incorporate any fixes directly into the branch. Releases are tagged relative to this
+                branch.
+            </li>
+            <li>
+                <span class="code">development</span> (called <span class="code">develop</span> in Vince's article).
+                This is where new features go. Before a release, they will be merged into the <span
+                class="code">master</span> branch.
+            </li>
+        </ul>
+
+        <p>
+            What this means to you is that if you submit a pull request that includes a new feature, make sure you
+            commit your changes relative to the <span class="code"><em>development</em></span> branch. If it is just a
+            bug fix, it should be committed against the <span class="code">master</span> branch.
+        </p>
+
+        <h1>Tools</h1>
+        <h2>Python</h2>
+        <p>
+            <a href="http://www.jetbrains.com/pycharm/">JetBrain's PyCharm</a> is exellent, and now there's a free
+            Community Edition. It has many advanced features, yet is structured that you need not be exposed to them
+            until you need them. Highly recommended.
+        </p>
+
+        <h2>HTML and Javascript</h2>
+        <p>
+            For HTML, <a href="http://www.jetbrains.com/webstorm/">JetBrain's WebStorm</a> is excellent, particularly if
+            you will be using a framework such as NodeJS or ExpressJS.
+        </p>
+
+        <h1 id="Daily_summaries">Daily summaries</h1>
 
         <p>
             This section builds on the discussion <a href="customizing.htm#The_database"><em>The database</em></a> in
@@ -452,7 +645,7 @@ next_ts = int(time.mktime(next_dt.timetuple()))</pre>
             <tr>
                 <td class="first_col code">squaresum</td>
                 <td>
-                    The sum of the wind speed squared for the day. This is useful for calculating RMS wind speed.
+                    The sum of the wind speed squared for the day.
                 </td>
             </tr>
             <tr>
@@ -469,181 +662,6 @@ next_ts = int(time.mktime(next_dt.timetuple()))</pre>
         </p>
         <pre class="tty">math.sqrt(wsquaresum / sumtime)</pre>
 
-
-        <h1>Internationalization</h1>
-        <p>
-            Generally, WeeWX is locale aware. It will emit reports using the local formatting conventions for date,
-            times, and values.
-        </p>
-
-        <h1>Exceptions</h1>
-        <p>In general, your code should not simply swallow an exception. For example, this is bad form:</p>
-        <pre class="tty">
-    try:
-        os.rename(oldname, newname)
-    except:
-        pass</pre>
-        <p>
-            While the odds are that if an exception happens it will be because the file <span class="code">oldname</span>
-            does not exist, that is not guaranteed. It could be because of a keyboard interrupt, or a corrupted file
-            system, or something else. Instead, you should test explicitly for any expected exception, and let the rest
-            go by:
-        </p>
-        <pre class="tty">
-    try:
-        os.rename(oldname, newname)
-    except OSError:
-        pass</pre>
-        <p>
-            WeeWX has a few specialized exception types, used to rationalized all the different types of exceptions that
-            could be thrown by the underlying libraries. In particular, low-level I/O code can raise a myriad of
-            exceptions, such as USB errors, serial errors, network connectivity errors, <i>etc.</i> All device drivers
-            should catch these exceptions and convert them into an exception of type <span
-                class="code">WeeWxIOError</span> or one of its subclasses.
-        </p>
-
-        <h1>Naming conventions</h1>
-        <p>
-            How you name variables makes a big difference in code readability. In general, long names are preferable to
-            short names. Instead of this,
-        </p>
-        <pre class="tty">p = 990.1</pre>
-        <p>use this,</p>
-        <pre class="tty">pressure = 990.1</pre>
-        <p>or, even better, this:</p>
-        <pre class="tty">pressure_mbar = 990.1</pre>
-
-        <p>
-            WeeWX uses a number of conventions to signal the variable type, although they are not used consistently.
-        </p>
-
-        <table style="width: 75%" class='indent'>
-            <caption>Variable suffix conventions</caption>
-            <tr class="first_row">
-                <td>Suffix</td>
-                <td>Example</td>
-                <td>Description</td>
-            </tr>
-            <tr>
-                <td class="code">_ts</td>
-                <td class="code">first_ts</td>
-                <td>Variable is a timestamp in <a href="https://en.wikipedia.org/wiki/Unix_time">unix epoch time</a>.
-                </td>
-            </tr>
-            <tr>
-                <td class="code">_dt</td>
-                <td class="code">start_dt</td>
-                <td>Variable is an instance of <a
-                    href="https://docs.python.org/3/library/datetime.html#datetime-objects"><span class="code">datetime.datetime</span></a>,
-                    usually in <em>local time</em>.
-                </td>
-            </tr>
-            <tr>
-                <td class="code">_d</td>
-                <td class="code">end_d</td>
-                <td>Variable is an instance of <a
-                    href="https://docs.python.org/3/library/datetime.html#date-objects"><span
-                    class="code">datetime.date</span></a>, usually in <em>local time</em>.
-                </td>
-            </tr>
-            <tr>
-                <td class="code">_tt</td>
-                <td class="code">sod_tt</td>
-                <td>Variable is an instance of <span class="code">time.struct_time</span> (a <a
-                    href="https://docs.python.org/3/library/time.html#time.struct_time"><em>time tuple</em>)</a>,
-                    usually in <em>local time</em>.
-                </td>
-            </tr>
-            <tr>
-                <td class="code">_vh</td>
-                <td class="code">pressure_vh</td>
-                <td>Variable is an instance of <span class="code">weewx.units.ValueHelper</span>.</td>
-            </tr>
-            <tr>
-                <td class="code">_vt</td>
-                <td class="code">speed_vt</td>
-                <td>Variable is an instance of <span class="code">weewx.units.ValueTuple</span>.</td>
-            </tr>
-        </table>
-
-
-        <h1>Code style</h1>
-        <p>
-            Generally, we try to follow the <a href="https://www.python.org/dev/peps/pep-0008/">PEP 8 style guide</a>,
-            but there are <em>many</em> exceptions. In particular, many older WeeWX function names use camelCase, but
-            PEP 8 calls for snake_case. Please use snake_case for new code.
-        </p>
-        <p>
-            Most modern code editors, such as Eclipse, or PyCharm, have the ability to automatically format code. Resist
-            the temptation and <em>don't use this feature!</em> Two reasons:
-        </p>
-        <ul>
-            <li>
-                Unless all developers use the same tool, using the same settings, we will just thrash back and forth
-                between slightly different versions.
-            </li>
-            <li>
-                Automatic formatters play a useful role, but some of what they do are really trivial changes, such as
-                removing spaces in otherwise blank lines. Now if someone is trying to figure out what real, syntactic,
-                changes you have made, s/he will have to wade through all those extraneous "changed lines," trying to
-                find the important stuff.
-            </li>
-        </ul>
-        <p>
-            If you are working with a file where the formatting is so ragged that you really must do a reformat, then do
-            it as a separate commit. This allows the formatting changes to be clearly distinguished from more functional
-            changes.
-        </p>
-
-        <p>
-            When invoking functions or instantiating classes, use the fully qualified name. Don't do this:
-        </p>
-        <pre class="tty" style="opacity: 0.5">from datetime import datetime
-now = datetime()</pre>
-        <p>Instead, do this:</p>
-        <pre class="tty">import datetime
-now = datetime.datetime()</pre>
-
-        <h1>Git work flow</h1>
-        <p>We use git as the source control system.</p>
-        <p>
-            We generally follow Vincent Driessen's <a href="http://nvie.com/posts/a-successful-git-branching-model/">branching
-            model</a>. Ignore the complicated diagram at the beginning of the article, and just focus on the text. In
-            this model, there are two key branches:
-        </p>
-
-        <ul>
-            <li>
-                <span class="code">master</span>. Fixes go into this branch. We tend to use fewer "hot fix" branches
-                and, instead, just incorporate any fixes directly into the branch. Releases are tagged relative to this
-                branch.
-            </li>
-            <li>
-                <span class="code">development</span> (called <span class="code">develop</span> in Vince's article).
-                This is where new features go. Before a release, they will be merged into the <span
-                class="code">master</span> branch.
-            </li>
-        </ul>
-
-        <p>
-            What this means to you is that if you submit a pull request that includes a new feature, make sure you
-            commit your changes relative to the <span class="code"><em>development</em></span> branch. If it is just a
-            bug fix, it should be committed against the <span class="code">master</span> branch.
-        </p>
-
-        <h1>Tools</h1>
-        <h2>Python</h2>
-        <p>
-            <a href="http://www.jetbrains.com/pycharm/">JetBrain's PyCharm</a> is exellent, and now there's a free
-            Community Edition. It has many advanced features, yet is structured that you need not be exposed to them
-            until you need them. Highly recommended.
-        </p>
-
-        <h2>HTML and Javascript</h2>
-        <p>
-            For HTML, <a href="http://www.jetbrains.com/webstorm/">JetBrain's WebStorm</a> is excellent, particularly if
-            you will be using a framework such as NodeJS or ExpressJS.
-        </p>
 
         <h1>Glossary</h1>
 
