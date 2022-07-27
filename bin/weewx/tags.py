@@ -158,7 +158,7 @@ class TimespanBinder(object):
        # Iterate by month:
        for monthStats in yearStats.months:
            # Print maximum temperature for each month in the year:
-           print monthStats.outTemp.max
+           print(monthStats.outTemp.max)
     """
 
     def __init__(self, timespan, db_lookup, data_binding=None, context='current',
@@ -258,6 +258,15 @@ class TimespanBinder(object):
 
     # Alias for the start time:
     dateTime = start
+
+    def check_for_data(self, sql_expr):
+        """Check whether the given sql expression returns any data"""
+        db_manager = self.db_lookup(self.data_binding)
+        try:
+            val = weewx.xtypes.get_aggregate(sql_expr, self.timespan, 'not_null', db_manager)
+            return bool(val[0])
+        except weewx.UnknownAggregation:
+            return False
 
     def __call__(self, data_binding=None):
         """The iterators return an instance of TimespanBinder. Allow them to override

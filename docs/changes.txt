@@ -37,6 +37,9 @@ under [[FTP]].
 
 Ensure that rundir exists and has correct permissions in weewx-multi
 
+Allow auto-provisioning feature of Seasons to work when using a SQL expression
+for option data_type in the ImageGenerator. Fixes issue #782.
+
 
 4.8.0 04/21/2022
 Allow unit to be overridden for a specific plot by using new option 'unit'.
