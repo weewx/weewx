@@ -400,8 +400,8 @@ def archiveHoursAgoSpan(time_ts, hours_ago=0):
     start_span_dt = start_of_hour_dt - datetime.timedelta(hours=hours_ago)
     stop_span_dt = start_span_dt + datetime.timedelta(hours=1)
 
-    return TimeSpan(time.mktime(start_span_dt.timetuple()),
-                    time.mktime(stop_span_dt.timetuple()))
+    return TimeSpan(int(time.mktime(start_span_dt.timetuple())),
+                    int(time.mktime(stop_span_dt.timetuple())))
 
 
 def daySpan(time_ts, days_ago=0, archive=False):
@@ -451,8 +451,8 @@ def daySpan(time_ts, days_ago=0, archive=False):
     start_span_dt = start_of_day_dt - datetime.timedelta(days=days_ago)
     stop_span_dt = start_span_dt + datetime.timedelta(days=1)
 
-    return TimeSpan(time.mktime(start_span_dt.timetuple()),
-                    time.mktime(stop_span_dt.timetuple()))
+    return TimeSpan(int(time.mktime(start_span_dt.timetuple())),
+                    int(time.mktime(stop_span_dt.timetuple())))
 
 
 def archiveDaySpan(time_ts, days_ago=0):
@@ -554,8 +554,8 @@ def archiveWeekSpan(time_ts, startOfWeek=6, weeks_ago=0):
     start_of_week = start_of_day_dt - datetime.timedelta(days=delta)
     end_of_week = start_of_week + datetime.timedelta(days=7)
 
-    return TimeSpan(time.mktime(start_of_week.timetuple()),
-                    time.mktime(end_of_week.timetuple()))
+    return TimeSpan(int(time.mktime(start_of_week.timetuple())),
+                    int(time.mktime(end_of_week.timetuple())))
 
 
 def archiveMonthSpan(time_ts, months_ago=0):
@@ -1006,8 +1006,8 @@ def genMonthSpans(start_ts, stop_ts):
     for month in range(_start_month, _stop_month + 1):
         _this_yr, _this_mo = divmod(month, 12)
         _next_yr, _next_mo = divmod(month + 1, 12)
-        yield TimeSpan(time.mktime((_this_yr, _this_mo, 1, 0, 0, 0, 0, 0, -1)),
-                       time.mktime((_next_yr, _next_mo, 1, 0, 0, 0, 0, 0, -1)))
+        yield TimeSpan(int(time.mktime((_this_yr, _this_mo, 1, 0, 0, 0, 0, 0, -1))),
+                       int(time.mktime((_next_yr, _next_mo, 1, 0, 0, 0, 0, 0, -1))))
 
 
 def genYearSpans(start_ts, stop_ts):
@@ -1024,8 +1024,8 @@ def genYearSpans(start_ts, stop_ts):
         _stop_year -= 1
 
     for year in range(_start_year, _stop_year + 1):
-        yield TimeSpan(time.mktime((year, 1, 1, 0, 0, 0, 0, 0, -1)),
-                       time.mktime((year + 1, 1, 1, 0, 0, 0, 0, 0, -1)))
+        yield TimeSpan(int(time.mktime((year, 1, 1, 0, 0, 0, 0, 0, -1))),
+                       int(time.mktime((year + 1, 1, 1, 0, 0, 0, 0, 0, -1))))
 
 
 def startOfDay(time_ts):
@@ -1045,7 +1045,7 @@ def startOfDay(time_ts):
                            _time_tt.tm_mon,
                            _time_tt.tm_mday,
                            0, 0, 0, 0, 0, -1))
-    return _bod_ts
+    return int(_bod_ts)
 
 
 def startOfGregorianDay(date_greg):
@@ -1115,7 +1115,7 @@ def startOfDayUTC(time_ts):
                                _time_tt.tm_mon,
                                _time_tt.tm_mday,
                                0, 0, 0, 0, 0, -1))
-    return _bod_ts
+    return int(_bod_ts)
 
 
 def startOfArchiveDay(time_ts):
@@ -1141,7 +1141,7 @@ def startOfArchiveDay(time_ts):
             and time_dt.microsecond == 0:
         start_of_day_dt -= datetime.timedelta(days=1)
     start_of_day_tt = start_of_day_dt.timetuple()
-    start_of_day_ts = time.mktime(start_of_day_tt)
+    start_of_day_ts = int(time.mktime(start_of_day_tt))
     return start_of_day_ts
 
 
