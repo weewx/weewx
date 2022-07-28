@@ -3768,22 +3768,22 @@ ephem.Eros = eros</pre>
         </p>
         <pre class="tty">$almanac.sun.rise.raw</pre>
         <p>
-            To calculate - for example - the daylight time:
+            To calculate - for example - the time from dawn to dusk:
         </p>
-        <pre>#set $daylight=$almanac.sun.set.raw-$almanac.sun.rise.raw</pre>
+        <pre>#set $dawntodusk=$almanac(horizon=-6).sun(use_center=1).set.raw-$almanac(horizon=-6).sun(use_center=1).rise.raw</pre>
         <p>
             To display that value and make it observe the units and settings is a little bit tricky:
         </p>
         <pre>#from weewx.units import ValueTuple,ValueHelper 
-#set $rising=$almanac.sun.rise.raw 
-#set $setting=$almanac.sun.set.raw 
-#set $daylight=$setting-$rising
-#set $daylight_vh=ValueHelper(ValueTuple($daylight,'second','group_deltatime'),formatter=$station.formatter) 
+#set $dawn=$almanac(horizon=-6).sun(use_center=1).rise.raw 
+#set $dusk=$almanac(horizon=-6.sun(use_center=1).set.raw 
+#set $dawntodusk=$dusk-$dawn
+#set $dawntodusk_vh=ValueHelper(ValueTuple($dawntodusk,'second','group_deltatime'),formatter=$station.formatter) 
 
-$daylight_vh</pre>
+$dawntodusk_vh</pre>
         <p>The unit provided has to conform to the unit of the raw values used in calculation. </p>
         <p>To get a special output format you can add <span class="code">.format(...)</code>, for example:</p>
-        <pre>$daylight_vh.format("%(hour)d%(hour_label) %(minute)d%(minute_label)s %(second)d%(second_label)s","")</pre>
+        <pre>$dawntodusk_vh.format("%(hour)d%(hour_label) %(minute)d%(minute_label)s %(second)d%(second_label)s","")</pre>
         
         <p>
             Another example is the difference between maximum and minimum temperature of the day in Kelvin 
