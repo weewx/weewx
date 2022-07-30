@@ -3756,7 +3756,7 @@ ephem.Eros = eros</pre>
         <p>
             While it is the best way to define calculated values by writing a search list extension or XTYPE extension,
             sometimes it is easier or faster to include the calculation in the template. To do so, Cheetah provides 
-            the <span class="code">#set</code> directive. Here it is explained how to use it for calculations and
+            the <span class="code">#set</span> directive. Here it is explained how to use it for calculations and
             displaying the resulting values.
         </p>
         <p>
@@ -3776,7 +3776,7 @@ ephem.Eros = eros</pre>
         </p>
         <pre>#from weewx.units import ValueTuple,ValueHelper 
 #set $dawn=$almanac(horizon=-6).sun(use_center=1).rise.raw 
-#set $dusk=$almanac(horizon=-6.sun(use_center=1).set.raw 
+#set $dusk=$almanac(horizon=-6).sun(use_center=1).set.raw 
 #set $dawntodusk=$dusk-$dawn
 #set $dawntodusk_vh=ValueHelper(ValueTuple($dawntodusk,'second','group_deltatime'),formatter=$station.formatter) 
 
