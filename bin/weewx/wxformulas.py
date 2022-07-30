@@ -785,15 +785,15 @@ def evapotranspiration_Metric(Tmin_C, Tmax_C, rh_min, rh_max, sr_mean_wpm2,
 
     Args:
  
-        Tmin_C (float): Minimum temperature during the hour in degrees Celsius
-        Tmax_C (float): Maximum temperature during the hour in degrees Celsius
+        Tmin_C (float): Minimum temperature during the hour in degrees Celsius.
+        Tmax_C (float): Maximum temperature during the hour in degrees Celsius.
         rh_min (float): Minimum relative humidity during the hour in percent.
         rh_max (float): Maximum relative humidity during the hour in percent.
-        sr_mean_wpm2 (float): Mean solar radiation during the hour in watts per sq meter
-        ws_mps (float): Average wind speed during the hour in meters per second
-        wind_height_m (float): Height in meters at which windspeed is measured
-        latitude_deg (float): Latitude of the station in degrees
-        longitude_deg (float): Longitude of the station in degrees
+        sr_mean_wpm2 (float): Mean solar radiation during the hour in watts per sq meter.
+        ws_mps (float): Average wind speed during the hour in meters per second.
+        wind_height_m (float): Height in meters at which windspeed is measured.
+        latitude_deg (float): Latitude of the station in degrees.
+        longitude_deg (float): Longitude of the station in degrees.
         altitude_m (float): Altitude of the station in meters.
         timestamp (float): The time, as unix epoch time, at the end of the hour.
         albedo (float): Albedo. Default is 0.23 (grass reference crop).
@@ -909,15 +909,15 @@ def evapotranspiration_US(Tmin_F, Tmax_F, rh_min, rh_max,
 
     Args:
  
-        Tmin_F (float): Minimum temperature during the hour in degrees Fahrenheit
-        Tmax_F (float): Maximum temperature during the hour in degrees Fahrenheit
+        Tmin_F (float): Minimum temperature during the hour in degrees Fahrenheit.
+        Tmax_F (float): Maximum temperature during the hour in degrees Fahrenheit.
         rh_min (float): Minimum relative humidity during the hour in percent.
         rh_max (float): Maximum relative humidity during the hour in percent.
-        sr_mean_wpm2 (float): Mean solar radiation during the hour in watts per sq meter
-        ws_mph (float): Average wind speed during the hour in miles per hour
-        wind_height_ft (float): Height in feet at which windspeed is measured
-        latitude_deg (float): Latitude of the station in degrees
-        longitude_deg (float): Longitude of the station in degrees
+        sr_mean_wpm2 (float): Mean solar radiation during the hour in watts per sq meter.
+        ws_mph (float): Average wind speed during the hour in miles per hour.
+        wind_height_ft (float): Height in feet at which windspeed is measured.
+        latitude_deg (float): Latitude of the station in degrees.
+        longitude_deg (float): Longitude of the station in degrees.
         altitude_ft (float): Altitude of the station in feet.
         timestamp (float): The time, as unix epoch time, at the end of the hour.
         albedo (float): Albedo. Default is 0.23 (grass reference crop).

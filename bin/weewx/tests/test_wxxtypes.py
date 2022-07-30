@@ -409,9 +409,9 @@ class TestET(unittest.TestCase):
             self.db_manager.addRecord(record)
 
     def test_ET(self):
-        wx_xtypes = weewx.wxxtypes.WXXTypes(altitude_vt,
-                                            latitude_f=latitude,
-                                            longitude_f=longitude)
+        wx_xtypes = weewx.wxxtypes.ETXType(altitude_vt,
+                                           latitude_f=latitude,
+                                           longitude_f=longitude)
         ts = self.db_manager.lastGoodStamp()
         record = self.db_manager.getRecord(ts)
         et_vt = wx_xtypes.get_scalar('ET', record, self.db_manager)

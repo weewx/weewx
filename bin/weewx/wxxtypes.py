@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2021 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2022 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -31,8 +31,11 @@ DEFAULTS_INI = """
       atc = 0.8
       nfac = 2
     [[[ET]]]
-      wind_height = 2.0
       et_period = 3600
+      wind_height = 2.0
+      albedo = 0.23
+      cn = 37
+      cd = 0.34
     [[[heatindex]]]
       algorithm = new
   [[PressureCooker]]
@@ -56,13 +59,11 @@ class WXXTypes(weewx.xtypes.XType):
     are generally stateless, such as dewpoint, heatindex, etc. """
 
     def __init__(self, altitude_vt, latitude_f, longitude_f,
-                 et_period=3600,
                  atc=0.8,
                  nfac=2,
-                 wind_height=2.0,
                  force_null=True,
                  maxSolarRad_algo='rs',
-                 heat_index_algo='new'
+                 heatindex_algo='new'
                  ):
         # Fail hard if out of range:
         if not 0.7 <= atc <= 0.91:
@@ -71,13 +72,11 @@ class WXXTypes(weewx.xtypes.XType):
         self.altitude_vt = altitude_vt
         self.latitude_f = latitude_f
         self.longitude_f = longitude_f
-        self.et_period = et_period
         self.atc = atc
         self.nfac = nfac
-        self.wind_height = wind_height
         self.force_null = force_null
         self.maxSolarRad_algo = maxSolarRad_algo.lower()
-        self.heat_index_algo = heat_index_algo.lower()
+        self.heatindex_algo = heatindex_algo.lower()
 
     def get_scalar(self, obs_type, record, db_manager, **option_dict):
         """Invoke the proper method for the desired observation type."""
@@ -132,71 +131,6 @@ class WXXTypes(weewx.xtypes.XType):
             u = 'meter'
         return ValueTuple(val, u, 'group_altitude')
 
-    def calc_ET(self, key, data, db_manager):
-        """Get maximum and minimum temperatures and average radiation and wind speed for the
-        indicated period then calculate the amount of evapotranspiration during the interval.
-        Convert to US units if necessary since this service operates in US unit system.
-        """
-
-        if 'interval' not in data:
-            # This will cause LOOP data not to be processed.
-            raise weewx.CannotCalculate(key)
-
-        interval = data['interval']
-        end_ts = data['dateTime']
-        start_ts = end_ts - self.et_period
-        try:
-            r = db_manager.getSql("SELECT MAX(outTemp), MIN(outTemp), "
-                                  "AVG(radiation), AVG(windSpeed), "
-                                  "MAX(outHumidity), MIN(outHumidity), "
-                                  "MAX(usUnits), MIN(usUnits) FROM %s "
-                                  "WHERE dateTime>? AND dateTime <=?"
-                                  % db_manager.table_name, (start_ts, end_ts))
-        except weedb.DatabaseError:
-            return ValueTuple(None, None, None)
-
-        # Make sure everything is there:
-        if r is None or None in r:
-            return ValueTuple(None, None, None)
-
-        # Unpack the results
-        T_max, T_min, rad_avg, wind_avg, rh_max, rh_min, std_unit_min, std_unit_max = r
-
-        # Check for mixed units
-        if std_unit_min != std_unit_max:
-            log.info("Mixed unit system not allowed in ET calculation. Skipped.")
-            return ValueTuple(None, None, None)
-        std_unit = std_unit_min
-        if std_unit == weewx.METRIC or std_unit == weewx.METRICWX:
-            T_max = CtoF(T_max)
-            T_min = CtoF(T_min)
-            if std_unit == weewx.METRICWX:
-                wind_avg = mps_to_mph(wind_avg)
-            else:
-                wind_avg = kph_to_mph(wind_avg)
-        # Wind height is in meters, so convert it:
-        height_ft = self.wind_height / METER_PER_FOOT
-        # Get altitude in feet
-        altitude_ft = weewx.units.convert(self.altitude_vt, 'foot')[0]
-
-        try:
-            ET_rate = weewx.wxformulas.evapotranspiration_US(
-                T_min, T_max, rh_min, rh_max, rad_avg, wind_avg, height_ft,
-                self.latitude_f, self.longitude_f, altitude_ft, end_ts)
-        except ValueError as e:
-            log.error("Calculation of evapotranspiration failed: %s", e)
-            weeutil.logger.log_traceback(log.error)
-            ET_inch = None
-        else:
-            # The formula returns inches/hour. We need the total ET over the interval, so multiply
-            # by the length of the interval in hours. Remember that 'interval' is actually in
-            # minutes.
-            ET_inch = ET_rate * interval / 60.0 if ET_rate is not None else None
-
-        # Convert back to the unit system of the incoming record:
-        ET = weewx.units.convertStd((ET_inch, 'inch', 'group_rain'), data['usUnits'])
-        return ET
-
     @staticmethod
     def calc_dewpoint(key, data, db_manager=None):
         if 'outTemp' not in data or 'outHumidity' not in data:
@@ -243,11 +177,11 @@ class WXXTypes(weewx.xtypes.XType):
             raise weewx.CannotCalculate(key)
         if data['usUnits'] == weewx.US:
             val = weewx.wxformulas.heatindexF(data['outTemp'], data['outHumidity'],
-                                              algorithm=self.heat_index_algo)
+                                              algorithm=self.heatindex_algo)
             u = 'degree_F'
         else:
             val = weewx.wxformulas.heatindexC(data['outTemp'], data['outHumidity'],
-                                              algorithm=self.heat_index_algo)
+                                              algorithm=self.heatindex_algo)
             u = 'degree_C'
         return weewx.units.convertStd((val, u, 'group_temperature'), data['usUnits'])
 
@@ -315,6 +249,106 @@ class WXXTypes(weewx.xtypes.XType):
             u = 'mile'
         return weewx.units.convertStd((val, u, 'group_distance'), data['usUnits'])
 
+
+#
+# ########################### Class ETXType ##################################
+#
+
+class ETXType(weewx.xtypes.XType):
+    """XType extension for calculating ET"""
+
+    def __init__(self, altitude_vt,
+                 latitude_f, longitude_f,
+                 et_period=3600,
+                 wind_height=2.0,
+                 albedo=0.23,
+                 cn=37,
+                 cd=.34):
+        """
+
+        Args:
+            altitude_vt (ValueTuple): Altitude as a ValueTuple
+            latitude_f (float): Latitude in decimal degrees.
+            longitude_f (float): Longitude in decimal degrees.
+            et_period (float): Window of time for ET calculation in seconds.
+            wind_height (float):Height above ground at which the wind is measured in meters.
+            albedo (float): The albedo to use.
+            cn (float): The numerator constant for the reference crop type and time step.
+            cd (float): The denominator constant for the reference crop type and time step.
+        """
+        self.altitude_vt = altitude_vt
+        self.latitude_f = latitude_f
+        self.longitude_f = longitude_f
+        self.et_period = et_period
+        self.wind_height = wind_height
+        self.albedo = albedo
+        self.cn = cn
+        self.cd = cd
+
+    def get_scalar(self, obs_type, data, db_manager, **option_dict):
+        """Calculate ET as a scalar"""
+        if obs_type != 'ET':
+            raise weewx.UnknownType(obs_type)
+
+        if 'interval' not in data:
+            # This will cause LOOP data not to be processed.
+            raise weewx.CannotCalculate(obs_type)
+
+        interval = data['interval']
+        end_ts = data['dateTime']
+        start_ts = end_ts - self.et_period
+        try:
+            r = db_manager.getSql("SELECT MAX(outTemp), MIN(outTemp), "
+                                  "AVG(radiation), AVG(windSpeed), "
+                                  "MAX(outHumidity), MIN(outHumidity), "
+                                  "MAX(usUnits), MIN(usUnits) FROM %s "
+                                  "WHERE dateTime>? AND dateTime <=?"
+                                  % db_manager.table_name, (start_ts, end_ts))
+        except weedb.DatabaseError:
+            return ValueTuple(None, None, None)
+
+        # Make sure everything is there:
+        if r is None or None in r:
+            return ValueTuple(None, None, None)
+
+        # Unpack the results
+        T_max, T_min, rad_avg, wind_avg, rh_max, rh_min, std_unit_min, std_unit_max = r
+
+        # Check for mixed units
+        if std_unit_min != std_unit_max:
+            log.info("Mixed unit system not allowed in ET calculation. Skipped.")
+            return ValueTuple(None, None, None)
+        std_unit = std_unit_min
+        if std_unit == weewx.METRIC or std_unit == weewx.METRICWX:
+            T_max = CtoF(T_max)
+            T_min = CtoF(T_min)
+            if std_unit == weewx.METRICWX:
+                wind_avg = mps_to_mph(wind_avg)
+            else:
+                wind_avg = kph_to_mph(wind_avg)
+        # Wind height is in meters, so convert it:
+        height_ft = self.wind_height / METER_PER_FOOT
+        # Get altitude in feet
+        altitude_ft = weewx.units.convert(self.altitude_vt, 'foot')[0]
+
+        try:
+            ET_rate = weewx.wxformulas.evapotranspiration_US(
+                T_min, T_max, rh_min, rh_max, rad_avg, wind_avg, height_ft,
+                self.latitude_f, self.longitude_f, altitude_ft, end_ts,
+                self.albedo, self.cn, self.cd)
+        except ValueError as e:
+            log.error("Calculation of evapotranspiration failed: %s", e)
+            weeutil.logger.log_traceback(log.error)
+            ET_inch = None
+        else:
+            # The formula returns inches/hour. We need the total ET over the interval, so multiply
+            # by the length of the interval in hours. Remember that 'interval' is actually in
+            # minutes.
+            ET_inch = ET_rate * interval / 60.0 if ET_rate is not None else None
+
+        # Convert back to the unit system of the incoming record:
+        ET = weewx.units.convertStd((ET_inch, 'inch', 'group_rain'), data['usUnits'])
+        return ET
 
 #
 # ######################## Class PressureCooker ##############################
@@ -662,30 +696,45 @@ class StdWXXTypes(weewx.engine.StdService):
         atc = to_float(option_dict['maxSolarRad'].get('atc', 0.8))
         # atmospheric turbidity (2=clear, 4-5=smoggy)
         nfac = to_float(option_dict['maxSolarRad'].get('nfac', 2))
+        # heatindex-related options
+        heatindex_algo = option_dict['heatindex'].get('algorithm', 'new').lower()
+
+        # Instantiate an instance of WXXTypes and register it with the XTypes system
+        self.wxxtypes = WXXTypes(altitude_vt, latitude_f, longitude_f,
+                                 atc=atc,
+                                 nfac=nfac,
+                                 force_null=force_null,
+                                 maxSolarRad_algo=maxSolarRad_algo,
+                                 heatindex_algo=heatindex_algo)
+        weewx.xtypes.xtypes.append(self.wxxtypes)
 
         # ET-related options
         # height above ground at which wind is measured, in meters
         wind_height = to_float(weeutil.config.search_up(option_dict['ET'], 'wind_height', 2.0))
         # window of time for evapotranspiration calculation, in seconds
         et_period = to_int(option_dict['ET'].get('et_period', 3600))
+        # The albedo to use
+        albedo = to_float(option_dict['ET'].get('albedo', 0.23))
+        # The numerator constant for the reference crop type and time step.
+        cn = to_float(option_dict['ET'].get('cn', 37))
+        # The denominator constant for the reference crop type and time step.
+        cd = to_float(option_dict['ET'].get('cd', 0.34))
 
-        # heatindex-related options
-        heatindex_algo = option_dict['heatindex'].get('algorithm', 'new').lower()
+        # Instantiate an instance of ETXType and register it with the XTypes system
+        self.etxtype = ETXType(altitude_vt,
+                               latitude_f, longitude_f,
+                               et_period=et_period,
+                               wind_height=wind_height,
+                               albedo=albedo,
+                               cn=cn,
+                               cd=cd)
+        weewx.xtypes.xtypes.append(self.etxtype)
 
-        self.wxxtypes = WXXTypes(altitude_vt, latitude_f, longitude_f,
-                                 et_period,
-                                 atc,
-                                 nfac,
-                                 wind_height,
-                                 force_null,
-                                 maxSolarRad_algo,
-                                 heatindex_algo)
-        # Add to the xtypes system
-        weewx.xtypes.xtypes.append(self.wxxtypes)
 
     def shutDown(self):
         """Engine shutting down. """
         # Remove from the XTypes system:
+        weewx.xtypes.xtypes.remove(self.etxtype)
         weewx.xtypes.xtypes.remove(self.wxxtypes)
 
 

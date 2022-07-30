@@ -270,6 +270,52 @@ sudo apt-get install weewx</pre>
         </p>
         <pre class="tty cmd">wee_reports /home/weewx/weewx.conf --date=2022-02-17 --time=13:00</pre>
 
+        <h3>Init function of class <span class="code">WXXTypes</span> has changed</h3>
+        <p>
+            In earlier versions, ET was calculated in class <span class="code">WXXTypes</span>. Now it has its own
+            class, <span class="code">ETXType</span>. As a result, some initialization parameters are no longer needed
+            and have been removed.
+        </p>
+        <p>
+            Note also that the parameter <span class="code">heat_index_algo</span> was changed to
+            <span class="code">heatindex_algo</span> in keeping with the rest of the code.
+        </p>
+        <p>
+            Unless you have been writing specialized code that required direct access to <span
+            class="code">WXXTypes</span> you are very unlikely to be affected.
+        </p>
+        <table>
+            <tr class="first_row">
+                <td style='width:50%'>V4.8 and earlier</td>
+                <td>4.9</td>
+            </tr>
+            <tr>
+                <td>
+                    <pre class='tty'>
+    def __init__(self, altitude_vt, latitude_f, longitude_f,
+                 <span class="removed">et_period=3600,</span>
+                 atc=0.8,
+                 nfac=2,
+                 <span class="removed">wind_height=2.0,</span>
+                 force_null=True,
+                 maxSolarRad_algo='rs',
+                 <span class="changed">heat_index_algo</span>='new')
+</pre>
+                </td>
+                <td>
+                    <pre class='tty'>
+    def __init__(self, altitude_vt, latitude_f, longitude_f,
+                 atc=0.8,
+                 nfac=2,
+                 force_null=True,
+                 maxSolarRad_algo='rs',
+                 <span class="changed">heatindex_algo</span>='new')
+</pre>
+                </td>
+            </tr>
+        </table>
+
+
         <h2>Upgrading to V4.6</h2>
         <h3>Ordering of search list changed</h3>
         <p>

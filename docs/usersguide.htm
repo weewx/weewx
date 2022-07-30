@@ -2715,7 +2715,10 @@ longitude = -77.0366</pre>
 
         <h4 class="config_section">[[[ET]]]</h4>
         <p>
-            This sub-section contains several options used when calculating ET (evapotranspiration)
+            This subsection contains several options used when calculating ET (evapotranspiration).
+            See the document <a href="https://edis.ifas.ufl.edu/pdf/AE/AE45900.pdf"><em>Step by Step Calculation of the
+            Penman-Monteith Evapotranspiration"</em></a> for the definitions of <span class="code">cn</span>
+            and <span class="code">cd</span>.
         </p>
 
         <p class="config_option">et_period</p>
@@ -2725,6 +2728,21 @@ longitude = -77.0366</pre>
         <p>
             The option <span class="code">wind_height</span> is used to normalize where wind speed is measured for
             calculating evapotranspiration. It should be set to the height of your anemometer in meters. Default is 2.0.
+        </p>
+
+        <p class="config_option">albedo</p>
+        <p>
+            The albedo to be used in the calculations. Default is 0.23.
+        </p>
+
+        <p class="config_option">cn</p>
+        <p>
+            The numerator constant for the reference crop type and time step. Default is 37.
+        </p>
+
+        <p class="config_option">cd</p>
+        <p>
+            The denominator constant for the reference crop type and time step. Default is 0.34.
         </p>
 
         <h4 class="config_section">[[[heatindex]]]</h4>
