@@ -44,7 +44,7 @@
         <div class="logoref">
             <a href='https://weewx.com'> <img src='images/logo-weewx.png' class='logo' style="float:right"
                                              alt="weewx logo"/> </a><br/> <span class='version'>
-Version: 4.8
+Version: 4.9
     </span>
         </div>
         <div class="title">WeeWX Customization Guide</div>
@@ -545,7 +545,7 @@ Version: 4.8
             class="code">.inc</span> extension. These templates are included in other templates.
         </p>
 
-        <h2>The database</h2>
+        <h2 id="The_database">The database</h2>
 
         <p>
             WeeWX uses a single database to store and retrieve the records it needs. It can be implemented by using
@@ -642,9 +642,11 @@ Version: 4.8
 
         <p>
             In addition to the main archive table, there are a number of smaller tables inside the database, one for
-            each observation type, that hold <em>daily summaries</em> of the type. For example, the minimum and maximum
-            value seen during the day, and at what time. These tables have names such as <span class="code">archive_day_outTemp</span>
+            each observation type, which hold <em>daily summaries</em> of the type, such as the minimum and maximum value
+            seen during the day, and at what time. These tables have names such as <span class="code">archive_day_outTemp</span>
             or <span class="code">archive_day_barometer</span>. Their existence is generally transparent to the user.
+            For more details, see the section <a href="devnotes.htm#Daily_summaries"><em>Daily
+            summaries</em></a> in the document <em>Developer's Notes</em>.
         </p>
 
         <h3 id="binding_names">Binding names</h3>
@@ -991,17 +993,19 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
             like this:
         </p>
         <pre class="tty">ls -l /etc/weewx/skins/Seasons/lang
-total 80
--rw-rw-r-- 1 tkeffer tkeffer  7870 Aug 10 16:45 cz.conf
--rw-rw-r-- 1 tkeffer tkeffer  7659 Aug 10 16:45 de.conf
--rw-rw-r-- 1 tkeffer tkeffer  7345 Aug 10 16:45 en.conf
--rw-rw-r-- 1 tkeffer tkeffer  8307 Aug 10 16:45 es.conf
--rw-rw-r-- 1 tkeffer tkeffer  8036 Aug 10 16:45 fr.conf
--rw-rw-r-- 1 tkeffer tkeffer  8145 Sep 23 16:57 it.conf
--rw-rw-r-- 1 tkeffer tkeffer  9373 Aug 10 16:45 gr.conf
--rw-rw-r-- 1 tkeffer tkeffer  7528 Aug 10 16:45 nl.conf
--rw-rw-r-- 1 tkeffer tkeffer 12530 Aug 10 16:45 th.conf
-        </pre>
+total 136
+-rw-rw-r-- 1 tkeffer tkeffer  9447 Jul  1 11:11 cn.conf
+-rw-rw-r-- 1 tkeffer tkeffer  9844 Mar 13 12:31 cz.conf
+-rw-rw-r-- 1 tkeffer tkeffer  9745 Mar 13 12:31 de.conf
+-rw-rw-r-- 1 tkeffer tkeffer  9459 Mar 13 12:31 en.conf
+-rw-rw-r-- 1 tkeffer tkeffer 10702 Mar 13 12:31 es.conf
+-rw-rw-r-- 1 tkeffer tkeffer 10673 May 31 07:50 fr.conf
+-rw-rw-r-- 1 tkeffer tkeffer 11838 Mar 13 12:31 gr.conf
+-rw-rw-r-- 1 tkeffer tkeffer  9947 Mar 13 12:31 it.conf
+-rw-rw-r-- 1 tkeffer tkeffer  9548 Mar 13 12:31 nl.conf
+-rw-rw-r-- 1 tkeffer tkeffer 10722 Apr 15 14:52 no.conf
+-rw-rw-r-- 1 tkeffer tkeffer 15356 Mar 13 12:31 th.conf
+</pre>
 
         <p>
             This means that the <em>Seasons</em> skin has been localized for the following languages:
@@ -1012,6 +1016,10 @@ total 80
             <tr class="first_row">
                 <td>File</td>
                 <td>Language</td>
+            </tr>
+            <tr>
+                <td class="code">cn.conf</td>
+                <td>Traditional Chinese</td>
             </tr>
             <tr>
                 <td class="code">cz.conf</td>
@@ -3754,44 +3762,96 @@ ephem.Eros = eros</pre>
         <h2 id="calculation_in_templates">How to calculate values in templates</h2>
         
         <p>
-            While it is the best way to define calculated values by writing a search list extension or XTYPE extension,
-            sometimes it is easier or faster to include the calculation in the template. To do so, Cheetah provides 
-            the <span class="code">#set</span> directive. Here it is explained how to use it for calculations and
-            displaying the resulting values.
+            If you need to calculate a new value, you should generally strive to do it in a search list
+            extension or XType. However, there are occasions where it is quicker and easier to do
+            the calculation right in the template, using the Cheetah directive <span class="code">#set</span>.
         </p>
         <p>
-            To get an observation type value in a way that can be used in formulae you can add <span class="code">.raw</span>
-            after an observation type tag as described in section <a href="#formatting_options">Formatting options</a>.
+            Here's an example where we calculate the elapsed time between dawn and dusk:
         </p>
-        <p>
-            To calculate - for example - the time from dawn to dusk (for details to the <span class="code">$almanac</span> tag see 
-            the <a href="#Almanac">Almanac</a> section):
-        </p>
-        <pre>#set $dawntodusk=$almanac(horizon=-6).sun(use_center=1).set.raw-$almanac(horizon=-6).sun(use_center=1).rise.raw</pre>
-        <p>
-            To display that value while having it observe the units and settings is a little bit tricky. You need the help of the classes 
-            <a href="#ValueTuple">ValueTuple</a> and <a href="#ValueHelper">ValueHelper</a> to get values that are formatted like normal tags.
-        </p>
-        <pre>#from weewx.units import ValueTuple,ValueHelper 
-#set $dawn=$almanac(horizon=-6).sun(use_center=1).rise.raw 
-#set $dusk=$almanac(horizon=-6).sun(use_center=1).set.raw 
-#set $dawntodusk=$dusk-$dawn
-<span class="highlight">#set $dawntodusk_vh=ValueHelper(ValueTuple($dawntodusk,'second','group_deltatime'),formatter=$station.formatter)</span>
+        <pre class="tty">#set $dawntodusk = $almanac(horizon=-6).sun(use_center=1).set.raw - $almanac(horizon=-6).sun(use_center=1).rise.raw</pre>
 
-$dawntodusk_vh</pre>
-        <p>The unit provided has to conform to the unit of the raw values used in calculation. </p>
-        <p>To get a special output format you can add <span class="code">.format(...)</code>, for example:</p>
-        <pre>$dawntodusk_vh.format("%(hour)d%(hour_label) %(minute)d%(minute_label)s %(second)d%(second_label)s","")</pre>
-        
         <p>
-            Another example is the difference between maximum and minimum temperature of the day in Kelvin 
-            (which is the same value as in degrees Centigrade for differences, so no unit conversion applies):
+            The expression calculates the simple difference between two values: the time of the sunset minus the time of
+            the sunrise, both in unix epoch time. The result will be the elapsed time in seconds. For details on the
+            <span class="code">$almanac</span> tag, see the <a href="#Almanac">Almanac</a> section. For details on the
+            <span class="code">.raw</span> suffix see section <a href="#formatting_options">Formatting options</a>.
         </p>
-        <pre>#from weewx.units import ValueTuple,ValueHelper 
-#set $maxmin=$day.outTemp.max.degree_C.raw-$day.outTemp.min.degree_C.raw
-#set $maxmin_vh=ValueHelper(ValueTuple($maxmin,'degree_C','group_temperature'),formatter=$station.formatter)
 
-$maxmin_vh</pre>
+        <p>
+            We can make use of this tag by simply referencing <span class="code">$dawntodusk</span>. For example:
+        </p>
+        <pre class="tty">&lt;p&gt;The elapsed time between dawn and dusk is $dawntodusk&lt;/p&gt</pre>
+
+        <p>
+            This will result in something like
+        </p>
+        <p class="example_output">The elapsed time between dawn to dusk is 57315.0023124218</p>
+        <p>
+            Not very elegant.
+        </p>
+        <p>
+            To get something more readable, while having the results honor any user-specified
+            settings, including unit conversions and formatting, is a bit more involved.
+            Here's a more sophisticated version that leverages classes <a
+            href="#ValueTuple">ValueTuple</a> and <a href="#ValueHelper">ValueHelper</a> to do the formatting.
+            While this example does not involve any unit conversions, in general, these classes can take care of
+            that as well.
+        </p>
+        <pre class="tty">
+#from weewx.units import ValueTuple, ValueHelper                                                                   ## 1
+#set $dawn = $almanac(horizon=-6).sun(use_center=1).rise.raw                                                       ## 2
+#set $dusk = $almanac(horizon=-6).sun(use_center=1).set.raw                                                        ## 3
+#set $dawntodusk = $dusk - $dawn                                                                                   ## 4
+#set $dawntodusk_vh = ValueHelper(ValueTuple($dawntodusk,'second','group_deltatime'),formatter=$station.formatter) ## 5
+</pre>
+        <p>
+            The numbers reference the comments below:
+        </p>
+        <ol>
+            <li>
+                Neither class <span class="code">ValueTuple</span>, nor <span class="code">ValueHelper</span>, appear
+                in the template. We must import them.
+            </li>
+            <li>
+                Set the value <span class="code">$dawn</span> to the time of sunrise. The <span class="code">.raw</span>
+                suffix ensures that the results will be in unix epoch time (rather than a string).
+            </li>
+            <li>
+                Similar, but with sunset.
+            </li>
+            <li>
+                Take the difference. Because unix epoch time is in seconds, the results will also be in seconds.
+            </li>
+            <li>
+                Construct a <span class="code">ValueHelper</span> to hold the results. We borrow a formatter
+                from the <span class="code">$station</span> tag.
+            </li>
+        </ol>
+
+        <p>
+            The results, <span class="code">$dawntodusk_vh</span> is a <span class="code">ValueHelper</span>. When
+            rendered as a string by the Cheetah engine, it will do the necessary magic to ensure sensible formatting
+            for the <span class="code">ValueTuple</span> that it holds internally. This time, the template
+        </p>
+        <pre class="tty">&lt;p&gt;The elapsed time between dawn and dusk is $dawntodusk_vh.&lt;/p&gt</pre>
+        <p>
+            gives the following results:
+        </p>
+        <p class="example_output">The elapsed time between dawn and dusk is 0 days, 15 hours, 55 minutes</p>
+
+        <p>
+            Like any other instance of <span class="code">ValueHelper</span>, you can override the formatting.
+            For example, specifying
+        </p>
+
+        <pre class="tty">&lt;p&gt;The elapsed time between dawn and dusk is
+            $dawntodusk_vh.format("%(hour)d%(hour_label)s, %(minute)d%(minute_label)s, and %(second)d%(second_label)s")</pre>
+
+        <p>
+            gives the results
+        </p>
+        <p class="example_output">The elapsed time between dawn and dusk is 15 hours, 55 minutes, and 15 seconds</p>
 
 
         <!-- -------------------------------------------------------------- -->
