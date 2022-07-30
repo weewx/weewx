@@ -3764,17 +3764,19 @@ ephem.Eros = eros</pre>
             after an observation type tag as described in section <a href="#formatting_options">Formatting options</a>.
         </p>
         <p>
-            To calculate - for example - the time from dawn to dusk:
+            To calculate - for example - the time from dawn to dusk (for details to the <span class="code">$almanac</span> tag see 
+            the <a href="#Almanac">Almanac</a> section):
         </p>
         <pre>#set $dawntodusk=$almanac(horizon=-6).sun(use_center=1).set.raw-$almanac(horizon=-6).sun(use_center=1).rise.raw</pre>
         <p>
-            To display that value and make it observe the units and settings is a little bit tricky:
+            To display that value while having it observe the units and settings is a little bit tricky. You need the help of the classes 
+            <a href="#ValueTuple">ValueTuple</a> and <a href="#ValueHelper">ValueHelper</a> to get values that are formatted like normal tags.
         </p>
         <pre>#from weewx.units import ValueTuple,ValueHelper 
 #set $dawn=$almanac(horizon=-6).sun(use_center=1).rise.raw 
 #set $dusk=$almanac(horizon=-6).sun(use_center=1).set.raw 
 #set $dawntodusk=$dusk-$dawn
-#set $dawntodusk_vh=ValueHelper(ValueTuple($dawntodusk,'second','group_deltatime'),formatter=$station.formatter) 
+<span class="highlight">#set $dawntodusk_vh=ValueHelper(ValueTuple($dawntodusk,'second','group_deltatime'),formatter=$station.formatter)</span>
 
 $dawntodusk_vh</pre>
         <p>The unit provided has to conform to the unit of the raw values used in calculation. </p>
