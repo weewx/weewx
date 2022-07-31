@@ -141,7 +141,7 @@ class WXXTypes(weewx.xtypes.XType):
         else:
             val = weewx.wxformulas.dewpointC(data['outTemp'], data['outHumidity'])
             u = 'degree_C'
-        return weewx.units.convertStd((val, u, 'group_temperature'), data['usUnits'])
+        return ValueTuple(val, u, 'group_temperature')
 
     @staticmethod
     def calc_inDewpoint(key, data, db_manager=None):
@@ -153,7 +153,7 @@ class WXXTypes(weewx.xtypes.XType):
         else:
             val = weewx.wxformulas.dewpointC(data['inTemp'], data['inHumidity'])
             u = 'degree_C'
-        return weewx.units.convertStd((val, u, 'group_temperature'), data['usUnits'])
+        return ValueTuple(val, u, 'group_temperature')
 
     @staticmethod
     def calc_windchill(key, data, db_manager=None):
@@ -170,7 +170,7 @@ class WXXTypes(weewx.xtypes.XType):
             u = 'degree_C'
         else:
             raise weewx.ViolatedPrecondition("Unknown unit system %s" % data['usUnits'])
-        return weewx.units.convertStd((val, u, 'group_temperature'), data['usUnits'])
+        return ValueTuple(val, u, 'group_temperature')
 
     def calc_heatindex(self, key, data, db_manager=None):
         if 'outTemp' not in data or 'outHumidity' not in data:
@@ -183,7 +183,7 @@ class WXXTypes(weewx.xtypes.XType):
             val = weewx.wxformulas.heatindexC(data['outTemp'], data['outHumidity'],
                                               algorithm=self.heatindex_algo)
             u = 'degree_C'
-        return weewx.units.convertStd((val, u, 'group_temperature'), data['usUnits'])
+        return ValueTuple(val, u, 'group_temperature')
 
     @staticmethod
     def calc_humidex(key, data, db_manager=None):
@@ -195,7 +195,7 @@ class WXXTypes(weewx.xtypes.XType):
         else:
             val = weewx.wxformulas.humidexC(data['outTemp'], data['outHumidity'])
             u = 'degree_C'
-        return weewx.units.convertStd((val, u, 'group_temperature'), data['usUnits'])
+        return ValueTuple(val, u, 'group_temperature')
 
     @staticmethod
     def calc_appTemp(key, data, db_manager=None):
@@ -211,7 +211,7 @@ class WXXTypes(weewx.xtypes.XType):
             windspeed_mps = weewx.units.convert(windspeed_vt, 'meter_per_second')[0]
             val = weewx.wxformulas.apptempC(data['outTemp'], data['outHumidity'], windspeed_mps)
             u = 'degree_C'
-        return weewx.units.convertStd((val, u, 'group_temperature'), data['usUnits'])
+        return ValueTuple(val, u, 'group_temperature')
 
     @staticmethod
     def calc_beaufort(key, data, db_manager=None):
@@ -247,7 +247,7 @@ class WXXTypes(weewx.xtypes.XType):
         else:
             val = None
             u = 'mile'
-        return weewx.units.convertStd((val, u, 'group_distance'), data['usUnits'])
+        return ValueTuple(val, u, 'group_distance')
 
 
 #
@@ -346,9 +346,8 @@ class ETXType(weewx.xtypes.XType):
             # minutes.
             ET_inch = ET_rate * interval / 60.0 if ET_rate is not None else None
 
-        # Convert back to the unit system of the incoming record:
-        ET = weewx.units.convertStd((ET_inch, 'inch', 'group_rain'), data['usUnits'])
-        return ET
+        return ValueTuple(ET_inch, 'inch', 'group_rain')
+
 
 #
 # ######################## Class PressureCooker ##############################
@@ -445,8 +444,7 @@ class PressureCooker(weewx.xtypes.XType):
                 record_US['outHumidity']
             )
 
-        # Convert to target unit system and return
-        return weewx.units.convertStd((pressure, 'inHg', 'group_pressure'), record['usUnits'])
+        return ValueTuple(pressure, 'inHg', 'group_pressure')
 
     def altimeter(self, record):
         """Calculate the observation type 'altimeter'."""
@@ -465,8 +463,8 @@ class PressureCooker(weewx.xtypes.XType):
             u = 'mbar'
         # Apply the formula
         altimeter = formula(record['pressure'], altitude[0], self.altimeter_algorithm)
-        # Convert to the target unit system
-        return weewx.units.convertStd((altimeter, u, 'group_pressure'), record['usUnits'])
+
+        return ValueTuple(altimeter, u, 'group_pressure')
 
     def barometer(self, record):
         """Calculate the observation type 'barometer'"""
@@ -486,8 +484,8 @@ class PressureCooker(weewx.xtypes.XType):
             u = 'mbar'
         # Apply the formula
         barometer = formula(record['pressure'], altitude[0], record['outTemp'])
-        # Convert to the target unit system:
-        return weewx.units.convertStd((barometer, u, 'group_pressure'), record['usUnits'])
+
+        return ValueTuple(barometer, u, 'group_pressure')
 
 
 #
@@ -548,9 +546,7 @@ class RainRater(weewx.xtypes.XType):
             val = 3600 * rainsum / self.rain_period
             # Get the unit and unit group for rainRate
             u, g = weewx.units.getStandardUnitType(self.unit_system, 'rainRate')
-            # Form a ValueTuple, then convert it to the unit system of the incoming record
-            rr = weewx.units.convertStd(ValueTuple(val, u, g), record['usUnits'])
-            return rr
+            return ValueTuple(val, u, g)
 
     def _setup(self, stop_ts, db_manager):
         """Initialize the rain event list"""
@@ -629,9 +625,7 @@ class Delta(weewx.xtypes.XType):
         # Get the unit and group of the key. This will be the same as for the result
         unit_and_group = weewx.units.getStandardUnitType(record['usUnits'], key)
         # ... then form and return the ValueTuple.
-        delta_vt = ValueTuple(delta, *unit_and_group)
-
-        return delta_vt
+        return ValueTuple(delta, *unit_and_group)
 
 
 #
