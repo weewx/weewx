@@ -83,9 +83,8 @@ class VaporPressure(weewx.xtypes.XType):
             # Don't recognize the exception. Fail hard:
             raise ValueError(self.algorithm)
 
-        # We have the vapor pressure as a ValueTuple. Convert it back to the units used by
-        # the incoming record and return it
-        return weewx.units.convertStd(p_vt, record['usUnits'])
+        # If we got this far, we were able to calculate a value. Return it.
+        return p_vt
 
 
 class VaporPressureService(StdService):
