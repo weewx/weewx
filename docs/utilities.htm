@@ -1260,12 +1260,14 @@ summaries using the wee_database utility.</pre>
 
         <h3>Option <span class="code">--import-config</span></h3>
 
-        <p><span class="code">wee_import</span> uses a secondary configuration file to store various import parameters.
-            The <span class="code">--import-config</span> option is mandatory for all imports. Example import
-            configuration files for each type of import supported by <span class="code">wee_import</span> are provided
-            in the <span class="code">util/import</span> directory. These example files are best used by making a copy of
-            the applicable example file in a working directory and then modifying the duplicate file to suit your needs.
-            The <span class="code">--import-config</span> option is used as follows:
+        <p><span class="code">wee_import</span> uses a secondary configuration file, known as the import configuration
+            file, to store various import parameters. The <span class="code">--import-config</span> option is mandatory
+            for all imports. Example import configuration files for each type of import supported by
+            <span class="code">wee_import</span> are provided in the <span class="code">/home/weewx/util/import</span>
+            directory if you used the setup.py install method. If you used a package installer the example import config
+            files will be in the <span class="code">/etc/weewx/import</span> directory. These example files are best
+            used by making a copy of the applicable example file in a working directory and then modifying the duplicate
+            file to suit your needs. The <span class="code">--import-config</span> option is used as follows:
         </p>
 
         <pre class="tty cmd">wee_import --import-config=/directory/import.conf
@@ -1451,8 +1453,9 @@ summaries using the wee_database utility.</pre>
             and various options associated with each type of import. The import configuration file is specified using
             the mandatory <span class="code">--import-config</span> option. How you construct the import configuration
             file is up to you; however, the recommended method is to copy one of the example import configuration files
-            located in the <span class="code">util/import</span> directory, modify the configuration options in the newly
-            copied file to suit the import to be performed and then use this file as the import configuration file.
+            located in the <span class="code">/home/weewx/util/import</span> or <span class="code">/etc/weewx/import</span>
+            directory as applicable, modify the configuration options in the newly copied file to suit the import to be
+            performed and then use this file as the import configuration file.
         </p>
 
         <p>Following is the definitive guide to the options available in the import configuration file. Default values
@@ -1497,10 +1500,10 @@ summaries using the wee_database utility.</pre>
 
         <h4 class='config_option' id='csv_encoding'>source_encoding</h4>
 
-        <p>The source file encoding. This parameter is optional and should only need be used if the source file uses an encoding
-            other than UTF-8 or an ASCII compatible encoding. If used, the setting used should be
-            a <a href="https://docs.python.org/3/library/codecs.html#standard-encodings">Python Standard Encoding</a>.  The default
-            value is <span class="code">utf-8-sig</span>.
+        <p>The source file encoding. This parameter is optional and should only need be used if the source file uses an
+            encoding other than UTF-8 or an ASCII compatible encoding. If used, the setting used should be
+            a <a href="https://docs.python.org/3/library/codecs.html#standard-encodings">Python Standard Encoding</a>.
+            The default value is <span class="code">utf-8-sig</span>.
         </p>
 
         <h4 class='config_option' id='csv_delimiter'>delimiter</h4>
@@ -2500,8 +2503,9 @@ summaries using the wee_database utility.</pre>
             the <span class="config_section">[WD]</span> section of the import configuration file.
         </p>
 
-        <p>The example Weather Display import configuration file located in the <span class="code">util/import</span>
-            directory contains an example field map in the import configuration file comments. There is no default.
+        <p>The example Weather Display import configuration file located in the <span class="code">/home/weewx/util/import</span>
+            or the <span class="code">/etc/weewx/import</span> directory contains an example field map in the import
+            configuration file comments. There is no default.
         </p>
 
         <h3 class="config_section">[WeatherCat]</h3>
@@ -3614,9 +3618,10 @@ Aug 22 14:38:28 stretch12 weewx[863]: manager: unable to add record 2018-09-04 0
             </li>
 
             <li>Create an import configuration file, this is easily done by making a copy of the example Weather Display
-                import configuration file located in the <span class="code">/home/weewx/util/import</span> directory.
-                In this case we will make a copy of the example Weather Display import configuration file and save it
-                as <span class="code">wd.conf</span> in the <span class="code">/var/tmp</span> directory:
+                import configuration file located in the <span class="code">/home/weewx/util/import</span> or
+                <span class="code">/etc/weewx/import</span> directory as applicable. In this case we will make a copy of
+                the example Weather Display import configuration file and save it as <span class="code">wd.conf</span> in
+                the <span class="code">/var/tmp</span> directory:
 
                 <pre class="tty cmd">$ cp /home/weewx/util/import/wd-example.conf /var/tmp/wd.conf</pre>
 
