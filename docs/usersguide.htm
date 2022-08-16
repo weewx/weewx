@@ -118,9 +118,11 @@ Version: 4.9
 
         <h2>Time</h2>
 
-        <p> You should run a <a href="https://www.ntp.org/">NTP</a> daemon on your server to ensure that it is
-            synchronized with the correct time. Doing so will greatly reduce errors, especially if you send data to
-            services such as the Weather Underground.
+        <p>
+            You should run some sort of time synchronization daemon to ensure that your computer has the correct time.
+            Doing so will greatly reduce errors, especially if you send data to services such as the Weather
+            Underground. Systemd systems can use <a href="https://wiki.archlinux.org/title/systemd-timesyncd">systemd-timesyncd</a>,
+            other systems can use <a href="https://www.ntp.org/">NTP</a>.
         </p>
 
         <p>The time on some stations is automatically synchronized with the WeeWX server nominally every four hours. The
