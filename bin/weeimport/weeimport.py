@@ -146,6 +146,9 @@ class Source(object):
         self.apply_qc = tobool(import_config_dict.get('qc', True))
         # calc-missing, default to True
         self.calc_missing = tobool(import_config_dict.get('calc_missing', True))
+        # decimal separator, default to period '.'
+        self.decimal_sep = import_config_dict.get('decimal', '.')
+
         # Some sources include UV index and solar radiation values even if no
         # sensor was present. The WeeWX convention is to store the None value
         # when a sensor or observation does not exist. Record whether UV and/or
@@ -830,70 +833,85 @@ class Source(object):
                             _rec[_field] = _row[self.map[_field]['field_name']]
                         else:
                             # we have a non-text field so try to get a value
-                            # for the obs but if we can't catch the error
-
+                            # for the obs but if we can't, catch the error
                             try:
-                                _temp = float(_row[self.map[_field]['field_name']].strip())
+                                _rec[_field] = float(_row[self.map[_field]['field_name']].strip())
                             except AttributeError:
                                 # the data has no strip() attribute so chances are
-                                # it's a number already
-                                if isinstance(_row[self.map[_field]['field_name']], numbers.Number):
-                                    _temp = _row[self.map[_field]['field_name']]
-                                elif _row[self.map[_field]['field_name']] is None:
-                                    _temp = None
+                                # it's a number already or it could (somehow ?) be
+                                # None
+                                if _row[self.map[_field]['field_name']] is None:
+                                    _rec[_field] = None
                                 else:
-                                    # it's not a string and its not a number so raise an error
-                                    _msg = "%s: cannot convert '%s' to float at " \
-                                           "timestamp '%s'." % (_field,
-                                                                _row[self.map[_field]['field_name']],
-                                                                timestamp_to_string(_rec['dateTime']))
-                                    raise ValueError(_msg)
-                            except TypeError:
-                                # perhaps we have a None, so return None for our field
-                                _temp = None
+                                    try:
+                                        _rec[_field] = float(_row[self.map[_field]['field_name']])
+                                    except TypeError:
+                                        # somehow we have data that is not a
+                                        # number or a string
+                                        _msg = "%s: cannot convert '%s' to float at " \
+                                               "timestamp '%s'." % (_field,
+                                                                    _row[self.map[_field]['field_name']],
+                                                                    timestamp_to_string(_rec['dateTime']))
+                                        raise TypeError(_msg)
                             except ValueError:
-                                # most likely have non-numeric, non-None data
+                                # A ValueError means that float() could not
+                                # convert the string or number to a float, most
+                                # likely because we have non-numeric, non-None
+                                # data. We have some other possibilities to
+                                # work through before we give up.
 
-                                # if this is a csv import and we are mapping to a
+                                # start by setting our result to None.
+                                _temp = None
+
+                                # perhaps it is numeric data but with something
+                                # other that a period as decimal separator, try
+                                # using float() again after replacing the
+                                # decimal seperator
+                                if self.decimal_sep is not None:
+                                    _data = _row[self.map[_field]['field_name']].replace(self.decimal_sep,
+                                                                                         '.')
+                                    try:
+                                        _temp = float(_data)
+                                    except ValueError:
+                                        # still could not convert it so pass
+                                        pass
+
+                                # If this is a csv import and we are mapping to a
                                 # direction field perhaps we have a string
                                 # representation of a cardinal, inter-cardinal or
                                 # secondary inter-cardinal direction that we can
                                 # convert to degrees
 
-                                # set a flag to indicate whether we matched the data to a value
-                                matched = False
-                                if hasattr(self, 'wind_dir_map') and self.map[_field]['units'] == 'degree_compass':
+                                if _temp is None and hasattr(self, 'wind_dir_map') and \
+                                        self.map[_field]['units'] == 'degree_compass':
                                     # we have a csv import and we are mapping to a
-                                    # direction field
+                                    # direction field so try a cardinal conversion
 
                                     # first strip any whitespace and hyphens from
                                     # the data
-                                    _stripped = re.sub(r'[\s-]+', '', _row[self.map[_field]['field_name']])
+                                    _stripped = re.sub(r'[\s-]+', '',
+                                                       _row[self.map[_field]['field_name']])
                                     # try to use the data as the key in a dict
                                     # mapping directions to degrees, if there is no
                                     # match we will have None returned
-                                    dir_degrees = self.wind_dir_map.get(_stripped.upper())
-                                    # if we have a non-None value use it
-                                    if dir_degrees is not None:
-                                        _temp = dir_degrees
-                                        # we have a match so set our flag
-                                        matched = True
-                                # if we did not get a match perhaps we can ignore
-                                # the invalid data, that will depend on the
-                                # ignore_invalid_data property
-                                if not matched and self.ignore_invalid_data:
-                                    # we ignore the invalid data so set our result
-                                    # to None
-                                    _temp = None
-                                    # set our matched flag
-                                    matched = True
-                                # if we did not find a match raise the error
-                                if not matched:
-                                    _msg = "%s: cannot convert '%s' to float at " \
-                                           "timestamp '%s'." % (_field,
-                                                                _row[self.map[_field]['field_name']],
-                                                                timestamp_to_string(_rec['dateTime']))
-                                    raise ValueError(_msg)
+                                    try:
+                                        _temp = self.wind_dir_map[_stripped.upper()]
+                                    except KeyError:
+                                        # we did not find a match so pass
+                                        pass
+                                # we have exhausted all possibilities, so if we
+                                # have a non-None result use it, otherwise we
+                                # either ignore it or raise an error
+                                if _temp is not None:
+                                    _rec[_field] = _temp
+                                else:
+                                    if not self.ignore_invalid_data:
+                                        _msg = "%s: cannot convert '%s' to float at " \
+                                               "timestamp '%s'." % (_field,
+                                                                    _row[self.map[_field]['field_name']],
+                                                                    timestamp_to_string(_rec['dateTime']))
+                                        raise ValueError(_msg)
+
                             # some fields need some special processing
 
                             # rain - if our imported 'rain' field is cumulative
