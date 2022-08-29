@@ -425,7 +425,7 @@ class Source(object):
                 log.info(_msg)
 
                 # save the mapped data to archive
-                # first advise the user and log, but only if its not a dry run
+                # first advise the user and log, but only if it's not a dry run
                 if not self.dry_run:
                     _msg = 'Saving mapped data to archive for period %d ...' % self.period_no
                     if self.verbose:
@@ -616,7 +616,7 @@ class Source(object):
                     # we have 1 parameter so it must be just name
                     _map[_key] = {'field_name': _entry[0]}
                 else:
-                    # otherwise its invalid so ignore it
+                    # otherwise it's invalid so ignore it
                     pass
 
             # now do some crude error checking
