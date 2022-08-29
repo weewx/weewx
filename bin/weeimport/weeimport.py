@@ -811,7 +811,7 @@ class Source(object):
                 # now process the raw interval data
                 if _tfield is not None and _tfield != '':
                     try:
-                        interval = int(_tfield)
+                        _rec['interval'] = int(_tfield)
                     except ValueError:
                         _msg = "Invalid '%s' field. Cannot convert '%s' to " \
                                "an integer." % (self.map['interval']['field_name'],
@@ -825,9 +825,20 @@ class Source(object):
                                                 timestamp_to_string(_rec['dateTime']))
                     raise ValueError(_msg)
             else:
-                # we have no mapping so try to calculate it
-                interval = self.getInterval(_last_ts, _rec['dateTime'])
-            _rec['interval'] = interval
+                # we have no mapping so calculate it, wrap in a try..except in
+                # case it cannot be calculated
+                try:
+                    _rec['interval'] = self.getInterval(_last_ts, _rec['dateTime'])
+                except WeeImportFieldError as e:
+                    # We encountered a WeeImportFieldError, which means we
+                    # cannot calculate the interval value, possibly because
+                    # this record is out of date-time order. We cannot use this
+                    # record so skip it, advise the user (via console and log)
+                    # and move to the next record.
+                    _msg = "Record discarded: %s" % e
+                    print(_msg)
+                    log.info(_msg)
+                    continue
             # now step through the rest of the fields in our map and process
             # the fields that don't require special processing
             for _field in self.map:
@@ -848,16 +859,16 @@ class Source(object):
                             # we have a non-text field so try to get a value
                             # for the obs but if we can't, catch the error
                             try:
-                                _rec[_field] = float(_row[self.map[_field]['field_name']].strip())
+                                _value = float(_row[self.map[_field]['field_name']].strip())
                             except AttributeError:
                                 # the data has no strip() attribute so chances
                                 # are it's a number already, or it could
                                 # (somehow ?) be None
                                 if _row[self.map[_field]['field_name']] is None:
-                                    _rec[_field] = None
+                                    _value = None
                                 else:
                                     try:
-                                        _rec[_field] = float(_row[self.map[_field]['field_name']])
+                                        _value = float(_row[self.map[_field]['field_name']])
                                     except TypeError:
                                         # somehow we have data that is not a
                                         # number or a string
@@ -874,7 +885,7 @@ class Source(object):
                                 # work through before we give up.
 
                                 # start by setting our result to None.
-                                _temp = None
+                                _value = None
 
                                 # perhaps it is numeric data but with something
                                 # other that a period as decimal separator, try
@@ -884,7 +895,7 @@ class Source(object):
                                     _data = _row[self.map[_field]['field_name']].replace(self.decimal_sep,
                                                                                          '.')
                                     try:
-                                        _temp = float(_data)
+                                        _value = float(_data)
                                     except ValueError:
                                         # still could not convert it so pass
                                         pass
@@ -895,7 +906,7 @@ class Source(object):
                                 # or secondary inter-cardinal direction that we
                                 # can convert to degrees
 
-                                if _temp is None and hasattr(self, 'wind_dir_map') and \
+                                if _value is None and hasattr(self, 'wind_dir_map') and \
                                         self.map[_field]['units'] == 'degree_compass':
                                     # we have a csv import and we are mapping
                                     # to a direction field, so try a cardinal
@@ -909,77 +920,75 @@ class Source(object):
                                     # mapping directions to degrees, if there
                                     # is no match we will have None returned
                                     try:
-                                        _temp = self.wind_dir_map[_stripped.upper()]
+                                        _value = self.wind_dir_map[_stripped.upper()]
                                     except KeyError:
                                         # we did not find a match so pass
                                         pass
                                 # we have exhausted all possibilities, so if we
                                 # have a non-None result use it, otherwise we
                                 # either ignore it or raise an error
-                                if _temp is not None:
-                                    _rec[_field] = _temp
-                                else:
-                                    if not self.ignore_invalid_data:
-                                        _msg = "%s: cannot convert '%s' to float at " \
-                                               "timestamp '%s'." % (_field,
-                                                                    _row[self.map[_field]['field_name']],
-                                                                    timestamp_to_string(_rec['dateTime']))
-                                        raise ValueError(_msg)
+                                if _value is None and not self.ignore_invalid_data:
+                                    _msg = "%s: cannot convert '%s' to float at " \
+                                           "timestamp '%s'." % (_field,
+                                                                _row[self.map[_field]['field_name']],
+                                                                timestamp_to_string(_rec['dateTime']))
+                                    raise ValueError(_msg)
 
                             # some fields need some special processing
 
                             # rain - if our imported 'rain' field is cumulative
                             # (self.rain == 'cumulative') then we need to calculate
                             # the discrete rainfall for this archive period
-                            if _field == "rain" and self.rain == "cumulative":
-                                _rain = self.getRain(_last_rain, _temp)
-                                _last_rain = _temp
-                                _temp = _rain
-
+                            if _field == "rain":
+                                if self.rain == "cumulative":
+                                    _rain = self.getRain(_last_rain, _value)
+                                    _last_rain = _value
+                                    _value = _rain
                             # wind - check any wind direction fields are within our
                             # bounds and convert to 0 to 360 range
-                            if _field == "windDir" or _field == "windGustDir":
-                                if _temp is not None and (self.wind_dir[0] <= _temp <= self.wind_dir[1]):
+                            elif _field == "windDir" or _field == "windGustDir":
+                                if _value is not None and (self.wind_dir[0] <= _value <= self.wind_dir[1]):
                                     # normalise to 0 to 360
-                                    _temp %= 360
+                                    _value %= 360
                                 else:
                                     # outside our bounds so set to None
-                                    _temp = None
-
+                                    _value = None
                             # UV - if there was no UV sensor used to create the
                             # imported data then we need to set the imported value
                             # to None
-                            if _field == 'UV' and not self.UV_sensor:
-                                _temp = None
-
+                            elif _field == 'UV':
+                                if not self.UV_sensor:
+                                    _value = None
                             # solar radiation - if there was no solar radiation
                             # sensor used to create the imported data then we need
                             # to set the imported value to None
-                            if _field == 'radiation' and not self.solar_sensor:
-                                _temp = None
+                            elif _field == 'radiation':
+                                if not self.solar_sensor:
+                                    _value = None
 
                             # check and ignore if required temperature and humidity
                             # values of 255.0 and greater
                             if self.ignore_extr_th \
                                     and self.map[_field]['units'] in ['degree_C', 'degree_F', 'percent'] \
-                                    and _temp >= 255.0:
-                                _temp = None
+                                    and _value >= 255.0:
+                                _value = None
 
                             # if there is no mapped field for a unit system we
                             # have to do field by field unit conversions
                             if _units is None:
-                                _temp_vt = ValueTuple(_temp,
-                                                      self.map[_field]['units'],
-                                                      weewx.units.obs_group_dict[_field])
-                                _conv_vt = convertStd(_temp_vt, unit_sys)
+                                _vt = ValueTuple(_value,
+                                                 self.map[_field]['units'],
+                                                 weewx.units.obs_group_dict[_field])
+                                _conv_vt = convertStd(_vt, unit_sys)
                                 _rec[_field] = _conv_vt.value
                             else:
                                 # we do have a mapped field for a unit system so
                                 # save the field in our record and continue, any
                                 # unit conversion will be done in bulk later
-                                _rec[_field] = _temp
+                                _rec[_field] = _value
                     else:
-                        # No it's not. Set the field in our output to None
+                        # no it's not in our record, so set the field in our
+                        # output to None
                         _rec[_field] = None
                         # now warn the user about this field if we have not
                         # already done so
@@ -1131,11 +1140,10 @@ class Source(object):
                 _interval = int((current_ts - last_ts) / 60.0)
                 # but if _interval < 0 our records are not in date-time order
                 if _interval < 0:
-                    # so raise an error
-                    _msg = "Cannot derive 'interval' for record timestamp: %s." % timestamp_to_string(current_ts)
-                    print(_msg)
-                    log.info(_msg)
-                    raise ValueError("Raw data is not in ascending date time order.")
+                    # so raise a WeeImportFieldError exception
+                    _msg = "Cannot derive 'interval' for record "\
+                           "timestamp: %s. " % timestamp_to_string(current_ts)
+                    raise WeeImportFieldError(_msg)
             except TypeError:
                 _interval = None
             return _interval
