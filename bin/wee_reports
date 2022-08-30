@@ -129,7 +129,8 @@ def main():
 
         record = db_manager.getRecord(ts)
 
-    t = weewx.reportengine.StdReportEngine(config_dict, stn_info, record=record, gen_ts=gen_ts)
+    # Instantiate the report engine with the retrieved record and required timestamp
+    t = weewx.reportengine.StdReportEngine(config_dict, stn_info, record=record, gen_ts=ts)
 
     # Although the report engine inherits from Thread, we can just run it in the main thread:
     t.run()
