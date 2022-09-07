@@ -117,7 +117,14 @@ class Common(unittest.TestCase):
                 # Now test where there is no matching result:
                 _cursor.execute("SELECT dateTime, min FROM test1 WHERE dateTime = -1")
                 _row = _cursor.fetchone()
-                self.assertEqual(_row, None)
+                self.assertIsNone(_row)
+
+                # Same, but using an aggregate:
+                _cursor.execute("SELECT MAX(min) FROM test1 WHERE dateTime = -1")
+                _row = _cursor.fetchone()
+                self.assertIsNotNone(_row)
+                self.assertIsNone(_row[0])
+
             
     def test_bad_select(self):
         self.populate_db()

@@ -264,19 +264,18 @@ class ArchiveTable(XType):
         """Returns an aggregation of an observation type over a given time period, using the
         main archive table.
     
-        obs_type: The type over which aggregation is to be done (e.g., 'barometer',
-        'outTemp', 'rain', ...)
-    
-        timespan: An instance of weeutil.Timespan with the time period over which
-        aggregation is to be done.
-    
-        aggregate_type: The type of aggregation to be done.
-    
-        db_manager: An instance of weewx.manager.Manager or subclass.
-    
-        option_dict: Not used in this version.
-    
-        returns: A ValueTuple containing the result."""
+        Args:
+            obs_type (str): The type over which aggregation is to be done (e.g., 'barometer',
+                'outTemp', 'rain', ...)
+            timespan (TimeSpan): An instance of weeutil.Timespan with the time period over which
+                aggregation is to be done.
+            aggregate_type (str): The type of aggregation to be done.
+            db_manager (weewx.manager.Manager): An instance of weewx.manager.Manager or subclass.
+            option_dict (dict): Not used in this version.
+
+        Returns:
+            ValueTuple: A ValueTuple containing the result.
+        """
 
         if aggregate_type not in ['sum', 'count', 'avg', 'max', 'min'] \
                 + list(ArchiveTable.agg_sql_dict.keys()):
