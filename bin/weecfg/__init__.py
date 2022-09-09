@@ -71,27 +71,27 @@ def find_file(file_path=None, args=None, locations=DEFAULT_LOCATIONS,
     If after all that, the file still cannot be found, then an IOError
     exception will be raised.
 
-    Parameters:
+    Args:
+        file_path (str): A candidate path to the file.
+        args (list[str]): command-line arguments. If the file cannot be found in file_path,
+            then the members of args will be tried.
+        locations (list[str]): A list of directories to be searched. If they do not
+            start with a slash ('/'), then they will be treated as relative to
+            this file (bin/weecfg/__init__.py).
+            Default is ['../..', '/etc/weewx', '/home/weewx'].
+        file_name (str): The name of the file to be found. This is used
+            only if the directories must be searched. Default is 'weewx.conf'.
 
-    file_path: A candidate path to the file.
-
-    args: command-line arguments. If the file cannot be found in file_path,
-    then the first element in args will be tried.
-
-    locations: A list of directories to be searched. If they do not
-    start with a slash ('/'), then they will be treated as relative to
-    this file (bin/weecfg/__init__.py).
-    Default is ['../..', '/etc/weewx', '/home/weewx'].
-
-    file_name: The name of the file to be found. This is used
-    only if the directories must be searched. Default is 'weewx.conf'.
-
-    returns: full path to the file
+    Returns:
+        str: full path to the file
     """
 
     # Start by searching args (if available)
     if file_path is None and args:
         for i in range(len(args)):
+            # Ignore empty strings and None values:
+            if not args[i]:
+                continue
             if not args[i].startswith('-'):
                 file_path = args[i]
                 del args[i]
@@ -108,8 +108,8 @@ def find_file(file_path=None, args=None, locations=DEFAULT_LOCATIONS,
                 return candidate
 
     if file_path is None:
-        raise IOError("Unable to find file '%s'. Tried directories %s" %
-                      (file_name, locations))
+        raise IOError("Unable to find file '%s'. Tried directories %s"
+                      % (file_name, locations))
     elif not os.path.isfile(file_path):
         raise IOError("%s is not a file" % file_path)
 

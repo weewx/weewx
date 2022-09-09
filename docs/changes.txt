@@ -43,6 +43,9 @@ for option data_type in the ImageGenerator. Fixes issue #782.
 Allow constants albedo, cn, and cd to be specified when calculating ET.
 See the User's Guide. Resolves issue #730.
 
+Fix problem that prevented wee_reports from using a default location
+for weewx.conf.
+
 
 4.8.0 04/21/2022
 Allow unit to be overridden for a specific plot by using new option 'unit'.
