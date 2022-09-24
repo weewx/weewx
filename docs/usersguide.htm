@@ -665,17 +665,13 @@ Version: 4.9
         <pre class="tty cmd">sudo /etc/init.d/weewx start
 sudo /etc/init.d/weewx stop
 sudo /etc/init.d/weewx restart</pre>
-        <p>By default, the scripts are designed to have WeeWX run at run levels 2, 3, 4 and 5. Incidentally, a nice tool
+        <p>
+            By default, the scripts are designed to have WeeWX run at run levels 2, 3, 4 and 5. Incidentally, a nice tool
             for setting run levels with Debian (Ubuntu, Mint) systems is <a href="http://sysv-rc-conf.sourceforge.net/">sysv-rc-conf</a>.
             It uses a curses interface to allow you to change easily which run level any of your daemons runs at. There
             is a similar tool on SuSE. From the start menu run the YAST Control Center, then look for Systems Services
             (Runlevel). Pick &quot;Expert&quot; mode to see the run levels.
         </p>
-
-        <p>You can also tell WeeWX to reread its configuration file without stopping by using the &#39;reload&#39;
-            option:
-        </p>
-        <pre class="tty cmd">sudo /etc/init.d/weewx reload </pre>
 
 
         <h1 id="monitoring">Monitoring WeeWX</h1>
