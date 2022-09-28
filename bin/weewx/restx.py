@@ -1449,55 +1449,47 @@ class StdStationRegistry(StdRESTful):
 class StationRegistryThread(RESTThread):
     """Concrete threaded class for posting to the weewx station registry."""
 
-    def __init__(self, q, station_url, latitude, longitude,
+    def __init__(self,
+                 q,
+                 station_url,
+                 latitude,
+                 longitude,
                  server_url=StdStationRegistry.archive_url,
                  description="Unknown",
-                 station_type="Unknown", station_model="Unknown",
-                 post_interval=604800, max_backlog=0, stale=None,
-                 log_success=True, log_failure=True,
-                 timeout=60, max_tries=3, retry_wait=5):
+                 station_type="Unknown",
+                 station_model="Unknown",
+                 post_interval=86400,
+                 timeout=60,
+                 **kwargs):
         """Initialize an instance of StationRegistryThread.
         
-        Parameters specific to this class:
+        Args:
 
-          station_url: An URL used to identify the station. This will be
-          used as the unique key in the registry to identify each station.
-          
-          latitude: Latitude of the staion
-          
-          longitude: Longitude of the station
-        
-          server_url: The URL of the registry server. 
-          Default is 'http://weewx.com/register/register.cgi'
-          
-          description: A brief description of the station. 
-          Default is 'Unknown'
-          
-          station_type: The type of station. Generally, this is the name of
-          the driver used by the station. 
-          Default is 'Unknown'
-          
-          station_model: The hardware model, typically the hardware_name
-          property provided by the driver.
-          Default is 'Unknown'.
-
-        Parameters customized for this class:
-          
-          post_interval: How long to wait between posts.
-          Default is 604800 seconds (1 week).
+          q (queue.Queue): An instance of queue.Queue where the records will appear.
+          station_url (str): An URL used to identify the station. This will be
+            used as the unique key in the registry to identify each station.
+          latitude (float): Latitude of the staion
+          longitude (float): Longitude of the station
+          server_url (str): The URL of the registry server.
+            Default is 'http://weewx.com/register/register.cgi'
+          description (str): A brief description of the station.
+            Default is 'Unknown'
+          station_type (str): The type of station. Generally, this is the name of
+            the driver used by the station. Default is 'Unknown'
+          station_model (str): The hardware model, typically the hardware_name property provided
+           by the driver. Default is 'Unknown'.
+          post_interval (int): How long to wait between posts.
+            Default is 86400 seconds (1 day).
+          timeout (int): How long to wait for the server to respond before giving up.
+            Default is 60 seconds.
         """
 
         super(StationRegistryThread, self).__init__(
             q,
             protocol_name='StationRegistry',
             post_interval=post_interval,
-            max_backlog=max_backlog,
-            stale=stale,
-            log_success=log_success,
-            log_failure=log_failure,
             timeout=timeout,
-            max_tries=max_tries,
-            retry_wait=retry_wait)
+            **kwargs)
         self.station_url = station_url
         self.latitude = to_float(latitude)
         self.longitude = to_float(longitude)
