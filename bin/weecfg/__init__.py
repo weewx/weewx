@@ -1,6 +1,6 @@
 # coding: utf-8
 #
-#    Copyright (c) 2009-2021 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2022 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your rights.
 #
@@ -84,6 +84,9 @@ def find_file(file_path=None, args=None, locations=DEFAULT_LOCATIONS,
 
     Returns:
         str: full path to the file
+
+    Raises:
+        IOError: If the configuration file cannot be found, or is not a file.
     """
 
     # Start by searching args (if available)
@@ -123,17 +126,21 @@ def read_config(config_path, args=None, locations=DEFAULT_LOCATIONS,
     locations for weewx.conf. Returns the filename of the actual configuration
     file, as well as the ConfigObj.
 
-    config_path: configuration filename
+    Args:
 
-    args: command-line arguments
+        config_path (str): configuration filename.
+        args (list[str]): command-line arguments.
+        locations (list[str]): A list of directories to search.
+        file_name (str): The name of the config file. Default is 'weewx.conf'
+        interpolation (str): The type of interpolation to use when reading the config file.
+            Default is 'ConfigParser'. See the ConfigObj documentation https://bit.ly/3L593vH
 
-    return: path-to-file, instance-of-ConfigObj
+    Returns:
+        (str, configobj.ConfigObj): path-to-file, instance-of-ConfigObj
 
     Raises:
-
-    SyntaxError: If there is a syntax error in the file
-
-    IOError: If the file cannot be found
+        SyntaxError: If there is a syntax error in the file
+        IOError: If the file cannot be found
     """
     # Find and open the config file:
     config_path = find_file(config_path, args,
@@ -158,9 +165,17 @@ def save_with_backup(config_dict, config_path):
 
 
 def save(config_dict, config_path, backup=False):
-    """Save the config file, backing up as necessary."""
+    """Save the config file, backing up as necessary.
 
-    # Check to see if the file exists and we are supposed to make backup:
+    Args:
+        config_dict(dict): A configuration dictionary.
+        config_path(str): Path to where the dictionary should be saved.
+        backup(bool): True to save a timestamped version of the old config file, False otherwise.
+    Returns:
+        str|None: The path to the backed up old config file. None otherwise
+    """
+
+    # Check to see if the file exists, and we are supposed to make backup:
     if os.path.exists(config_path) and backup:
 
         # Yes. We'll have to back it up.
@@ -190,10 +205,27 @@ def save(config_dict, config_path, backup=False):
 # ==============================================================================
 
 def modify_config(config_dict, stn_info, logger, debug=False):
-    """If a driver has a configuration editor, then use that to insert the
+    """This function is responsible for creating or modifying the driver stanza.
+
+    If a driver has a configuration editor, then use that to insert the
     stanza for the driver in the config_dict.  If there is no configuration
     editor, then inject a generic configuration, i.e., just the driver name
     with a single 'driver' element that points to the driver file.
+
+    Args:
+        config_dict(configobj.ConfigObj): The configuration dictionary
+        stn_info(dict): Dictionary containing station information. Typical entries:
+            location: "My Little Town, Oregon"
+            latitude: "45.0"
+            longitude: "-122.0"
+            altitude: ["700", "foot"]
+            station_type: "Vantage"
+            lang: "en"
+            unit_system: "us"
+            register_this_station: "False"
+            driver: "weewx.drivers.vantage"
+        logger (Logger): For logging
+        debug (bool): For additional debug information
     """
     driver_editor = None
     driver_name = None
@@ -216,13 +248,13 @@ def modify_config(config_dict, stn_info, logger, debug=False):
     stanza = None
     if driver_name is not None:
         if driver_editor is not None:
-            orig_stanza_text = None
-
             # if a previous stanza exists for this driver, grab it
             if driver_name in config_dict:
                 orig_stanza = configobj.ConfigObj(interpolation=False)
                 orig_stanza[driver_name] = config_dict[driver_name]
                 orig_stanza_text = '\n'.join(orig_stanza.write())
+            else:
+                orig_stanza_text = None
 
             # let the driver process the stanza or give us a new one
             stanza_text = driver_editor.get_conf(orig_stanza_text)
@@ -232,10 +264,7 @@ def modify_config(config_dict, stn_info, logger, debug=False):
             driver_editor.modify_config(config_dict)
         else:
             stanza = configobj.ConfigObj(interpolation=False)
-            if driver_name in config_dict:
-                stanza[driver_name] = config_dict[driver_name]
-            else:
-                stanza[driver_name] = {}
+            stanza[driver_name] = config_dict.get(driver_name, {})
 
     # If we have a stanza, inject it into the configuration dictionary
     if stanza is not None and driver_name is not None:

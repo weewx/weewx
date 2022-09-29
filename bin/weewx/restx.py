@@ -169,7 +169,9 @@ class RESTThread(threading.Thread):
     
     Offers a few bits of common functionality."""
 
-    def __init__(self, q, protocol_name,
+    def __init__(self,
+                 q,
+                 protocol_name,
                  essentials={},
                  manager_dict=None,
                  post_interval=None,
@@ -185,57 +187,40 @@ class RESTThread(threading.Thread):
                  softwaretype="weewx-%s" % weewx.__version__,
                  skip_upload=False):
         """Initializer for the class RESTThread
-        Required parameters:
 
-          q: An instance of queue.Queue where the records will appear.
+        Args:
 
-          protocol_name: A string holding the name of the protocol.
-          
-        Optional parameters:
-
-          essentials: A dictionary that holds observation types that must
-          not be None for the post to go ahead.
-
-          manager_dict: A manager dictionary, to be used to open up a
-          database manager. Default is None.
-        
-          post_interval: How long to wait between posts.
-          Default is None (post every record).
-          
-          max_backlog: How many records are allowed to accumulate in the queue
-          before the queue is trimmed.
-          Default is six.MAXSIZE (essentially, allow any number).
-          
-          stale: How old a record can be and still considered useful.
-          Default is None (never becomes too old).
-          
-          log_success: If True, log a successful post in the system log.
-          Default is True.
-          
-          log_failure: If True, log an unsuccessful post in the system log.
-          Default is True.
-          
-          timeout: How long to wait for the server to respond before giving up.
-          Default is 10 seconds.
-
-          max_tries: How many times to try the post before giving up.
-          Default is 3
-          
-          retry_wait: How long to wait between retries when failures.
-          Default is 5 seconds.
-          
-          retry_login: How long to wait before retrying a login. Default
-          is 3600 seconds (one hour).
-          
-          retry_ssl: How long to wait before retrying after an SSL error. Default
-          is 3600 seconds (one hour).
-
-          softwaretype: Sent as field "softwaretype in the Ambient post.
-          Default is "weewx-x.y.z where x.y.z is the weewx version.
-
-          skip_upload: Do all record processing, but do not upload the result.
-          Useful for diagnostic purposes when local debugging should not
-          interfere with the downstream data service.  Default is False.
+          q (queue.Queue): An instance of queue.Queue where the records will appear.
+          protocol_name (str): A string holding the name of the protocol.
+          essentials (dict): An optional dictionary that holds observation types that must
+            not be None for the post to go ahead.
+          manager_dict (dict|None): A database manager dictionary, to be used to open up a
+            database manager. Default is None.
+          post_interval (int|None): How long to wait between posts in seconds.
+            Default is None (post every record).
+          max_backlog (int): How many records are allowed to accumulate in the queue
+            before the queue is trimmed. Default is six.MAXSIZE (essentially, allow any number).
+          stale (int|None): How old a record can be and still considered useful.
+            Default is None (never becomes too old).
+          log_success (bool): If True, log a successful post in the system log.
+            Default is True.
+          log_failure (bool): If True, log an unsuccessful post in the system log.
+            Default is True.
+          timeout (int): How long to wait for the server to respond before giving up.
+            Default is 10 seconds.
+          max_tries (int): How many times to try the post before giving up.
+            Default is 3
+          retry_wait (int): How long to wait between retries when failures.
+            Default is 5 seconds.
+          retry_login (int): How long to wait before retrying a login. Default
+            is 3600 seconds (one hour).
+          retry_ssl (int): How long to wait before retrying after an SSL error. Default
+            is 3600 seconds (one hour).
+          softwaretype (str): Sent as field "softwaretype" in the Ambient post.
+            Default is "weewx-x.y.z where x.y.z is the weewx version.
+          skip_upload (bool): Do all record processing, but do not upload the result.
+            Useful for diagnostic purposes when local debugging should not
+            interfere with the downstream data service.  Default is False.
           """
         # Initialize my superclass:
         threading.Thread.__init__(self, name=protocol_name)
@@ -263,14 +248,23 @@ class RESTThread(threading.Thread):
         """Augment record data with additional data from the archive.
         Should return results in the same units as the record and the database.
         
-        This is a general version that works for:
+        This is a general version that for each of types 'hourRain', 'rain24', and 'dayRain',
+        it checks for existence. If not there, then the database is used to add it. This works for:
           - WeatherUnderground
           - PWSweather
           - WOW
           - CWOP
+
         It can be overridden and specialized for additional protocols.
 
-        returns: A dictionary of weather values"""
+        Args:
+            record (dict): An incoming record that will be augmented. It will not be touched.
+            dbmanager (weewx.manager.Manager|None): An instance of a database manager. If set
+                to None, then the record will not be augmented.
+
+        Returns:
+            dict: A dictionary of augmented weather values
+        """
 
         if dbmanager is None:
             # If we don't have a database, we can't do anything
