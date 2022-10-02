@@ -1402,6 +1402,7 @@ class StdStationRegistry(StdRESTful):
         weewx_info       weewx version
         python_info
         platform_info
+        entrypoint
 
     The station_url is the unique key by which a station is identified.
     """
@@ -1434,6 +1435,7 @@ class StdStationRegistry(StdRESTful):
         _registry_dict.setdefault('latitude', self.engine.stn_info.latitude_f)
         _registry_dict.setdefault('longitude', self.engine.stn_info.longitude_f)
         _registry_dict.setdefault('station_model', self.engine.stn_info.hardware)
+        _registry_dict.setdefault('entrypoint', config_dict['entrypoint'])
 
         self.archive_queue = queue.Queue()
         self.archive_thread = StationRegistryThread(self.archive_queue,
@@ -1453,6 +1455,7 @@ class StationRegistryThread(RESTThread):
                  server_url=StdStationRegistry.archive_url,
                  description="Unknown",
                  station_type="Unknown", station_model="Unknown",
+                 entrypoint="Unknown",
                  post_interval=604800, max_backlog=0, stale=None,
                  log_success=True, log_failure=True,
                  timeout=60, max_tries=3, retry_wait=5):
@@ -1481,6 +1484,10 @@ class StationRegistryThread(RESTThread):
           property provided by the driver.
           Default is 'Unknown'.
 
+          entrypoint: location of the invoked weewxd, used in system
+          registration to determine how weewx might have been installed.
+          Default is 'Unknown'.
+
         Parameters customized for this class:
           
           post_interval: How long to wait between posts.
@@ -1505,6 +1512,7 @@ class StationRegistryThread(RESTThread):
         self.description = weeutil.weeutil.list_as_string(description)
         self.station_type = station_type
         self.station_model = station_model
+        self.entrypoint = entrypoint
 
     def get_record(self, dummy_record, dummy_archive):
         _record = {
@@ -1517,6 +1525,7 @@ class StationRegistryThread(RESTThread):
             'python_info': platform.python_version(),
             'platform_info': platform.platform(),
             'weewx_info': weewx.__version__,
+            'entrypoint'     : self.entrypoint,
             'usUnits': weewx.US,
         }
         return _record
@@ -1529,6 +1538,7 @@ class StationRegistryThread(RESTThread):
                 'station_model': 'station_model=%s',
                 'python_info': 'python_info=%s',
                 'platform_info': 'platform_info=%s',
+                'entrypoint'    : 'entrypoint=%s',
                 'weewx_info': 'weewx_info=%s'}
 
     def format_url(self, record):
