@@ -150,6 +150,9 @@ def read_config(config_path, args=None, locations=DEFAULT_LOCATIONS,
         e.msg += ' File %s' % config_path
         raise
 
+    # Remember where we found the config file
+    config_dict['config_path'] = os.path.realpath(config_path)
+
     return config_path, config_dict
 
 
