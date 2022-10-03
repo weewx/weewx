@@ -109,16 +109,31 @@ class Common(object):
         with weewx.manager.Manager.open_with_create(self.archive_db_dict, schema=archive_schema) as archive:
             archive.addRecord(genRecords())
 
-    def test_no_archive(self):
+    def test_open_no_archive(self):
         # Attempt to open a non-existent database results in an exception:
-        self.assertRaises(weedb.OperationalError, weewx.manager.Manager.open, self.archive_db_dict)
+        with self.assertRaises(weedb.NoDatabaseError):
+            db_manager = weewx.manager.Manager.open(self.archive_db_dict)
 
-    def test_unitialized_archive(self):
+    def test_open_unitialized_archive(self):
+        """Test creating the database, but not initializing it. Then try to open it."""
         weedb.create(self.archive_db_dict)
         with self.assertRaises(weedb.ProgrammingError):
             db_manager = weewx.manager.Manager.open(self.archive_db_dict)
 
+    def test_open_with_create_no_archive(self):
+        """Test open_with_create of a non-existent database and without supplying a schema."""
+        with self.assertRaises(weedb.NoDatabaseError):
+            db_manager = weewx.manager.Manager.open_with_create(self.archive_db_dict)
+
+    def test_open_with_create_uninitialized(self):
+        """Test open_with_create with a database that exists, but has not been initialized and
+        no schema has been supplied."""
+        weedb.create(self.archive_db_dict)
+        with self.assertRaises(weedb.ProgrammingError):
+            db_manager = weewx.manager.Manager.open_with_create(self.archive_db_dict)
+
     def test_create_archive(self):
+        """Test open_with_create with a database that does not exist, while supplying a schema"""
         archive = weewx.manager.Manager.open_with_create(self.archive_db_dict, schema=archive_schema)
         self.assertEqual(archive.connection.tables(), ['archive'])
         self.assertEqual(archive.connection.columnsOf('archive'), ['dateTime', 'usUnits', 'interval', 'barometer', 'inTemp', 'outTemp', 'windSpeed'])
@@ -293,7 +308,8 @@ class TestMySQL(Common, unittest.TestCase):
 
     
 def suite():
-    tests = ['test_no_archive', 'test_unitialized_archive', 'test_create_archive',
+    tests = ['test_open_no_archive', 'test_open_unitialized_archive',
+             'test_open_with_create_no_archive', 'test_open_with_create_uninitialized',
              'test_empty_archive', 'test_add_archive_records', 'test_get_records', 'test_update']
     suite = unittest.TestSuite(list(map(TestSqlite, tests)) + list(map(TestMySQL, tests)))
     suite.addTest(TestDatabaseDict('test_get_database_dict'))
