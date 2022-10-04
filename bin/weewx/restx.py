@@ -533,6 +533,8 @@ class RESTThread(threading.Thread):
         """
         # Data might be a unicode string. Encode it first.
         data_bytes = six.ensure_binary(data) if data is not None else None
+        if weewx.debug >= 2:
+            log.debug("%s url: '%s'", self.protocol_name, request.get_full_url())
         _response = urllib.request.urlopen(request, data=data_bytes, timeout=self.timeout)
         return _response
 
