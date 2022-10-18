@@ -49,6 +49,8 @@ for weewx.conf.
 Post location of configuration file to the station registry. Thanks to Vince!
 PR #705.
 
+Fix minor install warning under Python 3.10. Fixes issue #799.
+
 
 4.8.0 04/21/2022
 Allow unit to be overridden for a specific plot by using new option 'unit'.
