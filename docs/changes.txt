@@ -52,6 +52,12 @@ PR #705.
 Added copytruncate option to default log rotation configuration.  Thanks to
 user sastorsl.  Addresses PR #791.
 
+Update the default and example rules in rsyslog configuration.  The output
+from the weewx daemon goes to weewxd.log whereas the output from wee_xxx
+utilities goes to weewx.log.  Also added examples of how to deal with
+systemd/journald messing with log output.  Addresses PR#788 and PR#790.
+Thanks to user sastorsl.
+
 
 4.8.0 04/21/2022
 Allow unit to be overridden for a specific plot by using new option 'unit'.
