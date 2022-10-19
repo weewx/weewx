@@ -6,13 +6,13 @@
   delaycompress
   notifempty
 
-# on some older systems the permissions do not propagate, so force them
-# debian uses root:adm
-#  create 644 root adm
-# ubuntu uses syslog:adm
-#  create 644 syslog adm
+# for a typical configuration, use copytruncate instead of create, since weewx
+# does not know how to reopen a log file.  this has the risk of losing log
+# messages that are made after the copy but before truncation, but it ensures
+# that weewx will write to the correct log file after rotation.
+  copytruncate
 
-# on some older systems rsyslog must be restarted to send output to right file
+# on some systems rsyslog must be restarted to send output to right file
 #  sharedscripts
 #  postrotate
 # standard way of invoking rc scripts
@@ -27,4 +27,10 @@
 # some debian systems do it this way
 #    invoke-rc.d rsyslog reload > /dev/null
 #  endscript
+
+# on some systems the permissions do not propagate, so force them
+# debian uses root:adm
+#  create 644 root adm
+# ubuntu uses syslog:adm
+#  create 644 syslog adm
 }
