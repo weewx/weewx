@@ -49,6 +49,11 @@ for weewx.conf.
 Post location of configuration file to the station registry. Thanks to Vince!
 PR #705.
 
+Fix minor install warning under Python 3.10. Fixes issue #799.
+
+Fix problem where xtypes.ArchiveTable.get_series() does not pass option_dict
+on to get_aggregate(). Fixes issue #797
+
 Added copytruncate option to default log rotation configuration.  Thanks to
 user sastorsl.  Addresses PR #791.
 

@@ -783,7 +783,7 @@ class WindVec(XType):
             # Yes. Just use the regular series function. When it comes time to do the aggregation,
             # the specialized function WindVec.get_aggregate() (defined below), will be used.
             return ArchiveTable.get_series(obs_type, timespan, db_manager, aggregate_type,
-                                           aggregate_interval)
+                                           aggregate_interval, **option_dict)
 
         else:
             # No aggregation desired. However, we have will have to assemble the wind vector from
