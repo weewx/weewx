@@ -1398,7 +1398,8 @@ class StdStationRegistry(StdRESTful):
         weewx_info       weewx version
         python_info
         platform_info
-        config_path
+        config_path      Where the configuration file is located.
+        entry_path       The path to the top-level module (usually where weewxd is located)
 
     The station_url is the unique key by which a station is identified.
     """
@@ -1432,6 +1433,7 @@ class StdStationRegistry(StdRESTful):
         _registry_dict.setdefault('longitude', self.engine.stn_info.longitude_f)
         _registry_dict.setdefault('station_model', self.engine.stn_info.hardware)
         _registry_dict.setdefault('config_path', config_dict.get('config_path', 'Unknown'))
+        _registry_dict.setdefault('entry_path', config_dict.get('entry_path', 'Unknown'))
 
         self.archive_queue = queue.Queue()
         self.archive_thread = StationRegistryThread(self.archive_queue,
@@ -1457,6 +1459,7 @@ class StationRegistryThread(RESTThread):
                  station_type="Unknown",
                  station_model="Unknown",
                  config_path="Unknown",
+                 entry_path="Unknown",
                  post_interval=86400,
                  timeout=60,
                  **kwargs):
@@ -1478,6 +1481,8 @@ class StationRegistryThread(RESTThread):
           config_path (str): location of the configuration file, used in system
             registration to determine how weewx might have been installed.
             Default is 'Unknown'.
+          entry_path (str): location of the top-level module that was executed. Usually this is
+            where 'weewxd' is located. Default is "Unknown".
           station_model (str): The hardware model, typically the hardware_name property provided
            by the driver. Default is 'Unknown'.
           post_interval (int): How long to wait between posts.
@@ -1500,6 +1505,7 @@ class StationRegistryThread(RESTThread):
         self.station_type = station_type
         self.station_model = station_model
         self.config_path = config_path
+        self.entry_path = entry_path
 
     def get_record(self, dummy_record, dummy_archive):
         _record = {
@@ -1513,6 +1519,7 @@ class StationRegistryThread(RESTThread):
             'platform_info': platform.platform(),
             'weewx_info': weewx.__version__,
             'config_path': self.config_path,
+            'entry_path' : self.entry_path,
             'usUnits': weewx.US,
         }
         return _record
@@ -1526,6 +1533,7 @@ class StationRegistryThread(RESTThread):
                 'python_info': 'python_info=%s',
                 'platform_info': 'platform_info=%s',
                 'config_path': 'config_path=%s',
+                'entry_path': 'entry_path=%s',
                 'weewx_info': 'weewx_info=%s'}
 
     def format_url(self, record):
