@@ -46,8 +46,8 @@ See the User's Guide. Resolves issue #730.
 Fix problem that prevented wee_reports from using a default location
 for weewx.conf.
 
-Post location of configuration file to the station registry. Thanks to Vince!
-PR #705.
+Post location of the configuration file and the top-level module to the station
+registry. Thanks to Vince! PR #705.
 
 Fix minor install warning under Python 3.10. Fixes issue #799.
 

@@ -3759,100 +3759,6 @@ ephem.Eros = eros</pre>
             a companion document <a href="sle.html"><em>Writing search list extensions</em></a>.
         </p>
 
-        <h2 id="calculation_in_templates">How to calculate values in templates</h2>
-        
-        <p>
-            If you need to calculate a new value, you should generally strive to do it in a search list
-            extension or XType. However, there are occasions where it is quicker and easier to do
-            the calculation right in the template, using the Cheetah directive <span class="code">#set</span>.
-        </p>
-        <p>
-            Here's an example where we calculate the elapsed time between dawn and dusk:
-        </p>
-        <pre class="tty">#set $dawntodusk = $almanac(horizon=-6).sun(use_center=1).set.raw - $almanac(horizon=-6).sun(use_center=1).rise.raw</pre>
-
-        <p>
-            The expression calculates the simple difference between two values: the time of the sunset minus the time of
-            the sunrise, both in unix epoch time. The result will be the elapsed time in seconds. For details on the
-            <span class="code">$almanac</span> tag, see the <a href="#Almanac">Almanac</a> section. For details on the
-            <span class="code">.raw</span> suffix see section <a href="#formatting_options">Formatting options</a>.
-        </p>
-
-        <p>
-            We can make use of this tag by simply referencing <span class="code">$dawntodusk</span>. For example:
-        </p>
-        <pre class="tty">&lt;p&gt;The elapsed time between dawn and dusk is $dawntodusk&lt;/p&gt</pre>
-
-        <p>
-            This will result in something like
-        </p>
-        <p class="example_output">The elapsed time between dawn to dusk is 57315.0023124218</p>
-        <p>
-            Not very elegant.
-        </p>
-        <p>
-            To get something more readable, while having the results honor any user-specified
-            settings, including unit conversions and formatting, is a bit more involved.
-            Here's a more sophisticated version that leverages classes <a
-            href="#ValueTuple">ValueTuple</a> and <a href="#ValueHelper">ValueHelper</a> to do the formatting.
-            While this example does not involve any unit conversions, in general, these classes can take care of
-            that as well.
-        </p>
-        <pre class="tty">
-#from weewx.units import ValueTuple, ValueHelper                                                                   ## 1
-#set $dawn = $almanac(horizon=-6).sun(use_center=1).rise.raw                                                       ## 2
-#set $dusk = $almanac(horizon=-6).sun(use_center=1).set.raw                                                        ## 3
-#set $dawntodusk = $dusk - $dawn                                                                                   ## 4
-#set $dawntodusk_vh = ValueHelper(ValueTuple($dawntodusk,'second','group_deltatime'),formatter=$station.formatter) ## 5
-</pre>
-        <p>
-            The numbers reference the comments below:
-        </p>
-        <ol>
-            <li>
-                Neither class <span class="code">ValueTuple</span>, nor <span class="code">ValueHelper</span>, appear
-                in the template. We must import them.
-            </li>
-            <li>
-                Set the value <span class="code">$dawn</span> to the time of sunrise. The <span class="code">.raw</span>
-                suffix ensures that the results will be in unix epoch time (rather than a string).
-            </li>
-            <li>
-                Similar, but with sunset.
-            </li>
-            <li>
-                Take the difference. Because unix epoch time is in seconds, the results will also be in seconds.
-            </li>
-            <li>
-                Construct a <span class="code">ValueHelper</span> to hold the results. We borrow a formatter
-                from the <span class="code">$station</span> tag.
-            </li>
-        </ol>
-
-        <p>
-            The results, <span class="code">$dawntodusk_vh</span> is a <span class="code">ValueHelper</span>. When
-            rendered as a string by the Cheetah engine, it will do the necessary magic to ensure sensible formatting
-            for the <span class="code">ValueTuple</span> that it holds internally. This time, the template
-        </p>
-        <pre class="tty">&lt;p&gt;The elapsed time between dawn and dusk is $dawntodusk_vh.&lt;/p&gt</pre>
-        <p>
-            gives the following results:
-        </p>
-        <p class="example_output">The elapsed time between dawn and dusk is 0 days, 15 hours, 55 minutes</p>
-
-        <p>
-            Like any other instance of <span class="code">ValueHelper</span>, you can override the formatting.
-            For example, specifying
-        </p>
-
-        <pre class="tty">&lt;p&gt;The elapsed time between dawn and dusk is
-            $dawntodusk_vh.format("%(hour)d%(hour_label)s, %(minute)d%(minute_label)s, and %(second)d%(second_label)s")</pre>
-
-        <p>
-            gives the results
-        </p>
-        <p class="example_output">The elapsed time between dawn and dusk is 15 hours, 55 minutes, and 15 seconds</p>
-
 
         <!-- -------------------------------------------------------------- -->
 
@@ -7767,6 +7673,7 @@ station_altitude_vt = ValueTuple(120.0, "meter", "group_altitude")
                 <span class="code">localize</span> If truthy, then the results will be localized. For example, in some
                 locales, a comma will be used as the decimal specifier.
             </p>
+        </div>
 
     </div>
     <!-- end id technical_content -->

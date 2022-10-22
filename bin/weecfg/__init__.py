@@ -159,6 +159,8 @@ def read_config(config_path, args=None, locations=DEFAULT_LOCATIONS,
 
     # Remember where we found the config file
     config_dict['config_path'] = os.path.realpath(config_path)
+    # Find the top-level module. This is where the entry point will be.
+    config_dict['entry_path'] = getattr(sys.modules['__main__'], '__file__', 'Unknown')
 
     return config_path, config_dict
 
