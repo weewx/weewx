@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2019-2021 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2019-2022 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -253,7 +253,14 @@ class ArchiveTable(XType):
                   "WHERE dateTime <= %(stop)s) "
                   "AND a.dateTime = (SELECT MIN(dateTime) FROM archive "
                   "WHERE dateTime >= %(start)s);",
+        # The aggregation 'vecdir' requires built-in math functions, introduced in sqlite v3.35.0
+        'vecdir': "SELECT SUM(windSpeed * COS(RADIANS(90 - windDir))), "
+                  "       SUM(windSpeed * SIN(RADIANS(90 - windDir))) "
+                  "FROM %(table_name)s "
+                  "WHERE dateTime > %(start)s AND dateTime <= %(stop)s "
     }
+
+    valid_aggregate_types = set(['sum', 'count', 'avg', 'max', 'min']).union(agg_sql_dict.keys())
 
     simple_agg_sql = "SELECT %(aggregate_type)s(%(obs_type)s) FROM %(table_name)s " \
                      "WHERE dateTime > %(start)s AND dateTime <= %(stop)s " \
@@ -277,8 +284,7 @@ class ArchiveTable(XType):
             ValueTuple: A ValueTuple containing the result.
         """
 
-        if aggregate_type not in ['sum', 'count', 'avg', 'max', 'min'] \
-                + list(ArchiveTable.agg_sql_dict.keys()):
+        if aggregate_type not in ArchiveTable.valid_aggregate_types:
             raise weewx.UnknownAggregation(aggregate_type)
 
         interpolate_dict = {
@@ -299,6 +305,12 @@ class ArchiveTable(XType):
 
         if aggregate_type == 'not_null':
             value = row is not None
+        elif aggregate_type == 'vecdir':
+            if None in row or row == (0.0, 0.0):
+                value = None
+            else:
+                deg = 90.0 - math.degrees(math.atan2(row[1], row[0]))
+                value = deg if deg >= 0 else deg + 360.0
         else:
             value = row[0] if row else None
 
@@ -724,6 +736,57 @@ class AggregateHeatCool(XType):
         return weewx.units.ValueTuple(value, t, g)
 
 
+class XTypeTable(XType):
+    """Calculate a series for an xtype. An xtype may not necessarily be in the database, so
+    this version calculates it on the fly. Note: this version only works if no aggregation has
+    been requested."""
+
+    @staticmethod
+    def get_series(obs_type, timespan, db_manager, aggregate_type=None, aggregate_interval=None,
+                   **option_dict):
+        """Get a series of an xtype, by using the main archive table. Works only for no
+        aggregation. """
+
+        start_vec = list()
+        stop_vec = list()
+        data_vec = list()
+
+        if aggregate_type:
+            # This version does not know how to do aggregations, although this could be
+            # added in the future.
+            raise weewx.UnknownAggregation(aggregate_type)
+
+        else:
+            # No aggregation
+
+            std_unit_system = None
+
+            # Hit the database.
+            for record in db_manager.genBatchRecords(*timespan):
+
+                if std_unit_system:
+                    if std_unit_system != record['usUnits']:
+                        raise weewx.UnsupportedFeature("Unit system cannot change "
+                                                       "within a series.")
+                else:
+                    std_unit_system = record['usUnits']
+
+                # Given a record, use the xtypes system to calculate a value:
+                try:
+                    value = get_scalar(obs_type, record, db_manager)
+                    data_vec.append(value[0])
+                except weewx.CannotCalculate:
+                    data_vec.append(None)
+                start_vec.append(record['dateTime'] - record['interval'] * 60)
+                stop_vec.append(record['dateTime'])
+
+            unit, unit_group = weewx.units.getStandardUnitType(std_unit_system, obs_type)
+
+        return (ValueTuple(start_vec, 'unix_epoch', 'group_time'),
+                ValueTuple(stop_vec, 'unix_epoch', 'group_time'),
+                ValueTuple(data_vec, unit, unit_group))
+
+
 # ############################# WindVec extensions #########################################
 
 class WindVec(XType):
@@ -979,57 +1042,6 @@ class WindVecDaily(XType):
                                                aggregate_type)
         # Return as a value tuple
         return weewx.units.ValueTuple(value, t, g)
-
-
-class XTypeTable(XType):
-    """Calculate a series for an xtype. An xtype may not necessarily be in the database, so
-    this version calculates it on the fly. Note: this version only works if no aggregation has
-    been requested."""
-
-    @staticmethod
-    def get_series(obs_type, timespan, db_manager, aggregate_type=None, aggregate_interval=None,
-                   **option_dict):
-        """Get a series of an xtype, by using the main archive table. Works only for no
-        aggregation. """
-
-        start_vec = list()
-        stop_vec = list()
-        data_vec = list()
-
-        if aggregate_type:
-            # This version does not know how to do aggregations, although this could be
-            # added in the future.
-            raise weewx.UnknownAggregation(aggregate_type)
-
-        else:
-            # No aggregation
-
-            std_unit_system = None
-
-            # Hit the database.
-            for record in db_manager.genBatchRecords(*timespan):
-
-                if std_unit_system:
-                    if std_unit_system != record['usUnits']:
-                        raise weewx.UnsupportedFeature("Unit system cannot change "
-                                                       "within a series.")
-                else:
-                    std_unit_system = record['usUnits']
-
-                # Given a record, use the xtypes system to calculate a value:
-                try:
-                    value = get_scalar(obs_type, record, db_manager)
-                    data_vec.append(value[0])
-                except weewx.CannotCalculate:
-                    data_vec.append(None)
-                start_vec.append(record['dateTime'] - record['interval'] * 60)
-                stop_vec.append(record['dateTime'])
-
-            unit, unit_group = weewx.units.getStandardUnitType(std_unit_system, obs_type)
-
-        return (ValueTuple(start_vec, 'unix_epoch', 'group_time'),
-                ValueTuple(stop_vec, 'unix_epoch', 'group_time'),
-                ValueTuple(data_vec, unit, unit_group))
 
 
 # Add instantiated versions to the extension list. Order matters. We want the highly-specialized

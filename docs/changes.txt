@@ -63,6 +63,9 @@ utilities goes to weewx.log.  Also added examples of how to deal with
 systemd/journald messing with log output.  Addresses PR#788 and PR#790.
 Thanks to user sastorsl.
 
+Allow aggregations shorter than a day for aggregation type 'vecdir'.
+Fixes issue #800.
+
 
 4.8.0 04/21/2022
 Allow unit to be overridden for a specific plot by using new option 'unit'.
