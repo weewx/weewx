@@ -1,7 +1,7 @@
 WeeWX change history
 --------------------
 
-4.9.0 MM/DD/YYYY
+4.9.0 10/24/2022
 Fix problem that create 'ghost' values for VantageVue stations.
 Fix problem that causes `leafWet3` and `leafWet4` to be emitted in VP2
 stations that do not have the necessary sensors.
