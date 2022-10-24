@@ -149,7 +149,7 @@ upload-src:
 
 # upload docs to the web site
 upload-docs:
-	rsync -rv docs $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)
+	rsync -Orv docs $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)
 
 # update the version in all relevant places
 VDOCS=readme.htm customizing.htm devnotes.htm hardware.htm usersguide.htm upgrading.htm utilities.htm
@@ -359,7 +359,7 @@ apt-repo:
 # make local copy of the published apt repository
 pull-apt-repo:
 	mkdir -p ~/.aptly
-	rsync -arvz $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/aptly/ ~/.aptly
+	rsync -Oarvz $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/aptly/ ~/.aptly
 
 # add the latest version to the local apt repo using aptly
 update-apt-repo:
@@ -379,11 +379,11 @@ update-apt-repo:
 push-apt-repo:
 	find ~/.aptly -type f -exec chmod 664 {} \;
 	find ~/.aptly -type d -exec chmod 2775 {} \;
-	rsync -rtlvz ~/.aptly/ $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/aptly-test
+	rsync -Ortlvz ~/.aptly/ $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/aptly-test
 
 # copy the testing repository onto the production repository
 release-apt-repo:
-	ssh $(USER)@$(WEEWX_COM) "rsync -logrvz /var/www/html/aptly-test/ /var/www/html/aptly"
+	ssh $(USER)@$(WEEWX_COM) "rsync -Ologrvz /var/www/html/aptly-test/ /var/www/html/aptly"
 
 YUM_REPO=~/.yum/weewx
 yum-repo:
@@ -394,7 +394,7 @@ yum-repo:
 
 pull-yum-repo:
 	mkdir -p $(YUM_REPO)
-	rsync -arvz $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/yum/ ~/.yum
+	rsync -Oarvz $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/yum/ ~/.yum
 
 update-yum-repo:
 	cp -p $(DSTDIR)/weewx-$(RPMVER).el7.$(RPMARCH).rpm $(YUM_REPO)/el7/RPMS
@@ -405,11 +405,11 @@ update-yum-repo:
 push-yum-repo:
 	find ~/.yum -type f -exec chmod 664 {} \;
 	find ~/.yum -type d -exec chmod 2775 {} \;
-	rsync -rtlvz ~/.yum/ $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/yum-test
+	rsync -Ortlvz ~/.yum/ $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/yum-test
 
 # copy the testing repository onto the production repository
 release-yum-repo:
-	ssh $(USER)@$(WEEWX_COM) "rsync -logrvz /var/www/html/yum-test/ /var/www/html/yum"
+	ssh $(USER)@$(WEEWX_COM) "rsync -Ologrvz /var/www/html/yum-test/ /var/www/html/yum"
 
 SUSE_REPO=~/.suse/weewx
 suse-repo:
@@ -420,7 +420,7 @@ suse-repo:
 
 pull-suse-repo:
 	mkdir -p $(SUSE_REPO)
-	rsync -arvz $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/suse/ ~/.suse
+	rsync -Oarvz $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/suse/ ~/.suse
 
 update-suse-repo:
 	cp -p $(DSTDIR)/weewx-$(RPMVER).suse12.$(RPMARCH).rpm $(SUSE_REPO)/suse12/RPMS
@@ -431,11 +431,11 @@ update-suse-repo:
 push-suse-repo:
 	find ~/.suse -type f -exec chmod 664 {} \;
 	find ~/.suse -type d -exec chmod 2775 {} \;
-	rsync -rtlvz ~/.suse/ $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/suse-test
+	rsync -Ortlvz ~/.suse/ $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/suse-test
 
 # copy the testing repository onto the production repository
 release-suse-repo:
-	ssh $(USER)@$(WEEWX_COM) "rsync -logrvz /var/www/html/suse-test/ /var/www/html/suse"
+	ssh $(USER)@$(WEEWX_COM) "rsync -Ologrvz /var/www/html/suse-test/ /var/www/html/suse"
 
 # run perlcritic to ensure clean perl code.  put these in ~/.perlcriticrc:
 # [-CodeLayout::RequireTidyCode]
