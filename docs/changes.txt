@@ -63,7 +63,9 @@ utilities goes to weewx.log.  Also added examples of how to deal with
 systemd/journald messing with log output.  Addresses PR#788 and PR#790.
 Thanks to user sastorsl.
 
-Allow aggregations shorter than a day for aggregation type 'vecdir'.
+Allow additional aggregation intervals for observation type $wind. In
+particular, 'vecdir' and 'vecavg' can be done for aggregation intervals other
+than multiples of a day.
 Fixes issue #800.
 
 

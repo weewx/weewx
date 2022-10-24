@@ -3614,7 +3614,7 @@ ephem.Eros = eros</pre>
                 <td>The average wind speed seen during the archive period.
                 </td>
                 <td rowspan='4' class='code'>
-                    $current, $latest, $day, $week, $month, $year, $rainyear
+                    $current, $latest, $hour, $day, $week, $month, $year, $rainyear
                 </td>
             </tr>
             <tr>
@@ -3635,7 +3635,12 @@ ephem.Eros = eros</pre>
             </tbody>
         </table>
 
-        <p>In addition, a wind vector is stored in the daily summaries.</p>
+        <p>
+            Some wind aggregation types, notably <span class="code">vecdir</span> and <span class="code">vecavg</span>,
+            require wind speed <em>and</em> direction. For these, WeeWX provides a composite observation type
+            called <span class="code">wind</span>. It is stored directly in the daily summaries, but synthesized for
+            aggregations other than multiples of a day.
+        </p>
         <table class="indent">
             <tbody>
             <tr class="first_row">
@@ -3645,19 +3650,11 @@ ephem.Eros = eros</pre>
             </tr>
             <tr>
                 <td class="first_col code">wind</td>
-                <td>A vector composite of the wind. It includes information such as the direction of the maximum gust,
-                    and the x- and y-vector wind run.
-                </td>
-                <td class='code'>$day, $week, $month, $year, $rainyear</td>
+                <td>A vector composite of the wind.</td>
+                <td class='code'>$hour, $day, $week, $month, $year, $rainyear</td>
             </tr>
             </tbody>
         </table>
-        <p class="note" style="display: inline-block">
-            <strong>Note</strong><br/>The vector is only stored in the daily <em>summaries</em>, so unlike the scalar
-            tags such as <span class="code">windSpeed</span> or <span class="code">windGust</span>, the tag <span
-            class="code">wind</span> can only be used in aggregations such as <span class="code">$day</span>, <span
-            class="code">$month</span>, <i>etc.</i>
-        </p>
 
         <p>Any of these can be used in your tags. Here are some examples:</p>
 
@@ -3688,7 +3685,7 @@ ephem.Eros = eros</pre>
                 <td>The direction of the gust.</td>
             </tr>
             <tr>
-                <td class="first_col code">$day.wind.avg</td>
+                <td class="first_col code">$day.windSpeed.avg<br/>$day.wind.avg</td>
                 <td>The average wind speed since midnight. If the wind blows east at 5 m/s for 2 hours, then west at 5
                     m/s for 2 hours, the average wind speed is 5 m/s.
                 </td>
@@ -3706,7 +3703,7 @@ ephem.Eros = eros</pre>
                 </td>
             </tr>
             <tr>
-                <td class="first_col code">$day.wind.max</td>
+                <td class="first_col code">$day.windGust.max<br/>$day.wind.max</td>
                 <td>The maximum wind gust since midnight.</td>
             </tr>
             <tr>
@@ -3714,7 +3711,7 @@ ephem.Eros = eros</pre>
                 <td>The direction of the maximum wind gust.</td>
             </tr>
             <tr>
-                <td class="first_col code">$day.wind.maxtime</td>
+                <td class="first_col code">$day.windGust.maxtime<br/>$day.wind.maxtime</td>
                 <td>The time of the maximum wind gust.</td>
             </tr>
             <tr>
@@ -3725,8 +3722,11 @@ ephem.Eros = eros</pre>
             </tr>
             <tr>
                 <td class="first_col code">$day.windDir.avg</td>
-                <td>Not a very useful quantity. This is the strict, arithmetic average of all the compass wind
-                    direction. Probably not what you want.
+                <td>
+                    Not a very useful quantity. This is the strict, arithmetic average of all the compass wind
+                    directions. If the wind blows at 350&deg; for two hours then at 10&deg; for two hours,
+                    then the scalar average wind direction will be 180&deg; &mdash; probably not what you
+                    expect, nor want.
                 </td>
             </tr>
             </tbody>

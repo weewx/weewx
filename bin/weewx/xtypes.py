@@ -221,50 +221,60 @@ class ArchiveTable(XType):
 
     # Set of SQL statements to be used for calculating aggregates from the main archive table.
     agg_sql_dict = {
-        'diff': "SELECT (b.%(obs_type)s - a.%(obs_type)s) FROM archive a, archive b "
+        'diff': "SELECT (b.%(sql_type)s - a.%(sql_type)s) FROM archive a, archive b "
                 "WHERE b.dateTime = (SELECT MAX(dateTime) FROM archive "
                 "WHERE dateTime <= %(stop)s) "
                 "AND a.dateTime = (SELECT MIN(dateTime) FROM archive "
                 "WHERE dateTime >= %(start)s);",
-        'first': "SELECT %(obs_type)s FROM %(table_name)s "
+        'first': "SELECT %(sql_type)s FROM %(table_name)s "
                  "WHERE dateTime > %(start)s AND dateTime <= %(stop)s "
-                 "AND %(obs_type)s IS NOT NULL ORDER BY dateTime ASC LIMIT 1",
+                 "AND %(sql_type)s IS NOT NULL ORDER BY dateTime ASC LIMIT 1",
         'firsttime': "SELECT MIN(dateTime) FROM %(table_name)s "
                      "WHERE dateTime > %(start)s AND dateTime <= %(stop)s "
-                     "AND %(obs_type)s IS NOT NULL",
-        'last': "SELECT %(obs_type)s FROM %(table_name)s "
+                     "AND %(sql_type)s IS NOT NULL",
+        'last': "SELECT %(sql_type)s FROM %(table_name)s "
                 "WHERE dateTime > %(start)s AND dateTime <= %(stop)s "
-                "AND %(obs_type)s IS NOT NULL ORDER BY dateTime DESC LIMIT 1",
+                "AND %(sql_type)s IS NOT NULL ORDER BY dateTime DESC LIMIT 1",
         'lasttime': "SELECT MAX(dateTime) FROM %(table_name)s "
                     "WHERE dateTime > %(start)s AND dateTime <= %(stop)s "
-                    "AND %(obs_type)s IS NOT NULL",
+                    "AND %(sql_type)s IS NOT NULL",
         'maxtime': "SELECT dateTime FROM %(table_name)s "
                    "WHERE dateTime > %(start)s AND dateTime <= %(stop)s "
-                   "AND %(obs_type)s IS NOT NULL ORDER BY %(obs_type)s DESC LIMIT 1",
+                   "AND %(sql_type)s IS NOT NULL ORDER BY %(sql_type)s DESC LIMIT 1",
         'mintime': "SELECT dateTime FROM %(table_name)s "
                    "WHERE dateTime > %(start)s AND dateTime <= %(stop)s "
-                   "AND %(obs_type)s IS NOT NULL ORDER BY %(obs_type)s ASC LIMIT 1",
+                   "AND %(sql_type)s IS NOT NULL ORDER BY %(sql_type)s ASC LIMIT 1",
         'not_null': "SELECT 1 FROM %(table_name)s "
                     "WHERE dateTime > %(start)s AND dateTime <= %(stop)s "
-                    "AND %(obs_type)s IS NOT NULL LIMIT 1",
-        'tderiv': "SELECT (b.%(obs_type)s - a.%(obs_type)s) / (b.dateTime-a.dateTime) "
+                    "AND %(sql_type)s IS NOT NULL LIMIT 1",
+        'tderiv': "SELECT (b.%(sql_type)s - a.%(sql_type)s) / (b.dateTime-a.dateTime) "
                   "FROM archive a, archive b "
                   "WHERE b.dateTime = (SELECT MAX(dateTime) FROM archive "
                   "WHERE dateTime <= %(stop)s) "
                   "AND a.dateTime = (SELECT MIN(dateTime) FROM archive "
                   "WHERE dateTime >= %(start)s);",
-        # The aggregation 'vecdir' requires built-in math functions, introduced in sqlite v3.35.0
-        'vecdir': "SELECT SUM(windSpeed * COS(RADIANS(90 - windDir))), "
-                  "       SUM(windSpeed * SIN(RADIANS(90 - windDir))) "
+        'gustdir': "SELECT windGustDir FROM %(table_name)s "
+                   "WHERE dateTime > %(start)s AND dateTime <= %(stop)s "
+                   "ORDER BY windGust DESC limit 1",
+        # Aggregations 'vecdir' and 'vecavg' require built-in math functions,
+        # which were introduced in sqlite v3.35.0, 12-Mar-2021. If they don't exist, then
+        # weewx will raise an exception of type "weedb.OperationalError".
+        'vecdir': "SELECT SUM(`interval` * windSpeed * COS(RADIANS(90 - windDir))), "
+                  "       SUM(`interval` * windSpeed * SIN(RADIANS(90 - windDir))) "
                   "FROM %(table_name)s "
-                  "WHERE dateTime > %(start)s AND dateTime <= %(stop)s "
+                  "WHERE dateTime > %(start)s AND dateTime <= %(stop)s ",
+        'vecavg': "SELECT SUM(`interval` * windSpeed * COS(RADIANS(90 - windDir))), "
+                  "       SUM(`interval` * windSpeed * SIN(RADIANS(90 - windDir))), "
+                  "       SUM(`interval`) "
+                  "FROM %(table_name)s "
+                  "WHERE dateTime > %(start)s AND dateTime <= %(stop)s ",
     }
 
     valid_aggregate_types = set(['sum', 'count', 'avg', 'max', 'min']).union(agg_sql_dict.keys())
 
-    simple_agg_sql = "SELECT %(aggregate_type)s(%(obs_type)s) FROM %(table_name)s " \
+    simple_agg_sql = "SELECT %(aggregate_type)s(%(sql_type)s) FROM %(table_name)s " \
                      "WHERE dateTime > %(start)s AND dateTime <= %(stop)s " \
-                     "AND %(obs_type)s IS NOT NULL"
+                     "AND %(sql_type)s IS NOT NULL"
 
     @staticmethod
     def get_aggregate(obs_type, timespan, aggregate_type, db_manager, **option_dict):
@@ -287,9 +297,14 @@ class ArchiveTable(XType):
         if aggregate_type not in ArchiveTable.valid_aggregate_types:
             raise weewx.UnknownAggregation(aggregate_type)
 
+        if obs_type == 'wind':
+            sql_type = 'windGust' if aggregate_type == 'max' else 'windSpeed'
+        else:
+            sql_type = obs_type
+
         interpolate_dict = {
             'aggregate_type': aggregate_type,
-            'obs_type': obs_type,
+            'sql_type': sql_type,
             'table_name': db_manager.table_name,
             'start': timespan.start,
             'stop': timespan.stop
@@ -311,6 +326,8 @@ class ArchiveTable(XType):
             else:
                 deg = 90.0 - math.degrees(math.atan2(row[1], row[0]))
                 value = deg if deg >= 0 else deg + 360.0
+        elif aggregate_type == 'vecavg':
+            value = math.sqrt((row[0] ** 2 + row[1] ** 2) / row[2] ** 2) if row[2] else None
         else:
             value = row[0] if row else None
 
