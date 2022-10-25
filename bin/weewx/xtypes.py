@@ -267,7 +267,8 @@ class ArchiveTable(XType):
                   "       SUM(`interval` * windSpeed * SIN(RADIANS(90 - windDir))), "
                   "       SUM(`interval`) "
                   "FROM %(table_name)s "
-                  "WHERE dateTime > %(start)s AND dateTime <= %(stop)s ",
+                  "WHERE dateTime > %(start)s AND dateTime <= %(stop)s "
+                  "AND windSpeed is not null"
     }
 
     valid_aggregate_types = set(['sum', 'count', 'avg', 'max', 'min']).union(agg_sql_dict.keys())
@@ -296,6 +297,15 @@ class ArchiveTable(XType):
 
         if aggregate_type not in ArchiveTable.valid_aggregate_types:
             raise weewx.UnknownAggregation(aggregate_type)
+
+        # For older versions of sqlite, we need to do these calculations the hard way:
+        if obs_type == 'wind' \
+                and aggregate_type in ('vecdir', 'vecavg') \
+                and not db_manager.connection.has_math:
+            return ArchiveTable.get_wind_aggregate_long(obs_type,
+                                                        timespan,
+                                                        aggregate_type,
+                                                        db_manager)
 
         if obs_type == 'wind':
             sql_type = 'windGust' if aggregate_type == 'max' else 'windSpeed'
@@ -352,6 +362,51 @@ class ArchiveTable(XType):
         # Form the ValueTuple and return it:
         return weewx.units.ValueTuple(value, u, g)
 
+    @staticmethod
+    def get_wind_aggregate_long(obs_type, timespan, aggregate_type, db_manager):
+        """Calculate the math algorithm for vecdir and vecavg in Python. Suitable for
+        versions of sqlite that do not have math functions."""
+
+        # This should never happen:
+        if aggregate_type not in ['vecdir', 'vecavg']:
+            raise weewx.UnknownAggregation(aggregate_type)
+
+        # Nor this:
+        if obs_type != 'wind':
+            raise weewx.UnknownType(obs_type)
+
+        sql_stmt = "SELECT `interval`, windSpeed, windDir " \
+                   "FROM %(table_name)s " \
+                   "WHERE dateTime > %(start)s AND dateTime <= %(stop)s;" \
+                   % {
+                       'table_name': db_manager.table_name,
+                       'start': timespan.start,
+                       'stop': timespan.stop
+                   }
+        xsum = 0.0
+        ysum = 0.0
+        sumtime = 0.0
+        for row in db_manager.genSql(sql_stmt):
+            if row[1] is not None:
+                sumtime += row[0]
+                if row[2] is not None:
+                    xsum += row[0] * row[1] * math.cos(math.radians(90.0 - row[2]))
+                    ysum += row[0] * row[1] * math.sin(math.radians(90.0 - row[2]))
+
+        if not sumtime:
+            value = None
+        elif aggregate_type == 'vecdir':
+            deg = 90.0 - math.degrees((math.atan2(ysum, xsum)))
+            value = deg if deg >= 0 else deg + 360.0
+        elif aggregate_type == 'vecavg':
+            value = math.sqrt((xsum ** 2 + ysum ** 2) / sumtime ** 2)
+
+        # Look up the unit type and group of this combination of observation type and aggregation:
+        u, g = weewx.units.getStandardUnitType(db_manager.std_unit_system, obs_type,
+                                               aggregate_type)
+
+        # Form the ValueTuple and return it:
+        return weewx.units.ValueTuple(value, u, g)
 
 #
 # ######################## Class DailySummaries ##############################

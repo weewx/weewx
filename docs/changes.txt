@@ -1,6 +1,10 @@
 WeeWX change history
 --------------------
 
+4.9.1 10/25/2022
+Fix problem with `wind` for older versions of sqlite.
+
+
 4.9.0 10/24/2022
 Fix problem that create 'ghost' values for VantageVue stations.
 Fix problem that causes `leafWet3` and `leafWet4` to be emitted in VP2
