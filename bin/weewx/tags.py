@@ -85,7 +85,7 @@ class TimeBinder(object):
     def week(self, data_binding=None, weeks_ago=0):
         week_start = to_int(self.option_dict.get('week_start', 6))
         return TimespanBinder(
-            weeutil.weeutil.archiveWeekSpan(self.report_time, week_start, weeks_ago=weeks_ago),
+            weeutil.weeutil.archiveWeekSpan(self.report_time, startOfWeek=week_start, weeks_ago=weeks_ago),
             self.db_lookup, data_binding=data_binding,
             context='week', formatter=self.formatter, converter=self.converter,
             **self.option_dict)
@@ -158,7 +158,7 @@ class TimespanBinder(object):
        # Iterate by month:
        for monthStats in yearStats.months:
            # Print maximum temperature for each month in the year:
-           print monthStats.outTemp.max
+           print(monthStats.outTemp.max)
     """
 
     def __init__(self, timespan, db_lookup, data_binding=None, context='current',
@@ -258,6 +258,15 @@ class TimespanBinder(object):
 
     # Alias for the start time:
     dateTime = start
+
+    def check_for_data(self, sql_expr):
+        """Check whether the given sql expression returns any data"""
+        db_manager = self.db_lookup(self.data_binding)
+        try:
+            val = weewx.xtypes.get_aggregate(sql_expr, self.timespan, 'not_null', db_manager)
+            return bool(val[0])
+        except weewx.UnknownAggregation:
+            return False
 
     def __call__(self, data_binding=None):
         """The iterators return an instance of TimespanBinder. Allow them to override

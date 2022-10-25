@@ -169,7 +169,9 @@ class RESTThread(threading.Thread):
     
     Offers a few bits of common functionality."""
 
-    def __init__(self, q, protocol_name,
+    def __init__(self,
+                 q,
+                 protocol_name,
                  essentials={},
                  manager_dict=None,
                  post_interval=None,
@@ -185,57 +187,40 @@ class RESTThread(threading.Thread):
                  softwaretype="weewx-%s" % weewx.__version__,
                  skip_upload=False):
         """Initializer for the class RESTThread
-        Required parameters:
 
-          q: An instance of queue.Queue where the records will appear.
+        Args:
 
-          protocol_name: A string holding the name of the protocol.
-          
-        Optional parameters:
-
-          essentials: A dictionary that holds observation types that must
-          not be None for the post to go ahead.
-
-          manager_dict: A manager dictionary, to be used to open up a
-          database manager. Default is None.
-        
-          post_interval: How long to wait between posts.
-          Default is None (post every record).
-          
-          max_backlog: How many records are allowed to accumulate in the queue
-          before the queue is trimmed.
-          Default is six.MAXSIZE (essentially, allow any number).
-          
-          stale: How old a record can be and still considered useful.
-          Default is None (never becomes too old).
-          
-          log_success: If True, log a successful post in the system log.
-          Default is True.
-          
-          log_failure: If True, log an unsuccessful post in the system log.
-          Default is True.
-          
-          timeout: How long to wait for the server to respond before giving up.
-          Default is 10 seconds.
-
-          max_tries: How many times to try the post before giving up.
-          Default is 3
-          
-          retry_wait: How long to wait between retries when failures.
-          Default is 5 seconds.
-          
-          retry_login: How long to wait before retrying a login. Default
-          is 3600 seconds (one hour).
-          
-          retry_ssl: How long to wait before retrying after an SSL error. Default
-          is 3600 seconds (one hour).
-
-          softwaretype: Sent as field "softwaretype in the Ambient post.
-          Default is "weewx-x.y.z where x.y.z is the weewx version.
-
-          skip_upload: Do all record processing, but do not upload the result.
-          Useful for diagnostic purposes when local debugging should not
-          interfere with the downstream data service.  Default is False.
+          q (queue.Queue): An instance of queue.Queue where the records will appear.
+          protocol_name (str): A string holding the name of the protocol.
+          essentials (dict): An optional dictionary that holds observation types that must
+            not be None for the post to go ahead.
+          manager_dict (dict|None): A database manager dictionary, to be used to open up a
+            database manager. Default is None.
+          post_interval (int|None): How long to wait between posts in seconds.
+            Default is None (post every record).
+          max_backlog (int): How many records are allowed to accumulate in the queue
+            before the queue is trimmed. Default is six.MAXSIZE (essentially, allow any number).
+          stale (int|None): How old a record can be and still considered useful.
+            Default is None (never becomes too old).
+          log_success (bool): If True, log a successful post in the system log.
+            Default is True.
+          log_failure (bool): If True, log an unsuccessful post in the system log.
+            Default is True.
+          timeout (int): How long to wait for the server to respond before giving up.
+            Default is 10 seconds.
+          max_tries (int): How many times to try the post before giving up.
+            Default is 3
+          retry_wait (int): How long to wait between retries when failures.
+            Default is 5 seconds.
+          retry_login (int): How long to wait before retrying a login. Default
+            is 3600 seconds (one hour).
+          retry_ssl (int): How long to wait before retrying after an SSL error. Default
+            is 3600 seconds (one hour).
+          softwaretype (str): Sent as field "softwaretype" in the Ambient post.
+            Default is "weewx-x.y.z where x.y.z is the weewx version.
+          skip_upload (bool): Do all record processing, but do not upload the result.
+            Useful for diagnostic purposes when local debugging should not
+            interfere with the downstream data service.  Default is False.
           """
         # Initialize my superclass:
         threading.Thread.__init__(self, name=protocol_name)
@@ -263,14 +248,23 @@ class RESTThread(threading.Thread):
         """Augment record data with additional data from the archive.
         Should return results in the same units as the record and the database.
         
-        This is a general version that works for:
+        This is a general version that for each of types 'hourRain', 'rain24', and 'dayRain',
+        it checks for existence. If not there, then the database is used to add it. This works for:
           - WeatherUnderground
           - PWSweather
           - WOW
           - CWOP
+
         It can be overridden and specialized for additional protocols.
 
-        returns: A dictionary of weather values"""
+        Args:
+            record (dict): An incoming record that will be augmented. It will not be touched.
+            dbmanager (weewx.manager.Manager|None): An instance of a database manager. If set
+                to None, then the record will not be augmented.
+
+        Returns:
+            dict: A dictionary of augmented weather values
+        """
 
         if dbmanager is None:
             # If we don't have a database, we can't do anything
@@ -539,6 +533,8 @@ class RESTThread(threading.Thread):
         """
         # Data might be a unicode string. Encode it first.
         data_bytes = six.ensure_binary(data) if data is not None else None
+        if weewx.debug >= 2:
+            log.debug("%s url: '%s'", self.protocol_name, request.get_full_url())
         _response = urllib.request.urlopen(request, data=data_bytes, timeout=self.timeout)
         return _response
 
@@ -1402,6 +1398,8 @@ class StdStationRegistry(StdRESTful):
         weewx_info       weewx version
         python_info
         platform_info
+        config_path      Where the configuration file is located.
+        entry_path       The path to the top-level module (usually where weewxd is located)
 
     The station_url is the unique key by which a station is identified.
     """
@@ -1434,6 +1432,8 @@ class StdStationRegistry(StdRESTful):
         _registry_dict.setdefault('latitude', self.engine.stn_info.latitude_f)
         _registry_dict.setdefault('longitude', self.engine.stn_info.longitude_f)
         _registry_dict.setdefault('station_model', self.engine.stn_info.hardware)
+        _registry_dict.setdefault('config_path', config_dict.get('config_path', 'Unknown'))
+        _registry_dict.setdefault('entry_path', config_dict.get('entry_path', 'Unknown'))
 
         self.archive_queue = queue.Queue()
         self.archive_thread = StationRegistryThread(self.archive_queue,
@@ -1449,55 +1449,54 @@ class StdStationRegistry(StdRESTful):
 class StationRegistryThread(RESTThread):
     """Concrete threaded class for posting to the weewx station registry."""
 
-    def __init__(self, q, station_url, latitude, longitude,
+    def __init__(self,
+                 q,
+                 station_url,
+                 latitude,
+                 longitude,
                  server_url=StdStationRegistry.archive_url,
                  description="Unknown",
-                 station_type="Unknown", station_model="Unknown",
-                 post_interval=604800, max_backlog=0, stale=None,
-                 log_success=True, log_failure=True,
-                 timeout=60, max_tries=3, retry_wait=5):
+                 station_type="Unknown",
+                 station_model="Unknown",
+                 config_path="Unknown",
+                 entry_path="Unknown",
+                 post_interval=86400,
+                 timeout=60,
+                 **kwargs):
         """Initialize an instance of StationRegistryThread.
         
-        Parameters specific to this class:
+        Args:
 
-          station_url: An URL used to identify the station. This will be
-          used as the unique key in the registry to identify each station.
-          
-          latitude: Latitude of the staion
-          
-          longitude: Longitude of the station
-        
-          server_url: The URL of the registry server. 
-          Default is 'http://weewx.com/register/register.cgi'
-          
-          description: A brief description of the station. 
-          Default is 'Unknown'
-          
-          station_type: The type of station. Generally, this is the name of
-          the driver used by the station. 
-          Default is 'Unknown'
-          
-          station_model: The hardware model, typically the hardware_name
-          property provided by the driver.
-          Default is 'Unknown'.
-
-        Parameters customized for this class:
-          
-          post_interval: How long to wait between posts.
-          Default is 604800 seconds (1 week).
+          q (queue.Queue): An instance of queue.Queue where the records will appear.
+          station_url (str): An URL used to identify the station. This will be
+            used as the unique key in the registry to identify each station.
+          latitude (float): Latitude of the staion
+          longitude (float): Longitude of the station
+          server_url (str): The URL of the registry server.
+            Default is 'http://weewx.com/register/register.cgi'
+          description (str): A brief description of the station.
+            Default is 'Unknown'
+          station_type (str): The type of station. Generally, this is the name of
+            the driver used by the station. Default is 'Unknown'
+          config_path (str): location of the configuration file, used in system
+            registration to determine how weewx might have been installed.
+            Default is 'Unknown'.
+          entry_path (str): location of the top-level module that was executed. Usually this is
+            where 'weewxd' is located. Default is "Unknown".
+          station_model (str): The hardware model, typically the hardware_name property provided
+           by the driver. Default is 'Unknown'.
+          post_interval (int): How long to wait between posts.
+            Default is 86400 seconds (1 day).
+          timeout (int): How long to wait for the server to respond before giving up.
+            Default is 60 seconds.
         """
 
         super(StationRegistryThread, self).__init__(
             q,
             protocol_name='StationRegistry',
             post_interval=post_interval,
-            max_backlog=max_backlog,
-            stale=stale,
-            log_success=log_success,
-            log_failure=log_failure,
             timeout=timeout,
-            max_tries=max_tries,
-            retry_wait=retry_wait)
+            **kwargs)
         self.station_url = station_url
         self.latitude = to_float(latitude)
         self.longitude = to_float(longitude)
@@ -1505,6 +1504,8 @@ class StationRegistryThread(RESTThread):
         self.description = weeutil.weeutil.list_as_string(description)
         self.station_type = station_type
         self.station_model = station_model
+        self.config_path = config_path
+        self.entry_path = entry_path
 
     def get_record(self, dummy_record, dummy_archive):
         _record = {
@@ -1517,6 +1518,8 @@ class StationRegistryThread(RESTThread):
             'python_info': platform.python_version(),
             'platform_info': platform.platform(),
             'weewx_info': weewx.__version__,
+            'config_path': self.config_path,
+            'entry_path' : self.entry_path,
             'usUnits': weewx.US,
         }
         return _record
@@ -1529,6 +1532,8 @@ class StationRegistryThread(RESTThread):
                 'station_model': 'station_model=%s',
                 'python_info': 'python_info=%s',
                 'platform_info': 'platform_info=%s',
+                'config_path': 'config_path=%s',
+                'entry_path': 'entry_path=%s',
                 'weewx_info': 'weewx_info=%s'}
 
     def format_url(self, record):

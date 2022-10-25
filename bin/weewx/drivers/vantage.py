@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-#    Copyright (c) 2009-2021 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2022 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -33,7 +33,7 @@ from weewx.crc16 import crc16
 log = logging.getLogger(__name__)
 
 DRIVER_NAME = 'Vantage'
-DRIVER_VERSION = '3.2.3'
+DRIVER_VERSION = '3.4.0'
 
 
 def loader(config_dict, engine):
@@ -108,15 +108,13 @@ class BaseWrapper(object):
                 if _resp == b'\n\r':
                     log.debug("Rude wake up of console successful")
                     return
-            except weewx.WeeWxIOError:
-                pass
+            except weewx.WeeWxIOError as e:
+                log.debug("Wakeup retry #%d failed: %s", count + 1, e)
+                print("Unable to wake up Vantage console... sleeping")
+                time.sleep(self.wait_before_retry)
+                print("Unable to wake up Vantage console... retrying")
 
-            log.debug("Retry #%d failed", count)
-            print("Unable to wake up console... sleeping")
-            time.sleep(self.wait_before_retry)
-            print("Unable to wake up console... retrying")
-
-        log.error("Unable to wake up console")
+        log.error("Unable to wake up Vantage console")
         raise weewx.WakeupError("Unable to wake up Vantage console")
 
     def send_data(self, data):
@@ -132,7 +130,7 @@ class BaseWrapper(object):
         # Look for the acknowledging ACK character
         _resp = self.read()
         if _resp != _ack: 
-            log.error("No <ACK> received from console")
+            log.error("No <ACK> received from Vantage console")
             raise weewx.WeeWxIOError("No <ACK> received from Vantage console")
     
     def send_data_with_crc16(self, data, max_tries=3):
@@ -155,11 +153,10 @@ class BaseWrapper(object):
                 _resp = self.read()
                 if _resp == _ack:
                     return
-            except weewx.WeeWxIOError:
-                pass
-            log.debug("send_data_with_crc16; try #%d", count + 1)
+            except weewx.WeeWxIOError as e:
+                log.debug("send_data_with_crc16; try #%d: %s", count + 1, e)
 
-        log.error("Unable to pass CRC16 check while sending data")
+        log.error("Unable to pass CRC16 check while sending data to Vantage console")
         raise weewx.CRCError("Unable to pass CRC16 check while sending data to Vantage console")
 
     def send_command(self, command, max_tries=3):
@@ -174,8 +171,8 @@ class BaseWrapper(object):
                 self.write(command)
                 # Takes some time for the Vantage to react and fill up the buffer. Sleep for a bit:
                 time.sleep(self.command_delay)
-                # Can't use function serial.readline() because the VP responds with \n\r, not just \n.
-                # So, instead find how many bytes are waiting and fetch them all
+                # Can't use function serial.readline() because the VP responds with \n\r,
+                # not just \n. So, instead find how many bytes are waiting and fetch them all
                 nc = self.queued_bytes()
                 _buffer = self.read(nc)
                 # Split the buffer on the newlines
@@ -185,15 +182,14 @@ class BaseWrapper(object):
                     # Return the rest:
                     return _buffer_list[1:]
 
-            except weewx.WeeWxIOError:
-                # Caught an error. Keep trying...
-                pass
-            log.debug("send_command; try #%d failed", count + 1)
+            except weewx.WeeWxIOError as e:
+                # Caught an error. Log, then keep trying...
+                log.debug("send_command; try #%d failed: %s", count + 1, e)
         
-        log.error("Max retries exceeded while sending command %s", command)
-        raise weewx.RetriesExceeded("Max retries exceeded while sending command %s" % command)
-    
-        
+        msg = "Max retries exceeded while sending command %s" % command
+        log.error(msg)
+        raise weewx.RetriesExceeded(msg)
+
     def get_data_with_crc16(self, nbytes, prompt=None, max_tries=3):
         """Get a packet of data and do a CRC16 check on it, asking for retransmit if necessary.
         
@@ -489,6 +485,12 @@ class Vantage(weewx.drivers.AbstractDevice):
         [Optional. Default is 2]
 
         loop_request: Requested packet type. 1=LOOP; 2=LOOP2; 3=both.
+
+        loop_batch: How many LOOP packets to get in a single  batch.
+        [Optional. Default is 200]
+
+        max_batch_errors: How many errors to allow in a batch before a restart.
+        [Optional. Default is 3]
         """
 
         log.debug('Driver version is %s', DRIVER_VERSION)
@@ -499,10 +501,12 @@ class Vantage(weewx.drivers.AbstractDevice):
         self.max_tries  = to_int(vp_dict.get('max_tries', 4))
         self.iss_id     = to_int(vp_dict.get('iss_id'))
         self.model_type = to_int(vp_dict.get('model_type', 2))
-        if self.model_type not in list(range(1, 3)):
+        if self.model_type not in (1, 2):
             raise weewx.UnsupportedFeature("Unknown model_type (%d)" % self.model_type)
         self.loop_request = to_int(vp_dict.get('loop_request', 1))
         log.debug("Option loop_request=%d", self.loop_request)
+        self.loop_batch = to_int(vp_dict.get('loop_batch', 200))
+        self.max_batch_errors = to_int(vp_dict.get('max_batch_errors', 3))
 
         self.save_day_rain = None
         self.max_dst_jump = 7200
@@ -532,7 +536,7 @@ class Vantage(weewx.drivers.AbstractDevice):
             # Get LOOP packets in big batches This is necessary because there is
             # an undocumented limit to how many LOOP records you can request
             # on the VP (somewhere around 220).
-            for _loop_packet in self.genDavisLoopPackets(200):
+            for _loop_packet in self.genDavisLoopPackets(self.loop_batch):
                 yield _loop_packet
 
     def genDavisLoopPackets(self, N=1):
@@ -545,29 +549,30 @@ class Vantage(weewx.drivers.AbstractDevice):
         """
 
         log.debug("Requesting %d LOOP packets.", N)
-        
-        self.port.wakeup_console(self.max_tries)
-        
-        if self.loop_request == 1:
-            # If asking for old-fashioned LOOP1 data, send the older command in case the
-            # station does not support the LPS command:
-            self.port.send_data(b"LOOP %d\n" % N)
-        else:
-            # Request N packets of type "loop_request":
-            self.port.send_data(b"LPS %d %d\n" % (self.loop_request, N))
 
-        for loop in range(N):
-            for count in range(self.max_tries):
-                try:
-                    loop_packet = self._get_packet()
-                except weewx.WeeWxIOError as e:
-                    log.error("LOOP try #%d; error: %s", count + 1, e)
+        attempt = 1
+        while attempt <= self.max_batch_errors:
+            try:
+                self.port.wakeup_console(self.max_tries)
+                if self.loop_request == 1:
+                    # If asking for old-fashioned LOOP1 data, send the older command in case the
+                    # station does not support the LPS command:
+                    self.port.send_data(b"LOOP %d\n" % N)
                 else:
+                    # Request N packets of type "loop_request":
+                    self.port.send_data(b"LPS %d %d\n" % (self.loop_request, N))
+
+                for loop in range(N):
+                    loop_packet = self._get_packet()
                     yield loop_packet
-                    break
-            else:
-                log.error("LOOP max tries (%d) exceeded.", self.max_tries)
-                raise weewx.RetriesExceeded("Max tries exceeded while getting LOOP data.")
+
+            except weewx.WeeWxIOError as e:
+                log.error("LOOP batch try #%d; error: %s", attempt, e)
+                attempt += 1
+        else:
+            msg = "LOOP max batch errors (%d) exceeded." % self.max_batch_errors
+            log.error(msg)
+            raise weewx.RetriesExceeded(msg)
 
     def _get_packet(self):
         """Get a single LOOP packet"""
@@ -597,20 +602,20 @@ class Vantage(weewx.drivers.AbstractDevice):
         yields: a sequence of dictionaries containing the data
         """
 
-        count = 0
-        while count < self.max_tries:
+        count = 1
+        while count <= self.max_tries:
             try:            
                 for _record in self.genDavisArchiveRecords(since_ts):
-                    # Successfully retrieved record. Set count back to zero.
-                    count = 0
+                    # Successfully retrieved record. Set count back to one.
+                    count = 1
                     since_ts = _record['dateTime']
                     yield _record
                 # The generator loop exited. We're done.
                 return
             except weewx.WeeWxIOError as e:
-                # Problem. Increment retry count
-                count += 1
+                # Problem. Log, then increment count
                 log.error("DMPAFT try #%d; error: %s", count, e)
+                count += 1
 
         log.error("DMPAFT max tries (%d) exceeded.", self.max_tries)
         raise weewx.RetriesExceeded("Max tries exceeded while getting archive data.")
@@ -807,7 +812,7 @@ class Vantage(weewx.drivers.AbstractDevice):
                 # Caught an error. Keep retrying...
                 continue
         log.error("Max retries exceeded while getting time")
-        raise weewx.RetriesExceeded("While getting console time")
+        raise weewx.RetriesExceeded("Max retries exceeded while getting time")
             
     def setTime(self):
         """Set the clock on the Davis Vantage console"""
@@ -835,7 +840,7 @@ class Vantage(weewx.drivers.AbstractDevice):
                 # Caught an error. Keep retrying...
                 continue
         log.error("Max retries exceeded while setting time")
-        raise weewx.RetriesExceeded("While setting console time")
+        raise weewx.RetriesExceeded("Max retries exceeded while setting time")
     
     def setDST(self, dst='auto'):
         """Turn DST on or off, or set it to auto.
@@ -1161,7 +1166,7 @@ class Vantage(weewx.drivers.AbstractDevice):
                 # Caught an error. Keey trying...
                 continue
         log.error("Max retries exceeded while clearing log")
-        raise weewx.RetriesExceeded("While clearing log")
+        raise weewx.RetriesExceeded("Max retries exceeded while clearing log")
     
     def getRX(self):
         """Returns reception statistics from the console.
@@ -1411,9 +1416,10 @@ class Vantage(weewx.drivers.AbstractDevice):
                 return _value
             except weewx.WeeWxIOError:
                 continue
-        
-        log.error("Max retries exceeded while getting EEPROM data at address 0x%X", offset)
-        raise weewx.RetriesExceeded("While getting EEPROM data value at address 0x%X" % offset)
+
+        msg = "While getting EEPROM data value at address 0x%X" % offset
+        log.error(msg)
+        raise weewx.RetriesExceeded(msg)
         
     @staticmethod
     def _port_factory(vp_dict):
@@ -1480,6 +1486,9 @@ class Vantage(weewx.drivers.AbstractDevice):
         }
         # Now we need to map the raw values to physical units.
         for _type in raw_loop_packet:
+            if _type in extra_sensors and self.hardware_type == 17:
+                # Vantage Vues do not support extra sensors. Skip them.
+                continue
             # Get the mapping function for this type. If there is
             # no such function, supply a lambda function that returns None
             func = _loop_map.get(_type, lambda p, k: None)
@@ -1554,6 +1563,9 @@ class Vantage(weewx.drivers.AbstractDevice):
                                                     raw_archive_record['wind_samples'])
 
         for _type in raw_archive_record:
+            if _type in extra_sensors and self.hardware_type == 17:
+                # VantageVues do not support extra sensors. Skip them.
+                continue
             # Get the mapping function for this type. If there is no such
             # function, supply a lambda function that will just return None
             func = _archive_map.get(_type, lambda p, k: None)
@@ -1672,6 +1684,15 @@ rec_types_B, fmt_B = list(zip(*rec_B_schema))
 rec_A_struct = struct.Struct('<' + ''.join(fmt_A))
 rec_B_struct = struct.Struct('<' + ''.join(fmt_B))
 
+# These are extra sensors, not found on the Vues.
+extra_sensors = {
+    'leafTemp1', 'leafTemp2', 'leafWet1', 'leafWet2',
+    'soilTemp1', 'soilTemp2', 'soilTemp3', 'soilTemp4',
+    'extraHumid1', 'extraHumid2', 'extraTemp1', 'extraTemp2', 'extraTemp3',
+    'soilMoist1', 'soilMoist2', 'soildMoist3', 'soilMoist4'
+}
+
+
 def _rxcheck(model_type, interval, iss_id, number_of_wind_samples):
     """Gives an estimate of the fraction of packets received.
     
@@ -1765,6 +1786,8 @@ def _decode_windSpeed_H(p, k):
 # This dictionary maps a type key to a function. The function should be able to
 # decode a sensor value held in the LOOP packet in the internal, Davis form into US
 # units and return it.
+# NB: 5/28/2022. In a private email with Davis support, they say that leafWet3 and leafWet4 should
+# always be ignored. They are not supported.
 _loop_map = {
     'altimeter'       : lambda p, k: float(p[k]) / 1000.0 if p[k] else None,
     'bar_calibration' : lambda p, k: float(p[k]) / 1000.0 if p[k] else None,
@@ -1810,8 +1833,8 @@ _loop_map = {
     'leafTemp4'       : lambda p, k: float(p[k] - 90) if p[k] != 0xff else None,
     'leafWet1'        : lambda p, k: float(p[k]) if p[k] != 0xff else None,
     'leafWet2'        : lambda p, k: float(p[k]) if p[k] != 0xff else None,
-    'leafWet3'        : lambda p, k: float(p[k]) if p[k] != 0xff else None,
-    'leafWet4'        : lambda p, k: float(p[k]) if p[k] != 0xff else None,
+    'leafWet3'        : lambda p, k: None,  # Vantage supports only 2 leaf wetness sensors
+    'leafWet4'        : lambda p, k: None,
     'monthET'         : lambda p, k: float(p[k]) / 100.0,
     'monthRain'       : _decode_rain,
     'outHumidity'     : lambda p, k: float(p[k]) if p[k] != 0xff else None,

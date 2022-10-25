@@ -100,6 +100,7 @@ def main():
     # Log key bits of information.
     log.info("Initializing weewx version %s", weewx.__version__)
     log.info("Using Python %s", sys.version)
+    log.info("Located at %s", sys.executable)
     log.info("Platform %s", platform.platform())
     log.info("Locale is '%s'", locale.setlocale(locale.LC_ALL))
     log.info("Using configuration file %s", config_path)

@@ -4,7 +4,7 @@ checklist for doing a release:
      1. WEEWX_ROOT points to /home/weewx
      2. debug=0 in weewx.conf
 2. Make sure the version is correct
-     1. weewx.__init__.py
+     1. modify bin/weewx/__init__.py
      2. make version
 3. Make sure all changes have been logged
      1. docs/changes.txt
@@ -17,7 +17,8 @@ checklist for doing a release:
      2. make debian-packages
      3. make redhat-packages
      4. make suse-packages
-5. Sanity check on production machine: unpack the tarball, install, run
+5. Sanity check on production machine
+     1. unpack the tarball, install, run
 6. Tag it
      1. git tag -a v1.3.1 -m "Version 1.3.1 release"
 7. Upload to weewx.com
@@ -30,93 +31,43 @@ checklist for doing a release:
      1. make pull-apt-repo
      2. make update-apt-repo
      3. make push-apt-repo
-     4. ssh weewx.com rsync -arv /var/www/html/aptly-test/ /var/www/html/aptly
 9. Update the redhat repository
      1. make pull-yum-repo
      2. make update-yum-repo
      3. make push-yum-repo
-     4. ssh weewx.com rsync -arv /var/www/html/yum-test/ /var/www/html/yum
 10. Update the suse repository
      1. make pull-suse-repo
      2. make update-suse-repo
      3. make push-suse-repo
-     4. ssh weewx.com rsync -arv /var/www/html/suse-test/ /var/www/html/suse
-11. Announce the release to the weewx user's group.
-
-
-
-release process by command ----------------------------------------------------
-
-# on any host, do a fresh checkout, set the version and update changelogs
-git clone https://github.com/weewx/weewx.git
-vi bin/weewx/__init__.py
-make version
-make deb-changelog
-make redhat-changelog
-make suse-changelog
-vi docs/changes.txt        # as needed
-vi docs/upgrading.htm      # as needed
-git commit -a -m "release x.y.z"
-git push
-
-# build src, upload to development_versions
-rm -rf build dist
-make src-package upload-src
-
-# on debian host, build debian packages, upload to development_versions
-rm -rf build dist
-make debian-packages upload-debian
-
-# on redhat host, build the redhat packages, upload to development_versions
-rm -rf build dist
-make redhat-packages upload-redhat
-
-# on suse host, build the suse packages, upload to development_versions
-rm -rf build dist
-make suse-packages upload-suse
-
-# tag the release
-git tag -a vX.Y.Z -m "tag release X.Y.Z"
-
-# upload the docs
-git clone https://github.com/weewx/website.git
-make upload-docs
-
-# move the new files into position
-make release
-
-# update the apt repository
-make pull-apt-repo
-make update-apt-repo (requires local installation of aptly)
-make push-apt-repo
-
-# update the yum repository
-make pull-yum-repo
-make update-yum-repo (requires local installation of createrepo)
-make push-yum-repo
-
-# update the suse repository
-make pull-suse-repo
-make update-suse-repo (requires local installation of createrepo)
-make push-suse-repo
+11. Reshuffle files on the server
+     1. make release
+     2. make release-apt-repo
+     3. make release-yum-repo
+     4. make release-suse-repo
+12. Announce the release to the weewx user's group.
 
 
 pre-requisites ----------------------------------------------------------------
 
-to build debian package install the following (use 'apt-get install'):
+Signing packages requires gpg and local copy of authorized private+public keys.
+The debian repo management requires aptly.
+The redhat repo management requires createrepo.
+The suse repo management requires createrepo.
+
+To build debian package install the following (use 'apt-get install'):
   git
   rsync
   gpg
   debhelper
   python3-distutils
 
-to build redhat package install the following (use 'yum install'):
+To build redhat package install the following (use 'yum install'):
   git
   rsync
   rpm-build
   rpm-sign
 
-to build suse package install the following (use 'zypper install'):
+To build suse package install the following (use 'zypper install'):
   git
   rsync
   rpm-build
@@ -149,6 +100,16 @@ how to build redhat packages:
   emacs pkg/changelog.suse     # add any package-specific changes, if any
   git commit -m "update suse changelog" pkg/changelog.suse
   make suse-packages
+
+to build redhat packages with custom rpm revision:
+  make redhat-changelog RPMREVISION=2
+  make redhat-packages RPMREVISION=2
+  make pull-yum-repo
+  make update-yum-repo RPMREVISION=2
+  make push-yum-repo
+  ssh weewx.com rsync -arv /var/www/html/yum-test/ /var/www/html/yum
+suse also uses RPMREVISION, but debian uses DEBREVISION.  this is useful when
+there is a change to asset(s) in the packaging, but not part of weewx itself.
 
 to display debconf variables:
   sudo debconf-show weewx
@@ -304,9 +265,9 @@ the config and templates.  ended up using dpkg-buildpackage with some manual
 
 both debian and redhat deprecate the use of '/usr/bin/env python' as the
 shebang - they want a very tight binding to the operating system python as the
-shebang.  in fact, since late 2019 rehat build tools see any shebang other than
-a tight coupling to the operating system's python as an error and refuse to
-accept it.  however, the bsd platforms prefer this as the shebang, and the
+shebang.  in fact, since late 2019 redhat build tools see any shebang other
+than a tight coupling to the operating system's python as an error and refuse
+to accept it.  however, the bsd platforms prefer this as the shebang, and the
 other approach fails on bsd.  macos uses something else.
 
 weewx supports python 2.7 and any python 3.5+ so it should not be tightly

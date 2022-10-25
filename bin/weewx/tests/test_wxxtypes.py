@@ -322,12 +322,12 @@ class TestRainRater(unittest.TestCase):
         record_metric = weewx.units.to_METRICWX(record)
         # Add it to the RainRater object
         rain_rater.add_loop_packet(record_metric)
-        # The rest should be as before:
+        # The results should be in metric.
         # Get the rainRate out of it
         rate = rain_rater.get_scalar('rainRate', record, self.db_manager)
         # Check its values
-        self.assertAlmostEqual(rate[0], 13.80, 2)
-        self.assertEqual(rate[1:], ('inch_per_hour', 'group_rainrate'))
+        self.assertAlmostEqual(rate[0], 350.52, 2)
+        self.assertEqual(rate[1:], ('mm_per_hour', 'group_rainrate'))
 
     def test_trim(self):
         """"Test trimming old events"""
@@ -409,9 +409,9 @@ class TestET(unittest.TestCase):
             self.db_manager.addRecord(record)
 
     def test_ET(self):
-        wx_xtypes = weewx.wxxtypes.WXXTypes(altitude_vt,
-                                            latitude_f=latitude,
-                                            longitude_f=longitude)
+        wx_xtypes = weewx.wxxtypes.ETXType(altitude_vt,
+                                           latitude_f=latitude,
+                                           longitude_f=longitude)
         ts = self.db_manager.lastGoodStamp()
         record = self.db_manager.getRecord(ts)
         et_vt = wx_xtypes.get_scalar('ET', record, self.db_manager)

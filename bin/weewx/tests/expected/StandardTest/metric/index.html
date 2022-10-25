@@ -211,7 +211,7 @@
     </tr>
     <tr>
         <td>Start of hour (unix epoch time):</td>
-        <td>1283533200.0</td>
+        <td>1283533200</td>
     </tr>
     <tr>
       <td>Max Temperature</td>
@@ -231,6 +231,106 @@
     </tr>
   </table>
   
+  <h1>Wind related tags</h1>
+    <h2>$current</h2>
+      <table>
+        <tr>
+          <td>$current.windSpeed</td>
+          <td>29 kph</td>
+        </tr>
+          <td>$current.windDir</td>
+          <td>128&#176;</td>
+        </tr>
+        <tr>
+          <td>$current.windGust</td>
+          <td>35 kph</td>
+        </tr>
+        <tr>
+          <td>$current.windGustDir</td>
+          <td>128&#176;</td>
+        </tr>
+      </table>
+
+    <h2>$hour</h2>
+      <table>
+        <tr>
+          <td>Hour start, stop</td>
+          <td>1283533200<br/>1283536800</td>
+        </tr>
+        <tr>
+          <td>$hour.wind.vecdir</td>
+          <td>127&#176;</td>
+        </tr>
+        <tr>
+          <td>$hour.wind.vecavg</td>
+          <td>29 kph</td>
+        </tr>
+        <tr>
+          <td>$hour.wind.max</td>
+          <td>35 kph</td>
+        </tr>
+        <tr>
+          <td>$hour.wind.gustdir</td>
+          <td>126&#176;</td>
+        </tr>
+        <tr>
+          <td>$hour.wind.maxtime</td>
+          <td>10:30</td>
+        </tr>
+      </table>
+
+      <h2>$month</h2>
+        <table>
+          <tr>
+            <td>Month start, stop</td>
+            <td>1283324400<br/>1285916400</td>
+          </tr>
+          <tr>
+            <td>$month.windSpeed.avg</td>
+            <td>18 kph</td>
+          </tr>
+          <tr>
+            <td>$month.wind.avg</td>
+            <td>18 kph</td>
+          </tr>
+          <tr>
+            <td>$month.wind.vecavg</td>
+            <td>13 kph</td>
+          </tr>
+          <tr>
+            <td>$month.wind.vecdir</td>
+            <td>61&#176;</td>
+          </tr>
+          <tr>
+            <td>$month.windGust.max</td>
+            <td>39 kph</td>
+          </tr>
+          <tr>
+            <td>$month.wind.max</td>
+            <td>39 kph</td>
+          </tr>
+          <tr>
+            <td>$month.wind.gustdir</td>
+            <td>90&#176;</td>
+          </tr>
+          <tr>
+            <td>$month.windGust.maxtime</td>
+            <td>03-Sep-2010 01:00</td>
+          </tr>
+          <tr>
+            <td>$month.wind.maxtime</td>
+            <td>03-Sep-2010 01:00</td>
+          </tr>
+          <tr>
+            <td>$month.windSpeed.max</td>
+            <td>32 kph</td>
+          </tr>
+          <tr>
+            <td>$month.windDir.avg</td>
+            <td>168&#176;</td>
+          </tr>
+    </table>
+
   <h1>Iterate over three hours:</h1>
   <table>
     <tr>

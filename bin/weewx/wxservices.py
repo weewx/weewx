@@ -12,8 +12,9 @@ from __future__ import absolute_import
 
 import logging
 
-import weewx.engine
 import weeutil.weeutil
+import weewx.engine
+import weewx.units
 
 log = logging.getLogger(__name__)
 
@@ -134,7 +135,7 @@ class StdWXCalculate(weewx.engine.StdService):
                 # We need to do a calculation for type 'obs_type'. This may raise an exception,
                 # so be prepared to catch it.
                 try:
-                    new_value = weewx.xtypes.get_scalar(obs_type, data_dict, self.db_manager)
+                    val = weewx.xtypes.get_scalar(obs_type, data_dict, self.db_manager)
                 except weewx.CannotCalculate:
                     # XTypes is aware of the type, but can't calculate it, probably because of
                     # missing data. Set the type to None.
@@ -147,7 +148,9 @@ class StdWXCalculate(weewx.engine.StdService):
                 except weewx.UnknownAggregation as e:
                     log.debug("Unknown aggregation '%s'" % e)
                 else:
-                    # If there was no exception, then all is good.
-                    # Add the results to the dictionary
+                    # If there was no exception, then all is good. Convert to the same unit
+                    # as the record...
+                    new_value = weewx.units.convertStd(val, data_dict['usUnits'])
+                    # ... then add the results to the dictionary
                     data_dict[obs_type] = new_value[0]
 

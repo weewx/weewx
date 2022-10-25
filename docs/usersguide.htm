@@ -47,7 +47,7 @@
         <div class="logoref">
             <a href='https://weewx.com'> <img src='images/logo-weewx.png' class='logo' style="float:right"
                                              alt="weewx logo"/> </a><br/> <span class='version'>
-Version: 4.7
+Version: 4.9
     </span>
         </div>
         <div class="title">User's Guide to WeeWX</div>
@@ -118,9 +118,11 @@ Version: 4.7
 
         <h2>Time</h2>
 
-        <p> You should run a <a href="https://www.ntp.org/">NTP</a> daemon on your server to ensure that it is
-            synchronized with the correct time. Doing so will greatly reduce errors, especially if you send data to
-            services such as the Weather Underground.
+        <p>
+            You should run some sort of time synchronization daemon to ensure that your computer has the correct time.
+            Doing so will greatly reduce errors, especially if you send data to services such as the Weather
+            Underground. Systemd systems can use <a href="https://wiki.archlinux.org/title/systemd-timesyncd">systemd-timesyncd</a>,
+            other systems can use <a href="https://www.ntp.org/">NTP</a>.
         </p>
 
         <p>The time on some stations is automatically synchronized with the WeeWX server nominally every four hours. The
@@ -663,17 +665,13 @@ Version: 4.7
         <pre class="tty cmd">sudo /etc/init.d/weewx start
 sudo /etc/init.d/weewx stop
 sudo /etc/init.d/weewx restart</pre>
-        <p>By default, the scripts are designed to have WeeWX run at run levels 2, 3, 4 and 5. Incidentally, a nice tool
+        <p>
+            By default, the scripts are designed to have WeeWX run at run levels 2, 3, 4 and 5. Incidentally, a nice tool
             for setting run levels with Debian (Ubuntu, Mint) systems is <a href="http://sysv-rc-conf.sourceforge.net/">sysv-rc-conf</a>.
             It uses a curses interface to allow you to change easily which run level any of your daemons runs at. There
             is a similar tool on SuSE. From the start menu run the YAST Control Center, then look for Systems Services
             (Runlevel). Pick &quot;Expert&quot; mode to see the run levels.
         </p>
-
-        <p>You can also tell WeeWX to reread its configuration file without stopping by using the &#39;reload&#39;
-            option:
-        </p>
-        <pre class="tty cmd">sudo /etc/init.d/weewx reload </pre>
 
 
         <h1 id="monitoring">Monitoring WeeWX</h1>
@@ -2308,8 +2306,22 @@ longitude = -77.0366</pre>
         <p>WeeWX will try up to this many times to FTP a file up to your server before giving up. Default is 3.</p>
 
         <p class="config_option" id="ftp_encoding">ftp_encoding</p>
-        <p>The vast majority of FTP servers send their responses back using UTF-8 encoding. However, there are a few
-            oddballs that respond using Latin-1. This option allows you to specify alternative encodings.</p>
+        <p>
+            The vast majority of FTP servers send their responses back using UTF-8 encoding. However, there are a few
+            oddballs that respond using Latin-1. This option allows you to specify an alternative encoding.
+        </p>
+
+        <p class="config_option" id="ciphers">ciphers</p>
+        <p>
+            Some clients require a higher cipher level than the FTP server is capable of delivering. The symptom
+            is an error something like
+            <span class="code">ssl.SSLError: [SSL: DH_KEY_TOO_SMALL] dh key too small (_ssl.c:997)</span>. This option
+            allows you to specify a custom level. For example, in this case, you might want to specify:
+        </p>
+        <pre class="tty">ciphers='DEFAULT@SECLEVEL=1'</pre>
+        <p>
+            However, if possible, you are always better off upgrading the FTP server.
+        </p>
 
         <h3 class="config_section" id="config_RSYNC">[[RSYNC]]</h3>
 
@@ -2701,7 +2713,10 @@ longitude = -77.0366</pre>
 
         <h4 class="config_section">[[[ET]]]</h4>
         <p>
-            This sub-section contains several options used when calculating ET (evapotranspiration)
+            This subsection contains several options used when calculating ET (evapotranspiration).
+            See the document <a href="https://edis.ifas.ufl.edu/pdf/AE/AE45900.pdf"><em>Step by Step Calculation of the
+            Penman-Monteith Evapotranspiration"</em></a> for the definitions of <span class="code">cn</span>
+            and <span class="code">cd</span>.
         </p>
 
         <p class="config_option">et_period</p>
@@ -2711,6 +2726,21 @@ longitude = -77.0366</pre>
         <p>
             The option <span class="code">wind_height</span> is used to normalize where wind speed is measured for
             calculating evapotranspiration. It should be set to the height of your anemometer in meters. Default is 2.0.
+        </p>
+
+        <p class="config_option">albedo</p>
+        <p>
+            The albedo to be used in the calculations. Default is 0.23.
+        </p>
+
+        <p class="config_option">cn</p>
+        <p>
+            The numerator constant for the reference crop type and time step. Default is 37.
+        </p>
+
+        <p class="config_option">cd</p>
+        <p>
+            The denominator constant for the reference crop type and time step. Default is 0.34.
         </p>
 
         <h4 class="config_section">[[[heatindex]]]</h4>

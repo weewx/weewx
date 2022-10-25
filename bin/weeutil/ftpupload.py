@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2020 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2022 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -42,7 +42,8 @@ class FtpUpload(object):
                  debug=0,
                  secure_data=True,
                  reuse_ssl=False,
-                 encoding='utf-8'):
+                 encoding='utf-8',
+                 ciphers=None):
         """Initialize an instance of FtpUpload.
         
         After initializing, call method run() to perform the upload.
@@ -73,6 +74,8 @@ class FtpUpload(object):
 
         encoding: The vast majority of FTP servers chat using UTF-8. However, there are a few
         oddballs that use Latin-1.
+
+        ciphers: Explicitly set the cipher(s) to be used by the ssl sockets.
         """
         self.server = server
         self.user = user
@@ -87,8 +90,9 @@ class FtpUpload(object):
         self.secure_data = secure_data
         self.reuse_ssl = reuse_ssl
         self.encoding = encoding
+        self.ciphers = ciphers
 
-        if self.reuse_ssl and sys.version < '3.6':
+        if self.reuse_ssl and (sys.version_info.major < 3 or sys.version_info.minor < 6):
             raise ValueError("Reusing an SSL connection requires Python version 3.6 or greater")
 
     def run(self):
@@ -145,6 +149,12 @@ class FtpUpload(object):
                         # without encoding
                         ftp_server = ftplib.FTP_TLS()
                         log.debug("FTP encoding not supported, ignoring.")
+
+                # If the user has specified one, set a customized cipher:
+                if self.ciphers:
+                    ftp_server.context.set_ciphers(self.ciphers)
+                    log.debug("Set ciphers to %s", self.ciphers)
+
             else:
                 log.debug("Attempting connection to %s", self.server)
                 # Python 3.8 and earlier do not support the encoding parameter. 

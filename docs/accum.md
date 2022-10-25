@@ -2,27 +2,31 @@
 
 ## Abstract
 
-This Wiki describes the accumulators, and how they can be customized. 
+This Wiki documents the accumulators. Accumulators ingest an irregular stream of LOOP packets, then, when requested, allows
+regular archive records to be extracted from them. Most of the time, they
+"do the right thing," but there may be occasions where customization is called for. 
 
-The accumulators accumulate an irregular stream of LOOP packets, then, when requested, allows
-regular archive records to be extracted from them.
+An accumulator is instantiated for each observation type. Which type is instantiated is set
+by option `accumulator` (described later). There are three choices
 
-Presently, there are three different kinds of accumulators:
 - Scalars: accumulate scalar quantities, such as temperature;
 - Vectors: accumulate vector quantities, such as wind; and
 - FirstLast: primarily used to accumulate strings.
 
-An accumulator is instantiated for each observation type. Which type is instantiated is set
-by option `accumulator`, defined below.
+The vast majority of the time, you will be working with scalars and, indeed, this is the
+default type of accumulator.
 
-There are three different functions an accumulator performs:
+Whatever their type, all accumulators are expected to perform three different functions:
 - How to add new values of a type (the 'adder');
 - How to merge a type with another accumulator (the 'merger'); and
 - How to extract a type out of its accumulator, and into a record (the 'extractor').
 
+Again, there are sensible defaults for these three roles, but this can be customized.
+
 ## Life cycle of an accumulator
-At the start of an archive interval, a new collection of accumulators is created (class
-`weewx.accum.Accum`). Initially, it is empty.
+
+Class `weewx.accum.Accum` is a *collection* of accumulators. At the start of an archive interval, a new instance is
+created. Initially, it is empty.
 
 As LOOP packets come in, each observation type is checked to see if it's already in the instance of
 `Accum`. If not, a new accumulator of the proper type is created for it. The observation type is
@@ -31,7 +35,10 @@ then added to its accumulator using the appropriate "adder".
 At the end of the archive period, it is time to convert the accumulators into an archive record.
 This is done for each type, using the appropriate "extractor".
 
-Finally, the collection of accumulators is dicarded, and the cycle begins again.
+This archive record must then be merged into the already existing daily summaries. This is done
+for each type, using the appropriate "merger."
+
+Finally, the collection of accumulators is discarded, and the cycle begins again.
  
 ## Configuration
 For each observation type, a type of accumulator, an adder, a merger, and an extractor can be
@@ -78,7 +85,7 @@ database's daily summaries. This means merging the finished accumulator with the
 in the database. It is the job of the merger to manage this merge. There are two kinds of mergers:
 
 - `minmax`. This is what you'll want most of the time. It is the default.
-- `avg`.
+- `avg`. This merger is used if the user has set option [`loop_hilo`](http://www.weewx.com/docs/usersguide.htm#StdArchive) to `False`.
 
 ### Extractor
 
@@ -86,14 +93,14 @@ At the end of an archive interval, it is time to extract an archive record out o
 The job of the extractor is to do this for each type. There are eight different kinds of
 extractors:
 
-- `avg`. Extract the average value of this type. This is the default.
-- `count`. Extract the total number of non-Null LOOP packets seen of this type.
-- `last`. Extract the last value seen of this type.
-- `max`. Extract the maximum value seen of this type.
-- `min`. Extract the minimum value seen of this type.
-- `noop`. Extract no value for this type.
-- `sum`. Extract the total seen for this type.
-- `wind`. Extract `windSpeed` as the average wind magnitude, `windDir` as the vector average
+- `avg`: Extract the average value of this type. This is the default.
+- `count`: Extract the total number of non-Null LOOP packets seen of this type.
+- `last`: Extract the last value seen of this type. Use this type for totals of extensive variables, such as `dayRain`.
+- `max`: Extract the maximum value seen of this type.
+- `min`: Extract the minimum value seen of this type.
+- `noop`: Extract no value for this type.
+- `sum`: Extract the total seen for this type. Use this type for `rain` or other  variables that are measured increments.
+- `wind`: Extract `windSpeed` as the average wind magnitude, `windDir` as the vector average
 direction, `windGust` as the maximum wind seen, and `windGustDir` as its direction.
 
 ## Defaults
@@ -155,3 +162,14 @@ The accumulators come with a set of defaults that covers most situations.
     [[lightning_strike_count]]
         extractor = sum
 ```  
+
+These can be overridden by adding a section `[Accumulator]` to the configuration file `weewx.conf`.
+Here's an example. By default, the average value of `outTemp` of all the LOOP packets in an archive
+interval is used for the value of `outTemp` in an archive record. Suppose you want the very last
+value instead. This is what you would put in `weewx.conf`:
+
+```ini
+[Accumulator]
+    [[outTemp]]
+        extractor = last
+``` 

@@ -775,32 +775,35 @@ def longwave_radiation(Tmin_C, Tmax_C, ea, Rs, Rso, rh):
 
 def evapotranspiration_Metric(Tmin_C, Tmax_C, rh_min, rh_max, sr_mean_wpm2,
                               ws_mps, wind_height_m, latitude_deg, longitude_deg, altitude_m,
-                              timestamp):
-    """Calculate the rate of evapotranspiration during a one hour time period.
+                              timestamp, albedo=0.23, cn=37, cd=0.34):
+    """Calculate the rate of evapotranspiration during a one-hour time period.
     Ref: http://www.fao.org/docrep/x0490e/x0490e00.htm.
-    (The document http://edis.ifas.ufl.edu/ae459 is also helpful)
+
+    The document "Step by Step Calculation of the Penman-Monteith Evapotranspiration"
+    https://edis.ifas.ufl.edu/pdf/AE/AE45900.pdf is also helpful. See it for values
+    of cn and cd.
+
+    Args:
  
-    Tmin_C: Minimum temperature during the hour in degrees Celsius
- 
-    Tmax_C: Maximum temperature during the hour in degrees Celsius
- 
-    rh_min: Minimum relative humidity during the hour in percent.
-     
-    rh_max: Maximum relative humidity during the hour in percent.
- 
-    sr_mean_wpm2: Mean solar radiation during the hour in watts per sq meter
- 
-    ws_mps: Average wind speed during the hour in meters per second
- 
-    wind_height_m: Height in meters at which windspeed is measured
- 
-    latitude_deg, longitude_deg: Latitude, longitude of the station in degrees
- 
-    altitude_m: Altitude of the station in meters.
-     
-    timestamp: The time, as unix epoch time, at the end of the hour.
-     
-    Returns: Evapotranspiration in mm/hr
+        Tmin_C (float): Minimum temperature during the hour in degrees Celsius.
+        Tmax_C (float): Maximum temperature during the hour in degrees Celsius.
+        rh_min (float): Minimum relative humidity during the hour in percent.
+        rh_max (float): Maximum relative humidity during the hour in percent.
+        sr_mean_wpm2 (float): Mean solar radiation during the hour in watts per sq meter.
+        ws_mps (float): Average wind speed during the hour in meters per second.
+        wind_height_m (float): Height in meters at which windspeed is measured.
+        latitude_deg (float): Latitude of the station in degrees.
+        longitude_deg (float): Longitude of the station in degrees.
+        altitude_m (float): Altitude of the station in meters.
+        timestamp (float): The time, as unix epoch time, at the end of the hour.
+        albedo (float): Albedo. Default is 0.23 (grass reference crop).
+        cn (float): The numerator constant for the reference crop type and time step.
+            Default is 37 (short reference crop).
+        cd (float): The denominator constant for the reference crop type and time step.
+            Default is 0.34 (daytime short reference crop).
+
+    Returns:
+        float: Evapotranspiration in mm/hr
     
     Example (Example 19 in the reference document):
     >>> sr_mean_wpm2 = 680.56     # == 2.45 MJ/m^2/hr
@@ -830,12 +833,6 @@ def evapotranspiration_Metric(Tmin_C, Tmax_C, rh_min, rh_max, sr_mean_wpm2,
         wind_height_m = 2.0
     if altitude_m is None:
         altitude_m = 0.0
-
-    # Numerator and denominator terms for the reference crop type
-    cn = 37
-    cd = 0.34
-    # Albedo. for grass reference crop
-    albedo = 0.23
 
     # figure out the day of year [1-366] from the timestamp
     doy = time.localtime(timestamp)[7] - 1
@@ -903,31 +900,34 @@ def evapotranspiration_Metric(Tmin_C, Tmax_C, rh_min, rh_max, sr_mean_wpm2,
 
 def evapotranspiration_US(Tmin_F, Tmax_F, rh_min, rh_max,
                           sr_mean_wpm2, ws_mph, wind_height_ft,
-                          latitude_deg, longitude_deg, altitude_ft, timestamp):
-    """Calculate the rate of evapotranspiration during a one hour time period,
+                          latitude_deg, longitude_deg, altitude_ft, timestamp,
+                          albedo=0.23, cn=37, cd=0.34):
+    """Calculate the rate of evapotranspiration during a one-hour time period,
     returning result in inches/hr.
+
+    See function evapotranspiration_Metric() for references.
+
+    Args:
  
-    Tmin_F: Minimum temperature during the hour in degrees Fahrenheit
- 
-    Tmax_F: Maximum temperature during the hour in degrees Fahrenheit
- 
-    rh_min: Minimum relative humidity during the hour in percent.
-     
-    rh_max: Maximum relative humidity during the hour in percent.
- 
-    sr_mean_wpm2: Mean solar radiation during the hour in watts per sq meter
- 
-    ws_mph: Average wind speed during the hour in miles per hour
- 
-    wind_height_ft: Height in feet at which windspeed is measured
- 
-    latitude_deg, longitude_deg: Latitude, longitude of the station in degrees
- 
-    altitude_ft: Altitude of the station in feet.
-     
-    timestamp: The time, as unix epoch time, at the end of the hour.
-     
-    Returns: Evapotranspiration in inches/hr
+        Tmin_F (float): Minimum temperature during the hour in degrees Fahrenheit.
+        Tmax_F (float): Maximum temperature during the hour in degrees Fahrenheit.
+        rh_min (float): Minimum relative humidity during the hour in percent.
+        rh_max (float): Maximum relative humidity during the hour in percent.
+        sr_mean_wpm2 (float): Mean solar radiation during the hour in watts per sq meter.
+        ws_mph (float): Average wind speed during the hour in miles per hour.
+        wind_height_ft (float): Height in feet at which windspeed is measured.
+        latitude_deg (float): Latitude of the station in degrees.
+        longitude_deg (float): Longitude of the station in degrees.
+        altitude_ft (float): Altitude of the station in feet.
+        timestamp (float): The time, as unix epoch time, at the end of the hour.
+        albedo (float): Albedo. Default is 0.23 (grass reference crop).
+        cn (float): The numerator constant for the reference crop type and time step.
+            Default is 37 (short reference crop).
+        cd (float): The denominator constant for the reference crop type and time step.
+            Default is 0.34 (daytime short reference crop).
+
+    Returns:
+        float: Evapotranspiration in inches/hr
     
     Example (using data from HR station):
     >>> sr_mean_wpm2 = 860
@@ -951,7 +951,8 @@ def evapotranspiration_US(Tmin_F, Tmax_F, rh_min, rh_max,
                                     rh_min=rh_min, rh_max=rh_max, sr_mean_wpm2=sr_mean_wpm2,
                                     ws_mps=ws_mps, wind_height_m=wind_height_m,
                                     latitude_deg=latitude_deg, longitude_deg=longitude_deg,
-                                    altitude_m=altitude_m, timestamp=timestamp)
+                                    altitude_m=altitude_m, timestamp=timestamp,
+                                    albedo=albedo, cn=cn, cd=cd)
     return evt / MM_PER_INCH if evt is not None else None
 
 

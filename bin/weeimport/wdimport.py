@@ -222,9 +222,6 @@ class WDSource(weeimport.Source):
         # comma
         self.csv_delimiter = str(wd_config_dict.get('csv_delimiter', ','))
 
-        # decimal separator used in monthly log files, default to decimal point
-        self.decimal = wd_config_dict.get('decimal', '.')
-
         # ignore extreme > 255.0 values for temperature and humidity fields
         self.ignore_extr_th = weeutil.weeutil.tobool(wd_config_dict.get('ignore_extreme_temp_hum',
                                                                         True))
