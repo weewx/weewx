@@ -42,6 +42,8 @@ log = logging.getLogger(__name__)
 
 DEFAULTS_INI = """
 [Accumulator]
+    [[consBatteryVoltage]]
+        extractor = last
     [[dateTime]]
         adder = noop
     [[dayET]]
