@@ -64,6 +64,8 @@ DEFAULTS_INI = """
         extractor = last
     [[totalRain]]
         extractor = last
+    [[txBatteryStatus]]
+        extractor = last
     [[usUnits]]
         adder = check_units
     [[wind]]

@@ -1945,14 +1945,11 @@ class VantageService(Vantage, weewx.engine.StdService):
         self.bind(weewx.STARTUP, self.startup)        
         self.bind(weewx.NEW_LOOP_PACKET,    self.new_loop_packet)
         self.bind(weewx.END_ARCHIVE_PERIOD, self.end_archive_period)
-        self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
 
     def startup(self, event):  # @UnusedVariable
         self.max_loop_gust = 0.0
         self.max_loop_gustdir = None
-        self.loop_data = {'txBatteryStatus': None,
-                          'consBatteryVoltage': None}
-        
+
     def closePort(self):
         # Now close my superclass's port:
         Vantage.closePort(self)
@@ -1970,20 +1967,11 @@ class VantageService(Vantage, weewx.engine.StdService):
         event.packet['windGust'] = self.max_loop_gust
         event.packet['windGustDir'] = self.max_loop_gustdir
         
-        # Save the battery statuses:
-        for k in self.loop_data:
-            self.loop_data[k] = event.packet.get(k)
-        
-    def end_archive_period(self, event):  # @UnusedVariable
+    def end_archive_period(self, event):
         """Zero out the max gust seen since the start of the record"""
         self.max_loop_gust = 0.0
         self.max_loop_gustdir = None
         
-    def new_archive_record(self, event):
-        """Add the battery status to the archive record."""
-        # Add the last battery status:
-        event.record.update(self.loop_data)
-
 
 #===============================================================================
 #                      Class VantageConfigurator

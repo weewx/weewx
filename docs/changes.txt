@@ -1,6 +1,12 @@
 WeeWX change history
 --------------------
 
+X.Y.Z MM/DD/YYYY
+Don't inject txBatteryStatus and consBatteryVoltage into records in
+the Vantage driver. Let the accumulators do it.
+Fixes issue #802.
+
+
 4.9.1 10/25/2022
 Fix problem with `wind` for older versions of sqlite.
 
