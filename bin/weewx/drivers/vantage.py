@@ -33,7 +33,7 @@ from weewx.crc16 import crc16
 log = logging.getLogger(__name__)
 
 DRIVER_NAME = 'Vantage'
-DRIVER_VERSION = '3.5.0'
+DRIVER_VERSION = '3.5.1'
 
 
 def loader(config_dict, engine):
@@ -92,7 +92,9 @@ class BaseWrapper(object):
 
         for count in range(1, max_tries + 1):
             try:
-                # Wake up console and cancel pending LOOP data...
+                # Flush the input buffers to get rid of any pending packets...
+                self.flush_input()
+                # ... then wake up console and cancel pending LOOP data...
                 self.write(b'\n')
                 # ... wait a bit...
                 time.sleep(self.command_delay)
