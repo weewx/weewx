@@ -92,11 +92,14 @@ class BaseWrapper(object):
 
         for count in range(1, max_tries + 1):
             try:
-                # Wake up console and cancel pending LOOP data.
+                # Wake up console and cancel pending LOOP data...
                 self.write(b'\n')
+                # ... wait a bit...
+                time.sleep(self.command_delay)
+                # ... then read the response.
                 _resp = self.read(2)
                 if _resp == b'\n\r':  # LF, CR = 0x0a, 0x0d
-                    # We're done; the console accepted our cancel LOOP command; nothing to flush
+                    # We're done; the console accepted our cancel LOOP command.
                     log.debug("Successfully woke up Vantage console")
                     return
                 else:
