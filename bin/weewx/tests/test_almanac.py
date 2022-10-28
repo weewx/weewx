@@ -96,9 +96,9 @@ class AlmanacTest(unittest.TestCase):
             self.almanac.venus.cmlI
 
     def test_star(self):
-        self.assertEqual(str(self.almanac.rigel.rise), "12:32:33")
-        self.assertEqual(str(self.almanac.rigel.transit), "18:00:38")
-        self.assertEqual(str(self.almanac.rigel.set), "23:28:43")
+        self.assertEqual(str(self.almanac.castor.rise), "11:36:37")
+        self.assertEqual(str(self.almanac.castor.transit), "20:20:28")
+        self.assertEqual(str(self.almanac.castor.set), "05:08:16")
 
     def test_sidereal(self):
         self.assertAlmostEqual(self.almanac.sidereal_time, 348.3400, 4)

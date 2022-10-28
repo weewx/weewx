@@ -1,16 +1,20 @@
-# systemd configuration for weewx
-
+# systemd unit configuration file for WeeWX
+#
+# For information about running WeeWX under systemd,
+# be sure to read https://github.com/weewx/weewx/wiki/systemd
+#
 [Unit]
-Description=weewx weather system
+Description=WeeWX weather system
+Documentation=https://weewx.com/docs
+
 Requires=time-sync.target
 After=time-sync.target
 RequiresMountsFor=/home
 
 [Service]
-ExecStart=/home/weewx/bin/weewxd --daemon --pidfile=/var/run/weewx.pid /home/weewx/weewx.conf
-ExecReload=/bin/kill -HUP $MAINPID
-Type=forking
-PIDFile=/var/run/weewx.pid
+ExecStart=/home/weewx/bin/weewxd /home/weewx/weewx.conf
+StandardOutput=null
+# To run as a non-root user, uncomment and set username and group here:
 #User=weewx
 #Group=weewx
 

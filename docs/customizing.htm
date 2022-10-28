@@ -44,7 +44,7 @@
         <div class="logoref">
             <a href='https://weewx.com'> <img src='images/logo-weewx.png' class='logo' style="float:right"
                                              alt="weewx logo"/> </a><br/> <span class='version'>
-Version: 4.7
+Version: 4.9
     </span>
         </div>
         <div class="title">WeeWX Customization Guide</div>
@@ -545,7 +545,7 @@ Version: 4.7
             class="code">.inc</span> extension. These templates are included in other templates.
         </p>
 
-        <h2>The database</h2>
+        <h2 id="The_database">The database</h2>
 
         <p>
             WeeWX uses a single database to store and retrieve the records it needs. It can be implemented by using
@@ -642,9 +642,11 @@ Version: 4.7
 
         <p>
             In addition to the main archive table, there are a number of smaller tables inside the database, one for
-            each observation type, that hold <em>daily summaries</em> of the type. For example, the minimum and maximum
-            value seen during the day, and at what time. These tables have names such as <span class="code">archive_day_outTemp</span>
+            each observation type, which hold <em>daily summaries</em> of the type, such as the minimum and maximum value
+            seen during the day, and at what time. These tables have names such as <span class="code">archive_day_outTemp</span>
             or <span class="code">archive_day_barometer</span>. Their existence is generally transparent to the user.
+            For more details, see the section <a href="devnotes.htm#Daily_summaries"><em>Daily
+            summaries</em></a> in the document <em>Developer's Notes</em>.
         </p>
 
         <h3 id="binding_names">Binding names</h3>
@@ -991,17 +993,19 @@ db_manager.getSql("SELECT SUM(rain) FROM %s "\
             like this:
         </p>
         <pre class="tty">ls -l /etc/weewx/skins/Seasons/lang
-total 80
--rw-rw-r-- 1 tkeffer tkeffer  7870 Aug 10 16:45 cz.conf
--rw-rw-r-- 1 tkeffer tkeffer  7659 Aug 10 16:45 de.conf
--rw-rw-r-- 1 tkeffer tkeffer  7345 Aug 10 16:45 en.conf
--rw-rw-r-- 1 tkeffer tkeffer  8307 Aug 10 16:45 es.conf
--rw-rw-r-- 1 tkeffer tkeffer  8036 Aug 10 16:45 fr.conf
--rw-rw-r-- 1 tkeffer tkeffer  8145 Sep 23 16:57 it.conf
--rw-rw-r-- 1 tkeffer tkeffer  9373 Aug 10 16:45 gr.conf
--rw-rw-r-- 1 tkeffer tkeffer  7528 Aug 10 16:45 nl.conf
--rw-rw-r-- 1 tkeffer tkeffer 12530 Aug 10 16:45 th.conf
-        </pre>
+total 136
+-rw-rw-r-- 1 tkeffer tkeffer  9447 Jul  1 11:11 cn.conf
+-rw-rw-r-- 1 tkeffer tkeffer  9844 Mar 13 12:31 cz.conf
+-rw-rw-r-- 1 tkeffer tkeffer  9745 Mar 13 12:31 de.conf
+-rw-rw-r-- 1 tkeffer tkeffer  9459 Mar 13 12:31 en.conf
+-rw-rw-r-- 1 tkeffer tkeffer 10702 Mar 13 12:31 es.conf
+-rw-rw-r-- 1 tkeffer tkeffer 10673 May 31 07:50 fr.conf
+-rw-rw-r-- 1 tkeffer tkeffer 11838 Mar 13 12:31 gr.conf
+-rw-rw-r-- 1 tkeffer tkeffer  9947 Mar 13 12:31 it.conf
+-rw-rw-r-- 1 tkeffer tkeffer  9548 Mar 13 12:31 nl.conf
+-rw-rw-r-- 1 tkeffer tkeffer 10722 Apr 15 14:52 no.conf
+-rw-rw-r-- 1 tkeffer tkeffer 15356 Mar 13 12:31 th.conf
+</pre>
 
         <p>
             This means that the <em>Seasons</em> skin has been localized for the following languages:
@@ -1012,6 +1016,10 @@ total 80
             <tr class="first_row">
                 <td>File</td>
                 <td>Language</td>
+            </tr>
+            <tr>
+                <td class="code">cn.conf</td>
+                <td>Traditional Chinese</td>
             </tr>
             <tr>
                 <td class="code">cz.conf</td>
@@ -3317,8 +3325,8 @@ $month.outTemp.series(aggregate_type='max', aggregate_interval='day', time_serie
         </p>
 
         <pre>
-            &lt;p&gt;$gettext("Geographical","Altitude"): $station.altitude&lt;/p&gt;
-            &lt;p&gt;$gettext("Astronomical","Altitude"): $almanac.moon.alt&lt;/p&gt;
+            &lt;p&gt;$pgettext("Geographical","Altitude"): $station.altitude&lt;/p&gt;
+            &lt;p&gt;$pgettext("Astronomical","Altitude"): $almanac.moon.alt&lt;/p&gt;
         </pre>
 
         <p>
@@ -3606,7 +3614,7 @@ ephem.Eros = eros</pre>
                 <td>The average wind speed seen during the archive period.
                 </td>
                 <td rowspan='4' class='code'>
-                    $current, $latest, $day, $week, $month, $year, $rainyear
+                    $current, $latest, $hour, $day, $week, $month, $year, $rainyear
                 </td>
             </tr>
             <tr>
@@ -3627,7 +3635,12 @@ ephem.Eros = eros</pre>
             </tbody>
         </table>
 
-        <p>In addition, a wind vector is stored in the daily summaries.</p>
+        <p>
+            Some wind aggregation types, notably <span class="code">vecdir</span> and <span class="code">vecavg</span>,
+            require wind speed <em>and</em> direction. For these, WeeWX provides a composite observation type
+            called <span class="code">wind</span>. It is stored directly in the daily summaries, but synthesized for
+            aggregations other than multiples of a day.
+        </p>
         <table class="indent">
             <tbody>
             <tr class="first_row">
@@ -3637,19 +3650,11 @@ ephem.Eros = eros</pre>
             </tr>
             <tr>
                 <td class="first_col code">wind</td>
-                <td>A vector composite of the wind. It includes information such as the direction of the maximum gust,
-                    and the x- and y-vector wind run.
-                </td>
-                <td class='code'>$day, $week, $month, $year, $rainyear</td>
+                <td>A vector composite of the wind.</td>
+                <td class='code'>$hour, $day, $week, $month, $year, $rainyear</td>
             </tr>
             </tbody>
         </table>
-        <p class="note" style="display: inline-block">
-            <strong>Note</strong><br/>The vector is only stored in the daily <em>summaries</em>, so unlike the scalar
-            tags such as <span class="code">windSpeed</span> or <span class="code">windGust</span>, the tag <span
-            class="code">wind</span> can only be used in aggregations such as <span class="code">$day</span>, <span
-            class="code">$month</span>, <i>etc.</i>
-        </p>
 
         <p>Any of these can be used in your tags. Here are some examples:</p>
 
@@ -3680,7 +3685,7 @@ ephem.Eros = eros</pre>
                 <td>The direction of the gust.</td>
             </tr>
             <tr>
-                <td class="first_col code">$day.wind.avg</td>
+                <td class="first_col code">$day.windSpeed.avg<br/>$day.wind.avg</td>
                 <td>The average wind speed since midnight. If the wind blows east at 5 m/s for 2 hours, then west at 5
                     m/s for 2 hours, the average wind speed is 5 m/s.
                 </td>
@@ -3693,12 +3698,12 @@ ephem.Eros = eros</pre>
             </tr>
             <tr>
                 <td class="first_col code">$day.wind.vecdir</td>
-                <td>The direction of the vector averaged wind speed. If the wind blows northwest for two hours, then
-                    southwest for two hours, the vector averaged direction is west.
+                <td>The direction of the vector averaged wind speed. If the wind blows northwest at 5 m/s for two hours,
+                    then southwest at 5 m/s for two hours, the vector averaged direction is west.
                 </td>
             </tr>
             <tr>
-                <td class="first_col code">$day.wind.max</td>
+                <td class="first_col code">$day.windGust.max<br/>$day.wind.max</td>
                 <td>The maximum wind gust since midnight.</td>
             </tr>
             <tr>
@@ -3706,7 +3711,7 @@ ephem.Eros = eros</pre>
                 <td>The direction of the maximum wind gust.</td>
             </tr>
             <tr>
-                <td class="first_col code">$day.wind.maxtime</td>
+                <td class="first_col code">$day.windGust.maxtime<br/>$day.wind.maxtime</td>
                 <td>The time of the maximum wind gust.</td>
             </tr>
             <tr>
@@ -3717,8 +3722,11 @@ ephem.Eros = eros</pre>
             </tr>
             <tr>
                 <td class="first_col code">$day.windDir.avg</td>
-                <td>Not a very useful quantity. This is the strict, arithmetic average of all the compass wind
-                    direction. Probably not what you want.
+                <td>
+                    Not a very useful quantity. This is the strict, arithmetic average of all the compass wind
+                    directions. If the wind blows at 350&deg; for two hours then at 10&deg; for two hours,
+                    then the scalar average wind direction will be 180&deg; &mdash; probably not what you
+                    expect, nor want.
                 </td>
             </tr>
             </tbody>
@@ -3882,8 +3890,6 @@ ephem.Eros = eros</pre>
             <img src="images/sample_monthtempdew.png" alt="Monthly temperature and dewpoint"/>
         </p>
 
-        <h2>Including expressions in a plot</h2>
-
         <h3 id="including_same_sql_type_2x">Including a type more than once in a plot</h3>
 
         <p>
@@ -3945,7 +3951,7 @@ ephem.Eros = eros</pre>
             <img style="width:300px; height:180px" alt="Daily highs and lows" src="images/yearhilow.png"/>
         </p>
 
-        <h3 id="arbitrary_expressions_in_plot">Including arbitrary expressions</h3>
+        <h2 id="arbitrary_expressions_in_plot">Including arbitrary expressions</h2>
         <p>
             The option <span class="code">data_type</span> can actually be <em>any arbitrary SQL expression,
             which is valid in the context of the available types in the schema</em>. For
@@ -3966,6 +3972,45 @@ ephem.Eros = eros</pre>
 
         <p>
             <img style="width:300px; height:180px" alt="Inside - outside temperature" src="images/yeardiff.png"/>
+        </p>
+
+        <h2>Changing the unit used in a plot</h2>
+        <p>
+            Normally, the unit used in a plot is set by the unit group of the observation types in the plot.
+            For example, consider this plot of today's outside temperature and dewpoint:</p>
+        <pre class="tty">
+    [[day_images]]
+        ...
+        [[[daytempdew]]]
+            [[[[outTemp]]]]
+            [[[[dewpoint]]]]</pre>
+        <p>
+            Both <span class="code">outTemp</span> and <span class="code">dewpoint</span> belong to unit group <span
+            class="code">group_temperature</span>, so this plot will use whatever unit has been specified for that
+            group. See the section <a href="#mixed_units"><em>Mixed units</em></a> for details.
+        </p>
+        <p>
+            However, supposed you'd like to offer both Metric and US Customary versions of the same plot? You
+            can do this by using option <a href="#imagegenerator-unit"><span class="code">unit</span></a>
+            to override the unit used for individual plots:
+        </p>
+
+        <pre class="tty">
+    [[day_images]]
+        ...
+        [[[daytempdewUS]]]
+            <span class="highlight">unit = degree_F</span>
+            [[[[outTemp]]]]
+            [[[[dewpoint]]]]
+
+        [[[daytempdewMetric]]]
+            <span class="highlight">unit = degree_C</span>
+            [[[[outTemp]]]]
+            [[[[dewpoint]]]]</pre>
+
+        <p>
+            This will produce two plots: file <span class="code">daytempdewUS.png</span> will be in degrees
+            Fahrenheit, while file <span class="code">dayTempMetric.png</span> will use degrees Celsius.
         </p>
 
         <h2 id="line_gaps">Line gaps</h2>
@@ -4988,14 +5033,18 @@ class AddElectricity(StdService):
             to add a new observation type to your database, or change its unit system. This section shows you how to do
             this.
         </p>
-
-        <h2>The schema</h2>
         <p>
             Every relational database depends on a <em>schema</em> to specify which types to include in the database.
             When a WeeWX database is first created, it uses a Python version of the schema to initialize the database.
             However, once the database has been created, the schema is read directly from the database and the Python
-            version is not used again &mdash; any changes to it will have no affect. This means that the strategy for
-            modifying the schema depends on whether or not the database already exists.
+            version is not used again &mdash; any changes to it will have no effect. This means that the strategy for
+            modifying the schema depends on whether the database already exists.
+        </p>
+
+        <h2>Specifying a schema for a new database</h2>
+        <p>
+            If the database does not exist yet, then you will want to pick an appropriate starting
+            schema. If it's not exactly what you want, you can modify it to fit your needs.
         </p>
 
         <h3>Picking a starting schema</h3>
@@ -5010,18 +5059,18 @@ class AddElectricity(StdService):
                 <td>Comment</td>
             </tr>
             <tr>
-                <td class="code">schemas.wview</td>
+                <td class="code">schemas.wview.schema</td>
                 <td>49</td>
                 <td>The original schema that came with wview.</td>
             </tr>
             <tr>
-                <td class="code">schemas.wview_extended</td>
+                <td class="code">schemas.wview_extended.schema</td>
                 <td>111</td>
                 <td>A version of the wview schema, which has been extended with many new types. This is the default
                 version.</td>
             </tr>
             <tr>
-                <td class="code">schemas.wview_small</td>
+                <td class="code">schemas.wview_small.schema</td>
                 <td>20</td>
                 <td>A minimalist version of the wview schema. </td>
             </tr>
@@ -5029,15 +5078,15 @@ class AddElectricity(StdService):
         </table>
 
         <p>
-            For most users, the default database schema, <span class="code">schemas.wview_extended</span>, will work
-            just fine.
+            For most users, the default database schema, <span class="code">schemas.wview_extended.schema</span>,
+            will work just fine.
         </p>
 
         <p>
             To specify which schema to use when creating a database, modify option <span class="code">schema</span> in
             section <span class="code">[DataBindings]</span> in <span class="code">weewx.conf</span>. For example,
-            suppose you wanted to use the classic (and smaller) schema <span class="code">schemas.wview</span>
-            instead of the default <span class="code">schemas.wview_extended</span>. Then the section <span
+            suppose you wanted to use the classic (and smaller) schema <span class="code">schemas.wview.schema</span>
+            instead of the default <span class="code">schemas.wview_extended.schema</span>. Then the section <span
             class="code">[DataBindings]</span> would look like:
         </p>
 
@@ -5046,7 +5095,7 @@ class AddElectricity(StdService):
         database = archive_sqlite
         table_name = archive
         manager = weewx.manager.DaySummaryManager
-        <span class="highlight">schema = schemas.wview</span></pre>
+        <span class="highlight">schema = schemas.wview.schema</span></pre>
 
         <p>
             Now, when you start WeeWX, it will use this new choice instead of the default.
@@ -5056,7 +5105,7 @@ class AddElectricity(StdService):
             directly from the database. Changing this option will have no effect!
         </p>
 
-        <h3>Modifying a starting schema</h3>
+        <h3 id="modify_starting_schema">Modifying a starting schema</h3>
 
         <p>
             If none of the three starting schemas that come with WeeWX suits your purposes, you can easily create your
@@ -5066,7 +5115,7 @@ class AddElectricity(StdService):
             class="code">electricity</span> from the example <a href="#Adding_2nd_source"><em>Adding a second data
             source</em></a> above. The type <span class="code">electricity</span> does not appear in the schema, so
             you'll have to add it before starting up WeeWX. We will call the resulting new schema
-            <span class="code">user.myschema</span>.
+            <span class="code">user.myschema.schema</span>.
         </p>
         <p>
             If you did a Debian install, here's how you would do this:
@@ -5119,7 +5168,7 @@ class AddElectricity(StdService):
         database = archive_sqlite
         table_name = archive
         manager = weewx.manager.DaySummaryManager
-        <span class="highlight">schema = user.myschema</span></pre>
+        <span class="highlight">schema = user.myschema.schema</span></pre>
 
         <p>
             Start WeeWX. When the new database is created, it will use your modified schema instead of the default.
@@ -5131,24 +5180,45 @@ class AddElectricity(StdService):
 
 
         <h2>Modifying an existing database</h2>
-
         <p>
-            Suppose the database has already been created and you want to add or remove types? How would you do this?
-            Modifying or changing the Python version of the schema will not work, because it is only used when the
-            database is fist created. Here is where the tool <a href="utilities.htm#wee_database_utility"><span
-            class="code">wee_database</span></a> can be useful. Be sure to stop WeeWX before attempting to use it.
+            The previous section covers the case where you do not have an existing database, so you modify a starting
+            schema, then use it to initialize the database. But, what if you already have a database, and you want to
+            modify it, perhaps by adding a column or two? You cannot create a new starting schema, because it is only
+            used when the database is first created. Here is where the tool <a
+            href="utilities.htm#wee_database_utility"><span class="code">wee_database</span></a> can be useful. Be sure
+            to stop WeeWX before attempting to use it.
         </p>
+        <p>
+            There are two ways to do this. Both are covered below.
+        </p>
+        <ol>
+            <li>Modify the database <em>in situ</em> by using the tool <span class="code">wee_database</span>. This
+                choice works best for small changes.
+            </li>
+            <li>Transfer the old database to a new one while modifying it along the way, again by using the tool <span
+                class="code">wee_database</span>. This choice is best for large modifications.
+            </li>
+        </ol>
 
         <p class="warning">
             NOTE: Before using the tool <span class="code">wee_database</span>, MAKE A BACKUP FIRST!
         </p>
 
-        <h3 id="add_archive_type">Adding a new type to an existing database</h3>
+        <h3 id="add_archive_type">Modify the database <em>in situ</em></h3>
+        <p>
+            If you want to make some minor modifications to an existing database, perhaps adding or removing a column,
+            then this can easily be done using the tool <span class="code">wee_database</span> with an appropriate
+            option. We will cover the cases of adding, removing, and renaming a type. See the documentation for <a
+            href="utilities.htm#wee_database_utility"><span class="code">wee_database</span></a> for more details.
+        </p>
+
+        <h4>Adding a type</h4>
 
         <p>
-            Here's how you would add the observation type <span class="code">electricity</span> (from the example <a
-            href="#Adding_2nd_source"><em>Adding a second data source</em></a>) to an existing database by using <span
-            class="code">wee_database</span>:
+            Suppose you have an existing database and you want to add a type, such as the type <span class="code">electricity</span>
+            from the example above <a href="#Adding_2nd_source"><em>Adding a second data source</em></a>. This can be
+            done in one easy step using the tool <span class="code">wee_database</span> with the option <span
+            class="code">--add-column</span>:
         </p>
         <pre class="tty cmd">wee_database --add-column=electricity</pre>
         <p>
@@ -5156,70 +5226,78 @@ class AddElectricity(StdService):
             daily summaries.
         </p>
 
-        <h3 id="remove_archive_type">Removing types from an existing database</h3>
+        <h4 id="remove_archive_type">Removing a type </h4>
         <p>
-            In a similar manner, the tool can remove any unneeded types from an existing database. For example,
-            suppose you are using the <span class="code">schemas.wview</span> schema, but you're pretty sure you're not
-            going to need to store soil moisture. You can drop the unnecessary types this way:
+            In a similar manner, the tool can remove any unneeded types from an existing database. For example, suppose
+            you are using the <span class="code">schemas.wview</span> schema, but you're pretty sure you're not going to
+            need to store soil moisture. You can drop the unnecessary types this way:
         </p>
-    <pre class="tty cmd">wee_database --drop-columns=soilMoist1,soilMoist2,soilMoist3,soilMoist4</pre>
+        <pre class="tty cmd">wee_database --drop-columns=soilMoist1,soilMoist2,soilMoist3,soilMoist4</pre>
         <p>
-            Unlike the option <span class="code">--add-column</span>, in the interests of efficiency, the option <span
-            class="code">--drop-columns</span> can take more than one type. Adding new columns is easy and fast with the
-            SQLite database, but dropping columns requires copying the whole database. By specifying more than one type,
-            you can amortize the cost over a single invocation of the utility.
+            Unlike the option <span class="code">--add-column</span>, the option <span
+            class="code">--drop-columns</span> can take more than one type. This is done in the interest of efficiency:
+            adding new columns is easy and fast with the SQLite database, but dropping columns requires copying the
+            whole database. By specifying more than one type, you can amortize the cost over a single invocation of the
+            utility.
         </p>
         <p class="warning">
             NOTE: Dropping types from a database means <em>you will lose any data associated with them!</em> The data
             cannot be recovered.
         </p>
 
-
-
-        <h2 id="Changing_the_unit_system">Changing the database unit system in an existing database</h2>
+        <h4>Renaming a type</h4>
         <p>
-            Normally, data are stored in the databases using US Customary units and you shouldn't care; it is an
-            "implementation detail". Data can always be displayed using any set of units you want &mdash; the section <a
-            href="#how_to_change_units"><em>How to change units</em></a> explains how to change the reporting units.
-            Nevertheless, there may be special situations where you wish to store the data in Metric units. For example,
-            you may need to allow direct programmatic access to the database from another piece of software that expects
-            metric units.
+            Suppose you just want to rename a type? This can be done using the option <span class="code">--to-name</span>.
+            Here's an example where you rename <span class="code">soilMoist1</span> to <span class="code">soilMoistGarden</span>:
         </p>
+        <pre class="tty cmd">wee_database --rename-column=soilMoist1 --to-name=soilMoistGarden</pre>
 
         <p>
-            You should not change the database unit system midstream. That is, do not start with one unit system then,
-            some time later, switch to another. WeeWX cannot handle databases with mixed unit systems &mdash; see the
-            section <span class="code"> <a href="usersguide.htm#StdConvert">[StdConvert]</a></span> in the WeeWX User's
-            Guide. However, you can reconfigure the database by copying it to a new database, performing the unit
-            conversion along the way. You then use this new database.
+            Note how the option <span class="code">--rename-column</span> also requires option
+            <span class="code">--to-name</span>, which specifies the target name.
         </p>
 
-        <p>Here is the general strategy:</p>
+        <h3 id="transfer_database_using_new_schema">Transfer database using new schema</h3>
+        <p>
+            If you are making major changes to your database, you may find it easier to create a brand new database
+            using the schema you want, then transfer all data from the old database into the new one. This approach
+            is more work, and takes more processing time than the <em>in situ</em> strategies outlines above,
+            but has the advantage that it leaves behind a record of exactly the schema you are using.
+        </p>
+
+        <p>Here is the general strategy of how to do this.</p>
+
         <ol>
-            <li>Modify <span class="code">weewx.conf</span> to reflect your choice of the new unit system to use. Your
-                choices are <span class='code'>US</span>, <span class="code">METRIC</span>, or <span class="code">METRICWX</span>.
-                See the <em><a href="#units">Appendix: Units</a></em> for the exact differences between these three
-                choices.
-            </li>
-            <li>Make sure you have the necessary permissions to create the new database.
-            </li>
-            <li>Use the utility <a href="utilities.htm#wee_database_utility"><span class="code">wee_database</span></a>
+            <li>Create a new schema that includes exactly the types that you want.</li>
+            <li>Specify this schema as the starting schema for the database.</li>
+            <li>Make sure you have the necessary permissions to create the new database.</li>
+            <li>
+                Use the utility <a href="utilities.htm#wee_database_utility"><span class="code">wee_database</span></a>
                 to create the new database and populate it with data from the old database.
             </li>
-            <li>Shuffle databases around so WeeWX will use the new database.
-            </li>
+            <li>Shuffle databases around so WeeWX will use the new database.</li>
         </ol>
-        <p>Here is the recipe that follows that strategy:</p>
+        <p>Here are the details:</p>
+
         <ol>
             <li>
-                <p>
-                    <strong>Modify <span class="code">weewx.conf</span>. </strong> Edit the configuration file to change
-                    option <span class="code">target_unit</span> in section <span class="code"><a
-                    href="usersguide.htm#StdConvert">[StdConvert]</a></span> to reflect your choice. If you are
-                    switching to metric units, the option will look like:
+                <p><strong>Create a new schema.</strong> First step is to create a new schema with exactly the types
+                    you want. See the instructions above <a href="#modify_starting_schema"><em>Modify
+                        a starting schema</em></a>. As an example, suppose your new schema is called
+                    <span class="code">user.myschema.schema</span>.
                 </p>
-                <pre class="tty">[StdConvert]
-    target_unit = METRICWX</pre>
+            </li>
+            <li>
+                <p><strong>Set as starting schema.</strong> Set your new schema as the starting schema with
+                    whatever database binding you are working with (generally, <span class="code">wx_binding</span>).
+                    For example:</p>
+                <pre class="tty">[DataBindings]
+
+    [[wx_binding]]
+        database = archive_sqlite
+        table_name = archive
+        manager = weewx.manager.DaySummaryManager
+        <span class="highlight">schema = user.myschema.schema</span></pre>
             </li>
             <li>
                 <p>
@@ -5231,15 +5309,14 @@ class AddElectricity(StdService):
             </li>
             <li>
                 <p>
-                    <strong>Create and populate the new database.</strong> Now run the utility <span class="code">wee_database</span>
-                    with the <span class="code">--reconfigure</span> option:
+                    <strong>Create and populate the new database.</strong> Use the utility
+                    <span class="code">wee_database</span> with the <span class="code">--reconfigure</span> option.
                 </p>
                 <pre class="tty cmd">wee_database weewx.conf --reconfigure</pre>
                 <p>
                     This will create a new database (nominally, <span class="code">weewx.sdb_new</span> if you are using
                     SQLite, <span class="code">weewx_new</span> if you are using MySQL), using the schema found in <span
-                    class="code">user/schemas.py</span>, and populate it with data from the old database, while
-                    performing the unit conversion.
+                    class="code">user.myschema.schema</span>, and populate it with data from the old database.
                 </p>
             </li>
             <li>
@@ -5276,6 +5353,47 @@ mysql&gt;<span class="cmd"> RENAME TABLE weewx_new.archive TO weewx.archive;</sp
                 <pre class="tty cmd">wee_database weewx.conf --rebuild-daily</pre>
             </li>
         </ol>
+
+
+        <h2 id="Changing_the_unit_system">Changing the unit system in an existing database</h2>
+        <p>
+            Normally, data are stored in the databases using US Customary units, and you shouldn't care; it is an
+            "implementation detail". Data can always be displayed using any set of units you want &mdash; the section <a
+            href="#how_to_change_units"><em>How to change units</em></a> explains how to change the reporting units.
+            Nevertheless, there may be special situations where you wish to store the data in Metric units. For example,
+            you may need to allow direct programmatic access to the database from another piece of software that expects
+            metric units.
+        </p>
+
+        <p>
+            You should not change the database unit system midstream. That is, do not start with one unit system then,
+            some time later, switch to another. WeeWX cannot handle databases with mixed unit systems &mdash; see the
+            section <span class="code"> <a href="usersguide.htm#StdConvert">[StdConvert]</a></span> in the WeeWX User's
+            Guide. However, you can reconfigure the database by copying it to a new database, performing the unit
+            conversion along the way. You then use this new database.
+        </p>
+
+        <p>
+            The general strategy is identical to the strategy outlined above in the section
+            <a href="#transfer_database_using_new_schema"><em>Transfer database using new schema</em></a>. The only
+            difference is that instead of specifying a new starting schema, you specify a different database
+            unit system.
+            This means that instead of steps 1 and 2 above, you edit the configuration file and change
+            option <span class="code">target_unit</span> in section <span class="code"><a
+            href="usersguide.htm#StdConvert">[StdConvert]</a></span> to reflect your choice. For example, if you are
+            switching to metric units, the option will look like:
+        </p>
+        <pre class="tty">[StdConvert]
+    target_unit = METRICWX</pre>
+
+        <p>
+            After changing <span class="code">target_unit</span>, you then go ahead with the rest of the steps. That is
+            run <span class="code">wee_database</span> with the <span class="code">--reconfigure</span> option, then
+            shuffle the databases.
+        </p>
+
+
+
 
         <h2>Rebuilding the daily summaries</h2>
 
@@ -6138,8 +6256,9 @@ UV      = UV Index</pre>
         </p>
 
         <p>
-            The measurement unit to be used for temperatures. Options are <span class="code">degree_F</span>, <span
-            class="code">degree_C</span>, or <span class="code"><a href="https://xkcd.com/1923/">degree_E</a></span>.
+            The measurement unit to be used for temperatures. Options are <span class="code">degree_C</span>,
+            <span class="code"><a href="https://xkcd.com/1923/">degree_E</a></span>, <span
+            class="code">degree_F</span>, or <span class="code">degree_K</span>.
         </p>
 
         <p class="config_option">group_volt</p>
@@ -6518,6 +6637,13 @@ growing_base = 50.0, degree_F</pre>
             Image file staleness age, in seconds. If the image file is older than this age it will be generated. If no
             <span class="code">stale_age</span> is specified, then the image file will be generated every time the
             generator runs.
+        </p>
+
+        <p class="config_option" id="imagegenerator-unit">unit</p>
+
+        <p>
+            Normally, the unit used in a plot is set by whatever <a href="#mixed_units">unit group the types are in</a>.
+            However, this option allows overriding the unit used in a specific plot.
         </p>
 
         <h3>Various label options</h3>
@@ -7216,6 +7342,14 @@ growing_base = 50.0, degree_F</pre>
                 <td>dB</td>
             </tr>
             <tr>
+                <td class="first_col">group_delta_time</td>
+                <td>daySunshineDur<br/>rainDur<br/>sunshineDurDoc</td>
+                <td>second<br/> minute<br/>hour<br/>day<br/></td>
+                <td>second</td>
+                <td>second</td>
+                <td>second</td>
+            </tr>
+            <tr>
                 <td class="first_col">group_degree_day</td>
                 <td>cooldeg<br/> heatdeg<br/> growdeg
                 </td>
@@ -7301,7 +7435,7 @@ growing_base = 50.0, degree_F</pre>
             <tr>
                 <td class="first_col">group_percent</td>
                 <td>
-                    extraHumid1 <br/> extraHumid2 <br/> inHumidity <br/> outHumidity <br/>
+                    cloudcover<br/>extraHumid1 <br/> extraHumid2 <br/> inHumidity <br/> outHumidity <br/>pop<br/>
                     rxCheckPercent<br/>snowMoisture
                 </td>
                 <td>percent</td>
@@ -7394,7 +7528,7 @@ growing_base = 50.0, degree_F</pre>
                     heatingTemp <br/> humidex <br/> inTemp <br/> leafTemp1 <br/> leafTemp2 <br/> outTemp <br/> soilTemp1
                     <br/> soilTemp2 <br/> soilTemp3 <br/> soilTemp4 <br/> windchill <br/> THSW
                 </td>
-                <td>degree_F <br/> degree_C<br/> degree_E
+                <td>degree_C<br/> degree_F <br/> degree_E<br/> degree_K
                 </td>
                 <td>degree_F</td>
                 <td>degree_C</td>
@@ -7539,6 +7673,7 @@ station_altitude_vt = ValueTuple(120.0, "meter", "group_altitude")
                 <span class="code">localize</span> If truthy, then the results will be localized. For example, in some
                 locales, a comma will be used as the decimal specifier.
             </p>
+        </div>
 
     </div>
     <!-- end id technical_content -->

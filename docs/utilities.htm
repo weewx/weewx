@@ -49,7 +49,7 @@
         <div class="logoref">
             <a href='https://weewx.com'> <img src='images/logo-weewx.png' class='logo' style="float:right"
                                              alt="weewx logo"/> </a><br/> <span class='version'>
-Version: 4.7
+Version: 4.9
     </span>
         </div>
         <div class="title">WeeWX Utilities Guide</div>
@@ -423,11 +423,9 @@ Options:
   --create              Create the WeeWX database and initialize it with the
                         schema.
   --reconfigure         Create a new database using configuration information
-                        found in the configuration file. In particular, the
-                        new database will use the unit system found in option
-                        [StdConvert][target_unit]. The new database will have
-                        the same name as the old database, with a '_new' on
-                        the end.
+                        found in the configuration file. The new database will
+                        have the same name as the old database, with a '_new'
+                        on the end.
   --transfer            Transfer the WeeWX archive from source database to
                         destination database.
   --add-column=NAME     Add new column NAME to database.
@@ -1262,12 +1260,14 @@ summaries using the wee_database utility.</pre>
 
         <h3>Option <span class="code">--import-config</span></h3>
 
-        <p><span class="code">wee_import</span> uses a secondary configuration file to store various import parameters.
-            The <span class="code">--import-config</span> option is mandatory for all imports. Example import
-            configuration files for each type of import supported by <span class="code">wee_import</span> are provided
-            in the <span class="code">util/import</span> directory. These example files are best used by making a copy of
-            the applicable example file in a working directory and then modifying the duplicate file to suit your needs.
-            The <span class="code">--import-config</span> option is used as follows:
+        <p><span class="code">wee_import</span> uses a secondary configuration file, known as the import configuration
+            file, to store various import parameters. The <span class="code">--import-config</span> option is mandatory
+            for all imports. Example import configuration files for each type of import supported by
+            <span class="code">wee_import</span> are provided in the <span class="code">/home/weewx/util/import</span>
+            directory if you used the setup.py install method. If you used a package installer the example import config
+            files will be in the <span class="code">/etc/weewx/import</span> directory. These example files are best
+            used by making a copy of the applicable example file in a working directory and then modifying the duplicate
+            file to suit your needs. The <span class="code">--import-config</span> option is used as follows:
         </p>
 
         <pre class="tty cmd">wee_import --import-config=/directory/import.conf
@@ -1453,8 +1453,9 @@ summaries using the wee_database utility.</pre>
             and various options associated with each type of import. The import configuration file is specified using
             the mandatory <span class="code">--import-config</span> option. How you construct the import configuration
             file is up to you; however, the recommended method is to copy one of the example import configuration files
-            located in the <span class="code">util/import</span> directory, modify the configuration options in the newly
-            copied file to suit the import to be performed and then use this file as the import configuration file.
+            located in the <span class="code">/home/weewx/util/import</span> or <span class="code">/etc/weewx/import</span>
+            directory as applicable, modify the configuration options in the newly copied file to suit the import to be
+            performed and then use this file as the import configuration file.
         </p>
 
         <p>Following is the definitive guide to the options available in the import configuration file. Default values
@@ -1499,10 +1500,10 @@ summaries using the wee_database utility.</pre>
 
         <h4 class='config_option' id='csv_encoding'>source_encoding</h4>
 
-        <p>The source file encoding. This parameter is optional and should only need be used if the source file uses an encoding
-            other than UTF-8 or an ASCII compatible encoding. If used, the setting used should be
-            a <a href="https://docs.python.org/3/library/codecs.html#standard-encodings">Python Standard Encoding</a>.  The default
-            value is <span class="code">utf-8-sig</span>.
+        <p>The source file encoding. This parameter is optional and should only need be used if the source file uses an
+            encoding other than UTF-8 or an ASCII compatible encoding. If used, the setting used should be
+            a <a href="https://docs.python.org/3/library/codecs.html#standard-encodings">Python Standard Encoding</a>.
+            The default value is <span class="code">utf-8-sig</span>.
         </p>
 
         <h4 class='config_option' id='csv_delimiter'>delimiter</h4>
@@ -1896,6 +1897,16 @@ summaries using the wee_database utility.</pre>
             class="code">dewpoint</span>) and for which there is no field mapping may be calculated during import by use
             of the <span class="code">calc_missing</span> option in the <span class="config_section">[CSV]</span>
             section of the import configuration file.
+        </p>
+
+        <p class="note">
+            <strong>Note</strong><br/>The <span class="code">dateTime</span> field map entry is a special case. Whereas
+            other field map entries may use any supported WeeWX unit name, or no unit name if the
+            <span class="code">usUnits</span> field is populated, the <span class="code">dateTime</span> field map entry
+            must include the WeeWX unit name <span class="code">unix_epoch</span>. This is because
+            <span class="code">wee_import</span> uses the
+            <em><a href="#csv_raw_datetime_format">raw_datetime_format</a></em> config option to convert the supplied
+            date-time field data to a Unix epoch timestamp before the field map is applied.
         </p>
 
         <h3 class="config_section">[WU]</h3>
@@ -2492,8 +2503,9 @@ summaries using the wee_database utility.</pre>
             the <span class="config_section">[WD]</span> section of the import configuration file.
         </p>
 
-        <p>The example Weather Display import configuration file located in the <span class="code">util/import</span>
-            directory contains an example field map in the import configuration file comments. There is no default.
+        <p>The example Weather Display import configuration file located in the <span class="code">/home/weewx/util/import</span>
+            or the <span class="code">/etc/weewx/import</span> directory contains an example field map in the import
+            configuration file comments. There is no default.
         </p>
 
         <h3 class="config_section">[WeatherCat]</h3>
@@ -3606,11 +3618,13 @@ Aug 22 14:38:28 stretch12 weewx[863]: manager: unable to add record 2018-09-04 0
             </li>
 
             <li>Create an import configuration file, this is easily done by making a copy of the example Weather Display
-                import configuration file located in the <span class="code">/home/weewx/util/import</span> directory.
-                In this case we will make a copy of the example Weather Display import configuration file and save it
-                as <span class="code">wd.conf</span> in the <span class="code">/var/tmp</span> directory:
+                import configuration file located in the <span class="code">/home/weewx/util/import</span> or
+                <span class="code">/etc/weewx/import</span> directory as applicable. In this case we will make a copy of
+                the example Weather Display import configuration file and save it as <span class="code">wd.conf</span> in
+                the <span class="code">/var/tmp</span> directory:
 
                 <pre class="tty cmd">$ cp /home/weewx/util/import/wd-example.conf /var/tmp/wd.conf</pre>
+            </li>
 
             <li>Confirm that the <span class="code">source</span> option is set to WD:
             <pre class="tty">source = WD</pre>
@@ -4526,16 +4540,58 @@ Aug 22 14:38:28 stretch12 weewx[863]: manager: unable to add record 2018-09-04 0
 
         <p>This results in something like this:</p>
 
-        <pre class="tty">Usage: wee_reports: [config_file] [timestamp] [--config=CONFIG_FILE] [--help]
+        <pre class="tty">usage: wee_reports --help
+       wee_reports [CONFIG_FILE | --config=CONFIG_FILE]
+       wee_reports [CONFIG_FILE | --config=CONFIG_FILE] --epoch=TIMESTAMP
+       wee_reports [CONFIG_FILE | --config=CONFIG_FILE] --date=YYYY-MM-DD --time=HH:MM
 
-Run all reports defined in the specified configuration file. Use this utility
-to run reports immediately instead of waiting for the end of an archive
-interval.
+Run all reports defined in the specified configuration file. Use this utility to run reports immediately instead of waiting for the end of
+an archive interval.
 
-Options:
+positional arguments:
+  CONFIG_FILE
+
+optional arguments:
   -h, --help            show this help message and exit
-  --config=CONFIG_FILE  Use the configuration file CONFIG_FILE
+  --config CONFIG_FILE  Use the configuration file CONFIG_FILE
+  --epoch EPOCH_TIME    Time of the report in unix epoch time
+  --date YYYY-MM-DD     Date for the report
+  --time HH:MM          Time of day for the report
+
+Specify either the positional argument CONFIG_FILE, or the optional argument --config, but not both.
 </pre>
+
+        <p>
+            By default, the reports are generated as of the last timestamp in the database, however, an explicit
+            time can be given by using either option <span class="code">--epoch</span>, or by using options
+            <span class="code">--date</span> and <span class="code">--time</span>.
+        </p>
+        <h2>Options</h2>
+        <h3>Option <span class="code">--config</span></h3>
+        <p>
+            An optional path to the configuration file (usually, <span class="code">weewx.conf</span>) can be given
+            as either a positional argument, or by using option <span class="code">--config</span> (but not both).
+            If not given, the location of the configuration file will be inferred.
+        </p>
+        <h3>Option <span class="code">--epoch</span></h3>
+        <p>
+            If given, generate the reports so that they are current as of the given unix epoch time. Example:
+        </p>
+        <pre class="tty cmd">wee_reports --epoch=1652367600</pre>
+        <p>
+            This would generate a report for unix epoch time 1652367600 (12-May-2022 at 8AM PDT).
+        </p>
+        <h3>Option <span class="code">--date</span><br/>
+        Option <span class="code">--time</span></h3>
+        <p>
+            If given, generate the reports so that they are current as of the given date and time. The date should
+            be given in the form <span class="code">YYYY-MM-DD</span> and the time should be given as
+            <span class="code">HH:DD</span>. Example:
+        </p>
+        <pre class="tty cmd">wee_reports /home/weewx/weewx.conf --date=2022-05-12 --time=08:00</pre>
+        <p>
+            This would generate a report for 12-May-2022 at 8AM (unix epoch time 1652367600).
+        </p>
 
         <!-- ======== -->
 

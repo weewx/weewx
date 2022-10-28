@@ -31,7 +31,7 @@ import math
 import six
 
 import weewx
-from weeutil.weeutil import ListOfDicts, to_float
+from weeutil.weeutil import ListOfDicts, to_float, timestamp_to_string
 import weeutil.config
 
 log = logging.getLogger(__name__)
@@ -42,6 +42,8 @@ log = logging.getLogger(__name__)
 
 DEFAULTS_INI = """
 [Accumulator]
+    [[consBatteryVoltage]]
+        extractor = last
     [[dateTime]]
         adder = noop
     [[dayET]]
@@ -63,6 +65,8 @@ DEFAULTS_INI = """
     [[stormRain]]
         extractor = last
     [[totalRain]]
+        extractor = last
+    [[txBatteryStatus]]
         extractor = last
     [[usUnits]]
         adder = check_units
@@ -432,7 +436,7 @@ class Accum(dict):
         # Check to see if the record is within my observation timespan 
         if not self.timespan.includesArchiveTime(record['dateTime']):
             raise OutOfSpan("Attempt to add out-of-interval record (%s) to timespan (%s)"
-                            % (record['dateTime'], self.timespan))
+                            % (timestamp_to_string(record['dateTime']), self.timespan))
 
         for obs_type in record:
             # Get the proper function ...

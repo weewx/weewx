@@ -1,7 +1,87 @@
 WeeWX change history
 --------------------
 
-4.7.1 MM/DD/YYYY
+X.Y.Z MM/DD/YYYY
+Don't inject txBatteryStatus and consBatteryVoltage into records in
+the Vantage driver. Let the accumulators do it.
+Fixes issue #802.
+
+
+4.9.1 10/25/2022
+Fix problem with `wind` for older versions of sqlite.
+
+
+4.9.0 10/24/2022
+Fix problem that create 'ghost' values for VantageVue stations.
+Fix problem that causes `leafWet3` and `leafWet4` to be emitted in VP2
+stations that do not have the necessary sensors.
+Fixes issue #771.
+
+Try waking the Vantage console before giving up on LOOP errors.
+Better Vantage diagnostics.
+Fixes issue #772.
+
+Add missing 30-day barometer graph to Smartphone skin.
+Fixes issue #774.
+
+Fix check for reuse_ssl for Python versions greater than 3.10.
+Fixes issue #775.
+
+The utility wee_reports can now be invoked by specifying a --date and --time.
+Fixes issue #776.
+
+Allow timestamps that are not integers.
+Fixes issue #779.
+
+Add localization file for Traditional Chinese. Thanks to user lyuxingliu!
+PR #777.
+
+Don't swallow syntax errors when wee_config is looking for drivers.
+
+Include 'wind' in daily summary if 'windSpeed' is present.
+
+Refine translations for French skin. Thanks to user Pascal!
+
+Allow a custom cipher to be specified for FTP uploads. See option 'cipher'
+under [[FTP]].
+
+Ensure that rundir exists and has correct permissions in weewx-multi
+
+Allow auto-provisioning feature of Seasons to work when using a SQL expression
+for option data_type in the ImageGenerator. Fixes issue #782.
+
+Allow constants albedo, cn, and cd to be specified when calculating ET.
+See the User's Guide. Resolves issue #730.
+
+Fix problem that prevented wee_reports from using a default location
+for weewx.conf.
+
+Post location of the configuration file and the top-level module to the station
+registry. Thanks to Vince! PR #705.
+
+Fix minor install warning under Python 3.10. Fixes issue #799.
+
+Fix problem where xtypes.ArchiveTable.get_series() does not pass option_dict
+on to get_aggregate(). Fixes issue #797
+
+Added copytruncate option to default log rotation configuration.  Thanks to
+user sastorsl.  Addresses PR #791.
+
+Update the default and example rules in rsyslog configuration.  The output
+from the weewx daemon goes to weewxd.log whereas the output from wee_xxx
+utilities goes to weewx.log.  Also added examples of how to deal with
+systemd/journald messing with log output.  Addresses PR#788 and PR#790.
+Thanks to user sastorsl.
+
+Allow additional aggregation intervals for observation type $wind. In
+particular, 'vecdir' and 'vecavg' can be done for aggregation intervals other
+than multiples of a day.
+Fixes issue #800.
+
+
+4.8.0 04/21/2022
+Allow unit to be overridden for a specific plot by using new option 'unit'.
+Fixes issue #729.
 
 Fix problem that prevented wind from appearing in NOAA yearly summaries.
 
@@ -14,6 +94,20 @@ in a plot.
 
 Reorder font download order, for slightly faster downloads.
 Fix issue #760.
+
+Add observation types highOutTemp and lowOutTemp to group_temperature.
+
+Add unit groups for sunshine and rain duration, cloudcover, and pop.
+PR #765
+
+Do not allow HUP signals (reload is not allowed as of V4.6).
+PR #766.
+
+Do not fork if using systemd.
+PR #767.
+
+Fix problem that prevented wee_config --reconfigure from working when
+using Python 2.7, if the configuration file contained UTF-8 characters.
 
 
 4.7.0 03/01/2022

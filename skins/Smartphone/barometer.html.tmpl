@@ -10,27 +10,34 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 <body>
-  <div data-role="page" data-add-back-btn="true" data-theme="a">
-    <div data-role="header">
-      <h1>$obs.label.barometer</h1>
-   </div>
-   <div data-role="content">
-     <h4>$gettext("24h barometer")</h4>
-     <img src="daybarometer.png"/>
-     <p>
-       $gettext("min"): $day.barometer.min $gettext("at") $day.barometer.mintime<br/>
-       $gettext("max"): $day.barometer.max $gettext("at") $day.barometer.maxtime
-     </p>
+    <div data-role="page" data-add-back-btn="true" data-theme="a">
+        <div data-role="header">
+            <h1>$obs.label.barometer</h1>
+        </div>
+        <div data-role="content">
+            <h4>$gettext("24h barometer")</h4>
+            <img src="daybarometer.png"/>
+            <p>
+                $gettext("min"): $day.barometer.min $gettext("at") $day.barometer.mintime<br/>
+                $gettext("max"): $day.barometer.max $gettext("at") $day.barometer.maxtime
+            </p>
 
-     <h4>$gettext("7-day barometer")</h4>
-     <img src="weekbarometer.png" />
-     <p>
-       $gettext("min"): $week.barometer.min $gettext("at") $week.barometer.mintime<br/>
-       $gettext("max"): $week.barometer.max $gettext("at") $week.barometer.maxtime
-     </p>
+            <h4>$gettext("7-day barometer")</h4>
+            <img src="weekbarometer.png" />
+            <p>
+                $gettext("min"): $week.barometer.min $gettext("at") $week.barometer.mintime<br/>
+                $gettext("max"): $week.barometer.max $gettext("at") $week.barometer.maxtime
+            </p>
+
+            <h4>$gettext("30-day barometer")</h4>
+            <img src="monthbarometer.png" />
+            <p>
+                $gettext("min"): $month.barometer.min $gettext("at") $month.barometer.mintime<br/>
+                $gettext("max"): $month.barometer.max $gettext("at") $month.barometer.maxtime
+            </p>
+        </div> ## End 'content'
+        <div data-role="footer">
+            <h4>WeeWX v$station.version</h4>
+        </div>
     </div>
-    <div data-role="footer">
-      <h4>WeeWX v$station.version</h4>
-    </div>
-  </div>
 </body>

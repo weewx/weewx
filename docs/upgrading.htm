@@ -20,11 +20,12 @@
     </script>
     <style>
         #toc_parent {
-            overflow-y: hidden;
+            overflow-y: scroll;
+            height: 50%;
         }
 
         #legend {
-            padding-top: 30px;
+            padding-top: 10px;
         }
 
         #legend p {
@@ -80,7 +81,7 @@
         <div class="logoref">
             <a href='https://weewx.com'> <img src='images/logo-weewx.png' class='logo' style="float:right"
                                              alt="weewx logo"/> </a><br/> <span class='version'>
-Version: 4.7
+Version: 4.9
     </span>
         </div>
         <div class="title">WeeWX Upgrade Guide</div>
@@ -248,6 +249,159 @@ sudo apt-get install weewx</pre>
 
 
         <h1><a id="Instructions_for_specific_versions">Instructions for specific versions</a></h1>
+
+        <h2>Upgrading to V4.9</h2>
+        <h3><span class="code">wee_reports</span> may require <span class="code">--epoch</span> option.</h3>
+        <p>
+            In previous versions, the utility <span class="code">wee_reports</span> could take an optional
+            position argument that specified the reporting time in unix epoch time. For example,
+        </p>
+        <pre class="tty cmd">wee_reports /home/weewx/weewx.conf 1645131600</pre>
+        <p>
+            would specify that the reporting time should be 1645131600, or 17-Feb-2022 13:00 PST.
+        </p>
+        <p>
+            Starting with V4.9, the unix epoch time must be specified using the <span class="code">--epoch</span>
+            flag, so the command becomes
+        </p>
+        <pre class="tty cmd">wee_reports /home/weewx/weewx.conf --epoch=1645131600</pre>
+        <p>
+            Alternatively, the reporting time can be specified by using <span class="code">--date</span> and
+            <span class="code">--time</span> flags:
+        </p>
+        <pre class="tty cmd">wee_reports /home/weewx/weewx.conf --date=2022-02-17 --time=13:00</pre>
+
+        <h3>Init function of class <span class="code">WXXTypes</span> has changed</h3>
+        <p>
+            In earlier versions, ET was calculated in class <span class="code">WXXTypes</span>. Now it has its own
+            class, <span class="code">ETXType</span>. As a result, some initialization parameters are no longer needed
+            and have been removed.
+        </p>
+        <p>
+            Note also that the parameter <span class="code">heat_index_algo</span> was changed to
+            <span class="code">heatindex_algo</span> in keeping with the rest of the code.
+        </p>
+        <p>
+            Unless you have been writing specialized code that required direct access to <span
+            class="code">WXXTypes</span> you are very unlikely to be affected.
+        </p>
+        <table>
+            <tr class="first_row">
+                <td style='width:50%'>V4.8 and earlier</td>
+                <td>4.9</td>
+            </tr>
+            <tr>
+                <td>
+                    <pre class='tty'>
+    def __init__(self, altitude_vt, latitude_f, longitude_f,
+                 <span class="removed">et_period=3600,</span>
+                 atc=0.8,
+                 nfac=2,
+                 <span class="removed">wind_height=2.0,</span>
+                 force_null=True,
+                 maxSolarRad_algo='rs',
+                 <span class="changed">heat_index_algo</span>='new')
+</pre>
+                </td>
+                <td>
+                    <pre class='tty'>
+    def __init__(self, altitude_vt, latitude_f, longitude_f,
+                 atc=0.8,
+                 nfac=2,
+                 force_null=True,
+                 maxSolarRad_algo='rs',
+                 <span class="changed">heatindex_algo</span>='new')
+</pre>
+                </td>
+            </tr>
+        </table>
+
+        <h3>Calling signature of some archive span functions has changed</h3>
+
+        <p>
+            The calling signature of the following functions has changed. In general, the parameter
+            <span class="code">grace</span> has been removed in favor of a more robust method for figuring out
+            which time span a timestamp belongs to.
+        </p>
+
+        <table>
+            <tr class="first_row">
+                <td style='width:50%'>V4.8 and earlier</td>
+                <td>4.9</td>
+            </tr>
+            <tr>
+                <td>
+                    <pre class='tty'>
+def archiveHoursAgoSpan(time_ts, hours_ago=0<span class="removed">, grace=1</span>)
+</pre>
+                </td>
+                <td>
+                    <pre class='tty'>
+def archiveHoursAgoSpan(time_ts, hours_ago=0)
+</pre>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <pre class='tty'>
+def archiveDaySpan(time_ts, <span class="removed">grace=1,</span> days_ago=0)
+</pre>
+                </td>
+                <td>
+                    <pre class='tty'>
+def archiveDaySpan(time_ts, days_ago=0)
+</pre>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <pre class='tty'>
+def archiveWeekSpan(time_ts, startOfWeek=6, <span class="removed">grace=1,</span> weeks_ago=0)
+</pre>
+                </td>
+                <td>
+                    <pre class='tty'>
+def archiveWeekSpan(time_ts, startOfWeek=6, weeks_ago=0)
+</pre>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <pre class='tty'>
+def archiveMonthSpan(time_ts, <span class="removed">grace=1,</span> months_ago=0)
+</pre>
+                </td>
+                <td>
+                    <pre class='tty'>
+def archiveMonthSpan(time_ts, months_ago=0)
+</pre>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <pre class='tty'>
+def archiveYearSpan(time_ts, <span class="removed">grace=1,</span> years_ago=0)
+</pre>
+                </td>
+                <td>
+                    <pre class='tty'>
+def archiveYearSpan(time_ts, years_ago=0)
+</pre>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <pre class='tty'>
+def archiveRainYearSpan(time_ts, sory_mon<span class="removed">, grace=1</span>)
+</pre>
+                </td>
+                <td>
+                    <pre class='tty'>
+def archiveRainYearSpan(time_ts, sory_mon)
+</pre>
+                </td>
+            </tr>
+        </table>
 
         <h2>Upgrading to V4.6</h2>
         <h3>Ordering of search list changed</h3>
@@ -1336,9 +1490,8 @@ extraHumid8 = humidity_8</pre>
 
         <p>
             The introduction of <em>data bindings</em> has meant a change in the calling signature of <em>search list
-            extensions.</em> By way of example, here's the example from the section <a
-            href="customizing.htm#extending_the_list"><i>Extending the list</i></a> in the <i>Customizing Guide</i>,
-            with the differences highlighted.
+            extensions.</em> By way of example, here's the example from the document <a
+            href="sle.html"><i>Writing search list extensions</i></a>, but with the differences highlighted.
         </p>
         <table>
             <tbody>

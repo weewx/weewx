@@ -70,9 +70,7 @@ def main():
                            " schema.")
     parser.add_option("--reconfigure", action='store_true',
                       help="Create a new database using configuration"
-                           " information found in the configuration file. In"
-                           " particular, the new database will use the unit system"
-                           " found in option [StdConvert][target_unit]."
+                           " information found in the configuration file."
                            " The new database will have the same name as the old"
                            " database, with a '_new' on the end.")
     parser.add_option("--transfer", action='store_true',

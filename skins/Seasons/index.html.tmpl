@@ -59,7 +59,7 @@
     *#
     #set $plot_name = $period + $plot_group
     #for obs in $getobs($plot_name)
-      #if getattr($recent, $obs).has_data
+      #if $recent.check_for_data($obs)
         #set $show_plot = 1
       #end if
     #end for

@@ -1,10 +1,60 @@
 #
-#    Copyright (c) 2009-2021 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2022 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
-"""Classes and functions for interfacing with a weewx database archive."""
+"""Classes and functions for interfacing with a weewx database archive.
 
+This module includes two classes for managing database connections:
+
+   Manager: For managing a WeeWX database without a daily summary.
+   DaySummaryManager: For managing a WeeWX database with a daily summary. It inherits from Manager.
+
+While one could instantiate these classes directly, it's easier with these two class methods:
+
+    cls.open(): For opening an existing database.
+    cls.open_with_create(): For opening a database that may or may not have been created.
+
+where:
+    cls is the class to be opened, either weewx.manager.Manager or weewx.manager.DaySummaryManager.
+
+Which manager to choose depends on whether or not a daily summary is desired for performance
+reasons. Generally, it's a good idea to use one. The database binding section in weewx.conf
+is responsible for choosing the type of manager. Here's a typical entry in the configuration file.
+Note the entry 'manager':
+
+[DataBindings]
+
+    [[wx_binding]]
+        # The database must match one of the sections in [Databases].
+        # This is likely to be the only option you would want to change.
+        database = archive_sqlite
+        # The name of the table within the database
+        table_name = archive
+        # The manager handles aggregation of data for historical summaries
+        manager = weewx.manager.DaySummaryManager
+        # The schema defines the structure of the database.
+        # It is *only* used when the database is created.
+        schema = schemas.wview_extended.schema
+
+To avoid making the user dig into the configuration dictionary to figure out which type of
+database manager to open, there is a convenience function for doing so:
+
+    open_manager_with_config(config_dict, data_binding, initialize, default_binding_dict)
+
+This will return a database manager of the proper type for the specified data binding.
+
+Because opening a database and creating a manager can be expensive, the module also provides
+a caching utility, DBBinder.
+
+Example:
+
+    db_binder = DBBinder(config_dict)
+    db_manager = db_binder.get_manager(data_binding='wx_binding')
+    for row in db_manager.genBatchRows(1664389800, 1664391600):
+        print(row)
+
+"""
 from __future__ import absolute_import
 from __future__ import print_function
 
@@ -44,32 +94,29 @@ class Manager(object):
     unaware of later records in the database, and may choose the wrong query strategy. If this
     might be the case, call member function _sync() before starting the query.
 
-    USEFUL ATTRIBUTES
-
-    database_name: The name of the database the manager is bound to.
-
-    table_name: The name of the main, archive table.
-
-    sqlkeys: A list of the SQL keys that the database table supports.
-
-    obskeys: A list of the observation types that the database table supports.
-
-    std_unit_system: The unit system used by the database table.
-
-    first_timestamp: The timestamp of the earliest record in the table.
-
-    last_timestamp: The timestamp of the last record in the table."""
+    Attributes:
+        connection (weedb.Connection): The underlying database connection.
+        table_name (str): The name of the main, archive table.
+        first_timestamp (int): The timestamp of the earliest record in the table.
+        last_timestamp (int): The timestamp of the last record in the table.
+        std_unit_system (int): The unit system used by the database table.
+        sqlkeys (list[str]): A list of the SQL keys that the database table supports.
+    """
 
     def __init__(self, connection, table_name='archive', schema=None):
         """Initialize an object of type Manager.
 
-        connection: A weedb connection to the database to be managed.
+        Args:
+            connection (weedb.Connection): A weedb connection to the database to be managed.
+            table_name (str): The name of the table to be used in the database.
+                Default is 'archive'.
+            schema (dict): The schema to be used. Optional.
 
-        table_name: The name of the table to be used in the database. Default is 'archive'.
-
-        schema: The schema to be used. Optional. If not supplied, then an exception of type
-        weedb.ProgrammingError will be raised if the database does not exist, and of type
-        weedb.UnitializedDatabase if it exists, but has not been initialized.
+        Raises:
+            weedb.NoDatabaseError: If the database does not exist and no schema has been
+                supplied.
+            weedb.ProgrammingError: If the database exists, but has not been initialized and no
+                schema has been supplied.
         """
 
         self.connection = connection
@@ -100,28 +147,40 @@ class Manager(object):
 
     @classmethod
     def open(cls, database_dict, table_name='archive'):
-        """Open and return a Manager or a subclass of Manager.
+        """Open and return a Manager or a subclass of Manager. The database must exist.
 
-        database_dict: A database dictionary holding the information necessary to open the
-        database.
+        Args:
+            cls: The class object to be created. Typically, something
+                like weewx.manager.DaySummaryManager.
+            database_dict (dict): A database dictionary holding the information necessary to open
+                the database.
 
-          For example, for sqlite, it looks something like:
-            {
-               'SQLITE_ROOT' : '/home/weewx/archive',
-               'database_name' : 'weewx.sdb',
-               'driver' : 'weedb.sqlite'
-            }
+                For example, for sqlite, it looks something like this:
 
-          For MySQL:
-            {
-              'host': 'localhost',
-              'user': 'weewx',
-              'password': 'weewx-password',
-              'database_name' : 'weeewx',
-              'driver' : 'weedb.mysql'
-            }
+                    {
+                       'SQLITE_ROOT' : '/home/weewx/archive',
+                       'database_name' : 'weewx.sdb',
+                       'driver' : 'weedb.sqlite'
+                    }
 
-        table_name: The name of the table to be used in the database. Default is 'archive'.
+                  For MySQL:
+                    {
+                      'host': 'localhost',
+                      'user': 'weewx',
+                      'password': 'weewx-password',
+                      'database_name' : 'weeewx',
+                      'driver' : 'weedb.mysql'
+                    }
+
+            table_name (str): The name of the table to be used in the database. Default
+                is 'archive'.
+
+        Returns:
+            cls: An instantiated instance of class "cls".
+
+        Raises:
+            weedb.NoDatabaseError: If the database does not exist.
+            weedb.ProgrammingError: If the database exists, but has not been initialized.
         """
 
         # This will raise a weedb.OperationalError if the database does not exist. The 'open'
@@ -136,14 +195,39 @@ class Manager(object):
     def open_with_create(cls, database_dict, table_name='archive', schema=None):
         """Open and return a Manager or a subclass of Manager, initializing if necessary.
 
-        database_dict: A database dictionary holding the information necessary to open the
-        database. See the classmethod above for details.
+        Args:
+            cls: The class object to be created. Typically, something
+                like weewx.manager.DaySummaryManager.
+            database_dict (dict): A database dictionary holding the information necessary to open
+                the database.
 
-        table_name: The name of the table to be used in the database. Default is 'archive'.
+                For example, for sqlite, it looks something like this:
 
-        schema: The schema to be used. If not supplied, then an exception of type
-        weedb.OperationalError will be raised if the database does not exist, and of type
-        weedb.Uninitialized if it exists, but has not been initialized.
+                    {
+                       'SQLITE_ROOT' : '/home/weewx/archive',
+                       'database_name' : 'weewx.sdb',
+                       'driver' : 'weedb.sqlite'
+                    }
+
+                  For MySQL:
+                    {
+                      'host': 'localhost',
+                      'user': 'weewx',
+                      'password': 'weewx-password',
+                      'database_name' : 'weeewx',
+                      'driver' : 'weedb.mysql'
+                    }
+
+            table_name (str): The name of the table to be used in the database. Default
+                is 'archive'.
+            schema: The schema to be used.
+        Returns:
+            cls: An instantiated instance of class "cls".
+        Raises:
+            weedb.NoDatabaseError: Raised if the database does not exist and a schema has
+                not been supplied.
+            weedb.ProgrammingError: Raised if the database exists, but has not been initialized
+                and no schema has been supplied.
         """
 
         # This will raise a weedb.OperationalError if the database does not exist.
@@ -166,11 +250,12 @@ class Manager(object):
 
     @property
     def database_name(self):
+        """str: The name of the database the manager is bound to."""
         return self.connection.database_name
 
     @property
     def obskeys(self):
-        """The list of observation types"""
+        """list[str]: The list of observation types"""
         return [obs_type for obs_type in self.sqlkeys
                 if obs_type not in ['dateTime', 'usUnits', 'interval']]
 
@@ -232,23 +317,32 @@ class Manager(object):
     def lastGoodStamp(self):
         """Retrieves the epoch time of the last good archive record.
 
-        returns: Time of the last good archive record as an epoch time, or None if there are no
-        records.
+        Returns:
+            int|None: Time of the last good archive record as an epoch time,
+                or None if there are no records.
         """
         _row = self.getSql("SELECT MAX(dateTime) FROM %s" % self.table_name)
         return _row[0] if _row else None
 
     def firstGoodStamp(self):
-        """Retrieves earliest timestamp in the archive.
+        """Retrieves the earliest timestamp in the archive.
 
-        returns: Time of the first good archive record as an epoch time, or None if there are no
-        records.
+        Returns:
+            int|None: Time of the first good archive record as an epoch time,
+                or None if there are no records.
         """
         _row = self.getSql("SELECT MIN(dateTime) FROM %s" % self.table_name)
         return _row[0] if _row else None
 
     def exists(self, obs_type):
-        """Checks whether the observation type exists in the database."""
+        """Checks whether the observation type exists in the database.
+
+        Args:
+            obs_type(str): The observation type to check for existence.
+
+        Returns:
+            bool: True if the observation type is in the database schema. False otherwise.
+        """
 
         # Check to see if this is a valid observation type:
         return obs_type in self.obskeys
@@ -256,6 +350,14 @@ class Manager(object):
     def has_data(self, obs_type, timespan):
         """Checks whether the observation type exists in the database and whether it has any
         data.
+
+        Args:
+            obs_type(str): The observation type to check for existence.
+            timespan (tuple): A 2-way tuple with the start and stop time to be checked for data.
+
+        Returns:
+            bool: True if the type is in the schema, and has some data within the given timespan.
+                Otherwise, return False.
         """
         return self.exists(obs_type) \
                and bool(weewx.xtypes.get_aggregate(obs_type, timespan, 'not_null', self)[0])
@@ -269,7 +371,7 @@ class Manager(object):
         Commit a single record or a collection of records to the archive.
 
         Args:
-            record_obj (iterable | dict): Either a data record, or an iterable that can return
+            record_obj (iterable|dict): Either a data record, or an iterable that can return
                 data records. Each data record must look like a dictionary, where the keys are the
                 SQL types and the values are the values to be stored in the database.
             accumulator (weewx.accum.Accum): An optional accumulator. If given, the record
@@ -366,13 +468,15 @@ class Manager(object):
         """Generator function that yields raw rows from the archive database with timestamps within
         an interval.
 
-        startstamp: Exclusive start of the interval in epoch time. If 'None', then start at
-        earliest archive record.
+        Args:
+            startstamp (int|None): Exclusive start of the interval in epoch time. If 'None',
+                then start at earliest archive record.
+            stopstamp (int|None): Inclusive end of the interval in epoch time. If 'None',
+                then end at last archive record.
 
-        stopstamp: Inclusive end of the interval in epoch time. If 'None', then end at last archive
-        record.
-
-        yields: A list with the data records. """
+        Yields:
+            list: Each iteration yields a single data row.
+        """
 
         with self.connection.cursor() as _cursor:
 
@@ -406,14 +510,16 @@ class Manager(object):
     def genBatchRecords(self, startstamp=None, stopstamp=None):
         """Generator function that yields records with timestamps within an interval.
 
-        startstamp: Exclusive start of the interval in epoch time. If 'None', then start at
-        earliest archive record.
+        Args:
+            startstamp (int|None): Exclusive start of the interval in epoch time. If 'None',
+                then start at earliest archive record.
+            stopstamp (int|None): Inclusive end of the interval in epoch time. If 'None',
+                then end at last archive record.
 
-        stopstamp: Inclusive end of the interval in epoch time. If 'None', then end at last archive
-        record.
-
-        yields: A dictionary where key is the observation type (eg, 'outTemp') and the value is the
-        observation value. """
+        Yields:
+             dict|None: A dictionary where key is the observation type (eg, 'outTemp') and the
+                value is the observation value, or None if there are no rows in the time range.
+        """
 
         for _row in self.genBatchRows(startstamp, stopstamp):
             yield dict(list(zip(self.sqlkeys, _row))) if _row else None
@@ -421,12 +527,14 @@ class Manager(object):
     def getRecord(self, timestamp, max_delta=None):
         """Get a single archive record with a given epoch time stamp.
 
-        timestamp: The epoch time of the desired record.
+        Args:
+            timestamp (int): The epoch time of the desired record.
+            max_delta (int|None): The largest difference in time that is acceptable.
+                [Optional. The default is no difference]
 
-        max_delta: The largest difference in time that is acceptable.
-        [Optional. The default is no difference]
-
-        returns: a record dictionary or None if the record does not exist."""
+        Returns:
+            dict|None: a record dictionary or None if the record does not exist.
+        """
 
         with self.connection.cursor() as _cursor:
 
@@ -443,19 +551,28 @@ class Manager(object):
             return dict(list(zip(self.sqlkeys, _row))) if _row else None
 
     def updateValue(self, timestamp, obs_type, new_value):
-        """Update (replace) a single value in the database."""
+        """Update (replace) a single value in the database.
+
+        Args:
+            timestamp (int): The timestamp of the record to be updated.
+            obs_type (str): The observation type to be updated.
+            new_value (float | str): The updated value
+        """
 
         self.connection.execute("UPDATE %s SET %s=? WHERE dateTime=?" %
                                 (self.table_name, obs_type), (new_value, timestamp))
 
     def getSql(self, sql, sqlargs=(), cursor=None):
-        """Executes an arbitrary SQL statement on the database.
+        """Executes an arbitrary SQL statement on the database. The result will be a single row.
 
-        sql: The SQL statement
+        Args:
+            sql (str): The SQL statement
+            sqlargs (tuple): A tuple containing the arguments for the SQL statement
+            cursor (cursor| None): An optional cursor to be used. If not given, then one will be
+                created and closed when finished.
 
-        sqlargs: A tuple containing the arguments for the SQL statement
-
-        returns: a tuple containing the results
+        Returns:
+             tuple: a tuple containing a single result set.
         """
         _cursor = cursor or self.connection.cursor()
         try:
@@ -467,7 +584,15 @@ class Manager(object):
 
     def genSql(self, sql, sqlargs=()):
         """Generator function that executes an arbitrary SQL statement on
-        the database."""
+        the database, returning a result set.
+
+        Args:
+            sql (str): The SQL statement
+            sqlargs (tuple): A tuple containing the arguments for the SQL statement.
+
+        Yields:
+            list: A row in the result set.
+        """
 
         with self.connection.cursor() as _cursor:
             for _row in _cursor.execute(sql, sqlargs):
@@ -488,9 +613,11 @@ class Manager(object):
                                        aggregate_type, aggregate_interval)
 
     def add_column(self, column_name, column_type="REAL"):
-        """Add a single column to the database.
-        column_name: The name of the new column.
-        column_type: The type ("REAL"|"INTEGER|) of the new column. Default is "REAL".
+        """Add a single new column to the database.
+
+        Args:
+            column_name (str): The name of the new column.
+            column_type (str): The type ("REAL"|"INTEGER|) of the new column. Default is "REAL".
         """
         with weedb.Transaction(self.connection) as cursor:
             self._add_column(column_name, column_type, cursor)
@@ -501,7 +628,12 @@ class Manager(object):
                        % (self.table_name, column_name, column_type))
 
     def rename_column(self, old_column_name, new_column_name):
-        """Rename an existing column"""
+        """Rename an existing column
+
+        Args:
+            old_column_name (str): Tne old name of the column to be renamed.
+            new_column_name (str): Its new name
+        """
         with weedb.Transaction(self.connection) as cursor:
             self._rename_column(old_column_name, new_column_name, cursor)
 
@@ -511,6 +643,11 @@ class Manager(object):
                        % (self.table_name, old_column_name, new_column_name))
 
     def drop_columns(self, column_names):
+        """Drop a list of columns from the database
+
+        Args:
+            column_names (list[str]): A list containing the observation types to be dropped.
+        """
         with weedb.Transaction(self.connection) as cursor:
             self._drop_columns(column_names, cursor)
 
@@ -535,7 +672,17 @@ class Manager(object):
 
 
 def reconfig(old_db_dict, new_db_dict, new_unit_system=None, new_schema=None):
-    """Copy over an old archive to a new one, using a provided schema."""
+    """Copy over an old archive to a new one, using an optionally new unit system and schema.
+
+    Args:
+        old_db_dict (dict): The database dictionary for the old database. See
+            method Manager.open() for the definition of a database dictionary.
+        new_db_dict (dict): THe database dictionary for the new database.  See
+            method Manager.open() for the definition of a database dictionary.
+        new_unit_system (int|None): The new unit system to be used, or None to keep the old one.
+        new_schema (dict): The new schema to use, or None to use the old one.
+
+    """
 
     with Manager.open(old_db_dict) as old_archive:
         if new_schema is None:
@@ -562,7 +709,9 @@ class DBBinder(object):
     def __init__(self, config_dict):
         """ Initialize a DBBinder object.
 
-        config_dict: The configuration dictionary. """
+        Args:
+            config_dict (dict): The configuration dictionary.
+        """
 
         self.config_dict = config_dict
         self.default_binding_dict = {}
@@ -584,7 +733,16 @@ class DBBinder(object):
         self.default_binding_dict[binding_name] = default_binding_dict
 
     def get_manager(self, data_binding='wx_binding', initialize=False):
-        """Given a binding name, returns the managed object"""
+        """Given a binding name, returns the managed object
+
+        Args:
+            data_binding (str): The returned Manager object will be bound to this binding.
+            initialize (bool): True to initialize the database first.
+
+        Returns:
+            weewx.manager.Manager: Or its subclass, weewx.manager.DaySummaryManager, depending
+                on the settings under the [DataBindings] section.
+        """
         global default_binding_dict
 
         if data_binding not in self.manager_cache:
@@ -625,17 +783,21 @@ default_binding_dict = {'database': 'archive_sqlite',
 
 
 def get_database_dict_from_config(config_dict, database):
-    """Return a database dictionary holding the information necessary to open a database. Searches
-    top-level stanzas for any missing information about a database.
+    """Convenience function that given a configuration dictionary and a database name,
+     returns a database dictionary that can be used to open the database using Manager.open().
 
-    config_dict: The configuration dictionary.
+    Args:
 
-    database: The database whose database dict is to be retrieved (example: 'archive_sqlite')
+        config_dict (dict): The configuration dictionary.
+        database (str): The database whose database dict is to be retrieved
+            (example: 'archive_sqlite')
 
-    Returns: a database dictionary, with everything needed to pass on to a Manager or weedb in
-    order to open a database.
+    Returns:
+        dict: Adatabase dictionary, with everything needed to pass on to a Manager or weedb in
+            order to open a database.
 
-    Example. Given a configuration file snippet that looks like:
+    Example:
+        Given a configuration file snippet that looks like:
 
     >>> import configobj
     >>> from six.moves import StringIO
@@ -681,16 +843,12 @@ def get_database_dict_from_config(config_dict, database):
 
 
 #
-# A "manager dict" is everything needed to open up a manager. It is basically the same as a binding
-# dictionary, except that the database has been replaced with a database dictionary.
-#
-# As such, it includes keys:
+# A "manager dict" includes keys:
 #
 #  manager: The manager class
 #  table_name: The name of the internal table
 #  schema: The schema to be used in case of initialization
-#  database_dict: The database dictionary. This will be passed
-#      on to weedb.
+#  database_dict: The database dictionary. This will be passed on to weedb.
 #
 def get_manager_dict_from_config(config_dict, data_binding,
                                  default_binding_dict=default_binding_dict):
@@ -940,7 +1098,7 @@ class DaySummaryManager(Manager):
             day_summaries_schemas = [(e, 'scalar') for e in self.sqlkeys if
                                      e not in ('dateTime', 'usUnits', 'interval')]
             import weewx.wxmanager
-            if type(self) == weewx.wxmanager.WXDaySummaryManager:
+            if type(self) == weewx.wxmanager.WXDaySummaryManager or 'windSpeed' in self.sqlkeys:
                 # For backwards compatibility, include 'wind'
                 day_summaries_schemas += [('wind', 'vector')]
 
@@ -1047,20 +1205,20 @@ class DaySummaryManager(Manager):
         To help prevent database errors for large archives, database transactions are limited to
         trans_days days of archive data. This is a trade-off between speed and memory usage.
 
-        start_d: The first day to be included, specified as a datetime.date object [Optional.
-        Default is to start with the first datum in the archive.]
+        Args:
 
-        stop_d: The last day to be included, specified as a datetime.date object [Optional. Default
-        is to include the date of the last archive record.]
+            start_d (datetime.date|None): The first day to be included, specified as a datetime.date
+                object [Optional. Default is to start with the first datum in the archive.]
+            stop_d (datetime.date|None): The last day to be included, specified as a datetime.date
+                object [Optional. Default is to include the date of the last archive record.]
+            progress_fn (function): This function will be called after processing every 1000 records.
+            trans_day (int): Number of days of archive data to be used for each daily summaries database
+                transaction. [Optional. Default is 5.]
 
-        progress_fn: This function will be called after processing every 1000 records.
-
-        trans_day: Number of days of archive data to be used for each daily summaries database
-        transaction. [Optional. Default is 5.]
-
-        returns: A 2-way tuple (nrecs, ndays) where
-          nrecs is the number of records backfilled;
-          ndays is the number of days
+        Returns:
+             tuple[int,int]: A 2-way tuple (nrecs, ndays) where
+                  nrecs is the number of records backfilled;
+                  ndays is the number of days
         """
         # Definition:
         #   last_daily_ts: Timestamp of the last record that was incorporated into the
@@ -1374,8 +1532,8 @@ class DaySummaryManager(Manager):
         """Obtain the first and last timestamp of all the daily summaries.
 
         Returns:
-            (first_ts, last_ts): A two-way tuple with the first timestamp and the last timestamp.
-            Returns None if there is nothing in the daily summaries.
+            tuple[int,int]|None: A two-way tuple (first_ts, last_ts) with the first timestamp and
+                the last timestamp. Returns None if there is nothing in the daily summaries.
         """
 
         big_select = ["SELECT MIN(dateTime) AS mtime FROM %s_day_%s"
@@ -1398,7 +1556,7 @@ class DaySummaryManager(Manager):
         """
 
         # Get the TimeSpan for the day starting with sod_ts:
-        _timespan = weeutil.weeutil.archiveDaySpan(sod_ts, 0)
+        _timespan = weeutil.weeutil.daySpan(sod_ts)
 
         # Get an empty day accumulator:
         _day_accum = weewx.accum.Accum(_timespan, self.std_unit_system)

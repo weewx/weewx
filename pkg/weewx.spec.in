@@ -132,7 +132,7 @@ cat weewx.conf | sed \
  > %{buildroot}%{dst_cfg_dir}/weewx.conf
 %if "%{initdir}" == "/etc/systemd/system"
 cat util/systemd/weewx.service | sed \
- -e 's%ExecStart=.*%ExecStart=/usr/bin/weewxd --daemon --pidfile=/var/run/weewx.pid /etc/weewx/weewx.conf%' \
+ -e 's%ExecStart=.*%ExecStart=/usr/bin/weewxd /etc/weewx/weewx.conf%' \
  > %{buildroot}%{initdir}/weewx.service
 %else
 cp util/init.d/weewx.%{platform} %{buildroot}%{initdir}/weewx

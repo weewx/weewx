@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2021 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2022 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -17,6 +17,7 @@ if not hasattr(sqlite3.Connection, "__exit__"):  # @UndefinedVariable
     from pysqlite2 import dbapi2 as sqlite3  # @Reimport @UnresolvedImport
 
 sqlite_version = sqlite3.sqlite_version
+has_math = sqlite_version >= '3.35.0'
 
 import weedb
 from weeutil.weeutil import to_int, to_bool
@@ -191,6 +192,11 @@ class Connection(weedb.Connection):
             return None if row is None else (var_name, row[0])
         finally:
             cursor.close()
+
+    @property
+    def has_math(self):
+        global has_math
+        return has_math
 
     @guard
     def begin(self):

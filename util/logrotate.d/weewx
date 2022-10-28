@@ -1,30 +1,45 @@
-/var/log/weewx.log {
+/var/log/weewxd.log /var/log/weewx.log {
   weekly
   missingok
   rotate 52
   compress
-  delaycompress
+#  delaycompress # do not compress the most recently rotated file
+  copytruncate   # copy the file, then truncate
   notifempty
 
-# on some older systems the permissions do not propagate, so force them
-# debian uses root:adm
-#  create 644 root adm
-# ubuntu uses syslog:adm
-#  create 644 syslog adm
+# on some systems the permissions do not propagate, so force them
+#  create 644 root adm    # default user/group on Debian
+#  create 644 syslog adm  # default user/group on Ubuntu
+#  create 644 root root   # default user/group on Redhat
 
-# on some older systems rsyslog must be restarted to send output to right file
-#  sharedscripts
-#  postrotate
-# standard way of invoking rc scripts
-#    /etc/init.d/rsyslog stop
-#    /etc/init.d/rsyslog start
-# on some systems a reload will work
-#    /etc/init.d/rsyslog reload > /dev/null
-# some ubuntu systems use upstart
-#    service rsyslog restart > /dev/null
-# some redhat/fedora systems have their own way
-#    reload rsyslog > /dev/null 2>&1
-# some debian systems do it this way
-#    invoke-rc.d rsyslog reload > /dev/null
-#  endscript
+## The default logrotate behavior is to use "create" instead of "copytruncate".
+## However, if you do not use "copytruncate", then on some systems rsyslog
+## must be reloaded, or weewx must be restarted, otherwise the weewx log
+## messages will go to the previous log file, not the newly rotated one.
+##
+## The following example shows how to use the 'sharedscripts' and 'postrotate'
+## options to restart rsyslog.
+##
+## The command to restart rsyslog depends on the operating system - some
+## examples are given below.  In the postrotate section, uncomment only one
+## of the commands.  If you choose this approach, be sure to test!
+##
+# sharedscripts  # Run the command only _once_, not pr file.
+# postrotate     # Run the script after rotation is done.
+### On systems with SystemD
+#   systemctl kill -s HUP rsyslog.service
+### On systems that have "pgrep / pkill"
+#   pkill -HUP rsyslog
+### If SysV init scripts are available
+#   /etc/init.d/rsyslog stop
+#   /etc/init.d/rsyslog start
+### SysV where reload is available
+#   /etc/init.d/rsyslog reload > /dev/null
+### Ubuntu systems with upstart
+#   service rsyslog restart > /dev/null
+### Some (older?) RedHat/Fedora systems have the "reload" command
+#   reload rsyslog > /dev/null 2>&1
+### Debian systems might have this command available
+#   invoke-rc.d rsyslog reload > /dev/null
+# endscript
 }

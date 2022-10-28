@@ -1,6 +1,6 @@
 # coding: utf-8
 #
-#    Copyright (c) 2009-2021 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2022 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your rights.
 #
@@ -17,6 +17,7 @@ import shutil
 import sys
 import tempfile
 
+import six
 from six.moves import StringIO, input
 
 import configobj
@@ -70,27 +71,30 @@ def find_file(file_path=None, args=None, locations=DEFAULT_LOCATIONS,
     If after all that, the file still cannot be found, then an IOError
     exception will be raised.
 
-    Parameters:
+    Args:
+        file_path (str): A candidate path to the file.
+        args (list[str]): command-line arguments. If the file cannot be found in file_path,
+            then the members of args will be tried.
+        locations (list[str]): A list of directories to be searched. If they do not
+            start with a slash ('/'), then they will be treated as relative to
+            this file (bin/weecfg/__init__.py).
+            Default is ['../..', '/etc/weewx', '/home/weewx'].
+        file_name (str): The name of the file to be found. This is used
+            only if the directories must be searched. Default is 'weewx.conf'.
 
-    file_path: A candidate path to the file.
+    Returns:
+        str: full path to the file
 
-    args: command-line arguments. If the file cannot be found in file_path,
-    then the first element in args will be tried.
-
-    locations: A list of directories to be searched. If they do not
-    start with a slash ('/'), then they will be treated as relative to
-    this file (bin/weecfg/__init__.py).
-    Default is ['../..', '/etc/weewx', '/home/weewx'].
-
-    file_name: The name of the file to be found. This is used
-    only if the directories must be searched. Default is 'weewx.conf'.
-
-    returns: full path to the file
+    Raises:
+        IOError: If the configuration file cannot be found, or is not a file.
     """
 
     # Start by searching args (if available)
     if file_path is None and args:
         for i in range(len(args)):
+            # Ignore empty strings and None values:
+            if not args[i]:
+                continue
             if not args[i].startswith('-'):
                 file_path = args[i]
                 del args[i]
@@ -107,8 +111,8 @@ def find_file(file_path=None, args=None, locations=DEFAULT_LOCATIONS,
                 return candidate
 
     if file_path is None:
-        raise IOError("Unable to find file '%s'. Tried directories %s" %
-                      (file_name, locations))
+        raise IOError("Unable to find file '%s'. Tried directories %s"
+                      % (file_name, locations))
     elif not os.path.isfile(file_path):
         raise IOError("%s is not a file" % file_path)
 
@@ -122,17 +126,21 @@ def read_config(config_path, args=None, locations=DEFAULT_LOCATIONS,
     locations for weewx.conf. Returns the filename of the actual configuration
     file, as well as the ConfigObj.
 
-    config_path: configuration filename
+    Args:
 
-    args: command-line arguments
+        config_path (str): configuration filename.
+        args (list[str]): command-line arguments.
+        locations (list[str]): A list of directories to search.
+        file_name (str): The name of the config file. Default is 'weewx.conf'
+        interpolation (str): The type of interpolation to use when reading the config file.
+            Default is 'ConfigParser'. See the ConfigObj documentation https://bit.ly/3L593vH
 
-    return: path-to-file, instance-of-ConfigObj
+    Returns:
+        (str, configobj.ConfigObj): path-to-file, instance-of-ConfigObj
 
     Raises:
-
-    SyntaxError: If there is a syntax error in the file
-
-    IOError: If the file cannot be found
+        SyntaxError: If there is a syntax error in the file
+        IOError: If the file cannot be found
     """
     # Find and open the config file:
     config_path = find_file(config_path, args,
@@ -149,6 +157,11 @@ def read_config(config_path, args=None, locations=DEFAULT_LOCATIONS,
         e.msg += ' File %s' % config_path
         raise
 
+    # Remember where we found the config file
+    config_dict['config_path'] = os.path.realpath(config_path)
+    # Find the top-level module. This is where the entry point will be.
+    config_dict['entry_path'] = getattr(sys.modules['__main__'], '__file__', 'Unknown')
+
     return config_path, config_dict
 
 
@@ -157,9 +170,17 @@ def save_with_backup(config_dict, config_path):
 
 
 def save(config_dict, config_path, backup=False):
-    """Save the config file, backing up as necessary."""
+    """Save the config file, backing up as necessary.
 
-    # Check to see if the file exists and we are supposed to make backup:
+    Args:
+        config_dict(dict): A configuration dictionary.
+        config_path(str): Path to where the dictionary should be saved.
+        backup(bool): True to save a timestamped version of the old config file, False otherwise.
+    Returns:
+        str|None: The path to the backed up old config file. None otherwise
+    """
+
+    # Check to see if the file exists, and we are supposed to make backup:
     if os.path.exists(config_path) and backup:
 
         # Yes. We'll have to back it up.
@@ -189,10 +210,27 @@ def save(config_dict, config_path, backup=False):
 # ==============================================================================
 
 def modify_config(config_dict, stn_info, logger, debug=False):
-    """If a driver has a configuration editor, then use that to insert the
+    """This function is responsible for creating or modifying the driver stanza.
+
+    If a driver has a configuration editor, then use that to insert the
     stanza for the driver in the config_dict.  If there is no configuration
     editor, then inject a generic configuration, i.e., just the driver name
     with a single 'driver' element that points to the driver file.
+
+    Args:
+        config_dict(configobj.ConfigObj): The configuration dictionary
+        stn_info(dict): Dictionary containing station information. Typical entries:
+            location: "My Little Town, Oregon"
+            latitude: "45.0"
+            longitude: "-122.0"
+            altitude: ["700", "foot"]
+            station_type: "Vantage"
+            lang: "en"
+            unit_system: "us"
+            register_this_station: "False"
+            driver: "weewx.drivers.vantage"
+        logger (Logger): For logging
+        debug (bool): For additional debug information
     """
     driver_editor = None
     driver_name = None
@@ -215,13 +253,13 @@ def modify_config(config_dict, stn_info, logger, debug=False):
     stanza = None
     if driver_name is not None:
         if driver_editor is not None:
-            orig_stanza_text = None
-
             # if a previous stanza exists for this driver, grab it
             if driver_name in config_dict:
                 orig_stanza = configobj.ConfigObj(interpolation=False)
                 orig_stanza[driver_name] = config_dict[driver_name]
                 orig_stanza_text = '\n'.join(orig_stanza.write())
+            else:
+                orig_stanza_text = None
 
             # let the driver process the stanza or give us a new one
             stanza_text = driver_editor.get_conf(orig_stanza_text)
@@ -231,10 +269,7 @@ def modify_config(config_dict, stn_info, logger, debug=False):
             driver_editor.modify_config(config_dict)
         else:
             stanza = configobj.ConfigObj(interpolation=False)
-            if driver_name in config_dict:
-                stanza[driver_name] = config_dict[driver_name]
-            else:
-                stanza[driver_name] = {}
+            stanza[driver_name] = config_dict.get(driver_name, {})
 
     # If we have a stanza, inject it into the configuration dictionary
     if stanza is not None and driver_name is not None:
@@ -1456,25 +1491,20 @@ def get_driver_infos(driver_pkg_name='weewx.drivers', excludes=['__init__.py']):
             # A valid driver will define the attribute "DRIVER_NAME"
             if hasattr(driver_module, 'DRIVER_NAME'):
                 # A driver might define the attribute DRIVER_VERSION
-                driver_module_version = driver_module.DRIVER_VERSION \
-                    if hasattr(driver_module, 'DRIVER_VERSION') else '?'
+                driver_module_version = getattr(driver_module, 'DRIVER_VERSION', '?')
                 # Create an entry for it, keyed by the driver module name
                 driver_info_dict[driver_module_name] = {
                     'module_name': driver_module_name,
                     'driver_name': driver_module.DRIVER_NAME,
                     'version': driver_module_version,
                     'status': ''}
-        except ImportError as e:
+        except (SyntaxError, ImportError) as e:
             # If the import fails, report it in the status
             driver_info_dict[driver_module_name] = {
                 'module_name': driver_module_name,
                 'driver_name': '?',
                 'version': '?',
                 'status': e}
-        except Exception as e:
-            # Ignore anything else.  This might be a python file that is not
-            # a driver, a python file with errors, or who knows what.
-            pass
 
     return driver_info_dict
 
@@ -1717,7 +1747,7 @@ def prompt_with_options(prompt, default=None, options=None):
     msg = "%s [%s]: " % (prompt, default) if default is not None else "%s: " % prompt
     value = None
     while value is None:
-        value = input(msg).strip()
+        value = input(six.ensure_str(msg)).strip()
         if value:
             if options and value not in options:
                 value = None

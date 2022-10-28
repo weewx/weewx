@@ -156,6 +156,12 @@ class Connection(object):
         If the variable does not exist, it returns None.
         """
         raise NotImplementedError
+
+    @property
+    def has_math(self):
+        """Returns True if the database supports math functions such as cos() and sin().
+        False otherwise."""
+        return True
     
     def begin(self):
         raise NotImplementedError

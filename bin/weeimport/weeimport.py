@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2021 Tom Keffer <tkeffer@gmail.com> and Gary Roderick
+#    Copyright (c) 2009-2022 Tom Keffer <tkeffer@gmail.com> and Gary Roderick
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -76,6 +76,7 @@ class WeeImportFieldError(Exception):
        from an external source.
     """
 
+
 class WeeImportDecodeError(Exception):
     """Base class of exceptions thrown when encountering a decode error with an
        external source.
@@ -127,7 +128,7 @@ class Source(object):
 
         Set some realistic default values for options read from the import
         config file. Obtain objects to handle missing derived obs (if required)
-        and QC on imported data. Parse any --date command line option so we
+        and QC on imported data. Parse any --date command line option, so we
         know what records to import.
         """
 
@@ -146,6 +147,9 @@ class Source(object):
         self.apply_qc = tobool(import_config_dict.get('qc', True))
         # calc-missing, default to True
         self.calc_missing = tobool(import_config_dict.get('calc_missing', True))
+        # decimal separator, default to period '.'
+        self.decimal_sep = import_config_dict.get('decimal', '.')
+
         # Some sources include UV index and solar radiation values even if no
         # sensor was present. The WeeWX convention is to store the None value
         # when a sensor or observation does not exist. Record whether UV and/or
@@ -284,6 +288,7 @@ class Source(object):
 
         # initialise two sets to hold timestamps of records for which we
         # encountered duplicates
+
         # duplicates seen over all periods
         self.duplicates = set()
         # duplicates seen over the current period
@@ -342,7 +347,7 @@ class Source(object):
 
         # setup a counter to count the periods of records
         self.period_no = 1
-        # obtain the lastUpdate meta data value before we import anything
+        # obtain the lastUpdate metadata value before we import anything
         last_update = to_int(self.dbm._read_metadata('lastUpdate'))
         with self.dbm as archive:
             if self.first_period:
@@ -380,8 +385,10 @@ class Source(object):
                     log.info("**** Unable to load source data for period %d." % self.period_no)
                     print("**** %s" % e)
                     log.info("**** %s" % e)
-                    print("**** Period %d will be skipped. Proceeding to next period." % self.period_no)
-                    log.info("**** Period %d will be skipped. Proceeding to next period." % self.period_no)
+                    print("**** Period %d will be skipped. "
+                          "Proceeding to next period." % self.period_no)
+                    log.info("**** Period %d will be skipped. "
+                             "Proceeding to next period." % self.period_no)
                     # increment our period counter
                     self.period_no += 1
                     continue
@@ -390,10 +397,14 @@ class Source(object):
                     log.info("**** Unable to decode source data for period %d." % self.period_no)
                     print("**** %s" % e)
                     log.info("**** %s" % e)
-                    print("**** Period %d will be skipped. Proceeding to next period." % self.period_no)
-                    log.info("**** Period %d will be skipped. Proceeding to next period." % self.period_no)
-                    print("**** Consider specifying the source file encoding using the 'source_encoding' config option.")
-                    log.info("**** Consider specifying the source file encoding using the 'source_encoding' config option.")
+                    print("**** Period %d will be skipped. "
+                          "Proceeding to next period." % self.period_no)
+                    log.info("**** Period %d will be skipped. "
+                             "Proceeding to next period." % self.period_no)
+                    print("**** Consider specifying the source file encoding "
+                          "using the 'source_encoding' config option.")
+                    log.info("**** Consider specifying the source file encoding "
+                             "using the 'source_encoding' config option.")
                     # increment our period counter
                     self.period_no += 1
                     continue
@@ -414,16 +425,17 @@ class Source(object):
                 log.info(_msg)
 
                 # save the mapped data to archive
-                # first advise the user and log, but only if its not a dry run
+                # first advise the user and log, but only if it's not a dry run
                 if not self.dry_run:
                     _msg = 'Saving mapped data to archive for period %d ...' % self.period_no
                     if self.verbose:
                         print(_msg)
                     log.info(_msg)
                 self.saveToArchive(archive, _mapped_data)
-                # advise the user and log, but only if its not a dry run
+                # advise the user and log, but only if it's not a dry run
                 if not self.dry_run:
-                    _msg = 'Mapped data saved to archive successfully for period %d.' % self.period_no
+                    _msg = 'Mapped data saved to archive successfully "' \
+                           '"for period %d.' % self.period_no
                     if self.verbose:
                         print(_msg)
                     log.info(_msg)
@@ -432,7 +444,7 @@ class Source(object):
             # The source data has been processed and any records saved to
             # archive (except if it was a dry run).
 
-            # now update the lastUpdate meta data field, set it to the max of
+            # now update the lastUpdate metadata field, set it to the max of
             # the timestamp of the youngest record imported and the value of
             # lastUpdate from before we started
             new_last_update = max_with_none((last_update, self.latest_ts))
@@ -477,8 +489,8 @@ class Source(object):
                         # get a CalcMissing object.
                         # First construct a CalcMissing config dict
                         # (self.dry_run will never be true). Subtract 0.5
-                        # seconds from earliest timestamp as calc_missing only
-                        # calculates missing derived obs for records
+                        # seconds from the earliest timestamp as calc_missing
+                        # only calculates missing derived obs for records
                         # timestamped after start_ts.
                         calc_missing_config_dict = {'name': 'Calculate Missing Derived Observations',
                                                     'binding': self.db_binding_wx,
@@ -515,7 +527,8 @@ class Source(object):
                         _msg = "1 duplicate record was ignored."
                         print(_msg)
                         log.info(_msg)
-                    print("Those records with a timestamp already in the archive will not have been")
+                    print("Those records with a timestamp already "
+                          "in the archive will not have been")
                     print("imported. Confirm successful import in the WeeWX log file.")
 
     def parseMap(self, source_type, source, import_config_dict):
@@ -529,9 +542,9 @@ class Source(object):
         All user defined mapping is specified in the import config file.
 
         To generate the field map first look to see if we have a fixed map, if
-        we do validate it and return the resulting map. Otherwise look for user
-        specified mapping in the import config file, construct the field map
-        and return it. If there is neither a fixed map or user specified
+        we do validate it and return the resulting map. Otherwise, look for
+        user specified mapping in the import config file, construct the field
+        map and return it. If there is neither a fixed map nor a user specified
         mapping then raise an error.
 
         Input parameters:
@@ -603,20 +616,20 @@ class Source(object):
                     # we have 1 parameter so it must be just name
                     _map[_key] = {'field_name': _entry[0]}
                 else:
-                    # otherwise its invalid so ignore it
+                    # otherwise it's invalid so ignore it
                     pass
 
             # now do some crude error checking
 
-            # dateTime. We must have a dateTime mapping. Check for a 'field_name'
-            # field under 'dateTime' and be prepared to catch the error if it
-            # does not exist.
+            # dateTime. We must have a dateTime mapping. Check for a
+            # 'field_name' field under 'dateTime' and be prepared to catch the
+            # error if it does not exist.
             try:
                 if _map['dateTime']['field_name']:
                     # we have a 'field_name' entry so continue
                     pass
                 else:
-                    # something is wrong, we have a 'field_name' entry but it
+                    # something is wrong; we have a 'field_name' entry, but it
                     # is not valid so raise an error
                     _msg = "Invalid mapping specified in '%s' for " \
                            "field 'dateTime'." % self.import_config_path
@@ -718,7 +731,8 @@ class Source(object):
                 try:
                     _raw_dateTime = _row[self.map['dateTime']['field_name']]
                 except KeyError:
-                    _msg = "Field '%s' not found in source data." % self.map['dateTime']['field_name']
+                    _msg = "Field '%s' not found in source "\
+                           "data." % self.map['dateTime']['field_name']
                     raise WeeImportFieldError(_msg)
                 # now process the raw date time data
                 if isinstance(_raw_dateTime, numbers.Number) or _raw_dateTime.isdigit():
@@ -751,7 +765,7 @@ class Source(object):
                     # we have no timeframe or if we do it falls within it so
                     # save the dateTime
                     _rec['dateTime'] = _rec_dateTime
-                    # update earliest and latest record timstamps
+                    # update earliest and latest record timestamps
                     if self.earliest_ts is None or _rec_dateTime < self.earliest_ts:
                         self.earliest_ts = _rec_dateTime
                     if self.latest_ts is None or _rec_dateTime > self.earliest_ts:
@@ -768,10 +782,11 @@ class Source(object):
                 # we have a field map for a unit system
                 try:
                     # The mapped field is in _row so try to get the raw data.
-                    # If its not there then raise an error.
+                    # If it's not there then raise an error.
                     _raw_units = int(_row[self.map['usUnits']['field_name']])
                 except KeyError:
-                    _msg = "Field '%s' not found in source data." % self.map['usUnits']['field_name']
+                    _msg = "Field '%s' not found in "\
+                           "source data." % self.map['usUnits']['field_name']
                     raise WeeImportFieldError(_msg)
                 # we have a value but is it valid
                 if _raw_units in unit_nicknames:
@@ -786,16 +801,17 @@ class Source(object):
             # interval
             if 'field_name' in self.map['interval']:
                 # We have a map for interval so try to get the raw data. If
-                # its not there then raise an error.
+                # it's not there raise an error.
                 try:
                     _tfield = _row[self.map['interval']['field_name']]
                 except KeyError:
-                    _msg = "Field '%s' not found in source data." % self.map['interval']['field_name']
+                    _msg = "Field '%s' not found in "\
+                           "source data." % self.map['interval']['field_name']
                     raise WeeImportFieldError(_msg)
                 # now process the raw interval data
                 if _tfield is not None and _tfield != '':
                     try:
-                        interval = int(_tfield)
+                        _rec['interval'] = int(_tfield)
                     except ValueError:
                         _msg = "Invalid '%s' field. Cannot convert '%s' to " \
                                "an integer." % (self.map['interval']['field_name'],
@@ -809,9 +825,20 @@ class Source(object):
                                                 timestamp_to_string(_rec['dateTime']))
                     raise ValueError(_msg)
             else:
-                # we have no mapping so try to calculate it
-                interval = self.getInterval(_last_ts, _rec['dateTime'])
-            _rec['interval'] = interval
+                # we have no mapping so calculate it, wrap in a try..except in
+                # case it cannot be calculated
+                try:
+                    _rec['interval'] = self.getInterval(_last_ts, _rec['dateTime'])
+                except WeeImportFieldError as e:
+                    # We encountered a WeeImportFieldError, which means we
+                    # cannot calculate the interval value, possibly because
+                    # this record is out of date-time order. We cannot use this
+                    # record so skip it, advise the user (via console and log)
+                    # and move to the next record.
+                    _msg = "Record discarded: %s" % e
+                    print(_msg)
+                    log.info(_msg)
+                    continue
             # now step through the rest of the fields in our map and process
             # the fields that don't require special processing
             for _field in self.map:
@@ -830,124 +857,138 @@ class Source(object):
                             _rec[_field] = _row[self.map[_field]['field_name']]
                         else:
                             # we have a non-text field so try to get a value
-                            # for the obs but if we can't catch the error
-
+                            # for the obs but if we can't, catch the error
                             try:
-                                _temp = float(_row[self.map[_field]['field_name']].strip())
+                                _value = float(_row[self.map[_field]['field_name']].strip())
                             except AttributeError:
-                                # the data has no strip() attribute so chances are
-                                # it's a number already
-                                if isinstance(_row[self.map[_field]['field_name']], numbers.Number):
-                                    _temp = _row[self.map[_field]['field_name']]
-                                elif _row[self.map[_field]['field_name']] is None:
-                                    _temp = None
+                                # the data has no strip() attribute so chances
+                                # are it's a number already, or it could
+                                # (somehow ?) be None
+                                if _row[self.map[_field]['field_name']] is None:
+                                    _value = None
                                 else:
-                                    # it's not a string and its not a number so raise an error
-                                    _msg = "%s: cannot convert '%s' to float at " \
-                                           "timestamp '%s'." % (_field,
-                                                                _row[self.map[_field]['field_name']],
-                                                                timestamp_to_string(_rec['dateTime']))
-                                    raise ValueError(_msg)
-                            except TypeError:
-                                # perhaps we have a None, so return None for our field
-                                _temp = None
+                                    try:
+                                        _value = float(_row[self.map[_field]['field_name']])
+                                    except TypeError:
+                                        # somehow we have data that is not a
+                                        # number or a string
+                                        _msg = "%s: cannot convert '%s' to float at " \
+                                               "timestamp '%s'." % (_field,
+                                                                    _row[self.map[_field]['field_name']],
+                                                                    timestamp_to_string(_rec['dateTime']))
+                                        raise TypeError(_msg)
                             except ValueError:
-                                # most likely have non-numeric, non-None data
+                                # A ValueError means that float() could not
+                                # convert the string or number to a float, most
+                                # likely because we have non-numeric, non-None
+                                # data. We have some other possibilities to
+                                # work through before we give up.
 
-                                # if this is a csv import and we are mapping to a
-                                # direction field perhaps we have a string
-                                # representation of a cardinal, inter-cardinal or
-                                # secondary inter-cardinal direction that we can
-                                # convert to degrees
+                                # start by setting our result to None.
+                                _value = None
 
-                                # set a flag to indicate whether we matched the data to a value
-                                matched = False
-                                if hasattr(self, 'wind_dir_map') and self.map[_field]['units'] == 'degree_compass':
-                                    # we have a csv import and we are mapping to a
-                                    # direction field
+                                # perhaps it is numeric data but with something
+                                # other that a period as decimal separator, try
+                                # using float() again after replacing the
+                                # decimal seperator
+                                if self.decimal_sep is not None:
+                                    _data = _row[self.map[_field]['field_name']].replace(self.decimal_sep,
+                                                                                         '.')
+                                    try:
+                                        _value = float(_data)
+                                    except ValueError:
+                                        # still could not convert it so pass
+                                        pass
 
-                                    # first strip any whitespace and hyphens from
-                                    # the data
-                                    _stripped = re.sub(r'[\s-]+', '', _row[self.map[_field]['field_name']])
+                                # If this is a csv import and we are mapping to
+                                # a direction field, perhaps we have a string
+                                # representation of a cardinal, inter-cardinal
+                                # or secondary inter-cardinal direction that we
+                                # can convert to degrees
+
+                                if _value is None and hasattr(self, 'wind_dir_map') and \
+                                        self.map[_field]['units'] == 'degree_compass':
+                                    # we have a csv import and we are mapping
+                                    # to a direction field, so try a cardinal
+                                    # conversion
+
+                                    # first strip any whitespace and hyphens
+                                    # from the data
+                                    _stripped = re.sub(r'[\s-]+', '',
+                                                       _row[self.map[_field]['field_name']])
                                     # try to use the data as the key in a dict
-                                    # mapping directions to degrees, if there is no
-                                    # match we will have None returned
-                                    dir_degrees = self.wind_dir_map.get(_stripped.upper())
-                                    # if we have a non-None value use it
-                                    if dir_degrees is not None:
-                                        _temp = dir_degrees
-                                        # we have a match so set our flag
-                                        matched = True
-                                # if we did not get a match perhaps we can ignore
-                                # the invalid data, that will depend on the
-                                # ignore_invalid_data property
-                                if not matched and self.ignore_invalid_data:
-                                    # we ignore the invalid data so set our result
-                                    # to None
-                                    _temp = None
-                                    # set our matched flag
-                                    matched = True
-                                # if we did not find a match raise the error
-                                if not matched:
+                                    # mapping directions to degrees, if there
+                                    # is no match we will have None returned
+                                    try:
+                                        _value = self.wind_dir_map[_stripped.upper()]
+                                    except KeyError:
+                                        # we did not find a match so pass
+                                        pass
+                                # we have exhausted all possibilities, so if we
+                                # have a non-None result use it, otherwise we
+                                # either ignore it or raise an error
+                                if _value is None and not self.ignore_invalid_data:
                                     _msg = "%s: cannot convert '%s' to float at " \
                                            "timestamp '%s'." % (_field,
                                                                 _row[self.map[_field]['field_name']],
                                                                 timestamp_to_string(_rec['dateTime']))
                                     raise ValueError(_msg)
+
                             # some fields need some special processing
 
                             # rain - if our imported 'rain' field is cumulative
                             # (self.rain == 'cumulative') then we need to calculate
                             # the discrete rainfall for this archive period
-                            if _field == "rain" and self.rain == "cumulative":
-                                _rain = self.getRain(_last_rain, _temp)
-                                _last_rain = _temp
-                                _temp = _rain
-
+                            if _field == "rain":
+                                if self.rain == "cumulative":
+                                    _rain = self.getRain(_last_rain, _value)
+                                    _last_rain = _value
+                                    _value = _rain
                             # wind - check any wind direction fields are within our
                             # bounds and convert to 0 to 360 range
-                            if _field == "windDir" or _field == "windGustDir":
-                                if _temp is not None and (self.wind_dir[0] <= _temp <= self.wind_dir[1]):
+                            elif _field == "windDir" or _field == "windGustDir":
+                                if _value is not None and (self.wind_dir[0] <= _value <= self.wind_dir[1]):
                                     # normalise to 0 to 360
-                                    _temp %= 360
+                                    _value %= 360
                                 else:
                                     # outside our bounds so set to None
-                                    _temp = None
-
+                                    _value = None
                             # UV - if there was no UV sensor used to create the
                             # imported data then we need to set the imported value
                             # to None
-                            if _field == 'UV' and not self.UV_sensor:
-                                _temp = None
-
+                            elif _field == 'UV':
+                                if not self.UV_sensor:
+                                    _value = None
                             # solar radiation - if there was no solar radiation
                             # sensor used to create the imported data then we need
                             # to set the imported value to None
-                            if _field == 'radiation' and not self.solar_sensor:
-                                _temp = None
+                            elif _field == 'radiation':
+                                if not self.solar_sensor:
+                                    _value = None
 
                             # check and ignore if required temperature and humidity
                             # values of 255.0 and greater
                             if self.ignore_extr_th \
                                     and self.map[_field]['units'] in ['degree_C', 'degree_F', 'percent'] \
-                                    and _temp >= 255.0:
-                                _temp = None
+                                    and _value >= 255.0:
+                                _value = None
 
                             # if there is no mapped field for a unit system we
                             # have to do field by field unit conversions
                             if _units is None:
-                                _temp_vt = ValueTuple(_temp,
-                                                      self.map[_field]['units'],
-                                                      weewx.units.obs_group_dict[_field])
-                                _conv_vt = convertStd(_temp_vt, unit_sys)
+                                _vt = ValueTuple(_value,
+                                                 self.map[_field]['units'],
+                                                 weewx.units.obs_group_dict[_field])
+                                _conv_vt = convertStd(_vt, unit_sys)
                                 _rec[_field] = _conv_vt.value
                             else:
                                 # we do have a mapped field for a unit system so
                                 # save the field in our record and continue, any
                                 # unit conversion will be done in bulk later
-                                _rec[_field] = _temp
+                                _rec[_field] = _value
                     else:
-                        # No it's not. Set the field in our output to None
+                        # no it's not in our record, so set the field in our
+                        # output to None
                         _rec[_field] = None
                         # now warn the user about this field if we have not
                         # already done so
@@ -963,7 +1004,8 @@ class Source(object):
                             if not self.suppress:
                                 print(_msg)
                             log.info(_msg)
-                            _msg = "         WeeWX field '%s' will be set to 'None' in these records." % _field
+                            _msg = "         WeeWX field '%s' will be "\
+                                   "set to 'None' in these records." % _field
                             if not self.suppress:
                                 print(_msg)
                             log.info(_msg)
@@ -976,14 +1018,14 @@ class Source(object):
                 # we have a mapped field for a unit system with a valid value
                 _rec['usUnits'] = _units
             else:
-                # no mapped field for unit system but we have already converted
-                # any necessary fields on a field by field basis so all we need
-                # do is set 'usUnits', any bulk conversion will be taken care of
-                # by saveToArchive()
+                # no mapped field for unit system, but we have already
+                # converted any necessary fields on a field by field basis so
+                # all we need do is set 'usUnits', any bulk conversion will be
+                # taken care of by saveToArchive()
                 _rec['usUnits'] = unit_sys
             # If interval is being derived from record timestamps our first
             # record will have an interval of None. In this case we wait until
-            # we have the second record and then we use the interval between
+            # we have the second record, and then we use the interval between
             # records 1 and 2 as the interval for record 1.
             if len(_records) == 1 and _records[0]['interval'] is None:
                 _records[0]['interval'] = _rec['interval']
@@ -1008,9 +1050,12 @@ class Source(object):
                        "different 'interval' values."
                 print(_msg)
                 log.info(_msg)
-                print("         This may mean the imported data is missing some records and it may lead")
-                print("         to data integrity issues. If the raw data has a known, fixed interval")
-                print("         value setting the relevant 'interval' setting in wee_import config to")
+                print("         This may mean the imported data is missing "
+                      "some records and it may lead")
+                print("         to data integrity issues. If the raw data has "
+                      "a known, fixed interval")
+                print("         value setting the relevant 'interval' setting "
+                      "in wee_import config to")
                 print("         this value may give a better result.")
                 while self.interval_ans not in ['y', 'n']:
                     if self.no_prompt:
@@ -1024,8 +1069,10 @@ class Source(object):
                         print("Dry run import aborted by user. %d records were processed." % self.total_rec_proc)
                     else:
                         if self.total_rec_proc > 0:
-                            print("Those records with a timestamp already in the archive will not have been")
-                            print("imported. As the import was aborted before completion refer to the WeeWX log")
+                            print("Those records with a timestamp already in the "
+                                  "archive will not have been")
+                            print("imported. As the import was aborted before completion "
+                                  "refer to the WeeWX log")
                             print("file to confirm which records were imported.")
                             raise SystemExit('Exiting.')
                         else:
@@ -1038,7 +1085,7 @@ class Source(object):
             if self.verbose:
                 print(_msg)
             log.info(_msg)
-            # the user wants to continue or we have only one unique value for
+            # the user wants to continue, or we have only one unique value for
             # interval so return the records
             return _records
         else:
@@ -1091,19 +1138,19 @@ class Source(object):
             # get interval from the timestamps of consecutive records
             try:
                 _interval = int((current_ts - last_ts) / 60.0)
-                # but if _interval < 0 our records are not in date time order
+                # but if _interval < 0 our records are not in date-time order
                 if _interval < 0:
-                    # so raise an error
-                    _msg = "Cannot derive 'interval' for record timestamp: %s." % timestamp_to_string(current_ts)
-                    print(_msg)
-                    log.info(_msg)
-                    raise ValueError("Raw data is not in ascending date time order.")
+                    # so raise a WeeImportFieldError exception
+                    _msg = "Cannot derive 'interval' for record "\
+                           "timestamp: %s. " % timestamp_to_string(current_ts)
+                    raise WeeImportFieldError(_msg)
             except TypeError:
                 _interval = None
             return _interval
         else:
             # we don't know what to do so raise an error
-            _msg = "Cannot derive 'interval'. Unknown 'interval' setting in %s." % self.import_config_path
+            _msg = "Cannot derive 'interval'. Unknown 'interval' "\
+                   "setting in %s." % self.import_config_path
             raise ValueError(_msg)
 
     @staticmethod
@@ -1215,7 +1262,7 @@ class Source(object):
                 for _rec in records:
                     # convert our record
                     _conv_rec = to_std_system(_rec, self.archive_unit_sys)
-                    # perform any any required QC checks
+                    # perform any required QC checks
                     self.qc(_conv_rec, 'Archive')
                     # add the record to our tranche and increment our count
                     _tranche.append(_conv_rec)
@@ -1232,8 +1279,9 @@ class Source(object):
                         for _trec in _tranche:
                             unique_set.add(_trec['dateTime'])
                         # tell the user what we have done
-                        _msg = "Unique records processed: %d; Last timestamp: %s\r" % (nrecs,
-                                                                                       timestamp_to_string(_rec['dateTime']))
+                        _msg = "Unique records processed: %d; "\
+                               "Last timestamp: %s\r" % (nrecs,
+                                                         timestamp_to_string(_rec['dateTime']))
                         print(_msg, end='', file=sys.stdout)
                         sys.stdout.flush()
                         _tranche = []
@@ -1249,8 +1297,9 @@ class Source(object):
                     for _trec in _tranche:
                         unique_set.add(_trec['dateTime'])
                     # tell the user what we have done
-                    _msg = "Unique records processed: %d; Last timestamp: %s\r" % (nrecs,
-                                                                                   timestamp_to_string(_rec['dateTime']))
+                    _msg = "Unique records processed: %d; "\
+                           "Last timestamp: %s\r" % (nrecs,
+                                                     timestamp_to_string(_rec['dateTime']))
                     print(_msg, end='', file=sys.stdout)
                 print()
                 sys.stdout.flush()
@@ -1262,10 +1311,12 @@ class Source(object):
                 self.total_duplicate_rec += num_duplicates
                 if num_duplicates > 0:
                     if num_duplicates == 1:
-                        _msg = "    1 duplicate record was identified in period %d:" % self.period_no
+                        _msg = "    1 duplicate record was identified "\
+                               "in period %d:" % self.period_no
                     else:
-                        _msg = "    %d duplicate records were identified in period %d:" % (num_duplicates,
-                                                                                           self.period_no)
+                        _msg = "    %d duplicate records were identified "\
+                               "in period %d:" % (num_duplicates,
+                                                  self.period_no)
                     if not self.suppress:
                         print(_msg)
                     log.info(_msg)
@@ -1287,7 +1338,7 @@ class Source(object):
                 raise SystemExit('Exiting. Nothing done.')
         else:
             # we have no records to import, advise the user but what we say
-            # will depend if there are any more periods to import
+            # will depend on if there are any more periods to import
             if self.first_period and self.last_period:
                 # there was only 1 period
                 _msg = 'No records identified for import.'
