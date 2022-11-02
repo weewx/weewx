@@ -178,9 +178,12 @@ def save(config_dict, config_path, backup=False):
         str|None: The path to the backed up old config file. None otherwise
     """
 
-    # We need to pop 'config_path' off the dictionary before writing. Make a deep copy first.
+    # We need to pop 'config_path' off the dictionary before writing. WeeWX v4.9.1 wrote
+    # 'entry_path' to the config file as well, so we need to get rid of that in case it snuck in.
+    # Make a deep copy first --- we're going to be modifying the dictionary.
     write_dict = weeutil.config.deep_copy(config_dict)
     write_dict.pop('config_path', None)
+    write_dict.pop('entry_path', None)
 
     # Check to see if the file exists, and we are supposed to make backup:
     if os.path.exists(config_path) and backup:
