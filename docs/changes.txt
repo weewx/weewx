@@ -8,6 +8,9 @@ Fixes issue #802.
 
 Different wake-up strategy for the Vantage console.
 
+Do not write config_path and entry_path to updated configuration dictionary.
+Fixes issue #806.
+
 
 4.9.1 10/25/2022
 Fix problem with `wind` for older versions of sqlite.

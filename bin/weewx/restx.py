@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2020 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2022 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -89,6 +89,7 @@ import platform
 import re
 import socket
 import ssl
+import sys
 import threading
 import time
 
@@ -1433,7 +1434,10 @@ class StdStationRegistry(StdRESTful):
         _registry_dict.setdefault('longitude', self.engine.stn_info.longitude_f)
         _registry_dict.setdefault('station_model', self.engine.stn_info.hardware)
         _registry_dict.setdefault('config_path', config_dict.get('config_path', 'Unknown'))
-        _registry_dict.setdefault('entry_path', config_dict.get('entry_path', 'Unknown'))
+        # Find the top-level module. This is where the entry point will be.
+        _registry_dict.setdefault('entry_path', getattr(sys.modules['__main__'], '__file__',
+                                                        'Unknown')
+)
 
         self.archive_queue = queue.Queue()
         self.archive_thread = StationRegistryThread(self.archive_queue,
