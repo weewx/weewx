@@ -159,8 +159,6 @@ def read_config(config_path, args=None, locations=DEFAULT_LOCATIONS,
 
     # Remember where we found the config file
     config_dict['config_path'] = os.path.realpath(config_path)
-    # Find the top-level module. This is where the entry point will be.
-    config_dict['entry_path'] = getattr(sys.modules['__main__'], '__file__', 'Unknown')
 
     return config_path, config_dict
 
@@ -180,6 +178,13 @@ def save(config_dict, config_path, backup=False):
         str|None: The path to the backed up old config file. None otherwise
     """
 
+    # We need to pop 'config_path' off the dictionary before writing. WeeWX v4.9.1 wrote
+    # 'entry_path' to the config file as well, so we need to get rid of that in case it snuck in.
+    # Make a deep copy first --- we're going to be modifying the dictionary.
+    write_dict = weeutil.config.deep_copy(config_dict)
+    write_dict.pop('config_path', None)
+    write_dict.pop('entry_path', None)
+
     # Check to see if the file exists, and we are supposed to make backup:
     if os.path.exists(config_path) and backup:
 
@@ -189,7 +194,7 @@ def save(config_dict, config_path, backup=False):
         # Now we can save the file. Get a temporary file:
         with tempfile.NamedTemporaryFile() as tmpfile:
             # Write the configuration dictionary to it:
-            config_dict.write(tmpfile)
+            write_dict.write(tmpfile)
             tmpfile.flush()
 
             # Now move the temporary file into the proper place:
@@ -199,7 +204,7 @@ def save(config_dict, config_path, backup=False):
 
         # No existing file or no backup required. Just write.
         with open(config_path, 'wb') as fd:
-            config_dict.write(fd)
+            write_dict.write(fd)
         backup_path = None
 
     return backup_path

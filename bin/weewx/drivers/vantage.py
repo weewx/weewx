@@ -33,7 +33,7 @@ from weewx.crc16 import crc16
 log = logging.getLogger(__name__)
 
 DRIVER_NAME = 'Vantage'
-DRIVER_VERSION = '3.5.0'
+DRIVER_VERSION = '3.5.2'
 
 
 def loader(config_dict, engine):
@@ -92,11 +92,16 @@ class BaseWrapper(object):
 
         for count in range(1, max_tries + 1):
             try:
-                # Wake up console and cancel pending LOOP data...
+                # Clear out any pending input or output characters:
+                self.flush_output()
+                self.flush_input()
+                # It can be hard to get the console's attention, particularly
+                # when in the middle of a LOOP command. Send a whole bunch of line feeds,
+                # then flush everything, then look for the \n\r acknowledgment
+                self.write(b'\n\n\n')
+                time.sleep(0.5)
+                self.flush_input()
                 self.write(b'\n')
-                # ... wait a bit...
-                time.sleep(self.command_delay)
-                # ... then read the response.
                 _resp = self.read(2)
                 if _resp == b'\n\r':  # LF, CR = 0x0a, 0x0d
                     # We're done; the console accepted our cancel LOOP command.
