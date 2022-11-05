@@ -745,7 +745,7 @@ class Formatter(object):
             else:
                 val_str = time.strftime(useThisFormat, time.localtime(t))
             addLabel = False
-        elif val_t[2] == "group_deltatime":
+        elif val_t[2] == "group_deltatime" and val_t[1] == 'second':
             # Get a delta-time format string. Use a default if the user did not supply one:
             if useThisFormat is None:
                 # For group_deltatime formatting, the default context cannot be 'current'.
