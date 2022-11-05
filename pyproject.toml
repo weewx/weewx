@@ -35,15 +35,14 @@ packages = [
     { include = "weeplot", from = "bin" },
     { include = "weeutil", from = "bin" },
     { include = "weewx", from = "bin" },
-    { include = "daemon.py", from = "bin" },
-    { include = "wee_config", from = "bin" },
-    { include = "wee_database", from = "bin" },
-    { include = "wee_debug", from = "bin" },
-    { include = "wee_device", from = "bin" },
-    { include = "wee_extension", from = "bin" },
-    { include = "wee_import", from = "bin" },
-    { include = "wee_reports", from = "bin" },
-    { include = "weewxd", from = "bin" },
+#    { include = "wee_config", from = "bin" },
+#    { include = "wee_database", from = "bin" },
+#    { include = "wee_debug", from = "bin" },
+#    { include = "wee_device", from = "bin" },
+#    { include = "wee_extension", from = "bin" },
+#    { include = "wee_import", from = "bin" },
+#    { include = "wee_reports", from = "bin" },
+    { include = "weewxd.py", from = "bin" },
 ]
 
 include = [
@@ -66,11 +65,12 @@ cheetah3 = { version = "^3.2", python = ">=3.5" }
 [tool.poetry.dev-dependencies]
 mock = { version = "*", python = "~2.7" }
 
+[tool.poetry.scripts]
+weewxd = 'weewxd:main'
+
 [build-system]
 # Minimum requirements for the build system to execute.
 # requires = ["poetry", "setuptools>=46.0", "wheel", "configobj"]
 requires = ["poetry>=0.12"]
 build-backend = "poetry.masonry.api"
 
-#[tool.poetry.scripts]
-#weewxd = 'weewxd:main'

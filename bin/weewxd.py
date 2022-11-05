@@ -18,7 +18,7 @@ import time
 from optparse import OptionParser
 
 import configobj
-import daemon
+from weewx import daemon
 import weecfg
 import weedb
 from weeutil.weeutil import to_bool
@@ -32,9 +32,9 @@ import weewx.engine
 
 log = logging.getLogger(__name__)
 
-usagestr = """Usage: weewxd --help
-       weewxd --version
-       weewxd [CONFIG_FILE|--config=CONFIG_FILE]
+usagestr = """Usage: weewxd.py --help
+       weewxd.py --version
+       weewxd.py [CONFIG_FILE|--config=CONFIG_FILE]
               [--daemon] [--pidfile=PIDFILE]
               [--exit]   [--loop-on-init]
               [--log-label=LABEL]
