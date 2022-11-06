@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2021 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2022 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -392,7 +392,7 @@ class AlmanacBinder(object):
             visible = (time_setting_djd - time_rising_djd) * weewx.units.SECS_PER_DAY
 
         return weewx.units.ValueHelper(ValueTuple(visible, "second", "group_deltatime"),
-                                       context="short_delta",
+                                       context="day",
                                        formatter=self.almanac.formatter,
                                        converter=self.almanac.converter)
 
@@ -409,7 +409,7 @@ class AlmanacBinder(object):
         # Take the difference
         diff = today_visible.raw - then_visible.raw
         return weewx.units.ValueHelper(ValueTuple(diff, "second", "group_deltatime"),
-                                       context="brief_delta",
+                                       context="hour",
                                        formatter=self.almanac.formatter,
                                        converter=self.almanac.converter)
 

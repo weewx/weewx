@@ -250,6 +250,60 @@ sudo apt-get install weewx</pre>
 
         <h1><a id="Instructions_for_specific_versions">Instructions for specific versions</a></h1>
 
+        <h2>Upgrading to V4.10</h2>
+        <h3>Changes for custom delta time formats</h3>
+        <p>
+            The bad news is that fixing issue <a href="https://github.com/weewx/weewx/issues/808">#808</a> required
+            introducing a separate dictionary for members of group <span class="code">group_deltatime</span>. This
+            means that if you specified custom formats under <span class="code">[Units]/[[TimeFormats]]</span>, then
+            you will have to move them to the new section <span class="code">[Units]/[[DeltaTimeFormats]]</span>.
+            Very few users should be affected as being able to set custom delta time formats is an undocumented feature.
+        </p>
+        <p>
+            The good news is that the contexts they now use have more standard names. The table below summarizes:
+        </p>
+
+        <table>
+            <tr class="first_row">
+                <td style='width:50%'>V4.9 and earlier</td>
+                <td>4.10</td>
+            </tr>
+            <tr>
+                <td>
+                    <pre class='tty'>
+    def __init__(self, altitude_vt, latitude_f, longitude_f,
+    [[TimeFormats]]
+        ...
+        current     = %x %X
+        ephem_day   = %X
+        ephem_year  = %x %X
+        <span class="removed">brief_delta = "%(minute)d%(minute_label)s, %(second)d%(second_label)s"</span>
+        <span class="removed">short_delta = "%(hour)d%(hour_label)s, %(minute)d%(minute_label)s, %(second)d%(second_label)s"</span>
+        <span class="removed">long_delta  = "%(day)d%(day_label)s, %(hour)d%(hour_label)s, %(minute)d%(minute_label)s"</span>
+        <span class="removed">delta_time  = "%(day)d%(day_label)s, %(hour)d%(hour_label)s, %(minute)d%(minute_label)s"</span>
+</pre>
+                </td>
+                <td>
+                    <pre class='tty'>
+    [[TimeFormats]]
+        ...
+        current     = %x %X
+        ephem_day   = %X
+        ephem_year  = %x %X
+
+    <span class="added">[[DeltaTimeFormats]]</span>
+        <span class="added">current = "%(minute)d%(minute_label)s, %(second)d%(second_label)s"</span>
+        <span class="added">hour    = "%(minute)d%(minute_label)s, %(second)d%(second_label)s"</span>
+        <span class="added">day     = "%(hour)d%(hour_label)s, %(minute)d%(minute_label)s, %(second)d%(second_label)s"</span>
+        <span class="added">week    = "%(day)d%(day_label)s, %(hour)d%(hour_label)s, %(minute)d%(minute_label)s"</span>
+        <span class="added">month   = "%(day)d%(day_label)s, %(hour)d%(hour_label)s, %(minute)d%(minute_label)s"</span>
+        <span class="added">year    = "%(day)d%(day_label)s, %(hour)d%(hour_label)s, %(minute)d%(minute_label)s"</span>
+
+</pre>
+                </td>
+            </tr>
+        </table>
+
         <h2>Upgrading to V4.9</h2>
         <h3><span class="code">wee_reports</span> may require <span class="code">--epoch</span> option.</h3>
         <p>

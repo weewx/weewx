@@ -1,6 +1,6 @@
 # coding: utf-8
 #
-#    Copyright (c) 2019-2021 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2019-2022 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your rights.
 #
@@ -221,10 +221,15 @@ log_failure = False
         current     = %x %X
         ephem_day   = %X
         ephem_year  = %x %X
-        brief_delta = "%(minute)d%(minute_label)s, %(second)d%(second_label)s"
-        short_delta = "%(hour)d%(hour_label)s, %(minute)d%(minute_label)s, %(second)d%(second_label)s"
-        long_delta  = "%(day)d%(day_label)s, %(hour)d%(hour_label)s, %(minute)d%(minute_label)s"
-        delta_time  = "%(day)d%(day_label)s, %(hour)d%(hour_label)s, %(minute)d%(minute_label)s"
+
+    [[DeltaTimeFormats]]
+        current = "%(minute)d%(minute_label)s, %(second)d%(second_label)s"
+        hour    = "%(minute)d%(minute_label)s, %(second)d%(second_label)s"
+        day     = "%(hour)d%(hour_label)s, %(minute)d%(minute_label)s, %(second)d%(second_label)s"
+        week    = "%(day)d%(day_label)s, %(hour)d%(hour_label)s, %(minute)d%(minute_label)s"
+        month   = "%(day)d%(day_label)s, %(hour)d%(hour_label)s, %(minute)d%(minute_label)s"
+        year    = "%(day)d%(day_label)s, %(hour)d%(hour_label)s, %(minute)d%(minute_label)s"
+        
 
     [[Ordinates]]
 

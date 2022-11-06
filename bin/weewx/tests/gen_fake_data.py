@@ -1,6 +1,6 @@
 #
 #
-#    Copyright (c) 2009-2019 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2022 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -193,6 +193,7 @@ def genFakeRecords(start_ts=start_ts, stop_ts=stop_ts, interval=interval,
             record['rain'] = 0.0
         record['radiation'] = max(amplitude * 800 * math.sin(daily_phase - math.pi / 2.0), 0)
         record['radiation'] *= 0.5 * (math.cos(annual_phase + math.pi) + 1.5)
+        record['sunshineDur'] = interval if record['radiation'] else 0.0
 
         # Make every 71st observation (a prime number) a null. This is a deterministic algorithm, so it
         # will produce the same results every time.

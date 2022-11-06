@@ -11,6 +11,10 @@ Different wake-up strategy for the Vantage console.
 Do not write config_path and entry_path to updated configuration dictionary.
 Fixes issue #806.
 
+Fix bug that prevents group_deltatime from being used by timespans. Users
+who used custom formatting for delta times will be affected. See the Upgrade
+Guide. Fixes issue #808.
+
 
 4.9.1 10/25/2022
 Fix problem with `wind` for older versions of sqlite.
