@@ -745,19 +745,32 @@ class Formatter(object):
             else:
                 val_str = time.strftime(useThisFormat, time.localtime(t))
             addLabel = False
-        elif val_t[2] == "group_deltatime" and val_t[1] == 'second':
+        elif val_t[2] == "group_deltatime":
             # Get a delta-time format string. Use a default if the user did not supply one:
             if useThisFormat is None:
                 # For group_deltatime formatting, the default context cannot be 'current'.
                 # Change it to something sensible.
                 if context == 'current':
                     context = 'delta_time'
+                elif context == 'day':
+                    context = 'short_delta'
+                elif context in ('week','month','year'):
+                    context = 'long_delta'
                 format_string = self.time_format_dict.get(context, DEFAULT_DELTATIME_FORMAT)
             else:
                 format_string = useThisFormat
-            # Now format the delta time, using the function delta_secs_to_string:
-            val_str = self.delta_secs_to_string(val_t[0], format_string)
-            addLabel = False
+            if '%(' in format_string:
+                # Now format the delta time, using the function delta_secs_to_string:
+                if val_t[1]!='second':
+                    val_t = convert(val_t,'second')
+                val_str = self.delta_secs_to_string(val_t[0], format_string)
+                addLabel = False
+            elif localize:
+                # Localization requested. Use locale with the supplied format:
+                val_str = locale.format_string(format_string, val_t[0])
+            else:
+                # No localization. Just format the string.
+                val_str = format_string % val_t[0]
         else:
             # It's not a time. It's a regular value. Get a suitable format string:
             if useThisFormat is None:
