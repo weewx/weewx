@@ -2624,12 +2624,12 @@ or in foobar units: $day.barometer.min.foobar
 
         <p>
             For <em>aggregation periods</em>, such as <span class="code">$month</span>, you can request the
-            <em>start</em> or <em>end</em> of the period, by using suffixes <span class="code">.start</span> or <span
-            class="code">.end</span>, respectively. For example,
+            <em>start</em>, <em>end</em>, or <em>length<em> of the period, by using suffixes <span class="code">.start</span>, <span
+            class="code">.end</span>, or <span class="code">.length</span>, respectively. For example,
         </p>
-        <pre class="tty">The current month runs from $month.start to $month.end.</pre>
+        <pre class="tty">The current month runs from $month.start to $month.end and has $month.length.format("%(day)d %(day_label)s").</pre>
         <p>results in</p>
-        <pre class="example_output">The current month runs from 01/01/2010 12:00:00 AM to 02/01/2017 12:00:00 AM.</pre>
+        <pre class="example_output">The current month runs from 01/01/2010 12:00:00 AM to 02/01/2010 12:00:00 AM and has 31 days.</pre>
 
         <p>
             In addition to the suffixes <span class="code">.start</span> and <span class="code">.end</span>, the suffix
