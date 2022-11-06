@@ -11,6 +11,7 @@ from __future__ import with_statement
 import unittest
 
 from weeutil.weeutil import *  # @UnusedWildImport
+from weewx.tags import TimespanBinder
 
 os.environ['TZ'] = 'America/Los_Angeles'
 time.tzset()
@@ -1053,6 +1054,15 @@ class WeeutilTest(unittest.TestCase):
     def test_latlon_string(self):
         self.assertEqual(latlon_string(-12.3, ('N', 'S'), 'lat'), ('12', '18.00', 'S'))
         self.assertEqual(latlon_string(-123.3, ('E', 'W'), 'long'), ('123', '18.00', 'W'))
+    
+    def test_timespanbinder_length(self):
+        t = ((1667689200,1667775600,'day',86400),
+             (1667257200,1669849200,'month',86400*30),
+             (1640991600,1672527600,'year',31536000))
+        for i in t:
+            ts = TimeSpan(i[0],i[1])
+            tsb = TimespanBinder(ts,None,context=i[2])
+            self.assertEqual(tsb.length.raw,i[3])
 
 
 if __name__ == '__main__':
