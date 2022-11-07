@@ -33,7 +33,7 @@ from weewx.crc16 import crc16
 log = logging.getLogger(__name__)
 
 DRIVER_NAME = 'Vantage'
-DRIVER_VERSION = '3.4.0'
+DRIVER_VERSION = '3.5.2'
 
 
 def loader(config_dict, engine):
@@ -90,29 +90,32 @@ class BaseWrapper(object):
         
         If unsuccessful, an exception of type weewx.WakeupError is thrown"""
 
-        for count in range(max_tries):
+        for count in range(1, max_tries + 1):
             try:
-                # Wake up console and cancel pending LOOP data.
-                # First try a gentle wake up
+                # Clear out any pending input or output characters:
+                self.flush_output()
+                self.flush_input()
+                # It can be hard to get the console's attention, particularly
+                # when in the middle of a LOOP command. Send a whole bunch of line feeds,
+                # then flush everything, then look for the \n\r acknowledgment
+                self.write(b'\n\n\n')
+                time.sleep(0.5)
+                self.flush_input()
                 self.write(b'\n')
                 _resp = self.read(2)
                 if _resp == b'\n\r':  # LF, CR = 0x0a, 0x0d
-                    # We're done; the console accepted our cancel LOOP command; nothing to flush
-                    log.debug("Gentle wake up of console successful")
+                    # We're done; the console accepted our cancel LOOP command.
+                    log.debug("Successfully woke up Vantage console")
                     return
-                # That didn't work. Try a rude wake up.
-                # Flush any pending LOOP packets
-                self.flush_input()
-                # Look for the acknowledgment of the sent '\n'
-                _resp = self.read(2)
-                if _resp == b'\n\r':
-                    log.debug("Rude wake up of console successful")
-                    return
+                else:
+                    log.debug("Bad wake-up response from Vantage console: %s", _resp)
             except weewx.WeeWxIOError as e:
-                log.debug("Wakeup retry #%d failed: %s", count + 1, e)
-                print("Unable to wake up Vantage console... sleeping")
-                time.sleep(self.wait_before_retry)
-                print("Unable to wake up Vantage console... retrying")
+                log.debug("Wake up try %d failed. Exception: %s", e)
+
+            log.debug("Retry #%d unable to wake up console... sleeping", count)
+            print("Unable to wake up console... sleeping")
+            time.sleep(self.wait_before_retry)
+            print("Unable to wake up console... retrying")
 
         log.error("Unable to wake up Vantage console")
         raise weewx.WakeupError("Unable to wake up Vantage console")
@@ -130,7 +133,7 @@ class BaseWrapper(object):
         # Look for the acknowledging ACK character
         _resp = self.read()
         if _resp != _ack: 
-            log.error("No <ACK> received from Vantage console")
+            log.error("send_data: no <ACK> received from Vantage console")
             raise weewx.WeeWxIOError("No <ACK> received from Vantage console")
     
     def send_data_with_crc16(self, data, max_tries=3):
@@ -146,15 +149,17 @@ class BaseWrapper(object):
         _data_with_crc = data + struct.pack(">H", _crc)
         
         # Retry up to max_tries times:
-        for count in range(max_tries):
+        for count in range(1, max_tries + 1):
             try:
                 self.write(_data_with_crc)
                 # Look for the acknowledgment.
                 _resp = self.read()
                 if _resp == _ack:
                     return
+                else:
+                    log.debug("send_data_with_crc16 try #%d bad <ack>: %s", count, _resp)
             except weewx.WeeWxIOError as e:
-                log.debug("send_data_with_crc16; try #%d: %s", count + 1, e)
+                log.debug("send_data_with_crc16 try #%d exception: %s", count, e)
 
         log.error("Unable to pass CRC16 check while sending data to Vantage console")
         raise weewx.CRCError("Unable to pass CRC16 check while sending data to Vantage console")
@@ -164,7 +169,7 @@ class BaseWrapper(object):
         
         Any response from the console is split on \n\r characters and returned as a list."""
 
-        for count in range(max_tries):
+        for count in range(1, max_tries + 1):
             try:
                 self.wakeup_console(max_tries=max_tries)
 
@@ -181,10 +186,11 @@ class BaseWrapper(object):
                 if _buffer_list[0] == b'OK':
                     # Return the rest:
                     return _buffer_list[1:]
-
+                else:
+                    log.debug("send_command; try #%d failed. Response: %s", count, _buffer_list[0])
             except weewx.WeeWxIOError as e:
                 # Caught an error. Log, then keep trying...
-                log.debug("send_command; try #%d failed: %s", count + 1, e)
+                log.debug("send_command; try #%d failed. Exception: %s", count, e)
         
         msg = "Max retries exceeded while sending command %s" % command
         log.error(msg)
@@ -210,16 +216,16 @@ class BaseWrapper(object):
         first_time = True
         _buffer = b''
 
-        for count in range(max_tries):
+        for count in range(1, max_tries + 1):
             try:
                 if not first_time: 
                     self.write(_resend)
                 _buffer = self.read(nbytes)
                 if crc16(_buffer) == 0:
                     return _buffer
-                log.debug("Get_data_with_crc16; try #%d failed. CRC error", count + 1)
+                log.debug("Get_data_with_crc16; try #%d failed. CRC error", count)
             except weewx.WeeWxIOError as e:
-                log.debug("Get_data_with_crc16; try #%d failed: %s", count + 1, e)
+                log.debug("Get_data_with_crc16; try #%d failed: %s", count, e)
             first_time = False
 
         if _buffer:
@@ -1401,7 +1407,7 @@ class Vantage(weewx.drivers.AbstractDevice):
         nbytes = struct.calcsize(v_format)
         # Don't bother waking up the console for the first try. It's probably
         # already awake from opening the port. However, if we fail, then do a
-        # wakeup.
+        # wake up.
         firsttime = True
         
         command = b"EEBRD %X %X\n" % (offset, nbytes)
