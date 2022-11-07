@@ -761,8 +761,8 @@ class Formatter(object):
                 format_string = useThisFormat
             else:
                 format_string = self.deltatime_format_dict.get(context, DEFAULT_DELTATIME_FORMAT)
-            # Now format the delta time, using the function delta_secs_to_string:
-            val_str = self.delta_secs_to_string(val_t[0], format_string)
+            # Now format the delta time, using the function delta_time_to_string:
+            val_str = self.delta_time_to_string(val_t, format_string)
             addLabel = False
         else:
             # It's not a time. It's a regular value. Get a suitable format string:
@@ -798,8 +798,9 @@ class Formatter(object):
         _sector = int(_degree / _sector_size)
         return self.ordinate_names[_sector]
 
-    def delta_secs_to_string(self, secs, label_format):
-        """Convert elapsed seconds to a string """
+    def delta_time_to_string(self, val_t, label_format):
+        """Convert elapsed time to a string """
+        secs = convert(val_t, 'second').value
         etime_dict = {}
         secs = abs(secs)
         for (label, interval) in (('day', 86400), ('hour', 3600), ('minute', 60), ('second', 1)):
