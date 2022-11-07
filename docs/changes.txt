@@ -15,6 +15,9 @@ Fix bug that prevents group_deltatime from being used by timespans. Users
 who used custom formatting for delta times will be affected. See the Upgrade
 Guide. Fixes issue #808.
 
+Allow more flexible formatting for delta times. This can break old skins.
+See Upgrade Guide. PR #807.
+
 
 4.9.1 10/25/2022
 Fix problem with `wind` for older versions of sqlite.

@@ -251,13 +251,157 @@ sudo apt-get install weewx</pre>
         <h1><a id="Instructions_for_specific_versions">Instructions for specific versions</a></h1>
 
         <h2>Upgrading to V4.10</h2>
+
+        <h3>Breaking changes for skins that use delta times</h3>
+        <p>
+            A "delta time" is the difference between two times, for example the amount of uptime (difference between
+            start and current time). Before, delta times were treated as a special case, which limited their
+            flexibility. Now, a delta time is treated like any other scalar. However, this means that if you want to
+            format the time in the "long form", that is, so the results look like <span
+            class="code">4 hours, 15 minutes</span>, rather than <span class="code">15300 seconds</span>, then you will
+            have to say so explicitly.
+        </p>
+        <p>
+            If you use the <em>Seasons</em> skin, you will have to make these three small changes, where you add
+            the text in <span class="added">green</span>:
+        </p>
+
+        <table>
+            <tr class="first_row">
+                <td style='width:50%'>V4.9 and earlier Seasons skin</td>
+                <td>4.10 Seasons skin</td>
+            </tr>
+            <tr>
+<td colspan="2" style="text-align: center"><span class="code">Seasons/about.inc</span> starting at line 31</td>
+            </tr>
+            <tr>
+                <td>
+<pre class="tty">
+    &lt;tr&gt;
+      &lt;td class="label"&gt;$gettext("Server uptime")&lt;/td&gt;
+      &lt;td class="data"&gt;$station.os_uptime&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td class="label"&gt;$gettext("WeeWX uptime")&lt;/td&gt;
+      &lt;td class="data"&gt;$station.uptime&lt;/td&gt;
+    &lt;/tr&gt;
+</pre>
+                </td>
+                <td>
+<pre class="tty">
+    &lt;tr&gt;
+      &lt;td class="label"&gt;$gettext("Server uptime")&lt;/td&gt;
+      &lt;td class="data"&gt;$station.os_uptime<span class="added">.long_form</span>&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td class="label"&gt;$gettext("WeeWX uptime")&lt;/td&gt;
+      &lt;td class="data"&gt;$station.uptime<span class="added">.long_form</span>&lt;/td&gt;
+    &lt;/tr&gt;
+</pre>
+                </td>
+            </tr>
+            <tr>
+<td colspan="2" style="text-align: center"><span class="code">Seasons/celestial.inc</span> starting at line 94</td>
+            </tr>
+            <tr>
+                <td>
+<pre class="tty">
+          &lt;tr&gt;
+            &lt;td class="label"&gt;$gettext("Total daylight")&lt;/td&gt;
+            &lt;td class="data"&gt;$almanac.sun.visible&lt;br/&gt;$sun_visible_change.long_form $change_str&lt;/td&gt;
+          &lt;/tr&gt;
+</pre>
+                </td>
+                <td>
+<pre class="tty">
+          &lt;tr&gt;
+            &lt;td class="label"&gt;$gettext("Total daylight")&lt;/td&gt;
+            &lt;td class="data"&gt;$almanac.sun.visible&lt;br/&gt;$sun_visible_change<span class="added">.long_form</span> $change_str&lt;/td&gt;
+          &lt;/tr&gt;
+</pre>
+                </td>
+            </tr>
+
+        </table>
+
+        <p>
+            In a similar manner, if you use the <em>Standard</em> skin, you will have to make these two changes.
+        </p>
+        <table>
+            <tr class="first_row">
+                <td style='width:50%'>V4.9 and earlier Standard skin</td>
+                <td>4.10 Standard skin</td>
+            </tr>
+            <tr>
+<td colspan="2" style="text-align: center"><span class="code">Standard/index.html.tmpl</span> starting at line 309</td>
+            </tr>
+            <tr>
+                <td>
+<pre class="tty">
+          &lt;p&gt;$gettext("WeeWX uptime"):  $station.uptime&lt;br/&gt;
+             $gettext("Server uptime"): $station.os_uptime&lt;br/&gt;
+</pre>
+                </td>
+                <td>
+<pre class="tty">
+          &lt;p&gt;$gettext("WeeWX uptime"):  $station.uptime<span class="added">.long_form</span>&lt;br/&gt;
+             $gettext("Server uptime"): $station.os_uptime<span class="added">.long_form</span>&lt;br/&gt;
+</pre>
+                </td>
+            </tr>
+        </table>
+
+        <p>
+            The advantage of this approach is that the delta time can be treated like any other scalar. Here
+            are some examples:
+        </p>
+        <table>
+            <tr class="first_row">
+                <td style='width:50%'>Tag</td>
+                <td>Results</td>
+            </tr>
+            <tr>
+                <td class="tty">
+$almanac.sun.visible
+                </td>
+                <td class="tty">
+45000 seconds
+                </td>
+            </tr>
+            <tr>
+                <td class="tty">
+$almanac.sun.visible.hour
+                </td>
+                <td class="tty">
+12.5 hours
+                </td>
+            </tr>
+            <tr>
+                <td class="tty">
+$almanac.sun.visible.hour.format("%.2f")
+                </td>
+                <td class="tty">
+12.50 hours
+                </td>
+            </tr>
+            <tr>
+                <td class="tty">
+$almanac.sun.visible.long_form
+                </td>
+                <td class="tty">
+12 hours, 30 minutes, 0 seconds
+                </td>
+            </tr>
+        </table>
+
         <h3>Changes for custom delta time formats</h3>
         <p>
-            The bad news is that fixing issue <a href="https://github.com/weewx/weewx/issues/808">#808</a> required
+            Fixing issue <a href="https://github.com/weewx/weewx/issues/808">#808</a> required
             introducing a separate dictionary for members of group <span class="code">group_deltatime</span>. This
             means that if you specified custom formats under <span class="code">[Units]/[[TimeFormats]]</span>, then
             you will have to move them to the new section <span class="code">[Units]/[[DeltaTimeFormats]]</span>.
-            Very few users should be affected as being able to set custom delta time formats is an undocumented feature.
+            Very few users should be affected by this change because the ability to set custom delta time formats is an
+            undocumented feature.
         </p>
         <p>
             The good news is that the contexts they now use have more standard names. The table below summarizes:
@@ -298,7 +442,6 @@ sudo apt-get install weewx</pre>
         <span class="added">week    = "%(day)d%(day_label)s, %(hour)d%(hour_label)s, %(minute)d%(minute_label)s"</span>
         <span class="added">month   = "%(day)d%(day_label)s, %(hour)d%(hour_label)s, %(minute)d%(minute_label)s"</span>
         <span class="added">year    = "%(day)d%(day_label)s, %(hour)d%(hour_label)s, %(minute)d%(minute_label)s"</span>
-
 </pre>
                 </td>
             </tr>
