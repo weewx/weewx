@@ -260,13 +260,7 @@ class TimespanBinder(object):
     @property
     def length(self):
         val = weewx.units.ValueTuple(self.timespan.stop-self.timespan.start, 'second', 'group_deltatime')
-        if val[0]<=5400:
-            context = 'brief_delta'
-        elif val[0]<=86400:
-            context = 'short_delta'
-        else:
-            context = 'long_delta'
-        return weewx.units.ValueHelper(val, context, self.formatter, self.converter)
+        return weewx.units.ValueHelper(val, self.context, self.formatter, self.converter)
 
     # Alias for the start time:
     dateTime = start
