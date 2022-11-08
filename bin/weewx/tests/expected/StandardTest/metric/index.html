@@ -303,10 +303,10 @@
           </tr>
           <tr>
             <td>$month.length</td>
-            <td>30 Tage, 0 Stunden, 0 Minuten</td>
+            <td>2592000 Sekunden</td>
           </tr>
           <tr>
-            <td>$month.length.format("%(day)d %(day_label)s")</td>
+            <td>$month.length.long_form("%(day)d %(day_label)s")</td>
             <td>30  Tage</td>
           </tr>
           <tr>
@@ -595,14 +595,26 @@
       <td>$day.foobar.min</td>
     </tr>
     </tr>
-      <tr>
+    <tr>
       <td>Test for a bad aggregation type on a $day tag: $day.outTemp.foo</td>
       <td>$day.outTemp.foo</td>
     </tr>
     </tr>
-      <tr>
+    <tr>
       <td>Test for sunshineDur: $day.sunshineDur.sum</td>
+      <td>25200 Sekunden</td>
+    </tr>
+    <tr>
+      <td>Test for sunshineDur: $day.sunshineDur.sum.long_form</td>
       <td>7 Stunden, 0 Minuten, 0 Sekunden</td>
+    </tr>
+    <tr>
+      <td>Test for sunshineDur, custom format:</td>
+      <td>7 Stunden, 0 Minuten</td>
+    </tr>
+    <tr>
+      <td>sunshineDur in hours:</td>
+      <td>7.00 Stunden</td>
     </tr>
   </table>
 
@@ -741,6 +753,14 @@
     <tr>
        <td align="right">Moon:</td>
        <td align="left">abnehmend (29%full)</td>
+    </tr>
+    <tr>
+       <td align="right">$almanac.sun.visible:</td>
+       <td align="left">13 Stunden, 10 Minuten, 42 Sekunden <br/>(47442 Sekunden)</td>
+    </tr>
+    <tr>
+       <td align="right">$almanac.sun.visible_change:</td>
+       <td align="left">3 Minuten, 6 Sekunden (-186 Sekunden)</td>
     </tr>
   </table>
   

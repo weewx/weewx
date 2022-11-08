@@ -75,12 +75,12 @@ class AlmanacTest(unittest.TestCase):
         self.assertAlmostEqual(self.almanac.sun.alt, 44.02, 2)
 
         # Visible time
-        self.assertEqual(str(self.almanac.sun.visible), "12 hours, 34 minutes, 4 seconds")
+        self.assertEqual(self.almanac.sun.visible.long_form(), "12 hours, 34 minutes, 4 seconds")
         # Change in visible time:
-        self.assertEqual(str(self.almanac.sun.visible_change()), "3 minutes, 15 seconds")
+        self.assertEqual(str(self.almanac.sun.visible_change().long_form()), "3 minutes, 15 seconds")
         # Do it again, but in the fall when daylight is decreasing:
         almanac = Almanac(FALL_TIMESTAMP, LATITUDE, LONGITUDE, formatter=default_formatter)
-        self.assertEqual(str(almanac.sun.visible_change()), "3 minutes, 13 seconds")
+        self.assertEqual(str(almanac.sun.visible_change().long_form()), "3 minutes, 13 seconds")
 
     def test_mars(self):
         self.assertEqual(str(self.almanac.mars.rise), "06:08:57")
@@ -110,7 +110,7 @@ class AlmanacTest(unittest.TestCase):
         self.assertIsNone(almanac(horizon=-6).sun(use_center=1).rise.raw)
         self.assertIsNone(almanac(horizon=-6).sun(use_center=1).set.raw)
         self.assertEqual(almanac(horizon=-6).sun(use_center=1).visible.raw, 86400)
-        self.assertEqual(str(almanac(horizon=-6).sun(use_center=1).visible),
+        self.assertEqual(almanac(horizon=-6).sun(use_center=1).visible.long_form(),
                          "24 hours, 0 minutes, 0 seconds")
 
         # Now where the sun is always down:
@@ -118,7 +118,7 @@ class AlmanacTest(unittest.TestCase):
         self.assertIsNone(almanac(horizon=-6).sun(use_center=1).rise.raw)
         self.assertIsNone(almanac(horizon=-6).sun(use_center=1).set.raw)
         self.assertEqual(almanac(horizon=-6).sun(use_center=1).visible.raw, 0)
-        self.assertEqual(str(almanac(horizon=-6).sun(use_center=1).visible),
+        self.assertEqual(almanac(horizon=-6).sun(use_center=1).visible.long_form(),
                          "0 hours, 0 minutes, 0 seconds")
 
     def test_naval_observatory(self):
