@@ -1,4 +1,4 @@
-## Copyright 2009-2021 Tom Keffer
+## Copyright 2009-2022 Tom Keffer
 ## Distributed under terms of GPLv3.  See LICENSE.txt for your rights.
 #errorCatcher Echo
 #encoding UTF-8
@@ -306,8 +306,8 @@
           </p>
           <p><a href="RSS/weewx_rss.xml">$gettext("RSS feed")</a></p>
           <p><a href="smartphone/index.html">$gettext("Smartphone formatted")</a></p>
-          <p>$gettext("WeeWX uptime"):  $station.uptime<br/>
-             $gettext("Server uptime"): $station.os_uptime<br/>
+          <p>$gettext("WeeWX uptime"):  $station.uptime.long_form<br/>
+             $gettext("Server uptime"): $station.os_uptime.long_form<br/>
              weewx v$station.version</p>
         </div> <!-- End id "about" -->
         
@@ -494,7 +494,7 @@
         #for $monthYear in $SummaryByMonth
             <option value="$monthYear">$monthYear</option>
         #end for
-	    <option selected>-$gettext("Select month")-</option>
+        <option selected>-$gettext("Select month")-</option>
         </select>
         <br/>
         $gettext("Yearly summary"):&nbsp;
@@ -502,7 +502,7 @@
         #for $yr in $SummaryByYear
             <option value="$yr">$yr</option>
         #end for
-	    <option selected>-$gettext("Select year")-</option>
+        <option selected>-$gettext("Select year")-</option>
         </select>
         </p>
       </div>

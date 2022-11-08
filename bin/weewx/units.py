@@ -755,15 +755,6 @@ class Formatter(object):
             else:
                 val_str = time.strftime(useThisFormat, time.localtime(t))
             addLabel = False
-        elif val_t[2] == "group_deltatime":
-            # Get a delta-time format string. Use a default if the user did not supply one:
-            if useThisFormat:
-                format_string = useThisFormat
-            else:
-                format_string = self.deltatime_format_dict.get(context, DEFAULT_DELTATIME_FORMAT)
-            # Now format the delta time, using the function delta_time_to_string:
-            val_str = self.delta_time_to_string(val_t, format_string)
-            addLabel = False
         else:
             # It's not a time. It's a regular value. Get a suitable format string:
             if useThisFormat is None:
@@ -798,9 +789,36 @@ class Formatter(object):
         _sector = int(_degree / _sector_size)
         return self.ordinate_names[_sector]
 
+    def long_form(self, val_t, context, format_string=None):
+        """Format a delta time using the long-form.
+
+        Args:
+            val_t (ValueTuple): a ValueTuple holding the delta time.
+            context (str): The time context. Something like 'day', 'current', etc.
+            format_string (str|None): An optional custom format string. Otherwise, an appropriate
+                string will be looked up in deltatime_format_dict.
+        Returns
+            str: The results formatted in a "long-form" time. This is something like
+                "2 hours, 14 minutes, 21 seconds".
+        """
+        # Get a delta-time format string. Use a default if the user did not supply one:
+        if not format_string:
+            format_string = self.deltatime_format_dict.get(context, DEFAULT_DELTATIME_FORMAT)
+        # Now format the delta time, using the function delta_time_to_string:
+        val_str = self.delta_time_to_string(val_t, format_string)
+        return val_str
+
     def delta_time_to_string(self, val_t, label_format):
-        """Convert elapsed time to a string """
-        secs = convert(val_t, 'second').value
+        """Format elapsed time as a string
+
+        Args:
+            val_t (ValueTuple): A ValueTuple containing the elapsed time.
+            label_format (str): The formatting string.
+
+        Returns:
+            str: The formatted time as a string.
+        """
+        secs = convert(val_t, 'second')[0]
         etime_dict = {}
         secs = abs(secs)
         for (label, interval) in (('day', 86400), ('hour', 3600), ('minute', 60), ('second', 1)):
@@ -1037,6 +1055,12 @@ class ValueHelper(object):
         # Get the raw value tuple, then ask the formatter to look up an
         # appropriate ordinate:
         return self.formatter.to_ordinal_compass(self.value_t)
+
+    def long_form(self, format_string=None):
+        """Format a delta time"""
+        return self.formatter.long_form(self.value_t,
+                                        context=self.context,
+                                        format_string=format_string)
 
     def json(self, **kwargs):
         return json.dumps(self.raw, cls=ComplexEncoder, **kwargs)
