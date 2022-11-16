@@ -21,6 +21,8 @@ Guide. Fixes issue #808.
 Add suffix ".length" to class TimespanBinder. This allows expressions such as
 $month.length. PR #809. Thanks to user Karen!
 
+Added new unit "hertz". PR #812. Again, thanks to user Karen!
+
 
 4.9.1 10/25/2022
 Fix problem with `wind` for older versions of sqlite.
