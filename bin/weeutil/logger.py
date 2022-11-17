@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2020 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2020-2022 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -53,6 +53,16 @@ LOGGING_STR = """[Logging]
             # Alternate choice is 'ext://sys.stderr'
             stream = ext://sys.stdout
 
+        # Log to a set of rotating files
+        [[[rotate]]]
+            level = DEBUG
+            formatter = standard
+            class = logging.handlers.RotatingFileHandler
+            # Writing to this file will require root privileges:
+            filename = /var/log/weewx.log
+            maxBytes = 10000000
+            backupCount = 4
+
     # How to format log messages
     [[formatters]]
         [[[simple]]]
@@ -69,53 +79,6 @@ LOGGING_STR = """[Logging]
 if sys.platform == "darwin":
     address = '/var/run/syslog'
     facility = 'local1'
-
-    # Mac uses slightly different logging setup
-    LOGGING_STR = """[Logging]
-        version = 1
-        disable_existing_loggers = False
-
-        # Root logger
-        [[root]]
-          level = {log_level}
-          handlers = rotate,
-    
-        # Additional loggers would go in the following section. This is useful for tailoring logging
-        # for individual modules.
-        [[loggers]]
-
-        # Definitions of possible logging destinations
-        [[handlers]]
-
-            # Log to a set of rotating files    
-            [[[rotate]]]
-                level = DEBUG
-                formatter = standard
-                class = logging.handlers.RotatingFileHandler
-                # Writing to this file will require root privileges:
-                filename = /var/log/weewx.log
-                maxBytes = 10000000
-                backupCount = 4
-
-            # Log to console
-            [[[console]]]
-                level = DEBUG
-                formatter = verbose
-                class = logging.StreamHandler
-                # Alternate choice is 'ext://sys.stderr'
-                stream = ext://sys.stdout
-
-        # How to format log messages
-        [[formatters]]
-            [[[simple]]]
-                format = "%(levelname)s %(message)s"
-            [[[standard]]]
-                format = "{process_name}[%(process)d] %(levelname)s %(name)s: %(message)s" 
-            [[[verbose]]]
-                format = "%(asctime)s  {process_name}[%(process)d] %(levelname)s %(name)s: %(message)s"
-                # Format to use for dates and times:
-                datefmt = %Y-%m-%d %H:%M:%S
-    """
 elif sys.platform.startswith('linux'):
     address = '/dev/log'
     facility = 'user'
@@ -136,9 +99,15 @@ else:
 def setup(process_name, user_log_dict):
     """Set up the weewx logging facility"""
 
+    global address, facility
+
     # Create a ConfigObj from the default string. No interpolation (it interferes with the
     # interpolation directives embedded in the string).
     log_config = configobj.ConfigObj(StringIO(LOGGING_STR), interpolation=False, encoding='utf-8')
+
+    if sys.platform == "darwin":
+        # Different default handler for MacOS:
+        log_config['Logging']['root']['handlers'] = ['rotate']
 
     # Turn off interpolation in the incoming dictionary. First save the old
     # value, then restore later. However, the incoming dictionary may be a simple
