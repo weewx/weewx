@@ -31,7 +31,9 @@ from six.moves import map
 import gen_fake_data
 import weeutil.logger
 import weeutil.weeutil
+import weeutil.config
 import weewx
+import weewx.accum
 import weewx.reportengine
 import weewx.station
 import weewx.units
@@ -55,6 +57,19 @@ locale.setlocale(locale.LC_ALL, '')
 my_dir = os.path.normpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 # The full path to the configuration file:
 config_path = os.path.join(my_dir, "testgen.conf")
+
+try:
+    config_dict = configobj.ConfigObj(config_path, file_error=True, encoding='utf-8')
+except IOError:
+    sys.stderr.write("Unable to open configuration file %s" % config_path)
+    # Reraise the exception (this will eventually cause the program to exit)
+    raise
+except configobj.ConfigObjError:
+    sys.stderr.write("Error while parsing configuration file %s" % config_path)
+    raise
+
+# We test accumulator configurations as well, so initialize the Accumulator dictionary:
+weewx.accum.initialize(config_dict)
 
 # These tests also test the examples in the 'example' subdirectory.
 # Patch PYTHONPATH to find them.
@@ -103,17 +118,9 @@ weewx.units.default_unit_label_dict["amp"] = " A"
 class Common(object):
 
     def setUp(self):
-        global config_path
+        global config_dict
 
-        try:
-            self.config_dict = configobj.ConfigObj(config_path, file_error=True, encoding='utf-8')
-        except IOError:
-            sys.stderr.write("Unable to open configuration file %s" % config_path)
-            # Reraise the exception (this will eventually cause the program to exit)
-            raise
-        except configobj.ConfigObjError:
-            sys.stderr.write("Error while parsing configuration file %s" % config_path)
-            raise
+        self.config_dict = weeutil.config.deep_copy(config_dict)
 
         # Remove the old directory:
         try:

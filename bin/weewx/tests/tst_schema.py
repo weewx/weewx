@@ -27,10 +27,11 @@ table = [('dateTime',             'INTEGER NOT NULL UNIQUE PRIMARY KEY'),
          ('windGust',             'REAL'),
          ('windGustDir',          'REAL'),
          ('windSpeed',            'REAL'),
+         ('stringData',           'VARCHAR(30)')
          ]
 
-day_summaries = [(e[0], 'scalar') for e in table
-                 if e[0] not in ('dateTime', 'usUnits', 'interval')] + [('wind', 'VECTOR')]
+day_types = [e[0] for e in table if e[0] not in {'dateTime', 'usUnits', 'interval', 'stringData'}]
+day_summaries = [(day_type, 'scalar') for day_type in day_types] + [('wind', 'VECTOR')]
 
 schema = {
     'table': table,

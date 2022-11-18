@@ -184,6 +184,7 @@ def genFakeRecords(start_ts=start_ts, stop_ts=stop_ts, interval=interval,
             'windSpeed': abs(amplitude * weather_wind_range * (1.0 + math.sin(weather_phase))),
             'windDir': math.degrees(weather_phase) % 360.0,
             'outHumidity': 40 * math.sin(weather_phase) + 50,
+            'stringData' : "S%d" % ts,
         }
         record['windGust'] = 1.2 * record['windSpeed']
         record['windGustDir'] = record['windDir']
@@ -226,11 +227,18 @@ if __name__ == '__main__':
     count = 0
     for rec in genFakeRecords():
         if count % 30 == 0:
-            print("Time                        outTemp   windSpeed   barometer rain radiation")
+            print("Time                        outTemp   windSpeed   barometer rain radiation stringData")
         count += 1
         outTemp = "%10.1f" % rec['outTemp'] if rec['outTemp'] is not None else "       N/A"
         windSpeed = "%10.1f" % rec['windSpeed'] if rec['windSpeed'] is not None else "       N/A"
         barometer = "%10.1f" % rec['barometer'] if rec['barometer'] is not None else "       N/A"
         rain = "%10.2f" % rec['rain'] if rec['rain'] is not None else "       N/A"
         radiation = "%10.0f" % rec['radiation'] if rec['radiation'] is not None else "       N/A"
-        print(6 * "%s" % (time.ctime(rec['dateTime']), outTemp, windSpeed, barometer, rain, radiation))
+        string_data = " %s" % rec['stringData']
+        print(7 * "%s" % (time.ctime(rec['dateTime']),
+                          outTemp,
+                          windSpeed,
+                          barometer,
+                          rain,
+                          radiation,
+                          string_data))
