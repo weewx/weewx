@@ -568,7 +568,7 @@ class WDSource(weeimport.Source):
                     print(_msg)
                     log.info(_msg)
                 # make sure we have full stops as decimal points
-                _clean_data.append(clean_row.replace(self.decimal, '.'))
+                _clean_data.append(clean_row.replace(self.decimal_sep, '.'))
 
             # initialise a list to hold our processed data for this log file
             _data = []
