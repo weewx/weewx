@@ -1,6 +1,6 @@
 # coding: utf-8
 #
-#    Copyright (c) 2019-2021 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2019-2022 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your rights.
 #
@@ -48,6 +48,7 @@ log_failure = False
         group_energy       = watt_hour
         group_energy2      = watt_second
         group_fraction     = ppm
+        group_frequency    = hertz
         group_illuminance  = lux
         group_length       = inch
         group_moisture     = centibar
@@ -95,6 +96,7 @@ log_failure = False
         degree_K           = %.1f
         foot               = %.0f
         gallon             = %.1f
+        hertz              = %.1f
         hour               = %.1f
         hPa                = %.1f
         hPa_per_hour       = %.3f
@@ -163,6 +165,7 @@ log_failure = False
         degree_K          = "°K"
         foot              = " feet"
         gallon            = " gal"
+        hertz             = " Hz"
         hour              = " hour", " hours"
         hPa               = " hPa"
         hPa_per_hour      = " hPa/h"
@@ -221,10 +224,15 @@ log_failure = False
         current     = %x %X
         ephem_day   = %X
         ephem_year  = %x %X
-        brief_delta = "%(minute)d%(minute_label)s, %(second)d%(second_label)s"
-        short_delta = "%(hour)d%(hour_label)s, %(minute)d%(minute_label)s, %(second)d%(second_label)s"
-        long_delta  = "%(day)d%(day_label)s, %(hour)d%(hour_label)s, %(minute)d%(minute_label)s"
-        delta_time  = "%(day)d%(day_label)s, %(hour)d%(hour_label)s, %(minute)d%(minute_label)s"
+
+    [[DeltaTimeFormats]]
+        current = "%(minute)d%(minute_label)s, %(second)d%(second_label)s"
+        hour    = "%(minute)d%(minute_label)s, %(second)d%(second_label)s"
+        day     = "%(hour)d%(hour_label)s, %(minute)d%(minute_label)s, %(second)d%(second_label)s"
+        week    = "%(day)d%(day_label)s, %(hour)d%(hour_label)s, %(minute)d%(minute_label)s"
+        month   = "%(day)d%(day_label)s, %(hour)d%(hour_label)s, %(minute)d%(minute_label)s"
+        year    = "%(day)d%(day_label)s, %(hour)d%(hour_label)s, %(minute)d%(minute_label)s"
+        
 
     [[Ordinates]]
 

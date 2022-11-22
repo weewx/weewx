@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-#    Copyright (c) 2009-2021 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2022 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -23,7 +23,7 @@ from six.moves import map
 import configobj
 
 import gen_fake_data
-import schemas.wview_small
+import tst_schema
 import weeutil.logger
 import weeutil.weeutil
 import weewx.manager
@@ -39,7 +39,7 @@ weeutil.logger.setup('test_daily', {})
 os.environ['TZ'] = 'America/Los_Angeles'
 time.tzset()
 
-day_keys = [x[0] for x in schemas.wview_small.schema['day_summaries']]
+day_keys = [x[0] for x in tst_schema.schema['day_summaries']]
 
 # Find the configuration file. It's assumed to be in the same directory as me:
 config_path = os.path.join(os.path.dirname(__file__), "testgen.conf")

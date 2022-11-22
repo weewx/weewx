@@ -295,8 +295,32 @@ FALSE#slurp
       <h2>\$month</h2>
         <table>
           <tr>
-            <td>Month start, stop</td>
-            <td>$month.start.raw<br/>$month.end.raw</td>
+            <td>\$month.start.raw</td>
+            <td>$month.start.raw</td>
+          </tr>
+          <tr>
+            <td>\$month.end.raw</td>
+            <td>$month.end.raw</td>
+          </tr>
+          <tr>
+            <td>\$month.length.raw</td>
+            <td>$month.length.raw</td>
+          </tr>
+          <tr>
+            <td>\$month.start</td>
+            <td>$month.start</td>
+          </tr>
+          <tr>
+            <td>\$month.end</td>
+            <td>$month.end</td>
+          </tr>
+          <tr>
+            <td>\$month.length</td>
+            <td>$month.length</td>
+          </tr>
+          <tr>
+            <td>\$month.length.long_form("%(day)d %(day_label)s")</td>
+            <td>$month.length.long_form("%(day)d %(day_label)s")</td>
           </tr>
           <tr>
             <td>\$month.windSpeed.avg</td>
@@ -571,9 +595,38 @@ FALSE#slurp
       <td>$day.foobar.min</td>
     </tr>
     </tr>
-      <tr>
+    <tr>
       <td>Test for a bad aggregation type on a \$day tag: \$day.outTemp.foo</td>
       <td>$day.outTemp.foo</td>
+    </tr>
+    </tr>
+    <tr>
+      <td>Test for sunshineDur: \$day.sunshineDur.sum</td>
+      <td>$day.sunshineDur.sum</td>
+    </tr>
+    <tr>
+      <td>Test for sunshineDur: \$day.sunshineDur.sum.long_form</td>
+      <td>$day.sunshineDur.sum.long_form</td>
+    </tr>
+    <tr>
+      <td>Test for sunshineDur, custom format:</td>
+      <td>$day.sunshineDur.sum.long_form("%(hour)d%(hour_label)s, %(minute)d%(minute_label)s")</td>
+    </tr>
+    <tr>
+      <td>sunshineDur in hours:</td>
+      <td>$day.sunshineDur.sum.hour.format("%.2f")</td>
+    </tr>
+    <tr>
+      <td>\$day.stringData.first.raw</td>
+      <td>$day.stringData.first.raw</td>
+    </tr>
+    <tr>
+      <td>\$day.stringData.last.raw</td>
+      <td>$day.stringData.last.raw</td>
+    </tr>
+    <tr>
+      <td>\$day.stringData.first.format("%s")</td>
+      <td>$day.stringData.first.format("%s")</td>
     </tr>
   </table>
 
@@ -716,6 +769,14 @@ FALSE#slurp
     <tr>
        <td align="right">Moon:</td>
        <td align="left">$almanac.moon_phase ($almanac.moon_fullness%full)</td>
+    </tr>
+    <tr>
+       <td align="right">\$almanac.sun.visible:</td>
+       <td align="left">$almanac.sun.visible.long_form <br/>($almanac.sun.visible)</td>
+    </tr>
+    <tr>
+       <td align="right">\$almanac.sun.visible_change:</td>
+       <td align="left">$almanac.sun.visible_change.long_form ($almanac.sun.visible_change)</td>
     </tr>
   </table>
   

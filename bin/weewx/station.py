@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2021 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2022 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -92,7 +92,7 @@ class Station(object):
         delta_time = time.time() - weewx.launchtime_ts if weewx.launchtime_ts else None
 
         return weewx.units.ValueHelper(value_t=(delta_time, "second", "group_deltatime"),
-                                       context="long_delta",
+                                       context="month",
                                        formatter=self.formatter,
                                        converter=self.converter)
 
@@ -101,7 +101,7 @@ class Station(object):
         """Lazy evaluation of the server uptime."""
         os_uptime_secs = _os_uptime()
         return weewx.units.ValueHelper(value_t=(os_uptime_secs, "second", "group_deltatime"),
-                                       context="long_delta",
+                                       context="month",
                                        formatter=self.formatter,
                                        converter=self.converter)
 

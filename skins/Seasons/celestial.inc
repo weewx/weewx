@@ -93,7 +93,7 @@
           #end if
           <tr>
             <td class="label">$gettext("Total daylight")</td>
-            <td class="data">$almanac.sun.visible<br/>$sun_visible_change $change_str</td>
+            <td class="data">$almanac.sun.visible<br/>$sun_visible_change.long_form $change_str</td>
           </tr>
         </table>
       </div>

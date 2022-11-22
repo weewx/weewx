@@ -30,11 +30,11 @@
     </tr>
     <tr>
       <td class="label">$gettext("Server uptime")</td>
-      <td class="data">$station.os_uptime</td>
+      <td class="data">$station.os_uptime.long_form</td>
     </tr>
     <tr>
       <td class="label">$gettext("WeeWX uptime")</td>
-      <td class="data">$station.uptime</td>
+      <td class="data">$station.uptime.long_form</td>
     </tr>
     <tr>
       <td class="label">$gettext("WeeWX version")</td>

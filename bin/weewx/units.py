@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-#    Copyright (c) 2009-2021 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2022 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -271,6 +271,7 @@ USUnits = ListOfDicts({
     "group_energy"      : "watt_hour",
     "group_energy2"     : "watt_second",
     "group_fraction"    : "ppm",
+    "group_frequency"   : "hertz",
     "group_illuminance" : "lux",
     "group_interval"    : "minute",
     "group_length"      : "inch",
@@ -309,6 +310,7 @@ MetricUnits = ListOfDicts({
     "group_energy"      : "watt_hour",
     "group_energy2"     : "watt_second",
     "group_fraction"    : "ppm",
+    "group_frequency"   : "hertz",
     "group_illuminance" : "lux",
     "group_interval"    : "minute",
     "group_length"      : "cm",
@@ -572,7 +574,8 @@ class Formatter(object):
     def __init__(self, unit_format_dict = None,
                  unit_label_dict  = None,
                  time_format_dict = None,
-                 ordinate_names   = None):
+                 ordinate_names   = None,
+                 deltatime_format_dict = None):
         """
 
         Args:
@@ -583,12 +586,15 @@ class Formatter(object):
             time_format_dict (dict): Key is a context (e.g., 'week'), value is a
                 strftime format (e.g., "%d-%b-%Y %H:%M").
             ordinate_names(list): A list containing ordinal compass names (e.g., ['N', 'NNE', etc.]
+            deltatime_format_dict (dict): Key is a context (e.g., 'week'), value is a deltatime
+                format string (e.g., "%(minute)d%(minute_label)s, %(second)d%(second_label)s")
         """
 
         self.unit_format_dict = unit_format_dict or {}
         self.unit_label_dict  = unit_label_dict or {}
         self.time_format_dict = time_format_dict or {}
         self.ordinate_names    = ordinate_names or DEFAULT_ORDINATE_NAMES
+        self.deltatime_format_dict = deltatime_format_dict or {}
 
     @staticmethod
     def fromSkinDict(skin_dict):
@@ -614,10 +620,16 @@ class Formatter(object):
         except KeyError:
             ordinate_names = {}
 
+        try:
+            deltatime_format_dict = skin_dict['Units']['DeltaTimeFormats']
+        except KeyError:
+            deltatime_format_dict = {}
+
         return Formatter(unit_format_dict,
                          unit_label_dict,
                          time_format_dict,
-                         ordinate_names)
+                         ordinate_names,
+                         deltatime_format_dict)
 
     def get_format_string(self, unit):
         """Return a suitable format string."""
@@ -745,19 +757,6 @@ class Formatter(object):
             else:
                 val_str = time.strftime(useThisFormat, time.localtime(t))
             addLabel = False
-        elif val_t[2] == "group_deltatime":
-            # Get a delta-time format string. Use a default if the user did not supply one:
-            if useThisFormat is None:
-                # For group_deltatime formatting, the default context cannot be 'current'.
-                # Change it to something sensible.
-                if context == 'current':
-                    context = 'delta_time'
-                format_string = self.time_format_dict.get(context, DEFAULT_DELTATIME_FORMAT)
-            else:
-                format_string = useThisFormat
-            # Now format the delta time, using the function delta_secs_to_string:
-            val_str = self.delta_secs_to_string(val_t[0], format_string)
-            addLabel = False
         else:
             # It's not a time. It's a regular value. Get a suitable format string:
             if useThisFormat is None:
@@ -792,8 +791,36 @@ class Formatter(object):
         _sector = int(_degree / _sector_size)
         return self.ordinate_names[_sector]
 
-    def delta_secs_to_string(self, secs, label_format):
-        """Convert elapsed seconds to a string """
+    def long_form(self, val_t, context, format_string=None):
+        """Format a delta time using the long-form.
+
+        Args:
+            val_t (ValueTuple): a ValueTuple holding the delta time.
+            context (str): The time context. Something like 'day', 'current', etc.
+            format_string (str|None): An optional custom format string. Otherwise, an appropriate
+                string will be looked up in deltatime_format_dict.
+        Returns
+            str: The results formatted in a "long-form" time. This is something like
+                "2 hours, 14 minutes, 21 seconds".
+        """
+        # Get a delta-time format string. Use a default if the user did not supply one:
+        if not format_string:
+            format_string = self.deltatime_format_dict.get(context, DEFAULT_DELTATIME_FORMAT)
+        # Now format the delta time, using the function delta_time_to_string:
+        val_str = self.delta_time_to_string(val_t, format_string)
+        return val_str
+
+    def delta_time_to_string(self, val_t, label_format):
+        """Format elapsed time as a string
+
+        Args:
+            val_t (ValueTuple): A ValueTuple containing the elapsed time.
+            label_format (str): The formatting string.
+
+        Returns:
+            str: The formatted time as a string.
+        """
+        secs = convert(val_t, 'second')[0]
         etime_dict = {}
         secs = abs(secs)
         for (label, interval) in (('day', 86400), ('hour', 3600), ('minute', 60), ('second', 1)):
@@ -1030,6 +1057,12 @@ class ValueHelper(object):
         # Get the raw value tuple, then ask the formatter to look up an
         # appropriate ordinate:
         return self.formatter.to_ordinal_compass(self.value_t)
+
+    def long_form(self, format_string=None):
+        """Format a delta time"""
+        return self.formatter.long_form(self.value_t,
+                                        context=self.context,
+                                        format_string=format_string)
 
     def json(self, **kwargs):
         return json.dumps(self.raw, cls=ComplexEncoder, **kwargs)
@@ -1629,7 +1662,9 @@ def get_default_formatter():
         unit_format_dict=weewx.defaults.defaults['Units']['StringFormats'],
         unit_label_dict=weewx.defaults.defaults['Units']['Labels'],
         time_format_dict=weewx.defaults.defaults['Units']['TimeFormats'],
-        ordinate_names=weewx.defaults.defaults['Units']['Ordinates']['directions'])
+        ordinate_names=weewx.defaults.defaults['Units']['Ordinates']['directions'],
+        deltatime_format_dict=weewx.defaults.defaults['Units']['DeltaTimeFormats']
+    )
     return formatter
 
 

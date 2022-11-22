@@ -256,6 +256,12 @@ class TimespanBinder(object):
         val = weewx.units.ValueTuple(self.timespan.stop, 'unix_epoch', 'group_time')
         return weewx.units.ValueHelper(val, self.context, self.formatter, self.converter)
 
+    # Return the length of the timespan
+    @property
+    def length(self):
+        val = weewx.units.ValueTuple(self.timespan.stop-self.timespan.start, 'second', 'group_deltatime')
+        return weewx.units.ValueHelper(val, self.context, self.formatter, self.converter)
+
     # Alias for the start time:
     dateTime = start
 

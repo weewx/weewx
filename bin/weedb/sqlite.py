@@ -16,8 +16,16 @@ if not hasattr(sqlite3.Connection, "__exit__"):  # @UndefinedVariable
     del sqlite3
     from pysqlite2 import dbapi2 as sqlite3  # @Reimport @UnresolvedImport
 
-sqlite_version = sqlite3.sqlite_version
-has_math = sqlite_version >= '3.35.0'
+# Test to see whether this version of SQLite has math functions. An explicit test is required
+# (rather than just check version numbers) because the SQLite library may or may not have been
+# compiled with the DSQLITE_ENABLE_MATH_FUNCTIONS option.
+try:
+    with sqlite3.connect(":memory:") as conn:
+        conn.execute("SELECT RADIANS(0.0), SIN(0.0), COS(0.0);")
+except sqlite3.OperationalError:
+    has_math = False
+else:
+    has_math = True
 
 import weedb
 from weeutil.weeutil import to_int, to_bool

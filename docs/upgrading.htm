@@ -49,6 +49,10 @@
         .added {
             background: #ccffcc;
         }
+
+        .wide-table{
+            overflow-x: scroll;
+        }
     </style>
 </head>
 
@@ -81,7 +85,7 @@
         <div class="logoref">
             <a href='https://weewx.com'> <img src='images/logo-weewx.png' class='logo' style="float:right"
                                              alt="weewx logo"/> </a><br/> <span class='version'>
-Version: 4.9
+Version: 4.10
     </span>
         </div>
         <div class="title">WeeWX Upgrade Guide</div>
@@ -249,6 +253,252 @@ sudo apt-get install weewx</pre>
 
 
         <h1><a id="Instructions_for_specific_versions">Instructions for specific versions</a></h1>
+
+        <h2>Upgrading to V4.10</h2>
+
+        <h3>Breaking changes for skins that use delta times</h3>
+        <p>
+            A "delta time" is the difference between two times, for example the amount of uptime (difference between
+            start and current time), or the amount of daylight (difference between sunrise and sunset).
+            In previous versions, delta times were treated as a special case, which limited their
+            flexibility. With <a href="https://github.com/weewx/weewx/pull/807">PR #807</a>,
+            a delta time is treated like any other scalar, which gives you access to all the regular formatting
+            tools. However, a side effect is that if you want to format the time in the "long form", that is, so the
+            results look like <span class="code">4 hours, 15 minutes</span>, rather than <span class="code">15300
+            seconds</span>, then you will have to say so explicitly.
+        </p>
+        <p>
+            If you use the <em>Seasons</em> skin, you will have to make these three small changes. Add
+            the text in <span class="added">green</span>:
+        </p>
+
+        <div class="wide-table">
+            <table>
+                <tr class="first_row">
+                    <td style='width:50%'>V4.9 and earlier Seasons skin</td>
+                    <td>4.10 Seasons skin</td>
+                </tr>
+                <tr>
+                    <td colspan="2" style="text-align: center"><span class="code">Seasons/about.inc</span> starting at line 31</td>
+                </tr>
+                <tr>
+                    <td>
+                        <pre class="tty">
+    &lt;tr&gt;
+      &lt;td class="label"&gt;$gettext("Server uptime")&lt;/td&gt;
+      &lt;td class="data"&gt;$station.os_uptime&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td class="label"&gt;$gettext("WeeWX uptime")&lt;/td&gt;
+      &lt;td class="data"&gt;$station.uptime&lt;/td&gt;
+    &lt;/tr&gt;
+                        </pre>
+                    </td>
+                    <td>
+                        <pre class="tty">
+    &lt;tr&gt;
+      &lt;td class="label"&gt;$gettext("Server uptime")&lt;/td&gt;
+      &lt;td class="data"&gt;$station.os_uptime<span class="added">.long_form</span>&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td class="label"&gt;$gettext("WeeWX uptime")&lt;/td&gt;
+      &lt;td class="data"&gt;$station.uptime<span class="added">.long_form</span>&lt;/td&gt;
+    &lt;/tr&gt;
+                        </pre>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2" style="text-align: center"><span class="code">Seasons/celestial.inc</span> starting at line 94</td>
+                </tr>
+                <tr>
+                    <td>
+                        <pre class="tty">
+    &lt;tr&gt;
+      &lt;td class="label"&gt;$gettext("Total daylight")&lt;/td&gt;
+      &lt;td class="data"&gt;$almanac.sun.visible&lt;br/&gt;$sun_visible_change.long_form $change_str&lt;/td&gt;
+    &lt;/tr&gt;
+                        </pre>
+                    </td>
+                    <td>
+                        <pre class="tty">
+    &lt;tr&gt;
+      &lt;td class="label"&gt;$gettext("Total daylight")&lt;/td&gt;
+      &lt;td class="data"&gt;$almanac.sun.visible&lt;br/&gt;$sun_visible_change<span class="added">.long_form</span> $change_str&lt;/td&gt;
+    &lt;/tr&gt;
+                        </pre>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <p>
+            In a similar manner, if you use the <em>Standard</em> skin, you will have to make these two changes.
+        </p>
+        <div class="wide-table">
+            <table>
+                <tr class="first_row">
+                    <td style='width:50%'>V4.9 and earlier Standard skin</td>
+                    <td>4.10 Standard skin</td>
+                </tr>
+                <tr>
+                    <td colspan="2" style="text-align: center"><span class="code">Standard/index.html.tmpl</span> starting at line 309</td>
+                </tr>
+                <tr>
+                    <td>
+                        <pre class="tty">
+          &lt;p&gt;$gettext("WeeWX uptime"):  $station.uptime&lt;br/&gt;
+             $gettext("Server uptime"): $station.os_uptime&lt;br/&gt;
+                        </pre>
+                    </td>
+                    <td>
+                        <pre class="tty">
+          &lt;p&gt;$gettext("WeeWX uptime"):  $station.uptime<span class="added">.long_form</span>&lt;br/&gt;
+             $gettext("Server uptime"): $station.os_uptime<span class="added">.long_form</span>&lt;br/&gt;
+                        </pre>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <p>
+            In both cases, the new formatting directive <span class="code">.long_form</span> has been used to
+            explicitly request that the delta time be formatted into its constituent components.
+            The advantage of this approach is that the delta time can be treated like any other scalar. Here
+            are some examples:
+        </p>
+        <table>
+            <tr class="first_row">
+                <td style='width:50%'>Tag</td>
+                <td>Results</td>
+            </tr>
+            <tr>
+                <td class="tty">
+$almanac.sun.visible
+                </td>
+                <td class="tty">
+45000 seconds
+                </td>
+            </tr>
+            <tr>
+                <td class="tty">
+$almanac.sun.visible.hour
+                </td>
+                <td class="tty">
+12.5 hours
+                </td>
+            </tr>
+            <tr>
+                <td class="tty">
+$almanac.sun.visible.hour.format("%.2f")
+                </td>
+                <td class="tty">
+12.50 hours
+                </td>
+            </tr>
+            <tr>
+                <td class="tty">
+$almanac.sun.visible.long_form
+                </td>
+                <td class="tty">
+12 hours, 30 minutes, 0 seconds
+                </td>
+            </tr>
+        </table>
+
+        <h3>Changes for custom delta time formats</h3>
+        <p>
+            Fixing issue <a href="https://github.com/weewx/weewx/issues/808">#808</a> required
+            introducing a separate dictionary for members of group <span class="code">group_deltatime</span>. This
+            means that if you specified custom formats under <span class="code">[Units]/[[TimeFormats]]</span>, then
+            you will have to move them to the new section <span class="code">[Units]/[[DeltaTimeFormats]]</span>.
+            Very few users should be affected by this change because the ability to set custom delta time formats is an
+            undocumented feature.
+        </p>
+        <p>
+            The good news is that the contexts they now use have more standard names. The table below summarizes:
+        </p>
+
+        <div class="wide-table">
+            <table>
+                <tr class="first_row">
+                    <td>V4.9 and earlier</td>
+                    <td>4.10</td>
+                </tr>
+                <tr>
+                    <td>
+                        <pre class='tty'>
+    def __init__(self, altitude_vt, latitude_f, longitude_f,
+    [[TimeFormats]]
+        ...
+        current     = %x %X
+        ephem_day   = %X
+        ephem_year  = %x %X
+        <span class="removed">brief_delta = "%(minute)d%(minute_label)s, %(second)d%(second_label)s"</span>
+        <span class="removed">short_delta = "%(hour)d%(hour_label)s, %(minute)d%(minute_label)s, %(second)d%(second_label)s"</span>
+        <span class="removed">long_delta  = "%(day)d%(day_label)s, %(hour)d%(hour_label)s, %(minute)d%(minute_label)s"</span>
+        <span class="removed">delta_time  = "%(day)d%(day_label)s, %(hour)d%(hour_label)s, %(minute)d%(minute_label)s"</span>
+                        </pre>
+                    </td>
+                    <td>
+                        <pre class='tty'>
+    [[TimeFormats]]
+        ...
+        current     = %x %X
+        ephem_day   = %X
+        ephem_year  = %x %X
+
+                        <span class="added">[[DeltaTimeFormats]]</span>
+                        <span class="added">current = "%(minute)d%(minute_label)s, %(second)d%(second_label)s"</span>
+                        <span class="added">hour    = "%(minute)d%(minute_label)s, %(second)d%(second_label)s"</span>
+                        <span class="added">day     = "%(hour)d%(hour_label)s, %(minute)d%(minute_label)s, %(second)d%(second_label)s"</span>
+                        <span class="added">week    = "%(day)d%(day_label)s, %(hour)d%(hour_label)s, %(minute)d%(minute_label)s"</span>
+                        <span class="added">month   = "%(day)d%(day_label)s, %(hour)d%(hour_label)s, %(minute)d%(minute_label)s"</span>
+                        <span class="added">year    = "%(day)d%(day_label)s, %(hour)d%(hour_label)s, %(minute)d%(minute_label)s"</span>
+                        </pre>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <h4>Elapsed time calls may have to be changed</h4>
+        <p>
+            The fix for Issue #808 also affects the API.
+        </p>
+
+        <table>
+            <tr class="first_row">
+                <td style='width:50%'>V4.9 and earlier</td>
+                <td>4.10</td>
+            </tr>
+            <tr>
+                <td>
+                    <pre class='tty'>
+# Create an elapsed time of 1655 seconds
+vt = ValueTuple(1655, 'second', 'group_deltatime')
+vh = ValueHelper(vt,
+                 formatter=self.generator.formatter,
+                 converter=self.generator.converter,
+                 <span class="changed">context='short_delta'</span>)
+</pre>
+                </td>
+                <td>
+                    <pre class='tty'>
+# Create an elapsed time of 1655 seconds
+vt = ValueTuple(1655, 'second', 'group_deltatime')
+vh = ValueHelper(vt,
+                 formatter=self.generator.formatter,
+                 converter=self.generator.converter,
+                 <span class="changed">context='day'</span>)
+</pre>
+                </td>
+            </tr>
+        </table>
+
+        <p>
+            In summary, because <span class="code">group_deltatime</span> now uses the same context names as any
+            other time, you will have to change the call to use one of the conventional contexts.
+        </p>
+
 
         <h2>Upgrading to V4.9</h2>
         <h3><span class="code">wee_reports</span> may require <span class="code">--epoch</span> option.</h3>
@@ -418,46 +668,6 @@ def archiveRainYearSpan(time_ts, sory_mon)
             although leaving it in will do no harm.
         </p>
 
-        <h3>API changes</h3>
-        <h4>Elapsed time calls may have to be changed</h4>
-        <p>
-            If you use group <span class="code">group_deltatime</span> to display elapsed time, you may have to change
-            the call. For example,
-        </p>
-
-        <table>
-            <tr class="first_row">
-                <td style='width:50%'>V4.5 and earlier</td>
-                <td>4.6</td>
-            </tr>
-            <tr>
-                <td>
-                    <pre class='tty'>
-# Create an elapsed time of 1655 seconds
-vt = ValueTuple(1655, 'second', 'group_deltatime')
-vh = ValueHelper(vt,
-                 formatter=self.generator.formatter,
-                 converter=self.generator.converter)
-</pre>
-                </td>
-                <td>
-                    <pre class='tty'>
-# Create an elapsed time of 1655 seconds
-vt = ValueTuple(1655, 'second', 'group_deltatime')
-vh = ValueHelper(vt,
-                 formatter=self.generator.formatter,
-                 converter=self.generator.converter,
-                 <span class="added">context='short_delta'</span>)
-</pre>
-                </td>
-            </tr>
-        </table>
-
-        <p>
-            In summary, you will need to indicate the "context". There are two choices, <span class="code">short_delta</span>
-            for elapsed times less than a day, and <span class="code">long_delta</span> for time spans more than
-            a day.
-        </p>
 
         <h2>Upgrading to V4.5</h2>
         <p>

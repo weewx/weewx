@@ -282,8 +282,32 @@
       <h2>$month</h2>
         <table>
           <tr>
-            <td>Month start, stop</td>
-            <td>1283324400<br/>1285916400</td>
+            <td>$month.start.raw</td>
+            <td>1283324400</td>
+          </tr>
+          <tr>
+            <td>$month.end.raw</td>
+            <td>1285916400</td>
+          </tr>
+          <tr>
+            <td>$month.length.raw</td>
+            <td>2592000</td>
+          </tr>
+          <tr>
+            <td>$month.start</td>
+            <td>01-Sep-2010 00:00</td>
+          </tr>
+          <tr>
+            <td>$month.end</td>
+            <td>01-Oct-2010 00:00</td>
+          </tr>
+          <tr>
+            <td>$month.length</td>
+            <td>2592000 seconds</td>
+          </tr>
+          <tr>
+            <td>$month.length.long_form("%(day)d %(day_label)s")</td>
+            <td>30  days</td>
           </tr>
           <tr>
             <td>$month.windSpeed.avg</td>
@@ -571,9 +595,38 @@
       <td>$day.foobar.min</td>
     </tr>
     </tr>
-      <tr>
+    <tr>
       <td>Test for a bad aggregation type on a $day tag: $day.outTemp.foo</td>
       <td>$day.outTemp.foo</td>
+    </tr>
+    </tr>
+    <tr>
+      <td>Test for sunshineDur: $day.sunshineDur.sum</td>
+      <td>25200 seconds</td>
+    </tr>
+    <tr>
+      <td>Test for sunshineDur: $day.sunshineDur.sum.long_form</td>
+      <td>7 hours, 0 minutes, 0 seconds</td>
+    </tr>
+    <tr>
+      <td>Test for sunshineDur, custom format:</td>
+      <td>7 hours, 0 minutes</td>
+    </tr>
+    <tr>
+      <td>sunshineDur in hours:</td>
+      <td>7.00 hours</td>
+    </tr>
+    <tr>
+      <td>$day.stringData.first.raw</td>
+      <td>S1283499000</td>
+    </tr>
+    <tr>
+      <td>$day.stringData.last.raw</td>
+      <td>S1283536800</td>
+    </tr>
+    <tr>
+      <td>$day.stringData.first.format("%s")</td>
+      <td>S1283499000</td>
     </tr>
   </table>
 
@@ -712,6 +765,14 @@
     <tr>
        <td align="right">Moon:</td>
        <td align="left">Waning crescent (29%full)</td>
+    </tr>
+    <tr>
+       <td align="right">$almanac.sun.visible:</td>
+       <td align="left">13 hours, 10 minutes, 42 seconds <br/>(47442 seconds)</td>
+    </tr>
+    <tr>
+       <td align="right">$almanac.sun.visible_change:</td>
+       <td align="left">3 minutes, 6 seconds (-186 seconds)</td>
     </tr>
   </table>
   

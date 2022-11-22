@@ -211,11 +211,12 @@ class TestSqlite(Common):
         super(TestSqlite, self).__init__(*args, **kwargs)
 
     def test_variable(self):
+        import sqlite3
         weedb.create(self.db_dict)
         with weedb.connect(self.db_dict) as _connect:
             # Early versions of sqlite did not support journal modes.
             # Not sure exactly when it started, but I know that v3.4.2 did not have it.
-            if StrictVersion(weedb.sqlite.sqlite_version) > StrictVersion('3.4.2'):
+            if StrictVersion(sqlite3.sqlite_version) > StrictVersion('3.4.2'):
                 _v = _connect.get_variable('journal_mode')
                 self.assertEqual(_v[1].lower(), 'delete')
             _v = _connect.get_variable('foo')
