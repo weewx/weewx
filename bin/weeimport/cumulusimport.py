@@ -343,7 +343,7 @@ class CumulusSource(weeimport.Source):
                 print(_msg)
                 log.info(_msg)
             # make sure we have full stops as decimal points
-            _line = clean_row.replace(self.decimal, '.')
+            _line = clean_row.replace(self.decimal_sep, '.')
             # ignore any blank lines
             if _line != "\n":
                 # Cumulus has separate date and time fields as the first 2
