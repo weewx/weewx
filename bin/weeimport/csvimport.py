@@ -45,8 +45,8 @@ class CSVSource(weeimport.Source):
     # Define a dict to map CSV fields to WeeWX archive fields. For a CSV import
     # these details are specified by the user in the wee_import config file.
     _header_map = None
-    # define a dict to map cardinal, intercardinal and secondary intercardinal
-    # directions to degrees
+    # define a dict to map cardinal, inter-cardinal and secondary
+    # inter-cardinal directions to degrees
     wind_dir_map = {'N': 0.0, 'NNE': 22.5, 'NE': 45.0, 'ENE': 67.5,
                     'E': 90.0, 'ESE': 112.5, 'SE': 135.0, 'SSE': 157.5,
                     'S': 180.0, 'SSW': 202.5, 'SW': 225.0, 'WSW': 247.5,
@@ -83,7 +83,7 @@ class CSVSource(weeimport.Source):
         self.rain = self.csv_config_dict.get('rain', 'cumulative')
         # determine valid range for imported wind direction
         _wind_direction = option_as_list(self.csv_config_dict.get('wind_direction',
-                                                                  '0,360'))
+                                                                  [0, 360]))
         try:
             if float(_wind_direction[0]) <= float(_wind_direction[1]):
                 self.wind_dir = [float(_wind_direction[0]),
