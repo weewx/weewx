@@ -38,6 +38,121 @@ test_import_config_path = os.path.join(my_dir, "test_import.conf")
 test_import_csv_import_config_path = os.path.join(my_dir, "test_csv_import.conf")
 
 
+class Options(object):
+    """Class to represent wee_import command line options.
+
+    Refer to wee_import parser options for details.
+    """
+
+    def __init__(self):
+        self.config_path = None
+        self.import_config_path = None
+        self.dry_run = None
+        self.date = None
+        self.date_from = None
+        self.date_to = None
+        self.verbose = None
+        self.no_prompt = None
+        self.suppress = None
+        self.version = None
+
+
+class TestWeeImport(unittest.TestCase):
+    """Test elements of class Source and weeimport utilities.
+
+    weeimport.py provides the base class for source specific classes used to
+    import data. Much of the base class functionality can be tested with a base
+    class object rather than a source specific object. Utility methods in the
+    weeimport.py module are also tested in this test case.
+    """
+
+    def setUp(self):
+        """Setup the environment for our tests.
+
+        A Source object is required to allow the test to be run. To instantiate
+        a Source object we require a WeeWX config dict as well as an import
+        source config file. The import source type is not important, in this
+        case we will use a CSV source.
+        """
+
+        # obtain path and content of our WeeWX test config file
+        self.config_path, self.config_dict = weecfg.read_config(test_import_config_path,
+                                                                file_name="test_import.conf")
+        # obtain path and content of our WeeWX test import config file
+        self.import_config_path, import_config_dict = weecfg.read_config(test_import_csv_import_config_path,
+                                                                         file_name="test_csv_import.conf")
+        # but our csv import config sits under [CSV]
+        self.import_config_dict = import_config_dict.get('CSV')
+        # obtain an Options object to hold any 'wee_import' command line
+        # options
+        self.options = Options()
+
+
+    def tearDown(self):
+        """Clean up after ourselves."""
+
+        pass
+
+    def test_date_options(self):
+        """Test processing of date related command line options."""
+
+
+        # Check processing of --date, --date-from and --date-to command line
+        # options. These options are used to determine the first_ts and last_ts
+        # properties of the source object.
+
+        # we will be doing some date-time epoch conversions so put our system
+        # timezone into a known state
+        os.environ['TZ'] = 'America/Los_Angeles'
+        time.tzset()
+
+        # neither --date, --date-from or --date-to were specified, ie all are
+        # None; we should see first_ts and last_ts == None
+        # get a CsvSource object
+        csv_source_obj = weeimport.csvimport.CSVSource(self.config_dict,
+                                                       self.config_path,
+                                                       self.import_config_dict,
+                                                       self.import_config_path,
+                                                       self.options)
+        self.assertIsNone(csv_source_obj.first_ts)
+        self.assertIsNone(csv_source_obj.last_ts)
+        # only --date is specified
+        # a valid --date (format YYY-MM-DD); we should see first_ts and
+        # last_ts == valid timestamps
+        self.options.date = '2022-07-25'
+        csv_source_obj = weeimport.csvimport.CSVSource(self.config_dict,
+                                                       self.config_path,
+                                                       self.import_config_dict,
+                                                       self.import_config_path,
+                                                       self.options)
+        self.assertEqual(csv_source_obj.first_ts, 1658732400)
+        self.assertEqual(csv_source_obj.last_ts, 1658818800)
+        # an invalid --date but in correct format (YYYY-mm-dd); we should see a
+        # WeeImportOptionError exception
+        self.options.date = '2022-07-32'
+        args = (self.config_dict, self.config_path, self.import_config_dict,
+                self.import_config_path, self.options)
+        self.assertRaises(weeimport.weeimport.WeeImportOptionError,
+                          weeimport.csvimport.CSVSource,
+                          *args)
+        # an invalid --date but in incorrect format (YYYY-mm-ddTHH:MM); we
+        # should see a WeeImportOptionError exception
+        self.options.date = '2022-07-25T12:55'
+        args = (self.config_dict, self.config_path, self.import_config_dict,
+                self.import_config_path, self.options)
+        self.assertRaises(weeimport.weeimport.WeeImportOptionError,
+                          weeimport.csvimport.CSVSource,
+                          *args)
+        # an invalid --date in no recognised format; we should see a
+        # WeeImportOptionError exception
+        self.options.date = 'some_date'
+        args = (self.config_dict, self.config_path, self.import_config_dict,
+                self.import_config_path, self.options)
+        self.assertRaises(weeimport.weeimport.WeeImportOptionError,
+                          weeimport.csvimport.CSVSource,
+                          *args)
+
+
 class TestCsvImport(unittest.TestCase):
     """Test CSV import."""
 
@@ -351,7 +466,7 @@ def suite():
     """Create a TestSuite object containing the tests to be performed."""
 
     # the list of test cases to be performed
-    tests = [TestCsvImport, ]
+    tests = [TestCsvImport, TestWeeImport]
     # get a test loader
     loader = unittest.TestLoader()
     # create an empty test suite
