@@ -50,14 +50,51 @@ class TestCsvImport(unittest.TestCase):
 28/11/2017 08:20:00,1016.9,25.9,79,1.6,95,9.7,0,774,5.5,
 28/11/2017 08:25:00,1017,25.5,78,2.9,48,9.7,0,303,3.4,"forecast received"
 28/11/2017 08:30:00,1017.1,25.1,80,3.1,54,9.7,0,190,3.6,"""
-
+    test_data_list = [{'Time': '28/11/2017 08:00:00', 'Barometer': '1016.9', 'Temp': '24.6',
+                       'Humidity': '84', 'Windspeed': '1.8', 'Dir': '113', 'Gust': '8',
+                       'Dayrain': '0', 'Radiation': '359', 'Uv': '3.8',
+                       'Comment': 'start of observations'},
+                      {'Time': '28/11/2017 08:05:00', 'Barometer': '1016.9', 'Temp': '25.1',
+                       'Humidity': '82', 'Windspeed': '4.8', 'Dir': '135', 'Gust': '11.3',
+                       'Dayrain': '0', 'Radiation': '775', 'Uv': '4.7', 'Comment': ''},
+                      {'Time': '28/11/2017 08:10:00', 'Barometer': '1016.9', 'Temp': '25.4',
+                       'Humidity': '80', 'Windspeed': '4.4', 'Dir': '127', 'Gust': '11.3',
+                       'Dayrain': '0', 'Radiation': '787', 'Uv': '5.1',
+                       'Comment': 'note temperature'},
+                      {'Time': '28/11/2017 08:15:00', 'Barometer': '1017', 'Temp': '25.7',
+                       'Humidity': '79', 'Windspeed': '3.5', 'Dir': '74', 'Gust': '11.3',
+                       'Dayrain': '0', 'Radiation': '800', 'Uv': '5.4', 'Comment': ''},
+                      {'Time': '28/11/2017 08:20:00', 'Barometer': '1016.9', 'Temp': '25.9',
+                       'Humidity': '79', 'Windspeed': '1.6', 'Dir': '95', 'Gust': '9.7',
+                       'Dayrain': '0', 'Radiation': '774', 'Uv': '5.5', 'Comment': ''},
+                      {'Time': '28/11/2017 08:25:00', 'Barometer': '1017', 'Temp': '25.5',
+                       'Humidity': '78', 'Windspeed': '2.9', 'Dir': '48', 'Gust': '9.7',
+                       'Dayrain': '0', 'Radiation': '303', 'Uv': '3.4',
+                       'Comment': 'forecast received'},
+                      {'Time': '28/11/2017 08:30:00', 'Barometer': '1017.1', 'Temp': '25.1',
+                       'Humidity': '80', 'Windspeed': '3.1', 'Dir': '54', 'Gust': '9.7',
+                       'Dayrain': '0', 'Radiation': '190', 'Uv': '3.6', 'Comment': ''}
+                      ]
+    # expected source-to-database map
+    map = {'dateTime': {'field_name': 'timestamp', 'units': 'unix_epoch'},
+           'usUnits': {'units': None}, 'interval': {'units': 'minute'},
+           'barometer': {'field_name': 'barometer', 'units': 'inHg'},
+           'outTemp': {'field_name': 'Temp', 'units': 'degree_F'},
+           'outHumidity': {'field_name': 'humidity', 'units': 'percent'},
+           'windSpeed': {'field_name': 'windspeed', 'units': 'mile_per_hour'},
+           'windDir': {'field_name': 'wind', 'units': 'degree_compass'},
+           'windGust': {'field_name': 'gust', 'units': 'mile_per_hour'},
+           'windGustDir': {'field_name': 'gustDir', 'units': 'degree_compass'},
+           'rainRate': {'field_name': 'rate', 'units': 'inch_per_hour'},
+           'rain': {'field_name': 'dayrain', 'units': 'inch'}
+           }
     # minimal import config to test application of defaults
     default_import_config = """
     file = %s/%s
     [FieldMap]
         dateTime    = timestamp, unix_epoch
         interval    =
-        barometer   = barometer, inHg""" % (import_test_working_dir, TestCsvImport.test_data_file)
+        barometer   = barometer, inHg""" % (import_test_working_dir, test_data_file)
 
     class Options(object):
         """Class to represent command line options fed to wee_import.
@@ -97,6 +134,12 @@ class TestCsvImport(unittest.TestCase):
         # options
         self.options = TestCsvImport.Options()
         # generate the file containing the CSV test data to be imported
+        # first make sure our path exists
+        try:
+            os.makedirs(import_test_working_dir)
+        except OSError:
+            pass
+        # now populate the file
         with open(os.path.join(import_test_working_dir, TestCsvImport.test_data_file), 'w') as f:
             f.write(TestCsvImport.test_data)
 
@@ -149,6 +192,8 @@ class TestCsvImport(unittest.TestCase):
         self.assertEqual(csv_source_obj.increment, 1)
         # check the verbose property is correctly set
         self.assertIsNone(csv_source_obj.verbose)
+        # check the _header_map property is None
+        self.assertIsNone(csv_source_obj._header_map)
 
     def test_csv_defaults(self):
         """Test CsvSource object defaults.
@@ -192,8 +237,83 @@ class TestCsvImport(unittest.TestCase):
         # check the solar_sensor property is set to the default
         self.assertEqual(csv_source_obj_defaults.solar_sensor, True)
 
+    def test_getRawData(self):
+        """Test the CsvSource getRawData() method.
+
+        The getRawData() method returns a csv DictReader object containing the
+        imported data. This DictReader object is an iterator that yields
+        individual rows of data as a dict. The getRawData() method can also
+        raise various exceptions.
+        """
+
+        # get a CsvSource object
+        csv_source_obj = weeimport.csvimport.CSVSource(self.config_dict,
+                                                       self.config_path,
+                                                       self.import_config_dict,
+                                                       self.import_config_path,
+                                                       self.options)
+        # initialise a counter to count the number of 'rows' returned
+        row_count = 0
+        # iterate over the 'rows' in the DictReader
+        for row in csv_source_obj.getRawData(period=1):
+            # check the row data returned by the DictReader matches the source
+            # data, there is no unit conversion involved in this process only
+            # parsing and formatting source data
+            self.assertDictEqual(row, TestCsvImport.test_data_list[row_count])
+            # increment the row counter
+            row_count += 1
+        # check the correct number of rows were returned
+        self.assertEqual(row_count, len(TestCsvImport.test_data_list))
+        # check the source-to-database map was correctly generated
+        self.assertDictEqual(csv_source_obj.map, TestCsvImport.map)
+
+        # check exceptions we should see from getRawData()
+
+        # a non-existent source file
+        # first save the source property so we can restore it when we have
+        # finished this test
+        _source = csv_source_obj.source
+        # set the source property to a non-existent path/file
+        csv_source_obj.source = "/var/tmp/zzunknown.zzz"
+        # check that a WeeImportIOError is raised
+        self.assertRaises(weeimport.weeimport.WeeImportIOError,
+                          csv_source_obj.getRawData, period=1)
+        # restore the source property
+        csv_source_obj.source = _source
+
+        # an invalid source encoding
+        # first save the source_encoding property so we can restore it when we
+        # have finished this test
+        _encoding = csv_source_obj.source_encoding
+        # set the source_encoding property to an unknown source encoding
+        csv_source_obj.source_encoding = "unknown"
+        # check that a LookupError is raised
+        self.assertRaises(LookupError, csv_source_obj.getRawData, period=1)
+
+        # an incorrect source encoding
+        # set the source_encoding property to a valid but incorrect source
+        # encoding
+        csv_source_obj.source_encoding = "utf-32"
+        # check that a WeeImportDecodeError is raised
+        self.assertRaises(weeimport.weeimport.WeeImportDecodeError,
+                          csv_source_obj.getRawData,
+                          period=1)
+        # restore the source_encoding property
+        csv_source_obj.source_encoding = _encoding
+
+        # missing field map
+        # first save the FieldMap stanza so we can restore it when we have
+        # finished this test
+        _field_map = csv_source_obj.csv_config_dict.pop('FieldMap')
+        # check that a WeeImportMapError exception is raised
+        self.assertRaises(weeimport.weeimport.WeeImportMapError,
+                          csv_source_obj.getRawData,
+                          period=1)
+        # now restore the FieldMap stanza
+        csv_source_obj.csv_config_dict['FieldMap'] = _field_map
+
     def test_csv_other(self):
-        """Test CsvSource object generators and property methods.
+        """Test generator and property methods of the CsvSource object.
 
         Tests the following CsvSource object methods:
 
@@ -220,9 +340,9 @@ class TestCsvImport(unittest.TestCase):
             # test the generator yields the integer 1
             self.assertEqual(period, 1)
             # test the first_period property is True
-            self.assertTrue(csv_source_obj.first_period)
+            self.assertEqual(csv_source_obj.first_period, True)
             # test the first_period property is True
-            self.assertTrue(csv_source_obj.last_period)
+            self.assertEqual(csv_source_obj.last_period, True)
         # test the generator yielded one value only
         self.assertEqual(period_count, 1)
 
@@ -244,6 +364,7 @@ def suite():
         test_suite.addTests(tests)
     # finally return the populated test suite
     return test_suite
+
 
 if __name__ == '__main__':
     # obtain a TestSuite containing the test to be run and then run the tests
