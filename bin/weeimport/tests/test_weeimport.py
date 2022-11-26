@@ -95,43 +95,62 @@ class TestWeeImport(unittest.TestCase):
         pass
 
     def test_date_options(self):
-        """Test processing of date related command line options."""
+        """Test processing of date related command line options.
 
+        Test processing of --date, --date-from and --date-to command line
+        options. These options are used to determine the first_ts and last_ts
+        properties of the source object.
+        """
+
+        # tests that check first_ts and last_ts values
         test_data = [
             # only --date is specified using a valid format (YYYY-MM-DD); we
             # should see valid timestamps
             {'options': {'date': '2022-07-25', 'date_from': None, 'date_to': None},
-             'results': {'first_ts': 1658732400, 'last_ts': 1658818800}},
+             'result': {'first_ts': 1658732400, 'last_ts': 1658818800}},
             # neither --date, --date-from or --date-to were specified; we
             # should see first_ts and last_ts == None
             {'options': {'date': None, 'date_from': None, 'date_to': None},
-             'results': {'first_ts': None, 'last_ts': None}},
+             'result': {'first_ts': None, 'last_ts': None}},
             # a valid format (YYYY-mm-dd) for --date=from and --date-to, --date
             # not specified; we should see valid timestamps
             {'options': {'date': None, 'date_from': '2022-07-21', 'date_to': '2022-08-24'},
-             'results': {'first_ts': 1658386800, 'last_ts': 1661410800}},
+             'result': {'first_ts': 1658386800, 'last_ts': 1661410800}},
             # a valid long format (YYYY-mm-ddTHH:MM) for --date-from and
             # --date-to, --date not specified; we should see valid timestamps
             {'options': {'date': None, 'date_from': '2022-07-21T11:00', 'date_to': '2022-08-24T21:55'},
-             'results': {'first_ts': 1658426400, 'last_ts': 1661403300}},
+             'result': {'first_ts': 1658426400, 'last_ts': 1661403300}},
             # A valid date format (YYYY-mm-dd) for --date, --date-from and
             # --date-to; we should see --date used to produce first_ts and
             # last_ts as valid timestamps. --date-drom and --date-to are
             # ignored.
             {'options': {'date': '2022-07-25', 'date_from': '2022-07-21', 'date_to': '2022-08-24'},
-             'results': {'first_ts': 1658732400, 'last_ts': 1658818800}}
+             'result': {'first_ts': 1658732400, 'last_ts': 1658818800}}
         ]
-
-        # Check processing of --date, --date-from and --date-to command line
-        # options. These options are used to determine the first_ts and last_ts
-        # properties of the source object.
+        # tests that raise exceptions
+        exception_test_data = [
+            # an invalid --date but in correct format (YYYY-mm-dd); we should see a
+            # WeeImportOptionError exception
+            {'options': {'date': '2022-07-32', 'date_from': None, 'date_to': None},
+             'result': weeimport.weeimport.WeeImportOptionError},
+            # an invalid --date but in incorrect format (YYYY-mm-ddTHH:MM); we
+            # should see a WeeImportOptionError exception
+            {'options': {'date': '2022-07-25T12:55', 'date_from': None, 'date_to': None},
+             'result': weeimport.weeimport.WeeImportOptionError},
+            # an invalid --date in no recognised format; we should see a
+            # WeeImportOptionError exception
+            {'options': {'date': 'some_date', 'date_from': None, 'date_to': None},
+             'result': weeimport.weeimport.WeeImportOptionError}
+        ]
 
         # we will be doing some date-time epoch conversions so put our system
         # timezone into a known state
         os.environ['TZ'] = 'America/Los_Angeles'
         time.tzset()
 
+        # run the tests that check values
         for params in test_data:
+            # set the required command line options
             for option, value in six.iteritems(params['options']):
                 setattr(self.options, option, value)
             # get a CsvSource object
@@ -140,43 +159,26 @@ class TestWeeImport(unittest.TestCase):
                                                            self.import_config_dict,
                                                            self.import_config_path,
                                                            self.options)
-            for prop, value in six.iteritems(params['results']):
+            # check the resulting values
+            for prop, value in six.iteritems(params['result']):
+                # which assert function we use depends on the expected result
                 if value is None:
                     self.assertIsNone(getattr(csv_source_obj, prop))
                 else:
                     self.assertEqual(getattr(csv_source_obj, prop), value)
-
-        # an invalid --date but in correct format (YYYY-mm-dd); we should see a
-        # WeeImportOptionError exception
-        self.options.date = '2022-07-32'
-        self.options.date_from = None
-        self.options.date_to = None
-        args = (self.config_dict, self.config_path, self.import_config_dict,
-                self.import_config_path, self.options)
-        self.assertRaises(weeimport.weeimport.WeeImportOptionError,
-                          weeimport.csvimport.CSVSource,
-                          *args)
-
-        # an invalid --date but in incorrect format (YYYY-mm-ddTHH:MM); we
-        # should see a WeeImportOptionError exception
-        self.options.date = '2022-07-25T12:55'
-        self.options.date_from = None
-        self.options.date_to = None
-        args = (self.config_dict, self.config_path, self.import_config_dict,
-                self.import_config_path, self.options)
-        self.assertRaises(weeimport.weeimport.WeeImportOptionError,
-                          weeimport.csvimport.CSVSource,
-                          *args)
-        # an invalid --date in no recognised format; we should see a
-        # WeeImportOptionError exception
-        self.options.date = 'some_date'
-        self.options.date_from = None
-        self.options.date_to = None
-        args = (self.config_dict, self.config_path, self.import_config_dict,
-                self.import_config_path, self.options)
-        self.assertRaises(weeimport.weeimport.WeeImportOptionError,
-                          weeimport.csvimport.CSVSource,
-                          *args)
+        # run the tests that check for exceptions, these tests require a
+        # slightly different setup and call
+        for params in exception_test_data:
+            # set the required command line options
+            for option, value in six.iteritems(params['options']):
+                setattr(self.options, option, value)
+            # obtain a tuple of the arguments to be passed to CsvSource
+            args = (self.config_dict, self.config_path, self.import_config_dict,
+                    self.import_config_path, self.options)
+            # run the test
+            self.assertRaises(params['result'],
+                              weeimport.csvimport.CSVSource,
+                              *args)
 
 
 class TestCsvImport(unittest.TestCase):
