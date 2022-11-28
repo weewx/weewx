@@ -16,14 +16,12 @@ classifiers = [
     'Operating System :: POSIX :: Linux',
     'Operating System :: Unix',
     'Programming Language :: Python',
-    'Programming Language :: Python :: 2.7',
-    'Programming Language :: Python :: 3.5',
-    'Programming Language :: Python :: 3.6',
     'Programming Language :: Python :: 3.7',
     'Programming Language :: Python :: 3.8',
     'Programming Language :: Python :: 3.9',
     'Programming Language :: Python :: 3.10',
     'Programming Language :: Python :: 3.11',
+    'Programming Language :: Python :: 3.12',
     'Topic :: Scientific/Engineering :: Physics'
 ]
 packages = [
@@ -52,18 +50,14 @@ include = [
 ]
 
 [tool.poetry.dependencies]
-python = "~2.7 || ^3.5"
+python = "^3.7"
 configobj = ">=4.7"
 pyusb = "^1.0.2"
 pyserial = "^3.4"
 pyephem = "^3.7"
-pillow = ">=6.2"
+pillow = "^6.2"
 six = "^1"
-cheetah = { version = "^2.4", python = "~2.7" }
-cheetah3 = { version = "^3.2", python = ">=3.5" }
-
-[tool.poetry.dev-dependencies]
-mock = { version = "*", python = "~2.7" }
+cheetah3 = "^3.1"
 
 [tool.poetry.scripts]
 weewxd = 'weewxd:main'
