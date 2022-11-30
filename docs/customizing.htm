@@ -3078,6 +3078,37 @@ $month.dateTime.format("%B"): Min, max temperatures: $month.outTemp.min $month.o
                 </td>
             </tr>
             <tr>
+                <td class="first_col code">$to_bool(x)</td>
+                <td>
+                    Convert <span class="code">x</span> to a boolean.
+                    The argument <span class="code">x</span> can be
+                    of type <span class="code">int</span>,
+                    <span class="code">float</span>, or 
+                    <span class="code">str</span>.
+                    If lowercase <span class="code">x</span> is
+                    'true', 'yes', or 'y' the function returns 
+                    <span class="code">True</span>. 
+                    If it is 'false', 'no', or 'n' it returns
+                    <span class="code">False</span>.
+                    Other string values raise a 
+                    <span class="code">ValueError</span>.
+                    In case of an numeric argument 0 means 
+                    <span class="code">False</span>, all other
+                    values <span class="code">True</span>.
+                </td>
+            </tr>
+            <tr>
+                <td class="first_col code">$to_list(x)</td>
+                <td>
+                    Convert <span class="code">x</span> to a list.
+                    If <span class="code">x</span> is already a list,
+                    nothing changes. If it is a single value it
+                    is converted to a list with this value as the
+                    only list element. Values of <span
+                    class="code">None</span> are passed through.
+                </td>
+            </tr>
+            <tr>
                 <td class="first_col code">$getobs(plot_name)</td>
                 <td>
                     For a given plot name, this function will return the set of all observation types used by the plot.
