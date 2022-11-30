@@ -88,7 +88,6 @@ class TestWeeImport(unittest.TestCase):
         # options
         self.options = Options()
 
-
     def tearDown(self):
         """Clean up after ourselves."""
 
