@@ -104,15 +104,15 @@ class TestWeeImport(unittest.TestCase):
 
         # tests that check first_ts and last_ts values
         test_data = [
+            # neither --date, --date-from nor --date-to were specified; we
+            # should see first_ts and last_ts == None
+            {'options': {'date': None, 'date_from': None, 'date_to': None},
+             'result': {'first_ts': None, 'last_ts': None}},
             # only --date is specified using a valid format (YYYY-MM-DD); we
             # should see valid timestamps
             {'options': {'date': '2022-07-25', 'date_from': None, 'date_to': None},
              'result': {'first_ts': 1658732400, 'last_ts': 1658818800}},
-            # neither --date, --date-from or --date-to were specified; we
-            # should see first_ts and last_ts == None
-            {'options': {'date': None, 'date_from': None, 'date_to': None},
-             'result': {'first_ts': None, 'last_ts': None}},
-            # a valid format (YYYY-mm-dd) for --date=from and --date-to, --date
+            # a valid format (YYYY-mm-dd) for --date-from and --date-to, --date
             # not specified; we should see valid timestamps
             {'options': {'date': None, 'date_from': '2022-07-21', 'date_to': '2022-08-24'},
              'result': {'first_ts': 1658386800, 'last_ts': 1661410800}},
@@ -122,24 +122,55 @@ class TestWeeImport(unittest.TestCase):
              'result': {'first_ts': 1658426400, 'last_ts': 1661403300}},
             # A valid date format (YYYY-mm-dd) for --date, --date-from and
             # --date-to; we should see --date used to produce first_ts and
-            # last_ts as valid timestamps. --date-drom and --date-to are
+            # last_ts as valid timestamps. --date-from and --date-to are
             # ignored.
             {'options': {'date': '2022-07-25', 'date_from': '2022-07-21', 'date_to': '2022-08-24'},
              'result': {'first_ts': 1658732400, 'last_ts': 1658818800}}
         ]
         # tests that raise exceptions
         exception_test_data = [
-            # an invalid --date but in correct format (YYYY-mm-dd); we should see a
+            # an invalid --date in a valid format (YYYY-mm-dd); we should see a
             # WeeImportOptionError exception
             {'options': {'date': '2022-07-32', 'date_from': None, 'date_to': None},
              'result': weeimport.weeimport.WeeImportOptionError},
-            # an invalid --date but in incorrect format (YYYY-mm-ddTHH:MM); we
+            # an invalid --date in an incorrect format (YYYY-mm-ddTHH:MM); we
             # should see a WeeImportOptionError exception
             {'options': {'date': '2022-07-25T12:55', 'date_from': None, 'date_to': None},
              'result': weeimport.weeimport.WeeImportOptionError},
-            # an invalid --date in no recognised format; we should see a
+            # an invalid --date in an invalid format; we should see a
             # WeeImportOptionError exception
             {'options': {'date': 'some_date', 'date_from': None, 'date_to': None},
+             'result': weeimport.weeimport.WeeImportOptionError},
+            # an invalid --date-from in a valid format, --date-to can be
+            # anything, no --date; we should see a WeeImportOptionError
+            # exception
+            {'options': {'date': None, 'date_from': '2022-07-32', 'date_to': None},
+             'result': weeimport.weeimport.WeeImportOptionError},
+            # an invalid --date-to in a valid format, valid --date-from, no
+            # --date; we should see a WeeImportOptionError exception
+            {'options': {'date': None, 'date_from': '2022-07-31', 'date_to': '2022-09-31'},
+             'result': weeimport.weeimport.WeeImportOptionError},
+            # an invalid --date-from in an invalid format, --date-to can be
+            # anything, no --date; we should see a WeeImportOptionError
+            # exception
+            {'options': {'date': None, 'date_from': 'some_data', 'date_to': None},
+             'result': weeimport.weeimport.WeeImportOptionError},
+            # an invalid --date-to in an invalid format, valid --date-from, no
+            # --date; we should see a WeeImportOptionError exception
+            {'options': {'date': None, 'date_from': '2022-07-31', 'date_to': 'some_date'},
+             'result': weeimport.weeimport.WeeImportOptionError},
+            # --date-from is not a string or None, --date-to can be anything,
+            # no --date; we should see a WeeImportOptionError exception
+            {'options': {'date': None, 'date_from': 25, 'date_to': '2022-07-23'},
+             'result': weeimport.weeimport.WeeImportOptionError},
+            # a valid --date-from, --date-to is not a string or None, no
+            # --date; we should see a WeeImportOptionError exception
+            {'options': {'date': None, 'date_from': '2022-07-25T12:55', 'date_to': 25},
+             'result': weeimport.weeimport.WeeImportOptionError},
+            # valid --date-from and --date-to but --date-to is earlier than
+            # --date-from, no --date; we should see a WeeImportOptionError
+            # exception
+            {'options': {'date': None, 'date_from': '2022-07-31', 'date_to': '2022-04-16'},
              'result': weeimport.weeimport.WeeImportOptionError}
         ]
 
