@@ -328,8 +328,12 @@ class TestCsvImport(unittest.TestCase):
     def test_csv_init(self):
         """Test CsvSource object initialisation.
 
-        Test that the CsvSource object was correctly initialise from our config
-        dicts and command line options.
+        Test that the CsvSource object was correctly initialised from our
+        config dicts and command line options.
+
+        These tests verify correct object initialisation in class CsvSource.
+        test_init() verifies correct object initialisation in the parent class
+        (class Source).
         """
 
         # get a CsvSource object
@@ -363,10 +367,88 @@ class TestCsvImport(unittest.TestCase):
         self.assertEqual(csv_source_obj.end, 1)
         # check the increment property is correctly set
         self.assertEqual(csv_source_obj.increment, 1)
-        # check the verbose property is correctly set
-        self.assertIsNone(csv_source_obj.verbose)
         # check the _header_map property is None
         self.assertIsNone(csv_source_obj._header_map)
+
+    def test_init(self):
+        """Test parent initialisation of CsvSource objects.
+
+        Tests the correct initialisation of CsvSource objects that occurs in
+        the parent class Source based on config dicts and command line options.
+
+        These tests verify correct object initialisation in class Source.
+        test_csv_init() verifies correct object initialisation in the child
+        class (class CsvSource).
+        """
+
+        # get a CsvSource object
+        csv_source_obj = weeimport.csvimport.CSVSource(self.config_dict,
+                                                       self.config_path,
+                                                       self.import_config_dict,
+                                                       self.import_config_path,
+                                                       self.options)
+
+        # check the config dict is correctly set
+        self.assertEqual(csv_source_obj.config_dict, self.config_dict)
+        # check the interval property is correctly set
+        self.assertEqual(csv_source_obj.interval,
+                         self.import_config_dict.get('interval', 'derive'))
+        # check the ignore_invalid_data property is correctly set
+        self.assertEqual(csv_source_obj.ignore_invalid_data,
+                         weeutil.weeutil.tobool(self.import_config_dict.get('ignore_invalid_data',
+                                                                            'True')))
+        # check the tranche property is correctly set
+        self.assertEqual(csv_source_obj.tranche,
+                         int(self.import_config_dict.get('tranche', '250')))
+        # check the apply_qc property is correctly set
+        self.assertEqual(csv_source_obj.apply_qc,
+                         weeutil.weeutil.tobool(self.import_config_dict.get('qc', 'True')))
+        # check the calc_missing property is correctly set
+        self.assertEqual(csv_source_obj.calc_missing,
+                         weeutil.weeutil.tobool(self.import_config_dict.get('calc_missing',
+                                                                            'True')))
+        # check the decimal_sep property is correctly set
+        self.assertEqual(csv_source_obj.decimal_sep,
+                         self.import_config_dict.get('decimal', '.'))
+        # check the UV_sensor property is correctly set
+        self.assertEqual(csv_source_obj.UV_sensor,
+                         weeutil.weeutil.tobool(self.import_config_dict.get('UV_sensor', 'True')))
+        # check the solar_sensor property is correctly set
+        self.assertEqual(csv_source_obj.solar_sensor,
+                         weeutil.weeutil.tobool(self.import_config_dict.get('solar_sensor',
+                                                                            'True')))
+        # check the dry_run property is correctly set
+        self.assertIsNone(csv_source_obj.dry_run)
+        # check the verbose property is correctly set
+        self.assertIsNone(csv_source_obj.verbose)
+        # check the no_prompt property is correctly set
+        self.assertIsNone(csv_source_obj.no_prompt)
+        # check the suppress property is correctly set
+        self.assertIsNone(csv_source_obj.suppress)
+        # check the ans property is correctly set
+        self.assertIsNone(csv_source_obj.ans)
+        # check the interval_ans property is correctly set
+        self.assertIsNone(csv_source_obj.interval_ans)
+        # check the period_no property is correctly set
+        self.assertIsNone(csv_source_obj.period_no)
+        # check the total_rec_proc property is correctly set
+        self.assertEqual(csv_source_obj.total_rec_proc, 0)
+        # check the total_unique_rec property is correctly set
+        self.assertEqual(csv_source_obj.total_unique_rec, 0)
+        # check the total_duplicate_rec property is correctly set
+        self.assertEqual(csv_source_obj.total_duplicate_rec, 0)
+        # check the t1 property is correctly set
+        self.assertIsNone(csv_source_obj.t1)
+        # check the tdiff property is correctly set
+        self.assertIsNone(csv_source_obj.tdiff)
+        # check the earliest_ts property is correctly set
+        self.assertIsNone(csv_source_obj.earliest_ts)
+        # check the latest_ts property is correctly set
+        self.assertIsNone(csv_source_obj.latest_ts)
+        # check the duplicates property is correctly set
+        self.assertEqual(csv_source_obj.duplicates, set())
+        # check the period_duplicates property is correctly set
+        self.assertEqual(csv_source_obj.period_duplicates, set())
 
     def test_csv_defaults(self):
         """Test CsvSource object defaults.
