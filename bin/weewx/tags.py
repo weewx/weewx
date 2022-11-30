@@ -567,28 +567,23 @@ class CurrentObj(object):
         else:
             # A binding has been specified, or we don't have a record, or the observation type
             # is not in the record, or the timestamp is wrong.
-            try:
-                # Get the appropriate database manager
-                db_manager = self.db_lookup(self.data_binding)
-            except weewx.UnknownBinding:
-                # Don't recognize the binding.
-                raise AttributeError(self.data_binding)
+            # Get the appropriate database manager
+            db_manager = self.db_lookup(self.data_binding)
+            # Get the record for this timestamp from the database
+            record = db_manager.getRecord(self.current_time, max_delta=self.max_delta)
+            # If there was no record at that timestamp, it will be None. If there was a record,
+            # check to see if the type is in it.
+            if not record or obs_type in record:
+                # If there was no record, then the value of the ValueTuple will be None.
+                # Otherwise, it will be value stored in the database.
+                vt = weewx.units.as_value_tuple(record, obs_type)
             else:
-                # Get the record for this timestamp from the database
-                record = db_manager.getRecord(self.current_time, max_delta=self.max_delta)
-                # If there was no record at that timestamp, it will be None. If there was a record,
-                # check to see if the type is in it.
-                if not record or obs_type in record:
-                    # If there was no record, then the value of the ValueTuple will be None.
-                    # Otherwise, it will be value stored in the database.
-                    vt = weewx.units.as_value_tuple(record, obs_type)
-                else:
-                    # Couldn't get the value out of the record. Try the XTypes system.
-                    try:
-                        vt = weewx.xtypes.get_scalar(obs_type, self.record, db_manager)
-                    except (weewx.UnknownType, weewx.CannotCalculate):
-                        # Nothing seems to be working. It's an unknown type.
-                        vt = weewx.units.UnknownType(obs_type)
+                # Couldn't get the value out of the record. Try the XTypes system.
+                try:
+                    vt = weewx.xtypes.get_scalar(obs_type, self.record, db_manager)
+                except (weewx.UnknownType, weewx.CannotCalculate):
+                    # Nothing seems to be working. It's an unknown type.
+                    vt = weewx.units.UnknownType(obs_type)
 
         # Finally, return a ValueHelper
         return weewx.units.ValueHelper(vt, 'current', self.formatter, self.converter)
