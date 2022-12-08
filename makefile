@@ -1,6 +1,6 @@
 # -*- makefile -*-
 # this makefile controls the build and packaging of weewx
-# Copyright 2013 Matthew Wall
+# Copyright 2013-2023 Matthew Wall
 
 # if you do not want to sign the packages, set SIGN to 0
 SIGN=1
@@ -16,7 +16,7 @@ WEEWX_DOWNLOADS=$(WEEWX_HTMLDIR)/downloads
 WEEWX_STAGING=$(WEEWX_HTMLDIR)/downloads/development_versions
 
 # extract version to be used in package controls and labels
-VERSION=$(shell grep "__version__.*=" bin/weewx/__init__.py | sed -e 's/__version__=//' | sed -e 's/"//g')
+VERSION=$(shell sed -ne 's/^version = "\(.*\)"/\1/p;' pyproject.toml)
 # just the major.minor part of the version
 MMVERSION:=$(shell echo "$(VERSION)" | sed -e 's%.[0-9a-z]*$$%%')
 
@@ -34,7 +34,7 @@ help: info
 	@echo "options include:"
 	@echo "          info  display values of variables we care about"
 	@echo "       install  run the generic python install"
-	@echo "       version  get version from __init__ and insert elsewhere"
+	@echo "       version  get version from pyproject.toml and insert elsewhere"
 	@echo ""
 	@echo "    deb-changelog prepend stub changelog entry for deb"
 	@echo " redhat-changelog prepend stub changelog entry for redhat"
@@ -168,9 +168,8 @@ done
   sed -e 's/^SKIN_VERSION = [0-9].*/SKIN_VERSION = $(VERSION)/' $$f > $$f.tmp; \
   mv $$f.tmp $$f; \
 done
-	sed -e 's/^VERSION = .*/VERSION = "$(VERSION)"/' setup.py > setup.py.tmp
-	mv setup.py.tmp setup.py
-	chmod 755 setup.py
+	sed -e 's/__version__ *=.*/__version__ = "$(VERSION)"/' bin/weewx/__init__.py > weeinit.py.tmp
+	mv weeinit.py.tmp bin/weewx/__init__.py
 
 DEBREVISION=1
 DEBVER=$(VERSION)-$(DEBREVISION)
