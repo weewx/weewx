@@ -52,12 +52,14 @@ should only have to implement a few functions. In particular,
    could raise an unusual exception, override this function and catch the
    exception. See the WOWThread implementation for an example.
    
- - check_response(self, response). After an HTTP request gets posted, the webserver sends
-   back a "response." This response may contain clues as to whether the post
-   worked.  By overriding check_response() you can look for these clues. For
-   example, the station registry checks all lines in the response, looking for
-   any that start with the string "FAIL". If it finds one, it raises a
-   FailedPost exception, signaling that the post did not work.
+ - check_response(self, response). After an HTTP request gets posted, the
+   webserver sends back a "response." This response may contain clues as to
+   whether the post worked.  For example, a request might succeed, but the
+   actual posting of data might fail, with the reason indicated in the
+   response.  The uploader can then take appropriate action, such as just
+   logging the response, or raising a FailedPost exception. By overriding
+   check_response() you can look for these clues.
+   
    
 In unusual cases, you might also have to implement the following:
   
@@ -1558,11 +1560,20 @@ class StationRegistryThread(RESTThread):
         return _url
 
     def check_response(self, response):
-        """Check the response from a Station Registry post."""
+        """
+        Check the response from a Station Registry post.  The server will
+        reply with OK or FAIL.  If a post fails at this point, it is probably
+        due to a configuration problem, not communications, so retrying
+        probably not help.  Just log the server response.
+        """
+        # server responds with a single line, but check for multiple in case
+        # the protocol changes
+        ok = True
         for line in response:
-            # the server replies to a bad post with a line starting with "FAIL"
             if line.startswith(b'FAIL'):
-                raise FailedPost(line)
+                ok = False
+        if (not ok and self.log_failure) or (ok and self.log_success):
+                log.info("StationRegistry: %s" % line)
 
 
 # ==============================================================================
