@@ -1570,7 +1570,7 @@ class StationRegistryThread(RESTThread):
         # the protocol changes
         ok = True
         for line in response:
-            if line.startswith(b'FAIL'):
+            if line.startswith(b'FAIL') or line.startswith(b'REJECT'):
                 ok = False
         if (not ok and self.log_failure) or (ok and self.log_success):
                 log.info("StationRegistry: %s" % line)
