@@ -5,15 +5,14 @@
 #
 """Entry point for the "station" subcommand."""
 
-import argparse
 from . import common_parser
 
-station_create_usage = """weectl station create [--config=CONFIG_FILE] 
+station_create_usage = """weectl station create [--config=CONFIG-PATH] 
                              [--html-root=HTML_ROOT] [--skin-root=SKIN_ROOT]
                              [--driver=DRIVER]"""
-station_reconfigure_usage = "weectl station reconfigure [--config=CONFIG_FILE] [--driver=DRIVER]"
-station_upgrade_usage = "weectl station upgrade [--config=CONFIG_FILE]"
-station_upgrade_skins_usage = "weectl station upgrade-skins [--config=CONFIG_FILE]"
+station_reconfigure_usage = "weectl station reconfigure [--config=CONFIG-PATH] [--driver=DRIVER]"
+station_upgrade_usage = "weectl station upgrade [--config=CONFIG-PATH]"
+station_upgrade_skins_usage = "weectl station upgrade-skins [--config=CONFIG-PATH]"
 
 station_usage = "\n       ".join((station_create_usage, station_reconfigure_usage,
                                   station_upgrade_usage, station_upgrade_skins_usage))
@@ -29,7 +28,7 @@ def add_subparser(subparsers,
                                            description="Manages the configuration file and skins",
                                            help="Create, modify, or upgrade a config file")
     action_parser = station_parser.add_subparsers(dest='action',
-                                                  help="The action to be taken")
+                                                  title="Which action to take")
 
     # Action 'create'
     create_station_parser = action_parser.add_parser('create',
@@ -42,6 +41,7 @@ def add_subparser(subparsers,
                                             'Default is "public_html".')
     create_station_parser.add_argument('--skin_root', default='skins')
     create_station_parser.add_argument('--driver', default='weewx.drivers.simulator')
+    create_station_parser.set_defaults(func=create_station)
 
     # Action 'reconfigure'
     reconfigure_station_parser = action_parser.add_parser('reconfigure',
@@ -63,3 +63,8 @@ def add_subparser(subparsers,
                                                       parents=[common_parser],
                                                       usage=station_upgrade_skins_usage,
                                                       help='Upgrade the skins')
+
+
+def create_station(namespace):
+    print("in create_station")
+    print(namespace)

@@ -33,14 +33,18 @@ def main():
     parser.add_argument("-v", "--version", action='version',
                         version=f"weectl v{weewx.__version__}")
 
-    subparsers = parser.add_subparsers(dest='subcommand', help='subcommand to run')
+    subparsers = parser.add_subparsers(dest='subcommand',
+                                       title="Available subcommands")
 
     for subcommand in SUBCOMMANDS:
         module = importlib.import_module(f'weectl.{subcommand}')
         module.add_subparser(subparsers)
 
     namespace = parser.parse_args()
-    print(namespace)
+
+    # Call the appropriate action function:
+    if namespace.func:
+        namespace.func(namespace)
 
 if __name__ == "__main__":
     # Start up the program
