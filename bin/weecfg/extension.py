@@ -256,7 +256,7 @@ class ExtensionEngine(object):
         save_config = False
 
         # Prepend any html paths with HTML_ROOT from existing configuration
-        weecfg.prepend_path(cfg, 'HTML_ROOT', self.config_dict['StdReport']['HTML_ROOT'])
+        ExtensionEngine.prepend_path(cfg, 'HTML_ROOT', self.config_dict['StdReport']['HTML_ROOT'])
 
         # If the extension uses a database, massage it so it's compatible with the new V3.2 way of
         # specifying database options
@@ -450,3 +450,14 @@ class ExtensionEngine(object):
         idx = path.find('/')
         if idx >= 0:
             return path[idx + 1:]
+
+    @staticmethod
+    def prepend_path(a_dict: dict, label: str, value: str) -> None:
+        """Prepend the value to every instance of the label in dict a_dict"""
+        for k in a_dict:
+            if isinstance(a_dict[k], dict):
+                ExtensionEngine.prepend_path(a_dict[k], label, value)
+            elif k == label:
+                a_dict[k] = os.path.join(value, a_dict[k])
+
+
