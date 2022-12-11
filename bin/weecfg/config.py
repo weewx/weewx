@@ -116,7 +116,7 @@ class ConfigEngine(object):
         if options.upgrade:
             # Update the config dictionary, then merge it with the distribution
             # dictionary
-            weecfg.update_and_merge(config_dict, dist_config_dict)
+            weecfg.update_config.update_and_merge(config_dict, dist_config_dict)
 
         elif options.install or options.reconfigure:
             # Extract stn_info from the config_dict and command-line options:

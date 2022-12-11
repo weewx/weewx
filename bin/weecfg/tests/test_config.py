@@ -20,6 +20,7 @@ import configobj
 from six.moves import StringIO
 
 import weecfg.extension
+import weecfg.update_config
 import weeutil.config
 import weeutil.weeutil
 
@@ -75,7 +76,7 @@ Y_STR = """
         [section_e]
           c = 15"""
 
-current_config_dict_path = "../../../weewx.conf"
+current_config_dict_path = "../../wee_resources/weewx.conf"
 
 
 class LineTest(unittest.TestCase):
@@ -338,7 +339,7 @@ class ConfigTest(LineTest):
         config_dict = configobj.ConfigObj('weewx20.conf', encoding='utf-8')
 
         # Upgrade the V2.0 configuration dictionary to V2.5:
-        weecfg.update_to_v25(config_dict)
+        weecfg.update_config.update_to_v25(config_dict)
 
         self._check_against_expected(config_dict, 'expected/weewx25_expected.conf')
 
@@ -348,7 +349,7 @@ class ConfigTest(LineTest):
         config_dict = configobj.ConfigObj('weewx25.conf', encoding='utf-8')
 
         # Upgrade the V2.5 configuration dictionary to V2.6:
-        weecfg.update_to_v26(config_dict)
+        weecfg.update_config.update_to_v26(config_dict)
 
         self._check_against_expected(config_dict, 'expected/weewx26_expected.conf')
 
@@ -358,7 +359,7 @@ class ConfigTest(LineTest):
         config_dict = configobj.ConfigObj('weewx27.conf', encoding='utf-8')
 
         # Upgrade the V2.7 configuration dictionary to V3.0:
-        weecfg.update_to_v30(config_dict)
+        weecfg.update_config.update_to_v30(config_dict)
 
         # with open('expected/weewx30_expected.conf', 'wb') as fd:
         #     config_dict.write(fd)
@@ -371,7 +372,7 @@ class ConfigTest(LineTest):
         config_dict = configobj.ConfigObj('weewx30.conf', encoding='utf-8')
 
         # Upgrade the V3.0 configuration dictionary to V3.2:
-        weecfg.update_to_v32(config_dict)
+        weecfg.update_config.update_to_v32(config_dict)
 
         # with open('expected/weewx32_expected.conf', 'wb') as fd:
         #     config_dict.write(fd)
@@ -384,7 +385,7 @@ class ConfigTest(LineTest):
         config_dict = configobj.ConfigObj('weewx32.conf', encoding='utf-8')
 
         # Upgrade the V3.2 configuration dictionary to V3.6:
-        weecfg.update_to_v36(config_dict)
+        weecfg.update_config.update_to_v36(config_dict)
 
         self._check_against_expected(config_dict, 'expected/weewx36_expected.conf')
 
@@ -394,7 +395,7 @@ class ConfigTest(LineTest):
         config_dict = configobj.ConfigObj('weewx38.conf', encoding='utf-8')
 
         # Upgrade the V3.8 configuration dictionary to V3.9:
-        weecfg.update_to_v39(config_dict)
+        weecfg.update_config.update_to_v39(config_dict)
 
         # with open('expected/weewx39_expected.conf', 'wb') as fd:
         #     config_dict.write(fd)
@@ -408,7 +409,7 @@ class ConfigTest(LineTest):
         config_dict = configobj.ConfigObj('weewx39.conf', encoding='utf-8')
 
         # Upgrade the V3.9 configuration dictionary to V4.0:
-        weecfg.update_to_v40(config_dict)
+        weecfg.update_config.update_to_v40(config_dict)
 
         # with open('expected/weewx40_expected.conf', 'wb') as fd:
         #     config_dict.write(fd)
@@ -422,7 +423,7 @@ class ConfigTest(LineTest):
         config_dict = configobj.ConfigObj('weewx41.conf', encoding='utf-8')
 
         # Upgrade the V4.1 configuration dictionary to V4.2:
-        weecfg.update_to_v42(config_dict)
+        weecfg.update_config.update_to_v42(config_dict)
 
         # with open('expected/weewx42_expected.conf', 'wb') as fd:
         #     config_dict.write(fd)
@@ -436,7 +437,7 @@ class ConfigTest(LineTest):
         config_dict = configobj.ConfigObj('weewx42.conf', encoding='utf-8')
 
         # Upgrade the V4.2 configuration dictionary to V4.3:
-        weecfg.update_to_v43(config_dict)
+        weecfg.update_config.update_to_v43(config_dict)
 
         # with open('expected/weewx43_expected.conf', 'wb') as fd:
         #     config_dict.write(fd)
@@ -453,7 +454,7 @@ class ConfigTest(LineTest):
         template = configobj.ConfigObj(current_config_dict_path, encoding='utf-8')
 
         # First update, then merge:
-        weecfg.update_and_merge(config_dict, template)
+        weecfg.update_config.update_and_merge(config_dict, template)
 
         # with open('expected/weewx43_user_expected.conf', 'wb') as fd:
         #     config_dict.write(fd)
@@ -595,7 +596,7 @@ class ExtensionInstallTest(unittest.TestCase):
         self.skin_dir = os.path.join(self.weewx_root, 'skins')
         self.bin_dir = os.path.join(self.weewx_root, 'bin')
         distutils.dir_util.copy_tree('../../../bin/user', self.user_dir)
-        distutils.dir_util.copy_tree('../../../skins/Standard',
+        distutils.dir_util.copy_tree('../../wee_resources/skins/Standard',
                                      os.path.join(self.skin_dir, 'Standard'))
         shutil.copy(current_config_dict_path, self.weewx_root)
 
