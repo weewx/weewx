@@ -121,7 +121,7 @@ class AbstractConfEditor(object):
 
         The return value should be a long string. See default_stanza above
         for an example string stanza."""
-        return self.default_stanza if orig_stanza is None else orig_stanza
+        return orig_stanza if orig_stanza else self.default_stanza
 
     def prompt_for_settings(self):
         """Prompt for settings required for proper operation of this driver.

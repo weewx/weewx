@@ -2817,6 +2817,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
 # =============================================================================
 
 class VantageConfEditor(weewx.drivers.AbstractConfEditor):
+    """Provide a default stanza, and the opportunity to change it."""
     @property
     def default_stanza(self):
         return """

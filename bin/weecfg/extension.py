@@ -255,7 +255,11 @@ class ExtensionEngine(object):
 
         save_config = False
 
-        # Prepend any html paths with HTML_ROOT from existing configuration
+        # Extensions can specify where their HTML output goes relative to HTML_ROOT. So, we must
+        # prepend the installation's HTML_ROOT to get a final location that the reporting engine
+        # can use. For example, if an extension specifies "HTML_ROOT=forecast", the final location
+        # might be public_html/forecast, or /var/www/html/forecast, depending on the installation
+        # method.
         ExtensionEngine.prepend_path(cfg, 'HTML_ROOT', self.config_dict['StdReport']['HTML_ROOT'])
 
         # If the extension uses a database, massage it so it's compatible with the new V3.2 way of
