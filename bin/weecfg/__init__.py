@@ -1,32 +1,30 @@
 # coding: utf-8
 #
-#    Copyright (c) 2009-2022 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2023 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your rights.
 #
 """Utilities used by the setup and configure programs"""
 
-from __future__ import print_function
-from __future__ import with_statement
-from __future__ import absolute_import
-
 import errno
+import pkgutil
 import glob
 import os.path
 import shutil
 import sys
 import tempfile
-
-import six
-from six.moves import StringIO, input
+import importlib
 
 import configobj
 
-import weeutil.weeutil
 import weeutil.config
+import weeutil.weeutil
 from weeutil.weeutil import to_bool
 
-major_comment_block = ["", "##############################################################################", ""]
+major_comment_block = ["",
+                       "#######################################"
+                       "#######################################",
+                       ""]
 
 DEFAULT_URL = 'http://acme.com'
 
@@ -355,6 +353,7 @@ def inject_station_url(config_dict, url):
     # Reorder to match the canonical ordering.
     reorder_scalars(station_dict.scalars, 'station_url', 'rain_year_start')
 
+
 # ==============================================================================
 #              Utilities that extract from ConfigObj objects
 # ==============================================================================
@@ -471,24 +470,6 @@ def reorder_scalars(scalars, src, dst):
     scalars.insert(dst_index, src)
 
 
-# def reorder(name_list, ref_list):
-#     """Reorder the names in name_list, according to a reference list."""
-#     result = []
-#     # Use the ordering in ref_list, to reassemble the name list:
-#     for name in ref_list:
-#         # These always come at the end
-#         if name in ['FTP', 'RSYNC']:
-#             continue
-#         if name in name_list:
-#             result.append(name)
-#     # Finally, add these, so they are at the very end
-#     for name in ref_list:
-#         if name in name_list and name in ['FTP', 'RSYNC']:
-#             result.append(name)
-#
-#     return result
-#
-
 def remove_and_prune(a_dict, b_dict):
     """Remove fields from a_dict that are present in b_dict"""
     for k in b_dict:
@@ -500,13 +481,6 @@ def remove_and_prune(a_dict, b_dict):
         elif k in a_dict:
             a_dict.pop(k)
 
-
-# def replace_string(a_dict, label, value):
-#    for k in a_dict:
-#        if isinstance(a_dict[k], dict):
-#            replace_string(a_dict[k], label, value)
-#        else:
-#            a_dict[k] = a_dict[k].replace(label, value)
 
 # ==============================================================================
 #                Utilities that work on drivers
@@ -520,34 +494,49 @@ def get_all_driver_infos():
     return infos
 
 
-def get_driver_infos(driver_pkg_name='weewx.drivers', excludes=['__init__.py']):
-    """Scan the drivers folder, extracting information about each available
+def get_driver_infos(driver_pkg_name='weewx.drivers'):
+    """Scan the driver's folder, extracting information about each available
     driver. Return as a dictionary, keyed by the driver module name.
 
     Valid drivers must be importable, and must have attribute "DRIVER_NAME"
     defined.
+
+    Args:
+        driver_pkg_name (str): The name of the package holder the drivers.
+            Default is 'weewx.drivers'
+
+    Returns
+        dict: The key is the driver module name, value is information about the driver.
+            Typical entry:
+            'weewx.drivers.acurite': {'module_name': 'weewx.drivers.acurite',
+                                      'driver_name': 'AcuRite',
+                                      'version': '0.4',
+                                      'status': ''}
+
     """
-
-    __import__(driver_pkg_name)
-    driver_package = sys.modules[driver_pkg_name]
-    driver_pkg_directory = os.path.dirname(os.path.abspath(driver_package.__file__))
-    driver_list = [os.path.basename(f) for f in glob.glob(os.path.join(driver_pkg_directory, "*.py"))]
-
     driver_info_dict = {}
-    for filename in driver_list:
-        if filename in excludes:
-            continue
+    # Import the package, so we can find the modules contained within it
+    driver_pkg = importlib.import_module(driver_pkg_name)
+    driver_path = os.path.dirname(driver_pkg.__file__)
 
-        # Get the driver module name. This will be something like
-        # 'weewx.drivers.fousb'
-        driver_module_name = os.path.splitext("%s.%s" % (driver_pkg_name,
-                                                         filename))[0]
+    # Iterate over all the modules in the package.
+    for driver_module_info in pkgutil.iter_modules([driver_path]):
+        # Form the importable name of the module. This will be something
+        # like 'weewx.drivers.acurite'
+        driver_module_name = f"{driver_pkg_name}.{driver_module_info.name}"
 
+        # Try importing the module. Be prepared for an exception if the import fails.
         try:
-            # Try importing the module
-            __import__(driver_module_name)
-            driver_module = sys.modules[driver_module_name]
-
+            driver_module = importlib.import_module(driver_module_name)
+        except (SyntaxError, ImportError) as e:
+            # If the import fails, report it in the status
+            driver_info_dict[driver_module_name] = {
+                'module_name': driver_module_name,
+                'driver_name': '?',
+                'version': '?',
+                'status': e}
+        else:
+            # The import succeeded.
             # A valid driver will define the attribute "DRIVER_NAME"
             if hasattr(driver_module, 'DRIVER_NAME'):
                 # A driver might define the attribute DRIVER_VERSION
@@ -558,13 +547,6 @@ def get_driver_infos(driver_pkg_name='weewx.drivers', excludes=['__init__.py']):
                     'driver_name': driver_module.DRIVER_NAME,
                     'version': driver_module_version,
                     'status': ''}
-        except (SyntaxError, ImportError) as e:
-            # If the import fails, report it in the status
-            driver_info_dict[driver_module_name] = {
-                'module_name': driver_module_name,
-                'driver_name': '?',
-                'version': '?',
-                'status': e}
 
     return driver_info_dict
 
@@ -575,27 +557,29 @@ def print_drivers():
     keys = sorted(driver_info_dict)
     print("%-25s%-15s%-9s%-25s" % ("Module name", "Driver name", "Version", "Status"))
     for d in keys:
-        print("  %(module_name)-25s%(driver_name)-15s%(version)-9s%(status)-25s" % driver_info_dict[d])
+        print("  %(module_name)-25s%(driver_name)-15s%(version)-9s%(status)-25s"
+              % driver_info_dict[d])
 
 
 def load_driver_editor(driver_module_name):
     """Load the configuration editor from the driver file
 
-    driver_module_name: A string holding the driver name.
-                        E.g., 'weewx.drivers.fousb'
+    Args:
+        driver_module_name (str): A string holding the driver name, for
+            example, 'weewx.drivers.fousb'
+
+    Returns:
+        tuple: A 3-way tuple: (editor, driver_name, driver_version)
     """
-    __import__(driver_module_name)
-    driver_module = sys.modules[driver_module_name]
+    driver_module = importlib.import_module(driver_module_name)
     editor = None
-    driver_name = None
-    driver_version = 'undefined'
     if hasattr(driver_module, 'confeditor_loader'):
+        # Retrieve the loader function
         loader_function = getattr(driver_module, 'confeditor_loader')
+        # Call it to get the actual editor
         editor = loader_function()
-    if hasattr(driver_module, 'DRIVER_NAME'):
-        driver_name = driver_module.DRIVER_NAME
-    if hasattr(driver_module, 'DRIVER_VERSION'):
-        driver_version = driver_module.DRIVER_VERSION
+    driver_name = getattr(driver_module,'DRIVER_NAME', None)
+    driver_version = getattr(driver_module, 'DRIVER_VERSION', 'undefined')
     return editor, driver_name, driver_version
 
 
@@ -621,7 +605,10 @@ def prompt_for_info(location=None, latitude='0.000', longitude='0.000',
     print("\nSpecify altitude, with units 'foot' or 'meter'.  For example:")
     print("35, foot")
     print("12, meter")
-    msg = "altitude [%s]: " % weeutil.weeutil.list_as_string(altitude) if altitude else "altitude: "
+    if altitude:
+        msg = "altitude [%s]: " % weeutil.weeutil.list_as_string(altitude)
+    else:
+        msg = "altitude: "
     alt = None
     while alt is None:
         ans = input(msg).strip()
@@ -683,7 +670,16 @@ def prompt_for_info(location=None, latitude='0.000', longitude='0.000',
 
 
 def prompt_for_driver(dflt_driver=None):
-    """Get the information about each driver, return as a dictionary."""
+    """Get the information about each driver, return as a dictionary.
+
+    Args:
+        dflt_driver (str): The default driver to offer. If not given, 'weewx.drivers.simulator'
+            will be used
+
+    Returns:
+        str: The selected driver. This will be something like 'weewx.drivers.vantage'.
+    """
+
     if dflt_driver is None:
         dflt_driver = 'weewx.drivers.simulator'
     infos = get_all_driver_infos()
@@ -695,7 +691,10 @@ def prompt_for_driver(dflt_driver=None):
                                         "(%s)" % d, infos[d].get('status', '')))
         if dflt_driver == d:
             dflt_idx = i
-    msg = "choose a driver [%d]: " % dflt_idx if dflt_idx is not None else "choose a driver: "
+    if dflt_idx is None:
+        msg = "choose a driver: "
+    else:
+        msg = f"choose a driver [{dflt_idx:d}]: "
     idx = 0
     ans = None
     while ans is None:
@@ -714,10 +713,9 @@ def prompt_for_driver(dflt_driver=None):
 def prompt_for_driver_settings(driver, config_dict):
     """Let the driver prompt for any required settings.  If the driver does
     not define a method for prompting, return an empty dictionary."""
-    settings = dict()
+    settings = configobj.ConfigObj(interpolation=False)
     try:
-        __import__(driver)
-        driver_module = sys.modules[driver]
+        driver_module = importlib.import_module(driver)
         loader_function = getattr(driver_module, 'confeditor_loader')
         editor = loader_function()
         editor.existing_options = config_dict.get(driver_module.DRIVER_NAME, {})
@@ -734,7 +732,7 @@ def get_languages(skin_dir):
         skin_dir (str): The path to the skin subdirectory.
 
     Returns:
-        (dict): A dictionary where the key is the language code, and the value is the natural
+        dict|None: A dictionary where the key is the language code, and the value is the natural
             language name of the language. The value 'None' is returned if skin_dir does not exist.
     """
     # Get the path to the "./lang" subdirectory
@@ -775,11 +773,11 @@ def pick_language(languages, default='en'):
     Given a choice of languages, pick one.
 
     Args:
-        languages (list): As returned by function get_languages() above
+        languages (dict): As returned by function get_languages() above
         default (str): The language code of the default
 
     Returns:
-        (str): The chosen language code
+        str: The chosen language code
     """
     keys = sorted(languages.keys())
     if default not in keys:
@@ -796,18 +794,21 @@ def pick_language(languages, default='en'):
 def prompt_with_options(prompt, default=None, options=None):
     """Ask the user for an input with an optional default value.
 
-    prompt: A string to be used for a prompt.
+    Args:
+        prompt(str): A string to be used for a prompt.
+        default(str|None): A default value. If the user simply hits <enter>, this
+            is the value returned. Optional.
+        options(list[str]|None): A list of possible choices. The returned value must be in
+            this list. Optional.
 
-    default: A default value. If the user simply hits <enter>, this
-    is the value returned. Optional.
+    Returns:
+        str: The chosen option
+    """
 
-    options: A list of possible choices. The returned value must be in
-    this list. Optional."""
-
-    msg = "%s [%s]: " % (prompt, default) if default is not None else "%s: " % prompt
+    msg = f"{prompt} [{default}]: " if default is not None else f"{prompt}: "
     value = None
     while value is None:
-        value = input(six.ensure_str(msg)).strip()
+        value = input(msg).strip()
         if value:
             if options and value not in options:
                 value = None
@@ -884,50 +885,47 @@ def extract_roots(config_path, config_dict, bin_root):
 def extract_tar(filename, target_dir, logger=None):
     """Extract files from a tar archive into a given directory
 
-    Returns: A list of the extracted files
+    Args:
+        filename (str): Path to the tarfile
+        target_dir (str): Path to the directory to which the contents will be extracted
+        logger (weecfg.Logger): Logger to use
+
+    Returns:
+        list[str]: A list of the extracted files
     """
-    logger = logger or Logger()
     import tarfile
-    logger.log("Extracting from tar archive %s" % filename, level=1)
-    tar_archive = None
-    try:
-        tar_archive = tarfile.open(filename, mode='r')
-        tar_archive.extractall(target_dir)
+    logger = logger or Logger()
+    logger.log(f"Extracting from tar archive {filename}", level=1)
+
+    with tarfile.open(filename, mode='r') as tar_archive:
         member_names = [os.path.normpath(x.name) for x in tar_archive.getmembers()]
-        return member_names
-    finally:
-        if tar_archive is not None:
-            tar_archive.close()
+        tar_archive.extractall(target_dir)
+
+    del tarfile
+    return member_names
 
 
 def extract_zip(filename, target_dir, logger=None):
     """Extract files from a zip archive into the specified directory.
 
-    Returns: a list of the extracted files
+    Args:
+        filename (str): Path to the zip file
+        target_dir (str): Path to the directory to which the contents will be extracted
+        logger (weecfg.Logger): Logger to use
+
+    Returns:
+        list[str]: A list of the extracted files
     """
-    logger = logger or Logger()
     import zipfile
-    logger.log("Extracting from zip archive %s" % filename, level=1)
+    logger = logger or Logger()
+    logger.log(f"Extracting from zip archive {filename}", level=1)
 
-    zip_archive = zipfile.ZipFile(filename)
-
-    try:
+    with zipfile.ZipFile(filename) as zip_archive:
         member_names = zip_archive.namelist()
+        zip_archive.extractall(target_dir)
 
-        # manually extract files since extractall is only in python 2.6+
-        #        zip_archive.extractall(target_dir)
-        for f in member_names:
-            if f.endswith('/'):
-                dst = "%s/%s" % (target_dir, f)
-                mkdir_p(dst)
-        for f in member_names:
-            if not f.endswith('/'):
-                path = "%s/%s" % (target_dir, f)
-                with open(path, 'wb') as dest_file:
-                    dest_file.write(zip_archive.read(f))
-        return member_names
-    finally:
-        zip_archive.close()
+    del zipfile
+    return member_names
 
 
 def mkdir_p(path):
@@ -961,7 +959,7 @@ def get_extension_installer(extension_installer_dir):
         # Restore the path
         sys.path = old_path
 
-    return (install_module.__file__, installer)
+    return install_module.__file__, installer
 
 
 # ==============================================================================
