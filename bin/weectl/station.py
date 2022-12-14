@@ -9,7 +9,9 @@ from . import common_parser
 
 station_create_usage = """weectl station create [--config=CONFIG-PATH] 
                              [--html-root=HTML_ROOT] [--skin-root=SKIN_ROOT]
-                             [--driver=DRIVER]"""
+                             [--driver=DRIVER] 
+                             [--latitude=LATITUDE] [--longitude=LONGITUDE]
+                             [--altitude=ALTITUDE,{foot|meter}]"""
 station_reconfigure_usage = "weectl station reconfigure [--config=CONFIG-PATH] [--driver=DRIVER]"
 station_upgrade_usage = "weectl station upgrade [--config=CONFIG-PATH]"
 station_upgrade_skins_usage = "weectl station upgrade-skins [--config=CONFIG-PATH]"
@@ -22,7 +24,6 @@ def add_subparser(subparsers,
                   weewx_root='/home/weewx',
                   html_root='html',
                   skin_root='skins'):
-
     station_parser = subparsers.add_parser("station",
                                            usage=station_usage,
                                            description="Manages the configuration file and skins",
@@ -41,6 +42,13 @@ def add_subparser(subparsers,
                                             'Default is "public_html".')
     create_station_parser.add_argument('--skin_root', default='skins')
     create_station_parser.add_argument('--driver', default='weewx.drivers.simulator')
+    create_station_parser.add_argument('--latitude',
+                                       help="The station latitude in decimal degrees.")
+    create_station_parser.add_argument('--longitude',
+                                       help="The station longitude in decimal degrees.")
+    create_station_parser.add_argument('--altitude', metavar="ALTITUDE,(foot|meter)",
+                                       help="The station altitude in either feet or meters."
+                                            " For example, '750,foot' or '320,meter'")
     create_station_parser.set_defaults(func=create_station)
 
     # Action 'reconfigure'
@@ -60,9 +68,9 @@ def add_subparser(subparsers,
 
     # Action 'upgrade-skins'
     upgrade_skins_parser = action_parser.add_parser('upgrade-skins',
-                                                      parents=[common_parser],
-                                                      usage=station_upgrade_skins_usage,
-                                                      help='Upgrade the skins')
+                                                    parents=[common_parser],
+                                                    usage=station_upgrade_skins_usage,
+                                                    help='Upgrade the skins')
 
 
 def create_station(namespace):
