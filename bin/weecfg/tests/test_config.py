@@ -1,13 +1,9 @@
 #
-#    Copyright (c) 2009-2021 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2023 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
 """Test the configuration utilities."""
-from __future__ import with_statement
-from __future__ import absolute_import
-from __future__ import print_function
-
 import distutils.dir_util
 import io
 import os.path
@@ -17,40 +13,16 @@ import tempfile
 import unittest
 
 import configobj
-from six.moves import StringIO
 
 import weecfg.extension
 import weecfg.update_config
 import weeutil.config
 import weeutil.weeutil
 
-try:
-    try:
-        # Python 2 requires PyPi module mock
-        from mock import patch
-    except ImportError:
-        # Python 3 comes with it:
-        from unittest.mock import patch
-    have_mock = True
-except ImportError:
-    print("Module 'mock' not installed. Testing will be restricted.")
-    have_mock = False
-
-TMPDIR = '/var/tmp/weewx_test'
+from unittest.mock import patch
 
 # Redirect the import of setup:
 sys.modules['setup'] = weecfg.extension
-
-
-def check_fileend(out_str):
-    """Early versions of ConfigObj did not terminate files with a newline.
-    This function will add one if it's missing"""
-    if configobj.__version__ <= '4.4.0':
-        out_str.seek(-1, os.SEEK_END)
-        x = out_str.read(1)
-        if x != '\n':
-            out_str.write('\n')
-
 
 # Change directory so we can find things dependent on the location of
 # this file, such as config files and expected values:
@@ -79,40 +51,7 @@ Y_STR = """
 current_config_dict_path = "../../wee_resources/weewx.conf"
 
 
-class LineTest(unittest.TestCase):
-
-    def _check_against_expected(self, config_dict, expected):
-        """Check a ConfigObj against an expected version
-
-        config_dict: The ConfigObj that is to be checked
-
-        expected: The name of a file holding the expected version
-        """
-        # Writing a ConfigObj to a file-like object always writes in bytes,
-        # so we cannot write to a StringIO (which accepts only Unicode under Python 3).
-        # Use a BytesIO object instead, which accepts byte strings.
-        with io.BytesIO() as fd_actual:
-            config_dict.write(fd_actual)
-            check_fileend(fd_actual)
-            fd_actual.seek(0)
-
-            # When we read the BytesIO object back in, the results will be in byte strings.
-            # To compare apples-to-apples, we need to open the file with expected
-            # strings in binary, so when we read it, we get byte-strings:
-            with open(expected, 'rb') as fd_expected:
-                N = 0
-                for expected in fd_expected:
-                    actual = fd_actual.readline()
-                    N += 1
-                    self.assertEqual(actual.strip(), expected.strip(),
-                                     "[%d] '%s' vs '%s'" % (N, actual, expected))
-
-                # Make sure there are no extra lines in the updated config:
-                more = fd_actual.readline()
-                self.assertEqual(more, b'')
-
-
-class ConfigTest(LineTest):
+class ConfigTest(unittest.TestCase):
 
     def test_find_file(self):
         # Test the utility function weecfg.find_file()
@@ -143,7 +82,7 @@ class ConfigTest(LineTest):
     def test_reorder_before(self):
         global X_STR
 
-        xio = StringIO(X_STR)
+        xio = io.StringIO(X_STR)
         x_dict = configobj.ConfigObj(xio, encoding='utf-8')
         weecfg.reorder_sections(x_dict, 'section_c', 'section_b')
         x_dict_str = convert_to_str(x_dict)
@@ -161,7 +100,7 @@ class ConfigTest(LineTest):
     def test_reorder_after(self):
         global X_STR
 
-        xio = StringIO(X_STR)
+        xio = io.StringIO(X_STR)
         x_dict = configobj.ConfigObj(xio, encoding='utf-8')
         weecfg.reorder_sections(x_dict, 'section_c', 'section_b', after=True)
         x_dict_str = convert_to_str(x_dict)
@@ -179,8 +118,8 @@ class ConfigTest(LineTest):
     def test_conditional_merge(self):
         global X_STR, Y_STR
 
-        xio = StringIO(X_STR)
-        yio = StringIO(Y_STR)
+        xio = io.StringIO(X_STR)
+        yio = io.StringIO(Y_STR)
         x_dict = configobj.ConfigObj(xio, encoding='utf-8')
         y_dict = configobj.ConfigObj(yio, encoding='utf-8')
         weeutil.config.conditional_merge(x_dict, y_dict)
@@ -201,8 +140,8 @@ class ConfigTest(LineTest):
     def test_remove_and_prune(self):
         global X_STR, Y_STR
 
-        xio = StringIO(X_STR)
-        yio = StringIO(Y_STR)
+        xio = io.StringIO(X_STR)
+        yio = io.StringIO(Y_STR)
         x_dict = configobj.ConfigObj(xio, encoding='utf-8')
         y_dict = configobj.ConfigObj(yio, encoding='utf-8')
         weecfg.remove_and_prune(x_dict, y_dict)
@@ -227,239 +166,108 @@ class ConfigTest(LineTest):
         weecfg.reorder_scalars(test_list, 'x', 'd')
         self.assertEqual(test_list, ['a', 'b', 'd'])
 
-    if have_mock:
-        def test_prompt_for_info(self):
-            # Suppress stdout by temporarily assigning it to /dev/null
-            save_stdout = sys.stdout
-            with open(os.devnull, 'w') as sys.stdout:
-                # Test a normal input
-                with patch('weecfg.input',
-                           side_effect=['Anytown', '100, meter', '45.0', '180.0', 'y',
-                                        'weewx.com', 'us']):
-                    stn_info = weecfg.prompt_for_info()
-                    self.assertEqual(stn_info, {'altitude': ['100', 'meter'],
-                                                'latitude': '45.0',
-                                                'location': 'Anytown',
-                                                'longitude': '180.0',
-                                                'register_this_station': 'true',
-                                                'station_url': 'weewx.com',
-                                                'unit_system': 'us',
-                                                })
+    def test_prompt_for_info(self):
+        # Suppress stdout by temporarily assigning it to /dev/null
+        save_stdout = sys.stdout
+        with open(os.devnull, 'w') as sys.stdout:
+            # Test a normal input
+            with patch('weecfg.input',
+                       side_effect=['Anytown', '100, meter', '45.0', '180.0', 'y',
+                                    'weewx.com', 'us']):
+                stn_info = weecfg.prompt_for_info()
+                self.assertEqual(stn_info, {'altitude': ['100', 'meter'],
+                                            'latitude': '45.0',
+                                            'location': 'Anytown',
+                                            'longitude': '180.0',
+                                            'register_this_station': 'true',
+                                            'station_url': 'weewx.com',
+                                            'unit_system': 'us',
+                                            })
 
-                # Test for a default input
-                with patch('weecfg.input',
-                           side_effect=['Anytown', '', '', '', '', '']):
-                    stn_info = weecfg.prompt_for_info()
-                    self.assertEqual(stn_info, {'altitude': ['0', 'meter'],
-                                                'latitude': '0.000',
-                                                'location': 'Anytown',
-                                                'longitude': '0.000',
-                                                'register_this_station': 'false',
-                                                'unit_system': 'metricwx',
-                                                })
+            # Test for a default input
+            with patch('weecfg.input',
+                       side_effect=['Anytown', '', '', '', '', '']):
+                stn_info = weecfg.prompt_for_info()
+                self.assertEqual(stn_info, {'altitude': ['0', 'meter'],
+                                            'latitude': '0.000',
+                                            'location': 'Anytown',
+                                            'longitude': '0.000',
+                                            'register_this_station': 'false',
+                                            'unit_system': 'metricwx',
+                                            })
 
-                # Test for an out-of-bounds latitude with retry
-                with patch('weecfg.input',
-                           side_effect=['Anytown', '100, meter', '95.0', '45.0', '180.0', 'n',
-                                        'us']):
-                    stn_info = weecfg.prompt_for_info()
-                    self.assertEqual(stn_info, {'altitude': ['100', 'meter'],
-                                                'latitude': '45.0',
-                                                'location': 'Anytown',
-                                                'longitude': '180.0',
-                                                'register_this_station': 'false',
-                                                'unit_system': 'us'})
+            # Test for an out-of-bounds latitude with retry
+            with patch('weecfg.input',
+                       side_effect=['Anytown', '100, meter', '95.0', '45.0', '180.0', 'n',
+                                    'us']):
+                stn_info = weecfg.prompt_for_info()
+                self.assertEqual(stn_info, {'altitude': ['100', 'meter'],
+                                            'latitude': '45.0',
+                                            'location': 'Anytown',
+                                            'longitude': '180.0',
+                                            'register_this_station': 'false',
+                                            'unit_system': 'us'})
 
-                # Test for a bad length unit type with retry
-                with patch('weecfg.input',
-                           side_effect=['Anytown', '100, foo', '100,meter', '45.0', '180.0',
-                                        'n', 'us']):
-                    stn_info = weecfg.prompt_for_info()
-                    self.assertEqual(stn_info, {'altitude': ['100', 'meter'],
-                                                'latitude': '45.0',
-                                                'location': 'Anytown',
-                                                'longitude': '180.0',
-                                                'register_this_station': 'false',
-                                                'unit_system': 'us'})
+            # Test for a bad length unit type with retry
+            with patch('weecfg.input',
+                       side_effect=['Anytown', '100, foo', '100,meter', '45.0', '180.0',
+                                    'n', 'us']):
+                stn_info = weecfg.prompt_for_info()
+                self.assertEqual(stn_info, {'altitude': ['100', 'meter'],
+                                            'latitude': '45.0',
+                                            'location': 'Anytown',
+                                            'longitude': '180.0',
+                                            'register_this_station': 'false',
+                                            'unit_system': 'us'})
 
-                # Test for a bad display unit with retry
-                with patch('weecfg.input',
-                           side_effect=['Anytown', '100, meter', '45.0', '180.0', 'n', 'foo',
-                                        'us']):
-                    stn_info = weecfg.prompt_for_info()
-                    self.assertEqual(stn_info, {'altitude': ['100', 'meter'],
-                                                'latitude': '45.0',
-                                                'location': 'Anytown',
-                                                'longitude': '180.0',
-                                                'register_this_station': 'false',
-                                                'unit_system': 'us'})
-            # Restore stdout:
-            sys.stdout = save_stdout
+            # Test for a bad display unit with retry
+            with patch('weecfg.input',
+                       side_effect=['Anytown', '100, meter', '45.0', '180.0', 'n', 'foo',
+                                    'us']):
+                stn_info = weecfg.prompt_for_info()
+                self.assertEqual(stn_info, {'altitude': ['100', 'meter'],
+                                            'latitude': '45.0',
+                                            'location': 'Anytown',
+                                            'longitude': '180.0',
+                                            'register_this_station': 'false',
+                                            'unit_system': 'us'})
+        # Restore stdout:
+        sys.stdout = save_stdout
 
-    if have_mock:
-        def test_prompt_with_options(self):
-            # Suppress stdout by temporarily assigning it to /dev/null
-            save_stdout = sys.stdout
-            with open(os.devnull, 'w') as sys.stdout:
-                with patch('weecfg.input', return_value="yes"):
-                    response = weecfg.prompt_with_options("Say yes or no", "yes", ["yes", "no"])
-                    self.assertEqual(response, "yes")
-                with patch('weecfg.input', return_value="no"):
-                    response = weecfg.prompt_with_options("Say yes or no", "yes", ["yes", "no"])
-                    self.assertEqual(response, "no")
-                with patch('weecfg.input', return_value=""):
-                    response = weecfg.prompt_with_options("Say yes or no", "yes", ["yes", "no"])
-                    self.assertEqual(response, "yes")
-                with patch('weecfg.input', side_effect=["make me", "no"]):
-                    response = weecfg.prompt_with_options("Say yes or no", "yes", ["yes", "no"])
-                    self.assertEqual(response, "no")
-            # Restore stdout:
-            sys.stdout = save_stdout
+    def test_prompt_with_options(self):
+        # Suppress stdout by temporarily assigning it to /dev/null
+        save_stdout = sys.stdout
+        with open(os.devnull, 'w') as sys.stdout:
+            with patch('weecfg.input', return_value="yes"):
+                response = weecfg.prompt_with_options("Say yes or no", "yes", ["yes", "no"])
+                self.assertEqual(response, "yes")
+            with patch('weecfg.input', return_value="no"):
+                response = weecfg.prompt_with_options("Say yes or no", "yes", ["yes", "no"])
+                self.assertEqual(response, "no")
+            with patch('weecfg.input', return_value=""):
+                response = weecfg.prompt_with_options("Say yes or no", "yes", ["yes", "no"])
+                self.assertEqual(response, "yes")
+            with patch('weecfg.input', side_effect=["make me", "no"]):
+                response = weecfg.prompt_with_options("Say yes or no", "yes", ["yes", "no"])
+                self.assertEqual(response, "no")
+        # Restore stdout:
+        sys.stdout = save_stdout
 
-    if have_mock:
-        def test_prompt_with_limits(self):
-            # Suppress stdout by temporarily assigning it to /dev/null
-            save_stdout = sys.stdout
-            with open(os.devnull, 'w') as sys.stdout:
-                with patch('weecfg.input', return_value="45"):
-                    response = weecfg.prompt_with_limits("latitude", "0.0", -90, 90)
-                    self.assertEqual(response, "45")
-                with patch('weecfg.input', return_value=""):
-                    response = weecfg.prompt_with_limits("latitude", "0.0", -90, 90)
-                    self.assertEqual(response, "0.0")
-                with patch('weecfg.input', side_effect=["-120", "-45"]):
-                    response = weecfg.prompt_with_limits("latitude", "0.0", -90, 90)
-                    self.assertEqual(response, "-45")
-            # Restore stdout:
-            sys.stdout = save_stdout
-
-    def test_upgrade_v25(self):
-
-        # Start with the Version 2.0 weewx.conf file:
-        config_dict = configobj.ConfigObj('weewx20.conf', encoding='utf-8')
-
-        # Upgrade the V2.0 configuration dictionary to V2.5:
-        weecfg.update_config.update_to_v25(config_dict)
-
-        self._check_against_expected(config_dict, 'expected/weewx25_expected.conf')
-
-    def test_upgrade_v26(self):
-
-        # Start with the Version 2.5 weewx.conf file:
-        config_dict = configobj.ConfigObj('weewx25.conf', encoding='utf-8')
-
-        # Upgrade the V2.5 configuration dictionary to V2.6:
-        weecfg.update_config.update_to_v26(config_dict)
-
-        self._check_against_expected(config_dict, 'expected/weewx26_expected.conf')
-
-    def test_upgrade_v30(self):
-
-        # Start with the Version 2.7 weewx.conf file:
-        config_dict = configobj.ConfigObj('weewx27.conf', encoding='utf-8')
-
-        # Upgrade the V2.7 configuration dictionary to V3.0:
-        weecfg.update_config.update_to_v30(config_dict)
-
-        # with open('expected/weewx30_expected.conf', 'wb') as fd:
-        #     config_dict.write(fd)
-
-        self._check_against_expected(config_dict, 'expected/weewx30_expected.conf')
-
-    def test_upgrade_v32(self):
-
-        # Start with the Version 3.0 weewx.conf file:
-        config_dict = configobj.ConfigObj('weewx30.conf', encoding='utf-8')
-
-        # Upgrade the V3.0 configuration dictionary to V3.2:
-        weecfg.update_config.update_to_v32(config_dict)
-
-        # with open('expected/weewx32_expected.conf', 'wb') as fd:
-        #     config_dict.write(fd)
-
-        self._check_against_expected(config_dict, 'expected/weewx32_expected.conf')
-
-    def test_upgrade_v36(self):
-
-        # Start with the Version 3.2 weewx.conf file:
-        config_dict = configobj.ConfigObj('weewx32.conf', encoding='utf-8')
-
-        # Upgrade the V3.2 configuration dictionary to V3.6:
-        weecfg.update_config.update_to_v36(config_dict)
-
-        self._check_against_expected(config_dict, 'expected/weewx36_expected.conf')
-
-    def test_upgrade_v39(self):
-
-        # Start with the Version 3.8 weewx.conf file:
-        config_dict = configobj.ConfigObj('weewx38.conf', encoding='utf-8')
-
-        # Upgrade the V3.8 configuration dictionary to V3.9:
-        weecfg.update_config.update_to_v39(config_dict)
-
-        # with open('expected/weewx39_expected.conf', 'wb') as fd:
-        #     config_dict.write(fd)
-
-        self._check_against_expected(config_dict, 'expected/weewx39_expected.conf')
-
-    def test_upgrade_v40(self):
-        """Test an upgrade of the stock v3.9 weewx.conf to V4.0"""
-
-        # Start with the Version 3.9 weewx.conf file:
-        config_dict = configobj.ConfigObj('weewx39.conf', encoding='utf-8')
-
-        # Upgrade the V3.9 configuration dictionary to V4.0:
-        weecfg.update_config.update_to_v40(config_dict)
-
-        # with open('expected/weewx40_expected.conf', 'wb') as fd:
-        #     config_dict.write(fd)
-
-        self._check_against_expected(config_dict, 'expected/weewx40_expected.conf')
-
-    def test_upgrade_v42(self):
-        """Test an upgrade of the stock v4.1 weewx.conf to V4.2"""
-
-        # Start with the Version 4.1 weewx.conf file:
-        config_dict = configobj.ConfigObj('weewx41.conf', encoding='utf-8')
-
-        # Upgrade the V4.1 configuration dictionary to V4.2:
-        weecfg.update_config.update_to_v42(config_dict)
-
-        # with open('expected/weewx42_expected.conf', 'wb') as fd:
-        #     config_dict.write(fd)
-
-        self._check_against_expected(config_dict, 'expected/weewx42_expected.conf')
-
-    def test_upgrade_v43(self):
-        """Test an upgrade of the stock v4.1 weewx.conf to V4.2"""
-
-        # Start with the Version 4.1 weewx.conf file:
-        config_dict = configobj.ConfigObj('weewx42.conf', encoding='utf-8')
-
-        # Upgrade the V4.2 configuration dictionary to V4.3:
-        weecfg.update_config.update_to_v43(config_dict)
-
-        # with open('expected/weewx43_expected.conf', 'wb') as fd:
-        #     config_dict.write(fd)
-
-        self._check_against_expected(config_dict, 'expected/weewx43_expected.conf')
-
-    def test_merge(self):
-        """Test an upgrade against a typical user's configuration file"""
-
-        # Start with a typical V2.0 user file:
-        config_dict = configobj.ConfigObj('weewx20_user.conf', encoding='utf-8')
-
-        # The current config file becomes the template:
-        template = configobj.ConfigObj(current_config_dict_path, encoding='utf-8')
-
-        # First update, then merge:
-        weecfg.update_config.update_and_merge(config_dict, template)
-
-        # with open('expected/weewx43_user_expected.conf', 'wb') as fd:
-        #     config_dict.write(fd)
-
-        self._check_against_expected(config_dict, 'expected/weewx43_user_expected.conf')
+    def test_prompt_with_limits(self):
+        # Suppress stdout by temporarily assigning it to /dev/null
+        save_stdout = sys.stdout
+        with open(os.devnull, 'w') as sys.stdout:
+            with patch('weecfg.input', return_value="45"):
+                response = weecfg.prompt_with_limits("latitude", "0.0", -90, 90)
+                self.assertEqual(response, "45")
+            with patch('weecfg.input', return_value=""):
+                response = weecfg.prompt_with_limits("latitude", "0.0", -90, 90)
+                self.assertEqual(response, "0.0")
+            with patch('weecfg.input', side_effect=["-120", "-45"]):
+                response = weecfg.prompt_with_limits("latitude", "0.0", -90, 90)
+                self.assertEqual(response, "-45")
+        # Restore stdout:
+        sys.stdout = save_stdout
 
     def test_driver_info(self):
         """Test the discovery and listing of drivers."""
@@ -475,7 +283,6 @@ class ConfigTest(LineTest):
         del weewx.drivers.ws1
 
     def test_modify_config(self):
-
         # Use the current weewx.conf
         config_dict = configobj.ConfigObj(current_config_dict_path, encoding='utf-8')
 
@@ -483,7 +290,8 @@ class ConfigTest(LineTest):
 
         self.assertEqual(stn_info,
                          {'station_type': 'unspecified', 'altitude': ['700', 'foot'],
-                          'longitude': '0.00', 'unit_system': 'us', 'location': 'My Little Town, Oregon',
+                          'longitude': '0.00', 'unit_system': 'us',
+                          'location': 'My Little Town, Oregon',
                           'latitude': '0.00', 'register_this_station': 'false', 'lang': 'en'})
 
         # Modify the station info, to reflect a hardware choice
@@ -496,7 +304,7 @@ class ConfigTest(LineTest):
         # Make sure the driver stanza got injected correctly
         import weewx.drivers.vantage
         vcf = weewx.drivers.vantage.VantageConfEditor()
-        default_config = configobj.ConfigObj(StringIO(vcf.default_stanza), encoding='utf-8')
+        default_config = configobj.ConfigObj(io.StringIO(vcf.default_stanza), encoding='utf-8')
 
         self.assertEqual(config_dict['Vantage'], default_config['Vantage'])
 
