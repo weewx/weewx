@@ -761,22 +761,22 @@ def update_to_v39(config_dict):
         std_report_comment = config_dict.comments['StdReport']
 
         if 'Defaults' not in config_dict['StdReport']:
-            defaults_dict = weeutil.config.config_from_str(weecfg.DEFAULTS)
+            defaults_dict = weeutil.config.config_from_str(DEFAULTS)
             weeutil.config.merge_config(config_dict, defaults_dict)
             weecfg.reorder_sections(config_dict['StdReport'], 'Defaults', 'RSYNC', after=True)
 
         if 'SeasonsReport' not in config_dict['StdReport']:
-            seasons_options_dict = weeutil.config.config_from_str(weecfg.SEASONS_REPORT)
+            seasons_options_dict = weeutil.config.config_from_str(SEASONS_REPORT)
             weeutil.config.merge_config(config_dict, seasons_options_dict)
             weecfg.reorder_sections(config_dict['StdReport'], 'SeasonsReport', 'FTP')
 
         if 'SmartphoneReport' not in config_dict['StdReport']:
-            smartphone_options_dict = weeutil.config.config_from_str(weecfg.SMARTPHONE_REPORT)
+            smartphone_options_dict = weeutil.config.config_from_str(SMARTPHONE_REPORT)
             weeutil.config.merge_config(config_dict, smartphone_options_dict)
             weecfg.reorder_sections(config_dict['StdReport'], 'SmartphoneReport', 'FTP')
 
         if 'MobileReport' not in config_dict['StdReport']:
-            mobile_options_dict = weeutil.config.config_from_str(weecfg.MOBILE_REPORT)
+            mobile_options_dict = weeutil.config.config_from_str(MOBILE_REPORT)
             weeutil.config.merge_config(config_dict, mobile_options_dict)
             weecfg.reorder_sections(config_dict['StdReport'], 'MobileReport', 'FTP')
 
@@ -954,3 +954,98 @@ def update_to_v43(config_dict):
         config_dict['StdReport']['log_failure'] = True
 
     config_dict['version'] = '4.3.0'
+
+
+# ==============================================================================
+#            Various config sections
+# ==============================================================================
+
+
+SEASONS_REPORT = """[StdReport]
+
+    [[SeasonsReport]]
+        # The SeasonsReport uses the 'Seasons' skin, which contains the
+        # images, templates and plots for the report.
+        skin = Seasons
+        enable = false"""
+
+SMARTPHONE_REPORT = """[StdReport]
+
+    [[SmartphoneReport]]
+        # The SmartphoneReport uses the 'Smartphone' skin, and the images and
+        # files are placed in a dedicated subdirectory.
+        skin = Smartphone
+        enable = false
+        HTML_ROOT = public_html/smartphone"""
+
+MOBILE_REPORT = """[StdReport]
+
+    [[MobileReport]]
+        # The MobileReport uses the 'Mobile' skin, and the images and files
+        # are placed in a dedicated subdirectory.
+        skin = Mobile
+        enable = false
+        HTML_ROOT = public_html/mobile"""
+
+DEFAULTS = """[StdReport]
+
+    ####
+
+    # Options in the [[Defaults]] section below will apply to all reports.
+    # What follows are a few of the more popular options you may want to
+    # uncomment, then change.
+    [[Defaults]]
+
+        # Which language to use for all reports. Not all skins support all languages.
+        # You can override this for individual reports.
+        lang = en
+
+        # Which unit system to use for all reports. Choices are 'us', 'metric', or 'metricwx'.
+        # You can override this for individual reports.
+        unit_system = us
+
+        [[[Units]]]
+            # Option "unit_system" above sets the general unit system, but overriding specific unit
+            # groups is possible. These are popular choices. Uncomment and set as appropriate.
+            # NB: The unit is always in the singular. I.e., 'mile_per_hour',
+            # NOT 'miles_per_hour'
+            [[[[Groups]]]]
+                # group_altitude     = meter              # Options are 'foot' or 'meter'
+                # group_pressure     = mbar               # Options are 'inHg', 'mmHg', 'mbar', or 'hPa'
+                # group_rain         = mm                 # Options are 'inch', 'cm', or 'mm'
+                # group_rainrate     = mm_per_hour        # Options are 'inch_per_hour', 'cm_per_hour', or 'mm_per_hour'
+                # The following line is used to keep the above lines indented properly.
+                # It can be ignored.
+                unused = unused
+
+            # Uncommenting the following section frequently results in more
+            # attractive formatting of times and dates, but may not work in
+            # your locale.
+            [[[[TimeFormats]]]]
+                # day        = %H:%M
+                # week       = %H:%M on %A
+                # month      = %d-%b-%Y %H:%M
+                # year       = %d-%b-%Y %H:%M
+                # rainyear   = %d-%b-%Y %H:%M
+                # current    = %d-%b-%Y %H:%M
+                # ephem_day  = %H:%M
+                # ephem_year = %d-%b-%Y %H:%M
+                # The following line is used to keep the above lines indented properly.
+                # It can be ignored.
+                unused = unused
+
+        [[[Labels]]]
+            # Users frequently change the labels for these observation types
+            [[[[Generic]]]]
+                # inHumidity     = Inside Humidity
+                # inTemp         = Inside Temperature
+                # outHumidity    = Outside Humidity
+                # outTemp        = Outside Temperature
+                # extraTemp1     = Temperature1
+                # extraTemp2     = Temperature2
+                # extraTemp3     = Temperature3
+                # The following line is used to keep the above lines indented properly.
+                # It can be ignored.
+                unused = unused
+
+"""
