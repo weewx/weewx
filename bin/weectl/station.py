@@ -6,6 +6,7 @@
 """Entry point for the "station" subcommand."""
 
 from . import common_parser
+import weecfg.station_config
 
 station_create_usage = """weectl station create [--config=CONFIG-PATH] 
                              [--html-root=HTML_ROOT] [--skin-root=SKIN_ROOT]
@@ -49,7 +50,7 @@ def add_subparser(subparsers,
     create_station_parser.add_argument('--altitude', metavar="ALTITUDE,(foot|meter)",
                                        help="The station altitude in either feet or meters."
                                             " For example, '750,foot' or '320,meter'")
-    create_station_parser.set_defaults(func=create_station)
+    create_station_parser.set_defaults(func=weecfg.station_config.create_station)
 
     # Action 'reconfigure'
     reconfigure_station_parser = action_parser.add_parser('reconfigure',
@@ -57,7 +58,6 @@ def add_subparser(subparsers,
                                                           usage=station_reconfigure_usage,
                                                           help='Reconfigure a station config file')
     reconfigure_station_parser.add_argument('--driver',
-                                            default='weewx.drivers.simulator',
                                             help="Set active driver to DRIVER")
 
     # Action 'upgrade'
@@ -72,7 +72,10 @@ def add_subparser(subparsers,
                                                     usage=station_upgrade_skins_usage,
                                                     help='Upgrade the skins')
 
-
 def create_station(namespace):
-    print("in create_station")
-    print(namespace)
+    weecfg.station_config.create_station(config_path=namespace.config,
+                                         driver=namespace.driver,
+                                         latitude=namespace.latitude,
+                                         longitude=namespace.longitude,
+                                         altitude=namespace.altitude,
+                                         no_prompt=namespace.no_prompt)
