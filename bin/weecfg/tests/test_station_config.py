@@ -157,5 +157,35 @@ class AltitudeConfigTest(unittest.TestCase):
             self.assertEqual(self.config_dict['Station']['altitude'], ["110", "meter"])
 
 
+class DriverConfigTest(unittest.TestCase):
+
+    def setUp(self):
+        self.config_dict = weeutil.config.deep_copy(CONFIG_DICT)
+
+    def test_default_config_driver(self):
+        weecfg.station_config.config_driver(self.config_dict, no_prompt=True)
+        self.assertEqual(self.config_dict['Station']['station_type'], 'Simulator')
+        self.assertEqual(self.config_dict['Simulator']['driver'], 'weewx.drivers.simulator')
+
+    def test_arg_config_driver(self):
+        weecfg.station_config.config_driver(self.config_dict, driver='weewx.drivers.vantage',
+                                            no_prompt=True)
+        self.assertEqual(self.config_dict['Station']['station_type'], 'Vantage')
+        self.assertEqual(self.config_dict['Vantage']['driver'], 'weewx.drivers.vantage')
+
+    @suppress_stdout
+    def test_prompt_config_driver(self):
+        with patch('weecfg.input', side_effect=['6', '', '/dev/ttyS0']):
+            weecfg.station_config.config_driver(self.config_dict)
+            self.assertEqual(self.config_dict['Station']['station_type'], 'Vantage')
+            self.assertEqual(self.config_dict['Vantage']['port'], '/dev/ttyS0')
+
+        # Do it again. This time, the stanza ['Vantage'] will exist, and we'll just modify it
+        with patch('weecfg.input', side_effect=['', '', '/dev/ttyS1']):
+            weecfg.station_config.config_driver(self.config_dict)
+            self.assertEqual(self.config_dict['Station']['station_type'], 'Vantage')
+            self.assertEqual(self.config_dict['Vantage']['port'], '/dev/ttyS1')
+
+
 if __name__ == "__main__":
     unittest.main()

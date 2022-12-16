@@ -225,7 +225,7 @@ def config_driver(config_dict, driver=None, no_prompt=False):
             config_dict['Station']['station_type'] = driver_name
         # Give the user a chance to modify the stanza:
         if not no_prompt:
-            settings = weecfg.prompt_for_driver_settings(driver, config_dict)
+            settings = weecfg.prompt_for_driver_settings(final_driver, config_dict)
             config_dict.merge(settings)
 
     if driver_editor:
