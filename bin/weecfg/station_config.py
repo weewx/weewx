@@ -50,40 +50,50 @@ def config_station(config_dict, driver=None,
 def config_latlon(config_dict, latitude=None, longitude=None, no_prompt=False):
     """Set a (possibly new) value for latitude and longitude"""
 
-    if 'Station' in config_dict:
-        # Use the existing value, if any, as the default:
-        default_latitude = to_float(config_dict['Station'].get('latitude', 0.0))
-        # Was a new value provided as an argument?
-        if latitude is not None:
-            # Yes. Use it
-            final_latitude = latitude
-        elif not no_prompt:
-            # No value provided as an argument. Prompt for a new value
-            print("\nSpecify latitude in decimal degrees, negative for south.")
-            final_latitude = weecfg.prompt_with_limits("latitude", default_latitude, -90, 90)
-        else:
-            # If we got here, there was no value provided as an argument, yet we cannot prompt.
-            # Use the default.
-            final_latitude = default_latitude
-        # Set the value in the config file
-        config_dict['Station']['latitude'] = final_latitude
+    if "Station" not in config_dict:
+        return
 
-        # Similar, except for longitude
-        default_longitude = to_float(config_dict['Station'].get('longitude', 0.0))
-        # Was a new value provided on the command line?
-        if longitude is not None:
-            # Yes. Use it
-            final_longitude = longitude
-        elif not no_prompt:
-            # No command line value. Prompt for a new value
-            print("Specify longitude in decimal degrees, negative for west.")
-            final_longitude = weecfg.prompt_with_limits("longitude", default_longitude, -180, 180)
-        else:
-            # If we got here, there was no value provided as an argument, yet we cannot prompt.
-            # Use the default.
-            final_longitude = default_longitude
-        # Set the value in the config file
-        config_dict['Station']['longitude'] = final_longitude
+    # Use the existing value, if any, as the default:
+    default_latitude = to_float(config_dict['Station'].get('latitude', 0.0))
+    # Was a new value provided as an argument?
+    if latitude is not None:
+        # Yes. Use it
+        final_latitude = latitude
+    elif not no_prompt:
+        # No value provided as an argument. Prompt for a new value
+        print("\nSpecify latitude in decimal degrees, negative for south.")
+        final_latitude = weecfg.prompt_with_limits("latitude", default_latitude, -90, 90)
+    else:
+        # If we got here, there was no value provided as an argument, yet we cannot prompt.
+        # Use the default.
+        final_latitude = default_latitude
+
+    # Make sure we have something that can convert to a float:
+    float(final_latitude)
+
+    # Set the value in the config file
+    config_dict['Station']['latitude'] = final_latitude
+
+    # Similar, except for longitude
+    default_longitude = to_float(config_dict['Station'].get('longitude', 0.0))
+    # Was a new value provided on the command line?
+    if longitude is not None:
+        # Yes. Use it
+        final_longitude = longitude
+    elif not no_prompt:
+        # No command line value. Prompt for a new value
+        print("Specify longitude in decimal degrees, negative for west.")
+        final_longitude = weecfg.prompt_with_limits("longitude", default_longitude, -180, 180)
+    else:
+        # If we got here, there was no value provided as an argument, yet we cannot prompt.
+        # Use the default.
+        final_longitude = default_longitude
+
+    # Make sure we have something that can convert to a float:
+    float(final_longitude)
+
+    # Set the value in the config file
+    config_dict['Station']['longitude'] = final_longitude
 
 
 def config_altitude(config_dict, altitude=None, no_prompt=False):
