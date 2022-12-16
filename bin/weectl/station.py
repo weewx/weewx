@@ -4,15 +4,19 @@
 #    See the file LICENSE.txt for your rights.
 #
 """Entry point for the "station" subcommand."""
+import sys
 
+import weewx
 from . import common_parser
 import weecfg.station_config
 
 station_create_usage = """weectl station create [--config=CONFIG-PATH] 
-                             [--html-root=HTML_ROOT] [--skin-root=SKIN_ROOT]
                              [--driver=DRIVER] 
+                             [--altitude=ALTITUDE,{foot|meter}]
                              [--latitude=LATITUDE] [--longitude=LONGITUDE]
-                             [--altitude=ALTITUDE,{foot|meter}]"""
+                             [--register={y,n} [--station-url=STATION_URL]]
+                             [--html-root=HTML_ROOT] [--skin-root=SKIN_ROOT]
+"""
 station_reconfigure_usage = "weectl station reconfigure [--config=CONFIG-PATH] [--driver=DRIVER]"
 station_upgrade_usage = "weectl station upgrade [--config=CONFIG-PATH]"
 station_upgrade_skins_usage = "weectl station upgrade-skins [--config=CONFIG-PATH]"
@@ -37,20 +41,27 @@ def add_subparser(subparsers,
                                                      parents=[common_parser],
                                                      usage=station_create_usage,
                                                      help='Create a station config file')
+    create_station_parser.add_argument('--driver',
+                                       help="Driver to use. E.g., --driver=weewx.drivers.fousb")
+    create_station_parser.add_argument('--altitude', metavar="ALTITUDE,(foot|meter)",
+                                       help="The station altitude in either feet or meters."
+                                            " For example, '750,foot' or '320,meter'")
+    create_station_parser.add_argument('--latitude',
+                                       help="The station latitude in decimal degrees.")
+    create_station_parser.add_argument('--longitude',
+                                       help="The station longitude in decimal degrees.")
+    create_station_parser.add_argument('--register', choices=['y', 'n'],
+                                       help="Register this station in the weewx registry?")
+    create_station_parser.add_argument('--station-url',
+                                       help="Unique URL to be used if registering the station.")
     create_station_parser.add_argument('--html_root',
                                        default='public_html',
                                        help='Set HTML_ROOT, relative to WEEWX_ROOT. '
                                             'Default is "public_html".')
     create_station_parser.add_argument('--skin_root', default='skins')
-    create_station_parser.add_argument('--driver', default='weewx.drivers.simulator')
-    create_station_parser.add_argument('--latitude',
-                                       help="The station latitude in decimal degrees.")
-    create_station_parser.add_argument('--longitude',
-                                       help="The station longitude in decimal degrees.")
-    create_station_parser.add_argument('--altitude', metavar="ALTITUDE,(foot|meter)",
-                                       help="The station altitude in either feet or meters."
-                                            " For example, '750,foot' or '320,meter'")
-    create_station_parser.set_defaults(func=weecfg.station_config.create_station)
+    create_station_parser.add_argument('--no-prompt', type=bool,
+                                       help="If true, suppress prompts")
+    create_station_parser.set_defaults(func=create_station)
 
     # Action 'reconfigure'
     reconfigure_station_parser = action_parser.add_parser('reconfigure',
@@ -73,9 +84,12 @@ def add_subparser(subparsers,
                                                     help='Upgrade the skins')
 
 def create_station(namespace):
-    weecfg.station_config.create_station(config_path=namespace.config,
-                                         driver=namespace.driver,
-                                         latitude=namespace.latitude,
-                                         longitude=namespace.longitude,
-                                         altitude=namespace.altitude,
-                                         no_prompt=namespace.no_prompt)
+    try:
+        weecfg.station_config.create_station(config_path=namespace.config,
+                                             driver=namespace.driver,
+                                             latitude=namespace.latitude,
+                                             longitude=namespace.longitude,
+                                             altitude=namespace.altitude,
+                                             no_prompt=namespace.no_prompt)
+    except weewx.ViolatedPrecondition as e:
+        sys.exit(e)

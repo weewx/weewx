@@ -17,6 +17,7 @@ import weecfg.station_config
 import weecfg.update_config
 import weeutil.config
 import weeutil.weeutil
+import weewx
 
 CONFIG_DICT_STR = """
 # WEEWX TEST CONFIGURATION FILE
@@ -61,9 +62,15 @@ version = 4.10.0a1
     # If you have a website, you may specify an URL. This is required if you
     # intend to register your station.
     #station_url = http://www.example.com
+
+[StdRESTful]
+    [[StationRegistry]]
+        register_this_station = false
 """
 
 CONFIG_DICT = configobj.ConfigObj(io.StringIO(CONFIG_DICT_STR))
+
+STATION_URL = 'http://weewx.com'
 
 
 def suppress_stdout(func):
@@ -73,41 +80,6 @@ def suppress_stdout(func):
                 return func(*args, **kwargs)
 
     return wrapper
-
-
-class LatLonConfigTest(unittest.TestCase):
-
-    def setUp(self):
-        self.config_dict = weeutil.config.deep_copy(CONFIG_DICT)
-
-    def test_default_config_latlon(self):
-        # Use the default as supplied by CONFIG_DICT
-        weecfg.station_config.config_latlon(self.config_dict, no_prompt=True)
-        self.assertEqual(float(self.config_dict['Station']['latitude']), 5.0)
-        self.assertEqual(float(self.config_dict['Station']['longitude']), 10.0)
-        # Delete the values in the configuration dictionary
-        del self.config_dict['Station']['latitude']
-        del self.config_dict['Station']['longitude']
-        # Now the defaults should be the hardwired defaults
-        weecfg.station_config.config_latlon(self.config_dict, no_prompt=True)
-        self.assertEqual(float(self.config_dict['Station']['latitude']), 0.0)
-        self.assertEqual(float(self.config_dict['Station']['longitude']), 0.0)
-
-    def test_arg_config_latlon(self):
-        weecfg.station_config.config_latlon(self.config_dict, latitude=-20, longitude=-40)
-        self.assertEqual(float(self.config_dict['Station']['latitude']), -20.0)
-        self.assertEqual(float(self.config_dict['Station']['longitude']), -40.0)
-
-    def test_badarg_config_latlon(self):
-        with self.assertRaises(ValueError):
-            weecfg.station_config.config_latlon(self.config_dict, latitude="-20f", longitude=-40)
-
-    @suppress_stdout
-    def test_prompt_config_latlong(self):
-        with patch('weecfg.input', side_effect=['-21', '-41']):
-            weecfg.station_config.config_latlon(self.config_dict)
-            self.assertEqual(float(self.config_dict['Station']['latitude']), -21.0)
-            self.assertEqual(float(self.config_dict['Station']['longitude']), -41.0)
 
 
 class AltitudeConfigTest(unittest.TestCase):
@@ -155,6 +127,87 @@ class AltitudeConfigTest(unittest.TestCase):
         with patch('weecfg.station_config.input', side_effect=['100f, foot', '110, meter']):
             weecfg.station_config.config_altitude(self.config_dict)
             self.assertEqual(self.config_dict['Station']['altitude'], ["110", "meter"])
+
+
+class LatLonConfigTest(unittest.TestCase):
+
+    def setUp(self):
+        self.config_dict = weeutil.config.deep_copy(CONFIG_DICT)
+
+    def test_default_config_latlon(self):
+        # Use the default as supplied by CONFIG_DICT
+        weecfg.station_config.config_latlon(self.config_dict, no_prompt=True)
+        self.assertEqual(float(self.config_dict['Station']['latitude']), 5.0)
+        self.assertEqual(float(self.config_dict['Station']['longitude']), 10.0)
+        # Delete the values in the configuration dictionary
+        del self.config_dict['Station']['latitude']
+        del self.config_dict['Station']['longitude']
+        # Now the defaults should be the hardwired defaults
+        weecfg.station_config.config_latlon(self.config_dict, no_prompt=True)
+        self.assertEqual(float(self.config_dict['Station']['latitude']), 0.0)
+        self.assertEqual(float(self.config_dict['Station']['longitude']), 0.0)
+
+    def test_arg_config_latlon(self):
+        weecfg.station_config.config_latlon(self.config_dict, latitude=-20, longitude=-40)
+        self.assertEqual(float(self.config_dict['Station']['latitude']), -20.0)
+        self.assertEqual(float(self.config_dict['Station']['longitude']), -40.0)
+
+    def test_badarg_config_latlon(self):
+        with self.assertRaises(ValueError):
+            weecfg.station_config.config_latlon(self.config_dict, latitude="-20f", longitude=-40)
+
+    @suppress_stdout
+    def test_prompt_config_latlong(self):
+        with patch('weecfg.input', side_effect=['-21', '-41']):
+            weecfg.station_config.config_latlon(self.config_dict)
+            self.assertEqual(float(self.config_dict['Station']['latitude']), -21.0)
+            self.assertEqual(float(self.config_dict['Station']['longitude']), -41.0)
+
+
+class RegistryConfigTest(unittest.TestCase):
+
+    def setUp(self):
+        self.config_dict = weeutil.config.deep_copy(CONFIG_DICT)
+
+    def test_default_register(self):
+        weecfg.station_config.config_registry(self.config_dict, no_prompt=True)
+        self.assertFalse(
+            self.config_dict['StdRESTful']['StationRegistry']['register_this_station'])
+
+    def test_args_register(self):
+        # Missing station_url:
+        with self.assertRaises(weewx.ViolatedPrecondition):
+            weecfg.station_config.config_registry(self.config_dict, register='True',
+                                                  no_prompt=True)
+        # This time we supply a station_url. Should be OK.
+        weecfg.station_config.config_registry(self.config_dict, register='True',
+                                              station_url=STATION_URL, no_prompt=True)
+        self.assertTrue(self.config_dict['StdRESTful']['StationRegistry']['register_this_station'])
+        self.assertEqual(self.config_dict['Station']['station_url'], STATION_URL)
+        # Alternatively, the config file already had a station_url:
+        self.config_dict['Station']['station_url'] = STATION_URL
+        weecfg.station_config.config_registry(self.config_dict, register='True', no_prompt=True)
+        self.assertTrue(self.config_dict['StdRESTful']['StationRegistry']['register_this_station'])
+        self.assertEqual(self.config_dict['Station']['station_url'], STATION_URL)
+
+    @suppress_stdout
+    def test_prompt_register(self):
+        with patch('weecfg.input', side_effect=['y', STATION_URL]):
+            weecfg.station_config.config_registry(self.config_dict)
+        self.assertTrue(self.config_dict['StdRESTful']['StationRegistry']['register_this_station'])
+        self.assertEqual(self.config_dict['Station']['station_url'], STATION_URL)
+
+        # Try again, but without specifying an URL. Should ask twice.
+        with patch('weecfg.input', side_effect=['y', '', STATION_URL]):
+            weecfg.station_config.config_registry(self.config_dict)
+        self.assertTrue(self.config_dict['StdRESTful']['StationRegistry']['register_this_station'])
+        self.assertEqual(self.config_dict['Station']['station_url'], STATION_URL)
+
+        # Now with a bogus URL
+        with patch('weecfg.input', side_effect=['y', 'http://www.example.com', STATION_URL]):
+            weecfg.station_config.config_registry(self.config_dict)
+        self.assertTrue(self.config_dict['StdRESTful']['StationRegistry']['register_this_station'])
+        self.assertEqual(self.config_dict['Station']['station_url'], STATION_URL)
 
 
 class DriverConfigTest(unittest.TestCase):

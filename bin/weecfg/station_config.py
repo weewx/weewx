@@ -16,17 +16,18 @@ import weecfg
 import weeutil.config
 import weeutil.weeutil
 import weewx
-from weeutil.weeutil import to_float
+from weeutil.weeutil import to_float, to_bool
 
 log = logging.getLogger(__name__)
 
 
 def create_station(config_path, *args, **kwargs):
-    """Create a brand new configuration file.
+    """Create a brand-new configuration file.
 
-    Like config_station(), except it ensures that the config file does not already exists. It then
+    Like config_station(), except it ensures that the config file does not already exist. It then
     retrieves the template config file from package resources and uses that.
     """
+
     # Make sure there is not already a configuration file at the designated location.
     if os.path.exists(config_path):
         raise weewx.ViolatedPrecondition(f"Config file {config_path} already exists")
@@ -35,20 +36,100 @@ def create_station(config_path, *args, **kwargs):
     with importlib.resources.open_text('wee_resources', 'weewx.conf', encoding='utf-8') as fd:
         dist_config_dict = configobj.ConfigObj(fd, encoding='utf-8', file_error=True)
 
-    config_station(dist_config_dict, *args, **kwargs)
+    config_config(dist_config_dict, *args, **kwargs)
+
+    # Save the results. No backup.
+    weecfg.save(dist_config_dict, config_path)
 
 
-def config_station(config_dict, driver=None,
-                   latitude=None, longitude=None, altitude=None,
-                   no_prompt=False):
+def config_station(config_path, *args, **kwargs):
+    "Reconfigure an existing station"
+
+    config_dict = configobj.ConfigObj(config_path, encoding='utf-8', file_error=True)
+
+    config_config(config_dict, *args, **kwargs)
+
+    # Save the results with backup
+    weecfg.save_with_backup(config_dict, config_path)
+
+
+def config_config(config_dict, driver=None,
+                  latitude=None, longitude=None, altitude=None,
+                  no_prompt=False):
     """Modify a configuration file."""
-    config_latlon(config_dict, latitude=latitude, longitude=longitude, no_prompt=no_prompt)
     config_altitude(config_dict, altitude=altitude, no_prompt=no_prompt)
+    config_latlon(config_dict, latitude=latitude, longitude=longitude, no_prompt=no_prompt)
+    # config_registry(config_dict, register=register, no_prompt=no_prompt)
+    # config_units(config_dict, unit_system=units, no_prompt=noprompt)
+    # config_lang(config_dict, lang=lang, no_prompt=no_prompt)
     config_driver(config_dict, driver=driver, no_prompt=no_prompt)
 
 
+def config_altitude(config_dict, altitude=None, no_prompt=False):
+    """Set a (possibly new) value and unit for altitude.
+
+    Args:
+        config_dict (configobj.ConfigObj): The configuration dictionary.
+        altitude (str): A string with value and unit, separated with a comma.
+            For example, "50, meter". Optional.
+        no_prompt(bool):  Do not prompt the user for a value.
+    """
+    if 'Station' not in config_dict:
+        return
+
+    # Start with assuming the existing value:
+    default_altitude = config_dict['Station'].get('altitude', ["0", 'foot'])
+    # Was a new value provided as an argument?
+    if altitude is not None:
+        # Yes. Extract and validate it.
+        value, unit = altitude.split(',')
+        # Fail hard if the value cannot be converted to a float
+        float(value)
+        # Fail hard if the unit is unknown:
+        unit = unit.strip().lower()
+        if unit not in ['foot', 'meter']:
+            raise ValueError(f"Unknown altitude unit {unit}")
+        # All is good. Use it.
+        final_altitude = [value, unit]
+    elif not no_prompt:
+        print("\nSpecify altitude, with units 'foot' or 'meter'.  For example:")
+        print("35, foot")
+        print("12, meter")
+        msg = "altitude [%s]: " % weeutil.weeutil.list_as_string(default_altitude)
+        final_altitude = None
+
+        while final_altitude is None:
+            ans = input(msg).strip()
+            if ans:
+                value, unit = ans.split(',')
+                try:
+                    # Test whether the first token can be converted into a
+                    # number. If not, an exception will be raised.
+                    float(value)
+                    unit = unit.strip().lower()
+                    if unit in ['foot', 'meter']:
+                        final_altitude = [value.strip(), unit]
+                except (ValueError, TypeError):
+                    pass
+            else:
+                # The user gave the null string. We're done
+                final_altitude = default_altitude
+    else:
+        # If we got here, there was no value in the args and we cannot prompt. Use the default.
+        final_altitude = default_altitude
+
+    config_dict['Station']['altitude'] = final_altitude
+
+
 def config_latlon(config_dict, latitude=None, longitude=None, no_prompt=False):
-    """Set a (possibly new) value for latitude and longitude"""
+    """Set a (possibly new) value for latitude and longitude
+
+    Args:
+        config_dict (configobj.ConfigObj): The configuration dictionary.
+        latitude (float|None): The latitude. If specified, no prompting will happen.
+        longitude (float|None): The longitude. If specified no prompting will happen.
+        no_prompt(bool):  Do not prompt the user for a value.
+    """
 
     if "Station" not in config_dict:
         return
@@ -96,61 +177,51 @@ def config_latlon(config_dict, latitude=None, longitude=None, no_prompt=False):
     config_dict['Station']['longitude'] = final_longitude
 
 
-def config_altitude(config_dict, altitude=None, no_prompt=False):
-    """Set a (possibly new) value and unit for altitude.
+def config_registry(config_dict, register=None, station_url=None, no_prompt=False):
+    """Configure whether to include the station in the weewx.com registry."""
 
-    Args:
-        config_dict (configobj.ConfigObj): The configuration dictionary.
-        altitude (str): A string with value and unit, separated with a comma.
-            For example, "50, meter". Optional.
-        no_prompt(bool):  If altitude is not provided, and no_prompt is False, then the user will
-            be prompted to supply a value.
-    """
     if 'Station' not in config_dict:
         return
 
-    # Start with assuming the existing value:
-    default_altitude = config_dict['Station'].get('altitude', ["0", 'foot'])
-    # Was a new value provided as an argument?
-    if altitude is not None:
-        # Yes. Extract and validate it.
-        value, unit = altitude.split(',')
-        # Fail hard if the value cannot be converted to a float
-        float(value)
-        # Fail hard if the unit is unknown:
-        unit = unit.strip().lower()
-        if unit not in ['foot', 'meter']:
-            raise ValueError(f"Unknown altitude unit {unit}")
-        # All is good. Use it.
-        final_altitude = [value, unit]
+    try:
+        default_register = to_bool(
+            config_dict['StdRESTful']['StationRegistry']['register_this_station'])
+    except KeyError:
+        default_register = False
+
+    default_station_url = config_dict['Station'].get('station_url')
+
+    if register is not None:
+        final_register = to_bool(register)
+        final_station_url = station_url or default_station_url
     elif not no_prompt:
-        print("\nSpecify altitude, with units 'foot' or 'meter'.  For example:")
-        print("35, foot")
-        print("12, meter")
-        msg = "altitude [%s]: " % weeutil.weeutil.list_as_string(default_altitude)
-        final_altitude = None
-
-        while final_altitude is None:
-            ans = input(msg).strip()
-            if ans:
-                value, unit = ans.split(',')
-                try:
-                    # Test whether the first token can be converted into a
-                    # number. If not, an exception will be raised.
-                    float(value)
-                    unit = unit.strip().lower()
-                    if unit in ['foot', 'meter']:
-                        final_altitude = [value.strip(), unit]
-                except (ValueError, TypeError):
-                    pass
-            else:
-                # The user gave the null string. We're done
-                final_altitude = default_altitude
+        print("\nYou can register your station on weewx.com, where it will be included")
+        print("in a map. You will need a unique URL to identify your station (such as a")
+        print("website, or WeatherUnderground link).")
+        ans = weecfg.prompt_with_options("Include station in the station registry (y/n)?",
+                                         default_register,
+                                         ['y', 'n'])
+        final_register = to_bool(ans)
+        if final_register:
+            while True:
+                url = weecfg.prompt_with_options("Unique URL:", default_station_url)
+                if url:
+                    if url.startswith('http://www.example.com'):
+                        print("Unique please!")
+                    else:
+                        final_station_url = url
+                        break
     else:
-        # If we got here, there was no value in the args and we cannot prompt. Use the default.
-        final_altitude = default_altitude
+        final_register = default_register
+        final_station_url = default_station_url
 
-    config_dict['Station']['altitude'] = final_altitude
+    if final_register and not final_station_url:
+        raise weewx.ViolatedPrecondition("Registering the station requires "
+                                         "option 'station_url'.")
+
+    config_dict['StdRESTful']['StationRegistry']['register_this_station'] = final_register
+    if final_station_url:
+        config_dict['Station']['station_url'] = final_station_url
 
 
 def config_driver(config_dict, driver=None, no_prompt=False):
@@ -231,4 +302,3 @@ def config_driver(config_dict, driver=None, no_prompt=False):
     if driver_editor:
         # One final chance for the driver to modify other parts of the configuration
         driver_editor.modify_config(config_dict)
-
