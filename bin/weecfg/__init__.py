@@ -26,8 +26,6 @@ major_comment_block = ["",
                        "#######################################",
                        ""]
 
-DEFAULT_URL = 'http://acme.com'
-
 
 class ExtensionError(IOError):
     """Errors when installing or uninstalling an extension"""
@@ -209,152 +207,6 @@ def save(config_dict, config_path, backup=False):
 
 
 # ==============================================================================
-#              Utilities that modify ConfigObj objects
-# ==============================================================================
-
-def modify_config(config_dict, stn_info, logger, debug=False):
-    """This function is responsible for creating or modifying the driver stanza.
-
-    If a driver has a configuration editor, then use that to insert the
-    stanza for the driver in the config_dict.  If there is no configuration
-    editor, then inject a generic configuration, i.e., just the driver name
-    with a single 'driver' element that points to the driver file.
-
-    Args:
-        config_dict(configobj.ConfigObj): The configuration dictionary
-        stn_info(dict): Dictionary containing station information. Typical entries:
-            location: "My Little Town, Oregon"
-            latitude: "45.0"
-            longitude: "-122.0"
-            altitude: ["700", "foot"]
-            station_type: "Vantage"
-            lang: "en"
-            unit_system: "us"
-            register_this_station: "False"
-            driver: "weewx.drivers.vantage"
-        logger (Logger): For logging
-        debug (bool): For additional debug information
-    """
-    driver_editor = None
-    driver_name = None
-    driver_version = None
-
-    # Get the driver editor, name, and version:
-    driver = stn_info.get('driver')
-    if driver:
-        try:
-            # Look up driver info:
-            driver_editor, driver_name, driver_version = load_driver_editor(driver)
-        except Exception as e:
-            sys.exit("Driver %s failed to load: %s" % (driver, e))
-        stn_info['station_type'] = driver_name
-        if debug:
-            logger.log('Using %s version %s (%s)'
-                       % (driver_name, driver_version, driver), level=1)
-
-    # Get a driver stanza, if possible
-    stanza = None
-    if driver_name is not None:
-        if driver_editor is not None:
-            # if a previous stanza exists for this driver, grab it
-            if driver_name in config_dict:
-                orig_stanza = configobj.ConfigObj(interpolation=False)
-                orig_stanza[driver_name] = config_dict[driver_name]
-                orig_stanza_text = '\n'.join(orig_stanza.write())
-            else:
-                orig_stanza_text = None
-
-            # let the driver process the stanza or give us a new one
-            stanza_text = driver_editor.get_conf(orig_stanza_text)
-            stanza = configobj.ConfigObj(stanza_text.splitlines())
-
-            # let the driver modify other parts of the configuration
-            driver_editor.modify_config(config_dict)
-        else:
-            stanza = configobj.ConfigObj(interpolation=False)
-            stanza[driver_name] = config_dict.get(driver_name, {})
-
-    # If we have a stanza, inject it into the configuration dictionary
-    if stanza is not None and driver_name is not None:
-        # Ensure that the driver field matches the path to the actual driver
-        stanza[driver_name]['driver'] = driver
-        # Insert the stanza in the configuration dictionary:
-        config_dict[driver_name] = stanza[driver_name]
-        # Add a major comment deliminator:
-        config_dict.comments[driver_name] = major_comment_block
-        # If we have a [Station] section, move the new stanza to just after it
-        if 'Station' in config_dict:
-            reorder_sections(config_dict, driver_name, 'Station', after=True)
-            # make the stanza the station type
-            config_dict['Station']['station_type'] = driver_name
-
-    # Apply any overrides from the stn_info
-    if stn_info:
-        # Update driver stanza with any overrides from stn_info
-        if driver_name is not None and driver_name in stn_info:
-            for k in stn_info[driver_name]:
-                config_dict[driver_name][k] = stn_info[driver_name][k]
-        # Update station information with stn_info overrides
-        for p in ['location', 'latitude', 'longitude', 'altitude']:
-            if p in stn_info:
-                if debug:
-                    logger.log("Using %s for %s" % (stn_info[p], p), level=2)
-                config_dict['Station'][p] = stn_info[p]
-
-        if 'StdReport' in config_dict \
-                and 'unit_system' in stn_info \
-                and stn_info['unit_system'] != 'custom':
-            # Make sure the default unit system sits under [[Defaults]]. First, get rid of anything
-            # under [StdReport]
-            config_dict['StdReport'].pop('unit_system', None)
-            # Then add it under [[Defaults]]
-            config_dict['StdReport']['Defaults']['unit_system'] = stn_info['unit_system']
-
-        if 'register_this_station' in stn_info \
-                and 'StdRESTful' in config_dict \
-                and 'StationRegistry' in config_dict['StdRESTful']:
-            config_dict['StdRESTful']['StationRegistry']['register_this_station'] \
-                = stn_info['register_this_station']
-
-        if 'station_url' in stn_info and 'Station' in config_dict:
-            if 'station_url' in config_dict['Station']:
-                config_dict['Station']['station_url'] = stn_info['station_url']
-            else:
-                inject_station_url(config_dict, stn_info['station_url'])
-
-
-def inject_station_url(config_dict, url):
-    """Inject the option station_url into the [Station] section"""
-
-    if 'station_url' in config_dict['Station']:
-        # Already injected. Done.
-        return
-
-    # Isolate just the [Station] section. This simplifies what follows
-    station_dict = config_dict['Station']
-
-    # First search for any existing comments that mention 'station_url'
-    for scalar in station_dict.scalars:
-        for ilist, comment in enumerate(station_dict.comments[scalar]):
-            if comment.find('station_url') != -1:
-                # This deletes the (up to) three lines related to station_url that ships
-                # with the standard distribution
-                del station_dict.comments[scalar][ilist]
-                if ilist and station_dict.comments[scalar][ilist - 1].find('specify an URL') != -1:
-                    del station_dict.comments[scalar][ilist - 1]
-                if ilist > 1 and station_dict.comments[scalar][ilist - 2].strip() == '':
-                    del station_dict.comments[scalar][ilist - 2]
-
-    # Add the new station_url, plus comments
-    station_dict['station_url'] = url
-    station_dict.comments['station_url'] \
-        = ['', '    # If you have a website, you may specify an URL']
-
-    # Reorder to match the canonical ordering.
-    reorder_scalars(station_dict.scalars, 'station_url', 'rain_year_start')
-
-
-# ==============================================================================
 #              Utilities that extract from ConfigObj objects
 # ==============================================================================
 
@@ -374,59 +226,6 @@ def get_version_info(config_dict):
         minor = '0' + minor
 
     return major, minor
-
-
-def get_station_info_from_config(config_dict):
-    """Extract station info from config dictionary.
-
-    Returns:
-        A station_info structure. If a key is missing in the structure, that means no
-        information is available about it.
-    """
-    stn_info = dict()
-    if config_dict:
-        if 'Station' in config_dict:
-            if 'location' in config_dict['Station']:
-                stn_info['location'] \
-                    = weeutil.weeutil.list_as_string(config_dict['Station']['location'])
-            if 'latitude' in config_dict['Station']:
-                stn_info['latitude'] = config_dict['Station']['latitude']
-            if 'longitude' in config_dict['Station']:
-                stn_info['longitude'] = config_dict['Station']['longitude']
-            if 'altitude' in config_dict['Station']:
-                stn_info['altitude'] = config_dict['Station']['altitude']
-            if 'station_type' in config_dict['Station']:
-                stn_info['station_type'] = config_dict['Station']['station_type']
-                if stn_info['station_type'] in config_dict:
-                    stn_info['driver'] = config_dict[stn_info['station_type']]['driver']
-
-        try:
-            stn_info['lang'] = config_dict['StdReport']['lang']
-        except KeyError:
-            try:
-                stn_info['lang'] = config_dict['StdReport']['Defaults']['lang']
-            except KeyError:
-                pass
-        try:
-            # Look for option 'unit_system' in [StdReport]
-            stn_info['unit_system'] = config_dict['StdReport']['unit_system']
-        except KeyError:
-            try:
-                stn_info['unit_system'] = config_dict['StdReport']['Defaults']['unit_system']
-            except KeyError:
-                # Not there. It's a custom system
-                stn_info['unit_system'] = 'custom'
-        try:
-            stn_info['register_this_station'] \
-                = config_dict['StdRESTful']['StationRegistry']['register_this_station']
-        except KeyError:
-            pass
-        try:
-            stn_info['station_url'] = config_dict['Station']['station_url']
-        except KeyError:
-            pass
-
-    return stn_info
 
 
 # ==============================================================================
@@ -485,7 +284,6 @@ def remove_and_prune(a_dict, b_dict):
 # ==============================================================================
 #                Utilities that work on drivers
 # ==============================================================================
-
 
 
 def get_all_driver_infos():
@@ -580,7 +378,7 @@ def load_driver_editor(driver_module_name):
         loader_function = getattr(driver_module, 'confeditor_loader')
         # Call it to get the actual editor
         editor = loader_function()
-    driver_name = getattr(driver_module,'DRIVER_NAME', None)
+    driver_name = getattr(driver_module, 'DRIVER_NAME', None)
     driver_version = getattr(driver_module, 'DRIVER_VERSION', 'undefined')
     return editor, driver_name, driver_version
 
@@ -588,87 +386,6 @@ def load_driver_editor(driver_module_name):
 # ==============================================================================
 #                Utilities that seek info from the command line
 # ==============================================================================
-
-def prompt_for_info(location=None, latitude='0.000', longitude='0.000',
-                    altitude=['0', 'meter'], unit_system='metricwx',
-                    register_this_station='false',
-                    station_url=DEFAULT_URL, **kwargs):
-    stn_info = {}
-    #
-    #  Description
-    #
-    print("Enter a brief description of the station, such as its location.  For example:")
-    print("Santa's Workshop, North Pole")
-    stn_info['location'] = prompt_with_options("description", location)
-
-    #
-    #  Altitude
-    #
-    print("\nSpecify altitude, with units 'foot' or 'meter'.  For example:")
-    print("35, foot")
-    print("12, meter")
-    if altitude:
-        msg = "altitude [%s]: " % weeutil.weeutil.list_as_string(altitude)
-    else:
-        msg = "altitude: "
-    alt = None
-    while alt is None:
-        ans = input(msg).strip()
-        if ans:
-            parts = ans.split(',')
-            if len(parts) == 2:
-                try:
-                    # Test whether the first token can be converted into a
-                    # number. If not, an exception will be raised.
-                    float(parts[0])
-                    if parts[1].strip() in ['foot', 'meter']:
-                        alt = [parts[0].strip(), parts[1].strip()]
-                except (ValueError, TypeError):
-                    pass
-        elif altitude:
-            alt = altitude
-
-        if not alt:
-            print("Unrecognized response. Try again.")
-    stn_info['altitude'] = alt
-
-    #
-    # Latitude & Longitude
-    #
-    print("\nSpecify latitude in decimal degrees, negative for south.")
-    stn_info['latitude'] = prompt_with_limits("latitude", latitude, -90, 90)
-    print("Specify longitude in decimal degrees, negative for west.")
-    stn_info['longitude'] = prompt_with_limits("longitude", longitude, -180, 180)
-
-    #
-    # Include in station registry?
-    #
-    default = 'y' if to_bool(register_this_station) else 'n'
-    print("\nYou can register your station on weewx.com, where it will be included")
-    print("in a map. You will need a unique URL to identify your station (such as a")
-    print("website, or WeatherUnderground link).")
-    registry = prompt_with_options("Include station in the station registry (y/n)?",
-                                   default,
-                                   ['y', 'n'])
-    if registry.lower() == 'y':
-        stn_info['register_this_station'] = 'true'
-        while True:
-            station_url = prompt_with_options("Unique URL:", station_url)
-            if station_url == DEFAULT_URL:
-                print("Unique please!")
-            else:
-                stn_info['station_url'] = station_url
-                break
-    else:
-        stn_info['register_this_station'] = 'false'
-
-    # Get what unit system the user wants
-    options = ['us', 'metric', 'metricwx']
-    print("\nIndicate the preferred units for display: %s" % options)
-    uni = prompt_with_options("unit system", unit_system, options)
-    stn_info['unit_system'] = uni
-
-    return stn_info
 
 
 def prompt_for_driver(dflt_driver=None):
@@ -962,4 +679,3 @@ def get_extension_installer(extension_installer_dir):
         sys.path = old_path
 
     return install_module.__file__, installer
-
