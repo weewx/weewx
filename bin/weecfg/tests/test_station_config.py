@@ -66,6 +66,11 @@ version = 4.10.0a1
 [StdRESTful]
     [[StationRegistry]]
         register_this_station = false
+        
+[StdReport]
+    [[Defaults]]
+        lang = en
+        unit_system = us
 """
 
 CONFIG_DICT = configobj.ConfigObj(io.StringIO(CONFIG_DICT_STR))
@@ -208,6 +213,35 @@ class RegistryConfigTest(unittest.TestCase):
             weecfg.station_config.config_registry(self.config_dict)
         self.assertTrue(self.config_dict['StdRESTful']['StationRegistry']['register_this_station'])
         self.assertEqual(self.config_dict['Station']['station_url'], STATION_URL)
+
+
+class UnitsConfigTest(unittest.TestCase):
+
+    def setUp(self):
+        self.config_dict = weeutil.config.deep_copy(CONFIG_DICT)
+
+    def test_default_units(self):
+        weecfg.station_config.config_units(self.config_dict, no_prompt=True)
+        self.assertEqual(self.config_dict['StdReport']['Defaults']['unit_system'], 'us')
+
+    def test_custom_units(self):
+        del self.config_dict['StdReport']['Defaults']['unit_system']
+        weecfg.station_config.config_units(self.config_dict, no_prompt=True)
+        self.assertNotIn('unit_system', self.config_dict['StdReport']['Defaults'])
+
+    def test_args_units(self):
+        weecfg.station_config.config_units(self.config_dict, units='metricwx', no_prompt=True)
+        self.assertEqual(self.config_dict['StdReport']['Defaults']['unit_system'], 'metricwx')
+
+    @suppress_stdout
+    def test_prompt_units(self):
+        with patch('weecfg.input', side_effect=['metricwx']):
+            weecfg.station_config.config_units(self.config_dict)
+        self.assertEqual(self.config_dict['StdReport']['Defaults']['unit_system'], 'metricwx')
+        # Do it again, but with a wrong unit system name. It should ask again.
+        with patch('weecfg.input', side_effect=['metricwz', 'metricwx']):
+            weecfg.station_config.config_units(self.config_dict)
+        self.assertEqual(self.config_dict['StdReport']['Defaults']['unit_system'], 'metricwx')
 
 
 class DriverConfigTest(unittest.TestCase):

@@ -59,8 +59,8 @@ def config_config(config_dict, driver=None,
     """Modify a configuration file."""
     config_altitude(config_dict, altitude=altitude, no_prompt=no_prompt)
     config_latlon(config_dict, latitude=latitude, longitude=longitude, no_prompt=no_prompt)
-    # config_registry(config_dict, register=register, no_prompt=no_prompt)
-    # config_units(config_dict, unit_system=units, no_prompt=noprompt)
+    config_registry(config_dict, register=register, no_prompt=no_prompt)
+    config_units(config_dict, unit_system=units, no_prompt=noprompt)
     # config_lang(config_dict, lang=lang, no_prompt=no_prompt)
     config_driver(config_dict, driver=driver, no_prompt=no_prompt)
 
@@ -222,6 +222,38 @@ def config_registry(config_dict, register=None, station_url=None, no_prompt=Fals
     config_dict['StdRESTful']['StationRegistry']['register_this_station'] = final_register
     if final_station_url:
         config_dict['Station']['station_url'] = final_station_url
+
+
+def config_units(config_dict, units=None, no_prompt=False):
+    """Determine the unit system to use"""
+
+    try:
+        # Look for option 'unit_system' in [StdReport]
+        default_units = config_dict['StdReport']['unit_system']
+    except KeyError:
+        try:
+            default_units = config_dict['StdReport']['Defaults']['unit_system']
+        except KeyError:
+            # Not there. It's a custom system
+            default_units = None
+
+    if units:
+        final_units = units
+    elif not no_prompt:
+        # Get what unit system the user wants
+        options = ['us', 'metric', 'metricwx']
+        print("\nIndicate the preferred units for display: %s" % options)
+        uni = weecfg.prompt_with_options("unit system", default_units, options)
+        final_units = uni
+    else:
+        final_units = default_units
+
+    if 'StdReport' in config_dict and final_units:
+        # Make sure the default unit system sits under [[Defaults]]. First, get rid of anything
+        # under [StdReport]
+        config_dict['StdReport'].pop('unit_system', None)
+        # Then add it under [[Defaults]]
+        config_dict['StdReport']['Defaults']['unit_system'] = final_units
 
 
 def config_driver(config_dict, driver=None, no_prompt=False):
