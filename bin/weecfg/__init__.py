@@ -206,6 +206,36 @@ def save(config_dict, config_path, backup=False):
     return backup_path
 
 
+def inject_station_url(config_dict, url):
+    """Inject the option station_url into the [Station] section"""
+
+    if 'station_url' in config_dict['Station']:
+        # Already injected. Just set the value
+        config_dict['Station']['station_url'] = url
+        return
+
+    # Isolate just the [Station] section. This simplifies what follows
+    station_dict = config_dict['Station']
+
+    # In the configuration file that ships with WeeWX, station_url is commented out, so its
+    # comments are part of the following option, which is 'rain_year_start'. So, just set
+    # the comments for 'rain_year_start' to something sensible, which will make the 'station_url'
+    # comment go away.
+    station_dict.comments['rain_year_start'] = [
+        "",
+        "The start of the rain year (1=January; 10=October, etc.). This is",
+        "downloaded from the station if the hardware supports it."
+    ]
+
+    # Add the new station_url, plus its comments
+    station_dict['station_url'] = url
+    station_dict.comments['station_url'] \
+        = ['', 'If you have a website, you may specify an URL']
+
+    # Reorder to match the canonical ordering.
+    reorder_scalars(station_dict.scalars, 'station_url', 'rain_year_start')
+
+
 # ==============================================================================
 #              Utilities that extract from ConfigObj objects
 # ==============================================================================

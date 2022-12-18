@@ -198,12 +198,14 @@ def config_registry(config_dict, register=None, station_url=None, no_prompt=Fals
         print("in a map. You will need a unique URL to identify your station (such as a")
         print("website, or WeatherUnderground link).")
         ans = weecfg.prompt_with_options("Include station in the station registry (y/n)?",
-                                         default_register,
+                                         'y' if default_register else 'n',
                                          ['y', 'n'])
         final_register = to_bool(ans)
         if final_register:
             while True:
-                url = weecfg.prompt_with_options("Unique URL:", default_station_url)
+                print("\nNow give a unique URL for your station. A Weather Underground ")
+                print("URL such as https://www.wunderground.com/dashboard/pws/KORPORT12 will do.")
+                url = weecfg.prompt_with_options("Unique URL", default_station_url)
                 if url:
                     if url.startswith('http://www.example.com'):
                         print("Unique please!")
@@ -220,7 +222,7 @@ def config_registry(config_dict, register=None, station_url=None, no_prompt=Fals
 
     config_dict['StdRESTful']['StationRegistry']['register_this_station'] = final_register
     if final_station_url:
-        config_dict['Station']['station_url'] = final_station_url
+        weecfg.inject_station_url(config_dict, final_station_url)
 
 
 def config_units(config_dict, unit_system=None, no_prompt=False):
