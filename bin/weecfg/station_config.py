@@ -53,15 +53,14 @@ def config_station(config_path, *args, **kwargs):
     weecfg.save_with_backup(config_dict, config_path)
 
 
-def config_config(config_dict, driver=None,
-                  latitude=None, longitude=None, altitude=None,
+def config_config(config_dict, altitude=None, latitude=None, longitude=None,
+                  register=None, unit_system=None, driver=None,
                   no_prompt=False):
     """Modify a configuration file."""
     config_altitude(config_dict, altitude=altitude, no_prompt=no_prompt)
     config_latlon(config_dict, latitude=latitude, longitude=longitude, no_prompt=no_prompt)
     config_registry(config_dict, register=register, no_prompt=no_prompt)
-    config_units(config_dict, unit_system=units, no_prompt=noprompt)
-    # config_lang(config_dict, lang=lang, no_prompt=no_prompt)
+    config_units(config_dict, unit_system=unit_system, no_prompt=no_prompt)
     config_driver(config_dict, driver=driver, no_prompt=no_prompt)
 
 
@@ -224,36 +223,36 @@ def config_registry(config_dict, register=None, station_url=None, no_prompt=Fals
         config_dict['Station']['station_url'] = final_station_url
 
 
-def config_units(config_dict, units=None, no_prompt=False):
+def config_units(config_dict, unit_system=None, no_prompt=False):
     """Determine the unit system to use"""
 
+    default_unit_system = None
     try:
         # Look for option 'unit_system' in [StdReport]
-        default_units = config_dict['StdReport']['unit_system']
+        default_unit_system = config_dict['StdReport']['unit_system']
     except KeyError:
         try:
-            default_units = config_dict['StdReport']['Defaults']['unit_system']
+            default_unit_system = config_dict['StdReport']['Defaults']['unit_system']
         except KeyError:
-            # Not there. It's a custom system
-            default_units = None
+            # Not there. It's a custom unit system
+            pass
 
-    if units:
-        final_units = units
+    if unit_system:
+        final_unit_system = unit_system
     elif not no_prompt:
         # Get what unit system the user wants
-        options = ['us', 'metric', 'metricwx']
+        options = ['us', 'metricwx', 'metric']
         print("\nIndicate the preferred units for display: %s" % options)
-        uni = weecfg.prompt_with_options("unit system", default_units, options)
-        final_units = uni
+        final_unit_system = weecfg.prompt_with_options("unit system", default_unit_system, options)
     else:
-        final_units = default_units
+        final_unit_system = default_unit_system
 
-    if 'StdReport' in config_dict and final_units:
+    if 'StdReport' in config_dict and final_unit_system:
         # Make sure the default unit system sits under [[Defaults]]. First, get rid of anything
         # under [StdReport]
         config_dict['StdReport'].pop('unit_system', None)
         # Then add it under [[Defaults]]
-        config_dict['StdReport']['Defaults']['unit_system'] = final_units
+        config_dict['StdReport']['Defaults']['unit_system'] = final_unit_system
 
 
 def config_driver(config_dict, driver=None, no_prompt=False):

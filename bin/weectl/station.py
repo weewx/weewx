@@ -15,6 +15,7 @@ station_create_usage = """weectl station create [--config=CONFIG-PATH]
                              [--altitude=ALTITUDE,{foot|meter}]
                              [--latitude=LATITUDE] [--longitude=LONGITUDE]
                              [--register={y,n} [--station-url=STATION_URL]]
+                             [--units={us,metricwx,metric}]
                              [--html-root=HTML_ROOT] [--skin-root=SKIN_ROOT]
 """
 station_reconfigure_usage = "weectl station reconfigure [--config=CONFIG-PATH] [--driver=DRIVER]"
@@ -54,6 +55,9 @@ def add_subparser(subparsers,
                                        help="Register this station in the weewx registry?")
     create_station_parser.add_argument('--station-url',
                                        help="Unique URL to be used if registering the station.")
+    create_station_parser.add_argument('--units', choices=['us', 'metricwx', 'metric'],
+                                       dest='unit_system',
+                                       help="Set display units to us, metricwx, or metric.")
     create_station_parser.add_argument('--html_root',
                                        default='public_html',
                                        help='Set HTML_ROOT, relative to WEEWX_ROOT. '
@@ -86,10 +90,12 @@ def add_subparser(subparsers,
 def create_station(namespace):
     try:
         weecfg.station_config.create_station(config_path=namespace.config,
-                                             driver=namespace.driver,
+                                             altitude=namespace.altitude,
                                              latitude=namespace.latitude,
                                              longitude=namespace.longitude,
-                                             altitude=namespace.altitude,
+                                             register=namespace.register,
+                                             unit_system=namespace.unit_system,
+                                             driver=namespace.driver,
                                              no_prompt=namespace.no_prompt)
     except weewx.ViolatedPrecondition as e:
         sys.exit(e)

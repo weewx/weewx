@@ -63,6 +63,10 @@ version = 4.10.0a1
     # intend to register your station.
     #station_url = http://www.example.com
 
+    # The start of the rain year (1=January; 10=October, etc.). This is
+    # downloaded from the station if the hardware supports it.
+    rain_year_start = 1
+
 [StdRESTful]
     [[StationRegistry]]
         register_this_station = false
@@ -230,7 +234,7 @@ class UnitsConfigTest(unittest.TestCase):
         self.assertNotIn('unit_system', self.config_dict['StdReport']['Defaults'])
 
     def test_args_units(self):
-        weecfg.station_config.config_units(self.config_dict, units='metricwx', no_prompt=True)
+        weecfg.station_config.config_units(self.config_dict, unit_system='metricwx', no_prompt=True)
         self.assertEqual(self.config_dict['StdReport']['Defaults']['unit_system'], 'metricwx')
 
     @suppress_stdout

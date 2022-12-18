@@ -7,16 +7,12 @@ Applications need to be converted into poetry scripts.
 ## Configuration related
 Implement configuration for location.
 
-Implement configuration for language.
+Check for validity of station_url.
 
-Implement configuration for unit system.
+Put station_url in its proper spot (resurrect "inject_station_url())
 
-Implement configuration for station registry.
 
 ## Obsolete
-Function `prompt_for_info()`, and all other functions that manipulation `stn_info` go away.
-
-Tests for `prompt_for_info()` go away.
 
 Make sure distutil isn't used anywhere. E.g., `distutils.copytree()`.
 
