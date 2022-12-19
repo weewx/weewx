@@ -48,28 +48,30 @@ should only have to implement a few functions. In particular,
 
  - post_request(self, request, data). This function takes a urllib.request.Request object
    and is responsible for performing the HTTP GET or POST. The default version
-   simply uses urllib.request.urlopen(request) and returns the result. If the post
-   could raise an unusual exception, override this function and catch the
+   simply uses urllib.request.urlopen(request) and returns the result. If the
+   post could raise an unusual exception, override this function and catch the
    exception. See the WOWThread implementation for an example.
    
- - check_response(self, response). After an HTTP request gets posted, the webserver sends
-   back a "response." This response may contain clues as to whether the post
-   worked.  By overriding check_response() you can look for these clues. For
-   example, the station registry checks all lines in the response, looking for
-   any that start with the string "FAIL". If it finds one, it raises a
-   FailedPost exception, signaling that the post did not work.
+ - check_response(self, response). After an HTTP request gets posted, the
+   webserver sends back a "response." This response may contain clues as to
+   whether the post worked.  For example, a request might succeed, but the
+   actual posting of data might fail, with the reason indicated in the
+   response.  The uploader can then take appropriate action, such as raising
+   a FailedPost exception, which results in logging the failure but not
+   retrying the post.  See the StationRegistry uploader as an example.
    
-In unusual cases, you might also have to implement the following:
+   
+In some cases, you might also have to implement the following:
   
  - get_request(self, url). The default version of this function creates
    an urllib.request.Request object from the url, adds a 'User-Agent' header,
    then returns it. You may need to override this function if you need to add
    other headers, such as "Authorization" header.
 
- - get_post_body(self, record). Override this function if you want to do an HTTP
-   POST (instead of GET). It should return a tuple. First element is the body
-   of the POST, the second element is the type of the body. An example would
-   be (json.dumps({'city' : 'Sacramento'}), 'application/json').
+ - get_post_body(self, record). Override this function if you want to do an
+   HTTP POST (instead of GET). It should return a tuple. First element is the
+   body of the POST, the second element is the type of the body. An example
+   would be (json.dumps({'city' : 'Sacramento'}), 'application/json').
 
  - process_record(self, record, dbmanager). The default version is designed
    to handle HTTP GET and POST. However, if your uploader uses some other
@@ -1558,9 +1560,14 @@ class StationRegistryThread(RESTThread):
         return _url
 
     def check_response(self, response):
-        """Check the response from a Station Registry post."""
+        """
+        Check the response from a Station Registry post.  The server will
+        reply with a single line that starts with OK or FAIL.  If a post fails
+        at this point, it is probably due to a configuration problem, not
+        communications, so retrying probably not help.  So raise a FailedPost
+        exception, which will result in logging the failure without retrying.
+        """
         for line in response:
-            # the server replies to a bad post with a line starting with "FAIL"
             if line.startswith(b'FAIL'):
                 raise FailedPost(line)
 
