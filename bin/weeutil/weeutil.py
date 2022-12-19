@@ -1800,17 +1800,19 @@ def to_sorted_string(rec, simple_sort=False):
         return ", ".join(sorted_dict)
 
 
-def y_or_n(msg, noprompt=False):
+def y_or_n(msg, noprompt=False, default=None):
     """Prompt and look for a 'y' or 'n' response"""
 
-    # If noprompt is truthy, always return 'y'
+    # If noprompt is truthy, return the default
     if noprompt:
-        return 'y'
+        return 'y' if default is None else default
 
-    ans = None
-    while ans not in ['y', 'n']:
-        ans = input(msg)
-    return ans
+    while True:
+        ans = input(msg).strip().lower()
+        if not ans and default is not None:
+            return default
+        elif ans in ('y', 'n'):
+            return ans
 
 
 def deep_copy_path(path, dest_dir):

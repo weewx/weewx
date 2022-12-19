@@ -201,20 +201,23 @@ class RegistryConfigTest(unittest.TestCase):
 
     @suppress_stdout
     def test_prompt_register(self):
-        with patch('weecfg.input', side_effect=['y', STATION_URL]):
-            weecfg.station_config.config_registry(self.config_dict)
+        with patch('weeutil.weeutil.input', side_effect=['y']):
+            with patch('weecfg.input', side_effect=[STATION_URL]):
+                weecfg.station_config.config_registry(self.config_dict)
         self.assertTrue(self.config_dict['StdRESTful']['StationRegistry']['register_this_station'])
         self.assertEqual(self.config_dict['Station']['station_url'], STATION_URL)
 
         # Try again, but without specifying an URL. Should ask twice.
-        with patch('weecfg.input', side_effect=['y', '', STATION_URL]):
-            weecfg.station_config.config_registry(self.config_dict)
+        with patch('weeutil.weeutil.input', side_effect=['y']):
+            with patch('weecfg.input', side_effect=["", STATION_URL]):
+                weecfg.station_config.config_registry(self.config_dict)
         self.assertTrue(self.config_dict['StdRESTful']['StationRegistry']['register_this_station'])
         self.assertEqual(self.config_dict['Station']['station_url'], STATION_URL)
 
         # Now with a bogus URL
-        with patch('weecfg.input', side_effect=['y', 'http://www.example.com', STATION_URL]):
-            weecfg.station_config.config_registry(self.config_dict)
+        with patch('weeutil.weeutil.input', side_effect=['y']):
+            with patch('weecfg.input', side_effect=['http://www.example.com', STATION_URL]):
+                weecfg.station_config.config_registry(self.config_dict)
         self.assertTrue(self.config_dict['StdRESTful']['StationRegistry']['register_this_station'])
         self.assertEqual(self.config_dict['Station']['station_url'], STATION_URL)
 

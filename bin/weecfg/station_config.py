@@ -100,7 +100,11 @@ def config_altitude(config_dict, altitude=None, no_prompt=False):
         while final_altitude is None:
             ans = input(msg).strip()
             if ans:
-                value, unit = ans.split(',')
+                try:
+                    value, unit = ans.split(',')
+                except ValueError:
+                    print("You must specify a value and unit. For example: 200, meter")
+                    continue
                 try:
                     # Test whether the first token can be converted into a
                     # number. If not, an exception will be raised.
@@ -195,11 +199,10 @@ def config_registry(config_dict, register=None, station_url=None, no_prompt=Fals
         final_station_url = station_url or default_station_url
     elif not no_prompt:
         print("\nYou can register your station on weewx.com, where it will be included")
-        print("in a map. You will need a unique URL to identify your station (such as a")
-        print("website, or WeatherUnderground link).")
-        ans = weecfg.prompt_with_options("Include station in the station registry (y/n)?",
-                                         'y' if default_register else 'n',
-                                         ['y', 'n'])
+        print("in a map. If you choose to do so, you will also need a unique URL to identify ")
+        print("your station (such as a website, or a WeatherUnderground link).")
+        ans = weeutil.weeutil.y_or_n("Include station in the station registry [n]? ",
+                                     default = default_register)
         final_register = to_bool(ans)
         if final_register:
             while True:
@@ -221,7 +224,7 @@ def config_registry(config_dict, register=None, station_url=None, no_prompt=Fals
                                          "option 'station_url'.")
 
     config_dict['StdRESTful']['StationRegistry']['register_this_station'] = final_register
-    if final_station_url:
+    if final_register and final_station_url:
         weecfg.inject_station_url(config_dict, final_station_url)
 
 
@@ -242,10 +245,15 @@ def config_units(config_dict, unit_system=None, no_prompt=False):
     if unit_system:
         final_unit_system = unit_system
     elif not no_prompt:
+        print("\nChoose a unit system for your reports. Possible choices are:")
+        print("  'us' (ºF, inHg, in, mph)")
+        print("  'metricwx' (ºC, mbar, mm, m/s)")
+        print("  'metric' (ºC, mbar, cm, km/h)")
+        print("Later, you can modify your choice, or choose a combination of units.")
         # Get what unit system the user wants
         options = ['us', 'metricwx', 'metric']
-        print("\nIndicate the preferred units for display: %s" % options)
-        final_unit_system = weecfg.prompt_with_options("unit system", default_unit_system, options)
+        final_unit_system = weecfg.prompt_with_options(f"Your choice",
+                                                       default_unit_system, options)
     else:
         final_unit_system = default_unit_system
 
