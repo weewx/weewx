@@ -11,7 +11,7 @@ from . import common_parser
 import weecfg.station_config
 
 station_create_usage = """weectl station create [--config=CONFIG-PATH] 
-                             [--driver=DRIVER] [--name=NAME]
+                             [--driver=DRIVER]
                              [--altitude=ALTITUDE,{foot|meter}]
                              [--latitude=LATITUDE] [--longitude=LONGITUDE]
                              [--register={y,n} [--station-url=STATION_URL]]
@@ -44,9 +44,6 @@ def add_subparser(subparsers,
                                                      help='Create a station config file')
     create_station_parser.add_argument('--driver',
                                        help="Driver to use. E.g., --driver=weewx.drivers.fousb")
-    create_station_parser.add_argument('--name',
-                                       help="The stanza name to use for the driver. If not given, "
-                                            "it will supplied by the driver.")
     create_station_parser.add_argument('--altitude', metavar="ALTITUDE,(foot|meter)",
                                        help="The station altitude in either feet or meters."
                                             " For example, '750,foot' or '320,meter'")
@@ -99,7 +96,6 @@ def create_station(namespace):
                                              register=namespace.register,
                                              unit_system=namespace.unit_system,
                                              driver=namespace.driver,
-                                             name=namespace.name,
                                              no_prompt=namespace.no_prompt)
     except weewx.ViolatedPrecondition as e:
         sys.exit(e)

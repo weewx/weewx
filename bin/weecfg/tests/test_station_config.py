@@ -267,25 +267,21 @@ class DriverConfigTest(unittest.TestCase):
         self.assertEqual(self.config_dict['Station']['station_type'], 'Vantage')
         self.assertEqual(self.config_dict['Vantage']['driver'], 'weewx.drivers.vantage')
 
-    def test_arg_name_config_driver(self):
-        """Test giving a stanza name"""
-        weecfg.station_config.config_driver(self.config_dict,
-                                            driver='weewx.drivers.vantage', name='MyDevice',
-                                            no_prompt=True)
-        self.assertEqual(self.config_dict['Station']['station_type'], 'MyDevice')
-        self.assertEqual(self.config_dict['MyDevice']['driver'], 'weewx.drivers.vantage')
-
     def test_arg_noeditor_config_driver(self):
         # Test a driver that does not have a configurator editor. Because all WeeWX drivers do, we
         # have to disable one of them.
         import weewx.drivers.vantage
         weewx.drivers.vantage.hold = weewx.drivers.vantage.confeditor_loader
         del weewx.drivers.vantage.confeditor_loader
+        # At this point, there is no configuration loader, so a minimal version of [Vantage]
+        # should be supplied.
         weecfg.station_config.config_driver(self.config_dict,
-                                            driver='weewx.drivers.vantage', name='MyDevice',
+                                            driver='weewx.drivers.vantage',
                                             no_prompt=True)
-        self.assertEqual(self.config_dict['Station']['station_type'], 'MyDevice')
-        self.assertEqual(self.config_dict['MyDevice']['driver'], 'weewx.drivers.vantage')
+        self.assertEqual(self.config_dict['Station']['station_type'], 'Vantage')
+        self.assertEqual(self.config_dict['Vantage']['driver'], 'weewx.drivers.vantage')
+        # The rest of the [Vantage] stanza should be missing. Try a key.
+        self.assertNotIn('port', self.config_dict['Vantage'])
         # Restore the editor:
         weewx.drivers.vantage.confeditor_loader = weewx.drivers.vantage.hold
 
