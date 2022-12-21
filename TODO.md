@@ -9,8 +9,6 @@ Implement configuration for location.
 
 Check for validity of station_url.
 
-Put station_url in its proper spot (resurrect "inject_station_url())
-
 
 ## Obsolete
 

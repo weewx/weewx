@@ -459,7 +459,7 @@ def prompt_for_driver(dflt_driver=None):
     return keys[idx]
 
 
-def prompt_for_driver_settings(driver, config_dict):
+def prompt_for_driver_settings(driver, stanza_dict):
     """Let the driver prompt for any required settings.  If the driver does
     not define a method for prompting, return an empty dictionary."""
     settings = configobj.ConfigObj(interpolation=False)
@@ -467,8 +467,8 @@ def prompt_for_driver_settings(driver, config_dict):
         driver_module = importlib.import_module(driver)
         loader_function = getattr(driver_module, 'confeditor_loader')
         editor = loader_function()
-        editor.existing_options = config_dict.get(driver_module.DRIVER_NAME, {})
-        settings[driver_module.DRIVER_NAME] = editor.prompt_for_settings()
+        editor.existing_options = stanza_dict
+        settings = editor.prompt_for_settings()
     except AttributeError:
         pass
     return settings

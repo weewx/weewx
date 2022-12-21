@@ -267,6 +267,28 @@ class DriverConfigTest(unittest.TestCase):
         self.assertEqual(self.config_dict['Station']['station_type'], 'Vantage')
         self.assertEqual(self.config_dict['Vantage']['driver'], 'weewx.drivers.vantage')
 
+    def test_arg_name_config_driver(self):
+        """Test giving a stanza name"""
+        weecfg.station_config.config_driver(self.config_dict,
+                                            driver='weewx.drivers.vantage', name='MyDevice',
+                                            no_prompt=True)
+        self.assertEqual(self.config_dict['Station']['station_type'], 'MyDevice')
+        self.assertEqual(self.config_dict['MyDevice']['driver'], 'weewx.drivers.vantage')
+
+    def test_arg_noeditor_config_driver(self):
+        # Test a driver that does not have a configurator editor. Because all WeeWX drivers do, we
+        # have to disable one of them.
+        import weewx.drivers.vantage
+        weewx.drivers.vantage.hold = weewx.drivers.vantage.confeditor_loader
+        del weewx.drivers.vantage.confeditor_loader
+        weecfg.station_config.config_driver(self.config_dict,
+                                            driver='weewx.drivers.vantage', name='MyDevice',
+                                            no_prompt=True)
+        self.assertEqual(self.config_dict['Station']['station_type'], 'MyDevice')
+        self.assertEqual(self.config_dict['MyDevice']['driver'], 'weewx.drivers.vantage')
+        # Restore the editor:
+        weewx.drivers.vantage.confeditor_loader = weewx.drivers.vantage.hold
+
     @suppress_stdout
     def test_prompt_config_driver(self):
         with patch('weecfg.input', side_effect=['6', '', '/dev/ttyS0']):
