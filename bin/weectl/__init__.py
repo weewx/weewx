@@ -9,7 +9,3 @@ import argparse
 
 # This is a common parser used as a parent for the other parsers.
 common_parser = argparse.ArgumentParser(description="Common parser", add_help=False)
-common_parser.add_argument('--config',
-                           metavar="CONFIG-PATH",
-                           help="Path to configuration file. If not given, a sensible path will "
-                                "be inferred.")

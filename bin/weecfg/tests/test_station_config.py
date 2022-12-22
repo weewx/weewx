@@ -90,11 +90,35 @@ def suppress_stdout(func):
 
     return wrapper
 
-
-class AltitudeConfigTest(unittest.TestCase):
+class CommonConfigTest(unittest.TestCase):
 
     def setUp(self):
         self.config_dict = weeutil.config.deep_copy(CONFIG_DICT)
+
+
+class LocationConfigTest(CommonConfigTest):
+
+    def test_default_config_location(self):
+        weecfg.station_config.config_location(self.config_dict, no_prompt=True)
+        self.assertEqual(self.config_dict['Station']['location'], "Test station")
+        del self.config_dict['Station']['location']
+        weecfg.station_config.config_location(self.config_dict, no_prompt=True)
+        self.assertEqual(self.config_dict['Station']['location'], "WeeWX")
+
+    def test_arg_config_location(self):
+        weecfg.station_config.config_location(self.config_dict, location='foo', no_prompt=True)
+        self.assertEqual(self.config_dict['Station']['location'], "foo")
+
+    @suppress_stdout
+    def test_prompt_config_location(self):
+        with patch('weecfg.station_config.input', side_effect=['']):
+            weecfg.station_config.config_location(self.config_dict)
+            self.assertEqual(self.config_dict['Station']['location'], "Test station")
+        with patch('weecfg.station_config.input', side_effect=['bar']):
+            weecfg.station_config.config_location(self.config_dict)
+            self.assertEqual(self.config_dict['Station']['location'], "bar")
+
+class AltitudeConfigTest(CommonConfigTest):
 
     def test_default_config_altitude(self):
         weecfg.station_config.config_altitude(self.config_dict, no_prompt=True)
@@ -138,10 +162,7 @@ class AltitudeConfigTest(unittest.TestCase):
             self.assertEqual(self.config_dict['Station']['altitude'], ["110", "meter"])
 
 
-class LatLonConfigTest(unittest.TestCase):
-
-    def setUp(self):
-        self.config_dict = weeutil.config.deep_copy(CONFIG_DICT)
+class LatLonConfigTest(CommonConfigTest):
 
     def test_default_config_latlon(self):
         # Use the default as supplied by CONFIG_DICT
@@ -173,10 +194,7 @@ class LatLonConfigTest(unittest.TestCase):
             self.assertEqual(float(self.config_dict['Station']['longitude']), -41.0)
 
 
-class RegistryConfigTest(unittest.TestCase):
-
-    def setUp(self):
-        self.config_dict = weeutil.config.deep_copy(CONFIG_DICT)
+class RegistryConfigTest(CommonConfigTest):
 
     def test_default_register(self):
         weecfg.station_config.config_registry(self.config_dict, no_prompt=True)
@@ -222,10 +240,7 @@ class RegistryConfigTest(unittest.TestCase):
         self.assertEqual(self.config_dict['Station']['station_url'], STATION_URL)
 
 
-class UnitsConfigTest(unittest.TestCase):
-
-    def setUp(self):
-        self.config_dict = weeutil.config.deep_copy(CONFIG_DICT)
+class UnitsConfigTest(CommonConfigTest):
 
     def test_default_units(self):
         weecfg.station_config.config_units(self.config_dict, no_prompt=True)
@@ -251,10 +266,7 @@ class UnitsConfigTest(unittest.TestCase):
         self.assertEqual(self.config_dict['StdReport']['Defaults']['unit_system'], 'metricwx')
 
 
-class DriverConfigTest(unittest.TestCase):
-
-    def setUp(self):
-        self.config_dict = weeutil.config.deep_copy(CONFIG_DICT)
+class DriverConfigTest(CommonConfigTest):
 
     def test_default_config_driver(self):
         weecfg.station_config.config_driver(self.config_dict, no_prompt=True)
