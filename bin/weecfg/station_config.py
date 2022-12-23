@@ -17,7 +17,7 @@ import weeutil.config
 import weeutil.weeutil
 import weewx
 from weectl import default_config_path
-from weeutil.weeutil import to_float, to_bool
+from weeutil.weeutil import to_float, to_bool, bcolors
 
 log = logging.getLogger(__name__)
 
@@ -32,7 +32,8 @@ def create_station(config_path, *args, **kwargs):
 
     if not config_path:
         config_path = default_config_path
-        print(f"The configuration file will be created at \033[1m{config_path}\033[0m.")
+        print(f"The configuration file will be created "
+              f"at {bcolors.BOLD}{config_path}{bcolors.ENDC}.")
 
     # Make sure there is not already a configuration file at the designated location.
     if os.path.exists(config_path):
@@ -275,9 +276,9 @@ def config_units(config_dict, unit_system=None, no_prompt=False):
         final_unit_system = unit_system
     elif not no_prompt:
         print("\nChoose a unit system for your reports. Possible choices are:")
-        print("  'us' (ºF, inHg, in, mph)")
-        print("  'metricwx' (ºC, mbar, mm, m/s)")
-        print("  'metric' (ºC, mbar, cm, km/h)")
+        print(f"  '{bcolors.BOLD}us{bcolors.ENDC}' (ºF, inHg, in, mph)")
+        print(f"  '{bcolors.BOLD}metricwx{bcolors.ENDC}' (ºC, mbar, mm, m/s)")
+        print(f"  '{bcolors.BOLD}metric{bcolors.ENDC}' (ºC, mbar, cm, km/h)")
         print("Later, you can modify your choice, or choose a combination of units.")
         # Get what unit system the user wants
         options = ['us', 'metricwx', 'metric']

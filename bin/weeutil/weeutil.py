@@ -1852,6 +1852,18 @@ def is_iterable(x):
     return hasattr(x, '__iter__') and not isinstance(x, (bytes, six.string_types))
 
 
+class bcolors:
+    """Colors used for terminals"""
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKCYAN = '\033[96m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
 if __name__ == '__main__':
     import doctest
 

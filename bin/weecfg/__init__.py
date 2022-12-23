@@ -19,7 +19,7 @@ import configobj
 
 import weeutil.config
 import weeutil.weeutil
-from weeutil.weeutil import to_bool
+from weeutil.weeutil import to_bool, bcolors
 
 major_comment_block = ["",
                        "#######################################"
@@ -436,8 +436,9 @@ def prompt_for_driver(dflt_driver=None):
     dflt_idx = None
     print("\nInstalled drivers include:")
     for i, d in enumerate(keys):
-        print(" %2d) %-15s %-25s %s" % (i, infos[d].get('driver_name', '?'),
-                                        "(%s)" % d, infos[d].get('status', '')))
+        print(" %s%2d%s) %-15s %-25s %s" % (bcolors.BOLD, i, bcolors.ENDC,
+                                            infos[d].get('driver_name', '?'),
+                                            "(%s)" % d, infos[d].get('status', '')))
         if dflt_driver == d:
             dflt_idx = i
     if dflt_idx is None:
