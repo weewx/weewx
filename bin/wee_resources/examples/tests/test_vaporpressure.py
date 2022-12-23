@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2020 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2020-2023 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -12,9 +12,18 @@ import unittest
 
 import configobj
 
-import gen_fake_data
-import weeutil.logger
 import weewx
+
+# We need to add two things to the python path: the test directory used by the weewx package (so we
+# can find 'gen_fake_data'), and the examples directory (so we can find 'vaporpressure').
+test_path = os.path.join(os.path.dirname(weewx.__file__), './tests')
+sys.path.append(test_path)
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+# Now we can import gen_fake_data and vaporpressure
+import gen_fake_data
+import vaporpressure
+
+import weeutil.logger
 import weewx.xtypes
 from weeutil.weeutil import TimeSpan
 
@@ -24,12 +33,11 @@ weeutil.logger.setup('test_vaporpressure', {})
 weewx.debug = 1
 
 # Register vapor pressure with the xtypes system
-sys.path.append('..')
-import vaporpressure
 weewx.xtypes.xtypes.append(vaporpressure.VaporPressure())
 
-# Find the configuration file. Assume it is in the standard position:
-config_path = os.path.join(os.path.dirname(__file__), '../../bin/weewx/tests', 'testgen.conf')
+# Find the configuration file used by the weewx package.
+config_path = os.path.join(test_path, 'testgen.conf')
+
 cwd = None
 
 os.environ['TZ'] = 'America/Los_Angeles'
@@ -66,7 +74,7 @@ class CommonTests(object):
         try:
             self.config_dict = configobj.ConfigObj(config_path, file_error=True, encoding='utf-8')
         except IOError:
-            sys.stderr.write("Unable to open configuration file %s" % self.config_path)
+            sys.stderr.write("Unable to open configuration file %s" % config_path)
             # Reraise the exception (this will eventually cause the program to exit)
             raise
         except configobj.ConfigObjError:
