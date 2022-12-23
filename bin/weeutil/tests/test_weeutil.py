@@ -1064,6 +1064,13 @@ class WeeutilTest(unittest.TestCase):
             tsb = TimespanBinder(ts,None,context=i[2])
             self.assertEqual(tsb.length.raw,i[3])
 
+    def test_version_compare(self):
+        from weeutil.weeutil import version_compare
+        self.assertEqual(version_compare('1.2.3', '1.2.2'), 1)
+        self.assertEqual(version_compare('1.2.3', '1.2.3'), 0)
+        self.assertEqual(version_compare('1.2.2', '1.2.3'), -1)
+        self.assertEqual(version_compare('1.3', '1.2.2'), 1)
+        self.assertEqual(version_compare('1.3.0a1', '1.3.0a2'), -1)
 
 if __name__ == '__main__':
     unittest.main()

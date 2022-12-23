@@ -59,7 +59,6 @@ To build debian package install the following (use 'apt-get install'):
   rsync
   gpg
   debhelper
-  python3-distutils
 
 To build redhat package install the following (use 'yum install'):
   git

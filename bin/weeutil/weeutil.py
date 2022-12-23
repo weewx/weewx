@@ -1864,6 +1864,30 @@ class bcolors:
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
 
+
+def version_compare(v1, v2):
+    """Compare two version numbers
+
+    Args:
+        v1(str): The first version number as a string. Can be something like '4.5.1a1'
+        v2(str): The second version number as a string.
+
+    Returns:
+        int: Returns +1 if v1 is greater than v2, -1 if less than, 0 if they are the same.
+    """
+
+    import itertools
+
+    mash = itertools.zip_longest(v1.split('.'), v2.split('.'), fillvalue='0')
+
+    for x1, x2 in mash:
+        if x1 > x2:
+            return 1
+        if x1 < x2:
+            return -1
+    return 0
+
+
 if __name__ == '__main__':
     import doctest
 

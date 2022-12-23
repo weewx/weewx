@@ -13,12 +13,12 @@ from __future__ import absolute_import
 from __future__ import with_statement
 
 import unittest
-from distutils.version import StrictVersion
 
 from six.moves import map
 
 import weedb
 import weedb.sqlite
+from weeutil.weeutil import version_compare
 
 sqlite_db_dict = {'database_name': '/var/tmp/test.sdb', 'driver': 'weedb.sqlite', 'timeout': '2'}
 mysql_db_dict = {'database_name': 'test_weewx1', 'user': 'weewx1', 'password': 'weewx1',
@@ -216,7 +216,7 @@ class TestSqlite(Common):
         with weedb.connect(self.db_dict) as _connect:
             # Early versions of sqlite did not support journal modes.
             # Not sure exactly when it started, but I know that v3.4.2 did not have it.
-            if StrictVersion(sqlite3.sqlite_version) > StrictVersion('3.4.2'):
+            if version_compare(sqlite3.sqlite_version, '3.4.2') > 0:
                 _v = _connect.get_variable('journal_mode')
                 self.assertEqual(_v[1].lower(), 'delete')
             _v = _connect.get_variable('foo')

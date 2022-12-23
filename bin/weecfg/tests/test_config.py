@@ -4,7 +4,6 @@
 #    See the file LICENSE.txt for your full rights.
 #
 """Test the configuration utilities."""
-import distutils.dir_util
 import io
 import os.path
 import shutil
@@ -300,28 +299,20 @@ class ExtensionInstallTest(unittest.TestCase):
     def setUp(self):
         # We're going to install a "mini-weewx" in this temporary directory:
         self.weewx_root = '/var/tmp/wee_test'
-        # NB: If we use distutils to copy trees, we have to use it to remove
-        # them because it caches directories it has created.
-        try:
-            distutils.dir_util.remove_tree(self.weewx_root)
-        except OSError:
-            pass
+        shutil.rmtree(self.weewx_root, ignore_errors=True)
 
         # Now build a new configuration
         self.user_dir = os.path.join(self.weewx_root, 'bin', 'user')
         self.skin_dir = os.path.join(self.weewx_root, 'skins')
         self.bin_dir = os.path.join(self.weewx_root, 'bin')
-        distutils.dir_util.copy_tree('../../../bin/user', self.user_dir)
-        distutils.dir_util.copy_tree('../../wee_resources/skins/Standard',
-                                     os.path.join(self.skin_dir, 'Standard'))
+        shutil.copytree('../../../bin/user', self.user_dir)
+        shutil.copytree('../../wee_resources/skins/Standard',
+                        os.path.join(self.skin_dir, 'Standard'))
         shutil.copy(current_config_dict_path, self.weewx_root)
 
     def tearDown(self):
         "Remove any installed test configuration"
-        try:
-            distutils.dir_util.remove_tree(self.weewx_root)
-        except OSError:
-            pass
+        shutil.rmtree(self.weewx_root, ignore_errors=True)
 
     def test_install(self):
         # Find and read the test configuration

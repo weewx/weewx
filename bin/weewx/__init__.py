@@ -141,7 +141,7 @@ class Event(object):
 
 def require_weewx_version(module, required_version):
     """utility to check for version compatibility"""
-    from distutils.version import StrictVersion
-    if StrictVersion(__version__) < StrictVersion(required_version):
+    from weeutil.weeutil import version_compare
+    if version_compare(__version__, required_version) < 0:
         raise UnsupportedFeature("%s requires weewx %s or greater, found %s"
                                  % (module, required_version, __version__))

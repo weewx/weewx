@@ -1,6 +1,15 @@
 WeeWX change history
 --------------------
 
+5.0.0 MM/DD/YYYY
+
+Major change in how WeeWX is installed and upgraded. It can now be installed
+using pip.
+
+Removed all references to the deprecated package distutils, due to be removed
+with Python v3.12.
+
+
 4.10.0 MM/DD/YYYY
 Don't inject txBatteryStatus and consBatteryVoltage into records in
 the Vantage driver. Let the accumulators do it.

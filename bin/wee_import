@@ -716,8 +716,6 @@ from __future__ import print_function
 import logging
 import optparse
 
-from distutils.version import StrictVersion
-
 # WeeWX imports
 import weecfg
 import weewx
@@ -791,9 +789,9 @@ def main():
     (options, args) = parser.parse_args()
 
     # check WeeWX version number for compatibility
-    if StrictVersion(weewx.__version__) < StrictVersion(REQUIRED_WEEWX):
-        print("WeeWX %s or greater is required, found %s. Nothing done, exiting." % (REQUIRED_WEEWX,
-                                                                                     weewx.__version__))
+    if weeutil.weeutil.version_compare(weewx.__version__, REQUIRED_WEEWX) < 0:
+        print("WeeWX %s or greater is required, found %s. Nothing done, exiting."
+              % (REQUIRED_WEEWX, weewx.__version__))
         exit(1)
 
     # get config_dict to use
