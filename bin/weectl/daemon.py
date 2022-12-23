@@ -5,8 +5,6 @@
 #
 """Entry point for the "daemon" subcommand."""
 
-from . import common_parser
-
 daemon_install_usage = "weectl daemon install --type={sysv|systemd} [--config=CONFIG-PATH]"
 daemon_uninstall_usage = "weectl daemon uninstall  --type={sysv|systemd} [--config=CONFIG-PATH]"
 
@@ -23,7 +21,6 @@ def add_subparser(subparsers):
 
     # Action "install':
     action_install_parser = action_parser.add_parser("install",
-                                                     parents=[common_parser],
                                                      description="Install an appropriate system "
                                                                  "file to run weewxd as a daemon. "
                                                                  "You must specify the type of file "
@@ -38,7 +35,6 @@ def add_subparser(subparsers):
 
     # Action "uninstall":
     action_uninstall_parser = action_parser.add_parser("uninstall",
-                                                       parents=[common_parser],
                                                        description="After uninstalling, weewxd will "
                                                                    "not run as a daemon.",
                                                        usage=daemon_uninstall_usage,

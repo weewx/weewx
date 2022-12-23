@@ -16,9 +16,11 @@ import weecfg
 import weeutil.config
 import weeutil.weeutil
 import weewx
+from weectl import default_config_path
 from weeutil.weeutil import to_float, to_bool
 
 log = logging.getLogger(__name__)
+
 
 
 def create_station(config_path, *args, **kwargs):
@@ -27,6 +29,10 @@ def create_station(config_path, *args, **kwargs):
     Like config_station(), except it ensures that the config file does not already exist. It then
     retrieves the template config file from package resources and uses that.
     """
+
+    if not config_path:
+        config_path = default_config_path
+        print(f"The configuration file will be created at \033[1m{config_path}\033[0m.")
 
     # Make sure there is not already a configuration file at the designated location.
     if os.path.exists(config_path):

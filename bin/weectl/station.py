@@ -7,7 +7,6 @@
 import sys
 
 import weewx
-from . import common_parser
 import weecfg.station_config
 
 station_create_usage = """weectl station create [--config=CONFIG-PATH] 
@@ -45,7 +44,6 @@ def add_subparser(subparsers,
 
     # Action 'create'
     create_station_parser = action_parser.add_parser('create',
-                                                     parents=[common_parser],
                                                      description=CREATE_DESCRIPTION,
                                                      usage=station_create_usage,
                                                      help='Create a station config file')
@@ -95,7 +93,6 @@ def add_subparser(subparsers,
 
     # Action 'reconfigure'
     reconfigure_station_parser = action_parser.add_parser('reconfigure',
-                                                          parents=[common_parser],
                                                           usage=station_reconfigure_usage,
                                                           help='Reconfigure a station config file')
     reconfigure_station_parser.add_argument('--driver',
@@ -103,13 +100,11 @@ def add_subparser(subparsers,
 
     # Action 'upgrade'
     upgrade_station_parser = action_parser.add_parser('upgrade',
-                                                      parents=[common_parser],
                                                       usage=station_upgrade_usage,
                                                       help='Upgrade a station config file')
 
     # Action 'upgrade-skins'
     upgrade_skins_parser = action_parser.add_parser('upgrade-skins',
-                                                    parents=[common_parser],
                                                     usage=station_upgrade_skins_usage,
                                                     help='Upgrade the skins')
 
