@@ -166,73 +166,7 @@ class ConfigTest(unittest.TestCase):
         weecfg.reorder_scalars(test_list, 'x', 'd')
         self.assertEqual(test_list, ['a', 'b', 'd'])
 
-    def test_prompt_for_info(self):
-        # Suppress stdout by temporarily assigning it to /dev/null
-        save_stdout = sys.stdout
-        with open(os.devnull, 'w') as sys.stdout:
-            # Test a normal input
-            with patch('weecfg.input',
-                       side_effect=['Anytown', '100, meter', '45.0', '180.0', 'y',
-                                    'weewx.com', 'us']):
-                stn_info = weecfg.prompt_for_info()
-                self.assertEqual(stn_info, {'altitude': ['100', 'meter'],
-                                            'latitude': '45.0',
-                                            'location': 'Anytown',
-                                            'longitude': '180.0',
-                                            'register_this_station': 'true',
-                                            'station_url': 'weewx.com',
-                                            'unit_system': 'us',
-                                            })
 
-            # Test for a default input
-            with patch('weecfg.input',
-                       side_effect=['Anytown', '', '', '', '', '']):
-                stn_info = weecfg.prompt_for_info()
-                self.assertEqual(stn_info, {'altitude': ['0', 'meter'],
-                                            'latitude': '0.000',
-                                            'location': 'Anytown',
-                                            'longitude': '0.000',
-                                            'register_this_station': 'false',
-                                            'unit_system': 'metricwx',
-                                            })
-
-            # Test for an out-of-bounds latitude with retry
-            with patch('weecfg.input',
-                       side_effect=['Anytown', '100, meter', '95.0', '45.0', '180.0', 'n',
-                                    'us']):
-                stn_info = weecfg.prompt_for_info()
-                self.assertEqual(stn_info, {'altitude': ['100', 'meter'],
-                                            'latitude': '45.0',
-                                            'location': 'Anytown',
-                                            'longitude': '180.0',
-                                            'register_this_station': 'false',
-                                            'unit_system': 'us'})
-
-            # Test for a bad length unit type with retry
-            with patch('weecfg.input',
-                       side_effect=['Anytown', '100, foo', '100,meter', '45.0', '180.0',
-                                    'n', 'us']):
-                stn_info = weecfg.prompt_for_info()
-                self.assertEqual(stn_info, {'altitude': ['100', 'meter'],
-                                            'latitude': '45.0',
-                                            'location': 'Anytown',
-                                            'longitude': '180.0',
-                                            'register_this_station': 'false',
-                                            'unit_system': 'us'})
-
-            # Test for a bad display unit with retry
-            with patch('weecfg.input',
-                       side_effect=['Anytown', '100, meter', '45.0', '180.0', 'n', 'foo',
-                                    'us']):
-                stn_info = weecfg.prompt_for_info()
-                self.assertEqual(stn_info, {'altitude': ['100', 'meter'],
-                                            'latitude': '45.0',
-                                            'location': 'Anytown',
-                                            'longitude': '180.0',
-                                            'register_this_station': 'false',
-                                            'unit_system': 'us'})
-        # Restore stdout:
-        sys.stdout = save_stdout
 
     def test_prompt_with_options(self):
         # Suppress stdout by temporarily assigning it to /dev/null
@@ -281,32 +215,6 @@ class ConfigTest(unittest.TestCase):
         self.assertEqual(driver_info_dict['weewx.drivers.ws1']['version'],
                          weewx.drivers.ws1.DRIVER_VERSION)
         del weewx.drivers.ws1
-
-    def test_modify_config(self):
-        # Use the current weewx.conf
-        config_dict = configobj.ConfigObj(current_config_dict_path, encoding='utf-8')
-
-        stn_info = weecfg.get_station_info_from_config(config_dict)
-
-        self.assertEqual(stn_info,
-                         {'station_type': 'unspecified', 'altitude': ['700', 'foot'],
-                          'longitude': '0.00', 'unit_system': 'us',
-                          'location': 'My Little Town, Oregon',
-                          'latitude': '0.00', 'register_this_station': 'false', 'lang': 'en'})
-
-        # Modify the station info, to reflect a hardware choice
-        stn_info['station_type'] = 'Vantage'
-        stn_info['driver'] = 'weewx.drivers.vantage'
-
-        # Now modify the config_dict.
-        weecfg.modify_config(config_dict, stn_info, None)
-
-        # Make sure the driver stanza got injected correctly
-        import weewx.drivers.vantage
-        vcf = weewx.drivers.vantage.VantageConfEditor()
-        default_config = configobj.ConfigObj(io.StringIO(vcf.default_stanza), encoding='utf-8')
-
-        self.assertEqual(config_dict['Vantage'], default_config['Vantage'])
 
 
 class ExtensionUtilityTest(unittest.TestCase):
