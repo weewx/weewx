@@ -73,7 +73,9 @@ weewx.accum.initialize(config_dict)
 
 # These tests also test the examples in the 'example' subdirectory.
 # Patch PYTHONPATH to find them.
-example_dir = os.path.normpath(os.path.join(my_dir, '../../../examples'))
+import wee_resources
+example_dir = os.path.normpath(os.path.join(os.path.dirname(wee_resources.__file__),
+                                            './examples'))
 sys.path.append(example_dir)
 sys.path.append(os.path.join(example_dir, './colorize'))
 
