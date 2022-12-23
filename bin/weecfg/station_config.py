@@ -53,15 +53,38 @@ def config_station(config_path, *args, **kwargs):
     weecfg.save_with_backup(config_dict, config_path)
 
 
-def config_config(config_dict, altitude=None, latitude=None, longitude=None,
-                  register=None, unit_system=None, driver=None, name=None,
+def config_config(config_dict, driver=None, location=None,
+                  altitude=None, latitude=None, longitude=None,
+                  register=None, unit_system=None,
+                  skin_root=None, sqlite_root=None,
+                  html_root=None,
                   no_prompt=False):
     """Modify a configuration file."""
+    config_location(config_dict, location=location, no_prompt=no_prompt)
     config_altitude(config_dict, altitude=altitude, no_prompt=no_prompt)
     config_latlon(config_dict, latitude=latitude, longitude=longitude, no_prompt=no_prompt)
     config_registry(config_dict, register=register, no_prompt=no_prompt)
     config_units(config_dict, unit_system=unit_system, no_prompt=no_prompt)
-    config_driver(config_dict, driver=driver, name=name, no_prompt=no_prompt)
+    config_driver(config_dict, driver=driver, no_prompt=no_prompt)
+
+
+def config_location(config_dict, location=None, no_prompt=False):
+    """Set the location option. """
+    if 'Station' not in config_dict:
+        return
+
+    default_location = config_dict['Station'].get('location', "WeeWX station")
+
+    if location is not None:
+        final_location = location
+    elif not no_prompt:
+        print("\nGive a description of your station. This will be used for the title "
+              "of any reports.")
+        ans = input(f"Description [{default_location}]: ").strip()
+        final_location = ans if ans else default_location
+    else:
+        final_location = default_location
+    config_dict['Station']['location'] = final_location
 
 
 def config_altitude(config_dict, altitude=None, no_prompt=False):
@@ -129,8 +152,8 @@ def config_latlon(config_dict, latitude=None, longitude=None, no_prompt=False):
 
     Args:
         config_dict (configobj.ConfigObj): The configuration dictionary.
-        latitude (float|None): The latitude. If specified, no prompting will happen.
-        longitude (float|None): The longitude. If specified no prompting will happen.
+        latitude (str|None): The latitude. If specified, no prompting will happen.
+        longitude (str|None): The longitude. If specified no prompting will happen.
         no_prompt(bool):  Do not prompt the user for a value.
     """
 
@@ -202,7 +225,7 @@ def config_registry(config_dict, register=None, station_url=None, no_prompt=Fals
         print("in a map. If you choose to do so, you will also need a unique URL to identify ")
         print("your station (such as a website, or a WeatherUnderground link).")
         ans = weeutil.weeutil.y_or_n("Include station in the station registry [n]? ",
-                                     default = default_register)
+                                     default=default_register)
         final_register = to_bool(ans)
         if final_register:
             while True:
@@ -210,7 +233,7 @@ def config_registry(config_dict, register=None, station_url=None, no_prompt=Fals
                 print("URL such as https://www.wunderground.com/dashboard/pws/KORPORT12 will do.")
                 url = weecfg.prompt_with_options("Unique URL", default_station_url)
                 if url:
-                    if url.startswith('http://www.example.com'):
+                    if 'example.com' in url:
                         print("Unique please!")
                     else:
                         final_station_url = url
@@ -265,7 +288,7 @@ def config_units(config_dict, unit_system=None, no_prompt=False):
         config_dict['StdReport']['Defaults']['unit_system'] = final_unit_system
 
 
-def config_driver(config_dict, driver=None, name=None, no_prompt=False):
+def config_driver(config_dict, driver=None, no_prompt=False):
     """Do what's necessary to create or reconfigure a driver in the configuration file.
 
     Args:
@@ -273,8 +296,6 @@ def config_driver(config_dict, driver=None, name=None, no_prompt=False):
         driver (str): The driver to use. Something like 'weewx.drivers.fousb'.
             Usually this comes from the command line. Default is None, which means prompt the user.
             If no_prompt has been specified, then use the simulator.
-        name (str): The name to use for the driver stanza. If not given, then the driver's
-            value for DRIVER_NAME will be used.
         no_prompt (bool): False to prompt the user. True to not allow prompts. Default is False.
     """
     # The existing driver is the default. If there is no existing driver, use the simulator.
@@ -302,7 +323,6 @@ def config_driver(config_dict, driver=None, name=None, no_prompt=False):
     driver_editor, driver_name, driver_version = weecfg.load_driver_editor(final_driver)
     # If the user has supplied a name for the driver stanza, then use it. Otherwise, use the one
     # supplied by the driver.
-    stanza_name = name or driver_name
     log.info(f'Using {driver_name} version {driver_version} ({driver})')
 
     # Get a driver stanza, if possible
@@ -310,10 +330,10 @@ def config_driver(config_dict, driver=None, name=None, no_prompt=False):
     if driver_name:
         if driver_editor:
             # if a previous stanza exists for this driver, grab it
-            if stanza_name in config_dict:
+            if driver_name in config_dict:
                 # We must get the original stanza as a long string with embedded newlines.
                 orig_stanza = configobj.ConfigObj(interpolation=False)
-                orig_stanza[stanza_name] = config_dict[stanza_name]
+                orig_stanza[driver_name] = config_dict[driver_name]
                 orig_stanza_text = '\n'.join(orig_stanza.write())
             else:
                 orig_stanza_text = None
@@ -321,35 +341,30 @@ def config_driver(config_dict, driver=None, name=None, no_prompt=False):
             # let the driver process the stanza or give us a new one
             stanza_text = driver_editor.get_conf(orig_stanza_text)
             stanza = configobj.ConfigObj(stanza_text.splitlines())
-            # The drivers return the stanza with the driver name as the key. If the user wants
-            # something different, we have to change the key.
-            if name:
-                stanza[stanza_name] = stanza[driver_name]
-                del stanza[driver_name]
         else:
             # No editor. If the original config_dict has the stanza use that. Otherwise, a blank
             # stanza.
             stanza = configobj.ConfigObj(interpolation=False)
-            stanza[stanza_name] = config_dict.get(stanza_name, {})
+            stanza[driver_name] = config_dict.get(driver_name, {})
 
     # If we have a stanza, inject it into the configuration dictionary
     if stanza and driver_name:
         # Ensure that the driver field matches the path to the actual driver
-        stanza[stanza_name]['driver'] = final_driver
+        stanza[driver_name]['driver'] = final_driver
         # Insert the stanza in the configuration dictionary:
-        config_dict[stanza_name] = stanza[stanza_name]
+        config_dict[driver_name] = stanza[driver_name]
         # Add a major comment deliminator:
-        config_dict.comments[stanza_name] = weecfg.major_comment_block
+        config_dict.comments[driver_name] = weecfg.major_comment_block
         # If we have a [Station] section, move the new stanza to just after it
         if 'Station' in config_dict:
-            weecfg.reorder_sections(config_dict, stanza_name, 'Station', after=True)
+            weecfg.reorder_sections(config_dict, driver_name, 'Station', after=True)
             # make the stanza the station type
-            config_dict['Station']['station_type'] = stanza_name
+            config_dict['Station']['station_type'] = driver_name
         # Give the user a chance to modify the stanza:
         if not no_prompt:
             settings = weecfg.prompt_for_driver_settings(final_driver,
-                                                         config_dict.get(stanza_name, {}))
-            config_dict[stanza_name].merge(settings)
+                                                         config_dict.get(driver_name, {}))
+            config_dict[driver_name].merge(settings)
 
     if driver_editor:
         # One final chance for the driver to modify other parts of the configuration
