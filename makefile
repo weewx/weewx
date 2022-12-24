@@ -103,7 +103,7 @@ check-docs:
 
 # if no suite is specified, find all test suites in the source tree
 ifndef SUITE
-SUITE=`find bin examples -name "test_*.py"`
+SUITE=`find bin -name "test_*.py"`
 endif
 test:
 	@rm -f $(BLDDIR)/test-results

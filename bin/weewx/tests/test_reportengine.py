@@ -1,14 +1,11 @@
 #
-#    Copyright (c) 2021-2022 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2021-2023 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
 """Test algorithms in the Report Engine"""
 
-from __future__ import absolute_import
-from __future__ import print_function
-from __future__ import with_statement
-
+import importlib.resources
 import logging
 import os.path
 import sys
@@ -22,11 +19,17 @@ from weewx.reportengine import _build_skin_dict
 log = logging.getLogger(__name__)
 weewx.debug = 1
 
-CONFIG_DICT_INI = """
+# Find where the skins are stored. Unfortunately, the following strategy won't work if the
+# resources are stored as a zip file. But, the alternative is too messy. After all, this is just
+# for testing.
+with importlib.resources.path('wee_resources', 'skins') as skin_resource:
+    SKIN_DIR = skin_resource
+
+CONFIG_DICT_INI = f"""
 WEEWX_ROOT = '../../..'
 
 [StdReport]
-    SKIN_ROOT = skins
+    SKIN_ROOT = {SKIN_DIR}
     [[SeasonsReport]]
         skin = Seasons
     [[Defaults]]
