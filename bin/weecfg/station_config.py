@@ -384,7 +384,7 @@ def config_driver(config_dict, driver=None, no_prompt=False):
 
 
 def config_roots(config_dict, weewx_root=None, skin_root=None, html_root=None, sqlite_root=None):
-    """Set up the location of various root directories."""
+    """Set the location of various root directories in the configuration dictionary."""
     if weewx_root:
         config_dict['WEEWX_ROOT'] = weewx_root
 
@@ -410,7 +410,7 @@ def config_roots(config_dict, weewx_root=None, skin_root=None, html_root=None, s
 
 
 def copy_skins(config_dict):
-    """Copy and missing skins from the resource package to the skins directory"""
+    """Copy any missing skins from the resource package to the skins directory"""
     if 'StdReport' not in config_dict:
         return
 

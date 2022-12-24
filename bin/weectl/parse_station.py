@@ -74,16 +74,15 @@ def add_subparser(subparsers):
                                        dest='unit_system',
                                        help='Set display units to us, metricwx, or metric. '
                                             'Default is "us".')
-    create_station_parser.add_argument('--skin-root', default='skins',
+    create_station_parser.add_argument('--skin-root',
                                        help='Where the skins will be located, relatve to '
-                                            'WEEWX_ROOT. Default is "skins".')
-    create_station_parser.add_argument('--sqlite-root', default='archive',
+                                            'WEEWX_ROOT.')
+    create_station_parser.add_argument('--sqlite-root',
                                        help='Set the location of the sqlite directory, relative '
-                                            'to WEEWX_ROOT. Default is "archive".')
+                                            'to WEEWX_ROOT.')
     create_station_parser.add_argument('--html-root',
-                                       default='public_html',
                                        help='Where generated HTML and images will go, relative '
-                                            'to WEEWX_ROOT. Default is "public_html".')
+                                            'to WEEWX_ROOT.')
     create_station_parser.add_argument('--no-prompt', type=bool,
                                        help='If true, suppress prompts. Default values will be '
                                             'used.')
