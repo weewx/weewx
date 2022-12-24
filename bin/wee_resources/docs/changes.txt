@@ -3,11 +3,13 @@ WeeWX change history
 
 5.0.0 MM/DD/YYYY
 
-Major change in how WeeWX is installed and upgraded. It can now be installed
-using pip.
+Python 2.7 is no longer supported. You must have Python 3.7 (introduced
+May 2018) or greater.
 
-Removed all references to the deprecated package distutils, due to be removed
-with Python v3.12.
+WeeWX can now be installed using pip.
+
+Removed all references to the deprecated package distutils, which was due to be
+removed in Python v3.12.
 
 
 4.10.0 MM/DD/YYYY

@@ -8,19 +8,20 @@
 import importlib
 import importlib.resources
 import logging
+import os
 import os.path
+import shutil
 
 import configobj
 
 import weecfg
+import weectl
 import weeutil.config
 import weeutil.weeutil
 import weewx
-from weectl import default_config_path
 from weeutil.weeutil import to_float, to_bool, bcolors
 
 log = logging.getLogger(__name__)
-
 
 
 def create_station(config_path, *args, **kwargs):
@@ -31,9 +32,11 @@ def create_station(config_path, *args, **kwargs):
     """
 
     if not config_path:
-        config_path = default_config_path
+        config_path = weectl.default_config_path
         print(f"The configuration file will be created "
               f"at {bcolors.BOLD}{config_path}{bcolors.ENDC}.")
+
+    weewx_root = os.path.dirname(config_path)
 
     # Make sure there is not already a configuration file at the designated location.
     if os.path.exists(config_path):
@@ -43,7 +46,7 @@ def create_station(config_path, *args, **kwargs):
     with importlib.resources.open_text('wee_resources', 'weewx.conf', encoding='utf-8') as fd:
         dist_config_dict = configobj.ConfigObj(fd, encoding='utf-8', file_error=True)
 
-    config_config(dist_config_dict, *args, **kwargs)
+    config_config(dist_config_dict, weewx_root=weewx_root, *args, **kwargs)
 
     # Save the results. No backup.
     weecfg.save(dist_config_dict, config_path)
@@ -63,8 +66,8 @@ def config_station(config_path, *args, **kwargs):
 def config_config(config_dict, driver=None, location=None,
                   altitude=None, latitude=None, longitude=None,
                   register=None, unit_system=None,
-                  skin_root=None, sqlite_root=None,
-                  html_root=None,
+                  weewx_root=None, skin_root=None,
+                  html_root=None, sqlite_root=None,
                   no_prompt=False):
     """Modify a configuration file."""
     config_location(config_dict, location=location, no_prompt=no_prompt)
@@ -73,6 +76,8 @@ def config_config(config_dict, driver=None, location=None,
     config_registry(config_dict, register=register, no_prompt=no_prompt)
     config_units(config_dict, unit_system=unit_system, no_prompt=no_prompt)
     config_driver(config_dict, driver=driver, no_prompt=no_prompt)
+    config_roots(config_dict, weewx_root, skin_root, html_root, sqlite_root)
+    copy_skins(config_dict)
 
 
 def config_location(config_dict, location=None, no_prompt=False):
@@ -376,3 +381,57 @@ def config_driver(config_dict, driver=None, no_prompt=False):
     if driver_editor:
         # One final chance for the driver to modify other parts of the configuration
         driver_editor.modify_config(config_dict)
+
+
+def config_roots(config_dict, weewx_root=None, skin_root=None, html_root=None, sqlite_root=None):
+    """Set up the location of various root directories."""
+    if weewx_root:
+        config_dict['WEEWX_ROOT'] = weewx_root
+
+    if 'StdReport' in config_dict:
+        if skin_root:
+            config_dict['StdReport']['SKIN_ROOT'] = skin_root
+        elif 'SKIN_ROOT' not in config_dict['StdReport']:
+            config_dict['StdReport']['SKIN_ROOT'] = 'skins'
+        if html_root:
+            config_dict['StdReport']['HTML_ROOT'] = html_root
+        elif 'HTML_ROOT' not in config_dict['StdReport']:
+            config_dict['StdReport']['HTML_ROOT'] = 'public_html'
+
+    if 'DatabaseTypes' in config_dict and 'SQLite' in config_dict['DatabaseTypes']:
+        # Temporarily turn off interpolation
+        hold, config_dict.interpolation = config_dict.interpolation, False
+        if sqlite_root:
+            config_dict['DatabaseTypes']['SQLite']['SQLITE_ROOT'] = sqlite_root
+        elif 'SQLITE_ROOT' not in config_dict['DatabaseTypes']['SQLite']:
+            config_dict['DatabaseTypes']['SQLite']['SQLITE_ROOT'] = '%(WEEWX_ROOT)s/archive'
+        # Turn interpolation back on.
+        config_dict.interpolation = hold
+
+
+def copy_skins(config_dict):
+    """Copy and missing skins from the resource package to the skins directory"""
+    if 'StdReport' not in config_dict:
+        return
+
+    # This is the destination of the skins:
+    skin_dir = os.path.join(config_dict['WEEWX_ROOT'], config_dict['StdReport']['SKIN_ROOT'])
+    # Make it if it doesn't already exist
+    os.makedirs(skin_dir, exist_ok=True)
+
+    # Find the skins we already have
+    with os.scandir(skin_dir) as existing_contents:
+        existing_skins = {os.path.basename(d.path) for d in existing_contents if d.is_dir()}
+
+    with importlib.resources.path('wee_resources', 'skins') as skin_resources:
+        # Find which skins are available in the resource package
+        with os.scandir(skin_resources) as resource_contents:
+            available_skins = {os.path.basename(d.path) for d in resource_contents if d.is_dir()}
+
+        missing_skins = available_skins - existing_skins
+
+        # Copy over any missing skins
+        for skin in missing_skins:
+            src = os.path.join(skin_resources, skin)
+            dest = os.path.join(skin_dir, skin)
+            shutil.copytree(src, dest)

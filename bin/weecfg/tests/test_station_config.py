@@ -7,6 +7,7 @@
 import contextlib
 import importlib.resources
 import os
+import tempfile
 import unittest
 from unittest.mock import patch
 
@@ -19,7 +20,7 @@ import weeutil.config
 import weeutil.weeutil
 import weewx
 
-# Use the version of weewx.onf that comes with WeeWX for the tests.
+# For the tests, use the version of weewx.onf that comes with WeeWX.
 with importlib.resources.open_text('wee_resources', 'weewx.conf', encoding='utf-8') as fd:
     CONFIG_DICT = configobj.ConfigObj(fd, encoding='utf-8', file_error=True)
 
@@ -256,6 +257,68 @@ class DriverConfigTest(CommonConfigTest):
             weecfg.station_config.config_driver(self.config_dict)
             self.assertEqual(self.config_dict['Station']['station_type'], 'Vantage')
             self.assertEqual(self.config_dict['Vantage']['port'], '/dev/ttyS1')
+
+
+class TestConfigRoots(CommonConfigTest):
+
+    def test_args_config_roots(self):
+        weecfg.station_config.config_roots(self.config_dict, skin_root='foo',
+                                           html_root='bar', sqlite_root='baz')
+        self.assertEqual(self.config_dict['StdReport']['SKIN_ROOT'], 'foo')
+        self.assertEqual(self.config_dict['StdReport']['HTML_ROOT'], 'bar')
+        self.assertEqual(self.config_dict['DatabaseTypes']['SQLite']['SQLITE_ROOT'], 'baz')
+
+        # Delete the options, then try again. They should be replaced with defaults
+        del self.config_dict['StdReport']['SKIN_ROOT']
+        del self.config_dict['StdReport']['HTML_ROOT']
+        del self.config_dict['DatabaseTypes']['SQLite']['SQLITE_ROOT']
+        weecfg.station_config.config_roots(self.config_dict)
+        self.assertEqual(self.config_dict['StdReport']['SKIN_ROOT'], 'skins')
+        self.assertEqual(self.config_dict['StdReport']['HTML_ROOT'], 'public_html')
+        self.assertEqual(self.config_dict['DatabaseTypes']['SQLite']['SQLITE_ROOT'],
+                         '/home/weewx/archive')
+
+
+class TestCreateStation(unittest.TestCase):
+
+    def test_create_default(self):
+        "Test creating a new station"
+        # Get a temporary directory to create it in
+        with tempfile.TemporaryDirectory(dir='/var/tmp') as dirname:
+            config_path = os.path.join(dirname, 'weewx.conf')
+            # Create a station using the defaults
+            weecfg.station_config.create_station(config_path, no_prompt=True)
+
+            # Retrieve the config file that was created and check it:
+            config_dict = configobj.ConfigObj(config_path, encoding='utf-8')
+            self.assertEqual(config_dict['WEEWX_ROOT'], dirname)
+            self.assertEqual(config_dict['Station']['station_type'], 'Simulator')
+            self.assertEqual(config_dict['Simulator']['driver'], 'weewx.drivers.simulator')
+            self.assertEqual(config_dict['StdReport']['SKIN_ROOT'], 'skins')
+            self.assertEqual(config_dict['StdReport']['HTML_ROOT'], 'public_html')
+            self.assertEqual(config_dict['DatabaseTypes']['SQLite']['SQLITE_ROOT'],
+                             os.path.normpath(os.path.join(dirname, 'archive')))
+
+            # Make sure all the skins are there
+            for skin in ['Seasons', 'Smartphone', 'Mobile', 'Standard',
+                         'Ftp', 'Rsync']:
+                p = os.path.join(dirname, config_dict['StdReport']['SKIN_ROOT'], skin)
+                self.assertTrue(os.path.isdir(p))
+
+
+# class TestConfigSkins(CommonConfigTest):
+#
+#     def test_copy_skins(self):
+#         with tempfile.TemporaryDirectory(dir='/var/tmp') as dirname:
+#             self.config_dict['StdReport']['skins'] = dirname
+#             weecfg.station_config.copy_skins(self.config_dict)
+#
+#             for skin in ['Seasons', 'Smartphone', 'Mobile', 'Standard',
+#                          'Ftp', 'Rsync']:
+#                 p = os.path.join(dirname, skin)
+#                 print(p)
+#                 self.assertTrue(os.path.isdir(p))
+#
 
 
 if __name__ == "__main__":

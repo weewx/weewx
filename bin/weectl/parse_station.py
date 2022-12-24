@@ -31,10 +31,8 @@ station_usage = '\n       '.join((station_create_usage, station_reconfigure_usag
 CREATE_DESCRIPTION = 'In what follows, WEEWX_ROOT is the directory that contains the ' \
                      'configuration file. For example, if "--config=/home/weewx/weewx.conf", ' \
                      'then WEEWX_ROOT will be "/home/weewx".'
-def add_subparser(subparsers,
-                  weewx_root='/home/weewx',
-                  html_root='html',
-                  skin_root='skins'):
+def add_subparser(subparsers):
+    """Add the parsers used to implement the 'station' command. """
     station_parser = subparsers.add_parser('station',
                                            usage=station_usage,
                                            description='Manages the configuration file and skins',
