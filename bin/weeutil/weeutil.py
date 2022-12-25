@@ -460,7 +460,7 @@ def archiveDaySpan(time_ts, days_ago=0):
 
     Args:
         time_ts (float): The day will include this timestamp.
-        days_ago (int, optional): Which day we want. 0=today, 1=yesterday, etc.
+        days_ago (int): Which day we want. 0=today, 1=yesterday, etc.
 
     Returns:
         TimeSpan: A TimeSpan object one day long.
