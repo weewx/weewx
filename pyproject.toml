@@ -53,12 +53,14 @@ include = [
 [tool.poetry.dependencies]
 python = "^3.7"
 configobj = ">=4.7"
-pyusb = "^1.0.2"
-pyserial = "^3.4"
-pyephem = "^3.7"
+# This is the renamed "Cheetah" package:
+CT3 = "^3.1"
 Pillow = "^9.3"
+pyephem = "^3.7"
+PyMySQL = "^1.0"
+pyserial = "^3.4"
+pyusb = "^1.0.2"
 six = "^1"
-cheetah3 = "^3.1"
 
 [tool.poetry.scripts]
 weewxd = 'weewxd:main'
