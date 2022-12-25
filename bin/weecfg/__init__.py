@@ -47,7 +47,10 @@ class Logger(object):
 #              Utilities that find and save ConfigObj objects
 # ==============================================================================
 
-DEFAULT_LOCATIONS = ['../..', '/etc/weewx', '/home/weewx']
+if sys.platform == "darwin":
+    DEFAULT_LOCATIONS = ['../..', '/etc/weewx', '/Users/Shared/weewx']
+else:
+    DEFAULT_LOCATIONS = ['../..', '/etc/weewx', '/home/weewx']
 
 
 def find_file(file_path=None, args=None, locations=DEFAULT_LOCATIONS,
