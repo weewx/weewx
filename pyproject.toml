@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "weewx"
-version = "5.0.0a1"
+version = "5.0.0a2"
 description = "The WeeWX weather software system"
 authors = ["Tom Keffer <tkeffer@gmail.com>"]
 license = "GPL3"
@@ -28,25 +28,26 @@ packages = [
     { include = "schemas", from = "bin" },
     { include = "user", from = "bin" },
     { include = "weecfg", from = "bin" },
+    { include = "weectl", from = "bin" },
     { include = "weedb", from = "bin" },
     { include = "weeimport", from = "bin" },
     { include = "weeplot", from = "bin" },
+    { include = "wee_resources", from = "bin" },
     { include = "weeutil", from = "bin" },
     { include = "weewx", from = "bin" },
-#    { include = "wee_config", from = "bin" },
-#    { include = "wee_database", from = "bin" },
-#    { include = "wee_debug", from = "bin" },
-#    { include = "wee_device", from = "bin" },
-#    { include = "wee_extension", from = "bin" },
-#    { include = "wee_import", from = "bin" },
-#    { include = "wee_reports", from = "bin" },
+    #    { include = "wee_config", from = "bin" },
+    #    { include = "wee_database", from = "bin" },
+    #    { include = "wee_debug", from = "bin" },
+    #    { include = "wee_device", from = "bin" },
+    #    { include = "wee_extension", from = "bin" },
+    #    { include = "wee_import", from = "bin" },
+    #    { include = "wee_reports", from = "bin" },
     { include = "weewxd.py", from = "bin" },
 ]
 
 include = [
     "LICENSE.txt",
-    "README.md",
-    "weewx.conf",
+    "README.md"
 ]
 
 [tool.poetry.dependencies]
@@ -55,12 +56,13 @@ configobj = ">=4.7"
 pyusb = "^1.0.2"
 pyserial = "^3.4"
 pyephem = "^3.7"
-pillow = "^6.2"
+Pillow = "^9.3"
 six = "^1"
 cheetah3 = "^3.1"
 
 [tool.poetry.scripts]
 weewxd = 'weewxd:main'
+weectl = 'weectl.__main__:main'
 
 [build-system]
 # Minimum requirements for the build system to execute.
