@@ -52,8 +52,17 @@ def create_station(config_path, *args, **kwargs):
     weecfg.save(dist_config_dict, config_path)
 
 
-def config_station(config_path, *args, **kwargs):
+def reconfigure_station(config_path, *args, **kwargs):
     "Reconfigure an existing station"
+
+    if not config_path:
+        config_path = weectl.default_config_path
+
+    print(f"The configuration file {bcolors.BOLD}{config_path}{bcolors.ENDC} will be used.")
+
+    # Make sure the file exists
+    if not os.path.exists(config_path):
+        raise weewx.ViolatedPrecondition(f"The configuration file {config_path} does not exist")
 
     config_dict = configobj.ConfigObj(config_path, encoding='utf-8', file_error=True)
 
