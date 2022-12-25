@@ -161,6 +161,5 @@ def _add_common_args(parser):
     parser.add_argument('--html-root',
                         help='Where generated HTML and images will go, relative '
                              'to WEEWX_ROOT.')
-    parser.add_argument('--no-prompt', type=bool,
-                        help='If true, suppress prompts. Default values will be '
-                             'used.')
+    parser.add_argument('--no-prompt', action='store_true',
+                        help='If set, do not prompt. Use default values.')
