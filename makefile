@@ -14,6 +14,10 @@ WEEWX_HTMLDIR=/var/www/html
 WEEWX_DOWNLOADS=$(WEEWX_HTMLDIR)/downloads
 # location for staging weewx package uploads
 WEEWX_STAGING=$(WEEWX_HTMLDIR)/downloads/development_versions
+# Location of docs
+DOCLOC=bin/wee_resources/docs
+# Location of the skins
+SKINLOC=bin/wee_resources/skins
 
 # extract version to be used in package controls and labels
 VERSION=$(shell sed -ne 's/^version = "\(.*\)"/\1/p;' pyproject.toml)
@@ -87,6 +91,8 @@ info:
 	@echo "        USER: $(USER)"
 	@echo "   WEEWX_COM: $(WEEWX_COM)"
 	@echo " STAGING_DIR: $(STAGING_DIR)"
+	@echo "      DOCLOC: $(DOCLOC)"
+	@echo "     SKINLOC: $(SKINLOC)"
 
 clean:
 	find . -name "*.pyc" -exec rm {} \;
@@ -154,19 +160,19 @@ upload-docs:
 # update the version in all relevant places
 VDOCS=readme.htm customizing.htm devnotes.htm hardware.htm usersguide.htm upgrading.htm utilities.htm
 VCONFIGS=weewx.conf bin/weecfg/tests/expected/weewx43_user_expected.conf
-VSKINS=skins/Ftp/skin.conf skins/Mobile/skin.conf skins/Rsync/skin.conf skins/Seasons/skin.conf skins/Smartphone/skin.conf skins/Standard/skin.conf
+VSKINS=Ftp/skin.conf Mobile/skin.conf Rsync/skin.conf Seasons/skin.conf Smartphone/skin.conf Standard/skin.conf
 version:
 	for f in $(VDOCS); do \
-  sed -e 's/^Version: [0-9].*/Version: $(MMVERSION)/' docs/$$f > docs/$$f.tmp; \
-  mv docs/$$f.tmp docs/$$f; \
+  sed -e 's/^Version: [0-9].*/Version: $(MMVERSION)/' $(DOCLOC)/$$f > $(DOCLOC)/$$f.tmp; \
+  mv $(DOCLOC)/$$f.tmp $(DOCLOC)/$$f; \
 done
 	for f in $(VCONFIGS); do \
   sed -e 's/version = [0-9].*/version = $(VERSION)/' $$f > $$f.tmp; \
   mv $$f.tmp $$f; \
 done
 	for f in $(VSKINS); do \
-  sed -e 's/^SKIN_VERSION = [0-9].*/SKIN_VERSION = $(VERSION)/' $$f > $$f.tmp; \
-  mv $$f.tmp $$f; \
+  sed -e 's/^SKIN_VERSION = [0-9].*/SKIN_VERSION = $(VERSION)/' $(SKINLOC)/$$f > $(SKINLOC)/$$f.tmp; \
+  mv $(SKINLOC)/$$f.tmp $(SKINLOC)/$$f; \
 done
 	sed -e 's/__version__ *=.*/__version__ = "$(VERSION)"/' bin/weewx/__init__.py > weeinit.py.tmp
 	mv weeinit.py.tmp bin/weewx/__init__.py
