@@ -50,7 +50,7 @@ def add_subparser(subparsers):
     list_extension_parser.add_argument('--config',
                                        metavar='CONFIG-PATH',
                                        help=f'Path to configuration file. '
-                                            f'Default is "{weectllib.default_config_path}".')
+                                            f'Default is "{weecfg.default_config_path}".')
 
     # ---------- Action 'install' ----------
     install_extension_parser = \
@@ -68,7 +68,7 @@ def add_subparser(subparsers):
     install_extension_parser.add_argument('--config',
                                           metavar='CONFIG-PATH',
                                           help=f'Path to configuration file. '
-                                               f'Default is "{weectllib.default_config_path}".')
+                                               f'Default is "{weecfg.default_config_path}".')
     install_extension_parser.add_argument('--tmpdir',
                                           metavar='DIR',
                                           help="Location of a temporarily directory to use if "

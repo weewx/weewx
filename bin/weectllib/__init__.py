@@ -4,9 +4,3 @@
 #    See the file LICENSE.txt for your rights.
 #
 """The 'weectllib' package."""
-import sys
-
-if sys.platform == 'darwin':
-    default_config_path = '/Users/Shared/weewx/weewx.conf'
-else:
-    default_config_path = '/home/weewx/weewx.conf'

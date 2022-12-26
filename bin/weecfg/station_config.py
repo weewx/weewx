@@ -32,7 +32,7 @@ def create_station(config_path, *args, **kwargs):
     """
 
     if not config_path:
-        config_path = weectllib.default_config_path
+        config_path = weecfg.default_config_path
         print(f"The configuration file will be created "
               f"at {bcolors.BOLD}{config_path}{bcolors.ENDC}.")
 
@@ -56,7 +56,7 @@ def reconfigure_station(config_path, *args, **kwargs):
     "Reconfigure an existing station"
 
     if not config_path:
-        config_path = weectllib.default_config_path
+        config_path = weecfg.default_config_path
 
     print(f"The configuration file {bcolors.BOLD}{config_path}{bcolors.ENDC} will be used.")
 

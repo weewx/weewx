@@ -26,6 +26,8 @@ major_comment_block = ["",
                        "#######################################",
                        ""]
 
+default_weewx_root = os.path.expanduser('~/weewx-data')
+default_config_path = os.path.join(default_weewx_root, 'weewx.conf')
 
 class ExtensionError(IOError):
     """Errors when installing or uninstalling an extension"""
@@ -48,9 +50,9 @@ class Logger(object):
 # ==============================================================================
 
 if sys.platform == "darwin":
-    DEFAULT_LOCATIONS = ['../..', '/etc/weewx', '/Users/Shared/weewx']
+    DEFAULT_LOCATIONS = ['../..', default_weewx_root, '/etc/weewx', '/Users/Shared/weewx']
 else:
-    DEFAULT_LOCATIONS = ['../..', '/etc/weewx', '/home/weewx']
+    DEFAULT_LOCATIONS = ['../..', default_weewx_root, '/etc/weewx', '/home/weewx']
 
 
 def find_file(file_path=None, args=None, locations=DEFAULT_LOCATIONS,
