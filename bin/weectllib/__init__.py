@@ -3,7 +3,7 @@
 #
 #    See the file LICENSE.txt for your rights.
 #
-"""The 'weectl' package."""
+"""The 'weectllib' package."""
 import sys
 
 if sys.platform == 'darwin':

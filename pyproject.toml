@@ -64,7 +64,7 @@ six = "^1"
 
 [tool.poetry.scripts]
 weewxd = 'weewxd:main'
-weectl = 'weectl.__main__:main'
+weectl = 'weectl:main'
 
 [build-system]
 # Minimum requirements for the build system to execute.

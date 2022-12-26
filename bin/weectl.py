@@ -41,7 +41,7 @@ def main():
                                        title="Available subcommands")
 
     for subcommand in SUBCOMMANDS:
-        module = importlib.import_module(f'weectl.parse_{subcommand}')
+        module = importlib.import_module(f'weectllib.parse_{subcommand}')
         module.add_subparser(subparsers)
 
     namespace = parser.parse_args()

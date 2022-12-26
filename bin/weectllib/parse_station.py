@@ -6,7 +6,7 @@
 """Entry point for the "station" subcommand."""
 import sys
 
-import weectl
+import weectllib
 import weewx
 import weecfg.station_config
 
@@ -62,7 +62,7 @@ def add_subparser(subparsers):
     create_station_parser.add_argument('--config',
                                        metavar='CONFIG-PATH',
                                        help=f'Path to configuration file. It must not already '
-                                            f'exist. Default is "{weectl.default_config_path}".')
+                                            f'exist. Default is "{weectllib.default_config_path}".')
     _add_common_args(create_station_parser)
     create_station_parser.set_defaults(func=create_station)
 
@@ -74,7 +74,7 @@ def add_subparser(subparsers):
     reconfigure_station_parser.add_argument('--config',
                                             metavar='CONFIG-PATH',
                                             help=f'Path to configuration file. '
-                                                 f'Default is "{weectl.default_config_path}"')
+                                                 f'Default is "{weectllib.default_config_path}"')
     _add_common_args(reconfigure_station_parser)
     reconfigure_station_parser.set_defaults(func=reconfigure_station)
 
