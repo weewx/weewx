@@ -73,8 +73,8 @@ def add_subparser(subparsers):
 
     reconfigure_station_parser.add_argument('--config',
                                             metavar='CONFIG-PATH',
-                                            help='Path to configuration file. Default is '
-                                                 '"/home/weewx/weewx.conf".')
+                                            help=f'Path to configuration file. '
+                                                 f'Default is "{weectl.default_config_path}"')
     _add_common_args(reconfigure_station_parser)
     reconfigure_station_parser.set_defaults(func=reconfigure_station)
 
