@@ -25,7 +25,7 @@ usagestr = """weectl -v|--version
        weectl daemon --help
 """
 
-SUBCOMMANDS = ['station', 'daemon']
+SUBCOMMANDS = ['station', 'daemon', 'extension']
 
 
 # ===============================================================================
