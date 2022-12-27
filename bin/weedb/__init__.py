@@ -17,7 +17,6 @@ Weedb generally follows the MySQL exception model. Specifically:
 """
 
 import importlib
-import sys
 
 # The exceptions that the weedb package can raise:
 class DatabaseError(Exception):
@@ -205,3 +204,77 @@ class Transaction(object):
         except DatabaseError:
             pass
 
+
+def get_database_dict_from_config(config_dict, database):
+    """Convenience function that given a configuration dictionary and a database name,
+     returns a database dictionary that can be used to open the database using Manager.open().
+
+    Args:
+
+        config_dict (dict): The configuration dictionary.
+        database (str): The database whose database dict is to be retrieved
+            (example: 'archive_sqlite')
+
+    Returns:
+        dict: A database dictionary, with everything needed to pass on to a Manager or weedb in
+            order to open a database.
+
+    Example:
+        Given a configuration file snippet that looks like:
+
+    >>> import configobj
+    >>> from six.moves import StringIO
+    >>> config_snippet = '''
+    ... WEEWX_ROOT = /home/weewx
+    ... [DatabaseTypes]
+    ...   [[SQLite]]
+    ...     driver = weedb.sqlite
+    ...     SQLITE_ROOT = archive
+    ... [Databases]
+    ...     [[archive_sqlite]]
+    ...        database_name = weewx.sdb
+    ...        database_type = SQLite'''
+    >>> config_dict = configobj.ConfigObj(StringIO(config_snippet))
+    >>> database_dict = get_database_dict_from_config(config_dict, 'archive_sqlite')
+    >>> keys = sorted(database_dict.keys())
+    >>> for k in keys:
+    ...     print("%15s: %12s" % (k, database_dict[k]))
+        SQLITE_ROOT: /home/weewx/archive
+      database_name:    weewx.sdb
+             driver: weedb.sqlite
+    """
+    import weewx
+    import weeutil.config
+    try:
+        database_dict = dict(config_dict['Databases'][database])
+    except KeyError as e:
+        raise weewx.UnknownDatabase("Unknown database '%s'" % e)
+
+    # See if a 'database_type' is specified. This is something
+    # like 'SQLite' or 'MySQL'. If it is, use it to augment any
+    # missing information in the database_dict:
+    if 'database_type' in database_dict:
+        database_type = database_dict.pop('database_type')
+
+        # Augment any missing information in the database dictionary with
+        # the top-level stanza
+        if database_type in config_dict['DatabaseTypes']:
+            weeutil.config.conditional_merge(database_dict,
+                                             config_dict['DatabaseTypes'][database_type])
+        else:
+            raise weewx.UnknownDatabaseType('database_type')
+
+    # Import the driver and see if it wants to modify the database dictionary
+    db_mod = importlib.import_module(database_dict['driver'])
+    if hasattr(db_mod, 'modify_config'):
+        database_dict = getattr(db_mod, 'modify_config')(config_dict, database_dict)
+
+    return database_dict
+
+
+
+if __name__ == '__main__':
+    import doctest
+
+    if not doctest.testmod().failed:
+        print("PASSED")

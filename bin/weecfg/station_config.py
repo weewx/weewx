@@ -413,7 +413,7 @@ def config_roots(config_dict, weewx_root=None, skin_root=None, html_root=None, s
         if sqlite_root:
             config_dict['DatabaseTypes']['SQLite']['SQLITE_ROOT'] = sqlite_root
         elif 'SQLITE_ROOT' not in config_dict['DatabaseTypes']['SQLite']:
-            config_dict['DatabaseTypes']['SQLite']['SQLITE_ROOT'] = '%(WEEWX_ROOT)s/archive'
+            config_dict['DatabaseTypes']['SQLite']['SQLITE_ROOT'] = 'archive'
         # Turn interpolation back on.
         config_dict.interpolation = hold
 

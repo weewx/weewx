@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2022 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2023 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -783,63 +783,8 @@ default_binding_dict = {'database': 'archive_sqlite',
 
 
 def get_database_dict_from_config(config_dict, database):
-    """Convenience function that given a configuration dictionary and a database name,
-     returns a database dictionary that can be used to open the database using Manager.open().
-
-    Args:
-
-        config_dict (dict): The configuration dictionary.
-        database (str): The database whose database dict is to be retrieved
-            (example: 'archive_sqlite')
-
-    Returns:
-        dict: Adatabase dictionary, with everything needed to pass on to a Manager or weedb in
-            order to open a database.
-
-    Example:
-        Given a configuration file snippet that looks like:
-
-    >>> import configobj
-    >>> from six.moves import StringIO
-    >>> config_snippet = '''
-    ... WEEWX_ROOT = /home/weewx
-    ... [DatabaseTypes]
-    ...   [[SQLite]]
-    ...     driver = weedb.sqlite
-    ...     SQLITE_ROOT = %(WEEWX_ROOT)s/archive
-    ... [Databases]
-    ...     [[archive_sqlite]]
-    ...        database_name = weewx.sdb
-    ...        database_type = SQLite'''
-    >>> config_dict = configobj.ConfigObj(StringIO(config_snippet))
-    >>> database_dict = get_database_dict_from_config(config_dict, 'archive_sqlite')
-    >>> keys = sorted(database_dict.keys())
-    >>> for k in keys:
-    ...     print("%15s: %12s" % (k, database_dict[k]))
-        SQLITE_ROOT: /home/weewx/archive
-      database_name:    weewx.sdb
-             driver: weedb.sqlite
-    """
-    try:
-        database_dict = dict(config_dict['Databases'][database])
-    except KeyError as e:
-        raise weewx.UnknownDatabase("Unknown database '%s'" % e)
-
-    # See if a 'database_type' is specified. This is something
-    # like 'SQLite' or 'MySQL'. If it is, use it to augment any
-    # missing information in the database_dict:
-    if 'database_type' in database_dict:
-        database_type = database_dict.pop('database_type')
-
-        # Augment any missing information in the database dictionary with
-        # the top-level stanza
-        if database_type in config_dict['DatabaseTypes']:
-            weeutil.config.conditional_merge(database_dict,
-                                             config_dict['DatabaseTypes'][database_type])
-        else:
-            raise weewx.UnknownDatabaseType('database_type')
-
-    return database_dict
+    """Backwards compatible shim that redirects to weedb."""
+    return weedb.get_database_dict_from_config(config_dict, database)
 
 
 #
