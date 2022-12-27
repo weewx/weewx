@@ -18,50 +18,65 @@ Weedb generally follows the MySQL exception model. Specifically:
 
 import importlib
 
+
 # The exceptions that the weedb package can raise:
 class DatabaseError(Exception):
     """Base class of all weedb exceptions."""
 
+
 class IntegrityError(DatabaseError):
     """Operation attempted involving the relational integrity of the database."""
 
+
 class ProgrammingError(DatabaseError):
     """SQL or other programming error."""
-    
+
+
 class DatabaseExistsError(ProgrammingError):
     """Attempt to create a database that already exists"""
 
+
 class TableExistsError(ProgrammingError):
     """Attempt to create a table that already exists."""
-    
+
+
 class NoTableError(ProgrammingError):
     """Attempt to operate on a non-existing table."""
-    
+
+
 class OperationalError(DatabaseError):
     """Runtime database errors."""
+
 
 class NoDatabaseError(OperationalError):
     """Operation attempted on a database that does not exist."""
 
+
 class CannotConnectError(OperationalError):
     """Unable to connect to the database server."""
+
 
 class DisconnectError(OperationalError):
     """Database went away."""
 
+
 class NoColumnError(OperationalError):
     """Attempt to operate on a column that does not exist."""
 
+
 class BadPasswordError(OperationalError):
     """Bad or missing password."""
-    
+
+
 class PermissionError(OperationalError):
     """Lacking necessary permissions."""
+
 
 # For backwards compatibility:
 DatabaseExists = DatabaseExistsError
 NoDatabase = NoDatabaseError
 CannotConnect = CannotConnectError
+
 
 # In what follows, the test whether a database dictionary has function "dict" is
 # to get around a bug in ConfigObj. It seems to be unable to unpack (using the
@@ -159,7 +174,7 @@ class Connection(object):
         """Returns True if the database supports math functions such as cos() and sin().
         False otherwise."""
         return True
-    
+
     def begin(self):
         raise NotImplementedError
 
@@ -184,8 +199,10 @@ class Connection(object):
         except DatabaseError:
             pass
 
+
 class Transaction(object):
     """Class to be used to wrap transactions in a 'with' clause."""
+
     def __init__(self, connection):
         self.connection = connection
         self.cursor = self.connection.cursor()
@@ -239,8 +256,8 @@ def get_database_dict_from_config(config_dict, database):
     >>> keys = sorted(database_dict.keys())
     >>> for k in keys:
     ...     print("%15s: %12s" % (k, database_dict[k]))
-        SQLITE_ROOT: /home/weewx/archive
       database_name:    weewx.sdb
+            db_path: /home/weewx/archive/weewx.sdb
              driver: weedb.sqlite
     """
     import weewx
@@ -270,7 +287,6 @@ def get_database_dict_from_config(config_dict, database):
         database_dict = getattr(db_mod, 'modify_config')(config_dict, database_dict)
 
     return database_dict
-
 
 
 if __name__ == '__main__':
