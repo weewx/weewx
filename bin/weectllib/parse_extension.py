@@ -5,29 +5,23 @@
 #    See the file LICENSE.txt for your rights.
 #
 """Install and remove extensions."""
-import argparse
 import sys
 
-import weewx
-import weectllib
 import weecfg.extension
-import weeutil.logger
-from weecfg import Logger
-from weecfg.extension import ExtensionEngine
-from weeutil.weeutil import to_int
+from weeutil.weeutil import bcolors
 
 # Redirect the import of setup:
 sys.modules['setup'] = weecfg.extension
 
-extension_list_usage = """weectllib extension list [--config=CONFIG-PATH]
+extension_list_usage = f"""{bcolors.BOLD}weectllib extension list [--config=CONFIG-PATH]{bcolors.ENDC}
 """
-extension_install_usage = """  weectllib extension install {filename|directory|remote}
-               [--config=CONFIG-PATH]
-               [--tmpdir=DIR] [--dry-run] [--verbosity=N]
+extension_install_usage = f"""  {bcolors.BOLD}weectllib extension install {{filename|directory|remote}} \\
+           [--config=CONFIG-PATH] \\
+           [--tmpdir=DIR] [--dry-run] [--verbosity=N]{bcolors.ENDC}
 """
-extension_uninstall_usage = """  weectllib extension uninstall=EXTENSION
-               [--config=CONFIG-PATH]
-               [--dry-run] [--verbosity=N]
+extension_uninstall_usage = f"""  {bcolors.BOLD}weectllib extension uninstall=EXTENSION \\
+           [--config=CONFIG-PATH] \\
+           [--dry-run] [--verbosity=N]{bcolors.ENDC}
 """
 extension_usage = '\n     '.join((extension_list_usage,
                                   extension_install_usage,

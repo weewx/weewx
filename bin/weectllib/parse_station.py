@@ -6,43 +6,43 @@
 """Entry point for the "station" subcommand."""
 import sys
 
-import weectllib
-import weewx
 import weecfg.station_config
+import weewx
+from weeutil.weeutil import bcolors
 
-station_create_usage = """weectl station create [--config=CONFIG-PATH] 
-                             [--driver=DRIVER]
-                             [--location=LOCATION]
-                             [--altitude=ALTITUDE,{foot|meter}]
-                             [--latitude=LATITUDE] [--longitude=LONGITUDE]
-                             [--register={y,n} [--station-url=STATION_URL]]
-                             [--units={us,metricwx,metric}]
-                             [--skin-root=SKIN_ROOT]
-                             [--sqlite-root=SQLITE_ROOT]
-                             [--html-root=HTML_ROOT] 
-                             [--no-prompt]
+station_create_usage = f"""{bcolors.BOLD}weectl station create [--config=CONFIG-PATH] \\
+                             [--driver=DRIVER] \\
+                             [--location=LOCATION] \\
+                             [--altitude=ALTITUDE,{{foot|meter}}] \\
+                             [--latitude=LATITUDE] [--longitude=LONGITUDE] \\
+                             [--register={{y,n}} [--station-url=STATION_URL]] \\
+                             [--units={{us,metricwx,metric}}] \\
+                             [--skin-root=SKIN_ROOT] \\
+                             [--sqlite-root=SQLITE_ROOT] \\
+                             [--html-root=HTML_ROOT] \\
+                             [--no-prompt]{bcolors.ENDC}
 """
-station_reconfigure_usage = """weectl station reconfigure [--config=CONFIG-PATH] 
-                                  [--driver=DRIVER]
-                                  [--location=LOCATION]
-                                  [--altitude=ALTITUDE,{foot|meter}]
-                                  [--latitude=LATITUDE] [--longitude=LONGITUDE]
-                                  [--register={y,n} [--station-url=STATION_URL]]
-                                  [--units={us,metricwx,metric}]
-                                  [--skin-root=SKIN_ROOT]
-                                  [--sqlite-root=SQLITE_ROOT]
-                                  [--html-root=HTML_ROOT] 
-                                  [--no-prompt]
+station_reconfigure_usage = f"""{bcolors.BOLD}weectl station reconfigure [--config=CONFIG-PATH] \\ 
+                                  [--driver=DRIVER] \\
+                                  [--location=LOCATION] \\
+                                  [--altitude=ALTITUDE,{{foot|meter}}] \\
+                                  [--latitude=LATITUDE] [--longitude=LONGITUDE] \\
+                                  [--register={{y,n}} [--station-url=STATION_URL]] \\
+                                  [--units={{us,metricwx,metric}}] \\
+                                  [--skin-root=SKIN_ROOT] \\
+                                  [--sqlite-root=SQLITE_ROOT] \\
+                                  [--html-root=HTML_ROOT] \\
+                                  [--no-prompt]{bcolors.ENDC}
 """
-station_upgrade_usage = 'weectl station upgrade [--config=CONFIG-PATH]'
-station_upgrade_skins_usage = 'weectl station upgrade-skins [--config=CONFIG-PATH]'
+station_upgrade_usage = f'{bcolors.BOLD}weectl station upgrade [--config=CONFIG-PATH]{bcolors.ENDC}'
+station_upgrade_skins_usage = f'{bcolors.BOLD}weectl station upgrade-skins [--config=CONFIG-PATH]{bcolors.ENDC}'
 
 station_usage = '\n       '.join((station_create_usage, station_reconfigure_usage,
                                   station_upgrade_usage, station_upgrade_skins_usage))
 
-CREATE_DESCRIPTION = 'In what follows, WEEWX_ROOT is the directory that contains the ' \
-                     'configuration file. For example, if "--config=/home/weewx/weewx.conf", ' \
-                     'then WEEWX_ROOT will be "/home/weewx".'
+CREATE_DESCRIPTION = f"""In what follows, {bcolors.BOLD}WEEWX_ROOT{bcolors.ENDC} is the directory 
+that contains the configuration file. For example, if "--config={weecfg.default_config_path}", 
+then WEEWX_ROOT will be "{weecfg.default_weewx_root}"."""
 
 
 def add_subparser(subparsers):
