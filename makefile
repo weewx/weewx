@@ -159,7 +159,7 @@ upload-docs:
 
 # update the version in all relevant places
 VDOCS=readme.htm customizing.htm devnotes.htm hardware.htm usersguide.htm upgrading.htm utilities.htm
-VCONFIGS=weewx.conf bin/weecfg/tests/expected/weewx43_user_expected.conf
+VCONFIGS=bin/wee_resources/weewx.conf bin/weecfg/tests/expected/weewx43_user_expected.conf
 VSKINS=Ftp/skin.conf Mobile/skin.conf Rsync/skin.conf Seasons/skin.conf Smartphone/skin.conf Standard/skin.conf
 version:
 	for f in $(VDOCS); do \
