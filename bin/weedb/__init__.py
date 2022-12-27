@@ -16,6 +16,7 @@ Weedb generally follows the MySQL exception model. Specifically:
     being raised.
 """
 
+import importlib
 import sys
 
 # The exceptions that the weedb package can raise:
@@ -71,8 +72,7 @@ CannotConnect = CannotConnectError
 def create(db_dict):
     """Create a database. If it already exists, an exception of type
     weedb.DatabaseExistsError will be raised."""
-    __import__(db_dict['driver'])
-    driver_mod = sys.modules[db_dict['driver']]
+    driver_mod = importlib.import_module(db_dict['driver'])
     # See note above
     if hasattr(db_dict, "dict"):
         return driver_mod.create(**db_dict.dict())
@@ -83,8 +83,7 @@ def create(db_dict):
 def connect(db_dict):
     """Return a connection to a database. If the database does not
     exist, an exception of type weedb.NoDatabaseError will be raised."""
-    __import__(db_dict['driver'])
-    driver_mod = sys.modules[db_dict['driver']]
+    driver_mod = importlib.import_module(db_dict['driver'])
     # See note above
     if hasattr(db_dict, "dict"):
         return driver_mod.connect(**db_dict.dict())
@@ -95,8 +94,7 @@ def connect(db_dict):
 def drop(db_dict):
     """Drop (delete) a database. If the database does not exist,
     the exception weedb.NoDatabaseError will be raised."""
-    __import__(db_dict['driver'])
-    driver_mod = sys.modules[db_dict['driver']]
+    driver_mod = importlib.import_module(db_dict['driver'])
     # See note above
     if hasattr(db_dict, "dict"):
         return driver_mod.drop(**db_dict.dict())
