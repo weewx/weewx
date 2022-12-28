@@ -8,7 +8,8 @@ import weecfg.daemon_config
 from weeutil.weeutil import bcolors
 
 daemon_install_usage = f"""{bcolors.BOLD}weectl daemon install --type={{sysv|systemd}} 
-            [--config=CONFIG-PATH]{bcolors.ENDC}"""
+            [--config=CONFIG-PATH] [--user=USER] 
+            [--weewxd-path=WEEWXD-PATH] [-daemon-dir=DAEMON-DIR] {bcolors.ENDC}"""
 daemon_uninstall_usage = f"""{bcolors.BOLD}weectl daemon uninstall  --type={{sysv|systemd}} 
             [--config=CONFIG-PATH]{bcolors.ENDC}"""
 
@@ -40,7 +41,18 @@ def add_subparser(subparsers):
                                        dest="daemon_type",
                                        required=True,
                                        help="Type of file to install. Required.")
-
+    daemon_install_parser.add_argument('--config',
+                                       metavar='CONFIG-PATH',
+                                       help=f'Path to configuration file. '
+                                            f'Default is "{weecfg.default_config_path}".')
+    daemon_install_parser.add_argument('--user',
+                                       help='Run as USER. If not given, "root" will be used.')
+    daemon_install_parser.add_argument('--weewxd-path',
+                                       help='Path to the weewxd.py file. If not given, it will '
+                                            'be inferred')
+    daemon_install_parser.add_argument('--daemon-dir',
+                                       help='Path to the directory in which the finished daemon '
+                                            'file should be put.')
     daemon_install_parser.set_defaults(func=daemon_install)
 
     # ---------- Action 'uninstall' ----------
@@ -60,7 +72,11 @@ def add_subparser(subparsers):
 
 
 def daemon_install(namespace):
-    weecfg.daemon_config.daemon_install(namespace.daemon_type)
+    weecfg.daemon_config.daemon_install(namespace.daemon_type,
+                                        config_path=namespace.config,
+                                        user=namespace.user,
+                                        weewxd_path=namespace.weewxd_path,
+                                        daemon_dir=namespace.daemon_dir)
 
 
 def daemon_uninstall(namespace):
