@@ -17,6 +17,7 @@ import importlib
 
 import configobj
 
+import user
 import weeutil.config
 import weeutil.weeutil
 from weeutil.weeutil import to_bool, bcolors
@@ -613,22 +614,19 @@ def prompt_with_limits(prompt, default=None, low_limit=None, high_limit=None):
 def extract_roots(config_path, config_dict, bin_root):
     """Get the location of the various root directories used by weewx."""
 
-    root_dict = {'WEEWX_ROOT': config_dict['WEEWX_ROOT'],
-                 'CONFIG_ROOT': os.path.dirname(config_path)}
-    # If bin_root has not been defined, then figure out where it is using
-    # the location of this file:
-    if bin_root:
-        root_dict['BIN_ROOT'] = bin_root
-    else:
-        root_dict['BIN_ROOT'] = os.path.abspath(os.path.join(
-            os.path.dirname(__file__), '..'))
-    # The user subdirectory:
-    root_dict['USER_ROOT'] = os.path.join(root_dict['BIN_ROOT'], 'user')
-    # The extensions directory is in the user directory:
-    root_dict['EXT_ROOT'] = os.path.join(root_dict['USER_ROOT'], 'installer')
+    if not bin_root:
+        bin_root = os.path.realpath(os.path.join(os.path.dirname(user.__file__), '..'))
+
+    root_dict = {
+        'BIN_ROOT' : bin_root,
+        'WEEWX_ROOT': config_dict['WEEWX_ROOT'],
+        'CONFIG_ROOT': os.path.realpath(os.path.dirname(config_path)),
+        'USER_ROOT' : os.path.realpath(os.path.join(bin_root, 'user')),
+        'EXT_ROOT' : os.path.realpath(os.path.join(bin_root, 'user', 'installer'))
+    }
     # Add SKIN_ROOT if it can be found:
     try:
-        root_dict['SKIN_ROOT'] = os.path.abspath(os.path.join(
+        root_dict['SKIN_ROOT'] = os.path.realpath(os.path.join(
             root_dict['WEEWX_ROOT'],
             config_dict['StdReport']['SKIN_ROOT']))
     except KeyError:
