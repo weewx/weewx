@@ -21,7 +21,7 @@ extension_list_usage = f"""{bcolors.BOLD}weectl extension list [--config=CONFIG-
 """
 extension_install_usage = f"""  {bcolors.BOLD}weectl extension install {{FILE|DIR|URL}} \\
            [--config=CONFIG-PATH] \\
-           [--tmpdir=DIR] [--dry-run] [--verbosity=N]{bcolors.ENDC}
+           [--dry-run] [--verbosity=N]{bcolors.ENDC}
 """
 extension_uninstall_usage = f"""  {bcolors.BOLD}weectl extension uninstall NAME \\
            [--config=CONFIG-PATH] \\
@@ -30,7 +30,6 @@ extension_uninstall_usage = f"""  {bcolors.BOLD}weectl extension uninstall NAME 
 extension_usage = '\n     '.join((extension_list_usage,
                                   extension_install_usage,
                                   extension_uninstall_usage))
-
 
 
 def add_subparser(subparsers):
@@ -73,11 +72,6 @@ def add_subparser(subparsers):
                                           metavar='CONFIG-PATH',
                                           help=f'Path to configuration file. '
                                                f'Default is "{weecfg.default_config_path}".')
-    install_extension_parser.add_argument('--tmpdir',
-                                          metavar='DIR',
-                                          help="Location of a temporarily directory to use if "
-                                               "a zipfile or tarball needs to be unpacked. "
-                                               "Optional.")
     install_extension_parser.add_argument('--dry-run',
                                           action='store_true',
                                           help='Print what would happen, but do not actually '
@@ -132,7 +126,6 @@ def install_extension(namespace):
 
     ext = weecfg.extension.ExtensionEngine(config_path=config_path,
                                            config_dict=config_dict,
-                                           tmpdir=namespace.tmpdir,
                                            dry_run=namespace.dry_run,
                                            logger=weecfg.Logger(verbosity=namespace.verbosity))
 

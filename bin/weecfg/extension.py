@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2021 Tom Keffer <tkeffer@gmail.com> and
+#    Copyright (c) 2009-2023 Tom Keffer <tkeffer@gmail.com> and
 #                            Matthew Wall
 #
 #    See the file LICENSE.txt for your full rights.
@@ -18,6 +18,7 @@ import glob
 import os
 import shutil
 import sys
+import tempfile
 
 import configobj
 
@@ -48,8 +49,7 @@ class ExtensionEngine(object):
         'bin': 'BIN_ROOT',
         'skins': 'SKIN_ROOT'}
 
-    def __init__(self, config_path, config_dict, tmpdir=None, bin_root=None,
-                 dry_run=False, logger=None):
+    def __init__(self, config_path, config_dict, bin_root=None, dry_run=False, logger=None):
         """
         Initializer for ExtensionEngine.
 
@@ -61,12 +61,9 @@ class ExtensionEngine(object):
             config_dict (str): The configuration dictionary, i.e., the contents of the
                          file at config_path.
 
-            tmpdir (str): A temporary directory to be used for extracting tarballs and
-                    the like [Optional]
-
             bin_root (str): Path to the location of the weewx binary files.  For example,
                       something like /home/weewx/bin. Optional. If not specified,
-                      it will be guessed based on the location of this file.
+                      it will be guessed based on the location of the weewx module.
 
             dry_run (bool): If Truthy, all the steps will be printed out, but nothing will
                      actually be done.
@@ -77,7 +74,6 @@ class ExtensionEngine(object):
         self.config_path = config_path
         self.config_dict = config_dict
         self.logger = logger or Logger()
-        self.tmpdir = tmpdir or '/var/tmp'
         self.dry_run = dry_run
 
         self.root_dict = weecfg.extract_roots(self.config_path, self.config_dict, bin_root)
@@ -108,40 +104,60 @@ class ExtensionEngine(object):
         return installer
 
     def install_extension(self, extension_path):
-        """Install the extension from the file or directory extension_path"""
+        """Install an extension.
+
+        Args:
+            extension_path(str): Either a file path, a directory path, or an URL.
+        """
         self.logger.log("Request to install '%s'" % extension_path)
         if self.dry_run:
             self.logger.log("This is a dry run. Nothing will actually be done.")
 
-        if os.path.isfile(extension_path):
-            # It is a file. If it ends with .zip, assume it is a zip archive.
-            # Otherwise, assume it is a tarball.
-            extension_dir = None
-            try:
-                if extension_path[-4:] == '.zip':
-                    member_names = weecfg.extract_zip(extension_path,
-                                                      self.tmpdir, self.logger)
-                else:
-                    member_names = weecfg.extract_tar(extension_path,
-                                                      self.tmpdir, self.logger)
-                extension_reldir = os.path.commonprefix(member_names)
-                if extension_reldir == '':
-                    raise InstallError("Unable to install from '%s': no common path "
-                                       "(the extension archive contains more than a "
-                                       "single root directory)" % extension_path)
-                extension_dir = os.path.join(self.tmpdir, extension_reldir)
-                self.install_from_dir(extension_dir)
-            finally:
-                if extension_dir:
-                    shutil.rmtree(extension_dir, ignore_errors=True)
+        # Figure out what extension_path is
+        if extension_path.startswith('http'):
+            # It's an URL. Download, then install
+            import urllib.request
+            import tempfile
+            # Download the file into a temporary file
+            with tempfile.NamedTemporaryFile() as test_fd:
+                filename, info = urllib.request.urlretrieve(extension_path, test_fd.name)
+                # Now install the temporary file. The file type will be given up the download
+                # header's "subtype". This will be something like "zip".
+                extension_name = self._install_from_file(test_fd.name, info.get_content_subtype())
+        elif os.path.isfile(extension_path):
+            # It's a file. Figure out what kind, then install. If it's not a zipfile, assume
+            # it's a tarfile.
+            if extension_path[-4:] == '.zip':
+                filetype = 'zip'
+            else:
+                filetype = 'tar'
+            extension_name = self._install_from_file(extension_path, filetype)
         elif os.path.isdir(extension_path):
-            # It's a directory, presumably containing the extension components.
-            # Install directly
-            self.install_from_dir(extension_path)
+            # It's a directory. Install directly.
+            extension_name = self.install_from_dir(extension_path)
         else:
-            raise InstallError("Extension '%s' not found." % extension_path)
+            raise InstallError(f"Unrecognized type for {extension_path}")
 
-        self.logger.log("Finished installing extension '%s'" % extension_path)
+        self.logger.log(f"Finished installing extension {extension_name} from {extension_path}")
+
+    def _install_from_file(self, filepath, filetype):
+        """Install the extension at path filepath."""
+        # Make a temporary directory into which to extract the file.
+        with tempfile.TemporaryDirectory() as dir_name:
+            if filetype == 'zip':
+                member_names = weecfg.extract_zip(filepath, dir_name, self.logger)
+            else:
+                # Assume it's a tarfile
+                member_names = weecfg.extract_tar(filepath, dir_name, self.logger)
+            extension_reldir = os.path.commonprefix(member_names)
+            if not extension_reldir:
+                raise InstallError(f"Unable to install from {filepath}: no common path "
+                                   "(the extension archive contains more than a "
+                                   "single root directory)")
+            extension_dir = os.path.join(dir_name, extension_reldir)
+            extension_name = self.install_from_dir(extension_dir)
+
+        return extension_name
 
     def install_from_dir(self, extension_dir):
         """Install the extension whose components are in extension_dir"""
@@ -236,6 +252,8 @@ class ExtensionEngine(object):
         if save_config:
             backup_path = weecfg.save_with_backup(self.config_dict, self.config_path)
             self.logger.log("Saved configuration dictionary. Backup copy at %s" % backup_path)
+
+        return extension_name
 
     def get_lang_code(self, skin, default_code):
         """Convenience function for picking a language code"""
