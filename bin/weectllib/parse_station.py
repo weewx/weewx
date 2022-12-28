@@ -51,7 +51,10 @@ def add_subparser(subparsers):
                                            usage=station_usage,
                                            description='Manages the configuration file and skins',
                                            help='Create, modify, or upgrade a config file')
+    # In the following, the 'prog' argument is necessary to get a proper error message.
+    # See Python issue https://bugs.python.org/issue42297
     action_parser = station_parser.add_subparsers(dest='action',
+                                                  prog='weectl station',
                                                   title='Which action to take')
 
     # ---------- Action 'create' ----------

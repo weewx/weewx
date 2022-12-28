@@ -27,8 +27,8 @@ log = logging.getLogger(__name__)
 def create_station(config_path, *args, **kwargs):
     """Create a brand-new configuration file.
 
-    Like config_station(), except it ensures that the config file does not already exist. It then
-    retrieves the template config file from package resources and uses that.
+    Like reconfigure_station(), except it ensures that the config file does not already exist.
+    It then retrieves the template config file from package resources and uses that.
     """
 
     if not config_path:
