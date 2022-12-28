@@ -35,7 +35,8 @@ station_reconfigure_usage = f"""{bcolors.BOLD}weectl station reconfigure [--conf
                                   [--no-prompt]{bcolors.ENDC}
 """
 station_upgrade_usage = f'{bcolors.BOLD}weectl station upgrade [--config=CONFIG-PATH]{bcolors.ENDC}'
-station_upgrade_skins_usage = f'{bcolors.BOLD}weectl station upgrade-skins [--config=CONFIG-PATH]{bcolors.ENDC}'
+station_upgrade_skins_usage = f'{bcolors.BOLD}weectl station upgrade-skins ' \
+                              f'[--config=CONFIG-PATH]{bcolors.ENDC}'
 
 station_usage = '\n       '.join((station_create_usage, station_reconfigure_usage,
                                   station_upgrade_usage, station_upgrade_skins_usage))
@@ -58,38 +59,38 @@ def add_subparser(subparsers):
                                                   title='Which action to take')
 
     # ---------- Action 'create' ----------
-    create_station_parser = action_parser.add_parser('create',
+    station_create_parser = action_parser.add_parser('create',
                                                      description=CREATE_DESCRIPTION,
                                                      usage=station_create_usage,
                                                      help='Create a station config file')
-    create_station_parser.add_argument('--config',
+    station_create_parser.add_argument('--config',
                                        metavar='CONFIG-PATH',
                                        help=f'Path to configuration file. It must not already '
                                             f'exist. Default is "{weecfg.default_config_path}".')
-    _add_common_args(create_station_parser)
-    create_station_parser.set_defaults(func=create_station)
+    _add_common_args(station_create_parser)
+    station_create_parser.set_defaults(func=create_station)
 
     # ---------- Action 'reconfigure' ----------
-    reconfigure_station_parser = action_parser.add_parser('reconfigure',
+    station_reconfigure_parser = action_parser.add_parser('reconfigure',
                                                           usage=station_reconfigure_usage,
                                                           help='Reconfigure a station config file')
 
-    reconfigure_station_parser.add_argument('--config',
+    station_reconfigure_parser.add_argument('--config',
                                             metavar='CONFIG-PATH',
                                             help=f'Path to configuration file. '
                                                  f'Default is "{weecfg.default_config_path}"')
-    _add_common_args(reconfigure_station_parser)
-    reconfigure_station_parser.set_defaults(func=reconfigure_station)
+    _add_common_args(station_reconfigure_parser)
+    station_reconfigure_parser.set_defaults(func=reconfigure_station)
 
     # Action 'upgrade'
-    upgrade_station_parser = action_parser.add_parser('upgrade',
+    station_upgrade_parser = action_parser.add_parser('upgrade',
                                                       usage=station_upgrade_usage,
                                                       help='Upgrade a station config file')
 
     # Action 'upgrade-skins'
-    upgrade_skins_parser = action_parser.add_parser('upgrade-skins',
-                                                    usage=station_upgrade_skins_usage,
-                                                    help='Upgrade the skins')
+    station_upgrade_skins_parser = action_parser.add_parser('upgrade-skins',
+                                                            usage=station_upgrade_skins_usage,
+                                                            help='Upgrade the skins')
 
 
 def create_station(namespace):
