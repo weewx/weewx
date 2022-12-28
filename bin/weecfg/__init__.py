@@ -51,9 +51,9 @@ class Logger(object):
 # ==============================================================================
 
 if sys.platform == "darwin":
-    DEFAULT_LOCATIONS = ['../..', default_weewx_root, '/etc/weewx', '/Users/Shared/weewx']
+    DEFAULT_LOCATIONS = [default_weewx_root, '/etc/weewx', '/Users/Shared/weewx']
 else:
-    DEFAULT_LOCATIONS = ['../..', default_weewx_root, '/etc/weewx', '/home/weewx']
+    DEFAULT_LOCATIONS = [default_weewx_root, '/etc/weewx', '/home/weewx']
 
 
 def find_file(file_path=None, args=None, locations=DEFAULT_LOCATIONS,
