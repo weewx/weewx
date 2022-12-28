@@ -110,6 +110,9 @@ class ExtensionEngine(object):
     def install_extension(self, extension_path):
         """Install the extension from the file or directory extension_path"""
         self.logger.log("Request to install '%s'" % extension_path)
+        if self.dry_run:
+            self.logger.log("This is a dry run. Nothing will actually be done.")
+
         if os.path.isfile(extension_path):
             # It is a file. If it ends with .zip, assume it is a zip archive.
             # Otherwise, assume it is a tarball.
@@ -319,6 +322,8 @@ class ExtensionEngine(object):
         """Uninstall the extension with name extension_name"""
 
         self.logger.log("Request to remove extension '%s'" % extension_name)
+        if self.dry_run:
+            self.logger.log("This is a dry run. Nothing will actually be done.")
 
         # Find the subdirectory containing this extension's installer
         extension_installer_dir = os.path.join(self.root_dict['EXT_ROOT'], extension_name)
