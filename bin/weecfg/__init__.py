@@ -17,7 +17,7 @@ import importlib
 
 import configobj
 
-import user
+import weewx
 import weeutil.config
 import weeutil.weeutil
 from weeutil.weeutil import to_bool, bcolors
@@ -615,18 +615,20 @@ def extract_roots(config_path, config_dict, bin_root):
     """Get the location of the various root directories used by weewx."""
 
     if not bin_root:
-        bin_root = os.path.realpath(os.path.join(os.path.dirname(user.__file__), '..'))
+        # An explicit value was not given for bin_root. Figure it out from where the
+        # weewx module is:
+        bin_root = os.path.abspath(os.path.join(os.path.dirname(weewx.__file__), '..'))
 
     root_dict = {
         'BIN_ROOT' : bin_root,
         'WEEWX_ROOT': config_dict['WEEWX_ROOT'],
-        'CONFIG_ROOT': os.path.realpath(os.path.dirname(config_path)),
-        'USER_ROOT' : os.path.realpath(os.path.join(bin_root, 'user')),
-        'EXT_ROOT' : os.path.realpath(os.path.join(bin_root, 'user', 'installer'))
+        'CONFIG_ROOT': os.path.abspath(os.path.dirname(config_path)),
+        'USER_ROOT' : os.path.abspath(os.path.join(bin_root, 'user')),
+        'EXT_ROOT' : os.path.abspath(os.path.join(bin_root, 'user', 'installer'))
     }
     # Add SKIN_ROOT if it can be found:
     try:
-        root_dict['SKIN_ROOT'] = os.path.realpath(os.path.join(
+        root_dict['SKIN_ROOT'] = os.path.abspath(os.path.join(
             root_dict['WEEWX_ROOT'],
             config_dict['StdReport']['SKIN_ROOT']))
     except KeyError:
