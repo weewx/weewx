@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "weewx"
-version = "5.0.0a4"
+version = "5.0.0a5"
 description = "The WeeWX weather software system"
 authors = ["Tom Keffer <tkeffer@gmail.com>"]
 license = "GPL3"
@@ -27,12 +27,12 @@ classifiers = [
 packages = [
     { include = "schemas", from = "bin" },
     { include = "user", from = "bin" },
+    { include = "wee_resources", from = "bin" },
     { include = "weecfg", from = "bin" },
-    { include = "weectl", from = "bin" },
+    { include = "weectllib", from = "bin" },
     { include = "weedb", from = "bin" },
     { include = "weeimport", from = "bin" },
     { include = "weeplot", from = "bin" },
-    { include = "wee_resources", from = "bin" },
     { include = "weeutil", from = "bin" },
     { include = "weewx", from = "bin" },
     #    { include = "wee_config", from = "bin" },
@@ -43,6 +43,7 @@ packages = [
     #    { include = "wee_import", from = "bin" },
     #    { include = "wee_reports", from = "bin" },
     { include = "weewxd.py", from = "bin" },
+    { include = "weectl.py", from = "bin" },
 ]
 
 include = [
