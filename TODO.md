@@ -3,12 +3,7 @@
 
 ## Configuration related
 
-Check for validity of station_url.
-
 Get config update working again. 
-
-Consider rename `create_station` to `station_create`. This would mirror the
-usage statements. Same with `reconfigure_station`, et al.
 
 ## Commands
 ```
@@ -26,6 +21,8 @@ weectl extension list
 ## Documentation
 
 Update "where to find things" in user's guide.
+
+Update install documentation. Replace setup.py guide with a pip guide.
 
 Use a dollar sign when referring to symbolic names. For example, $WEEWX_ROOT instead of WEEWX_ROOT.
 

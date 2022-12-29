@@ -276,7 +276,7 @@ class TestConfigRoots(CommonConfigTest):
         self.assertEqual(self.config_dict['StdReport']['SKIN_ROOT'], 'skins')
         self.assertEqual(self.config_dict['StdReport']['HTML_ROOT'], 'public_html')
         self.assertEqual(self.config_dict['DatabaseTypes']['SQLite']['SQLITE_ROOT'],
-                         '/home/weewx/archive')
+                         'archive')
 
 
 class TestCreateStation(unittest.TestCase):
@@ -287,7 +287,7 @@ class TestCreateStation(unittest.TestCase):
         with tempfile.TemporaryDirectory(dir='/var/tmp') as dirname:
             config_path = os.path.join(dirname, 'weewx.conf')
             # Create a station using the defaults
-            weecfg.station_config.create_station(config_path, no_prompt=True)
+            weecfg.station_config.station_create(config_path, no_prompt=True)
 
             # Retrieve the config file that was created and check it:
             config_dict = configobj.ConfigObj(config_path, encoding='utf-8')
@@ -296,8 +296,7 @@ class TestCreateStation(unittest.TestCase):
             self.assertEqual(config_dict['Simulator']['driver'], 'weewx.drivers.simulator')
             self.assertEqual(config_dict['StdReport']['SKIN_ROOT'], 'skins')
             self.assertEqual(config_dict['StdReport']['HTML_ROOT'], 'public_html')
-            self.assertEqual(config_dict['DatabaseTypes']['SQLite']['SQLITE_ROOT'],
-                             os.path.normpath(os.path.join(dirname, 'archive')))
+            self.assertEqual(config_dict['DatabaseTypes']['SQLite']['SQLITE_ROOT'], 'archive')
 
             # Make sure all the skins are there
             for skin in ['Seasons', 'Smartphone', 'Mobile', 'Standard',

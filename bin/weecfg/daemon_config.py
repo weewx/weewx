@@ -34,7 +34,7 @@ def daemon_install(daemon_type, config_path=None, user=None, weewxd_path=None, d
         weewxd_path = weewxd.__file__
 
     if daemon_type == 'systemd':
-        install_systemd(config_path=config_path,
+        systemd_install(config_path=config_path,
                         user=user,
                         weewxd_path=weewxd_path,
                         daemon_dir=daemon_dir)
@@ -44,7 +44,7 @@ def daemon_install(daemon_type, config_path=None, user=None, weewxd_path=None, d
         raise ValueError(f"Unknown daemon type: {daemon_type}")
 
 
-def install_systemd(config_path=None, user=None, weewxd_path=None, daemon_dir=None):
+def systemd_install(config_path=None, user=None, weewxd_path=None, daemon_dir=None):
     """Install a systemd file."""
 
     service_file_name = 'weewx.service'

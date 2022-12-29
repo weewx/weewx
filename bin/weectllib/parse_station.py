@@ -95,7 +95,7 @@ def add_subparser(subparsers):
 
 def create_station(namespace):
     try:
-        weecfg.station_config.create_station(config_path=namespace.config,
+        weecfg.station_config.station_create(config_path=namespace.config,
                                              driver=namespace.driver,
                                              location=namespace.location,
                                              altitude=namespace.altitude,
@@ -113,7 +113,7 @@ def create_station(namespace):
 
 def reconfigure_station(namespace):
     try:
-        weecfg.station_config.reconfigure_station(config_path=namespace.config,
+        weecfg.station_config.station_reconfigure(config_path=namespace.config,
                                                   driver=namespace.driver,
                                                   location=namespace.location,
                                                   altitude=namespace.altitude,

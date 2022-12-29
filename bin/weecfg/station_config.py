@@ -24,10 +24,10 @@ from weeutil.weeutil import to_float, to_bool, bcolors
 log = logging.getLogger(__name__)
 
 
-def create_station(config_path, *args, **kwargs):
+def station_create(config_path, *args, **kwargs):
     """Create a brand-new configuration file.
 
-    Like reconfigure_station(), except it ensures that the config file does not already exist.
+    Like station_reconfigure(), except it ensures that the config file does not already exist.
     It then retrieves the template config file from package resources and uses that.
     """
 
@@ -52,7 +52,7 @@ def create_station(config_path, *args, **kwargs):
     weecfg.save(dist_config_dict, config_path)
 
 
-def reconfigure_station(config_path, *args, **kwargs):
+def station_reconfigure(config_path, *args, **kwargs):
     "Reconfigure an existing station"
 
     config_path, config_dict = weecfg.read_config(config_path)
