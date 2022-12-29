@@ -15,8 +15,8 @@ stations using WeeWX.
 * Robust and hard-to-crash
 * Designed with the enthusiast in mind
 * Simple, easy to understand internal design that is easily extended (Python skills recommended)
-* Python 2 or Python 3
-* Growing ecosystem of 3rd party extensions
+* Python 3.7 or greater
+* Large ecosystem of 3rd party extensions
 * Internationalized language support
 * Localized date/time support
 * Support for US and metric units
@@ -38,17 +38,6 @@ Support for many online weather services, including:
 * Weather Cloud
 * Wetter
 * Windfinder
-
-Support for many data aggregation services, including:
-
-* EmonCMS
-* Graphite
-* InfluxDB
-* MQTT
-* Smart Energy Groups
-* Thingspeak
-* Twitter
-* Xively
 
 Support for over 70 types of hardware including, but not limited to:
 
@@ -81,7 +70,9 @@ of supported stations, and for pictures to help identify your hardware!  The
 [hardware comparison](http://www.weewx.com/hwcmp.html) shows specifications for
 many different types of hardware, including some not yet supported by WeeWX.
 
-## Downloads
+## Install
+
+Install either using `pip`, or package installers (Debian, Red Hat, SuSE).
 
 For current and previous releases:
 
@@ -89,8 +80,7 @@ For current and previous releases:
 
 ## Documentation and Support
 
-Guides for installation, upgrading, and customization are in `docs/readme.htm`
-or at:
+Guides for installation, upgrading, and customization:
 
 [http://weewx.com/docs.html](http://weewx.com/docs.html)
 
