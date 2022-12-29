@@ -20,6 +20,8 @@ station_create_usage = f"""{bcolors.BOLD}weectl station create [--config=CONFIG-
                              [--skin-root=SKIN_ROOT] \\
                              [--sqlite-root=SQLITE_ROOT] \\
                              [--html-root=HTML_ROOT] \\
+                             [--docs-root=DOCS_ROOT] \\
+                             [--examples-root=EXAMPLES_ROOT] \\
                              [--no-prompt]{bcolors.ENDC}
 """
 station_reconfigure_usage = f"""{bcolors.BOLD}weectl station reconfigure [--config=CONFIG-PATH] \\ 
@@ -68,6 +70,14 @@ def add_subparser(subparsers):
                                        help=f'Path to configuration file. It must not already '
                                             f'exist. Default is "{weecfg.default_config_path}".')
     _add_common_args(station_create_parser)
+    station_create_parser.add_argument('--docs-root',
+                                       help=f'Where to put the documentation. Default is '
+                                            f'"$WEEWX_ROOT/docs".')
+    station_create_parser.add_argument('--examples-root',
+                                       help=f'Where to put the examples. Default is '
+                                            f'"$WEEWX_ROOT/examples".')
+    station_create_parser.add_argument('--no-prompt', action='store_true',
+                                       help='If set, do not prompt. Use default values.')
     station_create_parser.set_defaults(func=create_station)
 
     # ---------- Action 'reconfigure' ----------
@@ -80,12 +90,16 @@ def add_subparser(subparsers):
                                             help=f'Path to configuration file. '
                                                  f'Default is "{weecfg.default_config_path}"')
     _add_common_args(station_reconfigure_parser)
+    station_reconfigure_parser.add_argument('--no-prompt', action='store_true',
+                                            help='If set, do not prompt. Use default values.')
     station_reconfigure_parser.set_defaults(func=reconfigure_station)
 
     # Action 'upgrade'
-    station_upgrade_parser = action_parser.add_parser('upgrade',
-                                                      usage=station_upgrade_usage,
-                                                      help='Upgrade a station config file')
+    station_upgrade_parser = \
+        action_parser.add_parser('upgrade',
+                                 usage=station_upgrade_usage,
+                                 description='Upgrade the configuration file, docs, and examples',
+                                 help='Upgrade the configuration file, docs, and examples')
 
     # Action 'upgrade-skins'
     station_upgrade_skins_parser = action_parser.add_parser('upgrade-skins',
@@ -106,6 +120,8 @@ def create_station(namespace):
                                              skin_root=namespace.skin_root,
                                              sqlite_root=namespace.sqlite_root,
                                              html_root=namespace.html_root,
+                                             docs_root=namespace.docs_root,
+                                             examples_root=namespace.examples_root,
                                              no_prompt=namespace.no_prompt)
     except weewx.ViolatedPrecondition as e:
         sys.exit(e)
@@ -165,5 +181,3 @@ def _add_common_args(parser):
     parser.add_argument('--html-root',
                         help='Where generated HTML and images will go, relative '
                              'to WEEWX_ROOT.')
-    parser.add_argument('--no-prompt', action='store_true',
-                        help='If set, do not prompt. Use default values.')

@@ -18,11 +18,20 @@ weectl extension uninstall
 weectl extension list
 ```
 
+## Logging
+
+Consider making `$HOME/weewx-data/logs` the default log for MacOS.
+
+
 ## Documentation
 
 Update "where to find things" in user's guide.
 
 Update install documentation. Replace setup.py guide with a pip guide.
+
+Update MacOS install instructions. Are they needed now that a pip install can be done?
+
+Get rid of Python 2 install instructions.
 
 Use a dollar sign when referring to symbolic names. For example, $WEEWX_ROOT instead of WEEWX_ROOT.
 

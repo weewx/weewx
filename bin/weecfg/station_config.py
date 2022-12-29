@@ -15,7 +15,6 @@ import shutil
 import configobj
 
 import weecfg
-import weectllib
 import weeutil.config
 import weeutil.weeutil
 import weewx
@@ -24,17 +23,23 @@ from weeutil.weeutil import to_float, to_bool, bcolors
 log = logging.getLogger(__name__)
 
 
-def station_create(config_path, *args, **kwargs):
-    """Create a brand-new configuration file.
+def station_create(config_path, *args, docs_root=None, examples_root=None, **kwargs):
+    """Create a brand-new station by creating a new configuration file.
 
-    Like station_reconfigure(), except it ensures that the config file does not already exist.
-    It then retrieves the template config file from package resources and uses that.
+    WEEWX_ROOT is defined as the directory the resultant configuration file is in.
+
+    This function first checks whether the configuration file already exists. If it does, then
+    an exception is raised.
+
+    It then:
+      1. If no-prompt is false, it creates the configuration file by prompting the user. If true,
+       it uses defaults.
+      2. It then copies the documentation out of package resources and into WEEWX_ROOT.
+      3. Same with the examples.
     """
 
     if not config_path:
         config_path = weecfg.default_config_path
-        print(f"The configuration file will be created "
-              f"at {bcolors.BOLD}{config_path}{bcolors.ENDC}.")
 
     weewx_root = os.path.dirname(config_path)
 
@@ -42,11 +47,16 @@ def station_create(config_path, *args, **kwargs):
     if os.path.exists(config_path):
         raise weewx.ViolatedPrecondition(f"Config file {config_path} already exists")
 
+    print(f"The configuration file will be created "
+          f"at {bcolors.BOLD}{config_path}{bcolors.ENDC}.")
+
     # Retrieve the configuration file as a ConfigObj
     with importlib.resources.open_text('wee_resources', 'weewx.conf', encoding='utf-8') as fd:
         dist_config_dict = configobj.ConfigObj(fd, encoding='utf-8', file_error=True)
 
     config_config(dist_config_dict, weewx_root=weewx_root, *args, **kwargs)
+    copy_docs(dist_config_dict, docs_root=docs_root)
+    copy_examples(dist_config_dict, examples_root=examples_root)
 
     # Save the results. No backup.
     weecfg.save(dist_config_dict, config_path)
@@ -437,3 +447,25 @@ def copy_skins(config_dict):
             src = os.path.join(skin_resources, skin)
             dest = os.path.join(skin_dir, skin)
             shutil.copytree(src, dest)
+
+
+def copy_docs(config_dict, docs_root=None):
+    """Copy documentation from package resources to the DOCS_ROOT directory."""
+
+    if not docs_root:
+        docs_root = os.path.join(config_dict['WEEWX_ROOT'], 'docs')
+
+    shutil.rmtree(docs_root, ignore_errors=True)
+    with importlib.resources.path('wee_resources', 'docs') as docs_resources:
+        shutil.copytree(docs_resources, docs_root)
+
+
+def copy_examples(config_dict, examples_root=None):
+    """Copy the examples to the EXAMPLE_ROOT directory."""
+
+    if not examples_root:
+        examples_root = os.path.join(config_dict['WEEWX_ROOT'], 'examples')
+
+    shutil.rmtree(examples_root, ignore_errors=True)
+    with importlib.resources.path('wee_resources', 'examples') as examples_resources:
+        shutil.copytree(examples_resources, examples_root)
