@@ -318,4 +318,6 @@ def modify_config(config_dict, database_dict):
     # These are no longer needed:
     db_dict.pop('SQLITE_ROOT', None)
     db_dict.pop('root', None)
+    del db_dict['database_name']
+
     return db_dict

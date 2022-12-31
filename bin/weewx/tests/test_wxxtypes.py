@@ -274,7 +274,7 @@ class TestRainRater(unittest.TestCase):
         """Set up and populate an in-memory database"""
         self.db_manager = weewx.manager.Manager.open_with_create(
             {
-                'database_name': ':memory:',
+                'db_path': ':memory:',
                 'driver': 'weedb.sqlite'
             },
             schema=schemas.wview_extended.schema)
@@ -394,7 +394,7 @@ class TestET(unittest.TestCase):
         """Set up an in-memory database"""
         self.db_manager = weewx.manager.Manager.open_with_create(
             {
-                'database_name': ':memory:',
+                'db_path': ':memory:',
                 'driver': 'weedb.sqlite'
             },
             schema=schemas.wview_extended.schema)

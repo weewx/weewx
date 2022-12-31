@@ -158,8 +158,7 @@ class Manager(object):
                 For example, for sqlite, it looks something like this:
 
                     {
-                       'SQLITE_ROOT' : '/home/weewx/archive',
-                       'database_name' : 'weewx.sdb',
+                       'db_path' : '/home/weewx/archive/weewx.sdb',
                        'driver' : 'weedb.sqlite'
                     }
 

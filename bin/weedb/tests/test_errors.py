@@ -12,17 +12,17 @@ import weedb
 #
 # For these tests to work, the database for sqdb1 must in a place where you have write permissions,
 # and the database for sqdb2 must be in a place where you do NOT have write permissions
-sqdb1_dict = {'database_name': '/var/tmp/weewx_test/sqdb1.sdb', 'driver': 'weedb.sqlite', 'timeout': '2'}
-sqdb2_dict = {'database_name': '/usr/local/sqdb2.sdb', 'driver': 'weedb.sqlite', 'timeout': '2'}
+sqdb1_dict = {'db_path': '/var/tmp/weewx_test/sqdb1.sdb', 'driver': 'weedb.sqlite', 'timeout': '2'}
+sqdb2_dict = {'db_path': '/usr/local/sqdb2.sdb', 'driver': 'weedb.sqlite', 'timeout': '2'}
 mysql1_dict = {'database_name': 'test_weewx1', 'user': 'weewx1', 'password': 'weewx1', 'driver': 'weedb.mysql'}
 mysql2_dict = {'database_name': 'test_weewx1', 'user': 'weewx2', 'password': 'weewx2', 'driver': 'weedb.mysql'}
 
 # Double check that we have the necessary permissions (or lack thereof):
 try:
-    file_directory = os.path.dirname(sqdb1_dict['database_name'])
+    file_directory = os.path.dirname(sqdb1_dict['db_path'])
     if not os.path.exists(file_directory):
         os.makedirs(file_directory)
-    fd = open(sqdb1_dict['database_name'], 'w')
+    fd = open(sqdb1_dict['db_path'], 'w')
     fd.close()
 # Python 2 raises IOError; Python 3 raises PermissionError, a subclass of OSError:
 except (IOError, OSError):
@@ -30,7 +30,7 @@ except (IOError, OSError):
              "Change the permissions and try again." % sqdb1_dict['database_name'])
 
 try:
-    fd = open(sqdb2_dict['database_name'], 'w')
+    fd = open(sqdb2_dict['db_path'], 'w')
     fd.close()
 # Python 2 raises IOError; Python 3 raises PermissionError, a subclass of OSError:
 except (IOError, OSError):

@@ -24,7 +24,7 @@ import weeutil.logger
 
 weeutil.logger.setup('test_database',{})
 
-archive_sqlite = {'database_name': '/var/tmp/weewx_test/weedb.sdb', 'driver':'weedb.sqlite'}
+archive_sqlite = {'db_path': '/var/tmp/weewx_test/weedb.sdb', 'driver':'weedb.sqlite'}
 archive_mysql  = {'database_name': 'test_weedb', 'user':'weewx1', 'password':'weewx1', 'driver':'weedb.mysql'}
 
 archive_schema = [('dateTime',             'INTEGER NOT NULL UNIQUE PRIMARY KEY'),
@@ -85,8 +85,7 @@ class TestDatabaseDict(unittest.TestCase):
                database_type = SQLite'''
         config_dict = configobj.ConfigObj(StringIO(config_snippet))
         database_dict = weewx.manager.get_database_dict_from_config(config_dict, 'archive_sqlite')
-        self.assertEqual(database_dict, {'SQLITE_ROOT': '/home/weewx/archive',
-                                         'database_name': 'weewx.sdb',
+        self.assertEqual(database_dict, {'db_path': '/home/weewx/archive/weewx.sdb',
                                          'driver': 'weedb.sqlite'})
 
 
