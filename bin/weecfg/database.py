@@ -1,14 +1,10 @@
 #
-#    Copyright (c) 2009-2022 Tom Keffer <tkeffer@gmail.com> and
+#    Copyright (c) 2009-2023 Tom Keffer <tkeffer@gmail.com> and
 #                            Gary Roderick <gjroderick@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
 """Classes to support fixes or other bulk corrections of weewx data."""
-
-from __future__ import with_statement
-from __future__ import absolute_import
-from __future__ import print_function
 
 # standard python imports
 import datetime
@@ -23,7 +19,7 @@ import weewx.engine
 import weewx.manager
 import weewx.units
 import weewx.wxservices
-from weeutil.weeutil import timestamp_to_string, startOfDay, to_bool, option_as_list
+from weeutil.weeutil import timestamp_to_string, to_bool
 
 log = logging.getLogger(__name__)
 
@@ -94,14 +90,10 @@ class DatabaseFix(object):
         """
 
         _sql = "SELECT dateTime FROM %s_day_%s " \
-               " WHERE dateTime >= ? AND dateTime <= ?" % (self.dbm.table_name, obs)
+               "WHERE dateTime >= ? AND dateTime <= ?" % (self.dbm.table_name, obs)
 
-        _cursor = self.dbm.connection.cursor()
-        try:
-            for _row in _cursor.execute(_sql, (start_ts, stop_ts)):
-                yield weeutil.weeutil.daySpan(_row[0])
-        finally:
-            _cursor.close()
+        for _row in self.dbm.genSql(_sql, (start_ts, stop_ts)):
+            yield weeutil.weeutil.daySpan(_row[0])
 
     def first_summary_ts(self, obs_type):
         """Obtain the timestamp of the earliest daily summary entry for an
@@ -118,9 +110,8 @@ class DatabaseFix(object):
         _sql_str = "SELECT MIN(dateTime) FROM %s_day_%s" % (self.dbm.table_name,
                                                             obs_type)
         _row = self.dbm.getSql(_sql_str)
-        if _row:
-            return _row[0]
-        return None
+        return _row[0] if _row else None
+
 
     @staticmethod
     def _progress(record, ts):

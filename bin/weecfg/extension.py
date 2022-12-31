@@ -13,7 +13,6 @@
 #  -user/installer/pmon/           # The extension's installer subdirectory
 #  -user/installer/pmon/install.py # The copy of the installer for the extension
 
-from __future__ import absolute_import
 import glob
 import os
 import shutil
@@ -23,10 +22,10 @@ import tempfile
 import configobj
 
 import weecfg
-from weecfg import Logger, prompt_with_options
-from weewx import all_service_groups
 import weeutil.config
 import weeutil.weeutil
+from weecfg import Logger
+from weewx import all_service_groups
 
 
 class InstallError(Exception):
