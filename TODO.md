@@ -7,16 +7,19 @@ Get config update working again.
 
 ## Commands
 ```
-weectl station create
-weectl station reconfigure
-weectl station upgrade
+✅ weectl station create
+✅ weectl station reconfigure
+½ weectl station upgrade
 weectl station upgrade-skins
-weectl daemon install
+½ weectl daemon install
 weectl daemon uninstall
-weectl extension install
-weectl extension uninstall
-weectl extension list
+✅ weectl extension install
+✅ weectl extension uninstall
+✅ weectl extension list
 ```
+Key: 
+✅ means largely completed
+½ means started
 
 ## Logging
 
