@@ -7,7 +7,7 @@
 from __future__ import absolute_import
 import time
 
-__version__ = "5.0.0a6"
+__version__ = "5.0.0a7"
 
 # Holds the program launch time in unix epoch seconds:
 # Useful for calculating 'uptime.'

@@ -35,7 +35,18 @@ def daemon_install(daemon_type, config_path=None, user=None, weewxd_path=None, d
         # find its libraries.
         weewxd_path = shutil.which('weewxd')
         if not weewxd_path:
-            raise FileNotFoundError("Could not find path to 'weewxd'")
+            # weewxd is not in the current path, perhaps because we were invoked using sudo, which
+            # uses the abbreviated secure_path set in /etc/sudoers, which does not search the
+            # user's home directory. Take an educated guess. First, we can only do this if we
+            # have a user
+            if user:
+                # Now check his/her directory ~/.local:
+                candidate = os.path.expanduser(f"~{user}/.local/bin/weewxd")
+                if os.path.isfile(candidate):
+                    # Good guess. Use it.
+                    weewxd_path = candidate
+    if not weewxd_path:
+        raise FileNotFoundError("Could not find path to 'weewxd'")
 
     if daemon_type == 'systemd':
         systemd_install(config_path=config_path,
