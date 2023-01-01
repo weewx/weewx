@@ -5,6 +5,12 @@
 
 Get config update working again. 
 
+## Daemon
+
+Do we need the `--type` option for `weectl daemon install`? Can we make decisions on the basis
+of the OS encountered?
+
+
 ## Commands
 ```
 ✅ weectl station create

@@ -7,6 +7,7 @@
 
 import importlib.resources
 import os.path
+import shutil
 
 import weecfg
 from weeutil.weeutil import bcolors
@@ -29,9 +30,12 @@ def daemon_install(daemon_type, config_path=None, user=None, weewxd_path=None, d
     print(f"The configuration file {bcolors.BOLD}{config_path}{bcolors.ENDC} will be used.")
 
     if not weewxd_path:
-        # Find it by importing weewxd.py
-        import weewxd
-        weewxd_path = weewxd.__file__
+        # We need the path to weewxd, not weewxd.py, because it contains the shebang used
+        # to invoke the proper virtual environment. Otherwise, the daemon will not be able to
+        # find its libraries.
+        weewxd_path = shutil.which('weewxd')
+        if not weewxd_path:
+            raise FileNotFoundError("Could not find path to 'weewxd'")
 
     if daemon_type == 'systemd':
         systemd_install(config_path=config_path,
@@ -48,6 +52,9 @@ def systemd_install(config_path=None, user=None, weewxd_path=None, daemon_dir=No
     """Install a systemd file."""
 
     service_file_name = 'weewx.service'
+
+    # We need the full path for the service file:
+    config_path = os.path.abspath(config_path)
 
     # Get the systemd template from package resources.
     with importlib.resources.path('wee_resources', 'util') as util_path:
@@ -73,6 +80,7 @@ def systemd_install(config_path=None, user=None, weewxd_path=None, daemon_dir=No
         daemon_dir = '/etc/systemd/system'
     target_path = os.path.join(daemon_dir, service_file_name)
 
+    # Now write it out
     with open(target_path, 'w') as outd:
         outd.writelines(out_lines)
     print(f"Systemd file written to {bcolors.BOLD}{target_path}{bcolors.ENDC}")
