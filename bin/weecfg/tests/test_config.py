@@ -294,58 +294,80 @@ class ExtensionUtilityTest(unittest.TestCase):
 class ExtensionInstallTest(unittest.TestCase):
     """Tests of the extension installer."""
 
-    def setUp(self):
-        # We're going to install a "mini-weewx" in this temporary directory:
-        self.weewx_root = '/var/tmp/wee_test'
-        shutil.rmtree(self.weewx_root, ignore_errors=True)
+    @staticmethod
+    def _build_mini_weewx(weewx_root):
+        """Build a "mini-WeeWX" in the given root directory.
 
-        # Now build a new configuration
-        self.user_dir = os.path.join(self.weewx_root, 'bin', 'user')
-        self.skin_dir = os.path.join(self.weewx_root, 'skins')
-        self.bin_dir = os.path.join(self.weewx_root, 'bin')
-        shutil.copytree('../../../bin/user', self.user_dir)
-        shutil.copytree('../../wee_resources/skins/Standard',
-                        os.path.join(self.skin_dir, 'Standard'))
-        shutil.copy(current_config_dict_path, self.weewx_root)
+        This function makes a simple version of weewx that looks like
+            weewx_root
+            ├── skins
+            ├── user
+            │   ├── __init__.py
+            │   └── extensions.py
+            └── weewx.conf
+        """
+
+        # First remove anything there
+        shutil.rmtree(weewx_root, ignore_errors=True)
+        os.makedirs(os.path.join(weewx_root, 'skins'))
+        # Copy over the current version of the 'user' package
+        shutil.copytree('../../../bin/user', os.path.join(weewx_root, 'user'))
+        # Copy over the current version of weewx.conf
+        shutil.copy(current_config_dict_path, weewx_root)
+
+    def setUp(self):
+        self.weewx_root = '/var/tmp/wee_test'
+
+        # Install the "mini-weewx"
+        ExtensionInstallTest._build_mini_weewx(self.weewx_root)
+
+        # Retrieve the configuration file from the mini-weewx
+        self.config_path = os.path.join(self.weewx_root, 'weewx.conf')
+        self.config_dict = configobj.ConfigObj(self.config_path, encoding='utf-8')
+        # Note that the actual location of the "mini-weewx" is over in /var/tmp
+        self.config_dict['WEEWX_ROOT'] = self.weewx_root
+
+        # Initialize the install engine. We need to specify bin_root because it's in a
+        # non-standard location.
+        self.engine = weecfg.extension.ExtensionEngine(self.config_path,
+                                                       self.config_dict,
+                                                       bin_root=self.weewx_root,
+                                                       logger=weecfg.Logger(verbosity=-1))
 
     def tearDown(self):
         "Remove any installed test configuration"
         shutil.rmtree(self.weewx_root, ignore_errors=True)
 
     def test_install(self):
-        # Find and read the test configuration
-        config_path = os.path.join(self.weewx_root, 'weewx.conf')
-        config_dict = configobj.ConfigObj(config_path, encoding='utf-8')
-
-        # Note that the actual location of the "mini-weewx" is over in /var/tmp
-        config_dict['WEEWX_ROOT'] = self.weewx_root
-
-        # Initialize the install engine. Note that we want the bin root in /var/tmp, not here:
-        engine = weecfg.extension.ExtensionEngine(config_path, config_dict,
-                                                  bin_root=self.bin_dir,
-                                                  logger=weecfg.Logger(verbosity=-1))
 
         # Make sure the root dictionary got calculated correctly:
-        self.assertEqual(engine.root_dict, {'WEEWX_ROOT': '/var/tmp/wee_test',
-                                            'BIN_ROOT': '/var/tmp/wee_test/bin',
-                                            'USER_ROOT': '/var/tmp/wee_test/bin/user',
-                                            'EXT_ROOT': '/var/tmp/wee_test/bin/user/installer',
-                                            'SKIN_ROOT': '/var/tmp/wee_test/skins',
-                                            'CONFIG_ROOT': '/var/tmp/wee_test'})
+        self.assertEqual(self.engine.root_dict['WEEWX_ROOT'], '/var/tmp/wee_test')
+        self.assertEqual(self.engine.root_dict['USER_ROOT'], '/var/tmp/wee_test/user')
+        self.assertEqual(self.engine.root_dict['EXT_ROOT'], '/var/tmp/wee_test/user/installer')
+        self.assertEqual(self.engine.root_dict['SKIN_ROOT'], '/var/tmp/wee_test/skins')
+        self.assertEqual(self.engine.root_dict['CONFIG_ROOT'], '/var/tmp/wee_test')
 
         # Now install the extension...
-        engine.install_extension('./pmon.tgz')
+        self.engine.install_extension('./pmon.tgz')
 
         # ... and assert that it got installed correctly
-        self.assertTrue(os.path.isfile(os.path.join(self.user_dir, 'pmon.py')))
-        self.assertTrue(
-            os.path.isfile(os.path.join(self.user_dir, 'installer', 'pmon', 'install.py')))
-        self.assertTrue(os.path.isdir(os.path.join(self.skin_dir, 'pmon')))
-        self.assertTrue(os.path.isfile(os.path.join(self.skin_dir, 'pmon', 'index.html.tmpl')))
-        self.assertTrue(os.path.isfile(os.path.join(self.skin_dir, 'pmon', 'skin.conf')))
+        self.assertTrue(os.path.isfile(os.path.join(self.engine.root_dict['USER_ROOT'],
+                                                    'pmon.py')))
+        self.assertTrue(os.path.isfile(os.path.join(self.engine.root_dict['USER_ROOT'],
+                                                    'installer',
+                                                    'pmon',
+                                                    'install.py')))
+        self.assertTrue(os.path.isdir(os.path.join(self.engine.root_dict['SKIN_ROOT'],
+                                                   'pmon')))
+        self.assertTrue(os.path.isfile(os.path.join(self.engine.root_dict['SKIN_ROOT'],
+                                                    'pmon',
+                                                    'index.html.tmpl')))
+        self.assertTrue(os.path.isfile(os.path.join(self.engine.root_dict['SKIN_ROOT'],
+                                                    'pmon',
+                                                    'skin.conf')))
 
         # Get, then check the new config dict:
-        test_dict = configobj.ConfigObj(config_path, encoding='utf-8')
+        test_dict = configobj.ConfigObj(self.config_path, encoding='utf-8')
         self.assertEqual(test_dict['StdReport']['pmon'],
                          {'HTML_ROOT': 'public_html/pmon', 'skin': 'pmon'})
         self.assertEqual(test_dict['Databases']['pmon_sqlite'],
@@ -364,35 +386,32 @@ class ExtensionInstallTest(unittest.TestCase):
             'user.pmon.ProcessMonitor' in test_dict['Engine']['Services']['process_services'])
 
     def test_uninstall(self):
-        # Find and read the test configuration
-        config_path = os.path.join(self.weewx_root, 'weewx.conf')
-        config_dict = configobj.ConfigObj(config_path, encoding='utf-8')
-
-        # Note that the actual location of the "mini-weewx" is over in /var/tmp
-        config_dict['WEEWX_ROOT'] = self.weewx_root
-
-        # Initialize the install engine. Note that we want the bin root in /var/tmp, not here:
-        engine = weecfg.extension.ExtensionEngine(config_path, config_dict,
-                                                  bin_root=self.bin_dir,
-                                                  logger=weecfg.Logger(verbosity=-1))
         # First install...
-        engine.install_extension('./pmon.tgz')
+        self.engine.install_extension('./pmon.tgz')
         # ... then uninstall it:
-        engine.uninstall_extension('pmon')
+        self.engine.uninstall_extension('pmon')
 
         # Assert that everything got removed correctly:
-        self.assertTrue(not os.path.exists(os.path.join(self.user_dir, 'pmon.py')))
-        self.assertTrue(
-            not os.path.exists(os.path.join(self.user_dir, 'installer', 'pmon', 'install.py')))
-        self.assertTrue(not os.path.exists(os.path.join(self.skin_dir, 'pmon')))
-        self.assertTrue(not os.path.exists(os.path.join(self.skin_dir, 'pmon', 'index.html.tmpl')))
-        self.assertTrue(not os.path.exists(os.path.join(self.skin_dir, 'pmon', 'skin.conf')))
+        self.assertFalse(os.path.exists(os.path.join(self.engine.root_dict['USER_ROOT'],
+                                                     'pmon.py')))
+        self.assertFalse(os.path.exists(os.path.join(self.engine.root_dict['USER_ROOT'],
+                                                     'installer',
+                                                     'pmon',
+                                                     'install.py')))
+        self.assertFalse(os.path.exists(os.path.join(self.engine.root_dict['SKIN_ROOT'],
+                                                     'pmon')))
+        self.assertFalse(os.path.exists(os.path.join(self.engine.root_dict['SKIN_ROOT'],
+                                                     'pmon',
+                                                     'index.html.tmpl')))
+        self.assertFalse(os.path.exists(os.path.join(self.engine.root_dict['SKIN_ROOT'],
+                                                     'pmon',
+                                                     'skin.conf')))
 
         # Get the modified config dict, which had the extension removed from it
-        test_dict = configobj.ConfigObj(config_path, encoding='utf-8')
+        test_dict = configobj.ConfigObj(self.config_path, encoding='utf-8')
 
         # It should be the same as our original:
-        self.assertEqual(test_dict, config_dict)
+        self.assertEqual(test_dict, self.config_dict)
 
 
 # ############# Utilities #################

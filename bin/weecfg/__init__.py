@@ -611,7 +611,7 @@ def prompt_with_limits(prompt, default=None, low_limit=None, high_limit=None):
 #            Miscellaneous utilities
 # ==============================================================================
 
-def extract_roots(config_path, config_dict, bin_root):
+def extract_roots(config_path, config_dict, bin_root=None):
     """Get the location of the various root directories used by weewx."""
 
     if not bin_root:
