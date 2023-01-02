@@ -22,6 +22,7 @@ weectl daemon uninstall
 ✅ weectl extension install
 ✅ weectl extension uninstall
 ✅ weectl extension list
+✅ weectl extension transfer
 ```
 Key: 
 ✅ means largely completed
@@ -36,15 +37,21 @@ Consider making `$HOME/weewx-data/logs` the default log for MacOS.
 
 Update "where to find things" in user's guide.
 
-Update install documentation. Replace setup.py guide with a pip guide.
+Update install documentation. Replace setup.py guide with a pip guide (in progress)
 
-Update MacOS install instructions. Are they needed now that a pip install can be done?
+Check whether we need macOS install instructions any longer. Probably not: pip install supercedes
+them.
 
-Get rid of Python 2 install instructions.
+Get rid of Python 2 install instructions wherever they occur.
 
 Use a dollar sign when referring to symbolic names. For example, $WEEWX_ROOT instead of WEEWX_ROOT.
 
+Define $WEEWX_ROOT.
+
 Note that SQLITE is now relative to WEEWX_ROOT.
+
+References to `/home/weewx` become `$WEEWX_ROOT`
+
 
 ## Testing
 
@@ -56,3 +63,5 @@ Note that SQLITE is now relative to WEEWX_ROOT.
 Note the change in the weedb.sqlite API. Can't imagine it will affect anyone.
 
 Installs to ~/weewx-data now.
+
+Write a tool to migrate extensions.
