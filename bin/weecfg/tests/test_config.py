@@ -4,12 +4,14 @@
 #    See the file LICENSE.txt for your full rights.
 #
 """Test the configuration utilities."""
+import contextlib
 import io
 import os.path
 import shutil
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 import configobj
 
@@ -17,8 +19,6 @@ import weecfg.extension
 import weecfg.update_config
 import weeutil.config
 import weeutil.weeutil
-
-from unittest.mock import patch
 
 # Redirect the import of setup:
 sys.modules['setup'] = weecfg.extension
@@ -50,6 +50,15 @@ Y_STR = """
 current_config_dict_path = "../../wee_resources/weewx.conf"
 
 
+def suppress_stdout(func):
+    def wrapper(*args, **kwargs):
+        with open(os.devnull, 'w') as devnull:
+            with contextlib.redirect_stdout(devnull):
+                return func(*args, **kwargs)
+
+    return wrapper
+
+
 class ConfigTest(unittest.TestCase):
 
     def test_find_file(self):
@@ -64,19 +73,21 @@ class ConfigTest(unittest.TestCase):
             result = weecfg.find_file(full_path)
             self.assertEqual(result, full_path)
             # Find the file with an explicit, but wrong, path:
-            self.assertRaises(IOError, weecfg.find_file, full_path + "foo")
+            with self.assertRaises(IOError):
+                weecfg.find_file(full_path + "foo")
             # Find the file using the "args" optional list:
             result = weecfg.find_file(None, [full_path])
             self.assertEqual(result, full_path)
             # Find the file using the "args" optional list, but with a wrong name:
-            self.assertRaises(IOError, weecfg.find_file,
-                              None, [full_path + "foo"])
+            with self.assertRaises(IOError):
+                weecfg.find_file(None, [full_path + "foo"])
             # Now search a list of directory locations given a file name:
             result = weecfg.find_file(None, file_name=filename, locations=['/usr/bin', dir_path])
             self.assertEqual(result, full_path)
             # Do the same, but with a non-existent file name:
-            self.assertRaises(IOError, weecfg.find_file,
-                              None, file_name=filename + "foo", locations=['/usr/bin', dir_path])
+            with self.assertRaises(IOError):
+                weecfg.find_file(None, file_name=filename + "foo",
+                                 locations=['/usr/bin', dir_path])
 
     def test_reorder_before(self):
         global X_STR
@@ -165,42 +176,32 @@ class ConfigTest(unittest.TestCase):
         weecfg.reorder_scalars(test_list, 'x', 'd')
         self.assertEqual(test_list, ['a', 'b', 'd'])
 
-
-
+    @suppress_stdout
     def test_prompt_with_options(self):
-        # Suppress stdout by temporarily assigning it to /dev/null
-        save_stdout = sys.stdout
-        with open(os.devnull, 'w') as sys.stdout:
-            with patch('weecfg.input', return_value="yes"):
-                response = weecfg.prompt_with_options("Say yes or no", "yes", ["yes", "no"])
-                self.assertEqual(response, "yes")
-            with patch('weecfg.input', return_value="no"):
-                response = weecfg.prompt_with_options("Say yes or no", "yes", ["yes", "no"])
-                self.assertEqual(response, "no")
-            with patch('weecfg.input', return_value=""):
-                response = weecfg.prompt_with_options("Say yes or no", "yes", ["yes", "no"])
-                self.assertEqual(response, "yes")
-            with patch('weecfg.input', side_effect=["make me", "no"]):
-                response = weecfg.prompt_with_options("Say yes or no", "yes", ["yes", "no"])
-                self.assertEqual(response, "no")
-        # Restore stdout:
-        sys.stdout = save_stdout
+        with patch('weecfg.input', return_value="yes"):
+            response = weecfg.prompt_with_options("Say yes or no", "yes", ["yes", "no"])
+            self.assertEqual(response, "yes")
+        with patch('weecfg.input', return_value="no"):
+            response = weecfg.prompt_with_options("Say yes or no", "yes", ["yes", "no"])
+            self.assertEqual(response, "no")
+        with patch('weecfg.input', return_value=""):
+            response = weecfg.prompt_with_options("Say yes or no", "yes", ["yes", "no"])
+            self.assertEqual(response, "yes")
+        with patch('weecfg.input', side_effect=["make me", "no"]):
+            response = weecfg.prompt_with_options("Say yes or no", "yes", ["yes", "no"])
+            self.assertEqual(response, "no")
 
+    @suppress_stdout
     def test_prompt_with_limits(self):
-        # Suppress stdout by temporarily assigning it to /dev/null
-        save_stdout = sys.stdout
-        with open(os.devnull, 'w') as sys.stdout:
-            with patch('weecfg.input', return_value="45"):
-                response = weecfg.prompt_with_limits("latitude", "0.0", -90, 90)
-                self.assertEqual(response, "45")
-            with patch('weecfg.input', return_value=""):
-                response = weecfg.prompt_with_limits("latitude", "0.0", -90, 90)
-                self.assertEqual(response, "0.0")
-            with patch('weecfg.input', side_effect=["-120", "-45"]):
-                response = weecfg.prompt_with_limits("latitude", "0.0", -90, 90)
-                self.assertEqual(response, "-45")
-        # Restore stdout:
-        sys.stdout = save_stdout
+        with patch('weecfg.input', return_value="45"):
+            response = weecfg.prompt_with_limits("latitude", "0.0", -90, 90)
+            self.assertEqual(response, "45")
+        with patch('weecfg.input', return_value=""):
+            response = weecfg.prompt_with_limits("latitude", "0.0", -90, 90)
+            self.assertEqual(response, "0.0")
+        with patch('weecfg.input', side_effect=["-120", "-45"]):
+            response = weecfg.prompt_with_limits("latitude", "0.0", -90, 90)
+            self.assertEqual(response, "-45")
 
     def test_driver_info(self):
         """Test the discovery and listing of drivers."""
@@ -233,7 +234,6 @@ class ExtensionUtilityTest(unittest.TestCase):
         shutil.rmtree('/var/tmp/pmon', ignore_errors=True)
 
     def test_tar_extract(self):
-        shutil.rmtree('/var/tmp/pmon', ignore_errors=True)
         member_names = weecfg.extract_tar('./pmon.tar', '/var/tmp')
         self.assertEqual(member_names, ['pmon',
                                         'pmon/readme.txt',
@@ -253,7 +253,6 @@ class ExtensionUtilityTest(unittest.TestCase):
         self.assertEqual(sorted(actual_files), self.INSTALLED_NAMES)
 
     def test_tgz_extract(self):
-        shutil.rmtree('/var/tmp/pmon', ignore_errors=True)
         member_names = weecfg.extract_tar('./pmon.tgz', '/var/tmp')
         self.assertEqual(member_names, ['pmon',
                                         'pmon/bin',
@@ -273,7 +272,6 @@ class ExtensionUtilityTest(unittest.TestCase):
         self.assertEqual(sorted(actual_files), self.INSTALLED_NAMES)
 
     def test_zip_extract(self):
-        shutil.rmtree('/var/tmp/pmon', ignore_errors=True)
         member_names = weecfg.extract_zip('./pmon.zip', '/var/tmp')
         self.assertEqual(member_names, ['pmon/',
                                         'pmon/bin/',
