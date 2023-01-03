@@ -5,6 +5,8 @@
 
 Get config update working again. 
 
+Remove wunderfixer. Remove references in docs.
+
 ## Daemon
 
 Do we need the `--type` option for `weectl daemon install`? Can we make decisions on the basis
