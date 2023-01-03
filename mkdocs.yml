@@ -1,0 +1,126 @@
+site_name: 'weewx documentation'
+site_url: 'https://www.weewx.com'
+repo_url: https://github.com/weewx/weewx
+repo_name: WeeWX GitHub Repository
+copyright: Copyright © Tom Keffer and Matthew Wall, all rights reserved
+favicon: 'images/favicon.png'
+theme:
+  logo: 'images/logo-weewx.png'
+  name: 'material'
+  icon:
+    logo: material/library
+  features:
+    - navigation.instant
+    - navigation.tabs
+    - navigation.top
+    - navigation.tracking
+    - search.highlight
+    - search.share
+    - search.suggest
+  font:
+    text: 'Noto Sans'
+    code: 'Roboto Mono'
+
+  palette:
+    - scheme: default
+      primary: teal
+      accent: white
+      toggle:
+        icon: material/toggle-switch-off-outline
+        name: Switch to dark mode
+    - scheme: slate
+      primary: teal
+      accent: indigo
+      toggle:
+        icon: material/toggle-switch
+        name: Switch to light mode
+
+nav:
+  - Quickstarts:
+      - quickstart-overview.md
+      - Debian: debian.htm
+      - RedHat: redhat.htm
+      - SUSE: suse.htm
+      - pip: pip.md
+  - Documentation:
+      - guides-overview.md
+      - "User's Guide": usersguide.md
+      - "Customization Guide": customization.md
+      - "Hardware Guide": hardware.md
+      - "Utilities Guide": utilities.md
+      - "Upgrade Guide": upgrading.md
+      - "Change log": changes.md
+      - "Notes for developers": devnotes.md
+      - "Hardware Comparison": hardware.md
+  - Support:
+      - support.md
+
+plugins:
+  - search
+
+markdown_extensions:
+
+  # Code highlighting in ``` ``` blocks
+  # https://squidfunk.github.io/mkdocs-material/setup/extensions/python-markdown-extensions/#highlight
+  - pymdownx.highlight:
+  - pymdownx.inlinehilite
+
+  - pymdownx.superfences
+
+  # https://squidfunk.github.io/mkdocs-material/setup/extensions/python-markdown-extensions/#details
+  - pymdownx.details
+
+  # linkifies URL and email links without having to wrap them in Markdown syntax. Also, allows shortens repository issue, pull request, and commit links.
+  - pymdownx.magiclink
+
+  # Task lists (https://facelessuser.github.io/pymdown-extensions/extensions/tasklist/)
+  - pymdownx.tasklist:
+      custom_checkbox: true
+
+  # Highlight words with ==mark me==
+  - pymdownx.mark
+
+  # Adds support for strike through ~~strike me~~ and subscript text~a\ subscript~
+  - pymdownx.tilde
+
+  # Tabbed provides a syntax to easily add tabbed Markdown content.
+  # https://facelessuser.github.io/pymdown-extensions/extensions/tabbed/
+  - pymdownx.tabbed:
+      alternate_style: true
+
+  - pymdownx.snippets:
+      # auto_append abbreviations.md to every file
+      # https://squidfunk.github.io/mkdocs-material/reference/tooltips/#adding-a-glossary
+      auto_append:
+        - docs/abbreviations.md
+
+  - pymdownx.emoji:
+      emoji_index: !!python/name:materialx.emoji.twemoji
+      emoji_generator: !!python/name:materialx.emoji.to_svg
+
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+
+  # Adds the ability to define abbreviations (https://squidfunk.github.io/mkdocs-material/reference/tooltips/)
+  - abbr
+
+  # block-styled side content
+  # https://squidfunk.github.io/mkdocs-material/reference/admonitions/
+  - admonition
+
+  - attr_list
+
+  # Adds syntax for defining footnotes in Markdown documents (https://squidfunk.github.io/mkdocs-material/reference/footnotes/)
+  - footnotes
+
+  - md_in_html
+
+  - tables
+
+  # Table of Contents`
+  # https://python-markdown.github.io/extensions/toc/
+  - toc:
+      permalink: true
