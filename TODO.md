@@ -37,6 +37,10 @@ Consider making `$HOME/weewx-data/logs` the default log for MacOS.
 
 ## Documentation
 
+Update internal links in the customizing guide.
+
+Finish conversion of `report_scheduling.md` to markdown.
+
 Update "where to find things" in user's guide.
 
 Update install documentation. Replace setup.py guide with a pip guide (in progress)

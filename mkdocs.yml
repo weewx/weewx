@@ -17,9 +17,10 @@ theme:
     - search.highlight
     - search.share
     - search.suggest
+
   font:
     text: 'Noto Sans'
-    code: 'Roboto Mono'
+    code: 'Inconsolata Mono'
 
   palette:
     - scheme: default
@@ -35,6 +36,9 @@ theme:
         icon: material/toggle-switch
         name: Switch to light mode
 
+extra_css:
+  - css/weewx_ui.css
+
 nav:
   - Quickstarts:
       - quickstart-overview.md
@@ -44,14 +48,14 @@ nav:
       - pip: pip.md
   - Documentation:
       - guides-overview.md
-      - "User's Guide": usersguide.md
-      - "Customization Guide": customization.md
-      - "Hardware Guide": hardware.md
-      - "Utilities Guide": utilities.md
-      - "Upgrade Guide": upgrading.md
+      - "User's Guide": usersguide.htm
+      - "Customization Guide": customizing5.md
+      - "Hardware Guide": hardware.htm
+      - "Utilities Guide": utilities.htm
+      - "Upgrade Guide": upgrading.htm
       - "Change log": changes.md
-      - "Notes for developers": devnotes.md
-      - "Hardware Comparison": hardware.md
+      - "Notes for developers": devnotes.htm
+      - "Hardware Comparison": hardware.htm
   - Support:
       - support.md
 
