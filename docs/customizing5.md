@@ -874,9 +874,7 @@ The skin contains three different kinds of generated output:
 
 Because the option
 
-```ini
-    encoding = html_entities
-``` 
+        encoding = html_entities
 
 appears directly under `[StdReport]`, this will be the default encoding of the generated files unless explicitly overridden. We see an example of this under `[SummaryByMonth]` and `[SummaryByYear]`, which use option `normalized_ascii` instead of `html_entities`. This encoding replaces accented characters with a non-accented analog.
 
@@ -1010,17 +1008,13 @@ There are two different versions of the tags, depending on whether the data is "
 
 Time period `$current` represents a _current observation_. An example would be the current barometric pressure:
 
-```
-$current.barometer
-```
+    $current.barometer
 
 Formally, for current observations, WeeWX first looks for the observation type in the record emitted by the `NEW_ARCHIVE_RECORD` event. This is generally the data emitted by the station console, augmented by any derived variables (_e.g._ wind chill) that you might have specified. If the observation type cannot be found there, the most recent record in the database will be searched.
 
 The most general tag for a "current" observation looks like:
 
-```ini
-$current($timestamp=some_time, $max_delta=delta_t,$data_binding=binding_name).obstype[.optional_unit_conversion][.optional_rounding][.optional_formatting]
-```
+    $current($timestamp=some_time, $max_delta=delta_t,$data_binding=binding_name).obstype[.optional_unit_conversion][.optional_rounding][.optional_formatting]
 
 Where:
 
@@ -1046,17 +1040,13 @@ Time period `$latest` is very similar to `$current`, except that it uses the las
 
 Aggregation periods is the other kind of tag. For example,
 
-```
-$week.rain.sum
-```
+    $week.rain.sum
 
 represents an _aggregation over time_, using a certain _aggregation type_. In this example, the aggregation time is a week, and the aggregation type is summation. So, this tag represents the total rainfall over a week.
 
 The most general tag for an aggregation over time looks like:
 
-```
-$period($data_binding=binding_name, $optional_ago=_delta).statstype.aggregation[.optional_unit_conversion][.optional_rounding][.optional_formatting]
-```
+    $period($data_binding=binding_name, $optional_ago=_delta).statstype.aggregation[.optional_unit_conversion][.optional_rounding][.optional_formatting]
 
 Where:
 
@@ -1199,9 +1189,7 @@ The _`$optional_ago`_ parameters can be useful for statistics farther in the pas
 
 The tag _`optional_unit_conversion`_ can be used with either current observations or aggregations. If supplied, the results will be converted to the specified units. For example, if you have set `group_pressure` to inches of mercury (`inHg`), then the tag
 
-```
-Today's average pressure=$day.barometer.avg 
-```
+    Today's average pressure=$day.barometer.avg 
 
 would normally give a result such as
 
@@ -1211,9 +1199,7 @@ Today's average pressure=30.05 inHg
 
 However, if you add `mbar` to the end of the tag,
 
-```
-Today's average pressure=$day.barometer.avg.mbar
-```
+    Today's average pressure=$day.barometer.avg.mbar
 
 then the results will be in millibars:
 
@@ -1245,9 +1231,7 @@ The data in the resultant tag can be optionally rounded to a fixed number of dec
 
 The structure of the tag is
 
-```
-.round(ndigits=None)
-```
+    .round(ndigits=None)
 
 where `ndigits` is the number of decimal digits to retain. If `None` (the default), then all digits will be retained.
 
@@ -1301,9 +1285,8 @@ A variety of tags and arguments are available to you to customize the formatting
 
 
 The first of these tags (.format()) has the formal structure:
-```
-.format(format_string=None, None_string=None, add_label=True, localize=True)
-```
+
+    .format(format_string=None, None_string=None, add_label=True, localize=True)
 
 Here is the meaning of each of the optional arguments:
 
@@ -1554,9 +1537,7 @@ Note that the same formatting conventions can be used for aggregation periods, s
 
 While not an observation type, in many ways the time of an observation, `dateTime`, can be treated as one. A tag such as
 
-```
-$current.dateTime
-```
+    $current.dateTime
 
 represents the _current time_ (more properly, the time as of the end of the last archive interval) and would produce something like
 
@@ -1568,9 +1549,7 @@ Like true observation types, explicit formats can be specified, except that they
 
 For example, adding a format descriptor like this:
 
-```
-$current.dateTime.format("%d-%b-%Y %H:%M")
-```
+    $current.dateTime.format("%d-%b-%Y %H:%M")
 
 produces
 
@@ -1580,9 +1559,8 @@ produces
 
 For _aggregation periods_, such as `$month`, you can request the _start_, _end_, or _length _of the period, by using suffixes `.start`, `.end`, or `.length`, respectively. For example,
 
-```
-The current month runs from $month.start to $month.end and has $month.length.format("%(day)d %(day_label)s").
-```
+    The current month runs from $month.start to $month.end and has $month.length.format("%(day)d %(day_label)s").
+
 results in
 
 <div class="example_output">
@@ -1591,9 +1569,8 @@ The current month runs from 01/01/2010 12:00:00 AM to 02/01/2010 12:00:00 AM and
 
 The returned string values will always be in _local time_. However, if you ask for the raw value
 
-```
-$current.dateTime.raw
-```
+    $current.dateTime.raw
+
 the returned value will be in Unix Epoch Time (number of seconds since 00:00:00 UTC 1 Jan 1970, _i.e._, a large number), which you must convert yourself. It is guaranteed to never be `None`, so you don't worry have to worry about handling a `None` value.
 
 #### Tag $trend
@@ -1612,9 +1589,7 @@ Note how you can explicitly specify a value in the tag itself (2nd row in the ta
 
 For example, the template expression
 
-```
-The barometer trend over $trend.time_delta.hour is $trend.barometer.format("%+.2f")
-```
+    The barometer trend over $trend.time_delta.hour is $trend.barometer.format("%+.2f")
 
 would result in
 
@@ -1688,15 +1663,11 @@ There are several delta settings that can be used:
 
 For example, the template expressions
 
-```
-The total rainfall over the last 30 hours is $span($hour_delta=30).rain.sum
-```
+    The total rainfall over the last 30 hours is $span($hour_delta=30).rain.sum
 
 and
 
-```
-The total rainfall over the last 30 hours is $span($hour_delta=6, $day_delta=1).rain.sum
-```
+    The total rainfall over the last 30 hours is $span($hour_delta=6, $day_delta=1).rain.sum
 
 would both result in
 
@@ -1718,9 +1689,7 @@ The type, label, and string formats for all units are also available, allowing y
 
 For example, the tag
 
-```
-$day.outTemp.max.format(add_label=False)$unit.label.outTemp
-```
+    $day.outTemp.max.format(add_label=False)$unit.label.outTemp
 
 would result in
 
@@ -1806,13 +1775,9 @@ October: Min, max temperatures: N/A N/A
 November: Min, max temperatures: N/A N/A  
 December: Min, max temperatures: N/A N/A
 ```
+The following template again uses a Cheetah `for` loop, this time to iterate over 3-hour spans over the last 24 hours, displaying the averages in each span. The iteration loop is ==highlighted==.
 
-
-STOPPED HERE
-
-
-The following template again uses a Cheetah for loop, this time to iterate over 3-hour spans over the last 24 hours, displaying the averages in each span. The iteration loop is  highlighted .
-
+```html hl_lines="6 10"
 <p>3 hour averages over the last 24 hours</p>
 <table>
   <tr>
@@ -1820,75 +1785,76 @@ The following template again uses a Cheetah for loop, this time to iterate over 
   </tr>
 #for $_span in $span($day_delta=1).spans(interval=10800)
   <tr>
-    <td>$_span.start.format("%d/%m %H:%M")</td><td>$_span.outTemp.avg</td><td>$_span.outHumidity.avg</td>
+    <td>$_span.start.format("%d/%m %H:%M")</td>
+    <td>$_span.outTemp.avg</td>
+    <td>$_span.outHumidity.avg</td>
   </tr>
 #end for
 </table>
+```
 
 The result is:
 
-3 hour averages over the last 24 hours
+<div class="example_output">
+    <p>3 hour averages over the last 24 hours</p>
+    <table>
+        <tr>
+            <td>Date/time</td>
+            <td>outTemp</td>
+            <td>outHumidity</td>
+        </tr>
+        <tr>
+            <td>21/01 18:50</td>
+            <td>33.4&#176;F</td>
+            <td>95%</td>
+        </tr>
+        <tr>
+            <td>21/01 21:50</td>
+            <td>32.8&#176;F</td>
+            <td>96%</td>
+        </tr>
+        <tr>
+            <td>22/01 00:50</td>
+            <td>33.2&#176;F</td>
+            <td>96%</td>
+        </tr>
+        <tr>
+            <td>22/01 03:50</td>
+            <td>33.2&#176;F</td>
+            <td>96%</td>
+        </tr>
+        <tr>
+            <td>22/01 06:50</td>
+            <td>33.8&#176;F</td>
+            <td>96%</td>
+        </tr>
+        <tr>
+            <td>22/01 09:50</td>
+            <td>36.8&#176;F</td>
+            <td>95%</td>
+        </tr>
+        <tr>
+            <td>22/01 12:50</td>
+            <td>39.4&#176;F</td>
+            <td>91%</td>
+        </tr>
+        <tr>
+            <td>22/01 15:50</td>
+            <td>35.4&#176;F</td>
+            <td>93%</td>
+        </tr>
+    </table>
 
-Date/time
+</div>
 
-outTemp
 
-outHumidity
+See the NOAA template files `NOAA/NOAA-YYYY.txt.tmpl` and `NOAA/NOAA-YYYY-MM.txt.tmpl`, both included in the _Seasons_ skin, for other examples using iteration and explicit formatting.
 
-21/01 18:50
-
-33.4°F
-
-95%
-
-21/01 21:50
-
-32.8°F
-
-96%
-
-22/01 00:50
-
-33.2°F
-
-96%
-
-22/01 03:50
-
-33.2°F
-
-96%
-
-22/01 06:50
-
-33.8°F
-
-96%
-
-22/01 09:50
-
-36.8°F
-
-95%
-
-22/01 12:50
-
-39.4°F
-
-91%
-
-22/01 15:50
-
-35.4°F
-
-93%
-
-See the NOAA template files NOAA/NOAA-YYYY.txt.tmpl and NOAA/NOAA-YYYY-MM.txt.tmpl for other examples using iteration, as well as explicit formatting.
-
-### Comprehensive example
+#### Comprehensive example
 
 This example is designed to put together a lot of the elements described above, including iteration, aggregation period starts and ends, formatting, and overriding units. [Click here](examples/tag.htm) for the results.
 
+```html
 <html>
   <head>
     <style>
@@ -1919,145 +1885,233 @@ This example is designed to put together a lot of the elements described above, 
     </table>
   </body>
 </html>
+```
 
-### Helper functions
+#### Helper functions
 
 WeeWX includes a number of helper functions that may be useful when writing templates.
 
-Cheetah helper functions
+<table class="indent">
+    <caption>Cheetah helper functions</caption>
+    <tbody>
+    <tr class="first_row">
+        <td>Function</td>
+        <td>Description</td>
+    </tr>
+    <tr>
+        <td class="first_col code">$rnd(x, ndigits=None)</td>
+        <td>
+            Round <span class="code">x</span> to <span class="code">ndigits</span> decimal digits. The argument
+            <span class="code">x</span> can be a <span class="code">float</span> or a list of <span
+            class="code">floats</span>. Values of <span class="code">None</span> are passed through.
+        </td>
+    </tr>
+    <tr>
+        <td class="first_col code">$jsonize(seq)</td>
+        <td>Convert the iterable <span class="code">seq</span> to a JSON string.</td>
+    </tr>
+    <tr>
+        <td class="first_col code">$to_int(x)</td>
+        <td>
+            Convert <span class="code">x</span> to an integer. The argument <span class="code">x</span> can be
+            of type <span class="code">float</span> or <span class="code">str</span>. Values of <span
+            class="code">None</span> are passed through.
+        </td>
+    </tr>
+    <tr>
+        <td class="first_col code">$to_bool(x)</td>
+        <td>
+            Convert <span class="code">x</span> to a boolean.
+            The argument <span class="code">x</span> can be
+            of type <span class="code">int</span>,
+            <span class="code">float</span>, or 
+            <span class="code">str</span>.
+            If lowercase <span class="code">x</span> is
+            'true', 'yes', or 'y' the function returns 
+            <span class="code">True</span>. 
+            If it is 'false', 'no', or 'n' it returns
+            <span class="code">False</span>.
+            Other string values raise a 
+            <span class="code">ValueError</span>.
+            In case of a numeric argument, 0 means 
+            <span class="code">False</span>, all other
+            values <span class="code">True</span>.
+        </td>
+    </tr>
+    <tr>
+        <td class="first_col code">$to_list(x)</td>
+        <td>
+            Convert <span class="code">x</span> to a list.
+            If <span class="code">x</span> is already a list,
+            nothing changes. If it is a single value it
+            is converted to a list with this value as the
+            only list element. Values of <span
+            class="code">None</span> are passed through.
+        </td>
+    </tr>
+    <tr>
+        <td class="first_col code">$getobs(plot_name)</td>
+        <td>
+            For a given plot name, this function will return the set of all observation types used by the plot.
+            <a href="#getobs-more-info">More information.</a>
+        <div id="getobs-more-info" class="modal-dialog">
+            <div>
+                <a href="#close" title="Close" class="close-dialog">X</a>
+                <p>
+                    For example, consider a plot that is defined in <span class="code">[ImageGenerator]</span> as
+                </p>
+                <pre class="tty">
+[[[daytempleaf]]]
+  [[[[leafTemp1]]]]
+  [[[[leafTemp2]]]]
+  [[[[temperature]]]]
+    data_type = outTemp</pre>
+                <p>The tag <span class="code">$getobs('daytempleaf')</span> would return the
+                set <span class="code">{'leafTemp1', 'leafTemp2', 'outTemp'}</span>.</p>
+            </div>
+        </div>
+        </td>
+    </tr>
+    </tbody>
+</table>
 
-Function
+#### Support for series
 
-Description
-
-$rnd(x, ndigits=None)
-
-Round x to ndigits decimal digits. The argument x can be a float or a list of floats. Values of None are passed through.
-
-$jsonize(seq)
-
-Convert the iterable seq to a JSON string.
-
-$to_int(x)
-
-Convert x to an integer. The argument x can be of type float or str. Values of None are passed through.
-
-$to_bool(x)
-
-Convert x to a boolean. The argument x can be of type int, float, or str. If lowercase x is 'true', 'yes', or 'y' the function returns True. If it is 'false', 'no', or 'n' it returns False. Other string values raise a ValueError. In case of an numeric argument 0 means False, all other values True.
-
-$to_list(x)
-
-Convert x to a list. If x is already a list, nothing changes. If it is a single value it is converted to a list with this value as the only list element. Values of None are passed through.
-
-$getobs(plot_name)
-
-For a given plot name, this function will return the set of all observation types used by the plot. [More information.](#getobs-more-info)
-
-[X](#close "Close")
-
-For example, consider a plot that is defined in [ImageGenerator] as
-
-    [[[daytempleaf]]]
-        [[[[leafTemp1]]]]
-        [[[[leafTemp2]]]]
-        [[[[temperature]]]]
-            data_type = outTemp
-
-The tag $getobs('daytempleaf') would return the set {'leafTemp1', 'leafTemp2', 'outTemp'}.
-
-### Support for series
-
-This is an experimental API that could change.
+!!! Note
+    This is an experimental API that could change.
 
 WeeWX V4.5 introduced some experimental tags for producing _series_ of data, possibly aggregated. This can be useful for creating the JSON data needed for JavaScript plotting packages, such as [HighCharts](https://www.highcharts.com/), [Google Charts](https://developers.google.com/chart), or [C3.js](https://c3js.org/).
 
 For example, suppose you need the maximum temperature for each day of the month. This tag
 
-$month.outTemp.series(aggregate_type='max', aggregate_interval='day', time_series='start').json
-        
+    $month.outTemp.series(aggregate_type='max', aggregate_interval='day', time_series='start').json
 
 would produce the following:
 
-[[1614585600, 58.2], [1614672000, 55.8], [1614758400, 59.6], [1614844800, 57.8], ... ]
-        
+    [[1614585600, 58.2], [1614672000, 55.8], [1614758400, 59.6], [1614844800, 57.8], ... ]
 
 This is a list of (time, temperature) for each day of the month, in JSON, easily consumed by many of these plotting packages.
 
 Many other combinations are possible. See the Wiki article [_Tags for series_](https://github.com/weewx/weewx/wiki/Tags-for-series).
 
-### General tags
+#### General tags
 
 There are some general tags that do not reflect observation data, but technical information about the template files. They are frequently useful in #if expressions to control how Cheetah processes the template.
 
-Tag
+<table class="indent">
+  <tbody>
+    <tr class="first_row">
+      <td>Tag</td>
+      <td>Description</td>
+    </tr>
+    <tr>
+      <td class="code first_col">$encoding</td>
+      <td>Character encoding, to which the file is converted
+      after creation. Possible values are
+      <span class="code">html_entities</span>,
+      <span class="code">strict_ascii</span>,
+      <span class="code">normalized_ascii</span>, and
+      <span class="code">utf-8</span>.
+      </td>
+    </tr>
+    <tr>
+      <td class="code first_col">$filename</td>
+      <td>
+        Name of the file to be created including relative path.
+        Can be used to set the canonical URL for search engines.
+        <pre class="tty">&lt;link rel="canonical" href="$station.station_url/$filename" /&gt;</pre>
+      </td>
+    </tr>
+    <tr>
+        <td class="code first_col">$lang</td>
+        <td>Language code set by the <span class="code">lang</span> option for the report. For example,
+            <span class="code">fr</span>, or <span class="code">gr</span>.
+        </td>
+    </tr>
+    <tr>
+      <td class="code first_col">$month_name</td>
+      <td>For templates listed under <span class="code">SummaryByMonth</span>, this will contain the localized
+          month name (<em>e.g.</em>, "<em>Sep</em>").</td>
+    </tr>
+    <tr>
+        <td class="code first_col">$page</td>
+        <td>The section name from <span class="code">skin.conf</span> where the template is described.</td>
+    </tr>
+    <tr>
+        <td class="code first_col">$skin</td>
+        <td>The value of option <span class="code">skin</span> in <span class="code">weewx.conf</span>.</td>
+    </tr>
+    <tr>
+        <td class="code first_col">$SKIN_NAME</td>
+        <td>
+            All skin included with WeeWX, version 4.6 or later, include the tag
+            <span class="code">$SKIN_NAME</span>. For example, for
+            the <em>Seasons</em> skin, <span class="code">$SKIN_NAME</span> would return
+            <span class="code">Seasons</span>.
+        </td>
+    </tr>
+    <tr>
+        <td class="code first_col">$SKIN_VERSION</td>
+        <td>
+            All skin included with WeeWX, version 4.6 or later, include the tag
+            <span class="code">$SKIN_VERSION</span>, which returns the WeeWX version number of when the skin was
+            installed. Because skins are not touched during the upgrade process, this shows the origin of the
+            skin.
+        </td>
+    </tr>
+    <tr>
+        <td class="code first_col">$SummaryByDay</td>
+        <td>
+            A list of year-month-day strings (<em>e.g.</em>, <span class="code">["2018-12-31", "2019-01-01"]</span>)
+            for which a summary-by-day has been generated.
+            The <span class="code">[[SummaryByDay]]</span> section must have been processed before this tag
+            will be valid, otherwise it will be empty.
+        </td>
+    </tr>
+    <tr>
+        <td class="code first_col">$SummaryByMonth</td>
+        <td>
+            A list of year-month strings (<em>e.g.</em>, <span class="code">["2018-12", "2019-01"]</span>)
+            for which a summary-by-month has been generated.
+            The <span class="code">[[SummaryByMonth]]</span> section must have been processed before this tag
+            will be valid, otherwise it will be empty.
+        </td>
+    </tr>
+    <tr>
+        <td class="code first_col">$SummaryByYear</td>
+        <td>
+            A list of year strings (<em>e.g.</em>, <span class="code">["2018", "2019"]</span>)
+            for which a summary-by-year has been generated.
+            The <span class="code">[[SummaryByYear]]</span> section must have been processed before this tag
+            will be valid, otherwise it will be empty.
+        </td>
+    </tr>            
+    <tr>
+      <td class="code first_col">$year_name</td>
+        <td>For templates listed under <span class="code">SummaryByMonth</span> or
+            <span class="code">SummaryByYear</span>, this will contain the year (<em>e.g.</em>, "2018").</td>
+    </tr>
+  </tbody>
+</table>
 
-Description
 
-$encoding
+#### Internationalization support with `$gettext`
 
-Character encoding, to which the file is converted after creation. Possible values are html_entities, strict_ascii, normalized_ascii, and utf-8.
-
-$filename
-
-Name of the file to be created including relative path. Can be used to set the canonical URL for search engines.
-
-<link rel="canonical" href="$station.station_url/$filename" />
-
-$lang
-
-Language code set by the lang option for the report. For example, fr, or gr.
-
-$month_name
-
-For templates listed under SummaryByMonth, this will contain the localized month name (_e.g._, "_Sep_").
-
-$page
-
-The section name from skin.conf where the template is described.
-
-$skin
-
-The value of option skin in `weewx.conf`.
-
-$SKIN_NAME
-
-All skin included with WeeWX, version 4.6 or later, include the tag $SKIN_NAME. For example, for the _Seasons_ skin, $SKIN_NAME would return Seasons.
-
-$SKIN_VERSION
-
-All skin included with WeeWX, version 4.6 or later, include the tag $SKIN_VERSION, which returns the WeeWX version number of when the skin was installed. Because skins are not touched during the upgrade process, this shows the origin of the skin.
-
-$SummaryByDay
-
-A list of year-month-day strings (_e.g._, ["2018-12-31", "2019-01-01"]) for which a summary-by-day has been generated. The [[SummaryByDay]] section must have been processed before this tag will be valid, otherwise it will be empty.
-
-$SummaryByMonth
-
-A list of year-month strings (_e.g._, ["2018-12", "2019-01"]) for which a summary-by-month has been generated. The [[SummaryByMonth]] section must have been processed before this tag will be valid, otherwise it will be empty.
-
-$SummaryByYear
-
-A list of year strings (_e.g._, ["2018", "2019"]) for which a summary-by-year has been generated. The [[SummaryByYear]] section must have been processed before this tag will be valid, otherwise it will be empty.
-
-$year_name
-
-For templates listed under SummaryByMonth or SummaryByYear, this will contain the year (_e.g._, "2018").
-
-### Internationalization support with $gettext
-
-Pages generated by WeeWX not only contain observation data, but also static text. The WeeWX $gettext tag provides internationalization support for these kinds of texts. It is structured very similarly to the [GNU gettext facility](https://www.gnu.org/software/gettext/), but its implementation is very different. To support internationalization of your template, do not use static text in your templates, but rather use $gettext. Here's how.
+Pages generated by WeeWX not only contain observation data, but also static text. The WeeWX tag `$gettext` provides internationalization support for these kinds of texts. It is structured very similarly to the [GNU gettext facility](https://www.gnu.org/software/gettext/), but its implementation is very different. To support internationalization of your template, do not use static text in your templates, but rather use `$gettext`. Here's how.
 
 Suppose you write a skin called "YourSkin", and you want to include a headline labelled "Current Conditions" in English, "aktuelle Werte" in German, "Conditions actuelles" in French, etc. Then the template file could contain:
 
+```
 ...
 
 <h1>$gettext("Current Conditions")</h1>
 
 ...
+```
 
 The section of `weewx.conf` configuring your skin would look something like this:
 
+```
 ...
 [StdReport]
     ...
@@ -2065,48 +2119,60 @@ The section of `weewx.conf` configuring your skin would look something like this
         skin = YourSkin
         lang = fr
     ...
+```
 
-With lang = fr the report is in French. To get it in English, replace the language code fr by the code for English en. And to get it in German use de.
+With `lang = fr` the report is in French. To get it in English, replace the language code `fr` by the code for English `en`. And to get it in German use `de`.
 
-To make this all work a language file has to be created for each supported language. The language files reside in the lang subdirectory of the skin directory that is defined by the skin option. The file name of the language file is the language code appended by .conf, for example en.conf, de.conf, or fr.conf.
+To make this all work, a language file has to be created for each supported language. The language files reside in the `lang` subdirectory of the skin directory that is defined by the skin option. The file name of the language file is the language code appended by `.conf`, for example `en.conf`, `de.conf`, or `fr.conf`.
 
-The language file has the same layout as skin.conf, i.e. you can put language specific versions of the labels there. Additionally a section [Texts] can be defined to hold the static texts used in the skin. For the example above the language files would contain the following:
+The language file has the same layout as `skin.conf`, _i.e._ you can put language specific versions of the labels there. Additionally, a section `[Texts]` can be defined to hold the static texts used in the skin. For the example above the language files would contain the following:
 
-en.conf
+`en.conf`
 
+```
 ...
 [Texts]
     "Current Conditions" = Current Conditions
     ...
+```
 
-de.conf
+`de.conf`
 
+```
 ...
 [Texts]
     "Current Conditions" = Aktuelle Werte
     ...
+```
 
-fr.conf
+`fr.conf`
 
+```
 ...
 [Texts]
     "Current Conditions" = Conditions actuelles
     ...
+```
 
 While it is not technically necessary, we recommend using the whole English text for the key. This makes the template easier to read, and easier for the translator. In the absence of a translation, it will also be the default, so the skin will still be usable, even if a translation is not available.
 
-See the subdirectory SKIN_ROOT/Seasons/lang for examples of language files.
+See the subdirectory `SKIN_ROOT/Seasons/lang` for examples of language files.
 
-#### Context sensitive lookups: $pgettext()
 
-A common problem is that the same string may have different translations, depending on its context. For example, in English, the word "Altitude" is used to mean both height above sea level, and the angle of a heavenly body from the horizon, but that's not necessarily true in other languages. For example, in Thai, "ระดับความสูง" is used to mean the former, "อัลติจูด" the latter. The function pgettext() (the "p" stands for _particular_) allows you to distinguish between the two. Its semantics are very similar to the [GNU](https://www.gnu.org/software/gettext/manual/gettext.html#Contexts) and [Python](https://docs.python.org/3/library/gettext.html#gettext.pgettext) versions of the function. Here's an example:
+##### Context sensitive lookups: `$pgettext()`
 
-            <p>$pgettext("Geographical","Altitude"): $station.altitude</p>
-            <p>$pgettext("Astronomical","Altitude"): $almanac.moon.alt</p>
-        
+A common problem is that the same string may have different translations, depending on its context. For example, in English, the word "Altitude" is used to mean both height above sea level, and the angle of a heavenly body from the horizon, but that's not necessarily true in other languages. For example, in Thai, "ระดับความสูง" is used to mean the former, "อัลติจูด" the latter. The function `pgettext()` (the "p" stands for _particular_) allows you to distinguish between the two. Its semantics are very similar to the [GNU](https://www.gnu.org/software/gettext/manual/gettext.html#Contexts) and [Python](https://docs.python.org/3/library/gettext.html#gettext.pgettext) versions of the function. Here's an example:
 
-The [Texts] section of the language file should then contain a subsection for each context. For example, the Thai language file would include:
+```
+<p>$pgettext("Geographical","Altitude"): $station.altitude</p>
+<p>$pgettext("Astronomical","Altitude"): $almanac.moon.alt</p>
+```
 
+The `[Texts]` section of the language file should then contain a subsection for each context. For example, the Thai language file would include:
+
+`th.conf`
+
+```
 [Texts]
     ...
     [[Geographical]]
@@ -2114,43 +2180,48 @@ The [Texts] section of the language file should then contain a subsection for ea
     [[Astronomical]]
         "Altitude" = "อัลติจูด"         # As in angle above the horizon
     ...
-        
+```        
 
-Almanac
--------
+### Almanac
 
 If module [pyephem](https://rhodesmill.org/pyephem) has been installed, then WeeWX can generate extensive almanac information for the Sun, Moon, Venus, Mars, Jupiter, and other heavenly bodies, including their rise, transit and set times, as well as their azimuth and altitude. Other information is also available.
 
 Here is an example template:
 
+```
 Current time is $current.dateTime
 #if $almanac.hasExtras
-Sunrise, transit, sunset: $almanac.sun.rise $almanac.sun.transit $almanac.sun.set
-Moonrise, transit, moonset: $almanac.moon.rise $almanac.moon.transit $almanac.moon.set
-Mars rise, transit, set: $almanac.mars.rise $almanac.mars.transit $almanac.mars.set
-Azimuth, altitude of mars: $almanac.mars.az $almanac.mars.alt
-Next new, full moon: $almanac.next_new_moon $almanac.next_full_moon
-Next summer, winter solstice: $almanac.next_summer_solstice $almanac.next_winter_solstice
+    Sunrise, transit, sunset: $almanac.sun.rise $almanac.sun.transit $almanac.sun.set
+    Moonrise, transit, moonset: $almanac.moon.rise $almanac.moon.transit $almanac.moon.set
+    Mars rise, transit, set: $almanac.mars.rise $almanac.mars.transit $almanac.mars.set
+    Azimuth, altitude of mars: $almanac.mars.az $almanac.mars.alt
+    Next new, full moon: $almanac.next_new_moon $almanac.next_full_moon
+    Next summer, winter solstice: $almanac.next_summer_solstice $almanac.next_winter_solstice
 #else
-Sunrise, sunset: $almanac.sunrise $almanac.sunset
+    Sunrise, sunset: $almanac.sunrise $almanac.sunset
 #end if
+```
 
 If pyephem is installed this would result in:
 
-Current time is 29-Mar-2011 09:20  
-Sunrise, transit, sunset: 06:51 13:11 19:30  
-Moonrise, transit, moonset: 04:33 09:44 15:04  
-Mars rise, transit, set: 06:35 12:30 18:26  
-Azimuth, altitude of mars: 124.354959275 26.4808431952  
-Next new, full moon: 03-Apr-2011 07:32 17-Apr-2011 19:43  
-Next summer, winter solstice: 21-Jun-2011 10:16 21-Dec-2011 21:29
+<div class="example_output">
+Current time is 29-Mar-2011 09:20<br/>
+Sunrise, transit, sunset: 06:51 13:11 19:30<br/>  
+Moonrise, transit, moonset: 04:33 09:44 15:04  <br/>
+Mars rise, transit, set: 06:35 12:30 18:26  <br/>
+Azimuth, altitude of mars: 124.354959275 26.4808431952<br/>  
+Next new, full moon: 03-Apr-2011 07:32 17-Apr-2011 19:43  <br/>
+Next summer, winter solstice: 21-Jun-2011 10:16 21-Dec-2011 21:29<br/>
+</div>
 
 Otherwise, a fallback of basic calculations is used, resulting in:
 
-Current time is 29-Mar-2011 09:20  
+<div class="example_output">
+Current time is 29-Mar-2011 09:20<br/>  
 Sunrise, sunset: 06:51 19:30
+</div>
 
-As shown in the example, you can test whether this extended almanac information is available with the value $almanac.hasExtras.
+As shown in the example, you can test whether this extended almanac information is available with the value `$almanac.hasExtras`.
 
 The almanac information falls into three categories:
 
@@ -2160,86 +2231,100 @@ The almanac information falls into three categories:
 
 We will cover each of these separately.
 
-### Calendar events
+#### Calendar events
 
-"Calendar events" do not require a heavenly body. They cover things such as next_solstice, next_first_quarter_moon or sidereal_time. The syntax here is:
+"Calendar events" do not require a heavenly body. They cover things such as the time of the next solstice or next first quarter moon, or the sidereal time. The syntax is:
 
-$almanac.next_solstice
-
-or
-
-$almanac.next_first_quarter_moon
+    $almanac.next_solstice
 
 or
 
-$almanac.sidereal_time
+    $almanac.next_first_quarter_moon
+
+or
+
+    $almanac.sidereal_time
 
 Here is a table of the information that falls into this category:
 
-Calendar events
+<table class="indent">
+    <caption>Calendar events</caption>
+    <tbody class="code">
+    <tr>
+        <td>previous_equinox</td>
+        <td>next_equinox</td>
+    </tr>
+    <tr>
+        <td>previous_solstice</td>
+        <td>next_solstice</td>
+    </tr>
+    <tr>
+        <td>previous_autumnal_equinox</td>
+        <td>next_autumnal_equinox</td>
+    </tr>
+    <tr>
+        <td>previous_vernal_equinox</td>
+        <td>next_vernal_equinox</td>
+    </tr>
+    <tr>
+        <td>previous_winter_solstice</td>
+        <td>next_winter_solstice</td>
+    </tr>
+    <tr>
+        <td>previous_summer_solstice</td>
+        <td>next_summer_solstice</td>
+    </tr>
+    <tr>
+        <td>previous_new_moon</td>
+        <td>next_new_moon</td>
+    </tr>
+    <tr>
+        <td>previous_first_quarter_moon</td>
+        <td>next_first_quarter_moon</td>
+    </tr>
+    <tr>
+        <td>previous_full_moon</td>
+        <td>next_full_moon</td>
+    </tr>
+    <tr>
+        <td>previous_last_quarter_moon</td>
+        <td>next_last_quarter_moon</td>
+    </tr>
+    <tr>
+        <td>sidereal_time</td>
+        <td></td>
+    </tr>
+    <tr>
+        <td></td>
+        <td></td>
+    </tr>
+    </tbody>
+</table>
 
-previous_equinox
+!!! Note
+    The tag `$almanac.sidereal_time` returns a value in decimal degrees rather than a customary value from 0 to 24 hours.
 
-next_equinox
+#### Heavenly bodies
 
-previous_solstice
-
-next_solstice
-
-previous_autumnal_equinox
-
-next_autumnal_equinox
-
-previous_vernal_equinox
-
-next_vernal_equinox
-
-previous_winter_solstice
-
-next_winter_solstice
-
-previous_summer_solstice
-
-next_summer_solstice
-
-previous_new_moon
-
-next_new_moon
-
-previous_first_quarter_moon
-
-next_first_quarter_moon
-
-previous_full_moon
-
-next_full_moon
-
-previous_last_quarter_moon
-
-next_last_quarter_moon
-
-sidereal_time
-
-**Note**  
-The tag $almanac.sidereal_time returns a value in decimal degrees rather than a customary value from 0 to 24 hours.
-
-### Heavenly bodies
 
 The second category does require a heavenly body. This covers queries such as, "When does Jupiter rise?" or, "When does the sun transit?" Examples are
 
-$almanac.jupiter.rise
+    $almanac.jupiter.rise
 
 or
 
-$almanac.sun.transit
+    $almanac.sun.transit
 
 To accurately calculate these times, WeeWX automatically uses the present temperature and pressure to calculate refraction effects. However, you can override these values, which will be necessary if you wish to match the almanac times published by the Naval Observatory [as explained in the pyephem documentation](https://rhodesmill.org/pyephem/rise-set.html). For example, to match the sunrise time as published by the Observatory, instead of
 
-$almanac.sun.rise
+    $almanac.sun.rise
 
 use
 
-$almanac(pressure=0, horizon=-34.0/60.0).sun.rise
+    $almanac(pressure=0, horizon=-34.0/60.0).sun.rise
+
+
+STOPPED HERE
 
 By setting pressure to zero we are bypassing the refraction calculations and manually setting the horizon to be 34 arcminutes lower than the normal horizon. This is what the Navy uses.
 
