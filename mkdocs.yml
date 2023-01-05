@@ -42,9 +42,9 @@ extra_css:
 nav:
   - Quickstarts:
       - quickstart-overview.md
-      - Debian: debian.htm
+      - Debian: debian.md
       - RedHat: redhat.md
-      - SUSE: suse.htm
+      - SUSE: suse.md
       - pip: pip.md
   - Documentation:
       - guides-overview.md
