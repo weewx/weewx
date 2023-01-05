@@ -44,7 +44,7 @@ nav:
       - quickstart-overview.md
       - Debian: debian.htm
       - RedHat: redhat.md
-      - SUSE: suse.htm
+      - SUSE: suse.md
       - pip: pip.md
   - Documentation:
       - guides-overview.md
