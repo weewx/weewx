@@ -71,7 +71,7 @@ for wview).
 
 All writes to the databases are protected by transactions. You can kill
 the program at any time (either Control-C if run directly or
-*[/etc/init.d/weewx stop]* if run as a daemon) without fear of
+`/etc/init.d/weewx stop` if run as a daemon) without fear of
 corrupting the databases.
 
 The code makes ample use of exceptions to insure graceful recovery from
@@ -104,29 +104,29 @@ a difference:
 3.  In the presentation (i.e., html and image files).
 
 The general strategy is that measurements are converted by service
-[StdConvert] as they come off the weather station into a target
+`StdConvert` as they come off the weather station into a target
 unit system, then stored internally in the database in that unit system.
 Then, as they come off the database to be used for a report, they are
 converted into a target unit, specified by a combination of the
-configuration file [weewx.conf] and the skin configuration file
-[skin.conf].
+configuration file `weewx.conf` and the skin configuration file
+`skin.conf`.
 
-## Value [None]
+## Value `None`
 
-The Python special value [None] is used throughout to signal an
+The Python special value `None` is used throughout to signal an
 invalid or bad data point. All functions must be written to expect it.
 
-Device drivers should be written to emit [None] if a data value
+Device drivers should be written to emit `None` if a data value
 is bad (perhaps because of a failed checksum). If the hardware simply
 doesn't support a data type, then the driver should not emit a value at
 all.
 
 The same rule applies to derived values. If the input data for a derived
 value are missing, then no derived value should be emitted. However, if
-the input values are present, but have value [None], then the
-derived value should be set to [None].
+the input values are present, but have value `None`, then the
+derived value should be set to `None`.
 
-However, the time value must never be [None]. This is because it
+However, the time value must never be `None`. This is because it
 is used as the primary key in the SQL database.
 
 ## Time
@@ -154,8 +154,8 @@ But, if one wanted to plot something for every 3 hours *in local time*
 (that is, at 0000, 0300, 0600, etc.), despite a possible DST change in
 the middle, then things get a bit more complicated. One could modify the
 above to recognize whether a DST transition occurs sometime between
-[last_ts] and the next three hours and, if so, make the necessary
-adjustments. This is generally what [wview] does. WeeWX takes a
+`last_ts` and the next three hours and, if so, make the necessary
+adjustments. This is generally what `wview` does. WeeWX takes a
 different approach and converts from UTC to local, does the arithmetic,
 then converts back. This is inefficient, but bulletproof against changes
 in DST algorithms, etc:
@@ -236,7 +236,7 @@ example, this is bad form:
 ```
 
 While the odds are that if an exception happens it will be because the
-file [oldname] does not exist, that is not guaranteed. It could
+file `oldname` does not exist, that is not guaranteed. It could
 be because of a keyboard interrupt, or a corrupted file system, or
 something else. Instead, you should test explicitly for any expected
 exception, and let the rest go by:
@@ -253,7 +253,7 @@ the different types of exceptions that could be thrown by the underlying
 libraries. In particular, low-level I/O code can raise a myriad of
 exceptions, such as USB errors, serial errors, network connectivity
 errors, *etc.* All device drivers should catch these exceptions and
-convert them into an exception of type [WeeWxIOError] or one of
+convert them into an exception of type `WeeWxIOError` or one of
 its subclasses.
 
 ## Naming conventions
@@ -341,7 +341,7 @@ camelCase, but PEP 8 calls for snake_case. Please use snake_case for new
 code.
 
 Most modern code editors, such as Eclipse, or PyCharm, have the ability
-to automatically format code. Resist the temptation and *don\'t use this
+to automatically format code. Resist the temptation and *don't use this
 feature!* Two reasons:
 
 -   Unless all developers use the same tool, using the same settings, we
@@ -384,23 +384,23 @@ The code is hosted on [GitHub](https://github.com/weewx/weewx). Their
 [documentation](https://docs.github.com/en/get-started) is very
 extensive and helpful.
 
-We generally follow Vincent Driessen\'s [branching
+We generally follow Vincent Driessen's [branching
 model](http://nvie.com/posts/a-successful-git-branching-model/). Ignore
 the complicated diagram at the beginning of the article, and just focus
 on the text. In this model, there are two key branches:
 
--   [master]. Fixes go into this branch. We tend to use fewer
+-   'master'. Fixes go into this branch. We tend to use fewer
     *hot fix* branches and, instead, just incorporate any fixes
     directly into the branch. Releases are tagged relative to this
     branch.
--   [development] (called [develop] in Vince\'s article).
+-   'development' (called `develop` in Vince's article).
     This is where new features go. Before a release, they will be merged
-    into the [master] branch.
+    into the `master` branch.
 
 What this means to you is that if you submit a pull request that
 includes a new feature, make sure you commit your changes relative to
-the [*development*] branch. If it is just a bug fix, it should be
-committed against the [master] branch.
+the *development* branch. If it is just a bug fix, it should be
+committed against the `master` branch.
 
 ## Tools
 
@@ -423,7 +423,7 @@ This section builds on the discussion [*The database*](customizing.htm#The_datab
 Read it first.
 
 The big flat table in the database (usually called table
-[archive]) is the definitive table of record. While it includes a
+`archive`) is the definitive table of record. While it includes a
 lot of information, querying it can be slow. For example, to find the
 maximum temperature of the year would require scanning the whole thing,
 which might include 100,000 or more records. To speed things up, WeeWX
@@ -431,8 +431,8 @@ includes *daily summaries* in the database as an optimization.
 
 In the daily summaries, each observation type gets its own table, which
 holds a statistical summary for the day. For example, for outside
-temperature observation type [outTemp]), this table would be
-named [archive_day_outTemp]. Here's what it would look like:
+temperature observation type `outTemp`, this table would be
+named `archive_day_outTemp`. Here's what it would look like:
 
 <html>
   <table class="indent fixed_width">
@@ -497,7 +497,7 @@ named [archive_day_outTemp]. Here's what it would look like:
         </table>
 </html> 
 
-Structure of the [archive_day_outTemp] daily summary
+Structure of the `archive_day_outTemp` daily summary
 
 Here's what the table columns mean:
 
@@ -569,12 +569,12 @@ Here's what the table columns mean:
         </table>
 </html>
 
-Note how the average temperature for the day can be calculated as [wsum
-/ sumtime]. This will be true even if the archive interval
+Note how the average temperature for the day can be calculated as `wsum
+/ sumtime`. This will be true even if the archive interval
 changes during the day.
 
-Now consider an extensive variable such as [rain]. The total
-rainfall for the day will be given by the field [sum]. So,
+Now consider an extensive variable such as `rain`. The total
+rainfall for the day will be given by the field `sum`. So,
 calculating the total rainfall for the year can be done by scanning and
 summing only 365 records, instead of potentially tens, or even hundreds,
 of thousands of records. This results in a dramatic speed up for report
@@ -756,5 +756,4 @@ This is a glossary of terminology used throughout the code.
         </table>
 </html>
 
-::: footer
 © [Copyright](copyright.htm) Tom Keffer
