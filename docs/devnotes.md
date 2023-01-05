@@ -280,8 +280,6 @@ pressure_mbar = 990.1
 WeeWX uses a number of conventions to signal the variable type, although
 they are not used consistently.
 
-**FIXME - table CSS**
-
 <html>
  <table style="width: 75%" class='indent'>
             <caption>Variable suffix conventions</caption>
@@ -436,7 +434,6 @@ holds a statistical summary for the day. For example, for outside
 temperature observation type [outTemp]), this table would be
 named [archive_day_outTemp]. Here's what it would look like:
 
-**FIXME - table CSS**
 <html>
   <table class="indent fixed_width">
             <caption>
@@ -504,7 +501,6 @@ Structure of the [archive_day_outTemp] daily summary
 
 Here's what the table columns mean:
 
-**FIXME - table CSS**
 <html>
     <table class="indent">
             <tr class="first_row">
@@ -590,8 +586,6 @@ working off an SD card.
 The daily summary for wind includes six additional fields. Here\'s what
 they mean:
 
-**FIXME - table CSS**
-
 <table>
 <table class="indent">
             <tr class="first_row">
@@ -643,8 +637,6 @@ math.sqrt(wsquaresum / sumtime)
 ## Glossary
 
 This is a glossary of terminology used throughout the code.
-
-**FIXME - table CSS**
 
 <html>
        <table style="width: 95%" class='indent'>
