@@ -2,6 +2,14 @@
 
 This is a guide to installing WeeWX from a DEB package on Debian-based systems, including Ubuntu, Mint, and Raspbian.
 
+This requires a version of the operating system based on debian-10 or newer.
+
+## Compatible Operating System Versions
+WeeWX v5 requires python v3.7 or later, which is only available on operating systems based on debian-10 or later. No packages for python2-only operating systems will be provided.
+
+It is recommended that users of older operating systems continue to use WeeWX v4 until you can update your operating system to a more current version supporting python v3.7 at a minimum.
+
+
 ## Configure apt
 
 The first time you install WeeWX, you must configure ```apt``` so that it knows to trust weewx.com, and knows where to find the WeeWX releases.
@@ -15,19 +23,11 @@ wget -qO - https://weewx.com/keys.html | \
 
 Step two: run one of the following two commands to tell `apt` where to find the appropriate WeeWX repository.
 
-*   For Debian10 and later, use Python 3:
-
 ```
 wget -qO - https://weewx.com/apt/weewx-python3.list | \
   sudo tee /etc/apt/sources.list.d/weewx.list
 ```
 
-*   _or_, for Debian9 and earlier, use Python 2:
-
-```
-wget -qO - https://weewx.com/apt/weewx-python2.list | \
-  sudo tee /etc/apt/sources.list.d/weewx.list
-```
 
 ## Install
 

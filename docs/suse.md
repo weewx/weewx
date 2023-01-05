@@ -4,6 +4,14 @@ WeeWX: Installation on SuSE-based systems
 
 This is a guide to installing WeeWX from an RPM package on systems such as SuSE or OpenSUSE.
 
+This requires a version of the operating system based on SUSE 15 or newer.
+
+## Compatible Operating System Versions
+WeeWX v5 requires python v3.7, which is only available on operating systems based on SUSE-15 or later. No packages for python2-only operating systems will be provided.
+
+It is recommended that users of older operating systems continue to use WeeWX v4 until you can update your operating system to a more current version supporting python v3.7 at a minimum.
+
+
 Configure zypper
 ----------------
 
@@ -15,17 +23,10 @@ Tell your system to trust weewx.com:
 sudo rpm --import https://weewx.com/keys.html
 ```
 
-For SUSE 15 use python3:
+Define the repo:
 
 ```
 curl -s https://weewx.com/suse/weewx-suse15.repo | \
-    sudo tee /etc/zypp/repos.d/weewx.repo
-```
-
-For SUSE 12 use python2:
-
-```
-curl -s https://weewx.com/suse/weewx-suse12.repo | \
     sudo tee /etc/zypp/repos.d/weewx.repo
 ```
 
