@@ -43,7 +43,7 @@ nav:
   - Quickstarts:
       - quickstart-overview.md
       - Debian: debian.htm
-      - RedHat: redhat.htm
+      - RedHat: redhat.md
       - SUSE: suse.htm
       - pip: pip.md
   - Documentation:
