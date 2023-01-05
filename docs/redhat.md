@@ -3,33 +3,27 @@
 This is a guide to installing WeeWX from an RPM package on systems such
 as Redhat, CentOS or Fedora.
 
+This requires a version of the operating system based on Redhat 8 or newer.
+
+## Compatible Operating System Versions
+WeeWX v5 requires python v3.7, which is only available on operating systems based on redhat-8 or later. No packages for python2-only operating systems will be provided.
+
+It is recommended that users of older operating systems continue to use WeeWX v4 until you can update your operating system to a more current version supporting python v3.7 at a minimum.
+
+
 ## Install pre-requisites
 
 Unfortunately, not everything that WeeWX uses is included in the
-standard Redhat 8 and Redhat 7 repositories. You will need to enable
+standard Redhat repositories. You will need to enable
 their respective EPEL ("Extra Packages for Enterprise Linux")
 repositories, then install some prerequisites manually.
 
-### Redhat 8 and Centos 8
-For Redhat 8 and Centos 8, you will be using Python 3. Here are the
-pre-requisites:
+Add the EPEL repo and install prerequisites:
 
 ```
 sudo yum install epel-release
 sudo yum install python3-cheetah
 ```
-
-
-### Redhat 7 and Centos 7 
-For Redhat 7 and Centos 7, you will be using Python 2. Here are the
-pre-requisites:
-
-```
-sudo yum install epel-release
-sudo yum install pyserial pyusb
-sudo yum install python2-pip      # (Optional)
-```
-
 
 ## Configure yum
 
@@ -43,16 +37,10 @@ Tell your system to trust weewx.com:
 sudo rpm --import https://weewx.com/keys.html
 ```
 
-For Redhat 8, using Python 3:
+Enable the WeeWX repo:
 
 ```
 curl -s https://weewx.com/yum/weewx-el8.repo | sudo tee /etc/yum.repos.d/weewx.repo
-```
-
-For Redhat 7, using Python 2:
-
-```
-curl -s https://weewx.com/yum/weewx-el7.repo | sudo tee /etc/yum.repos.d/weewx.repo
 ```
 
 ## Install WeeWX
