@@ -54,7 +54,7 @@ nav:
       - "Utilities Guide": utilities.htm
       - "Upgrade Guide": upgrading.htm
       - "Change log": changes.md
-      - "Notes for developers": devnotes.htm
+      - "Notes for developers": devnotes.md
       - "Hardware Comparison": hardware.htm
   - Support:
       - support.md
