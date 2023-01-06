@@ -2,6 +2,7 @@
 !/.idea
 /.idea/*
 !/.idea/codeStyles
+/bin/wee_resources/docs
 .project
 .pydevproject
 .settings

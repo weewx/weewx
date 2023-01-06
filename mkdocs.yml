@@ -39,6 +39,8 @@ theme:
 extra_css:
   - css/weewx_ui.css
 
+site_dir: 'bin/wee_resources/docs'
+
 nav:
   - Quickstarts:
       - quickstart-overview.md
