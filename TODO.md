@@ -71,3 +71,6 @@ Note the change in the weedb.sqlite API. Can't imagine it will affect anyone.
 Installs to ~/weewx-data now.
 
 Write a tool to migrate extensions.
+
+Mac logs to `syslog` like any other system, instead of `rotate`. Need to update wiki logging
+page, too.

@@ -11,6 +11,8 @@ WeeWX can now be installed using pip.
 Removed all references to the deprecated package distutils, which was due to be
 removed in Python v3.12.
 
+Mac now logs to `syslog` like any other system, (instead of `rotate`).
+
 
 ## 4.10.0 MM/DD/YYYY
 Don't inject txBatteryStatus and consBatteryVoltage into records in
