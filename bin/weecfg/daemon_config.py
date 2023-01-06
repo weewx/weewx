@@ -10,6 +10,7 @@ import os.path
 import shutil
 
 import weecfg
+import weeutil.weeutil
 from weeutil.weeutil import bcolors
 
 
@@ -68,7 +69,7 @@ def systemd_install(config_path=None, user=None, weewxd_path=None, daemon_dir=No
     config_path = os.path.abspath(config_path)
 
     # Get the systemd template from package resources.
-    with importlib.resources.path('wee_resources', 'util') as util_path:
+    with weeutil.weeutil.path_to_resource('wee_resources', 'util') as util_path:
         systemd_template_path = os.path.join(util_path, 'systemd', service_file_name)
         # Read it all in.
         with open(systemd_template_path, 'rt') as fd:

@@ -435,7 +435,7 @@ def copy_skins(config_dict):
     with os.scandir(skin_dir) as existing_contents:
         existing_skins = {os.path.basename(d.path) for d in existing_contents if d.is_dir()}
 
-    with importlib.resources.path('wee_resources', 'skins') as skin_resources:
+    with weeutil.weeutil.path_to_resource('wee_resources', 'skins') as skin_resources:
         # Find which skins are available in the resource package
         with os.scandir(skin_resources) as resource_contents:
             available_skins = {os.path.basename(d.path) for d in resource_contents if d.is_dir()}
@@ -456,7 +456,7 @@ def copy_docs(config_dict, docs_root=None):
         docs_root = os.path.join(config_dict['WEEWX_ROOT'], 'docs')
 
     shutil.rmtree(docs_root, ignore_errors=True)
-    with importlib.resources.path('wee_resources', 'docs') as docs_resources:
+    with weeutil.weeutil.path_to_resource('wee_resources', 'docs') as docs_resources:
         shutil.copytree(docs_resources, docs_root)
 
 
@@ -467,5 +467,5 @@ def copy_examples(config_dict, examples_root=None):
         examples_root = os.path.join(config_dict['WEEWX_ROOT'], 'examples')
 
     shutil.rmtree(examples_root, ignore_errors=True)
-    with importlib.resources.path('wee_resources', 'examples') as examples_resources:
+    with weeutil.weeutil.path_to_resource('wee_resources', 'examples') as examples_resources:
         shutil.copytree(examples_resources, examples_root)

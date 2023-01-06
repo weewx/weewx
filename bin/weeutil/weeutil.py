@@ -1888,6 +1888,19 @@ def version_compare(v1, v2):
     return 0
 
 
+def path_to_resource(package, resource):
+    """Return a path to a resource within a package. The resource can be a directory or a file."""
+    import sys
+    import importlib.resources
+
+    if sys.version_info.major == 3 and sys.version_info.minor < 9:
+        # For earlier Python versions, use the deprecated function path()
+        return importlib.resources.path(package, resource)
+    else:
+        # For later versions...
+        return importlib.resources.as_file(importlib.resources.files(package).joinpath(resource))
+
+
 if __name__ == '__main__':
     import doctest
 

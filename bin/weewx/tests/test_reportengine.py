@@ -13,6 +13,7 @@ import unittest
 
 import weeutil.config
 import weeutil.logger
+import weeutil.weeutil
 import weewx
 from weewx.reportengine import _build_skin_dict
 
@@ -22,7 +23,7 @@ weewx.debug = 1
 # Find where the skins are stored. Unfortunately, the following strategy won't work if the
 # resources are stored as a zip file. But, the alternative is too messy. After all, this is just
 # for testing.
-with importlib.resources.path('wee_resources', 'skins') as skin_resource:
+with weeutil.weeutil.path_to_resource('wee_resources', 'skins') as skin_resource:
     SKIN_DIR = skin_resource
 
 CONFIG_DICT_INI = f"""
