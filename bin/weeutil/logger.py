@@ -53,16 +53,16 @@ LOGGING_STR = """[Logging]
             # Alternate choice is 'ext://sys.stderr'
             stream = ext://sys.stdout
 
-        # Log to a set of rotating files
-        [[[rotate]]]
-            level = DEBUG
-            formatter = standard
-            class = logging.handlers.RotatingFileHandler
-            # Writing to this file will require root privileges:
-            filename = /var/log/weewx.log
-            maxBytes = 10000000
-            backupCount = 4
-
+        # # Log to a set of rotating files
+        # [[[rotate]]]
+        #     level = DEBUG
+        #     formatter = standard
+        #     class = logging.handlers.RotatingFileHandler
+        #     # Writing to this file will require root privileges:
+        #     filename = /var/log/weewx.log
+        #     maxBytes = 10000000
+        #     backupCount = 4
+        # 
     # How to format log messages
     [[formatters]]
         [[[simple]]]
