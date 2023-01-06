@@ -2626,7 +2626,7 @@ Image generation is controlled by the section [`[ImageGenerator]`](#ImageGenerat
 configuration file `skin.conf`. Let's take a look at the beginning part of this section. It looks
 like this:
 
-``` tty
+``` ini
 [ImageGenerator]
     ...
     image_width = 500
@@ -2653,7 +2653,7 @@ aggregation and plot types for that time period. For example, here is a typical 
 sub-section `[[month_images]]`. It controls which "monthly" images will get generated, and what
 they will look like:
 
-``` tty
+``` ini
     [[month_images]]
         x_label_format = %d
         bottom_label_format = %m/%d/%y %H:%M
@@ -2684,7 +2684,7 @@ Like elsewhere, the values specified in the level above can be
 overridden. For example, here is a typical set of options for
 sub-sub-section `[[[monthrain]]]`:
 
-``` tty
+``` ini
         [[[monthrain]]]
             plot_type = bar
             yscale = None, None, 0.02
@@ -2705,7 +2705,7 @@ values, respectively, and `min_interval` is the minimum tick
 interval. If set to `None`, the corresponding value will be
 automatically chosen. So, in this example, the setting
 
-``` tty
+``` ini
 yscale = None, None, 0.02
 ```
 
@@ -2733,7 +2733,7 @@ More than one observation can be included in a plot. For example, here
 is how to generate a plot with the week's outside temperature as well
 as dewpoint:
 
-``` tty
+``` ini
 [[[monthtempdew]]]
     [[[[outTemp]]]]
     [[[[dewpoint]]]]
@@ -2751,7 +2751,7 @@ with hourly averages. Here, you are using the same data type
 (`outTemp`) for both plot lines, the first with averages, the
 second without. If you do the obvious it won't work:
 
-``` tty
+``` ini
 ## WRONG ##
 [[[daytemp_with_avg]]]
     [[[[outTemp]]]]
@@ -2769,7 +2769,7 @@ trick you must know: use option `data_type`. This will override
 the default action that the logical line name is used for the database
 column. So, our example would look like this:
 
-``` tty
+``` ini
 [[[daytemp_with_avg]]]
     [[[[avgTemp]]]]
         data_type = outTemp
@@ -2786,15 +2786,14 @@ will use data type ` outTemp` and that it will use averaging over
 a one hour period. The second also uses `outTemp`, but will not
 use averaging.
 
-The result is a nice plot of the day's temperature, overlaid with a one
-hour smoothed average:
+The result is a nice plot of the day's temperature, overlaid with a one-hour smoothed average:
 
 ![Daytime temperature with running average](images/daytemp_with_avg.png)
 
 One more example. This one shows daily high and low temperatures for a
 year:
 
-``` tty
+``` ini
 [[year_images]]
     [[[yearhilow]]]
         [[[[hi]]]]
@@ -2820,7 +2819,7 @@ expression, which is valid in the context of the available types in the
 schema*. For example, say you wanted to plot the difference between
 inside and outside temperature for the year. This could be done with:
 
-``` tty
+``` ini
 [[year_images]]
     [[[yeardiff]]]
         [[[[diff]]]]
@@ -2842,7 +2841,7 @@ Normally, the unit used in a plot is set by the unit group of the
 observation types in the plot. For example, consider this plot of
 today's outside temperature and dewpoint:
 
-``` tty
+``` ini
     [[day_images]]
         ...
         [[[daytempdew]]]
@@ -2860,7 +2859,7 @@ versions of the same plot? You can do this by using option
 [`unit`](#imagegenerator-unit) to override the unit used for
 individual plots:
 
-``` tty hl_lines="4 9"
+``` ini hl_lines="4 9"
     [[day_images]]
         ...
         [[[daytempdewUS]]]
@@ -2908,7 +2907,7 @@ an archive period. Here's how to produce a progressive vector for one
 week that shows the hourly biggest wind gusts, along with hourly
 averages:
 
-``` tty
+``` ini
 [[[weekgustoverlay]]]
     aggregate_interval = hour
     [[[[windvec]]]]
@@ -2952,7 +2951,7 @@ generate some oversized plots to give you extra detail, perhaps for an
 HTML popup. The standard `skin.conf` file specifies plot size of
 300x180 pixels, which will be used for all plots unless overridden:
 
-``` tty
+``` ini
 [ImageGenerator]
     ...
     image_width = 300
@@ -2962,7 +2961,7 @@ HTML popup. The standard `skin.conf` file specifies plot size of
 The standard plot of barometric pressure will appear in
 `daybarometer.png`:
 
-``` tty
+``` ini
 [[[daybarometer]]]
     [[[[barometer]]]] 
 ```
@@ -2971,7 +2970,7 @@ We now add our special plot of barometric pressure, but specify a larger
 image size. This image will be put in file
 `daybarometer_big.png`.
 
-``` tty
+``` ini
 [[[daybarometer_big]]]
     image_width  = 600
     image_height = 360
@@ -2993,7 +2992,7 @@ the reports on the Dell, but access the RPi's MySQL database remotely.
 Here's how the bindings and database sections of `weewx.conf`
 would look on the Dell:
 
-``` tty hl_lines="14-22 31-34"
+``` ini hl_lines="14-22 31-34"
 [DataBindings]
     # This section binds a data store to an actual database
 
@@ -3067,7 +3066,7 @@ host `rpi-bug`, the name of my Raspberry Pi.
 How do we use this new binding? First, let's do a text comparison,
 using tags. Here's what our template looks like:
 
-``` tty hl_lines="8"
+``` html hl_lines="8"
 <table>
   <tr>
     <td class="stats_label">Inside Temperature, Vantage</td>
@@ -3096,7 +3095,7 @@ How would we produce a graph of the two different temperatures? Here's
 what the relevant section of the `skin.conf` file would look
 like.
 
-``` tty hl_lines="6"
+``` ini hl_lines="6"
 [[[daycompare]]]
    [[[[inTemp]]]]
        label = Vantage inTemp
@@ -3138,13 +3137,11 @@ specific to a locale.
 
 ### If the skin has been internationalized
 
-All of the skins that come with WeeWX have been *internationalized*,
+All the skins that come with WeeWX have been *internationalized*,
 that is, they are capable of being *localized*, although there may or may not
 be a localization available for your specific language.
 See the section [Internationalized skins](#internationalized_skins) for
 how to tell.
-
-STOPPED HERE
 
 #### Internationalized, your language is available
 
@@ -3154,7 +3151,7 @@ locale in `weewx.conf`. For example, to select German (code
 `de`) for the *Seasons* skin, just add the highlighted line (or
 change, if it's already there):
 
-``` tty
+``` ini hl_lines="9"
 ...
 [StdReport]
     ...
@@ -3178,13 +3175,13 @@ strings on the right side of the equal signs to your language. For
 example, say you want to localize the skin in the French language. Then
 copy `en.conf` to `fr.conf`
 
-``` {.cmd .tty}
+```shell
 cp en.conf fr.conf
 ```
 
 Then change things that look like this:
 
-``` tty
+``` ini
 ...
 [Texts]
     "Language" = "English"
@@ -3197,7 +3194,7 @@ Then change things that look like this:
 
 to something that looks like this:
 
-``` tty
+``` ini
 ...
 [Texts]
     Language = French
@@ -3228,18 +3225,17 @@ to local formats and language.
 
 Internationalization of WeeWX templates uses a pattern very similar to
 the well-known GNU
-"`[gettext`](https://www.gnu.org/software/gettext/)" approach.
+"[`gettext`](https://www.gnu.org/software/gettext/)" approach.
 The only difference is that we have leveraged the `ConfigObj`
-facility used throughout WeeWX.
+configuration library used throughout WeeWX.
 
 #### Create the localization file
 
-Create a subdirectory called `lang` in the skin directory. Then
-create a file named by the language code with the suffix `.conf`.
-For example, if you want to translate to Spanish, name the file
-`es.conf`. Include the following in the file:
+Create a subdirectory called `lang` in the skin directory. Then create a file named by the language
+code with the suffix `.conf` in this subdirectory. For example, if you want to translate to
+Spanish, name the file `lang/es.conf`. Include the following in the file:
 
-``` tty
+``` ini
 [Units]
 
     [[Labels]]
@@ -3329,7 +3325,7 @@ It is much easier if you can change both files simultaneously.
 At the top of the template, change the HTML "lang" attribute to a
 configurable value.
 
-``` tty
+``` html
 <!DOCTYPE html>
 <html lang="$lang">
   <head>
@@ -3340,8 +3336,8 @@ configurable value.
 The value `$lang` will get replaced by the actual language to be
 used.
 
-[language codes](https://www.w3schools.com/tags/ref_language_codes.asp)\
-[country codes](https://www.w3schools.com/tags/ref_country_codes.asp)\
+[language codes](https://www.w3schools.com/tags/ref_language_codes.asp)<br/>
+[country codes](https://www.w3schools.com/tags/ref_country_codes.asp)
 
 ##### Change the body text
 
@@ -3349,7 +3345,7 @@ The next step is to go through the templates and change all natural
 language phrases into lookups using `$gettext`. For example,
 suppose your skin has a section that looks like this:
 
-``` tty
+``` html
 <div>
     Current Conditions
     <table>
@@ -3364,7 +3360,7 @@ suppose your skin has a section that looks like this:
 There are two natural language phrases here: *Current Conditions* and
 *Outside Temperature*. They would be changed to:
 
-``` tty
+``` html
 <div>
     $gettext("Current Conditions")
     <table>
@@ -3383,12 +3379,12 @@ cause the Cheetah Generator to look up the localized version of
 could have done something similar for *Outside Temperature*, but in this
 case, we chose to use the localized name for type `outTemp`,
 which you should have provided in your localization file, under section
-[[Labels] / [[Generic]]]{.code}.
+`[Labels] / [[Generic]]`.
 
 In the localization file, include the translation for *Current
-Conditions* under the [[Texts]]{.code} section:
+Conditions* under the `[Texts]` section:
 
-``` tty
+``` ini
 ...
 [Texts]
 
@@ -3406,7 +3402,7 @@ Whenever a time is used in a template, it will need a format. WeeWX
 comes with the following set of defaults, defined in
 `defaults.py`:
 
-``` tty
+``` ini
 [Units]
     ...
     [[TimeFormats]]
@@ -3423,16 +3419,16 @@ comes with the following set of defaults, defined in
 These defaults will give something readable in every locale, but they
 may not be very pretty. Therefore, you may want to change them to
 something more suitable for the locale you are targeting, using the
-Python `[strftime()` specific
+Python [`strftime()` specific
 directives](https://docs.python.org/3/library/datetime.html#strftime-and-strptime-behavior).
 
 Example: the default time formatting for "Current" conditions is `%x
-%x`, which will show today's date as 14/05/21 10:00:00 in the
-Spanish locale. Suppose you would rather see 14-mayo-2021 10:00. You
+%x`, which will show today's date as "14/05/21 10:00:00" in the
+Spanish locale. Suppose you would rather see "14-mayo-2021 10:00". You
 would add the following to your Spanish localization file
 `es.conf`:
 
-``` tty
+``` ini
 ...
 
 [Units]
@@ -3447,7 +3443,7 @@ would add the following to your Spanish localization file
 Finally, you will need to set the environment variable `LANG` to
 reflect your locale. For example, assuming you set
 
-``` tty
+``` shell
 $ export LANG=es_ES.UTF-8
 ```
 
@@ -3461,8 +3457,8 @@ This is an advanced topic intended for those who wish to try their hand
 at extending the internal engine in WeeWX. Before attempting these
 examples, you should be reasonably proficient with Python.
 
-Please note that the API to the service engine may change in future
-versions!
+!!! Warning
+    Please note that the API to the service engine may change in future versions!
 
 At a high level, WeeWX consists of an *engine* that is responsible for
 managing a set of *services*. A service consists of a Python class which
@@ -3471,17 +3467,15 @@ have the bound member function called when a specific event happens,
 such as a new LOOP packet arriving.
 
 The services are specified in lists in the
-[[[Engine][[Services]]]{.code}](usersguide.htm#engine_services)
-stanza of the configuration file. The [[[Services]]]{.code} section
+[`[Engine][[Services]]`](usersguide.htm#engine_services)
+stanza of the configuration file. The `[[Services]]` section
 lists all the services to be run, broken up into different *service
 lists*.
 
-These lists are designed to orchestrate the data as it flows through the
-WeeWX engine. For example, you want to make sure data has been processed
-by, for example, running it through the quality control service,
-`StdQC`, before putting them in the database. Similarly, the
-reporting system must come *after* the archiving service. These groups
-insure that things happen in the proper sequence.
+These lists are designed to orchestrate the data as it flows through the WeeWX engine. For example,
+you want to make sure that data has been processed by the quality control service, `StdQC`, before
+putting them in the database. Similarly, the reporting system must come *after* the data has been
+put in the database. These groups ensure that things happen in the proper sequence.
 
 See the table [Default services](#default_services) for a list of the
 services that are normally run.
@@ -3493,13 +3487,14 @@ archive packets to the console when they arrive. By default, it prints
 out the entire record, which generally includes a lot of possibly
 distracting information and can be rather messy. Suppose you do not like
 this, and want it to print out only the time, barometer reading, and the
-outside temperature whenever a new LOOP packet arrives. This could be
-done by subclassing the default print service `StdPrint` and
-overriding member function `new_loop_packet()`.
+outside temperature whenever a new LOOP packet arrives. 
+
+This could be done by subclassing the default print service `StdPrint` and overriding member
+function `new_loop_packet()`.
 
 Create the file `user/myprint.py`:
 
-``` tty
+``` python
 from weewx.engine import StdPrint
 from weeutil.weeutil import timestamp_to_string
 
@@ -3521,9 +3516,9 @@ outside temperature (or `N/A`).
 You then need to specify that your print service class should be loaded
 instead of the default `StdPrint` service. This is done by
 substituting your service name for `StdPrint` in
-`service_list`, located in [[Engine][[Services]]]{.code}:
+`service_list`, located in `[Engine]/[[Services]]`:
 
-``` tty
+``` ini
 [Engine]
     [[Services]]
         ...
@@ -3546,7 +3541,7 @@ which sends off an email when an arbitrary expression evaluates
 This example is included in the standard distribution as
 `examples/alarm.py:`
 
-``` tty
+``` python linenums="1" hl_lines="40 56 59"
 import smtplib
 import socket
 import syslog
@@ -3691,10 +3686,10 @@ class MyAlarm(StdService):
 
 This service expects all the information it needs to be in the
 configuration file `weewx.conf` in a new section called
-[[Alarm]]{.code}. So, add the following lines to your configuration
+`[Alarm]`. So, add the following lines to your configuration
 file:
 
-``` tty
+``` ini
 [Alarm]
     expression = "outTemp < 40.0"
     time_wait = 3600
@@ -3709,27 +3704,27 @@ file:
 There are three important points to be noted in this example, each
 marked with a `NOTE` flag in the code.
 
-1.  Here is where the binding happens between an event,
+1.  (Line 40) Here is where the binding happens between an event,
     `weewx.NEW_ARCHIVE_RECORD` in this example, and a member
     function, `self.new_archive_record`. When the event
     `NEW_ARCHIVE_RECORD` occurs, the function
     `self.new_archive_record` will be called. There are many
     other events that can be intercepted. Look in the file
-    `weewx/\_\_init\_\_.py`.
-2.  Some hardware does not emit all possible observation types in every
-    record. So, it's possible that a record may be missing some types
+    `weewx/_init_.py`.
+2.  (Line 56) Some hardware do not emit all possible observation types in every
+    record, so it's possible that a record may be missing some types
     that are used in the expression. This try block will catch the
     `NameError` exception that would be raised should this occur.
-3.  This is where the test is done for whether or not to sound the
-    alarm. The [[Alarm]]{.code} configuration options specify that the
-    alarm be sounded when `outTemp \< 40.0` evaluates
+3.  (Line 59) This is where the test is done for whether to sound the
+    alarm. The `[Alarm]` configuration options specify that the
+    alarm be sounded when `outTemp < 40.0` evaluates
     `True`, that is when the outside temperature is below 40.0
     degrees. Any valid Python expression can be used, although the only
     variables available are those in the current archive record.
 
 Another example expression could be:
 
-``` tty
+``` ini
 expression = "outTemp < 32.0 and windSpeed > 10.0"
 ```
 
@@ -3737,8 +3732,8 @@ In this case, the alarm is sounded if the outside temperature drops
 below freezing and the wind speed is greater than 10.0.
 
 Note that units must be the same as whatever is being used in your
-database. That is, the same as what you specified in option
-`[target_unit`](usersguide.htm#option_target_unit).
+database, that is, the same as what you specified in option
+[`target_unit`](usersguide.htm#option_target_unit).
 
 Option `time_wait` is used to avoid a flood of nearly identical
 emails. The new service will wait this long before sending another email
@@ -3760,21 +3755,22 @@ WeeWX supplies may not satisfy its requirements.
 To make this all work, you must first copy the `alarm.py` file to
 the `user` directory. Then tell the engine to load this new
 service by adding the service name to the list `report_services`,
-located in [[Engine][[Services]]]{.code}:
+located in `[Engine]/[[Services]]`:
 
-``` tty
+``` ini
 [Engine]
    [[Services]]
         report_services = weewx.engine.StdPrint, weewx.engine.StdReport, user.alarm.MyAlarm
 ```
 
 Again, note that the option `report_services` must be all on one
-line --- the parser `ConfigObj` does not allow options to be
+line &mdash; the `ConfigObj` parser does not allow options to be
 continued on to following lines.
 
 In addition to this example, the distribution also includes a
 low-battery alarm (`lowBattery.py`), which is similar, except
-that it intercepts LOOP events (instead of archiving events).
+that it intercepts LOOP events instead of archiving events.
+
 
 ### Adding a second data source {#Adding_2nd_source}
 
@@ -3809,7 +3805,7 @@ downloads the amount of power consumed since time zero.
 
 File `user/electricity.py`
 
-``` tty
+``` python
 import weewx
 from weewx.engine import StdService
 
@@ -3850,14 +3846,14 @@ separate thread and feed the results to `AddElectricity` through
 a queue.
 
 To make sure your service gets run, you need to add it to one of the
-service lists in `weewx.conf`, section [[Engine]]{.code},
-subsection [[[Services]]]{.code}.
+service lists in `weewx.conf`, section `[Engine]`,
+subsection `[[Services]]`.
 
 In our case, the obvious place for our new service is in
 `data_services`. When you're done, your section
-[[Engine]]{.code} will look something like this:
+`[Engine]` will look something like this:
 
-``` tty
+``` ini hl_lines="11"
 #   This section configures the internal WeeWX engine.
 
 [Engine]
@@ -3875,6 +3871,7 @@ In our case, the obvious place for our new service is in
         report_services = weewx.engine.StdPrint, weewx.engine.StdReport
 ```
 
+
 ## Customizing the database {#archive_database}
 
 For most users the database defaults will work just fine. However, there
@@ -3886,7 +3883,7 @@ Every relational database depends on a *schema* to specify which types
 to include in the database. When a WeeWX database is first created, it
 uses a Python version of the schema to initialize the database. However,
 once the database has been created, the schema is read directly from the
-database and the Python version is not used again --- any changes to it
+database and the Python version is not used again &mdash; any changes to it
 will have no effect. This means that the strategy for modifying the
 schema depends on whether the database already exists.
 
@@ -3894,31 +3891,31 @@ schema depends on whether the database already exists.
 
 If the database does not exist yet, then you will want to pick an
 appropriate starting schema. If it's not exactly what you want, you can
-modify it to fit your needs.
+modify it to fit your needs before creating the database.
 
 #### Picking a starting schema
 
 WeeWX gives you a choice of three different schemas to choose from when
 creating a new database:
 
-  ------------------------------- ----------------------------- ----------------------------------------------------------------------------------------------------------
-  Name                            Number of observation types   Comment
-  schemas.wview.schema            49                            The original schema that came with wview.
-  schemas.wview_extended.schema   111                           A version of the wview schema, which has been extended with many new types. This is the default version.
-  schemas.wview_small.schema      20                            A minimalist version of the wview schema.
-  ------------------------------- ----------------------------- ----------------------------------------------------------------------------------------------------------
+|  Name  | Number of<br/>observation types | Comment                                                  |
+|------------------|---------------|----------------------------------------------------------|
+| `schemas.wview.schema`| 49            | The original schema that came with wview.                |
+| `schemas.wview_extended.schema` | 111  | A version of the wview schema,<br/>which has been extended with<br/>many new types.<br/>This is the default version. |
+| `schemas.wview_small.schema` | 20            | A minimalist version of the wview schema.                |
+  
 
 For most users, the default database schema,
 `schemas.wview_extended.schema`, will work just fine.
 
 To specify which schema to use when creating a database, modify option
-`schema` in section [[DataBindings]]{.code} in
+`schema` in section `[DataBindings]` in
 `weewx.conf`. For example, suppose you wanted to use the classic
 (and smaller) schema `schemas.wview.schema` instead of the
 default `schemas.wview_extended.schema`. Then the section
-[[DataBindings]]{.code} would look like:
+`[DataBindings]` would look like:
 
-``` tty
+``` ini
 [DataBindings]
     [[wx_binding]]
         database = archive_sqlite
@@ -3930,9 +3927,10 @@ default `schemas.wview_extended.schema`. Then the section
 Now, when you start WeeWX, it will use this new choice instead of the
 default.
 
-NOTE: This only works when the database is *first created*. Thereafter,
-WeeWX reads the schema directly from the database. Changing this option
-will have no effect!
+!!! Note
+    This only works when the database is *first created*. Thereafter,
+    WeeWX reads the schema directly from the database. Changing this option
+    will have no effect!
 
 #### Modifying a starting schema {#modify_starting_schema}
 
@@ -3949,13 +3947,16 @@ add it before starting up WeeWX. We will call the resulting new schema
 
 If you did a Debian install, here's how you would do this:
 
-``` tty
+``` shell
 # Copy the wview_small schema over to the user subdirectory and rename it myschema:
 sudo cp /usr/share/weewx/schemas/wview_small.py /usr/share/weewx/user/myschema.py
 
 # Edit it using your favorite text editor
 sudo nano /usr/share/weewx/user/myschema.py
 ```
+
+
+STOPPED HERE. How to find `user` directory???
 
 If you did a `setup.py` install, it would look like this:
 
