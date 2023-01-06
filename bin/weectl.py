@@ -47,9 +47,12 @@ def main():
 
     namespace = parser.parse_args()
 
-    # Call the appropriate action function:
-    if namespace.func:
+    if hasattr(namespace, 'func'):
+        # Call the appropriate action function:
         namespace.func(namespace)
+    else:
+        # Now subcommand was invoked. Print a help message
+        parser.print_help()
 
 
 if __name__ == "__main__":
