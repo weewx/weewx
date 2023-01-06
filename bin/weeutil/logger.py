@@ -105,10 +105,6 @@ def setup(process_name, user_log_dict):
     # interpolation directives embedded in the string).
     log_config = configobj.ConfigObj(StringIO(LOGGING_STR), interpolation=False, encoding='utf-8')
 
-    if sys.platform == "darwin":
-        # Different default handler for MacOS:
-        log_config['Logging']['root']['handlers'] = ['rotate']
-
     # Turn off interpolation in the incoming dictionary. First save the old
     # value, then restore later. However, the incoming dictionary may be a simple
     # Python dictionary and not have interpolation. Hence the try block.
