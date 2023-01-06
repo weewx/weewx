@@ -2323,241 +2323,310 @@ use
 
     $almanac(pressure=0, horizon=-34.0/60.0).sun.rise
 
+By setting pressure to zero we are bypassing the refraction calculations
+and manually setting the horizon to be 34 arcminutes lower than the
+normal horizon. This is what the Navy uses.
 
-STOPPED HERE
+If you wish to calculate the start of civil twilight, you can set the
+horizon to -6 degrees, and also tell WeeWX to use the center of the sun
+(instead of the upper limb, which it normally uses) to do the
+calcuation:
 
-By setting pressure to zero we are bypassing the refraction calculations and manually setting the horizon to be 34 arcminutes lower than the normal horizon. This is what the Navy uses.
-
-If you wish to calculate the start of civil twilight, you can set the horizon to -6 degrees, and also tell WeeWX to use the center of the sun (instead of the upper limb, which it normally uses) to do the calcuation:
-
-$almanac(pressure=0, horizon=-6).sun(use_center=1).rise
+    $almanac(pressure=0, horizon=-6).sun(use_center=1).rise
 
 The general syntax is:
 
-$almanac(almanac_time=_time_,            ## Unix epoch time
-         lat=_latitude_, lon=_longitude_,  ## degrees
-         altitude=_altitude_,            ## meters
-         pressure=_pressure_,            ## mbars
-         horizon=_horizon_,              ## degrees
-         temperature=_temperature_C_     ## degrees C
-       )._heavenly_body_(use_center=[01])._attribute_
+``` 
+$almanac(almanac_time=time,            ## Unix epoch time
+         lat=latitude, lon=longitude,  ## degrees
+         altitude=altitude,            ## meters
+         pressure=pressure,            ## mbars
+         horizon=horizon,              ## degrees
+         temperature=temperature_C     ## degrees C
+       ).heavenly_body(use_center=[01]).attribute
       
+```
 
-As you can see, many other properties can be overridden besides pressure and the horizon angle.
+As you can see, many other properties can be overridden besides pressure
+and the horizon angle.
 
-PyEphem offers an extensive list of objects that can be used for the _heavenly_body_ tag. All the planets and many stars are in the list.
+PyEphem offers an extensive list of objects that can be used for the
+_`heavenly_body`_ tag. All the planets and many stars are in the
+list.
 
-The possible values for the attribute tag are listed in the following table:
+The possible values for the _`attribute`_ tag are listed in the
+following table:
 
-Attributes that can be used with heavenly bodies
+<table class="indent" style="width: 80%">
+    <caption>Attributes that can be used with heavenly bodies
+    </caption>
+    <tbody class="code">
+    <tr>
+        <td>az</td>
+        <td>alt</td>
+    </tr>
+    <tr>
+        <td>a_ra</td>
+        <td>a_dec</td>
+    </tr>
+    <tr>
+        <td>g_ra</td>
+        <td>ra</td>
+    </tr>
+    <tr>
+        <td>g_dec</td>
+        <td>dec</td>
+    </tr>
+    <tr>
+        <td>elong</td>
+        <td>radius</td>
+    </tr>
+    <tr>
+        <td>hlong</td>
+        <td>hlat</td>
+    </tr>
+    <tr>
+        <td>sublat</td>
+        <td>sublong</td>
+    </tr>
+    <tr>
+        <td>next_rising</td>
+        <td>next_setting</td>
+    </tr>
+    <tr>
+        <td>next_transit</td>
+        <td>next_antitransit</td>
+    </tr>
+    <tr>
+        <td>previous_rising</td>
+        <td>previous_setting</td>
+    </tr>
+    <tr>
+        <td>previous_transit</td>
+        <td>previous_antitransit</td>
+    </tr>
+    <tr>
+        <td>rise</td>
+        <td>set</td>
+    </tr>
+    <tr>
+        <td>transit</td>
+        <td>visible</td>
+    </tr>
+    <tr>
+        <td>visible_change</td>
+        <td> </td>
+    </tr>
+    </tbody>
+</table>
 
-az
+!!! Note
+    The tags `ra`, `a_ra` and `g_ra` return values in decimal degrees rather than customary values from 0 to 24 hours.
 
-alt
+#### Functions
 
-a_ra
+There is actually one function in this category:
+`separation`. It returns the angular separation between two
+heavenly bodies. For example, to calculate the angular separation
+between Venus and Mars you would use:
 
-a_dec
-
-g_ra
-
-ra
-
-g_dec
-
-dec
-
-elong
-
-radius
-
-hlong
-
-hlat
-
-sublat
-
-sublong
-
-next_rising
-
-next_setting
-
-next_transit
-
-next_antitransit
-
-previous_rising
-
-previous_setting
-
-previous_transit
-
-previous_antitransit
-
-rise
-
-set
-
-transit
-
-visible
-
-visible_change
-
- 
-
-**Note**  
-The tags ra, a_ra and g_ra return values in decimal degrees rather than customary values from 0 to 24 hours.
-
-### Functions
-
-There is actually one one function in this category: separation. It returns the angular separation between two heavenly bodies. For example, to calculate the angular separation between Venus and Mars you would use:
-
+``` tty
 <p>The separation between Venus and Mars is
       $almanac.separation(($almanac.venus.alt,$almanac.venus.az), ($almanac.mars.alt,$almanac.mars.az))</p>
      
+```
 
 This would result in:
 
+<div class="example_output">
 The separation between Venus and Mars is 55:55:31.8
+</div>
 
-### Adding new bodies to the almanac
+#### Adding new bodies to the almanac
 
-It is possible to extend the WeeWX almanac, adding new bodies that it was not previously aware of. For example, say we wanted to add [_433 Eros_](https://en.wikipedia.org/wiki/433_Eros), the first asteroid visited by a spacecraft. Here is the process:
+It is possible to extend the WeeWX almanac, adding new bodies that it
+was not previously aware of. For example, say we wanted to add [*433
+Eros*](https://en.wikipedia.org/wiki/433_Eros), the first asteroid
+visited by a spacecraft. Here is the process:
 
-1.  Put the following in the file user/extensions.py:
-    
+1.  Put the following in the file `user/extensions.py`:
+
+    ``` tty
     import ephem
     eros = ephem.readdb("433 Eros,e,10.8276,304.3222,178.8165,1.457940,0.5598795,0.22258902,71.2803,09/04.0/2017,2000,H11.16,0.46")
     ephem.Eros = eros
-    
-    This does two things: it adds orbital information about _433 Eros_ to the internal pyephem database, and it makes that data available under the name Eros (note the capital letter).
-2.  You can then use _433 Eros_ like any other body in your templates. For example, to display when it will rise above the horizon:
-    
+    ```
+
+    This does two things: it adds orbital information about *433 Eros*
+    to the internal pyephem database, and it makes that data available
+    under the name `Eros` (note the capital letter).
+
+2.  You can then use *433 Eros* like any other body in your templates.
+    For example, to display when it will rise above the horizon:
+
+    ``` tty
     $almanac.eros.rise
-    
+    ```
 
-Wind
-----
+### Wind
 
-Wind deserves a few comments because it is stored in the database in two different ways: as a set of scalars, and as a _vector_ of speed and direction. Here are the four wind-related scalars stored in the main archive database:
+Wind deserves a few comments because it is stored in the database in two
+different ways: as a set of scalars, and as a *vector* of speed and
+direction. Here are the four wind-related scalars stored in the main
+archive database:
 
-Archive type
+<table class="indent">
+    <tbody>
+    <tr class="first_row">
+        <td>Archive type</td>
+        <td>Meaning</td>
+        <td>Valid contexts</td>
+    </tr>
+    <tr>
+        <td class="first_col code">windSpeed</td>
+        <td>The average wind speed seen during the archive period.
+        </td>
+        <td rowspan='4' class='code'>
+            $current, $latest, $hour, $day, $week, $month, $year, $rainyear
+        </td>
+    </tr>
+    <tr>
+        <td class="first_col code">windDir</td>
+        <td>If software record generation is used, this is the vector average over the archive period. If
+            hardware record generation is used, the value is hardware dependent.
+        </td>
+    </tr>
+    <tr>
+        <td class="first_col code">windGust</td>
+        <td>The maximum (gust) wind speed seen during the archive period.
+        </td>
+    </tr>
+    <tr>
+        <td class="first_col code">windGustDir</td>
+        <td>The direction of the wind when the gust was observed.</td>
+    </tr>
+    </tbody>
+</table>
 
-Meaning
 
-Valid contexts
+Some wind aggregation types, notably `vecdir` and `vecavg`, require wind speed *and* direction. For
+these, WeeWX provides a composite observation type called `wind`. It is stored directly in the
+daily summaries, but synthesized for aggregations other than multiples of a day.
 
-windSpeed
-
-The average wind speed seen during the archive period.
-
-$current, $latest, $hour, $day, $week, $month, $year, $rainyear
-
-windDir
-
-If software record generation is used, this is the vector average over the archive period. If hardware record generation is used, the value is hardware dependent.
-
-windGust
-
-The maximum (gust) wind speed seen during the archive period.
-
-windGustDir
-
-The direction of the wind when the gust was observed.
-
-Some wind aggregation types, notably vecdir and vecavg, require wind speed _and_ direction. For these, WeeWX provides a composite observation type called wind. It is stored directly in the daily summaries, but synthesized for aggregations other than multiples of a day.
-
-Daily summary type
-
-Meaning
-
-Valid contexts
-
-wind
-
-A vector composite of the wind.
-
-$hour, $day, $week, $month, $year, $rainyear
-
+| Daily summary type | Meaning                         |  Valid contexts                                          |
+|--------------------|---------------------------------|----------------------------------------------------------|
+| wind               | A vector composite of the wind. | `$hour`, `$day`, `$week`, `$month`, `$year`, `$rainyear` |
+  
 Any of these can be used in your tags. Here are some examples:
 
-Tag
+<table class="indent">
+    <tbody>
+    <tr class="first_row">
+        <td>Tag</td>
+        <td>Meaning</td>
+    </tr>
+    <tr>
+        <td class="first_col code">$current.windSpeed</td>
+        <td>The average wind speed over the most recent archive interval.
+        </td>
+    </tr>
+    <tr>
+        <td class="first_col code">$current.windDir</td>
+        <td>If software record generation is used, this is the vector average over the archive interval. If
+            hardware record generation is used, the value is hardware dependent.
+        </td>
+    </tr>
+    <tr>
+        <td class="first_col code">$current.windGust</td>
+        <td>The maximum wind speed (gust) over the most recent archive interval.
+        </td>
+    </tr>
+    <tr>
+        <td class="first_col code">$current.windGustDir</td>
+        <td>The direction of the gust.</td>
+    </tr>
+    <tr>
+        <td class="first_col code">$day.windSpeed.avg<br/>$day.wind.avg</td>
+        <td>The average wind speed since midnight. If the wind blows east at 5 m/s for 2 hours, then west at 5
+            m/s for 2 hours, the average wind speed is 5 m/s.
+        </td>
+    </tr>
+    <tr>
+        <td class="first_col code">$day.wind.vecavg</td>
+        <td>The <em>vector average</em> wind speed since midnight. If the wind blows east at 5 m/s for 2 hours,
+            then west at 5 m/s for 2 hours, the vector average wind speed is zero.
+        </td>
+    </tr>
+    <tr>
+        <td class="first_col code">$day.wind.vecdir</td>
+        <td>The direction of the vector averaged wind speed. If the wind blows northwest at 5 m/s for two hours,
+            then southwest at 5 m/s for two hours, the vector averaged direction is west.
+        </td>
+    </tr>
+    <tr>
+        <td class="first_col code">$day.windGust.max<br/>$day.wind.max</td>
+        <td>The maximum wind gust since midnight.</td>
+    </tr>
+    <tr>
+        <td class="first_col code">$day.wind.gustdir</td>
+        <td>The direction of the maximum wind gust.</td>
+    </tr>
+    <tr>
+        <td class="first_col code">$day.windGust.maxtime<br/>$day.wind.maxtime</td>
+        <td>The time of the maximum wind gust.</td>
+    </tr>
+    <tr>
+        <td class="first_col code">$day.windSpeed.max</td>
+        <td>The max average wind speed. The wind is averaged over each of the archive intervals. Then the
+            maximum of these values is taken. Note that this is <em>not</em> the same as the maximum wind gust.
+        </td>
+    </tr>
+    <tr>
+        <td class="first_col code">$day.windDir.avg</td>
+        <td>
+            Not a very useful quantity. This is the strict, arithmetic average of all the compass wind
+            directions. If the wind blows at 350&deg; for two hours then at 10&deg; for two hours,
+            then the scalar average wind direction will be 180&deg; &mdash; probably not what you
+            expect, nor want.
+        </td>
+    </tr>
+    </tbody>
+</table>
 
-Meaning
 
-$current.windSpeed
+### Defining new tags {#defining_new_tags}
 
-The average wind speed over the most recent archive interval.
+We have seen how you can change a template and make use of the various tags available such as
+`$day.outTemp.max` for the maximum outside temperature for the day. But, what if you want to
+introduce some new data for which no tag is available?
 
-$current.windDir
+If you wish to introduce a static tag, that is, one that will not change with time (such as a
+Google Analytics tracker ID, or your name), then this is very easy: simply put it in section
+[`[Extras]`](#Extras) in the skin configuration file. More information on how to do this can be found
+there.
 
-If software record generation is used, this is the vector average over the archive interval. If hardware record generation is used, the value is hardware dependent.
+But, what if you wish to introduce a more dynamic tag, one that requires some calculation, or
+perhaps uses the database? Simply putting it in the `[Extras]` section won't do, because then it
+cannot change.
 
-$current.windGust
+The answer is to write a *search list extension*. Complete directioins on how to do this are in a
+companion document [*Writing search list extensions*](sle.html).
 
-The maximum wind speed (gust) over the most recent archive interval.
+## The Image generator {#image_generator}
 
-$current.windGustDir
+This section gives an overview of the Image generator. For details about each of its various
+options, see the section [`[ImageGenerator]`](#ImageGenerator) in the [*Reference: report
+options*](#report_options).
 
-The direction of the gust.
+The installed version of WeeWX is configured to generate a set of useful plots. But, what if you
+don't like how they look, or you want to generate different plots, perhaps with different
+aggregation types? This section covers how to do this.
 
-$day.windSpeed.avg  
-$day.wind.avg
+Image generation is controlled by the section [`[ImageGenerator]`](#ImageGenerator) in the skin
+configuration file `skin.conf`. Let's take a look at the beginning part of this section. It looks
+like this:
 
-The average wind speed since midnight. If the wind blows east at 5 m/s for 2 hours, then west at 5 m/s for 2 hours, the average wind speed is 5 m/s.
-
-$day.wind.vecavg
-
-The _vector average_ wind speed since midnight. If the wind blows east at 5 m/s for 2 hours, then west at 5 m/s for 2 hours, the vector average wind speed is zero.
-
-$day.wind.vecdir
-
-The direction of the vector averaged wind speed. If the wind blows northwest at 5 m/s for two hours, then southwest at 5 m/s for two hours, the vector averaged direction is west.
-
-$day.windGust.max  
-$day.wind.max
-
-The maximum wind gust since midnight.
-
-$day.wind.gustdir
-
-The direction of the maximum wind gust.
-
-$day.windGust.maxtime  
-$day.wind.maxtime
-
-The time of the maximum wind gust.
-
-$day.windSpeed.max
-
-The max average wind speed. The wind is averaged over each of the archive intervals. Then the maximum of these values is taken. Note that this is _not_ the same as the maximum wind gust.
-
-$day.windDir.avg
-
-Not a very useful quantity. This is the strict, arithmetic average of all the compass wind directions. If the wind blows at 350° for two hours then at 10° for two hours, then the scalar average wind direction will be 180° — probably not what you expect, nor want.
-
-Defining new tags
------------------
-
-We have seen how you can change a template and make use of the various tags available such as $day.outTemp.max for the maximum outside temperature for the day. But, what if you want to introduce some new data for which no tag is available?
-
-If you wish to introduce a static tag, that is, one that will not change with time (such as a Google analytics Tracker ID, or your name), then this is very easy: simply put it in section [[Extras]](#Extras) in the skin configuration file. More information on how to do this can be found there.
-
-But, what if you wish to introduce a more dynamic tag, one that requires some calculation, or perhaps uses the database? Simply putting it in the [Extras] section won't do, because then it cannot change.
-
-The answer is to write a _search list extension_. Complete directioins on how to do this are in a companion document [_Writing search list extensions_](sle.html).
-
-The Image generator
-===================
-
-This section gives an overview of the Image generator. For details about each of its various options, see the section [_[ImageGenerator]_](#ImageGenerator) in the [_Reference: report options_](#report_options).
-
-The installed version of WeeWX is configured to generate a set of useful plots. But, what if you don't like how they look, or you want to generate different plots, perhaps with different aggregation types? This section covers how to do this.
-
-Image generation is controlled by the section [[ImageGenerator]](#ImageGenerator) in the skin configuration file skin.conf. Let's take a look at the beginning part of this section. It looks like this:
-
+``` tty
 [ImageGenerator]
     ...
     image_width = 500
@@ -2567,14 +2636,24 @@ Image generation is controlled by the section [[ImageGenerator]](#ImageGenerator
     chart_background_color = #d8d8d8
     chart_gridline_color = #a0a0a0
     ...
+```
 
-The options right under the section name [ImageGenerator] will apply to _all_ plots, unless overridden in subsections. So, unless otherwise changed, all plots will be 500 pixels in width, 180 pixels in height, and will have an RGB background color of #f5f5f5, a very light gray (HTML color "WhiteSmoke"). The chart itself will have a background color of #d8d8d8 (a little darker gray), and the gridlines will be #a0a0a0 (still darker). The other options farther down (not shown) will also apply to all plots.
+The options right under the section name `[ImageGenerator]` will apply to *all* plots, unless
+overridden in subsections. So, unless otherwise changed, all plots will be 500 pixels in width, 180
+pixels in height, and will have an RGB background color of #f5f5f5, a very light gray (HTML color
+"WhiteSmoke"). The chart itself will have a background color of #d8d8d8 (a little darker gray),
+and the gridlines will be #a0a0a0 (still darker). The other options farther down (not shown) will
+also apply to all plots.
 
-Time periods
-------------
+### Time periods
 
-After the "global" options at the top of section [ImageGenerator], comes a set of sub-sections, one for each time period (day, week, month, and year). These sub-sections define the nature of aggregation and plot types for that time period. For example, here is a typical set of options for sub-section [[month_images]]. It controls which "monthly" images will get generated, and what they will look like:
+After the "global" options at the top of section `[ImageGenerator]`, comes a set of sub-sections,
+one for each time period (day, week, month, and year). These sub-sections define the nature of
+aggregation and plot types for that time period. For example, here is a typical set of options for
+sub-section `[[month_images]]`. It controls which "monthly" images will get generated, and what
+they will look like:
 
+``` tty
     [[month_images]]
         x_label_format = %d
         bottom_label_format = %m/%d/%y %H:%M
@@ -2582,14 +2661,30 @@ After the "global" options at the top of section [ImageGenerator], comes a set o
         aggregate_type = avg
         aggregate_interval = 10800    # == 3 hours
         show_daynight = false
+```
 
-The option x_label_format gives a [strftime()](https://docs.python.org/3/library/datetime.html#strftime-strptime-behavior) type format for the x-axis. In this example, it will only show days (format option %d). The bottom_label_format is the format used to time stamp the image at the bottom. In this example, it will show the time as something like 10/25/09 15:35. A plot will cover a nominal 30 days, and all items included in it will use an aggregate type of averaging over 3 hours. Finally, by setting option show_daynight to false, we are requesting that day-night, shaded bands not be shown.
+The option `x_label_format` gives a
+[strftime()](https://docs.python.org/3/library/datetime.html#strftime-strptime-behavior)
+type format for the x-axis. In this example, it will only show days
+(format option `%d`). The `bottom_label_format` is the
+format used to time stamp the image at the bottom. In this example, it
+will show the time as something like `10/25/09 15:35`. A plot
+will cover a nominal 30 days, and all items included in it will use an
+aggregate type of averaging over 3 hours. Finally, by setting option
+`show_daynight` to `false`, we are requesting that
+day-night, shaded bands not be shown.
 
-Image files
------------
+### Image files
 
-Within each time period sub-section is another nesting, one for each image to be generated. The title of each sub-sub-section is the filename to be used for the image. Finally, at one additional nesting level (!) are the logical names of all the line types to be drawn in the image. Like elsewhere, the values specified in the level above can be overridden. For example, here is a typical set of options for sub-sub-section [[[monthrain]]]:
+Within each time period sub-section is another nesting, one for each
+image to be generated. The title of each sub-sub-section is the filename
+to be used for the image. Finally, at one additional nesting level (!)
+are the logical names of all the line types to be drawn in the image.
+Like elsewhere, the values specified in the level above can be
+overridden. For example, here is a typical set of options for
+sub-sub-section `[[[monthrain]]]`:
 
+``` tty
         [[[monthrain]]]
             plot_type = bar
             yscale = None, None, 0.02
@@ -2597,43 +2692,84 @@ Within each time period sub-section is another nesting, one for each image to be
                 aggregate_type = sum
                 aggregate_interval = day
                 label = Rain (daily total)
+```
 
-This will generate an image file with name monthrain.png. It will be a bar plot. Option yscale controls the y-axis scaling — if left out, the scale will automatically be chosen. However, in this example we are choosing to exercise some degree of control by specifying values explicitly. The option is a 3-way tuple (ylow, yhigh, min_interval), where ylow and yhigh are the minimum and maximum y-axis values, respectively, and min_interval is the minimum tick interval. If set to None, the corresponding value will be automatically chosen. So, in this example, the setting
+This will generate an image file with name `monthrain.png`. It
+will be a bar plot. Option `yscale` controls the y-axis scaling
+&mdash; if left out, the scale will be chosen automatically. However, in
+this example we are choosing to exercise some degree of control by
+specifying values explicitly. The option is a 3-way tuple
+(`ylow`, `yhigh`, `min_interval`), where
+`ylow` and `yhigh` are the minimum and maximum y-axis
+values, respectively, and `min_interval` is the minimum tick
+interval. If set to `None`, the corresponding value will be
+automatically chosen. So, in this example, the setting
 
+``` tty
 yscale = None, None, 0.02
+```
 
-will cause WeeWX to pick sensible y minimum and maximum values, but require that the tick increment (min_interval) be at least 0.02.
+will cause WeeWX to pick sensible y minimum and maximum values, but
+require that the tick increment (`min_interval`) be at least
+0.02.
 
-Continuing on with the example above, there will be only one plot "line" (it will actually be a series of bars) and it will have logical name rain. Because we have not said otherwise, the database column name to be used for this line will be the same as its logical name, that is, rain, but this can be overridden. The aggregation type will be summing (overriding the averaging specified in sub-section [[month_images]]), so you get the total rain over the aggregate period (rather than the average) over an aggregation interval of 86,400 seconds (one day). The plot line will be titled with the indicated label of 'Rain (daily total)'. The result of all this is the following plot:
+Continuing on with the example above, there will be only one plot
+"line" (it will actually be a series of bars) and it will have logical
+name `rain`. Because we have not said otherwise, the database
+column name to be used for this line will be the same as its logical
+name, that is, `rain`, but this can be overridden. The
+aggregation type will be summing (overriding the averaging specified in
+sub-section `[[month_images]]`), so you get the total rain
+over the aggregate period (rather than the average) over an aggregation
+interval of 86,400 seconds (one day). The plot line will be titled with
+the indicated label of 'Rain (daily total)'. The result of all this is
+the following plot:
 
 ![Sample monthly rain plot](images/sample_monthrain.png)
 
-Including more than one type in a plot
---------------------------------------
+### Including more than one type in a plot
 
-More than one observation can be included in a plot. For example, here is how to generate a plot with the week's outside temperature as well as dewpoint:
+More than one observation can be included in a plot. For example, here
+is how to generate a plot with the week's outside temperature as well
+as dewpoint:
 
+``` tty
 [[[monthtempdew]]]
     [[[[outTemp]]]]
     [[[[dewpoint]]]]
+```
 
-This would create an image in file monthtempdew.png that includes a line plot of both outside temperature and dewpoint:
+This would create an image in file `monthtempdew.png` that
+includes a line plot of both outside temperature and dewpoint:
 
 ![Monthly temperature and dewpoint](images/sample_monthtempdew.png)
 
-### Including a type more than once in a plot
+#### Including a type more than once in a plot {#including_same_sql_type_2x}
 
-Another example. Say you want a plot of the day's temperature, overlaid with hourly averages. Here, you are using the same data type (outTemp) for both plot lines, the first with averages, the second without. If you do the obvious it won't work:
+Another example. Say you want a plot of the day's temperature, overlaid
+with hourly averages. Here, you are using the same data type
+(`outTemp`) for both plot lines, the first with averages, the
+second without. If you do the obvious it won't work:
 
-\## WRONG ##
+``` tty
+## WRONG ##
 [[[daytemp_with_avg]]]
     [[[[outTemp]]]]
         aggregate_type = avg
         aggregate_interval = hour
     [[[[outTemp]]]]  # OOPS! The same section name appears more than once!
+```
 
-The option parser does not allow the same section name (outTemp in this case) to appear more than once at a given level in the configuration file, so an error will be declared (technical reason: formally, the sections are an unordered dictionary). If you wish for the same observation to appear more than once in a plot then there is a trick you must know: use option data_type. This will override the default action that the logical line name is used for the database column. So, our example would look like this:
+The option parser does not allow the same section name (`outTemp`
+in this case) to appear more than once at a given level in the
+configuration file, so an error will be declared (technical reason:
+formally, the sections are an unordered dictionary). If you wish for the
+same observation to appear more than once in a plot then there is a
+trick you must know: use option `data_type`. This will override
+the default action that the logical line name is used for the database
+column. So, our example would look like this:
 
+``` tty
 [[[daytemp_with_avg]]]
     [[[[avgTemp]]]]
         data_type = outTemp
@@ -2641,15 +2777,24 @@ The option parser does not allow the same section name (outTemp in this case) to
         aggregate_interval = hour
         label = Avg. Temp.
     [[[[outTemp]]]]
+```
 
-Here, the first plot line has been given the name avgTemp to distinguish it from the second line outTemp. Any name will do — it just has to be different. We have specified that the first line will use data type outTemp and that it will use averaging over a one hour period. The second also uses outTemp, but will not use averaging.
+Here, the first plot line has been given the name `avgTemp` to
+distinguish it from the second line `outTemp`. Any name will do
+--- it just has to be different. We have specified that the first line
+will use data type ` outTemp` and that it will use averaging over
+a one hour period. The second also uses `outTemp`, but will not
+use averaging.
 
-The result is a nice plot of the day's temperature, overlaid with a one hour smoothed average:
+The result is a nice plot of the day's temperature, overlaid with a one
+hour smoothed average:
 
 ![Daytime temperature with running average](images/daytemp_with_avg.png)
 
-One more example. This one shows daily high and low temperatures for a year:
+One more example. This one shows daily high and low temperatures for a
+year:
 
+``` tty
 [[year_images]]
     [[[yearhilow]]]
         [[[[hi]]]]
@@ -2660,41 +2805,62 @@ One more example. This one shows daily high and low temperatures for a year:
             data_type = outTemp
             aggregate_type = min
             label = Low Temperature
+```
 
-This results in the plot yearhilow.png:
+This results in the plot `yearhilow.png`:
 
-![Daily highs and lows](images/yearhilow.png)
+![Daily highs and
+lows](images/yearhilow.png){style="width:300px; height:180px"}
 
-Including arbitrary expressions
--------------------------------
 
-The option data_type can actually be _any arbitrary SQL expression, which is valid in the context of the available types in the schema_. For example, say you wanted to plot the difference between inside and outside temperature for the year. This could be done with:
+### Including arbitrary expressions {#arbitrary_expressions_in_plot}
 
+The option `data_type` can actually be *any arbitrary SQL
+expression, which is valid in the context of the available types in the
+schema*. For example, say you wanted to plot the difference between
+inside and outside temperature for the year. This could be done with:
+
+``` tty
 [[year_images]]
     [[[yeardiff]]]
         [[[[diff]]]]
             data_type = inTemp-outTemp
             label = Inside - Outside
+```
 
-Note that the option data_type is now an expression representing the difference between inTemp and outTemp, the inside and outside temperature, respectively. This results in a plot yeardiff.png:
+Note that the option `data_type` is now an expression
+representing the difference between `inTemp` and
+`outTemp`, the inside and outside temperature, respectively. This
+results in a plot `yeardiff.png`:
 
-![Inside - outside temperature](images/yeardiff.png)
+![Inside - outside
+temperature](images/yeardiff.png){style="width:300px; height:180px"}
 
-Changing the unit used in a plot
---------------------------------
+### Changing the unit used in a plot
 
-Normally, the unit used in a plot is set by the unit group of the observation types in the plot. For example, consider this plot of today's outside temperature and dewpoint:
+Normally, the unit used in a plot is set by the unit group of the
+observation types in the plot. For example, consider this plot of
+today's outside temperature and dewpoint:
 
+``` tty
     [[day_images]]
         ...
         [[[daytempdew]]]
             [[[[outTemp]]]]
             [[[[dewpoint]]]]
+```
 
-Both outTemp and dewpoint belong to unit group group_temperature, so this plot will use whatever unit has been specified for that group. See the section [_Mixed units_](#mixed_units) for details.
+Both `outTemp` and `dewpoint` belong to unit group
+`group_temperature`, so this plot will use whatever unit has been
+specified for that group. See the section [*Mixed units*](#mixed_units)
+for details.
 
-However, supposed you'd like to offer both Metric and US Customary versions of the same plot? You can do this by using option [unit](#imagegenerator-unit) to override the unit used for individual plots:
+However, supposed you'd like to offer both Metric and US Customary
+versions of the same plot? You can do this by using option
+[`unit`](#imagegenerator-unit) to override the unit used for
+individual plots:
 
+``` tty hl_lines="4 9"
     [[day_images]]
         ...
         [[[daytempdewUS]]]
@@ -2706,27 +2872,43 @@ However, supposed you'd like to offer both Metric and US Customary versions of t
             unit = degree_C
             [[[[outTemp]]]]
             [[[[dewpoint]]]]
+```
 
-This will produce two plots: file daytempdewUS.png will be in degrees Fahrenheit, while file dayTempMetric.png will use degrees Celsius.
+This will produce two plots: file `daytempdewUS.png` will be in
+degrees Fahrenheit, while file `dayTempMetric.png` will use
+degrees Celsius.
 
-Line gaps
----------
+### Line gaps {#line_gaps}
 
-If there is a time gap in the data, the option line_gap_fraction controls how line plots will be drawn. Here's what a plot looks like without and with this option being specified:
+If there is a time gap in the data, the option
+`line_gap_fraction` controls how line plots will be drawn.
+Here's what a plot looks like without and with this option being
+specified:
+
+No `line_gap_fraction` specified:
 
 ![Gap not shown](images/day-gap-not-shown.png)
 
-No line_gap_fraction specified
+
+With `line_gap_fraction=0.01`. Note how each line has been split
+into two lines:
 
 ![Gap showing](images/day-gap-showing.png)
 
-With line_gap_fraction=0.01. Note how each line has been split into two lines.
+### Progressive vector plots
 
-Progressive vector plots
-------------------------
+WeeWX can produce progressive vector plots as well as the more
+conventional x-y plots. To produce these, use plot type `vector`.
+You need a vector type to produce this kind of plot. There are two:
+`windvec`, and `windgustvec`. While they do not actually
+appear in the database, WeeWX understands that they represent special
+vector-types. The first, `windvec`, represents the average wind
+in an archive period, the second, `windgustvec` the max wind in
+an archive period. Here's how to produce a progressive vector for one
+week that shows the hourly biggest wind gusts, along with hourly
+averages:
 
-WeeWX can produce progressive vector plots as well as the more conventional x-y plots. To produce these, use plot type vector. You need a vector type to produce this kind of plot. There are two: windvec, and windgustvec. While they do not actually appear in the database, WeeWX understands that they represent special vector-types. The first, windvec, represents the average wind in an archive period, the second, windgustvec the max wind in an archive period. Here's how to produce a progressive vector for one week that shows the hourly biggest wind gusts, along with hourly averages:
-
+``` tty
 [[[weekgustoverlay]]]
     aggregate_interval = hour
     [[[[windvec]]]]
@@ -2737,46 +2919,81 @@ WeeWX can produce progressive vector plots as well as the more conventional x-y 
         label = Gust Wind
         plot_type = vector
         aggregate_type = max
+```
 
-This will produce an image file with name weekgustoverlay.png. It will consist of two progressive vector plots, both using hourly aggregation (3,600 seconds). For the first set of vectors, the hourly average will be used. In the second, the max of the gusts will be used:
+This will produce an image file with name `weekgustoverlay.png`.
+It will consist of two progressive vector plots, both using hourly
+aggregation (3,600 seconds). For the first set of vectors, the hourly
+average will be used. In the second, the max of the gusts will be used:
 
-![hourly average wind vector overlaid with gust vectors](images/weekgustoverlay.png)
+![hourly average wind vector overlaid with gust
+vectors](images/weekgustoverlay.png)
 
-By default, the sticks in the progressive wind plots point towards the wind source. That is, the stick for a wind from the west will point left. If you have a chronic wind direction (as I do), you may want to rotate the default direction so that all the vectors do not line up over the x-axis, overlaying each other. Do this by using option vector_rotate. For example, with my chronic westerlies, I set vector_rotate to 90.0 for the plot above, so winds out of the west point straight up.
+By default, the sticks in the progressive wind plots point towards the
+wind source. That is, the stick for a wind from the west will point
+left. If you have a chronic wind direction (as I do), you may want to
+rotate the default direction so that all the vectors do not line up over
+the x-axis, overlaying each other. Do this by using option
+`vector_rotate`. For example, with my chronic westerlies, I set
+`vector_rotate` to 90.0 for the plot above, so winds out of the
+west point straight up.
 
-If you use this kind of plot (the out-of-the-box version of WeeWX includes daily, weekly, monthly, and yearly progressive wind plots), a small compass rose will be put in the lower-left corner of the image to show the orientation of North.
+If you use this kind of plot (the out-of-the-box version of WeeWX
+includes daily, weekly, monthly, and yearly progressive wind plots), a
+small compass rose will be put in the lower-left corner of the image to
+show the orientation of North.
 
-Overriding values
------------------
+### Overriding values
 
-Remember that values at any level can override values specified at a higher level. For example, say you want to generate the standard plots, but for a few key observation types such as barometer, you want to also generate some oversized plots to give you extra detail, perhaps for an HTML popup. The standard `weewx.conf` file specifies plot size of 300x180 pixels, which will be used for all plots unless overridden:
+Remember that values at any level can override values specified at a
+higher level. For example, say you want to generate the standard plots,
+but for a few key observation types such as barometer, you want to also
+generate some oversized plots to give you extra detail, perhaps for an
+HTML popup. The standard `skin.conf` file specifies plot size of
+300x180 pixels, which will be used for all plots unless overridden:
 
+``` tty
 [ImageGenerator]
     ...
     image_width = 300
     image_height = 180
+```
 
-The standard plot of barometric pressure will appear in daybarometer.png:
+The standard plot of barometric pressure will appear in
+`daybarometer.png`:
 
+``` tty
 [[[daybarometer]]]
     [[[[barometer]]]] 
+```
 
-We now add our special plot of barometric pressure, but specify a larger image size. This image will be put in file daybarometer_big.png.
+We now add our special plot of barometric pressure, but specify a larger
+image size. This image will be put in file
+`daybarometer_big.png`.
 
+``` tty
 [[[daybarometer_big]]]
     image_width  = 600
     image_height = 360
     [[[[barometer]]]]
+```
 
-Using multiple bindings
-=======================
+## Using multiple bindings {#Using_multiple_bindings}
 
-It's easy to use more than one database in your reports. Here's an example. In my office I have two consoles: a VantagePro2 connected to a Dell Optiplex, and a WMR100N, connected to a Raspberry Pi. Each is running WeeWX. The Dell is using SQLite, the RPi, MySQL.
+It's easy to use more than one database in your reports. Here's an
+example. In my office I have two consoles: a VantagePro2 connected to a
+Dell Optiplex, and a WMR100N, connected to a Raspberry Pi. Each is
+running WeeWX. The Dell is using SQLite, the RPi, MySQL.
 
-Suppose I wish to compare the inside temperatures of the two consoles. How would I do that?
+Suppose I wish to compare the inside temperatures of the two consoles.
+How would I do that?
 
-It's easier to access MySQL across a network than SQLite, so let's run the reports on the Dell, but access the RPi's MySQL database remotely. Here's how the bindings and database sections of `weewx.conf` would look on the Dell:
+It's easier to access MySQL across a network than SQLite, so let's run
+the reports on the Dell, but access the RPi's MySQL database remotely.
+Here's how the bindings and database sections of `weewx.conf`
+would look on the Dell:
 
+``` tty hl_lines="14-22 31-34"
 [DataBindings]
     # This section binds a data store to an actual database
 
@@ -2829,16 +3046,28 @@ It's easier to access MySQL across a network than SQLite, so let's run the repor
         # The password for the user name
         password = weewx
     
+```
 
-The two additions have been highlighted. The first, [[wmr100_binding]], adds a new binding called wmr10_binding. It links ("binds") to the new database, called rpi_mysql, through the option database. It also defines some characteristics of the binding, such as which manager is to be used and what its schema looks like.
+The two additions have been ==highlighted==. The first,
+`[[wmr100_binding]]`, adds a new binding called
+`wmr100_binding`. It links ("binds") to the new database, called
+`rpi_mysql`, through the option `database`. It also
+defines some characteristics of the binding, such as which manager is to
+be used and what its schema looks like.
 
-The second addition, [[rpi-mysql]] defines the new database. Option database_type is set to MySQL, indicating that it is a MySQL database. Defaults for MySQL databases are defined in the section [[MySQL]]. The new database accepts all of them, except for host, which as been set to the remote host rpi-bug, the name of my Raspberry Pi.
+The second addition, `[[rpi-mysql]]`, defines the new
+database. Option `database_type` is set to `MySQL`,
+indicating that it is a MySQL database. Defaults for MySQL databases are
+defined in the section `[[MySQL]]`. The new database accepts
+all of them, except for `host`, which as been set to the remote
+host `rpi-bug`, the name of my Raspberry Pi.
 
-Explicit binding in tags
-------------------------
+### Explicit binding in tags
 
-How do we use this new binding? First, let's do a text comparison, using tags. Here's what our template looks like:
+How do we use this new binding? First, let's do a text comparison,
+using tags. Here's what our template looks like:
 
+``` tty hl_lines="8"
 <table>
   <tr>
     <td class="stats_label">Inside Temperature, Vantage</td>
@@ -2849,24 +3078,25 @@ How do we use this new binding? First, let's do a text comparison, using tags. H
     <td class="stats_data">$latest($data_binding='wmr100_binding').inTemp</td>
   </tr>
 </table>
+```
 
-The explicit binding to wmr100_binding is highlighted. This tells the reporting engine to override the default binding specifed in [StdReport], generally wx_binding, and use wmr100_binding instead.
+The explicit binding to `wmr100_binding` is highlighted. This
+tells the reporting engine to override the default binding specifed in
+`[StdReport]`, generally `wx_binding`, and use
+`wmr100_binding` instead.
 
-This results in an HTML output that looks like:
+<div class="example_output">
+  Inside Temperature, Vantage   68.7°F<br/>
+  Inside Temperature, WMR100    68.9°F
+</div>
 
-Inside Temperature, Vantage
+### Explicit binding in images
 
-68.7°F
+How would we produce a graph of the two different temperatures? Here's
+what the relevant section of the `skin.conf` file would look
+like.
 
-Inside Temperature, WMR100
-
-68.9°F
-
-Explicit binding in images
---------------------------
-
-How would we produce a graph of the two different temperatures? Here's what the relevant section of the skin.conf file would look like.
-
+``` tty hl_lines="6"
 [[[daycompare]]]
    [[[[inTemp]]]]
        label = Vantage inTemp
@@ -2874,30 +3104,57 @@ How would we produce a graph of the two different temperatures? Here's what the 
        data_type = inTemp
        data_binding = wmr100_binding
        label = WMR100 inTemp
+```
 
-This will produce an image with name daycompare.png, with two plot lines. The first will be of the temperature from the Vantage. It uses the default binding, wx_binding, and will be labeled Vantage inTemp. The second explicitly uses the wmr100_binding. Because it uses the same variable name (inTemp) as the first line, we had to explicitly specify it using option data_type, in order to avoid using the same sub-section name twice (see the section _[Including a type more than once in a plot](#including_same_sql_type_2x)_ for details). It will be labeled WMR100 inTemp. The results look like this:
+This will produce an image with name `daycompare.png`, with two
+plot lines. The first will be of the temperature from the Vantage. It
+uses the default binding, `wx_binding`, and will be labeled
+`Vantage inTemp`. The second line explicitly uses the
+`wmr100_binding`. Because it uses the same variable name
+(`inTemp`) as the first line, we had to explicitly specify it
+using option `data_type`, in order to avoid using the same
+sub-section name twice (see the section *[Including a type more than
+once in a plot](#including_same_sql_type_2x)* for details). It will be
+labeled `WMR100 inTemp`. The results look like this:
 
 ![Comparing temperatures](images/daycompare.png)
 
-Stupid detail
--------------
+### Stupid detail {#stupid_detail}
 
-At first, I could not get this example to work. The problem turned out to be that the RPi was processing things just a beat behind the Dell, so the temperature for the "current" time wasn't ready when the Dell needed it. I kept getting N/A. To avoid this, I introduced the tag $latest, which uses the last available timestamp in the binding, which may or may not be the same as what $current uses. That's why the example above uses $latest instead of $current.
+At first, I could not get this example to work. The problem turned out
+to be that the RPi was processing things just a beat behind the Dell, so
+the temperature for the "current" time wasn't ready when the Dell
+needed it. I kept getting `N/A`. To avoid this, I introduced the
+tag `$latest`, which uses the last available timestamp in the
+binding, which may or may not be the same as what `$current`
+uses. That's why the example above uses `$latest` instead of
+`$current`.
 
-Localization
-============
+## Localization
 
-This section provides suggestions for localization, including translation to different languages and display of data in formats specific to a locale.
+This section provides suggestions for localization, including
+translation to different languages and display of data in formats
+specific to a locale.
 
-If the skin has been internationalized
---------------------------------------
+### If the skin has been internationalized
 
-All of the skins that come with WeeWX have been _internationalized_, although they may not have been _localized_ to your specific language. See the section [Internationalized skins](#internationalized_skins) for how to tell.
+All of the skins that come with WeeWX have been *internationalized*,
+that is, they are capable of being *localized*, although there may or may not
+be a localization available for your specific language.
+See the section [Internationalized skins](#internationalized_skins) for
+how to tell.
 
-### Internationalized, your language is available
+STOPPED HERE
 
-This is the easy case: the skin has been internationalized, and your locale is available. In this case, all you need to do is to select your locale in `weewx.conf`. For example, to select German (code de) for the _Seasons_ skin, just add the highlighted line (or change, if it's already there):
+#### Internationalized, your language is available
 
+This is the easy case: the skin has been internationalized, and your
+locale is available. In this case, all you need to do is to select your
+locale in `weewx.conf`. For example, to select German (code
+`de`) for the *Seasons* skin, just add the highlighted line (or
+change, if it's already there):
+
+``` tty
 ...
 [StdReport]
     ...
@@ -2908,15 +3165,26 @@ This is the easy case: the skin has been internationalized, and your locale is a
         enable = true
         lang = de
         ...
+```
 
-### Internationalized, but your language is missing
+#### Internationalized, but your language is missing {#internationalized-missing-language}
 
-If the lang subdirectory is present in the skin directory, then the skin has been internationalized. However, if your language code is not included in the subdirectory, then you will have to _localize_ it to your language. To do so, copy the file en.conf and name it according to the language code of your language. Then translate all the strings on the right side of the equal signs to your language. For example, say you want to localize the skin in the French language. Then copy en.conf to fr.conf
+If the `lang` subdirectory is present in the skin directory, then
+the skin has been internationalized. However, if your language code is
+not included in the subdirectory, then you will have to *localize* it to
+your language. To do so, copy the file `en.conf` and name it
+according to the language code of your language. Then translate all the
+strings on the right side of the equal signs to your language. For
+example, say you want to localize the skin in the French language. Then
+copy `en.conf` to `fr.conf`
 
+``` {.cmd .tty}
 cp en.conf fr.conf
+```
 
 Then change things that look like this:
 
+``` tty
 ...
 [Texts]
     "Language" = "English"
@@ -2925,9 +3193,11 @@ Then change things that look like this:
     "24h" = "24h"
     "About this weather station" = "About this weather station"
     ...
+```
 
 to something that looks like this:
 
+``` tty
 ...
 [Texts]
     Language = French
@@ -2936,22 +3206,40 @@ to something that looks like this:
     "24h" = "24h"
     "About this weather station" = "A propos de cette station"
     ...
+```
 
-And so on. When you're done, the skin author may be interested in your localization file to ship it together with the skin for the use of other users. If the skin is one that came with WeeWX, contact the WeeWX team via a post to the [weewx-user group](https://groups.google.com/forum/#!forum/weewx-user) and, with your permission, we may include your localization file in a future WeeWX release.
+And so on. When you're done, the skin author may be interested in your
+localization file to ship it together with the skin for the use of other
+users. If the skin is one that came with WeeWX, contact the WeeWX team
+via a post to the [weewx-user
+group](https://groups.google.com/forum/#!forum/weewx-user) and, with
+your permission, we may include your localization file in a future WeeWX
+release.
 
-Finally, set the option lang in `weewx.conf` to your language code (fr in this example) as described in the [User's Guide](usersguide.htm#lang-code).
+Finally, set the option `lang` in `weewx.conf` to your
+language code (`fr` in this example) as described in the [User's
+Guide](usersguide.htm#lang-code).
 
-How to internationalize a skin
-------------------------------
+### How to internationalize a skin
 
-What happens when you come across a skin that you like, but it has not been internationalized? This section explains how to convert the report to local formats and language.
+What happens when you come across a skin that you like, but it has not
+been internationalized? This section explains how to convert the report
+to local formats and language.
 
-Internationalization of WeeWX templates uses a pattern very similar to the well-known GNU "[gettext](https://www.gnu.org/software/gettext/)" approach. The only difference is that we have leveraged the ConfigObj facility used throughout WeeWX.
+Internationalization of WeeWX templates uses a pattern very similar to
+the well-known GNU
+"`[gettext`](https://www.gnu.org/software/gettext/)" approach.
+The only difference is that we have leveraged the `ConfigObj`
+facility used throughout WeeWX.
 
-### Create the localization file
+#### Create the localization file
 
-Create a subdirectory called lang in the skin directory. Then create a file named by the language code with the suffix .conf. For example, if you want to translate to Spanish, name the file es.conf. Include the following in the file:
+Create a subdirectory called `lang` in the skin directory. Then
+create a file named by the language code with the suffix `.conf`.
+For example, if you want to translate to Spanish, name the file
+`es.conf`. Include the following in the file:
 
+``` tty
 [Units]
 
     [[Labels]]
@@ -3024,32 +3312,44 @@ Create a subdirectory called lang in the skin directory. Then create a file name
 
     Language              = Español # Replace with the language you are targeting
         
+```
 
-Go through the file, translating all phrases on the right-hand side of the equal signs to your target language (Spanish in this example).
+Go through the file, translating all phrases on the right-hand side of
+the equal signs to your target language (Spanish in this example).
 
-### Internationalize the template
+#### Internationalize the template
 
-You will need to internationalize every HTML template (these typically have a file suffix of .html.tmpl). This is most easily done by opening the template and the language file in different editor windows. It is much easier if you can change both files simultaneously.
+You will need to internationalize every HTML template (these typically
+have a file suffix of `.html.tmpl`). This is most easily done by
+opening the template and the language file in different editor windows.
+It is much easier if you can change both files simultaneously.
 
-#### Change the html lang attribute
+##### Change the `html lang` attribute
 
-At the top of the template, change the HTML "lang" attribute to a configurable value.
+At the top of the template, change the HTML "lang" attribute to a
+configurable value.
 
+``` tty
 <!DOCTYPE html>
 <html lang="$lang">
   <head>
     <meta charset="UTF-8">
     ...
+```
 
-The value $lang will get replaced by the actual language to be used.
+The value `$lang` will get replaced by the actual language to be
+used.
 
-[language codes](https://www.w3schools.com/tags/ref_language_codes.asp)  
-[country codes](https://www.w3schools.com/tags/ref_country_codes.asp)  
+[language codes](https://www.w3schools.com/tags/ref_language_codes.asp)\
+[country codes](https://www.w3schools.com/tags/ref_country_codes.asp)\
 
-#### Change the body text
+##### Change the body text
 
-The next step is to go through the templates and change all natural language phrases into lookups using $gettext. For example, suppose your skin has a section that looks like this:
+The next step is to go through the templates and change all natural
+language phrases into lookups using `$gettext`. For example,
+suppose your skin has a section that looks like this:
 
+``` tty
 <div>
     Current Conditions
     <table>
@@ -3059,9 +3359,12 @@ The next step is to go through the templates and change all natural language phr
         </tr>
     </table>
 </div>
+```
 
-There are two natural language phrases here: _Current Conditions_ and _Outside Temperature_. They would be changed to:
+There are two natural language phrases here: *Current Conditions* and
+*Outside Temperature*. They would be changed to:
 
+``` tty
 <div>
     $gettext("Current Conditions")
     <table>
@@ -3071,24 +3374,39 @@ There are two natural language phrases here: _Current Conditions_ and _Outside T
         </tr>
     </table>
 </div>
+```
 
-We have done two replacements here. For the phrase _Current Conditions_, we substituted $gettext("Current Conditions"). This will cause the Cheetah Generator to look up the localized version of "Current Conditions" in the localization file and substitute it. We could have done something similar for _Outside Temperature_, but in this case, we chose to use the localized name for type outTemp, which you should have provided in your localization file, under section [Labels] / [[Generic]].
+We have done two replacements here. For the phrase *Current Conditions*,
+we substituted `$gettext("Current Conditions")`. This will
+cause the Cheetah Generator to look up the localized version of
+"Current Conditions" in the localization file and substitute it. We
+could have done something similar for *Outside Temperature*, but in this
+case, we chose to use the localized name for type `outTemp`,
+which you should have provided in your localization file, under section
+[[Labels] / [[Generic]]]{.code}.
 
-In the localization file, include the translation for _Current Conditions_ under the [Texts] section:
+In the localization file, include the translation for *Current
+Conditions* under the [[Texts]]{.code} section:
 
+``` tty
 ...
 [Texts]
 
     "Language"           = "Español"
     "Current Conditions" = "Condiciones Actuales"
     ...
+```
 
-Repeat this process for all the strings that you find. Make sure not to replace HTML tags and HTML options.
+Repeat this process for all the strings that you find. Make sure not to
+replace HTML tags and HTML options.
 
-### Think about time
+#### Think about time
 
-Whenever a time is used in a template, it will need a format. WeeWX comes with the following set of defaults, defined in defaults.py:
+Whenever a time is used in a template, it will need a format. WeeWX
+comes with the following set of defaults, defined in
+`defaults.py`:
 
+``` tty
 [Units]
     ...
     [[TimeFormats]]
@@ -3100,11 +3418,21 @@ Whenever a time is used in a template, it will need a format. WeeWX comes with t
         current    = %x %X
         ephem_day  = %X
         ephem_year = %x %X
+```
 
-These defaults will give something readable in every locale, but they may not be very pretty. Therefore, you may want to change them to something more suitable for the locale you are targeting, using the Python [strftime() specific directives](https://docs.python.org/3/library/datetime.html#strftime-and-strptime-behavior).
+These defaults will give something readable in every locale, but they
+may not be very pretty. Therefore, you may want to change them to
+something more suitable for the locale you are targeting, using the
+Python `[strftime()` specific
+directives](https://docs.python.org/3/library/datetime.html#strftime-and-strptime-behavior).
 
-Example: the default time formatting for "Current" conditions is %x %x, which will show today's date as 14/05/21 10:00:00 in the Spanish locale. Suppose you would rather see 14-mayo-2021 10:00. You would add the following to your Spanish localization file es.conf:
+Example: the default time formatting for "Current" conditions is `%x
+%x`, which will show today's date as 14/05/21 10:00:00 in the
+Spanish locale. Suppose you would rather see 14-mayo-2021 10:00. You
+would add the following to your Spanish localization file
+`es.conf`:
 
+``` tty
 ...
 
 [Units]
@@ -3112,37 +3440,66 @@ Example: the default time formatting for "Current" conditions is %x %x, which wi
         current = %d-%B-%Y %H:%M
 
 ...     
+```
 
-### Set the environment variable LANG
+#### Set the environment variable `LANG` {#environment_variable_LANG}
 
-Finally, you will need to set the environment variable LANG to reflect your locale. For example, assuming you set
+Finally, you will need to set the environment variable `LANG` to
+reflect your locale. For example, assuming you set
 
+``` tty
 $ export LANG=es_ES.UTF-8
+```
 
-before running WeeWX, then the local Spanish names for days of the week and months of the year will be used. The decimal point for numbers will also be modified appropriately.
+before running WeeWX, then the local Spanish names for days of the week
+and months of the year will be used. The decimal point for numbers will
+also be modified appropriately.
 
-Customizing the WeeWX service engine
-====================================
+## Customizing the WeeWX service engine {#service_engine}
 
-This is an advanced topic intended for those who wish to try their hand at extending the internal engine in WeeWX. Before attempting these examples, you should be reasonably proficient with Python.
+This is an advanced topic intended for those who wish to try their hand
+at extending the internal engine in WeeWX. Before attempting these
+examples, you should be reasonably proficient with Python.
 
-Please note that the API to the service engine may change in future versions!
+Please note that the API to the service engine may change in future
+versions!
 
-At a high level, WeeWX consists of an _engine_ that is responsible for managing a set of _services_. A service consists of a Python class which binds its member functions to various _events_. The engine arranges to have the bound member function called when a specific event happens, such as a new LOOP packet arriving.
+At a high level, WeeWX consists of an *engine* that is responsible for
+managing a set of *services*. A service consists of a Python class which
+binds its member functions to various *events*. The engine arranges to
+have the bound member function called when a specific event happens,
+such as a new LOOP packet arriving.
 
-The services are specified in lists in the [[Engine][[Services]]](usersguide.htm#engine_services) stanza of the configuration file. The [[Services]] section lists all the services to be run, broken up into different _service lists_.
+The services are specified in lists in the
+[[[Engine][[Services]]]{.code}](usersguide.htm#engine_services)
+stanza of the configuration file. The [[[Services]]]{.code} section
+lists all the services to be run, broken up into different *service
+lists*.
 
-These lists are designed to orchestrate the data as it flows through the WeeWX engine. For example, you want to make sure data has been processed by, for example, running it through the quality control service, StdQC, before putting them in the database. Similarly, the reporting system must come _after_ the archiving service. These groups insure that things happen in the proper sequence.
+These lists are designed to orchestrate the data as it flows through the
+WeeWX engine. For example, you want to make sure data has been processed
+by, for example, running it through the quality control service,
+`StdQC`, before putting them in the database. Similarly, the
+reporting system must come *after* the archiving service. These groups
+insure that things happen in the proper sequence.
 
-See the table [Default services](#default_services) for a list of the services that are normally run.
+See the table [Default services](#default_services) for a list of the
+services that are normally run.
 
-Modifying an existing service
------------------------------
+### Modifying an existing service {#Customizing_a_service}
 
-The service weewx.engine.StdPrint prints out new LOOP and archive packets to the console when they arrive. By default, it prints out the entire record, which generally includes a lot of possibly distracting information and can be rather messy. Suppose you do not like this, and want it to print out only the time, barometer reading, and the outside temperature whenever a new LOOP packet arrives. This could be done by subclassing the default print service StdPrint and overriding member function new_loop_packet().
+The service `weewx.engine.StdPrint` prints out new LOOP and
+archive packets to the console when they arrive. By default, it prints
+out the entire record, which generally includes a lot of possibly
+distracting information and can be rather messy. Suppose you do not like
+this, and want it to print out only the time, barometer reading, and the
+outside temperature whenever a new LOOP packet arrives. This could be
+done by subclassing the default print service `StdPrint` and
+overriding member function `new_loop_packet()`.
 
-Create the file user/myprint.py:
+Create the file `user/myprint.py`:
 
+``` tty
 from weewx.engine import StdPrint
 from weeutil.weeutil import timestamp_to_string
 
@@ -3154,25 +3511,42 @@ class MyPrint(StdPrint):
         print("LOOP: ", timestamp_to_string(packet['dateTime']),
             "BAR=",  packet.get('barometer', 'N/A'),
             "TEMP=", packet.get('outTemp', 'N/A'))
+```
 
-This service substitutes a new implementation for the member function new_loop_packet. This implementation prints out the time, then the barometer reading (or N/A if it is not available) and the outside temperature (or N/A).
+This service substitutes a new implementation for the member function
+`new_loop_packet`. This implementation prints out the time, then
+the barometer reading (or `N/A` if it is not available) and the
+outside temperature (or `N/A`).
 
-You then need to specify that your print service class should be loaded instead of the default StdPrint service. This is done by substituting your service name for StdPrint in service_list, located in [Engine][[Services]]:
+You then need to specify that your print service class should be loaded
+instead of the default `StdPrint` service. This is done by
+substituting your service name for `StdPrint` in
+`service_list`, located in [[Engine][[Services]]]{.code}:
 
+``` tty
 [Engine]
     [[Services]]
         ...
         report_services = user.myprint.MyPrint, weewx.engine.StdReport
+```
 
-Note that the report_services must be all on one line. Unfortunately, the parser ConfigObj does not allow options to be continued on to following lines.
+Note that the `report_services` must be all on one line.
+Unfortunately, the parser `ConfigObj` does not allow options to
+be continued on to following lines.
 
-Creating a new service
-----------------------
+### Creating a new service {#Adding_a_service}
 
-Suppose there is no service that can be easily customized for your needs. In this case, a new one can easily be created by subclassing off the abstract base class StdService, and then adding the functionality you need. Here is an example that implements an alarm, which sends off an email when an arbitrary expression evaluates True.
+Suppose there is no service that can be easily customized for your
+needs. In this case, a new one can easily be created by subclassing off
+the abstract base class `StdService`, and then adding the
+functionality you need. Here is an example that implements an alarm,
+which sends off an email when an arbitrary expression evaluates
+`True`.
 
-This example is included in the standard distribution as examples/alarm.py:
+This example is included in the standard distribution as
+`examples/alarm.py:`
 
+``` tty
 import smtplib
 import socket
 import syslog
@@ -3268,7 +3642,7 @@ class MyAlarm(StdService):
         syslog.syslog(syslog.LOG_INFO, 'alarm: Alarm expression "%s" evaluated True at %s' % (self.expression, t_str))
 
         # Form the message text:
-        msg_text = 'Alarm expression "%s" evaluated True at %s\\nRecord:\\n%s' % (self.expression, t_str, str(rec))
+        msg_text = 'Alarm expression "%s" evaluated True at %s\nRecord:\n%s' % (self.expression, t_str, str(rec))
         # Convert to MIME:
         msg = MIMEText(msg_text)
 
@@ -3313,9 +3687,14 @@ class MyAlarm(StdService):
 
         # Log sending the email:
         syslog.syslog(syslog.LOG_INFO, "alarm: email sent to: %s" % self.TO)
+```
 
-This service expects all the information it needs to be in the configuration file `weewx.conf` in a new section called [Alarm]. So, add the following lines to your configuration file:
+This service expects all the information it needs to be in the
+configuration file `weewx.conf` in a new section called
+[[Alarm]]{.code}. So, add the following lines to your configuration
+file:
 
+``` tty
 [Alarm]
     expression = "outTemp < 40.0"
     time_wait = 3600
@@ -3325,55 +3704,112 @@ This service expects all the information it needs to be in the configuration fil
     mailto = auser@example.com, anotheruser@example.com
     from   = me@example.com
     subject = "Alarm message from WeeWX!"
+```
 
-There are three important points to be noted in this example, each marked with a NOTE flag in the code.
+There are three important points to be noted in this example, each
+marked with a `NOTE` flag in the code.
 
-1.  Here is where the binding happens between an event, weewx.NEW_ARCHIVE_RECORD in this example, and a member function, self.new_archive_record. When the event NEW_ARCHIVE_RECORD occurs, the function self.new_archive_record will be called. There are many other events that can be intercepted. Look in the file weewx/__init__.py.
-2.  Some hardware does not emit all possible observation types in every record. So, it's possible that a record may be missing some types that are used in the expression. This try block will catch the NameError exception that would be raised should this occur.
-3.  This is where the test is done for whether or not to sound the alarm. The [Alarm] configuration options specify that the alarm be sounded when outTemp < 40.0 evaluates True, that is when the outside temperature is below 40.0 degrees. Any valid Python expression can be used, although the only variables available are those in the current archive record.
+1.  Here is where the binding happens between an event,
+    `weewx.NEW_ARCHIVE_RECORD` in this example, and a member
+    function, `self.new_archive_record`. When the event
+    `NEW_ARCHIVE_RECORD` occurs, the function
+    `self.new_archive_record` will be called. There are many
+    other events that can be intercepted. Look in the file
+    `weewx/\_\_init\_\_.py`.
+2.  Some hardware does not emit all possible observation types in every
+    record. So, it's possible that a record may be missing some types
+    that are used in the expression. This try block will catch the
+    `NameError` exception that would be raised should this occur.
+3.  This is where the test is done for whether or not to sound the
+    alarm. The [[Alarm]]{.code} configuration options specify that the
+    alarm be sounded when `outTemp \< 40.0` evaluates
+    `True`, that is when the outside temperature is below 40.0
+    degrees. Any valid Python expression can be used, although the only
+    variables available are those in the current archive record.
 
 Another example expression could be:
 
+``` tty
 expression = "outTemp < 32.0 and windSpeed > 10.0"
+```
 
-In this case, the alarm is sounded if the outside temperature drops below freezing and the wind speed is greater than 10.0.
+In this case, the alarm is sounded if the outside temperature drops
+below freezing and the wind speed is greater than 10.0.
 
-Note that units must be the same as whatever is being used in your database. That is, the same as what you specified in option [target_unit](usersguide.htm#option_target_unit).
+Note that units must be the same as whatever is being used in your
+database. That is, the same as what you specified in option
+`[target_unit`](usersguide.htm#option_target_unit).
 
-Option time_wait is used to avoid a flood of nearly identical emails. The new service will wait this long before sending another email out.
+Option `time_wait` is used to avoid a flood of nearly identical
+emails. The new service will wait this long before sending another email
+out.
 
-Email will be sent through the SMTP host specified by option smtp_host. The recipient(s) are specified by the comma separated option mailto.
+Email will be sent through the SMTP host specified by option
+`smtp_host`. The recipient(s) are specified by the comma
+separated option `mailto`.
 
-Many SMTP hosts require user login. If this is the case, the user and password are specified with options smtp_user and smtp_password, respectively.
+Many SMTP hosts require user login. If this is the case, the user and
+password are specified with options `smtp_user` and
+`smtp_password`, respectively.
 
-The last two options, from and subject are optional. If not supplied, WeeWX will supply something sensible. Note, however, that some mailers require a valid "from" email address and the one WeeWX supplies may not satisfy its requirements.
+The last two options, `from` and `subject` are optional.
+If not supplied, WeeWX will supply something sensible. Note, however,
+that some mailers require a valid "from" email address and the one
+WeeWX supplies may not satisfy its requirements.
 
-To make this all work, you must first copy the alarm.py file to the user directory. Then tell the engine to load this new service by adding the service name to the list report_services, located in [Engine][[Services]]:
+To make this all work, you must first copy the `alarm.py` file to
+the `user` directory. Then tell the engine to load this new
+service by adding the service name to the list `report_services`,
+located in [[Engine][[Services]]]{.code}:
 
+``` tty
 [Engine]
    [[Services]]
         report_services = weewx.engine.StdPrint, weewx.engine.StdReport, user.alarm.MyAlarm
+```
 
-Again, note that the option report_services must be all on one line — the parser ConfigObj does not allow options to be continued on to following lines.
+Again, note that the option `report_services` must be all on one
+line --- the parser `ConfigObj` does not allow options to be
+continued on to following lines.
 
-In addition to this example, the distribution also includes a low-battery alarm (lowBattery.py), which is similar, except that it intercepts LOOP events (instead of archiving events).
+In addition to this example, the distribution also includes a
+low-battery alarm (`lowBattery.py`), which is similar, except
+that it intercepts LOOP events (instead of archiving events).
 
-Adding a second data source
----------------------------
+### Adding a second data source {#Adding_2nd_source}
 
-A very common problem is wanting to augment the data from your weather station with data from some other device. Generally, you have two approaches for how to handle this:
+A very common problem is wanting to augment the data from your weather
+station with data from some other device. Generally, you have two
+approaches for how to handle this:
 
-*   Run two instances of WeeWX, each using its own database and `weewx.conf` configuration file. The results are then combined in a final report, using WeeWX's ability [to use more than one database](#Using_multiple_bindings). See the Wiki entry [_How to run multiple instances of WeeWX_](https://github.com/weewx/weewx/wiki/weewx-multi) for details on how to do this.
-*   Run one instance, but use a custom WeeWX service to augment the records coming from your weather station with data from the other device.
+-   Run two instances of WeeWX, each using its own database and
+    `weewx.conf` configuration file. The results are then
+    combined in a final report, using WeeWX's ability [to use more than
+    one database](#Using_multiple_bindings). See the Wiki entry [*How to
+    run multiple instances of
+    WeeWX*](https://github.com/weewx/weewx/wiki/weewx-multi) for details
+    on how to do this.
+-   Run one instance, but use a custom WeeWX service to augment the
+    records coming from your weather station with data from the other
+    device.
 
 This section covers the latter approach.
 
-Suppose you have installed an electric meter at your house and you wish to correlate electrical usage with the weather. The meter has some sort of connection to your computer, allowing you to download the total power consumed. At the end of every archive interval you want to calculate the amount of power consumed during the interval, then add the results to the record coming off your weather station. How would you do this?
+Suppose you have installed an electric meter at your house and you wish
+to correlate electrical usage with the weather. The meter has some sort
+of connection to your computer, allowing you to download the total power
+consumed. At the end of every archive interval you want to calculate the
+amount of power consumed during the interval, then add the results to
+the record coming off your weather station. How would you do this?
 
-Here is the outline of a service that retrieves the electrical consumption data and adds it to the archive record. It assumes that you already have a function download_total_power() that, somehow, downloads the amount of power consumed since time zero.
+Here is the outline of a service that retrieves the electrical
+consumption data and adds it to the archive record. It assumes that you
+already have a function `download_total_power()` that, somehow,
+downloads the amount of power consumed since time zero.
 
-File user/electricity.py
+File `user/electricity.py`
 
+``` tty
 import weewx
 from weewx.engine import StdService
 
@@ -3398,16 +3834,31 @@ class AddElectricity(StdService):
             event.record['electricity'] = net_consumed
 
         self.last_total = total_power
+```
 
-This adds a new key electricity to the record dictionary and sets it equal to the difference between the amount of power currently consumed and the amount consumed at the last archive record. Hence, it will be the amount of power consumed over the archive interval. The unit should be Watt-hours.
+This adds a new key `electricity` to the record dictionary and
+sets it equal to the difference between the amount of power currently
+consumed and the amount consumed at the last archive record. Hence, it
+will be the amount of power consumed over the archive interval. The unit
+should be Watt-hours.
 
-As an aside, it is important that the function download_total_power() does not delay very long because it will sit right in the main loop of the WeeWX engine. If it's going to cause a delay of more than a couple seconds you might want to put it in a separate thread and feed the results to AddElectricity through a queue.
+As an aside, it is important that the function
+`download_total_power()` does not delay very long because it will
+sit right in the main loop of the WeeWX engine. If it's going to cause
+a delay of more than a couple seconds you might want to put it in a
+separate thread and feed the results to `AddElectricity` through
+a queue.
 
-To make sure your service gets run, you need to add it to one of the service lists in `weewx.conf`, section [Engine], subsection [[Services]].
+To make sure your service gets run, you need to add it to one of the
+service lists in `weewx.conf`, section [[Engine]]{.code},
+subsection [[[Services]]]{.code}.
 
-In our case, the obvious place for our new service is in data_services. When you're done, your section [Engine] will look something like this:
+In our case, the obvious place for our new service is in
+`data_services`. When you're done, your section
+[[Engine]]{.code} will look something like this:
 
-\#   This section configures the internal WeeWX engine.
+``` tty
+#   This section configures the internal WeeWX engine.
 
 [Engine]
 
@@ -3422,84 +3873,103 @@ In our case, the obvious place for our new service is in data_services. When you
         archive_services = weewx.engine.StdArchive
         restful_services = weewx.restx.StdStationRegistry, weewx.restx.StdWunderground, weewx.restx.StdPWSweather, weewx.restx.StdCWOP, weewx.restx.StdWOW, weewx.restx.StdAWEKAS
         report_services = weewx.engine.StdPrint, weewx.engine.StdReport
+```
 
-Customizing the database
-========================
+## Customizing the database {#archive_database}
 
-For most users the database defaults will work just fine. However, there may be occasions when you may want to add a new observation type to your database, or change its unit system. This section shows you how to do this.
+For most users the database defaults will work just fine. However, there
+may be occasions when you may want to add a new observation type to your
+database, or change its unit system. This section shows you how to do
+this.
 
-Every relational database depends on a _schema_ to specify which types to include in the database. When a WeeWX database is first created, it uses a Python version of the schema to initialize the database. However, once the database has been created, the schema is read directly from the database and the Python version is not used again — any changes to it will have no effect. This means that the strategy for modifying the schema depends on whether the database already exists.
+Every relational database depends on a *schema* to specify which types
+to include in the database. When a WeeWX database is first created, it
+uses a Python version of the schema to initialize the database. However,
+once the database has been created, the schema is read directly from the
+database and the Python version is not used again --- any changes to it
+will have no effect. This means that the strategy for modifying the
+schema depends on whether the database already exists.
 
-Specifying a schema for a new database
---------------------------------------
+### Specifying a schema for a new database
 
-If the database does not exist yet, then you will want to pick an appropriate starting schema. If it's not exactly what you want, you can modify it to fit your needs.
+If the database does not exist yet, then you will want to pick an
+appropriate starting schema. If it's not exactly what you want, you can
+modify it to fit your needs.
 
-### Picking a starting schema
+#### Picking a starting schema
 
-WeeWX gives you a choice of three different schemas to choose from when creating a new database:
+WeeWX gives you a choice of three different schemas to choose from when
+creating a new database:
 
-Name
+  ------------------------------- ----------------------------- ----------------------------------------------------------------------------------------------------------
+  Name                            Number of observation types   Comment
+  schemas.wview.schema            49                            The original schema that came with wview.
+  schemas.wview_extended.schema   111                           A version of the wview schema, which has been extended with many new types. This is the default version.
+  schemas.wview_small.schema      20                            A minimalist version of the wview schema.
+  ------------------------------- ----------------------------- ----------------------------------------------------------------------------------------------------------
 
-Number of observation types
+For most users, the default database schema,
+`schemas.wview_extended.schema`, will work just fine.
 
-Comment
+To specify which schema to use when creating a database, modify option
+`schema` in section [[DataBindings]]{.code} in
+`weewx.conf`. For example, suppose you wanted to use the classic
+(and smaller) schema `schemas.wview.schema` instead of the
+default `schemas.wview_extended.schema`. Then the section
+[[DataBindings]]{.code} would look like:
 
-schemas.wview.schema
-
-49
-
-The original schema that came with wview.
-
-schemas.wview_extended.schema
-
-111
-
-A version of the wview schema, which has been extended with many new types. This is the default version.
-
-schemas.wview_small.schema
-
-20
-
-A minimalist version of the wview schema.
-
-For most users, the default database schema, schemas.wview_extended.schema, will work just fine.
-
-To specify which schema to use when creating a database, modify option schema in section [DataBindings] in `weewx.conf`. For example, suppose you wanted to use the classic (and smaller) schema schemas.wview.schema instead of the default schemas.wview_extended.schema. Then the section [DataBindings] would look like:
-
+``` tty
 [DataBindings]
     [[wx_binding]]
         database = archive_sqlite
         table_name = archive
         manager = weewx.manager.DaySummaryManager
         schema = schemas.wview.schema
+```
 
-Now, when you start WeeWX, it will use this new choice instead of the default.
+Now, when you start WeeWX, it will use this new choice instead of the
+default.
 
-NOTE: This only works when the database is _first created_. Thereafter, WeeWX reads the schema directly from the database. Changing this option will have no effect!
+NOTE: This only works when the database is *first created*. Thereafter,
+WeeWX reads the schema directly from the database. Changing this option
+will have no effect!
 
-### Modifying a starting schema
+#### Modifying a starting schema {#modify_starting_schema}
 
-If none of the three starting schemas that come with WeeWX suits your purposes, you can easily create your own. Just pick one of the three schemas as a starting point, then modify it. Put the results in the user subdirectory, where it will be safe from upgrades. For example, suppose you like the schemas.wview_small schema, but you need to store the type electricity from the example [_Adding a second data source_](#Adding_2nd_source) above. The type electricity does not appear in the schema, so you'll have to add it before starting up WeeWX. We will call the resulting new schema user.myschema.schema.
+If none of the three starting schemas that come with WeeWX suits your
+purposes, you can easily create your own. Just pick one of the three
+schemas as a starting point, then modify it. Put the results in the
+`user` subdirectory, where it will be safe from upgrades. For
+example, suppose you like the `schemas.wview_small` schema, but
+you need to store the type `electricity` from the example
+[*Adding a second data source*](#Adding_2nd_source) above. The type
+`electricity` does not appear in the schema, so you'll have to
+add it before starting up WeeWX. We will call the resulting new schema
+`user.myschema.schema`.
 
 If you did a Debian install, here's how you would do this:
 
-\# Copy the wview_small schema over to the user subdirectory and rename it myschema:
+``` tty
+# Copy the wview_small schema over to the user subdirectory and rename it myschema:
 sudo cp /usr/share/weewx/schemas/wview_small.py /usr/share/weewx/user/myschema.py
 
 # Edit it using your favorite text editor
 sudo nano /usr/share/weewx/user/myschema.py
+```
 
-If you did a setup.py install, it would look like this:
+If you did a `setup.py` install, it would look like this:
 
-\# Copy the wview_small schema over to the user subdirectory and rename it myschema:
+``` tty
+# Copy the wview_small schema over to the user subdirectory and rename it myschema:
 cp /home/weewx/bin/schemas/wview_small.py /home/weewx/bin/user/myschema.py
 
 # Edit it using your favorite text editor
 nano /home/weewx/bin/user/myschema.py
+```
 
-In myschema.py change this:
+In `myschema.py` change this:
 
+``` tty
          ...
          ('windchill',            'REAL'),
          ('windDir',              'REAL'),
@@ -3507,9 +3977,11 @@ In myschema.py change this:
          ('windGustDir',          'REAL'),
          ('windSpeed',            'REAL'),
          ]
+```
 
 to this
 
+``` tty
          ...
          ('windchill',            'REAL'),
          ('windDir',              'REAL'),
@@ -3518,418 +3990,664 @@ to this
          ('windSpeed',            'REAL'),
          ('electricity',          'REAL'),
          ]
+```
 
-The only change was the addition (highlighted) of electricity to the list of observation names.
+The only change was the addition ([highlighted]{.highlight}) of
+`electricity` to the list of observation names.
 
-Now change option schema under [DataBindings] in `weewx.conf` to use your new schema:
+Now change option `schema` under [[DataBindings]]{.code} in
+`weewx.conf` to use your new schema:
 
+``` tty
 [DataBindings]
     [[wx_binding]]
         database = archive_sqlite
         table_name = archive
         manager = weewx.manager.DaySummaryManager
         schema = user.myschema.schema
+```
 
-Start WeeWX. When the new database is created, it will use your modified schema instead of the default.
+Start WeeWX. When the new database is created, it will use your modified
+schema instead of the default.
 
-NOTE: This will only work when the database is first created! Thereafter, WeeWX reads the schema directly from the database and your changes will have no effect!
+NOTE: This will only work when the database is first created!
+Thereafter, WeeWX reads the schema directly from the database and your
+changes will have no effect!
 
-Modifying an existing database
-------------------------------
+### Modifying an existing database
 
-The previous section covers the case where you do not have an existing database, so you modify a starting schema, then use it to initialize the database. But, what if you already have a database, and you want to modify it, perhaps by adding a column or two? You cannot create a new starting schema, because it is only used when the database is first created. Here is where the tool [wee_database](utilities.htm#wee_database_utility) can be useful. Be sure to stop WeeWX before attempting to use it.
+The previous section covers the case where you do not have an existing
+database, so you modify a starting schema, then use it to initialize the
+database. But, what if you already have a database, and you want to
+modify it, perhaps by adding a column or two? You cannot create a new
+starting schema, because it is only used when the database is first
+created. Here is where the tool
+`[wee_database`](utilities.htm#wee_database_utility) can be
+useful. Be sure to stop WeeWX before attempting to use it.
 
 There are two ways to do this. Both are covered below.
 
-1.  Modify the database _in situ_ by using the tool wee_database. This choice works best for small changes.
-2.  Transfer the old database to a new one while modifying it along the way, again by using the tool wee_database. This choice is best for large modifications.
+1.  Modify the database *in situ* by using the tool
+    `wee_database`. This choice works best for small changes.
+2.  Transfer the old database to a new one while modifying it along the
+    way, again by using the tool `wee_database`. This choice is
+    best for large modifications.
 
-NOTE: Before using the tool wee_database, MAKE A BACKUP FIRST!
+NOTE: Before using the tool `wee_database`, MAKE A BACKUP FIRST!
 
-### Modify the database _in situ_
+#### Modify the database *in situ* {#add_archive_type}
 
-If you want to make some minor modifications to an existing database, perhaps adding or removing a column, then this can easily be done using the tool wee_database with an appropriate option. We will cover the cases of adding, removing, and renaming a type. See the documentation for [wee_database](utilities.htm#wee_database_utility) for more details.
+If you want to make some minor modifications to an existing database,
+perhaps adding or removing a column, then this can easily be done using
+the tool `wee_database` with an appropriate option. We will cover
+the cases of adding, removing, and renaming a type. See the
+documentation for
+`[wee_database`](utilities.htm#wee_database_utility) for more
+details.
 
-#### Adding a type
+##### Adding a type
 
-Suppose you have an existing database and you want to add a type, such as the type electricity from the example above [_Adding a second data source_](#Adding_2nd_source). This can be done in one easy step using the tool wee_database with the option \--add-column:
+Suppose you have an existing database and you want to add a type, such
+as the type `electricity` from the example above [*Adding a
+second data source*](#Adding_2nd_source). This can be done in one easy
+step using the tool `wee_database` with the option
+`\--add-column`:
 
+``` {.tty .cmd}
 wee_database --add-column=electricity
+```
 
-The tool not only adds electricity to the main archive table, but also to the daily summaries.
+The tool not only adds `electricity` to the main archive table,
+but also to the daily summaries.
 
-#### Removing a type
+##### Removing a type {#remove_archive_type}
 
-In a similar manner, the tool can remove any unneeded types from an existing database. For example, suppose you are using the schemas.wview schema, but you're pretty sure you're not going to need to store soil moisture. You can drop the unnecessary types this way:
+In a similar manner, the tool can remove any unneeded types from an
+existing database. For example, suppose you are using the
+`schemas.wview` schema, but you're pretty sure you're not going
+to need to store soil moisture. You can drop the unnecessary types this
+way:
 
+``` {.tty .cmd}
 wee_database --drop-columns=soilMoist1,soilMoist2,soilMoist3,soilMoist4
+```
 
-Unlike the option \--add-column, the option \--drop-columns can take more than one type. This is done in the interest of efficiency: adding new columns is easy and fast with the SQLite database, but dropping columns requires copying the whole database. By specifying more than one type, you can amortize the cost over a single invocation of the utility.
+Unlike the option `\--add-column`, the option
+`\--drop-columns` can take more than one type. This is done in
+the interest of efficiency: adding new columns is easy and fast with the
+SQLite database, but dropping columns requires copying the whole
+database. By specifying more than one type, you can amortize the cost
+over a single invocation of the utility.
 
-NOTE: Dropping types from a database means _you will lose any data associated with them!_ The data cannot be recovered.
+NOTE: Dropping types from a database means *you will lose any data
+associated with them!* The data cannot be recovered.
 
-#### Renaming a type
+##### Renaming a type
 
-Suppose you just want to rename a type? This can be done using the option \--to-name. Here's an example where you rename soilMoist1 to soilMoistGarden:
+Suppose you just want to rename a type? This can be done using the
+option `\--to-name`. Here's an example where you rename
+`soilMoist1` to `soilMoistGarden`:
 
+``` {.tty .cmd}
 wee_database --rename-column=soilMoist1 --to-name=soilMoistGarden
+```
 
-Note how the option \--rename-column also requires option \--to-name, which specifies the target name.
+Note how the option `\--rename-column` also requires option
+`\--to-name`, which specifies the target name.
 
-### Transfer database using new schema
+#### Transfer database using new schema {#transfer_database_using_new_schema}
 
-If you are making major changes to your database, you may find it easier to create a brand new database using the schema you want, then transfer all data from the old database into the new one. This approach is more work, and takes more processing time than the _in situ_ strategies outlines above, but has the advantage that it leaves behind a record of exactly the schema you are using.
+If you are making major changes to your database, you may find it easier
+to create a brand new database using the schema you want, then transfer
+all data from the old database into the new one. This approach is more
+work, and takes more processing time than the *in situ* strategies
+outlines above, but has the advantage that it leaves behind a record of
+exactly the schema you are using.
 
 Here is the general strategy of how to do this.
 
 1.  Create a new schema that includes exactly the types that you want.
 2.  Specify this schema as the starting schema for the database.
-3.  Make sure you have the necessary permissions to create the new database.
-4.  Use the utility [wee_database](utilities.htm#wee_database_utility) to create the new database and populate it with data from the old database.
+3.  Make sure you have the necessary permissions to create the new
+    database.
+4.  Use the utility
+    `[wee_database`](utilities.htm#wee_database_utility) to
+    create the new database and populate it with data from the old
+    database.
 5.  Shuffle databases around so WeeWX will use the new database.
 
 Here are the details:
 
-1.  **Create a new schema.** First step is to create a new schema with exactly the types you want. See the instructions above [_Modify a starting schema_](#modify_starting_schema). As an example, suppose your new schema is called user.myschema.schema.
-    
-2.  **Set as starting schema.** Set your new schema as the starting schema with whatever database binding you are working with (generally, wx_binding). For example:
-    
+1.  **Create a new schema.** First step is to create a new schema with
+    exactly the types you want. See the instructions above [*Modify a
+    starting schema*](#modify_starting_schema). As an example, suppose
+    your new schema is called `user.myschema.schema`.
+
+2.  **Set as starting schema.** Set your new schema as the starting
+    schema with whatever database binding you are working with
+    (generally, `wx_binding`). For example:
+
+    ``` tty
     [DataBindings]
-    
+
         [[wx_binding]]
             database = archive_sqlite
             table_name = archive
             manager = weewx.manager.DaySummaryManager
             schema = user.myschema.schema
-    
-3.  **Check permissions.** The reconfiguration utility will create a new database with the same name as the old, except with the suffix _new attached to the end. Make sure you have the necessary permissions to do this. In particular, if you are using MySQL, you will need CREATE privileges.
-    
-4.  **Create and populate the new database.** Use the utility wee_database with the \--reconfigure option.
-    
+    ```
+
+3.  **Check permissions.** The reconfiguration utility will create a new
+    database with the same name as the old, except with the suffix
+    `\_new` attached to the end. Make sure you have the necessary
+    permissions to do this. In particular, if you are using MySQL, you
+    will need `CREATE` privileges.
+
+4.  **Create and populate the new database.** Use the utility
+    `wee_database` with the `\--reconfigure` option.
+
+    ``` {.tty .cmd}
     wee_database weewx.conf --reconfigure
-    
-    This will create a new database (nominally, weewx.sdb_new if you are using SQLite, weewx_new if you are using MySQL), using the schema found in user.myschema.schema, and populate it with data from the old database.
-    
-5.  **Shuffle the databases.** Now arrange things so WeeWX can find the new database.
-    
-    **Warning!**  
+    ```
+
+    This will create a new database (nominally, `weewx.sdb_new`
+    if you are using SQLite, `weewx_new` if you are using MySQL),
+    using the schema found in `user.myschema.schema`, and
+    populate it with data from the old database.
+
+5.  **Shuffle the databases.** Now arrange things so WeeWX can find the
+    new database.
+
+    **Warning!**\
     Make a backup of the data before doing any of the next steps!
-    
-    You can either shuffle the databases around so the new database has the same name as the old database, or edit `weewx.conf` to use the new database name. To do the former:
-    
+
+    You can either shuffle the databases around so the new database has
+    the same name as the old database, or edit `weewx.conf` to
+    use the new database name. To do the former:
+
     For SQLite:
-    
+
+    ``` {.tty .cmd}
     cd SQLITE_ROOT
     mv weewx.sdb_new weewx.sdb
-    
+    ```
+
     For MySQL:
-    
+
+    ``` tty
     mysql -u <username> --password=<mypassword>
     mysql> DROP DATABASE weewx;                             # Delete the old database
     mysql> CREATE DATABASE weewx;                           # Create a new one with the same name
     mysql> RENAME TABLE weewx_new.archive TO weewx.archive; # Rename to the nominal name
-    
-6.  It's worth noting that there's actually a hidden, last step: rebuilding the daily summaries inside the new database. This will be done automatically by WeeWX at the next startup. Alternatively, it can be done manually using the [wee_database](utilities.htm#wee_database_utility) utility and the \--rebuild-daily option:
-    
+    ```
+
+6.  It's worth noting that there's actually a hidden, last step:
+    rebuilding the daily summaries inside the new database. This will be
+    done automatically by WeeWX at the next startup. Alternatively, it
+    can be done manually using the
+    `[wee_database`](utilities.htm#wee_database_utility) utility
+    and the `\--rebuild-daily` option:
+
+    ``` {.tty .cmd}
     wee_database weewx.conf --rebuild-daily
-    
+    ```
 
-Changing the unit system in an existing database
-------------------------------------------------
+### Changing the unit system in an existing database {#Changing_the_unit_system}
 
-Normally, data are stored in the databases using US Customary units, and you shouldn't care; it is an "implementation detail". Data can always be displayed using any set of units you want — the section [_How to change units_](#how_to_change_units) explains how to change the reporting units. Nevertheless, there may be special situations where you wish to store the data in Metric units. For example, you may need to allow direct programmatic access to the database from another piece of software that expects metric units.
+Normally, data are stored in the databases using US Customary units, and
+you shouldn't care; it is an "implementation detail". Data can always
+be displayed using any set of units you want --- the section [*How to
+change units*](#how_to_change_units) explains how to change the
+reporting units. Nevertheless, there may be special situations where you
+wish to store the data in Metric units. For example, you may need to
+allow direct programmatic access to the database from another piece of
+software that expects metric units.
 
-You should not change the database unit system midstream. That is, do not start with one unit system then, some time later, switch to another. WeeWX cannot handle databases with mixed unit systems — see the section [[StdConvert]](usersguide.htm#StdConvert) in the WeeWX User's Guide. However, you can reconfigure the database by copying it to a new database, performing the unit conversion along the way. You then use this new database.
+You should not change the database unit system midstream. That is, do
+not start with one unit system then, some time later, switch to another.
+WeeWX cannot handle databases with mixed unit systems --- see the
+section [ [[StdConvert]](usersguide.htm#StdConvert)]{.code} in the
+WeeWX User's Guide. However, you can reconfigure the database by
+copying it to a new database, performing the unit conversion along the
+way. You then use this new database.
 
-The general strategy is identical to the strategy outlined above in the section [_Transfer database using new schema_](#transfer_database_using_new_schema). The only difference is that instead of specifying a new starting schema, you specify a different database unit system. This means that instead of steps 1 and 2 above, you edit the configuration file and change option target_unit in section [[StdConvert]](usersguide.htm#StdConvert) to reflect your choice. For example, if you are switching to metric units, the option will look like:
+The general strategy is identical to the strategy outlined above in the
+section [*Transfer database using new
+schema*](#transfer_database_using_new_schema). The only difference is
+that instead of specifying a new starting schema, you specify a
+different database unit system. This means that instead of steps 1 and 2
+above, you edit the configuration file and change option
+`target_unit` in section
+[[[StdConvert]](usersguide.htm#StdConvert)]{.code} to reflect your
+choice. For example, if you are switching to metric units, the option
+will look like:
 
+``` tty
 [StdConvert]
     target_unit = METRICWX
+```
 
-After changing target_unit, you then go ahead with the rest of the steps. That is run wee_database with the \--reconfigure option, then shuffle the databases.
+After changing `target_unit`, you then go ahead with the rest of
+the steps. That is run `wee_database` with the
+`\--reconfigure` option, then shuffle the databases.
 
-Rebuilding the daily summaries
-------------------------------
+### Rebuilding the daily summaries
 
-The wee_database utility can also be used to rebuild the daily summaries:
+The `wee_database` utility can also be used to rebuild the daily
+summaries:
 
+``` {.tty .cmd}
 wee_database weewx.conf --rebuild-daily
+```
 
-In most cases this will be sufficient; however, if anomalies remain in the daily summaries the daily summary tables may be dropped first before rebuilding:
+In most cases this will be sufficient; however, if anomalies remain in
+the daily summaries the daily summary tables may be dropped first before
+rebuilding:
 
+``` {.tty .cmd}
 wee_database weewx.conf --drop-daily
+```
 
-The summaries will automatically be rebuilt the next time WeeWX starts, or they can be rebuilt with the utility:
+The summaries will automatically be rebuilt the next time WeeWX starts,
+or they can be rebuilt with the utility:
 
+``` {.tty .cmd}
 wee_database weewx.conf --rebuild-daily
+```
 
-Customizing units and unit groups
-=================================
+## Customizing units and unit groups {#customizing_units}
 
-**Warning!**  
-This is an area that is changing rapidly in WeeWX. Presently, new units and unit groups are added by manipulating the internal dictionaries in WeeWX (as described below). In the future, they may be specified in `weewx.conf`.
+**Warning!**\
+This is an area that is changing rapidly in WeeWX. Presently, new units
+and unit groups are added by manipulating the internal dictionaries in
+WeeWX (as described below). In the future, they may be specified in
+`weewx.conf`.
 
-Assigning a unit group
-----------------------
+### Assigning a unit group
 
-In the examples above, we created a new observation type, electricity, and added it to the database schema. Now we would like to recognize that it is a member of the unit group group_energy (which already exists), so it can enjoy the labels and formats already provided for this group. This is done by extending the dictionary weewx.units.obs_group_dict.
+In the examples above, we created a new observation type,
+`electricity`, and added it to the database schema. Now we would
+like to recognize that it is a member of the unit group
+`group_energy` (which already exists), so it can enjoy the labels
+and formats already provided for this group. This is done by extending
+the dictionary `weewx.units.obs_group_dict`.
 
-Add the following to our new services file user/electricity.py, just after the last import statement:
+Add the following to our new services file `user/electricity.py`,
+just after the last import statement:
 
+``` tty
 import weewx
 from weewx.engine import StdService
+
 import weewx.units
 weewx.units.obs_group_dict['electricity'] = 'group_energy'
 
 class AddElectricity(StdService):
 
    # [...]
+```
 
-When our new service gets loaded by the WeeWX engine, these few lines will get run. They tell WeeWX that our new observation type, electricity, is part of the unit group group_energy. Once the observation has been associated with a unit group, the unit labels and other tag syntax will work for that observation. So, now a tag like:
+When our new service gets loaded by the WeeWX engine, these few lines
+will get run. They tell WeeWX that our new observation type,
+`electricity`, is part of the unit group `group_energy`.
+Once the observation has been associated with a unit group, the unit
+labels and other tag syntax will work for that observation. So, now a
+tag like:
 
+``` tty
 $month.electricity.sum
+```
 
-will return the total amount of electricity consumed for the month, in Watt-hours.
+will return the total amount of electricity consumed for the month, in
+Watt-hours.
 
-Creating a new unit group
--------------------------
+### Creating a new unit group
 
-That was an easy one, because there was already an existing group, group_energy, that covered our new observation type. But, what if we are measuring something entirely new, like force with time? There is nothing in the existing system of units that covers things like newtons or pounds. We will have to define these new units, as well as the unit group they can belong to.
+That was an easy one, because there was already an existing group,
+`group_energy`, that covered our new observation type. But, what
+if we are measuring something entirely new, like force with time? There
+is nothing in the existing system of units that covers things like
+newtons or pounds. We will have to define these new units, as well as
+the unit group they can belong to.
 
-We assume we have a new observation type, rocketForce, which we are measuring over time, for a service named Rocket, located in user/rocket.py. We will create a new unit group, group_force, and new units, newton and pound. Our new observation, rocketForce, will belong to group_force, and will be measured in units of newton or pound.
+We assume we have a new observation type, `rocketForce`, which we
+are measuring over time, for a service named `Rocket`, located in
+` user/rocket.py`. We will create a new unit group,
+`group_force`, and new units, `newton` and `pound`.
+Our new observation, `rocketForce`, will belong to
+`group_force`, and will be measured in units of `newton`
+or `pound`.
 
-To make this work, we need to add the following to user/rocket.py.
+To make this work, we need to add the following to
+`user/rocket.py`.
 
-1.  As before, we start by specifying what group our new observation type belongs to:
-    
+1.  As before, we start by specifying what group our new observation
+    type belongs to:
+
+    ``` tty
     import weewx.units
     weewx.units.obs_group_dict['rocketForce'] = 'group_force'
-    
-2.  Next, we specify what unit is used to measure force in the three standard unit systems used by weewx.
-    
+    ```
+
+2.  Next, we specify what unit is used to measure force in the three
+    standard unit systems used by weewx.
+
+    ``` tty
     weewx.units.USUnits['group_force'] = 'pound'
     weewx.units.MetricUnits['group_force'] = 'newton'
     weewx.units.MetricWXUnits['group_force'] = 'newton'
-    
-3.  Then we specify what formats and labels to use for newton and pound:
-    
+    ```
+
+3.  Then we specify what formats and labels to use for `newton`
+    and `pound`:
+
+    ``` tty
     weewx.units.default_unit_format_dict['newton'] = '%.1f'
     weewx.units.default_unit_format_dict['pound']  = '%.1f'
-    
+
     weewx.units.default_unit_label_dict['newton'] = ' newton'
     weewx.units.default_unit_label_dict['pound']  = ' pound'
-    
+    ```
+
 4.  Finally, we specify how to convert between them:
-    
-    weewx.units.conversionDict['newton'] = {'pound':  lambda x : x \* 0.224809}
-    weewx.units.conversionDict['pound']  = {'newton': lambda x : x \* 4.44822}
-    
 
-Now, when the service Rocket gets loaded, these lines of code will get executed, adding the necessary unit extensions to WeeWX.
+    ``` tty
+    weewx.units.conversionDict['newton'] = {'pound':  lambda x : x * 0.224809}
+    weewx.units.conversionDict['pound']  = {'newton': lambda x : x * 4.44822}
+    ```
 
-Using the new units
--------------------
+Now, when the service `Rocket` gets loaded, these lines of code
+will get executed, adding the necessary unit extensions to WeeWX.
+
+### Using the new units
 
 Now you've added a new type of units. How do you use it?
 
-Pretty much like any other units. For example, to do a plot of the month's electric consumption, totaled by day, add this section to the [[month_images]] section of skin.conf:
+Pretty much like any other units. For example, to do a plot of the
+month's electric consumption, totaled by day, add this section to the
+[[[month_images]]]{.code} section of `skin.conf`:
 
+``` tty
 [[[monthelectric]]]
     [[[[electricity]]]]
         aggregate_type = sum
         aggregate_interval = day
         label = Electric consumption (daily total)
-
-This will cause the generation of an image monthelectric.png, showing a plot of each day's consumption for the past month.
-
-If you wish to use the new type in the templates, it will be available using the same syntax as any other type. Here are some other tags that might be useful:
-
-Tag
-
-Meaning
-
-$day.electricity.sum
-
-Total consumption since midnight
-
-$year.electricity.sum
-
-Total consumption since the first of the year
-
-$year.electricity.max
-
-The most consumed during any archive period
-
-$year.electricity.maxsum
-
-The most consumed during a day
-
-$year.electricity.maxsumtime
-
-The day it happened.
-
-$year.electricity.sum_ge((5000.0, 'kWh', 'group_energy'))
-
-The number of days of the year where more than 5.0 kWh of energy was consumed. The argument is a ValueTuple.
-
-Adding new, derived types
-=========================
-
-In the section [_Adding a second data source_](#Adding_2nd_source), we saw an example of how to create a new type for a new data source. But, what if you just want to add a type that is a derivation of existing types? The WeeWX type dewpoint is an example of this: it's a function of two observables, outTemp, and outHumidity. WeeWX calculates it automatically for you.
-
-Calculating new, derived types is the job of the WeeWX XTypes system. It can also allow you to add new aggregatioin types.
-
-See the Wiki article [_WeeWX V4 user defined types_](https://github.com/weewx/weewx/wiki/WeeWX-V4-user-defined-types) for complete details on how the XTypes system works.
-
-Porting to new hardware
-=======================
-
-Naturally, this is an advanced topic but, nevertheless, I'd like to encourage any Python wizards out there to give it a try. Of course, I have selfish reasons for this: I don't want to have to buy every weather station ever invented, and I don't want my roof to look like a weather station farm!
-
-A _driver_ communicates with hardware. Each driver is a single python file that contains the code that is the interface between a device and WeeWX. A driver may communicate directly with hardware using a MODBus, USB, serial, or other physical interface. Or it may communicate over a network to a physical device or a web service.
-
-General guidelines
-------------------
-
-*   The driver should emit data as it receives it from the hardware (no caching).
-*   The driver should emit only data it receives from the hardware (no "filling in the gaps").
-*   The driver should not modify the data unless the modification is directly related to the hardware (_e.g._, decoding a hardware-specific sensor value).
-*   If the hardware flags "bad data", then the driver should emit a null value for that datum (Python None).
-*   The driver should not calculate any derived variables (such as dewpoint). The service StdWXService will do that.
-*   However, if the hardware emits a derived variable, then the driver should emit it.
-
-Implement the driver
---------------------
-
-Create a file in the user directory, say mydriver.py. This file will contain the driver class as well as any hardware-specific code. Do not put it in the weewx/drivers directory or it will be deleted when you upgrade WeeWX.
-
-Inherit from the abstract base class weewx.drivers.AbstractDevice. Try to implement as many of its methods as you can. At the very minimum, you must implement the first three methods, loader, hardware_name, and genLoopPackets.
-
-### loader
-
-This is a factory function that returns an instance of your driver. It has two arguments: the configuration dictionary, and a reference to the WeeWX engine.
-
-### hardware_name
-
-Return a string with a short nickname for the hardware, such as "ACME X90"
-
-### genLoopPackets
-
-This should be a Python [generator function](https://wiki.python.org/moin/Generators) that yields loop packets, one after another. Don't worry about stopping it: the engine will do this when an archive record is due. A "loop packet" is a dictionary. At the very minimum it must contain keys for the observation time and for the units used within the packet.
-
-Required keys
-
-dateTime
-
-The time of the observation in unix epoch time.
-
-usUnits
-
-The unit system used. weewx.US for US customary, weewx.METRICWX, or weewx.METRIC for metric. See the Appendix [_Units_](#units) for their exact definitions. The dictionaries USUnits, MetricWXUnits, and MetricUnits in file units.py, can also be useful.
-
-Then include any observation types you have in the dictionary. Every packet need not contain the same set of observation types. Different packets can use different unit systems, but all observations within a packet must use the same unit system. If your hardware is capable of measuing an observation type but, for whatever reason, its value is bad (maybe a bad checksum?), then set its value to None. If your hardware is incapable of measuring an observation type, then leave it out of the dictionary.
-
-A couple of observation types are tricky, in particular, rain. The field rain in a LOOP packet should be the amount of rain that has fallen _since the last packet_. Because LOOP packets are emitted fairly frequently, this is likely to be a small number. If your hardware does not provide this value, you might have to infer it from changes in whatever value it provides, for example changes in the daily or monthly rainfall.
-
-Wind is another tricky one. It is actually broken up into four different observations: windSpeed, windDir, windGust, and windGustDir. Supply as many as you can. The directions should be compass directions in degrees (0=North, 90=East, etc.).
-
-Be careful when reporting pressure. There are three observations related to pressure. Some stations report only the station pressure, others calculate and report sea level pressures.
-
-Pressure types
-
-pressure
-
-The _Station Pressure_ (SP), which is the raw, absolute pressure measured by the station. This is the true barometric pressure for the station.
-
-barometer
-
-The _Sea Level Pressure_ (SLP) obtained by correcting the _Station Pressure_ for altitude and local temperature. This is the pressure reading most commonly used by meteorologist to track weather systems at the surface, and this is the pressure that is uploaded to weather services by WeeWX. It is the station pressure reduced to mean sea level using local altitude and local temperature.
-
-altimeter
-
-The _Altimeter Setting_ (AS) obtained by correcting the _Station Pressure_ for altitude. This is the pressure reading most commonly heard in weather reports. It is not the true barometric pressure of a station, but rather the station pressure reduced to mean sea level using altitude and an assumed temperature average.
-
-### genArchiveRecords()
-
-If your hardware does not have an archive record logger, then WeeWX can do the record generation for you. It will automatically collect all the types it sees in your loop packets then emit a record with the averages (in some cases the sum or max value) of all those types. If it doesn't see a type, then it won't appear in the emitted record.
-
-However, if your hardware does have a logger, then you should implement method genArchiveRecords() as well. It should be a generator function that returns all the records since a given time.
-
-### archive_interval
-
-If you implement function genArchiveRecords(), then you should also implement archive_interval as either an attribute, or as a [property function](https://docs.python.org/3/library/functions.html#property). It should return the archive interval in seconds.
-
-### getTime()
-
-If your hardware has an onboard clock and supports reading the time from it, then you may want to implement this method. It takes no argument. It should return the time in Unix Epoch Time.
-
-### setTime()
-
-If your hardware has an onboard clock and supports _setting_ it, then you may want to implement this method. It takes no argument and does not need to return anything.
-
-### closePort()
-
-If the driver needs to close a serial port, terminate a thread, close a database, or perform any other activity before the application terminates, then you must supply this function. WeeWX will call it if it needs to shut down your console (usually in the case of an error).
-
-Define the configuration
-------------------------
-
-You then include a new section in the configuration file `weewx.conf` that includes any options your driver needs. It should also include an entry driver that points to where your driver can be found. Set option station_type to your new section type and your driver will be loaded.
-
-Examples
---------
-
-The fileparse driver is perhaps the simplest example of a WeeWX driver. It reads name-value pairs from a file and uses the values as sensor 'readings'. The code is actually packaged as an extension, located in examples/fileparse, making it a good example of not only writing a device driver, but also of how to package an extension. The actual driver itself is in examples/fileparse/bin/user/fileparse.py.
-
-Another good example is the simulator code located in weewx/drivers/simulator.py. It's dirt simple and you can easily play with it. Many people have successfully used it as a starting point for writing their own custom driver.
-
-The Ultimeter (ultimeter.py) and WMR100 (wmr100.py) drivers illustrate how to communicate with serial and USB hardware, respectively. They also show different approaches for decoding data. Nevertheless, they are pretty straightforward.
-
-The driver for the Vantage series is by far the most complicated. It actually multi-inherits from not only AbstractDevice, but also StdService. That is, it also participates in the engine as a service.
-
-Naturally, there are a lot of subtleties that have been glossed over in this high-level description. If you run into trouble, look for help in the [weewx-development forum](https://groups.google.com/forum/#!forum/weewx-development).
-
-Extensions
-==========
-
-A key feature of WeeWX is its ability to be extended by installing 3rd party _extensions_. Extensions are a way to package one or more customizations so they can be installed and distributed as a functional group.
+```
+
+This will cause the generation of an image `monthelectric.png`,
+showing a plot of each day's consumption for the past month.
+
+If you wish to use the new type in the templates, it will be available
+using the same syntax as any other type. Here are some other tags that
+might be useful:
+
+  ---------------------------------------------------------------- -----------------------------------------------------------------------------------------------------------------------
+  Tag                                                              Meaning
+  $day.electricity.sum                                            Total consumption since midnight
+  $year.electricity.sum                                           Total consumption since the first of the year
+  $year.electricity.max                                           The most consumed during any archive period
+  $year.electricity.maxsum                                        The most consumed during a day
+  $year.electricity.maxsumtime                                    The day it happened.
+  $year.electricity.sum_ge((5000.0, 'kWh', 'group_energy'))   The number of days of the year where more than 5.0 kWh of energy was consumed. The argument is a `ValueTuple`.
+  ---------------------------------------------------------------- -----------------------------------------------------------------------------------------------------------------------
+
+## Adding new, derived types
+
+In the section [*Adding a second data source*](#Adding_2nd_source), we
+saw an example of how to create a new type for a new data source. But,
+what if you just want to add a type that is a derivation of existing
+types? The WeeWX type `dewpoint` is an example of this: it's a
+function of two observables, `outTemp`, and `outHumidity`.
+WeeWX calculates it automatically for you.
+
+Calculating new, derived types is the job of the WeeWX XTypes system. It
+can also allow you to add new aggregatioin types.
+
+See the Wiki article [*WeeWX V4 user defined
+types*](https://github.com/weewx/weewx/wiki/WeeWX-V4-user-defined-types)
+for complete details on how the XTypes system works.
+
+## Porting to new hardware {#porting}
+
+Naturally, this is an advanced topic but, nevertheless, I'd like to
+encourage any Python wizards out there to give it a try. Of course, I
+have selfish reasons for this: I don't want to have to buy every
+weather station ever invented, and I don't want my roof to look like a
+weather station farm!
+
+A *driver* communicates with hardware. Each driver is a single python
+file that contains the code that is the interface between a device and
+WeeWX. A driver may communicate directly with hardware using a MODBus,
+USB, serial, or other physical interface. Or it may communicate over a
+network to a physical device or a web service.
+
+### General guidelines
+
+-   The driver should emit data as it receives it from the hardware (no
+    caching).
+-   The driver should emit only data it receives from the hardware (no
+    "filling in the gaps").
+-   The driver should not modify the data unless the modification is
+    directly related to the hardware (*e.g.*, decoding a
+    hardware-specific sensor value).
+-   If the hardware flags "bad data", then the driver should emit a
+    null value for that datum (Python `None`).
+-   The driver should not calculate any derived variables (such as
+    dewpoint). The service `StdWXService` will do that.
+-   However, if the hardware emits a derived variable, then the driver
+    should emit it.
+
+### Implement the driver
+
+Create a file in the user directory, say `mydriver.py`. This file
+will contain the driver class as well as any hardware-specific code. Do
+not put it in the `weewx/drivers` directory or it will be deleted
+when you upgrade WeeWX.
+
+Inherit from the abstract base class
+`weewx.drivers.AbstractDevice`. Try to implement as many of its
+methods as you can. At the very minimum, you must implement the first
+three methods, `loader`, `hardware_name`, and
+`genLoopPackets`.
+
+#### `loader`
+
+This is a factory function that returns an instance of your driver. It
+has two arguments: the configuration dictionary, and a reference to the
+WeeWX engine.
+
+#### `hardware_name`
+
+Return a string with a short nickname for the hardware, such as `"ACME
+X90"`
+
+#### `genLoopPackets`
+
+This should be a Python [generator
+function](https://wiki.python.org/moin/Generators) that yields loop
+packets, one after another. Don't worry about stopping it: the engine
+will do this when an archive record is due. A "loop packet" is a
+dictionary. At the very minimum it must contain keys for the observation
+time and for the units used within the packet.
+
+  ---------- ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+  dateTime   The time of the observation in unix epoch time.
+  usUnits    The unit system used. `weewx.US` for US customary, `weewx.METRICWX`, or `weewx.METRIC` for metric. See the Appendix [*Units*](#units) for their exact definitions. The dictionaries `USUnits`, `MetricWXUnits`, and `MetricUnits` in file `units.py`, can also be useful.
+  ---------- ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+  : Required keys
+
+Then include any observation types you have in the dictionary. Every
+packet need not contain the same set of observation types. Different
+packets can use different unit systems, but all observations within a
+packet must use the same unit system. If your hardware is capable of
+measuing an observation type but, for whatever reason, its value is bad
+(maybe a bad checksum?), then set its value to `None`. If your
+hardware is incapable of measuring an observation type, then leave it
+out of the dictionary.
+
+A couple of observation types are tricky, in particular, `rain`.
+The field `rain` in a LOOP packet should be the amount of rain
+that has fallen *since the last packet*. Because LOOP packets are
+emitted fairly frequently, this is likely to be a small number. If your
+hardware does not provide this value, you might have to infer it from
+changes in whatever value it provides, for example changes in the daily
+or monthly rainfall.
+
+Wind is another tricky one. It is actually broken up into four different
+observations: `windSpeed`, `windDir`, `windGust`,
+and `windGustDir`. Supply as many as you can. The directions
+should be compass directions in degrees (0=North, 90=East, etc.).
+
+Be careful when reporting pressure. There are three observations related
+to pressure. Some stations report only the station pressure, others
+calculate and report sea level pressures.
+
+  ----------- -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+  pressure    The *Station Pressure* (SP), which is the raw, absolute pressure measured by the station. This is the true barometric pressure for the station.
+  barometer   The *Sea Level Pressure* (SLP) obtained by correcting the *Station Pressure* for altitude and local temperature. This is the pressure reading most commonly used by meteorologist to track weather systems at the surface, and this is the pressure that is uploaded to weather services by WeeWX. It is the station pressure reduced to mean sea level using local altitude and local temperature.
+  altimeter   The *Altimeter Setting* (AS) obtained by correcting the *Station Pressure* for altitude. This is the pressure reading most commonly heard in weather reports. It is not the true barometric pressure of a station, but rather the station pressure reduced to mean sea level using altitude and an assumed temperature average.
+  ----------- -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+  : Pressure types
+
+#### `genArchiveRecords()`
+
+If your hardware does not have an archive record logger, then WeeWX can
+do the record generation for you. It will automatically collect all the
+types it sees in your loop packets then emit a record with the averages
+(in some cases the sum or max value) of all those types. If it doesn't
+see a type, then it won't appear in the emitted record.
+
+However, if your hardware does have a logger, then you should implement
+method `genArchiveRecords()` as well. It should be a generator
+function that returns all the records since a given time.
+
+#### `archive_interval`
+
+If you implement function `genArchiveRecords()`, then you should
+also implement `archive_interval` as either an attribute, or as a
+[property
+function](https://docs.python.org/3/library/functions.html#property). It
+should return the archive interval in seconds.
+
+#### `getTime()`
+
+If your hardware has an onboard clock and supports reading the time from
+it, then you may want to implement this method. It takes no argument. It
+should return the time in Unix Epoch Time.
+
+#### `setTime()`
+
+If your hardware has an onboard clock and supports *setting* it, then
+you may want to implement this method. It takes no argument and does not
+need to return anything.
+
+#### `closePort()`
+
+If the driver needs to close a serial port, terminate a thread, close a
+database, or perform any other activity before the application
+terminates, then you must supply this function. WeeWX will call it if it
+needs to shut down your console (usually in the case of an error).
+
+### Define the configuration
+
+You then include a new section in the configuration file
+`weewx.conf` that includes any options your driver needs. It
+should also include an entry `driver` that points to where your
+driver can be found. Set option `station_type` to your new
+section type and your driver will be loaded.
+
+### Examples
+
+The `fileparse` driver is perhaps the simplest example of a WeeWX
+driver. It reads name-value pairs from a file and uses the values as
+sensor 'readings'. The code is actually packaged as an extension,
+located in `examples/fileparse`, making it a good example of not
+only writing a device driver, but also of how to package an extension.
+The actual driver itself is in
+`examples/fileparse/bin/user/fileparse.py`.
+
+Another good example is the simulator code located in
+`weewx/drivers/simulator.py`. It's dirt simple and you can
+easily play with it. Many people have successfully used it as a starting
+point for writing their own custom driver.
+
+The Ultimeter (`ultimeter.py`) and WMR100 (`wmr100.py`)
+drivers illustrate how to communicate with serial and USB hardware,
+respectively. They also show different approaches for decoding data.
+Nevertheless, they are pretty straightforward.
+
+The driver for the Vantage series is by far the most complicated. It
+actually multi-inherits from not only `AbstractDevice`, but also
+`StdService`. That is, it also participates in the engine as a
+service.
+
+Naturally, there are a lot of subtleties that have been glossed over in
+this high-level description. If you run into trouble, look for help in
+the `[weewx-development`
+forum](https://groups.google.com/forum/#!forum/weewx-development).
+
+## Extensions
+
+A key feature of WeeWX is its ability to be extended by installing 3rd
+party *extensions*. Extensions are a way to package one or more
+customizations so they can be installed and distributed as a functional
+group.
 
 Customizations typically fall into one of these categories:
 
-*   search list extension
-*   template
-*   skin
-*   service
-*   generator
-*   driver
+-   search list extension
+-   template
+-   skin
+-   service
+-   generator
+-   driver
 
-Take a look at the [WeeWX wiki](https://github.com/weewx/weewx/wiki) for a sampling of some of the extensions that are available.
+Take a look at the [WeeWX wiki](https://github.com/weewx/weewx/wiki) for
+a sampling of some of the extensions that are available.
 
-Creating an extension
----------------------
+### Creating an extension
 
-Now that you have made some customizations, you might want to share those changes with other WeeWX users. Put your customizations into an extension to make installation, removal, and distribution easier.
+Now that you have made some customizations, you might want to share
+those changes with other WeeWX users. Put your customizations into an
+extension to make installation, removal, and distribution easier.
 
 Here are a few guidelines for creating extensions:
 
-*   Extensions should not modify or depend upon existing skins. An extension should include its own, standalone skin to illustrate any templates, search list extension, or generator features.
-*   Extensions should not modify the database schemas. If it requires data not found in the default databases, an extension should provide its own database and schema.
+-   Extensions should not modify or depend upon existing skins. An
+    extension should include its own, standalone skin to illustrate any
+    templates, search list extension, or generator features.
+-   Extensions should not modify the database schemas. If it requires
+    data not found in the default databases, an extension should provide
+    its own database and schema.
 
-Although one extension might use another extension, take care to write the dependent extension so that it fails gracefully. For example, a skin might use data the forecast extension, but what happens if the forecast extension is not installed? Make the skin display a message about "forecast not installed" but otherwise continue to function.
+Although one extension might use another extension, take care to write
+the dependent extension so that it fails gracefully. For example, a skin
+might use data the forecast extension, but what happens if the forecast
+extension is not installed? Make the skin display a message about
+"forecast not installed" but otherwise continue to function.
 
-Packaging an extension
-----------------------
+### Packaging an extension
 
-The structure of an extension mirrors that of WeeWX itself. If the customizations include a skin, the extension will have a skins directory. If the customizations include python code, the extension will have a bin/user directory.
+The structure of an extension mirrors that of WeeWX itself. If the
+customizations include a skin, the extension will have a skins
+directory. If the customizations include python code, the extension will
+have a `bin/user` directory.
 
 Each extension should also include:
 
-*   readme.txt - a summary of what the extension does, list of pre-requisites (if any), and instructions for installing the extension manually
-*   changelog - an enumeration of changes in each release
-*   install.py - python code used by the WeeWX ExtensionInstaller
+-   `readme.txt` - a summary of what the extension does, list of
+    pre-requisites (if any), and instructions for installing the
+    extension manually
+-   `changelog` - an enumeration of changes in each release
+-   `install.py` - python code used by the WeeWX
+    ExtensionInstaller
 
-For example, here is the structure of a skin called basic:
+For example, here is the structure of a skin called `basic`:
 
+``` tty
 basic/
 basic/changelog
 basic/install.py
@@ -3942,9 +4660,11 @@ basic/skins/basic/favicon.ico
 basic/skins/basic/hilo.inc
 basic/skins/basic/index.html.tmpl
 basic/skins/basic/skin.conf
+```
 
-Here is the structure of a search list extension called xstats:
+Here is the structure of a search list extension called `xstats`:
 
+``` tty
 xstats/
 xstats/changelog
 xstats/install.py
@@ -3952,64 +4672,78 @@ xstats/readme.txt
 xstats/bin/
 xstats/bin/user/
 xstats/bin/user/xstats.py
+```
 
-See the extensions directory of the WeeWX source for examples.
+See the `extensions` directory of the WeeWX source for examples.
 
-To distribute an extension, simply create a compressed archive of the extension directory.
+To distribute an extension, simply create a compressed archive of the
+extension directory.
 
-For example, create the compressed archive for the basic skin like this:
+For example, create the compressed archive for the `basic` skin
+like this:
 
 tar cvfz basic.tar.gz basic
 
-Once an extension has been packaged, it can be installed using the [wee_extension](utilities.htm#wee_extension_utility) utility.
+Once an extension has been packaged, it can be installed using the
+[wee_extension](utilities.htm#wee_extension_utility) utility.
 
-Default values
---------------
+### Default values
 
-Whenever possible, an extension should _just work_, with a minimum of input from the user. At the same time, parameters for the most frequently requested options should be easily accessible and easy to modify. For skins, this might mean parameterizing strings into [Labels] for easier customization. Or it might mean providing parameters in [Extras] to control skin behavior or to parameterize links.
+Whenever possible, an extension should *just work*, with a minimum of
+input from the user. At the same time, parameters for the most
+frequently requested options should be easily accessible and easy to
+modify. For skins, this might mean parameterizing strings into
+[[Labels]]{.code} for easier customization. Or it might mean providing
+parameters in [[Extras]]{.code} to control skin behavior or to
+parameterize links.
 
-Some parameters _must_ be specified, and no default value would be appropriate. For example, an uploader may require a username and password, or a driver might require a serial number or IP address. In these cases, use a default value in the configuration that will obviously require modification. The _username_ might default to _REPLACE_ME_. Also be sure to add a log entry that indicates the feature is disabled until the value has been specified.
+Some parameters *must* be specified, and no default value would be
+appropriate. For example, an uploader may require a username and
+password, or a driver might require a serial number or IP address. In
+these cases, use a default value in the configuration that will
+obviously require modification. The *username* might default to
+*REPLACE_ME*. Also be sure to add a log entry that indicates the feature
+is disabled until the value has been specified.
 
-In the case of drivers, use the configuration editor to prompt for this type of required value.
+In the case of drivers, use the configuration editor to prompt for this
+type of required value.
 
-Reference: report options
-=========================
+## Reference: report options {#report_options}
 
-This section contains the options available in the skin configuration file, skin.conf. The same options apply to the language files found in the subdirectory lang, like lang/en.conf for English.
+This section contains the options available in the skin configuration
+file, `skin.conf`. The same options apply to the language files
+found in the subdirectory `lang`, like `lang/en.conf for
+English`.
 
 We recommend to put
 
-*   options that control the behavior of the skin into skin.conf; and
-*   language dependent labels and texts into the language files.
+-   options that control the behavior of the skin into
+    `skin.conf`; and
+-   language dependent labels and texts into the language files.
 
-The most important options, the ones you are likely to have to customize, are **highlighted**.
+The most important options, the ones you are likely to have to
+customize, are [**highlighted**]{.config_important}.
 
-It is worth noting that, like the main configuration file `weewx.conf`, UTF-8 is used throughout.
+It is worth noting that, like the main configuration file
+`weewx.conf`, UTF-8 is used throughout.
 
-[Extras]
-----------
+### [Extras] {#Extras .config_section}
 
-This section is available to add any static tags you might want to use in your templates.
+This section is available to add any static tags you might want to use
+in your templates.
 
-As an example, the skin.conf file for the _Seasons_ skin includes three options:
+As an example, the `skin.conf` file for the *Seasons* skin
+includes three options:
 
-Skin option
+  ------------------- ----------------------------
+  Skin option         Template tag
+  radar_img           $Extras.radar_img
+  radar_url           $Extras.radar_url
+  googleAnalyticsId   $Extras.googleAnalyticsId
+  ------------------- ----------------------------
 
-Template tag
-
-radar_img
-
-$Extras.radar_img
-
-radar_url
-
-$Extras.radar_url
-
-googleAnalyticsId
-
-$Extras.googleAnalyticsId
-
-If you take a look at the template radar.inc you will see examples of testing for these tags.
+If you take a look at the template `radar.inc` you will see
+examples of testing for these tags.
 
 radar_img
 
@@ -4017,180 +4751,273 @@ Set to an URL to show a local radar image for your region.
 
 radar_url
 
-If the radar image is clicked, the browser will go to this URL. This is usually used to show a more detailed, close-up, radar picture.
+If the radar image is clicked, the browser will go to this URL. This is
+usually used to show a more detailed, close-up, radar picture.
 
 For me in Oregon, setting the two options to:
 
+``` tty
 [Extras]
     radar_img = http://radar.weather.gov/ridge/lite/N0R/RTX_loop.gif
     radar_url = http://radar.weather.gov/ridge/radar.php?product=NCR&rid=RTX&loop=yes
+```
 
-results in a nice image of a radar centered on Portland, Oregon. When you click on it, it gives you a detailed, animated view. If you live in the USA, take a look at the [NOAA radar website](http://radar.weather.gov/) to find a nice one that will work for you. In other countries, you will have to consult your local weather service.
+results in a nice image of a radar centered on Portland, Oregon. When
+you click on it, it gives you a detailed, animated view. If you live in
+the USA, take a look at the [NOAA radar
+website](http://radar.weather.gov/) to find a nice one that will work
+for you. In other countries, you will have to consult your local weather
+service.
 
 googleAnalyticsId
 
-If you have a [Google Analytics ID](https://www.google.com/analytics/), you can set it here. The Google Analytics Javascript code will then be included, enabling analytics of your website usage. If commented out, the code will not be included.
+If you have a [Google Analytics ID](https://www.google.com/analytics/),
+you can set it here. The Google Analytics Javascript code will then be
+included, enabling analytics of your website usage. If commented out,
+the code will not be included.
 
-### Extending [Extras]
+#### Extending [[Extras]]{.code}
 
-Other tags can be added in a similar manner, including sub-sections. For example, say you have added a video camera and you would like to add a still image with a hyperlink to a page with the video. You want all of these options to be neatly contained in a sub-section.
+Other tags can be added in a similar manner, including sub-sections. For
+example, say you have added a video camera and you would like to add a
+still image with a hyperlink to a page with the video. You want all of
+these options to be neatly contained in a sub-section.
 
+``` tty
 [Extras]
     [[video]]
         still = video_capture.jpg
         hyperlink = http://www.eatatjoes.com/video.html
       
+```
 
 Then in your template you could refer to these as:
 
-```html
+``` tty
 <a href="$Extras.video.hyperlink">
     <img src="$Extras.video.still" alt="Video capture"/>
 </a>
 ```
 
-[Labels]
-----------
+### [Labels] {#labels .config_section}
 
 This section defines various labels.
 
 hemispheres
 
-Comma separated list for the labels to be used for the four hemispheres. The default is N, S, E, W.
+Comma separated list for the labels to be used for the four hemispheres.
+The default is `N, S, E, W`.
 
 latlon_formats
 
-Comma separated list for the formatting to be used when converting latitude and longitude to strings. There should be three elements:
+Comma separated list for the formatting to be used when converting
+latitude and longitude to strings. There should be three elements:
 
 1.  The format to be used for whole degrees of latitude
 2.  The format to be used for whole degrees of longitude
 3.  The format to be used for minutes.
 
-This allows you to decide whether or not you want leading zeroes. The default includes leading zeroes and is "%02d", "%03d", "%05.2f"
+This allows you to decide whether or not you want leading zeroes. The
+default includes leading zeroes and is "%02d", "%03d", "%05.2f"
 
-### [[Generic]]
+#### [[Generic]] {#Labels_Generic .config_section}
 
-This sub-section specifies default labels to be used for each observation type. For example, options
+This sub-section specifies default labels to be used for each
+observation type. For example, options
 
+``` tty
 inTemp  = Temperature inside the house
 outTemp = Outside Temperature
 UV      = UV Index
+```
 
-would cause the given labels to be used for plots of inTemp and outTemp. If no option is given, then the observation type itself will be used (_e.g._, outTemp).
+would cause the given labels to be used for plots of `inTemp` and
+`outTemp`. If no option is given, then the observation type
+itself will be used (*e.g.*, `outTemp`).
 
-[Almanac]
------------
+### [Almanac] {#almanac-1 .config_section}
 
-This section controls what text to use for the almanac. It consists of only one entry
+This section controls what text to use for the almanac. It consists of
+only one entry
 
 moon_phases
 
-This option is a comma separated list of labels to be used for the eight phases of the moon. Default is New, Waxing crescent, First quarter, Waxing gibbous, Full, Waning gibbous, Last quarter, Waning crescent.
+This option is a comma separated list of labels to be used for the eight
+phases of the moon. Default is `New, Waxing crescent, First quarter,
+Waxing gibbous, Full, Waning gibbous, Last quarter, Waning
+crescent`.
 
-[Units]
----------
+### [Units] {#units-1 .config_section}
 
 This section controls how units are managed and displayed.
 
-### [[Groups]]
+#### [[Groups]] {#groups .config_section}
 
-This sub-section lists all the _Unit Groups_ and specifies which measurement unit is to be used for each one of them.
+This sub-section lists all the *Unit Groups* and specifies which
+measurement unit is to be used for each one of them.
 
-As there are many different observational measurement types (such as outTemp, barometer, etc.) used in WeeWX (more than 50 at last count), it would be tedious, not to say possibly inconsistent, to specify a different measurement system for each one of them. At the other extreme, requiring all of them to be "U.S. Customary" or "Metric" seems overly restrictive. WeeWX has taken a middle route and divided all the different observation types into 12 different _unit groups_. A unit group is something like group_temperature. It represents the measurement system to be used by all observation types that are measured in temperature, such as inside temperature (type inTemp), outside temperature (outTemp), dewpoint (dewpoint), wind chill (windchill), and so on. If you decide that you want unit group group_temperature to be measured in degree_C then you are saying _all_ members of its group will be reported in degrees Celsius.
+As there are many different observational measurement types (such as
+`outTemp`, `barometer`, etc.) used in WeeWX (more than 50
+at last count), it would be tedious, not to say possibly inconsistent,
+to specify a different measurement system for each one of them. At the
+other extreme, requiring all of them to be "U.S. Customary" or
+"Metric" seems overly restrictive. WeeWX has taken a middle route and
+divided all the different observation types into 12 different *unit
+groups*. A unit group is something like `group_temperature`. It
+represents the measurement system to be used by all observation types
+that are measured in temperature, such as inside temperature (type
+`inTemp`), outside temperature (`outTemp`), dewpoint
+(`dewpoint`), wind chill (`windchill`), and so on. If you
+decide that you want unit group `group_temperature` to be
+measured in `degree_C` then you are saying *all* members of its
+group will be reported in degrees Celsius.
 
-Note that the measurement unit is always specified in the singular. That is, specify degree_C or foot, not degrees_C or feet. See the _[Appendix: Units](#units)_ for more information, including a concise summary of the groups, their members, and which options can be used for each group.
+Note that the measurement unit is always specified in the singular. That
+is, specify `degree_C` or `foot`, not `degrees_C`
+or `feet`. See the *[Appendix: Units](#units)* for more
+information, including a concise summary of the groups, their members,
+and which options can be used for each group.
 
-group_altitude
+[group_altitude]{#group_altitude .config_option}
 
-Which measurement unit to be used for altitude. Possible options are foot or meter.
+Which measurement unit to be used for altitude. Possible options are
+`foot` or `meter`.
 
 group_direction
 
-Which measurement unit to be used for direction. The only option is degree_compass.
+Which measurement unit to be used for direction. The only option is
+`degree_compass`.
 
 group_distance
 
-Which measurement unit to be used for distance (such as for wind run). Possible options are mile or km.
+Which measurement unit to be used for distance (such as for wind run).
+Possible options are `mile` or `km`.
 
 group_moisture
 
-The measurement unit to be used for soil moisture. The only option is centibar.
+The measurement unit to be used for soil moisture. The only option is
+`centibar`.
 
 group_percent
 
-The measurement unit to be used for percentages. The only option is percent.
+The measurement unit to be used for percentages. The only option is
+`percent`.
 
 group_pressure
 
-The measurement unit to be used for pressure. Possible options are one of inHg (inches of mercury), mbar, hPa, or kPa.
+The measurement unit to be used for pressure. Possible options are one
+of `inHg` (inches of mercury), `mbar`, `hPa`, or
+`kPa`.
 
 group_pressurerate
 
-The measurement unit to be used for rate of change in pressure. Possible options are one of inHg_per_hour (inches of mercury per hour), mbar_per_hour, hPa_per_hour, or kPa_per_hour.
+The measurement unit to be used for rate of change in pressure. Possible
+options are one of `inHg_per_hour` (inches of mercury per hour),
+`mbar_per_hour`, `hPa_per_hour`, or `kPa_per_hour`.
 
 group_radiation
 
-The measurement unit to be used for radiation. The only option is watt_per_meter_squared.
+The measurement unit to be used for radiation. The only option is
+`watt_per_meter_squared`.
 
 group_rain
 
-The measurement unit to be used for precipitation. Options are inch, cm, or mm.
+The measurement unit to be used for precipitation. Options are
+`inch`, `cm`, or `mm`.
 
 group_rainrate
 
-The measurement unit to be used for rate of precipitation. Possible options are one of inch_per_hour, cm_per_hour, or mm_per_hour.
+The measurement unit to be used for rate of precipitation. Possible
+options are one of `inch_per_hour`, `cm_per_hour`, or
+`mm_per_hour`.
 
 group_speed
 
-The measurement unit to be used for wind speeds. Possible options are one of mile_per_hour, km_per_hour, knot, meter_per_second, or beaufort.
+The measurement unit to be used for wind speeds. Possible options are
+one of `mile_per_hour`, `km_per_hour`, `knot`,
+`meter_per_second`, or `beaufort`.
 
 group_speed2
 
-This group is similar to group_speed, but is used for calculated wind speeds which typically have a slightly higher resolution. Possible options are one mile_per_hour2, km_per_hour2, knot2, or meter_per_second2.
+This group is similar to `group_speed`, but is used for
+calculated wind speeds which typically have a slightly higher
+resolution. Possible options are one `mile_per_hour2`,
+`km_per_hour2`, `knot2`, or `meter_per_second2`.
 
-group_temperature
+[group_temperature]{#group_temperature .config_important}
 
-The measurement unit to be used for temperatures. Options are degree_C, [degree_E](https://xkcd.com/1923/), degree_F, or degree_K.
+The measurement unit to be used for temperatures. Options are
+`degree_C`, [[degree_E](https://xkcd.com/1923/)]{.code},
+`degree_F`, or `degree_K`.
 
 group_volt
 
-The measurement unit to be used for voltages. The only option is volt.
+The measurement unit to be used for voltages. The only option is
+`volt`.
 
-### [[StringFormats]]
+#### [[StringFormats]] {#Units_StringFormats .config_section}
 
-This sub-section is used to specify what string format is to be used for each unit when a quantity needs to be converted to a string. Typically, this happens with y-axis labeling on plots and for statistics in HTML file generation. For example, the options
+This sub-section is used to specify what string format is to be used for
+each unit when a quantity needs to be converted to a string. Typically,
+this happens with y-axis labeling on plots and for statistics in HTML
+file generation. For example, the options
 
+``` tty
 degree_C = %.1f
 inch     = %.2f
+```
 
-would specify that the given string formats are to be used when formatting any temperature measured in degrees Celsius or any precipitation amount measured in inches, respectively. The [formatting codes are those used by Python](https://docs.python.org/library/string.html#format-specification-mini-language), and are very similar to C's sprintf() codes.
+would specify that the given string formats are to be used when
+formatting any temperature measured in degrees Celsius or any
+precipitation amount measured in inches, respectively. The [formatting
+codes are those used by
+Python](https://docs.python.org/library/string.html#format-specification-mini-language),
+and are very similar to C's `sprintf()` codes.
 
-You can also specify what string to use for an invalid or unavailable measurement (value None). For example,
+You can also specify what string to use for an invalid or unavailable
+measurement (value `None`). For example,
 
+``` tty
 NONE = " N/A "
+```
 
-### [[Labels]]
+#### [[Labels]] {#Units_Labels .config_section}
 
-This sub-section specifies what label is to be used for each measurement unit type. For example, the options
+This sub-section specifies what label is to be used for each measurement
+unit type. For example, the options
 
+``` tty
 degree_F = °F
 inch     = ' in'
+```
 
-would cause all temperatures to have unit labels °F and all precipitation to have labels in. If any special symbols are to be used (such as the degree sign) they should be encoded in UTF-8. This is generally what most text editors use if you cut-and-paste from a character map.
+would cause all temperatures to have unit labels `°F` and all
+precipitation to have labels `in`. If any special symbols are to
+be used (such as the degree sign) they should be encoded in UTF-8. This
+is generally what most text editors use if you cut-and-paste from a
+character map.
 
-If the label includes two values, then the first is assumed to be the singular form, the second the plural form. For example,
+If the label includes two values, then the first is assumed to be the
+singular form, the second the plural form. For example,
 
+``` tty
 foot   = " foot",   " feet"
 ...
 day    = " day",    " days"
 hour   = " hour",   " hours"
 minute = " minute", " minutes"
 second = " second", " seconds"
+```
 
-### [[TimeFormats]]
+#### [[TimeFormats]] {#Units_TimeFormats .config_section}
 
-This sub-section specifies what time format to use for different time _contexts_. For example, you might want to use a different format when displaying the time in a day, versus the time in a month. It uses [strftime()](https://docs.python.org/3/library/datetime.html#strftime-strptime-behavior) formats. The default looks like this:
+This sub-section specifies what time format to use for different time
+*contexts*. For example, you might want to use a different format when
+displaying the time in a day, versus the time in a month. It uses
+[strftime()](https://docs.python.org/3/library/datetime.html#strftime-strptime-behavior)
+formats. The default looks like this:
 
+``` tty
     [[TimeFormats]]
         hour        = %H:%M
         day         = %X
@@ -4201,9 +5028,17 @@ This sub-section specifies what time format to use for different time _contexts_
         current     = %x %X
         ephem_day   = %X
         ephem_year  = %x %X
+```
 
-The specifiers %x, %X, and %A code locale dependent date, time, and weekday names, respectively. Hence, if you set an appropriate environment variable LANG, then the date and times should follow local conventions (see section [Environment variable LANG](#environment_variable_LANG) for details on how to do this). However, the results may not look particularly nice, and you may want to change them. For example, I use this in the U.S.:
+The specifiers `%x`, `%X`, and `%A` code locale
+dependent date, time, and weekday names, respectively. Hence, if you set
+an appropriate environment variable `LANG`, then the date and
+times should follow local conventions (see section [Environment variable
+LANG](#environment_variable_LANG) for details on how to do this).
+However, the results may not look particularly nice, and you may want to
+change them. For example, I use this in the U.S.:
 
+``` tty
     [[TimeFormats]]
         #
         # More attractive formats that work in most Western countries.
@@ -4216,1199 +5051,895 @@ The specifiers %x, %X, and %A code locale dependent date, time, and weekday name
         current    = %d-%b-%Y %H:%M
         ephem_day  = %H:%M
         ephem_year = %d-%b-%Y %H:%M
+```
 
-The last two formats, ephem_day and ephem_year allow the formatting to be set for almanac times The first, ephem_day, is used for almanac times within the day, such as sunrise or sunset. The second, ephem_year, is used for almanac times within the year, such as the next equinox or full moon.
+The last two formats, `ephem_day` and `ephem_year` allow
+the formatting to be set for almanac times The first,
+`ephem_day`, is used for almanac times within the day, such as
+sunrise or sunset. The second, `ephem_year`, is used for almanac
+times within the year, such as the next equinox or full moon.
 
-### [[Ordinates]]
+#### [[Ordinates]] {#Units_Ordinates .config_section}
 
 directions
 
-Set to the abbreviations to be used for ordinal directions. By default, this is N, NNE, NE, ENE, E, ESE, SE, SSE, S, SSW, SW, WSW, W, WNW, NW, NNW, N.
+Set to the abbreviations to be used for ordinal directions. By default,
+this is `N, NNE, NE, ENE, E, ESE, SE, SSE, S, SSW, SW, WSW, W, WNW, NW,
+NNW, N`.
 
-### [[DegreeDays]]
+#### [[DegreeDays]] {#degreedays .config_section}
 
-heating_base  
-cooling_base  
+heating_base\
+cooling_base\
 growing_base
 
-Set to the base temperature for calculating heating, cooling, and growing degree-days, along with the unit to be used. Examples:
+Set to the base temperature for calculating heating, cooling, and
+growing degree-days, along with the unit to be used. Examples:
 
+``` tty
 heating_base = 65.0, degree_F
 cooling_base = 20.0, degree_C
 growing_base = 50.0, degree_F
+```
 
-### [[Trend]]
+#### [[Trend]] {#trend .config_section}
 
 time_delta
 
-Set to the time difference over which you want trends to be calculated. The default is 3 hours.
+Set to the time difference over which you want trends to be calculated.
+The default is 3 hours.
 
 time_grace
 
-When searching for a previous record to be used in calculating a trend, a record within this amount of time_delta will be accepted. Default is 300 seconds.
+When searching for a previous record to be used in calculating a trend,
+a record within this amount of `time_delta` will be accepted.
+Default is 300 seconds.
 
-[Texts]
----------
+### [Texts] {#texts .config_section}
 
-The section [Texts] holds static texts that are used in the templates. Generally there are multiple language files, one for each supported language, named by the language codes defined in [ISO 639-1](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes). The entries give the translation of the texts to the target language. For example,
+The section [[Texts]]{.code} holds static texts that are used in the
+templates. Generally there are multiple language files, one for each
+supported language, named by the language codes defined in
+[ISO 639-1](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes){target="_blank"}.
+The entries give the translation of the texts to the target language.
+For example,
 
+``` tty
 [Texts]
     "Current Conditions" = "Aktuelle Werte"
+```
 
-would cause "Aktuelle Werte" to be used whereever $gettext("Current Conditions" appeared. See the section on [$gettext](#Tag_$gettext).
+would cause "Aktuelle Werte" to be used whereever `$gettext("Current
+Conditions"` appeared. See the section on
+`[$gettext`](#Tag_$gettext).
 
-**Note!**  
+**Note!**\
 Strings that include commas must be included in single or double quotes.
 
-[CheetahGenerator]
---------------------
+### [CheetahGenerator] {#CheetahGenerator}
 
-This section contains the options for the Cheetah generator. It applies to skin.conf only.
+This section contains the options for the Cheetah generator. It applies
+to `skin.conf` only.
 
 search_list
 
-This is the list of search list objects that will be scanned by the template engine, looking for tags. See the section _[Defining new tags](#defining_new_tags)_ and the [Cheetah documentation](https://cheetahtemplate.org/) for details on search lists. If no search_list is specified, a default list will be used.
+This is the list of search list objects that will be scanned by the
+template engine, looking for tags. See the section *[Defining new
+tags](#defining_new_tags)* and the [Cheetah
+documentation](https://cheetahtemplate.org/) for details on search
+lists. If no [search_list]{.config_option} is specified, a default list
+will be used.
 
 search_list_extensions
 
-This defines one or more search list objects that will be appended to the search_list. For example, if you are using the "seven day" and "forecast" search list extensions, the option would look like
+This defines one or more search list objects that will be appended to
+the [search_list]{.config_option}. For example, if you are using the
+"seven day" and "forecast" search list extensions, the option would
+look like
 
+``` tty
 search_list_extensions = user.seven_day.SevenDay, user.forecast.ForecastVariables
+```
 
 encoding
 
-As Cheetah goes through the template, it substitutes strings for all tag values. This option controls which encoding to use for the new strings. The encoding can be chosen on a per file basis. All of the encodings listed in the Python documentation [_Standard Encodings_](https://docs.python.org/3/library/codecs.html#standard-encodings) are available, as well as these WeeWX-specific encodings:
+As Cheetah goes through the template, it substitutes strings for all tag
+values. This option controls which encoding to use for the new strings.
+The encoding can be chosen on a per file basis. All of the encodings
+listed in the Python documentation [*Standard
+Encodings*](https://docs.python.org/3/library/codecs.html#standard-encodings)
+are available, as well as these WeeWX-specific encodings:
 
-Encoding
+  ------------------ ----------------------------------------------------------------------------------------------------------------------------
+  Encoding           Comments
+  html_entities      Non 7-bit characters will be represented as HTML entities (*e.g.*, the degree sign will be represented as `&#176;`)
+  strict_ascii       Non 7-bit characters will be ignored.
+  normalized_ascii   Replace accented characters with non-accented analogs (*e.g.*, 'ö' will be replaced with 'o').
+  ------------------ ----------------------------------------------------------------------------------------------------------------------------
 
-Comments
-
-html_entities
-
-Non 7-bit characters will be represented as HTML entities (_e.g._, the degree sign will be represented as &#176;)
-
-strict_ascii
-
-Non 7-bit characters will be ignored.
-
-normalized_ascii
-
-Replace accented characters with non-accented analogs (_e.g._, 'ö' will be replaced with 'o').
-
-The encoding html_entities is the default. Other common choices are utf8, cp1252 (_a.k.a._ Windows-1252), and latin1.
+The encoding `html_entities` is the default. Other common choices
+are `utf8`, `cp1252` (*a.k.a.* Windows-1252), and
+`latin1`.
 
 template
 
-The name of a template file. A template filename must end with .tmpl. Filenames are case-sensitive. If the template filename has the letters YYYY, MM, WW or DD in its name, these will be substituted for the year, month, week and day of month, respectively. So, a template with the name summary-YYYY-MM.html.tmpl would have name summary-2010-03.html for the month of March, 2010.
+The name of a template file. A template filename must end with
+`.tmpl`. Filenames are case-sensitive. If the template filename
+has the letters `YYYY`, `MM`, `WW` or `DD`
+in its name, these will be substituted for the year, month, week and day
+of month, respectively. So, a template with the name
+`summary-YYYY-MM.html.tmpl` would have name
+`summary-2010-03.html` for the month of March, 2010.
 
 generate_once
 
-When set to True, the template is processed only on the first invocation of the report engine service. This feature is useful for files that do not change when data values change, such as HTML files that define a layout. The default is False.
+When set to `True`, the template is processed only on the first
+invocation of the report engine service. This feature is useful for
+files that do not change when data values change, such as HTML files
+that define a layout. The default is `False`.
 
 stale_age
 
-File staleness age, in seconds. If the file is older than this age it will be generated from the template. If no stale_age is specified, then the file will be generated every time the generator runs.
+File staleness age, in seconds. If the file is older than this age it
+will be generated from the template. If no `stale_age` is
+specified, then the file will be generated every time the generator
+runs.
 
-**Note**  
-Precise control over when a _[report](usersguide.htm#Reports)_ is run is available through use of the report_timing option in `weewx.conf`. The report_timing option uses a CRON-like setting to control precisely when a report is run. See the _[Scheduling reports](#customizing_gen_time)_ section for details on the report_timing option.
+**Note**\
+Precise control over when a *[report](usersguide.htm#Reports)* is run is
+available through use of the `report_timing` option in
+`weewx.conf`. The `report_timing` option uses a CRON-like
+setting to control precisely when a report is run. See the *[Scheduling
+reports](#customizing_gen_time)* section for details on the
+`report_timing` option.
 
 [[SummaryByDay]]
 
-The SummaryByDay section defines some special behavior. Each template in this section will be used multiple times, each time with a different per-day timespan. Be sure to include YYYY, MM, and DD in the filename of any template in this section.
+The `SummaryByDay` section defines some special behavior. Each
+template in this section will be used multiple times, each time with a
+different per-day timespan. Be sure to include `YYYY`,
+`MM`, and `DD` in the filename of any template in this
+section.
 
 [[SummaryByMonth]]
 
-The SummaryByMonth section defines some special behavior. Each template in this section will be used multiple times, each time with a different per-month timespan. Be sure to include YYYY and MM in the filename of any template in this section.
+The `SummaryByMonth` section defines some special behavior. Each
+template in this section will be used multiple times, each time with a
+different per-month timespan. Be sure to include `YYYY` and
+`MM` in the filename of any template in this section.
 
 [[SummaryByYear]]
 
-The SummaryByYear section defines some special behavior. Each template in this section will be used multiple times, each time with a different per-year timespan. Be sure to include YYYY in the filename of any template in this section.
+The `SummaryByYear` section defines some special behavior. Each
+template in this section will be used multiple times, each time with a
+different per-year timespan. Be sure to include `YYYY` in the
+filename of any template in this section.
 
-[ImageGenerator]
-------------------
+### [ImageGenerator] {#ImageGenerator .config_section}
 
-This section describes the various options available to the image generator.
+This section describes the various options available to the image
+generator.
 
+::: {.image .image-right}
 ![Part names in a WeeWX image](images/image_parts.png)
 
+::: image_caption
 Part names in a WeeWX image
+:::
+:::
 
-### Overall options
+#### Overall options
 
 These are options that affect the overall image.
 
 anti_alias
 
-Setting to 2 or more might give a sharper image, with fewer jagged edges. Experimentation is in order. Default is 1.
+Setting to 2 or more might give a sharper image, with fewer jagged
+edges. Experimentation is in order. Default is `1`.
 
 chart_background_color
 
-The background color of the chart itself. Optional. Default is #d8d8d8.
+The background color of the chart itself. Optional. Default is
+`#d8d8d8`.
 
 chart_gridline_color
 
-The color of the chart grid lines. Optional. Default is #a0a0a0
+The color of the chart grid lines. Optional. Default is `#a0a0a0`
 
+::: {.image .image-right style="clear: right"}
+::: image
 ![Effect of anti_alias option](images/antialias.gif)
 
-A GIF showing the same image with anti_alias=1, 2, and 4.
+::: image_caption
+A GIF showing the same image with `anti_alias=1`, `2`, and
+`4`.
+:::
+:::
 
+::: image
 ![Example of day/night bands](images/weektempdew.png)
 
+::: image_caption
 Example of day/night bands in a one week image
+:::
+:::
+:::
 
 daynight_day_color
 
-The color to be used for the daylight band. Optional. Default is #ffffff.
+The color to be used for the daylight band. Optional. Default is
+`#ffffff`.
 
 daynight_edge_color
 
-The color to be used in the transition zone between night and day. Optional. Default is #efefef, a mid-gray.
+The color to be used in the transition zone between night and day.
+Optional. Default is `#efefef`, a mid-gray.
 
 daynight_night_color
 
-The color to be used for the nighttime band. Optional. Default is #f0f0f0, a dark gray.
+The color to be used for the nighttime band. Optional. Default is
+`#f0f0f0`, a dark gray.
 
 image_background_color
 
-The background color of the whole image. Optional. Default is #f5f5f5 ("SmokeGray")
+The background color of the whole image. Optional. Default is
+`#f5f5f5` ("SmokeGray")
 
-image_width  
+image_width\
 image_height
 
-The width and height of the image in pixels. Optional. Default is 300 x 180 pixels.
+The width and height of the image in pixels. Optional. Default is 300 x
+180 pixels.
 
 show_daynight
 
-Set to true to show day/night bands in an image. Otherwise, set to false. This only looks good with day or week plots. Optional. Default is false.
+Set to `true` to show day/night bands in an image. Otherwise, set
+to false. This only looks good with day or week plots. Optional. Default
+is `false`.
 
 skip_if_empty
 
-If set to true, then skip the generation of the image if all data in it are null. If set to a time period, such as month or year, then skip the generation of the image if all data in that period are null. Default is false.
+If set to `true`, then skip the generation of the image if all
+data in it are null. If set to a time period, such as `month` or
+`year`, then skip the generation of the image if all data in that
+period are null. Default is `false`.
 
 stale_age
 
-Image file staleness age, in seconds. If the image file is older than this age it will be generated. If no stale_age is specified, then the image file will be generated every time the generator runs.
+Image file staleness age, in seconds. If the image file is older than
+this age it will be generated. If no `stale_age` is specified,
+then the image file will be generated every time the generator runs.
 
 unit
 
-Normally, the unit used in a plot is set by whatever [unit group the types are in](#mixed_units). However, this option allows overriding the unit used in a specific plot.
+Normally, the unit used in a plot is set by whatever [unit group the
+types are in](#mixed_units). However, this option allows overriding the
+unit used in a specific plot.
 
-### Various label options
+#### Various label options
 
 These are options for the various labels used in the image.
 
 axis_label_font_color
 
-The color of the x- and y-axis label font. Optional. Default is black.
+The color of the x- and y-axis label font. Optional. Default is
+`black`.
 
 axis_label_font_path
 
-The path to the font to be use for the x- and y-axis labels. Optional. If not given, or if WeeWX cannot find the font, then the default PIL font will be used.
+The path to the font to be use for the x- and y-axis labels. Optional.
+If not given, or if WeeWX cannot find the font, then the default PIL
+font will be used.
 
 axis_label_font_size
 
-The size of the x- and y-axis labels in pixels. Optional. The default is 10.
+The size of the x- and y-axis labels in pixels. Optional. The default is
+`10`.
 
 bottom_label_font_color
 
-The color of the bottom label font. Optional. Default is black.
+The color of the bottom label font. Optional. Default is `black`.
 
 bottom_label_font_path
 
-The path to the font to be use for the bottom label. Optional. If not given, or if WeeWX cannot find the font, then the default PIL font will be used.
+The path to the font to be use for the bottom label. Optional. If not
+given, or if WeeWX cannot find the font, then the default PIL font will
+be used.
 
 bottom_label_font_size
 
-The size of the bottom label in pixels. Optional. The default is 10.
+The size of the bottom label in pixels. Optional. The default is
+`10`.
 
 bottom_label_format
 
-The format to be used for the bottom label. It should be a [strftime format](https://docs.python.org/3/library/datetime.html#strftime-strptime-behavior). Optional. Default is '%m/%d/%y %H:%M'.
+The format to be used for the bottom label. It should be a [strftime
+format](https://docs.python.org/3/library/datetime.html#strftime-strptime-behavior).
+Optional. Default is `'%m/%d/%y %H:%M'`.
 
 bottom_label_offset
 
-The margin of the bottom label from the bottom of the plot. Default is 3.
+The margin of the bottom label from the bottom of the plot. Default is
+3.
 
 top_label_font_path
 
-The path to the font to be use for the top label. Optional. If not given, or if WeeWX cannot find the font, then the default PIL font will be used.
+The path to the font to be use for the top label. Optional. If not
+given, or if WeeWX cannot find the font, then the default PIL font will
+be used.
 
 top_label_font_size
 
-The size of the top label in pixels. Optional. The default is 10.
+The size of the top label in pixels. Optional. The default is
+`10`.
 
 unit_label_font_color
 
-The color of the unit label font. Optional. Default is black.
+The color of the unit label font. Optional. Default is `black`.
 
 unit_label_font_path
 
-The path to the font to be use for the unit label. Optional. If not given, or if WeeWX cannot find the font, then the default PIL font will be used.
+The path to the font to be use for the unit label. Optional. If not
+given, or if WeeWX cannot find the font, then the default PIL font will
+be used.
 
 unit_label_font_size
 
-The size of the unit label in pixels. Optional. The default is 10.
+The size of the unit label in pixels. Optional. The default is
+`10`.
 
 x_interval
 
-The time interval in seconds between x-axis tick marks. Optional. If not given, a suitable default will be chosen.
+The time interval in seconds between x-axis tick marks. Optional. If not
+given, a suitable default will be chosen.
 
 x_label_format
 
-The format to be used for the time labels on the x-axis. It should be a [strftime format](https://docs.python.org/3/library/datetime.html#strftime-strptime-behavior). Optional. If not given, a sensible format will be chosen automatically.
+The format to be used for the time labels on the x-axis. It should be a
+[strftime
+format](https://docs.python.org/3/library/datetime.html#strftime-strptime-behavior).
+Optional. If not given, a sensible format will be chosen automatically.
 
 x_label_spacing
 
-Specifies the ordinal increment between labels on the x-axis: For example, 3 means a label every 3rd tick mark. Optional. The default is 2.
+Specifies the ordinal increment between labels on the x-axis: For
+example, 3 means a label every 3rd tick mark. Optional. The default is
+`2`.
 
 y_label_side
 
-Specifies if the y-axis labels should be on the left, right, or both sides of the graph. Valid values are left, right or both. Optional. Default is left.
+Specifies if the y-axis labels should be on the left, right, or both
+sides of the graph. Valid values are `left`, `right` or
+`both`. Optional. Default is `left`.
 
 y_label_spacing
 
-Specifies the ordinal increment between labels on the y-axis: For example, 3 means a label every 3rd tick mark. Optional. The default is 2.
+Specifies the ordinal increment between labels on the y-axis: For
+example, 3 means a label every 3rd tick mark. Optional. The default is
+`2`.
 
 y_nticks
 
-The nominal number of ticks along the y-axis. The default is 10.
+The nominal number of ticks along the y-axis. The default is
+`10`.
 
-### Plot scaling options
+#### Plot scaling options
 
 time_length
 
-The nominal length of the time period to be covered in seconds. The exact length of the x-axis is chosen by the plotting engine to cover this period. Optional. Default is 86400 (one day).
+The nominal length of the time period to be covered in seconds. The
+exact length of the x-axis is chosen by the plotting engine to cover
+this period. Optional. Default is `86400` (one day).
 
 yscale
 
-A 3-way tuple (ylow, yhigh, min_interval), where ylow and yhigh are the minimum and maximum y-axis values, respectively, and min_interval is the minimum tick interval. If set to None, the corresponding value will be automatically chosen. Optional. Default is None, None, None. (Choose the y-axis minimum, maximum, and minimum increment automatically.)
+A 3-way tuple (`ylow`, `yhigh`, `min_interval`),
+where `ylow` and `yhigh` are the minimum and maximum
+y-axis values, respectively, and `min_interval` is the minimum
+tick interval. If set to `None`, the corresponding value will be
+automatically chosen. Optional. Default is `None, None, None`.
+(Choose the y-axis minimum, maximum, and minimum increment
+automatically.)
 
-### Compass rose options
+#### Compass rose options
 
+::: {.image .image-right style="width: 300px"}
 ![Example of a progressive vector plot](images/daywindvec.png)
 
+::: image_caption
 Example of a vector plot with a compass rose in the lower-left
+:::
+:::
 
 rose_label
 
-The label to be used in the compass rose to indicate due North. Optional. Default is N.
+The label to be used in the compass rose to indicate due North.
+Optional. Default is `N`.
 
 rose_label_font_path
 
-The path to the font to be use for the rose label (the letter "N," indicating North). Optional. If not given, or if WeeWX cannot find the font, then the default PIL font will be used.
+The path to the font to be use for the rose label (the letter "N,"
+indicating North). Optional. If not given, or if WeeWX cannot find the
+font, then the default PIL font will be used.
 
 rose_label_font_size
 
-The size of the compass rose label in pixels. Optional. The default is 10.
+The size of the compass rose label in pixels. Optional. The default is
+`10`.
 
 rose_label_font_color
 
-The color of the compass rose label. Optional. Default is the same color as the rose itself.
+The color of the compass rose label. Optional. Default is the same color
+as the rose itself.
 
 vector_rotate
 
-Causes the vectors to be rotated by this many degrees. Positive is clockwise. If westerly winds dominate at your location (as they do at mine), then you may want to specify +90 for this option. This will cause the average vector to point straight up, rather than lie flat against the x-axis. Optional. The default is 0.
+Causes the vectors to be rotated by this many degrees. Positive is
+clockwise. If westerly winds dominate at your location (as they do at
+mine), then you may want to specify `+90` for this option. This
+will cause the average vector to point straight up, rather than lie flat
+against the x-axis. Optional. The default is `0`.
 
-### Shared plot line options
+#### Shared plot line options
 
 These are options shared by all the plot lines.
 
 chart_line_colors
 
-Each chart line is drawn in a different color. This option is a list of those colors. If the number of lines exceeds the length of the list, then the colors wrap around to the beginning of the list. Optional. In the case of bar charts, this is the color of the outline of the bar. Default is #0000ff, #00ff00, #ff0000.  
-  
-Individual line color can be overridden by using option color.
+Each chart line is drawn in a different color. This option is a list of
+those colors. If the number of lines exceeds the length of the list,
+then the colors wrap around to the beginning of the list. Optional. In
+the case of bar charts, this is the color of the outline of the bar.
+Default is `#0000ff, #00ff00, #ff0000`.\
+\
+Individual line color can be overridden by using option `color`.
 
 chart_fill_colors
 
-A list of the color to be used as the fill of the bar charts. Optional. The default is to use the same color as the outline color (option chart_line_colors).
+A list of the color to be used as the fill of the bar charts. Optional.
+The default is to use the same color as the outline color (option
+`chart_line_colors`).
 
 chart_line_width
 
-Each chart line can be drawn using a different line width. This option is a list of these widths. If the number of lines exceeds the length of the list, then the widths wrap around to the beginning of the list. Optional. Default is 1, 1, 1.  
-  
-Individual line widths can be overridden by using option width.
+Each chart line can be drawn using a different line width. This option
+is a list of these widths. If the number of lines exceeds the length of
+the list, then the widths wrap around to the beginning of the list.
+Optional. Default is `1, 1, 1`.\
+\
+Individual line widths can be overridden by using option `width`.
 
-### Individual line options
+#### Individual line options
 
 These are options that are set for individual lines.
 
 aggregate_interval
 
-The time period over which the data should be aggregated, in seconds. Required if aggregate_type has been set. Alternatively, the time can be specified by using one of the "shortcuts" (that is, hour, day, week, month, or year).
+The time period over which the data should be aggregated, in seconds.
+Required if `aggregate_type` has been set. Alternatively, the
+time can be specified by using one of the "shortcuts" (that is,
+`hour`, `day`, `week`, `month`, or
+`year`).
 
 aggregate_type
 
-The default is to plot every data point, but this is probably not a good idea for any plot longer than a day. By setting this option, you can _aggregate_ data by a set time interval. Available aggregation types include avg, count, cumulative, diff, last, max, min, sum, and tderiv.
+The default is to plot every data point, but this is probably not a good
+idea for any plot longer than a day. By setting this option, you can
+*aggregate* data by a set time interval. Available aggregation types
+include `avg`, `count`, `cumulative`,
+`diff`, `last`, `max`, `min`, `sum`,
+and `tderiv`.
 
 color
 
-This option is to override the color for an individual line. Optional. Default is to use the color in chart_line_colors.
+This option is to override the color for an individual line. Optional.
+Default is to use the color in `chart_line_colors`.
 
 data_type
 
-The SQL data type to be used for this plot line. For more information, see the section _[Including a type more than once in a plot](#including_same_sql_type_2x)_. Optional. The default is to use the section name.
+The SQL data type to be used for this plot line. For more information,
+see the section *[Including a type more than once in a
+plot](#including_same_sql_type_2x)*. Optional. The default is to use the
+section name.
 
 fill_color
 
-This option is to override the fill color for a bar chart. Optional. Default is to use the color in chart_fill_colors.
+This option is to override the fill color for a bar chart. Optional.
+Default is to use the color in `chart_fill_colors`.
 
 label
 
-The label to be used for this plot line in the top label. Optional. The default is to use the SQL variable name.
+The label to be used for this plot line in the top label. Optional. The
+default is to use the SQL variable name.
 
 line_gap_fraction
 
-If there is a gap between data points bigger than this fractional amount of the x-axis, then a gap will be drawn, rather than a connecting line. See Section _[Line gaps](#line_gaps)_. Optional. The default is to always draw the line.
+If there is a gap between data points bigger than this fractional amount
+of the x-axis, then a gap will be drawn, rather than a connecting line.
+See Section *[Line gaps](#line_gaps)*. Optional. The default is to
+always draw the line.
 
 line_type
 
-The type of line to be used. Choices are solid or none. Optional. Default is solid.
+The type of line to be used. Choices are `solid` or
+`none`. Optional. Default is `solid`.
 
 marker_size
 
-The size of the marker. Optional. Default is 8.
+The size of the marker. Optional. Default is `8`.
 
 marker_type
 
-The type of marker to be used to mark each data point. Choices are cross, x, circle, box, or none. Optional. Default is none.
+The type of marker to be used to mark each data point. Choices are
+`cross`, `x`, `circle`, `box`, or
+`none`. Optional. Default is `none`.
 
 plot_type
 
-The type of plot for this line. Choices are line, bar, or vector. Optional. Default is line.
+The type of plot for this line. Choices are `line`, `bar`,
+or `vector`. Optional. Default is `line`.
 
 width
 
-This option is to override the line widthfor an individual line. Optional. Default is to use the width in chart_line_width.
+This option is to override the line widthfor an individual line.
+Optional. Default is to use the width in `chart_line_width`.
 
-[CopyGenerator]
------------------
+### [CopyGenerator] {#copygenerator .config_section}
 
-This section is used by generator weewx.reportengine.CopyGenerator and controls which files are to be copied over from the skin directory to the destination directory. Think of it as "file generation," except that rather than going through the template engine, the files are simply copied over.
+This section is used by generator
+`weewx.reportengine.CopyGenerator` and controls which files are
+to be copied over from the skin directory to the destination directory.
+Think of it as "file generation," except that rather than going
+through the template engine, the files are simply copied over.
 
 copy_once
 
-This option controls which files get copied over on the first invocation of the report engine service. Typically, this is things such as style sheets or background GIFs. Wildcards can be used.
+This option controls which files get copied over on the first invocation
+of the report engine service. Typically, this is things such as style
+sheets or background GIFs. Wildcards can be used.
 
 copy_always
 
-This is a list of files that should be copied on every invocation. Wildcards can be used.
+This is a list of files that should be copied on every invocation.
+Wildcards can be used.
 
-Here is the [CopyGenerator] section from the Standard skin.conf
+Here is the [[CopyGenerator]]{.code} section from the Standard
+`skin.conf`
 
+``` tty
 [CopyGenerator]
     # This section is used by the generator CopyGenerator
 
     # List of files to be copied only the first time the generator runs
-    copy_once = backgrounds/\*, weewx.css, mobile.css, favicon.ico
+    copy_once = backgrounds/*, weewx.css, mobile.css, favicon.ico
 
     # List of files to be copied each time the generator runs
     # copy_always = 
+```
 
-The Standard skin includes some background images, CSS files, and icons that need to be copied once. There are no files that need to be copied every time the generator runs.
+The Standard skin includes some background images, CSS files, and icons
+that need to be copied once. There are no files that need to be copied
+every time the generator runs.
 
-[Generators]
---------------
+### [Generators] {#generators_section .config_section}
 
 This section defines the list of generators that should be run.
 
 generator_list
 
-This option controls which generators get run for this skin. It is a comma separated list. The generators will be run in this order.
+This option controls which generators get run for this skin. It is a
+comma separated list. The generators will be run in this order.
 
-Here is the [Generators] section from the Standard skin.conf
+Here is the [[Generators]]{.code} section from the Standard
+`skin.conf`
 
+``` tty
 [Generators]
     generator_list = weewx.cheetahgenerator.CheetahGenerator, weewx.imagegenerator.ImageGenerator, weewx.reportengine.CopyGenerator
-
-The Standard skin uses three generators: CheetahGenerator, ImageGenerator, and CopyGenerator.
-
-Appendix
-========
-
-Aggregation types
------------------
-
-Aggregation types
-
-Aggregation type
-
-Meaning
-
-avg
-
-The average value in the aggregation period.
-
-avg_ge(val)
-
-The number of days where the average value is greater than or equal to _val_. Aggregation period must be one day or longer. The argument val is a [ValueTuple](#ValueTuple).
-
-avg_le(val)
-
-The number of days where the average value is less than or equal to _val_. Aggregation period must be one day or longer. The argument val is a [ValueTuple](#ValueTuple).
-
-count
-
-The number of non-null values in the aggregation period.
-
-diff
-
-The difference between the last and first value in the aggregation period.
-
-exists
-
-Returns True if the observation type exists in the database.
-
-first
-
-The first non-null value in the aggregation period.
-
-firsttime
-
-The time of the first non-null value in the aggregation period.
-
-gustdir
-
-The direction of the max gust in the aggregation period.
-
-has_data
-
-Returns True if the observation type exists in the database and is non-null.
-
-last
-
-The last non-null value in the aggregation period.
-
-lasttime
-
-The time of the last non-null value in the aggregation period.
-
-max
-
-The maximum value in the aggregation period.
-
-maxmin
-
-The maximum daily minimum in the aggregation period. Aggregation period must be one day or longer.
-
-maxmintime
-
-The time of the maximum daily minimum.
-
-maxsum
-
-The maximum daily sum in the aggregation period. Aggregation period must be one day or longer.
-
-maxsumtime
-
-The time of the maximum daily sum.
-
-maxtime
-
-The time of the maximum value.
-
-max_ge(val)
-
-The number of days where the maximum value is greater than or equal to _val_. Aggregation period must be one day or longer. The argument val is a [ValueTuple](#ValueTuple).
-
-max_le(val)
-
-The number of days where the maximum value is less than or equal to _val_. Aggregation period must be one day or longer. The argument val is a [ValueTuple](#ValueTuple).
-
-meanmax
-
-The average daily maximum in the aggregation period. Aggregation period must be one day or longer.
-
-meanmin
-
-The average daily minimum in the aggregation period. Aggregation period must be one day or longer.
-
-min
-
-The minimum value in the aggregation period.
-
-minmax
-
-The minimum daily maximum in the aggregation period. Aggregation period must be one day or longer.
-
-minmaxtime
-
-The time of the minimum daily maximum.
-
-minsum
-
-The minimum daily sum in the aggregation period. Aggregation period must be one day or longer.
-
-minsumtime
-
-The time of the minimum daily sum.
-
-mintime
-
-The time of the minimum value.
-
-min_ge(val)
-
-The number of days where the minimum value is greater than or equal to _val_. Aggregation period must be one day or longer. The argument val is a [ValueTuple](#ValueTuple).
-
-min_le(val)
-
-The number of days where the minimum value is less than or equal to _val_. Aggregation period must be one day or longer. The argument val is a [ValueTuple](#ValueTuple).
-
-not_null
-
-Returns truthy if any value over the aggregation period is non-null.
-
-rms
-
-The root mean square value in the aggregation period.
-
-sum
-
-The sum of values in the aggregation period.
-
-sum_ge(val)
-
-The number of days where the sum of value is greater than or equal to _val_. Aggregation period must be one day or longer. The argument val is a [ValueTuple](#ValueTuple).
-
-sum_le(val)
-
-The number of days where the sum of value is less than or equal to _val_. Aggregation period must be one day or longer. The argument val is a [ValueTuple](#ValueTuple).
-
-tderiv
-
-The time derivative between the last and first value in the aggregation period. This is the difference in value divided by the difference in time.
-
-vecavg
-
-The vector average speed in the aggregation period.
-
-vecdir
-
-The vector averaged direction during the aggregation period.
-
-Units
------
-
-WeeWX offers three different _unit systems_:
-
-The standard unit systems used within WeeWX
-
-Name
-
-Encoded value
-
-Note
-
-US
-
-0x01
-
-U.S. Customary
-
-METRICWX
-
-0x11
-
-Metric, with rain related measurements in mm and speeds in m/s
-
-METRIC
-
-0x10
-
-Metric, with rain related measurements in cm and speeds in km/hr
-
-The table below lists all the unit groups, their members, which units are options for the group, and what the defaults are for each standard unit system.
-
-Unit groups, members and options
-
-Group
-
-Members
-
-Unit options
-
-US
-
-METRICWX
-
-METRIC
-
-group_altitude
-
-altitude  
-cloudbase
-
-foot  
-meter
-
-foot
-
-meter
-
-meter
-
-group_amp
-
-amp
-
-amp
-
-amp
-
-amp
-
-group_boolean
-
-boolean
-
-boolean
-
-boolean
-
-boolean
-
-group_concentration
-
-no2  
-pm1_0  
-pm2_5  
-pm10_0
-
-microgram_per_meter_cubed
-
-microgram_per_meter_cubed
-
-microgram_per_meter_cubed
-
-microgram_per_meter_cubed
-
-group_count
-
-leafWet1  
-leafWet2  
-lightning_disturber_count  
-lightning_noise_count  
-lightning_strike_count  
-
-count
-
-count
-
-count
-
-count
-
-group_data
-
-byte  
-bit
-
-byte
-
-byte
-
-byte
-
-group_db
-
-noise
-
-dB
-
-dB
-
-dB
-
-dB
-
-group_delta_time
-
-daySunshineDur  
-rainDur  
-sunshineDurDoc
-
-second  
-minute  
-hour  
-day  
-
-second
-
-second
-
-second
-
-group_degree_day
-
-cooldeg  
-heatdeg  
-growdeg
-
-degree_F_day  
-degree_C_day
-
-degree_F_day
-
-degree_C_day
-
-degree_C_day
-
-group_direction
-
-gustdir  
-vecdir  
-windDir  
-windGustDir
-
-degree_compass
-
-degree_compass
-
-degree_compass
-
-degree_compass
-
-group_distance
-
-windrun  
-lightning_distance
-
-mile  
-km
-
-mile
-
-km
-
-km
-
-group_energy
-
-kilowatt_hour  
-mega_joule  
-watt_hour  
-watt_second
-
-watt_hour
-
-watt_hour
-
-watt_hour
-
-group_energy2
-
-kilowatt_hour  
-watt_hour  
-watt_second
-
-watt_second
-
-watt_second
-
-watt_second
-
-group_fraction
-
-co  
-co2  
-nh3  
-o3  
-pb  
-so2
-
-ppm
-
-ppm
-
-ppm
-
-ppm
-
-group_frequency
-
-hertz
-
-hertz
-
-hertz
-
-hertz
-
-group_illuminance
-
-illuminance
-
-lux
-
-lux
-
-lux
-
-lux
-
-group_interval
-
-interval
-
-minute
-
-minute
-
-minute
-
-minute
-
-group_length
-
-inch  
-cm
-
-inch
-
-cm
-
-cm
-
-group_moisture
-
-soilMoist1  
-soilMoist2  
-soilMoist3  
-soilMoist4
-
-centibar
-
-centibar
-
-centibar
-
-centibar
-
-group_percent
-
-cloudcover  
-extraHumid1  
-extraHumid2  
-inHumidity  
-outHumidity  
-pop  
-rxCheckPercent  
-snowMoisture
-
-percent
-
-percent
-
-percent
-
-percent
-
-group_power
-
-kilowatt  
-watt
-
-watt
-
-watt
-
-watt
-
-group_pressure
-
-barometer  
-altimeter  
-pressure
-
-inHg  
-mbar  
-hPa  
-kPa
-
-inHg
-
-mbar
-
-mbar
-
-group_pressurerate
-
-barometerRate  
-altimeterRate  
-pressureRate
-
-inHg_per_hour  
-mbar_per_hour  
-hPa_per_hour  
-kPa_per_hour
-
-inHg_per_hour
-
-mbar_per_hour
-
-mbar_per_hour
-
-group_radiation
-
-maxSolarRad  
-radiation
-
-watt_per_meter_squared
-
-watt_per_meter_squared
-
-watt_per_meter_squared
-
-watt_per_meter_squared
-
-group_rain
-
-rain  
-ET  
-hail  
-snowDepth  
-snowRate
-
-inch  
-cm  
-mm
-
-inch
-
-mm
-
-cm
-
-group_rainrate
-
-rainRate  
-hailRate
-
-inch_per_hour  
-cm_per_hour  
-mm_per_hour
-
-inch_per_hour
-
-mm_per_hour
-
-cm_per_hour
-
-group_speed
-
-wind  
-windGust  
-windSpeed  
-windgustvec  
-windvec
-
-mile_per_hour  
-km_per_hour  
-knot  
-meter_per_second  
-beaufort
-
-mile_per_hour
-
-meter_per_second
-
-km_per_hour
-
-group_speed2
-
-rms  
-vecavg
-
-mile_per_hour2  
-km_per_hour2  
-knot2  
-meter_per_second2
-
-mile_per_hour2
-
-meter_per_second2
-
-km_per_hour2
-
-group_temperature
-
-appTemp  
-dewpoint  
-extraTemp1  
-extraTemp2  
-extraTemp3  
-heatindex  
-heatingTemp  
-humidex  
-inTemp  
-leafTemp1  
-leafTemp2  
-outTemp  
-soilTemp1  
-soilTemp2  
-soilTemp3  
-soilTemp4  
-windchill  
-THSW
-
-degree_C  
-degree_F  
-degree_E  
-degree_K
-
-degree_F
-
-degree_C
-
-degree_C
-
-group_time
-
-dateTime
-
-unix_epoch  
-dublin_jd
-
-unix_epoch
-
-unix_epoch
-
-unix_epoch
-
-group_uv
-
-UV
-
-uv_index
-
-uv_index
-
-uv_index
-
-uv_index
-
-group_volt
-
-consBatteryVoltage  
-heatingVoltage  
-referenceVoltage  
-supplyVoltage
-
-volt
-
-volt
-
-volt
-
-volt
-
-group_volume
-
-cubic_foot  
-gallon  
-liter
-
-gallon
-
-liter
-
-liter
-
-group_NONE
-
-NONE
-
-NONE
-
-NONE
-
-NONE
-
-NONE
-
-Class ValueTuple
-----------------
-
-A value, along with the unit it is in, can be represented by a 3-way tuple called a "value tuple". They are used throughout WeeWX. All WeeWX routines can accept a simple unadorned 3-way tuple as a value tuple, but they return the type ValueTuple. It is useful because its contents can be accessed using named attributes. You can think of it as a unit-aware value, useful for converting to and from other units.
+```
+
+The Standard skin uses three generators: CheetahGenerator,
+ImageGenerator, and CopyGenerator.
+
+## Appendix
+
+### Aggregation types {#aggregation_types}
+
+  ------------------ ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+  Aggregation type   Meaning
+  avg                The average value in the aggregation period.
+  avg_ge(val)        The number of days where the average value is greater than or equal to *val*. Aggregation period must be one day or longer. The argument `val` is a `[ValueTuple`](#ValueTuple).
+  avg_le(val)        The number of days where the average value is less than or equal to *val*. Aggregation period must be one day or longer. The argument `val` is a `[ValueTuple`](#ValueTuple).
+  count              The number of non-null values in the aggregation period.
+  diff               The difference between the last and first value in the aggregation period.
+  exists             Returns `True` if the observation type exists in the database.
+  first              The first non-null value in the aggregation period.
+  firsttime          The time of the first non-null value in the aggregation period.
+  gustdir            The direction of the max gust in the aggregation period.
+  has_data           Returns `True` if the observation type exists in the database and is non-null.
+  last               The last non-null value in the aggregation period.
+  lasttime           The time of the last non-null value in the aggregation period.
+  max                The maximum value in the aggregation period.
+  maxmin             The maximum daily minimum in the aggregation period. Aggregation period must be one day or longer.
+  maxmintime         The time of the maximum daily minimum.
+  maxsum             The maximum daily sum in the aggregation period. Aggregation period must be one day or longer.
+  maxsumtime         The time of the maximum daily sum.
+  maxtime            The time of the maximum value.
+  max_ge(val)        The number of days where the maximum value is greater than or equal to *val*. Aggregation period must be one day or longer. The argument `val` is a `[ValueTuple`](#ValueTuple).
+  max_le(val)        The number of days where the maximum value is less than or equal to *val*. Aggregation period must be one day or longer. The argument `val` is a `[ValueTuple`](#ValueTuple).
+  meanmax            The average daily maximum in the aggregation period. Aggregation period must be one day or longer.
+  meanmin            The average daily minimum in the aggregation period. Aggregation period must be one day or longer.
+  min                The minimum value in the aggregation period.
+  minmax             The minimum daily maximum in the aggregation period. Aggregation period must be one day or longer.
+  minmaxtime         The time of the minimum daily maximum.
+  minsum             The minimum daily sum in the aggregation period. Aggregation period must be one day or longer.
+  minsumtime         The time of the minimum daily sum.
+  mintime            The time of the minimum value.
+  min_ge(val)        The number of days where the minimum value is greater than or equal to *val*. Aggregation period must be one day or longer. The argument `val` is a `[ValueTuple`](#ValueTuple).
+  min_le(val)        The number of days where the minimum value is less than or equal to *val*. Aggregation period must be one day or longer. The argument `val` is a `[ValueTuple`](#ValueTuple).
+  not_null           Returns truthy if any value over the aggregation period is non-null.
+  rms                The root mean square value in the aggregation period.
+  sum                The sum of values in the aggregation period.
+  sum_ge(val)        The number of days where the sum of value is greater than or equal to *val*. Aggregation period must be one day or longer. The argument `val` is a `[ValueTuple`](#ValueTuple).
+  sum_le(val)        The number of days where the sum of value is less than or equal to *val*. Aggregation period must be one day or longer. The argument `val` is a `[ValueTuple`](#ValueTuple).
+  tderiv             The time derivative between the last and first value in the aggregation period. This is the difference in value divided by the difference in time.
+  vecavg             The vector average speed in the aggregation period.
+  vecdir             The vector averaged direction during the aggregation period.
+  ------------------ ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+  : Aggregation types
+
+### Units {#units}
+
+WeeWX offers three different *unit systems*:
+
+  ---------- --------------- ------------------------------------------------------------------------------------
+  Name       Encoded value   Note
+  US         0x01            U.S. Customary
+  METRICWX   0x11            Metric, with rain related measurements in `mm` and speeds in `m/s`
+  METRIC     0x10            Metric, with rain related measurements in `cm` and speeds in `km/hr`
+  ---------- --------------- ------------------------------------------------------------------------------------
+
+  : The standard unit systems used within WeeWX
+
+The table below lists all the unit groups, their members, which units
+are options for the group, and what the defaults are for each standard
+unit system.
+
+  --------------------- ---------------------------- --------------------------- --------------------------- --------------------------- ---------------------------
+  Group                 Members                      Unit options                `US`                 `METRICWX`           `METRIC`
+
+  group_altitude        altitude\                    foot\                       foot                        meter                       meter
+                        cloudbase                    meter                                                                               
+
+  group_amp                                          amp                         amp                         amp                         amp
+
+  group_boolean                                      boolean                     boolean                     boolean                     boolean
+
+  group_concentration   no2\                         microgram_per_meter_cubed   microgram_per_meter_cubed   microgram_per_meter_cubed   microgram_per_meter_cubed
+                        pm1_0\                                                                                                           
+                        pm2_5\                                                                                                           
+                        pm10_0                                                                                                           
+
+  group_count           leafWet1\                    count                       count                       count                       count
+                        leafWet2\                                                                                                        
+                        lightning_disturber_count\                                                                                       
+                        lightning_noise_count\                                                                                           
+                        lightning_strike_count\                                                                                          
+
+  group_data                                         byte\                       byte                        byte                        byte
+                                                     bit                                                                                 
+
+  group_db              noise                        dB                          dB                          dB                          dB
+
+  group_delta_time      daySunshineDur\              second\                     second                      second                      second
+                        rainDur\                     minute\                                                                             
+                        sunshineDurDoc               hour\                                                                               
+                                                     day\                                                                                
+
+  group_degree_day      cooldeg\                     degree_F\_day\              degree_F\_day               degree_C\_day               degree_C\_day
+                        heatdeg\                     degree_C\_day                                                                       
+                        growdeg                                                                                                          
+
+  group_direction       gustdir\                     degree_compass              degree_compass              degree_compass              degree_compass
+                        vecdir\                                                                                                          
+                        windDir\                                                                                                         
+                        windGustDir                                                                                                      
+
+  group_distance        windrun\                     mile\                       mile                        km                          km
+                        lightning_distance           km                                                                                  
+
+  group_energy                                       kilowatt_hour\              watt_hour                   watt_hour                   watt_hour
+                                                     mega_joule\                                                                         
+                                                     watt_hour\                                                                          
+                                                     watt_second                                                                         
+
+  group_energy2                                      kilowatt_hour\              watt_second                 watt_second                 watt_second
+                                                     watt_hour\                                                                          
+                                                     watt_second                                                                         
+
+  group_fraction        co\                          ppm                         ppm                         ppm                         ppm
+                        co2\                                                                                                             
+                        nh3\                                                                                                             
+                        o3\                                                                                                              
+                        pb\                                                                                                              
+                        so2                                                                                                              
+
+  group_frequency                                    hertz                       hertz                       hertz                       hertz
+
+  group_illuminance     illuminance                  lux                         lux                         lux                         lux
+
+  group_interval        interval                     minute                      minute                      minute                      minute
+
+  group_length                                       inch\                       inch                        cm                          cm
+                                                     cm                                                                                  
+
+  group_moisture        soilMoist1\                  centibar                    centibar                    centibar                    centibar
+                        soilMoist2\                                                                                                      
+                        soilMoist3\                                                                                                      
+                        soilMoist4                                                                                                       
+
+  group_percent         cloudcover\                  percent                     percent                     percent                     percent
+                        extraHumid1\                                                                                                     
+                        extraHumid2\                                                                                                     
+                        inHumidity\                                                                                                      
+                        outHumidity\                                                                                                     
+                        pop\                                                                                                             
+                        rxCheckPercent\                                                                                                  
+                        snowMoisture                                                                                                     
+
+  group_power                                        kilowatt\                   watt                        watt                        watt
+                                                     watt                                                                                
+
+  group_pressure        barometer\                   inHg\                       inHg                        mbar                        mbar
+                        altimeter\                   mbar\                                                                               
+                        pressure                     hPa\                                                                                
+                                                     kPa                                                                                 
+
+  group_pressurerate    barometerRate\               inHg_per_hour\              inHg_per_hour               mbar_per_hour               mbar_per_hour
+                        altimeterRate\               mbar_per_hour\                                                                      
+                        pressureRate                 hPa_per_hour\                                                                       
+                                                     kPa_per_hour                                                                        
+
+  group_radiation       maxSolarRad\                 watt_per_meter_squared      watt_per_meter_squared      watt_per_meter_squared      watt_per_meter_squared
+                        radiation                                                                                                        
+
+  group_rain            rain\                        inch\                       inch                        mm                          cm
+                        ET\                          cm\                                                                                 
+                        hail\                        mm                                                                                  
+                        snowDepth\                                                                                                       
+                        snowRate                                                                                                         
+
+  group_rainrate        rainRate\                    inch_per_hour\              inch_per_hour               mm_per_hour                 cm_per_hour
+                        hailRate                     cm_per_hour\                                                                        
+                                                     mm_per_hour                                                                         
+
+  group_speed           wind\                        mile_per_hour\              mile_per_hour               meter_per_second            km_per_hour
+                        windGust\                    km_per_hour\                                                                        
+                        windSpeed\                   knot\                                                                               
+                        windgustvec\                 meter_per_second\                                                                   
+                        windvec                      beaufort                                                                            
+
+  group_speed2          rms\                         mile_per_hour2\             mile_per_hour2              meter_per_second2           km_per_hour2
+                        vecavg                       km_per_hour2\                                                                       
+                                                     knot2\                                                                              
+                                                     meter_per_second2                                                                   
+
+  group_temperature     appTemp\                     degree_C\                   degree_F                    degree_C                    degree_C
+                        dewpoint\                    degree_F\                                                                           
+                        extraTemp1\                  degree_E\                                                                           
+                        extraTemp2\                  degree_K                                                                            
+                        extraTemp3\                                                                                                      
+                        heatindex\                                                                                                       
+                        heatingTemp\                                                                                                     
+                        humidex\                                                                                                         
+                        inTemp\                                                                                                          
+                        leafTemp1\                                                                                                       
+                        leafTemp2\                                                                                                       
+                        outTemp\                                                                                                         
+                        soilTemp1\                                                                                                       
+                        soilTemp2\                                                                                                       
+                        soilTemp3\                                                                                                       
+                        soilTemp4\                                                                                                       
+                        windchill\                                                                                                       
+                        THSW                                                                                                             
+
+  group_time            dateTime                     unix_epoch\                 unix_epoch                  unix_epoch                  unix_epoch
+                                                     dublin_jd                                                                           
+
+  group_uv              UV                           uv_index                    uv_index                    uv_index                    uv_index
+
+  group_volt            consBatteryVoltage\          volt                        volt                        volt                        volt
+                        heatingVoltage\                                                                                                  
+                        referenceVoltage\                                                                                                
+                        supplyVoltage                                                                                                    
+
+  group_volume                                       cubic_foot\                 gallon                      liter                       liter
+                                                     gallon\                                                                             
+                                                     liter                                                                               
+
+  group_NONE            NONE                         NONE                        NONE                        NONE                        NONE
+  --------------------- ---------------------------- --------------------------- --------------------------- --------------------------- ---------------------------
+
+  : Unit groups, members and options
+
+### Class `ValueTuple` {#ValueTuple}
+
+A value, along with the unit it is in, can be represented by a 3-way
+tuple called a "value tuple". They are used throughout WeeWX. All
+WeeWX routines can accept a simple unadorned 3-way tuple as a value
+tuple, but they return the type `ValueTuple`. It is useful
+because its contents can be accessed using named attributes. You can
+think of it as a unit-aware value, useful for converting to and from
+other units.
 
 The following attributes, and their index, are present:
 
-Index
-
-Attribute
-
-Meaning
-
-0
-
-value
-
-The data value(s). Can be a series (e.g., [20.2, 23.2, ...]) or a scalar (e.g., 20.2)
-
-1
-
-unit
-
-The unit it is in ("degree_C")
-
-2
-
-group
-
-The unit group ("group_temperature")
+  ------- ----------- ------------------------------------------------------------------------------------------------------------
+  Index   Attribute   Meaning
+  0       value       The data value(s). Can be a series (e.g., [[20.2, 23.2, \...]]{.code}) or a scalar (e.g., `20.2`)
+  1       unit        The unit it is in (`"degree_C"`)
+  2       group       The unit group (`"group_temperature"`)
+  ------- ----------- ------------------------------------------------------------------------------------------------------------
 
 It is valid to have a datum value of None.
 
-It is also valid to have a unit type of None (meaning there is no information about the unit the value is in). In this case, you won't be able to convert it to another unit.
+It is also valid to have a unit type of None (meaning there is no
+information about the unit the value is in). In this case, you won't be
+able to convert it to another unit.
 
 Here are some examples:
 
+``` tty
 from weewx.units import ValueTuple
 
 freezing_vt = ValueTuple(0.0, "degree_C", "group_temperature")
 body_temperature_vt = ValueTuple(98.6, "degree_F", group_temperature")
 station_altitude_vt = ValueTuple(120.0, "meter", "group_altitude")
         
+```
 
-Class ValueHelper
------------------
+### Class `ValueHelper` {#ValueHelper}
 
-Class ValueHelper contains all the information necessary to do the proper formatting of a value, including a unit label.
+Class `ValueHelper` contains all the information necessary to do
+the proper formatting of a value, including a unit label.
 
-#### Instance attribute
+##### Instance attribute
 
 ValueHelper.**value_t**
 
-Returns the ValueTuple instance held internally.
+Returns the `ValueTuple` instance held internally.
 
-#### Instance methods
+##### Instance methods
 
-ValueHelper.**__str__**()
+ValueHelper.**\_\_str\_\_**()
 
 Formats the value as a string, including a unit label, and returns it.
 
-ValueHelper.**format**(_format_string=None, None_string=None, add_label=True, localize=True_)
+ValueHelper.**format**(*format_string=None, None_string=None,
+add_label=True, localize=True*)
 
-Format the value as a string, using various specified options, and return it. Unless otherwise specified, a label is included.
+::: indent
+Format the value as a string, using various specified options, and
+return it. Unless otherwise specified, a label is included.
 
-format_string A string to be used for formatting. It must include one, and only one, [format specifier](https://docs.python.org/3/library/string.html#formatspec).
+`format_string` A string to be used for formatting. It must
+include one, and only one, [format
+specifier](https://docs.python.org/3/library/string.html#formatspec).
 
-None_string In the event of a value of Python None, this string will be substituted. If None, then a default string from skin.conf will be used.
+`None_string` In the event of a value of Python None, this string
+will be substituted. If None, then a default string from
+`skin.conf` will be used.
 
-add_label If truthy, then an appropriate unit label will be attached. Otherwise, no label is attached.
+`add_label` If truthy, then an appropriate unit label will be
+attached. Otherwise, no label is attached.
 
-localize If truthy, then the results will be localized. For example, in some locales, a comma will be used as the decimal specifier.
+`localize` If truthy, then the results will be localized. For
+example, in some locales, a comma will be used as the decimal specifier.
+:::
+:::
 
-
-
-__
-
-__
-
+::: footer
 © [Copyright](copyright.htm) Tom Keffer
-
-
-
-__
+:::
+:::
