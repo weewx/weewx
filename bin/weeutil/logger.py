@@ -58,8 +58,8 @@ LOGGING_STR = """[Logging]
             level = DEBUG
             formatter = standard
             class = logging.handlers.RotatingFileHandler
-            # Writing to this file will require root privileges:
-            filename = /var/log/weewx.log
+            # A user might want to override this location:
+            filename = /var/tmp/weewx.log
             maxBytes = 10000000
             backupCount = 4
 

@@ -35,6 +35,11 @@ Key:
 Consider making `$HOME/weewx-data/logs` the default log for MacOS.
 
 
+## Build and distribution
+
+Need make command for `mkdocs build` and subsequent upload to weewx.com
+
+
 ## Documentation
 
 Update internal links in the customizing guide.
@@ -72,5 +77,4 @@ Installs to ~/weewx-data now.
 
 Write a tool to migrate extensions.
 
-Mac logs to `syslog` like any other system, instead of `rotate`. Need to update wiki logging
-page, too.
+Rotate logger file is now in `/var/tmp` instead of `/var/log`.
