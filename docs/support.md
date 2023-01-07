@@ -21,6 +21,15 @@ If you get stuck, there is a very active User's Group to
 help, but please first try to solve the problem yourself.
 
 
+## FAQ
+
+The Frequently Asked Questions (FAQ) is contributed by WeeWX
+users.  It contains pointers to more information for problems
+and questions most frequently asked in the WeeWX forums.
+
+https://github.com/weewx/weewx/wiki/WeeWX-Frequently-Asked-Questions
+
+
 ## Wiki
 
 The wiki content is contributed by WeeWX
