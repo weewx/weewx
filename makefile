@@ -58,6 +58,7 @@ help: info
 	@echo " upload-redhat  upload the redhat rpm packages"
 	@echo "   upload-suse  upload the suse rpm packages"
 	@echo ""
+	@echo "    build-docs  generate the docs using mkdocs"
 	@echo "   upload-docs  upload docs to weewx.com"
 	@echo ""
 	@echo "       release  rearrange files on the download server"
@@ -152,6 +153,10 @@ src-package $(DSTDIR)/$(SRCPKG): MANIFEST.in
 # upload the source tarball to the web site
 upload-src:
 	scp $(DSTDIR)/$(SRCPKG) $(USER)@$(WEEWX_COM):$(WEEWX_STAGING)
+
+# Build the documentation:
+build-docs:
+	mkdocs build
 
 # upload docs to the web site
 upload-docs:
