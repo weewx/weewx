@@ -34,6 +34,8 @@ Key:
 
 Consider making `$HOME/weewx-data/logs` the default log for MacOS.
 
+Update the logging wiki.
+
 
 ## Build and distribution
 
@@ -57,6 +59,8 @@ Get rid of Python 2 install instructions wherever they occur.
 
 Use a dollar sign when referring to symbolic names. For example, $WEEWX_ROOT instead of WEEWX_ROOT.
 
+Split the bigger docs into multiple smaller docs. This will make navigation much easier.
+
 Define $WEEWX_ROOT.
 
 Note that SQLITE is now relative to WEEWX_ROOT.
@@ -75,6 +79,10 @@ Note the change in the weedb.sqlite API. Can't imagine it will affect anyone.
 
 Installs to ~/weewx-data now.
 
-Write a tool to migrate extensions.
+Guide on how to migrate to V5. (In progress)
 
-Rotate logger file is now in `/var/tmp` instead of `/var/log`.
+
+## Miscellaneous
+
+Should change the station registry uploader to use `~` instead of the absolute path to the user's
+home directory. See Slack: https://weewx.slack.com/archives/C04AEC3K4G7/p1673192099682549

@@ -17,9 +17,9 @@ Most of the guide applies to any hardware, but the exact data types are hardware
 
 Below is a brief overview of the WeeWX system architecture, which is covered in much more detail in the rest of this document.
 
-![The WeeWX pipeline](images/pipeline.png)
-
-A typical WeeWX pipeline. The actual pipeline depends on what extensions are in use. Data, in the form of LOOP packets and archive records, flows from top to bottom.
+| ![The WeeWX pipeline](images/pipeline.png)                                                                                                                            |
+|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| A typical WeeWX pipeline. The actual pipeline depends on what extensions are in use. Data, in the form of LOOP packets and archive records, flows from top to bottom. |
 
 *   A WeeWX process normally handles the monitoring of one station — _e.g._ a weather station. The process is configured using options in a configuration file, typically called `weewx.conf`.
 *   A WeeWX process has at most one "driver" to communicate with the station hardware and receive "high resolution" (_i.e._ every few seconds) measurement data in the form of LOOP packets. The driver is single-threaded and blocking, so no more than one driver can run in a WeeWX process.
@@ -2884,15 +2884,15 @@ If there is a time gap in the data, the option
 Here's what a plot looks like without and with this option being
 specified:
 
-No `line_gap_fraction` specified:
+| ![Gap not shown](images/day-gap-not-shown.png) |
+|------------------------------------------------|
+| No `line_gap_fraction` specified               |
 
-![Gap not shown](images/day-gap-not-shown.png)
 
 
-With `line_gap_fraction=0.01`. Note how each line has been split
-into two lines:
-
-![Gap showing](images/day-gap-showing.png)
+| ![Gap showing](images/day-gap-showing.png)                                           |
+|--------------------------------------------------------------------------------------|
+| With `line_gap_fraction=0.01`.<br/>Note how each line has been split into two lines. |
 
 ### Progressive vector plots
 
@@ -3955,14 +3955,15 @@ sudo cp /usr/share/weewx/schemas/wview_small.py /usr/share/weewx/user/myschema.p
 sudo nano /usr/share/weewx/user/myschema.py
 ```
 
+If you did a pip install, it can be difficult to find the starting schema because it can be
+buried deep in the Python library tree. It's easier to just download from the git repository and
+start with that:
 
-STOPPED HERE. How to find `user` directory???
-
-If you did a `setup.py` install, it would look like this:
-
-``` tty
-# Copy the wview_small schema over to the user subdirectory and rename it myschema:
-cp /home/weewx/bin/schemas/wview_small.py /home/weewx/bin/user/myschema.py
+``` shell
+# Download the wview_small schema and rename it to myschema.py
+cd ~/weewx-data/lib/user
+wget https://raw.githubusercontent.com/weewx/weewx/master/bin/schemas/wview_small.py
+mv wview_small.py myschema.py
 
 # Edit it using your favorite text editor
 nano /home/weewx/bin/user/myschema.py
@@ -3982,7 +3983,7 @@ In `myschema.py` change this:
 
 to this
 
-``` tty
+``` tty hl_lines="7"
          ...
          ('windchill',            'REAL'),
          ('windDir',              'REAL'),
@@ -3993,13 +3994,13 @@ to this
          ]
 ```
 
-The only change was the addition ([highlighted]{.highlight}) of
+The only change was the addition (==highlighted==)  of
 `electricity` to the list of observation names.
 
-Now change option `schema` under [[DataBindings]]{.code} in
+Now change option `schema` under `[DataBindings]` in
 `weewx.conf` to use your new schema:
 
-``` tty
+``` tty hl_lines="6"
 [DataBindings]
     [[wx_binding]]
         database = archive_sqlite
@@ -4011,9 +4012,10 @@ Now change option `schema` under [[DataBindings]]{.code} in
 Start WeeWX. When the new database is created, it will use your modified
 schema instead of the default.
 
-NOTE: This will only work when the database is first created!
-Thereafter, WeeWX reads the schema directly from the database and your
-changes will have no effect!
+!!! Note
+    This will only work when the database is first created!
+    Thereafter, WeeWX reads the schema directly from the database and your
+    changes will have no effect!
 
 ### Modifying an existing database
 
@@ -4023,7 +4025,7 @@ database. But, what if you already have a database, and you want to
 modify it, perhaps by adding a column or two? You cannot create a new
 starting schema, because it is only used when the database is first
 created. Here is where the tool
-`[wee_database`](utilities.htm#wee_database_utility) can be
+[`wee_database](utilities.htm#wee_database_utility) can be
 useful. Be sure to stop WeeWX before attempting to use it.
 
 There are two ways to do this. Both are covered below.
@@ -4034,7 +4036,8 @@ There are two ways to do this. Both are covered below.
     way, again by using the tool `wee_database`. This choice is
     best for large modifications.
 
-NOTE: Before using the tool `wee_database`, MAKE A BACKUP FIRST!
+!!! Warning
+    Before using the tool `wee_database`, MAKE A BACKUP FIRST!
 
 #### Modify the database *in situ* {#add_archive_type}
 
@@ -4043,7 +4046,7 @@ perhaps adding or removing a column, then this can easily be done using
 the tool `wee_database` with an appropriate option. We will cover
 the cases of adding, removing, and renaming a type. See the
 documentation for
-`[wee_database`](utilities.htm#wee_database_utility) for more
+[`wee_database`](utilities.htm#wee_database_utility) for more
 details.
 
 ##### Adding a type
@@ -4052,9 +4055,9 @@ Suppose you have an existing database and you want to add a type, such
 as the type `electricity` from the example above [*Adding a
 second data source*](#Adding_2nd_source). This can be done in one easy
 step using the tool `wee_database` with the option
-`\--add-column`:
+`--add-column`:
 
-``` {.tty .cmd}
+``` shell
 wee_database --add-column=electricity
 ```
 
@@ -4069,50 +4072,51 @@ existing database. For example, suppose you are using the
 to need to store soil moisture. You can drop the unnecessary types this
 way:
 
-``` {.tty .cmd}
+``` shell
 wee_database --drop-columns=soilMoist1,soilMoist2,soilMoist3,soilMoist4
 ```
 
-Unlike the option `\--add-column`, the option
-`\--drop-columns` can take more than one type. This is done in
+Unlike the option `--add-column`, the option
+`--drop-columns` can take more than one type. This is done in
 the interest of efficiency: adding new columns is easy and fast with the
 SQLite database, but dropping columns requires copying the whole
 database. By specifying more than one type, you can amortize the cost
 over a single invocation of the utility.
 
-NOTE: Dropping types from a database means *you will lose any data
-associated with them!* The data cannot be recovered.
+!!! Warning
+    Dropping types from a database means *you will lose any data
+    associated with them!* The data cannot be recovered.
 
 ##### Renaming a type
 
 Suppose you just want to rename a type? This can be done using the
-option `\--to-name`. Here's an example where you rename
+option `--to-name`. Here's an example where you rename
 `soilMoist1` to `soilMoistGarden`:
 
-``` {.tty .cmd}
+``` shell
 wee_database --rename-column=soilMoist1 --to-name=soilMoistGarden
 ```
 
-Note how the option `\--rename-column` also requires option
-`\--to-name`, which specifies the target name.
+Note how the option `--rename-column` also requires option
+`--to-name`, which specifies the target name.
 
 #### Transfer database using new schema {#transfer_database_using_new_schema}
 
 If you are making major changes to your database, you may find it easier
-to create a brand new database using the schema you want, then transfer
+to create a brand-new database using the schema you want, then transfer
 all data from the old database into the new one. This approach is more
 work, and takes more processing time than the *in situ* strategies
 outlines above, but has the advantage that it leaves behind a record of
 exactly the schema you are using.
 
-Here is the general strategy of how to do this.
+Here is the general strategy to do this.
 
 1.  Create a new schema that includes exactly the types that you want.
 2.  Specify this schema as the starting schema for the database.
 3.  Make sure you have the necessary permissions to create the new
     database.
 4.  Use the utility
-    `[wee_database`](utilities.htm#wee_database_utility) to
+    [`wee_database`](utilities.htm#wee_database_utility) to
     create the new database and populate it with data from the old
     database.
 5.  Shuffle databases around so WeeWX will use the new database.
@@ -4128,7 +4132,7 @@ Here are the details:
     schema with whatever database binding you are working with
     (generally, `wx_binding`). For example:
 
-    ``` tty
+    ``` ini hl_lines="7"
     [DataBindings]
 
         [[wx_binding]]
@@ -4140,14 +4144,14 @@ Here are the details:
 
 3.  **Check permissions.** The reconfiguration utility will create a new
     database with the same name as the old, except with the suffix
-    `\_new` attached to the end. Make sure you have the necessary
+    `_new` attached to the end. Make sure you have the necessary
     permissions to do this. In particular, if you are using MySQL, you
     will need `CREATE` privileges.
 
 4.  **Create and populate the new database.** Use the utility
-    `wee_database` with the `\--reconfigure` option.
+    `wee_database` with the `--reconfigure` option.
 
-    ``` {.tty .cmd}
+    ``` shell
     wee_database weewx.conf --reconfigure
     ```
 
@@ -4159,8 +4163,8 @@ Here are the details:
 5.  **Shuffle the databases.** Now arrange things so WeeWX can find the
     new database.
 
-    **Warning!**\
-    Make a backup of the data before doing any of the next steps!
+    !!! Warning
+        Make a backup of the data before doing any of the next steps!
 
     You can either shuffle the databases around so the new database has
     the same name as the old database, or edit `weewx.conf` to
@@ -4168,14 +4172,14 @@ Here are the details:
 
     For SQLite:
 
-    ``` {.tty .cmd}
-    cd SQLITE_ROOT
+    ``` shell
+    cd ~/weewx-data/archive
     mv weewx.sdb_new weewx.sdb
     ```
 
     For MySQL:
 
-    ``` tty
+    ``` shell
     mysql -u <username> --password=<mypassword>
     mysql> DROP DATABASE weewx;                             # Delete the old database
     mysql> CREATE DATABASE weewx;                           # Create a new one with the same name
@@ -4186,11 +4190,11 @@ Here are the details:
     rebuilding the daily summaries inside the new database. This will be
     done automatically by WeeWX at the next startup. Alternatively, it
     can be done manually using the
-    `[wee_database`](utilities.htm#wee_database_utility) utility
-    and the `\--rebuild-daily` option:
+    [`wee_database`](utilities.htm#wee_database_utility) utility
+    and the `--rebuild-daily` option:
 
-    ``` {.tty .cmd}
-    wee_database weewx.conf --rebuild-daily
+    ``` shell
+    wee_database --rebuild-daily
     ```
 
 ### Changing the unit system in an existing database {#Changing_the_unit_system}
@@ -4207,7 +4211,7 @@ software that expects metric units.
 You should not change the database unit system midstream. That is, do
 not start with one unit system then, some time later, switch to another.
 WeeWX cannot handle databases with mixed unit systems --- see the
-section [ [[StdConvert]](usersguide.htm#StdConvert)]{.code} in the
+section [`[StdConvert]`](usersguide.htm#StdConvert) in the
 WeeWX User's Guide. However, you can reconfigure the database by
 copying it to a new database, performing the unit conversion along the
 way. You then use this new database.
@@ -4219,25 +4223,25 @@ that instead of specifying a new starting schema, you specify a
 different database unit system. This means that instead of steps 1 and 2
 above, you edit the configuration file and change option
 `target_unit` in section
-[[[StdConvert]](usersguide.htm#StdConvert)]{.code} to reflect your
+[`[StdConvert]`](usersguide.htm#StdConvert)] to reflect your
 choice. For example, if you are switching to metric units, the option
 will look like:
 
-``` tty
+``` ini
 [StdConvert]
     target_unit = METRICWX
 ```
 
 After changing `target_unit`, you then go ahead with the rest of
 the steps. That is run `wee_database` with the
-`\--reconfigure` option, then shuffle the databases.
+`--reconfigure` option, then shuffle the databases.
 
 ### Rebuilding the daily summaries
 
 The `wee_database` utility can also be used to rebuild the daily
 summaries:
 
-``` {.tty .cmd}
+``` shell
 wee_database weewx.conf --rebuild-daily
 ```
 
@@ -4245,24 +4249,24 @@ In most cases this will be sufficient; however, if anomalies remain in
 the daily summaries the daily summary tables may be dropped first before
 rebuilding:
 
-``` {.tty .cmd}
+``` shell
 wee_database weewx.conf --drop-daily
 ```
 
 The summaries will automatically be rebuilt the next time WeeWX starts,
 or they can be rebuilt with the utility:
 
-``` {.tty .cmd}
+``` shell
 wee_database weewx.conf --rebuild-daily
 ```
 
 ## Customizing units and unit groups {#customizing_units}
 
-**Warning!**\
-This is an area that is changing rapidly in WeeWX. Presently, new units
-and unit groups are added by manipulating the internal dictionaries in
-WeeWX (as described below). In the future, they may be specified in
-`weewx.conf`.
+!!! Warning
+    This is an area that is changing rapidly in WeeWX. Presently, new units
+    and unit groups are added by manipulating the internal dictionaries in
+    WeeWX (as described below). In the future, they may be specified in
+    `weewx.conf`.
 
 ### Assigning a unit group
 
@@ -4276,7 +4280,7 @@ the dictionary `weewx.units.obs_group_dict`.
 Add the following to our new services file `user/electricity.py`,
 just after the last import statement:
 
-``` tty
+``` python
 import weewx
 from weewx.engine import StdService
 
@@ -4295,7 +4299,7 @@ Once the observation has been associated with a unit group, the unit
 labels and other tag syntax will work for that observation. So, now a
 tag like:
 
-``` tty
+```
 $month.electricity.sum
 ```
 
@@ -4325,7 +4329,7 @@ To make this work, we need to add the following to
 1.  As before, we start by specifying what group our new observation
     type belongs to:
 
-    ``` tty
+    ``` python
     import weewx.units
     weewx.units.obs_group_dict['rocketForce'] = 'group_force'
     ```
@@ -4333,7 +4337,7 @@ To make this work, we need to add the following to
 2.  Next, we specify what unit is used to measure force in the three
     standard unit systems used by weewx.
 
-    ``` tty
+    ``` python
     weewx.units.USUnits['group_force'] = 'pound'
     weewx.units.MetricUnits['group_force'] = 'newton'
     weewx.units.MetricWXUnits['group_force'] = 'newton'
@@ -4342,7 +4346,7 @@ To make this work, we need to add the following to
 3.  Then we specify what formats and labels to use for `newton`
     and `pound`:
 
-    ``` tty
+    ``` python
     weewx.units.default_unit_format_dict['newton'] = '%.1f'
     weewx.units.default_unit_format_dict['pound']  = '%.1f'
 
@@ -4352,7 +4356,7 @@ To make this work, we need to add the following to
 
 4.  Finally, we specify how to convert between them:
 
-    ``` tty
+    ``` python
     weewx.units.conversionDict['newton'] = {'pound':  lambda x : x * 0.224809}
     weewx.units.conversionDict['pound']  = {'newton': lambda x : x * 4.44822}
     ```
@@ -4366,9 +4370,9 @@ Now you've added a new type of units. How do you use it?
 
 Pretty much like any other units. For example, to do a plot of the
 month's electric consumption, totaled by day, add this section to the
-[[[month_images]]]{.code} section of `skin.conf`:
+`[[month_images]]` section of `skin.conf`:
 
-``` tty
+``` ini
 [[[monthelectric]]]
     [[[[electricity]]]]
         aggregate_type = sum
@@ -4383,15 +4387,14 @@ If you wish to use the new type in the templates, it will be available
 using the same syntax as any other type. Here are some other tags that
 might be useful:
 
-  ---------------------------------------------------------------- -----------------------------------------------------------------------------------------------------------------------
-  Tag                                                              Meaning
-  $day.electricity.sum                                            Total consumption since midnight
-  $year.electricity.sum                                           Total consumption since the first of the year
-  $year.electricity.max                                           The most consumed during any archive period
-  $year.electricity.maxsum                                        The most consumed during a day
-  $year.electricity.maxsumtime                                    The day it happened.
-  $year.electricity.sum_ge((5000.0, 'kWh', 'group_energy'))   The number of days of the year where more than 5.0 kWh of energy was consumed. The argument is a `ValueTuple`.
-  ---------------------------------------------------------------- -----------------------------------------------------------------------------------------------------------------------
+|  Tag| Meaning                                                                                                                |
+|----|------------------------------------------------------------------------------------------------------------------------|
+|  `$day.electricity.sum`| Total consumption since midnight                                                                                       |
+ | `$year.electricity.sum`| Total consumption since the first of the year                                                                          |
+|  `$year.electricity.max`| The most consumed during any archive period                                                                            |
+|  `$year.electricity.maxsum`| The most consumed during a day                                                                                         |
+|  `$year.electricity.maxsumtime`| The day it happened.                                                                                                   |
+|  `$year.electricity.sum_ge((5000.0, 'kWh', 'group_energy'))`| The number of days of the year where<br/>more than 5.0 kWh of energy was consumed.<br/>The argument is a `ValueTuple`. |
 
 ## Adding new, derived types
 
@@ -4403,7 +4406,7 @@ function of two observables, `outTemp`, and `outHumidity`.
 WeeWX calculates it automatically for you.
 
 Calculating new, derived types is the job of the WeeWX XTypes system. It
-can also allow you to add new aggregatioin types.
+can also allow you to add new aggregation types.
 
 See the Wiki article [*WeeWX V4 user defined
 types*](https://github.com/weewx/weewx/wiki/WeeWX-V4-user-defined-types)
@@ -4472,18 +4475,31 @@ will do this when an archive record is due. A "loop packet" is a
 dictionary. At the very minimum it must contain keys for the observation
 time and for the units used within the packet.
 
-  ---------- ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-  dateTime   The time of the observation in unix epoch time.
-  usUnits    The unit system used. `weewx.US` for US customary, `weewx.METRICWX`, or `weewx.METRIC` for metric. See the Appendix [*Units*](#units) for their exact definitions. The dictionaries `USUnits`, `MetricWXUnits`, and `MetricUnits` in file `units.py`, can also be useful.
-  ---------- ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-  : Required keys
+<table class="indent">
+    <caption>Required keys</caption>
+    <tbody>
+    <tr>
+        <td class="code first_col">dateTime</td>
+        <td>The time of the observation in unix epoch time.</td>
+    </tr>
+    <tr>
+        <td class="code first_col">usUnits</td>
+        <td>
+            The unit system used. <span class="code">weewx.US</span> for US customary, <span
+            class="code">weewx.METRICWX</span>, or <span class="code">weewx.METRIC</span> for metric. See the
+            Appendix <a href="#units"><em>Units</em></a> for their exact definitions. The dictionaries <span
+            class="code">USUnits</span>, <span class="code">MetricWXUnits</span>, and <span
+            class="code">MetricUnits</span> in file <span class="code">units.py</span>, can also be useful.
+        </td>
+    </tr>
+    </tbody>
+</table>
 
 Then include any observation types you have in the dictionary. Every
 packet need not contain the same set of observation types. Different
 packets can use different unit systems, but all observations within a
 packet must use the same unit system. If your hardware is capable of
-measuing an observation type but, for whatever reason, its value is bad
+measuring an observation type but, for whatever reason, its value is bad
 (maybe a bad checksum?), then set its value to `None`. If your
 hardware is incapable of measuring an observation type, then leave it
 out of the dictionary.
@@ -4505,13 +4521,34 @@ Be careful when reporting pressure. There are three observations related
 to pressure. Some stations report only the station pressure, others
 calculate and report sea level pressures.
 
-  ----------- -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-  pressure    The *Station Pressure* (SP), which is the raw, absolute pressure measured by the station. This is the true barometric pressure for the station.
-  barometer   The *Sea Level Pressure* (SLP) obtained by correcting the *Station Pressure* for altitude and local temperature. This is the pressure reading most commonly used by meteorologist to track weather systems at the surface, and this is the pressure that is uploaded to weather services by WeeWX. It is the station pressure reduced to mean sea level using local altitude and local temperature.
-  altimeter   The *Altimeter Setting* (AS) obtained by correcting the *Station Pressure* for altitude. This is the pressure reading most commonly heard in weather reports. It is not the true barometric pressure of a station, but rather the station pressure reduced to mean sea level using altitude and an assumed temperature average.
-  ----------- -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-  : Pressure types
+<table class="indent">
+    <caption>Pressure types</caption>
+    <tbody>
+    <tr>
+        <td class="code first_col">pressure</td>
+        <td>The <em>Station Pressure</em> (SP), which is the raw, absolute pressure measured by the station.
+            This is the true barometric pressure for the station.
+        </td>
+    </tr>
+    <tr>
+        <td class="code first_col">barometer</td>
+        <td>The <em>Sea Level Pressure</em> (SLP) obtained by correcting the <em>Station Pressure</em> for
+            altitude and local temperature. This is the pressure reading most commonly used by meteorologist to
+            track weather systems at the surface, and this is the pressure that is uploaded to weather services
+            by WeeWX. It is the station pressure reduced to mean sea level using local altitude and local
+            temperature.
+        </td>
+    </tr>
+    <tr>
+        <td class="code first_col">altimeter</td>
+        <td>The <em>Altimeter Setting</em> (AS) obtained by correcting the <em>Station Pressure</em> for
+            altitude. This is the pressure reading most commonly heard in weather reports. It is not the true
+            barometric pressure of a station, but rather the station pressure reduced to mean sea level using
+            altitude and an assumed temperature average.
+        </td>
+    </tr>
+    </tbody>
+</table>
 
 #### `genArchiveRecords()`
 
@@ -4633,7 +4670,7 @@ extension is not installed? Make the skin display a message about
 ### Packaging an extension
 
 The structure of an extension mirrors that of WeeWX itself. If the
-customizations include a skin, the extension will have a skins
+customizations include a skin, the extension will have a `skins`
 directory. If the customizations include python code, the extension will
 have a `bin/user` directory.
 
@@ -4648,7 +4685,7 @@ Each extension should also include:
 
 For example, here is the structure of a skin called `basic`:
 
-``` tty
+```
 basic/
 basic/changelog
 basic/install.py
@@ -4665,7 +4702,7 @@ basic/skins/basic/skin.conf
 
 Here is the structure of a search list extension called `xstats`:
 
-``` tty
+```
 xstats/
 xstats/changelog
 xstats/install.py
@@ -4683,10 +4720,11 @@ extension directory.
 For example, create the compressed archive for the `basic` skin
 like this:
 
-tar cvfz basic.tar.gz basic
+    tar cvfz basic.tar.gz basic
 
-Once an extension has been packaged, it can be installed using the
-[wee_extension](utilities.htm#wee_extension_utility) utility.
+Once an extension has been packaged, it can be installed using `weectl`:
+
+    weectl extension install extension-location
 
 ### Default values
 
@@ -4694,8 +4732,8 @@ Whenever possible, an extension should *just work*, with a minimum of
 input from the user. At the same time, parameters for the most
 frequently requested options should be easily accessible and easy to
 modify. For skins, this might mean parameterizing strings into
-[[Labels]]{.code} for easier customization. Or it might mean providing
-parameters in [[Extras]]{.code} to control skin behavior or to
+`[Labels]` for easier customization. Or it might mean providing
+parameters in `[Extras] to control skin behavior or to
 parameterize links.
 
 Some parameters *must* be specified, and no default value would be
@@ -4713,8 +4751,8 @@ type of required value.
 
 This section contains the options available in the skin configuration
 file, `skin.conf`. The same options apply to the language files
-found in the subdirectory `lang`, like `lang/en.conf for
-English`.
+found in the subdirectory `lang`, like `lang/en.conf` for
+English.
 
 We recommend to put
 
@@ -4723,7 +4761,7 @@ We recommend to put
 -   language dependent labels and texts into the language files.
 
 The most important options, the ones you are likely to have to
-customize, are [**highlighted**]{.config_important}.
+customize, are ==highlighted==.
 
 It is worth noting that, like the main configuration file
 `weewx.conf`, UTF-8 is used throughout.
@@ -4736,28 +4774,28 @@ in your templates.
 As an example, the `skin.conf` file for the *Seasons* skin
 includes three options:
 
-  ------------------- ----------------------------
-  Skin option         Template tag
-  radar_img           $Extras.radar_img
-  radar_url           $Extras.radar_url
-  googleAnalyticsId   $Extras.googleAnalyticsId
-  ------------------- ----------------------------
+
+| Skin option         | Template tag                |
+|---------------------|-----------------------------|
+| `radar_img`         | `$Extras.radar_img`         |
+| `radar_url`         | `$Extras.radar_url`         |
+| `googleAnalyticsId` | `$Extras.googleAnalyticsId` |
 
 If you take a look at the template `radar.inc` you will see
 examples of testing for these tags.
 
-radar_img
+`radar_img`
 
 Set to an URL to show a local radar image for your region.
 
-radar_url
+`radar_url`
 
 If the radar image is clicked, the browser will go to this URL. This is
 usually used to show a more detailed, close-up, radar picture.
 
 For me in Oregon, setting the two options to:
 
-``` tty
+``` ini
 [Extras]
     radar_img = http://radar.weather.gov/ridge/lite/N0R/RTX_loop.gif
     radar_url = http://radar.weather.gov/ridge/radar.php?product=NCR&rid=RTX&loop=yes
@@ -4770,21 +4808,21 @@ website](http://radar.weather.gov/) to find a nice one that will work
 for you. In other countries, you will have to consult your local weather
 service.
 
-googleAnalyticsId
+`googleAnalyticsId`
 
 If you have a [Google Analytics ID](https://www.google.com/analytics/),
 you can set it here. The Google Analytics Javascript code will then be
 included, enabling analytics of your website usage. If commented out,
 the code will not be included.
 
-#### Extending [[Extras]]{.code}
+#### Extending `[Extras]`
 
 Other tags can be added in a similar manner, including sub-sections. For
-example, say you have added a video camera and you would like to add a
+example, say you have added a video camera, and you would like to add a
 still image with a hyperlink to a page with the video. You want all of
 these options to be neatly contained in a sub-section.
 
-``` tty
+``` ini
 [Extras]
     [[video]]
         still = video_capture.jpg
@@ -4794,7 +4832,7 @@ these options to be neatly contained in a sub-section.
 
 Then in your template you could refer to these as:
 
-``` tty
+``` html
 <a href="$Extras.video.hyperlink">
     <img src="$Extras.video.still" alt="Video capture"/>
 </a>
@@ -4804,12 +4842,12 @@ Then in your template you could refer to these as:
 
 This section defines various labels.
 
-hemispheres
+`hemispheres`
 
 Comma separated list for the labels to be used for the four hemispheres.
 The default is `N, S, E, W`.
 
-latlon_formats
+`latlon_formats`
 
 Comma separated list for the formatting to be used when converting
 latitude and longitude to strings. There should be three elements:
@@ -4818,15 +4856,15 @@ latitude and longitude to strings. There should be three elements:
 2.  The format to be used for whole degrees of longitude
 3.  The format to be used for minutes.
 
-This allows you to decide whether or not you want leading zeroes. The
-default includes leading zeroes and is "%02d", "%03d", "%05.2f"
+This allows you to decide whether you want leading zeroes. The
+default includes leading zeroes and is `"%02d", "%03d", "%05.2f"`.
 
 #### [[Generic]] {#Labels_Generic .config_section}
 
 This sub-section specifies default labels to be used for each
 observation type. For example, options
 
-``` tty
+``` ini
 inTemp  = Temperature inside the house
 outTemp = Outside Temperature
 UV      = UV Index
@@ -4836,7 +4874,7 @@ would cause the given labels to be used for plots of `inTemp` and
 `outTemp`. If no option is given, then the observation type
 itself will be used (*e.g.*, `outTemp`).
 
-### [Almanac] {#almanac-1 .config_section}
+### [Almanac] {#almanac-1}
 
 This section controls what text to use for the almanac. It consists of
 only one entry
@@ -4848,11 +4886,11 @@ phases of the moon. Default is `New, Waxing crescent, First quarter,
 Waxing gibbous, Full, Waning gibbous, Last quarter, Waning
 crescent`.
 
-### [Units] {#units-1 .config_section}
+### [Units] {#units-1}
 
 This section controls how units are managed and displayed.
 
-#### [[Groups]] {#groups .config_section}
+#### [[Groups]] {#groups}
 
 This sub-section lists all the *Unit Groups* and specifies which
 measurement unit is to be used for each one of them.
@@ -4879,91 +4917,91 @@ or `feet`. See the *[Appendix: Units](#units)* for more
 information, including a concise summary of the groups, their members,
 and which options can be used for each group.
 
-[group_altitude]{#group_altitude .config_option}
+==`group_altitude`=={#group_altitude}
 
 Which measurement unit to be used for altitude. Possible options are
 `foot` or `meter`.
 
-group_direction
+`group_direction`
 
 Which measurement unit to be used for direction. The only option is
 `degree_compass`.
 
-group_distance
+`group_distance`
 
 Which measurement unit to be used for distance (such as for wind run).
 Possible options are `mile` or `km`.
 
-group_moisture
+`group_moisture`
 
 The measurement unit to be used for soil moisture. The only option is
 `centibar`.
 
-group_percent
+`group_percent`
 
 The measurement unit to be used for percentages. The only option is
 `percent`.
 
-group_pressure
+==`group_pressure`==
 
 The measurement unit to be used for pressure. Possible options are one
 of `inHg` (inches of mercury), `mbar`, `hPa`, or
 `kPa`.
 
-group_pressurerate
+==`group_pressurerate`==
 
 The measurement unit to be used for rate of change in pressure. Possible
 options are one of `inHg_per_hour` (inches of mercury per hour),
 `mbar_per_hour`, `hPa_per_hour`, or `kPa_per_hour`.
 
-group_radiation
+`group_radiation`
 
 The measurement unit to be used for radiation. The only option is
 `watt_per_meter_squared`.
 
-group_rain
+==`group_rain`==
 
 The measurement unit to be used for precipitation. Options are
 `inch`, `cm`, or `mm`.
 
-group_rainrate
+==`group_rainrate`==
 
 The measurement unit to be used for rate of precipitation. Possible
 options are one of `inch_per_hour`, `cm_per_hour`, or
 `mm_per_hour`.
 
-group_speed
+==`group_speed`==
 
 The measurement unit to be used for wind speeds. Possible options are
 one of `mile_per_hour`, `km_per_hour`, `knot`,
 `meter_per_second`, or `beaufort`.
 
-group_speed2
+==`group_speed2`==
 
 This group is similar to `group_speed`, but is used for
 calculated wind speeds which typically have a slightly higher
 resolution. Possible options are one `mile_per_hour2`,
 `km_per_hour2`, `knot2`, or `meter_per_second2`.
 
-[group_temperature]{#group_temperature .config_important}
+==`group_temperature`=={#group_temperature}
 
 The measurement unit to be used for temperatures. Options are
-`degree_C`, [[degree_E](https://xkcd.com/1923/)]{.code},
+`degree_C`, [`degree_E`](https://xkcd.com/1923/),
 `degree_F`, or `degree_K`.
 
-group_volt
+`group_volt`
 
 The measurement unit to be used for voltages. The only option is
 `volt`.
 
-#### [[StringFormats]] {#Units_StringFormats .config_section}
+#### `[[StringFormats]]` {#Units_StringFormats}
 
 This sub-section is used to specify what string format is to be used for
 each unit when a quantity needs to be converted to a string. Typically,
 this happens with y-axis labeling on plots and for statistics in HTML
 file generation. For example, the options
 
-``` tty
+``` ini
 degree_C = %.1f
 inch     = %.2f
 ```
@@ -4978,16 +5016,16 @@ and are very similar to C's `sprintf()` codes.
 You can also specify what string to use for an invalid or unavailable
 measurement (value `None`). For example,
 
-``` tty
+``` ini
 NONE = " N/A "
 ```
 
-#### [[Labels]] {#Units_Labels .config_section}
+#### `[[Labels]]` {#Units_Labels}
 
 This sub-section specifies what label is to be used for each measurement
 unit type. For example, the options
 
-``` tty
+``` ini
 degree_F = °F
 inch     = ' in'
 ```
@@ -5001,7 +5039,7 @@ character map.
 If the label includes two values, then the first is assumed to be the
 singular form, the second the plural form. For example,
 
-``` tty
+``` ini
 foot   = " foot",   " feet"
 ...
 day    = " day",    " days"
@@ -5010,7 +5048,7 @@ minute = " minute", " minutes"
 second = " second", " seconds"
 ```
 
-#### [[TimeFormats]] {#Units_TimeFormats .config_section}
+#### `[[TimeFormats]]` {#Units_TimeFormats}
 
 This sub-section specifies what time format to use for different time
 *contexts*. For example, you might want to use a different format when
@@ -5018,7 +5056,7 @@ displaying the time in a day, versus the time in a month. It uses
 [strftime()](https://docs.python.org/3/library/datetime.html#strftime-strptime-behavior)
 formats. The default looks like this:
 
-``` tty
+``` ini
     [[TimeFormats]]
         hour        = %H:%M
         day         = %X
@@ -5039,7 +5077,7 @@ LANG](#environment_variable_LANG) for details on how to do this).
 However, the results may not look particularly nice, and you may want to
 change them. For example, I use this in the U.S.:
 
-``` tty
+``` ini
     [[TimeFormats]]
         #
         # More attractive formats that work in most Western countries.
@@ -5060,52 +5098,52 @@ the formatting to be set for almanac times The first,
 sunrise or sunset. The second, `ephem_year`, is used for almanac
 times within the year, such as the next equinox or full moon.
 
-#### [[Ordinates]] {#Units_Ordinates .config_section}
+#### `[[Ordinates]]` {#Units_Ordinates}
 
-directions
+`directions`
 
 Set to the abbreviations to be used for ordinal directions. By default,
 this is `N, NNE, NE, ENE, E, ESE, SE, SSE, S, SSW, SW, WSW, W, WNW, NW,
 NNW, N`.
 
-#### [[DegreeDays]] {#degreedays .config_section}
+#### `[[DegreeDays]]` {#degreedays}
 
-heating_base\
-cooling_base\
-growing_base
+==`heating_base`==<br/>
+==`cooling_base`==<br/>
+`growing_base`
 
 Set to the base temperature for calculating heating, cooling, and
 growing degree-days, along with the unit to be used. Examples:
 
-``` tty
+``` ini
 heating_base = 65.0, degree_F
 cooling_base = 20.0, degree_C
 growing_base = 50.0, degree_F
 ```
 
-#### [[Trend]] {#trend .config_section}
+#### `[[Trend]]` {#trend}
 
-time_delta
+`time_delta`
 
 Set to the time difference over which you want trends to be calculated.
 The default is 3 hours.
 
-time_grace
+`time_grace`
 
 When searching for a previous record to be used in calculating a trend,
 a record within this amount of `time_delta` will be accepted.
 Default is 300 seconds.
 
-### [Texts] {#texts .config_section}
+### `[Texts]` {#texts}
 
-The section [[Texts]]{.code} holds static texts that are used in the
+The section `[Texts]` holds static texts that are used in the
 templates. Generally there are multiple language files, one for each
 supported language, named by the language codes defined in
 [ISO 639-1](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes){target="_blank"}.
 The entries give the translation of the texts to the target language.
 For example,
 
-``` tty
+``` ini
 [Texts]
     "Current Conditions" = "Aktuelle Werte"
 ```
@@ -5114,55 +5152,72 @@ would cause "Aktuelle Werte" to be used whereever `$gettext("Current
 Conditions"` appeared. See the section on
 `[$gettext`](#Tag_$gettext).
 
-**Note!**\
-Strings that include commas must be included in single or double quotes.
+!!! Note
+    Strings that include commas must be included in single or double quotes.
+
 
 ### [CheetahGenerator] {#CheetahGenerator}
 
 This section contains the options for the Cheetah generator. It applies
 to `skin.conf` only.
 
-search_list
+`search_list`
 
 This is the list of search list objects that will be scanned by the
 template engine, looking for tags. See the section *[Defining new
 tags](#defining_new_tags)* and the [Cheetah
 documentation](https://cheetahtemplate.org/) for details on search
-lists. If no [search_list]{.config_option} is specified, a default list
+lists. If no `search_list` is specified, a default list
 will be used.
 
-search_list_extensions
+`search_list_extensions`
 
 This defines one or more search list objects that will be appended to
-the [search_list]{.config_option}. For example, if you are using the
+the `search_list]`. For example, if you are using the
 "seven day" and "forecast" search list extensions, the option would
 look like
 
-``` tty
+``` ini
 search_list_extensions = user.seven_day.SevenDay, user.forecast.ForecastVariables
 ```
 
-encoding
+`encoding`
 
 As Cheetah goes through the template, it substitutes strings for all tag
 values. This option controls which encoding to use for the new strings.
-The encoding can be chosen on a per file basis. All of the encodings
+The encoding can be chosen on a per-file basis. All the encodings
 listed in the Python documentation [*Standard
 Encodings*](https://docs.python.org/3/library/codecs.html#standard-encodings)
 are available, as well as these WeeWX-specific encodings:
 
-  ------------------ ----------------------------------------------------------------------------------------------------------------------------
-  Encoding           Comments
-  html_entities      Non 7-bit characters will be represented as HTML entities (*e.g.*, the degree sign will be represented as `&#176;`)
-  strict_ascii       Non 7-bit characters will be ignored.
-  normalized_ascii   Replace accented characters with non-accented analogs (*e.g.*, 'ö' will be replaced with 'o').
-  ------------------ ----------------------------------------------------------------------------------------------------------------------------
+<table class="indent">
+    <tbody>
+    <tr class="first_row">
+        <td>Encoding</td>
+        <td>Comments</td>
+    </tr>
+    <tr>
+        <td class="code first_col">html_entities</td>
+        <td>Non 7-bit characters will be represented as HTML entities (<i>e.g.</i>, the degree sign will be
+            represented as <span class="code">&amp;#176;</span>)
+        </td>
+    </tr>
+    <tr>
+        <td class="code first_col">strict_ascii</td>
+        <td>Non 7-bit characters will be ignored.</td>
+    </tr>
+    <tr>
+        <td class="code first_col">normalized_ascii</td>
+        <td>Replace accented characters with non-accented analogs (<i>e.g.</i>, 'ö' will be replaced with 'o').</td>
+    </tr>
+    </tbody>
+</table>
 
 The encoding `html_entities` is the default. Other common choices
 are `utf8`, `cp1252` (*a.k.a.* Windows-1252), and
 `latin1`.
 
-template
+`template`
 
 The name of a template file. A template filename must end with
 `.tmpl`. Filenames are case-sensitive. If the template filename
@@ -5172,29 +5227,29 @@ of month, respectively. So, a template with the name
 `summary-YYYY-MM.html.tmpl` would have name
 `summary-2010-03.html` for the month of March, 2010.
 
-generate_once
+`generate_once`
 
 When set to `True`, the template is processed only on the first
 invocation of the report engine service. This feature is useful for
 files that do not change when data values change, such as HTML files
 that define a layout. The default is `False`.
 
-stale_age
+`stale_age`
 
 File staleness age, in seconds. If the file is older than this age it
 will be generated from the template. If no `stale_age` is
 specified, then the file will be generated every time the generator
 runs.
 
-**Note**\
-Precise control over when a *[report](usersguide.htm#Reports)* is run is
-available through use of the `report_timing` option in
-`weewx.conf`. The `report_timing` option uses a CRON-like
-setting to control precisely when a report is run. See the *[Scheduling
-reports](#customizing_gen_time)* section for details on the
-`report_timing` option.
+!!! Note
+    Precise control over when a *[report](usersguide.htm#Reports)* is run is
+    available through use of the `report_timing` option in
+    `weewx.conf`. The `report_timing` option uses a CRON-like
+    setting to control precisely when a report is run. See the *[Scheduling
+    reports](#customizing_gen_time)* section for details on the
+    `report_timing` option.
 
-[[SummaryByDay]]
+`[[SummaryByDay]]`
 
 The `SummaryByDay` section defines some special behavior. Each
 template in this section will be used multiple times, each time with a
@@ -5202,116 +5257,102 @@ different per-day timespan. Be sure to include `YYYY`,
 `MM`, and `DD` in the filename of any template in this
 section.
 
-[[SummaryByMonth]]
+`[[SummaryByMonth]]`
 
 The `SummaryByMonth` section defines some special behavior. Each
 template in this section will be used multiple times, each time with a
 different per-month timespan. Be sure to include `YYYY` and
 `MM` in the filename of any template in this section.
 
-[[SummaryByYear]]
+`[[SummaryByYear]]`
 
 The `SummaryByYear` section defines some special behavior. Each
 template in this section will be used multiple times, each time with a
 different per-year timespan. Be sure to include `YYYY` in the
 filename of any template in this section.
 
-### [ImageGenerator] {#ImageGenerator .config_section}
+### `[ImageGenerator]` {#ImageGenerator}
 
 This section describes the various options available to the image
 generator.
 
-::: {.image .image-right}
-![Part names in a WeeWX image](images/image_parts.png)
+| ![Part names in a WeeWX image](images/image_parts.png) |
+|--------------------------------------------------------|
+| Part names in a WeeWX image                            |
 
-::: image_caption
-Part names in a WeeWX image
-:::
-:::
 
 #### Overall options
 
 These are options that affect the overall image.
 
-anti_alias
+`anti_alias`
 
 Setting to 2 or more might give a sharper image, with fewer jagged
 edges. Experimentation is in order. Default is `1`.
 
-chart_background_color
+| ![Effect of anti_alias option](images/antialias.gif)                |
+|---------------------------------------------------------------------|
+| A GIF showing the same image<br/>with `anti_alias=1`, `2`, and `4`. |
+
+`chart_background_color`
 
 The background color of the chart itself. Optional. Default is
 `#d8d8d8`.
 
-chart_gridline_color
+`chart_gridline_color`
 
 The color of the chart grid lines. Optional. Default is `#a0a0a0`
 
-::: {.image .image-right style="clear: right"}
-::: image
-![Effect of anti_alias option](images/antialias.gif)
+| ![Example of day/night bands](images/weektempdew.png) |
+|-------------------------------------------------------|
+| Example of day/night bands in a one week image        |
 
-::: image_caption
-A GIF showing the same image with `anti_alias=1`, `2`, and
-`4`.
-:::
-:::
-
-::: image
-![Example of day/night bands](images/weektempdew.png)
-
-::: image_caption
-Example of day/night bands in a one week image
-:::
-:::
-:::
-
-daynight_day_color
+`daynight_day_color`
 
 The color to be used for the daylight band. Optional. Default is
 `#ffffff`.
 
-daynight_edge_color
+`daynight_edge_color`
 
 The color to be used in the transition zone between night and day.
 Optional. Default is `#efefef`, a mid-gray.
 
-daynight_night_color
+`daynight_night_color`
 
 The color to be used for the nighttime band. Optional. Default is
 `#f0f0f0`, a dark gray.
 
-image_background_color
+`image_background_color`
 
 The background color of the whole image. Optional. Default is
 `#f5f5f5` ("SmokeGray")
 
-image_width\
-image_height
+`image_width`<br/>
+`image_height`
 
 The width and height of the image in pixels. Optional. Default is 300 x
 180 pixels.
 
-show_daynight
+`show_daynight`
 
 Set to `true` to show day/night bands in an image. Otherwise, set
 to false. This only looks good with day or week plots. Optional. Default
 is `false`.
 
-skip_if_empty
+`skip_if_empty`
 
 If set to `true`, then skip the generation of the image if all
 data in it are null. If set to a time period, such as `month` or
 `year`, then skip the generation of the image if all data in that
 period are null. Default is `false`.
 
-stale_age
+`stale_age`
 
 Image file staleness age, in seconds. If the image file is older than
 this age it will be generated. If no `stale_age` is specified,
 then the image file will be generated every time the generator runs.
 
-unit
+==`unit`==
 
 Normally, the unit used in a plot is set by whatever [unit group the
 types are in](#mixed_units). However, this option allows overriding the
@@ -5321,118 +5362,118 @@ unit used in a specific plot.
 
 These are options for the various labels used in the image.
 
-axis_label_font_color
+`axis_label_font_color`
 
 The color of the x- and y-axis label font. Optional. Default is
 `black`.
 
-axis_label_font_path
+`axis_label_font_path`
 
 The path to the font to be use for the x- and y-axis labels. Optional.
 If not given, or if WeeWX cannot find the font, then the default PIL
 font will be used.
 
-axis_label_font_size
+`axis_label_font_size`
 
 The size of the x- and y-axis labels in pixels. Optional. The default is
 `10`.
 
-bottom_label_font_color
+`bottom_label_font_color`
 
 The color of the bottom label font. Optional. Default is `black`.
 
-bottom_label_font_path
+`bottom_label_font_path`
 
 The path to the font to be use for the bottom label. Optional. If not
 given, or if WeeWX cannot find the font, then the default PIL font will
 be used.
 
-bottom_label_font_size
+`bottom_label_font_size`
 
 The size of the bottom label in pixels. Optional. The default is
 `10`.
 
-bottom_label_format
+`bottom_label_format`
 
 The format to be used for the bottom label. It should be a [strftime
 format](https://docs.python.org/3/library/datetime.html#strftime-strptime-behavior).
 Optional. Default is `'%m/%d/%y %H:%M'`.
 
-bottom_label_offset
+`bottom_label_offset`
 
 The margin of the bottom label from the bottom of the plot. Default is
 3.
 
-top_label_font_path
+`top_label_font_path`
 
 The path to the font to be use for the top label. Optional. If not
 given, or if WeeWX cannot find the font, then the default PIL font will
 be used.
 
-top_label_font_size
+`top_label_font_size`
 
 The size of the top label in pixels. Optional. The default is
 `10`.
 
-unit_label_font_color
+`unit_label_font_color`
 
 The color of the unit label font. Optional. Default is `black`.
 
-unit_label_font_path
+`unit_label_font_path`
 
 The path to the font to be use for the unit label. Optional. If not
 given, or if WeeWX cannot find the font, then the default PIL font will
 be used.
 
-unit_label_font_size
+`unit_label_font_size`
 
 The size of the unit label in pixels. Optional. The default is
 `10`.
 
-x_interval
+`x_interval`
 
 The time interval in seconds between x-axis tick marks. Optional. If not
 given, a suitable default will be chosen.
 
-x_label_format
+`x_label_format`
 
 The format to be used for the time labels on the x-axis. It should be a
 [strftime
 format](https://docs.python.org/3/library/datetime.html#strftime-strptime-behavior).
 Optional. If not given, a sensible format will be chosen automatically.
 
-x_label_spacing
+`x_label_spacing`
 
 Specifies the ordinal increment between labels on the x-axis: For
 example, 3 means a label every 3rd tick mark. Optional. The default is
 `2`.
 
-y_label_side
+`y_label_side`
 
 Specifies if the y-axis labels should be on the left, right, or both
 sides of the graph. Valid values are `left`, `right` or
 `both`. Optional. Default is `left`.
 
-y_label_spacing
+`y_label_spacing`
 
 Specifies the ordinal increment between labels on the y-axis: For
 example, 3 means a label every 3rd tick mark. Optional. The default is
 `2`.
 
-y_nticks
+`y_nticks`
 
 The nominal number of ticks along the y-axis. The default is
 `10`.
 
 #### Plot scaling options
 
-time_length
+`time_length`
 
 The nominal length of the time period to be covered in seconds. The
 exact length of the x-axis is chosen by the plotting engine to cover
 this period. Optional. Default is `86400` (one day).
 
-yscale
+`yscale`
 
 A 3-way tuple (`ylow`, `yhigh`, `min_interval`),
 where `ylow` and `yhigh` are the minimum and maximum
@@ -5444,36 +5485,32 @@ automatically.)
 
 #### Compass rose options
 
-::: {.image .image-right style="width: 300px"}
-![Example of a progressive vector plot](images/daywindvec.png)
+| ![Example of a progressive vector plot](images/daywindvec.png)     |
+|--------------------------------------------------------------------|
+| Example of a vector plot with a compass rose<br/>in the lower-left |
 
-::: image_caption
-Example of a vector plot with a compass rose in the lower-left
-:::
-:::
-
-rose_label
+`rose_label`
 
 The label to be used in the compass rose to indicate due North.
 Optional. Default is `N`.
 
-rose_label_font_path
+`rose_label_font_path`
 
 The path to the font to be use for the rose label (the letter "N,"
 indicating North). Optional. If not given, or if WeeWX cannot find the
 font, then the default PIL font will be used.
 
-rose_label_font_size
+`rose_label_font_size`
 
 The size of the compass rose label in pixels. Optional. The default is
 `10`.
 
-rose_label_font_color
+`rose_label_font_color`
 
 The color of the compass rose label. Optional. Default is the same color
 as the rose itself.
 
-vector_rotate
+`vector_rotate`
 
 Causes the vectors to be rotated by this many degrees. Positive is
 clockwise. If westerly winds dominate at your location (as they do at
@@ -5485,44 +5522,41 @@ against the x-axis. Optional. The default is `0`.
 
 These are options shared by all the plot lines.
 
-chart_line_colors
+`chart_line_colors`
 
 Each chart line is drawn in a different color. This option is a list of
 those colors. If the number of lines exceeds the length of the list,
 then the colors wrap around to the beginning of the list. Optional. In
 the case of bar charts, this is the color of the outline of the bar.
-Default is `#0000ff, #00ff00, #ff0000`.\
-\
+Default is `#0000ff, #00ff00, #ff0000`.
 Individual line color can be overridden by using option `color`.
 
-chart_fill_colors
+`chart_fill_colors`
 
 A list of the color to be used as the fill of the bar charts. Optional.
 The default is to use the same color as the outline color (option
 `chart_line_colors`).
 
-chart_line_width
+`chart_line_width`
 
 Each chart line can be drawn using a different line width. This option
 is a list of these widths. If the number of lines exceeds the length of
 the list, then the widths wrap around to the beginning of the list.
-Optional. Default is `1, 1, 1`.\
-\
+Optional. Default is `1, 1, 1`.
 Individual line widths can be overridden by using option `width`.
 
 #### Individual line options
 
 These are options that are set for individual lines.
 
-aggregate_interval
+`aggregate_interval`
 
 The time period over which the data should be aggregated, in seconds.
 Required if `aggregate_type` has been set. Alternatively, the
 time can be specified by using one of the "shortcuts" (that is,
-`hour`, `day`, `week`, `month`, or
-`year`).
+`hour`, `day`, `week`, `month`, or `year`).
 
-aggregate_type
+`aggregate_type`
 
 The default is to plot every data point, but this is probably not a good
 idea for any plot longer than a day. By setting this option, you can
@@ -5531,83 +5565,82 @@ include `avg`, `count`, `cumulative`,
 `diff`, `last`, `max`, `min`, `sum`,
 and `tderiv`.
 
-color
+`color`
 
 This option is to override the color for an individual line. Optional.
 Default is to use the color in `chart_line_colors`.
 
-data_type
+`data_type`
 
 The SQL data type to be used for this plot line. For more information,
 see the section *[Including a type more than once in a
 plot](#including_same_sql_type_2x)*. Optional. The default is to use the
 section name.
 
-fill_color
+`fill_color`
 
 This option is to override the fill color for a bar chart. Optional.
 Default is to use the color in `chart_fill_colors`.
 
-label
+`label`
 
 The label to be used for this plot line in the top label. Optional. The
 default is to use the SQL variable name.
 
-line_gap_fraction
+`line_gap_fraction`
 
 If there is a gap between data points bigger than this fractional amount
 of the x-axis, then a gap will be drawn, rather than a connecting line.
 See Section *[Line gaps](#line_gaps)*. Optional. The default is to
 always draw the line.
 
-line_type
+`line_type`
 
 The type of line to be used. Choices are `solid` or
 `none`. Optional. Default is `solid`.
 
-marker_size
+`marker_size`
 
 The size of the marker. Optional. Default is `8`.
 
-marker_type
+`marker_type`
 
 The type of marker to be used to mark each data point. Choices are
-`cross`, `x`, `circle`, `box`, or
-`none`. Optional. Default is `none`.
+`cross`, `x`, `circle`, `box`, or `none`. Optional. Default is `none`.
 
-plot_type
+`plot_type`
 
 The type of plot for this line. Choices are `line`, `bar`,
 or `vector`. Optional. Default is `line`.
 
-width
+`width`
 
-This option is to override the line widthfor an individual line.
+This option is to override the line width for an individual line.
 Optional. Default is to use the width in `chart_line_width`.
 
-### [CopyGenerator] {#copygenerator .config_section}
+### [CopyGenerator] {#copygenerator}
 
 This section is used by generator
 `weewx.reportengine.CopyGenerator` and controls which files are
 to be copied over from the skin directory to the destination directory.
 Think of it as "file generation," except that rather than going
-through the template engine, the files are simply copied over.
+through the template engine, the files are simply copied over. It is
+useful for making sure CSS and Javascript files are in place.
 
-copy_once
+`copy_once`
 
 This option controls which files get copied over on the first invocation
 of the report engine service. Typically, this is things such as style
 sheets or background GIFs. Wildcards can be used.
 
-copy_always
+`copy_always`
 
 This is a list of files that should be copied on every invocation.
 Wildcards can be used.
 
-Here is the [[CopyGenerator]]{.code} section from the Standard
-`skin.conf`
+Here is the `[CopyGenerator]` section from the Standard `skin.conf`
 
-``` tty
+``` ini
 [CopyGenerator]
     # This section is used by the generator CopyGenerator
 
@@ -5622,19 +5655,18 @@ The Standard skin includes some background images, CSS files, and icons
 that need to be copied once. There are no files that need to be copied
 every time the generator runs.
 
-### [Generators] {#generators_section .config_section}
+### `[Generators]` {#generators_section }
 
 This section defines the list of generators that should be run.
 
-generator_list
+`generator_list`
 
 This option controls which generators get run for this skin. It is a
 comma separated list. The generators will be run in this order.
 
-Here is the [[Generators]]{.code} section from the Standard
-`skin.conf`
+Here is the [[Generators]]{.code} section from the Standard `skin.conf`
 
-``` tty
+``` ini
 [Generators]
     generator_list = weewx.cheetahgenerator.CheetahGenerator, weewx.imagegenerator.ImageGenerator, weewx.reportengine.CopyGenerator
 ```
@@ -5642,227 +5674,568 @@ Here is the [[Generators]]{.code} section from the Standard
 The Standard skin uses three generators: CheetahGenerator,
 ImageGenerator, and CopyGenerator.
 
+
 ## Appendix
 
 ### Aggregation types {#aggregation_types}
 
-  ------------------ ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-  Aggregation type   Meaning
-  avg                The average value in the aggregation period.
-  avg_ge(val)        The number of days where the average value is greater than or equal to *val*. Aggregation period must be one day or longer. The argument `val` is a `[ValueTuple`](#ValueTuple).
-  avg_le(val)        The number of days where the average value is less than or equal to *val*. Aggregation period must be one day or longer. The argument `val` is a `[ValueTuple`](#ValueTuple).
-  count              The number of non-null values in the aggregation period.
-  diff               The difference between the last and first value in the aggregation period.
-  exists             Returns `True` if the observation type exists in the database.
-  first              The first non-null value in the aggregation period.
-  firsttime          The time of the first non-null value in the aggregation period.
-  gustdir            The direction of the max gust in the aggregation period.
-  has_data           Returns `True` if the observation type exists in the database and is non-null.
-  last               The last non-null value in the aggregation period.
-  lasttime           The time of the last non-null value in the aggregation period.
-  max                The maximum value in the aggregation period.
-  maxmin             The maximum daily minimum in the aggregation period. Aggregation period must be one day or longer.
-  maxmintime         The time of the maximum daily minimum.
-  maxsum             The maximum daily sum in the aggregation period. Aggregation period must be one day or longer.
-  maxsumtime         The time of the maximum daily sum.
-  maxtime            The time of the maximum value.
-  max_ge(val)        The number of days where the maximum value is greater than or equal to *val*. Aggregation period must be one day or longer. The argument `val` is a `[ValueTuple`](#ValueTuple).
-  max_le(val)        The number of days where the maximum value is less than or equal to *val*. Aggregation period must be one day or longer. The argument `val` is a `[ValueTuple`](#ValueTuple).
-  meanmax            The average daily maximum in the aggregation period. Aggregation period must be one day or longer.
-  meanmin            The average daily minimum in the aggregation period. Aggregation period must be one day or longer.
-  min                The minimum value in the aggregation period.
-  minmax             The minimum daily maximum in the aggregation period. Aggregation period must be one day or longer.
-  minmaxtime         The time of the minimum daily maximum.
-  minsum             The minimum daily sum in the aggregation period. Aggregation period must be one day or longer.
-  minsumtime         The time of the minimum daily sum.
-  mintime            The time of the minimum value.
-  min_ge(val)        The number of days where the minimum value is greater than or equal to *val*. Aggregation period must be one day or longer. The argument `val` is a `[ValueTuple`](#ValueTuple).
-  min_le(val)        The number of days where the minimum value is less than or equal to *val*. Aggregation period must be one day or longer. The argument `val` is a `[ValueTuple`](#ValueTuple).
-  not_null           Returns truthy if any value over the aggregation period is non-null.
-  rms                The root mean square value in the aggregation period.
-  sum                The sum of values in the aggregation period.
-  sum_ge(val)        The number of days where the sum of value is greater than or equal to *val*. Aggregation period must be one day or longer. The argument `val` is a `[ValueTuple`](#ValueTuple).
-  sum_le(val)        The number of days where the sum of value is less than or equal to *val*. Aggregation period must be one day or longer. The argument `val` is a `[ValueTuple`](#ValueTuple).
-  tderiv             The time derivative between the last and first value in the aggregation period. This is the difference in value divided by the difference in time.
-  vecavg             The vector average speed in the aggregation period.
-  vecdir             The vector averaged direction during the aggregation period.
-  ------------------ ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-  : Aggregation types
+<table>
+    <caption>Aggregation types</caption>
+    <tbody>
+    <tr class="first_row">
+        <td>Aggregation type</td>
+        <td>Meaning</td>
+    </tr>
+    <tr>
+        <td class="first_col code">avg</td>
+        <td>The average value in the aggregation period.</td>
+    </tr>
+    <tr>
+        <td class="first_col code">avg_ge(val)</td>
+        <td>The number of days where the average value is greater than or equal to <em>val</em>. Aggregation
+            period must be one day or longer. The argument <span class="code">val</span> is a
+            <a href="#ValueTuple"><span class="code">ValueTuple</span></a>.
+        </td>
+    </tr>
+    <tr>
+        <td class="first_col code">avg_le(val)</td>
+        <td>The number of days where the average value is less than or equal to <em>val</em>. Aggregation period
+            must be one day or longer. The argument <span class="code">val</span> is a
+            <a href="#ValueTuple"><span class="code">ValueTuple</span></a>.
+        </td>
+    </tr>
+    <tr>
+        <td class="first_col code">count</td>
+        <td>The number of non-null values in the aggregation period.
+        </td>
+    </tr>
+    <tr>
+        <td class="first_col code">diff</td>
+        <td>The difference between the last and first value in the aggregation period.
+        </td>
+    </tr>
+    <tr>
+        <td class="first_col code">exists</td>
+        <td>Returns <span class="code">True</span> if the observation type exists in the database.</td>
+    </tr>
+    <tr>
+        <td class="first_col code">first</td>
+        <td>The first non-null value in the aggregation period.</td>
+    </tr>
+    <tr>
+        <td class="first_col code">firsttime</td>
+        <td>The time of the first non-null value in the aggregation period.
+        </td>
+    </tr>
+    <tr>
+        <td class="first_col code">gustdir</td>
+        <td>The direction of the max gust in the aggregation period.
+        </td>
+    </tr>
+    <tr>
+        <td class="first_col code">has_data</td>
+        <td>Returns <span class="code">True</span> if the observation type exists in the database and is
+            non-null.
+        </td>
+    </tr>
+    <tr>
+        <td class="first_col code">last</td>
+        <td>The last non-null value in the aggregation period.</td>
+    </tr>
+    <tr>
+        <td class="first_col code">lasttime</td>
+        <td>The time of the last non-null value in the aggregation period.
+        </td>
+    </tr>
+    <tr>
+        <td class="first_col code">max</td>
+        <td>The maximum value in the aggregation period.</td>
+    </tr>
+    <tr>
+        <td class="first_col code">maxmin</td>
+        <td>The maximum daily minimum in the aggregation period. Aggregation period must be one day or longer.
+        </td>
+    </tr>
+    <tr>
+        <td class="first_col code">maxmintime</td>
+        <td>The time of the maximum daily minimum.</td>
+    </tr>
+    <tr>
+        <td class="first_col code">maxsum</td>
+        <td>The maximum daily sum in the aggregation period. Aggregation period must be one day or longer.
+        </td>
+    </tr>
+    <tr>
+        <td class="first_col code">maxsumtime</td>
+        <td>The time of the maximum daily sum.</td>
+    </tr>
+    <tr>
+        <td class="first_col code">maxtime</td>
+        <td>The time of the maximum value.</td>
+    </tr>
+    <tr>
+        <td class="first_col code">max_ge(val)</td>
+        <td>The number of days where the maximum value is greater than or equal to <em>val</em>. Aggregation
+            period must be one day or longer. The argument <span class="code">val</span> is a
+            <a href="#ValueTuple"><span class="code">ValueTuple</span></a>.
+        </td>
+    </tr>
+    <tr>
+        <td class="first_col code">max_le(val)</td>
+        <td>The number of days where the maximum value is less than or equal to <em>val</em>. Aggregation period
+            must be one day or longer. The argument <span class="code">val</span> is a
+            <a href="#ValueTuple"><span class="code">ValueTuple</span></a>.
+        </td>
+    </tr>
+    <tr>
+        <td class="first_col code">meanmax</td>
+        <td>The average daily maximum in the aggregation period. Aggregation period must be one day or longer.
+        </td>
+    </tr>
+    <tr>
+        <td class="first_col code">meanmin</td>
+        <td>The average daily minimum in the aggregation period. Aggregation period must be one day or longer.
+        </td>
+    </tr>
+    <tr>
+        <td class="first_col code">min</td>
+        <td>The minimum value in the aggregation period.</td>
+    </tr>
+    <tr>
+        <td class="first_col code">minmax</td>
+        <td>The minimum daily maximum in the aggregation period. Aggregation period must be one day or longer.
+        </td>
+    </tr>
+    <tr>
+        <td class="first_col code">minmaxtime</td>
+        <td>The time of the minimum daily maximum.</td>
+    </tr>
+    <tr>
+        <td class="first_col code">minsum</td>
+        <td>The minimum daily sum in the aggregation period. Aggregation period must be one day or longer.
+        </td>
+    </tr>
+    <tr>
+        <td class="first_col code">minsumtime</td>
+        <td>The time of the minimum daily sum.</td>
+    </tr>
+    <tr>
+        <td class="first_col code">mintime</td>
+        <td>The time of the minimum value.</td>
+    </tr>
+    <tr>
+        <td class="first_col code">min_ge(val)</td>
+        <td>The number of days where the minimum value is greater than or equal to <em>val</em>. Aggregation
+            period must be one day or longer. The argument <span class="code">val</span> is a
+            <a href="#ValueTuple"><span class="code">ValueTuple</span></a>.
+        </td>
+    </tr>
+    <tr>
+        <td class="first_col code">min_le(val)</td>
+        <td>The number of days where the minimum value is less than or equal to <em>val</em>. Aggregation period
+            must be one day or longer. The argument <span class="code">val</span> is a
+            <a href="#ValueTuple"><span class="code">ValueTuple</span></a>.
+        </td>
+    </tr>
+    <tr>
+        <td class="first_col code">not_null</td>
+        <td>
+            Returns truthy if any value over the aggregation period is non-null.
+        </td>
+    </tr>
+    <tr>
+        <td class="first_col code">rms</td>
+        <td>The root mean square value in the aggregation period.
+        </td>
+    </tr>
+    <tr>
+        <td class="first_col code">sum</td>
+        <td>The sum of values in the aggregation period.</td>
+    </tr>
+    <tr>
+        <td class="first_col code">sum_ge(val)</td>
+        <td>The number of days where the sum of value is greater than or equal to <em>val</em>. Aggregation
+            period must be one day or longer. The argument <span class="code">val</span> is a
+            <a href="#ValueTuple"><span class="code">ValueTuple</span></a>.
+        </td>
+    </tr>
+    <tr>
+        <td class="first_col code">sum_le(val)</td>
+        <td>The number of days where the sum of value is less than or equal to <em>val</em>. Aggregation period
+            must be one day or longer. The argument <span class="code">val</span> is a
+            <a href="#ValueTuple"><span class="code">ValueTuple</span></a>.
+        </td>
+    </tr>
+    <tr>
+        <td class="first_col code">tderiv</td>
+        <td>
+            The time derivative between the last and first value in the aggregation period. This is the
+            difference in value divided by the difference in time.
+        </td>
+    </tr>
+    <tr>
+        <td class="first_col code">vecavg</td>
+        <td>The vector average speed in the aggregation period.</td>
+    </tr>
+    <tr>
+        <td class="first_col code">vecdir</td>
+        <td>The vector averaged direction during the aggregation period.
+        </td>
+    </tr>
+    </tbody>
+</table>
 
 ### Units {#units}
 
 WeeWX offers three different *unit systems*:
 
-  ---------- --------------- ------------------------------------------------------------------------------------
-  Name       Encoded value   Note
-  US         0x01            U.S. Customary
-  METRICWX   0x11            Metric, with rain related measurements in `mm` and speeds in `m/s`
-  METRIC     0x10            Metric, with rain related measurements in `cm` and speeds in `km/hr`
-  ---------- --------------- ------------------------------------------------------------------------------------
-
-  : The standard unit systems used within WeeWX
+<table>
+    <caption>The standard unit systems used within WeeWX</caption>
+    <tr class="first_row">
+        <td>Name</td>
+        <td>Encoded value</td>
+        <td>Note</td>
+    </tr>
+    <tr>
+        <td class="first_col code">US</td>
+        <td>0x01</td>
+        <td>U.S. Customary</td>
+    </tr>
+    <tr>
+        <td class="first_col code">METRICWX</td>
+        <td>0x11</td>
+        <td>Metric, with rain related measurements in <span class="code">mm</span> and speeds in <span
+            class="code">m/s</span>
+        </td>
+    </tr>
+    <tr>
+        <td class="first_col code">METRIC</td>
+        <td>0x10</td>
+        <td>Metric, with rain related measurements in <span class="code">cm</span> and speeds in <span
+            class="code">km/hr</span>
+        </td>
+    </tr>
+</table>
 
 The table below lists all the unit groups, their members, which units
 are options for the group, and what the defaults are for each standard
 unit system.
 
-  --------------------- ---------------------------- --------------------------- --------------------------- --------------------------- ---------------------------
-  Group                 Members                      Unit options                `US`                 `METRICWX`           `METRIC`
-
-  group_altitude        altitude\                    foot\                       foot                        meter                       meter
-                        cloudbase                    meter                                                                               
-
-  group_amp                                          amp                         amp                         amp                         amp
-
-  group_boolean                                      boolean                     boolean                     boolean                     boolean
-
-  group_concentration   no2\                         microgram_per_meter_cubed   microgram_per_meter_cubed   microgram_per_meter_cubed   microgram_per_meter_cubed
-                        pm1_0\                                                                                                           
-                        pm2_5\                                                                                                           
-                        pm10_0                                                                                                           
-
-  group_count           leafWet1\                    count                       count                       count                       count
-                        leafWet2\                                                                                                        
-                        lightning_disturber_count\                                                                                       
-                        lightning_noise_count\                                                                                           
-                        lightning_strike_count\                                                                                          
-
-  group_data                                         byte\                       byte                        byte                        byte
-                                                     bit                                                                                 
-
-  group_db              noise                        dB                          dB                          dB                          dB
-
-  group_delta_time      daySunshineDur\              second\                     second                      second                      second
-                        rainDur\                     minute\                                                                             
-                        sunshineDurDoc               hour\                                                                               
-                                                     day\                                                                                
-
-  group_degree_day      cooldeg\                     degree_F\_day\              degree_F\_day               degree_C\_day               degree_C\_day
-                        heatdeg\                     degree_C\_day                                                                       
-                        growdeg                                                                                                          
-
-  group_direction       gustdir\                     degree_compass              degree_compass              degree_compass              degree_compass
-                        vecdir\                                                                                                          
-                        windDir\                                                                                                         
-                        windGustDir                                                                                                      
-
-  group_distance        windrun\                     mile\                       mile                        km                          km
-                        lightning_distance           km                                                                                  
-
-  group_energy                                       kilowatt_hour\              watt_hour                   watt_hour                   watt_hour
-                                                     mega_joule\                                                                         
-                                                     watt_hour\                                                                          
-                                                     watt_second                                                                         
-
-  group_energy2                                      kilowatt_hour\              watt_second                 watt_second                 watt_second
-                                                     watt_hour\                                                                          
-                                                     watt_second                                                                         
-
-  group_fraction        co\                          ppm                         ppm                         ppm                         ppm
-                        co2\                                                                                                             
-                        nh3\                                                                                                             
-                        o3\                                                                                                              
-                        pb\                                                                                                              
-                        so2                                                                                                              
-
-  group_frequency                                    hertz                       hertz                       hertz                       hertz
-
-  group_illuminance     illuminance                  lux                         lux                         lux                         lux
-
-  group_interval        interval                     minute                      minute                      minute                      minute
-
-  group_length                                       inch\                       inch                        cm                          cm
-                                                     cm                                                                                  
-
-  group_moisture        soilMoist1\                  centibar                    centibar                    centibar                    centibar
-                        soilMoist2\                                                                                                      
-                        soilMoist3\                                                                                                      
-                        soilMoist4                                                                                                       
-
-  group_percent         cloudcover\                  percent                     percent                     percent                     percent
-                        extraHumid1\                                                                                                     
-                        extraHumid2\                                                                                                     
-                        inHumidity\                                                                                                      
-                        outHumidity\                                                                                                     
-                        pop\                                                                                                             
-                        rxCheckPercent\                                                                                                  
-                        snowMoisture                                                                                                     
-
-  group_power                                        kilowatt\                   watt                        watt                        watt
-                                                     watt                                                                                
-
-  group_pressure        barometer\                   inHg\                       inHg                        mbar                        mbar
-                        altimeter\                   mbar\                                                                               
-                        pressure                     hPa\                                                                                
-                                                     kPa                                                                                 
-
-  group_pressurerate    barometerRate\               inHg_per_hour\              inHg_per_hour               mbar_per_hour               mbar_per_hour
-                        altimeterRate\               mbar_per_hour\                                                                      
-                        pressureRate                 hPa_per_hour\                                                                       
-                                                     kPa_per_hour                                                                        
-
-  group_radiation       maxSolarRad\                 watt_per_meter_squared      watt_per_meter_squared      watt_per_meter_squared      watt_per_meter_squared
-                        radiation                                                                                                        
-
-  group_rain            rain\                        inch\                       inch                        mm                          cm
-                        ET\                          cm\                                                                                 
-                        hail\                        mm                                                                                  
-                        snowDepth\                                                                                                       
-                        snowRate                                                                                                         
-
-  group_rainrate        rainRate\                    inch_per_hour\              inch_per_hour               mm_per_hour                 cm_per_hour
-                        hailRate                     cm_per_hour\                                                                        
-                                                     mm_per_hour                                                                         
-
-  group_speed           wind\                        mile_per_hour\              mile_per_hour               meter_per_second            km_per_hour
-                        windGust\                    km_per_hour\                                                                        
-                        windSpeed\                   knot\                                                                               
-                        windgustvec\                 meter_per_second\                                                                   
-                        windvec                      beaufort                                                                            
-
-  group_speed2          rms\                         mile_per_hour2\             mile_per_hour2              meter_per_second2           km_per_hour2
-                        vecavg                       km_per_hour2\                                                                       
-                                                     knot2\                                                                              
-                                                     meter_per_second2                                                                   
-
-  group_temperature     appTemp\                     degree_C\                   degree_F                    degree_C                    degree_C
-                        dewpoint\                    degree_F\                                                                           
-                        extraTemp1\                  degree_E\                                                                           
-                        extraTemp2\                  degree_K                                                                            
-                        extraTemp3\                                                                                                      
-                        heatindex\                                                                                                       
-                        heatingTemp\                                                                                                     
-                        humidex\                                                                                                         
-                        inTemp\                                                                                                          
-                        leafTemp1\                                                                                                       
-                        leafTemp2\                                                                                                       
-                        outTemp\                                                                                                         
-                        soilTemp1\                                                                                                       
-                        soilTemp2\                                                                                                       
-                        soilTemp3\                                                                                                       
-                        soilTemp4\                                                                                                       
-                        windchill\                                                                                                       
-                        THSW                                                                                                             
-
-  group_time            dateTime                     unix_epoch\                 unix_epoch                  unix_epoch                  unix_epoch
-                                                     dublin_jd                                                                           
-
-  group_uv              UV                           uv_index                    uv_index                    uv_index                    uv_index
-
-  group_volt            consBatteryVoltage\          volt                        volt                        volt                        volt
-                        heatingVoltage\                                                                                                  
-                        referenceVoltage\                                                                                                
-                        supplyVoltage                                                                                                    
-
-  group_volume                                       cubic_foot\                 gallon                      liter                       liter
-                                                     gallon\                                                                             
-                                                     liter                                                                               
-
-  group_NONE            NONE                         NONE                        NONE                        NONE                        NONE
-  --------------------- ---------------------------- --------------------------- --------------------------- --------------------------- ---------------------------
-
-  : Unit groups, members and options
+<table>
+    <caption>Unit groups, members and options</caption>
+    <tbody class="code">
+    <tr class="first_row">
+        <td>Group</td>
+        <td>Members</td>
+        <td>Unit options</td>
+        <td><span class="code">US</span></td>
+        <td><span class="code">METRICWX</span></td>
+        <td><span class="code">METRIC</span></td>
+    </tr>
+    <tr>
+        <td class="first_col">group_altitude</td>
+        <td>altitude<br/> cloudbase
+        </td>
+        <td>foot <br/> meter
+        </td>
+        <td>foot</td>
+        <td>meter</td>
+        <td>meter</td>
+    </tr>
+    <tr>
+        <td class="first_col">group_amp</td>
+        <td></td>
+        <td>amp</td>
+        <td>amp</td>
+        <td>amp</td>
+        <td>amp</td>
+    </tr>
+    <tr>
+        <td class="first_col">group_boolean</td>
+        <td></td>
+        <td>boolean</td>
+        <td>boolean</td>
+        <td>boolean</td>
+        <td>boolean</td>
+    </tr>
+    <tr>
+        <td class="first_col">group_concentration</td>
+        <td>no2<br/>pm1_0<br/>pm2_5<br/>pm10_0</td>
+        <td>microgram_per_meter_cubed</td>
+        <td>microgram_per_meter_cubed</td>
+        <td>microgram_per_meter_cubed</td>
+        <td>microgram_per_meter_cubed</td>
+    </tr>
+    <tr>
+        <td class="first_col">group_count</td>
+        <td>leafWet1<br/>leafWet2<br/>lightning_disturber_count<br/>lightning_noise_count<br/>lightning_strike_count<br/></td>
+        <td>count</td>
+        <td>count</td>
+        <td>count</td>
+        <td>count</td>
+    </tr>
+    <tr>
+        <td class="first_col">group_data</td>
+        <td></td>
+        <td>byte<br/> bit</td>
+        <td>byte</td>
+        <td>byte</td>
+        <td>byte</td>
+    </tr>
+    <tr>
+        <td class="first_col">group_db</td>
+        <td>noise</td>
+        <td>dB</td>
+        <td>dB</td>
+        <td>dB</td>
+        <td>dB</td>
+    </tr>
+    <tr>
+        <td class="first_col">group_delta_time</td>
+        <td>daySunshineDur<br/>rainDur<br/>sunshineDurDoc</td>
+        <td>second<br/> minute<br/>hour<br/>day<br/></td>
+        <td>second</td>
+        <td>second</td>
+        <td>second</td>
+    </tr>
+    <tr>
+        <td class="first_col">group_degree_day</td>
+        <td>cooldeg<br/> heatdeg<br/> growdeg
+        </td>
+        <td>degree_F_day<br/> degree_C_day</td>
+        <td>degree_F_day</td>
+        <td>degree_C_day</td>
+        <td>degree_C_day</td>
+    </tr>
+    <tr>
+        <td class="first_col">group_direction</td>
+        <td>gustdir <br/> vecdir <br/> windDir <br/> windGustDir</td>
+        <td>degree_compass</td>
+        <td>degree_compass</td>
+        <td>degree_compass</td>
+        <td>degree_compass</td>
+    </tr>
+    <tr>
+        <td class="first_col">group_distance</td>
+        <td>windrun<br/>lightning_distance</td>
+        <td>mile<br/>km</td>
+        <td>mile</td>
+        <td>km</td>
+        <td>km</td>
+    </tr>
+    <tr>
+        <td class="first_col">group_energy</td>
+        <td></td>
+        <td>kilowatt_hour<br/>mega_joule<br/>watt_hour<br/>watt_second</td>
+        <td>watt_hour</td>
+        <td>watt_hour</td>
+        <td>watt_hour</td>
+    </tr>
+    <tr>
+        <td class="first_col">group_energy2</td>
+        <td></td>
+        <td>kilowatt_hour<br/>watt_hour<br/>watt_second</td>
+        <td>watt_second</td>
+        <td>watt_second</td>
+        <td>watt_second</td>
+    </tr>
+    <tr>
+        <td class="first_col">group_fraction</td>
+        <td>co<br/>co2<br/>nh3<br/>o3<br/>pb<br/>so2</td>
+        <td>ppm</td>
+        <td>ppm</td>
+        <td>ppm</td>
+        <td>ppm</td>
+    </tr>
+    <tr>
+        <td class="first_col">group_frequency</td>
+        <td></td>
+        <td>hertz</td>
+        <td>hertz</td>
+        <td>hertz</td>
+        <td>hertz</td>
+    </tr>
+    <tr>
+        <td class="first_col">group_illuminance</td>
+        <td>illuminance</td>
+        <td>lux</td>
+        <td>lux</td>
+        <td>lux</td>
+        <td>lux</td>
+    </tr>
+    <tr>
+        <td class="first_col">group_interval</td>
+        <td>interval</td>
+        <td>minute</td>
+        <td>minute</td>
+        <td>minute</td>
+        <td>minute</td>
+    </tr>
+    <tr>
+        <td class="first_col">group_length</td>
+        <td></td>
+        <td>inch<br/> cm
+        </td>
+        <td>inch</td>
+        <td>cm</td>
+        <td>cm</td>
+    </tr>
+    <tr>
+        <td class="first_col">group_moisture</td>
+        <td>soilMoist1 <br/> soilMoist2 <br/> soilMoist3 <br/> soilMoist4
+        </td>
+        <td>centibar</td>
+        <td>centibar</td>
+        <td>centibar</td>
+        <td>centibar</td>
+    </tr>
+    <tr>
+        <td class="first_col">group_percent</td>
+        <td>
+            cloudcover<br/>extraHumid1 <br/> extraHumid2 <br/> inHumidity <br/> outHumidity <br/>pop<br/>
+            rxCheckPercent<br/>snowMoisture
+        </td>
+        <td>percent</td>
+        <td>percent</td>
+        <td>percent</td>
+        <td>percent</td>
+    </tr>
+    <tr>
+        <td class="first_col">group_power</td>
+        <td></td>
+        <td>kilowatt<br/>watt</td>
+        <td>watt</td>
+        <td>watt</td>
+        <td>watt</td>
+    </tr>
+    <tr>
+        <td class="first_col">group_pressure</td>
+        <td>
+            barometer <br/> altimeter <br/> pressure
+        </td>
+        <td>
+            inHg<br/>mbar<br/>hPa<br/>kPa
+        </td>
+        <td>inHg</td>
+        <td>mbar</td>
+        <td>mbar</td>
+    </tr>
+    <tr>
+        <td class="first_col">group_pressurerate</td>
+        <td>
+            barometerRate <br/> altimeterRate <br/> pressureRate
+        </td>
+        <td>
+            inHg_per_hour <br/> mbar_per_hour <br/> hPa_per_hour <br/> kPa_per_hour
+        </td>
+        <td>inHg_per_hour</td>
+        <td>mbar_per_hour</td>
+        <td>mbar_per_hour</td>
+    </tr>
+    <tr>
+        <td class="first_col">group_radiation</td>
+        <td>maxSolarRad <br/> radiation</td>
+        <td>watt_per_meter_squared</td>
+        <td>watt_per_meter_squared</td>
+        <td>watt_per_meter_squared</td>
+        <td>watt_per_meter_squared</td>
+    </tr>
+    <tr>
+        <td class="first_col">group_rain</td>
+        <td>rain<br/>ET<br/>hail<br/>snowDepth<br/>snowRate</td>
+        <td>inch <br/> cm <br/> mm
+        </td>
+        <td>inch</td>
+        <td>mm</td>
+        <td>cm</td>
+    </tr>
+    <tr>
+        <td class="first_col">group_rainrate</td>
+        <td>rainRate <br/> hailRate
+        </td>
+        <td>inch_per_hour <br/> cm_per_hour <br/> mm_per_hour
+        </td>
+        <td>inch_per_hour</td>
+        <td>mm_per_hour</td>
+        <td>cm_per_hour</td>
+    </tr>
+    <tr>
+        <td class="first_col">group_speed</td>
+        <td>wind <br/> windGust <br/> windSpeed <br/> windgustvec <br/> windvec
+        </td>
+        <td>mile_per_hour <br/> km_per_hour <br/> knot <br/> meter_per_second <br/> beaufort
+        </td>
+        <td>mile_per_hour</td>
+        <td>meter_per_second</td>
+        <td>km_per_hour</td>
+    </tr>
+    <tr>
+        <td class="first_col">group_speed2</td>
+        <td>rms <br/> vecavg
+        </td>
+        <td>mile_per_hour2 <br/> km_per_hour2 <br/> knot2 <br/> meter_per_second2
+        </td>
+        <td>mile_per_hour2</td>
+        <td>meter_per_second2</td>
+        <td>km_per_hour2</td>
+    </tr>
+    <tr>
+        <td class="first_col">group_temperature</td>
+        <td>appTemp <br/> dewpoint <br/> extraTemp1 <br/> extraTemp2 <br/> extraTemp3 <br/> heatindex <br/>
+            heatingTemp <br/> humidex <br/> inTemp <br/> leafTemp1 <br/> leafTemp2 <br/> outTemp <br/> soilTemp1
+            <br/> soilTemp2 <br/> soilTemp3 <br/> soilTemp4 <br/> windchill <br/> THSW
+        </td>
+        <td>degree_C<br/> degree_F <br/> degree_E<br/> degree_K
+        </td>
+        <td>degree_F</td>
+        <td>degree_C</td>
+        <td>degree_C</td>
+    </tr>
+    <tr>
+        <td class="first_col">group_time</td>
+        <td>dateTime</td>
+        <td>unix_epoch <br/> dublin_jd
+        </td>
+        <td>unix_epoch</td>
+        <td>unix_epoch</td>
+        <td>unix_epoch</td>
+    </tr>
+    <tr>
+        <td class="first_col">group_uv</td>
+        <td>UV</td>
+        <td>uv_index</td>
+        <td>uv_index</td>
+        <td>uv_index</td>
+        <td>uv_index</td>
+    </tr>
+    <tr>
+        <td class="first_col">group_volt</td>
+        <td>consBatteryVoltage <br/> heatingVoltage <br/> referenceVoltage <br/> supplyVoltage
+        </td>
+        <td>volt</td>
+        <td>volt</td>
+        <td>volt</td>
+        <td>volt</td>
+    </tr>
+    <tr>
+        <td class="first_col">group_volume</td>
+        <td></td>
+        <td>cubic_foot<br/> gallon<br/> liter
+        </td>
+        <td>gallon</td>
+        <td>liter</td>
+        <td>liter</td>
+    </tr>
+    <tr>
+        <td class="first_col">group_NONE</td>
+        <td>NONE</td>
+        <td>NONE</td>
+        <td>NONE</td>
+        <td>NONE</td>
+        <td>NONE</td>
+    </tr>
+    </tbody>
+</table>
 
 ### Class `ValueTuple` {#ValueTuple}
 
@@ -5876,22 +6249,40 @@ other units.
 
 The following attributes, and their index, are present:
 
-  ------- ----------- ------------------------------------------------------------------------------------------------------------
-  Index   Attribute   Meaning
-  0       value       The data value(s). Can be a series (e.g., [[20.2, 23.2, \...]]{.code}) or a scalar (e.g., `20.2`)
-  1       unit        The unit it is in (`"degree_C"`)
-  2       group       The unit group (`"group_temperature"`)
-  ------- ----------- ------------------------------------------------------------------------------------------------------------
+<table>
+    <tr class="first_row">
+        <td>Index</td>
+        <td>Attribute</td>
+        <td>Meaning</td>
+    </tr>
+    <tr>
+        <td>0</td>
+        <td class="code">value</td>
+        <td>The data value(s). Can be a series (e.g., <span class="code">[20.2, 23.2, ...]</span>) or a scalar
+            (e.g., <span class="code">20.2</span>)
+        </td>
+    </tr>
+    <tr>
+        <td>1</td>
+        <td class="code">unit</td>
+        <td>The unit it is in (<span class="code">"degree_C"</span>)</td>
+    </tr>
+    <tr>
+        <td>2</td>
+        <td class="code">group</td>
+        <td>The unit group (<span class="code">"group_temperature"</span>)</td>
+    </tr>
+</table>
 
-It is valid to have a datum value of None.
+It is valid to have a datum value of `None`.
 
-It is also valid to have a unit type of None (meaning there is no
+It is also valid to have a unit type of `None` (meaning there is no
 information about the unit the value is in). In this case, you won't be
 able to convert it to another unit.
 
 Here are some examples:
 
-``` tty
+``` python
 from weewx.units import ValueTuple
 
 freezing_vt = ValueTuple(0.0, "degree_C", "group_temperature")
@@ -5907,20 +6298,18 @@ the proper formatting of a value, including a unit label.
 
 ##### Instance attribute
 
-ValueHelper.**value_t**
+`ValueHelper.value_t`
 
 Returns the `ValueTuple` instance held internally.
 
 ##### Instance methods
 
-ValueHelper.**\_\_str\_\_**()
+`ValueHelper.__str__()`
 
 Formats the value as a string, including a unit label, and returns it.
 
-ValueHelper.**format**(*format_string=None, None_string=None,
-add_label=True, localize=True*)
+`ValueHelper.format(format_string=None, None_string=None, add_label=True, localize=True)`
 
-::: indent
 Format the value as a string, using various specified options, and
 return it. Unless otherwise specified, a label is included.
 
@@ -5928,8 +6317,8 @@ return it. Unless otherwise specified, a label is included.
 include one, and only one, [format
 specifier](https://docs.python.org/3/library/string.html#formatspec).
 
-`None_string` In the event of a value of Python None, this string
-will be substituted. If None, then a default string from
+`None_string` In the event of a value of Python `None`, this string
+will be substituted. If `None`, then a default string from
 `skin.conf` will be used.
 
 `add_label` If truthy, then an appropriate unit label will be
@@ -5937,10 +6326,6 @@ attached. Otherwise, no label is attached.
 
 `localize` If truthy, then the results will be localized. For
 example, in some locales, a comma will be used as the decimal specifier.
-:::
-:::
 
-::: footer
+
 © [Copyright](copyright.htm) Tom Keffer
-:::
-:::
