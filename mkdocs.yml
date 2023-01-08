@@ -48,16 +48,34 @@ nav:
       - RedHat: redhat.md
       - SUSE: suse.md
       - pip: pip.md
-  - Documentation:
+  - "User's Guide":
+      - User's Guide: usersguide.htm
+
+  - Customization:
+    - "Introduction": custom/intro.md
+    - "Customizing reports": custom/custom_reports.md
+    - "The cheetah generator": custom/cheetah.md
+    - "The image generator": custom/image_generator.md
+    - "Multiple data bindings": custom/multiple_bindings.md
+    - "Localization": custom/localization.md
+    - "Customizing the service engine": custom/service_engine.md
+    - "Customizing the database": custom/database.md
+    - "Customizing units": custom/units.md
+    - "Derived types": custom/derived.md
+    - "Custom drivers": custom/drivers.md
+    - "Extensions": custom/extensions.md
+    - "Reference: options": custom/options_ref.md
+    - "Appendix": custom/appendix.md
+
+  - Other guides:
       - guides-overview.md
-      - "User's Guide": usersguide.htm
-      - "Customization Guide": customizing5.md
-      - "Hardware Guide": hardware.htm
-      - "Utilities Guide": utilities.htm
-      - "Upgrade Guide": upgrading.htm
+      - "Hardware guide": hardware.htm
+      - "Utilities guide": utilities.htm
+      - "Upgrade guide": upgrading.htm
       - "Change log": changes.md
       - "Notes for developers": devnotes.md
-      - "Hardware Comparison": hardware.htm
+      - "Hardware comparison": hardware.htm
+
   - Support:
       - support.md
 
