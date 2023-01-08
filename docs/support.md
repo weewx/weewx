@@ -49,3 +49,11 @@ There are two forums.
 
 - [weewx-development](https://groups.google.com/group/weewx-development) is for
   discussions about developing drivers, extensions, or working on the core code.
+
+
+## Legacy Documentation
+
+WeeWX v4 is no longer supported, but legacy (unmaintained) documentation is available at:
+
+https://weewx.com/legacy_docs
+
