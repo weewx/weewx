@@ -23,7 +23,11 @@ from weeutil.weeutil import to_float, to_bool, bcolors
 log = logging.getLogger(__name__)
 
 
-def station_create(config_path, *args, docs_root=None, examples_root=None, **kwargs):
+def station_create(config_path, *args,
+                   docs_root=None,
+                   examples_root=None,
+                   user_root=None,
+                   **kwargs):
     """Create a brand-new station by creating a new configuration file.
 
     WEEWX_ROOT is defined as the directory the resultant configuration file is in.
@@ -57,6 +61,7 @@ def station_create(config_path, *args, docs_root=None, examples_root=None, **kwa
     config_config(dist_config_dict, weewx_root=weewx_root, *args, **kwargs)
     copy_docs(dist_config_dict, docs_root=docs_root)
     copy_examples(dist_config_dict, examples_root=examples_root)
+    copy_user(dist_config_dict, user_root=user_root)
 
     # Save the results. No backup.
     weecfg.save(dist_config_dict, config_path)
@@ -80,6 +85,7 @@ def config_config(config_dict, driver=None, location=None,
                   register=None, unit_system=None,
                   weewx_root=None, skin_root=None,
                   html_root=None, sqlite_root=None,
+                  user_root=None,
                   no_prompt=False):
     """Modify a configuration file."""
     config_location(config_dict, location=location, no_prompt=no_prompt)
@@ -88,7 +94,7 @@ def config_config(config_dict, driver=None, location=None,
     config_registry(config_dict, register=register, no_prompt=no_prompt)
     config_units(config_dict, unit_system=unit_system, no_prompt=no_prompt)
     config_driver(config_dict, driver=driver, no_prompt=no_prompt)
-    config_roots(config_dict, weewx_root, skin_root, html_root, sqlite_root)
+    config_roots(config_dict, weewx_root, skin_root, html_root, sqlite_root, user_root)
     copy_skins(config_dict)
 
 
@@ -395,10 +401,17 @@ def config_driver(config_dict, driver=None, no_prompt=False):
         driver_editor.modify_config(config_dict)
 
 
-def config_roots(config_dict, weewx_root=None, skin_root=None, html_root=None, sqlite_root=None):
+def config_roots(config_dict,
+                 weewx_root=None,
+                 skin_root=None,
+                 html_root=None,
+                 sqlite_root=None,
+                 user_root=None):
     """Set the location of various root directories in the configuration dictionary."""
     if weewx_root:
         config_dict['WEEWX_ROOT'] = weewx_root
+    if user_root:
+        config_dict['USER_ROOT'] = user_root
 
     if 'StdReport' in config_dict:
         if skin_root:
@@ -426,7 +439,7 @@ def copy_skins(config_dict):
     if 'StdReport' not in config_dict:
         return
 
-    # This is the destination of the skins:
+    # SKIN_ROOT is the location of the skins relative to WEEWX_ROOT. Find it's absolute location
     skin_dir = os.path.join(config_dict['WEEWX_ROOT'], config_dict['StdReport']['SKIN_ROOT'])
     # Make it if it doesn't already exist
     os.makedirs(skin_dir, exist_ok=True)
@@ -452,20 +465,46 @@ def copy_skins(config_dict):
 def copy_docs(config_dict, docs_root=None):
     """Copy documentation from package resources to the DOCS_ROOT directory."""
 
+    # If the user didn't specify a value, use a default
     if not docs_root:
-        docs_root = os.path.join(config_dict['WEEWX_ROOT'], 'docs')
+        docs_root = 'docs'
 
-    shutil.rmtree(docs_root, ignore_errors=True)
+    # DOCS_ROOT is relative to WEEWX_PATH. Join them to get the absolute path.
+    docs_dir = os.path.join(config_dict['WEEWX_ROOT'], docs_root)
+
+    shutil.rmtree(docs_dir, ignore_errors=True)
     with weeutil.weeutil.path_to_resource('wee_resources', 'docs') as docs_resources:
-        shutil.copytree(docs_resources, docs_root)
+        shutil.copytree(docs_resources, docs_dir)
 
 
 def copy_examples(config_dict, examples_root=None):
-    """Copy the examples to the EXAMPLE_ROOT directory."""
+    """Copy the examples to the EXAMPLES_ROOT directory."""
 
+    # If the user didn't specify a value, use a default
     if not examples_root:
-        examples_root = os.path.join(config_dict['WEEWX_ROOT'], 'examples')
+        examples_root = 'examples'
 
-    shutil.rmtree(examples_root, ignore_errors=True)
+    # EXAMPLEs_ROOT is relative to WEEWX_PATH. Join them to get the absolute path.
+    examples_dir = os.path.join(config_dict['WEEWX_ROOT'], examples_root)
+
+    shutil.rmtree(examples_dir, ignore_errors=True)
     with weeutil.weeutil.path_to_resource('wee_resources', 'examples') as examples_resources:
-        shutil.copytree(examples_resources, examples_root)
+        shutil.copytree(examples_resources, examples_dir)
+
+
+def copy_user(config_dict, user_root=None):
+    """Copy the user directory to USER_ROOT"""
+
+    # If the user didn't specify a value, use a default
+    if not user_root:
+        user_root = config_dict.get('USER_ROOT', 'lib/user')
+
+    # USER_ROOT is relative to WEEWX_PATH. Join them to get the absolute path.
+    user_dir = os.path.join(config_dict['WEEWX_ROOT'], user_root)
+
+    # Don't clobber an existing user subdirectory
+    if not os.path.isdir(user_dir):
+        with weeutil.weeutil.path_to_resource('wee_resources', 'lib') as lib_resources:
+            shutil.copytree(os.path.join(lib_resources, 'user'),
+                            user_dir,
+                            ignore=shutil.ignore_patterns('*.pyc', '__pycache__',))

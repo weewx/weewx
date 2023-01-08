@@ -20,6 +20,7 @@ station_create_usage = f"""{bcolors.BOLD}weectl station create [--config=CONFIG-
                              [--skin-root=SKIN_ROOT] \\
                              [--sqlite-root=SQLITE_ROOT] \\
                              [--html-root=HTML_ROOT] \\
+                             [--user-root=USER_ROOT] \\
                              [--docs-root=DOCS_ROOT] \\
                              [--examples-root=EXAMPLES_ROOT] \\
                              [--no-prompt]{bcolors.ENDC}
@@ -70,12 +71,15 @@ def add_subparser(subparsers):
                                        help=f'Path to configuration file. It must not already '
                                             f'exist. Default is "{weecfg.default_config_path}".')
     _add_common_args(station_create_parser)
+    station_create_parser.add_argument('--user-root',
+                                       help='Where to put the "user" directory, relative to '
+                                       '$WEEWX_ROOT. Default is "lib/user"')
     station_create_parser.add_argument('--docs-root',
-                                       help=f'Where to put the documentation. Default is '
-                                            f'"$WEEWX_ROOT/docs".')
+                                       help='Where to put the documentation, relative to '
+                                       '$WEEWX_ROOT. Default is "docs".')
     station_create_parser.add_argument('--examples-root',
-                                       help=f'Where to put the examples. Default is '
-                                            f'"$WEEWX_ROOT/examples".')
+                                       help='Where to put the examples, relative to '
+                                       '$WEEWX_ROOT. Default is "examples".')
     station_create_parser.add_argument('--no-prompt', action='store_true',
                                        help='If set, do not prompt. Use default values.')
     station_create_parser.set_defaults(func=create_station)
@@ -173,11 +177,10 @@ def _add_common_args(parser):
                         help='Set display units to us, metricwx, or metric. '
                              'Default is "us".')
     parser.add_argument('--skin-root',
-                        help='Where the skins will be located, relatve to '
-                             'WEEWX_ROOT.')
+                        help='Where to put the skins, relatve to $WEEWX_ROOT. Default is "skins".')
     parser.add_argument('--sqlite-root',
-                        help='Set the location of the sqlite directory, relative '
-                             'to WEEWX_ROOT.')
+                        help='Where to put the SQLite database, relative to $WEEWX_ROOT. '
+                             'Default is "archive".')
     parser.add_argument('--html-root',
-                        help='Where generated HTML and images will go, relative '
-                             'to WEEWX_ROOT.')
+                        help='Where to put the generated HTML and images, relative to WEEWX_ROOT. '
+                             'Default is "public_html".')

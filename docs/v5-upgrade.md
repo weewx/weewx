@@ -2,34 +2,32 @@
 
 This guide is for migrating V4.x installations to Version 5.0.
 
-Relevant changes:
+With V5.0, there is now a clean separation between WeeWX code, and "user data". They are stored in
+separate areas, rather than everything under `/home/weewx`.
 
-- With V5.0, there is now a clean separation between WeeWX code, and "user
-  data" (such as configuration files, skins, database, etc). They are stored in
-  separate areas, rather than everything under `/home/weewx`.
+All WeeWX code is now in the normal Python directories. It is generic, and not specific to a
+particular installation. It includes:
 
-- With V5.0, all WeeWX code is now in the normal Python directories and no code
-  is under `/home/weewx`. In fact, no code in `/home/weewx`, _including any
-  extensions_, is used at all.
+  - Executables such as `weewxd`;
+  - Its libraries.
 
-- By default, WeeWX user data is now stored in your home directory in
-  `~/weewx-data`. However, you may continue to use your old user data located in
-  `/home/weewx` by following this guide.
+By contrast, user data is specific to your installation. By default, it is now stored in your home
+directory in `~/weewx-data`, although you may continue to use your old user data located in
+`/home/weewx` by following this guide. It includes:
+
+  * The configuration file, `weewx.conf`;
+  * Skins;
+  * Database;
+  * Generated HTML files and images; and
+  * Extensions.
 
 With this in mind, here is how you can continue to use your old `/home/weewx`:
 
-1. Move the old source tree aside so you won't confuse yourself, or any tools
-   you might use:
-
-    ```shell
-    mv /home/weewx/bin /home/weewx/bin.old
-    ```
-
-2. Install V5.0 using the tool  [pipx](https://pypa.github.io/pipx/) . 
+1. Install V5.0 using the tool  [pipx](https://pypa.github.io/pipx/) . 
    To familiarize yourself with the process, take a look at the document
    [_Installation using pip_](pip.md), but note that you are only going to follow
    step 1 (using pipx), and not step 2, which sets up the user data area. For 
-   that, you will use your old `/home/weewx`.
+   that, you will be using your old `/home/weewx`.
 
     Here are the relevant steps again:
 
@@ -43,7 +41,9 @@ With this in mind, here is how you can continue to use your old `/home/weewx`:
     When you are done, the new V5.0 executable will be in `~/.local/bin/weewxd`,
     rather than the more familiar V4.x location `/home/weewx/bin/weewxd`.
 
-3. Migrate your old extensions over by using the tool `weectl`. 
+2. Migrate your old extensions over by using the tool `weectl`. What this will do is copy
+   any items in your old user area (generally `/home/weewx/bin/user`) over to their new location
+   `/home/weewx/lib/user`. 
 
     First, try a dry run to make sure it will do what you expect:
 
@@ -57,14 +57,14 @@ With this in mind, here is how you can continue to use your old `/home/weewx`:
    weectl extension transfer 
     ```
    
-4. At this point, try running the V5.0 version of `weewxd` directly, using your
+3. At this point, try running the V5.0 version of `weewxd` directly, using your
    old configuration file:
 
     ```shell
     weewxd --config=/home/weewx/weewx.conf
     ```
 
-5. If that works, then it's time to modify your old daemon configuration file
+4. If that works, then it's time to modify your old daemon configuration file
    so that it uses the new V5.0 executable. The only change should be the
    location of `weewxd`.
 
@@ -121,3 +121,10 @@ With this in mind, here is how you can continue to use your old `/home/weewx`:
         </array>
         ```
        
+5. When you're all done, move the old source tree aside so that you won't confuse yourself, or any
+   tools you might use:
+
+    ```shell
+    mv /home/weewx/bin /home/weewx/bin.old
+    ```
+

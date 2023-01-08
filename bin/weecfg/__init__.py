@@ -352,6 +352,7 @@ def get_driver_infos(driver_pkg_name='weewx.drivers'):
     """
     driver_info_dict = {}
     # Import the package, so we can find the modules contained within it
+    print("importing", driver_pkg_name)
     driver_pkg = importlib.import_module(driver_pkg_name)
     driver_path = os.path.dirname(driver_pkg.__file__)
 

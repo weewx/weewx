@@ -1,16 +1,15 @@
 #!/usr/bin/env python
 #
-#    Copyright (c) 2009-2021 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2023 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your rights.
 #
 """Entry point to the weewx weather system."""
-from __future__ import absolute_import
-from __future__ import print_function
-
+import importlib
 import locale
 import logging
 import os
+import os.path
 import platform
 import signal
 import sys
@@ -18,17 +17,13 @@ import time
 from optparse import OptionParser
 
 import configobj
-from weewx import daemon
+
 import weecfg
 import weedb
-from weeutil.weeutil import to_bool
 import weeutil.logger
-
-# First import any user extensions...
-# noinspection PyUnresolvedReferences
-import user.extensions
-# ...then import the engine
 import weewx.engine
+from weeutil.weeutil import to_bool
+from weewx import daemon
 
 log = logging.getLogger(__name__)
 
@@ -90,6 +85,15 @@ def main():
         print("Error parsing config file: %s" % e, file=sys.stderr)
         weeutil.logger.log_traceback(log.critical, "    ****  ")
         sys.exit(weewx.CMD_ERROR)
+
+    # Now that we have the configuration dictionary, we can add the path to the user
+    # directory to PYTHONPATH.
+    weewx_root = os.path.dirname(config_path)
+    user_root = config_dict.get('USER_ROOT', 'lib/user')
+    lib_dir = os.path.abspath(os.path.join(weewx_root, user_root, '..'))
+    sys.path.insert(0, lib_dir)
+    # Now we can import user extensions
+    importlib.import_module('user.extensions')
 
     weewx.debug = int(config_dict.get('debug', 0))
 
