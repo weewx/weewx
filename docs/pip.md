@@ -5,8 +5,8 @@ install WeeWX on almost any operating system, including macOS.
 
 ## Requirements
 
-- You must have Python 3.7 or later. WeeWX V5 cannot be installed by earlier
-  versions of Python. If you are constrained by this, install WeeWX V4.9, the
+- You must have Python 3.7 or later. WeeWX V5.x cannot be installed by earlier
+  versions of Python. If you are constrained by this, install WeeWX V4.10, the
   last version to support Python 2.7, Python 3.5, and Python 3.6.
 
 - You must also have a copy of pip. Nowadays, almost all versions of Python come
@@ -56,14 +56,14 @@ This step also does not require root privileges.
 weectl station create
 ```
 
-This will create a directory `~/weewx-data` in your home directory with a new
-configuration file. It will also install skins, documentation, and examples. The
-same directory will be used to hold the database file and any generated HTML
-pages. It plays a role similar to `/home/weewx` in older versions of WeeWX but,
-unlike `/home/weewx`, it does not hold any code.
+The tool will ask you a series of questions, then create a directory `~/weewx-data` in your home
+directory with a new configuration file. It will also install skins, documentation, and examples.
+After running `weewxd`, the same directory will be used to hold the database file and any generated
+HTML pages. It plays a role similar to `/home/weewx` in older versions of WeeWX but, unlike
+`/home/weewx`, it does not hold any code.
 
 If you already have a `/home/weewx` and wish to reuse it, see the [Upgrading
-guide](upgrading.md) and the [Version 5 Migration guide](v5-upgrade.md).
+guide](upgrading.md) and the [Version 5 migration guide](v5-upgrade.md).
 
 ## Running `weewxd`
 
@@ -127,9 +127,8 @@ install the required daemon file..
 
 ### Verify
 
-After about 5 minutes, open the [station web
-page](file:///~/weewx-data/public_html/index.html) in a web browser. You should
-see your station information and data. If your hardware supports hardware
+After about 5 minutes, open the [station web page](file:///~/weewx-data/public_html/index.html) in
+a web browser. You should see your station information and data. If your hardware supports hardware
 archiving, then how long you have to wait will depend on the [archive
 interval](usersguide.md#archive_interval) set in your hardware.
 
@@ -142,7 +141,7 @@ interval](usersguide.md#archive_interval) set in your hardware.
 
 To enable uploads, such as Weather Underground, or to customize reports, modify
 the configuration file `~/weewx-data/weewx.conf`. See the [User
-Guide](usersguide.md) and [Customization Guide](customization.md) for details.
+Guide](usersguide.md) and [Customization Guide](custom/intro.md) for details.
 
 <p>WeeWX must be restarted for configuration file changes to take effect.
 </p>

@@ -48,10 +48,12 @@ nav:
       - RedHat: redhat.md
       - SUSE: suse.md
       - pip: pip.md
-  - "User's Guide":
-      - User's Guide: usersguide.htm
+      - "Migrating to V5": v5-upgrade.md
 
-  - Customization:
+  - "User's guide":
+      - User's guide: usersguide.htm
+
+  - Customization guide:
     - "Introduction": custom/intro.md
     - "Customizing reports": custom/custom_reports.md
     - "The cheetah generator": custom/cheetah.md

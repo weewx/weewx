@@ -14,6 +14,7 @@ import sys
 import time
 
 import weecfg
+import weewxd
 import weeutil.logger
 import weewx.engine
 import weewx.manager
@@ -92,10 +93,7 @@ def main():
 
     # Now that we have the configuration dictionary, we can add the path to the user
     # directory to PYTHONPATH.
-    weewx_root = os.path.dirname(config_path)
-    user_root = config_dict.get('USER_ROOT', 'lib/user')
-    lib_dir = os.path.abspath(os.path.join(weewx_root, user_root, '..'))
-    sys.path.insert(0, lib_dir)
+    weewxd.add_user_path(config_dict)
     # Now we can import user extensions
     importlib.import_module('user.extensions')
 

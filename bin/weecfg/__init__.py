@@ -7,20 +7,18 @@
 """Utilities used by the setup and configure programs"""
 
 import errno
-import pkgutil
-import glob
+import importlib
 import os.path
+import pkgutil
 import shutil
 import sys
 import tempfile
-import importlib
 
 import configobj
 
-import weewx
 import weeutil.config
 import weeutil.weeutil
-from weeutil.weeutil import to_bool, bcolors
+from weeutil.weeutil import bcolors
 
 major_comment_block = ["",
                        "#######################################"
@@ -29,6 +27,7 @@ major_comment_block = ["",
 
 default_weewx_root = os.path.expanduser('~/weewx-data')
 default_config_path = os.path.join(default_weewx_root, 'weewx.conf')
+
 
 class ExtensionError(IOError):
     """Errors when installing or uninstalling an extension"""
@@ -612,24 +611,20 @@ def prompt_with_limits(prompt, default=None, low_limit=None, high_limit=None):
 #            Miscellaneous utilities
 # ==============================================================================
 
-def extract_roots(config_path, config_dict, bin_root=None):
-    """Get the location of the various root directories used by weewx."""
+def extract_roots(config_dict):
+    """Get the location of the various root directories used by weewx.
+    The extracted paths are *absolute* paths. That is, they are no longer relative to WEEWX_ROOT.
+    """
+    root_dict = dict()
+    root_dict['WEEWX_ROOT'] = config_dict['WEEWX_ROOT']
+    root_dict['USER_DIR'] = os.path.join(config_dict['WEEWX_ROOT'],
+                                         config_dict.get('USER_ROOT', 'bin/user'))
+    root_dict['BIN_DIR'] = os.path.abspath(os.path.join(root_dict['USER_DIR'], '..'))
+    root_dict['EXT_DIR'] = os.path.join(root_dict['USER_DIR'], 'installer')
 
-    if not bin_root:
-        # An explicit value was not given for bin_root. Figure it out from where the
-        # weewx module is:
-        bin_root = os.path.abspath(os.path.join(os.path.dirname(weewx.__file__), '..'))
-
-    root_dict = {
-        'BIN_ROOT' : bin_root,
-        'WEEWX_ROOT': config_dict['WEEWX_ROOT'],
-        'CONFIG_ROOT': os.path.abspath(os.path.dirname(config_path)),
-        'USER_ROOT' : os.path.abspath(os.path.join(bin_root, 'user')),
-        'EXT_ROOT' : os.path.abspath(os.path.join(bin_root, 'user', 'installer'))
-    }
     # Add SKIN_ROOT if it can be found:
     try:
-        root_dict['SKIN_ROOT'] = os.path.abspath(os.path.join(
+        root_dict['SKIN_DIR'] = os.path.abspath(os.path.join(
             root_dict['WEEWX_ROOT'],
             config_dict['StdReport']['SKIN_ROOT']))
     except KeyError:
