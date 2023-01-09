@@ -88,6 +88,7 @@ def config_config(config_dict, driver=None, location=None,
                   user_root=None,
                   no_prompt=False):
     """Modify a configuration file."""
+    weewx.add_user_path(config_dict)
     config_location(config_dict, location=location, no_prompt=no_prompt)
     config_altitude(config_dict, altitude=altitude, no_prompt=no_prompt)
     config_latlon(config_dict, latitude=latitude, longitude=longitude, no_prompt=no_prompt)

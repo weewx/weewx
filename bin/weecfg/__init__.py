@@ -350,9 +350,13 @@ def get_driver_infos(driver_pkg_name='weewx.drivers'):
 
     """
     driver_info_dict = {}
-    # Import the package, so we can find the modules contained within it
-    print("importing", driver_pkg_name)
-    driver_pkg = importlib.import_module(driver_pkg_name)
+    # Import the package, so we can find the modules contained within it. It's possible we are
+    # trying to import the not-yet-created 'user' subdirectory, which would cause a
+    # ModuleNotFoundError. Be prepared to catch it.
+    try:
+        driver_pkg = importlib.import_module(driver_pkg_name)
+    except ModuleNotFoundError:
+        return driver_info_dict
     driver_path = os.path.dirname(driver_pkg.__file__)
 
     # Iterate over all the modules in the package.

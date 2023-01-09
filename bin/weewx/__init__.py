@@ -1,13 +1,14 @@
 #
-#    Copyright (c) 2009-2021 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2023 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
 """Package weewx, containing modules specific to the weewx runtime engine."""
-from __future__ import absolute_import
+import os.path
+import sys
 import time
 
-__version__ = "5.0.0a9"
+__version__ = "5.0.0a10"
 
 # Holds the program launch time in unix epoch seconds:
 # Useful for calculating 'uptime.'
@@ -139,9 +140,23 @@ class Event(object):
         s = "; ".join("%s: %s" %(k, self.__dict__[k]) for k in self.__dict__ if k!="event_type")
         return et + s
 
+# =============================================================================
+#                           Utilities
+# =============================================================================
+
+
 def require_weewx_version(module, required_version):
     """utility to check for version compatibility"""
     from weeutil.weeutil import version_compare
     if version_compare(__version__, required_version) < 0:
         raise UnsupportedFeature("%s requires weewx %s or greater, found %s"
                                  % (module, required_version, __version__))
+
+
+def add_user_path(config_dict):
+    """add the path to the user directory to PYTHONPATH."""
+    user_root = config_dict.get('USER_ROOT', 'bin/user')
+    lib_dir = os.path.abspath(os.path.join(config_dict['WEEWX_ROOT'], user_root, '..'))
+    sys.path.append(lib_dir)
+
+

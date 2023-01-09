@@ -88,7 +88,7 @@ def main():
 
     # Now that we have the configuration dictionary, we can add the path to the user
     # directory to PYTHONPATH.
-    add_user_path(config_dict)
+    weewx.add_user_path(config_dict)
     # Now we can import user extensions
     importlib.import_module('user.extensions')
 
@@ -231,14 +231,6 @@ def main():
             log.critical("    ****  Exiting.")
             # Reraise the exception (this should cause the program to exit)
             raise
-
-
-def add_user_path(config_dict):
-    """add the path to the user directory to PYTHONPATH."""
-    weewx_root = os.path.dirname(config_dict['config_path'])
-    user_root = config_dict.get('USER_ROOT', 'bin/user')
-    lib_dir = os.path.abspath(os.path.join(weewx_root, user_root, '..'))
-    sys.path.append(lib_dir)
 
 
 # ==============================================================================
