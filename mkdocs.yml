@@ -52,15 +52,15 @@ nav:
 
   - "User's guide":
       - "About WeeWX": ./usersguide/about-weewx.md
-      - "System Requirements": ./usersguide/system-requirements.md
+      - "System requirements": ./usersguide/system-requirements.md
       - "Installing WeeWX": ./usersguide/installing-weewx.md
       - "Running WeeWX": ./usersguide/running-weewx.md
-      - "WebServer Integration": ./usersguide/webserver-integration.md
-      - "Backup & Restore WeeWX": ./usersguide/backing-up-weewx.md
+      - "WebServer integration": ./usersguide/webserver-integration.md
+      - "Backup & restore WeeWX": ./usersguide/backing-up-weewx.md
       - "Configuring MySQL / MariaDB": ./usersguide/mysql-mariadb-config.md
       - "Reference: options":
         - "Overview": ./usersguide/weewx-config-file/overview.md
-        - "General Options": ./usersguide//weewx-config-file/general.md
+        - "General options": ./usersguide//weewx-config-file/general.md
         - "[Station]": ./usersguide/weewx-config-file/stations-config.md
         - "[StdRESTful]": ./usersguide/weewx-config-file/stdrestful-config.md
         - "[StdReport]": ./usersguide/weewx-config-file/stdreport-config.md

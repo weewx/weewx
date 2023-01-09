@@ -1814,5 +1814,5 @@ perhaps uses the database? Simply putting it in the `[Extras]` section won't do,
 cannot change.
 
 The answer is to write a *search list extension*. Complete directioins on how to do this are in a
-companion document [*Writing search list extensions*](sle.html).
+companion document [*Writing search list extensions*](/sle).
 
