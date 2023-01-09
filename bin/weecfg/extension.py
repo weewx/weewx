@@ -6,13 +6,6 @@
 #
 """Utilities for installing and removing extensions"""
 
-# As an example, here are the names of some reference directories for the
-# extension pmon (process monitor):
-#  -user/                          # The USER_ROOT subdirectory
-#  -user/installer/                # The EXT_ROOT subdirectory
-#  -user/installer/pmon/           # The extension's installer subdirectory
-#  -user/installer/pmon/install.py # The copy of the installer for the extension
-
 import glob
 import os
 import shutil
@@ -46,10 +39,10 @@ class ExtensionEngine(object):
     """Engine that manages extensions."""
     # Extension components can be installed to these locations
     target_dirs = {
-        'bin': 'BIN_ROOT',
-        'skins': 'SKIN_ROOT'}
+        'bin': 'BIN_DIR',
+        'skins': 'SKIN_DIR'}
 
-    def __init__(self, config_path, config_dict, bin_root=None, dry_run=False, logger=None):
+    def __init__(self, config_path, config_dict, dry_run=False, logger=None):
         """
         Initializer for ExtensionEngine.
 
@@ -60,10 +53,6 @@ class ExtensionEngine(object):
 
             config_dict (str): The configuration dictionary, i.e., the contents of the
                          file at config_path.
-
-            bin_root (str): Path to the location of the weewx binary files.  For example,
-                      something like /home/weewx/bin. Optional. If not specified,
-                      it will be guessed based on the location of the weewx module.
 
             dry_run (bool): If Truthy, all the steps will be printed out, but nothing will
                      actually be done.
@@ -76,14 +65,14 @@ class ExtensionEngine(object):
         self.logger = logger or Logger()
         self.dry_run = dry_run
 
-        self.root_dict = weecfg.extract_roots(self.config_path, self.config_dict, bin_root)
+        self.root_dict = weecfg.extract_roots(self.config_dict)
         self.logger.log("root dictionary: %s" % self.root_dict, 4)
 
     def enumerate_extensions(self):
         """Print info about all installed extensions to the logger."""
-        ext_root = self.root_dict['EXT_ROOT']
+        ext_dir = self.root_dict['EXT_DIR']
         try:
-            exts = os.listdir(ext_root)
+            exts = os.listdir(ext_dir)
             if exts:
                 self.logger.log("%-18s%-10s%s" % ("Extension Name", "Version", "Description"),
                                 level=0)
@@ -92,14 +81,14 @@ class ExtensionEngine(object):
                     msg = "%(name)-18s%(version)-10s%(description)s" % info
                     self.logger.log(msg, level=0)
             else:
-                self.logger.log("Extension cache is '%s'" % ext_root, level=2)
+                self.logger.log("Extension cache is '%s'" % ext_dir, level=2)
                 self.logger.log("No extensions installed", level=0)
         except OSError:
-            self.logger.log("No extension cache '%s'" % ext_root, level=2)
+            self.logger.log("No extension cache '%s'" % ext_dir, level=2)
             self.logger.log("No extensions installed", level=0)
 
     def get_extension_info(self, ext_name):
-        ext_cache_dir = os.path.join(self.root_dict['EXT_ROOT'], ext_name)
+        ext_cache_dir = os.path.join(self.root_dict['EXT_DIR'], ext_name)
         _, installer = weecfg.get_extension_installer(ext_cache_dir)
         return installer
 
@@ -183,7 +172,7 @@ class ExtensionEngine(object):
                 source_type = os.path.commonprefix((source_tuple[0], directory))
                 # If there is a match, source_type will be something other than an empty string:
                 if source_type:
-                    # This will be something like 'BIN_ROOT' or 'SKIN_ROOT':
+                    # This will be something like 'BIN_DIr' or 'SKIN_DIR':
                     root_type = ExtensionEngine.target_dirs[source_type]
                     # Now go through all the files of the source tuple
                     for install_file in source_tuple[1]:
@@ -240,7 +229,7 @@ class ExtensionEngine(object):
 
         # Save the extension's install.py file in the extension's installer
         # directory for later use enumerating and uninstalling
-        extension_installer_dir = os.path.join(self.root_dict['EXT_ROOT'], extension_name)
+        extension_installer_dir = os.path.join(self.root_dict['EXT_DIR'], extension_name)
         self.logger.log("Saving installer file to %s" % extension_installer_dir)
         if not self.dry_run:
             try:
@@ -257,7 +246,7 @@ class ExtensionEngine(object):
 
     def get_lang_code(self, skin, default_code):
         """Convenience function for picking a language code"""
-        skin_path = os.path.join(self.root_dict['SKIN_ROOT'], skin)
+        skin_path = os.path.join(self.root_dict['SKIN_DIR'], skin)
         languages = weecfg.get_languages(skin_path)
         code = weecfg.pick_language(languages, default_code)
         return code
@@ -344,7 +333,7 @@ class ExtensionEngine(object):
             self.logger.log("This is a dry run. Nothing will actually be done.")
 
         # Find the subdirectory containing this extension's installer
-        extension_installer_dir = os.path.join(self.root_dict['EXT_ROOT'], extension_name)
+        extension_installer_dir = os.path.join(self.root_dict['EXT_DIR'], extension_name)
         try:
             # Retrieve it
             _, installer = weecfg.get_extension_installer(extension_installer_dir)
@@ -393,7 +382,7 @@ class ExtensionEngine(object):
                 source_type = os.path.commonprefix((source_tuple[0], directory))
                 # If there is a match, source_type will be something other than an empty string:
                 if source_type:
-                    # This will be something like 'BIN_ROOT' or 'SKIN_ROOT':
+                    # This will be something like 'BIN_DIR' or 'SKIN_DIR':
                     root_type = ExtensionEngine.target_dirs[source_type]
                     # Now go through all the files of the source tuple
                     for install_file in source_tuple[1]:
@@ -407,7 +396,7 @@ class ExtensionEngine(object):
                             destination_path += "*"
                         N += self.delete_file(destination_path)
                     # Accumulate all directories under 'skins'
-                    if root_type == 'SKIN_ROOT':
+                    if root_type == 'SKIN_DIR':
                         dst_dir = ExtensionEngine._strip_leading_dir(source_tuple[0])
                         directory = os.path.abspath(os.path.join(self.root_dict[root_type],
                                                                  dst_dir))
@@ -491,7 +480,7 @@ class ExtensionEngine(object):
         """For transfering contents of an old 'user' directory into the new one."""
         if not os.path.isdir(root_src_dir):
             sys.exit(f"{root_src_dir} is not a directory")
-        root_dst_dir = self.root_dict['USER_ROOT']
+        root_dst_dir = self.root_dict['USER_DIR']
         self.logger.log(f"Transferring contents of {root_src_dir} to {root_dst_dir}", 1)
         if self.dry_run:
             self.logger.log(f"This is a {bcolors.BOLD}dry run{bcolors.ENDC}. "

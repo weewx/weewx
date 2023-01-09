@@ -1,25 +1,20 @@
 #!/usr/bin/env python
 #
-#    Copyright (c) 2009-2022 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2023 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your rights.
 #
 """Executable that can run all reports."""
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 import argparse
+import importlib
 import socket
 import sys
 import time
 
-# Although 'user.extensions' is not used, it's important to execute any user extensions
-# before starting.
-# noinspection PyUnresolvedReferences
-import user.extensions
 import weecfg
 import weeutil.logger
+import weewx
 import weewx.engine
 import weewx.manager
 import weewx.reportengine
@@ -94,6 +89,12 @@ def main():
     # Fetch the config file
     config_path, config_dict = weecfg.read_config(namespace.config_arg, [namespace.config_option])
     print("Using configuration file %s" % config_path)
+
+    # Now that we have the configuration dictionary, we can add the path to the user
+    # directory to PYTHONPATH.
+    weewx.add_user_path(config_dict)
+    # Now we can import user extensions
+    importlib.import_module('user.extensions')
 
     # Look for the debug flag. If set, ask for extra logging
     weewx.debug = int(config_dict.get('debug', 0))

@@ -694,3 +694,8 @@ a.toc-link:hover {
     border: 1px solid #aacccc;
     border-top: 5px solid #aacccc;
 }
+
+/* For mkdocs markdown: */
+.md-typeset code {
+    font-weight:bold;
+}
