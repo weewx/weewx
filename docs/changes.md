@@ -8,14 +8,23 @@ May 2018) or greater.
 
 WeeWX can now be installed using pip.
 
-Removed all references to the deprecated package distutils, which was due to be
-removed in Python v3.12.
+With pip installs, user data is stored in `~/weewx-data` by default, 
+instead of `/home/weewx`. This allows pip installs to be done without
+root privileges. However, `/home/weewx` can still be used.
 
-Mac now logs to `syslog` like any other system, (instead of `rotate`).
+The new utility `weectl` is now used for extensions and station configuration.
+With time, it will probably take on other responsibilities.
+
+Removed all references to the deprecated package `distutils`, which was due to
+be removed in Python v3.12.
+
+Documentation now uses [MkDocs](https://www.mkdocs.org/).
+
+MacOS now logs to `syslog` like any other system, (instead of `rotate`).
 
 
 ## 4.10.0 MM/DD/YYYY
-Don't inject txBatteryStatus and consBatteryVoltage into records in
+Don't inject `txBatteryStatus` and `consBatteryVoltage` into records in
 the Vantage driver. Let the accumulators do it.
 Fixes issue #802.
 
@@ -27,19 +36,20 @@ Fixes issue #806.
 Allow more flexible formatting for delta times. This can break old skins.
 See Upgrade Guide. PR #807.
 
-Fix bug that prevents group_deltatime from being used by timespans. Users
+Fix bug that prevents `group_deltatime` from being used by timespans. Users
 who used custom formatting for delta times will be affected. See the Upgrade
 Guide. Fixes issue #808.
 
-Add suffix ".length" to class TimespanBinder. This allows expressions such as
+Add suffix `.length` to class TimespanBinder. This allows expressions such as
 $month.length. PR #809. Thanks to user Karen!
 
-Added new unit "hertz". PR #812. Again, thanks to user Karen!
+Added new unit `hertz`. PR #812. Again, thanks to user Karen!
 
 Document the behavior of the registry server responses.  Do not attempt retries
 when a registration update contacts the server but gets a FAIL response, since
 a FAIL at that point is due to a configuration problem, not comms, and retries
 will not help.
+
 
 ## 4.9.1 10/25/2022
 Fix problem with `wind` for older versions of sqlite.

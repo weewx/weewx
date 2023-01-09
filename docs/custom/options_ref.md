@@ -838,7 +838,7 @@ Default is to use the color in `chart_fill_colors`.
 The label to be used for this plot line in the top label. Optional. The
 default is to use the SQL variable name.
 
-`line_gap_fraction`
+`line_gap_fraction`{ #line_gap_fraction }
 
 If there is a gap between data points bigger than this fractional amount
 of the x-axis, then a gap will be drawn, rather than a connecting line.

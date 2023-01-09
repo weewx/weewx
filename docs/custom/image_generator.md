@@ -266,17 +266,17 @@ degrees Celsius.
 ## Line gaps {#line_gaps}
 
 If there is a time gap in the data, the option
-`line_gap_fraction` controls how line plots will be drawn.
+[`line_gap_fraction`](/custom/options_ref/#line_gap_fraction) controls how line plots will be drawn.
 Here's what a plot looks like without and with this option being
 specified:
 
-| ![Gap not shown](images/day-gap-not-shown.png) |
-|------------------------------------------------|
-| No `line_gap_fraction` specified               |
+| ![Gap not shown](../images/day-gap-not-shown.png) |
+|---------------------------------------------------|
+| No `line_gap_fraction` specified                  |
 
 
 
-| ![Gap showing](images/day-gap-showing.png)                                           |
+| ![Gap showing](../images/day-gap-showing.png)                                        |
 |--------------------------------------------------------------------------------------|
 | With `line_gap_fraction=0.01`.<br/>Note how each line has been split into two lines. |
 

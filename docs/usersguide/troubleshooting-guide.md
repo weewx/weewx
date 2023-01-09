@@ -1,24 +1,25 @@
 # TroubleShooting Guide
 
-[Hardware Problems](#hardware-problems){ .md-button } [Software Problems](#software-problems){ .md-button } [Meteorological Problems](#meteorological-problems){ .md-button }
+[Hardware Problems](#hardware-problems)<br/>
+[Software Problems](#software-problems)<br/>
+[Meteorological Problems](#meteorological-problems)
 
-This section lists some common problems installing and running WeeWX. If you are stuck, be sure to:
+This guide lists some common problems installing and running WeeWX. 
 
-Set the option **debug** to 1 in **weewx.conf**. This will put much more information in the log file, which can be very useful for troubleshooting and debugging!
+!!! Note
+    If you are stuck, be sure to
+    set the option `debug = 1` in `weewx.conf`. This will put much more information in the log file, 
+    which can be very useful for troubleshooting and debugging!
 
-```
-debug = 1
-```
+Look at the [log file](/usersguide/running-weewx/#monitoring-weewx). We are always happy to take questions, but the first thing someone will ask is, "Did you look at the log file?"
 
-Look at the [log file](/userguide/running-weewx#monitoring). We are always happy to take questions, but the first thing someone will ask is, "Did you look at the log file?"
-
-```
+```shell
 sudo tail -f /var/log/syslog
 ```
 
-Run **weewxd** directly from the command line, rather than as a daemon. Generally, WeeWX will catch and log any unrecoverable exceptions. But if you are getting strange results, it is worth running directly and looking for any clues.
+Run `weewxd` directly from the command line, rather than as a daemon. Generally, WeeWX will catch and log any unrecoverable exceptions, but if you are getting strange results, it is worth running directly from the command line and looking for any clues.
 
-```
+```shell
 sudo weewxd weewx.conf
 ```
 
@@ -34,17 +35,15 @@ For Davis-specific tips, see the Wiki article [Troubleshooting Davis stations](h
 **Tips on making a system reliable**
 If you are having problems keeping your weather station up for long periods of time, here are some tips, in decreasing order of importance:
 
-
-
 * Run on dedicated hardware. If you are using the server for other tasks, particularly as your desktop machine, you will have reliability problems. If you are using it as a print or network server, you will probably be OK.
-* Run headless. Modern graphical systems are extremely complex. As new features are added, test suites do not always catch up. Your system will be much more reliable if you run it without a windowing system (X Windows, in the case of Linux).
-* Use an Uninterruptible Power Supply (UPS). The vast majority of power glitches are very short lived — just a second or two — so you do not need a big one. The 425VA unit I use to protect my fit-PC cost $55 at Best Buy.
+* Run headless. Modern graphical systems are extremely complex. As new features are added, test suites do not always catch up. Your system will be much more reliable if you run it without a windowing system.
+* Use an Uninterruptible Power Supply (UPS). The vast majority of power glitches are very short lived &mdash; just a second or two &mdash; so you do not need a big one. The 425VA unit I use to protect my fit-PC cost $55 at Best Buy.
 * If you buy a Davis VantagePro and your computer has an old-fashioned serial port, get the VantagePro with a serial connection, not a USB connection. See the Wiki article on Davis cp2101 converter problems for details.
 * If you do use a USB connection, put a ferrite coil on each end of the cable to your console. If you have enough length and the ferrite coil is big enough, make a loop so it goes through the coil twice. See the picture below:
 
 
 <figure markdown>
-  ![Ferrite Coils](images/ferrites.jpg){ width="300" }
+  ![Ferrite Coils](/images/ferrites.jpg){ width="300" }
   <figcaption>Cable connection looped through a ferrite coil
 Ferrite coils on a Davis Envoy. There are two coils, one on the USB connection (top wire) and one on the power supply. Both have loops.</figcaption>
 </figure>
@@ -71,14 +70,13 @@ More details about [Fine Offset lockups](https://github.com/weewx/weewx/wiki/Fin
 
 ### Archive interval
 
-Most hardware with data-logging includes a parameter to specify the archive interval used by the logger. If the hardware and driver support it, WeeWX will use this interval as the archive_interval. If not, WeeWX will fall back to the **archive_interval** specified in [[StdArchive]](weewx-config-file/stdarchive.md). The default fallback value is 300 seconds (5 minutes).
+Most hardware with data-logging includes a parameter to specify the archive interval used by the logger. If the hardware and driver support it, WeeWX will use this interval as the archive_interval. If not, WeeWX will fall back to using option `archive_interval specified in [[StdArchive]](/usersguide/weewx-config-file/stdarchive). The default fallback value is 300 seconds (5 minutes).
 
 If the hardware archive interval is large, it will take a long time before anything shows up in the WeeWX reports. For example, WS23xx stations ship with an archive interval of 60 minutes, and Fine Offset stations ship with an archive interval of 30 minutes. If you run WeeWX with a WS23xx station in its factory default configuration, it will take 60 minutes before the first data point shows up, then another 60 minutes until the next one, and so on.
 
 Since reports are generated when a new archive record arrives, a large archive interval means that reports will be generated infrequently.
 
 If you want data and reports closer to real-time, use the [wee_device](utilties/wee_device.md) utility to change the interval.
-
 
 
 ## Software problems
@@ -98,20 +96,20 @@ Feb  8 04:25:17 hummingbird weewx[6932] INFO weewx.restx: Windy: Published recor
 Feb  8 04:25:17 hummingbird weewx[6932] ERROR weewx.restx: WOW: Failed to publish record 2020-02-08 04:25:00 PST (1581164700): Failed upload after 3 tries
 ```
 
-The location of this logging file varies from system to system, but it is typically in **/var/log/syslog**, or something similar.
+The location of this logging file varies from system to system, but it is typically in `/var/log/syslog`, or something similar.
 
 However, some systems default to saving only warning or critical information, so **INFO** messages from WeeWX may not appear. If this happens to you, check your system logging configuration. On Debian systems, look in **/etc/rsyslog.conf**. On Redhat systems, look in **/etc/syslog.conf**.
 
 
 ### configobj errors
 
-These are errors in the configuration file. Two are very common. Incidentally, these errors are far easier to diagnose when WeeWX is run directly than when it is run as a daemon.
+These are errors in the configuration file. Two are very common. Incidentally, these errors are far easier to diagnose when WeeWX is run directly from the command line than when it is run as a daemon.
 
-#### configobj.DuplicateError exception
+#### `configobj.DuplicateError` exception
 
 This error is caused by using an identifier more than once in the configuration file. For example, you may have inadvertently listed your FTP server twice:
 
-```
+```ini
 [Reports]
     [[FTP]]
         ... (details elided)
@@ -132,11 +130,11 @@ Apr 24 12:09:15 raven weewx[11480]: **** Duplicate keyword name at line 254.
 Apr 24 12:09:15 raven weewx[11480]: **** Exiting. 
 ```
 
-#### configobj.NestingError exception
+#### `configobj.NestingError` exception
 
 This is a very similar error, and is caused by a misformed section nesting. For example:
 
-```
+```ini
 [Reports]
     [[FTP]]]
         ...
@@ -149,7 +147,7 @@ Note the extra closing bracket on the subsection **FTP**.
 
 If everything appears normal except that you have no barometer data, the problem may be a mismatch between the unit system used for service **StdConvert** and the unit system used by service **StdQC**. For example:
 
-```
+```ini
 [StdConvert]
     target_unit = METRIC
     ...
@@ -161,9 +159,9 @@ If everything appears normal except that you have no barometer data, the problem
 
 The problem is that you are requiring the barometer data to be between 28 and 32.5, but with the unit system set to **METRIC**, the data will be in the range 990 to 1050 or so!
 
-The solution is to change the values to match the units in StdConvert, or specify the units in MinMax, regardless of the units in StdConvert. For example:
+The solution is to change the values to match the units in `StdConvert`, or specify the units in `MinMax`, regardless of the units in `StdConvert`. For example:
 
-```
+```ini hl_lines="7"
 [StdConvert]
     target_unit = US
     ...
@@ -173,7 +171,7 @@ The solution is to change the values to match the units in StdConvert, or specif
         barometer = 950, 1100, mbar
 ```
 
-### Cheetah.NameMapper.NotFound errors
+### `Cheetah.NameMapper.NotFound` errors
 If you get errors of the sort:
 
 ``` log
@@ -191,7 +189,7 @@ If you see dots instead of lines in the daily plots, you might want to change th
 
 In a default configuration, a time period greater than 1% of the displayed timespan is considered to be a gap in data. So when the interval between data points is greater than about 10 minutes, the daily plots show dots instead of connected points.
 
-Change the [line_gap_fraction](customizing#line_gap_fraction) option in **skin.conf** to control how much time is considered a break in data.
+Change the [line_gap_fraction](/custom/image_generator#line_gaps) option in **skin.conf** to control how much time is considered a break in data.
 
 As for the archive interval, check the log file for an entry like this soon after WeeWX starts up:
 

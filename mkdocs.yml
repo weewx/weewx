@@ -58,6 +58,7 @@ nav:
       - "WebServer integration": ./usersguide/webserver-integration.md
       - "Backup & restore WeeWX": ./usersguide/backing-up-weewx.md
       - "Configuring MySQL / MariaDB": ./usersguide/mysql-mariadb-config.md
+      - "Troubleshooting": ./usersguide/troubleshooting-guide.md
       - "Reference: options":
         - "Overview": ./usersguide/weewx-config-file/overview.md
         - "General options": ./usersguide//weewx-config-file/general.md
@@ -91,7 +92,6 @@ nav:
     - "Appendix": custom/appendix.md
 
   - Other guides:
-      - troubleshooting-guide.md
       - guides-overview.md
       - "Hardware guide": hardware.htm
       - "Utilities guide": utilities.htm

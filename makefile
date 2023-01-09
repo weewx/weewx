@@ -159,6 +159,7 @@ upload-src:
 
 # Build the documentation:
 build-docs:
+	rm -r $(DOCLOC)
 	mkdocs build
 
 # upload docs to the web site
