@@ -51,30 +51,28 @@ nav:
       - "Migrating to V5": v5-upgrade.md
 
   - "User's guide":
-      - "About WeeWX": ./userguide/about-weewx.md
-      - "System Requirements": ./userguide/system-requirements.md
-      - "Installing WeeWX": ./userguide/installing-weewx.md
-      - "Running WeeWX": ./userguide/running-weewx.md
-      - "WebServer Integration": ./userguide/webserver-integration.md
-      - "Backup & Restore WeeWX": ./userguide/backing-up-weewx.md
-      - "Configuring MySQL / MariaDB": ./userguide/mysql-mariadb-config.md
-      - "weewx.conf config file": ./userguide/weewx.conf.md
-
-  - 'Configuring WeeWX':
-      - "weewx.conf Config File": ./weewx-config-file/overview.md
-      - "General Options": ./weewx-config-file/general.md
-      - "[Station]": ./weewx-config-file/stations-config.md
-      - "[StdRESTful]": ./weewx-config-file/stdrestful-config.md
-      - "[StdReport]": ./weewx-config-file/stdreport-config.md
-      - "[StdConvert]": ./weewx-config-file/stdconvert-config.md
-      - "[StdCalibrate]": ./weewx-config-file/stdcalibrate-config.md
-      - "[StdQC]": ./weewx-config-file/stdqc-config.md
-      - "[StdWXCalculate]": ./weewx-config-file/stdwxcalculate-config.md
-      - "[StdArchive]": ./weewx-config-file/stdarchive.md
-      - "[StdTimeSynch": ./weewx-config-file/stdtimesynch.md
-      - "[DataBindings]": ./weewx-config-file/data-bindings.md
-      - "[Databases]": ./weewx-config-file/databases.md
-      - "[Engine]": ./weewx-config-file/engine.md
+      - "About WeeWX": ./usersguide/about-weewx.md
+      - "System Requirements": ./usersguide/system-requirements.md
+      - "Installing WeeWX": ./usersguide/installing-weewx.md
+      - "Running WeeWX": ./usersguide/running-weewx.md
+      - "WebServer Integration": ./usersguide/webserver-integration.md
+      - "Backup & Restore WeeWX": ./usersguide/backing-up-weewx.md
+      - "Configuring MySQL / MariaDB": ./usersguide/mysql-mariadb-config.md
+      - "Reference: options":
+        - "Overview": ./usersguide/weewx-config-file/overview.md
+        - "General Options": ./usersguide//weewx-config-file/general.md
+        - "[Station]": ./usersguide/weewx-config-file/stations-config.md
+        - "[StdRESTful]": ./usersguide/weewx-config-file/stdrestful-config.md
+        - "[StdReport]": ./usersguide/weewx-config-file/stdreport-config.md
+        - "[StdConvert]": ./usersguide/weewx-config-file/stdconvert-config.md
+        - "[StdCalibrate]": ./usersguide/weewx-config-file/stdcalibrate-config.md
+        - "[StdQC]": ./usersguide/weewx-config-file/stdqc-config.md
+        - "[StdWXCalculate]": ./usersguide/weewx-config-file/stdwxcalculate-config.md
+        - "[StdArchive]": ./usersguide/weewx-config-file/stdarchive.md
+        - "[StdTimeSynch]": ./usersguide/weewx-config-file/stdtimesynch.md
+        - "[DataBindings]": ./usersguide/weewx-config-file/data-bindings.md
+        - "[Databases]": ./usersguide/weewx-config-file/databases.md
+        - "[Engine]": ./usersguide/weewx-config-file/engine.md
 
   - Customization guide:
     - "Introduction": custom/intro.md

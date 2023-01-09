@@ -1,29 +1,27 @@
-# WeeWX: Installation on Debian-based systems 
+# Installation on Debian-based systems 
 
 This is a guide to installing WeeWX from a DEB package on Debian-based systems, including Ubuntu, Mint, and Raspbian.
 
-This requires a version of the operating system based on debian-10 or newer.
+## Compatible operating system versions
 
-## Compatible Operating System Versions
-WeeWX v5 requires python v3.7 or later, which is only available on operating systems based on debian-10 or later. No packages for python2-only operating systems will be provided.
+WeeWX V5.x requires python v3.7 or greater, which is only available on *Debian 10 or later*. No package installer for Python 2 is available.
 
-It is recommended that users of older operating systems continue to use WeeWX v4 until you can update your operating system to a more current version supporting python v3.7 at a minimum.
-
+It is recommended that users of older operating systems either use WeeWX V4.x (unsupported), or install Python 3.7 or greater on their system.
 
 ## Configure apt
 
-The first time you install WeeWX, you must configure ```apt``` so that it knows to trust weewx.com, and knows where to find the WeeWX releases.
+The first time you install WeeWX, you must configure `apt` so that it knows to trust weewx.com, and knows where to find the WeeWX releases.
 
 Step one: tell your system to trust weewx.com. If you see any errors, please consult the [FAQ](https://github.com/weewx/weewx/wiki/faq-apt-key-problems).
 
-```
+```shell
 wget -qO - https://weewx.com/keys.html | \
   sudo gpg --dearmor --output /etc/apt/trusted.gpg.d/weewx.gpg
 ```
 
-Step two: run one of the following two commands to tell `apt` where to find the appropriate WeeWX repository.
+Step two: run the following command to tell `apt` where to find the appropriate WeeWX repository.
 
-```
+```shell
 wget -qO - https://weewx.com/apt/weewx-python3.list | \
   sudo tee /etc/apt/sources.list.d/weewx.list
 ```
@@ -33,7 +31,7 @@ wget -qO - https://weewx.com/apt/weewx-python3.list | \
 
 Having configured `apt`, you can now use `apt-get` to install WeeWX. The installer will prompt for a location, latitude/longitude, altitude, station type, and parameters specific to your station hardware.
 
-```
+```shell
 sudo apt-get update
 sudo apt-get install weewx
 ```
@@ -44,7 +42,7 @@ When you are done, WeeWX will be running in the background as a daemon.
 
 To make sure things are running properly look in the system log for messages from WeeWX.
 
-```
+```shell
 sudo tail -f /var/log/syslog
 ```
 
@@ -54,6 +52,19 @@ After about 5 minutes, open the station web page in a web browser. You should se
 
 ```
 [file:///var/www/html/weewx/index.html](file:///var/www/html/weewx/index.html)
+```
+
+## Configure
+
+The default installation uses a Simulator as the `station_type`. To
+use real hardware, stop WeeWX, change to the actual station type and
+station parameters, delete the simulation data, then restart WeeWX:
+
+```shell
+sudo systemctl stop
+sudo weectl station reconfigure
+sudo rm /var/lib/weewx/weewx.sdb
+sudo systemctl start
 ```
 
 ## Customize
@@ -66,7 +77,7 @@ WeeWX must be restarted for configuration file changes to take effect.
 
 To start/stop WeeWX:
 
-```
+```shell
 sudo /etc/init.d/weewx start
 sudo /etc/init.d/weewx stop
 ```
@@ -75,19 +86,19 @@ sudo /etc/init.d/weewx stop
 
 To uninstall WeeWX but retain configuration files and data:
 
-```
+```shell
 sudo apt-get remove weewx
 ```
 
 To uninstall WeeWX, removing configuration files but retaining data:
 
-```
+```shell
 sudo apt-get purge weewx
 ```
 
 To remove data:
 
-```
+```shell
 sudo rm -r /var/lib/weewx
 sudo rm -r /var/www/html/weewx
 ```
@@ -96,16 +107,20 @@ sudo rm -r /var/www/html/weewx
 
 The installation will result in the following layout:
 
-  --------------------------------- --------------------------------
-                        executable: /usr/bin/weewxd
-                configuration file: /etc/weewx/weewx.conf
-               skins and templates: /etc/weewx/skins
-                  sqlite databases: /var/lib/weewx/
-    generated web pages and images: /var/www/html/weewx/
-                     documentation: /usr/share/doc/weewx-x.y.z/
-                          examples: /usr/share/doc/weewx/examples/
-                         utilities: /usr/bin/wee_*
-  --------------------------------- --------------------------------
+| Role                    | Symbolic name     | Nominal value                   |
+|-------------------------|-------------------|---------------------------------|
+| WeeWX root directory    | _`$WEEWX_ROOT`_   | `/`                             |
+| Executables             | _`$BIN_ROOT`_     | `/usr/share/weewx/`             |
+| Configuration directory | _`$CONFIG_ROOT`_  | `/etc/weewx/`                   |
+| Skins and templates     | _`$SKIN_ROOT`_    | `/etc/weewx/skins/`             |
+| SQLite databases        | _`$SQLITE_ROOT`_  | `/var/lib/weewx/`               |
+| Web pages and images    | _`$HTML_ROOT`_    | `/var/www/html/weewx/`          |
+| Documentation           | _`$DOC_ROOT`_     | `/usr/share/doc/weewx/`         |
+| Examples                | _`$EXAMPLE_ROOT`_ | `/usr/share/doc/weewx/examples/`|
+| User directory          | _`$USER_ROOT`_    | `/usr/share/weewx/user`                |
+| PID file                |                   | `/var/run/weewx.pid`            |
+| Log file                |                   | `/var/log/syslog`               |
 
-© [Copyright](copyright/) Tom Keffer
+
+© [Copyright](copyright.md) Tom Keffer
 

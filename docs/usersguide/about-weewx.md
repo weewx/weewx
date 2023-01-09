@@ -1,5 +1,5 @@
-# WeeWX User Guide
-Version 4.9
+# WeeWX User's Guide
+Version: 5.0
 
 This is the complete guide to installing, configuring, and troubleshooting WeeWX.
 
@@ -9,6 +9,4 @@ This is the complete guide to installing, configuring, and troubleshooting WeeWX
 
 Initial development began in the winter of 2008-2009, with the first release in 2009.
 
-The source code is hosted on [GitHub](https://github.com/weewx/weewx), while downloads are available at [weewx.com/downloads](http://weewx.com/downloads).
-
-WeeWX is about 15,000 lines of code, plus another 15,000 for the drivers for all the types of supported hardware.
+The source code is hosted on [GitHub](https://github.com/weewx/weewx). It can be installed using package installers or pip. Download are available at [weewx.com/downloads](http://weewx.com/downloads).

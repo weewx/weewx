@@ -9,7 +9,7 @@ This section is for configuring the StdRESTful services, which upload to simple 
 * [Automatisches Wetterkarten System (AWEKAS)](https://www.awekas.at/)
 
 
-## General Options for each RESTful Service
+## General options for each RESTful Service
 
 **log_success**
 

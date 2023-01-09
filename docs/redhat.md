@@ -1,15 +1,13 @@
-# WeeWX: Installation on Redhat-based systems 
+# Installation on Redhat-based systems 
 
 This is a guide to installing WeeWX from an RPM package on systems such
 as Redhat, CentOS or Fedora.
 
-This requires a version of the operating system based on Redhat 8 or newer.
-
 ## Compatible Operating System Versions
-WeeWX v5 requires python v3.7, which is only available on operating systems based on redhat-8 or later. No packages for python2-only operating systems will be provided.
+
+WeeWX v5 requires python v3.7 or greater, which is only available on *redhat-8 or later*. No package installer for Python 2 is available.
 
 It is recommended that users of older operating systems continue to use WeeWX v4 until you can update your operating system to a more current version supporting python v3.7 at a minimum.
-
 
 ## Install pre-requisites
 
@@ -20,7 +18,7 @@ repositories, then install some prerequisites manually.
 
 Add the EPEL repo and install prerequisites:
 
-```
+```shell
 sudo yum install epel-release
 sudo yum install python3-cheetah
 ```
@@ -29,26 +27,25 @@ sudo yum install python3-cheetah
 
 Tell `yum` or `dnf` where to find the WeeWX releases.
 
-This only has to be done once - the first time you install WeeWX.
+This only has to be done once &mdash; the first time you install WeeWX.
 
 Tell your system to trust weewx.com:
 
-```
+```shell
 sudo rpm --import https://weewx.com/keys.html
 ```
 
 Enable the WeeWX repo:
 
-```
+```shell
 curl -s https://weewx.com/yum/weewx-el8.repo | sudo tee /etc/yum.repos.d/weewx.repo
 ```
 
 ## Install WeeWX
 
-Install WeeWX using `yum` or `dnf`. When you are done,
-WeeWX will be running the Simulator in the background as a daemon.
+Install WeeWX using `yum` or `dnf`. When you are done, WeeWX will be running in the background as a daemon.
 
-```
+```shell
 sudo yum install weewx
 ```
 
@@ -56,7 +53,7 @@ sudo yum install weewx
 
 Look in the system log for messages from WeeWX.
 
-```
+```shell
 sudo tail -f /var/log/messages
 ```
 
@@ -73,13 +70,13 @@ file:///var/www/html/weewx/index.html
 
 ## Configure
 
-The default installation uses Simulator as the `station_type`. To
+The default installation uses a Simulator as the `station_type`. To
 use real hardware, stop WeeWX, change to the actual station type and
 station parameters, delete the simulation data, then restart WeeWX:
 
-```
+```shell
 sudo /etc/init.d/weewx stop
-sudo wee_config --reconfigure
+sudo weectl station reconfigure
 sudo rm /var/lib/weewx/weewx.sdb
 sudo /etc/init.d/weewx start
 ```
@@ -88,7 +85,7 @@ sudo /etc/init.d/weewx start
 
 To start/stop WeeWX:
 
-```
+```shell
 sudo /etc/init.d/weewx start
 sudo /etc/init.d/weewx stop
 ```

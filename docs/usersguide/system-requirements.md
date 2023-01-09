@@ -23,14 +23,4 @@ The time on some stations is automatically synchronized with the WeeWX server no
 
 
 ## Python
-Python 2.7, or Python 3.5 or later is required.
-
-
-
-## Permissions
-There are a few places where permissions affect WeeWX:
-
-* Installation/Configuration. The user who does the installation must have write permission in order to do the install. Similarly, the user who modifies configuration files and skins must have write permission on those files and directories. The specific folders depend on the installation method, and are listed in the layout table below.
-* Running. Most USB and serial devices require administrative (root) access. Unless the device has been configured with a udev rule or other mechanism that grants access to non-root users, WeeWX commands must be run as root or must be prefaced with sudo for temporary administrative privileges.
-
-Normally WeeWX is installed and run with administrative (root) permissions. However, it is not uncommon to install and run WeeWX as a generic non-root user, or even as a user created specifically to run WeeWX.
+Python 3.7 or later is required. It will not run on Python 2.

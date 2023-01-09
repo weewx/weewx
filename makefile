@@ -15,6 +15,8 @@ WEEWX_DOWNLOADS=$(WEEWX_HTMLDIR)/downloads
 # location for staging weewx package uploads
 WEEWX_STAGING=$(WEEWX_HTMLDIR)/downloads/development_versions
 # Location of docs
+DOCSRC=docs
+# Location of built docs
 DOCLOC=bin/wee_resources/docs
 # Location of the skins
 SKINLOC=bin/wee_resources/skins
@@ -92,6 +94,7 @@ info:
 	@echo "        USER: $(USER)"
 	@echo "   WEEWX_COM: $(WEEWX_COM)"
 	@echo " STAGING_DIR: $(STAGING_DIR)"
+	@echo "      DOCSRC: $(DOCSRC)"
 	@echo "      DOCLOC: $(DOCLOC)"
 	@echo "     SKINLOC: $(SKINLOC)"
 
@@ -163,13 +166,13 @@ upload-docs:
 	rsync -Orv bin/wee_resources/docs/ $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/v5-docs
 
 # update the version in all relevant places
-VDOCS=readme.htm customizing.htm devnotes.htm hardware.htm usersguide.htm upgrading.htm utilities.htm
+VDOCS=usersguide/about-weewx.md
 VCONFIGS=bin/wee_resources/weewx.conf bin/weecfg/tests/expected/weewx43_user_expected.conf
 VSKINS=Ftp/skin.conf Mobile/skin.conf Rsync/skin.conf Seasons/skin.conf Smartphone/skin.conf Standard/skin.conf
 version:
 	for f in $(VDOCS); do \
-  sed -e 's/^Version: [0-9].*/Version: $(MMVERSION)/' $(DOCLOC)/$$f > $(DOCLOC)/$$f.tmp; \
-  mv $(DOCLOC)/$$f.tmp $(DOCLOC)/$$f; \
+  sed -e 's/^Version: [0-9].*/Version: $(MMVERSION)/' $(DOCSRC)/$$f > $(DOCSRC)/$$f.tmp; \
+  mv $(DOCSRC)/$$f.tmp $(DOCSRC)/$$f; \
 done
 	for f in $(VCONFIGS); do \
   sed -e 's/version = [0-9].*/version = $(VERSION)/' $$f > $$f.tmp; \
