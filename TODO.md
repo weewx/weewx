@@ -39,16 +39,16 @@ Update the logging wiki.
 
 ## Build and distribution
 
-Need make command for `mkdocs build` and subsequent upload to weewx.com
-
 
 ## Documentation
 
+New guide for weectl.
+
+Update utilities guide. Remove references to wee_config wee_extension from it.
+
 Update internal links in the customizing guide.
 
-Finish conversion of `report_scheduling.md` to markdown.
-
-Update "where to find things" in user's guide.
+Update internal links in the User's Guide.
 
 Update install documentation. Replace setup.py guide with a pip guide (in progress)
 
@@ -59,8 +59,6 @@ Get rid of Python 2 install instructions wherever they occur.
 
 Use a dollar sign when referring to symbolic names. For example, $WEEWX_ROOT instead of WEEWX_ROOT.
 
-Split the bigger docs into multiple smaller docs. This will make navigation much easier.
-
 Define $WEEWX_ROOT.
 
 Note that SQLITE is now relative to WEEWX_ROOT.
@@ -69,8 +67,7 @@ References to `/home/weewx` become `$WEEWX_ROOT`
 
 Put legacy (V4.x) docs at weewx.com/legacy_docs.
 
-Need to include version info in the docs. Needs to be target of `make version`.
-
+Update instructions on how to install the necessary daemon files. See `usersguide/running-weewx`.
 
 ## Testing
 

@@ -1,5 +1,8 @@
 # System requirements
 
+## Python
+Python 3.7 or later is required. WeeWX V5.x will not run on Python 2.
+
 ## Station hardware
 WeeWX includes support for many types of weather stations. In addition to hardware support, WeeWX comes with a software simulator, useful for testing and evaluation.
 
@@ -20,7 +23,3 @@ WeeWX also runs great on a Raspberry Pi, although report generation will take lo
 You should run some sort of time synchronization daemon to ensure that your computer has the correct time. Doing so will greatly reduce errors, especially if you send data to services such as the Weather Underground. Systemd systems can use systemd-timesyncd, other systems can use NTP.
 
 The time on some stations is automatically synchronized with the WeeWX server nominally every four hours. The synchronization frequency can be adjusted in the WeeWX configuration.
-
-
-## Python
-Python 3.7 or later is required. It will not run on Python 2.

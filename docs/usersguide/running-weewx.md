@@ -2,10 +2,11 @@
 WeeWX can be run either directly, or as a daemon. When first trying WeeWX, it is best to run it directly because you will be able to see sensor output and diagnostics, as well as log messages. Once everything is working properly, run it as a daemon.
 
 ## Running directly
-To run WeeWX directly, invoke the main program, **weewxd**:
+To run WeeWX directly, invoke the main program, `weewxd`. Depending on device permissions, you may
+or may not have to use `sudo`.
 
-```
-sudo weewxd
+```shell
+weewxd
 ```
 
 !!! note
@@ -13,7 +14,7 @@ sudo weewxd
     If your configuration file is named something other than weewx.conf, or if it is in a non-standard place, then you will have to specify it explicitly on the command line. For example:
 
     ```
-    sudo weewxd /some/path/to/weewx.conf
+    weewxd /some/path/to/weewx.conf
     ```
 
 If your station has a data logger, the program will start by downloading any data stored in your weather station into the archive database. For some stations, such as the Davis Vantage with a couple thousand records, this could take a minute or two.
@@ -22,46 +23,19 @@ WeeWX will then start monitoring live sensor data (also referrred to as 'LOOP' d
 
 
 ## Running as a daemon
-For unattended operations it is best to have WeeWX run as a daemon, started automatically when the server is rebooted.
+For unattended operations it is best to have WeeWX run as a daemon, started automatically when the server is rebooted. The utility `weectl` can set up the necessary files to do this. 
 
 If you use a packaged install from a DEB or RPM distribution, this is done automatically. You can ignore this section.
 
-Start by selecting the appropriate run script. They can be found in the source or installation under **util/init.d/**.
+To have `weectl` to setup the necessary files:
 
-| OS | Init Script Location |
-| -- | -------------------- |
-| Debian/Ubuntu/Mint: |	util/init.d/weewx.debian |
-| Redhat/CentOS/Mint: |	util/init.d/weewx.redhat |
-| SuSE: | util/init.d/weewx.suse |
-
-Check the chosen script to make sure the variable **WEEWX_ROOT** has been set to the proper root directory for your WeeWX installation (it should have been set to the correct value automatically by the install process, but it is worth checking).
-
-Copy it to the proper location for your system. Follow these commands (based on your O/S) to make the script executable with symbolic links in the run level directories:
-
-=== "Debian/Ubuntu/Mint"
-    ```
-    cp util/init.d/weewx.debian /etc/init.d/weewx
-    chmod +x /etc/init.d/weewx
-    update-rc.d weewx defaults 98
-    ```
-
-=== "Redhat/CentOS/Fedora"
-    ```
-    cp util/init.d/weewx.redhat /etc/rc.d/init.d/weewx
-    chmod +x /etc/init.d/rc.d/weewx
-    chkconfig weewx on
-    ```
-=== "SuSE"
-    ```
-    cp util/init.d/weewx.suse /etc/init.d/weewx
-    chmod +x /etc/init.d/weewx
-    /usr/lib/lsb/install_initd /etc/init.d/weewx
-    ```
-
+```shell
+sudo weectl daemon install
+```
 
 WeeWX will now start automatically whenever your system is booted. You can also manually start, stop, and restart the WeeWX daemon:
 
-```
+```shell
 sudo /etc/init.d/weewx start
 sudo /etc/init.d/weewx stop
 sudo /etc/init.d/weewx restart

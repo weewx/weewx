@@ -11,7 +11,7 @@ This guide lists some common problems installing and running WeeWX.
     set the option `debug = 1` in `weewx.conf`. This will put much more information in the log file, 
     which can be very useful for troubleshooting and debugging!
 
-Look at the [log file](/usersguide/running-weewx/#monitoring-weewx). We are always happy to take questions, but the first thing someone will ask is, "Did you look at the log file?"
+Look at the [log file](../../usersguide/running-weewx#monitoring-weewx). We are always happy to take questions, but the first thing someone will ask is, "Did you look at the log file?"
 
 ```shell
 sudo tail -f /var/log/syslog

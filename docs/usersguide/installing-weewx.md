@@ -36,9 +36,9 @@ There are two general ways of installing WeeWX: using a package installer, or by
 This is the recommended method for beginners.
 
 - One-step install. When done, WeeWX is up and running.
-- Requires root privileges.
-- Installs in operating system "standard locations."
+- Requires root privileges to install.
 - Requires root privileges to modify.
+- Installs in operating system "standard locations."
 
 Here are quick guides for common operating systems:
 
@@ -56,6 +56,7 @@ Best for those who intend to customize their system.
 - Multi-step install.
 - Does not require root privileges to install or modify (except for setting up a daemon).
 - Installs in "standard locations" for a Python application.
+- All user state is held in one location, making backups easy.
 
 
 ## Where to find things
