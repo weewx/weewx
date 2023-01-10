@@ -65,7 +65,8 @@ def add_subparser(subparsers):
     station_create_parser = action_parser.add_parser('create',
                                                      description=CREATE_DESCRIPTION,
                                                      usage=station_create_usage,
-                                                     help='Create a station config file')
+                                                     help='Create a user data area, including a '
+                                                          'config file')
     station_create_parser.add_argument('--config',
                                        metavar='CONFIG-PATH',
                                        help=f'Path to configuration file. It must not already '
@@ -162,10 +163,10 @@ def _add_common_args(parser):
                              'Default is "0, foot".')
     parser.add_argument('--latitude',
                         help='The station latitude in decimal degrees. '
-                             'Default is 0.00.')
+                             'Default is "0.00".')
     parser.add_argument('--longitude',
                         help='The station longitude in decimal degrees. '
-                             'Default is 0.00.')
+                             'Default is "0.00".')
     parser.add_argument('--register', choices=['y', 'n'],
                         help='Register this station in the weewx registry? '
                              'Default is "n" (do not register).')

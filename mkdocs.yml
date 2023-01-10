@@ -55,9 +55,9 @@ nav:
       - "System requirements": ./usersguide/system-requirements.md
       - "Installing WeeWX": ./usersguide/installing-weewx.md
       - "Running WeeWX": ./usersguide/running-weewx.md
-      - "WebServer integration": ./usersguide/webserver-integration.md
-      - "Backup & restore WeeWX": ./usersguide/backing-up-weewx.md
-      - "Configuring MySQL / MariaDB": ./usersguide/mysql-mariadb-config.md
+      - "Web server integration": ./usersguide/webserver-integration.md
+      - "Backup & restore": ./usersguide/backing-up-weewx.md
+      - "Configuring MySQL": ./usersguide/mysql-mariadb-config.md
       - "Troubleshooting": ./usersguide/troubleshooting-guide.md
       - "Reference: options":
         - "Overview": ./usersguide/weewx-config-file/overview.md
@@ -93,10 +93,20 @@ nav:
 
   - Other guides:
       - guides-overview.md
-      - "Hardware guide": hardware.htm
-      - "Utilities guide": utilities.htm
+      - weectl:
+          - Overview: weectl/index.md
+          - weectl station: weectl/station.md
+          - weectl extension: weectl/extension.md
+          - weectl daemon: weectl/daemon.md
+      - wee_database: utilities.htm#wee_database_utility
+      - wee_debug: utilities.htm#wee_debug_utility
+      - wee_device: utilities.htm#wee_device_utility
+      - wee_import: utilities.htm#wee_import_utility
+      - wee_reports: utilities.htm#wee_reports_utility
+      - weewxd: utilities.htm#weewxd
       - "Upgrade guide": upgrading.htm
       - "Change log": changes.md
+      - "Hardware guide": hardware.htm
       - "Notes for developers": devnotes.md
       - "Hardware comparison": hardware.htm
   - Support:
@@ -140,10 +150,6 @@ markdown_extensions:
       # https://squidfunk.github.io/mkdocs-material/reference/tooltips/#adding-a-glossary
       auto_append:
         - docs/abbreviations.md
-
-  - pymdownx.emoji:
-      emoji_index: !!python/name:materialx.emoji.twemoji
-      emoji_generator: !!python/name:materialx.emoji.to_svg
 
   - pymdownx.superfences:
       custom_fences:
