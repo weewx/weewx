@@ -134,6 +134,50 @@ optional arguments:
   --no-prompt           If set, do not prompt. Use default values.
 ```
 
+### Notable options
+
+Most options are self-explanatory. A few are not.
+
+#### `--no-prompt`
+
+Generally, the utility will prompt for values unless `--no-prompt` has been set. If it has beeen
+set, the values to be used are the default values, replaced with whatever options have been set.
+For example,
+
+```shell
+weectl station create --driver='weewx.drivers.vantage' --no-prompt
+```
+
+will cause the defaults to be used for all values except `--driver`, which will use the Vantage
+driver.
+
+#### `--config`
+
+Path to the configuration file to be created. The directory of the path will become the value for
+`WEEWX_ROOT` in the configuration file. Default is `~/weewx-data/weewx.conf`.
+
+#### root options
+
+"Root options" include
+
+`--skin-root`<br/>
+`--sqlite-root`<br/>
+`--html-root`<br/>
+`--user-root`<br/>
+`--docs-root`<br/>
+`--examples-root`
+
+All of these root options are *relative to `$WEEWX_ROOT`*. Of course, like any other path, if the
+option starts with a slash (`/`), it becomes an absolute path. So, for example,
+
+```shell
+--html-root=/var/www/html/
+```
+
+will cause HTML files to be put in the traditional system WWW directory `/var/www/html/`.
+
+
+
 ## `weectl station reconfigure`
 
 This action will reconfigure your configuration file `weewx.conf`. Unless option `--no-prompt` has been specified, it will prompt you with your old settings, and give you a chance to change them. 
@@ -166,10 +210,10 @@ optional arguments:
                         example, "750,foot" or "320,meter". Default is "0,
                         foot".
   --latitude LATITUDE   The station latitude in decimal degrees. Default is
-                        0.00.
+                        "0.00".
   --longitude LONGITUDE
                         The station longitude in decimal degrees. Default is
-                        0.00.
+                        "0.00".
   --register {y,n}      Register this station in the weewx registry? Default
                         is "n" (do not register).
   --station-url STATION_URL
@@ -189,3 +233,17 @@ optional arguments:
                         to WEEWX_ROOT. Default is "public_html".
   --no-prompt           If set, do not prompt. Use default values.
 ```
+
+When used with the `--no-prompt` option, `weectl station reconfigure` will modify specific parameters with no interaction. For example, this would set the station altitude to 35 feet:
+
+```shell
+weectl station reconfigure --altitude=35,foot --no-prompt
+```
+
+This would change the driver to a user-installed netatmo driver:
+
+```shell
+weectl station reconfigure --driver=user.netatmo --no-prompt
+```
+
+Other options are as under [`weectl station create`](#weectl-station-create) above.

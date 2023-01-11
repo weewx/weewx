@@ -128,6 +128,8 @@ class ExtensionEngine(object):
             raise InstallError(f"Unrecognized type for {extension_path}")
 
         self.logger.log(f"Finished installing extension {extension_name} from {extension_path}")
+        if self.dry_run:
+            self.logger.log("This was a dry run. Nothing was actually done.")
 
     def _install_from_file(self, filepath, filetype):
         """Install the extension at path filepath."""
@@ -476,35 +478,35 @@ class ExtensionEngine(object):
             elif k == label:
                 a_dict[k] = os.path.join(value, a_dict[k])
 
-    def transfer(self, root_src_dir):
-        """For transfering contents of an old 'user' directory into the new one."""
-        if not os.path.isdir(root_src_dir):
-            sys.exit(f"{root_src_dir} is not a directory")
-        root_dst_dir = self.root_dict['USER_DIR']
-        self.logger.log(f"Transferring contents of {root_src_dir} to {root_dst_dir}", 1)
-        if self.dry_run:
-            self.logger.log(f"This is a {bcolors.BOLD}dry run{bcolors.ENDC}. "
-                            f"Nothing will actually be done.")
-
-        for dirpath, dirnames, filenames in os.walk(root_src_dir):
-            if os.path.basename(dirpath) in {'__pycache__', '.init'}:
-                self.logger.log(f"Skipping {dirpath}.", 3)
-                continue
-            dst_dir = dirpath.replace(root_src_dir, root_dst_dir, 1)
-            self.logger.log(f"Making directory {dst_dir}", 3)
-            if not self.dry_run:
-                os.makedirs(dst_dir, exist_ok=True)
-            for f in filenames:
-                if ".pyc" in f:
-                    self.logger.log(f"Skipping {f}", 3)
-                    continue
-                dst_file = os.path.join(dst_dir, f)
-                if os.path.exists(dst_file):
-                    self.logger.log(f"File {dst_file} already exists. Not replacing.", 2)
-                else:
-                    src_file = os.path.join(dirpath, f)
-                    self.logger.log(f"Copying file {src_file} to {dst_dir}", 3)
-                    if not self.dry_run:
-                        shutil.copy(src_file, dst_dir)
-        if self.dry_run:
-            self.logger.log("This was a dry run. Nothing was actually done")
+    # def transfer(self, root_src_dir):
+    #     """For transfering contents of an old 'user' directory into the new one."""
+    #     if not os.path.isdir(root_src_dir):
+    #         sys.exit(f"{root_src_dir} is not a directory")
+    #     root_dst_dir = self.root_dict['USER_DIR']
+    #     self.logger.log(f"Transferring contents of {root_src_dir} to {root_dst_dir}", 1)
+    #     if self.dry_run:
+    #         self.logger.log(f"This is a {bcolors.BOLD}dry run{bcolors.ENDC}. "
+    #                         f"Nothing will actually be done.")
+    #
+    #     for dirpath, dirnames, filenames in os.walk(root_src_dir):
+    #         if os.path.basename(dirpath) in {'__pycache__', '.init'}:
+    #             self.logger.log(f"Skipping {dirpath}.", 3)
+    #             continue
+    #         dst_dir = dirpath.replace(root_src_dir, root_dst_dir, 1)
+    #         self.logger.log(f"Making directory {dst_dir}", 3)
+    #         if not self.dry_run:
+    #             os.makedirs(dst_dir, exist_ok=True)
+    #         for f in filenames:
+    #             if ".pyc" in f:
+    #                 self.logger.log(f"Skipping {f}", 3)
+    #                 continue
+    #             dst_file = os.path.join(dst_dir, f)
+    #             if os.path.exists(dst_file):
+    #                 self.logger.log(f"File {dst_file} already exists. Not replacing.", 2)
+    #             else:
+    #                 src_file = os.path.join(dirpath, f)
+    #                 self.logger.log(f"Copying file {src_file} to {dst_dir}", 3)
+    #                 if not self.dry_run:
+    #                     shutil.copy(src_file, dst_dir)
+    #     if self.dry_run:
+    #         self.logger.log("This was a dry run. Nothing was actually done")
