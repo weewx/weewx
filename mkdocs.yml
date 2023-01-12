@@ -96,8 +96,8 @@ nav:
       - weectl:
           - Overview: weectl/index.md
           - weectl station: weectl/station.md
-          - weectl extension: weectl/extension.md
           - weectl daemon: weectl/daemon.md
+          - weectl extension: weectl/extension.md
       - wee_database: utilities.htm#wee_database_utility
       - wee_debug: utilities.htm#wee_debug_utility
       - wee_device: utilities.htm#wee_device_utility

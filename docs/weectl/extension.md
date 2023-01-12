@@ -2,8 +2,9 @@
 
 ## `weectl extension`
 
-`weectl extension` lists, installs, and uninstalls WeeWX extensions. Running `weectl extension
---help` will give you more information about its three actions `list`, `install`, and `uninstall`:
+The subcommand `weectl extension` lists, installs, and uninstalls WeeWX extensions. Running `weectl
+extension --help` will give you more information about its three actions `list`, `install`, and
+`uninstall`:
 
 ```shell
 % weectl extension --help

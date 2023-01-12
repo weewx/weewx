@@ -2,7 +2,8 @@
 
 ## `weectl station`
 
-`weectl station` manages user data. Running `weectl station --help` will give you more information about its four actions `create`, `reconfigure`, `upgrade`, and `upgrade-skins`:
+The subcommand `weectl station` manages user data. Running `weectl station --help` will give you
+more information about its four actions `create`, `reconfigure`, `upgrade`, and `upgrade-skins`:
 
 ```shell
 % weectl station --help

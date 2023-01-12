@@ -12,6 +12,12 @@ Remove wunderfixer. Remove references in docs.
 Do we need the `--type` option for `weectl daemon install`? Can we make decisions on the basis
 of the OS encountered?
 
+How to get around the problem that pipx isolates its VE from pip's? This requires that
+a dependency, such as `requests`, get installed as
+
+    pipx weewx inject requests
+
+Can we use a regular venv VE? Does it see pip --user installs?
 
 ## Commands
 ```
