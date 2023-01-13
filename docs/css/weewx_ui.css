@@ -699,3 +699,7 @@ a.toc-link:hover {
 .md-typeset code {
     font-weight:bold;
 }
+
+.md-source__facts li {
+    margin-right: 7%;   /* over 7% breaks the github banner */
+}
