@@ -7,17 +7,11 @@ Get config update working again.
 
 Remove wunderfixer. Remove references in docs.
 
+Change `bin/user.py` to `lib/user.py`. This would require that the installer intercept paths
+with `bin` in them and change them to `lib`.
+
 ## Daemon
 
-Do we need the `--type` option for `weectl daemon install`? Can we make decisions on the basis
-of the OS encountered?
-
-How to get around the problem that pipx isolates its VE from pip's? This requires that
-a dependency, such as `requests`, get installed as
-
-    pipx weewx inject requests
-
-Can we use a regular venv VE? Does it see pip --user installs?
 
 ## Commands
 ```
@@ -48,20 +42,9 @@ Update the logging wiki.
 
 ## Documentation
 
-New guide for weectl.
-
-Update utilities guide. Remove references to wee_config wee_extension from it.
-
 Update internal links in the customizing guide.
 
 Update internal links in the User's Guide.
-
-Update install documentation. Replace setup.py guide with a pip guide (in progress)
-
-Check whether we need macOS install instructions any longer. Probably not: pip install supercedes
-them.
-
-Get rid of Python 2 install instructions wherever they occur.
 
 Use a dollar sign when referring to symbolic names. For example, $WEEWX_ROOT instead of WEEWX_ROOT.
 
@@ -73,7 +56,14 @@ References to `/home/weewx` become `$WEEWX_ROOT`
 
 Put legacy (V4.x) docs at weewx.com/legacy_docs.
 
-Update instructions on how to install the necessary daemon files. See `usersguide/running-weewx`.
+Warn the user to make sure that  `~/.local/bin` is in `PATH`.
+
+On minimal installations, a pip install may require:
+
+```
+sudo apt install gcc
+sudo apt install python3-dev
+```
 
 ## Testing
 

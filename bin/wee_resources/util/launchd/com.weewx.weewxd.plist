@@ -19,6 +19,6 @@
         <string>/Users/Shared/weewx/weewx.conf</string>
     </array>
     <key>StandardErrorPath</key>
-    <string>/Users/Shared/weewx/weewx.stderr</string>
+    <string>/var/log/weewx_err.log</string>
 </dict>
 </plist>

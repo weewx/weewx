@@ -28,27 +28,21 @@ Installation is a two-step process:
 
 There are many ways to install WeeWX using pip (see the wiki document [pip
 install strategies](https://github.com/weewx/weewx/wiki/pip-install-strategies)
-for a partial list), but the method below is one of the simplest and safest. It
-uses the tool [pipx](https://pypa.github.io/pipx/) to install WeeWX in a virtual
-environment under your home directory. It does not require root privileges, and
-it will not touch the rest of your Python environment.
+for a partial list), but the method below is one of the simplest and safest.
 
 ```shell
-# Install the tool pipx as a 'user' app
-python3 -m pip install pipx --user
-# Then use it to install weewx
-pipx install weewx
+pip install weewx --user
 ```
 
 When finished, the WeeWX executables will have been installed in `~/.local/bin`,
-and the libraries in a virtual environment under `~/.local/pipx/venvs/weewx`.
+and the libraries in your Python "user" area, generally `~/.local/lib/python3.10/site-packages/`.
 
 
 ### Create `weewx.conf`
 
 While the first step downloads everything into your local Python source tree, it
 does not set up a configuration file for your station, nor does it set up the
-reporting skins. That is the job of the next step, using the tool `weectl`. 
+reporting skins. That is the job of the next step, which uses the tool `weectl`. 
 
 This step also does not require root privileges.
 
@@ -57,10 +51,10 @@ weectl station create
 ```
 
 The tool will ask you a series of questions, then create a directory `~/weewx-data` in your home
-directory with a new configuration file. It will also install skins, documentation, and examples.
-After running `weewxd`, the same directory will be used to hold the database file and any generated
-HTML pages. It plays a role similar to `/home/weewx` in older versions of WeeWX but, unlike
-`/home/weewx`, it does not hold any code.
+directory with a new configuration file. It will also install skins, documentation, utilitiy files,
+and examples. After running `weewxd`, the same directory will be used to hold the database file and
+any generated HTML pages. It plays a role similar to `/home/weewx` in older versions of WeeWX but,
+unlike `/home/weewx`, it does not hold any code.
 
 If you already have a `/home/weewx` and wish to reuse it, see the [Upgrading
 guide](upgrading.md) and the [Version 5 migration guide](v5-upgrade.md).
@@ -80,30 +74,43 @@ weewxd
 
 If you wish to run `weewxd` as a daemon, follow the following steps, depending
 on your operating system. These steps will require root privileges in order to
-install the required daemon file..
+install the required daemon file.
 
 === "Debian"
 
+    !!! Note
+        The resulting daemon will be run using your username. If you prefer to use run as `root`,
+        you will have to modify the file `/etc/systemd/system/weewx.service`.
+
     ```bash
-    cd ~
-    sudo ./.local/bin/weectl daemon install --type=systemd
+    cd ~/weewx-data
+    sudo cp util/systemd/weewx.service /etc/systemd/system
+    sudo systemctl daemon-reload
     sudo systemctl enable weewx
     sudo systemctl start weewx
     ```
     
 === "Very old Debian"
+
+    !!! Note
+        The resulting daemon will be run using your username. If you prefer to use run as `root`,
+        you will have to modify the file `/etc/init.d/weewx`.
+
     ```bash
     # Use the old init.d method if your os is ancient
-    cd ~
-    sudo ./.local/bin/weectl daemon install --type=sysv
-    sudo /etc/init.d/weewx start
+    cd ~/weewx-data
+    sudo cp util/init.d/weewx.debian /etc/init.d/weewx
+    sudo chmod +x /etc/init.d/weewx
+    sudo update-rc.d weewx defaults 98
+    sudo /etc/init.d/weewx start     
     ```
 
 === "Redhat"
 
     ```bash
-    cd ~
-    sudo ./.local/bin/weectl daemon install --type=sysv
+    cd ~/weewx-data
+    sudo cp util/init.d/weewx.redhat /etc/rc.d/init.d/weewx
+    sudo chmod +x /etc/rc.d/init.d/weewx
     sudo chkconfig weewx on
     sudo /etc/rc.d/init.d/weewx start
     ```
@@ -111,16 +118,18 @@ install the required daemon file..
 === "SuSE"
 
     ```bash
-    cd ~
-    sudo ./.local/bin/weectl daemon install --type=sysv
+    cd ~/weewx-data
+    sudo cp util/init.d/weewx.suse /etc/init.d/weewx
+    sudo chmod +x /etc/init.d/weewx
+    sudo /usr/lib/lsb/install_initd /etc/init.d/weewx
     sudo /etc/init.d/weewx start
     ```
 
 === "macOS"
 
     ```bash
-    cd ~
-    sudo ./.local/bin/weectl daemon install --type=mac
+    cd ~/weewx-data
+    sudo cp util/launchd/com.weewx.weewxd.plist /Library/LaunchDaemons
     sudo launchctl load /Library/LaunchDaemons/com.weewx.weewxd.plist
     ```
 
@@ -172,16 +181,30 @@ Stop WeeWX
 
 Uninstall any daemon files:
 
-```bash
-cd ~
-sudo ./.local/bin/weectl daemon uninstall
+=== "Debian"
+
+    ```bash
+    sudo rm /etc/systemd/system/weewx.service
+    ```
+
+=== "Redhat, SuSE,<br/>and very old Debian:"
+
+    ```
+    sudo rm /etc/init.d/weewx
+    ```
+
+=== "macOS"
+
+    ```
+    sudo rm /Library/LaunchDaemons/com.weewx.weewxd.plist
+    ```
+
+Use pip to uninstall the program and dependencies.
+
+```
+pip uninstall weewx pyserial pyusb CT3 Pillow configobj PyMySQL pyephem ephem -y
 ```
 
-Have pipx uninstall weewx and its virtual environment:
-
-```bash
-pipx uninstall weewx
-```
 
 Finally, if desired, delete the data directory:
 

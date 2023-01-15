@@ -20,7 +20,10 @@ be removed in Python v3.12.
 
 Documentation now uses [MkDocs](https://www.mkdocs.org/).
 
-MacOS now logs to `syslog` like any other system, (instead of `rotate`).
+Logging handler `rotate` has been removed. Its need to access a privileged
+location `/var/log/` on start up would cause crashes, even if it was never used.
+
+MacOS now logs to `syslog` like any other system, rather than `rotate`.
 
 
 ## 4.10.0 MM/DD/YYYY
