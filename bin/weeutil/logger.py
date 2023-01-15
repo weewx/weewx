@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2020-2022 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2020-2023 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -52,16 +52,6 @@ LOGGING_STR = """[Logging]
             class = logging.StreamHandler
             # Alternate choice is 'ext://sys.stderr'
             stream = ext://sys.stdout
-
-        # Log to a set of rotating files
-        [[[rotate]]]
-            level = DEBUG
-            formatter = standard
-            class = logging.handlers.RotatingFileHandler
-            # A user might want to override this location:
-            filename = /var/tmp/weewx.log
-            maxBytes = 10000000
-            backupCount = 4
 
     # How to format log messages
     [[formatters]]
