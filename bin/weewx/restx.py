@@ -108,7 +108,7 @@ import weewx.engine
 import weewx.manager
 import weewx.units
 from weeutil.config import search_up, accumulateLeaves
-from weeutil.weeutil import to_int, to_float, to_bool, timestamp_to_string, to_sorted_string
+from weeutil.weeutil import to_text, to_int, to_float, to_bool, timestamp_to_string, to_sorted_string
 
 log = logging.getLogger(__name__)
 
@@ -626,7 +626,7 @@ class StdWunderground(StdRESTful):
                                                     not do_rapidfire_post))
 
         if do_archive_post:
-            _ambient_dict.setdefault('server_url', StdWunderground.pws_url)
+            _ambient_dict.setdefault('server_url', to_text(_ambient_dict.pop('pws_url', StdWunderground.pws_url)))
             self.archive_queue = queue.Queue()
             self.archive_thread = AmbientThread(
                 self.archive_queue,
@@ -640,7 +640,7 @@ class StdWunderground(StdRESTful):
                      _ambient_dict['station'])
 
         if do_rapidfire_post:
-            _ambient_dict.setdefault('server_url', StdWunderground.rf_url)
+            _ambient_dict.setdefault('server_url', to_text(_ambient_dict.pop('rf_url', StdWunderground.rf_url)))
             _ambient_dict.setdefault('log_success', False)
             _ambient_dict.setdefault('log_failure', False)
             _ambient_dict.setdefault('max_backlog', 0)
