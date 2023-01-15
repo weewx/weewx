@@ -5,11 +5,14 @@
 #
 """Install or reconfigure a configuration file"""
 
+import getpass
+import grp
 import importlib
 import importlib.resources
 import logging
 import os
 import os.path
+import re
 import shutil
 
 import configobj
@@ -58,7 +61,7 @@ def station_create(config_path, *args,
     with importlib.resources.open_text('wee_resources', 'weewx.conf', encoding='utf-8') as fd:
         dist_config_dict = configobj.ConfigObj(fd, encoding='utf-8', file_error=True)
 
-    config_config(dist_config_dict, weewx_root=weewx_root, *args, **kwargs)
+    config_config(config_path, dist_config_dict, weewx_root=weewx_root, *args, **kwargs)
     copy_docs(dist_config_dict, docs_root=docs_root)
     copy_examples(dist_config_dict, examples_root=examples_root)
     copy_user(dist_config_dict, user_root=user_root)
@@ -74,13 +77,14 @@ def station_reconfigure(config_path, *args, **kwargs):
 
     print(f"The configuration file {bcolors.BOLD}{config_path}{bcolors.ENDC} will be used.")
 
-    config_config(config_dict, *args, **kwargs)
+    config_config(config_path, config_dict, *args, **kwargs)
 
     # Save the results with backup
     weecfg.save_with_backup(config_dict, config_path)
 
 
-def config_config(config_dict, driver=None, location=None,
+def config_config(config_path, config_dict,
+                  driver=None, location=None,
                   altitude=None, latitude=None, longitude=None,
                   register=None, unit_system=None,
                   weewx_root=None, skin_root=None,
@@ -97,6 +101,7 @@ def config_config(config_dict, driver=None, location=None,
     config_driver(config_dict, driver=driver, no_prompt=no_prompt)
     config_roots(config_dict, weewx_root, skin_root, html_root, sqlite_root, user_root)
     copy_skins(config_dict)
+    copy_util(config_path, config_dict)
 
 
 def config_location(config_dict, location=None, no_prompt=False):
@@ -508,4 +513,76 @@ def copy_user(config_dict, user_root=None):
         with weeutil.weeutil.path_to_resource('wee_resources', 'lib') as lib_resources:
             shutil.copytree(os.path.join(lib_resources, 'user'),
                             user_dir,
-                            ignore=shutil.ignore_patterns('*.pyc', '__pycache__',))
+                            ignore=shutil.ignore_patterns('*.pyc', '__pycache__', ))
+
+
+def copy_util(config_path, config_dict):
+    weewxd_path = shutil.which('weewxd')
+    if not weewxd_path:
+        raise FileNotFoundError("Cannot find weewxd")
+    username = getpass.getuser()
+    groupname = grp.getgrgid(os.getgid()).gr_name
+    # This is the set of substitutions to be performed. The key is a regular expression. If a
+    # match is found, the value will be substituted for the matched expression.
+    re_dict = {
+        # For systemd
+        r"^#User=.*": rf"User={username}",
+        # For systemd
+        r"^#Group=.*": rf"Group={groupname}",
+        # For systemd
+        r"^ExecStart=.*": rf"ExecStart={weewxd_path} {config_path}",
+        # For init.d, redhat, bsd, suse
+        r"^WEEWX_BIN=.*": rf"WEEWX_BIN={weewxd_path}",
+        # For init.d, redhat, bsd, suse
+        r"^WEEWX_CFG=.*": rf"WEEWX_CFG={config_path}",
+        # For init.d
+        r"^WEEWX_USER=.*": rf"WEEWX_USER={groupname}",
+        # For multi
+        r"^WEEWX_BINDIR=.*": rf"WEEWX_BINDIR={os.path.dirname(weewxd_path)}",
+        # For multi
+        r"^WEEWX_CFGDIR=.*": rf"WEEWX_CFGDIR={os.path.dirname(config_path)}",
+        # For macOS:
+        r"<string>/Users/Shared/weewx/bin/weewxd</string>": rf"<string>{weewxd_path}<string>",
+        # For macOS:
+        r"<string>/Users/Shared/weewx/weewx.conf</string>": rf"<string>{config_path}<string>",
+    }
+    # Convert to a list of two-way tuples.
+    re_list = [(re.compile(key), re_dict[key]) for key in re_dict]
+
+    with weeutil.weeutil.path_to_resource('wee_resources', 'util') as util_resources:
+        dstdir = os.path.join(config_dict['WEEWX_ROOT'], 'util')
+        _process_files(util_resources, dstdir, re_list)
+
+
+def _process_files(srcdir, dstdir, re_list, exclude={'__pycache__'}):
+    """Process all the utility files found in srcdir. Put them in dstdir"""
+    if os.path.basename(srcdir) in exclude:
+        return
+    # If the destination directory doesn't exist yet, make it
+    if not os.path.exists(dstdir):
+        os.mkdir(dstdir)
+
+    for f in os.listdir(srcdir):
+        if ".pyc" in f:
+            continue
+        srcpath = os.path.join(srcdir, f)
+        dstpath = os.path.join(dstdir, f)
+        # If this entry is a directory, descend into it using recursion
+        if os.path.isdir(srcpath):
+            _process_files(srcpath, dstpath, re_list, exclude)
+        else:
+            # Otherwise, it's a file. Patch it.
+            _patch_file(srcpath, dstpath, re_list)
+
+
+def _patch_file(srcpath, dstpath, re_list):
+    """Patch an individual file using the list of regular expressions re_list"""
+    with open(srcpath, 'r') as rd, open(dstpath, 'w') as wd:
+        for line in rd:
+            # Lines starting with "#&" are comment lines. Ignore them.
+            if line.startswith("#&"):
+                continue
+            # Go through all the regular expressions, substituting the value for the key
+            for key, value in re_list:
+                line = key.sub(value, line)
+            wd.write(line)
