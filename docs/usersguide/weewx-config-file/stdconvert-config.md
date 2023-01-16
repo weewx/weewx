@@ -10,6 +10,6 @@ _Once chosen_, it cannot be changed! WeeWX does not allow you to mix unit system
 !!! Warning
     If, despite these precautions, you do decide to change the units of data stored in the database, be sure to read the sections **[StdCalibrate]** and **[StdQC]**, and change the units there as well!
 
-**target_unit**
+#### target_unit
 
 Set to either **US***, **METRICWX**, or **METRIC**. The difference between **METRICWX**, and **METRIC** is that the former uses **mm** instead of **cm** for rain, and **m/s** instead of **km/hr** for wind speed. See the Appendix [Units](customize/units.md) in the [Customization Guide](customize/) for the exact differences beween these three choices. Default is **US**.

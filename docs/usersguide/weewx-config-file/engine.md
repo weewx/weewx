@@ -29,26 +29,26 @@ For reference, here is the standard set of services that are run with the defaul
 
 If you're the type who likes to clean out your car trunk after every use it, then you may also be the type who wants to pare this down to the bare minimum. However, this will only make a slight difference in execution speed and memory use.
 
-**prep_services**
+#### prep_services
 
 These services get called before any others. They are typically used to prepare the console. For example, the service `weewx.wxengine.StdTimeSynch`, which is responsible for making sure the console's clock is up-to-date, is a member of this group.
 
-**data_services**
+#### data_services
 
 Augment data before processing. Typically this means adding fields to a LOOP packet or ARCHIVE record.
 
-**process_services**
+#### process_services
 
 Services in this group tend to process any incoming data. They typically do things like quality control, or unit conversion, or sensor calibration.
 
-**archive_services**
+#### archive_services
 
 Once data have been processed, services in this group archive them.
 
-**restful_services**
+#### restful_services
 
 RESTful services, such as the Weather Underground, or CWOP, are in this group. They need processed data that have been archived, hence they are run after the preceeding groups.
 
-**report_services**
+#### report_services
 
 The various reporting services run in this group, including the standard reporting engine.

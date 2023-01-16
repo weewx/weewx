@@ -16,18 +16,18 @@ This is the binding normally used for weather data. A typical **[[wx_binding]]**
 
 What follows is more detailed information about each of the binding options.
 
-**database**
+#### database
 
 The actual database to be used — it should match one of the sections in **[Databases]**. Should you decide to use a MySQL database, instead of the default SQLite database, this is the place to change it. See the section [Configuring MySQL](/weewx-config-file/configuring-mysql) for details. Required.
 
-**table_name**
+#### table_name
 
 Internally, the archive data is stored in one, long, flat table. This is the name of that table. Normally this does not need to be changed. Optional. Default is **archive**
 
-**manager**
+#### manager
 
 The name of the class to be used to manage the table. Optional. Default is class **weewx.manager.DaySummaryManager**. This class stores daily summaries in the database. Normally, this does not need to be changed.
 
-**schema**
+#### schema
 
 A Python structure holding the schema to be used to initialize the database. After initialization, it is not used. Optional. Default is **schemas.wview_extended.schema**, which is a superset of the schema used by the _wview_ weather system.

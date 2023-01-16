@@ -19,27 +19,27 @@ Order matters. The reports that generate HTML and images, that is, SeasonsReport
 
 Details for how to customize reports are in the section [Customizing reports](customize/customize-reports.md), in the [Customization Guide](customize/).
 
-**SKIN_ROOT**
+#### SKIN_ROOT
 
 The directory where the skins live. A relative path is relative to **WEEWX_ROOT**.
 
-**HTML_ROOT**
+#### HTML_ROOT
 
 The target directory for the generated files. A relative path is relative to **WEEWX_ROOT**. Generated files and images will be put here.
 
-**log_success**
+#### log_success
 
 If you set a value for **log_success** here, it will override the value set at the [top-level](/weewx-config-file/general/#general) and will apply only to reporting. In addition, **log_success** can be set for individual reports by putting them under the appropriate subsection (e.g., **[[Seasons]]**).
 
-**log_failure**
+#### log_failure
 
 If you set a value for log_failure here, it will override the value set at the [top-level](/weewx-config-file/general/#general) and will apply only to reporting. In addition, log_failure can be set for individual reports by putting them under the appropriate subsection (e.g., **[[Seasons]]**).
 
-**data_binding**
+#### data_binding
 
 The data source to be used for the reports. It should match a binding given in section [DataBindings](unknown.md) below. The binding can be overridden in individual reports. Optional. Default is **wx_binding**.
 
-**report_timing**
+#### report_timing
 
 This parameter uses a cron-like syntax that determines when a report will be run. The setting can be overridden in individual reports, so it is possible to run each report with a different schedule. Refer to the [Customizing the report generation time](unknown.md) section in the [Customization Guide](unknown.md) for details. Optional. The default value results in each report running on each archive interval.
 
@@ -47,33 +47,33 @@ This parameter uses a cron-like syntax that determines when a report will be run
 
 These are the four reports that are included in the standard distribution of WeeWX, and which actually generate HTML files and plots. They all use US Customary units by default (but this can be changed by setting the option **unit_system**).
 
-**[[SeasonsReport]]**
+#### [[SeasonsReport]]
 
-**[[SmartphoneReport]]**
+#### [[SmartphoneReport]]
 
-**[[MobileReport]]**
+#### [[MobileReport]]
 
-**[[StandardReport]]**
+#### [[StandardReport]]
 
 They all have the following options in common:
 
-**lang**
+#### lang
 
 Which language the skin should be localized in. The value is a two-character language code as defined in [ISO 639-1](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes). This option only works with skins that have been internationalized. All skins that ship with WeeWX have been internationalized, but only a handful of languages are included. To see which language a skin supports, look in the subdirectory **lang** in the skin's directory. For example, if you see a file **fr.conf**, then the skin can be localized in French.
 
-**unit_system**
+#### unit_system
 
 Which unit system to use with the skin. Choices are **US**, **METRIC**, or **METRICWX**. See the [Appendix Units](customizing/units.md) in the Customizing Guide for definitions of these unit systems. Individual units can be overridden. See ["How to change units"](customizing/how-to-change-units.md) in the ["Customization Guide"](customizing/) for more details.
 
-**enable**
+#### enable
 
 Set to **true** to enable the processing of this skin. Set to **false** to disable. If this option is missing, **True** is assumed.
 
-**skin**
+#### skin
 
 Where to find the skin. This should be a subdirectory under **SKIN_ROOT**. Inside the directory should be any templates used by the skin and a skin configuration file, **skin.conf**.
 
-**HTML_ROOT**
+#### HTML_ROOT
 
 Where to put the results. If not specified, the value for **HTML_ROOT** above will be used.
 
@@ -82,55 +82,55 @@ Where to put the results. If not specified, the value for **HTML_ROOT** above wi
 
 While this "report" does not actually generate anything, it uses the report machinery to upload files from directory **HTML_ROOT** to a remote webserver. It does an incremental update, that is, it only FTPs any files that have changed, saving the outgoing bandwidth of your Internet connection.
 
-**enable**
+#### enable
 
 Set to **true** (the default) to enable FTP. Set to **false** to disable.
 
-**user**
+#### user
 
 Set to the username you use for your FTP connection to your web server. Required. No default.
 
-**password**
+#### password
 
 Set to the password you use for your FTP connection to your web server. Required. No default.
 
-**server**
+#### server
 
 Set to the name of your web server (e.g., **www.threefools.org**, in my case). Required. No default
 
-**path**
+#### path
 
 Set to the path where the weather data will be stored on your webserver (e.g., **/weather**). NB: some FTP servers require a leading slash ('**/**'), some do not. Required. No default.
 
-**secure_ftp**
+#### secure_ftp
 
 Set to **True** to use FTP (FTPS) over TLS. This is an extension to the FTP protocol that uses a Secure Socket Layer (SSL) protocol, not to be confused with SFTP, which uses a Secure Socket Shell protocol. Not all FTP servers support this. In particular, the Microsoft FTP server seems to do a poor job of it. Optional. Default is **False**
 
-**secure_data**
+#### secure_data
 
 If a secure session is requested (option **secure_ftp=True**), should we attempt a secure data connection as well? This option is useful due to a bug in the Python FTP client library. See WeeWx GitHub [Issue #284](https://github.com/weewx/weewx/issues/284). Optional. Default is **True**.
 
-**reuse_ssl**
+#### reuse_ssl
 
 Some FTP servers (notably PureFTP) reuse ssl connections with FTPS. Unfortunately, the Python library has a bug that prematurely closes such connections. See [https://bit.ly/2Lrywla](https://bit.ly/2Lrywla). Symptom is an exception **OSError: [Errno 0]** Error. This option activates a workaround for Python versions greater than 3.6. It won't work for earlier versions. Optional. Default is **False**.
 
-**port**
+#### port
 
 Set to the port ID of your FTP server. Default is **21**.
 
-**passive**
+#### passive
 
 Set to 1 if you wish to use the more modern, FTP passive mode, 0 if you wish to use active mode. Passive mode generally works better through firewalls, but not all FTP servers do a good job of supporting it. See [Active FTP vs. Passive FTP, a Definitive Explanation](https://slacksite.com/other/ftp.html) for a good explanation of the difference. Default is 1 (passive mode).
 
-**max_tries**
+#### max_tries
 
 WeeWX will try up to this many times to FTP a file up to your server before giving up. Default is 3.
 
-**ftp_encoding**
+#### ftp_encoding
 
 The vast majority of FTP servers send their responses back using UTF-8 encoding. However, there are a few oddballs that respond using Latin-1. This option allows you to specify an alternative encoding.
 
-**ciphers**
+#### ciphers
 
 Some clients require a higher cipher level than the FTP server is capable of delivering. The symptom is an error something like **ssl.SSLError: [SSL: DH_KEY_TOO_SMALL] dh key too small (_ssl.c:997)**. This option allows you to specify a custom level. For example, in this case, you might want to specify:
 
@@ -147,27 +147,27 @@ While this "report" does not actually generate anything, it uses the report mach
 
 If you wish to use rsync, you must configure passwordless ssh using public/private key authentication from the user account that WeeWX runs, to the user account on the remote machine where the files will be copied.
 
-**enable**
+#### enable
 
 Set to **true** (the default) to enable rsync. Set to **false** to disable.
 
-**server**
+#### server
 
 Set to the name of your server. This name should appear in your **.ssh/config** file. Required. No default
 
-**user**
+#### user
 
 Set to the ssh username you use for your rsync connection to your web server. The local user that WeeWX runs as must have [passwordless ssh](https://www.tecmint.com/ssh-passwordless-login-using-ssh-keygen-in-5-easy-steps/) configured for _user@server_. Required. No default.
 
-**path**
+#### path
 
 Set to the path where the weather data will be stored on your webserver (e.g., **/var/www/html/weather**). Make sure user has write privileges in this directory. Required. No default.
 
-**port**
+#### port
 
 The port to use for the ssh connection. Default is to use the default port for the **ssh** command (generally 22).
 
-**delete**
+#### delete
 
 Files that don't exist in the local report are removed from the remote location. 
 
