@@ -35,7 +35,8 @@ pip install weewx --user
 ```
 
 When finished, the WeeWX executables will have been installed in `~/.local/bin`,
-and the libraries in your Python "user" area, generally `~/.local/lib/python3.10/site-packages/`.
+and the libraries in your Python "user" area, generally `~/.local/lib/python3.x/site-packages/`,
+where `3.x` is your version of Python.
 
 
 ### Create `weewx.conf`
@@ -167,7 +168,7 @@ Stop WeeWX
     sudo systemctl disable weewx
     ```
 
-=== "Redhat & SuSE"
+=== "Redhat, SuSE,<br/>and very old Debian:"
 
     ```bash
     sudo /etc/rc.d/init.d/weewx stop

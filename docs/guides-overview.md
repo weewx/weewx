@@ -4,7 +4,6 @@ These are more detailed guides regarding WeeWX.
 
 - Creation and management of user data.
 - Installation and uninstallation of extensions.
-- Installation and uninstallation of files necessary to run `weewxd` as a daemon.
 
 #### [`wee_database`](utilities.htm#wee_database_utility)
 

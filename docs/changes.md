@@ -315,8 +315,9 @@ The utility wee_database has new options --add-column, --rename-column, and
 --drop-columns for adding, renaming, and deleting columns in the database.
 
 New optional tag ".series()", for creating and formatting series in templates.
-See the document series_tags.md in the docs subdirectory. This is still
-experimental and subject to change! Addresses issue #341.
+See the document [Tabs for
+series](https://github.com/weewx/weewx/wiki/Tags-for-series) in the wiki. This
+is still experimental and subject to change! Addresses issue #341.
 
 New optional tag ".json()" for formatting results as JSON.
 
