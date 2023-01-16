@@ -15,10 +15,8 @@ with `bin` in them and change them to `lib`.
 ```
 ✅ weectl station create
 ✅ weectl station reconfigure
-½ weectl station upgrade
+✅ weectl station upgrade
 weectl station upgrade-skins
-½ weectl daemon install
-weectl daemon uninstall
 ✅ weectl extension install
 ✅ weectl extension uninstall
 ✅ weectl extension list
@@ -40,6 +38,8 @@ Update the logging wiki.
 
 ## Documentation
 
+Fill out "Preparation" section in pip.md for RedHat, SuSE, and macOS.
+
 Update internal links in the customizing guide.
 
 Update internal links in the User's Guide.
@@ -53,8 +53,6 @@ Note that SQLITE is now relative to WEEWX_ROOT.
 References to `/home/weewx` become `$WEEWX_ROOT`
 
 Put legacy (V4.x) docs at weewx.com/legacy_docs.
-
-Warn the user to make sure that  `~/.local/bin` is in `PATH`.
 
 On minimal installations, a pip install may require:
 

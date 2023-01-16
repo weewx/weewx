@@ -1,12 +1,12 @@
 # Introduction
 
-This document covers the customization of WeeWX. It assumes that you have read, and are reasonably familiar with, the [Users Guide](usersguide.htm).
+This document covers the customization of WeeWX. It assumes that you have read, and are reasonably familiar with, the [Users Guide](../usersguide/).
 
-The introduction contains an overview of the architecture. If you are only interested in customizing the generated reports you can probably skip the introduction and proceed directly to the section [_Customizing reports_](#customizing_reports). With this approach you can easily add new plot images, change the titles of images, change the units used in the reports, and so on.
+The introduction contains an overview of the architecture. If you are only interested in customizing the generated reports you can probably skip the introduction and proceed directly to the section [_Customizing reports_](custom_reports). With this approach you can easily add new plot images, change the titles of images, change the units used in the reports, and so on.
 
 However, if your goal is a specialized application, such as adding alarms, RSS feeds, _etc._, then it would be worth your while to read about the internal architecture.
 
-Most of the guide applies to any hardware, but the exact data types are hardware-specific. See the [_WeeWX Hardware Guide_](hardware.htm) for details of how different observation types are handled by different types hardware.
+Most of the guide applies to any hardware, but the exact data types are hardware-specific. See the [_WeeWX Hardware Guide_](../hardware.htm) for details of how different observation types are handled by different types hardware.
 
 !!! Warning
     WeeWX is still an experimental system and, as such, its internal design is subject to change. Future upgrades may break any customizations you have done, particularly if they involve the API (skin customizations tend to be more stable).
@@ -15,7 +15,7 @@ Most of the guide applies to any hardware, but the exact data types are hardware
 
 Below is a brief overview of the WeeWX system architecture, which is covered in much more detail in the rest of this document.
 
-| ![The WeeWX pipeline](images/pipeline.png)                                                                                                                            |
+| ![The WeeWX pipeline](../images/pipeline.png)                                                                                                                         |
 |-----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | A typical WeeWX pipeline. The actual pipeline depends on what extensions are in use. Data, in the form of LOOP packets and archive records, flows from top to bottom. |
 
@@ -33,7 +33,7 @@ WeeWX is data-driven. When the sensors spit out some data, WeeWX does something.
 
 A driver is Python code that communicates with the hardware. The driver reads data from a serial port or a device on the USB or a network interface. It handles any decoding of raw bits and bytes, and puts the resulting data into LOOP packets. The drivers for some kinds of hardware (most notably, Davis Vantage) are capable of emitting archive records as well.
 
-In addition to the primary observation types such as temperature, humidity, or solar radiation, there are also many useful dependent types, such as wind chill, heat index, or ET, which are calculated from the primary data. The firmware in some weather stations are capable of doing many of these calculations on their own. For the rest, should you choose to do so, the WeeWX service [StdWXCalculate](usersguide.htm#StdWXCalculate) can fill in the gaps. Sometimes the firmware simply does it wrong, and you may choose to have WeeWX do the calculation, despite the type's presence in LOOP packets.
+In addition to the primary observation types such as temperature, humidity, or solar radiation, there are also many useful dependent types, such as wind chill, heat index, or ET, which are calculated from the primary data. The firmware in some weather stations are capable of doing many of these calculations on their own. For the rest, should you choose to do so, the WeeWX service [StdWXCalculate](../usersguide/weewx-config-file/stdwxcalculate-config) can fill in the gaps. Sometimes the firmware simply does it wrong, and you may choose to have WeeWX do the calculation, despite the type's presence in LOOP packets.
 
 ## LOOP packets _vs._ archive records
 
@@ -85,7 +85,7 @@ The utility `wee_reports` allows you to run a report whenever you like. To use i
 wee_reports weewx.conf 1398927600
 ```
 
-For more information about `wee_reports`, see the [Utilities Guide](utilities.htm#wee_reports_utility)
+For more information about `wee_reports`, see the [Utilities Guide](../utilities.htm#wee_reports_utility)
 
 ## The WeeWX service architecture
 
@@ -151,7 +151,7 @@ At a high-level, WeeWX consists of an engine class called `StdEngine`. It is res
     </tbody>
 </table>
 
-It is easy to extend old services or to add new ones. The source distribution includes an example new service called MyAlarm, which sends an email when an arbitrary expression evaluates True. These advanced topics are covered later in the section _[Customizing the WeeWX service engine](#service_engine)_.
+It is easy to extend old services or to add new ones. The source distribution includes an example new service called MyAlarm, which sends an email when an arbitrary expression evaluates True. These advanced topics are covered later in the section _[Customizing the WeeWX service engine](service_engine)_.
 
 ## The standard reporting service `StdReport`
 
@@ -220,10 +220,10 @@ Each report has a _skin_ associated with it. For most reports, the relationship 
 
 Like all reports, the FTP and RSYNC "reports" also use a skin, and include a skin configuration file, although they are quite minimal.
 
-Skins live in their own directory called `skins`, whose location is referred to as `SKIN_ROOT`.
+Skins live in their own directory called `skins`, whose location is referred to as _`$SKIN_ROOT`_.
 
-??? SKIN_ROOT
-    The symbol SKIN_ROOT is a symbolic name to the location of the directory where your skins are located. It is not to be taken literally. Consult the [directory layout table](usersguide.htm#dir-layout-table) in the User's Guide for its exact location, dependent on how you installed WeeWX and what operating system you are using
+!!! Note
+    The symbol _`$SKIN_ROOT`_ is a symbolic name to the location of the directory where your skins are located. It is not to be taken literally. Consult the [directory layout table](../usersguide/installing-weewx/#where-to-find-things) in the User's Guide for its exact location, dependent on how you installed WeeWX and what operating system you are using
 
 ### Generators
 
@@ -262,11 +262,11 @@ To create their output, skins rely on one or more _generators_, which are what d
 
 Note that the three generators `FtpGenerator`, `RsyncGenerator`, and `CopyGenerator` do not actually generate anything having to do with the presentation layer. Instead, they just move files around.
 
-Which generators are to be run for a given skin is specified in the skin's configuration file skin.conf, in section [[Generators]](#generators_section).
+Which generators are to be run for a given skin is specified in the skin's configuration file `skin.conf`, in section [[Generators]](options_ref/#generators_section).
 
 ### Templates
 
-A template is a text file that is processed by a _template engine_ to create a new file. WeeWX uses the [Cheetah](https://pythonhosted.org/Cheetah/) template engine. The generator `weewx.cheetahgenerator.CheetahGenerator` is responsible for running Cheetah at appropriate times.
+A template is a text file that is processed by a _template engine_ to create a new file. WeeWX uses the [Cheetah](https://cheetahtemplate.org/) template engine. The generator `weewx.cheetahgenerator.CheetahGenerator` is responsible for running Cheetah at appropriate times.
 
 A template may be used to generate HTML, XML, CSV, Javascript, or any other type of text file. A template typically contains variables that are replaced when creating the new file. Templates may also contain simple programming logic.
 
@@ -358,7 +358,7 @@ The first three columns are _required._ Here's what they mean:
     </tr>
 </table>
 
-In addition to the main archive table, there are a number of smaller tables inside the database, one for each observation type, which hold _daily summaries_ of the type, such as the minimum and maximum value seen during the day, and at what time. These tables have names such as `archive_day_outTemp` or `archive_day_barometer`. Their existence is generally transparent to the user. For more details, see the section [_Daily summaries_](devnotes.htm#Daily_summaries) in the document _Developer's Notes_.
+In addition to the main archive table, there are a number of smaller tables inside the database, one for each observation type, which hold _daily summaries_ of the type, such as the minimum and maximum value seen during the day, and at what time. These tables have names such as `archive_day_outTemp` or `archive_day_barometer`. Their existence is generally transparent to the user. For more details, see the section [_Daily summaries_](../devnotes#Daily_summaries) in the document _Developer's Notes_.
 
 ### Binding names
 
@@ -366,7 +366,7 @@ While most users will only need the one weather database that comes with WeeWX, 
 
 An additional complication is that WeeWX can use more than one database implementation: SQLite or MySQL. Making users specify in the templates not only which database to use, but also which implementation, would be unreasonable.
 
-The solution, like so many other problems in computer science, is to introduce another level of indirection, a _database binding_. Rather than specify which database to use, you specify which _binding_. Bindings do not change with the database implementation, so, for example, you know that `wx_binding` will always point to the weather database, no matter if its implementation is a sqlite database or a MySQL database. Bindings are listed in section [[DataBindings]](usersguide.htm#DataBindings) in `weewx.conf`.
+The solution, like so many other problems in computer science, is to introduce another level of indirection, a _database binding_. Rather than specify which database to use, you specify which _binding_. Bindings do not change with the database implementation, so, for example, you know that `wx_binding` will always point to the weather database, no matter if its implementation is a sqlite database or a MySQL database. Bindings are listed in section [[DataBindings]](../usersguide/weewx-config-file/data-bindings/) in `weewx.conf`.
 
 The standard weather database binding that WeeWX uses is `wx_binding`. This is the binding that you will be using most of the time and, indeed, it is the default. You rarely have to specify it explicitly.
 

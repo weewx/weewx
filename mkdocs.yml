@@ -51,7 +51,7 @@ nav:
       - "Migrating to V5": v5-upgrade.md
 
   - "User's guide":
-      - "About WeeWX": ./usersguide/about-weewx.md
+      - "Introduction": ./usersguide/index.md
       - "System requirements": ./usersguide/system-requirements.md
       - "Installing WeeWX": ./usersguide/installing-weewx.md
       - "Running WeeWX": ./usersguide/running-weewx.md
@@ -76,7 +76,7 @@ nav:
         - "[Engine]": ./usersguide/weewx-config-file/engine.md
 
   - Customization guide:
-    - "Introduction": custom/intro.md
+    - "Introduction": custom/index.md
     - "Customizing reports": custom/custom_reports.md
     - "The cheetah generator": custom/cheetah.md
     - "The image generator": custom/image_generator.md

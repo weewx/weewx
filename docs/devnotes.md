@@ -1,4 +1,4 @@
-# Notes for Developers of the WeeWX Weather System
+# Notes for WeeWX developers
 
 This guide is intended for developers contributing to the open source
 project WeeWX.
