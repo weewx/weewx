@@ -9,13 +9,27 @@ install WeeWX on almost any operating system, including macOS.
   versions of Python. If you are constrained by this, install WeeWX V4.10, the
   last version to support Python 2.7, Python 3.5, and Python 3.6.
 
-- You must also have a copy of pip. Nowadays, almost all versions of Python come
-  with pip, however, if yours does not, see the 
-  [_pip Install guide_](https://pip.pypa.io/en/stable/installation/).
+- You must also have a copy of pip.
 
 - While you will not need root privileges to install and configure WeeWX,
   you will need them to set up a daemon.
 
+
+## Preparation
+
+If you do not already have pip on your system, you should install it first by following 
+[the directions on the pip website](https://pip.pypa.io/en/stable/installation/).
+
+For very minimal operating systems, you may have to follow these steps as well, before trying to
+install WeeWX:
+
+=== "Debian"
+
+    ```shell
+    sudo apt update && sudo apt upgrade
+    sudo apt install gcc
+    sudo apt install python3-dev
+    ```
 
 ## Installation steps
 
@@ -24,16 +38,18 @@ Installation is a two-step process:
 1. Install the software and resources using pip.
 2. Create a new station configuration file `weewx.conf` using the tool `weectl`.
 
+
 ### Install using pip
 
-There are many ways to install WeeWX using `pip` (see the wiki document [pip
+Once the preparatory steps are out of the way, you're ready to install WeeWX using pip.
+
+There are many ways to do this (see the wiki document [pip
 install strategies](https://github.com/weewx/weewx/wiki/pip-install-strategies)
 for a partial list), but the method below is one of the simplest and safest.
 
 !!! Note
-    While not strictly necessary, it's a good idea to use the invocation `python3 -m pip`, rather 
-    than simply `pip`. This way you can be sure which version of Python is being used, and avoid
-    using Python 2 accidentally.
+    While not strictly necessary, it's a good idea to invoke pip using `python3 -m pip`, rather 
+    than simply `pip`. This way you can be sure which version of Python is being used.
 
 ```shell
 python3 -m pip install weewx --user
@@ -51,7 +67,7 @@ where `3.x` is your version of Python.
           ```
     If you do, log out, then log back in.
 
-### Create `weewx.conf`
+### Create your user data
 
 While the first step downloads everything into your local Python source tree, it
 does not set up a configuration file for your station, nor does it set up the
