@@ -14,6 +14,7 @@ import os
 import os.path
 import re
 import shutil
+import sys
 
 import configobj
 
@@ -557,7 +558,11 @@ def copy_user(config_dict, user_root=None, dry_run=False):
 def copy_util(config_path, config_dict, dry_run=False):
     weewxd_path = shutil.which('weewxd')
     if not weewxd_path:
-        raise FileNotFoundError("Cannot find weewxd")
+        print("Unable to find the WeeWX executable 'weewxd'.", file=sys.stderr)
+        print("No daemon utility files will be created.", file=sys.stderr)
+        print("Try making sure the pip user directory (typically ~/.local/bin) is in your PATH.",
+              file=sys.stderr)
+        return
     username = getpass.getuser()
     groupname = grp.getgrgid(os.getgid()).gr_name
     # This is the set of substitutions to be performed. The key is a regular expression. If a
@@ -650,7 +655,10 @@ def station_update(config_path, docs_root=None, examples_root=None, dry_run=Fals
     examples_dir = copy_examples(config_dict, examples_root=examples_root, dry_run=dry_run)
     print(f"Finished upgrading examples found at {examples_dir}.")
     util_dir = copy_util(config_path, config_dict, dry_run=dry_run)
-    print(f"Finished upgrading utilities found at {util_dir}.")
+    if util_dir:
+        print(f"Finished upgrading utilities directory found at {util_dir}.")
+    else:
+        print("Could not upgrade the utilities directory.")
 
     # Save the updated config file with backup
     print(f"Saving configuration file to {config_path}.")
