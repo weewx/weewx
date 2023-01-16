@@ -17,7 +17,7 @@ import shutil
 
 import configobj
 
-import weecfg
+import weecfg.update_config
 import weeutil.config
 import weeutil.weeutil
 import weewx
@@ -30,6 +30,7 @@ def station_create(config_path, *args,
                    docs_root=None,
                    examples_root=None,
                    user_root=None,
+                   dry_run=False,
                    **kwargs):
     """Create a brand-new station by creating a new configuration file.
 
@@ -42,8 +43,11 @@ def station_create(config_path, *args,
       1. If no-prompt is false, it creates the configuration file by prompting the user. If true,
        it uses defaults.
       2. It then copies the documentation out of package resources and into WEEWX_ROOT.
-      3. Same with the examples.
+      3. Same with the examples and utility files.
     """
+
+    if dry_run:
+        print("This is a dry run. Nothing will actually be done.")
 
     if not config_path:
         config_path = weecfg.default_config_path
@@ -61,26 +65,39 @@ def station_create(config_path, *args,
     with importlib.resources.open_text('wee_resources', 'weewx.conf', encoding='utf-8') as fd:
         dist_config_dict = configobj.ConfigObj(fd, encoding='utf-8', file_error=True)
 
-    config_config(config_path, dist_config_dict, weewx_root=weewx_root, *args, **kwargs)
-    copy_docs(dist_config_dict, docs_root=docs_root)
-    copy_examples(dist_config_dict, examples_root=examples_root)
-    copy_user(dist_config_dict, user_root=user_root)
+    config_config(config_path, dist_config_dict, weewx_root=weewx_root, dry_run=dry_run,
+                  *args, **kwargs)
+    copy_docs(dist_config_dict, docs_root=docs_root, dry_run=dry_run)
+    copy_examples(dist_config_dict, examples_root=examples_root, dry_run=dry_run)
+    copy_user(dist_config_dict, user_root=user_root, dry_run=dry_run)
 
-    # Save the results. No backup.
-    weecfg.save(dist_config_dict, config_path)
+    print(f"Save the configuration file to {config_path}.")
+    if dry_run:
+        print("This was a dry run. Nothing was actually done.")
+    else:
+        # Save the results. No backup.
+        weecfg.save(dist_config_dict, config_path)
 
 
-def station_reconfigure(config_path, *args, **kwargs):
+def station_reconfigure(config_path, dry_run=False, *args, **kwargs):
     "Reconfigure an existing station"
+
+    if dry_run:
+        print("This is a dry run. Nothing will actually be done.")
 
     config_path, config_dict = weecfg.read_config(config_path)
 
     print(f"The configuration file {bcolors.BOLD}{config_path}{bcolors.ENDC} will be used.")
 
-    config_config(config_path, config_dict, *args, **kwargs)
+    config_config(config_path, config_dict, dry_run=dry_run, *args, **kwargs)
 
-    # Save the results with backup
-    weecfg.save_with_backup(config_dict, config_path)
+    print(f"Save the configuration file to {config_path}.")
+    if dry_run:
+        print("This was a dry run. Nothing was actually done.")
+    else:
+        # Save the results with backup
+        backup = weecfg.save_with_backup(config_dict, config_path)
+        print(f"Saved backup to {backup}.")
 
 
 def config_config(config_path, config_dict,
@@ -90,8 +107,10 @@ def config_config(config_path, config_dict,
                   weewx_root=None, skin_root=None,
                   html_root=None, sqlite_root=None,
                   user_root=None,
-                  no_prompt=False):
+                  no_prompt=False,
+                  dry_run=False):
     """Modify a configuration file."""
+    print(f"Processing configuration file {config_path}.")
     weewx.add_user_path(config_dict)
     config_location(config_dict, location=location, no_prompt=no_prompt)
     config_altitude(config_dict, altitude=altitude, no_prompt=no_prompt)
@@ -100,8 +119,8 @@ def config_config(config_path, config_dict,
     config_units(config_dict, unit_system=unit_system, no_prompt=no_prompt)
     config_driver(config_dict, driver=driver, no_prompt=no_prompt)
     config_roots(config_dict, weewx_root, skin_root, html_root, sqlite_root, user_root)
-    copy_skins(config_dict)
-    copy_util(config_path, config_dict)
+    copy_skins(config_dict, dry_run=dry_run)
+    copy_util(config_path, config_dict, dry_run=dry_run)
 
 
 def config_location(config_dict, location=None, no_prompt=False):
@@ -440,19 +459,24 @@ def config_roots(config_dict,
         config_dict.interpolation = hold
 
 
-def copy_skins(config_dict):
+def copy_skins(config_dict, dry_run=False):
     """Copy any missing skins from the resource package to the skins directory"""
     if 'StdReport' not in config_dict:
         return
 
     # SKIN_ROOT is the location of the skins relative to WEEWX_ROOT. Find it's absolute location
     skin_dir = os.path.join(config_dict['WEEWX_ROOT'], config_dict['StdReport']['SKIN_ROOT'])
-    # Make it if it doesn't already exist
-    os.makedirs(skin_dir, exist_ok=True)
+    if not dry_run:
+        # Make it if it doesn't already exist
+        print(f"Making directory {skin_dir}.")
+        os.makedirs(skin_dir, exist_ok=True)
 
     # Find the skins we already have
-    with os.scandir(skin_dir) as existing_contents:
-        existing_skins = {os.path.basename(d.path) for d in existing_contents if d.is_dir()}
+    if dry_run or not os.path.exists(skin_dir):
+        existing_skins = set()
+    else:
+        with os.scandir(skin_dir) as existing_contents:
+            existing_skins = {os.path.basename(d.path) for d in existing_contents if d.is_dir()}
 
     with weeutil.weeutil.path_to_resource('wee_resources', 'skins') as skin_resources:
         # Find which skins are available in the resource package
@@ -465,10 +489,12 @@ def copy_skins(config_dict):
         for skin in missing_skins:
             src = os.path.join(skin_resources, skin)
             dest = os.path.join(skin_dir, skin)
-            shutil.copytree(src, dest)
+            print(f"Copying new skin {skin} into {dest}.")
+            if not dry_run:
+                shutil.copytree(src, dest)
 
 
-def copy_docs(config_dict, docs_root=None):
+def copy_docs(config_dict, docs_root=None, dry_run=False):
     """Copy documentation from package resources to the DOCS_ROOT directory."""
 
     # If the user didn't specify a value, use a default
@@ -478,27 +504,37 @@ def copy_docs(config_dict, docs_root=None):
     # DOCS_ROOT is relative to WEEWX_PATH. Join them to get the absolute path.
     docs_dir = os.path.join(config_dict['WEEWX_ROOT'], docs_root)
 
-    shutil.rmtree(docs_dir, ignore_errors=True)
+    print(f"Removing {docs_dir}.")
+    if not dry_run:
+        shutil.rmtree(docs_dir, ignore_errors=True)
     with weeutil.weeutil.path_to_resource('wee_resources', 'docs') as docs_resources:
-        shutil.copytree(docs_resources, docs_dir)
+        print(f"Copying new docs into {docs_dir}.")
+        if not dry_run:
+            shutil.copytree(docs_resources, docs_dir)
+    return docs_dir
 
 
-def copy_examples(config_dict, examples_root=None):
+def copy_examples(config_dict, examples_root=None, dry_run=False):
     """Copy the examples to the EXAMPLES_ROOT directory."""
 
     # If the user didn't specify a value, use a default
     if not examples_root:
         examples_root = 'examples'
 
-    # EXAMPLEs_ROOT is relative to WEEWX_PATH. Join them to get the absolute path.
+    # examples_root is relative to WEEWX_PATH. Join them to get the absolute path.
     examples_dir = os.path.join(config_dict['WEEWX_ROOT'], examples_root)
 
-    shutil.rmtree(examples_dir, ignore_errors=True)
+    print(f"Removing directory {examples_dir}.")
+    if not dry_run:
+        shutil.rmtree(examples_dir, ignore_errors=True)
     with weeutil.weeutil.path_to_resource('wee_resources', 'examples') as examples_resources:
-        shutil.copytree(examples_resources, examples_dir)
+        print(f"Copying new examples into {examples_dir}.")
+        if not dry_run:
+            shutil.copytree(examples_resources, examples_dir)
+    return examples_dir
 
 
-def copy_user(config_dict, user_root=None):
+def copy_user(config_dict, user_root=None, dry_run=False):
     """Copy the user directory to USER_ROOT"""
 
     # If the user didn't specify a value, use a default
@@ -511,12 +547,14 @@ def copy_user(config_dict, user_root=None):
     # Don't clobber an existing user subdirectory
     if not os.path.isdir(user_dir):
         with weeutil.weeutil.path_to_resource('wee_resources', 'lib') as lib_resources:
-            shutil.copytree(os.path.join(lib_resources, 'user'),
-                            user_dir,
-                            ignore=shutil.ignore_patterns('*.pyc', '__pycache__', ))
+            print(f"Creating a new 'user' directory at {user_dir}.")
+            if not dry_run:
+                shutil.copytree(os.path.join(lib_resources, 'user'),
+                                user_dir,
+                                ignore=shutil.ignore_patterns('*.pyc', '__pycache__', ))
 
 
-def copy_util(config_path, config_dict):
+def copy_util(config_path, config_dict, dry_run=False):
     weewxd_path = shutil.which('weewxd')
     if not weewxd_path:
         raise FileNotFoundError("Cannot find weewxd")
@@ -551,8 +589,11 @@ def copy_util(config_path, config_dict):
 
     with weeutil.weeutil.path_to_resource('wee_resources', 'util') as util_resources:
         dstdir = os.path.join(config_dict['WEEWX_ROOT'], 'util')
-        _process_files(util_resources, dstdir, re_list)
+        print(f"Creating daemon utility files in {dstdir}.")
+        if not dry_run:
+            _process_files(util_resources, dstdir, re_list)
 
+    return dstdir
 
 def _process_files(srcdir, dstdir, re_list, exclude={'__pycache__'}):
     """Process all the utility files found in srcdir. Put them in dstdir"""
@@ -586,3 +627,36 @@ def _patch_file(srcpath, dstpath, re_list):
             for key, value in re_list:
                 line = key.sub(value, line)
             wd.write(line)
+
+
+def station_update(config_path, docs_root=None, examples_root=None, dry_run=False):
+    """Upgrade the user data for the configuration file found at config_path"""
+
+    if dry_run:
+        print("This is a dry run. Nothing will actually be done.")
+
+    # Retrieve the new configuration file as a ConfigObj:
+    with importlib.resources.open_text('wee_resources', 'weewx.conf', encoding='utf-8') as fd:
+        dist_config_dict = configobj.ConfigObj(fd, encoding='utf-8', file_error=True)
+    # Retrieve the old configuration file as a ConfigObj:
+    config_path, config_dict = weecfg.read_config(config_path)
+
+    print(f"The configuration file {bcolors.BOLD}{config_path}{bcolors.ENDC} will be used.")
+
+    weecfg.update_config.update_and_merge(config_dict, dist_config_dict)
+    print(f"Finished upgrading the configuration file found at {config_path}.")
+    docs_dir = copy_docs(config_dict, docs_root=docs_root, dry_run=dry_run)
+    print(f"Finished upgrading docs found at {docs_dir}.")
+    examples_dir = copy_examples(config_dict, examples_root=examples_root, dry_run=dry_run)
+    print(f"Finished upgrading examples found at {examples_dir}.")
+    util_dir = copy_util(config_path, config_dict, dry_run=dry_run)
+    print(f"Finished upgrading utilities found at {util_dir}.")
+
+    # Save the updated config file with backup
+    print(f"Saving configuration file to {config_path}.")
+    if dry_run:
+        print("This was a dry run. Nothing was actually done.")
+    else:
+        backup_path = weecfg.save_with_backup(config_dict, config_path)
+        print(f"Backed up configuration file to {backup_path}.")
+        print("Done")

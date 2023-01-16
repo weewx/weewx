@@ -1,1 +1,0 @@
-# weectl daemon

@@ -20,7 +20,8 @@ usage: weectl station create [--config=CONFIG-PATH] \
                              [--user-root=USER_ROOT] \
                              [--docs-root=DOCS_ROOT] \
                              [--examples-root=EXAMPLES_ROOT] \
-                             [--no-prompt]
+                             [--no-prompt] \
+                             [--dry-run]
 
        weectl station reconfigure [--config=CONFIG-PATH] \ 
                                   [--driver=DRIVER] \
@@ -32,10 +33,16 @@ usage: weectl station create [--config=CONFIG-PATH] \
                                   [--skin-root=SKIN_ROOT] \
                                   [--sqlite-root=SQLITE_ROOT] \
                                   [--html-root=HTML_ROOT] \
-                                  [--no-prompt]
+                                  [--no-prompt] \
+                                  [--dry-run]
 
-       weectl station upgrade [--config=CONFIG-PATH]
-       weectl station upgrade-skins [--config=CONFIG-PATH]
+       weectl station upgrade [--config=CONFIG-PATH] \
+                              [--docs-root=DOCS_ROOT] \
+                              [--examples-root=EXAMPLES_ROOT]
+                              [--dry-run]
+
+       weectl station upgrade-skins [--config=CONFIG-PATH] \
+                                    [--dry-run]
 
 Manages the configuration file and skins
 
@@ -44,10 +51,12 @@ optional arguments:
 
 Which action to take:
   {create,reconfigure,upgrade,upgrade-skins}
-    create              Create a user data area, including a config file
-    reconfigure         Reconfigure a station config file
-    upgrade             Upgrade the configuration file, docs, and examples
-    upgrade-skins       Upgrade the skins
+    create              Create a user data area, including a configuration
+                        file.
+    reconfigure         Reconfigure a station configuration file.
+    upgrade             Upgrade the configuration file, docs, examples, and
+                        utility files.
+    upgrade-skins       Upgrade the skins.
 ```
 
 ## `weectl station create`
@@ -84,11 +93,13 @@ usage: weectl station create [--config=CONFIG-PATH] \
                              [--user-root=USER_ROOT] \
                              [--docs-root=DOCS_ROOT] \
                              [--examples-root=EXAMPLES_ROOT] \
-                             [--no-prompt]
+                             [--no-prompt] \
+                             [--dry-run]
 
-In what follows, WEEWX_ROOT is the directory that contains the
-configuration file. For example, if "--config=/Users/tkeffer/weewx-
-data/weewx.conf", then WEEWX_ROOT will be "/Users/tkeffer/weewx-data".
+Create a new user data area, including a configuration file. In what follows,
+WEEWX_ROOT is the directory that contains the configuration file. For
+example, if "--config=/Users/tkeffer/weewx-data/weewx.conf", then WEEWX_ROOT
+will be "/Users/tkeffer/weewx-data".
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -133,6 +144,7 @@ optional arguments:
                         Where to put the examples, relative to $WEEWX_ROOT.
                         Default is "examples".
   --no-prompt           If set, do not prompt. Use default values.
+  --dry-run             Print what would happen, but do not actually do it.
 ```
 
 ### Notable options
@@ -197,7 +209,8 @@ usage: weectl station reconfigure [--config=CONFIG-PATH] \
                                   [--skin-root=SKIN_ROOT] \
                                   [--sqlite-root=SQLITE_ROOT] \
                                   [--html-root=HTML_ROOT] \
-                                  [--no-prompt]
+                                  [--no-prompt] \
+                                  [--dry-run]
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -233,6 +246,7 @@ optional arguments:
                         Where to put the generated HTML and images, relative
                         to WEEWX_ROOT. Default is "public_html".
   --no-prompt           If set, do not prompt. Use default values.
+  --dry-run             Print what would happen, but do not actually do it.
 ```
 
 When used with the `--no-prompt` option, `weectl station reconfigure` will modify specific parameters with no interaction. For example, this would set the station altitude to 35 feet:
@@ -248,3 +262,37 @@ weectl station reconfigure --driver=user.netatmo --no-prompt
 ```
 
 Other options are as under [`weectl station create`](#weectl-station-create) above.
+
+
+## `weectl station upgrade`
+
+This action will upgrade your configuration file, documentation, examples, and
+daemon configuration files. The skins will not be touched.
+
+Running `weectl station upgrade --help` will show you its options.
+
+``` shell
+% weectl station upgrade --help
+usage: weectl station upgrade [--config=CONFIG-PATH] \
+                              [--docs-root=DOCS_ROOT] \
+                              [--examples-root=EXAMPLES_ROOT]
+                              [--dry-run]
+
+Upgrade an existing user data area, including the configuration file, docs,
+examples, and utility files. In what follows, WEEWX_ROOT is the
+directory that contains the configuration file. For example, if "--
+config=/Users/tkeffer/weewx-data/weewx.conf", then WEEWX_ROOT will be
+"/Users/tkeffer/weewx-data".
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --config CONFIG-PATH  Path to configuration file. Default is
+                        "/Users/tkeffer/weewx-data/weewx.conf"
+  --docs-root DOCS_ROOT
+                        Where to put the new documentation, relative to
+                        $WEEWX_ROOT. Default is "docs".
+  --examples-root EXAMPLES_ROOT
+                        Where to put the new examples, relative to
+                        $WEEWX_ROOT. Default is "examples".
+  --dry-run             Print what would happen, but do not actually do it.
+```

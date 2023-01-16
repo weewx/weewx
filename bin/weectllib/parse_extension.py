@@ -34,7 +34,7 @@ def add_subparser(subparsers):
     extension_parser = subparsers.add_parser('extension',
                                              usage=extension_usage,
                                              description='Manages WeeWX extensions',
-                                             help="List, install, or uninstall extensions")
+                                             help="List, install, or uninstall extensions.")
     # In the following, the 'prog' argument is necessary to get a proper error message.
     # See Python issue https://bugs.python.org/issue42297
     action_parser = extension_parser.add_subparsers(dest='action',

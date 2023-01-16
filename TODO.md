@@ -3,8 +3,6 @@
 
 ## Configuration related
 
-Get config update working again. 
-
 Remove wunderfixer. Remove references in docs.
 
 Change `bin/user.py` to `lib/user.py`. This would require that the installer intercept paths
