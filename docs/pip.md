@@ -26,18 +26,30 @@ Installation is a two-step process:
 
 ### Install using pip
 
-There are many ways to install WeeWX using pip (see the wiki document [pip
+There are many ways to install WeeWX using `pip` (see the wiki document [pip
 install strategies](https://github.com/weewx/weewx/wiki/pip-install-strategies)
 for a partial list), but the method below is one of the simplest and safest.
 
+!!! Note
+    While not strictly necessary, it's a good idea to use the invocation `python3 -m pip`, rather 
+    than simply `pip`. This way you can be sure which version of Python is being used, and avoid
+    using Python 2 accidentally.
+
 ```shell
-pip install weewx --user
+python3 -m pip install weewx --user
 ```
 
 When finished, the WeeWX executables will have been installed in `~/.local/bin`,
 and the libraries in your Python "user" area, generally `~/.local/lib/python3.x/site-packages/`,
 where `3.x` is your version of Python.
 
+!!! Note
+    You may get a warning to the effect:
+          ```
+          WARNING: The script wheel is installed in '/home/ubuntu/.local/bin' which is not on PATH.
+          Consider adding this directory to PATH or, if you prefer to suppress this warning, use --no-warn-script-location.
+          ```
+    If you do, log out, then log back in.
 
 ### Create `weewx.conf`
 
