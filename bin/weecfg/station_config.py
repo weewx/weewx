@@ -558,9 +558,12 @@ def copy_user(config_dict, user_root=None, dry_run=False):
 def copy_util(config_path, config_dict, dry_run=False):
     weewxd_path = shutil.which('weewxd')
     if not weewxd_path:
-        print("Unable to find the WeeWX executable 'weewxd'.", file=sys.stderr)
-        print("No daemon utility files will be created.", file=sys.stderr)
-        print("Try making sure the pip user directory (typically ~/.local/bin) is in your PATH.",
+        print(f"{bcolors.FAIL}Unable to find the WeeWX executable 'weewxd'.{bcolors.ENDC}",
+              file=sys.stderr)
+        print(f"{bcolors.FAIL}No daemon utility files will be created.{bcolors.ENDC}",
+              file=sys.stderr)
+        print(f"{bcolors.FAIL}Make sure the pip user directory (typically ~/.local/bin) "
+              f"is in your PATH, then retry.{bcolors.ENDC}",
               file=sys.stderr)
         return
     username = getpass.getuser()
