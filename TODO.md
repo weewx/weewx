@@ -26,6 +26,16 @@ Key:
 ✅ means largely completed
 ½ means started
 
+## Utilities
+
+Get the following working again:
+
+- wee_database
+- wee_debug
+- wee_device
+- wee_import
+- wee_reports
+
 ## Logging
 
 Consider making `$HOME/weewx-data/logs` the default log for MacOS.

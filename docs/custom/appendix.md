@@ -619,35 +619,37 @@ station_altitude_vt = ValueTuple(120.0, "meter", "group_altitude")
 Class `ValueHelper` contains all the information necessary to do
 the proper formatting of a value, including a unit label.
 
-#### Instance attribute
+### Instance attribute
 
-`ValueHelper.value_t`
+#### ValueHelper.value_t
 
 Returns the `ValueTuple` instance held internally.
 
-#### Instance methods
+### Instance methods
 
-`ValueHelper.__str__()`
+#### ValueHelper.__str__()
 
 Formats the value as a string, including a unit label, and returns it.
 
-`ValueHelper.format(format_string=None, None_string=None, add_label=True, localize=True)`
+#### ValueHelper.format(format_string=None, None_string=None, add_label=True, localize=True)
 
 Format the value as a string, using various specified options, and
 return it. Unless otherwise specified, a label is included.
 
-`format_string` A string to be used for formatting. It must
+Its parameters:
+
+- `format_string` A string to be used for formatting. It must
 include one, and only one, [format
 specifier](https://docs.python.org/3/library/string.html#formatspec).
 
-`None_string` In the event of a value of Python `None`, this string
+- `None_string` In the event of a value of Python `None`, this string
 will be substituted. If `None`, then a default string from
 `skin.conf` will be used.
 
-`add_label` If truthy, then an appropriate unit label will be
+- `add_label` If truthy, then an appropriate unit label will be
 attached. Otherwise, no label is attached.
 
-`localize` If truthy, then the results will be localized. For
+- `localize` If truthy, then the results will be localized. For
 example, in some locales, a comma will be used as the decimal specifier.
 
 

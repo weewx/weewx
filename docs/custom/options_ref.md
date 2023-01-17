@@ -2,7 +2,7 @@
 
 This section contains the options available in the skin configuration
 file, `skin.conf`. The same options apply to the language files
-found in the subdirectory `lang`, like `lang/en.conf` for
+found in the subdirectory `lang`, such as `lang/en.conf` for
 English.
 
 We recommend to put

@@ -41,18 +41,18 @@ methods as you can. At the very minimum, you must implement the first
 three methods, `loader`, `hardware_name`, and
 `genLoopPackets`.
 
-### `loader`
+#### loader()
 
 This is a factory function that returns an instance of your driver. It
 has two arguments: the configuration dictionary, and a reference to the
 WeeWX engine.
 
-### `hardware_name`
+#### hardware_name
 
-Return a string with a short nickname for the hardware, such as `"ACME
-X90"`
+This is an attribute that should return a string with a short nickname for the hardware, such as
+`"ACME X90"`
 
-### `genLoopPackets`
+#### genLoopPackets()
 
 This should be a Python [generator
 function](https://wiki.python.org/moin/Generators) that yields loop
@@ -73,7 +73,7 @@ time and for the units used within the packet.
         <td>
             The unit system used. <span class="code">weewx.US</span> for US customary, <span
             class="code">weewx.METRICWX</span>, or <span class="code">weewx.METRIC</span> for metric. See the
-            Appendix <a href="#units"><em>Units</em></a> for their exact definitions. The dictionaries <span
+            Appendix <a href="../appendix/#units"><em>Units</em></a> for their exact definitions. The dictionaries <span
             class="code">USUnits</span>, <span class="code">MetricWXUnits</span>, and <span
             class="code">MetricUnits</span> in file <span class="code">units.py</span>, can also be useful.
         </td>
@@ -136,7 +136,7 @@ calculate and report sea level pressures.
     </tbody>
 </table>
 
-### `genArchiveRecords()`
+#### genArchiveRecords()
 
 If your hardware does not have an archive record logger, then WeeWX can
 do the record generation for you. It will automatically collect all the
@@ -148,7 +148,7 @@ However, if your hardware does have a logger, then you should implement
 method `genArchiveRecords()` as well. It should be a generator
 function that returns all the records since a given time.
 
-### `archive_interval`
+#### archive_interval
 
 If you implement function `genArchiveRecords()`, then you should
 also implement `archive_interval` as either an attribute, or as a
@@ -156,19 +156,19 @@ also implement `archive_interval` as either an attribute, or as a
 function](https://docs.python.org/3/library/functions.html#property). It
 should return the archive interval in seconds.
 
-### `getTime()`
+#### getTime()
 
 If your hardware has an onboard clock and supports reading the time from
 it, then you may want to implement this method. It takes no argument. It
 should return the time in Unix Epoch Time.
 
-### `setTime()`
+#### setTime()
 
 If your hardware has an onboard clock and supports *setting* it, then
 you may want to implement this method. It takes no argument and does not
 need to return anything.
 
-### `closePort()`
+#### closePort()
 
 If the driver needs to close a serial port, terminate a thread, close a
 database, or perform any other activity before the application

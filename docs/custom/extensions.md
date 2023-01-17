@@ -2,7 +2,7 @@
 
 A key feature of WeeWX is its ability to be extended by installing 3rd
 party *extensions*. Extensions are a way to package one or more
-customizations so they can be installed and distributed as a functional
+customizations so that they can be installed and distributed as a functional
 group.
 
 Customizations typically fall into one of these categories:
@@ -104,7 +104,7 @@ input from the user. At the same time, parameters for the most
 frequently requested options should be easily accessible and easy to
 modify. For skins, this might mean parameterizing strings into
 `[Labels]` for easier customization. Or it might mean providing
-parameters in `[Extras] to control skin behavior or to
+parameters in `[Extras]` to control skin behavior or to
 parameterize links.
 
 Some parameters *must* be specified, and no default value would be
