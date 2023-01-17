@@ -9,7 +9,7 @@ specific to a locale.
 All the skins that come with WeeWX have been *internationalized*,
 that is, they are capable of being *localized*, although there may or may not
 be a localization available for your specific language.
-See the section [Internationalized skins](#internationalized_skins) for
+See the section [Internationalized skins](../custom_reports/#internationalized-skins) for
 how to tell.
 
 ### Internationalized, your language is available
@@ -84,7 +84,7 @@ release.
 
 Finally, set the option `lang` in `weewx.conf` to your
 language code (`fr` in this example) as described in the [User's
-Guide](usersguide.htm#lang-code).
+Guide](../../usersguide/weewx-config-file/stdreport-config/#lang).
 
 ## How to internationalize a skin
 

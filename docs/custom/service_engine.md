@@ -14,7 +14,7 @@ have the bound member function called when a specific event happens,
 such as a new LOOP packet arriving.
 
 The services are specified in lists in the
-[`[Engine][[Services]]`](usersguide.htm#engine_services)
+[`[Engine][[Services]]`](../../usersguide/weewx-config-file/engine/#services)
 stanza of the configuration file. The `[[Services]]` section
 lists all the services to be run, broken up into different *service
 lists*.
@@ -24,7 +24,7 @@ you want to make sure that data has been processed by the quality control servic
 putting them in the database. Similarly, the reporting system must come *after* the data has been
 put in the database. These groups ensure that things happen in the proper sequence.
 
-See the table [Default services](#default_services) for a list of the
+See the table [The standard WeeWX services](../../custom/#the-weewx-service-architecture) for a list of the
 services that are normally run.
 
 ## Modifying an existing service {#Customizing_a_service}
@@ -280,7 +280,7 @@ below freezing and the wind speed is greater than 10.0.
 
 Note that units must be the same as whatever is being used in your
 database, that is, the same as what you specified in option
-[`target_unit`](usersguide.htm#option_target_unit).
+[`target_unit`](../../usersguide/weewx-config-file/stdconvert-config/#target_unit).
 
 Option `time_wait` is used to avoid a flood of nearly identical
 emails. The new service will wait this long before sending another email
@@ -328,7 +328,7 @@ approaches for how to handle this:
 -   Run two instances of WeeWX, each using its own database and
     `weewx.conf` configuration file. The results are then
     combined in a final report, using WeeWX's ability [to use more than
-    one database](#Using_multiple_bindings). See the Wiki entry [*How to
+    one database](../../custom/multiple_bindings/). See the Wiki entry [*How to
     run multiple instances of
     WeeWX*](https://github.com/weewx/weewx/wiki/weewx-multi) for details
     on how to do this.

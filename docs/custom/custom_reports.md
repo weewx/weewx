@@ -6,7 +6,7 @@ There are two general mechanisms for customizing reports: change options in one 
 
 Options are used to specify how reports will look and what they will contain. For example, they control which units to use, how to format dates and times, which data should be in each plot, the colors of plot elements, _etc_.
 
-For a complete listing of the report options, see the section [_Reference: report options_](#report_options).
+For a complete listing of the report options, see the section [_Reference: report options_](../options_ref).
 
 Options are read from three different types of _configuration files:_
 
@@ -38,7 +38,7 @@ Options are read from three different types of _configuration files:_
     </tbody>
 </table>
 
-Configuration files are read and processed using the Python utility [ConfigObj](https://configobj.readthedocs.io/en/latest/configobj.html), using a format similar to the MS-DOS ["INI" format](https://en.wikipedia.org/wiki/INI_file). Here's a simple example:
+Configuration files are read and processed using the Python utility [ConfigObj](https://configobj.readthedocs.io), using a format similar to the MS-DOS ["INI" format](https://en.wikipedia.org/wiki/INI_file). Here's a simple example:
 
 ```ini
 [Section1]
@@ -192,7 +192,7 @@ If you want to use the _Seasons_ skin and are working with one of these language
         lang = de
 ```
 
-By contrast, if the skin has been internationalized, but there is no localization file for your language, then you will have to supply one. See the section [_Internationalized, but your language is missing_](#internationalized-missing-language).
+By contrast, if the skin has been internationalized, but there is no localization file for your language, then you will have to supply one. See the section [_Internationalized, but your language is missing_](../localization/#internationalized-missing-language).
 
 ## Changing date and time formats
 
@@ -225,7 +225,7 @@ For example, this would result in a date/time string such as "2021.12.13 12:45" 
 
 ### Date and time formats for tags
 
-Each aggregation period has a format for the times associated with that period. These formats are defined in the `TimeFormats` section. The default format for each uses the date and/or time for the computer of the locale on which WeeWX is running.
+Each aggregation period has a format for the times associated with that period. These formats are defined in the `TimeFormats` section. The default formats use the date and/or time for the computer of the locale on which WeeWX is running.
 
 For example, this would result in a date/time string such as "2021.12.13 12:45" no matter what the computer's locale:
 
@@ -248,7 +248,7 @@ For example, this would result in a date/time string such as "2021.12.13 12:45" 
 
 ## Changing unit systems
 
-Each _unit system_ is a set of units. For example, the `METRIC` unit system uses centimeters for rain, kilometers per hour for wind speed, and degree Celsius for temperature. The option [unit_system](usersguide.htm#option-unit-system) controls which unit system will be used in your reports. The available choices are `US`, `METRIC`, or `METRICWX`. The option is case-insensitive. See the [_Appendix Units_](#units) for the unit defined in each of these unit systems.
+Each _unit system_ is a set of units. For example, the `METRIC` unit system uses centimeters for rain, kilometers per hour for wind speed, and degree Celsius for temperature. The option [unit_system](../../usersguide/weewx-config-file/stdreport-config#unit_system) controls which unit system will be used in your reports. The available choices are `US`, `METRIC`, or `METRICWX`. The option is case-insensitive. See [_Appendix: Units_](../appendix#units) for the units defined in each of these unit systems.
 
 By default, WeeWX uses `US` (US Customary) system. Suppose you would rather use the `METRICWX` system for all your reports? Then change this
 
@@ -363,4 +363,4 @@ This will cause the default label Outside Temperature to be replaced with the ne
 
 ## Scheduling report generation
 
-See the separate document [_Scheduling report generation_](report_scheduling.md) for how to control when reports are run.
+See the separate document [_Scheduling report generation_](../report_scheduling.md) for how to control when reports are run.

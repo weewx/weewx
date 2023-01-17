@@ -1,14 +1,14 @@
 # The Image generator {#image_generator}
 
 This section gives an overview of the Image generator. For details about each of its various
-options, see the section [`[ImageGenerator]`](#ImageGenerator) in the [*Reference: report
-options*](#report_options).
+options, see the section [`[ImageGenerator]`](../options_ref/#ImageGenerator) in the [*Reference: report
+options*](../options_ref).
 
 The installed version of WeeWX is configured to generate a set of useful plots. But, what if you
 don't like how they look, or you want to generate different plots, perhaps with different
 aggregation types? This section covers how to do this.
 
-Image generation is controlled by the section [`[ImageGenerator]`](#ImageGenerator) in the skin
+Image generation is controlled by the section [`[ImageGenerator]`](../options_ref/#ImageGenerator) in the skin
 configuration file `skin.conf`. Let's take a look at the beginning part of this section. It looks
 like this:
 
@@ -24,7 +24,7 @@ like this:
     ...
 ```
 
-The options right under the section name `[ImageGenerator]` will apply to *all* plots, unless
+The options directly under the section name `[ImageGenerator]` will apply to *all* plots, unless
 overridden in subsections. So, unless otherwise changed, all plots will be 500 pixels in width, 180
 pixels in height, and will have an RGB background color of #f5f5f5, a very light gray (HTML color
 "WhiteSmoke"). The chart itself will have a background color of #d8d8d8 (a little darker gray),
@@ -111,7 +111,7 @@ interval of 86,400 seconds (one day). The plot line will be titled with
 the indicated label of 'Rain (daily total)'. The result of all this is
 the following plot:
 
-![Sample monthly rain plot](images/sample_monthrain.png)
+![Sample monthly rain plot](../images/sample_monthrain.png)
 
 ## Including more than one type in a plot
 
@@ -128,11 +128,11 @@ as dewpoint:
 This would create an image in file `monthtempdew.png` that
 includes a line plot of both outside temperature and dewpoint:
 
-![Monthly temperature and dewpoint](images/sample_monthtempdew.png)
+![Monthly temperature and dewpoint](../images/sample_monthtempdew.png)
 
 ### Including a type more than once in a plot {#including_same_sql_type_2x}
 
-Another example. Say you want a plot of the day's temperature, overlaid
+Another example. Suppose that you want a plot of the day's temperature, overlaid
 with hourly averages. Here, you are using the same data type
 (`outTemp`) for both plot lines, the first with averages, the
 second without. If you do the obvious it won't work:
@@ -167,14 +167,14 @@ column. So, our example would look like this:
 
 Here, the first plot line has been given the name `avgTemp` to
 distinguish it from the second line `outTemp`. Any name will do
---- it just has to be different. We have specified that the first line
+&mdash; it just has to be different. We have specified that the first line
 will use data type ` outTemp` and that it will use averaging over
 a one hour period. The second also uses `outTemp`, but will not
 use averaging.
 
 The result is a nice plot of the day's temperature, overlaid with a one-hour smoothed average:
 
-![Daytime temperature with running average](images/daytemp_with_avg.png)
+![Daytime temperature with running average](../images/daytemp_with_avg.png)
 
 One more example. This one shows daily high and low temperatures for a
 year:
@@ -194,15 +194,14 @@ year:
 
 This results in the plot `yearhilow.png`:
 
-![Daily highs and
-lows](images/yearhilow.png){style="width:300px; height:180px"}
+![Daily highs and lows](../images/yearhilow.png)
 
 
 ## Including arbitrary expressions {#arbitrary_expressions_in_plot}
 
 The option `data_type` can actually be *any arbitrary SQL
-expression, which is valid in the context of the available types in the
-schema*. For example, say you wanted to plot the difference between
+expression* that is valid in the context of the available types in the
+schema. For example, say you wanted to plot the difference between
 inside and outside temperature for the year. This could be done with:
 
 ``` ini
@@ -218,8 +217,7 @@ representing the difference between `inTemp` and
 `outTemp`, the inside and outside temperature, respectively. This
 results in a plot `yeardiff.png`:
 
-![Inside - outside
-temperature](images/yeardiff.png){style="width:300px; height:180px"}
+![Inside - outside temperature](../images/yeardiff.png)
 
 ## Changing the unit used in a plot
 
@@ -237,12 +235,12 @@ today's outside temperature and dewpoint:
 
 Both `outTemp` and `dewpoint` belong to unit group
 `group_temperature`, so this plot will use whatever unit has been
-specified for that group. See the section [*Mixed units*](#mixed_units)
+specified for that group. See the section [*Mixed units*](../custom_reports/#mixed-units)
 for details.
 
 However, supposed you'd like to offer both Metric and US Customary
 versions of the same plot? You can do this by using option
-[`unit`](#imagegenerator-unit) to override the unit used for
+[`unit`](../options_ref/#unit) to override the unit used for
 individual plots:
 
 ``` ini hl_lines="4 9"
@@ -266,7 +264,7 @@ degrees Celsius.
 ## Line gaps {#line_gaps}
 
 If there is a time gap in the data, the option
-[`line_gap_fraction`](/custom/options_ref/#line_gap_fraction) controls how line plots will be drawn.
+[`line_gap_fraction`](../options_ref/#line_gap_fraction) controls how line plots will be drawn.
 Here's what a plot looks like without and with this option being
 specified:
 
@@ -311,8 +309,7 @@ It will consist of two progressive vector plots, both using hourly
 aggregation (3,600 seconds). For the first set of vectors, the hourly
 average will be used. In the second, the max of the gusts will be used:
 
-![hourly average wind vector overlaid with gust
-vectors](images/weekgustoverlay.png)
+![hourly average wind vector overlaid with gust vectors](../images/weekgustoverlay.png)
 
 By default, the sticks in the progressive wind plots point towards the
 wind source. That is, the stick for a wind from the west will point

@@ -17,7 +17,7 @@ customize, are ==highlighted==.
 It is worth noting that, like the main configuration file
 `weewx.conf`, UTF-8 is used throughout.
 
-## [Extras] {#Extras .config_section}
+## [Extras]
 
 This section is available to add any static tags you might want to use
 in your templates.
@@ -35,11 +35,11 @@ includes three options:
 If you take a look at the template `radar.inc` you will see
 examples of testing for these tags.
 
-`radar_img`
+#### radar_img
 
 Set to an URL to show a local radar image for your region.
 
-`radar_url`
+#### radar_url
 
 If the radar image is clicked, the browser will go to this URL. This is
 usually used to show a more detailed, close-up, radar picture.
@@ -59,7 +59,7 @@ website](http://radar.weather.gov/) to find a nice one that will work
 for you. In other countries, you will have to consult your local weather
 service.
 
-`googleAnalyticsId`
+#### googleAnalyticsId
 
 If you have a [Google Analytics ID](https://www.google.com/analytics/),
 you can set it here. The Google Analytics Javascript code will then be
@@ -89,16 +89,16 @@ Then in your template you could refer to these as:
 </a>
 ```
 
-## [Labels] {#labels .config_section}
+## [Labels]
 
 This section defines various labels.
 
-`hemispheres`
+#### hemispheres
 
 Comma separated list for the labels to be used for the four hemispheres.
 The default is `N, S, E, W`.
 
-`latlon_formats`
+#### latlon_formats
 
 Comma separated list for the formatting to be used when converting
 latitude and longitude to strings. There should be three elements:
@@ -110,7 +110,7 @@ latitude and longitude to strings. There should be three elements:
 This allows you to decide whether you want leading zeroes. The
 default includes leading zeroes and is `"%02d", "%03d", "%05.2f"`.
 
-### [[Generic]] {#Labels_Generic .config_section}
+### [[Generic]]
 
 This sub-section specifies default labels to be used for each
 observation type. For example, options
@@ -125,23 +125,23 @@ would cause the given labels to be used for plots of `inTemp` and
 `outTemp`. If no option is given, then the observation type
 itself will be used (*e.g.*, `outTemp`).
 
-## [Almanac] {#almanac-1}
+## [Almanac]
 
 This section controls what text to use for the almanac. It consists of
 only one entry
 
-moon_phases
+#### moon_phases
 
 This option is a comma separated list of labels to be used for the eight
 phases of the moon. Default is `New, Waxing crescent, First quarter,
 Waxing gibbous, Full, Waning gibbous, Last quarter, Waning
 crescent`.
 
-## [Units] {#units-1}
+## [Units]
 
 This section controls how units are managed and displayed.
 
-### [[Groups]] {#groups}
+### [[Groups]]
 
 This sub-section lists all the *Unit Groups* and specifies which
 measurement unit is to be used for each one of them.
@@ -164,83 +164,83 @@ group will be reported in degrees Celsius.
 
 Note that the measurement unit is always specified in the singular. That
 is, specify `degree_C` or `foot`, not `degrees_C`
-or `feet`. See the *[Appendix: Units](#units)* for more
+or `feet`. See the *[Appendix: Units](../appendix/#units)* for more
 information, including a concise summary of the groups, their members,
 and which options can be used for each group.
 
-==`group_altitude`=={#group_altitude}
+#### group_altitude
 
 Which measurement unit to be used for altitude. Possible options are
 `foot` or `meter`.
 
-`group_direction`
+#### group_direction
 
 Which measurement unit to be used for direction. The only option is
 `degree_compass`.
 
-`group_distance`
+#### group_distance
 
 Which measurement unit to be used for distance (such as for wind run).
 Possible options are `mile` or `km`.
 
-`group_moisture`
+#### group_moisture
 
 The measurement unit to be used for soil moisture. The only option is
 `centibar`.
 
-`group_percent`
+#### group_percent
 
 The measurement unit to be used for percentages. The only option is
 `percent`.
 
-==`group_pressure`==
+#### group_pressure
 
 The measurement unit to be used for pressure. Possible options are one
 of `inHg` (inches of mercury), `mbar`, `hPa`, or
 `kPa`.
 
-==`group_pressurerate`==
+#### group_pressurerate
 
 The measurement unit to be used for rate of change in pressure. Possible
 options are one of `inHg_per_hour` (inches of mercury per hour),
 `mbar_per_hour`, `hPa_per_hour`, or `kPa_per_hour`.
 
-`group_radiation`
+#### group_radiation
 
 The measurement unit to be used for radiation. The only option is
 `watt_per_meter_squared`.
 
-==`group_rain`==
+#### group_rain
 
 The measurement unit to be used for precipitation. Options are
 `inch`, `cm`, or `mm`.
 
-==`group_rainrate`==
+#### group_rainrate
 
 The measurement unit to be used for rate of precipitation. Possible
 options are one of `inch_per_hour`, `cm_per_hour`, or
 `mm_per_hour`.
 
-==`group_speed`==
+#### group_speed
 
 The measurement unit to be used for wind speeds. Possible options are
 one of `mile_per_hour`, `km_per_hour`, `knot`,
 `meter_per_second`, or `beaufort`.
 
-==`group_speed2`==
+#### group_speed2
 
 This group is similar to `group_speed`, but is used for
 calculated wind speeds which typically have a slightly higher
 resolution. Possible options are one `mile_per_hour2`,
 `km_per_hour2`, `knot2`, or `meter_per_second2`.
 
-==`group_temperature`=={#group_temperature}
+#### group_temperature
 
 The measurement unit to be used for temperatures. Options are
 `degree_C`, [`degree_E`](https://xkcd.com/1923/),
 `degree_F`, or `degree_K`.
 
-`group_volt`
+#### group_volt
 
 The measurement unit to be used for voltages. The only option is
 `volt`.
@@ -324,7 +324,7 @@ The specifiers `%x`, `%X`, and `%A` code locale
 dependent date, time, and weekday names, respectively. Hence, if you set
 an appropriate environment variable `LANG`, then the date and
 times should follow local conventions (see section [Environment variable
-LANG](#environment_variable_LANG) for details on how to do this).
+LANG](../localization/#environment_variable_LANG) for details on how to do this).
 However, the results may not look particularly nice, and you may want to
 change them. For example, I use this in the U.S.:
 
@@ -351,7 +351,7 @@ times within the year, such as the next equinox or full moon.
 
 ### `[[Ordinates]]` {#Units_Ordinates}
 
-`directions`
+#### directions
 
 Set to the abbreviations to be used for ordinal directions. By default,
 this is `N, NNE, NE, ENE, E, ESE, SE, SSE, S, SSW, SW, WSW, W, WNW, NW,
@@ -359,9 +359,9 @@ NNW, N`.
 
 ### `[[DegreeDays]]` {#degreedays}
 
-==`heating_base`==<br/>
-==`cooling_base`==<br/>
-`growing_base`
+#### heating_base
+#### cooling_base
+#### growing_base
 
 Set to the base temperature for calculating heating, cooling, and
 growing degree-days, along with the unit to be used. Examples:
@@ -374,12 +374,12 @@ growing_base = 50.0, degree_F
 
 ### `[[Trend]]` {#trend}
 
-`time_delta`
+#### time_delta
 
 Set to the time difference over which you want trends to be calculated.
 The default is 3 hours.
 
-`time_grace`
+#### time_grace
 
 When searching for a previous record to be used in calculating a trend,
 a record within this amount of `time_delta` will be accepted.
@@ -390,7 +390,7 @@ Default is 300 seconds.
 The section `[Texts]` holds static texts that are used in the
 templates. Generally there are multiple language files, one for each
 supported language, named by the language codes defined in
-[ISO 639-1](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes){target="_blank"}.
+[ISO 639-1](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes).
 The entries give the translation of the texts to the target language.
 For example,
 
@@ -401,10 +401,11 @@ For example,
 
 would cause "Aktuelle Werte" to be used whereever `$gettext("Current
 Conditions"` appeared. See the section on
-`[$gettext`](#Tag_$gettext).
+[`$gettext`](../cheetah/#internationalization-support-with-gettext).
 
 !!! Note
-    Strings that include commas must be included in single or double quotes.
+    Strings that include commas must be included in single or double quotes. Otherwise they
+    will be misinterpreted as a list.
 
 
 ## [CheetahGenerator] {#CheetahGenerator}
@@ -412,19 +413,19 @@ Conditions"` appeared. See the section on
 This section contains the options for the Cheetah generator. It applies
 to `skin.conf` only.
 
-`search_list`
+#### search_list
 
 This is the list of search list objects that will be scanned by the
 template engine, looking for tags. See the section *[Defining new
-tags](#defining_new_tags)* and the [Cheetah
+tags](../cheetah/#defining_new_tags)* and the [Cheetah
 documentation](https://cheetahtemplate.org/) for details on search
 lists. If no `search_list` is specified, a default list
 will be used.
 
-`search_list_extensions`
+#### search_list_extensions
 
 This defines one or more search list objects that will be appended to
-the `search_list]`. For example, if you are using the
+the `search_list`. For example, if you are using the
 "seven day" and "forecast" search list extensions, the option would
 look like
 
@@ -432,7 +433,7 @@ look like
 search_list_extensions = user.seven_day.SevenDay, user.forecast.ForecastVariables
 ```
 
-`encoding`
+#### encoding
 
 As Cheetah goes through the template, it substitutes strings for all tag
 values. This option controls which encoding to use for the new strings.
@@ -450,7 +451,7 @@ are available, as well as these WeeWX-specific encodings:
     <tr>
         <td class="code first_col">html_entities</td>
         <td>Non 7-bit characters will be represented as HTML entities (<i>e.g.</i>, the degree sign will be
-            represented as <span class="code">&amp;#176;</span>)
+            represented as "<span class="code">&amp;#176;</span>")
         </td>
     </tr>
     <tr>
@@ -468,7 +469,7 @@ The encoding `html_entities` is the default. Other common choices
 are `utf8`, `cp1252` (*a.k.a.* Windows-1252), and
 `latin1`.
 
-`template`
+#### template
 
 The name of a template file. A template filename must end with
 `.tmpl`. Filenames are case-sensitive. If the template filename
@@ -478,14 +479,14 @@ of month, respectively. So, a template with the name
 `summary-YYYY-MM.html.tmpl` would have name
 `summary-2010-03.html` for the month of March, 2010.
 
-`generate_once`
+#### generate_once
 
 When set to `True`, the template is processed only on the first
 invocation of the report engine service. This feature is useful for
 files that do not change when data values change, such as HTML files
 that define a layout. The default is `False`.
 
-`stale_age`
+#### stale_age
 
 File staleness age, in seconds. If the file is older than this age it
 will be generated from the template. If no `stale_age` is
@@ -493,12 +494,11 @@ specified, then the file will be generated every time the generator
 runs.
 
 !!! Note
-    Precise control over when a *[report](usersguide.htm#Reports)* is run is
+    Precise control over when a *[report](../../usersguide/weewx-config-file/stdreport-config/)* is run is
     available through use of the `report_timing` option in
     `weewx.conf`. The `report_timing` option uses a CRON-like
-    setting to control precisely when a report is run. See the *[Scheduling
-    reports](#customizing_gen_time)* section for details on the
-    `report_timing` option.
+    setting to control precisely when a report is run. See the guide *[Scheduling
+    report generation](../../report_scheduling)* for details.
 
 `[[SummaryByDay]]`
 
@@ -527,204 +527,204 @@ filename of any template in this section.
 This section describes the various options available to the image
 generator.
 
-| ![Part names in a WeeWX image](images/image_parts.png) |
-|--------------------------------------------------------|
-| Part names in a WeeWX image                            |
+| ![Part names in a WeeWX image](../images/image_parts.png) |
+|-----------------------------------------------------------|
+| Part names in a WeeWX image                               |
 
 
 ### Overall options
 
 These are options that affect the overall image.
 
-`anti_alias`
+#### anti_alias
 
 Setting to 2 or more might give a sharper image, with fewer jagged
 edges. Experimentation is in order. Default is `1`.
 
-| ![Effect of anti_alias option](images/antialias.gif)                |
+| ![Effect of anti_alias option](../images/antialias.gif)             |
 |---------------------------------------------------------------------|
 | A GIF showing the same image<br/>with `anti_alias=1`, `2`, and `4`. |
 
-`chart_background_color`
+#### chart_background_color
 
 The background color of the chart itself. Optional. Default is
 `#d8d8d8`.
 
-`chart_gridline_color`
+#### chart_gridline_color
 
 The color of the chart grid lines. Optional. Default is `#a0a0a0`
 
-| ![Example of day/night bands](images/weektempdew.png) |
-|-------------------------------------------------------|
-| Example of day/night bands in a one week image        |
+| ![Example of day/night bands](../images/weektempdew.png) |
+|----------------------------------------------------------|
+| Example of day/night bands in a one week image           |
 
-`daynight_day_color`
+#### daynight_day_color
 
 The color to be used for the daylight band. Optional. Default is
 `#ffffff`.
 
-`daynight_edge_color`
+#### daynight_edge_color
 
 The color to be used in the transition zone between night and day.
 Optional. Default is `#efefef`, a mid-gray.
 
-`daynight_night_color`
+#### daynight_night_color
 
 The color to be used for the nighttime band. Optional. Default is
 `#f0f0f0`, a dark gray.
 
-`image_background_color`
+#### image_background_color
 
 The background color of the whole image. Optional. Default is
 `#f5f5f5` ("SmokeGray")
 
-`image_width`<br/>
-`image_height`
+#### image_width
+#### image_height
 
 The width and height of the image in pixels. Optional. Default is 300 x
 180 pixels.
 
-`show_daynight`
+#### show_daynight
 
 Set to `true` to show day/night bands in an image. Otherwise, set
 to false. This only looks good with day or week plots. Optional. Default
 is `false`.
 
-`skip_if_empty`
+#### skip_if_empty
 
 If set to `true`, then skip the generation of the image if all
 data in it are null. If set to a time period, such as `month` or
 `year`, then skip the generation of the image if all data in that
 period are null. Default is `false`.
 
-`stale_age`
+#### stale_age
 
 Image file staleness age, in seconds. If the image file is older than
 this age it will be generated. If no `stale_age` is specified,
 then the image file will be generated every time the generator runs.
 
-==`unit`==
+#### unit
 
 Normally, the unit used in a plot is set by whatever [unit group the
-types are in](#mixed_units). However, this option allows overriding the
+types are in](../custom_reports/#mixed-units). However, this option allows overriding the
 unit used in a specific plot.
 
 ### Various label options
 
 These are options for the various labels used in the image.
 
-`axis_label_font_color`
+#### axis_label_font_color
 
 The color of the x- and y-axis label font. Optional. Default is
 `black`.
 
-`axis_label_font_path`
+#### axis_label_font_path
 
 The path to the font to be use for the x- and y-axis labels. Optional.
 If not given, or if WeeWX cannot find the font, then the default PIL
 font will be used.
 
-`axis_label_font_size`
+#### axis_label_font_size
 
 The size of the x- and y-axis labels in pixels. Optional. The default is
 `10`.
 
-`bottom_label_font_color`
+#### bottom_label_font_color
 
 The color of the bottom label font. Optional. Default is `black`.
 
-`bottom_label_font_path`
+#### bottom_label_font_path
 
 The path to the font to be use for the bottom label. Optional. If not
 given, or if WeeWX cannot find the font, then the default PIL font will
 be used.
 
-`bottom_label_font_size`
+#### bottom_label_font_size
 
 The size of the bottom label in pixels. Optional. The default is
 `10`.
 
-`bottom_label_format`
+#### bottom_label_format
 
 The format to be used for the bottom label. It should be a [strftime
 format](https://docs.python.org/3/library/datetime.html#strftime-strptime-behavior).
 Optional. Default is `'%m/%d/%y %H:%M'`.
 
-`bottom_label_offset`
+#### bottom_label_offset
 
 The margin of the bottom label from the bottom of the plot. Default is
 3.
 
-`top_label_font_path`
+#### top_label_font_path
 
 The path to the font to be use for the top label. Optional. If not
 given, or if WeeWX cannot find the font, then the default PIL font will
 be used.
 
-`top_label_font_size`
+#### top_label_font_size
 
 The size of the top label in pixels. Optional. The default is
 `10`.
 
-`unit_label_font_color`
+#### unit_label_font_color
 
 The color of the unit label font. Optional. Default is `black`.
 
-`unit_label_font_path`
+#### unit_label_font_path
 
 The path to the font to be use for the unit label. Optional. If not
 given, or if WeeWX cannot find the font, then the default PIL font will
 be used.
 
-`unit_label_font_size`
+#### unit_label_font_size
 
 The size of the unit label in pixels. Optional. The default is
 `10`.
 
-`x_interval`
+#### x_interval
 
 The time interval in seconds between x-axis tick marks. Optional. If not
 given, a suitable default will be chosen.
 
-`x_label_format`
+#### x_label_format
 
 The format to be used for the time labels on the x-axis. It should be a
 [strftime
 format](https://docs.python.org/3/library/datetime.html#strftime-strptime-behavior).
 Optional. If not given, a sensible format will be chosen automatically.
 
-`x_label_spacing`
+#### x_label_spacing
 
 Specifies the ordinal increment between labels on the x-axis: For
 example, 3 means a label every 3rd tick mark. Optional. The default is
 `2`.
 
-`y_label_side`
+#### y_label_side
 
 Specifies if the y-axis labels should be on the left, right, or both
-sides of the graph. Valid values are `left`, `right` or
-`both`. Optional. Default is `left`.
+sides of the graph. Valid values are `left`, `right` or `both`. Optional. 
+Default is `left`.
 
-`y_label_spacing`
+#### y_label_spacing
 
 Specifies the ordinal increment between labels on the y-axis: For
 example, 3 means a label every 3rd tick mark. Optional. The default is
 `2`.
 
-`y_nticks`
+#### y_nticks
 
 The nominal number of ticks along the y-axis. The default is
 `10`.
 
 ### Plot scaling options
 
-`time_length`
+#### time_length
 
 The nominal length of the time period to be covered in seconds. The
 exact length of the x-axis is chosen by the plotting engine to cover
 this period. Optional. Default is `86400` (one day).
 
-`yscale`
+#### yscale
 
 A 3-way tuple (`ylow`, `yhigh`, `min_interval`),
 where `ylow` and `yhigh` are the minimum and maximum
@@ -736,32 +736,32 @@ automatically.)
 
 ### Compass rose options
 
-| ![Example of a progressive vector plot](images/daywindvec.png)     |
+| ![Example of a progressive vector plot](../images/daywindvec.png)  |
 |--------------------------------------------------------------------|
 | Example of a vector plot with a compass rose<br/>in the lower-left |
 
-`rose_label`
+#### rose_label
 
 The label to be used in the compass rose to indicate due North.
 Optional. Default is `N`.
 
-`rose_label_font_path`
+#### rose_label_font_path
 
 The path to the font to be use for the rose label (the letter "N,"
 indicating North). Optional. If not given, or if WeeWX cannot find the
 font, then the default PIL font will be used.
 
-`rose_label_font_size`
+#### rose_label_font_size
 
 The size of the compass rose label in pixels. Optional. The default is
 `10`.
 
-`rose_label_font_color`
+#### rose_label_font_color
 
 The color of the compass rose label. Optional. Default is the same color
 as the rose itself.
 
-`vector_rotate`
+#### vector_rotate
 
 Causes the vectors to be rotated by this many degrees. Positive is
 clockwise. If westerly winds dominate at your location (as they do at
@@ -773,41 +773,41 @@ against the x-axis. Optional. The default is `0`.
 
 These are options shared by all the plot lines.
 
-`chart_line_colors`
+#### chart_line_colors
 
 Each chart line is drawn in a different color. This option is a list of
 those colors. If the number of lines exceeds the length of the list,
 then the colors wrap around to the beginning of the list. Optional. In
 the case of bar charts, this is the color of the outline of the bar.
 Default is `#0000ff, #00ff00, #ff0000`.
-Individual line color can be overridden by using option `color`.
+Individual line color can be overridden by using option [`color`](#color).
 
-`chart_fill_colors`
+#### chart_fill_colors
 
 A list of the color to be used as the fill of the bar charts. Optional.
 The default is to use the same color as the outline color (option
-`chart_line_colors`).
+[`chart_line_colors`](#chart_line_colors)).
 
-`chart_line_width`
+#### chart_line_width
 
 Each chart line can be drawn using a different line width. This option
 is a list of these widths. If the number of lines exceeds the length of
 the list, then the widths wrap around to the beginning of the list.
 Optional. Default is `1, 1, 1`.
-Individual line widths can be overridden by using option `width`.
+Individual line widths can be overridden by using option [`width`](#width).
 
 ### Individual line options
 
 These are options that are set for individual lines.
 
-`aggregate_interval`
+#### aggregate_interval
 
 The time period over which the data should be aggregated, in seconds.
 Required if `aggregate_type` has been set. Alternatively, the
 time can be specified by using one of the "shortcuts" (that is,
 `hour`, `day`, `week`, `month`, or `year`).
 
-`aggregate_type`
+#### aggregate_type
 
 The default is to plot every data point, but this is probably not a good
 idea for any plot longer than a day. By setting this option, you can
@@ -816,58 +816,58 @@ include `avg`, `count`, `cumulative`,
 `diff`, `last`, `max`, `min`, `sum`,
 and `tderiv`.
 
-`color`
+#### color
 
 This option is to override the color for an individual line. Optional.
-Default is to use the color in `chart_line_colors`.
+Default is to use the color in [`chart_line_colors`](#chart_line_colors).
 
-`data_type`
+#### data_type
 
 The SQL data type to be used for this plot line. For more information,
 see the section *[Including a type more than once in a
-plot](#including_same_sql_type_2x)*. Optional. The default is to use the
+plot](../image_generator#including_same_sql_type_2x)*. Optional. The default is to use the
 section name.
 
-`fill_color`
+#### fill_color
 
 This option is to override the fill color for a bar chart. Optional.
-Default is to use the color in `chart_fill_colors`.
+Default is to use the color in [`chart_fill_colors`](#chart_fill_colors).
 
-`label`
+#### label
 
 The label to be used for this plot line in the top label. Optional. The
 default is to use the SQL variable name.
 
-`line_gap_fraction`{ #line_gap_fraction }
+#### line_gap_fraction
 
 If there is a gap between data points bigger than this fractional amount
 of the x-axis, then a gap will be drawn, rather than a connecting line.
-See Section *[Line gaps](#line_gaps)*. Optional. The default is to
+See Section *[Line gaps](../image_generator/#line_gaps)*. Optional. The default is to
 always draw the line.
 
-`line_type`
+#### line_type
 
 The type of line to be used. Choices are `solid` or
 `none`. Optional. Default is `solid`.
 
-`marker_size`
+#### marker_size
 
 The size of the marker. Optional. Default is `8`.
 
-`marker_type`
+#### marker_type
 
 The type of marker to be used to mark each data point. Choices are
 `cross`, `x`, `circle`, `box`, or `none`. Optional. Default is `none`.
 
-`plot_type`
+#### plot_type
 
 The type of plot for this line. Choices are `line`, `bar`,
 or `vector`. Optional. Default is `line`.
 
-`width`
+#### width
 
 This option is to override the line width for an individual line.
-Optional. Default is to use the width in `chart_line_width`.
+Optional. Default is to use the width in [`chart_line_width`](#chart_line_width).
 
 ## [CopyGenerator] {#copygenerator}
 
@@ -878,13 +878,13 @@ Think of it as "file generation," except that rather than going
 through the template engine, the files are simply copied over. It is
 useful for making sure CSS and Javascript files are in place.
 
-`copy_once`
+#### copy_once
 
 This option controls which files get copied over on the first invocation
 of the report engine service. Typically, this is things such as style
 sheets or background GIFs. Wildcards can be used.
 
-`copy_always`
+#### copy_always
 
 This is a list of files that should be copied on every invocation.
 Wildcards can be used.
@@ -910,17 +910,17 @@ every time the generator runs.
 
 This section defines the list of generators that should be run.
 
-`generator_list`
+#### generator_list
 
 This option controls which generators get run for this skin. It is a
 comma separated list. The generators will be run in this order.
 
-Here is the [[Generators]]{.code} section from the Standard `skin.conf`
+Here is the `[Generators]` section from the Standard `skin.conf`
 
 ``` ini
 [Generators]
     generator_list = weewx.cheetahgenerator.CheetahGenerator, weewx.imagegenerator.ImageGenerator, weewx.reportengine.CopyGenerator
 ```
 
-The Standard skin uses three generators: CheetahGenerator,
-ImageGenerator, and CopyGenerator.
+The Standard skin uses three generators: `CheetahGenerator`, `ImageGenerator`, 
+and `CopyGenerator`.

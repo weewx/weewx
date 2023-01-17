@@ -1,12 +1,12 @@
 # The Cheetah generator
 
-This section gives an overview of the Cheetah generator. For details about each of its various options, see the section [_[CheetahGenerator]_](#CheetahGenerator) in the [_Reference: report options_](#report_options).
+This section gives an overview of the Cheetah generator. For details about each of its various options, see the section [_[CheetahGenerator]_](../options_ref#CheetahGenerator) in [_Reference: report options_](../options_ref).
 
-File generation is done using the [Cheetah](https://pythonhosted.org/Cheetah/) templating engine, which processes a _template_, replacing any symbolic _tags_, then produces an output file. Typically, it runs after each new archive record (usually about every five minutes), but it can also run on demand using the utility `wee_reports`.
+File generation is done using the [Cheetah](https://cheetahtemplate.org/) templating engine, which processes a _template_, replacing any symbolic _tags_, then produces an output file. Typically, it runs after each new archive record (usually about every five minutes), but it can also run on demand using the utility `wee_reports`.
 
 The Cheetah engine is very powerful, essentially letting you have the full semantics of Python available in your templates. As this would make the templates incomprehensible to anyone but a Python programmer, WeeWX adopts a very small subset of its power.
 
-The Cheetah generator is controlled by the section [[CheetahGenerator]](#CheetahGenerator). Let's take a look at how this works.
+The Cheetah generator is controlled by the section  [_[CheetahGenerator]_](../options_ref#CheetahGenerator). Let's take a look at how this works.
 
 ## Which files get processed?
 
@@ -165,7 +165,7 @@ $record.dateTime $record.outTemp $record.outHumidity
 
 If you look inside a template, you will see it makes heavy use of _tags_. As the Cheetah generator processes the template, it replaces each tag with an appropriate value and, sometimes, a label. This section discusses the details of how that happens.
 
-If there is a tag error during template generation, the error will show up in the log file. Many errors are obvious — Cheetah will display a line number and list the template file in which the error occurred. Unfortunately, in other cases, the error message can be very cryptic and not very useful. So make small changes and test often. Use the utility [wee_reports](#wee_reports) to speed up the process.
+If there is a tag error during template generation, the error will show up in the log file. Many errors are obvious — Cheetah will display a line number and list the template file in which the error occurred. Unfortunately, in other cases, the error message can be very cryptic and not very useful. So make small changes and test often. Use the utility [wee_reports](../../utilities.htm#wee_reports_utility) to speed up the process.
 
 Here are some examples of tags:
 
@@ -195,7 +195,7 @@ would be all you need for a very simple HTML page that would display the text (a
     Current temperature = 51.0°F  
     Max for the month is 68.8°F, which occurred at 07-Oct-2009 15:15
 
-The format that was used to format the temperature (51.0) is specified in section [[Units][[StringFormat]]](#Units_StringFormats). The unit label °F is from section [[Units][[Labels]]](#Units_Labels), while the time format is from [[Units][[TimeFormats]]](#Units_TimeFormats).
+The format that was used to format the temperature (51.0) is specified in section [[Units][[StringFormat]]](../options_ref/#Units_StringFormats). The unit label °F is from section [[Units][[Labels]]](../options_ref/#Units_Labels), while the time format is from [[Units][[TimeFormats]]](../options_ref/#Units_TimeFormats).
 
 As we saw above, the tags can be very simple:
 
@@ -226,19 +226,19 @@ _`some_time`_ is a timestamp that you want to display. It is optional, The defau
 
 _`delta_t`_ is the largest time difference (in seconds) between the time specified and a timestamp of a record in the database that will be returned. By default, it is zero, which means there must be an exact match with a specified time for a record to be retrieved.
 
-_`binding_name`_ is a _binding name_ to a database. An example would be `wx_binding`. See the section _[Binding names](#binding_names)_ for more details.
+_`binding_name`_ is a _binding name_ to a database. An example would be `wx_binding`. See the section _[Binding names](../../custom#binding-names)_ for more details.
 
 _`obstype`_ is an observation type, such as `barometer`. This type must appear either as a field in the database, or in the current (usually, the latest) record.
 
-_`optional_unit_conversion`_ is an optional unit conversion tag. If provided, the results will be converted into the specified units, otherwise the default units specified in the skin configuration file (in section `[Units][[Groups]]`) will be used. See the section _[Unit conversion options](#unit_conversion_options)_.
+_`optional_unit_conversion`_ is an optional unit conversion tag. If provided, the results will be converted into the specified units, otherwise the default units specified in the skin configuration file (in section `[Units][[Groups]]`) will be used. See the section _[Unit conversion options](#unit-conversion-options)_.
 
-_`optional_rounding`_ allows the results to be rounded to a fixed number of decimal digits. See the section _[Optional rounding](#optional_rounding)_.
+_`optional_rounding`_ allows the results to be rounded to a fixed number of decimal digits. See the section _[Optional rounding](#optional-rounding)_.
 
-_`optional_formatting`_ is a set of optional formatting tags, which control how the value will appear. See the section _[Formatting options](#formatting_options)_ below.
+_`optional_formatting`_ is a set of optional formatting tags, which control how the value will appear. See the section _[Formatting options](#formatting-options)_ below.
 
 ### Time period $latest
 
-Time period `$latest` is very similar to `$current`, except that it uses the last available timestamp in a database. Usually, `$current` and `$latest` are the same, but if a data binding points to a remote database, they may not be. See the section _[Using multiple bindings](#stupid_detail)_ for an example where this happened.
+Time period `$latest` is very similar to `$current`, except that it uses the last available timestamp in a database. Usually, `$current` and `$latest` are the same, but if a data binding points to a remote database, they may not be. See the section _[Using multiple bindings](../multiple_bindings)_ for an example where this happened.
 
 ### Aggregation periods
 
@@ -256,7 +256,7 @@ Where:
 
 _`period`_ is the time period over which the aggregation is to be done. Possible choices are listed in the [table below](#aggregation_periods).
 
-_`binding_name`_ is a _binding name_ to a database. An example would be `wx_binding`. See the section _[Binding names](#binding_names)_ for more details.
+_`binding_name`_ is a _binding name_ to a database. An example would be `wx_binding`. See the section _[Binding names](../../custom#binding-names)_ for more details.
 
 _`optional_ago`_ is a keyword that depends on the aggregation period. For example, for week, it would be `weeks_ago`, for day, it would be `days_ago`, _etc._
 
@@ -264,15 +264,15 @@ _`delta`_ is an integer indicating which aggregation period is desired. For exam
 
 _`statstype`_ is a _statistical type_. This is generally any observation type that appears in the database, as well as a few synthetic types (such as heating and cooling degree-days). Not all aggregations are supported for all types.
 
-_`aggregation`_ is an _aggregation type_. If you ask for `$month.outTemp.avg` you are asking for the _average_ outside temperature for the month. Possible aggregation types are given in _[Appendix: Aggregation types](#aggregation_types)_.
+_`aggregation`_ is an _aggregation type_. If you ask for `$month.outTemp.avg` you are asking for the _average_ outside temperature for the month. Possible aggregation types are given in _[Appendix: Aggregation types](../appendix/#aggregation_types)_.
 
-_`optional_unit_conversion`_ is an optional unit conversion tag. If provided, the results will be converted into the specified units, otherwise the default units specified in the skin configuration file (in section `[Units][[Groups]]`) will be used. See the section _[Unit Conversion Options](#unit_conversion_options)_.
+_`optional_unit_conversion`_ is an optional unit conversion tag. If provided, the results will be converted into the specified units, otherwise the default units specified in the skin configuration file (in section `[Units][[Groups]]`) will be used. See the section _[Unit conversion options](#unit-conversion-options)_.
 
-_`optional_rounding`_ allows the results to be rounded to a fixed number of decimal digits. See the section _[Optional rounding](#optional_rounding)_
+_`optional_rounding`_ allows the results to be rounded to a fixed number of decimal digits. See the section _[Optional rounding](#optional-rounding)_
 
-_`optional_formatting`_ is a set of optional formatting tags, which control how the value will appear. See the section _[Formatting Options](#formatting_options)_ below.
+_`optional_formatting`_ is a set of optional formatting tags, which control how the value will appear. See the section _[Formatting options](#formatting-options)_ below.
 
-There are several different _aggregation periods_ that can be used:
+There are several _aggregation periods_ that can be used:
 
 <table id="aggregation_periods" class="indent">
     <caption>Aggregation periods</caption>
@@ -304,7 +304,7 @@ There are several different _aggregation periods_ that can be used:
     </tr>
     <tr>
         <td class="first_col code">$week</td>
-        <td>This week. The start of the week is set by option <a href="usersguide.htm#week_start"><span
+        <td>This week. The start of the week is set by option <a href="../../usersguide/weewx-config-file/stations-config#week_start"><span
             class="code">week_start</span></a>.
         </td>
         <td class="code">$week.outTemp.max</td>
@@ -325,12 +325,10 @@ There are several different _aggregation periods_ that can be used:
     <tr>
         <td class="first_col code">$rainyear</td>
         <td>This rain year. The start of the rain year is set by option <a
-            href="usersguide.htm#rain_year_start"><span class="code">rain_year_start</span></a>.
+            href="../../usersguide/weewx-config-file/stations-config#rain_year_start"><span class="code">rain_year_start</span></a>.
         </td>
         <td class="code">$rainyear.rain.sum</td>
-        <td>The total rainfall for this rain year. The start of the rain year is set by option <a
-            href="usersguide.htm#rain_year_start"><span class="code">rain_year_start</span></a>.
-        </td>
+        <td>The total rainfall for this rain year. </td>
     </tr>
     <tr>
         <td class="first_col code">$alltime</td>
@@ -457,7 +455,7 @@ A variety of tags and arguments are available to you to customize the formatting
     <tr>
         <td class="code text_highlight">.ordinal_compass</td>
         <td>Format the value as a compass ordinals (<i>e.g.</i>"SW"), useful for wind directions.
-            The ordinal abbreviations are set by option <span class="code">directions</span> in the skin
+            The ordinal abbreviations are set by option <a href="../options_ref/#Units_Ordinates"><span class="code">directions</span></a> in the skin
             configuration file <span class="code">skin.conf</span>.
         </td>
     </tr>
@@ -512,7 +510,7 @@ Here is the meaning of each of the optional arguments:
         <td>Should the observation value be <span class="code">NONE</span>, then use the supplied string
             (typically, something like "N/A"). If <span class="code">None_string</span> is set to <span
                 class="code">None</span>, then the value for <span class="code">NONE</span> in <span
-                class="code"> <a href="#Units_StringFormats">[Units][[StringFormats]]</a>
+                class="code"> <a href="../options_ref/#Units_StringFormats">[Units][[StringFormats]]</a>
       </span> will be used.
         </td>
     </tr>
@@ -588,8 +586,8 @@ Here are the examples:
         <td class="code">str</td>
         <td>
             String formatting from <span class="code"><a
-            href="#Units_StringFormats">[Units][[StringFormats]]</a></span>. Label from <span class="code"><a
-            href="#Units_Labels">[Units][[Labels]]</a></span>.
+            href="../options_ref/#Units_StringFormats">[Units][[StringFormats]]"</a></span>. Label from <span class="code"><a
+            href="../options_ref/#Units_Labels">[Units][[Labels]]"</a></span>.
         </td>
     </tr>
     <tr>
@@ -613,7 +611,7 @@ Here are the examples:
         <td class="code">45.200°F</td>
         <td class="code">str</td>
         <td>
-            Specified string format used; label from <span class="code"><a href="#Units_Labels">[Units][[Labels]]</a></span>.
+            Specified string format used; label from <span class="code"><a href="../options_ref/#Units_Labels">[Units][[Labels]]</a></span>.
         </td>
     </tr>
     <tr>
@@ -629,7 +627,7 @@ Here are the examples:
         <td class="code">45.2</td>
         <td class="code">str</td>
         <td>
-            No label. The string formatting is from <span class="code"><a href="#Units_StringFormats">[Units][[StringFormats]]</a></span>.
+            No label. The string formatting is from <span class="code"><a href="../options_ref/#Units_StringFormats">[Units][[StringFormats]]</a></span>.
         </td>
     </tr>
     <tr>
@@ -638,7 +636,7 @@ Here are the examples:
         <td class="code">str</td>
         <td>
             The string specified by option <span class="code">NONE</span> in <span class="code"> <a
-            href="#Units_StringFormats">[Units][[StringFormats]]</a></span>.
+            href="../options_ref/#Units_StringFormats">[Units][[StringFormats]]</a></span>.
         </td>
     </tr>
     <tr>
@@ -655,7 +653,7 @@ Here are the examples:
         <td class="code">str</td>
         <td>
             Formatting is from option <span class="code">degree_compass</span> in <span class="code"> <a
-            href="#Units_StringFormats">[Units][[StringFormats]]</a></span>.
+            href="../options_ref/#Units_StringFormats">[Units][[StringFormats]]</a></span>.
         </td>
     </tr>
     <tr>
@@ -664,7 +662,7 @@ Here are the examples:
         <td class="code">str</td>
         <td>
             Ordinal direction from section <span class="code"><a
-            href="#Units_Ordinates">[Units][[Ordinates]]</a></span> is being substituted.
+            href="../options_ref/#Units_Ordinates">[Units][[Ordinates]]</a></span> is being substituted.
         </td>
     </tr>
     <tr>
@@ -673,7 +671,7 @@ Here are the examples:
         <td class="code">str</td>
         <td>
             Time formatting from <span class="code"><a
-            href="#Units_TimeFormats">[Units][[TimeFormats]]</a></span> is being used.
+            href="../options_ref/#Units_TimeFormats">[Units][[TimeFormats]]</a></span> is being used.
         </td>
     </tr>
     <tr>
@@ -789,7 +787,7 @@ The tag `$trend` is available for time trends, such as changes in barometric pre
 | `$trend.time_delta`                  | 10800 secs |
 | `$trend.time_delta.hour`             | 3 hrs      |
 
-Note how you can explicitly specify a value in the tag itself (2nd row in the table above). If you do not specify a value, then a default time interval, set by option [time_delta](#trend) in the skin configuration file, will be used. This value can be retrieved by using the syntax `$trend.time_delta` (4th row in the table).
+Note how you can explicitly specify a value in the tag itself (2nd row in the table above). If you do not specify a value, then a default time interval, set by option [time_delta](../options_ref/#trend) in the skin configuration file, will be used. This value can be retrieved by using the syntax `$trend.time_delta` (4th row in the table).
 
 For example, the template expression
 
@@ -815,7 +813,7 @@ $span([data_binding=binding_name][,optional_delta=delta][,boundary=[None|'midnig
 
 Where:
 
-_`binding_name`_ is a _binding name_ to a database. An example would be `wx_binding`. See the section _[Binding names](#binding_names)_ for more details.
+_`binding_name`_ is a _binding name_ to a database. An example would be `wx_binding`. See the section _[Binding names](../../custom#binding-names)_ for more details.
 
 _`optional_delta_=delta`_ is one or more comma separated delta settings from the table below. If more than one delta setting is included then the period used for the aggregate is the sum of the individual delta settings. If no delta setting is included, or all included delta settings are zero, the returned aggregate is based on the current obstype only.
 
@@ -823,11 +821,11 @@ _`boundary`_ is an optional specifier that can force the starting time to a time
 
 _`obstype`_ is a observation type, such as `outTemp`.
 
-_`aggregation`_ is an _aggregation type_. Possible aggregation types are given in _[Appendix: Aggregation types](#aggregation_types)_.
+_`aggregation`_ is an _aggregation type_. Possible aggregation types are given in _[Appendix: Aggregation types](../appendix/#aggregation_types)_.
 
-_`optional_unit_conversion`_ is an optional unit conversion tag. See the section _[Unit conversion options](#unit_conversion_options)_.
+_`optional_unit_conversion`_ is an optional unit conversion tag. See the section _[Unit conversion options](#unit-conversion-options)_.
 
-_`optional_formatting`_ is an optional formatting tag that controls how the value will appear. See the section _[Formatting options](#formatting_options)_.
+_`optional_formatting`_ is an optional formatting tag that controls how the value will appear. See the section _[Formatting options](#formatting-options)_.
 
 There are several delta settings that can be used:
 
@@ -905,7 +903,7 @@ would result in
 
 ### Tag $obs
 
-The labels used for the various observation types are available using tag `$obs`. These are basically the values given in the skin dictionary, section [[Labels][[Generic]]](#Labels_Generic).
+The labels used for the various observation types are available using tag `$obs`. These are basically the values given in the skin dictionary, section [[Labels][[Generic]]](../options_ref/#Labels_Generic).
 
 | Tag                  | Results             |
 |----------------------|---------------------|
@@ -1056,7 +1054,7 @@ See the NOAA template files `NOAA/NOAA-YYYY.txt.tmpl` and `NOAA/NOAA-YYYY-MM.txt
 
 ### Comprehensive example
 
-This example is designed to put together a lot of the elements described above, including iteration, aggregation period starts and ends, formatting, and overriding units. [Click here](examples/tag.htm) for the results.
+This example is designed to put together a lot of the elements described above, including iteration, aggregation period starts and ends, formatting, and overriding units. [Click here](../examples/tag.htm) for the results.
 
 ```html
 <html>
@@ -1200,7 +1198,7 @@ Many other combinations are possible. See the Wiki article [_Tags for series_](h
 
 ### General tags
 
-There are some general tags that do not reflect observation data, but technical information about the template files. They are frequently useful in #if expressions to control how Cheetah processes the template.
+There are some general tags that do not reflect observation data, but technical information about the template files. They are frequently useful in `#if` expressions to control how Cheetah processes the template.
 
 <table class="indent">
   <tbody>
