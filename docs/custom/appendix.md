@@ -653,4 +653,4 @@ attached. Otherwise, no label is attached.
 example, in some locales, a comma will be used as the decimal specifier.
 
 
-© [Copyright](copyright.htm) Tom Keffer
+© [Copyright](../copyright) 2009-2023 Thomas Keffer <tkeffer@gmail.com>

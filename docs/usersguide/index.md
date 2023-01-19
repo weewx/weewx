@@ -10,3 +10,5 @@ This is the complete guide to installing, configuring, and troubleshooting WeeWX
 Initial development began in the winter of 2008-2009, with the first release in 2009.
 
 The source code is hosted on [GitHub](https://github.com/weewx/weewx). It can be installed using package installers or pip. Download are available at [weewx.com/downloads](http://weewx.com/downloads).
+
+© [Copyright](../copyright) 2009-2023 Thomas Keffer <tkeffer@gmail.com>

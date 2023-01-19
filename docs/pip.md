@@ -86,7 +86,7 @@ any generated HTML pages. It plays a role similar to `/home/weewx` in older vers
 unlike `/home/weewx`, it does not hold any code.
 
 If you already have a `/home/weewx` and wish to reuse it, see the [Upgrading
-guide](upgrading.md) and the [Version 5 migration guide](v5-upgrade.md).
+guide](upgrading.htm) and the [*Migrating setup.py installs to Version 5*](v5-upgrade.md).
 
 ## Running `weewxd`
 
@@ -168,7 +168,7 @@ install the required daemon file.
 After about 5 minutes, open the [station web page](file:///~/weewx-data/public_html/index.html) in
 a web browser. You should see your station information and data. If your hardware supports hardware
 archiving, then how long you have to wait will depend on the [archive
-interval](usersguide.md#archive_interval) set in your hardware.
+interval](usersguide#archive_interval) set in your hardware.
 
 !!! note 
     Clicking the link to the webpage may be blocked by your browser. If
@@ -178,8 +178,8 @@ interval](usersguide.md#archive_interval) set in your hardware.
 ## Customize
 
 To enable uploads, such as Weather Underground, or to customize reports, modify
-the configuration file `~/weewx-data/weewx.conf`. See the [User
-Guide](usersguide.md) and [Customization Guide](custom/intro.md) for details.
+the configuration file `~/weewx-data/weewx.conf`. See the [*User
+Guide*](../usersguide) and [*Customization Guide*](../custom) for details.
 
 <p>WeeWX must be restarted for configuration file changes to take effect.
 </p>

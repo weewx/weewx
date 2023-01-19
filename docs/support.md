@@ -1,6 +1,6 @@
 In the world of open-source hobbyist software, WeeWX is pretty easy
 to install and configure. There are not many package dependencies,
-the configuration is simple, and it has an extensive [User's Guide](usersguide.md).
+the configuration is simple, and it has an extensive [*User's Guide*](../usersguide).
 There are thousands of people who have successfully done an
 install. However, there is no "point-and-click" interface, so
 you have to be prepared to roll up your sleeves and get in
@@ -8,7 +8,7 @@ there.
 
 You should have the following skills:
 
-- The patience to read and follow the <a href="../docs/usersguide.htm">User's Guide</a>;
+- The patience to read and follow the [*User's Guide*](../usersguide);
 - Willingness and ability to edit a configuration file;
 - Some familiarity with Linux or other Unix derivatives;
 - Know how to do simple Unix tasks like changing file

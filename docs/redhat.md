@@ -62,7 +62,7 @@ sudo tail -f /var/log/messages
 After 5 minutes, open the station web page in a web browser. You should
 see generic station information and data. If your hardware supports
 hardware archiving, then how long you wait will depend on the [archive
-interval](usersguide.md#archive_interval) set in your hardware.
+interval](usersguide#archive_interval) set in your hardware.
 
 ``` tty
 file:///var/www/html/weewx/index.html
@@ -128,6 +128,3 @@ The installation will result in the following layout:
                           examples: /usr/share/doc/weewx/examples/
                          utilities: /usr/bin/wee_*
   --------------------------------- --------------------------------
-
-© [Copyright](copyright/) Tom Keffer
-

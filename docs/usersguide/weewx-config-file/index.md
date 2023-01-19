@@ -55,3 +55,5 @@ In this example, at the top level, `log_success` is set to false. So, unless set
 The following will evaluate **True**: `true`, `True`, `yes`, `Yes`, `1`.
 
 The following will evaluate **False**: `false`, `False`, `no`, `No`, `0`.
+
+© [Copyright](../copyright) 2009-2023 Thomas Keffer <tkeffer@gmail.com>

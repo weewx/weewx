@@ -817,7 +817,3 @@ class Colorize(SearchList):                                               # 1
 11. If we make it all the way through the table without a hit, then we
     must have a value greater than anything in the table. Return the
     default, or the color `#00000000` if there is no default.
-
-
-© [Copyright](copyright.md) Tom Keffer
-

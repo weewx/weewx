@@ -74,3 +74,8 @@ many different types of hardware, including some not yet supported by WeeWX.
 ## Licensing
 
 WeeWX is licensed under the GNU Public License v3.
+
+
+## Copyright
+
+© [Copyright](../copyright) 2009-2023 Thomas Keffer <tkeffer@gmail.com>

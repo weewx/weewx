@@ -43,7 +43,8 @@ sudo tail -f /var/log/messages
 
 ## Verify
 
-After 5 minutes, open the station web page in a web browser. You should see generic station information and data. If your hardware supports hardware archiving, then how long you wait will depend on the [archive interval](usersguide.htm#archive_interval) set in your hardware.
+After 5 minutes, open the station web page in a web browser. You should see generic station information and data. If your hardware supports hardware archiving, then how long you wait will depend on the   [archive
+interval](usersguide#archive_interval) set in your hardware.
 
 [file:///var/www/html/weewx/index.html](file:///var/www/html/weewx/index.html)
 
@@ -69,7 +70,7 @@ sudo systemctl stop weewx
 
 ## Customize
 
-To enable uploads such as Weather Underground or to customize reports, modify the configuration file `/etc/weewx/weewx.conf`. See the [User Guide](usersguide.htm) and [Customization Guide](customizing.htm) for details.
+To enable uploads such as Weather Underground or to customize reports, modify the configuration file `/etc/weewx/weewx.conf`. See the [*Users Guide*](../usersguide) and [*Customization Guide*](../custom) for details.
 
 WeeWX must be restarted for configuration file changes to take effect.
 
@@ -104,7 +105,3 @@ The installation will result in the following layout:
 | User directory          | _`$USER_ROOT`_    | `/usr/share/weewx/user`                |
 | PID file                |                   | `/var/run/weewx.pid`                   |
 | Log file                |                   | `/var/log/syslog`                      |
-
-
-© [Copyright](copyright/) Tom Keffer
-

@@ -419,13 +419,13 @@ if you will be using a framework such as NodeJS or ExpressJS.
 
 ## Daily summaries {#Daily_summaries}
 
-This section builds on the discussion [*The database*](customizing.htm#The_database) in the *Customization Guide*.
-Read it first.
+This section builds on the discussion [*The database*](../custom/#the-database) in 
+the *Customization Guide*. Read it first.
 
 The big flat table in the database (usually called table
 `archive`) is the definitive table of record. While it includes a
 lot of information, querying it can be slow. For example, to find the
-maximum temperature of the year would require scanning the whole thing,
+maximum temperature of the year would require scanning the entire table,
 which might include 100,000 or more records. To speed things up, WeeWX
 includes *daily summaries* in the database as an optimization.
 
@@ -496,8 +496,6 @@ named `archive_day_outTemp`. Here's what it would look like:
             </tr>
         </table>
 </html> 
-
-Structure of the `archive_day_outTemp` daily summary
 
 Here's what the table columns mean:
 
@@ -583,7 +581,7 @@ working off an SD card.
 
 ### Wind
 
-The daily summary for wind includes six additional fields. Here\'s what
+The daily summary for wind includes six additional fields. Here's what
 they mean:
 
 <table>
@@ -677,8 +675,7 @@ This is a glossary of terminology used throughout the code.
                 <td>A dictionary with all the data necessary to bind to a database. An example for SQLite would be <span
                     class="code">
             {'driver':'db.sqlite',
-            'root':'/home/weewx',
-            'database_name':'archive/weewx.sdb'}</span>, an example for MySQL would be <span class="code">{
+            'db_path':'/home/username/weewx-data/archive/weewx.sdb'}</span>, an example for MySQL would be <span class="code">{
             'driver':'db.mysql',
             'host':'localhost',
             'user':'weewx',
@@ -690,7 +687,7 @@ This is a glossary of terminology used throughout the code.
                 <td class="text_highlight">epoch time</td>
                 <td>Sometimes referred to as &quot;unix time,&quot; or &quot;unix epoch time.&quot; The number of
                     seconds since the epoch, which is 1 Jan 1970 00:00:00 UTC. Hence, it always represents UTC (well...
-                    after adding a few leap seconds. But, close enough). This is the time used in the databases and
+                    after adding a few leap seconds... but, close enough). This is the time used in the databases and
                     appears as type <span class="code">
             dateTime</span> in the SQL schema, perhaps an unfortunate name because of the similarity to the completely
                     unrelated Python type <span class="code">datetime</span>. Very easy to manipulate, but it is a big
@@ -700,7 +697,7 @@ This is a glossary of terminology used throughout the code.
             <tr>
                 <td class="text_highlight">LOOP packet</td>
                 <td>The real-time data coming off the weather station. The terminology "LOOP" comes from the Davis
-                    series. A LOOP packet can contain all observation types, or it may contain only some of them
+                    series of weather stations. A LOOP packet can contain all observation types, or it may contain only some of them
                     ("Partial packet").
                 </td>
             </tr>
@@ -740,7 +737,7 @@ This is a glossary of terminology used throughout the code.
                 <td class="text_highlight">tuple-time</td>
                 <td>An instance of the Python object <span class="code">
             <a href="http://docs.python.org/2/library/time.html#time.struct_time">
-                time.struct_time</a></span>. This is a 9-wise tuple that represent a time. It could be in either local
+                time.struct_time</a></span>. This is a 9-way tuple that represent a time. It could be in either local
                     time or UTC, though usually the former. See module <span class="code">
             <a href="http://docs.python.org/2/library/time.html">time</a></span> for more information. Variables
                     carrying tuple time usually have a suffix <span class="code">_tt</span>.
@@ -756,4 +753,4 @@ This is a glossary of terminology used throughout the code.
         </table>
 </html>
 
-© [Copyright](copyright.htm) Tom Keffer
+© [Copyright](../copyright) 2009-2023 Thomas Keffer <tkeffer@gmail.com>
