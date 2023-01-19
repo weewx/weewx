@@ -3,10 +3,6 @@
 
 ## Configuration related
 
-Remove wunderfixer. Remove references in docs.
-
-Change `bin/user.py` to `lib/user.py`. This would require that the installer intercept paths
-with `bin` in them and change them to `lib`.
 
 ## Daemon
 
@@ -16,14 +12,14 @@ with `bin` in them and change them to `lib`.
 ✅ weectl station create
 ✅ weectl station reconfigure
 ✅ weectl station upgrade
-weectl station upgrade-skins
+✅ weectl station upgrade-skins
 ✅ weectl extension install
 ✅ weectl extension uninstall
 ✅ weectl extension list
 ✅ weectl extension transfer
 ```
 Key: 
-✅ means largely completed
+✅ means completed
 ½ means started
 
 ## Utilities
@@ -50,10 +46,6 @@ Update the logging wiki.
 
 Fill out "Preparation" section in pip.md for RedHat, SuSE, and macOS.
 
-Update internal links in the customizing guide.
-
-Update internal links in the User's Guide.
-
 Use a dollar sign when referring to symbolic names. For example, $WEEWX_ROOT instead of WEEWX_ROOT.
 
 Define $WEEWX_ROOT.
@@ -64,12 +56,6 @@ References to `/home/weewx` become `$WEEWX_ROOT`
 
 Put legacy (V4.x) docs at weewx.com/legacy_docs.
 
-On minimal installations, a pip install may require:
-
-```
-sudo apt install gcc
-sudo apt install python3-dev
-```
 
 ## Testing
 

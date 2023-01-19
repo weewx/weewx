@@ -42,10 +42,13 @@ station_reconfigure_usage = f"""{bcolors.BOLD}weectl station reconfigure [--conf
 station_upgrade_usage = f"""{bcolors.BOLD}weectl station upgrade [--config=CONFIG-PATH] \\
                               [--docs-root=DOCS_ROOT] \\
                               [--examples-root=EXAMPLES_ROOT]
+                              [--no-prompt] \\
                               [--dry-run]{bcolors.ENDC}
 """
 
 station_upgrade_skins_usage = f"""{bcolors.BOLD}weectl station upgrade-skins [--config=CONFIG-PATH] \\
+                                    [--skin-root=SKIN_ROOT] \\
+                                    [--no-prompt] \\
                                     [--dry-run]{bcolors.ENDC}
 """
 
@@ -61,6 +64,10 @@ CREATE_DESCRIPTION = """Create a new user data area, including a configuration f
 
 UPGRADE_DESCRIPTION = """Upgrade an existing user data area, including the configuration file, 
 docs, examples, and utility files. """ + WEEWX_ROOT_DESCRIPTION
+
+UPGRADE_SKINS_DESCRIPTION = """Upgrade skins to the latest version. 
+A backup will be made first. """ + WEEWX_ROOT_DESCRIPTION
+
 
 def add_subparser(subparsers):
     """Add the parsers used to implement the 'station' command. """
@@ -88,13 +95,13 @@ def add_subparser(subparsers):
     _add_common_args(station_create_parser)
     station_create_parser.add_argument('--user-root',
                                        help='Where to put the "user" directory, relative to '
-                                            '$WEEWX_ROOT. Default is "lib/user"')
+                                            'WEEWX_ROOT. Default is "lib/user"')
     station_create_parser.add_argument('--docs-root',
                                        help='Where to put the documentation, relative to '
-                                            '$WEEWX_ROOT. Default is "docs".')
+                                            'WEEWX_ROOT. Default is "docs".')
     station_create_parser.add_argument('--examples-root',
                                        help='Where to put the examples, relative to '
-                                            '$WEEWX_ROOT. Default is "examples".')
+                                            'WEEWX_ROOT. Default is "examples".')
     station_create_parser.add_argument('--no-prompt', action='store_true',
                                        help='If set, do not prompt. Use default values.')
     station_create_parser.add_argument('--dry-run',
@@ -136,10 +143,12 @@ def add_subparser(subparsers):
                                              f'Default is "{weecfg.default_config_path}"')
     station_upgrade_parser.add_argument('--docs-root',
                                         help='Where to put the new documentation, relative to '
-                                             '$WEEWX_ROOT. Default is "docs".')
+                                             'WEEWX_ROOT. Default is "docs".')
     station_upgrade_parser.add_argument('--examples-root',
                                         help='Where to put the new examples, relative to '
-                                             '$WEEWX_ROOT. Default is "examples".')
+                                             'WEEWX_ROOT. Default is "examples".')
+    station_upgrade_parser.add_argument('--no-prompt', action='store_true',
+                                        help='If set, do not prompt. Use default values.')
     station_upgrade_parser.add_argument('--dry-run',
                                         action='store_true',
                                         help='Print what would happen, but do not actually '
@@ -149,11 +158,18 @@ def add_subparser(subparsers):
     # ---------- Action 'upgrade-skins' ----------
     station_upgrade_skins_parser = action_parser.add_parser('upgrade-skins',
                                                             usage=station_upgrade_skins_usage,
-                                                            help='Upgrade the skins.')
+                                                            description=UPGRADE_SKINS_DESCRIPTION,
+                                                            help='Upgrade the skins, '
+                                                                 'making a backup copy first.')
     station_upgrade_skins_parser.add_argument('--config',
                                               metavar='CONFIG-PATH',
                                               help=f'Path to configuration file. '
                                                    f'Default is "{weecfg.default_config_path}"')
+    station_upgrade_skins_parser.add_argument('--skin-root',
+                                              help='Where to put the skins, relatve to '
+                                                   'WEEWX_ROOT. Default is "skins".')
+    station_upgrade_skins_parser.add_argument('--no-prompt', action='store_true',
+                                              help='If set, do not prompt. Use default values.')
     station_upgrade_skins_parser.add_argument('--dry-run',
                                               action='store_true',
                                               help='Print what would happen, but do not actually '
@@ -212,11 +228,17 @@ def upgrade_station(namespace):
     weecfg.station_config.station_update(config_path=namespace.config,
                                          docs_root=namespace.docs_root,
                                          examples_root=namespace.examples_root,
+                                         no_prompt=namespace.no_prompt,
                                          dry_run=namespace.dry_run)
 
 
 def upgrade_skins(namespace):
-    pass
+    weecfg.station_config.upgrade_skins(config_path=namespace.config,
+                                        skin_root=namespace.skin_root,
+                                        no_prompt=namespace.no_prompt,
+                                        dry_run=namespace.dry_run)
+
+
 
 
 # ==============================================================================
@@ -251,9 +273,9 @@ def _add_common_args(parser):
                         help='Set display units to us, metricwx, or metric. '
                              'Default is "us".')
     parser.add_argument('--skin-root',
-                        help='Where to put the skins, relatve to $WEEWX_ROOT. Default is "skins".')
+                        help='Where to put the skins, relatve to WEEWX_ROOT. Default is "skins".')
     parser.add_argument('--sqlite-root',
-                        help='Where to put the SQLite database, relative to $WEEWX_ROOT. '
+                        help='Where to put the SQLite database, relative to WEEWX_ROOT. '
                              'Default is "archive".')
     parser.add_argument('--html-root',
                         help='Where to put the generated HTML and images, relative to WEEWX_ROOT. '

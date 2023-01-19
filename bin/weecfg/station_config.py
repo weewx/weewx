@@ -41,7 +41,7 @@ def station_create(config_path, *args,
     an exception is raised.
 
     It then:
-      1. If no-prompt is false, it creates the configuration file by prompting the user. If true,
+      1. If no_prompt is false, it creates the configuration file by prompting the user. If true,
        it uses defaults.
       2. It then copies the documentation out of package resources and into WEEWX_ROOT.
       3. Same with the examples and utility files.
@@ -490,7 +490,7 @@ def copy_skins(config_dict, dry_run=False):
         for skin in missing_skins:
             src = os.path.join(skin_resources, skin)
             dest = os.path.join(skin_dir, skin)
-            print(f"Copying new skin {skin} into {dest}.")
+            print(f"Copying skin {skin} into {dest}.")
             if not dry_run:
                 shutil.copytree(src, dest)
 
@@ -603,6 +603,7 @@ def copy_util(config_path, config_dict, dry_run=False):
 
     return dstdir
 
+
 def _process_files(srcdir, dstdir, re_list, exclude={'__pycache__'}):
     """Process all the utility files found in srcdir. Put them in dstdir"""
     if os.path.basename(srcdir) in exclude:
@@ -637,11 +638,19 @@ def _patch_file(srcpath, dstpath, re_list):
             wd.write(line)
 
 
-def station_update(config_path, docs_root=None, examples_root=None, dry_run=False):
+def station_update(config_path, docs_root=None, examples_root=None,
+                   no_prompt=False, dry_run=False):
     """Upgrade the user data for the configuration file found at config_path"""
 
     if dry_run:
         print("This is a dry run. Nothing will actually be done.")
+
+    ans = weeutil.weeutil.y_or_n(f"\nUpgrade station at {config_path}? (Y/n) ",
+                                 noprompt=no_prompt,
+                                 default='y')
+    if ans != 'y':
+        print("Nothing done.")
+        return
 
     # Retrieve the new configuration file as a ConfigObj:
     with importlib.resources.open_text('wee_resources', 'weewx.conf', encoding='utf-8') as fd:
@@ -671,3 +680,43 @@ def station_update(config_path, docs_root=None, examples_root=None, dry_run=Fals
         backup_path = weecfg.save_with_backup(config_dict, config_path)
         print(f"Backed up configuration file to {backup_path}.")
         print("Done")
+
+
+def upgrade_skins(config_path, skin_root=None, no_prompt=False, dry_run=False):
+    """Make a backup of the old skins, then copy over new skins."""
+    if dry_run:
+        print("This is a dry run. Nothing will actually be done.")
+
+    ans = weeutil.weeutil.y_or_n(f"\nUpgrade skins at {config_path}?\n"
+                                 "A backup copy will be made first. (Y/n) ",
+                                 noprompt=no_prompt,
+                                 default='y')
+    if ans != 'y':
+        print("Nothing done.")
+        return
+
+    # Retrieve the configuration file as a ConfigObj:
+    config_path, config_dict = weecfg.read_config(config_path)
+
+    print(f"The configuration file {bcolors.BOLD}{config_path}{bcolors.ENDC} will be used.")
+
+    if not skin_root:
+        try:
+            skin_root = config_dict['StdReport']['SKIN_ROOT']
+        except KeyError:
+            skin_root = 'skins'
+
+    # SKIN_ROOT is the location of the skins relative to WEEWX_ROOT. Find it's absolute location
+    skin_dir = os.path.join(config_dict['WEEWX_ROOT'], skin_root)
+
+    if os.path.exists(skin_dir):
+        if not dry_run:
+            backup = weeutil.weeutil.move_with_timestamp(skin_dir)
+            print(f"Old skin directory saved to {backup}.")
+    else:
+        print(f"No skin directory found at {skin_dir}.")
+
+    copy_skins(config_dict, dry_run)
+
+    if dry_run:
+        print("This was a dry run. Nothing was actually done.")

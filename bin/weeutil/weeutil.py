@@ -1636,12 +1636,12 @@ def max_with_none(x_seq):
     return xmax
 
 
-def move_with_timestamp(filepath):
-    """Save a file to a path with a timestamp."""
+def move_with_timestamp(path):
+    """Save a file or directory to a path with a timestamp."""
     import shutil
     # Sometimes the target has a trailing '/'. This will take care of it:
-    filepath = os.path.normpath(filepath)
-    newpath = filepath + time.strftime(".%Y%m%d%H%M%S")
+    path = os.path.normpath(path)
+    newpath = path + time.strftime(".%Y%m%d%H%M%S")
     # Check to see if this name already exists
     if os.path.exists(newpath):
         # It already exists. Stick a version number on it:
@@ -1649,7 +1649,7 @@ def move_with_timestamp(filepath):
         while os.path.exists(newpath + '-' + str(version)):
             version += 1
         newpath = newpath + '-' + str(version)
-    shutil.move(filepath, newpath)
+    shutil.move(path, newpath)
     return newpath
 
 
