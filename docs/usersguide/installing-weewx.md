@@ -12,18 +12,18 @@ You should have the following skills:
 * Ability to do simple Unix tasks such as changing file permissions and running commands.
 
 No programming experience is necessary unless you wish to extend WeeWX. In this case, you should be comfortable programming in Python.
-If you get stuck, there is a very active [User's Group](https://groups.google.com/forum/#!forum/weewx-user) to help.
+If you get stuck, there is a very active [User's Group](https://groups.google.com/g/weewx-user) to help.
 
 
 ## Installation Overview
 This is an outline of the process to install, configure, and run WeeWX:
 
-* Read the [hardware notes](https://weewx.com/docs/hardware.htm) for your weather station. This will let you know of any features, limitations, or quirks of your hardware.
-* Install WeeWX. Use the step-by-step instructions in one of the [installation methods](index.md) below.
-* Configure the hardware. This involves setting things like the onboard archive interval, rain bucket size, etc. You may have to follow directions given by your hardware manufacturer, or you may be able to use the utility [wee_device](https://weewx.com/docs/utilities.htm#wee_device_utility).
-* Launch the **weewxd** program. It is run from the command line, either as a [daemon](https://weewx.com/docs/usersguide.htm#Running_as_a_daemon), or [directly](https://weewx.com/docs/usersguide.htm#Running_directly).
-* Tune the installation. Typically this is done by changing settings in the WeeWX configuration file. For example, you might want to [register your station](https://weewx.com/docs/usersguide.htm#station_registry), so it shows up on a world-wide map of WeeWX installations.
-* [Customize](https://weewx.com/docs/customizing.htm) the installation. This is an advanced topic, which allows you to shape WeeWX exactly to your liking!
+* Read the [hardware notes](../hardware.htm) for your weather station. This will let you know of any features, limitations, or quirks of your hardware.
+* Install WeeWX. Use the step-by-step instructions in one of the [installation methods](#installation-methods) below.
+* Configure the hardware. This involves setting things like the onboard archive interval, rain bucket size, etc. You may have to follow directions given by your hardware manufacturer, or you may be able to use the utility [wee_device](../utilities.htm#wee_device_utility).
+* Launch the **weewxd** program. It is run from the command line, either as a [daemon](../running-weewx/#running-as-a-daemon), or [directly](../running-weewx/#running-directly).
+* Tune the installation. Typically this is done by changing settings in the WeeWX configuration file. For example, you might want to [register your station](../weewx-config-file/stdrestful-config/#stationregistry), so it shows up on a world-wide map of WeeWX installations.
+* [Customize](../../custom/) the installation. This is an advanced topic, which allows you to shape WeeWX exactly to your liking!
 
 
 
@@ -54,7 +54,8 @@ Best for those who intend to customize their system.
 
 - Supports most operating systems, including macOS.
 - Multi-step install.
-- Does not require root privileges to install or modify (except for setting up a daemon).
+- Does not require root privileges to install or modify. 
+- Requires root privileges to set up a daemon.
 - Installs in "standard locations" for a Python application.
 - All user state is held in one location, making backups easy.
 
@@ -97,18 +98,18 @@ Here is a summary of the layout for the different install methods, along with th
 
 === "Pip (including macOS)"
     !!! Note
-        Pip install locations are *relative to _`$WEEWX_ROOT`_*
+        The pip install locations given below are *relative to _`$WEEWX_ROOT`_*
 
-    | Role                    | Symbolic name     | Nominal value                                            |
-    |-------------------------|-------------------|----------------------------------------------------------|
-    | WeeWX root directory    | _`$WEEWX_ROOT`_   | `~/weewx-data`                                           |
-    | Executables             | _`$BIN_ROOT`_     | `~/.local/pipx/venvs/weewx/lib/python3.x/site-packages/` |
-    | Configuration directory | _`$CONFIG_ROOT`_  | `./`                                                     |
-    | Skins and templates     | _`$SKIN_ROOT`_    | `./skins/`                                               |
-    | SQLite databases        | _`$SQLITE_ROOT`_  | `./archive/`                                             |
-    | Web pages and images    | _`$HTML_ROOT`_    | `./public_html/`                                         |
-    | Documentation           | _`$DOC_ROOT`_     | `./docs`                                                 |
-    | Examples                | _`$EXAMPLE_ROOT`_ | `./examples/`                                            |
-    | User directory          | _`$USER_ROOT`_    | `./bin/user`                                             |
-    | PID file                |                   | `/var/run/weewx.pid`                                     |
-    | Log file                |                   | `/var/log/syslog`                                        |
+    | Role                    | Symbolic name     | Nominal value        |
+    |-------------------------|-------------------|----------------------|
+    | WeeWX root directory    | _`$WEEWX_ROOT`_   | `~/weewx-data`       |
+    | Executables             | _`$BIN_ROOT`_     | `~/.local/bin`       |
+    | Configuration directory | _`$CONFIG_ROOT`_  | `./`                 |
+    | Skins and templates     | _`$SKIN_ROOT`_    | `./skins/`           |
+    | SQLite databases        | _`$SQLITE_ROOT`_  | `./archive/`         |
+    | Web pages and images    | _`$HTML_ROOT`_    | `./public_html/`     |
+    | Documentation           | _`$DOC_ROOT`_     | `./docs`             |
+    | Examples                | _`$EXAMPLE_ROOT`_ | `./examples/`        |
+    | User directory          | _`$USER_ROOT`_    | `./bin/user`         |
+    | PID file                |                   | `/var/run/weewx.pid` |
+    | Log file                |                   | `/var/log/syslog`    |

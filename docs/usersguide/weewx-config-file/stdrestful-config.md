@@ -13,42 +13,44 @@ This section is for configuring the StdRESTful services, which upload to simple 
 
 #### log_success
 
-If you set a value for log_success here, it will override the value set at the [top-level](/weewx-config-file/general/#general) and will apply only to RESTful services. In addition, **log_success** can be set for individual services by putting them under the appropriate subsection (e.g., **[[CWOP]]**).
+If you set a value for `log_success` here, it will override the value set at the [top-level](../../weewx-config-file/general/#log_success) and will apply only to RESTful services. In addition, `log_success` can be set for individual services by putting them under the appropriate subsection (*e.g.*, under `[[CWOP]]`).
 
 #### log_failure
 
-If you set a value for **log_failure** here, it will override the value set at the [top-level](/weewx-config-file/general/#general) and will apply only to RESTful services. In addition, **log_failure** can be set for individual services by putting them under the appropriate subsection (e.g., **[[CWOP]]**).
+If you set a value for `log_failure` here, it will override the value set at the [top-level](../../weewx-config-file/general/#log_failure) and will apply only to RESTful services. In addition, `log_failure` can be set for individual services by putting them under the appropriate subsection (*e.g.*, under `[[CWOP]]`).
 
 
 ## [[StationRegistry]]
 
-A registry of WeeWX weather stations is maintained at weewx.com. Stations are displayed on a map and a list at [https://weewx.com/stations.html](https://weewx.com/stations.html)
+A registry of WeeWX weather stations is maintained at `weewx.com`. Stations are displayed on a map and a list at [https://weewx.com/stations.html](https://weewx.com/stations.html)
 
-How does the registry work? Individual weather stations periodically contact the registry. Each station provides a unique URL to identify itself, plus other information such as the station type and WeeWX version. No personal information, nor any meteorological data, is sent.
+How does the registry work? Individual weather stations periodically contact the registry. Each station provides a unique URL to identify itself, plus other information such as the station type, Python version, WeeWX version and installation method. No personal information, nor any meteorological data, is sent.
 
 To add your station to this list, you must do two things:
 
-1. Enable the station registry by setting option **register_this_station** to True in **weewx.conf** . Your station will contact the registry once per week. If your station does not contact the registry for about a month, it will be removed from the list.
+1. Enable the station registry by setting option `register_this_station` to `true`. Your station will contact the registry once per day. If your station does not contact the registry for about a month, it will be removed from the list.
 
-2. Provide a value for option station_url in section [Station]. This value must be unique, so choose it carefully.
+2. Provide a value for option `station_url`. This value must be unique, so choose it carefully.
 
-```
+``` ini
 [StdRestful]
     [[StationRegistry]]
         register_this_station = True
+        description="Beach side weather"
+        station_url = https://acme.com
 ```
 
 #### register_this_station
 
-Set this to **True** to register the weather station.
+Set this to `true` to register the weather station.
 
 #### description
 
-A description of the station. If no description is specified, the **location** from the **[Station]** section will be used.
+A description of the station. If no description is specified, the `location` from section `[Station]` will be used.
 
 #### station_url
 
-The URL to the weather station. If no URL is specified, the **station_url** from the **[Station]** section will be used.
+The URL to the weather station. If no URL is specified, the [`station_url`](../stations-config#station_url) from section `[Station]`  will be used.
 
 #### log_success
 
@@ -61,7 +63,7 @@ If you set a value here, it will apply only to the station registry.
 
 ## [[AWEKAS]]
 
-WeeWX can send your current data to the [Automatisches Wetterkarten System (AWEKAS)](https://www.awekas.at/). If you wish to do this, set the option enable to true, then set options username and password appropriately. When you are done, it will look something like this:
+WeeWX can send your current data to the [Automatisches Wetterkarten System (AWEKAS)](https://www.awekas.at/). If you wish to do this, set the option `enable` to `true`, then set options `username` and `password` appropriately. When you are done, it will look something like this:
 
 ```
 [StdRestful]
@@ -73,11 +75,11 @@ WeeWX can send your current data to the [Automatisches Wetterkarten System (AWEK
 
 #### enable
 
-Set to **true** to enable posting to AWEKAS. Optional. Default is **false**.
+Set to `true` to enable posting to AWEKAS. Optional. Default is `false`.
 
 #### username
 
-Set to your AWEKAS username (e.g., **joeuser**). Required.
+Set to your AWEKAS username (e.g., `joeuser`). Required.
 
 #### password
 
@@ -85,7 +87,7 @@ Set to your AWEKAS password. Required.
 
 #### language
 
-Set to your preferred language. Default is **en**.
+Set to your preferred language. Default is `en`.
 
 #### log_success
 
@@ -97,7 +99,7 @@ If you set a value here, it will apply only to logging for AWEKAS.
 
 #### retry_login
 
-How long to wait in seconds before retrying a bad login. If set to zero, no retry will be attempted. Default is 3600 seconds (one hour).
+How long to wait in seconds before retrying a bad login. If set to zero, no retry will be attempted. Default is `3600`.
 
 #### post_interval
 
@@ -107,7 +109,7 @@ The interval in seconds between posts. Setting this value to zero will cause eve
 
 ## [[CWOP]]
 
-WeeWX can send your current data to the [Citizen Weather Observer Program](http://www.wxqa.com/). If you wish to do this, set the option **enable** to **true**, then set the option **station** to your CWOP station code. If your station is an amateur radio APRS station, you will have to set passcode as well. When you are done, it will look something like
+WeeWX can send your current data to the [Citizen Weather Observer Program](http://www.wxqa.com/). If you wish to do this, set the option `enable` to `true`, then set the option `station` to your CWOP station code. If your station is an amateur radio APRS station, you will have to set `passcode` as well. When you are done, it will look something like
 
 ```
 [StdRestful]
@@ -120,7 +122,7 @@ WeeWX can send your current data to the [Citizen Weather Observer Program](http:
 
 #### enable
 
-Set to **true** to enable posting to the CWOP. Optional. Default is **false**.
+Set to `true` to enable posting to the CWOP. Optional. Default is `false`.
 
 #### station
 
@@ -132,15 +134,15 @@ This is used for APRS (amateur radio) stations only. Set to the passcode given t
 
 #### post_interval
 
-The interval in seconds between posts. Because CWOP is heavily used, the operators discourage very frequent posts. Every 5 minutes (300 seconds) is fine, but they prefer every 10 minutes (600 s) or even longer. Setting this value to zero will cause every archive record to be posted. Optional. Default is 600 seconds.
+The interval in seconds between posts. Because CWOP is heavily used, the operators discourage very frequent posts. Every 5 minutes (300 seconds) is fine, but they prefer every 10 minutes (600 s) or even longer. Setting this value to zero will cause every archive record to be posted. Optional. Default is `600`.
 
 #### stale
 
-How old a record can be before it will not be used for a catch up. CWOP does not use the timestamp on a posted record. Instead, they use the wall clock time that it came in. This means that if your station is off the air for a long period of time, then when WeeWX attempts a catch up, old data could be interpreted as the current conditions. Optional. Default is 600 seconds.
+How old a record can be in seconds before it will not be used for a catch up. CWOP does not use the timestamp on a posted record. Instead, they use the wall clock time that it came in. This means that if your station is off the air for a long period of time, then when WeeWX attempts a catch up, old data could be interpreted as the current conditions. Optional. Default is `600`.
 
 #### server_list
 
-A comma-delimited list of the servers that should be tried for uploading data. Optional. Default is: cwop.aprs.net:14580, cwop.aprs.net:23
+A comma-delimited list of the servers that should be tried for uploading data. Optional. Default is: `cwop.aprs.net:14580, cwop.aprs.net:23`
 
 #### log_success
 
@@ -153,7 +155,7 @@ If you set a value here, it will apply only to logging for CWOP.
 
 ## [[PWSweather]]
 
-WeeWX can send your current data to the [PWSweather.com](https://www.pwsweather.com/) service. If you wish to do this, set the option enable to true, then set the options **station** and **password** appropriately. When you are done, it will look something like this:
+WeeWX can send your current data to the [PWSweather.com](https://www.pwsweather.com/) service. If you wish to do this, set the option `enable` to `true`, then set the options `station` and `password` appropriately. When you are done, it will look something like this:
 
 ```
 [StdRestful]
@@ -165,11 +167,11 @@ WeeWX can send your current data to the [PWSweather.com](https://www.pwsweather.
 
 #### enable
 
-Set to **true** to enable posting to the PWSweather. Optional. Default is **false**.
+Set to `true` to enable posting to the PWSweather. Optional. Default is `false`.
 
 #### station
 
-Set to your PWSweather station ID (e.g., **BOISE**). Required.
+Set to your PWSweather station ID (e.g., `BOISE`). Required.
 
 #### password
 
@@ -185,7 +187,7 @@ If you set a value here, it will apply only to logging for PWSweather.
 
 #### retry_login
 
-How long to wait in seconds before retrying a bad login. Default is 3600 seconds (one hour).
+How long to wait in seconds before retrying a bad login. Default is `3600` (one hour).
 
 #### post_interval
 
@@ -193,7 +195,7 @@ The interval in seconds between posts. Setting this value to zero will cause eve
 
 
 ## [[WOW]]
-WeeWX can send your current data to the [British Weather Observations Website (WOW)](https://wow.metoffice.gov.uk/) service. If you wish to do this, set the option **enable** to **true**, then set options station and password appropriately. Read [Importing Weather Data into WOW](https://wow.metoffice.gov.uk/support/dataformats#automatic) on how to find your site's username and how to set the password for your site. When you are done, it will look something like this:
+WeeWX can send your current data to the [British Weather Observations Website (WOW)](https://wow.metoffice.gov.uk/) service. If you wish to do this, set the option `enable` to `true`, then set options `station` and `password` appropriately. Read [Importing Weather Data into WOW](https://wow.metoffice.gov.uk/support/dataformats#automatic) on how to find your site's username and how to set the password for your site. When you are done, it will look something like this:
 
 ```
 [StdRestful]
@@ -205,11 +207,11 @@ WeeWX can send your current data to the [British Weather Observations Website (W
 
 #### enable
 
-Set to **true** to enable posting to WOW. Optional. Default is **false**.
+Set to `true` to enable posting to WOW. Optional. Default is `false`.
 
 #### station
 
-Set to your WOW station ID (e.g., **12345678** for Pre June 1996 sites, or **6a571450-df53-e611-9401-0003ff5987fd** for later ones). Required.
+Set to your WOW station ID (e.g., `12345678` for Pre June 1996 sites, or `6a571450-df53-e611-9401-0003ff5987fd` for later ones). Required.
 
 #### password
 
@@ -225,7 +227,7 @@ If you set a value here, it will apply only to logging for WOW.
 
 #### retry_login
 
-How long to wait in seconds before retrying a bad login. Default is 3600 seconds (one hour).
+How long to wait in seconds before retrying a bad login. Default is `3600` (one hour).
 
 #### post_interval
 
@@ -233,7 +235,7 @@ The interval in seconds between posts. Setting this value to zero will cause eve
 
 
 ## [[Wunderground]]
-WeeWX can send your current data to the [Weather Underground](https://www.wunderground.com/). If you wish to do this, set the option **enable** to **true**, then set the options **station** and **password** appropriately. When you are done, it will look something like this:
+WeeWX can send your current data to the [Weather Underground](https://www.wunderground.com/). If you wish to do this, set the option `enable` to `true`, then set the options `station` and `password` appropriately. When you are done, it will look something like this:
 
 ```
 [StdRestful]
@@ -247,11 +249,11 @@ WeeWX can send your current data to the [Weather Underground](https://www.wunder
 
 #### enable
 
-Set to **true** to enable posting to the Weather Underground. Optional. Default is **false**.
+Set to `true` to enable posting to the Weather Underground. Optional. Default is `false`.
 
 #### station
 
-Set to your Weather Underground station ID (e.g., **KCASANFRA11**). Required.
+Set to your Weather Underground station ID (e.g., `KCASANFRA11`). Required.
 
 #### password
 
@@ -259,23 +261,23 @@ Set to your Weather Underground password. Required.
 
 #### api_key
 
-Set to your [Weather Underground API key](https://www.wunderground.com/member/api-keys). This is needed only if you plan on using the utility [wunderfixer](utilities/wunderfixer.md).
+Set to your [Weather Underground API key](https://www.wunderground.com/member/api-keys). This is needed only if you plan on using the utility [wunderfixer](../../utilities.htm#wunderfixer_utility).
 
 #### rapidfire
 
-Set to **True** to have WeeWX post using the [Weather Underground's "Rapidfire" protocol](https://www.wunderground.com/weatherstation/rapidfirehelp.asp). This will send a post to the WU site with every LOOP packet, which can be as often as every 2.5 seconds in the case of the Vantage instruments. Not all instruments support this. Optional. Default is False.
+Set to `true` to have WeeWX post using the [Weather Underground's "Rapidfire" protocol](https://www.wunderground.com/weatherstation/rapidfirehelp.asp). This will send a post to the WU site with every LOOP packet, which can be as often as every 2.5 seconds in the case of the Vantage instruments. Not all instruments support this. Optional. Default is `false`.
 
 #### rtfreq
 
-When rapidfire is set, the **rtfreq** parameter is sent, and should correspond to "the frequency of updates in seconds". Optional. Default is **2.5**
+When rapidfire is set, the `rtfreq` parameter is sent, and should correspond to "the frequency of updates in seconds". Optional. Default is `2.5`.
 
 #### archive_post
 
-This option tells WeeWX to post on every archive record, which is the normal "PWS" mode for the Weather Underground. Because they prefer that you either use their "Rapidfire" protocol, or their PWS mode, but not both, the default for this option is the opposite for whatever you choose above for option rapidfire. However, if for some reason you want to do both, then you may set both options to **True**.
+This option tells WeeWX to post on every archive record, which is the normal "PWS" mode for the Weather Underground. Because they prefer that you either use their "Rapidfire" protocol, or their PWS mode, but not both, the default for this option is the opposite for whatever you choose above for option rapidfire. However, if for some reason you want to do both, then you may set both options to `true`.
 
 #### post_indoor_observations
 
-In the interest of respecting your privacy, WeeWX does not post indoor temperature or humidity to the Weather Underground unless you set this option to **True**. Default is **False**.
+In the interest of respecting your privacy, WeeWX does not post indoor temperature or humidity to the Weather Underground unless you set this option to `true`. Default is `false`.
 
 #### log_success
 
@@ -287,7 +289,7 @@ If you set a value here, it will apply only to logging for the Weather Undergrou
 
 #### retry_login
 
-How long to wait in seconds before retrying a bad login. Default is 3600 seconds (one hour).
+How long to wait in seconds before retrying a bad login. Default is `3600` (one hour).
 
 #### post_interval
 
@@ -295,15 +297,18 @@ The interval in seconds between posts. Setting this value to zero will cause eve
 
 #### force_direction
 
-The Weather Underground has a bug where they will claim that a station is "unavailable" if it sends a null wind direction, even when the wind speed is zero. This option causes the software to cache the last non-null wind direction and use that instead. Default is **False**.
+The Weather Underground has a bug where they will claim that a station is "unavailable" if it sends a null wind direction, even when the wind speed is zero. Setting this option to `true` causes the software to cache the last non-null wind direction and use that instead of sending a null value. Default is `False`.
 
 #### [[[Essentials]]]
 
 Occasionally (but not always!) when the Weather Underground is missing a data point it will substitute the value zero (0.0), thus messing up statistics and plots. For all observation types listed in this section, the post will be skipped if that type is missing. For example:
 
-```
-[[[Essentials]]]
-    outTemp = True
+``` ini
+[StdRestful]
+    [[Wunderground]]
+        ...
+        [[[Essentials]]]
+            outTemp = True
 ```
 
-would cause the post to be skipped if there is no outside temperature (observation type **outTemp**).
+would cause the post to be skipped if there is no outside temperature (observation type `outTemp`).

@@ -11,7 +11,7 @@ weewxd
 
 !!! note
     
-    If your configuration file is named something other than weewx.conf, or if it is in a non-standard place, then you will have to specify it explicitly on the command line. For example:
+    If your configuration file is named something other than `weewx.conf`, or if it is in a non-standard place, then you will have to specify it explicitly on the command line. For example:
 
     ```
     weewxd /some/path/to/weewx.conf
@@ -23,36 +23,22 @@ WeeWX will then start monitoring live sensor data (also referrred to as 'LOOP' d
 
 
 ## Running as a daemon
-For unattended operations it is best to have WeeWX run as a daemon, started automatically when the server is rebooted. The utility `weectl` can set up the necessary files to do this. 
+For unattended operations it is best to have WeeWX run as a daemon, started automatically when the server is rebooted.
 
 If you use a packaged install from a DEB or RPM distribution, this is done automatically. You can ignore this section.
 
-To have `weectl` to setup the necessary files:
-
-```shell
-sudo weectl daemon install
-```
-
-WeeWX will now start automatically whenever your system is booted. You can also manually start, stop, and restart the WeeWX daemon:
-
-```shell
-sudo /etc/init.d/weewx start
-sudo /etc/init.d/weewx stop
-sudo /etc/init.d/weewx restart
-```
-
-By default, the scripts are designed to have WeeWX run at run levels 2, 3, 4 and 5. Incidentally, a nice tool for setting run levels with Debian (Ubuntu, Mint) systems is [sysv-rc-conf](http://sysv-rc-conf.sourceforge.net/). It uses a curses interface to allow you to change easily which run level any of your daemons runs at. There is a similar tool on SuSE. From the start menu run the YAST Control Center, then look for Systems Services (Runlevel). Pick "Expert" mode to see the run levels.
+For a pip install, you will have to do this yourself. See the section [*Run as a daemon*](../../pip/#run-as-a-daemon) in the pip quick start guide.
 
 ## Monitoring WeeWX
-WeeWX logs many events to the system log. On Debian systems, this is **/var/log/syslog**, on SuSE, **/var/log/messages**. Your system may use yet another place. When troubleshooting the system, be sure to check it!
+WeeWX logs many events to the system log. On Debian systems, this is `/var/log/syslog`, on SuSE, `/var/log/messages`. Your system may use yet another place. When troubleshooting the system, be sure to check it!
 
-To watch the log as it is generated, use the tail command with the **-f** option:
+To watch the log as it is generated, use the tail command with the `-f` option:
 
 ```
 tail -f /var/log/syslog
 ```
 
-Set the debug option in **weewx.conf** to generate many more checks and output more information. This can be useful for diagnosing problems and debugging.
+Set the debug option in `weewx.conf` to generate many more checks and output more information. This can be useful for diagnosing problems and debugging.
 
 ```
 debug = 1

@@ -419,7 +419,7 @@ if you will be using a framework such as NodeJS or ExpressJS.
 
 ## Daily summaries {#Daily_summaries}
 
-This section builds on the discussion [*The database*](customizing.htm#The_database) in the *Customizing Guide*.
+This section builds on the discussion [*The database*](customizing.htm#The_database) in the *Customization Guide*.
 Read it first.
 
 The big flat table in the database (usually called table

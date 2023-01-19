@@ -1,4 +1,4 @@
-# Introduction
+# The Customization Guide
 
 This document covers the customization of WeeWX. It assumes that you have read, and are reasonably familiar with, the [Users Guide](../usersguide/).
 

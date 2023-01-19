@@ -1,15 +1,15 @@
 # Backup and restore
 
-To backup a WeeWX installation, you will need to make a copy of
+To back up a WeeWX installation, you will need to make a copy of
 
  * The configuration information (`weewx.conf`);
  * skins and templates;
  * any custom code or extensions you have installed; and
  * the WeeWX database.
 
-It is not necessary to backup the generated images, HTML files, or NOAA reports since WeeWX will easily create these again.
+It is not necessary to back up the generated images, HTML files, or NOAA reports, because WeeWX can easily regenerate them.
 
-It is also not necessary to backup the WeeWX code, because it can be installed again. However,
+It is also not necessary to back up the WeeWX code, because it can be installed again. However,
 it doesn't hurt to do so.
 
 !!! Note

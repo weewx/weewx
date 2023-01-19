@@ -60,7 +60,7 @@ nav:
       - "Configuring MySQL": ./usersguide/mysql-mariadb-config.md
       - "Troubleshooting": ./usersguide/troubleshooting-guide.md
       - "Reference: options":
-        - "Overview": ./usersguide/weewx-config-file/overview.md
+        - "Overview": ./usersguide/weewx-config-file/index.md
         - "General options": ./usersguide//weewx-config-file/general.md
         - "[Station]": ./usersguide/weewx-config-file/stations-config.md
         - "[StdRESTful]": ./usersguide/weewx-config-file/stdrestful-config.md
@@ -73,6 +73,7 @@ nav:
         - "[StdTimeSynch]": ./usersguide/weewx-config-file/stdtimesynch.md
         - "[DataBindings]": ./usersguide/weewx-config-file/data-bindings.md
         - "[Databases]": ./usersguide/weewx-config-file/databases.md
+        - "[DatabaseTypes]": ./usersguide/weewx-config-file/databasetypes.md
         - "[Engine]": ./usersguide/weewx-config-file/engine.md
 
   - Customization guide:

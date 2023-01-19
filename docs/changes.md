@@ -136,7 +136,7 @@ Fix honoring global values for log_success and log_failure. Fix issue #757.
 
 wee_import CSV imports now allow import of text fields. Addresses issue #732.
 
-Explain in the Customizing Guide how to include arbitrary SQL expressions
+Explain in the Customization Guide how to include arbitrary SQL expressions
 in a plot.
 
 Reorder font download order, for slightly faster downloads.
@@ -842,7 +842,7 @@ These are installed, but not enabled, for all users.
 Reworked how options get applied for reports. Backstop default values
 are supplied by a new file weewx/defaults.py. These can get overridden
 by skin.conf, or in a new section [StdReports] / [[Defaults]] in weewx.conf.
-See the Customizing Guide, section "How options work", for details.
+See the Customization Guide, section "How options work", for details.
 Fixes issue #248.
 
 The skin.conf is optional.  It is possible to specify the entire skin
@@ -1803,7 +1803,7 @@ Total rewrite of how devices are configured. A single utility
 wee_config_device replaces each of the device-specific configuration
 utilities.
 
-The Customizing Guide was extended with additional examples and option
+The Customization Guide was extended with additional examples and option
 documentation.
 
 Removed the no longer needed serviced StdRESTful, obsolete since V2.6
@@ -1864,7 +1864,7 @@ Enabled multiple rsync instances for a single weewx instance.
 More extensive debug information for rscync users.
 
 Added the ability to localize the weewx and server uptime. See the
-Customizing Guide for details. This will also cause a minor backwards 
+Customization Guide for details. This will also cause a minor backwards 
 incompatibility. See the Upgrading Guide for details.
 
 Added catchup to the WS28xx driver, but still no hardware record generation.
@@ -2442,7 +2442,7 @@ Internally, the databases can now use either Metric units, or US Customary.
 NB: you cannot switch systems in the middle of a database. You have to
 stick to one or other other. However, the utility config_database.py does
 have a reconfigure option that allows copying the data to a new database,
-performing the conversion along the way. See the Customizing Guide.
+performing the conversion along the way. See the Customization Guide.
 
 You can now use "mmHg" as a unit of pressure.
 

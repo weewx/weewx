@@ -1,11 +1,14 @@
-# [Engine]
-This section is used to configure the internal service engine in WeeWX. It is for advanced customization. Details on how to do this can be found in the section [Customizing the WeeWX service engine](customizing/weewx-service-engine) of the [Customization Guide](customizing/).
+# [Engine] 
+
+This section is used to configure the internal service engine in WeeWX. It is for advanced
+customization. Details on how to do this can be found in the section [*Customizing the WeeWX
+service engine*](../../../custom/service_engine/) of the [*Customization Guide*](../../../custom/).
 
 ## [[Services]]
 
-Internally, WeeWX consists of many services, each responsible for some aspect of the program's functionality. After an event happens, such as the arrival of a new LOOP packet, any interested service gets a chance to do some useful work on the event. For example, a service might manipulate the packet, print it out, store it in a database, etc. This section controls which services are loaded and in what order they get their opportunity to do that work. Before WeeWX v2.6, this section held one, long, option called `service_list`, which held the names of all the services that should be run. Since then, this list has been broken down into smaller lists.
+Internally, WeeWX consists of many services, each responsible for some aspect of the program's functionality. After an event happens, such as the arrival of a new LOOP packet, any interested service gets a chance to do some useful work on the event. For example, a service might manipulate the packet, print it out, store it in a database, *etc*. This section controls which services are loaded and in what order they get their opportunity to do that work. Before WeeWX v2.6, this section held one, long, option called `service_list`, which held the names of all the services that should be run. Since then, this list has been broken down into smaller lists.
 
-Services are run in the order given below.
+Service lists are run in the order given below.
 
 | Service list       | Function                                              |
 |--------------------|-------------------------------------------------------|
@@ -18,16 +21,16 @@ Services are run in the order given below.
 
 For reference, here is the standard set of services that are run with the default distribution.
 
-| Service list       | Function                                                                                   |
-|--------------------|--------------------------------------------------------------------------------------------|
-| `prep_services`    | `weewx.engine.StdTimeSynch`                                                                |
-| `data_services`	   |                                                                                            |
-| `process_services` | `weewx.engine.StdConvert` <br> `weewx.engine.StdCalibrate` <br> `weewx.engine.StdQC` <br> `weewx.wxservices.StdWXCalculate` |
-| `archive_services` | `weewx.engine.StdArchive`                                                                  |
-| `restful_services` | `weewx.restx.StdStationRegistry` <br> `weewx.restx.StdWunderground` <br> `weewx.restx.StdPWSweather` <br> `weewx.restx.StdCWOP` <br> `weewx.restx.StdWOW` <br> `weewx.restx.StdAWEKAS` |
-| `report_services`  | `weewx.engine.StdPrint` <br> `weewx.engine.StdReport`                              |
+| Service list       | Function                                                                                                                                                                          |
+|--------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `prep_services`    | `weewx.engine.StdTimeSynch`                                                                                                                                                       |
+| `data_services`	   |                                                                                                                                                                                   |
+| `process_services` | `weewx.engine.StdConvert` <br> `weewx.engine.StdCalibrate` <br> `weewx.engine.StdQC` <br> `weewx.wxservices.StdWXCalculate`                                                       |
+| `archive_services` | `weewx.engine.StdArchive`                                                                                                                                                         |
+| `restful_services` | `weewx.restx.StdStationRegistry` <br>`weewx.restx.StdWunderground` <br>`weewx.restx.StdPWSweather` <br>`weewx.restx.StdCWOP` <br>`weewx.restx.StdWOW` <br>`weewx.restx.StdAWEKAS` |
+| `report_services`  | `weewx.engine.StdPrint` <br> `weewx.engine.StdReport`                                                                                                                             |
 
-If you're the type who likes to clean out your car trunk after every use it, then you may also be the type who wants to pare this down to the bare minimum. However, this will only make a slight difference in execution speed and memory use.
+If you're the type who likes to clean out your car trunk after every use, then you may also be the type who wants to pare this down to the bare minimum. However, this will only make a slight difference in execution speed and memory use.
 
 #### prep_services
 
@@ -35,7 +38,7 @@ These services get called before any others. They are typically used to prepare 
 
 #### data_services
 
-Augment data before processing. Typically this means adding fields to a LOOP packet or ARCHIVE record.
+Augment data before processing. Typically, this means adding fields to a LOOP packet or archive record.
 
 #### process_services
 

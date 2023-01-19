@@ -1,10 +1,10 @@
 # [StdCalibrate]
 
-This section is for configuring the **StdCalibrate** service. This service offers an opportunity to correct for any calibration errors in your instruments. It is very general and flexible.
+This section is for configuring the `StdCalibrate` service. This service offers an opportunity to correct for any calibration errors in your instruments. It is very general and flexible.
 
-Because this service is normally run after **StdConvert**, the units to be used should be the same as the target unit system chosen in [StdConvert](/weewx-config-file/stdconvert-config) above. It is also important that this service be run before the archiving service **StdArchive**, so that it is the corrected data that are stored.
+Because this service is normally run after `StdConvert`, the units to be used should be the same as the target unit system chosen in [`StdConvert`](../stdconvert-config). It is also important that this service be run before the archiving service `StdArchive`, so that it is the corrected data that are stored.
 
-In a default configuration, calibrations are applied to observations from the hardware. They are not applied to derived calculations since the **StdWXCalculate** service runs after **StdCalibrate**.
+In a default configuration, calibrations are applied to observations from the hardware. They are not applied to derived calculations since the `StdWXCalculate` service runs after `StdCalibrate`.
 
 ## [[Corrections]]
 
