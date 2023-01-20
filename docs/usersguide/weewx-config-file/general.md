@@ -10,6 +10,10 @@ Set to 1 to have the program perform extra debug checks, as well as emit extra i
 
 Set to the root directory of the WeeWX file hierarchy for this station. Normally, this is set automatically by the installation process. Required. No default.
 
+#### USER_ROOT
+
+The location of the user package, relative to `WEEWX_ROOT`. WeeWX will look for any user-installed extensions in this directory. Default is `bin/user`.
+
 #### log_success
 
 If set to `true`, the default will be to log a successful operation (for example, the completion of a report, or uploading to the Weather Underground, etc.) to the system log. Default is `true`.
