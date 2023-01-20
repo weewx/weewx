@@ -155,7 +155,7 @@ def read_config(config_path, args=None, locations=DEFAULT_LOCATIONS,
                                           default_encoding='utf-8')
     except configobj.ConfigObjError as e:
         # Add on the path of the offending file, then reraise.
-        e.msg += ' File %s' % config_path
+        e.msg += " File '%s'." % config_path
         raise
 
     # Remember where we found the config file

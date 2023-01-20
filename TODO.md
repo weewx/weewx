@@ -53,6 +53,7 @@ Put legacy (V4.x) docs at weewx.com/legacy_docs.
 
 ## Upgrade guide
 
+How to switch from init.d to systemd.
 
 
 ## Miscellaneous
