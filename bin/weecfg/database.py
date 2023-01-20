@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2019 Tom Keffer <tkeffer@gmail.com> and
+#    Copyright (c) 2009-2022 Tom Keffer <tkeffer@gmail.com> and
 #                            Gary Roderick <gjroderick@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
@@ -83,14 +83,14 @@ class DatabaseFix(object):
         In this way the generated sequence includes only rows included in the
         daily summary rather than any 'missing' rows.
 
-        Input parameters:
-            start_ts: Include daily summary rows with a dateTime >= start_ts
-            stop_ts:  Include daily summary rows with a dateTime <>= start_ts
-            obs:      The weewx observation whose daily summary table is to be
-                      used as the source of the TimeSpan objects
+        Args:
+            start_ts (float): Include daily summary rows with a dateTime >= start_ts.
+            stop_ts (float): Include daily summary rows with a dateTime <= start_ts.
+            obs (str): The weewx observation whose daily summary table is to be
+                used as the source of the TimeSpan objects
 
-        Returns:
-            A sequence of day TimeSpan objects
+        Yields:
+            weeutil.weeutil.TimeSpan: A sequence with the start of each day.
         """
 
         _sql = "SELECT dateTime FROM %s_day_%s " \
@@ -99,7 +99,7 @@ class DatabaseFix(object):
         _cursor = self.dbm.connection.cursor()
         try:
             for _row in _cursor.execute(_sql, (start_ts, stop_ts)):
-                yield weeutil.weeutil.archiveDaySpan(_row[0], grace=0)
+                yield weeutil.weeutil.daySpan(_row[0])
         finally:
             _cursor.close()
 

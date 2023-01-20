@@ -23,6 +23,14 @@ $month.length. PR #809. Thanks to user Karen!
 
 Added new unit "hertz". PR #812. Again, thanks to user Karen!
 
+Document the behavior of the registry server responses.  Do not attempt retries
+when a registration update contacts the server but gets a FAIL response, since
+a FAIL at that point is due to a configuration problem, not comms, and retries
+will not help.
+
+Calculate `*.wind.maxtime` out of `windGust` like `*.wind.max`
+Fixes issue #833
+
 
 4.9.1 10/25/2022
 Fix problem with `wind` for older versions of sqlite.
