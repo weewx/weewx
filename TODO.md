@@ -30,7 +30,6 @@ Get the following working again:
 - wee_debug
 - wee_device
 - wee_import
-- wee_reports
 
 ## Logging
 
@@ -46,12 +45,6 @@ Update the logging wiki.
 
 Fill out "Preparation" section in pip.md for RedHat, SuSE, and macOS.
 
-Use a dollar sign when referring to symbolic names. For example, $WEEWX_ROOT instead of WEEWX_ROOT.
-
-Define $WEEWX_ROOT.
-
-Note that SQLITE is now relative to WEEWX_ROOT.
-
 Put legacy (V4.x) docs at weewx.com/legacy_docs.
 
 
@@ -60,13 +53,6 @@ Put legacy (V4.x) docs at weewx.com/legacy_docs.
 
 ## Upgrade guide
 
-Note that SQLITE is now relative to WEEWX_ROOT.
-
-Note the change in the weedb.sqlite API. Can't imagine it will affect anyone.
-
-Installs to ~/weewx-data now.
-
-Guide on how to migrate to V5. (In progress)
 
 
 ## Miscellaneous

@@ -3,10 +3,10 @@
 <head>
     <title>weewx: Upgrade Guide</title>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <link rel="icon" href="images/favicon.png" type="image/png"/>
-    <link rel="stylesheet" href="css/tocbot-4.12.0.css">
-    <link rel="stylesheet" href="css/weewx_ui.css"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <link href="images/favicon.png" rel="icon" type="image/png"/>
+    <link href="css/tocbot-4.12.0.css" rel="stylesheet">
+    <link href="css/weewx_ui.css" rel="stylesheet"/>
     <script src="js/cash.min.js"></script>
     <script src="js/tocbot-4.12.0.min.js"></script>
     <script src="js/weewx.js"></script>
@@ -50,7 +50,7 @@
             background: #ccffcc;
         }
 
-        .wide-table{
+        .wide-table {
             overflow-x: scroll;
         }
     </style>
@@ -68,7 +68,7 @@
         <!-- The TOC select list will be injected here -->
     </div>
     <div id="toc_parent">
-        <div id="toc-location" class="toc">
+        <div class="toc" id="toc-location">
             <!-- The table of contents will be injected here -->
         </div>
     </div>
@@ -83,81 +83,63 @@
 
     <div class="header">
         <div class="logoref">
-            <a href='https://weewx.com'> <img src='images/logo-weewx.png' class='logo' style="float:right"
-                                             alt="weewx logo"/> </a><br/> <span class='version'>
+            <a href='https://weewx.com'> <img alt="weewx logo" class='logo' src='images/logo-weewx.png'
+                                              style="float:right"/> </a><br/> <span class='version'>
 Version: 5.0
     </span>
         </div>
         <div class="title">WeeWX Upgrade Guide</div>
     </div>
 
-    <div id="technical_content" class="content">
+    <div class="content" id="technical_content">
 
         <p>This document explains the three methods of upgrading:</p>
         <ul>
-            <li><a href="#Upgrading_using_setup.py">Upgrading using <span class='code'>setup.py</span></a></li>
+            <li><a href="#Upgrading_using_pip">Upgrading using pip</li>
             <li><a href="#Upgrading_using_DEB_package">Upgrading using DEB package</a></li>
             <li><a href="#Upgrading_using_RPM_package">Upgrading using RPM package</a></li>
         </ul>
-        <p>The section <em><a href="#Instructions_for_specific_versions">Instructions for Specific Versions</a></em>
-            describes changes required from one version to the next. These changes apply to every upgrade method.
+
+        <p>
+            The section <a href="#general-upgrade-instructions"><em>General upgrade instructions</em></a> describes
+            instructions for all versions of WeeWX. The section
+            <a href="#Instructions_for_specific_versions"><em>Instructions for specific versions</em></a>
+            describes changes for specific versions of WeeWX.
         </p>
 
-        <p class="warning"><strong>Warning!</strong><br/> You must use the same upgrade technique as your initial
-            install! For example, if you used <span class="code">setup.py</span> to install WeeWX, then you should use
-            <span class="code">setup.py</span> to upgrade. If you used a DEB or RPM package to install, then you should
-            upgrade using the same package type.
+        <h1 id="general-upgrade-instructions">General upgrade instructions</h1>
+
+        <p class="warning">
+            <strong>Warning!</strong><br/>You must use the same upgrade technique as your initial
+            install! For example, if you used pip to install WeeWX, then you should use it to upgrade. If you used a DEB
+            or RPM package to install, then you should upgrade using the same package type.
         </p>
 
-        <h1><a id="Upgrading_using_setup.py">Upgrading using <span class='code'>setup.py</span></a></h1>
+        <h2 id="Upgrading_using_pip">Upgrading using pip</h2>
 
-        <p>Before upgrading WeeWX, check the section <em> <a href="#Instructions_for_specific_versions">Instructions for
-            Specific Versions</a></em> to see if any specific actions are required.</p>
-
-        <p>If you are an old Python 2 version, and you plan on switching to Python 3, make sure you have installed
-        whatever pre-requisites are required. You can find them in the guide
-            <a href="setup.htm"><em>Installation using setup.py</em></a>.
+        <p>
+            If you are upgrading from an old <span class="code">setup.py</span> installation, see the instructions <a
+            href="../v5-upgrade"><em>Migrating setup.py installs to Version 5.0</em></a>.
         </p>
 
         <p>
-            Then follow the standard installation procedure:
+            If you are upgrading a pip install:
         </p>
-        <p>Unpack the archive:</p>
-        <pre class="tty cmd">tar xvfz weewx-X.Y.Z.tar.gz</pre>
-        <p>Change directory into it:</p>
-        <pre class="tty cmd">cd weewx-X.Y.Z </pre>
-        <p>Build the distribution, using whatever version of Python you plan to use. For example, for Python 3:</p>
-        <pre class="tty cmd">python3 ./setup.py build </pre>
-
-        <p class='warning'><strong>Warning!</strong><br/> Before doing the next step, be sure that <span class="code">home</span>
-            in the file <span class="code">setup.cfg</span> is set to the location of the previous WeeWX installation.
-        </p>
-
+        <pre class="tty cmd">pip install weewx --upgrade</pre>
         <p>
-            After checking <span class='code'>setup.cfg</span>, install your new version of WeeWX, again using
-            the version of Python you plan on using:
+            You may then wish to upgrade your documentation, examples, and utility files by usign the tool <span
+            class="code">weectl</span>:
         </p>
-
-        <pre class="tty cmd">sudo python3 ./setup.py install </pre>
-
-        <p>The install process will do the following:</p>
-        <ul>
-            <li>Install the new version in the <span class="code">bin</span> directory, while preserving any user
-                extensions in the <span class="code">bin/user</span> directory
-            </li>
-            <li>Save a copy of the old <span class="code">weewx.conf</span> as
-                <span class='code'>weewx.conf.YYYYMMDDHHMMSS</span>
-            </li>
-            <li>Update your copy of <span class="code">weewx.conf</span>, reflecting any changes required by the latest
-                version of WeeWX. This updated version is then installed.
-            </li>
-            <li>Install a <span class="code">skins</span> directory if one does not already exist.
-            </li>
-        </ul>
+        <pre class="tty cmd">weectl station upgrade</pre>
+        <p>
+            You may want to also upgrade your skins, although this may break any modifications you have made to
+            the skins. Your old skins will be saved in a timestamped directory.
+        </p>
+        <pre class="tty cmd">weectl station upgrade-skins</pre>
 
         <p>Finally, restart WeeWX.</p>
 
-        <h1><a id="Upgrading_using_DEB_package">Upgrading using DEB package</a></h1>
+        <h2 id="Upgrading_using_DEB_package">Upgrading using DEB package</h2>
 
         <p>If you have specified the WeeWX apt repository in <span
             class="code">/etc/apt/sources.list.d/weewx.list</span>, then upgrade to the latest version like this:
@@ -211,10 +193,10 @@ sudo apt-get install weewx</pre>
             The vast majority of the time you will want to choose <span class="code">N</span> (the default).
         </p>
 
-        <h1><a id="Upgrading_using_RPM_package">Upgrading using RPM package</a></h1>
+        <h2 id="Upgrading_using_RPM_package">Upgrading using RPM package</h2>
 
-        <p>If you have specified the WeeWX yum repository in <span
-            class="code">/etc/yum.repos.d/weewx.repo</span>, then upgrade to the latest version like this:
+        <p>If you have specified the WeeWX yum repository in <span class="code">/etc/yum.repos.d/weewx.repo</span>, then
+            upgrade to the latest version like this:
         </p>
 
         <pre class='tty cmd'>sudo yum update weewx</pre>
@@ -239,37 +221,115 @@ sudo apt-get install weewx</pre>
 
         <pre class='tty'>warning: /etc/weewx/weewx.conf created as /etc/weewx/weewx.conf.rpmnew</pre>
 
-        <h1>Upgrading the WeeWX configuration file</h1>
+        <h2>Upgrading the WeeWX configuration file</h2>
 
         <p>
-            It does not happen very often, but occasionally a new release will <em>require</em> changes to the WeeWX configuration file.  When this happens, the installer, whether it is <span class="code">setup.py</span>, or a package installer, takes care of upgrading the file and you do not need to worry about it.
+            It does not happen very often, but occasionally a new release will <em>require</em> changes to the WeeWX
+            configuration file. When this happens, the installer, whether it is
+            <span class="code">weectl station upgrade</span>, or a
+            package installer, takes care of upgrading the file, and you do not need to worry about it.
         </p>
         <p>
-            However, there are some occasions when you may need to upgrade the file yourself. In particular, this happens when you run several instances of <span class="code">weewxd</span> on the same machine, each with its own configuration file. The configuration file named <span class="code">weewx.conf</span> will get upgraded, but what about the others?
+            However, there are some occasions when you may need to upgrade the file yourself. In particular, this
+            happens when you run several instances of <span class="code">weewxd</span> on the same machine, each with
+            its own configuration file. The configuration file named <span class="code">weewx.conf</span> will get
+            upgraded, but what about the others?
         </p>
         <p>
-          Use <span class="code">wee_config</span> to upgrade each configuration file.  See the section on <a href="utilities.htm#wee_config_utility_upgrade"><span class="code">wee_config --upgrade</span></a> in the Utilities Guide for how to do this.
+            The answer is to use <span class="code">weectl station upgrade</span> with the
+            <span class="code">--config</span> option pointing to each of the files to be upgraded. For example,
+        </p>
+        <pre class="tty cmd">sudo weectl station upgrade --config=/etc/weewx/other.conf</pre>
+        <p>
+            would upgrade the configuration  file <span class="code">/etc/weewx/other.conf</span>.
         </p>
 
 
         <h1><a id="Instructions_for_specific_versions">Instructions for specific versions</a></h1>
+
+        <h2>Upgrading to V5.0</h2>
+
+        <h3>Python 2.7 no longer supported</h3>
+        <p>
+            It has now been over 3 years since the end-of-life for Python 2.7. It's time to move on. WeeWX V5.x requires
+            Python 3.7 or greater. These days, all but the most ancient of operating systems offer Python 3, although
+            you may have to install it.
+        </p>
+
+        <h3>setup.py installs no longer possible</h3>
+
+        <p>
+            The package <span class="code">distutils</span>, and the imperative approach on which the WeeWX <span
+            class="code">setup.py</span> install method depends, <a href="https://peps.python.org/pep-0632/">has been
+            deprecated</a> and will ultimately be removed. The future is clearly pip installs using <span
+            class="code">pyproject.toml</span>. See the wiki article on <a
+            href="https://github.com/weewx/weewx/wiki/Version-5">Version 5</a> for the technical reasons why.
+        </p>
+
+        <h3>pip installs to new location</h3>
+        <p>
+            The <span class="code">setup.py</span> install method generally installed to <span
+            class="code">/home/weewx</span>. The new pip install method installs to <span
+            class="code">~/weewx-data</span> in your home directory. However, old installations can continue to use
+            <span class="code">/home/weewx</span> by following the guide <a href="../v5-upgrade"><em>Migrating setup.py
+            installs to Version 5.0</em></a>.
+        </p>
+
+        <h3><span class="code">SQLITE_ROOT</span> is now relative to <span class="code">WEEWX_ROOT</span></h3>
+        <p>
+            Previously, <span class="code">SQLITE_ROOT</span> was expected to be an absolute path, but now it is
+            relative to <span class="code">WEEWX_ROOT</span>. Because this is <em>less restrictive</em>, it is not
+            expected to affect any users.
+        </p>
+
+        <h3>Change in the weedb API for SQLite</h3>
+        <p>
+            Previously, the database dictionary that was used to open a SQLite database using the low-level library
+            <span class="code">weedb</span>, included a path to the SQLite directory, <span
+            class="code">SQLITE_ROOT</span>, as well as a path to the actual database, which was relative to <span
+            class="code">SQLITE_ROOT</span>:
+        </p>
+        <pre class="tty">
+{
+   'SQLITE_ROOT' : '/home/weewx/archive',
+   'database_name' : 'weewx.sdb',
+   'driver' : 'weedb.sqlite'
+}
+        </pre>
+
+        <p>
+            Now it expects an absolute path to the file holding the SQLite database:
+        </p>
+        <pre class="tty">
+{
+   'db_path' : '/home/weewx/archive/weewx.db',
+   'driver' : 'weedb.sqlite'
+}
+        </pre>
+
+        <p>
+            Because users access the database through class <span class="code">weewx.manager.Manager</span> and its
+            subclasses, which encapsulate the low-level details of <span class="code">weedb</span>, this change is
+            unlikely to affect anyone.
+        </p>
+
 
         <h2>Upgrading to V4.10</h2>
 
         <h3>Breaking changes for skins that use delta times</h3>
         <p>
             A "delta time" is the difference between two times, for example the amount of uptime (difference between
-            start and current time), or the amount of daylight (difference between sunrise and sunset).
-            In previous versions, delta times were treated as a special case, which limited their
-            flexibility. With <a href="https://github.com/weewx/weewx/pull/807">PR #807</a>,
-            a delta time is treated like any other scalar, which gives you access to all the regular formatting
-            tools. However, a side effect is that if you want to format the time in the "long form", that is, so the
-            results look like <span class="code">4 hours, 15 minutes</span>, rather than <span class="code">15300
+            start and current time), or the amount of daylight (difference between sunrise and sunset). In previous
+            versions, delta times were treated as a special case, which limited their flexibility. With <a
+            href="https://github.com/weewx/weewx/pull/807">PR #807</a>, a delta time is treated like any other scalar,
+            which gives you access to all the regular formatting tools. However, a side effect is that if you want to
+            format the time in the "long form", that is, so the results look like <span
+            class="code">4 hours, 15 minutes</span>, rather than <span class="code">15300
             seconds</span>, then you will have to say so explicitly.
         </p>
         <p>
-            If you use the <em>Seasons</em> skin, you will have to make these three small changes. Add
-            the text in <span class="added">green</span>:
+            If you use the <em>Seasons</em> skin, you will have to make these three small changes. Add the text in <span
+            class="added">green</span>:
         </p>
 
         <div class="wide-table">
@@ -279,7 +339,9 @@ sudo apt-get install weewx</pre>
                     <td>4.10 Seasons skin</td>
                 </tr>
                 <tr>
-                    <td colspan="2" style="text-align: center"><span class="code">Seasons/about.inc</span> starting at line 31</td>
+                    <td colspan="2" style="text-align: center"><span class="code">Seasons/about.inc</span> starting at
+                        line 31
+                    </td>
                 </tr>
                 <tr>
                     <td>
@@ -308,7 +370,9 @@ sudo apt-get install weewx</pre>
                     </td>
                 </tr>
                 <tr>
-                    <td colspan="2" style="text-align: center"><span class="code">Seasons/celestial.inc</span> starting at line 94</td>
+                    <td colspan="2" style="text-align: center"><span class="code">Seasons/celestial.inc</span> starting
+                        at line 94
+                    </td>
                 </tr>
                 <tr>
                     <td>
@@ -341,7 +405,9 @@ sudo apt-get install weewx</pre>
                     <td>4.10 Standard skin</td>
                 </tr>
                 <tr>
-                    <td colspan="2" style="text-align: center"><span class="code">Standard/index.html.tmpl</span> starting at line 309</td>
+                    <td colspan="2" style="text-align: center"><span class="code">Standard/index.html.tmpl</span>
+                        starting at line 309
+                    </td>
                 </tr>
                 <tr>
                     <td>
@@ -361,10 +427,9 @@ sudo apt-get install weewx</pre>
         </div>
 
         <p>
-            In both cases, the new formatting directive <span class="code">.long_form</span> has been used to
-            explicitly request that the delta time be formatted into its constituent components.
-            The advantage of this approach is that the delta time can be treated like any other scalar. Here
-            are some examples:
+            In both cases, the new formatting directive <span class="code">.long_form</span> has been used to explicitly
+            request that the delta time be formatted into its constituent components. The advantage of this approach is
+            that the delta time can be treated like any other scalar. Here are some examples:
         </p>
         <table>
             <tr class="first_row">
@@ -373,46 +438,45 @@ sudo apt-get install weewx</pre>
             </tr>
             <tr>
                 <td class="tty">
-$almanac.sun.visible
+                    $almanac.sun.visible
                 </td>
                 <td class="tty">
-45000 seconds
-                </td>
-            </tr>
-            <tr>
-                <td class="tty">
-$almanac.sun.visible.hour
-                </td>
-                <td class="tty">
-12.5 hours
+                    45000 seconds
                 </td>
             </tr>
             <tr>
                 <td class="tty">
-$almanac.sun.visible.hour.format("%.2f")
+                    $almanac.sun.visible.hour
                 </td>
                 <td class="tty">
-12.50 hours
+                    12.5 hours
                 </td>
             </tr>
             <tr>
                 <td class="tty">
-$almanac.sun.visible.long_form
+                    $almanac.sun.visible.hour.format("%.2f")
                 </td>
                 <td class="tty">
-12 hours, 30 minutes, 0 seconds
+                    12.50 hours
+                </td>
+            </tr>
+            <tr>
+                <td class="tty">
+                    $almanac.sun.visible.long_form
+                </td>
+                <td class="tty">
+                    12 hours, 30 minutes, 0 seconds
                 </td>
             </tr>
         </table>
 
         <h3>Changes for custom delta time formats</h3>
         <p>
-            Fixing issue <a href="https://github.com/weewx/weewx/issues/808">#808</a> required
-            introducing a separate dictionary for members of group <span class="code">group_deltatime</span>. This
-            means that if you specified custom formats under <span class="code">[Units]/[[TimeFormats]]</span>, then
-            you will have to move them to the new section <span class="code">[Units]/[[DeltaTimeFormats]]</span>.
-            Very few users should be affected by this change because the ability to set custom delta time formats is an
-            undocumented feature.
+            Fixing issue <a href="https://github.com/weewx/weewx/issues/808">#808</a> required introducing a separate
+            dictionary for members of group <span class="code">group_deltatime</span>. This means that if you specified
+            custom formats under <span class="code">[Units]/[[TimeFormats]]</span>, then you will have to move them to
+            the new section <span class="code">[Units]/[[DeltaTimeFormats]]</span>. Very few users should be affected by
+            this change because the ability to set custom delta time formats is an undocumented feature.
         </p>
         <p>
             The good news is that the contexts they now use have more standard names. The table below summarizes:
@@ -435,8 +499,10 @@ $almanac.sun.visible.long_form
         ephem_year  = %x %X
         <span class="removed">brief_delta = "%(minute)d%(minute_label)s, %(second)d%(second_label)s"</span>
         <span class="removed">short_delta = "%(hour)d%(hour_label)s, %(minute)d%(minute_label)s, %(second)d%(second_label)s"</span>
-        <span class="removed">long_delta  = "%(day)d%(day_label)s, %(hour)d%(hour_label)s, %(minute)d%(minute_label)s"</span>
-        <span class="removed">delta_time  = "%(day)d%(day_label)s, %(hour)d%(hour_label)s, %(minute)d%(minute_label)s"</span>
+        <span
+            class="removed">long_delta  = "%(day)d%(day_label)s, %(hour)d%(hour_label)s, %(minute)d%(minute_label)s"</span>
+        <span
+            class="removed">delta_time  = "%(day)d%(day_label)s, %(hour)d%(hour_label)s, %(minute)d%(minute_label)s"</span>
                         </pre>
                     </td>
                     <td>
@@ -495,29 +561,29 @@ vh = ValueHelper(vt,
         </table>
 
         <p>
-            In summary, because <span class="code">group_deltatime</span> now uses the same context names as any
-            other time, you will have to change the call to use one of the conventional contexts.
+            In summary, because <span class="code">group_deltatime</span> now uses the same context names as any other
+            time, you will have to change the call to use one of the conventional contexts.
         </p>
 
 
         <h2>Upgrading to V4.9</h2>
         <h3><span class="code">wee_reports</span> may require <span class="code">--epoch</span> option.</h3>
         <p>
-            In previous versions, the utility <span class="code">wee_reports</span> could take an optional
-            position argument that specified the reporting time in unix epoch time. For example,
+            In previous versions, the utility <span class="code">wee_reports</span> could take an optional position
+            argument that specified the reporting time in unix epoch time. For example,
         </p>
         <pre class="tty cmd">wee_reports /home/weewx/weewx.conf 1645131600</pre>
         <p>
             would specify that the reporting time should be 1645131600, or 17-Feb-2022 13:00 PST.
         </p>
         <p>
-            Starting with V4.9, the unix epoch time must be specified using the <span class="code">--epoch</span>
-            flag, so the command becomes
+            Starting with V4.9, the unix epoch time must be specified using the <span class="code">--epoch</span> flag,
+            so the command becomes
         </p>
         <pre class="tty cmd">wee_reports /home/weewx/weewx.conf --epoch=1645131600</pre>
         <p>
-            Alternatively, the reporting time can be specified by using <span class="code">--date</span> and
-            <span class="code">--time</span> flags:
+            Alternatively, the reporting time can be specified by using <span class="code">--date</span> and <span
+            class="code">--time</span> flags:
         </p>
         <pre class="tty cmd">wee_reports /home/weewx/weewx.conf --date=2022-02-17 --time=13:00</pre>
 
@@ -528,8 +594,8 @@ vh = ValueHelper(vt,
             and have been removed.
         </p>
         <p>
-            Note also that the parameter <span class="code">heat_index_algo</span> was changed to
-            <span class="code">heatindex_algo</span> in keeping with the rest of the code.
+            Note also that the parameter <span class="code">heat_index_algo</span> was changed to <span class="code">heatindex_algo</span>
+            in keeping with the rest of the code.
         </p>
         <p>
             Unless you have been writing specialized code that required direct access to <span
@@ -569,9 +635,8 @@ vh = ValueHelper(vt,
         <h3>Calling signature of some archive span functions has changed</h3>
 
         <p>
-            The calling signature of the following functions has changed. In general, the parameter
-            <span class="code">grace</span> has been removed in favor of a more robust method for figuring out
-            which time span a timestamp belongs to.
+            The calling signature of the following functions has changed. In general, the parameter <span class="code">grace</span>
+            has been removed in favor of a more robust method for figuring out which time span a timestamp belongs to.
         </p>
 
         <table>
@@ -693,8 +758,8 @@ def archiveRainYearSpan(time_ts, sory_mon)
 
         <h4>Function <span class="code">as_value_tuple()</span> may raise <span class="code">KeyError</span></h4>
         <p>
-            Previously, if the function <span class="code">as_value_tuple()</span> was asked to return a
-            <span class="code">ValueTuple</span> of a non-existent type, it returned a <span class="code">ValueTuple</span>
+            Previously, if the function <span class="code">as_value_tuple()</span> was asked to return a <span
+            class="code">ValueTuple</span> of a non-existent type, it returned a <span class="code">ValueTuple</span>
             with values <span class="code">(None, None, None)</span>. Now it raises a <span class="code">KeyError</span>
             exception.
         </p>
@@ -705,9 +770,10 @@ def archiveRainYearSpan(time_ts, sory_mon)
 
         <p>
             The V4.2 daily summary patch inadvertently introduced a bug which caused the <span class="code">wind</span>
-            daily summary to be incorrectly weighted. See issue <a href="https://github.com/weewx/weewx/issues/642">#642</a>.
-            V4.4 includes a patch to automatically fix the defective daily summary. It is run only once on the first use
-            of a database (usually by <span class="code">weewxd</span>) and takes only a few seconds.
+            daily summary to be incorrectly weighted. See issue <a
+            href="https://github.com/weewx/weewx/issues/642">#642</a>. V4.4 includes a patch to automatically fix the
+            defective daily summary. It is run only once on the first use of a database (usually by <span class="code">weewxd</span>)
+            and takes only a few seconds.
         </p>
 
         <h2>Upgrading to V4.3</h2>
@@ -717,9 +783,8 @@ def archiveRainYearSpan(time_ts, sory_mon)
         <p>
             Version 4.2 inadvertently introduced a bug, which prevented the sums that are kept in the daily summaries
             from being weighted by the archive interval. See issue <a href="https://github.com/weewx/weewx/issues/623">#623</a>.
-            V4.3 includes a patch, which will fix any defective daily summaries automatically. It is run only once
-            on the first use of a database (usually by <span class="code">weewxd</span>) and takes only a few
-            seconds.
+            V4.3 includes a patch, which will fix any defective daily summaries automatically. It is run only once on
+            the first use of a database (usually by <span class="code">weewxd</span>) and takes only a few seconds.
         </p>
 
         <h3>Option <span class="code">ignore_zero_wind</span> has been renamed and moved</h3>
@@ -728,9 +793,9 @@ def archiveRainYearSpan(time_ts, sory_mon)
             Normally, WeeWX sets wind direction to undefined when wind speed is zero. While it was never documented,
             some users used option <span class="code">ignore_zero_wind</span> to prevent this: if set to <span
             class="code">False</span>, wind direction will not be set to undefined when wind speed is zero. However, the
-            option's location and name has changed. It is now called <span class="code">force_null</span>, and it is
-            now located under <span class="code">[StdWXCalculate] / [[WXXTypes]] / [[[windDir]]]</span>. The old name
-            and location has been deprecated, but still honored.
+            option's location and name has changed. It is now called <span class="code">force_null</span>, and it is now
+            located under <span class="code">[StdWXCalculate] / [[WXXTypes]] / [[[windDir]]]</span>. The old name and
+            location has been deprecated, but still honored.
         </p>
 
         <table>
@@ -763,9 +828,8 @@ def archiveRainYearSpan(time_ts, sory_mon)
         <h3>Option <span class="code">log_failure</span> set to <span class="code">True</span></h3>
         <p>
             The option <span class="code">log_failure</span> under <span class="code">[StdReport]</span> controls
-            whether to log failures into the system log. It was previously set to <span class="code">False</span>.
-            The upgrade process will set it to <span class="code">True</span>, so that users can better see failure
-            modes.
+            whether to log failures into the system log. It was previously set to <span class="code">False</span>. The
+            upgrade process will set it to <span class="code">True</span>, so that users can better see failure modes.
         </p>
 
         <table>
@@ -801,8 +865,8 @@ def archiveRainYearSpan(time_ts, sory_mon)
 
         <h3>Type <span class="code">beaufort</span> deprecated</h3>
         <p>
-            The type <span class="code">beaufort</span> has been deprecated, although there are no immediate plans
-            to remove it &mdash; using it will put a warning in the log. Instead, it has become a new unit, which can be
+            The type <span class="code">beaufort</span> has been deprecated, although there are no immediate plans to
+            remove it &mdash; using it will put a warning in the log. Instead, it has become a new unit, which can be
             used as part of <span class="code">group_speed</span>. Here's an example:
         </p>
         <table>
@@ -836,9 +900,9 @@ def archiveRainYearSpan(time_ts, sory_mon)
         <h3>Python 2.5 and 2.6</h3>
         <p>
             Support for Python 2.5 and 2.6 has been dropped. It has now been well over 10 years since these versions
-            were introduced, and 6+ years since they were supported by the Python Software Foundation. If you are
-            using Python 2.5 or 2.6, then you should either upgrade your copy of Python, or stay with your old
-            version of WeeWX.
+            were introduced, and 6+ years since they were supported by the Python Software Foundation. If you are using
+            Python 2.5 or 2.6, then you should either upgrade your copy of Python, or stay with your old version of
+            WeeWX.
         </p>
         <h3><span class="code">[StdWXCalculate]</span></h3>
         <p>
@@ -881,8 +945,8 @@ def archiveRainYearSpan(time_ts, sory_mon)
         <h3>New skins</h3>
         <p>
             Version 3.9 introduces and installs a new skin, <em>Seasons</em>, and promotes two old skins,
-            <em>Mobile</em> and <em>Smartphone</em>, previously part of <em>Standard</em>, to first-class,
-            independent, skins.
+            <em>Mobile</em> and <em>Smartphone</em>, previously part of <em>Standard</em>, to first-class, independent,
+            skins.
         </p>
 
         <ul>
@@ -894,8 +958,7 @@ def archiveRainYearSpan(time_ts, sory_mon)
                 If you are upgrading, then the three new skins, <em>Seasons</em>, <em>Mobile</em>, and
                 <em>Smartphone</em> will be installed, but none will be activated. Your existing <em>Standard</em> will
                 be left untouched and activated. For most people, your website will continue to look as expected (the
-                exception is explained below in section
-                <a href="#v39_effects"><em>Do you need to change anything?</em></a>).
+                exception is explained below in section <a href="#v39_effects"><em>Do you need to change anything?</em></a>).
             </li>
         </ul>
 
@@ -914,8 +977,8 @@ def archiveRainYearSpan(time_ts, sory_mon)
         </p>
         <p>
             It also adds a file <span class="code">defaults.py</span>, in which the fallback values for every report
-            parameter are specified. Although the defaults file is currently useful only to developers, in
-            the future it may be extended to facilitate translations and localization.
+            parameter are specified. Although the defaults file is currently useful only to developers, in the future it
+            may be extended to facilitate translations and localization.
         </p>
 
         <h3 id="v39_effects">Do you need to change anything?</h3>
@@ -923,8 +986,8 @@ def archiveRainYearSpan(time_ts, sory_mon)
             The introduction of the new section, <span class="code">[StdReport]/[[Defaults]]</span> in <span
             class="code">weewx.conf</span>, can change which units are applied to reports because it has a higher
             precedence than what is in <span class="code">skin.conf</span>. See the section <a
-            href="customizing.htm#How_options_work"><em>How options work</em></a> for details of the ordering
-            in which an option is considered.
+            href="customizing.htm#How_options_work"><em>How options work</em></a> for details of the ordering in which
+            an option is considered.
         </p>
 
         <p>
@@ -946,9 +1009,9 @@ def archiveRainYearSpan(time_ts, sory_mon)
         </p>
 
         <p>
-            However, users who specified what unit system to use as part of the automated install using a
-            package installer or <span class="code">setup.py</span>, will have an override section, and therefore
-            will be unaffected. This is because the override section has the highest priority.
+            However, users who specified what unit system to use as part of the automated install using a package
+            installer or <span class="code">setup.py</span>, will have an override section, and therefore will be
+            unaffected. This is because the override section has the highest priority.
         </p>
 
         <h2>Upgrading to V3.7</h2>
@@ -1430,8 +1493,8 @@ extraHumid8 = humidity_8</pre>
             With Version 3, there is no longer a separate "stats" database. Instead, "daily summaries" have been
             included in the same database as the archive data &mdash; everything is under one name. For example, if you
             are using sqlite, both the archive data and the daily summaries will be inside file <span class="code">weewx.sdb</span>.
-            With MySQL, everything is inside the database <span class="code">weewx</span>.
-            This makes it easier to keep all data together when working with multiple databases.
+            With MySQL, everything is inside the database <span class="code">weewx</span>. This makes it easier to keep
+            all data together when working with multiple databases.
         </p>
 
         <p>This change in database structure should be transparent to you. On startup, WeeWX will automatically backfill
@@ -1700,8 +1763,8 @@ extraHumid8 = humidity_8</pre>
 
         <p>
             The introduction of <em>data bindings</em> has meant a change in the calling signature of <em>search list
-            extensions.</em> By way of example, here's the example from the document <a
-            href="sle.html"><i>Writing search list extensions</i></a>, but with the differences highlighted.
+            extensions.</em> By way of example, here's the example from the document <a href="sle.html"><i>Writing
+            search list extensions</i></a>, but with the differences highlighted.
         </p>
         <table>
             <tbody>
