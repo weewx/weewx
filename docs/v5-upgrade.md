@@ -55,6 +55,11 @@ With this in mind, here is how you can continue to use your old `/home/weewx`:
    so that it uses the new V5.0 executable. These steps will require root privileges.
 
     === "Debian"
+
+        !!! Note
+            If you previously used a SysVinit init.d startup file, you will need to clean up any
+            previous init.d remnants. Please consult the [wiki article](https://github.com/weewx/weewx/wiki/Switching-from-SysVinit-to-systemd)
+            for how to do so.
    
         !!! Note
             The resulting daemon will be run using your username. If you prefer to use run as `root`,
