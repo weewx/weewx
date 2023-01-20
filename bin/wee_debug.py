@@ -270,15 +270,13 @@ def generateDebugInfo(config_dict, config_path, db_binding_wx, verbosity):
 
     # weewx database info
     if verbosity > 0:
-        print("Databases configured in weewx.conf")
+        print("Databases configured in weewx.conf:")
         for db_keys in config_dict['Databases']:
             database_dict = weewx.manager.get_database_dict_from_config(config_dict,
                                                                         db_keys)
-            _ = sorted(database_dict.keys())
-            print("  Database name:        %s" % database_dict['database_name'])
-            print("  Database driver:      %s" % database_dict['driver'])
-            if 'host' in database_dict:
-                print("  Database host:        %s" % database_dict['host'])
+            print(f"    {db_keys}:")
+            for k in database_dict:
+                print(f"{k:>20s} {database_dict[k]:<20s}")
             print()
 
     # sqlkeys/obskeys info
