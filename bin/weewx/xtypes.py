@@ -308,7 +308,7 @@ class ArchiveTable(XType):
                                                         db_manager)
 
         if obs_type == 'wind':
-            sql_type = 'windGust' if aggregate_type == 'max' else 'windSpeed'
+            sql_type = 'windGust' if aggregate_type in ('max', 'maxtime') else 'windSpeed'
         else:
             sql_type = obs_type
 

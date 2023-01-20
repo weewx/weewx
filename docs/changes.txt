@@ -2,6 +2,9 @@ WeeWX change history
 --------------------
 
 4.9.2 MM/DD/YYYY
+Calculate `*.wind.maxtime` out of `windGust` like `*.wind.max`
+Fixes issue #833
+
 Don't inject txBatteryStatus and consBatteryVoltage into records in
 the Vantage driver. Let the accumulators do it.
 Fixes issue #802.
