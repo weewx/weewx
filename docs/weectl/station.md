@@ -136,7 +136,7 @@ optional arguments:
                         to WEEWX_ROOT. Default is "public_html".
   --user-root USER_ROOT
                         Where to put the "user" directory, relative to
-                        $WEEWX_ROOT. Default is "lib/user"
+                        $WEEWX_ROOT. Default is "bin/user"
   --docs-root DOCS_ROOT
                         Where to put the documentation, relative to
                         $WEEWX_ROOT. Default is "docs".

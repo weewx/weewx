@@ -87,12 +87,12 @@ start with that:
 
 ``` shell
  # Download the wview_small schema and rename it to myschema.py
-cd ~/weewx-data/lib/user
+cd ~/weewx-data/bin/user
 wget https://raw.githubusercontent.com/weewx/weewx/master/bin/schemas/wview_small.py
 mv wview_small.py myschema.py
 
  # Edit it using your favorite text editor
-nano /home/weewx/bin/user/myschema.py
+nano myschema.py
 ```
 
 In `myschema.py` change this:

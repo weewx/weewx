@@ -52,8 +52,6 @@ Define $WEEWX_ROOT.
 
 Note that SQLITE is now relative to WEEWX_ROOT.
 
-References to `/home/weewx` become `$WEEWX_ROOT`
-
 Put legacy (V4.x) docs at weewx.com/legacy_docs.
 
 
