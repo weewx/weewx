@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "weewx"
-version = "5.0.0a11"
+version = "5.0.0a12"
 description = "The WeeWX weather software system"
 authors = ["Tom Keffer <tkeffer@gmail.com>"]
 license = "GPL3"
@@ -38,7 +38,7 @@ packages = [
     #    { include = "wee_debug", from = "bin" },
     #    { include = "wee_device", from = "bin" },
     #    { include = "wee_import", from = "bin" },
-    #    { include = "wee_reports", from = "bin" },
+    { include = "wee_reports.py", from = "bin" },
     { include = "weewxd.py", from = "bin" },
     { include = "weectl.py", from = "bin" },
 ]
@@ -70,6 +70,7 @@ six = "^1"
 [tool.poetry.scripts]
 weewxd = 'weewxd:main'
 weectl = 'weectl:main'
+wee_reports = 'wee_reports:main'
 
 [build-system]
 # Minimum requirements for the build system to execute.
