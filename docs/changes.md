@@ -27,9 +27,8 @@ MacOS now logs to `syslog` like any other system, rather than `rotate`.
 
 
 ## 4.10.0 MM/DD/YYYY
-Don't inject `txBatteryStatus` and `consBatteryVoltage` into records in
-the Vantage driver. Let the accumulators do it.
-Fixes issue #802.
+Don't inject txBatteryStatus and consBatteryVoltage into records in the Vantage
+driver. Let the accumulators do it. Fixes issue #802.
 
 Different wake-up strategy for the Vantage console.
 
@@ -39,19 +38,19 @@ Fixes issue #806.
 Allow more flexible formatting for delta times. This can break old skins.
 See Upgrade Guide. PR #807.
 
-Fix bug that prevents `group_deltatime` from being used by timespans. Users
+Fix bug that prevents group_deltatime from being used by timespans. Users
 who used custom formatting for delta times will be affected. See the Upgrade
 Guide. Fixes issue #808.
 
-Add suffix `.length` to class TimespanBinder. This allows expressions such as
+Add suffix ".length" to class TimespanBinder. This allows expressions such as
 $month.length. PR #809. Thanks to user Karen!
 
-Added new unit `hertz`. PR #812. Again, thanks to user Karen!
+Added new unit "hertz". PR #812. Again, thanks to user Karen!
 
-Document the behavior of the registry server responses.  Do not attempt retries
-when a registration update contacts the server but gets a FAIL response, since
-a FAIL at that point is due to a configuration problem, not comms, and retries
-will not help.
+Calculate `*.wind.maxtime` out of `windGust` like `*.wind.max`
+Fixes issue #833
+Fix bug that prevents `group_deltatime` from being used by timespans. Users
+Add suffix `.length` to class TimespanBinder. This allows expressions such as
 
 
 ## 4.9.1 10/25/2022
