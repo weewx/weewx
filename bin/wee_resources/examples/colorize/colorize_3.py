@@ -14,8 +14,15 @@ This search list extension offers an extra tag:
 
 To use this search list extension:
 
-1) Copy this file to the user directory. See https://bit.ly/33YHsqX for where your user
-directory is located.
+1) Copy this file to the user directory.
+
+    For example, for pip installs:
+
+        cp colorize_3.py ~/weewx-data/bin/user
+
+    For package installers:
+
+        sudo cp colorize_3.py /usr/share/weewx/user
 
 2) Modify the option search_list_extensions in the skin.conf configuration file, adding
 the name of this extension.  When you're done, it will look something like this:
