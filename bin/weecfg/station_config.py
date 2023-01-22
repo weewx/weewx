@@ -540,7 +540,7 @@ def copy_user(config_dict, user_root=None, dry_run=False):
 
     # If the user didn't specify a value, use a default
     if not user_root:
-        user_root = config_dict.get('USER_ROOT', 'lib/user')
+        user_root = config_dict.get('USER_ROOT', 'bin/user')
 
     # USER_ROOT is relative to WEEWX_PATH. Join them to get the absolute path.
     user_dir = os.path.join(config_dict['WEEWX_ROOT'], user_root)

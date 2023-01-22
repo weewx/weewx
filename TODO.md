@@ -24,12 +24,7 @@ Key:
 
 ## Utilities
 
-Get the following working again:
-
-- wee_database
-- wee_debug
-- wee_device
-- wee_import
+Remove wunderfixer and its documentation.
 
 ## Logging
 
@@ -46,6 +41,11 @@ Update the logging wiki.
 Fill out "Preparation" section in pip.md for RedHat, SuSE, and macOS.
 
 Put legacy (V4.x) docs at weewx.com/legacy_docs.
+
+
+## Examples
+
+Change from `/home/weewx` to `~/weewx-data`.
 
 
 ## Testing

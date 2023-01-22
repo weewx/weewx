@@ -95,7 +95,7 @@ def add_subparser(subparsers):
     _add_common_args(station_create_parser)
     station_create_parser.add_argument('--user-root',
                                        help='Where to put the "user" directory, relative to '
-                                            'WEEWX_ROOT. Default is "lib/user"')
+                                            'WEEWX_ROOT. Default is "bin/user"')
     station_create_parser.add_argument('--docs-root',
                                        help='Where to put the documentation, relative to '
                                             'WEEWX_ROOT. Default is "docs".')
