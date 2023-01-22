@@ -5,12 +5,10 @@
 #    See the file LICENSE.txt for your full rights.
 #
 """Configure databases used by WeeWX"""
-from __future__ import absolute_import
-from __future__ import print_function
-from __future__ import with_statement
 
 # python imports
 import datetime
+import importlib
 import logging
 import optparse
 import sys
@@ -20,7 +18,6 @@ import six
 from six.moves import input
 
 # weewx imports
-import user.extensions  # @UnusedImport
 import weecfg.database
 import weedb
 import weeutil.logger
@@ -192,6 +189,11 @@ def main():
 
     # Customize the logging with user settings.
     weeutil.logger.setup('wee_database', config_dict)
+
+    # Add the 'user' package to PYTHONPATH
+    weewx.add_user_path(config_dict)
+    # Now we can import user.extensions
+    importlib.import_module('user.extensions')
 
     db_binding = options.binding
     # Get the db name, be prepared to catch the error if the binding does not
