@@ -1,12 +1,6 @@
 # To do
 
 
-## Configuration related
-
-
-## Daemon
-
-
 ## Commands
 ```
 ✅ weectl station create
@@ -33,9 +27,6 @@ Consider making `$HOME/weewx-data/logs` the default log for MacOS.
 Update the logging wiki.
 
 
-## Build and distribution
-
-
 ## Documentation
 
 Fill out "Preparation" section in pip.md for RedHat, SuSE, and macOS.
@@ -45,7 +36,22 @@ Put legacy (V4.x) docs at weewx.com/legacy_docs.
 
 ## Examples
 
-Change from `/home/weewx` to `~/weewx-data`.
+Update the examples:
+
+- ~~basic~~
+- colorize_1
+- colorize_2
+- colorize_3
+- fileparse
+- pmon
+- xstats
+- alarm.py
+- lowBattery.py
+- mem.py
+- seven_day.py
+- transfer_db.py
+- vaporpressure.py
+
 
 
 ## Testing

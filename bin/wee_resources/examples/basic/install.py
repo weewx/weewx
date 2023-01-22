@@ -11,7 +11,7 @@ def loader():
 class BasicInstaller(ExtensionInstaller):
     def __init__(self):
         super(BasicInstaller, self).__init__(
-            version="0.3",
+            version="0.4",
             name='Basic',
             description='Very basic skin for weewx.',
             author="Matthew Wall",
