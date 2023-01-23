@@ -23,7 +23,7 @@ Installation instructions using the installer (recommended)
         sudo weectl extension install /usr/share/doc/weewx/examples/pmon
 
 
-2Restart WeeWX
+2) Restart WeeWX
 
         sudo systemctl restart weewx
 

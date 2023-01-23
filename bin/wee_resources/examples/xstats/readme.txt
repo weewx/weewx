@@ -1,10 +1,14 @@
-xstats - WeeWX extension that provides extended statistics for reports
-Copyright 2014 Matthew Wall
+xstats
+======
+
+WeeWX extension that provides extended statistics for reports
+
+Copyright 2014-2023 Matthew Wall
 
 This search list extension offers extra tags:
 
   'alltime':    All time statistics.
-                For example, "what is the all time high temperature?"
+                For example, "what is the all-time high temperature?"
                 $alltime.outTemp.max
 
   'seven_day':  Statistics for the last seven days, i.e., since midnight
@@ -31,38 +35,65 @@ This search list extension offers extra tags:
                       fall up to this time last year.
                       $last_year_todate.rain.sum
 
-Installation instructions
+Installation instructions using the installer (recommended)
+-----------------------------------------------------------
 
-1) install the extension
+1) Install the extension.
 
-wee_extension --install=/home/weewx/examples/xstats
+    For pip installs:
+
+        weectl extension install ~/weewx-data/examples/xstats
+
+    For package installs
+
+        sudo weectl extension install /usr/share/doc/weewx/examples/xstats
+
 
 2) Restart WeeWX
 
-sudo /etc/init.d/weewx stop
-sudo /etc/init.d/weewx start
+        sudo systemctl restart weewx
+
 
 This will result in a report called xstats that illustrates the use of the
 extended statistics.
 
 
 Manual installation instructions
+--------------------------------
 
-1) Copy files to the WeeWX user directory. See https://bit.ly/33YHsqX for where your user
-directory is located.
+1) Copy the file `xstats.py` to the WeeWX `user` directory.
 
-cp bin/user/xstats.py /home/weewx/bin/user
+    For pip installs:
 
-2) In the WeeWX configuration file, modify the report section in which you
-would like to use the extended statistics. For example, for the StandardReport
+        cd ~/weewx-data/examples/xstats
+        cp bin/user/xstats.py ~/etc/weewx-data/bin/user
 
-[StdReport]
-    [[StandardReport]]
-        ...
-        [[[CheetahGenerator]]]
-            search_list_extensions = user.xstats.ExtendedStatistics
+    For package installs:
+
+        cd /usr/share/doc/weewx/examples/xstats
+        sudo cp bin/user/xstats.py /usr/share/weewx/user
+
+2) Copy the `xstats` demonstration skin to the `skins` directory.
+
+    For pip installs:
+
+        cd ~/weewx-data/examples/xstats
+        cp skins/xsstats ~/weewx-data/skins/
+
+    For package installs:
+
+        cd /usr/share/doc/weewx/examples/xstats
+        sudo cp skins/xstats/ /etc/weewx/skins/
+
+
+3) In the WeeWX configuration file, arrange to use the demonstration skin `xstats`.
+
+        [StdReport]
+            ...
+            [[XStats]]
+                skin = xstats
+                HTML_ROOT = xstats
 
 3) Restart WeeWX
 
-sudo /etc/init.d/weewx stop
-sudo /etc/init.d/weewx start
+        sudo systemctl restart weewx

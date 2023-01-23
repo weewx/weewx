@@ -32,11 +32,12 @@ from weewx.cheetahgenerator import SearchList
 from weewx.tags import TimespanBinder
 from weeutil.weeutil import TimeSpan
 
+
 class ExtendedStatistics(SearchList):
-    
+
     def __init__(self, generator):
         SearchList.__init__(self, generator)
-  
+
     def get_extension_list(self, timespan, db_lookup):
         """Returns a search list extension with additions.
 
@@ -55,7 +56,7 @@ class ExtendedStatistics(SearchList):
                                    context='alltime',
                                    formatter=self.generator.formatter,
                                    converter=self.generator.converter)
-        
+
         # Now create a TimespanBinder for the last seven days. This one we
         # will have to calculate. First, calculate the time at midnight, seven
         # days ago. The variable week_dt will be an instance of datetime.date.
@@ -77,16 +78,16 @@ class ExtendedStatistics(SearchList):
                                           context='thirty_day',
                                           formatter=self.generator.formatter,
                                           converter=self.generator.converter)
-        
+
         # Now use a similar process to get statistics for last year.
         year = datetime.date.today().year
         start_ts = time.mktime((year - 1, 1, 1, 0, 0, 0, 0, 0, 0))
         stop_ts = time.mktime((year, 1, 1, 0, 0, 0, 0, 0, 0))
         last_year_stats = TimespanBinder(TimeSpan(start_ts, stop_ts),
-                                          db_lookup,
-                                          context='last_year',
-                                          formatter=self.generator.formatter,
-                                          converter=self.generator.converter)
+                                         db_lookup,
+                                         context='last_year',
+                                         formatter=self.generator.formatter,
+                                         converter=self.generator.converter)
 
         # Now use a similar process to get statistics for last year to date.
         year = datetime.date.today().year
@@ -99,7 +100,7 @@ class ExtendedStatistics(SearchList):
                                                 context='last_year_todate',
                                                 formatter=self.generator.formatter,
                                                 converter=self.generator.converter)
-        
+
         # Now use a similar process to get statistics for last calendar month.
         start_ts = time.mktime((year, month - 1, 1, 0, 0, 0, 0, 0, 0))
         stop_ts = time.mktime((year, month, 1, 0, 0, 0, 0, 0, 0)) - 1
@@ -115,6 +116,7 @@ class ExtendedStatistics(SearchList):
                  'last_month': last_month_stats,
                  'last_year': last_year_stats,
                  'last_year_todate': last_year_todate_stats}]
+
 
 # For backwards compatibility:
 ExtStats = ExtendedStatistics

@@ -11,7 +11,7 @@ def loader():
 class XStatsInstaller(ExtensionInstaller):
     def __init__(self):
         super(XStatsInstaller, self).__init__(
-            version="0.2",
+            version="0.3",
             name='xstats',
             description='Extended statistics for weewx reports',
             author="Matthew Wall",
