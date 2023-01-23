@@ -1,4 +1,4 @@
-#    Copyright (c) 2009-2021 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2023 Tom Keffer <tkeffer@gmail.com>
 #    See the file LICENSE.txt for your rights.
 
 """Example of how to implement a low battery alarm in WeeWX.
@@ -41,8 +41,8 @@ as bad.
 
 To enable this service:
 
-1) Copy this file to your user directory. See https://bit.ly/33YHsqX for where your user
-directory is located.
+1) Copy this file to your user directory.  For pip install, this directory is
+at ~/weewx-data/bin/user. For package installs, it's /usr/share/weewx/user.
 
 2) Modify the weewx configuration file by adding this service to the option
 "report_services", located in section [Engine][[Services]].
@@ -235,16 +235,11 @@ Arguments:
 
       CONFIG_PATH: Path to weewx.conf """
 
-    epilog = """You must be sure the WeeWX modules are in your PYTHONPATH. For example:
-
-    PYTHONPATH=/home/weewx/bin python lowBattery.py --help"""
-
     # Force debug:
     weewx.debug = 1
 
     # Create a command line parser:
-    parser = OptionParser(usage=usage,
-                          epilog=epilog)
+    parser = OptionParser(usage=usage)
     parser.add_option("--config", dest="config_path", metavar="CONFIG_FILE",
                       help="Use configuration file CONFIG_FILE.")
     # Parse the arguments and options

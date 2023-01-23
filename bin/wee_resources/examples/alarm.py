@@ -1,4 +1,4 @@
-#    Copyright (c) 2009-2021 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2023 Tom Keffer <tkeffer@gmail.com>
 #    See the file LICENSE.txt for your rights.
 
 """Example of how to implement an alarm in WeeWX.
@@ -40,8 +40,8 @@ hour).
 
 To enable this service:
 
-1) Copy this file to the user directory. See https://bit.ly/33YHsqX for where your user
-directory is located.
+1) Copy this file to the user directory. For pip install, this directory is
+at ~/weewx-data/bin/user. For package installs, it's /usr/share/weewx/user.
 
 2) Modify the weewx configuration file by adding this service to the option
 "report_services", located in section [Engine][[Services]].
