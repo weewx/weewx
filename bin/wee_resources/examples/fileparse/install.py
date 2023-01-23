@@ -11,7 +11,7 @@ def loader():
 class FileParseInstaller(ExtensionInstaller):
     def __init__(self):
         super(FileParseInstaller, self).__init__(
-            version="0.6",
+            version="0.8",
             name='fileparse',
             description='File parsing driver for weewx.',
             author="Matthew Wall",

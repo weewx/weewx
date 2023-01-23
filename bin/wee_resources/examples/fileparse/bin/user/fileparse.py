@@ -54,21 +54,24 @@ import time
 import weewx.drivers
 
 DRIVER_NAME = 'FileParse'
-DRIVER_VERSION = "0.7"
+DRIVER_VERSION = "0.8"
 
 log = logging.getLogger(__name__)
 
-def _get_as_float(d, s):
+
+def _get_as_float(data, key):
     v = None
-    if s in d:
+    if key in data:
         try:
-            v = float(d[s])
+            v = float(data[key])
         except ValueError as e:
             log.error("cannot read value for '%s': %s" % (s, e))
     return v
 
+
 def loader(config_dict, engine):
     return FileParseDriver(**config_dict[DRIVER_NAME])
+
 
 class FileParseDriver(weewx.drivers.AbstractDevice):
     """weewx driver that reads data from a file"""
@@ -93,6 +96,9 @@ class FileParseDriver(weewx.drivers.AbstractDevice):
                 with open(self.path) as f:
                     for line in f:
                         eq_index = line.find('=')
+                        # Ignore all lines that do not have an equal sign
+                        if eq_index == -1:
+                            continue
                         name = line[:eq_index].strip()
                         value = line[eq_index + 1:].strip()
                         data[name] = value
@@ -112,12 +118,14 @@ class FileParseDriver(weewx.drivers.AbstractDevice):
     def hardware_name(self):
         return "FileParse"
 
+
 # To test this driver, run it directly as follows:
 #   PYTHONPATH=/home/weewx/bin python /home/weewx/bin/user/fileparse.py
 if __name__ == "__main__":
     import weeutil.weeutil
     import weeutil.logger
     import weewx
+
     weewx.debug = 1
     weeutil.logger.setup('fileparse', {})
 
