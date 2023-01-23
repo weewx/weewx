@@ -112,13 +112,14 @@ class ProcessMonitor(StdService):
         except weedb.DatabaseError:
             pass
 
-    COLUMNS = re.compile('[\S]+\s+[\d]+\s+[\d.]+\s+[\d.]+\s+([\d]+)\s+([\d]+)')
+    COLUMNS = re.compile(r'\S+\s+\d+\s+[\d.]+\s+[\d.]+\s+(\d+)\s+(\d+)')
 
     def get_data(self, now_ts, last_ts):
-        record = dict()
-        record['dateTime'] = now_ts
-        record['usUnits'] = weewx.METRIC
-        record['interval'] = int((now_ts - last_ts) / 60.0)
+        record = {
+            'dateTime' : now_ts,
+            'usUnits' : weewx.METRIC,
+            'interval' : int((now_ts - last_ts) / 60.0)
+        }
         try:
             cmd = 'ps aux'
             p = Popen(cmd, shell=True, stdout=PIPE)
@@ -158,7 +159,7 @@ if __name__ == "__main__":
             'mode': 'simulator'},
         'ProcessMonitor': {
             'data_binding': 'pmon_binding',
-            'process': 'weewxd'},
+            'process': 'pmon'},
         'DataBindings': {
             'pmon_binding': {
                 'database': 'pmon_sqlite',

@@ -25,7 +25,7 @@ class ProcessMonitorInstaller(ExtensionInstaller):
                     'pmon_binding': {
                         'database': 'pmon_sqlite',
                         'table_name': 'archive',
-                        'manager': 'weewx.manager.DaySummaryManager',
+                        'manager': 'weewx.manager.Manager',
                         'schema': 'user.pmon.schema'}},
                 'Databases': {
                     'pmon_sqlite': {

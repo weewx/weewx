@@ -43,7 +43,7 @@ Update the examples:
 - ~~colorize_2~~
 - ~~colorize_3~~
 - ~~fileparse~~
-- pmon <--- needs separate schema.
+- ~~pmon~~
 - xstats
 - alarm.py
 - lowBattery.py
