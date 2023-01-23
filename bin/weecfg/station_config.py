@@ -547,7 +547,7 @@ def copy_user(config_dict, user_root=None, dry_run=False):
 
     # Don't clobber an existing user subdirectory
     if not os.path.isdir(user_dir):
-        with weeutil.weeutil.path_to_resource('wee_resources', 'lib') as lib_resources:
+        with weeutil.weeutil.path_to_resource('wee_resources', 'bin') as lib_resources:
             print(f"Creating a new 'user' directory at {user_dir}.")
             if not dry_run:
                 shutil.copytree(os.path.join(lib_resources, 'user'),
