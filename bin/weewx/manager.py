@@ -807,12 +807,8 @@ def get_manager_dict_from_config(config_dict, data_binding,
 
     # Now get the database dictionary if it's missing:
     if 'database_dict' not in manager_dict:
-        try:
-            database = manager_dict.pop('database')
-            manager_dict['database_dict'] = get_database_dict_from_config(config_dict,
-                                                                          database)
-        except KeyError as e:
-            raise weewx.UnknownDatabase("Unknown database '%s'" % e)
+        database = manager_dict.pop('database')
+        manager_dict['database_dict'] = get_database_dict_from_config(config_dict, database)
 
     # The schema may be specified as a string, in which case we resolve the python object to which
     # it refers. Or it may be specified as a dict with field_name=sql_type pairs.

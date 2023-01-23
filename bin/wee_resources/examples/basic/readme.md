@@ -7,7 +7,7 @@ This example illustrates how to implement a skin and package it so that it can b
 extension installer. It also illustrates how to internationalize a skin.
 
 
-Installation instructions
+Installation instructions using the installer (recommended)
 -------------------------
 
 1) install the extension.

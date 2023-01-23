@@ -8,8 +8,8 @@ can be installed by the extension installer.  The fileparse driver reads data
 from a file of name=value pairs.
 
 
-Installation instructions (recommended)
--------------------------
+Installation instructions using the installer (recommended)
+-----------------------------------------------------------
 
 1) Install the extension.
 

@@ -1,4 +1,4 @@
-# Copyright 2013 Matthew Wall
+# Copyright 2013-2013 Matthew Wall
 """weewx module that records process information.
 
 Installation
@@ -16,7 +16,7 @@ Add the following to weewx.conf:
 [DataBindings]
     [[pmon_binding]]
         database = pmon_sqlite
-        manager = weewx.manager.DaySummaryManager
+        manager = weewx.manager.Manager
         table_name = archive
         schema = user.pmon.schema
 
@@ -30,9 +30,6 @@ Add the following to weewx.conf:
         archive_services = ..., user.pmon.ProcessMonitor
 """
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 import logging
 import os
 import re
@@ -41,10 +38,10 @@ from subprocess import Popen, PIPE
 
 import weedb
 import weewx.manager
-import weeutil.weeutil
+from weeutil.weeutil import to_int
 from weewx.engine import StdService
 
-VERSION = "0.6"
+VERSION = "0.7"
 
 log = logging.getLogger(__name__)
 
@@ -62,12 +59,13 @@ class ProcessMonitor(StdService):
     def __init__(self, engine, config_dict):
         super(ProcessMonitor, self).__init__(engine, config_dict)
 
-        d = config_dict.get('ProcessMonitor', {})
-        self.process = d.get('process', 'weewxd')
-        self.max_age = weeutil.weeutil.to_int(d.get('max_age', 2592000))
+        # To make what follows simpler, isolate the "pmon" part of the configuration file
+        pmon_dict = config_dict.get('ProcessMonitor', {})
+        self.process = pmon_dict.get('process', 'weewxd')
+        self.max_age = to_int(pmon_dict.get('max_age', 2592000))
 
         # get the database parameters we need to function
-        binding = d.get('data_binding', 'pmon_binding')
+        binding = pmon_dict.get('data_binding', 'pmon_binding')
         self.dbm = self.engine.db_binder.get_manager(data_binding=binding,
                                                      initialize=True)
 
@@ -120,7 +118,7 @@ class ProcessMonitor(StdService):
         record = dict()
         record['dateTime'] = now_ts
         record['usUnits'] = weewx.METRIC
-        record['interval'] = int((now_ts - last_ts) / 60)
+        record['interval'] = int((now_ts - last_ts) / 60.0)
         try:
             cmd = 'ps aux'
             p = Popen(cmd, shell=True, stdout=PIPE)
@@ -138,7 +136,7 @@ class ProcessMonitor(StdService):
 
 # what follows is a basic unit test of this module.  to run the test:
 #
-# cd /home/weewx
+# cd ~/weewx-data
 # PYTHONPATH=bin python bin/user/pmon.py
 #
 if __name__ == "__main__":
@@ -183,18 +181,20 @@ if __name__ == "__main__":
     svc = ProcessMonitor(eng, config)
 
     nowts = lastts = int(time.time())
-    rec = svc.get_data(nowts, lastts)
-    print(rec)
 
-    time.sleep(5)
-    nowts = int(time.time())
-    rec = svc.get_data(nowts, lastts)
-    print(rec)
-
-    time.sleep(5)
-    lastts = nowts
-    nowts = int(time.time())
-    rec = svc.get_data(nowts, lastts)
-    print(rec)
-
-    os.remove('/var/tmp/pmon.sdb')
+    loop = 0
+    try:
+        while True:
+            rec = svc.get_data(nowts, lastts)
+            print(rec)
+            loop += 1
+            if loop >= 3:
+                break
+            time.sleep(5)
+            lastts = nowts
+            nowts = int(time.time()+0.5)
+    finally:
+        try:
+            os.remove('/var/tmp/pmon.sdb')
+        except FileNotFoundError:
+            pass

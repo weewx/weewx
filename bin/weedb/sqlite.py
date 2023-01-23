@@ -311,10 +311,10 @@ def modify_config(config_dict, database_dict):
     # Very old versions of weedb used option 'root', instead of 'SQLITE_ROOT'
     sqlite_dir = db_dict.get('SQLITE_ROOT', db_dict.get('root', 'archive'))
 
-    db_path = os.path.join(config_dict['WEEWX_ROOT'],
-                           sqlite_dir,
-                           db_dict['database_name'])
-    db_dict['db_path'] = db_path
+    # If no WEEWX_ROOT, then it should have no influence. Use './'
+    db_dict['db_path'] = os.path.normpath(os.path.join(config_dict.get('WEEWX_ROOT', './'),
+                                                       sqlite_dir,
+                                                       db_dict['database_name']))
     # These are no longer needed:
     db_dict.pop('SQLITE_ROOT', None)
     db_dict.pop('root', None)

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "weewx"
-version = "5.0.0a12"
+version = "5.0.0a13"
 description = "The WeeWX weather software system"
 authors = ["Tom Keffer <tkeffer@gmail.com>"]
 license = "GPL3"
@@ -34,7 +34,7 @@ packages = [
     { include = "weeplot", from = "bin" },
     { include = "weeutil", from = "bin" },
     { include = "weewx", from = "bin" },
-    { include = "wee_database", from = "bin" },
+    { include = "wee_database.py", from = "bin" },
     { include = "wee_debug.py", from = "bin" },
     { include = "wee_device.py", from = "bin" },
     { include = "wee_import.py", from = "bin" },

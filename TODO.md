@@ -39,11 +39,11 @@ Put legacy (V4.x) docs at weewx.com/legacy_docs.
 Update the examples:
 
 - ~~basic~~
-- colorize_1
-- colorize_2
-- colorize_3
-- fileparse
-- pmon
+- ~~colorize_1~~
+- ~~colorize_2~~
+- ~~colorize_3~~
+- ~~fileparse~~
+- pmon <--- needs separate schema.
 - xstats
 - alarm.py
 - lowBattery.py

@@ -1,5 +1,5 @@
 # installer for pmon
-# Copyright 2014 Matthew Wall
+# Copyright 2014-2023 Matthew Wall
 
 from weecfg.extension import ExtensionInstaller
 
@@ -11,7 +11,7 @@ def loader():
 class ProcessMonitorInstaller(ExtensionInstaller):
     def __init__(self):
         super(ProcessMonitorInstaller, self).__init__(
-            version="0.4",
+            version="0.7",
             name='pmon',
             description='Collect and display process memory usage.',
             author="Matthew Wall",

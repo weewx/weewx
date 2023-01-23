@@ -1,3 +1,6 @@
+0.7 22jan2023
+* Ported to WeeWX V5.0
+
 0.6 17nov2019
 * ported to python 3
 * ported to weewx v4
