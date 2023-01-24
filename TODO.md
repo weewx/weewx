@@ -34,25 +34,6 @@ Fill out "Preparation" section in pip.md for RedHat, SuSE, and macOS.
 Put legacy (V4.x) docs at weewx.com/legacy_docs.
 
 
-## Examples
-
-Update the examples:
-
-- ~~basic~~
-- ~~colorize_1~~
-- ~~colorize_2~~
-- ~~colorize_3~~
-- ~~fileparse~~
-- ~~pmon~~
-- xstats
-- alarm.py
-- lowBattery.py
-- mem.py
-- seven_day.py
-- transfer_db.py
-- vaporpressure.py
-
-
 
 ## Testing
 
