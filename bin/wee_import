@@ -778,6 +778,8 @@ def main():
     parser.add_option("--to", dest="date_to", type=str, metavar="YYYY-mm-dd[THH:MM]",
                       help="Import data up until this date or date-time. Format "
                            "is YYYY-mm-dd[THH:MM].")
+    parser.add_option("--update", dest="update", action="store_true",
+                      help="Update data in database.")
     parser.add_option("--verbose", action="store_true", dest="verbose",
                       help="Print and log useful extra output.")
     parser.add_option("--no-prompt", action="store_true", dest="no_prompt",

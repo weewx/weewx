@@ -192,6 +192,7 @@ class Source(object):
 
         # Process our command line options
         self.dry_run = options.dry_run
+        self.update = options.update
         self.verbose = options.verbose
         self.no_prompt = options.no_prompt
         self.suppress = options.suppress
@@ -1273,7 +1274,7 @@ class Source(object):
                         # add the record only if it is not a dry run
                         if not self.dry_run:
                             # add the record only if it is not a dry run
-                            archive.addRecord(_tranche)
+                            archive.addRecord(_tranche, update=self.update)
                         # add our the dateTime for each record in our tranche
                         # to the dry run set
                         for _trec in _tranche:
@@ -1291,7 +1292,7 @@ class Source(object):
                     # we do so process them
                     if not self.dry_run:
                         # add the record only if it is not a dry run
-                        archive.addRecord(_tranche)
+                        archive.addRecord(_tranche, update=self.update)
                     # add our the dateTime for each record in our tranche to
                     # the dry run set
                     for _trec in _tranche:
