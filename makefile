@@ -119,6 +119,7 @@ done
 	@grep "ERROR:\|FAIL:" $(BLDDIR)/test-results || echo "no failures"
 	@grep "skipped=" $(BLDDIR)/test-results || echo "no tests were skipped"
 	@echo "see $(BLDDIR)/test-results for output from the tests"
+	@grep -q "ERROR:\|FAIL:" $(BLDDIR)/test-results && exit 1 || true
 
 test-setup:
 	bin/weedb/tests/setup_mysql.sh
