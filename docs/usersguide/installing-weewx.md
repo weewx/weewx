@@ -40,17 +40,17 @@ This is the recommended method for beginners.
 - Requires root privileges to modify.
 - Installs in operating system "standard locations."
 
-Here are quick guides for common operating systems:
+Quick guides for common operating systems:
 
-[Debian-based systems](../debian.md) : For Debian, Ubuntu, Mint, and Raspbian operating  systems.
+[Debian-based systems](../quickstarts/debian.md) : For Debian, Ubuntu, Mint, and Raspbian operating  systems.
 
-[Redhat-based RPM systems](../redhat.md): For Redhat, CentOS, Fedora operating systems.
+[Redhat-based RPM systems](../quickstarts/redhat.md): For Redhat, CentOS, Fedora operating systems.
 
-[SuSE-based RPM systems](../suse.md): For SuSE and OpenSUSE.
+[SuSE-based RPM systems](../quickstarts/suse.md): For SuSE and OpenSUSE.
 
 ### Installing using pip
 
-Best for those who intend to customize their system. 
+Best for those who intend to customize their system.
 
 - Supports most operating systems, including macOS.
 - Multi-step install.
@@ -59,57 +59,59 @@ Best for those who intend to customize their system.
 - Installs in "standard locations" for a Python application.
 - All user state is held in one location, making backups easy.
 
+For instructions, see [*Installation using pip*](../quickstarts/pip.md).
 
 ## Where to find things
 
 Here is a summary of the layout for the different install methods, along with the symbolic names used for each role. These names are used throughout the documentation.
 
+!!! Note
+    The install locations below are *relative to _`WEEWX_ROOT`_*. See Python's documentation on
+    [`os.path.join()`](https://docs.python.org/3.7/library/os.path.html#os.path.join) for the 
+    results of a joining two absolute paths (summary: the 2nd path wins).
+
+
 === "Debian"
 
     | Role                    | Symbolic name     | Nominal value                   |
     |-------------------------|-------------------|---------------------------------|
-    | WeeWX root directory    | _`$WEEWX_ROOT`_   | `/`                             |
-    | Executables             | _`$BIN_ROOT`_     | `/usr/share/weewx/`             |
-    | Configuration directory | _`$CONFIG_ROOT`_  | `/etc/weewx/`                   |
-    | Skins and templates     | _`$SKIN_ROOT`_    | `/etc/weewx/skins/`             |
-    | SQLite databases        | _`$SQLITE_ROOT`_  | `/var/lib/weewx/`               |
-    | Web pages and images    | _`$HTML_ROOT`_    | `/var/www/html/weewx/`          |
-    | Documentation           | _`$DOC_ROOT`_     | `/usr/share/doc/weewx/`         |
-    | Examples                | _`$EXAMPLE_ROOT`_ | `/usr/share/doc/weewx/examples/`|
-    | User directory          | _`$USER_ROOT`_    | `/usr/share/weewx/user`                |
-    | PID file                |                   | `/var/run/weewx.pid`            |
+    | WeeWX root directory    | _`WEEWX_ROOT`_   | `/`                             |
+    | Executables             | _`BIN_ROOT`_     | `/usr/share/weewx/`             |
+    | Configuration directory | _`CONFIG_ROOT`_  | `/etc/weewx/`                   |
+    | Skins and templates     | _`SKIN_ROOT`_    | `/etc/weewx/skins/`             |
+    | SQLite databases        | _`SQLITE_ROOT`_  | `/var/lib/weewx/`               |
+    | Web pages and images    | _`HTML_ROOT`_    | `/var/www/html/weewx/`          |
+    | Documentation           | _`DOC_ROOT`_     | `/usr/share/doc/weewx/`         |
+    | Examples                | _`EXAMPLE_ROOT`_ | `/usr/share/doc/weewx/examples/`|
+    | User directory          | _`USER_ROOT`_    | `/usr/share/weewx/user`                |
     | Log file                |                   | `/var/log/syslog`               |
 
 === "RedHat/SUSE"
 
     | Role                    | Symbolic name     | Nominal value                          |
     |-------------------------|-------------------|----------------------------------------|
-    | WeeWX root directory    | _`$WEEWX_ROOT`_   | `/`                                    |
-    | Executables             | _`$BIN_ROOT`_     | `/usr/share/weewx/`                    |
-    | Configuration directory | _`$CONFIG_ROOT`_  | `/etc/weewx/`                          |
-    | Skins and templates     | _`$SKIN_ROOT`_    | `/etc/weewx/skins/`                    |
-    | SQLite databases        | _`$SQLITE_ROOT`_  | `/var/lib/weewx/`                      |
-    | Web pages and images    | _`$HTML_ROOT`_    | `/var/www/html/weewx/`                 |
-    | Documentation           | _`$DOC_ROOT`_     | `/usr/share/doc/weewx-x.y.z/`          |
-    | Examples                | _`$EXAMPLE_ROOT`_ | `/usr/share/doc/weewx-x.y.z/examples/` |
-    | User directory          | _`$USER_ROOT`_    | `/usr/share/weewx/user`                |
-    | PID file                |                   | `/var/run/weewx.pid`                   |
+    | WeeWX root directory    | _`WEEWX_ROOT`_   | `/`                                    |
+    | Executables             | _`BIN_ROOT`_     | `/usr/share/weewx/`                    |
+    | Configuration directory | _`CONFIG_ROOT`_  | `/etc/weewx/`                          |
+    | Skins and templates     | _`SKIN_ROOT`_    | `/etc/weewx/skins/`                    |
+    | SQLite databases        | _`SQLITE_ROOT`_  | `/var/lib/weewx/`                      |
+    | Web pages and images    | _`HTML_ROOT`_    | `/var/www/html/weewx/`                 |
+    | Documentation           | _`DOC_ROOT`_     | `/usr/share/doc/weewx-x.y.z/`          |
+    | Examples                | _`EXAMPLE_ROOT`_ | `/usr/share/doc/weewx-x.y.z/examples/` |
+    | User directory          | _`USER_ROOT`_    | `/usr/share/weewx/user`                |
     | Log file                |                   | `/var/log/syslog`                      |
 
 === "Pip (including macOS)"
-    !!! Note
-        The pip install locations given below are *relative to _`$WEEWX_ROOT`_*
 
     | Role                    | Symbolic name     | Nominal value        |
     |-------------------------|-------------------|----------------------|
-    | WeeWX root directory    | _`$WEEWX_ROOT`_   | `~/weewx-data`       |
-    | Executables             | _`$BIN_ROOT`_     | `~/.local/bin`       |
-    | Configuration directory | _`$CONFIG_ROOT`_  | `./`                 |
-    | Skins and templates     | _`$SKIN_ROOT`_    | `./skins/`           |
-    | SQLite databases        | _`$SQLITE_ROOT`_  | `./archive/`         |
-    | Web pages and images    | _`$HTML_ROOT`_    | `./public_html/`     |
-    | Documentation           | _`$DOC_ROOT`_     | `./docs`             |
-    | Examples                | _`$EXAMPLE_ROOT`_ | `./examples/`        |
-    | User directory          | _`$USER_ROOT`_    | `./bin/user`         |
-    | PID file                |                   | `/var/run/weewx.pid` |
+    | WeeWX root directory    | _`WEEWX_ROOT`_   | `~/weewx-data`       |
+    | Executables             | _`BIN_ROOT`_     | `~/.local/bin`       |
+    | Configuration directory | _`CONFIG_ROOT`_  | `./`                 |
+    | Skins and templates     | _`SKIN_ROOT`_    | `./skins/`           |
+    | SQLite databases        | _`SQLITE_ROOT`_  | `./archive/`         |
+    | Web pages and images    | _`HTML_ROOT`_    | `./public_html/`     |
+    | Documentation           | _`DOC_ROOT`_     | `./docs`             |
+    | Examples                | _`EXAMPLE_ROOT`_ | `./examples/`        |
+    | User directory          | _`USER_ROOT`_    | `./bin/user`         |
     | Log file                |                   | `/var/log/syslog`    |

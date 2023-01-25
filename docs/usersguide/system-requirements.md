@@ -20,6 +20,6 @@ WeeWX also runs great on a Raspberry Pi, although report generation will take lo
 
 
 ## Time
-You should run some sort of time synchronization daemon to ensure that your computer has the correct time. Doing so will greatly reduce errors, especially if you send data to services such as the Weather Underground. Systemd systems can use systemd-timesyncd, other systems can use NTP.
+You should run some sort of time synchronization daemon to ensure that your computer has the correct time. Doing so will greatly reduce errors, especially if you send data to services such as the Weather Underground. Systemd systems can use systemd-timesyncd, other systems can use NTP. See the Wiki article [*Time services*](https://github.com/weewx/weewx/wiki/Time-services).
 
 The time on some stations is automatically synchronized with the WeeWX server nominally every four hours. The synchronization frequency can be adjusted in the WeeWX configuration.

@@ -26,7 +26,7 @@ home directory in `~/weewx-data`, although you may continue to use your old user
 With this in mind, here is how you can continue to use your old `/home/weewx`:
 
 1. Install V5.0 by using the tool `pip`. (You can find more details in the document 
-   [_Installation using pip_](pip.md), but note that you are *only going to follow step 1*. 
+   [_Installation using pip_](pip.md), but note that you are *only going to follow step 1*.
    Do not do step 2.)
 
     ```shell

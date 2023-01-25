@@ -27,7 +27,7 @@ For unattended operations it is best to have WeeWX run as a daemon, started auto
 
 If you use a packaged install from a DEB or RPM distribution, this is done automatically. You can ignore this section.
 
-For a pip install, you will have to do this yourself. See the section [*Run as a daemon*](../../pip/#run-as-a-daemon) in the pip quick start guide.
+For a pip install, you will have to do this yourself. See the section [*Run as a daemon*](../../quickstarts/pip/#run-as-a-daemon) in the pip quick start guide.
 
 ## Monitoring WeeWX
 WeeWX logs many events to the system log. On Debian systems, this is `/var/log/syslog`, on SuSE, `/var/log/messages`. Your system may use yet another place. When troubleshooting the system, be sure to check it!

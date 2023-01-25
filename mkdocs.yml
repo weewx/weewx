@@ -43,12 +43,12 @@ site_dir: 'bin/wee_resources/docs'
 
 nav:
   - Quickstarts:
-      - quickstart-overview.md
-      - Debian: debian.md
-      - RedHat: redhat.md
-      - SuSE: suse.md
-      - pip: pip.md
-      - "Migrating to V5": v5-upgrade.md
+      - Overview: ./quickstarts/index.md
+      - Debian: ./quickstarts/debian.md
+      - RedHat: ./quickstarts/redhat.md
+      - SuSE: ./quickstarts/suse.md
+      - pip: ./quickstarts/pip.md
+      - "Migrating to V5": ./quickstarts/v5-upgrade.md
 
   - "User's guide":
       - "Introduction": ./usersguide/index.md
