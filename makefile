@@ -123,6 +123,9 @@ done
 test-setup:
 	bin/weedb/tests/setup_mysql.sh
 
+test-setup-ci:
+	MYSQL_NO_OPTS=1 bin/weedb/tests/setup_mysql.sh
+
 TESTDIR=/var/tmp/weewx_test
 MYSQLCLEAN="drop database test_weewx;\n\
 drop database test_alt_weewx;\n\

@@ -30,7 +30,7 @@ jobs:
 
     - name: Setup tests
       run: |
-        sudo make test-setup
+        sudo make test-setup-ci
 
     - name: Launch tests
       run: |
