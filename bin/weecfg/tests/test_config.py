@@ -47,7 +47,9 @@ Y_STR = """
         [section_e]
           c = 15"""
 
-current_config_dict_path = "../../wee_resources/weewx.conf"
+import wee_resources
+resource_dir = os.path.dirname(wee_resources.__file__)
+current_config_dict_path = os.path.join(resource_dir, 'weewx.conf')
 
 
 def suppress_stdout(func):
@@ -311,7 +313,8 @@ class ExtensionInstallTest(unittest.TestCase):
         shutil.rmtree(weewx_root, ignore_errors=True)
         os.makedirs(os.path.join(weewx_root, 'skins'))
         # Copy over the current version of the 'user' package
-        shutil.copytree('../../../bin/user', os.path.join(weewx_root, 'user'))
+        shutil.copytree(os.path.join(resource_dir, 'bin/user'),
+                        os.path.join(weewx_root, 'user'))
         # Copy over the current version of weewx.conf
         shutil.copy(current_config_dict_path, weewx_root)
 
@@ -331,7 +334,6 @@ class ExtensionInstallTest(unittest.TestCase):
         # non-standard location.
         self.engine = weecfg.extension.ExtensionEngine(self.config_path,
                                                        self.config_dict,
-                                                       bin_root=self.weewx_root,
                                                        logger=weecfg.Logger(verbosity=-1))
 
     def tearDown(self):
@@ -339,30 +341,29 @@ class ExtensionInstallTest(unittest.TestCase):
         shutil.rmtree(self.weewx_root, ignore_errors=True)
 
     def test_install(self):
-
         # Make sure the root dictionary got calculated correctly:
         self.assertEqual(self.engine.root_dict['WEEWX_ROOT'], '/var/tmp/wee_test')
-        self.assertEqual(self.engine.root_dict['USER_ROOT'], '/var/tmp/wee_test/user')
-        self.assertEqual(self.engine.root_dict['EXT_ROOT'], '/var/tmp/wee_test/user/installer')
-        self.assertEqual(self.engine.root_dict['SKIN_ROOT'], '/var/tmp/wee_test/skins')
-        self.assertEqual(self.engine.root_dict['CONFIG_ROOT'], '/var/tmp/wee_test')
+        self.assertEqual(self.engine.root_dict['USER_DIR'], '/var/tmp/wee_test/bin/user')
+        self.assertEqual(self.engine.root_dict['BIN_DIR'], '/var/tmp/wee_test/bin')
+        self.assertEqual(self.engine.root_dict['EXT_DIR'], '/var/tmp/wee_test/bin/user/installer')
+        self.assertEqual(self.engine.root_dict['SKIN_DIR'], '/var/tmp/wee_test/skins')
 
         # Now install the extension...
         self.engine.install_extension('./pmon.tgz')
 
         # ... and assert that it got installed correctly
-        self.assertTrue(os.path.isfile(os.path.join(self.engine.root_dict['USER_ROOT'],
+        self.assertTrue(os.path.isfile(os.path.join(self.engine.root_dict['USER_DIR'],
                                                     'pmon.py')))
-        self.assertTrue(os.path.isfile(os.path.join(self.engine.root_dict['USER_ROOT'],
+        self.assertTrue(os.path.isfile(os.path.join(self.engine.root_dict['USER_DIR'],
                                                     'installer',
                                                     'pmon',
                                                     'install.py')))
-        self.assertTrue(os.path.isdir(os.path.join(self.engine.root_dict['SKIN_ROOT'],
+        self.assertTrue(os.path.isdir(os.path.join(self.engine.root_dict['SKIN_DIR'],
                                                    'pmon')))
-        self.assertTrue(os.path.isfile(os.path.join(self.engine.root_dict['SKIN_ROOT'],
+        self.assertTrue(os.path.isfile(os.path.join(self.engine.root_dict['SKIN_DIR'],
                                                     'pmon',
                                                     'index.html.tmpl')))
-        self.assertTrue(os.path.isfile(os.path.join(self.engine.root_dict['SKIN_ROOT'],
+        self.assertTrue(os.path.isfile(os.path.join(self.engine.root_dict['SKIN_DIR'],
                                                     'pmon',
                                                     'skin.conf')))
 
@@ -392,18 +393,18 @@ class ExtensionInstallTest(unittest.TestCase):
         self.engine.uninstall_extension('pmon')
 
         # Assert that everything got removed correctly:
-        self.assertFalse(os.path.exists(os.path.join(self.engine.root_dict['USER_ROOT'],
+        self.assertFalse(os.path.exists(os.path.join(self.engine.root_dict['USER_DIR'],
                                                      'pmon.py')))
-        self.assertFalse(os.path.exists(os.path.join(self.engine.root_dict['USER_ROOT'],
+        self.assertFalse(os.path.exists(os.path.join(self.engine.root_dict['USER_DIR'],
                                                      'installer',
                                                      'pmon',
                                                      'install.py')))
-        self.assertFalse(os.path.exists(os.path.join(self.engine.root_dict['SKIN_ROOT'],
+        self.assertFalse(os.path.exists(os.path.join(self.engine.root_dict['SKIN_DIR'],
                                                      'pmon')))
-        self.assertFalse(os.path.exists(os.path.join(self.engine.root_dict['SKIN_ROOT'],
+        self.assertFalse(os.path.exists(os.path.join(self.engine.root_dict['SKIN_DIR'],
                                                      'pmon',
                                                      'index.html.tmpl')))
-        self.assertFalse(os.path.exists(os.path.join(self.engine.root_dict['SKIN_ROOT'],
+        self.assertFalse(os.path.exists(os.path.join(self.engine.root_dict['SKIN_DIR'],
                                                      'pmon',
                                                      'skin.conf')))
 

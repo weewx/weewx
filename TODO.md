@@ -2,19 +2,6 @@
 
 
 ## Commands
-```
-✅ weectl station create
-✅ weectl station reconfigure
-✅ weectl station upgrade
-✅ weectl station upgrade-skins
-✅ weectl extension install
-✅ weectl extension uninstall
-✅ weectl extension list
-✅ weectl extension transfer
-```
-Key: 
-✅ means completed
-½ means started
 
 ## Utilities
 

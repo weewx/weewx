@@ -1,21 +1,10 @@
 # -*- coding: utf-8 -*-
 #
-#    Copyright (c) 2009-2022 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2023 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
-"""Test tag notation for template generation.
-
-To run standalone, PYTHONPATH must be set to not only the WeeWX code, but also the "stats" example.
-Something like:
-
-cd ~/git/weewx
-PYTHONPATH="./examples:./bin" python bin/weewx/tests/test_templates.py
-"""
-
-from __future__ import absolute_import
-from __future__ import print_function
-from __future__ import with_statement
+"""Test tag notation for template generation."""
 
 import locale
 import logging
@@ -26,12 +15,11 @@ import time
 import unittest
 
 import configobj
-from six.moves import map
 
 import gen_fake_data
+import weeutil.config
 import weeutil.logger
 import weeutil.weeutil
-import weeutil.config
 import weewx
 import weewx.accum
 import weewx.reportengine
@@ -76,8 +64,8 @@ weewx.accum.initialize(config_dict)
 import wee_resources
 example_dir = os.path.normpath(os.path.join(os.path.dirname(wee_resources.__file__),
                                             './examples'))
-sys.path.append(example_dir)
 sys.path.append(os.path.join(example_dir, './colorize'))
+sys.path.append(os.path.join(example_dir, './xstats/bin/user'))
 
 import colorize_1
 import colorize_2

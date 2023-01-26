@@ -5,10 +5,8 @@
 #
 """Test algorithms in the Report Engine"""
 
-import importlib.resources
 import logging
 import os.path
-import sys
 import unittest
 
 import weeutil.config
@@ -38,20 +36,6 @@ WEEWX_ROOT = '../../..'
 # Find WEEWX_ROOT by working up from this file's location:
 CONFIG_DICT = weeutil.config.config_from_str(CONFIG_DICT_INI)
 CONFIG_DICT['WEEWX_ROOT'] = os.path.normpath(os.path.join(os.path.dirname(__file__), '../../..'))
-
-# For MacOS, the default logging logs to /var/log/weewx.log, which is a privileged location.
-# Change to something unprivileged, so we don't have to run test suites as root.
-if sys.platform == 'darwin':
-    LOGGING = {
-        'Logging': {
-            'handlers': {
-                'rotate': {
-                    'filename': '/var/tmp/weewx.log'
-                }
-            }
-        }
-    }
-    CONFIG_DICT.merge(LOGGING)
 
 weeutil.logger.setup('test_reportengine', CONFIG_DICT)
 
