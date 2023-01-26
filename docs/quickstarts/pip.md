@@ -85,7 +85,7 @@ the database file and any generated HTML pages. It plays a role similar to `/hom
 versions of WeeWX but, unlike `/home/weewx`, it does not hold any code.
 
 If you already have a `/home/weewx` and wish to reuse it, see the [Upgrading
-guide](upgrading.htm) and the [*Migrating setup.py installs to Version 5*](v5-upgrade.md).
+guide](../upgrading.htm) and the [*Migrating setup.py installs to Version 5*](v5-upgrade.md).
 
 ## Running `weewxd`
 

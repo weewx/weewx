@@ -167,7 +167,7 @@ upload-docs:
 	rsync -Orv bin/wee_resources/docs/ $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/v5-docs
 
 # update the version in all relevant places
-VDOCS=usersguide/about-weewx.md
+VDOCS=usersguide/index.md custom/index.md
 VCONFIGS=bin/wee_resources/weewx.conf bin/weecfg/tests/expected/weewx43_user_expected.conf
 VSKINS=Ftp/skin.conf Mobile/skin.conf Rsync/skin.conf Seasons/skin.conf Smartphone/skin.conf Standard/skin.conf
 version:

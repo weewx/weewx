@@ -1,4 +1,5 @@
 # WeeWX User's Guide
+
 Version: 5.0
 
 This is the complete guide to installing, configuring, and troubleshooting WeeWX.
