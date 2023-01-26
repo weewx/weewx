@@ -11,9 +11,6 @@ We recommend to put
     `skin.conf`; and
 -   language dependent labels and texts into the language files.
 
-The most important options, the ones you are likely to have to
-customize, are ==highlighted==.
-
 It is worth noting that, like the main configuration file
 `weewx.conf`, UTF-8 is used throughout.
 
@@ -812,8 +809,7 @@ time can be specified by using one of the "shortcuts" (that is,
 The default is to plot every data point, but this is probably not a good
 idea for any plot longer than a day. By setting this option, you can
 *aggregate* data by a set time interval. Available aggregation types
-include `avg`, `count`, `cumulative`,
-`diff`, `last`, `max`, `min`, `sum`,
+include `avg`, `count`, `cumulative`, `diff`, `last`, `max`, `min`, `sum`,
 and `tderiv`.
 
 #### color

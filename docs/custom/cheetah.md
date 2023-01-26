@@ -10,7 +10,7 @@ The Cheetah generator is controlled by the section  [_[CheetahGenerator]_](../op
 
 ## Which files get processed?
 
-Each template file is named something like `_D/F.E.tmpl_`, where `D` is the (optional) directory the template sits in and will also be the directory the results will be put in, and `F.E` is the generated file name. So, given a template file with name `Acme/index.html.tmpl`, the results will be put in `HTML_ROOT/Acme/index.html`.
+Each template file is named something like `D/F.E.tmpl`, where `D` is the (optional) directory the template sits in and will also be the directory the results will be put in, and `F.E` is the generated file name. So, given a template file with name `Acme/index.html.tmpl`, the results will be put in <code><em>HTML_ROOT</em>/Acme/index.html</code>.
 
 The configuration for a group of templates will look something like this:
 
@@ -191,11 +191,12 @@ These code the current outside temperature, the maximum outside temperature for 
 
 would be all you need for a very simple HTML page that would display the text (assuming that the unit group for temperature is `degree_F`):
 
-!!! Example
-    Current temperature = 51.0°F  
-    Max for the month is 68.8°F, which occurred at 07-Oct-2009 15:15
+<span class="example_output">
+Current temperature = 51.0°F  
+Max for the month is 68.8°F, which occurred at 07-Oct-2009 15:15
+</span>
 
-The format that was used to format the temperature (51.0) is specified in section [[Units][[StringFormat]]](../options_ref/#Units_StringFormats). The unit label °F is from section [[Units][[Labels]]](../options_ref/#Units_Labels), while the time format is from [[Units][[TimeFormats]]](../options_ref/#Units_TimeFormats).
+The format that was used to format the temperature (`51.0`) is specified in section [[Units][[StringFormat]]](../options_ref/#Units_StringFormats). The unit label `°F` is from section [[Units][[Labels]]](../options_ref/#Units_Labels), while the time format is from [[Units][[TimeFormats]]](../options_ref/#Units_TimeFormats).
 
 As we saw above, the tags can be very simple:
 
@@ -222,11 +223,11 @@ The most general tag for a "current" observation looks like:
 
 Where:
 
-_`some_time`_ is a timestamp that you want to display. It is optional, The default is to display the value for the current time.
+_`$timestamp`_ is a timestamp that you want to display in unix epoch time. It is optional, The default is to display the value for the current time.
 
-_`delta_t`_ is the largest time difference (in seconds) between the time specified and a timestamp of a record in the database that will be returned. By default, it is zero, which means there must be an exact match with a specified time for a record to be retrieved.
+_`$max_delta`_ is the largest acceptable time difference (in seconds) between the time specified by `$timestamp` and a record's timestamp in the database. By default, it is zero, which means there must be an exact match with a specified time for a record to be retrieved. If it were `30`, then a record up to 30 seconds away would be acceptable.
 
-_`binding_name`_ is a _binding name_ to a database. An example would be `wx_binding`. See the section _[Binding names](../../custom#binding-names)_ for more details.
+_`$data_binding`_ is a _binding name_ to a database. An example would be `wx_binding`. See the section _[Binding names](../../custom#binding-names)_ for more details.
 
 _`obstype`_ is an observation type, such as `barometer`. This type must appear either as a field in the database, or in the current (usually, the latest) record.
 
@@ -256,7 +257,7 @@ Where:
 
 _`period`_ is the time period over which the aggregation is to be done. Possible choices are listed in the [table below](#aggregation_periods).
 
-_`binding_name`_ is a _binding name_ to a database. An example would be `wx_binding`. See the section _[Binding names](../../custom#binding-names)_ for more details.
+_`data_binding`_ is a _binding name_ to a database. An example would be `wx_binding`. See the section _[Binding names](../../custom#binding-names)_ for more details.
 
 _`optional_ago`_ is a keyword that depends on the aggregation period. For example, for week, it would be `weeks_ago`, for day, it would be `days_ago`, _etc._
 

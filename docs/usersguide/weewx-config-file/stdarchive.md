@@ -2,7 +2,7 @@
 
 This section is for configuring `StdArchive`, the service that stores data in a database.
 
-#### archive_interval
+#### ==archive_interval==
 
 If your station hardware supports data logging then the archive interval will be downloaded from the station. Otherwise, you must specify it here in seconds, and it must be evenly divisible by 60. Optional. Default is `300`.
 

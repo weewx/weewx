@@ -65,7 +65,7 @@ To illustrate the processing order, here are the steps for the skin _Seasons_:
 *   First, a set of options defined in the Python module `weewx.defaults` serve as the starting point.
 *   Next, options from the configuration file for _Seasons_, located in `skins/Seasons/skin.conf`, are merged.
 *   Next, any options that apply to all skins, specified in the `[StdReport] / [[Defaults]]` section of the WeeWX configuration file, are merged.
-*   Finally, any skin-specific options, specified in the [StdReport] / [[Seasons]] section of the WeeWX configuration, are merged. These options have the final say.
+*   Finally, any skin-specific options, specified in the `[StdReport] / [[Seasons]]` section of the WeeWX configuration, are merged. These options have the final say.
 
 At all four steps, if a language specification is encountered (option `lang`), then the corresponding language file will be read and merged. If a unit specification (option `unit_system`) is encountered, then the appropriate unit groups are set. For example, if `unit_system=metricwx`, then the unit for `group_pressure` will be set to `mbar`, etc.
 

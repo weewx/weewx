@@ -110,7 +110,7 @@ install the required daemon file.
         The resulting daemon will be run using your username. If you prefer to use run as `root`,
         you will have to modify the file `/etc/systemd/system/weewx.service`.
 
-    ```bash
+    ```shell
     cd ~/weewx-data
     sudo cp util/systemd/weewx.service /etc/systemd/system
     sudo systemctl daemon-reload
@@ -124,7 +124,7 @@ install the required daemon file.
         The resulting daemon will be run using your username. If you prefer to use run as `root`,
         you will have to modify the file `/etc/init.d/weewx`.
 
-    ```bash
+    ```shell
     # Use the old init.d method if your os is ancient
     cd ~/weewx-data
     sudo cp util/init.d/weewx.debian /etc/init.d/weewx
@@ -135,7 +135,7 @@ install the required daemon file.
 
 === "Redhat"
 
-    ```bash
+    ```shell
     cd ~/weewx-data
     sudo cp util/init.d/weewx.redhat /etc/rc.d/init.d/weewx
     sudo chmod +x /etc/rc.d/init.d/weewx
@@ -145,7 +145,7 @@ install the required daemon file.
 
 === "SuSE"
 
-    ```bash
+    ```shell
     cd ~/weewx-data
     sudo cp util/init.d/weewx.suse /etc/init.d/weewx
     sudo chmod +x /etc/init.d/weewx
@@ -155,7 +155,7 @@ install the required daemon file.
 
 === "macOS"
 
-    ```bash
+    ```shell
     cd ~/weewx-data
     sudo cp util/launchd/com.weewx.weewxd.plist /Library/LaunchDaemons
     sudo launchctl load /Library/LaunchDaemons/com.weewx.weewxd.plist
@@ -205,20 +205,20 @@ Stop WeeWX
 
 === "Debian"
 
-    ```bash
+    ```shell
     sudo systemctl stop weewx
     sudo systemctl disable weewx
     ```
 
 === "Redhat, SuSE,<br/>and very old Debian:"
 
-    ```bash
+    ```shell
     sudo /etc/rc.d/init.d/weewx stop
     ```
 
 === "macOS"
 
-    ```bash
+    ```shell
     sudo launchctl unload /Library/LaunchDaemons/com.weewx.weewxd.plist
     ```
 
@@ -226,31 +226,37 @@ Uninstall any daemon files:
 
 === "Debian"
 
-    ```bash
+    ```shell
     sudo rm /etc/systemd/system/weewx.service
     ```
 
 === "Redhat, SuSE,<br/>and very old Debian:"
 
-    ```
+    ```shell
     sudo rm /etc/init.d/weewx
     ```
 
 === "macOS"
 
-    ```
+    ```shell
     sudo rm /Library/LaunchDaemons/com.weewx.weewxd.plist
     ```
 
-Use pip to uninstall the program and dependencies.
+Use pip to uninstall the program.
 
-```
-pip uninstall weewx pyserial pyusb CT3 Pillow configobj PyMySQL pyephem ephem -y
+```shell
+python3 -m pip uninstall weewx -y
 ```
 
+You can also use pip to uninstall the dependencies, but first check that they are
+not being used by other programs!
+
+```shell
+python3 -m pip uninstall pyserial pyusb CT3 Pillow configobj PyMySQL pyephem ephem -y
+```
 
 Finally, if desired, delete the data directory:
 
-```bash
+```shell
 rm -r ~/weewx-data
 ```

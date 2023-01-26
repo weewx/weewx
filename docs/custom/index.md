@@ -63,13 +63,13 @@ You may choose to install one of the many [third-party extensions](https://githu
 
 More advanced customizations may require new Python code or modifications of example code. These should be placed in the user directory, where they will be preserved across upgrades. For example, if you wish to modify one of the examples that comes with WeeWX, copy it from the examples directory to the user directory, then modify it there. This way, your modifications will not be touched if you upgrade.
 
-For code that must run before anything else in WeeWX runs (for example, to set up an environment), put it in the file extensions.py in the user directory. It is always run before the WeeWX engine starts up. Because it is in the user subdirectory, it is preserved between upgrades.
+For code that must run before anything else in WeeWX runs (for example, to set up an environment), put it in the file `extensions.py` in the user directory. It is always run before the WeeWX engine starts up. Because it is in the `user` subdirectory, it is preserved between upgrades.
 
 ## Do I need to restart WeeWX?
 
 If you make a change in `weewx.conf`, you will need to restart `weewxd`.
 
-If you modify Python code in the user directory or elsewhere, you will need to restart `weewxd`.
+If you modify Python code in the `user` directory or elsewhere, you will need to restart `weewxd`.
 
 If you install an extension, you will need to restart `weewxd`.
 
@@ -120,8 +120,12 @@ At a high-level, WeeWX consists of an engine class called `StdEngine`. It is res
     </tr>
     <tr>
         <td class="code first_col">weewx.wxservices.StdWXCalculate</td>
-        <td>Calculate any missing, derived weather observation types, such a dewpoint, windchill, or
-            altimeter-corrected pressure.
+        <td>Decide which derived observation types need to be calculated.
+        </td>
+    </tr>
+    <tr>
+        <td class="code first_col">weewx.wxxtypes.StdWXXTypes<br/>weewx.wxxtypes.StdPressureCooker<br/>weewx.wxxtypes.StdRainRater<br/>weewx.wxxtypes.StdDelta</td>
+        <td>Calculate derived variables, such as <span class="code">ET</span>, <span class="code">dewpoint</span>, or <span class="code">rainRate</span>.
         </td>
     </tr>
     <tr>
@@ -220,10 +224,10 @@ Each report has a _skin_ associated with it. For most reports, the relationship 
 
 Like all reports, the FTP and RSYNC "reports" also use a skin, and include a skin configuration file, although they are quite minimal.
 
-Skins live in their own directory called `skins`, whose location is referred to as _`$SKIN_ROOT`_.
+Skins live in their own directory called `skins`, whose location is referred to as _`SKIN_ROOT`_.
 
 !!! Note
-    The symbol _`$SKIN_ROOT`_ is a symbolic name to the location of the directory where your skins are located. It is not to be taken literally. Consult the [directory layout table](../usersguide/installing-weewx/#where-to-find-things) in the User's Guide for its exact location, dependent on how you installed WeeWX and what operating system you are using
+    The symbol _`SKIN_ROOT`_ is a symbolic name to the location of the directory where your skins are located. It is not to be taken literally. Consult the [directory layout table](../usersguide/installing-weewx/#where-to-find-things) in the User's Guide for its exact location, dependent on how you installed WeeWX and what operating system you are using
 
 ### Generators
 
@@ -274,11 +278,11 @@ Each template file lives in the skin directory of the skin that uses it. By conv
 
 ## The database
 
-WeeWX uses a single database to store and retrieve the records it needs. It can be implemented by using either [SQLITE3](https://www.sqlite.org/), an open-source, lightweight SQL database, or [MySQL](https://www.mysql.com/), an open-source, full-featured database server.
+WeeWX uses a single database to store and retrieve the records it needs. It can be implemented by using either [SQLite](https://www.sqlite.org/), an open-source, lightweight SQL database, or [MySQL](https://www.mysql.com/), an open-source, full-featured database server.
 
 ### Structure
 
-Inside this database are several tables. The most important is the _archive table_, a big flat table, holding one record for each archive interval, keyed by dateTime, the time at the end of the archive interval. It looks something like this:
+Inside this database are several tables. The most important is the _archive table_, a big flat table, holding one record for each archive interval, keyed by `dateTime`, the time at the end of the archive interval. It looks something like this:
 
 <table class="indent fixed_width">
     <caption>
@@ -347,7 +351,7 @@ The first three columns are _required._ Here's what they mean:
     </tr>
     <tr>
         <td class="first_col code">usUnits</td>
-        <td>The unit system the record is in. It cannot be null. See the <em><a href="#units">Appendix:
+        <td>The unit system the record is in. It cannot be null. See the <em><a href="appendix/#units">Appendix:
             Units</a></em> for how these systems are encoded.
         </td>
     </tr>
@@ -358,7 +362,7 @@ The first three columns are _required._ Here's what they mean:
     </tr>
 </table>
 
-In addition to the main archive table, there are a number of smaller tables inside the database, one for each observation type, which hold _daily summaries_ of the type, such as the minimum and maximum value seen during the day, and at what time. These tables have names such as `archive_day_outTemp` or `archive_day_barometer`. Their existence is generally transparent to the user. For more details, see the section [_Daily summaries_](../devnotes#Daily_summaries) in the document _Developer's Notes_.
+In addition to the main archive table, there are a number of smaller tables inside the database, one for each observation type, which hold _daily summaries_ of the type, such as the minimum and maximum value seen during the day, and at what time. These tables have names such as `archive_day_outTemp` or `archive_day_barometer`. They are there to optimize certain types of queries &mdash; their existence is generally transparent to the user. For more details, see the section [_Daily summaries_](../devnotes#Daily_summaries) in the document _Developer's Notes_.
 
 ### Binding names
 
@@ -424,5 +428,7 @@ Note that whatever unit system is used in the database, data can be _displayed_ 
 Each _observation type_, such as `outTemp` or `pressure`, is associated with a _unit group_, such as `group_temperature` or `group_pressure`. Each unit group is associated with a _unit type_ such as `degree_F` or `mbar`. The reporting service uses this architecture to convert observations into a target unit system, to be displayed in your reports.
 
 With this architecture one can easily create reports with, say, wind measured in knots, rain measured in mm, and temperatures in degree Celsius. Or one can create a single set of templates, but display data in different unit systems with only a few stanzas in a configuration file.
+
+## Copyright
 
 © [Copyright](../copyright) 2009-2023 Thomas Keffer <tkeffer@gmail.com>

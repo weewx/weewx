@@ -40,7 +40,7 @@ To add your station to this list, you must do two things:
         station_url = https://acme.com
 ```
 
-#### register_this_station
+#### ==register_this_station==
 
 Set this to `true` to register the weather station.
 

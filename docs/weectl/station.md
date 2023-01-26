@@ -180,7 +180,7 @@ Path to the configuration file to be created. The directory of the path will bec
 `--docs-root`<br/>
 `--examples-root`
 
-All of these root options are *relative to `$WEEWX_ROOT`*. Of course, like any other path, if the
+All of these root options are *relative to `WEEWX_ROOT`*. Of course, like any other path, if the
 option starts with a slash (`/`), it becomes an absolute path. So, for example,
 
 ```shell
