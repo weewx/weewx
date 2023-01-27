@@ -52,6 +52,8 @@ Fixes issue #833
 Fix bug that prevents `group_deltatime` from being used by timespans. Users
 Add suffix `.length` to class TimespanBinder. This allows expressions such as
 
+Option line_gap_fraction can now be used with bar plots. Fixes issue #818.
+
 
 ## 4.9.1 10/25/2022
 Fix problem with `wind` for older versions of sqlite.

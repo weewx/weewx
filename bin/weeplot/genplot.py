@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2021 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2023 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -366,8 +366,8 @@ class GeneralPlot(object):
 
             # Calculate the size of a gap in data
             maxdx = None
-            if this_line.gap_fraction is not None:
-                maxdx = this_line.gap_fraction * (self.xscale[1] - self.xscale[0])
+            if this_line.line_gap_fraction is not None:
+                maxdx = this_line.line_gap_fraction * (self.xscale[1] - self.xscale[0])
 
             if this_line.plot_type == 'line':
                 ms = this_line.marker_size
@@ -611,7 +611,7 @@ class PlotLine(object):
     """Represents a single line (or bar) in a plot. """
     def __init__(self, x, y, label='', color=None, fill_color=None, width=None, plot_type='line',
                  line_type='solid', marker_type=None, marker_size=10, 
-                 bar_width=None, vector_rotate = None, gap_fraction=None):
+                 bar_width=None, vector_rotate = None, line_gap_fraction=None):
         self.x               = x
         self.y               = y
         self.label           = to_text(label)   # Make sure the label is in unicode
@@ -624,7 +624,7 @@ class PlotLine(object):
         self.width           = width
         self.bar_width       = bar_width
         self.vector_rotate   = vector_rotate
-        self.gap_fraction    = gap_fraction
+        self.line_gap_fraction = line_gap_fraction
 
 
 class UniDraw(ImageDraw.ImageDraw):
