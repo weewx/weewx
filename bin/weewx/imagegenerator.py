@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2021 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2023 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -255,6 +255,10 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
             # Get the type of plot ('bar', 'line', or 'vector')
             plot_type = line_options.get('plot_type', 'line').lower()
 
+            if plot_type not in {'line', 'bar', 'vector'}:
+                log.error(f"Unknown plot type {plot_type}. Ignored")
+                continue
+
             if aggregate_type and plot_type != 'bar':
                 # If aggregating, put the point in the middle of the interval
                 start_vec_t = ValueTuple(
@@ -302,7 +306,7 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
             width = to_int(line_options.get('width'))
 
             interval_vec = None
-            gap_fraction = None
+            line_gap_fraction = None
             vector_rotate = None
 
             # Some plot types require special treatments:
@@ -313,15 +317,12 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
             elif plot_type == 'bar':
                 interval_vec = [x[1] - x[0] for x in
                                 zip(start_vec_t.value, stop_vec_t.value)]
-            elif plot_type == 'line':
-                gap_fraction = to_float(line_options.get('line_gap_fraction'))
-                if gap_fraction is not None and not 0 < gap_fraction < 1:
+            if plot_type in ('line', 'bar'):
+                line_gap_fraction = to_float(line_options.get('line_gap_fraction'))
+                if line_gap_fraction and not 0 <= line_gap_fraction <= 1:
                     log.error("Gap fraction %5.3f outside range 0 to 1. Ignored.",
-                              gap_fraction)
-                    gap_fraction = None
-            else:
-                log.error("Unknown plot type '%s'. Ignored", plot_type)
-                continue
+                              line_gap_fraction)
+                    line_gap_fraction = None
 
             # Get the type of line (only 'solid' or 'none' for now)
             line_type = line_options.get('line_type', 'solid')
@@ -344,7 +345,7 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                 marker_size=marker_size,
                 bar_width=interval_vec,
                 vector_rotate=vector_rotate,
-                gap_fraction=gap_fraction))
+                line_gap_fraction=line_gap_fraction))
 
         # Return the constructed plot if it has any non-null data, otherwise return None
         return plot if have_data else None

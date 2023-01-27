@@ -25,6 +25,8 @@ Added new unit "hertz". PR #812. Again, thanks to user Karen!
 Calculate `*.wind.maxtime` out of `windGust` like `*.wind.max`
 Fixes issue #833
 
+Option line_gap_fraction can now be used with bar plots. Fixes issue #818.
+
 
 4.9.1 10/25/2022
 Fix problem with `wind` for older versions of sqlite.
