@@ -151,7 +151,7 @@ database. But, what if you already have a database, and you want to
 modify it, perhaps by adding a column or two? You cannot create a new
 starting schema, because it is only used when the database is first
 created. Here is where the tool
-[`wee_database`](../utilities.htm#wee_database_utility) can be
+[`wee_database`](../../utilities/utilities.htm#wee_database_utility) can be
 useful. Be sure to stop WeeWX before attempting to use it.
 
 There are two ways to do this. Both are covered below.
@@ -172,7 +172,7 @@ perhaps adding or removing a column, then this can easily be done using
 the tool `wee_database` with an appropriate option. We will cover
 the cases of adding, removing, and renaming a type. See the
 documentation for
-[`wee_database`](../utilities.htm#wee_database_utility) for more
+[`wee_database`](../../utilities/utilities.htm#wee_database_utility) for more
 details.
 
 #### Adding a type
@@ -243,7 +243,7 @@ Here is the general strategy to do this.
 3.  Make sure you have the necessary permissions to create the new
     database.
 4.  Use the utility
-    [`wee_database`](../utilities.htm#wee_database_utility) to
+    [`wee_database`](../../utilities/utilities.htm#wee_database_utility) to
     create the new database and populate it with data from the old
     database.
 5.  Shuffle databases around so WeeWX will use the new database.
@@ -317,7 +317,7 @@ Here are the details:
     rebuilding the daily summaries inside the new database. This will be
     done automatically by WeeWX at the next startup. Alternatively, it
     can be done manually using the
-    [`wee_database`](../utilities.htm#wee_database_utility)utility
+    [`wee_database`](../../utilities/utilities.htm#wee_database_utility)utility
     and the `--rebuild-daily` option:
 
     ``` shell

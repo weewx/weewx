@@ -73,7 +73,7 @@ If the hardware archive interval is large, it will take a long time before anyth
 
 Since reports are generated when a new archive record arrives, a large archive interval means that reports will be generated infrequently.
 
-If you want data and reports closer to real-time, use the [wee_device](..//utilities.htm#wee_device_utility) utility to change the interval.
+If you want data and reports closer to real-time, use the [wee_device](..//../utilities/utilities.htm#wee_device_utility) utility to change the interval.
 
 
 ## Software problems
@@ -198,7 +198,7 @@ Dec 30 10:54:17 saga weewx[10035]: wxengine: Using archive interval of 1800
 
 In this example, interval in `weewx.conf` is 5 minutes, but the station interval is 30 minutes. When the interval in `weewx.conf` does not match the station's hardware interval, WeeWX defers to the station's interval.
 
-Use the [`wee_device`](..//utilities.htm#wee_device_utility) utility to change the station's interval.
+Use the [`wee_device`](..//../utilities/utilities.htm#wee_device_utility) utility to change the station's interval.
 
 
 ### Spikes in the graphs

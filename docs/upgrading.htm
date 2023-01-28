@@ -60,9 +60,12 @@
 
 <div class="sidebar">
     <div class="doclist">
-        <a href="usersguide.htm">User's Guide</a><br/> <a href="customizing.htm">Customization Guide</a><br/> <a
-        href="hardware.htm">Hardware Guide</a><br/> <a href="utilities.htm">Utilities Guide</a><br/> <a
-        href="upgrading.htm">Upgrade Guide</a><br/> <a href="devnotes.htm">Notes for Developers</a>
+        <a href="./usersguide">User's Guide</a><br/>
+        <a href="./custom">Customization Guide</a><br/>
+        <a href="hardware.htm">Hardware Guide</a><br/>
+        <a href="../utilities/utilities.htm">Utilities Guide</a><br/>
+        <a href="upgrading.htm">Upgrade Guide</a><br/>
+        <a href="./devnotes">Notes for Developers</a>
     </div>
     <div id="toc_controls">
         <!-- The TOC select list will be injected here -->
@@ -1047,8 +1050,8 @@ def archiveRainYearSpan(time_ts, sory_mon)
             contains data from more than one type of hardware.
         </p>
 
-        <p>The <a href="utilities.htm#wee_database_utility"><span class="code">wee_database</span></a> utility, with
-            option <a href="utilities.htm#wee_database_utility_update"><span class="code">--update</span></a>, can fix
+        <p>The <a href="../utilities/utilities.htm#wee_database_utility"><span class="code">wee_database</span></a> utility, with
+            option <a href="../utilities/utilities.htm#wee_database_utility_update"><span class="code">--update</span></a>, can fix
             this problem by recalculating the weights in the daily summary, on the basis of the actual archive interval
             lengths. On a Raspberry Pi 1, model B, it takes about 10 minutes to fix a database with 10 years of data. On
             faster machines, it takes much less time.
@@ -1084,8 +1087,8 @@ $day.windGust.max</pre>
             maximum <em>archive</em> value seen during the day &mdash; usually a slightly smaller number. However, older
             daily max values will still contain the max LOOP packet values. If you wish to update your older values and
             have them use the max archive record value, use the utility <a
-                href="utilities.htm#wee_database_utility"><span class="code">wee_database</span></a>, with option <a
-                href="utilities.htm#wee_database_utility_update"><span class="code">--update</span></a>.
+                href="../utilities/utilities.htm#wee_database_utility"><span class="code">wee_database</span></a>, with option <a
+                href="../utilities/utilities.htm#wee_database_utility_update"><span class="code">--update</span></a>.
         </p>
 
         <h3>Changes to <span class="code">wee_database</span></h3>
@@ -1096,7 +1099,7 @@ $day.windGust.max</pre>
             windSpeed daily summary table. The rebuilding of the daily summaries (formerly backfilling the daily
             summaries) now supports selective rebuilding. Full details on the revised <span
             class="code">wee_database</span> utility can be found in the <a
-            href="utilities.htm#wee_database_utility"><i><span class="code">wee_database</span></i></a> section in the
+            href="../utilities/utilities.htm#wee_database_utility"><i><span class="code">wee_database</span></i></a> section in the
             <i>Utilities Guide</i>.
         </p>
 

@@ -261,7 +261,7 @@ Set to your Weather Underground password. Required.
 
 #### api_key
 
-Set to your [Weather Underground API key](https://www.wunderground.com/member/api-keys). This is needed only if you plan on using the utility [wunderfixer](../../utilities.htm#wunderfixer_utility).
+Set to your [Weather Underground API key](https://www.wunderground.com/member/api-keys). This is needed only if you plan on using the utility [wunderfixer](../../../utilities/utilities.htm#wunderfixer_utility).
 
 #### rapidfire
 

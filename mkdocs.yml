@@ -1,19 +1,20 @@
+# yaml-language-server: $schema=https://squidfunk.github.io/mkdocs-material/schema.json
 site_name: 'weewx documentation'
 site_url: 'https://www.weewx.com'
+site_author: "Tom Keffer <tkeffer@gmail.com>"
 repo_url: https://github.com/weewx/weewx
 repo_name: WeeWX GitHub Repository
 copyright: Copyright © Tom Keffer and Matthew Wall, all rights reserved
-favicon: 'images/favicon.png'
 theme:
-  logo: 'images/logo-weewx.png'
   name: 'material'
-  icon:
-    logo: material/library
+  logo: 'images/logo-weewx.png'
+  favicon: 'images/favicon.png'
   features:
     - navigation.instant
-    - navigation.tabs
-    - navigation.top
     - navigation.tracking
+    - navigation.indexes
+    - navigation.top
+    - toc.follow
     - search.highlight
     - search.share
     - search.suggest
@@ -42,8 +43,8 @@ extra_css:
 site_dir: 'bin/wee_resources/docs'
 
 nav:
-  - Quickstarts:
-      - Overview: ./quickstarts/index.md
+  - "Quick starts":
+      - "Quick starts": ./quickstarts/index.md
       - Debian: ./quickstarts/debian.md
       - RedHat: ./quickstarts/redhat.md
       - SuSE: ./quickstarts/suse.md
@@ -92,25 +93,24 @@ nav:
     - "Reference: options": custom/options_ref.md
     - "Appendix": custom/appendix.md
 
-  - Other guides:
-      - guides-overview.md
+  - Utilities:
+      - Overview: utilities/index.md
       - weectl:
           - Overview: weectl/index.md
           - weectl station: weectl/station.md
           - weectl extension: weectl/extension.md
-      - wee_database: utilities.htm#wee_database_utility
-      - wee_debug: utilities.htm#wee_debug_utility
-      - wee_device: utilities.htm#wee_device_utility
-      - wee_import: utilities.htm#wee_import_utility
-      - wee_reports: utilities.htm#wee_reports_utility
-      - weewxd: utilities.htm#weewxd
-      - "Upgrade guide": upgrading.htm
-      - "Change log": changes.md
-      - "Hardware guide": hardware.htm
-      - "Notes for developers": devnotes.md
-      - "Hardware comparison": hardware.htm
-  - Support:
-      - support.md
+      - wee_database: utilities/utilities.htm#wee_database_utility
+      - wee_debug: utilities/utilities.htm#wee_debug_utility
+      - wee_device: utilities/utilities.htm#wee_device_utility
+      - wee_import: utilities/utilities.htm#wee_import_utility
+      - wee_reports: utilities/utilities.htm#wee_reports_utility
+      - weewxd: utilities/utilities.htm#weewxd
+  - "Upgrade guide": upgrading.htm
+  - "Hardware guide": hardware.htm
+  - "Notes for developers": devnotes.md
+  - "Hardware comparison": hardware.htm
+  - "Change log": changes.md
+  - "Support": support.md
 
 plugins:
   - search
@@ -119,7 +119,7 @@ markdown_extensions:
 
   # Code highlighting in ``` ``` blocks
   # https://squidfunk.github.io/mkdocs-material/setup/extensions/python-markdown-extensions/#highlight
-  - pymdownx.highlight:
+  - pymdownx.highlight
   - pymdownx.inlinehilite
 
   - pymdownx.superfences
@@ -129,10 +129,6 @@ markdown_extensions:
 
   # linkifies URL and email links without having to wrap them in Markdown syntax. Also, allows shortens repository issue, pull request, and commit links.
   - pymdownx.magiclink
-
-  # Task lists (https://facelessuser.github.io/pymdown-extensions/extensions/tasklist/)
-  - pymdownx.tasklist:
-      custom_checkbox: true
 
   # Highlight words with ==mark me==
   - pymdownx.mark

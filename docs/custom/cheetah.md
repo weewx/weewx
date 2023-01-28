@@ -165,7 +165,7 @@ $record.dateTime $record.outTemp $record.outHumidity
 
 If you look inside a template, you will see it makes heavy use of _tags_. As the Cheetah generator processes the template, it replaces each tag with an appropriate value and, sometimes, a label. This section discusses the details of how that happens.
 
-If there is a tag error during template generation, the error will show up in the log file. Many errors are obvious — Cheetah will display a line number and list the template file in which the error occurred. Unfortunately, in other cases, the error message can be very cryptic and not very useful. So make small changes and test often. Use the utility [wee_reports](../../utilities.htm#wee_reports_utility) to speed up the process.
+If there is a tag error during template generation, the error will show up in the log file. Many errors are obvious — Cheetah will display a line number and list the template file in which the error occurred. Unfortunately, in other cases, the error message can be very cryptic and not very useful. So make small changes and test often. Use the utility [wee_reports](../../../utilities/utilities.htm#wee_reports_utility) to speed up the process.
 
 Here are some examples of tags:
 

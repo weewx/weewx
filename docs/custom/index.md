@@ -87,7 +87,7 @@ The utility `wee_reports` allows you to run a report whenever you like. To use i
 wee_reports weewx.conf 1398927600
 ```
 
-For more information about `wee_reports`, see the [Utilities Guide](../utilities.htm#wee_reports_utility)
+For more information about `wee_reports`, see the [Utilities Guide](../../utilities/utilities.htm#wee_reports_utility)
 
 ## The WeeWX service architecture
 
