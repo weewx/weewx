@@ -19,7 +19,7 @@ install WeeWX on almost any operating system, including macOS.
 If you do not already have pip on your system, you should install it first by following 
 [the directions on the pip website](https://pip.pypa.io/en/stable/installation/).
 
-For very minimal operating systems, you may have to follow these steps as well, before trying to
+For very minimal operating systems, you may have to follow these steps as well before trying to
 install WeeWX:
 
 === "Debian"
@@ -28,6 +28,8 @@ install WeeWX:
     sudo apt update && sudo apt upgrade
     sudo apt install gcc
     sudo apt install python3-dev
+    # This makes the install of pyephem go more smoothly:
+    python3 -m pip install wheel
     ```
 
 ## Installation steps
