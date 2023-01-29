@@ -56,6 +56,3 @@ The following will evaluate **True**: `true`, `True`, `yes`, `Yes`, `1`.
 
 The following will evaluate **False**: `false`, `False`, `no`, `No`, `0`.
 
-## Copyright
-
-© [Copyright](../copyright) 2009-2023 Thomas Keffer <tkeffer@gmail.com>

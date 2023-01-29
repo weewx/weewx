@@ -430,7 +430,3 @@ Note that whatever unit system is used in the database, data can be _displayed_ 
 Each _observation type_, such as `outTemp` or `pressure`, is associated with a _unit group_, such as `group_temperature` or `group_pressure`. Each unit group is associated with a _unit type_ such as `degree_F` or `mbar`. The reporting service uses this architecture to convert observations into a target unit system, to be displayed in your reports.
 
 With this architecture one can easily create reports with, say, wind measured in knots, rain measured in mm, and temperatures in degree Celsius. Or one can create a single set of templates, but display data in different unit systems with only a few stanzas in a configuration file.
-
-## Copyright
-
-© [Copyright](../copyright) 2009-2023 Thomas Keffer <tkeffer@gmail.com>

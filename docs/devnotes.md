@@ -752,5 +752,3 @@ This is a glossary of terminology used throughout the code.
             </tr>
         </table>
 </html>
-
-© [Copyright](../copyright) 2009-2023 Thomas Keffer <tkeffer@gmail.com>

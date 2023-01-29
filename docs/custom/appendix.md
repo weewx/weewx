@@ -651,6 +651,3 @@ attached. Otherwise, no label is attached.
 
 - `localize` If truthy, then the results will be localized. For
 example, in some locales, a comma will be used as the decimal specifier.
-
-
-© [Copyright](../copyright) 2009-2023 Thomas Keffer <tkeffer@gmail.com>

@@ -151,7 +151,7 @@ install the required daemon file.
         you will have to modify the file `/etc/systemd/system/weewx.service`.
 
     ```shell
-    # If SELinux is enabled, you will first need the following command:
+    # If SELinux is enabled, you will need the following command first:
     chcon -R --reference /bin/ls ~/.local/bin
 
     # Then proceed as normal:
