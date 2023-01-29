@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-#    Copyright (c) 2009-2021 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2023 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -208,24 +208,27 @@ def main():
     else:
         print("Using database binding '%s', which is bound to database '%s'" % (db_binding,
                                                                                 database))
+    if options.dry_run and not (options.check or options.check_strings):
+        print("This is a dry run. Nothing will actually be done.")
 
     if options.create:
-        createMainDatabase(config_dict, db_binding)
+        createMainDatabase(config_dict, db_binding, options.dry_run)
 
     elif options.reconfigure:
-        reconfigMainDatabase(config_dict, db_binding)
+        reconfigMainDatabase(config_dict, db_binding, options.dry_run)
 
     elif options.transfer:
         transferDatabase(config_dict, db_binding, options)
 
     elif options.add_column:
-        addColumn(config_dict, db_binding, options.add_column, options.type)
+        addColumn(config_dict, db_binding, options.add_column, options.type, options.dry_run)
 
     elif options.rename_column:
-        renameColumn(config_dict, db_binding, options.rename_column, options.to_name)
+        renameColumn(config_dict, db_binding, options.rename_column, options.to_name,
+                     options.dry_run)
 
     elif options.drop_columns:
-        dropColumns(config_dict, db_binding, options.drop_columns)
+        dropColumns(config_dict, db_binding, options.drop_columns, options.dry_run)
 
     elif options.check:
         check(config_dict, db_binding, options)
@@ -243,7 +246,7 @@ def main():
         check_strings(config_dict, db_binding, options, fix=True)
 
     elif options.drop_daily:
-        dropDaily(config_dict, db_binding)
+        dropDaily(config_dict, db_binding, options.dry_run)
 
     elif options.rebuild_daily:
         rebuildDaily(config_dict, db_binding, options)
@@ -251,8 +254,11 @@ def main():
     elif options.reweight:
         reweight(config_dict, db_binding, options)
 
+    if options.dry_run and not (options.check or options.check_strings):
+        print("This was a dry run. Nothing was actually done.")
 
-def createMainDatabase(config_dict, db_binding):
+
+def createMainDatabase(config_dict, db_binding, dry_run=False):
     """Create the WeeWX database"""
 
     # Try a simple open. If it succeeds, that means the database
@@ -261,17 +267,17 @@ def createMainDatabase(config_dict, db_binding):
         with weewx.manager.open_manager_with_config(config_dict, db_binding) as dbmanager:
             print("Database '%s' already exists. Nothing done." % dbmanager.database_name)
     except weedb.OperationalError:
-        # Database does not exist. Try again, but allow initialization:
-        with weewx.manager.open_manager_with_config(config_dict,
-                                                    db_binding, initialize=True) as dbmanager:
-            print("Created database '%s'" % dbmanager.database_name)
+        if not dry_run:
+            # Database does not exist. Try again, but allow initialization:
+            with weewx.manager.open_manager_with_config(config_dict,
+                                                        db_binding, initialize=True) as dbmanager:
+                print("Created database '%s'" % dbmanager.database_name)
 
 
-def dropDaily(config_dict, db_binding):
+def dropDaily(config_dict, db_binding, dry_run):
     """Drop the daily summaries from a WeeWX database"""
 
-    manager_dict = weewx.manager.get_manager_dict_from_config(config_dict,
-                                                              db_binding)
+    manager_dict = weewx.manager.get_manager_dict_from_config(config_dict, db_binding)
     database_name = manager_dict['database_dict']['database_name']
 
     print("Proceeding will delete all your daily summaries from database '%s'" % database_name)
@@ -282,7 +288,8 @@ def dropDaily(config_dict, db_binding):
         try:
             with weewx.manager.open_manager_with_config(config_dict, db_binding) as dbmanager:
                 try:
-                    dbmanager.drop_daily()
+                    if not dry_run:
+                        dbmanager.drop_daily()
                 except weedb.OperationalError as e:
                     print("Error '%s'" % e, file=sys.stderr)
                     print("Drop daily summary tables failed for database '%s'" % database_name)
@@ -336,9 +343,8 @@ def rebuildDaily(config_dict, db_binding, options):
     print(_msg)
     ans = y_or_n("Proceed (y/n)? ")
     if ans == 'n':
-        _msg = "Nothing done."
-        log.info(_msg)
-        print(_msg)
+        log.info("Nothing done.")
+        print("Nothing done.")
         return
 
     t1 = time.time()
@@ -351,7 +357,6 @@ def rebuildDaily(config_dict, db_binding, options):
         log.info("Rebuilding daily summaries in database '%s' ..." % database_name)
         print("Rebuilding daily summaries in database '%s' ..." % database_name)
         if options.dry_run:
-            print("Dry run. Nothing done.")
             return
         else:
             # now do the actual rebuild
@@ -408,9 +413,8 @@ def reweight(config_dict, db_binding, options):
     print(msg)
     ans = y_or_n("Proceed (y/n)? ")
     if ans == 'n':
-        msg = "Nothing done."
-        log.info(msg)
-        print(msg)
+        log.info("Nothing done.")
+        print("Nothing done.")
         return
 
     t1 = time.time()
@@ -422,9 +426,7 @@ def reweight(config_dict, db_binding, options):
 
         log.info("Recalculating the weighted summaries in database '%s' ..." % database_name)
         print("Recalculating the weighted summaries in database '%s' ..." % database_name)
-        if options.dry_run:
-            print("Dry run. Nothing done.")
-        else:
+        if not options.dry_run:
             # Do the actual recalculations
             dbmanager.recalculate_weights(start_d=from_d, stop_d=to_d)
 
@@ -433,7 +435,7 @@ def reweight(config_dict, db_binding, options):
     print(msg)
 
 
-def reconfigMainDatabase(config_dict, db_binding):
+def reconfigMainDatabase(config_dict, db_binding, dry_run):
     """Create a new database, then populate it with the contents of an old database"""
 
     manager_dict = weewx.manager.get_manager_dict_from_config(config_dict,
@@ -447,7 +449,8 @@ def reconfigMainDatabase(config_dict, db_binding):
     # First check and see if the new database already exists. If it does, check
     # with the user whether it's ok to delete it.
     try:
-        weedb.create(new_database_dict)
+        if not dry_run:
+            weedb.create(new_database_dict)
     except weedb.DatabaseExists:
         ans = y_or_n("New database '%s' already exists. "
                      "Delete it first (y/n)? " % new_database_dict['database_name'])
@@ -489,7 +492,8 @@ def reconfigMainDatabase(config_dict, db_binding):
         weewx.manager.reconfig(manager_dict['database_dict'],
                                new_database_dict,
                                new_unit_system=target_unit_system,
-                               new_schema=manager_dict['schema'])
+                               new_schema=manager_dict['schema'],
+                               dry_run=dry_run)
         tdiff = time.time() - t1
         print("Database '%s' copied to '%s' in %.2f seconds."
               % (manager_dict['database_dict']['database_name'],
@@ -549,7 +553,7 @@ def transferDatabase(config_dict, db_binding, options):
             print("No records found in source database '%s'."
                   % src_manager.database_name)
             print("Nothing done. Aborting.")
-            exit()
+            return
 
         if not options.dry_run:  # is it a dry run ?
             # not a dry run, actually do the transfer
@@ -618,10 +622,9 @@ def transferDatabase(config_dict, db_binding, options):
                   "to destination database '%s'."
                   % (num_recs, src_manager.database_name,
                      dest_manager_dict['database_dict']['database_name']))
-            print("Dry run, nothing done.")
 
 
-def addColumn(config_dict, db_binding, column_name, column_type):
+def addColumn(config_dict, db_binding, column_name, column_type, dry_run=False):
     """Add a single column to the database.
     column_name: The name of the new column.
     column_type: The type ("REAL"|"INTEGER|) of the new column.
@@ -631,24 +634,26 @@ def addColumn(config_dict, db_binding, column_name, column_type):
         "Add new column '%s' of type '%s' to database (y/n)? " % (column_name, column_type))
     if ans == 'y':
         dbm = weewx.manager.open_manager_with_config(config_dict, db_binding)
-        dbm.add_column(column_name, column_type)
-        print("New column %s of type %s added to database." % (column_name, column_type))
+        if not dry_run:
+            dbm.add_column(column_name, column_type)
+        print(f'New column {column_name} of type {column_type} added to database.')
     else:
         print("Nothing done.")
 
 
-def renameColumn(config_dict, db_binding, old_column_name, new_column_name):
+def renameColumn(config_dict, db_binding, old_column_name, new_column_name, dry_run=False):
     """Rename a column in the database. """
     ans = y_or_n("Rename column '%s' to '%s' (y/n)? " % (old_column_name, new_column_name))
     if ans == 'y':
         dbm = weewx.manager.open_manager_with_config(config_dict, db_binding)
-        dbm.rename_column(old_column_name, new_column_name)
+        if not dry_run:
+            dbm.rename_column(old_column_name, new_column_name)
         print("Column '%s' renamed to '%s'." % (old_column_name, new_column_name))
     else:
         print("Nothing done.")
 
 
-def dropColumns(config_dict, db_binding, drop_columns):
+def dropColumns(config_dict, db_binding, drop_columns, dry_run=False):
     """Drop a set of columns from the database"""
     drop_list = drop_columns.split(',')
     # In case the user ended the list of columns to be dropped with a comma, search for an
@@ -665,7 +670,8 @@ def dropColumns(config_dict, db_binding, drop_columns):
         # to catch it.
         try:
             print("This may take a while...")
-            dbm.drop_columns(drop_set)
+            if not dry_run:
+                dbm.drop_columns(drop_set)
         except weedb.NoColumnError as e:
             print(e, file=sys.stderr)
             print("Nothing done.")
@@ -732,9 +738,8 @@ def update(config_dict, db_binding, options):
         print(msg)
         return
 
-    msg = "Preparing interval weighting fix..."
-    log.info(msg)
-    print(msg)
+    log.info("Preparing interval weighting fix...")
+    print("Preparing interval weighting fix...")
 
     # Get a database manager object
     dbm = weewx.manager.open_manager_with_config(config_dict, db_binding)
@@ -755,9 +760,7 @@ def update(config_dict, db_binding, options):
         log.info(msg)
         print(msg)
         t1 = time.time()
-        if options.dry_run:
-            print("Dry run. Nothing done")
-        else:
+        if not options.dry_run:
             dbm.update()
         msg = "Interval Weighting Fix completed in %0.2f seconds." % (time.time() - t1)
         log.info(msg)
@@ -834,9 +837,8 @@ def calc_missing(config_dict, db_binding, options):
     # obtain a CalcMissing object
     calc_missing_obj = weecfg.database.CalcMissing(config_dict,
                                                    calc_missing_config_dict)
-    msg = "Calculating missing derived observations..."
-    log.info(msg)
-    print(msg)
+    log.info("Calculating missing derived observations...")
+    print("Calculating missing derived observations...")
     # Calculate and store any missing observations. Be prepared to
     # catch any exceptions from CalcMissing.
     try:

@@ -670,7 +670,7 @@ class Manager(object):
             self.std_unit_system = unit_system
 
 
-def reconfig(old_db_dict, new_db_dict, new_unit_system=None, new_schema=None):
+def reconfig(old_db_dict, new_db_dict, new_unit_system=None, new_schema=None, dry_run=False):
     """Copy over an old archive to a new one, using an optionally new unit system and schema.
 
     Args:
@@ -691,9 +691,9 @@ def reconfig(old_db_dict, new_db_dict, new_unit_system=None, new_schema=None):
             # Wrap the input generator in a unit converter.
             record_generator = weewx.units.GenWithConvert(old_archive.genBatchRecords(),
                                                           new_unit_system)
-
-            # This is very fast because it is done in a single transaction context:
-            new_archive.addRecord(record_generator)
+            if not dry_run:
+                # This is very fast because it is done in a single transaction context:
+                new_archive.addRecord(record_generator)
 
 
 # ===============================================================================
