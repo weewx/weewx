@@ -15,17 +15,19 @@ Service lists are run in the order given below.
 | `prep_services`    | Perform any actions before the main loop is run.      |
 | `data_services`    | Augment data, before it is processed.                 |
 | `process_services` | Process, filter, and massage the data.                |
+| `xtype_services`   | Add derived types to the data stream.                 |
 | `archive_services` | Record the data in a database.                        |
 | `restful_services` | Upload processed data to an external RESTful service. |
 | `report_services`  | Run any reports.                                      |
 
 For reference, here is the standard set of services that are run with the default distribution.
 
-| Service list       | Function                                                                                                                                                                          |
-|--------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `prep_services`    | `weewx.engine.StdTimeSynch`                                                                                                                                                       |
-| `data_services`	   |                                                                                                                                                                                   |
-| `process_services` | `weewx.engine.StdConvert` <br> `weewx.engine.StdCalibrate` <br> `weewx.engine.StdQC` <br> `weewx.wxservices.StdWXCalculate`                                                       |
+| Service list       | Function                                                                                                                                 |
+|--------------------|------------------------------------------------------------------------------------------------------------------------------------------|
+| `prep_services`    | `weewx.engine.StdTimeSynch`                                                                                                              |
+| `data_services`	   |                                                                                                                                          |
+| `process_services` | `weewx.engine.StdConvert` <br> `weewx.engine.StdCalibrate` <br> `weewx.engine.StdQC` <br> `weewx.wxservices.StdWXCalculate`              |
+| `xtype_services`   | `weewx.wxxtypes.StdWXXTypes` <br/> `weewx.wxxtypes.StdPressureCooker`<br/> `weewx.wxxtypes.StdRainRater` <br/> `weewx.wxxtypes.StdDelta` |
 | `archive_services` | `weewx.engine.StdArchive`                                                                                                                                                         |
 | `restful_services` | `weewx.restx.StdStationRegistry` <br>`weewx.restx.StdWunderground` <br>`weewx.restx.StdPWSweather` <br>`weewx.restx.StdCWOP` <br>`weewx.restx.StdWOW` <br>`weewx.restx.StdAWEKAS` |
 | `report_services`  | `weewx.engine.StdPrint` <br> `weewx.engine.StdReport`                                                                                                                             |
@@ -43,6 +45,10 @@ Augment data before processing. Typically, this means adding fields to a LOOP pa
 #### process_services
 
 Services in this group tend to process any incoming data. They typically do things like quality control, or unit conversion, or sensor calibration.
+
+#### xtype_services
+
+These are services that use the [WeeWX XTypes](https://github.com/weewx/weewx/wiki/xtypes) system to augment the data. Typically, they calculate derived variables such as `dewpoint`, `ET`, `rainRate`, *etc*.
 
 #### archive_services
 
