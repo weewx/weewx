@@ -32,6 +32,15 @@ install WeeWX:
     python3 -m pip install wheel
     ```
 
+=== "Redhat"
+    ```shell
+    sudo yum install -y gcc
+    sudo yum install -y python3-devel python3-pip
+    # This makes the install of pyephem go more smoothly:
+    python3 -m pip install wheel
+    ```
+
+
 ## Installation steps
 
 Installation is a two-step process:
@@ -137,12 +146,23 @@ install the required daemon file.
 
 === "Redhat"
 
+    !!! Note
+        The resulting daemon will be run using your username.   If selinux is also
+        enabled and enforcing, you also need to run:
+
+        `chcon -R --reference /bin/ls ~/.local/bin`
+
+    !!! Note
+        If you prefer to use run as `root`,
+        you will have to modify the file `/etc/systemd/system/weewx.service`.
+
+
     ```shell
     cd ~/weewx-data
-    sudo cp util/init.d/weewx.redhat /etc/rc.d/init.d/weewx
-    sudo chmod +x /etc/rc.d/init.d/weewx
-    sudo chkconfig weewx on
-    sudo /etc/rc.d/init.d/weewx start
+    sudo cp util/systemd/weewx.service /etc/systemd/system
+    sudo systemctl daemon-reload
+    sudo systemctl enable weewx
+    sudo systemctl start weewx
     ```
 
 === "SuSE"
