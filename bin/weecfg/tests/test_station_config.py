@@ -19,6 +19,9 @@ import weecfg.update_config
 import weeutil.config
 import weeutil.weeutil
 import weewx
+import weewxd
+
+weewxd_path = weewxd.__file__
 
 # For the tests, use the version of weewx.onf that comes with WeeWX.
 with importlib.resources.open_text('wee_resources', 'weewx.conf', encoding='utf-8') as fd:
@@ -286,8 +289,9 @@ class TestCreateStation(unittest.TestCase):
         # Get a temporary directory to create it in
         with tempfile.TemporaryDirectory(dir='/var/tmp') as dirname:
             config_path = os.path.join(dirname, 'weewx.conf')
-            # Create a station using the defaults
-            weecfg.station_config.station_create(config_path, no_prompt=True)
+            with patch('shutil.which', return_value=weewxd_path):
+                # Create a station using the defaults
+                weecfg.station_config.station_create(config_path, no_prompt=True)
 
             # Retrieve the config file that was created and check it:
             config_dict = configobj.ConfigObj(config_path, encoding='utf-8')
@@ -304,20 +308,12 @@ class TestCreateStation(unittest.TestCase):
                 p = os.path.join(dirname, config_dict['StdReport']['SKIN_ROOT'], skin)
                 self.assertTrue(os.path.isdir(p))
 
-
-# class TestConfigSkins(CommonConfigTest):
-#
-#     def test_copy_skins(self):
-#         with tempfile.TemporaryDirectory(dir='/var/tmp') as dirname:
-#             self.config_dict['StdReport']['skins'] = dirname
-#             weecfg.station_config.copy_skins(self.config_dict)
-#
-#             for skin in ['Seasons', 'Smartphone', 'Mobile', 'Standard',
-#                          'Ftp', 'Rsync']:
-#                 p = os.path.join(dirname, skin)
-#                 print(p)
-#                 self.assertTrue(os.path.isdir(p))
-#
+            # Retrieve the systemd utility file and check it
+            path = os.path.join(dirname, 'util/systemd/weewx.service')
+            with open(path, 'rt') as fd:
+                for line in fd:
+                    if line.startswith('ExecStart'):
+                        self.assertEqual(line.strip(), f"ExecStart={weewxd_path} {config_path}")
 
 
 if __name__ == "__main__":
