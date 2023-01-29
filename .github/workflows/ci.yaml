@@ -1,0 +1,44 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+
+    steps:
+
+    - run: |
+        sudo apt-get update
+        sudo apt-get install --yes --no-install-recommends \
+          python3-configobj \
+          python3-cheetah \
+          python3-ephem \
+          python3-mock \
+          python3-mysqldb \
+          python3-pil \
+          python3-pillow \
+          python3-serial \
+          python3-usb \
+          python3-pip \
+          mariadb-client \
+          mariadb-server \
+          rsync \
+          sqlite
+
+    - uses: actions/checkout@v3
+
+    - name: Setup tests
+      run: |
+        sudo make test-setup-ci
+
+    - name: Launch tests
+      run: |
+        make test
+
+    - name: Archive test-results
+      if: success() || failure()
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-results
+        path: build/test-results

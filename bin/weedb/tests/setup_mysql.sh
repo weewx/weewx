@@ -13,9 +13,14 @@
 #
 # NB: user weewx2 has more restrictive permissions than user weewx1
 #
-echo "Give the root password when prompted->"
-# Use the TCP protocol so we can connect to a Docker container running MySQL.
-mysql --force --protocol=tcp -u root -p << EOF
+if [ "${MYSQL_NO_OPTS:-0}" = "1" ]; then
+  CMD=mysql
+else
+  echo "Give the root password when prompted->"
+  # Use the TCP protocol so we can connect to a Docker container running MySQL.
+  CMD="mysql --force --protocol=tcp -u root -p"
+fi
+$CMD << EOF
 drop user if exists 'weewx';
 drop user if exists 'weewx1';
 drop user if exists 'weewx2';
@@ -43,4 +48,5 @@ if [ $? -eq 0 ]; then
     echo "Finished setting up MySQL."
 else
     echo "Problems setting up MySQL"
+    exit 1
 fi

@@ -119,9 +119,13 @@ done
 	@grep "ERROR:\|FAIL:" $(BLDDIR)/test-results || echo "no failures"
 	@grep "skipped=" $(BLDDIR)/test-results || echo "no tests were skipped"
 	@echo "see $(BLDDIR)/test-results for output from the tests"
+	@grep -q "ERROR:\|FAIL:" $(BLDDIR)/test-results && exit 1 || true
 
 test-setup:
-	bin/weedb/tests/setup_mysql
+	bin/weedb/tests/setup_mysql.sh
+
+test-setup-ci:
+	MYSQL_NO_OPTS=1 bin/weedb/tests/setup_mysql.sh
 
 TESTDIR=/var/tmp/weewx_test
 MYSQLCLEAN="drop database test_weewx;\n\
