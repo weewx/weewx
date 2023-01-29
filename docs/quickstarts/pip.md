@@ -19,7 +19,7 @@ install WeeWX on almost any operating system, including macOS.
 If you do not already have pip on your system, you should install it first by following 
 [the directions on the pip website](https://pip.pypa.io/en/stable/installation/).
 
-For very minimal operating systems, you may have to follow these steps as well before trying to
+For very minimal operating systems, you may have to follow these steps as well, before trying to
 install WeeWX:
 
 === "Debian"
@@ -147,17 +147,14 @@ install the required daemon file.
 === "Redhat"
 
     !!! Note
-        The resulting daemon will be run using your username.   If selinux is also
-        enabled and enforcing, you also need to run:
-
-        `chcon -R --reference /bin/ls ~/.local/bin`
-
-    !!! Note
-        If you prefer to use run as `root`,
+        The resulting daemon will be run using your username. If you prefer to use run as `root`,
         you will have to modify the file `/etc/systemd/system/weewx.service`.
 
-
     ```shell
+    # If SELinux is enabled, you will first need the following command:
+    chcon -R --reference /bin/ls ~/.local/bin
+
+    # Then proceed as normal:
     cd ~/weewx-data
     sudo cp util/systemd/weewx.service /etc/systemd/system
     sudo systemctl daemon-reload
