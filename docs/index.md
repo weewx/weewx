@@ -78,4 +78,4 @@ WeeWX is licensed under the GNU Public License v3.
 
 ## Copyright
 
-© [Copyright](../copyright) 2009-2023 Thomas Keffer <tkeffer@gmail.com>
+© [Copyright](../copyright) 2009-2023 Thomas Keffer (<tkeffer@gmail.com>) and Matthew Wall

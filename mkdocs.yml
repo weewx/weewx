@@ -4,7 +4,9 @@ site_url: 'https://www.weewx.com'
 site_author: "Tom Keffer <tkeffer@gmail.com>"
 repo_url: https://github.com/weewx/weewx
 repo_name: WeeWX GitHub Repository
-copyright: Copyright © Tom Keffer and Matthew Wall, all rights reserved
+# Shut off the edit on GitHub feature:
+edit_uri: ''
+copyright: Copyright © 2009-2023 Thomas Keffer and Matthew Wall, all rights reserved
 theme:
   name: 'material'
   logo: 'images/logo-weewx.png'
