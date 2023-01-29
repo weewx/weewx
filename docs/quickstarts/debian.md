@@ -1,6 +1,6 @@
 # Installation on Debian-based systems 
 
-This is a guide to installing WeeWX from a DEB package on Debian-based systems, including Ubuntu, Mint, and Raspbian.
+This is a guide to installing WeeWX from a DEB package on Debian-based systems, including Ubuntu, Mint, and Raspberry Pi OS.
 
 ## Compatible operating system versions
 

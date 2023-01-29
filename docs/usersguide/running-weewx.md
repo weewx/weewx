@@ -25,7 +25,7 @@ WeeWX will then start monitoring live sensor data (also referrred to as 'LOOP' d
 ## Running as a daemon
 For unattended operations it is best to have WeeWX run as a daemon, started automatically when the server is rebooted.
 
-If you use a packaged install from a DEB or RPM distribution, this is done automatically. You can ignore this section.
+If you use a packaged installer, this is done automatically. The installer finishes with a daemon running in the background. 
 
 For a pip install, you will have to do this yourself. See the section [*Run as a daemon*](../../quickstarts/pip/#run-as-a-daemon) in the pip quick start guide.
 
@@ -38,7 +38,7 @@ To watch the log as it is generated, use the tail command with the `-f` option:
 tail -f /var/log/syslog
 ```
 
-Set the debug option in `weewx.conf` to generate many more checks and output more information. This can be useful for diagnosing problems and debugging.
+Set the [`debug`](../weewx-config-file/general/#debug) option in `weewx.conf` to generate many more checks and output more information. This can be useful for diagnosing problems and debugging.
 
 ```
 debug = 1

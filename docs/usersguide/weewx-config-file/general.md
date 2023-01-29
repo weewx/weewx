@@ -4,7 +4,7 @@ The options declared at the top are not part of any section.
 
 #### ==debug==
 
-Set to 1 to have the program perform extra debug checks, as well as emit extra information in the log file. This is strongly recommended if you are having trouble. Otherwise, set to 0. Default is 0 (no debug).
+Set to `1` to have the program perform extra debug checks, as well as emit extra information in the log file. This is strongly recommended if you are having trouble. Set to `2` for even more information. Otherwise, set to `0`. Default is `0` (no debug).
 
 #### WEEWX_ROOT
 

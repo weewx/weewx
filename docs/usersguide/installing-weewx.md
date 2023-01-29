@@ -15,13 +15,13 @@ No programming experience is necessary unless you wish to extend WeeWX. In this 
 If you get stuck, there is a very active [User's Group](https://groups.google.com/g/weewx-user) to help.
 
 
-## Installation Overview
+## Installation overview
 This is an outline of the process to install, configure, and run WeeWX:
 
 * Read the [hardware notes](../hardware.htm) for your weather station. This will let you know of any features, limitations, or quirks of your hardware.
 * Install WeeWX. Use the step-by-step instructions in one of the [installation methods](#installation-methods) below.
 * Configure the hardware. This involves setting things like the onboard archive interval, rain bucket size, etc. You may have to follow directions given by your hardware manufacturer, or you may be able to use the utility [wee_device](../../utilities/utilities.htm#wee_device_utility).
-* Launch the **weewxd** program. It is run from the command line, either as a [daemon](../running-weewx/#running-as-a-daemon), or [directly](../running-weewx/#running-directly).
+* Launch the `weewxd` program, either [directly from the command line](../running-weewx/#running-directly), or as a [daemon](../running-weewx/#running-as-a-daemon).
 * Tune the installation. Typically this is done by changing settings in the WeeWX configuration file. For example, you might want to [register your station](../weewx-config-file/stdrestful-config/#stationregistry), so it shows up on a world-wide map of WeeWX installations.
 * [Customize](../../custom/) the installation. This is an advanced topic, which allows you to shape WeeWX exactly to your liking!
 
@@ -42,9 +42,9 @@ This is the recommended method for beginners.
 
 Quick guides for common operating systems:
 
-[Debian-based systems](../quickstarts/debian.md) : For Debian, Ubuntu, Mint, and Raspbian operating  systems.
+[Debian-based systems](../quickstarts/debian.md) : For Debian, Ubuntu, Mint, and Raspberry Pi OS operating systems.
 
-[Redhat-based RPM systems](../quickstarts/redhat.md): For Redhat, CentOS, Fedora operating systems.
+[Red Hat-based RPM systems](../quickstarts/redhat.md): For Red Hat, CentOS, Fedora operating systems.
 
 [SuSE-based RPM systems](../quickstarts/suse.md): For SuSE and OpenSUSE.
 
