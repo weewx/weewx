@@ -1,6 +1,5 @@
 #
-#    Copyright (c) 2009-2023 Tom Keffer <tkeffer@gmail.com> and
-#                            Matthew Wall
+#    Copyright (c) 2009-2023 Tom Keffer <tkeffer@gmail.com> and Matthew Wall
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -18,8 +17,12 @@ import weecfg
 import weeutil.config
 import weeutil.weeutil
 from weecfg import Logger
-from weeutil.weeutil import bcolors
 from weewx import all_service_groups
+
+# Very old extensions did:
+#   from setup import ExtensionInstaller
+# Redirect references to 'setup' to me instead.
+sys.modules['setup'] = sys.modules[__name__]
 
 
 class InstallError(Exception):
