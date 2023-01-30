@@ -20,7 +20,7 @@ import weedb
 import weedb.sqlite
 from weeutil.weeutil import version_compare
 
-sqlite_db_dict = {'db_path': '/var/tmp/test.sdb', 'driver': 'weedb.sqlite', 'timeout': '2'}
+sqlite_db_dict = {'database_name': '/var/tmp/test.sdb', 'driver': 'weedb.sqlite', 'timeout': '2'}
 mysql_db_dict = {'database_name': 'test_weewx1', 'user': 'weewx1', 'password': 'weewx1',
                  'driver': 'weedb.mysql'}
 

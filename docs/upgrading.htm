@@ -285,37 +285,6 @@ sudo apt-get install weewx</pre>
             expected to affect any users.
         </p>
 
-        <h3>Change in the weedb API for SQLite</h3>
-        <p>
-            Previously, the database dictionary that was used to open a SQLite database using the low-level library
-            <span class="code">weedb</span>, included a path to the SQLite directory, <span
-            class="code">SQLITE_ROOT</span>, as well as a path to the actual database, which was relative to <span
-            class="code">SQLITE_ROOT</span>:
-        </p>
-        <pre class="tty">
-{
-   'SQLITE_ROOT' : '/home/weewx/archive',
-   'database_name' : 'weewx.sdb',
-   'driver' : 'weedb.sqlite'
-}
-        </pre>
-
-        <p>
-            Now it expects an absolute path to the file holding the SQLite database:
-        </p>
-        <pre class="tty">
-{
-   'db_path' : '/home/weewx/archive/weewx.db',
-   'driver' : 'weedb.sqlite'
-}
-        </pre>
-
-        <p>
-            Because users access the database through class <span class="code">weewx.manager.Manager</span> and its
-            subclasses, which encapsulate the low-level details of <span class="code">weedb</span>, this change is
-            unlikely to affect anyone.
-        </p>
-
 
         <h2>Upgrading to V4.10</h2>
 

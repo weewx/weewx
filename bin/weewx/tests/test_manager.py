@@ -55,9 +55,10 @@ mid_ts = int(time.mktime(mid_d.timetuple()))
 db_dict_sqlite = {
     'driver': 'weedb.sqlite',
     # Use an in-memory database:
-    'db_path': ':memory:',
+    'database_name': ':memory:',
     # Can be useful for testing:
-    # 'db_path': '/var/tmp/weewx_test/testmgr.sdb'
+    # 'SQLITE_ROOT': '/var/tmp/weewx_test',
+    # 'database_name': 'testmgr.sdb',
 }
 
 db_dict_mysql = {

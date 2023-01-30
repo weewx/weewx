@@ -56,75 +56,71 @@ def guard(fn):
     return guarded_fn
 
 
-def connect(db_path='', driver='', **argv):  # @UnusedVariable
-    """Factory function, to keep things compatible with DBAPI. 
-    
-    Args:
-        db_path(str): A path to a SQLite database file
-        driver(str): The weedb driver to use
-        argv(dict): Any additional arguments to be passed on to the underlying Python driver
-        
-    Returns:
-        Connection: An open weedb.sqlite.Connection connection.
-    """
-    return Connection(db_path=db_path, **argv)
+def connect(database_name='', SQLITE_ROOT='', driver='', **argv):  # @UnusedVariable
+    """Factory function, to keep things compatible with DBAPI. """
+    return Connection(database_name=database_name, SQLITE_ROOT=SQLITE_ROOT, **argv)
 
 
 @guard
-def create(db_path='', driver='', **argv):
-    """Create a SQLite database.
-
-    Args:
-        db_path(str): A path to where the SQLite database file should be created.
-        driver(str): The weedb driver to use.
-        argv(dict): Any additional arguments to be passed on to the underlying Python
-            sqlite3 driver.
-
-    Raises:
-        DatabaseExistsError: If the SQLite database already exists.
-    """
-
+def create(database_name='', SQLITE_ROOT='', driver='', **argv):  # @UnusedVariable
+    """Create the database specified by the db_dict. If it already exists,
+    an exception of type DatabaseExistsError will be thrown."""
+    file_path = _get_filepath(SQLITE_ROOT, database_name, **argv)
     # Check whether the database file exists:
-    if os.path.exists(db_path):
-        raise weedb.DatabaseExistsError(f"Database {db_path} already exists")
+    if os.path.exists(file_path):
+        raise weedb.DatabaseExistsError("Database %s already exists" % (file_path,))
     else:
-        if db_path != ':memory:':
-            # Make any directories required, if any
-            sqlite_dir = os.path.dirname(db_path)
-            try:
-                os.makedirs(sqlite_dir, exist_ok=True)
-            except OSError:
-                raise weedb.PermissionError(f"Cannot create {sqlite_dir}")
+        if file_path != ':memory:':
+            # If it doesn't exist, create the parent directories
+            fileDirectory = os.path.dirname(file_path)
+            if not os.path.exists(fileDirectory):
+                try:
+                    os.makedirs(fileDirectory)
+                except OSError:
+                    raise weedb.PermissionError("No permission to create %s" % fileDirectory)
         timeout = to_int(argv.get('timeout', 5))
         isolation_level = argv.get('isolation_level')
         # Open, then immediately close the database.
-        connection = sqlite3.connect(db_path, timeout=timeout, isolation_level=isolation_level)
+        connection = sqlite3.connect(file_path, timeout=timeout, isolation_level=isolation_level)
         connection.close()
 
 
-def drop(db_path, driver='', **argv):
+def drop(database_name='', SQLITE_ROOT='', driver='', **argv):  # @UnusedVariable
+    file_path = _get_filepath(SQLITE_ROOT, database_name, **argv)
     try:
-        os.remove(db_path)
+        os.remove(file_path)
     except OSError as e:
         errno = getattr(e, 'errno', 2)
         if errno == 13:
-            raise weedb.PermissionError(f"No permission to drop database {db_path}")
+            raise weedb.PermissionError("No permission to drop database %s" % file_path)
         else:
-            raise weedb.NoDatabaseError(f"Attempt to drop non-existent database {db_path}")
+            raise weedb.NoDatabaseError("Attempt to drop non-existent database %s" % file_path)
+
+
+def _get_filepath(SQLITE_ROOT, database_name, **argv):
+    """Utility function to calculate the path to the sqlite database file."""
+    if database_name == ':memory:':
+        return database_name
+    # For backwards compatibility, allow the keyword 'root', if 'SQLITE_ROOT' is
+    # not defined:
+    root_dir = SQLITE_ROOT or argv.get('root', '')
+    return os.path.join(root_dir, database_name)
 
 
 class Connection(weedb.Connection):
     """A wrapper around a sqlite3 connection object."""
 
     @guard
-    def __init__(self, db_path='', pragmas={}, **argv):
+    def __init__(self, database_name='', SQLITE_ROOT='', pragmas=None, **argv):
         """Initialize an instance of Connection.
 
         Args:
         
-            db_path(str): The path to the SQLite database file.
-            pragmas(dict): Any pragma statements, in the form of a dictionary.
-            timeout(float): The amount of time, in seconds, to wait for a lock to be released.
+            database_name: The name of the Sqlite database. This is generally the file name
+            SQLITE_ROOT: The path to the directory holding the database. Joining "SQLITE_ROOT" with
+              "database_name" results in the full path to the sqlite file.
+            pragmas: Any pragma statements, in the form of a dictionary.
+            timeout: The amount of time, in seconds, to wait for a lock to be released.
               Optional. Default is 5.
             isolation_level(str): The type of isolation level to use. One of None,
               DEFERRED, IMMEDIATE, or EXCLUSIVE. Default is None (autocommit mode).
@@ -133,18 +129,19 @@ class Connection(weedb.Connection):
             NoDatabaseError: If the database file does not exist.
         """
 
-        self.db_path = db_path
-        if self.db_path != ':memory:' and not os.path.exists(db_path):
-            raise weedb.NoDatabaseError(f"Attempt to open a non-existent database {db_path}")
+        self.file_path = _get_filepath(SQLITE_ROOT, database_name, **argv)
+        if self.file_path != ':memory:' and not os.path.exists(self.file_path):
+            raise weedb.NoDatabaseError("Attempt to open a non-existent database %s"
+                                        % self.file_path)
         timeout = to_int(argv.get('timeout', 5))
         isolation_level = argv.get('isolation_level')
-        connection = sqlite3.connect(db_path, timeout=timeout, isolation_level=isolation_level)
+        connection = sqlite3.connect(self.file_path, timeout=timeout,
+                                     isolation_level=isolation_level)
 
-        for pragma in pragmas:
-            connection.execute("PRAGMA %s=%s;" % (pragma, pragmas[pragma]))
-
-        # Wrap the sqlite3 connection in a weedb Connection object
-        weedb.Connection.__init__(self, connection, os.path.basename(db_path), 'sqlite')
+        if pragmas:
+            for pragma in pragmas:
+                connection.execute("PRAGMA %s=%s;" % (pragma, pragmas[pragma]))
+        weedb.Connection.__init__(self, connection, database_name, 'sqlite')
 
     @guard
     def cursor(self):
@@ -298,26 +295,3 @@ class Cursor(sqlite3.Cursor):
         # It is not an error to close a sqlite3 cursor multiple times,
         # so there's no reason to guard it with a "try" clause:
         self.close()
-
-
-def modify_config(config_dict, database_dict):
-    """Modify the database dictionary returned by weedb.get_database_dict_from_config into
-    something that suits our on purposes.
-    """
-
-    # Make a copy
-    db_dict = dict(database_dict)
-
-    # Very old versions of weedb used option 'root', instead of 'SQLITE_ROOT'
-    sqlite_dir = db_dict.get('SQLITE_ROOT', db_dict.get('root', 'archive'))
-
-    # If no WEEWX_ROOT, then it should have no influence. Use './'
-    db_dict['db_path'] = os.path.normpath(os.path.join(config_dict.get('WEEWX_ROOT', './'),
-                                                       sqlite_dir,
-                                                       db_dict['database_name']))
-    # These are no longer needed:
-    db_dict.pop('SQLITE_ROOT', None)
-    db_dict.pop('root', None)
-    del db_dict['database_name']
-
-    return db_dict

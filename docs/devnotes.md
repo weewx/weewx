@@ -675,7 +675,8 @@ This is a glossary of terminology used throughout the code.
                 <td>A dictionary with all the data necessary to bind to a database. An example for SQLite would be <span
                     class="code">
             {'driver':'db.sqlite',
-            'db_path':'/home/username/weewx-data/archive/weewx.sdb'}</span>, an example for MySQL would be <span class="code">{
+            'SQLITE_ROOT':'/home/weewx/archive',
+            'database_name':'weewx.sdb'}</span>, an example for MySQL would be <span class="code">{
             'driver':'db.mysql',
             'host':'localhost',
             'user':'weewx',
