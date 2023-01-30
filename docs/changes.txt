@@ -1,7 +1,7 @@
 WeeWX change history
 --------------------
 
-4.10.0 MM/DD/YYYY
+4.10.0 01/29/2023
 Don't inject txBatteryStatus and consBatteryVoltage into records in the Vantage
 driver. Let the accumulators do it. Fixes issue #802.
 
