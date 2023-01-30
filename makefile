@@ -330,7 +330,7 @@ RHEL8_PKG=weewx-$(RPMVER).el8.$(RPMARCH).rpm
 SUSE12_PKG=weewx-$(RPMVER).suse12.$(RPMARCH).rpm
 SUSE15_PKG=weewx-$(RPMVER).suse15.$(RPMARCH).rpm
 upload-pkgs:
-	scp $(DSTDIR)/$(DEB2_PKG) $(DSTDIR)/$(DEB3_PKG) $(DSTDIR)/$(RHEL7_PKG) $(DSTDIR)/$(RHEL8_PKG) $(DSTDIR)/$(SUSE12_PKG) $(DSTDIR)/$(SUSE15_PKG) $(USER)@$(WEEWX_COM):$(WEEWX_STAGING)
+	scp $(DSTDIR)/$(SRCPKG) $(DSTDIR)/$(DEB2_PKG) $(DSTDIR)/$(DEB3_PKG) $(DSTDIR)/$(RHEL7_PKG) $(DSTDIR)/$(RHEL8_PKG) $(DSTDIR)/$(SUSE12_PKG) $(DSTDIR)/$(SUSE15_PKG) $(USER)@$(WEEWX_COM):$(WEEWX_STAGING)
 
 # move files from the upload directory to the release directory and set up the
 # symlinks to them from the download root directory
@@ -440,6 +440,14 @@ push-suse-repo:
 # copy the testing repository onto the production repository
 release-suse-repo:
 	ssh $(USER)@$(WEEWX_COM) "rsync -Ologrvz /var/www/html/suse-test/ /var/www/html/suse"
+
+# shortcuts to upload everything.  assumes that the assets have been staged
+# to the local 'dist' directory.
+upload-all: upload-docs upload-pkgs
+
+# shortcut to release everything.  assumes that all of the assets have been
+# staged to the development area on the distribution server.
+release-all: release release-apt-repo release-yum-repo release-suse-repo
 
 # run perlcritic to ensure clean perl code.  put these in ~/.perlcriticrc:
 # [-CodeLayout::RequireTidyCode]
