@@ -645,6 +645,9 @@ def station_update(config_path, docs_root=None, examples_root=None,
     if dry_run:
         print("This is a dry run. Nothing will actually be done.")
 
+    # Retrieve the old configuration file as a ConfigObj:
+    config_path, config_dict = weecfg.read_config(config_path)
+
     ans = weeutil.weeutil.y_or_n(f"\nUpgrade station at {config_path}? (Y/n) ",
                                  noprompt=no_prompt,
                                  default='y')
@@ -655,10 +658,6 @@ def station_update(config_path, docs_root=None, examples_root=None,
     # Retrieve the new configuration file as a ConfigObj:
     with importlib.resources.open_text('wee_resources', 'weewx.conf', encoding='utf-8') as fd:
         dist_config_dict = configobj.ConfigObj(fd, encoding='utf-8', file_error=True)
-    # Retrieve the old configuration file as a ConfigObj:
-    config_path, config_dict = weecfg.read_config(config_path)
-
-    print(f"The configuration file {bcolors.BOLD}{config_path}{bcolors.ENDC} will be used.")
 
     weecfg.update_config.update_and_merge(config_dict, dist_config_dict)
     print(f"Finished upgrading the configuration file found at {config_path}.")
@@ -678,7 +677,7 @@ def station_update(config_path, docs_root=None, examples_root=None,
         print("This was a dry run. Nothing was actually done.")
     else:
         backup_path = weecfg.save_with_backup(config_dict, config_path)
-        print(f"Backed up configuration file to {backup_path}.")
+        print(f"Saved old configuration file as {backup_path}.")
         print("Done")
 
 
