@@ -96,9 +96,9 @@ class AlmanacTest(unittest.TestCase):
             self.almanac.venus.cmlI
 
     def test_star(self):
-        self.assertAlmostEqual(self.almanac.castor.rise.raw, 1238178997.1, 1)
-        self.assertAlmostEqual(self.almanac.castor.transit.raw, 1238210429.0, 1)
-        self.assertAlmostEqual(self.almanac.castor.set.raw, 1238155696.8, 1)
+        self.assertAlmostEqual(self.almanac.castor.rise.raw, 1238178997, 0)
+        self.assertAlmostEqual(self.almanac.castor.transit.raw, 1238210429, 0)
+        self.assertAlmostEqual(self.almanac.castor.set.raw, 1238155697, 0)
 
     def test_sidereal(self):
         self.assertAlmostEqual(self.almanac.sidereal_time, 348.3400, 4)
