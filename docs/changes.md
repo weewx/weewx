@@ -26,8 +26,14 @@ location `/var/log/` on start up would cause crashes, even if it was never used.
 MacOS now logs to `syslog` like any other system, rather than `rotate`.
 
 
-## 4.10.0 MM/DD/YYYY
-Don't inject txBatteryStatus and consBatteryVoltage into records in the Vantage
+4.10.1 01/30/2023
+
+Logging handler `rotate` has been removed. Its need to access privileged
+location `/var/log/weewx.log` on start up would cause crashes, even if it was
+never used.
+
+
+4.10.0 01/29/2023Don't inject txBatteryStatus and consBatteryVoltage into records in the Vantage
 driver. Let the accumulators do it. Fixes issue #802.
 
 Different wake-up strategy for the Vantage console.
@@ -49,6 +55,7 @@ Added new unit "hertz". PR #812. Again, thanks to user Karen!
 
 Calculate `*.wind.maxtime` out of `windGust` like `*.wind.max`
 Fixes issue #833
+
 Fix bug that prevents `group_deltatime` from being used by timespans. Users
 Add suffix `.length` to class TimespanBinder. This allows expressions such as
 
