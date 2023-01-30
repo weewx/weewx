@@ -1,3 +1,5 @@
+* Sun Jan 29 2023 Matthew Wall (weewx) <mwall@users.sourceforge.net> - 4.10.0-1
+- new upstream release
 * Tue Oct 25 2022 Thomas Keffer (Author of weewx) <tkeffer@gmail.com> - 4.9.1-1
 - new upstream release
 * Mon Oct 24 2022 Thomas Keffer (Author of weewx) <tkeffer@gmail.com> - 4.9.0-1
