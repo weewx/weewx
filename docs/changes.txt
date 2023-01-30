@@ -1,6 +1,13 @@
 WeeWX change history
 --------------------
 
+4.10.1 01/30/2023
+
+Logging handler `rotate` has been removed. Its need to access privileged
+location `/var/log/weewx.log` on start up would cause crashes, even if it was
+never used.
+
+
 4.10.0 01/29/2023
 Don't inject txBatteryStatus and consBatteryVoltage into records in the Vantage
 driver. Let the accumulators do it. Fixes issue #802.

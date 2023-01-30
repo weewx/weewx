@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2020-2022 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2020-2023 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -53,16 +53,6 @@ LOGGING_STR = """[Logging]
             # Alternate choice is 'ext://sys.stderr'
             stream = ext://sys.stdout
 
-        # Log to a set of rotating files
-        [[[rotate]]]
-            level = DEBUG
-            formatter = standard
-            class = logging.handlers.RotatingFileHandler
-            # Writing to this file will require root privileges:
-            filename = /var/log/weewx.log
-            maxBytes = 10000000
-            backupCount = 4
-
     # How to format log messages
     [[formatters]]
         [[[simple]]]
@@ -104,10 +94,6 @@ def setup(process_name, user_log_dict):
     # Create a ConfigObj from the default string. No interpolation (it interferes with the
     # interpolation directives embedded in the string).
     log_config = configobj.ConfigObj(StringIO(LOGGING_STR), interpolation=False, encoding='utf-8')
-
-    if sys.platform == "darwin":
-        # Different default handler for MacOS:
-        log_config['Logging']['root']['handlers'] = ['rotate']
 
     # Turn off interpolation in the incoming dictionary. First save the old
     # value, then restore later. However, the incoming dictionary may be a simple
