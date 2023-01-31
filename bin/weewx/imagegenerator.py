@@ -256,7 +256,7 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
             plot_type = line_options.get('plot_type', 'line').lower()
 
             if plot_type not in {'line', 'bar', 'vector'}:
-                log.error(f"Unknown plot type {plot_type}. Ignored")
+                log.error("Unknown plot type '%s'. Ignored", plot_type)
                 continue
 
             if aggregate_type and plot_type != 'bar':
