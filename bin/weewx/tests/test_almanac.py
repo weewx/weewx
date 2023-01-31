@@ -1,14 +1,17 @@
 #
-#    Copyright (c) 2021-2022 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2021-2023 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
 """Test module weewx.almanac"""
+import locale
 import os
 import unittest
 
-import weewx.units
 from weewx.almanac import *
+
+locale.setlocale(locale.LC_ALL, 'C')
+os.environ['LANG'] = 'C'
 
 LATITUDE = 46.0
 LONGITUDE = -122.0
