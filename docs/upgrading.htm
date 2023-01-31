@@ -268,7 +268,7 @@ sudo apt-get install weewx</pre>
             seconds</span>, then you will have to say so explicitly.
         </p>
         <p>
-            If you use the <em>Seasons</em> skin, you will have to make these three small changes. Add
+            If you use the <em>Seasons</em> skin, you will have to make these four changes. Add
             the text in <span class="added">green</span>:
         </p>
 
@@ -315,7 +315,7 @@ sudo apt-get install weewx</pre>
                         <pre class="tty">
     &lt;tr&gt;
       &lt;td class="label"&gt;$gettext("Total daylight")&lt;/td&gt;
-      &lt;td class="data"&gt;$almanac.sun.visible&lt;br/&gt;$sun_visible_change.long_form $change_str&lt;/td&gt;
+      &lt;td class="data"&gt;$almanac.sun.visible&lt;br/&gt;$sun_visible_change $change_str&lt;/td&gt;
     &lt;/tr&gt;
                         </pre>
                     </td>
@@ -323,7 +323,7 @@ sudo apt-get install weewx</pre>
                         <pre class="tty">
     &lt;tr&gt;
       &lt;td class="label"&gt;$gettext("Total daylight")&lt;/td&gt;
-      &lt;td class="data"&gt;$almanac.sun.visible&lt;br/&gt;$sun_visible_change<span class="added">.long_form</span> $change_str&lt;/td&gt;
+      &lt;td class="data"&gt;$almanac.sun.visible<span class="added">.long_form</span>&lt;br/&gt;$sun_visible_change<span class="added">.long_form</span> $change_str&lt;/td&gt;
     &lt;/tr&gt;
                         </pre>
                     </td>
