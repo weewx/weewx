@@ -229,7 +229,20 @@ Stop WeeWX
     sudo systemctl disable weewx
     ```
 
-=== "Redhat, SuSE,<br/>and very old Debian:"
+=== "Very old Debian"
+
+    ```shell
+    sudo /etc/rc.d/init.d/weewx stop
+    ```
+
+=== "Redhat"
+
+    ```shell
+    sudo systemctl stop weewx
+    sudo systemctl disable weewx
+    ```
+
+=== "SuSE"
 
     ```shell
     sudo /etc/rc.d/init.d/weewx stop
@@ -249,7 +262,19 @@ Uninstall any daemon files:
     sudo rm /etc/systemd/system/weewx.service
     ```
 
-=== "Redhat, SuSE,<br/>and very old Debian:"
+=== "Very old Debian"
+
+    ```shell
+    sudo rm /etc/init.d/weewx
+    ```
+
+=== "Redhat"
+
+    ```shell
+    sudo rm /etc/systemd/system/weewx.service
+    ```
+
+=== "SuSE"
 
     ```shell
     sudo rm /etc/init.d/weewx
