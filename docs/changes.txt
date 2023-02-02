@@ -20,6 +20,10 @@ Vantage stations.
 Using a bad data binding with an aggregation tag no longer results in an
 exception. Instead, it shows the tag in the results. Related to PR #817.
 
+Method `ImageDraw.textsize()` was deprecated in Pillow 9.2 (1-Jul-2022), and
+will be removed in Pillow 10.0 (due 1-Jul-2023). Replaced it with workaround
+methods.
+
 
 4.10.1 01/30/2023
 
