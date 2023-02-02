@@ -1,3 +1,5 @@
+![CI workflow](https://github.com/weewx/weewx/actions/workflows/ci.yaml/badge.svg)
+
 # [WeeWX](http://www.weewx.com)
 *Open source software for your weather station*
 
