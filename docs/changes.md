@@ -29,6 +29,9 @@ Method `ImageDraw.textsize()` was deprecated in Pillow 9.2 (1-Jul-2022), and
 will be removed in Pillow 10.0 (due 1-Jul-2023). Replaced it with workaround
 methods.
 
+The *Standard* skin now uses the font `DejaVuSansMono-Bold` and includes a
+copy. Before, it had to rely on hardwired font paths, which were less reliable.
+
 
 ### 4.10.1 01/30/2023
 
