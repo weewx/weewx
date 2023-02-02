@@ -2,13 +2,14 @@
 
 [[package]]
 name = "configobj"
-version = "5.0.6"
+version = "5.0.8"
 description = "Config file reading, writing and validation."
 category = "main"
 optional = false
-python-versions = "*"
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 files = [
-    {file = "configobj-5.0.6.tar.gz", hash = "sha256:a2f5650770e1c87fb335af19a9b7eb73fc05ccf22144eb68db7d00cd2bcb0902"},
+    {file = "configobj-5.0.8-py2.py3-none-any.whl", hash = "sha256:a7a8c6ab7daade85c3f329931a807c8aee750a2494363934f8ea84d8a54c87ea"},
+    {file = "configobj-5.0.8.tar.gz", hash = "sha256:6f704434a07dc4f4dc7c9a745172c1cad449feb548febd9f7fe362629c627a97"},
 ]
 
 [package.dependencies]
@@ -256,4 +257,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.7"
-content-hash = "bcea49da83a8eef2da5952308e7d23234c8ce10c8274c6be6e1e2e2f985056b7"
+content-hash = "e4ebfa31fd1cb1ca125b5ab149152b21580be078306eba7bc61f425abeb2a2eb"
