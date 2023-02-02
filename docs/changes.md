@@ -25,6 +25,10 @@ location `/var/log/` on start up would cause crashes, even if it was never used.
 
 MacOS now logs to `syslog` like any other system, rather than `rotate`.
 
+Method `ImageDraw.textsize()` was deprecated in Pillow 9.2 (1-Jul-2022), and
+will be removed in Pillow 10.0 (due 1-Jul-2023). Replaced it with workaround
+methods.
+
 
 ### 4.10.1 01/30/2023
 
