@@ -8,6 +8,7 @@
 
 import argparse
 import importlib
+import logging
 import socket
 import sys
 import time
@@ -20,6 +21,8 @@ import weewx.manager
 import weewx.reportengine
 import weewx.station
 from weeutil.weeutil import timestamp_to_string
+
+log = logging.getLogger(__name__)
 
 description = """Run all reports defined in the specified configuration file.
 Use this utility to run reports immediately instead of waiting for the end of
@@ -101,6 +104,9 @@ def main():
 
     # Set logging configuration:
     weeutil.logger.setup('wee_reports', config_dict)
+
+    # With logging setup out of the way, we can log the config file in use.
+    log.info("Using configuration file %s", config_path)
 
     # For wee_reports we want to generate all reports irrespective of any
     # report_timing settings that may exist. The easiest way to do this is walk
