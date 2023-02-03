@@ -325,7 +325,8 @@ def get_all_driver_infos():
     # first look in the drivers directory
     infos = get_driver_infos()
     # then add any drivers in the user directory
-    infos.update(get_driver_infos('user'))
+    user_drivers = get_driver_infos('user')
+    infos.update(user_drivers)
     return infos
 
 
@@ -357,6 +358,11 @@ def get_driver_infos(driver_pkg_name='weewx.drivers'):
         driver_pkg = importlib.import_module(driver_pkg_name)
     except ModuleNotFoundError:
         return driver_info_dict
+
+    # This guards against namespace packages.
+    if not driver_pkg or not driver_pkg.__file__:
+        return {}
+
     driver_path = os.path.dirname(driver_pkg.__file__)
 
     # Iterate over all the modules in the package.
