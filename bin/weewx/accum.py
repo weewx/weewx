@@ -28,8 +28,6 @@ from __future__ import absolute_import
 import logging
 import math
 
-import six
-
 import weewx
 from weeutil.weeutil import ListOfDicts, to_float, timestamp_to_string
 import weeutil.config

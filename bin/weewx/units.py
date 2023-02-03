@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-#    Copyright (c) 2009-2022 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2023 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -8,20 +8,16 @@
 """Data structures and functions for dealing with units."""
 
 #
-# The doctest examples work only under Python 3!!
+# The doctest examples work under Python 3 only!!
 #
 
-from __future__ import absolute_import
-from __future__ import print_function
 import json
 import locale
 import logging
 import time
 
-import six
-
-import weewx
 import weeutil.weeutil
+import weewx
 from weeutil.weeutil import ListOfDicts, Polar, is_iterable
 
 log = logging.getLogger(__name__)
@@ -719,7 +715,7 @@ class Formatter(object):
                 val_str = self.unit_format_dict.get('NONE', u'N/A')
             else:
                 # Make sure the "None_string" is, in fact, a string
-                if isinstance(None_string, six.string_types):
+                if isinstance(None_string, str):
                     val_str = None_string
                 else:
                     # Coerce to a string.
@@ -772,16 +768,13 @@ class Formatter(object):
                 # No localization. Just format the string.
                 val_str = format_string % val_t[0]
 
-        # Make sure the results are in unicode:
-        val_ustr = six.ensure_text(val_str)
-
         # Add a label, if requested:
         if addLabel:
-            # Make sure the label is in unicode before tacking it on to the end
+            # Tack the label on to the end:
             label = self.get_label_string(val_t[1], plural=(not val_t[0]==1))
-            val_ustr += six.ensure_text(label)
+            val_str += label
 
-        return val_ustr
+        return val_str
 
     def to_ordinal_compass(self, val_t):
         if val_t[0] is None:
@@ -1039,12 +1032,7 @@ class ValueHelper(object):
         return s
 
     def __str__(self):
-        """Return as the native string type for the version of Python being run."""
-        s = self.toString()
-        return six.ensure_str(s)
-
-    def __unicode__(self):
-        """Return as unicode. This function is called only under Python 2."""
+        """Coerce to string"""
         return self.toString()
 
     def format(self, format_string=None, None_string=None, add_label=True, localize=True):
@@ -1217,12 +1205,7 @@ class SeriesHelper(object):
         return SeriesHelper(self.start, self.stop, self.data.round(ndigits))
 
     def __str__(self):
-        """Return as the native string type for the version of Python being run."""
-        s = self.format()
-        return six.ensure_str(s)
-
-    def __unicode__(self):
-        """Return as unicode. This function is called only under Python 2."""
+        """Coerce to string."""
         return self.format()
 
     def __len__(self):
@@ -1466,6 +1449,7 @@ def convertStd(val_t, target_std_unit_system):
         >>> value_t = (1.2, 'inch', 'group_rain')
         >>> print("(%.2f, %s, %s)" % convertStd(value_t, weewx.METRICWX))
         (30.48, mm, group_rain)
+
     Args:
         val_t (ValueTuple): The ValueTuple to be converted.
         target_std_unit_system (int):  A standardized WeeWX unit system (weewx.US, weewx.METRIC,
@@ -1669,8 +1653,6 @@ def get_default_formatter():
 
 
 if __name__ == "__main__":
-    if not six.PY3:
-        exit("units.py doctest must be run under Python 3")
     import doctest
 
     if not doctest.testmod().failed:

@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2020 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2023 Tom Keffer <tkeffer@gmail.com>
 #
 #    Class Gettext is Copyright (C) 2021 Johanna Karen Roedenbeck
 #
@@ -57,8 +57,6 @@ Example:
 
 """
 
-from __future__ import absolute_import
-
 import datetime
 import json
 import logging
@@ -68,7 +66,6 @@ import unicodedata
 
 import Cheetah.Filters
 import Cheetah.Template
-import six
 
 import weedb
 import weeutil.logger
@@ -327,10 +324,8 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
             # First, compile the template
             try:
                 # TODO: Look into caching the compiled template.
-                # Under Python 2, Cheetah V2 will crash if given a template file name in Unicode,
-                # so make sure it's a string first, using six.ensure_str().
                 compiled_template = Cheetah.Template.Template(
-                    file=six.ensure_str(template),
+                    file=template,
                     searchList=searchList,
                     filter='AssureUnicode',
                     filtersLib=weewx.cheetahgenerator)
@@ -628,16 +623,12 @@ class UnitInfo(SearchList):
         self.obs = weewx.units.ObsInfoHelper(generator.skin_dict)
 
 
-if six.PY3:
-    # Dictionaries in Python 3 no longer have the "has_key()" function.
-    # This will break a lot of skins. Use a wrapper to provide it
-    class ExtraDict(dict):
+# Dictionaries in Python 3 no longer have the "has_key()" function.
+# This will break a lot of skins. Use a wrapper to provide it
+class ExtraDict(dict):
 
-        def has_key(self, key):
-            return key in self
-else:
-    # Not necessary in Python 2
-    ExtraDict = dict
+    def has_key(self, key):
+        return key in self
 
 
 class Extras(SearchList):
@@ -795,32 +786,24 @@ class AssureUnicode(Cheetah.Filters.Filter):
     Unicode. """
 
     def filter(self, val, **kwargs):
-        """Convert the expression 'val' to unicode."""
-        # There is a 2x4 matrix of possibilities:
-        # input        PY2                 PY3
-        # _____        ________            _______
-        # bytes        decode()            decode()
-        # str          decode()           -done-
-        # unicode      -done-             N/A
-        # object       unicode()          str()
+        """Convert the expression 'val' to a string (unicode)."""
         if val is None:
             return u''
 
-        # Is it already unicode? This takes care of cells 4 and 5.
-        if isinstance(val, six.text_type):
+        # Is it already a string?
+        if isinstance(val, str):
             filtered = val
-        # This conditional covers cells 1,2, and 3. That is, val is a byte string
-        elif isinstance(val, six.binary_type):
+        # Is val a byte string?
+        elif isinstance(val, bytes):
             filtered = val.decode('utf-8')
-        # That leaves cells 7 and 8, that is val is an object, such as a ValueHelper
+        # That means val is an object, such as a ValueHelper
         else:
-            # Must be an object. Convert to unicode string
+            # Must be an object. Convert to string
             try:
-                # For late tag bindings under Python 2, the following forces the invocation of
-                # __unicode__(). Under Python 3, it invokes __str__(). Either way, it can force
-                # an XTypes query. For a tag such as $day.foobar.min, where 'foobar' is an unknown
-                # type, this will cause an attribute error. Be prepared to catch it.
-                filtered = six.text_type(val)
+                # This invokes __str__(), which can force an XTypes query. For a tag such as
+                # $day.foobar.min, where 'foobar' is an unknown type, this will cause an attribute
+                # error. Be prepared to catch it.
+                filtered = str(val)
             except AttributeError as e:
                 # Offer a debug message.
                 log.debug("Unrecognized: %s", kwargs.get('rawExpr', e))

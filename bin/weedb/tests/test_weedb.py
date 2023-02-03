@@ -14,8 +14,6 @@ from __future__ import with_statement
 
 import unittest
 
-from six.moves import map
-
 import weedb
 import weedb.sqlite
 from weeutil.weeutil import version_compare

@@ -19,7 +19,6 @@ import traceback
 
 # 3rd party imports
 import configobj
-from six.moves import zip
 
 # WeeWX imports:
 import weeutil.config

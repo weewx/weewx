@@ -64,8 +64,6 @@ import os.path
 import sys
 import time
 
-from six.moves import zip
-
 import weedb
 import weeutil.config
 import weeutil.weeutil
@@ -523,7 +521,7 @@ class Manager(object):
         """
 
         for _row in self.genBatchRows(startstamp, stopstamp):
-            yield dict(list(zip(self.sqlkeys, _row))) if _row else None
+            yield dict(zip(self.sqlkeys, _row)) if _row else None
 
     def getRecord(self, timestamp, max_delta=None):
         """Get a single archive record with a given epoch time stamp.
@@ -549,7 +547,7 @@ class Manager(object):
                 _cursor.execute("SELECT * FROM %s WHERE dateTime=?"
                                 % self.table_name, (timestamp,))
             _row = _cursor.fetchone()
-            return dict(list(zip(self.sqlkeys, _row))) if _row else None
+            return dict(zip(self.sqlkeys, _row)) if _row else None
 
     def updateValue(self, timestamp, obs_type, new_value):
         """Update (replace) a single value in the database.

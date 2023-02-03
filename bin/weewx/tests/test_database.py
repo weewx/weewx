@@ -11,9 +11,7 @@ from __future__ import absolute_import
 import unittest
 import time
 
-from six.moves import StringIO
-from six.moves import map
-from six.moves import range
+from io import StringIO
 
 import configobj
 

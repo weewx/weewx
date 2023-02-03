@@ -6,15 +6,10 @@
 """Generate images for up to an effective date.
 Should probably be refactored into smaller functions."""
 
-from __future__ import absolute_import
-from __future__ import with_statement
-
 import datetime
 import logging
 import os.path
 import time
-
-from six.moves import zip
 
 import weeplot.genplot
 import weeplot.utilities
