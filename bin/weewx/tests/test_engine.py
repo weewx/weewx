@@ -1,13 +1,9 @@
 #
-#    Copyright (c) 2009-2022 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2023 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
 """Test the accumulators by using the simulator wx station"""
-
-from __future__ import absolute_import
-from __future__ import print_function
-from __future__ import with_statement
 
 import logging
 import os.path
@@ -16,7 +12,6 @@ import time
 import unittest
 
 import configobj
-from six.moves import zip
 
 import weedb
 import weeutil.config

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-#    Copyright (c) 2009-2021 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2023 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -8,8 +8,6 @@
 
 import unittest
 import operator
-
-import six
 
 import weewx.units
 from weewx.units import ValueTuple
@@ -145,34 +143,34 @@ class ValueHelperTest(unittest.TestCase):
     def testFormatting(self):
         value_t = (68.01, "degree_F", "group_temperature")
         vh = weewx.units.ValueHelper(value_t, formatter=default_formatter)
-        self.assertEqual(vh.string(), u"68.0°F")
-        self.assertEqual(vh.nolabel("T=%.3f"), u"T=68.010")
-        self.assertEqual(vh.formatted, u"68.0")
+        self.assertEqual(vh.string(), "68.0°F")
+        self.assertEqual(vh.nolabel("T=%.3f"), "T=68.010")
+        self.assertEqual(vh.formatted, "68.0")
         self.assertEqual(vh.raw, 68.01)
-        self.assertEqual(six.text_type(vh), u"68.0°F")
-        self.assertEqual(six.text_type(vh.degree_F), u"68.0°F")
-        self.assertEqual(six.text_type(vh.degree_C), u"20.0°C")
+        self.assertEqual(str(vh), "68.0°F")
+        self.assertEqual(str(vh.degree_F), "68.0°F")
+        self.assertEqual(str(vh.degree_C), "20.0°C")
 
         # Using .format() interface
-        self.assertEqual(vh.format(), u"68.0°F")
-        self.assertEqual(vh.format("T=%.3f", add_label=False), u"T=68.010")
+        self.assertEqual(vh.format(), "68.0°F")
+        self.assertEqual(vh.format("T=%.3f", add_label=False), "T=68.010")
 
         # Test None_string
         value_t = (None, "degree_F", "group_temperature")
         vh = weewx.units.ValueHelper(value_t, formatter=default_formatter)
-        self.assertEqual(vh.format(None_string='foo'), u'foo')
-        self.assertTrue(isinstance(vh.format(None_string='foo'), six.text_type))
+        self.assertEqual(vh.format(None_string='foo'), 'foo')
+        self.assertTrue(isinstance(vh.format(None_string='foo'), str))
         # This one cannot be done with ASCII codec:
-        self.assertEqual(vh.format(None_string=u'unknown °F'), u'unknown °F')
-        self.assertTrue(isinstance(vh.format(None_string=u'unknown °F'), six.text_type))
+        self.assertEqual(vh.format(None_string='unknown °F'), 'unknown °F')
+        self.assertTrue(isinstance(vh.format(None_string='unknown °F'), str))
 
     def testFormattingWithConversion(self):
         value_t = (68.01, "degree_F", "group_temperature")
         c_m = weewx.units.Converter(weewx.units.MetricUnits)
         vh = weewx.units.ValueHelper(value_t, formatter=default_formatter, converter=c_m)
-        self.assertEqual(six.text_type(vh), u"20.0°C")
-        self.assertEqual(six.text_type(vh.degree_F), u"68.0°F")
-        self.assertEqual(six.text_type(vh.degree_C), u"20.0°C")
+        self.assertEqual(str(vh), "20.0°C")
+        self.assertEqual(str(vh.degree_F), "68.0°F")
+        self.assertEqual(str(vh.degree_C), "20.0°C")
         # Try an impossible conversion:
         self.assertRaises(AttributeError, getattr, vh, 'meter')
 
@@ -180,16 +178,16 @@ class ValueHelperTest(unittest.TestCase):
         value_t = (10.0, "meter_per_second", "group_speed")
         # Default converter converts to US Units
         vh = weewx.units.ValueHelper(value_t, formatter=default_formatter, converter=weewx.units.Converter())
-        self.assertEqual(six.text_type(vh), "22 mph")
+        self.assertEqual(str(vh), "22 mph")
         # Now explicitly convert to knots:
-        self.assertEqual(six.text_type(vh.knot), "19 knots")
+        self.assertEqual(str(vh.knot), "19 knots")
 
     def testNoneValue(self):
         value_t = (None, "degree_C", "group_temperature")
         converter = weewx.units.Converter()
         vh = weewx.units.ValueHelper(value_t, formatter=default_formatter, converter=converter)
-        self.assertEqual(six.text_type(vh), "   N/A")
-        self.assertEqual(six.text_type(vh.degree_C), "   N/A")
+        self.assertEqual(str(vh), "   N/A")
+        self.assertEqual(str(vh.degree_C), "   N/A")
         
     def testElapsedTime(self):
         value_t = (2*86400 + 1*3600 + 5*60 + 12, "second", "group_deltatime")

@@ -5,20 +5,13 @@
 #
 """Test restx services"""
 
+import http.client
 import os
+import queue
 import time
 import unittest
-
-try:
-    # Python 3 --- mock is included in unittest
-    from unittest import mock
-except ImportError:
-    # Python 2 --- must have mock installed
-    import mock
-
-from six.moves import queue
-from six.moves import urllib
-from six.moves import http_client
+import urllib.parse
+from unittest import mock
 
 import weewx
 import weewx.restx
@@ -209,8 +202,8 @@ class TestAmbient(unittest.TestCase):
         """Test response to raising an exception during a post"""
 
         # Get a mock version of urlopen(), but with the side effect of having an exception of
-        # type http_client.HTTPException raised when it's called
-        mock_urlopen = self.get_openurl_patcher(side_effect=http_client.HTTPException("oops"))
+        # type http.client.HTTPException raised when it's called
+        mock_urlopen = self.get_openurl_patcher(side_effect=http.client.HTTPException("oops"))
 
         q = queue.Queue()
         obj = weewx.restx.AmbientThread(q,

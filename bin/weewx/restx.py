@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2022 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2023 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -53,7 +53,7 @@ should only have to implement a few functions. In particular,
    exception. See the WOWThread implementation for an example.
    
  - check_response(self, response). After an HTTP request gets posted, the
-   webserver sends back a "response." This response may contain clues as to
+   webserver sends back a "response." This response may contain clues
    whether the post worked.  For example, a request might succeed, but the
    actual posting of data might fail, with the reason indicated in the
    response.  The uploader can then take appropriate action, such as raising
@@ -83,23 +83,20 @@ of various RESTful services.
 
 """
 
-from __future__ import absolute_import
-
 import datetime
+import http.client
 import logging
 import platform
+import queue
 import re
 import socket
 import ssl
 import sys
 import threading
 import time
-
-# Python 2/3 compatiblity shims
-import six
-from six.moves import http_client
-from six.moves import queue
-from six.moves import urllib
+import urllib.error
+import urllib.parse
+import urllib.request
 
 import weedb
 import weeutil.logger
@@ -178,7 +175,7 @@ class RESTThread(threading.Thread):
                  essentials={},
                  manager_dict=None,
                  post_interval=None,
-                 max_backlog=six.MAXSIZE,
+                 max_backlog=sys.maxsize,
                  stale=None,
                  log_success=True,
                  log_failure=True,
@@ -202,7 +199,7 @@ class RESTThread(threading.Thread):
           post_interval (int|None): How long to wait between posts in seconds.
             Default is None (post every record).
           max_backlog (int): How many records are allowed to accumulate in the queue
-            before the queue is trimmed. Default is six.MAXSIZE (essentially, allow any number).
+            before the queue is trimmed. Default is sys.maxsize (essentially, allow any number).
           stale (int|None): How old a record can be and still considered useful.
             Default is None (never becomes too old).
           log_success (bool): If True, log a successful post in the system log.
@@ -491,7 +488,7 @@ class RESTThread(threading.Thread):
                 # Provide method for derived classes to behave otherwise if
                 # necessary.
                 self.handle_code(_response.code, _count + 1)
-            except (urllib.error.URLError, socket.error, http_client.HTTPException) as e:
+            except (urllib.error.URLError, socket.error, http.client.HTTPException) as e:
                 # An exception was thrown. By default, log it and try again.
                 # Provide method for derived classes to behave otherwise if
                 # necessary.
@@ -535,10 +532,11 @@ class RESTThread(threading.Thread):
         as a GET. [optional]
         """
         # Data might be a unicode string. Encode it first.
-        data_bytes = six.ensure_binary(data) if data is not None else None
+        if data is not None and not isinstance(data, bytes):
+            data = data.encode('utf-8')
         if weewx.debug >= 2:
             log.debug("%s url: '%s'", self.protocol_name, request.get_full_url())
-        _response = urllib.request.urlopen(request, data=data_bytes, timeout=self.timeout)
+        _response = urllib.request.urlopen(request, data=data, timeout=self.timeout)
         return _response
 
     def skip_this_post(self, time_ts):
@@ -806,7 +804,7 @@ class AmbientThread(RESTThread):
                  protocol_name="Unknown-Ambient",
                  essentials={},
                  post_interval=None,
-                 max_backlog=six.MAXSIZE,
+                 max_backlog=sys.maxsize,
                  stale=None,
                  log_success=True,
                  log_failure=True,
@@ -971,7 +969,7 @@ class AmbientLoopThread(AmbientThread):
                  protocol_name="Unknown-Ambient",
                  essentials={},
                  post_interval=None,
-                 max_backlog=six.MAXSIZE,
+                 max_backlog=sys.maxsize,
                  stale=None,
                  log_success=True,
                  log_failure=True,
@@ -1150,7 +1148,7 @@ class CWOPThread(RESTThread):
     def __init__(self, q, manager_dict,
                  station, passcode, latitude, longitude, station_type,
                  server_list=StdCWOP.default_servers,
-                 post_interval=600, max_backlog=six.MAXSIZE, stale=600,
+                 post_interval=600, max_backlog=sys.maxsize, stale=600,
                  log_success=True, log_failure=True,
                  timeout=10, max_tries=3, retry_wait=5, skip_upload=False):
 
@@ -1549,10 +1547,6 @@ class StationRegistryThread(RESTThread):
         for _key in StationRegistryThread._FORMATS:
             v = record[_key]
             if v is not None:
-                # Under Python 2, quote_plus() can only accept strings (no unicode).
-                # If necessary, convert.
-                if isinstance(v, six.string_types):
-                    v = six.ensure_str(v)
                 _liststr.append(urllib.parse.quote_plus(StationRegistryThread._FORMATS[_key] % v,
                                                         '='))
         _urlquery = '&'.join(_liststr)
@@ -1701,7 +1695,7 @@ class AWEKASThread(RESTThread):
     def __init__(self, q, username, password, latitude, longitude,
                  manager_dict,
                  language='de', server_url=_SERVER_URL,
-                 post_interval=300, max_backlog=six.MAXSIZE, stale=None,
+                 post_interval=300, max_backlog=sys.maxsize, stale=None,
                  log_success=True, log_failure=True,
                  timeout=10, max_tries=3, retry_wait=5,
                  retry_login=3600, retry_ssl=3600, skip_upload=False):
@@ -1857,7 +1851,7 @@ class AWEKASThread(RESTThread):
             elif line.startswith(b"Benutzer/Passwort Fehler"):
                 raise BadLogin(line)
             else:
-                raise FailedPost("Server returned '%s'" % six.ensure_text(line))
+                raise FailedPost("Server returned '%s'" % line)
 
 
 ###############################################################################

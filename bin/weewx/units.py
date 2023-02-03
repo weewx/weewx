@@ -771,8 +771,7 @@ class Formatter(object):
         # Add a label, if requested:
         if addLabel:
             # Tack the label on to the end:
-            label = self.get_label_string(val_t[1], plural=(not val_t[0]==1))
-            val_str += label
+            val_str += self.get_label_string(val_t[1], plural=(not val_t[0]==1))
 
         return val_str
 
@@ -975,7 +974,7 @@ class ValueHelper(object):
         """Initialize a ValueHelper
 
         Args:
-            value_t (ValueTuple or UnknownType): This parameter can be either a ValueTuple,
+            value_t (ValueTuple|UnknownType|tuple): This parameter can be either a ValueTuple,
                 or an instance of UnknownType. If a ValueTuple, the "value" part can be either a
                 scalar, or a series. If a converter is given, it will be used to convert the
                 ValueTuple before storing. If the parameter is 'UnknownType', it is an error ot
