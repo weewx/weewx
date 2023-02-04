@@ -201,6 +201,8 @@ class ValueHelperTest(unittest.TestCase):
         # Now try a 'None' value:
         vh = weewx.units.ValueHelper((None, "second", "group_deltatime"), formatter=default_formatter)
         self.assertEqual(vh.string(), "   N/A")
+        self.assertEqual(vh.long_form(), "   N/A")
+        self.assertEqual(vh.long_form(None_string="Nothing"), "Nothing")
 
     def test_JSON(self):
         value_t = (68.1283, "degree_F", "group_temperature")

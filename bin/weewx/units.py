@@ -1069,11 +1069,12 @@ class ValueHelper(object):
         # appropriate ordinate:
         return self.formatter.to_ordinal_compass(self.value_t)
 
-    def long_form(self, format_string=None):
+    def long_form(self, format_string=None, None_string=None):
         """Format a delta time"""
         return self.formatter.long_form(self.value_t,
                                         context=self.context,
-                                        format_string=format_string)
+                                        format_string=format_string,
+                                        None_string=None_string)
 
     def json(self, **kwargs):
         return json.dumps(self.raw, cls=ComplexEncoder, **kwargs)
