@@ -33,7 +33,18 @@ The *Standard* skin now uses the font `DejaVuSansMono-Bold` and includes a
 copy. Before, it had to rely on hardwired font paths, which were less reliable.
 
 
-### 4.10.1 01/30/2023
+4.10.2 MM/DD/YYYY
+
+Removed errant "f-string" in imagegenerator.py.
+
+Added missing ".long_form" to celestial.inc that would cause total daylight
+to be given in seconds, instead of long form.
+
+Fix problem that a None value in long_form() would raise an exception.
+PR #843. Thanks to user Karen!
+
+
+4.10.1 01/30/2023
 
 Logging handler `rotate` has been removed. Its need to access privileged
 location `/var/log/weewx.log` on start up would cause crashes, even if it was
