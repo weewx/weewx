@@ -1,6 +1,17 @@
 WeeWX change history
 --------------------
 
+4.10.2 MM/DD/YYYY
+
+Removed errant "f-string" in imagegenerator.py.
+
+Added missing ".long_form" to celestial.inc that would cause total daylight
+to be given in seconds, instead of long form.
+
+Fix problem that a None value in long_form() would raise an exception.
+PR #843. Thanks to user Karen!
+
+
 4.10.1 01/30/2023
 
 Logging handler `rotate` has been removed. Its need to access privileged

@@ -791,7 +791,7 @@ class Formatter(object):
         _sector = int(_degree / _sector_size)
         return self.ordinate_names[_sector]
 
-    def long_form(self, val_t, context, format_string=None):
+    def long_form(self, val_t, context, format_string=None, None_string=None):
         """Format a delta time using the long-form.
 
         Args:
@@ -807,10 +807,10 @@ class Formatter(object):
         if not format_string:
             format_string = self.deltatime_format_dict.get(context, DEFAULT_DELTATIME_FORMAT)
         # Now format the delta time, using the function delta_time_to_string:
-        val_str = self.delta_time_to_string(val_t, format_string)
+        val_str = self.delta_time_to_string(val_t, format_string, None_string)
         return val_str
 
-    def delta_time_to_string(self, val_t, label_format):
+    def delta_time_to_string(self, val_t, label_format, None_string=None):
         """Format elapsed time as a string
 
         Args:
@@ -820,6 +820,17 @@ class Formatter(object):
         Returns:
             str: The formatted time as a string.
         """
+        if val_t is None or val_t[0] is None:
+            if None_string is None:
+                val_str = self.unit_format_dict.get('NONE', u'N/A')
+            else:
+                # Make sure the "None_string" is, in fact, a string
+                if isinstance(None_string, six.string_types):
+                    val_str = None_string
+                else:
+                    # Coerce to a string.
+                    val_str = str(None_string)
+            return val_str
         secs = convert(val_t, 'second')[0]
         etime_dict = {}
         secs = abs(secs)
@@ -1058,11 +1069,12 @@ class ValueHelper(object):
         # appropriate ordinate:
         return self.formatter.to_ordinal_compass(self.value_t)
 
-    def long_form(self, format_string=None):
+    def long_form(self, format_string=None, None_string=None):
         """Format a delta time"""
         return self.formatter.long_form(self.value_t,
                                         context=self.context,
-                                        format_string=format_string)
+                                        format_string=format_string,
+                                        None_string=None_string)
 
     def json(self, **kwargs):
         return json.dumps(self.raw, cls=ComplexEncoder, **kwargs)
