@@ -724,6 +724,7 @@ import weeimport.weeimport
 import weeutil.logger
 import weeutil.weeutil
 
+import user.extensions
 
 log = logging.getLogger(__name__)
 
