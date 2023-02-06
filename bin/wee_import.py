@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-#    Copyright (c) 2009-2021 Tom Keffer <tkeffer@gmail.com> and Gary Roderick
+#    Copyright (c) 2009-2023 Tom Keffer <tkeffer@gmail.com> and Gary Roderick
 #
 #    See the file LICENSE.txt for your rights.
 #
@@ -710,9 +710,7 @@ Adding a New Import Source
 """
 
 # Python imports
-from __future__ import absolute_import
-from __future__ import print_function
-
+import importlib
 import logging
 import optparse
 
@@ -724,12 +722,10 @@ import weeimport.weeimport
 import weeutil.logger
 import weeutil.weeutil
 
-import user.extensions
-
 log = logging.getLogger(__name__)
 
 # wee_import version number
-WEE_IMPORT_VERSION = '0.7'
+WEE_IMPORT_VERSION = '0.8'
 # minimum WeeWX version required for this version of wee_import
 REQUIRED_WEEWX = "4.0.0"
 
@@ -798,6 +794,12 @@ def main():
     # get config_dict to use
     config_path, config_dict = weecfg.read_config(options.config_path, args)
     print("Using WeeWX configuration file %s" % config_path)
+
+    # Now that we have the configuration dictionary, we can add the path to the user
+    # directory to PYTHONPATH.
+    weewx.add_user_path(config_dict)
+    # Now we can import user extensions
+    importlib.import_module('user.extensions')
 
     # Set weewx.debug as necessary:
     weewx.debug = weeutil.weeutil.to_int(config_dict.get('debug', 0))
