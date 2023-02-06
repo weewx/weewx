@@ -14,9 +14,6 @@ import optparse
 import sys
 import time
 
-import six
-from six.moves import input
-
 # weewx imports
 import weecfg.database
 import weedb
@@ -904,11 +901,11 @@ def _fix_wind(config_dict, db_binding, options):
 
 def check_type(val, expected):
     if expected == 'INTEGER':
-        return isinstance(val, six.integer_types)
+        return isinstance(val, int)
     elif expected == 'REAL':
         return isinstance(val, float)
     elif expected == 'STR' or expected == 'TEXT':
-        return isinstance(val, six.string_types)
+        return isinstance(val, str)
     else:
         raise ValueError("Unknown type %s" % expected)
 
@@ -919,7 +916,9 @@ def set_type(val, target):
     elif target == 'REAL':
         return float(val)
     elif target == 'STR' or target == 'TEXT':
-        return six.ensure_str(val)
+        if isinstance(val, bytes):
+            return val.decode('utf-8')
+        return str(val)
     else:
         raise ValueError("Unknown type %s" % target)
 
