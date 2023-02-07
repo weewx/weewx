@@ -814,10 +814,10 @@ class Formatter(object):
         """
         if val_t is None or val_t[0] is None:
             if None_string is None:
-                val_str = self.unit_format_dict.get('NONE', u'N/A')
+                val_str = self.unit_format_dict.get('NONE', 'N/A')
             else:
                 # Make sure the "None_string" is, in fact, a string
-                if isinstance(None_string, six.string_types):
+                if isinstance(None_string, str):
                     val_str = None_string
                 else:
                     # Coerce to a string.
