@@ -1,6 +1,11 @@
 # To do
 
 
+## Documentation
+
+Update `DEV_NOTES.txt` with instructions on making documents.
+
+
 ## Drivers
 
 Something funny about function `set_retransmit()` in `vantage.py`.

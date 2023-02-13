@@ -56,25 +56,25 @@ never used.
 
 ### 4.10.0 01/29/2023
 
-Don't inject txBatteryStatus and consBatteryVoltage into records in the Vantage
-driver. Let the accumulators do it. Fixes issue #802.
+Don't inject `txBatteryStatus` and `consBatteryVoltage` into records in the 
+Vantage driver. Let the accumulators do it. Fixes issue #802.
 
 Different wake-up strategy for the Vantage console.
 
-Do not write config_path and entry_path to updated configuration dictionary.
+Do not write `config_path` and `entry_path` to updated configuration dictionary.
 Fixes issue #806.
 
 Allow more flexible formatting for delta times. This can break old skins.
 See Upgrade Guide. PR #807.
 
-Fix bug that prevents group_deltatime from being used by timespans. Users
+Fix bug that prevents `group_deltatime` from being used by timespans. Users
 who used custom formatting for delta times will be affected. See the Upgrade
 Guide. Fixes issue #808.
 
-Add suffix ".length" to class TimespanBinder. This allows expressions such as
+Add suffix `.length` to class TimespanBinder. This allows expressions such as
 $month.length. PR #809. Thanks to user Karen!
 
-Added new unit "hertz". PR #812. Again, thanks to user Karen!
+Added new unit `hertz`. PR #812. Again, thanks to user Karen!
 
 Calculate `*.wind.maxtime` out of `windGust` like `*.wind.max`
 Fixes issue #833
@@ -82,7 +82,7 @@ Fixes issue #833
 Fix bug that prevents `group_deltatime` from being used by timespans. Users
 Add suffix `.length` to class TimespanBinder. This allows expressions such as
 
-Option line_gap_fraction can now be used with bar plots. Fixes issue #818.
+Option `line_gap_fraction` can now be used with bar plots. Fixes issue #818.
 
 
 ### 4.9.1 10/25/2022
