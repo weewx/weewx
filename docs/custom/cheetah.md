@@ -233,7 +233,7 @@ _`obstype`_ is an observation type, such as `barometer`. This type must appear e
 
 _`optional_unit_conversion`_ is an optional unit conversion tag. If provided, the results will be converted into the specified units, otherwise the default units specified in the skin configuration file (in section `[Units][[Groups]]`) will be used. See the section _[Unit conversion options](#unit-conversion-options)_.
 
-_`optional_rounding`_ allows the results to be rounded to a fixed number of decimal digits. See the section _[Optional rounding](#optional-rounding)_.
+_`optional_rounding`_ allows the results to be rounded to a fixed number of decimal digits. See the section _[Optional rounding options](#optional-rounding-options)_.
 
 _`optional_formatting`_ is a set of optional formatting tags, which control how the value will appear. See the section _[Formatting options](#formatting-options)_ below.
 
@@ -269,7 +269,7 @@ _`aggregation`_ is an _aggregation type_. If you ask for `$month.outTemp.avg` yo
 
 _`optional_unit_conversion`_ is an optional unit conversion tag. If provided, the results will be converted into the specified units, otherwise the default units specified in the skin configuration file (in section `[Units][[Groups]]`) will be used. See the section _[Unit conversion options](#unit-conversion-options)_.
 
-_`optional_rounding`_ allows the results to be rounded to a fixed number of decimal digits. See the section _[Optional rounding](#optional-rounding)_
+_`optional_rounding`_ allows the results to be rounded to a fixed number of decimal digits. See the section _[Optional rounding options](#optional-rounding-options)_
 
 _`optional_formatting`_ is a set of optional formatting tags, which control how the value will appear. See the section _[Formatting options](#formatting-options)_ below.
 
@@ -388,9 +388,9 @@ The _`$optional_ago`_ parameters can be useful for statistics farther in the pas
     </tbody>
 </table>
 
-## Unit conversion options
+### Unit conversion options
 
-The tag _`optional_unit_conversion`_ can be used with either current observations or aggregations. If supplied, the results will be converted to the specified units. For example, if you have set `group_pressure` to inches of mercury (`inHg`), then the tag
+The option _`optional_unit_conversion`_ can be used with either current observations or with aggregations. If supplied, the results will be converted to the specified units. For example, if you have set `group_pressure` to inches of mercury (`inHg`), then the tag
 
     Today's average pressure=$day.barometer.avg 
 
@@ -428,46 +428,46 @@ or in degrees C: $day.barometer.min.degree_C
 or in foobar units: $day.barometer.min.foobar
 </div>
 
-### Optional rounding
+### Option `round()`
 
 The data in the resultant tag can be optionally rounded to a fixed number of decimal digits. This is useful when emitting raw data or JSON strings. It should _not_ be used with formatted data (using a [format string](#format_string) would be a better choice).
 
-The structure of the tag is
+The structure of the option is
 
     .round(ndigits=None)
 
 where `ndigits` is the number of decimal digits to retain. If `None` (the default), then all digits will be retained.
 
-## Formatting options
+### Formatting options
 
-A variety of tags and arguments are available to you to customize the formatting of the final observation value. This table lists the tags:
+A variety of options are available to you to customize the formatting of the final observation value. They can be used whenever a tag results in a [`ValueHelper`](../appendix#ValueHelper), which is almost all the time. This table summarizes the options:
 
 <table class="indent">
-    <caption>Optional formatting tag</caption>
+    <caption>Formatting options</caption>
     <tbody>
     <tr class="first_row">
-        <td>Optional formatting tag</td>
+        <td>Formatting option</td>
         <td>Comment</td>
     </tr>
     <tr>
         <td class="code text_highlight">.format(<em>args</em>)</td>
-        <td>Format the value as a string, according to a set of optional <em>args</em> (see below).</td>
+        <td>
+            Format the value as a string, according to a set of optional <em>args</em> 
+            (<a href="#option-format">see below</a>).
+        </td>
+    </tr>
+    <tr>
+        <td class="code text_highlight">.long_form(<em>args</em>)</td>
+        <td>
+            Format <em>delta times</em> in the "long form", according to a set of optional 
+            <em>args</em> (<a href="#option-long_form">see below</a>).
+        </td>
     </tr>
     <tr>
         <td class="code text_highlight">.ordinal_compass</td>
         <td>Format the value as a compass ordinals (<i>e.g.</i>"SW"), useful for wind directions.
             The ordinal abbreviations are set by option <a href="../options_ref/#Units_Ordinates"><span class="code">directions</span></a> in the skin
             configuration file <span class="code">skin.conf</span>.
-        </td>
-    </tr>
-    <tr>
-        <td class="code text_highlight">.long_form</td>
-        <td>
-            Format delta times in the "long form". A "delta time" is the difference between two times. An
-            example is the amount of uptime (difference between start and current time). By default, this will
-            be formatted as the number of elapsed seconds (<em>e.g.,</em> <span
-            class="code">45000 seconds</span>). The "long form" breaks the time down into constituent time
-            elements (<em>e.g.,</em> <span class="code">12 hours, 30 minutes, 0 seconds</span>).
         </td>
     </tr>
     <tr>
@@ -480,14 +480,17 @@ A variety of tags and arguments are available to you to customize the formatting
         <td class="code text_highlight">.raw</td>
         <td>Return the value "as is", without being converted to a string and without any formatting applied.
             This can be useful for doing arithmetic directly within the templates. You must be prepared to deal
-            with a potential <span class="code">None</span> value.
+            with a potential value of <span class="code">None</span>.
         </td>
     </tr>
     </tbody>
 </table>
 
 
-The first of these tags (.format()) has the formal structure:
+#### Option `.format()`
+
+The results of a tag can be optionally formatted using option `.format()`. It has the formal
+structure:
 
     .format(format_string=None, None_string=None, add_label=True, localize=True)
 
@@ -502,9 +505,9 @@ Here is the meaning of each of the optional arguments:
     </tr>
     <tr>
         <td id="format_string" class='code text_highlight'>format_string</td>
-        <td>Use the optional string to format the value. If set to <span class="code">None</span>, then an
-            appropriate string format from <span class="code">skin.conf</span> will be used.
-        </td>
+        <td>If set, use the supplied string to format the value. Otherwise, if set to <span class="code">None</span>, then
+            an appropriate value from <a href="../options_ref/#Units_StringFormats">[Units][[StringFormats]]</a>
+            </span> will be used.</td>
     </tr>
     <tr>
         <td class="code text_highlight">None_string</td>
@@ -532,7 +535,87 @@ Here is the meaning of each of the optional arguments:
 
 If you're willing to honor the ordering of the arguments, the argument name can be omitted.
 
-### Formatting examples
+#### Option `.long_form()`
+
+The option `.long_form()`, can be used to format <em>delta times</em>. A <em>delta time</em> is the
+difference between two times, for example, the amount of uptime (the difference between start up
+and the current time). By default, this will be formatted as the number of elapsed seconds. For
+example, a template with the following
+
+```
+<p>WeeWX has been up $station.uptime</p>
+```
+
+will result in
+
+<div class="example_output">
+WeeWX has been up 101100 seconds
+</div>
+
+
+The "long form" breaks the time down into constituent time elements. For example,
+
+```
+<p>WeeWX has been up $station.uptime.long_form</p>
+```
+
+results in
+
+<div class="example_output">
+WeeWX has been up 1 day, 4 hours, 5 minutes
+</div>
+
+The option `.long_form()` has the formal structure
+
+    .long_form(format_string=None, None_string=None)
+
+Here is the meaning of each of the optional arguments:
+
+<table class="indent">
+    <caption>Optional arguments for <span class="code">.long_form()</span></caption>
+    <tbody>
+    <tr class="first_row">
+        <td>Optional argument</td>
+        <td>Comment</td>
+    </tr>
+    <tr>
+        <td id="format_string" class='code text_highlight'>format_string</td>
+        <td>
+            Use the supplied string to format the value.
+        </td>
+    </tr>
+    <tr>
+        <td class="code text_highlight">None_string</td>
+        <td>
+            Should the observation value be <span class="code">NONE</span>, then use the supplied 
+            string to format the value (typically, something like "N/A").
+        </td>
+    </tr>
+    </tbody>
+</table>
+
+The argument `format_string` uses special symbols to represent its constitutent components. Here's
+what they mean:
+
+| Symbol         | Meaning                     |
+|----------------|-----------------------------|
+| `day`          | The number of days          |
+| `hour`         | The number of hours         |
+| `minute`       | The number of minutes       |
+| `second`       | The number of seconds       |
+| `day_label`    | The label used for days     |
+| `hour_label`   | The label used for hours    |
+| `minute_label` | The label used for minutes  |
+| `second_label` | The label used for seconds  |
+
+Putting this together, the example above could be written
+
+```
+<p>WeeWX has been up $station.uptime.long_form(format_string="%(day)d%(day_label)s, %(hour)d%(hour_label)s, %(minute)d%(minute_label)s")</p>
+```
+
+
+#### Formatting examples
 
 This section gives a number of example tags, and their expected output. The following values are assumed:
 
@@ -568,6 +651,11 @@ This section gives a number of example tags, and their expected output. The foll
         </td>
         <td>1270250700</td>
     </tr>
+    <tr>
+        <td class="code first_col">
+            uptime
+        </td>
+        <td>101100 seconds</td>
 </table>
 
 Here are the examples:
@@ -731,12 +819,36 @@ Here are the examples:
             Value in degrees Celsius, rounded to two decimal digits, then converted to a JSON string.
         </td>
     </tr>
+    <tr>
+        <td class="code first_col">$station.uptime</td>
+        <td class="code">101100 seconds</td>
+        <td class="code">str</td>
+        <td>
+            WeeWX uptime.
+        </td>
+    </tr>
+    <tr>
+        <td class="code first_col">$station.uptime.hour</td>
+        <td class="code">28.1 hours</td>
+        <td class="code">str</td>
+        <td>
+            WeeWX uptime, with unit conversion to hours.
+        </td>
+    </tr>
+    <tr>
+        <td class="code first_col">$station.uptime.long_form</td>
+        <td class="code">1 day, 4 hours, 5 minutes</td>
+        <td class="code">str</td>
+        <td>
+            WeeWX uptime with "long form" formatting.
+        </td>
+    </tr>
+
     </tbody>
 </table>
 
-Note that the same formatting conventions can be used for aggregation periods, such as `$month`, as well as `$current`.
 
-### Start, end, and dateTime
+### Start, end, and `dateTime`
 
 While not an observation type, in many ways the time of an observation, `dateTime`, can be treated as one. A tag such as
 
@@ -760,7 +872,7 @@ produces
 09-Jan-2010 12:30
 </div>
 
-For _aggregation periods_, such as `$month`, you can request the _start_, _end_, or _length _of the period, by using suffixes `.start`, `.end`, or `.length`, respectively. For example,
+For _aggregation periods_, such as `$month`, you can request the _start_, _end_, or _length_ of the period, by using suffixes `.start`, `.end`, or `.length`, respectively. For example,
 
     The current month runs from $month.start to $month.end and has $month.length.format("%(day)d %(day_label)s").
 
@@ -788,7 +900,7 @@ The tag `$trend` is available for time trends, such as changes in barometric pre
 | `$trend.time_delta`                  | 10800 secs |
 | `$trend.time_delta.hour`             | 3 hrs      |
 
-Note how you can explicitly specify a value in the tag itself (2nd row in the table above). If you do not specify a value, then a default time interval, set by option [time_delta](../options_ref/#trend) in the skin configuration file, will be used. This value can be retrieved by using the syntax `$trend.time_delta` (4th row in the table).
+Note how you can explicitly specify a time interval in the tag itself (2nd row in the table above). If you do not specify a value, then a default time interval, set by option [time_delta](../options_ref/#trend) in the skin configuration file, will be used. This value can be retrieved by using the syntax `$trend.time_delta` (4th row in the table).
 
 For example, the template expression
 
