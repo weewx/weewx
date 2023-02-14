@@ -21,6 +21,10 @@ DOCLOC=bin/wee_resources/docs
 # Location of the skins
 SKINLOC=bin/wee_resources/skins
 
+ifndef PYTHON
+PYTHON=python3
+endif
+
 # extract version to be used in package controls and labels
 VERSION=$(shell sed -ne 's/^version = "\(.*\)"/\1/p;' pyproject.toml)
 # just the major.minor part of the version
@@ -29,24 +33,21 @@ MMVERSION:=$(shell echo "$(VERSION)" | sed -e 's%.[0-9a-z]*$$%%')
 CWD = $(shell pwd)
 BLDDIR=build
 DSTDIR=dist
-
-ifndef PYTHON
-PYTHON=python3
-endif
+SRCPKG=weewx-$(VERSION).tar.gz
+WHEEL=weewx-$(VERSION)-py3-none-any.whl
 
 all: help
 
 help: info
 	@echo "options include:"
 	@echo "          info  display values of variables we care about"
-	@echo "       install  run the generic python install"
 	@echo "       version  get version from pyproject.toml and insert elsewhere"
 	@echo ""
 	@echo "    deb-changelog prepend stub changelog entry for deb"
 	@echo " redhat-changelog prepend stub changelog entry for redhat"
 	@echo "   suse-changelog prepend stub changelog entry for suse"
 	@echo ""
-	@echo "    src-package create source tarball suitable for distribution"
+	@echo "  pypi-packages create wheel and source tarball suitable for pypi"
 	@echo "debian-packages create the debian packages"
 	@echo "redhat-packages create the redhat packages"
 	@echo "  suse-packages create the suse packages"
@@ -55,20 +56,20 @@ help: info
 	@echo "     check-rpm  check the rpm package"
 	@echo "    check-docs  run weblint on the docs"
 	@echo ""
-	@echo "    upload-src  upload the src package"
+	@echo "    upload-src  upload the src package to $(WEEWX_COM)"
+	@echo "   upload-pypi  upload wheel and src package to pypi.org"
 	@echo " upload-debian  upload the debian deb packages"
 	@echo " upload-redhat  upload the redhat rpm packages"
 	@echo "   upload-suse  upload the suse rpm packages"
 	@echo ""
-	@echo "    build-docs  generate the docs using mkdocs"
-	@echo "   upload-docs  upload docs to weewx.com"
+	@echo "    build-docs  build the docs using mkdocs"
+	@echo "   upload-docs  upload docs to $(WEEWX_COM)"
 	@echo ""
 	@echo "       release  rearrange files on the download server"
 	@echo ""
 	@echo "          test  run all unit tests"
 	@echo "                SUITE=path/to/foo.py to run only foo tests"
 	@echo "    test-clean  remove test databases"
-	@echo "                recommended when switching between python 2 and 3"
 	@echo ""
 	@echo " apt repository management"
 	@echo "    pull-apt-repo"
@@ -101,7 +102,8 @@ info:
 clean:
 	find . -name "*.pyc" -exec rm {} \;
 	find . -name __pycache__ -exec rm -rf {} \;
-	rm -rf bin/weewx.egg-info
+	rm -rf bin/weewx.egg-info \;
+	rm -rf $(BLDDIR) $(DSTDIR)
 
 realclean:
 	rm -f MANIFEST
@@ -149,13 +151,12 @@ test-clean:
 	rm -rf $(TESTDIR)
 	echo $(MYSQLCLEAN) | mysql --user=weewx --password=weewx --force >/dev/null 2>&1
 
-install:
-	$(PYTHON) ./setup.py --install
+pypi-packages $(DSTDIR)/$(SRCPKG) $(DSTDIR)/$(WHEEL):
+	poetry build
 
-SRCPKG=weewx-$(VERSION).tar.gz
-src-package $(DSTDIR)/$(SRCPKG): MANIFEST.in
-	rm -f MANIFEST
-	$(PYTHON) ./setup.py sdist
+# Upload wheel and src package to pypi.org
+upload-pypi: $(DSTDIR)/$(SRCPKG) $(DSTDIR)/$(WHEEL)
+	poetry publish
 
 # upload the source tarball to the web site
 upload-src:
@@ -163,7 +164,7 @@ upload-src:
 
 # Build the documentation:
 build-docs:
-	rm -r $(DOCLOC)
+	rm -rf $(DOCLOC)
 	mkdocs build
 
 # upload docs to the web site

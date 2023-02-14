@@ -4,47 +4,52 @@ checklist for doing a release:
      1. WEEWX_ROOT points to /home/weewx
      2. debug=0 in weewx.conf
 2. Make sure the version is correct
-     1. modify bin/weewx/__init__.py
+     1. modify pyproject.toml
      2. make version
 3. Make sure all changes have been logged
-     1. docs/changes.txt
-     2. make deb-changelog
-     3. make redhat-changelog
-     4. make suse-changelog
-     5. docs/upgrading.htm
-4. Create the packages
-     1. make src-package
+     1. docs/changes.md
+     2. docs/upgrading.htm
+     3. make deb-changelog
+     4. make redhat-changelog
+     5. make suse-changelog
+4. Build the documentation (may emit bogus warnings about dead links)
+     1. make build-docs
+5. Create the packages
+     1. make pypi-packages
      2. make debian-packages
      3. make redhat-packages
      4. make suse-packages
-5. Sanity check on production machine
+6. Sanity check on production machine
      1. unpack the tarball, install, run
-6. Tag it
-     1. git tag -a v1.3.1 -m "Version 1.3.1 release"
-7. Upload to weewx.com
+7. Commit and tag:
+     1. git commit -m "Version 1.3.1"
+     1. git tag -a v1.3.1 -m "v1.3.1"
+8. Upload wheel to pypi.org
+     1. make upload-pypi
+9. Upload to weewx.com
      1. make upload-src
      2. make upload-debian
      3. make upload-redhat
      4. make upload-suse
      6. make upload-docs
-8. Update the deb repository
+10. Update the deb repository
      1. make pull-apt-repo
      2. make update-apt-repo
      3. make push-apt-repo
-9. Update the redhat repository
+11. Update the redhat repository
      1. make pull-yum-repo
      2. make update-yum-repo
      3. make push-yum-repo
-10. Update the suse repository
+12. Update the suse repository
      1. make pull-suse-repo
      2. make update-suse-repo
      3. make push-suse-repo
-11. Reshuffle files on the server
+13. Reshuffle files on the server
      1. make release
      2. make release-apt-repo
      3. make release-yum-repo
      4. make release-suse-repo
-12. Announce the release to the weewx user's group.
+14. Announce the release to the weewx user's group.
 
 
 pre-requisites ----------------------------------------------------------------
@@ -75,12 +80,12 @@ To build suse package install the following (use 'zypper install'):
 howto -------------------------------------------------------------------------
 
 how to update the version number:
-  perl -pi -e 's/__version__=".*"/__version__="x.y.z"/' bin/weewx/__init__.py
+  Change the version number in pyproject.toml
   make version                  # this propagates the version number everywhere
   git commit -a -m "bump to version x.y.z"
 
-how to build source package:
-  make src-package
+how to build wheel and source tarball
+  make pypi-packages
 
 how to build debian packages:
   make deb-changelog
@@ -127,9 +132,10 @@ to generate gpg key used for signing packages:
 to export the text version of a public key:
   gpg --export -a "YOUR_NAME_HERE" > username.gpg.key
 
-source install:
-  python ./setup.py install
-  python ./setup.py install home=/opt/weewx-x.y.z     (this does not work!)
+Install using pip
+  make pypi-packages
+  pip install dist/weewx-x.y.z-py3-none-any.whl
+  weectl station create
 
 debian install/remove:
   apt-get install weewx         # install with apt
@@ -151,6 +157,30 @@ suse install/remove:
   zypper remove weewx                             # remove with zypper
   rpm -i weewx-x.y.z-r.rpm                        # install with rpm directly
   rpm -e weewx                                    # remove with rpm
+
+
+howto: build and publish wheels to pypi.org -----------------------------------
+
+Prerequisites:
+    - Python 3.7 or greater, with pip installed
+    - Install mkdocs:
+        python3 -m pip install mkdocs
+    - Install the theme "material" for mkdocs:
+        python3 -m pip install mkdocs-material
+    - Install poetry:
+        curl -sSL https://install.python-poetry.org | python3 -
+    - Get an API token from pypi.org
+        See https://pypi.org/manage/account/token/
+    - Tell poetry to use it:
+        poetry config pypi-token.pypi pypi-substitute-your-pypi-key
+
+Steps:
+    - Build the docs (may emit bogus warnings about dead links):
+        make build-docs
+    - Build the wheel
+        make pypi-packages
+    - Publish to pypi.org
+        make upload-pypi
 
 
 howto: deb repository ---------------------------------------------------------
@@ -243,7 +273,7 @@ switch from testing to production (this is done at weewx.com):
 notes -------------------------------------------------------------------------
 
 there are multiple changelogs:
-  docs/changes.txt - definitive changelog for the application
+  docs/changes.md - definitive changelog for the application
   pkg/debian/changelog - changes to the debian packaging
   pkg/changelog.el - changes to the redhat packaging
   pkg/changelog.suse - changes to the suse packaging
@@ -286,9 +316,8 @@ unit tests --------------------------------------------------------------------
 
 prerequisites:
 
-python 2.7
+python 3.7
 python-usb
-python-mock 0.6
 pyephem
 
 to set up mysql server with user and permissions for testing:
@@ -316,17 +345,21 @@ what to test when creating debian and redhat packages:
   install, modify files, remove
   install, modify files, upgrade
 
-any linux:
-- new install using setup.py to /home/weewx
-  setup.py install
+Using pip:
 
-- upgrade using setup.py to /home/weewx
-  setup.py install
-  modify /home/weewx/weewx.conf
-  setup.py install
+- new install to user space
+  make pypi-packages
+  pip install dist/weewx-x.y.z-py3-none-any.whl --user
+  weectl station create
 
-- new install using setup.py to /opt/weewx
-  setup.py install home=/opt/weewx
+- upgrade user data
+  modify ~/weewx-data/weewx.conf
+  weectl station upgrade
+
+- new install using pip to /opt/weewx
+  make pypi-packages
+  sudo pip install dist/weewx-x.y.z-py3-none-any.whl
+  sudo weectl station create /opt/weewx/weewx.conf
 
 - upgrade using setup.py to /opt/weewx
   setup.py install home=/opt/weewx
@@ -368,13 +401,11 @@ debian:
 all platforms:
 
 - installation and removal of extensions
-  wee_extension --install cmon
-  wee_extension --install pmon
-  wee_extension --remove cmon
+  weectl extension install https://github.com/matthewwall/weewx-cmon/archive/master.zip
+  weectl extension install ~/weewx-data/examples/pmon
+  weectl extension uninstall cmon
+  weectl extension uninstall pmon
 
-- reconfigure using wee_config
-  wee_config --reconfigure
-  wee_config --reconfigure --driver=weewx.drivers.vantage
-
-- list drivers
-  wee_config --list-drivers
+- reconfigure
+  weectl station reconfigure
+  weectl station reconfigure --driver=weewx.drivers.vantage --no-prompt
