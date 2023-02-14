@@ -1,18 +1,16 @@
 #
-#    Copyright (c) 2009-2019 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2023 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
-"""Test routines for weeplot.utilities"""
+"""Test functions in weeplot.utilities"""
 
-from __future__ import absolute_import
 import os
-import time
 import unittest
 
+from weeplot.utilities import *
+from weeplot.utilities import _rel_approx_equal
 from weeutil.weeutil import timestamp_to_string as to_string
-from weeplot.utilities import scale, scaletime, xy_seq_line, \
-    pickLabelFormat, _rel_approx_equal
 
 
 class WeePlotUtilTest(unittest.TestCase):
@@ -79,7 +77,6 @@ class WeePlotUtilTest(unittest.TestCase):
         self.assertEqual("(%.5f, %.5f, %.5f)" % scale(5.0, 17.0,
                                                       (0, 1, None)),
                          "(0.00000, 1.00000, 0.20000)")
-
 
     def test_scaletime(self):
         """test function scaletime()"""
@@ -191,6 +188,15 @@ class WeePlotUtilTest(unittest.TestCase):
         self.assertFalse(_rel_approx_equal(0.0, 1e-9))
         self.assertTrue(_rel_approx_equal(1.0, 1.0 + 1e-9))
         self.assertTrue(_rel_approx_equal(1e8, 1e8 + 1e-3))
+
+    def test_tobgr(self):
+        """Test the function tobgr()"""
+        self.assertEqual(tobgr("red"), 0x0000ff, "Test color name")
+        self.assertEqual(tobgr("#f1f2f3"), 0xf3f2f1, "Test RGB string")
+        self.assertEqual(tobgr("0xf1f2f3"), 0xf1f2f3, "Test BGR string")
+        self.assertEqual(tobgr(0xf1f2f3), 0xf1f2f3, "Test BGR int")
+        with self.assertRaises(ValueError):
+            tobgr("#f1f2fk")
 
 
 if __name__ == '__main__':

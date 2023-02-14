@@ -1,24 +1,15 @@
 #
-#    Copyright (c) 2009-2021 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2023 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
-"""Various utilities used by the plot package.
+"""Various utilities used by the plot package."""
 
-"""
-from __future__ import absolute_import
-from __future__ import print_function
-from six.moves import zip
-
-try:
-    from PIL import ImageFont, ImageColor
-except ImportError:
-    import ImageFont, ImageColor
 import datetime
-import time
 import math
+import time
 
-import six
+from PIL import ImageFont, ImageColor
 
 import weeplot
 
@@ -28,18 +19,21 @@ def scale(data_min, data_max, prescale=(None, None, None), nsteps=10):
 
     The origin (zero) is guaranteed to be on an interval boundary.
 
-    data_min: The minimum data value
+    Args:
 
-    data_max: The maximum data value. Must be greater than or equal to data_min.
+        data_min(float): The minimum data value
 
-    prescale: A 3-way tuple. A non-None min or max value (positions 0 and 1,
-    respectively) will be fixed to that value. A non-None interval (position 2)
-    be at least as big as that value. Default = (None, None, None)
+        data_max(float): The maximum data value. Must be greater than or equal to data_min.
 
-    nsteps: The nominal number of desired steps. Default = 10
+        prescale(tuple): A 3-way tuple. A non-None min or max value (positions 0 and 1,
+            respectively) will be fixed to that value. A non-None interval (position 2)
+            be at least as big as that value. Default = (None, None, None)
 
-    Returns: a three-way tuple. First value is the lowest scale value, second the highest.
-    The third value is the step (increment) between them.
+        nsteps(int): The nominal number of desired steps. Default = 10
+
+    Returns:
+        tuple: A three-way tuple. First value is the lowest scale value, second the highest.
+            The third value is the step (increment) between them.
 
     Examples:
     >>> print("(%.1f, %.1f, %.1f)" % scale(1.1, 12.3, (0, 14, 2)))
@@ -191,12 +185,15 @@ def scale(data_min, data_max, prescale=(None, None, None), nsteps=10):
 
 def scaletime(tmin_ts, tmax_ts):
     """Picks a time scaling suitable for a time plot.
+
+    Args:
+        tmin_ts(float): The minimum time that must be included.
+        tmax_ts(float): The maximum time that must be included
     
-    tmin_ts, tmax_ts: The time stamps in epoch time around which the times will be picked.
-    
-    Returns a scaling 3-tuple. First element is the start time, second the stop
-    time, third the increment. All are in seconds (epoch time in the case of the 
-    first two).    
+    Returns:
+        tuple: A scaling 3-tuple. First element is the start time, second the stop
+            time, third the increment. All are in seconds (epoch time in the case of the
+            first two).
     
     Example 1: 24 hours on an hour boundary
     >>> from weeutil.weeutil import timestamp_to_string as to_string
@@ -338,9 +335,7 @@ def scaletime(tmin_ts, tmax_ts):
 
 
 class ScaledDraw(object):
-    """Like an ImageDraw object, but lines are scaled.
-    
-    """
+    """Like an ImageDraw object, but lines are scaled. """
 
     def __init__(self, draw, imagebox, scaledbox):
         """Initialize a ScaledDraw object.
@@ -375,21 +370,20 @@ class ScaledDraw(object):
     def line(self, x, y, line_type='solid', marker_type=None, marker_size=8, maxdx=None,
              **options):
         """Draw a scaled line on the instance's ImageDraw object.
-        
-        x: sequence of x coordinates
-        
-        y: sequence of y coordinates, some of which are possibly null (value of None)
-        
-        line_type: 'solid' for line that connect the coordinates
-              None for no line
-        
-        marker_type: None or 'none' for no marker.
-                     'cross' for a cross
-                     'circle' for a circle
-                     'box' for a box
-                     'x' for an X
 
-        maxdx: defines what constitutes a gap in samples.  if two data points
+        Args:
+            x(list[float]): sequence of x coordinates
+            y(list[float|None]): sequence of y coordinates, some of which are possibly null
+                (value of None)
+            line_type(str|None): 'solid' for line that connect the coordinates
+                None for no line
+            marker_type(str|None): None or 'none' for no marker.
+                'cross' for a cross
+                'circle' for a circle
+                'box' for a box
+                'x' for an X
+            marker_size(int): Size of the marker in pixels
+            maxdx(float): defines what constitutes a gap in samples.  if two data points
                are more than maxdx apart they are treated as separate segments.
 
         For a scatter plot, set line_type to None and marker_type to something other than None.
@@ -560,11 +554,8 @@ def pickLabelFormat(increment):
     return u"%%.%df" % decimal_places
 
 
-def get_font_handle(fontpath, *args):
+def get_font_handle(fontpath_str, *args):
     """Get a handle for a font path, caching the results"""
-
-    # For Python 2, we want to make sure fontpath is a string, not unicode
-    fontpath_str = six.ensure_str(fontpath) if fontpath is not None else None
 
     # Look for the font in the cache
     font_key = (fontpath_str, args)
@@ -575,6 +566,8 @@ def get_font_handle(fontpath, *args):
     if fontpath_str is not None:
         try:
             if fontpath_str.endswith('.ttf'):
+                # Nice feature of Pillow: if fontpath_str is an absolute path and it cannot be
+                # found, then Pillow will search for the font in system resources as well.
                 font = ImageFont.truetype(fontpath_str, *args)
             else:
                 font = ImageFont.load_path(fontpath_str)
@@ -620,7 +613,7 @@ def tobgr(x):
     by ImageColor for example #RGB, #RRGGBB, hslHSL as well as standard color
     names from X11 and CSS3.  See ImageColor for complete set of colors.
     """
-    if isinstance(x, six.string_types):
+    if isinstance(x, str):
         if x.startswith('0x'):
             return int(x, 0)
         try:
@@ -629,9 +622,10 @@ def tobgr(x):
         except ValueError:
             try:
                 return int(x)
-            except ValueError:
+            except ValueError as exc:
                 raise ValueError("Unknown color specifier: '%s'.  "
-                                 "Colors must be specified as 0xBBGGRR, #RRGGBB, or standard color names." % x)
+                                 "Colors must be specified as 0xBBGGRR, #RRGGBB, "
+                                 "or standard color names." % x) from exc
     return x
 
 
