@@ -22,3 +22,6 @@ root = true
 
 [changes.md]
     max_line_length = 80
+
+[makefile]
+    indent_style = tab
