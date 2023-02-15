@@ -1551,11 +1551,6 @@ def to_complex(magnitude, direction):
     return value
 
 
-def to_text(x):
-    """Ensure the results are in unicode, while honoring 'None'."""
-    return six.ensure_text(x) if x is not None else None
-
-
 def dirN(c):
     """Given a complex number, return its phase as a compass heading"""
     if c is None:

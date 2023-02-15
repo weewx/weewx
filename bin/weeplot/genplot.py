@@ -4,29 +4,27 @@
 #    See the file LICENSE.txt for your full rights.
 #
 """Routines for generating image plots."""
-from __future__ import absolute_import
 
 import colorsys
 import locale
 import os
 import time
 
-try:
-    from PIL import Image, ImageDraw
-except ImportError:
-    import Image, ImageDraw
-
-from six.moves import zip
+from PIL import Image, ImageDraw, ImageFont
 
 import weeplot.utilities
-from weeplot.utilities import tobgr
 import weeutil.weeutil
-from weeutil.weeutil import max_with_none, min_with_none, to_bool, to_text
+from weeplot.utilities import tobgr
+from weeutil.weeutil import max_with_none, min_with_none, to_bool
 
+# Test if this version of Pillow has ImageFont.getbbox. If not, we will activate a workaround.
+try:
+    ImageFont.ImageFont.getbbox
+except AttributeError:
+    PIL_HAS_BBOX = False
+else:
+    PIL_HAS_BBOX = True
 
-# NB: PIL (and most fonts) expect text strings to be in Unicode. Hence, any place where a label can
-# be set should be protected by a call to weeutil.weeutil.to_text() to make sure the label is in
-# Unicode.
 
 class GeneralPlot(object):
     """Holds various parameters necessary for a plot. It should be specialized by the type of plot.
@@ -38,7 +36,7 @@ class GeneralPlot(object):
         """
 
         self.line_list = []
-        
+
         self.xscale = (None, None, None)
         self.yscale = (None, None, None)
 
@@ -57,7 +55,7 @@ class GeneralPlot(object):
         self.chart_fill_colors      = [tobgr(v) for v in fill_color_list]
         self.chart_line_widths      = [int(v) for v in width_list]
 
-        
+
         self.top_label_font_path    = plot_dict.get('top_label_font_path')
         self.top_label_font_size    = int(plot_dict.get('top_label_font_size', 10)) * self.anti_alias
 
@@ -78,15 +76,15 @@ class GeneralPlot(object):
         self.axis_label_font_size   = int(plot_dict.get('axis_label_font_size', 10)) * self.anti_alias
 
         # Make sure the formats used for the x- and y-axes are in unicode.
-        self.x_label_format         = to_text(plot_dict.get('x_label_format'))
-        self.y_label_format         = to_text(plot_dict.get('y_label_format'))
-        
+        self.x_label_format         = plot_dict.get('x_label_format')
+        self.y_label_format         = plot_dict.get('y_label_format')
+
         self.x_nticks               = int(plot_dict.get('x_nticks', 10))
         self.y_nticks               = int(plot_dict.get('y_nticks', 10))
 
         self.x_label_spacing        = int(plot_dict.get('x_label_spacing', 2))
         self.y_label_spacing        = int(plot_dict.get('y_label_spacing', 2))
-        
+
         # Calculate sensible margins for the given image and font sizes.
         self.y_label_side = plot_dict.get('y_label_side', 'left')
         if self.y_label_side == 'left' or self.y_label_side == 'both':
@@ -108,7 +106,7 @@ class GeneralPlot(object):
         self.rose_diameter          = int(plot_dict.get('rose_diameter', 10))
         self.rose_position          = (self.lmargin + self.padding + 5, self.image_height - self.bmargin - self.padding - self.rose_height)
         self.rose_rotation          = None
-        self.rose_label             = to_text(plot_dict.get('rose_label', u'N'))
+        self.rose_label             = plot_dict.get('rose_label', 'N')
         self.rose_label_font_path   = plot_dict.get('rose_label_font_path', self.bottom_label_font_path)
         self.rose_label_font_size   = int(plot_dict.get('rose_label_font_size', 10))
         self.rose_label_font_color  = tobgr(plot_dict.get('rose_label_font_color', '0x000000'))
@@ -144,28 +142,26 @@ class GeneralPlot(object):
 
     def setBottomLabel(self, bottom_label):
         """Set the label to be put at the bottom of the plot. """
-        # Make sure the label is in unicode or is None
-        self.bottom_label = to_text(bottom_label)
-        
+        self.bottom_label = bottom_label
+
     def setUnitLabel(self, unit_label):
         """Set the label to be used to show the units of the plot. """
-        # Make sure the label is in unicode
-        self.unit_label = to_text(unit_label)
-        
+        self.unit_label = unit_label
+
     def setXScaling(self, xscale):
         """Set the X scaling.
         
         xscale: A 3-way tuple (xmin, xmax, xinc)
         """
         self.xscale = xscale
-        
+
     def setYScaling(self, yscale):
         """Set the Y scaling.
         
         yscale: A 3-way tuple (ymin, ymax, yinc)
         """
         self.yscale = yscale
-        
+
     def addLine(self, line):
         """Add a line to be plotted.
         
@@ -178,7 +174,7 @@ class GeneralPlot(object):
     def setLocation(self, lat, lon):
         self.latitude  = lat
         self.longitude = lon
-        
+
     def setDayNight(self, showdaynight, daycolor, nightcolor, edgecolor):
         """Configure day/night bands.
 
@@ -204,19 +200,19 @@ class GeneralPlot(object):
         # The variable 'sdraw' is an instance of ScaledDraw and its units are in the "scaled" units of the plot
         # (e.g., the horizontal scaling might be for seconds, the vertical for degrees Fahrenheit.)
         image = Image.new("RGB", (self.image_width, self.image_height), self.image_background_color)
-        draw = self._getImageDraw(image)
-        draw.rectangle(((self.lmargin,self.tmargin), 
-                        (self.image_width - self.rmargin, self.image_height - self.bmargin)), 
+        draw = ImageDraw.ImageDraw(image)
+        draw.rectangle(((self.lmargin,self.tmargin),
+                        (self.image_width - self.rmargin, self.image_height - self.bmargin)),
                         fill=self.chart_background_color)
-        
+
         self._renderBottom(draw)
         self._renderTopBand(draw)
-        
+
         self._calcXScaling()
         self._calcYScaling()
         self._calcXLabelFormat()
         self._calcYLabelFormat()
-        
+
         sdraw = self._getScaledDraw(draw)
         if self.show_daynight:
             self._renderDayNight(sdraw)
@@ -231,12 +227,6 @@ class GeneralPlot(object):
 
         return image
 
-    # noinspection PyMethodMayBeStatic
-    def _getImageDraw(self, image):
-        """Returns an instance of ImageDraw with the proper dimensions and background color"""
-        draw = UniDraw(image)
-        return draw
-    
     def _getScaledDraw(self, draw):
         """Returns an instance of ScaledDraw, with the appropriate scaling.
         
@@ -254,7 +244,7 @@ class GeneralPlot(object):
             )
         )
         return sdraw
-        
+
     def _renderDayNight(self, sdraw):
         """Draw vertical bands for day/night."""
         (first, transitions) = weeutil.weeutil.getDayNightTransitions(
@@ -316,7 +306,10 @@ class GeneralPlot(object):
                        width=self.anti_alias)
             if drawlabelcount % self.x_label_spacing == 0 :
                 xlabel = self._genXLabel(x)
-                axis_label_width = sdraw.draw.textlength(xlabel, font=axis_label_font)
+                if PIL_HAS_BBOX:
+                    axis_label_width = sdraw.draw.textlength(xlabel, font=axis_label_font)
+                else:
+                    axis_label_width, _ = sdraw.draw.textsize(xlabel, font=axis_label_font)
                 xpos = sdraw.xtranslate(x)
                 sdraw.draw.text((xpos - axis_label_width/2, self.image_height - self.bmargin + 2),
                                 xlabel, fill=self.axis_label_font_color, font=axis_label_font)
@@ -329,7 +322,7 @@ class GeneralPlot(object):
         nygridlines     = int((self.yscale[1] - self.yscale[0]) / self.yscale[2] + 1.5)
         axis_label_font = weeplot.utilities.get_font_handle(self.axis_label_font_path,
                                                             self.axis_label_font_size)
-        
+
         # Draw the (constant y) grid lines 
         for i in range(nygridlines) :
             y = self.yscale[0] + i * self.yscale[2]
@@ -338,13 +331,18 @@ class GeneralPlot(object):
             # Draw a label on every other line:
             if i % self.y_label_spacing == 0 :
                 ylabel = self._genYLabel(y)
-                left, top, right, bottom = axis_label_font.getbbox(ylabel)
-                axis_label_width, axis_label_height = right - left, bottom - top
+                if PIL_HAS_BBOX:
+                    left, top, right, bottom = axis_label_font.getbbox(ylabel)
+                    axis_label_width, axis_label_height = right - left, bottom - top
+                else:
+                    axis_label_width, axis_label_height = sdraw.draw.textsize(ylabel,
+                                                                              font=axis_label_font)
                 ypos = sdraw.ytranslate(y)
                 # We want to treat Truetype and bitmapped fonts the same. By default, Truetype
                 # measures the top of the bounding box at the top of the ascender, while it's
                 # the top of the text for bitmapped. Specify an anchor of "lt" (left, top) for
-                # both.
+                # both. NB: argument "anchor" has been around at least as early as
+                # Pillow V5.0 (2018), but was not implemented until V8.0.0.
                 if self.y_label_side == 'left' or self.y_label_side == 'both':
                     sdraw.draw.text((self.lmargin - axis_label_width - 2, ypos - axis_label_height/2),
                                     ylabel, fill=self.axis_label_font_color, font=axis_label_font,
@@ -365,7 +363,7 @@ class GeneralPlot(object):
 
         # Draw them in reverse order, so the first line comes out on top of the image
         for j, this_line in enumerate(self.line_list[::-1]):
-            
+
             iline=nlines-j-1
             color = self.chart_line_colors[iline%ncolors] if this_line.color is None else this_line.color
             fill_color = self.chart_fill_colors[iline%nfcolors] if this_line.fill_color is None else this_line.fill_color
@@ -380,8 +378,8 @@ class GeneralPlot(object):
                 ms = this_line.marker_size
                 if ms is not None:
                     ms *= self.anti_alias
-                sdraw.line(this_line.x, 
-                           this_line.y, 
+                sdraw.line(this_line.x,
+                           this_line.y,
                            line_type=this_line.line_type,
                            marker_type=this_line.marker_type,
                            marker_size=ms,
@@ -408,21 +406,24 @@ class GeneralPlot(object):
         """Draw anything at the bottom (just some text right now). """
         bottom_label_font = weeplot.utilities.get_font_handle(self.bottom_label_font_path,
                                                               self.bottom_label_font_size)
-        left, top, right, bottom = bottom_label_font.getbbox(self.bottom_label)
-        bottom_label_width, bottom_label_height = right - left, bottom - top
-
+        if PIL_HAS_BBOX:
+            left, top, right, bottom = bottom_label_font.getbbox(self.bottom_label)
+            bottom_label_width, bottom_label_height = right - left, bottom - top
+        else:
+            bottom_label_width, bottom_label_height = draw.textsize(self.bottom_label,
+                                                                    font=bottom_label_font)
         draw.text(((self.image_width - bottom_label_width)/2,
                    self.image_height - bottom_label_height - self.bottom_label_offset),
-                  self.bottom_label, 
+                  self.bottom_label,
                   fill=self.bottom_label_font_color,
                   font=bottom_label_font,
                   anchor="lt")
-        
+
     def _renderTopBand(self, draw):
         """Draw the top band and any text in it. """
         # Draw the top band rectangle
-        draw.rectangle(((0,0), 
-                        (self.image_width, self.tbandht)), 
+        draw.rectangle(((0,0),
+                        (self.image_width, self.tbandht)),
                         fill = self.chart_background_color)
 
         # Put the units in the upper left corner
@@ -443,28 +444,34 @@ class GeneralPlot(object):
 
         top_label_font = weeplot.utilities.get_font_handle(self.top_label_font_path,
                                                            self.top_label_font_size)
-        
+
         # The top label is the appended label_list. However, it has to be drawn in segments 
         # because each label may be in a different color. For now, append them together to get
         # the total width
         top_label = u' '.join([line.label for line in self.line_list])
-        top_label_width= draw.textlength(top_label, font=top_label_font)
-        
+        if PIL_HAS_BBOX:
+            top_label_width= draw.textlength(top_label, font=top_label_font)
+        else:
+            top_label_width, _ = draw.textsize(top_label, font=top_label_font)
+
         x = (self.image_width - top_label_width)/2
         y = 0
-        
+
         ncolors = len(self.chart_line_colors)
         for i, this_line in enumerate(self.line_list):
             color = self.chart_line_colors[i%ncolors] if this_line.color is None else this_line.color
             # Draw a label
             draw.text( (x,y), this_line.label, fill = color, font = top_label_font)
             # Now advance the width of the label we just drew, plus a space:
-            label_width = draw.textlength(this_line.label + u' ', font= top_label_font)
+            if PIL_HAS_BBOX:
+                label_width = draw.textlength(this_line.label + u' ', font= top_label_font)
+            else:
+                label_width, _ = draw.textsize(this_line.label + u' ', font= top_label_font)
             x += label_width
 
     def _renderRose(self, image, draw):
         """Draw a compass rose."""
-        
+
         rose_center_x = self.rose_width/2  + 1
         rose_center_y = self.rose_height/2 + 1
         barb_width  = 3
@@ -472,7 +479,7 @@ class GeneralPlot(object):
         # The background is all white with a zero alpha (totally transparent)
         rose_image = Image.new("RGBA", (self.rose_width, self.rose_height), (0x00, 0x00, 0x00, 0x00))
         rose_draw = ImageDraw.Draw(rose_image)
- 
+
         fill_color = add_alpha(self.rose_color)
         # Draw the arrow straight up (North). First the shaft:
         rose_draw.line( ((rose_center_x, 0), (rose_center_x, self.rose_height)),
@@ -486,7 +493,7 @@ class GeneralPlot(object):
         rose_draw.line( ((rose_center_x, 0), (rose_center_x + barb_width, barb_height)),
                         width = self.rose_line_width,
                         fill = fill_color)
-        
+
         rose_draw.ellipse(((rose_center_x - self.rose_diameter/2,
                             rose_center_y - self.rose_diameter/2),
                            (rose_center_x + self.rose_diameter/2,
@@ -497,12 +504,16 @@ class GeneralPlot(object):
         if self.rose_rotation:
             rose_image = rose_image.rotate(self.rose_rotation)
             rose_draw = ImageDraw.Draw(rose_image)
-        
+
         # Calculate the position of the "N" label:
         rose_label_font = weeplot.utilities.get_font_handle(self.rose_label_font_path,
                                                             self.rose_label_font_size)
-        left, top, right, bottom = rose_label_font.getbbox(self.rose_label)
-        rose_label_width, rose_label_height = right - left, bottom - top
+        if PIL_HAS_BBOX:
+            left, top, right, bottom = rose_label_font.getbbox(self.rose_label)
+            rose_label_width, rose_label_height = right - left, bottom - top
+        else:
+            rose_label_width, rose_label_height = draw.textsize(self.rose_label,
+                                                                font=rose_label_font)
 
         # Draw the label in the middle of the (possibly) rotated arrow
         rose_draw.text((rose_center_x - rose_label_width/2 - 1,
@@ -516,7 +527,7 @@ class GeneralPlot(object):
         # channel of the image will be used as the mask.
         # This will cause the arrow to overlay the background plot
         image.paste(rose_image, self.rose_position, rose_image)
-        
+
     def _calcXScaling(self):
         """Calculates the x scaling. It will probably be specialized by
         plots where the x-axis represents time.
@@ -524,7 +535,7 @@ class GeneralPlot(object):
         (xmin, xmax) = self._calcXMinMax()
 
         self.xscale = weeplot.utilities.scale(xmin, xmax, self.xscale, nsteps=self.x_nticks)
-            
+
     def _calcYScaling(self):
         """Calculates y scaling. Can be used 'as-is' for most purposes."""
         # The filter is necessary because unfortunately the value 'None' is not
@@ -559,15 +570,15 @@ class GeneralPlot(object):
     def _calcYLabelFormat(self):
         if self.y_label_format is None:
             self.y_label_format = weeplot.utilities.pickLabelFormat(self.yscale[2])
-        
+
     def _genXLabel(self, x):
         xlabel = locale.format_string(self.x_label_format, x)
         return xlabel
-    
+
     def _genYLabel(self, y):
         ylabel = locale.format_string(self.y_label_format, y)
         return ylabel
-    
+
     def _calcXMinMax(self):
         xmin = xmax = None
         for line in self.line_list:
@@ -584,7 +595,7 @@ class GeneralPlot(object):
 
 class TimePlot(GeneralPlot) :
     """Class that specializes GeneralPlot for plots where the x-axis is time."""
-    
+
     def _calcXScaling(self):
         """Specialized version for time plots."""
         if None in self.xscale:
@@ -603,7 +614,7 @@ class TimePlot(GeneralPlot) :
                     self.x_label_format = u"%x %X"
                 else:
                     self.x_label_format = u"%X"
-        
+
     def _genXLabel(self, x):
         """Specialized version for time plots. Assumes that time is in unix epoch time."""
         if self.x_label_format is None:
@@ -621,11 +632,11 @@ class TimePlot(GeneralPlot) :
 class PlotLine(object):
     """Represents a single line (or bar) in a plot. """
     def __init__(self, x, y, label='', color=None, fill_color=None, width=None, plot_type='line',
-                 line_type='solid', marker_type=None, marker_size=10, 
+                 line_type='solid', marker_type=None, marker_size=10,
                  bar_width=None, vector_rotate = None, line_gap_fraction=None):
         self.x               = x
         self.y               = y
-        self.label           = to_text(label)   # Make sure the label is in unicode
+        self.label           = label
         self.plot_type       = plot_type
         self.line_type       = line_type
         self.marker_type     = marker_type
@@ -636,21 +647,6 @@ class PlotLine(object):
         self.bar_width       = bar_width
         self.vector_rotate   = vector_rotate
         self.line_gap_fraction = line_gap_fraction
-
-
-class UniDraw(ImageDraw.ImageDraw):
-    """Supports non-Unicode fonts
-    
-    Not all fonts support Unicode characters. These will raise a UnicodeEncodeError exception.
-    This class subclasses the regular ImageDraw.Draw class, adding overridden functions to
-    catch these exceptions. It then tries drawing the string again, this time as a UTF8 string
-    """
-    
-    def text(self, position, string, **options):
-        try:
-            return ImageDraw.ImageDraw.text(self, position, string, **options)
-        except UnicodeEncodeError:
-            return ImageDraw.ImageDraw.text(self, position, string.encode('utf-8'), **options)
 
 
 def blend_hls(c, bg, alpha):

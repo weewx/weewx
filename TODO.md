@@ -3,8 +3,6 @@
 
 ## Documentation
 
-Update `DEV_NOTES.txt` with instructions on making documents.
-
 
 ## Drivers
 
