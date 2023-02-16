@@ -14,6 +14,9 @@ PR #843. Thanks to user Karen!
 The module `user.extensions` is now imported into `wee_reports`. Thanks to
 user jocelynj! PR #842.
 
+Fix problem that prevented wee_device --set-retransmit from working on
+Vantage stations.
+
 
 4.10.1 01/30/2023
 

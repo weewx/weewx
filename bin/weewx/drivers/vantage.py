@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-#    Copyright (c) 2009-2022 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2023 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -1249,7 +1249,7 @@ class Vantage(weewx.drivers.AbstractDevice):
                            "listen": self.listen_dict[(use_tx >> transmitter_id) & 1] }
             if transmitter_type in ['temp', 'temp_hum']:
                 # Extra temperature is origin 0.
-                transmitter['temp'] = (transmitter_data[transmitter_id * 2 + 1] & 0xF) + 1
+                transmitter['temp'] = (station_list[tx_id * 2 + 1] & 0xF) + 1
             if transmitter_type in ['hum', 'temp_hum']:
                 # Extra humidity is origin 1.
                 transmitter['hum'] = transmitter_data[transmitter_id * 2 + 1] >> 4
@@ -2563,11 +2563,11 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
             print("Unknown variable %s" % variable, file=sys.stderr)
 
     @staticmethod
-    def set_transmitter_type(station, transmitter_list, noprompt):
+    def set_transmitter_type(station, transmitter_str, noprompt):
         """Set the transmitter type for one of the eight channels."""
 
-        transmitter_list = list(map((lambda x: int(x) if x.isdigit() else x if x != "" else None),
-                                    transmitter_list.split(',')))
+        transmitter_list = [int(x) if x.isdigit() else x for x in transmitter_str.split(',')]
+
         channel = transmitter_list[0]
         if not 1 <= channel <= 8:
             print("Channel number must be between 1 and 8.")
@@ -2642,34 +2642,47 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
     def set_retransmit(station, channel_on_off, noprompt):
         """Set console retransmit channel."""
 
-        channel = 0
+        channel = None
         channel_on_off = channel_on_off.strip().upper()
         channel_on_off_list = channel_on_off.split(',')
         on_off = channel_on_off_list[0]
-        if on_off != "OFF":
-            if len(channel_on_off_list) > 1:
-                channel = map((lambda x: int(x) if x != "" else None), channel_on_off_list[1])[0]
-                if not 0 < channel < 9:
-                    print("Channel out of range 1..8. Nothing done.")
-                    return
-        
+        if on_off == 'OFF':
+            channel = 0
+        elif on_off == "ON":
             transmitter_list = station.getStnTransmitters()
-            if channel:
+            if len(channel_on_off_list) > 1:
+                channel = int(channel_on_off_list[1])
+                if not 1 <= channel <= 8:
+                    print("Channel out of range 1..8.")
+                    print("Nothing done.")
+                    return
                 if transmitter_list[channel-1]["listen"] == "active":
-                    print("Channel %d in use. Please select another channel. Nothing done." % channel)
+                    print("Channel %d in use. Please select another channel." % channel)
+                    print("Nothing done.")
                     return
             else:
+                # Pick one for the user
                 for i in range(0, 7):
                     if transmitter_list[i]["listen"] == "inactive":
-                        channel = i+1
+                        channel = i + 1
                         break
-            if channel == 0:
-                print("All Channels in use. Retransmit can't be enabled. Nothing done.")
+            if channel is None:
+                print("All Channels in use. Retransmit can't be enabled.")
+                print("Nothing done.")
                 return
+        else:
+            print("Unrecognized command. Must be 'ON' or 'OFF'.")
+            print("Nothing done.")
+            return
     
         old_channel = station._getEEPROM_value(0x18)[0]
         if old_channel == channel:
-            print("Old and new retransmit settings are the same. Nothing done.")
+            if channel:
+                print("Old and new retransmit settings are the same.")
+                print("Nothing done.")
+            else:
+                print("Retransmit already OFF.")
+                print("Nothing done.")
             return
         
         if channel:
