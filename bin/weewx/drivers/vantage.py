@@ -1249,7 +1249,7 @@ class Vantage(weewx.drivers.AbstractDevice):
                            "listen": self.listen_dict[(use_tx >> transmitter_id) & 1] }
             if transmitter_type in ['temp', 'temp_hum']:
                 # Extra temperature is origin 0.
-                transmitter['temp'] = (station_list[tx_id * 2 + 1] & 0xF) + 1
+                transmitter['temp'] = (transmitter_data[transmitter_id * 2 + 1] & 0xF) + 1
             if transmitter_type in ['hum', 'temp_hum']:
                 # Extra humidity is origin 1.
                 transmitter['hum'] = transmitter_data[transmitter_id * 2 + 1] >> 4
