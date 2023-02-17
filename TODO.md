@@ -6,10 +6,8 @@
 
 ## Drivers
 
-Something funny about function `set_retransmit()` in `vantage.py`.
-Did it ever work??
-
 ## Utilities
+
 
 Remove wunderfixer and its documentation.
 
