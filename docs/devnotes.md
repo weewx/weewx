@@ -402,6 +402,22 @@ includes a new feature, make sure you commit your changes relative to
 the *development* branch. If it is just a bug fix, it should be
 committed against the `master` branch.
 
+### About forking the repository
+
+The WeeWX GitHub repository is configured to use 
+[GitHub Actions](https://docs.github.com/en/actions/learn-github-actions/understanding-github-actions)
+to automatically run Continuous Integration (CI) workflows if certain
+git operations are done on  branches under active development.
+
+This means that CI workflows will also be run vs. forks if the configured git action
+is done. This can be confusing to the developer when they get email from GitHub
+if these tasks fail for some reason vs. their fork.
+
+To control GitHub Actions for your fork, see the recommended solutions in this
+[GitHub discussion](https://github.com/orgs/community/discussions/26704#discussioncomment-3252979)
+on this topic.
+
+
 ## Tools
 
 ### Python
