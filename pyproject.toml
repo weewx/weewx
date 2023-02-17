@@ -61,7 +61,7 @@ python = "^3.7"
 configobj = ">=4.7"
 # This is the renamed "Cheetah" package:
 CT3 = "^3.1"
-Pillow = ">=7.2"
+Pillow = ">=8.2"
 pyephem = "^3.7"
 PyMySQL = "^1.0"
 pyserial = "^3.4"
