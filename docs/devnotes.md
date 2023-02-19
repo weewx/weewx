@@ -57,7 +57,7 @@ To meet these goals, the following strategies were used:
     generating html and other types of files from templates. Cheetah
     allows *search list extensions* to be defined, making it easy to
     extend WeeWX with new template tags.
--   Pure Python. The code base is 100% Python --- no underlying C
+-   Pure Python. The code base is 100% Python &mdash; no underlying C
     libraries need be built to install WeeWX. This also means no
     Makefiles are needed.
 
@@ -86,7 +86,7 @@ console timeouts and are most likely due to a logic error, are logged,
 reraised, and ultimately cause thread termination. If this happens in
 the main thread (not likely due to its simplicity), then this causes
 program termination. If it happens in the report processing thread (much
-more likely), then only the generation of reports will be affected ---
+more likely), then only the generation of reports will be affected &mdash;
 the main thread will continue downloading data off the instrument and
 putting them in the database.
 
@@ -171,7 +171,7 @@ Other time conversion problems are handled in a similar manner.
 
 For astronomical calculations, WeeWX uses the latitude and longitude
 specified in the configuration file. If that location does not
-correspond to the computer\'s local time, reports with astronomical
+correspond to the computer's local time, reports with astronomical
 times will probably be incorrect.
 
 ## Archive records
@@ -406,12 +406,12 @@ committed against the `master` branch.
 
 The WeeWX GitHub repository is configured to use 
 [GitHub Actions](https://docs.github.com/en/actions/learn-github-actions/understanding-github-actions)
-to automatically run Continuous Integration (CI) workflows if certain
-git operations are done on  branches under active development.
+to run Continuous Integration (CI) workflows automatically if certain
+`git` operations are done on branches under active development.
 
-This means that CI workflows will also be run vs. forks if the configured git action
-is done. This can be confusing to the developer when they get email from GitHub
-if these tasks fail for some reason vs. their fork.
+This means that CI workflows will also be run on any forks that you may have made if the configured
+`git` action is done. This can be confusing if you get an email from GitHub if these
+tasks fail for some reason on your fork.
 
 To control GitHub Actions for your fork, see the recommended solutions in this
 [GitHub discussion](https://github.com/orgs/community/discussions/26704#discussioncomment-3252979)
