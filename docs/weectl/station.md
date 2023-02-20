@@ -59,6 +59,9 @@ Which action to take:
     upgrade-skins       Upgrade the skins.
 ```
 
+In the documentation that follows,  the exact output will depend on
+your operating system and username. What is shown below is for macOS and user `tkeffer`.
+
 ## `weectl station create`
 
 This action will create a new area for user data. When done, the area will include
@@ -75,8 +78,7 @@ By contrast, package installers create the necessary user data as part of their 
 Nevertheless, you may want to create a second user data area, perhaps to support a second
 instrument &mdash; in that case, this action may be useful.
 
-Running `weectl station create --help` will show its options. The exact output will depend on
-your operating system and username. What is shown below is for macOS and user `tkeffer`.
+Running `weectl station create --help` will show its options.
 
 ```shell
 % weectl station create --help
@@ -296,3 +298,35 @@ optional arguments:
                         $WEEWX_ROOT. Default is "examples".
   --dry-run             Print what would happen, but do not actually do it.
 ```
+
+## `weectl station upgrade-skins`
+
+This action will upgrade your skins. Your old skins will be saved as a timestamped backup.
+Your configuration file will not be touched.
+
+Running `weectl station upgrade-skins --help` will show you its options.
+
+``` shell
+% weectl station upgrade-skins --help
+usage: weectl station upgrade-skins [--config=CONFIG-PATH] \
+                                    [--skin-root=SKIN_ROOT] \
+                                    [--no-prompt] \
+                                    [--dry-run]
+
+Upgrade skins to the latest version. A backup will be made first. In what
+follows, WEEWX_ROOT is the directory that contains the configuration
+file. For example, if "--config=/Users/tkeffer/weewx-data/weewx.conf", then
+WEEWX_ROOT will be "/Users/tkeffer/weewx-data".
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --config CONFIG-PATH  Path to configuration file. Default is
+                        "/Users/tkeffer/weewx-data/weewx.conf"
+  --skin-root SKIN_ROOT
+                        Where to put the skins, relatve to WEEWX_ROOT. Default
+                        is "skins".
+  --no-prompt           If set, do not prompt. Use default values.
+  --dry-run             Print what would happen, but do not actually do it.
+
+```
+

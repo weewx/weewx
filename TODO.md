@@ -8,6 +8,8 @@
 
 ## Utilities
 
+Lot of inconsistencies in how the path to the config file is handled. Some utilities accept a
+command line option, others require `--config=`.
 
 Remove wunderfixer and its documentation.
 
