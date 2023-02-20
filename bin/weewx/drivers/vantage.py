@@ -113,11 +113,13 @@ class BaseWrapper(object):
 
     def send_data(self, data):
         """Send data to the Davis console, waiting for an acknowledging <ACK>
-        
-        If the <ACK> is not received, no retry is attempted. Instead, an exception
-        of type weewx.WeeWxIOError is raised
-    
-        data: The data to send, as a byte string"""
+
+        Args:
+            data(bytes): The data to send, as bytes.
+
+        Raises:
+            weewx.WeeWxIOError: If no <ack> is received from the console. No retry is attempted.
+        """
 
         self.write(data)
     
@@ -458,8 +460,8 @@ class Vantage(weewx.drivers.AbstractDevice):
     transmitter_type_dict = {0:'iss', 1:'temp', 2:'hum', 3:'temp_hum', 4:'wind',
                              5:'rain', 6:'leaf', 7:'soil', 8:'leaf_soil',
                              9:'sensorlink', 10:'none'}
-    repeater_dict         = {0:'none', 1:'A', 2:'B', 3:'C', 4:'D',
-                             5:'E', 6:'F', 7:'G', 8:'H'}
+    repeater_dict         = {0:'none', 8:'A', 9:'B', 10:'C', 11:'D',
+                             12:'E', 13:'F', 14:'G', 15:'H'}
     listen_dict           = {0:'inactive',  1:'active'}
     
     def __init__(self, **vp_dict):
@@ -973,11 +975,10 @@ class Vantage(weewx.drivers.AbstractDevice):
     def setBarData(self, new_barometer_inHg, new_altitude_foot):
         """Set the internal barometer calibration and altitude settings in the console.
 
-        Args:
-            new_barometer_inHg(float): The local, reference barometric pressure in inHg.
-            new_altitude_foot(int|float): The new altitude in feet.
-        """
-        
+        new_barometer_inHg(float): The local, reference barometric pressure in inHg.
+
+        new_altitude_foot(int|float): The new altitude in feet."""
+
         new_barometer = int(new_barometer_inHg * 1000.0)
         new_altitude = int(new_altitude_foot)
         
@@ -1055,8 +1056,24 @@ class Vantage(weewx.drivers.AbstractDevice):
 
         log.info("Lamp set to '%s'", onoff)
         
-    def setTransmitterType(self, new_channel, new_transmitter_type, new_extra_temp, new_extra_hum, new_repeater):
-        """Set the transmitter type for one of the eight channels."""
+    def setTransmitterType(self,
+                           channel,
+                           transmitter_type,
+                           extra_temp_id,
+                           extra_hum_id,
+                           repeater_id):
+        """Set the transmitter type for one of the eight channels.
+        Args:
+            channel(int): The channel to change. [1-8]
+            transmitter_type(int): The type of the new channel. 0=ISS, 1=temp, 2=humidity,
+                3=temp/humidity, ..., 10=no station. [0-10]
+            extra_temp_id(int|None): The ID to be used if this is a temperature channel. This will
+                cause results to be emitted as extraTempN where N is the ID number. [1-8]
+            extra_hum_id(int|None):  The ID to be used if this is a humidity channel. This will
+                cause results to be emitted as extraHumidN where N is the ID number. [1-8]
+            repeater_id(int): The repeater number for this channel.
+                Zero means no repeater. [0-8]
+        """
         
         # Default value just for tidiness.
         new_temp_hum_bits = 0xFF
@@ -1074,7 +1091,7 @@ class Vantage(weewx.drivers.AbstractDevice):
             # Extra temp is origin 0.
             new_temp_hum_bits = new_temp_hum_bits & 0xF0 | (new_extra_temp - 1)
         if self.transmitter_type_dict[new_transmitter_type] in ['hum', 'temp_hum']:
-            if not 1 <= new_extra_hum <= 8:
+            if new_extra_hum not in list(range(1, 9)):
                 raise weewx.ViolatedPrecondition("Invalid extra humidity number %d" % new_extra_hum)
             # Extra humidity is origin 1.
             new_temp_hum_bits = new_temp_hum_bits & 0x0F | (new_extra_hum << 4)
@@ -1105,9 +1122,9 @@ class Vantage(weewx.drivers.AbstractDevice):
         
         self._setup()
         log.info("Transmitter type for channel %d set to %d (%s), repeater: %s, %s",
-                 new_channel, new_transmitter_type,
-                 self.transmitter_type_dict[new_transmitter_type],
-                 self.repeater_dict[new_repeater], self.listen_dict[usetx])
+                 channel, transmitter_type,
+                 self.transmitter_type_dict[transmitter_type],
+                 self.repeater_dict[repeater_id], self.listen_dict[usetx])
 
     def setRetransmit(self, new_channel):
         """Set console retransmit channel."""
@@ -1265,27 +1282,36 @@ class Vantage(weewx.drivers.AbstractDevice):
     def getStnTransmitters(self):
         """ Get the types of transmitters on the eight channels."""
 
-        tx_info_list = []
-        usetx          = self._getEEPROM_value(0x17)[0]
-        station_list   = self._getEEPROM_value(0x19, "16B")
-        
-        for tx_id in range(8):
-            transmitter_type = Vantage.transmitter_type_dict[station_list[tx_id * 2] & 0x0F]
-            repeater = station_list[tx_id * 2] & 0xF0
-            repeater = (repeater >> 4) - 7 if repeater > 127 else 0
-            transmitter = {
-                "transmitter_type": transmitter_type,
-                "repeater": Vantage.repeater_dict[repeater],
-                "listen": Vantage.listen_dict[(usetx >> tx_id) & 1]
+        transmitters = [ ]
+        use_tx =           self._getEEPROM_value(0x17)[0]
+        transmitter_data = self._getEEPROM_value(0x19, "16B")
+
+        # Iterate over channels 1, 2, ..., 8
+        for channel in range(1, 9):
+            lower_byte, upper_byte = transmitter_data[2 * channel - 2: 2 * channel]
+            # Transmitter type in the lower nibble
+            transmitter_type = lower_byte & 0x0f
+            # Repeater ID in the upper nibble
+            repeater_id = lower_byte >> 4
+            # The least significant bit of use_tx will be whether to listen to the current channel.
+            use_flag = use_tx & 0x01
+            # Shift use_tx over by one bit to get it ready for the next channel.
+            use_tx >>= 1
+            transmitter_dict = {
+                'transmitter_type' : Vantage.transmitter_type_dict[transmitter_type],
+                'repeater' : Vantage.repeater_dict[repeater_id],
+                'listen' : Vantage.listen_dict[use_flag]
             }
-            if transmitter_type in ['temp', 'temp_hum']:
+            if transmitter_dict['transmitter_type'] in ['temp', 'temp_hum']:
                 # Extra temperature is origin 0.
-                transmitter['temp'] = (station_list[tx_id * 2 + 1] & 0xF) + 1
-            if transmitter_type in ['hum', 'temp_hum']:
+                transmitter_dict['temp'] = upper_byte & 0xF + 1
+            if transmitter_dict['transmitter_type'] in ['hum', 'temp_hum']:
                 # Extra humidity is origin 1.
-                transmitter['hum'] = station_list[tx_id * 2 + 1] >> 4
-            tx_info_list.append(transmitter)
-        return tx_info_list
+                transmitter_dict['hum'] = upper_byte >> 4
+
+            transmitters.append(transmitter_dict)
+
+        return transmitters
 
     def getStnCalibration(self):
         """ Get the temperature/humidity/wind calibrations built into the console. """
@@ -2638,7 +2664,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
         transmitter_type = transmitter_list[1]
         extra_temp = transmitter_list[2] if len(transmitter_list) > 2 else None
         extra_hum = transmitter_list[3] if len(transmitter_list) > 3 else None
-        usetx = 1 if transmitter_type != 10 else 0
+        usetx = 0 if transmitter_type == 10 else 1
 
         try:
             transmitter_type_name = station.transmitter_type_dict[transmitter_type]
@@ -2646,11 +2672,11 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
             print("Unknown transmitter type (%s)" % transmitter_type)
             return
         
-        if transmitter_type_name in ['temp', 'temp_hum'] and not 1 <= extra_temp <= 7:
+        if transmitter_type_name in ['temp', 'temp_hum'] and extra_temp not in list(range(1, 8)):
             print("Transmitter type %s requires extra_temp in range 1-7'" % transmitter_type_name)
             return
         
-        if transmitter_type_name in ['hum', 'temp_hum'] and not 1 <= extra_hum <= 7:
+        if transmitter_type_name in ['hum', 'temp_hum'] and extra_hum not in list(range(1, 8)):
             print("Transmitter type %s requires extra_hum in range 1-7'" % transmitter_type_name)
             return
         
