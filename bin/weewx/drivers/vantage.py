@@ -975,9 +975,10 @@ class Vantage(weewx.drivers.AbstractDevice):
     def setBarData(self, new_barometer_inHg, new_altitude_foot):
         """Set the internal barometer calibration and altitude settings in the console.
 
-        new_barometer_inHg(float): The local, reference barometric pressure in inHg.
-
-        new_altitude_foot(int|float): The new altitude in feet."""
+        Args:
+            new_barometer_inHg(float): The local, reference barometric pressure in inHg.
+            new_altitude_foot(int|float): The new altitude in feet.
+        """
 
         new_barometer = int(new_barometer_inHg * 1000.0)
         new_altitude = int(new_altitude_foot)
@@ -1075,56 +1076,67 @@ class Vantage(weewx.drivers.AbstractDevice):
                 Zero means no repeater. [0-8]
         """
         
-        # Default value just for tidiness.
-        new_temp_hum_bits = 0xFF
+        # Check arguments for validity
+        if not 1 <= channel <= 8:
+            raise weewx.ViolatedPrecondition("Invalid channel %d" % channel)
+        if not 0 <= transmitter_type <= 10:
+            raise weewx.ViolatedPrecondition("Invalid transmitter type %d" % transmitter_type)
+        if not 0 <= repeater_id <= 8:
+            raise weewx.ViolatedPrecondition("Invalid repeater %d" % repeater_id)
 
-        # Check arguments are consistent.
-        if not 1 <= new_channel <= 8:
-            raise weewx.ViolatedPrecondition("Invalid channel %d" % new_channel)
-        if not 0 <= new_repeater <= 8:
-            raise weewx.ViolatedPrecondition("Invalid repeater %d" % new_repeater)
-        if not 0 <= new_transmitter_type <= 10:
-            raise weewx.ViolatedPrecondition("Invalid transmitter type %d" % new_transmitter_type)
-        if self.transmitter_type_dict[new_transmitter_type] in ['temp', 'temp_hum']:
-            if not 1 <= new_extra_temp <= 8:
-                raise weewx.ViolatedPrecondition("Invalid extra temperature number %d" % new_extra_temp)
+        extra_id_bits = 0xFF
+
+        # Set the appropriate bit for the temperature sender number
+        if Vantage.transmitter_type_dict[transmitter_type] in ['temp', 'temp_hum']:
+            if not 1 <= extra_temp_id <= 8:
+                raise weewx.ViolatedPrecondition("Invalid extra temperature number %d"
+                                                 % extra_temp_id)
             # Extra temp is origin 0.
-            new_temp_hum_bits = new_temp_hum_bits & 0xF0 | (new_extra_temp - 1)
-        if self.transmitter_type_dict[new_transmitter_type] in ['hum', 'temp_hum']:
-            if new_extra_hum not in list(range(1, 9)):
-                raise weewx.ViolatedPrecondition("Invalid extra humidity number %d" % new_extra_hum)
+            extra_id_bits = extra_id_bits & 0xF0 | extra_temp_id - 1
+        # Set the appropriate bit for the humidity sender number:
+        if Vantage.transmitter_type_dict[transmitter_type] in ['hum', 'temp_hum']:
+            if not 1 <= extra_hum_id <= 8:
+                raise weewx.ViolatedPrecondition("Invalid extra humidity number %d"
+                                                 % extra_hum_id)
             # Extra humidity is origin 1.
-            new_temp_hum_bits = new_temp_hum_bits & 0x0F | (new_extra_hum << 4)
+            extra_id_bits = extra_id_bits & 0x0F | extra_hum_id << 4
 
-        if new_repeater == 0:
-            new_type_bits = new_transmitter_type & 0x0F
-        else:
-            new_type_bits = ((new_repeater + 7) << 4) | (new_transmitter_type & 0x0F)
-        
+        # Encode the transmitter type
+        transmitter_type_bits = transmitter_type & 0x0F
+        if repeater_id:
+            # The transmitter uses a repeater. Add it in.
+            transmitter_type_bits |= (repeater_id + 7) << 4
+
+        usetx_bits = self._getEEPROM_value(0x17)[0]
         # A transmitter type of 10 indicates that channel does not have a transmitter.
-        # So, turn off its usetx bit as well. Otherwise, turn it on.
-        usetx = 1 if new_transmitter_type != 10 else 0
-        old_usetx_bits = self._getEEPROM_value(0x17)[0]
-        new_usetx_bits = old_usetx_bits & ~(1 << (new_channel - 1)) | usetx * (1 << (new_channel - 1))
-        
+        if transmitter_type == 10:
+            # The given channel is not being used. We need to clear the bit:
+            usetx_bits &= ~(1 << channel - 1)
+            in_use = 0
+        else:
+            # The channel is being used. We need to set it:
+            usetx_bits |= 1 << channel - 1
+            in_use = 1
+
         # Each channel uses two bytes. Find the correct starting byte for this channel
-        start_byte = 0x19 + (new_channel - 1) * 2
+        start_byte = 0x19 + (channel - 1) * 2
         # Tell the console to put two bytes in that location.
         self.port.send_data(b"EEBWR %X 02\n" % start_byte)
         # Follow it up with the two bytes of data, little-endian order:
-        self.port.send_data_with_crc16(struct.pack('<BB', new_type_bits, new_temp_hum_bits), max_tries=1)
+        self.port.send_data_with_crc16(struct.pack('<BB', transmitter_type_bits, extra_id_bits),
+                                       max_tries=1)
         # Now tell the console to put the one byte "usetx" in hex location 0x17
         self.port.send_data(b"EEBWR 17 01\n")
         # Follow it up with the usetx data:
-        self.port.send_data_with_crc16(struct.pack('>B', new_usetx_bits), max_tries=1)
+        self.port.send_data_with_crc16(struct.pack('>B', usetx_bits), max_tries=1)
         # Then call NEWSETUP to get it all to stick:
         self.port.send_data(b"NEWSETUP\n")
         
         self._setup()
         log.info("Transmitter type for channel %d set to %d (%s), repeater: %s, %s",
                  channel, transmitter_type,
-                 self.transmitter_type_dict[transmitter_type],
-                 self.repeater_dict[repeater_id], self.listen_dict[usetx])
+                 Vantage.transmitter_type_dict[transmitter_type],
+                 Vantage.repeater_dict[repeater_id], Vantage.listen_dict[in_use])
 
     def setRetransmit(self, new_channel):
         """Set console retransmit channel."""
@@ -2672,11 +2684,11 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
             print("Unknown transmitter type (%s)" % transmitter_type)
             return
         
-        if transmitter_type_name in ['temp', 'temp_hum'] and extra_temp not in list(range(1, 8)):
+        if transmitter_type_name in ['temp', 'temp_hum'] and not 1 <= extra_temp <= 7:
             print("Transmitter type %s requires extra_temp in range 1-7'" % transmitter_type_name)
             return
         
-        if transmitter_type_name in ['hum', 'temp_hum'] and extra_hum not in list(range(1, 8)):
+        if transmitter_type_name in ['hum', 'temp_hum'] and not 1 <= extra_hum <= 7:
             print("Transmitter type %s requires extra_hum in range 1-7'" % transmitter_type_name)
             return
         
