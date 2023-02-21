@@ -2,7 +2,7 @@
 
 There are two general mechanisms for customizing reports: change options in one or more configuration files, or change the template files. The former is generally easier, but occasionally the latter is necessary.
 
-## Options
+## How options work
 
 Options are used to specify how reports will look and what they will contain. For example, they control which units to use, how to format dates and times, which data should be in each plot, the colors of plot elements, _etc_.
 
@@ -52,7 +52,17 @@ Configuration files are read and processed using the Python utility [ConfigObj](
 
 This example uses two sections at root level (sections `Section1` and `Section2`), and one sub-section (`SubSectionA`), which is nested under `Section1`. The option `key1` is nested under `Section1`, option `key3` is nested under `Section2`, while option `key2` is nested under sub-section `SubSectionA`.
 
-Note that while this example indents sub-sections and options, this is strictly for readability — this isn't Python! It's the number of brackets that counts in determining nesting, not the indentation!
+Note that while this example indents sub-sections and options, this is strictly for readability — this isn't Python! It's the number of brackets that counts in determining nesting, not the indentation! It would torture your readers, but the above example could be written
+
+```ini
+      [Section1]
+# A comment
+key1 = value1
+[[SubSectionA]]
+key2 = value2
+[Section2]
+key3=value3
+```
 
 Configuration files take advantage of ConfigObj's ability to organize options hierarchically into _stanzas_. For example, the `[Labels]` stanza contains the text that should be displayed for each observation. The `[Units]` stanza contains other stanzas, each of which contains parameters that control the display of units.
 
