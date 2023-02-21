@@ -1,21 +1,19 @@
 # coding: utf-8
 #
-#    Copyright (c) 2020 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2020-2023 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
 """Test module weeutil.config"""
 import logging
 import unittest
+from io import BytesIO, StringIO
 
-import six
-from io import BytesIO
-from six.moves import StringIO
 import configobj
 
-import weewx
-import weeutil.logger
 import weeutil.config
+import weeutil.logger
+import weewx
 
 weewx.debug = 1
 
@@ -31,7 +29,7 @@ class TestConfigString(unittest.TestCase):
         test_str = """degree_C = °C"""
         c = weeutil.config.config_from_str(test_str)
         # Make sure the values are Unicode
-        self.assertEqual(type(c['degree_C']), six.text_type)
+        self.assertEqual(type(c['degree_C']), str)
 
 
 class TestConfig(unittest.TestCase):

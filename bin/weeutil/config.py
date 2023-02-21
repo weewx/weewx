@@ -1,12 +1,10 @@
 #
-#    Copyright (c) 2018-2020 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2018-2023 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
 
 """Convenience functions for ConfigObj"""
-
-from __future__ import absolute_import
 
 import configobj
 from configobj import Section
@@ -109,7 +107,7 @@ def patch_config(self_config, indict):
 
     Example:
     >>> import sys
-    >>> from six.moves import StringIO
+    >>> from io import StringIO
     >>> c = configobj.ConfigObj(StringIO('''[Section1]
     ... option1 = bar'''))
     >>> d = configobj.ConfigObj(StringIO('''[Section1]
@@ -213,17 +211,8 @@ def conditional_merge(a_dict, b_dict):
 
 def config_from_str(input_str):
     """Return a ConfigObj from a string. Values will be in Unicode."""
-    import six
-    from six import StringIO
-    # This is a bit of a hack. We want to return a ConfigObj with unicode values. Under Python 2,
-    # ConfigObj v5 requires a unicode input string, but earlier versions require a
-    # byte-string.
-    if configobj.__version__ >= '5.0.0':
-        # Convert to unicode
-        open_str = six.ensure_text(input_str)
-    else:
-        open_str = input_str
-    config = configobj.ConfigObj(StringIO(open_str), encoding='utf-8', default_encoding='utf-8')
+    from io import StringIO
+    config = configobj.ConfigObj(StringIO(input_str), encoding='utf-8', default_encoding='utf-8')
     return config
 
 
@@ -268,10 +257,8 @@ def deep_copy(old_dict, parent=None, depth=None, main=None):
         new_dict.inline_comments[entry] = old_dict.inline_comments[entry]
     return new_dict
 
+
 if __name__ == "__main__":
-    import six
-    if not six.PY3:
-        exit("units.py doctest must be run under Python 3")
     import doctest
 
     if not doctest.testmod().failed:

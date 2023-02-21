@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2022 Tom Keffer <tkeffer@gmail.com> and Gary Roderick
+#    Copyright (c) 2009-2023 Tom Keffer <tkeffer@gmail.com> and Gary Roderick
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -7,10 +7,6 @@
 """Module providing the base classes and API for importing observational data
 into WeeWX.
 """
-
-from __future__ import with_statement
-from __future__ import print_function
-from __future__ import absolute_import
 
 # Python imports
 import datetime
@@ -21,9 +17,6 @@ import sys
 import time
 from datetime import datetime as dt
 
-import six
-from six.moves import input
-
 # WeeWX imports
 import weecfg
 import weecfg.database
@@ -31,10 +24,10 @@ import weewx
 import weewx.accum
 import weewx.qc
 import weewx.wxservices
-
+from weeutil.weeutil import timestamp_to_string, option_as_list, to_int, tobool, get_object, \
+    max_with_none
 from weewx.manager import open_manager_with_config
 from weewx.units import unit_constants, unit_nicknames, convertStd, to_std_system, ValueTuple
-from weeutil.weeutil import timestamp_to_string, option_as_list, to_int, tobool, get_object, max_with_none
 
 log = logging.getLogger(__name__)
 
@@ -603,7 +596,7 @@ class Source(object):
         # Do we have a user specified map, if so construct our field map
         elif 'FieldMap' in import_config_dict:
             # we have a user specified map so construct our map dict
-            for _key, _item in six.iteritems(import_config_dict['FieldMap']):
+            for _key, _item in import_config_dict['FieldMap'].items():
                 _entry = option_as_list(_item)
                 # expect 2 parameters for each option: source field, units
                 if len(_entry) == 2:
@@ -644,7 +637,7 @@ class Source(object):
             if 'usUnits' not in _map or _map['usUnits'].get('field_name') is None:
                 # no unit system mapping do we have units specified for
                 # each individual field
-                for _key, _val in six.iteritems(_map):
+                for _key, _val in _map.items():
                     # we don't need to check dateTime and usUnits
                     if _key not in ['dateTime', 'usUnits']:
                         if 'units' in _val:
@@ -673,7 +666,7 @@ class Source(object):
             if self.verbose:
                 print(_msg)
             log.info(_msg)
-            for _key, _val in six.iteritems(_map):
+            for _key, _val in _map.items():
                 if 'field_name' in _val:
                     _units_msg = ""
                     if 'units' in _val:
