@@ -1,34 +1,30 @@
 #!/usr/bin/env python
 #
-#    Copyright (c) 2009-2021 Gary Roderick, Tom Keffer <tkeffer@gmail.com>, and Matthew Wall
+#    Copyright (c) 2009-2023 Gary Roderick, Tom Keffer <tkeffer@gmail.com>, and Matthew Wall
 #
 #    See the file LICENSE.txt for your rights.
 #
 """ Generate weewx debug info """
-
-from __future__ import absolute_import
-from __future__ import print_function
 
 import optparse
 import os
 import platform
 import sys
 
-import six
 from configobj import ConfigObj
 
 # weewx imports
 import weecfg
 import weedb
+import weeutil.config
 import weewx.manager
 import weewx.units
-import weeutil.config
 from weecfg.extension import ExtensionEngine
 from weeutil.weeutil import TimeSpan, timestamp_to_string
 from weewx.manager import DaySummaryManager
 
 VERSION = weewx.__version__
-WEE_DEBUG_VERSION = '0.9'
+WEE_DEBUG_VERSION = '1.0'
 
 # keys/setting names to obfuscate in weewx.conf, key value will be obfuscated
 # if the key starts any element in the list. Can add additional string elements
@@ -214,13 +210,10 @@ def generateDebugInfo(config_dict, config_path, db_binding_wx, verbosity):
         print("Driver info")
         driver_dict = {stationType: config_dict[stationType]}
         _config = ConfigObj(driver_dict)
-        if six.PY2:
-            _config.write(sys.stdout)
-        else:
-            # The ConfigObj.write() method always writes in binary,
-            # which is not accepted by Python 3 for output to stdout
-            # So write to sys.stdout.buffer
-            _config.write(sys.stdout.buffer)
+        # The ConfigObj.write() method always writes in binary,
+        # which is not accepted by Python 3 for output to stdout
+        # So write to sys.stdout.buffer
+        _config.write(sys.stdout.buffer)
         print()
 
     # installed extensions info
@@ -304,13 +297,11 @@ def generateDebugConf(config_dict):
                    OBFUSCATE_MAP['do_not_obfuscate'])
 
     # put obfuscated config_dict into weewx.conf form
-    if six.PY2:
-        config_dict_copy.write(sys.stdout)
-    else:
-        # The ConfigObj.write() method always writes in binary,
-        # which is not accepted by Python 3 for output to stdout.
-        # So write to sys.stdout.buffer
-        config_dict_copy.write(sys.stdout.buffer)
+
+    # The ConfigObj.write() method always writes in binary,
+    # which is not accepted by Python 3 for output to stdout.
+    # So write to sys.stdout.buffer
+    config_dict_copy.write(sys.stdout.buffer)
 
 
 def generateSysInfo(verbosity):

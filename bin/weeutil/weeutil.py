@@ -1,19 +1,15 @@
 # This Python file uses the following encoding: utf-8
 #
-#    Copyright (c) 2009-2022 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2023 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
 """Various handy utilities that don't belong anywhere else.
-   Works under Python 2 and Python 3.
 
    NB: To run the doctests, this code must be run as a module. For example:
      cd ~/git/weewx/bin
      python -m weeutil.weeutil
 """
-
-from __future__ import absolute_import
-from __future__ import print_function
 
 import calendar
 import cmath
@@ -23,10 +19,6 @@ import os
 import re
 import shutil
 import time
-
-# Compatibility shims
-import six
-from six.moves import input
 
 # For backwards compatibility:
 from weeutil.config import accumulateLeaves, search_up
@@ -63,7 +55,7 @@ def list_as_string(option):
     Reno, NV
     """
     # Check if it's already a string.
-    if option is not None and not isinstance(option, six.string_types):
+    if option is not None and not isinstance(option, str):
         return ', '.join(option)
     return option
 
@@ -1508,7 +1500,7 @@ def to_int(x):
     >>> print(to_int(None))
     None
     """
-    if isinstance(x, six.string_types) and x.lower() == 'none':
+    if isinstance(x, str) and x.lower() == 'none':
         x = None
     try:
         return int(x) if x is not None else None
@@ -1528,7 +1520,7 @@ def to_float(x):
     >>> print(to_float(None))
     None
     """
-    if isinstance(x, six.string_types) and x.lower() == 'none':
+    if isinstance(x, str) and x.lower() == 'none':
         x = None
     return float(x) if x is not None else None
 
@@ -1844,7 +1836,7 @@ def deep_copy_path(path, dest_dir):
 
 def is_iterable(x):
     """Test if something is iterable, but not a string"""
-    return hasattr(x, '__iter__') and not isinstance(x, (bytes, six.string_types))
+    return hasattr(x, '__iter__') and not isinstance(x, (bytes, str))
 
 
 class bcolors:

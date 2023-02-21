@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2019 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2019-2023 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -8,14 +8,11 @@
 OBSOLETE: Use weeutil.logging instead
 """
 
-from __future__ import absolute_import
-
 import os
 import syslog
 import traceback
 
-import six
-from six.moves import StringIO
+from io import StringIO
 
 log_levels = {
     'debug': syslog.LOG_DEBUG,
@@ -34,7 +31,7 @@ def log_upto(log_level=None):
     """Set what level of logging we want."""
     if log_level is None:
         log_level = syslog.LOG_INFO
-    elif isinstance(log_level, six.string_types):
+    elif isinstance(log_level, str):
         log_level = log_levels.get(log_level, syslog.LOG_INFO)
     syslog.setlogmask(syslog.LOG_UPTO(log_level))
 
@@ -95,7 +92,7 @@ def log_traceback(prefix='', log_level=None):
     """
     if log_level is None:
         log_level = syslog.LOG_INFO
-    elif isinstance(log_level, six.string_types):
+    elif isinstance(log_level, str):
         log_level = log_levels.get(log_level, syslog.LOG_INFO)
     sfd = StringIO()
     traceback.print_exc(file=sfd)

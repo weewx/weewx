@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Copyright 2014-2020 Matthew Wall
+# Copyright 2014-2023 Matthew Wall
 # See the file LICENSE.txt for your rights.
 
 """Driver for ADS WS1 weather stations.
@@ -13,14 +13,8 @@ Thanks to Jay Nugent (WB8TKL) and KRK6 for weather-2.kr6k-V2.1
   http://server1.nuge.com/~weather/
 """
 
-from __future__ import with_statement
-from __future__ import absolute_import
-from __future__ import print_function
-
 import logging
 import time
-
-from six import byte2int
 
 import weewx.drivers
 from weewx.units import INHG_PER_MBAR, MILE_PER_KM
@@ -29,7 +23,7 @@ import weewx.wxformulas
 log = logging.getLogger(__name__)
 
 DRIVER_NAME = 'WS1'
-DRIVER_VERSION = '0.5'
+DRIVER_VERSION = '1.0'
 
 
 def loader(config_dict, _):
@@ -241,7 +235,7 @@ class StationSerial(object):
     def get_readings(self):
         buf = self.serial_port.readline()
         if DEBUG_READ >= 2:
-            log.debug("bytes: '%s'" % ' '.join(["%0.2X" % byte2int(c) for c in buf]))
+            log.debug("bytes: '%s'" % ' '.join(["%0.2X" % c for c in buf]))
         buf = buf.strip()
         return buf
 

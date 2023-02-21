@@ -1,28 +1,19 @@
 #
-#    Copyright (c) 2009-2022 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2023 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
 """For uploading files to a remove server via FTP"""
 
-from __future__ import absolute_import
-from __future__ import print_function
-from __future__ import with_statement
-
 import ftplib
+import hashlib
 import logging
 import os
+import pickle
 import sys
 import time
 
-from six.moves import cPickle
 
-try:
-    import hashlib
-    has_hashlib=True
-except ImportError:
-    has_hashlib=False
-    
 log = logging.getLogger(__name__)
 
 
@@ -201,10 +192,7 @@ class FtpUpload(object):
                     full_local_path = os.path.join(dirpath, filename)
 
                     # calculate hash
-                    if has_hashlib:
-                        filehash=sha256sum(full_local_path)
-                    else:
-                        filehash=None
+                    filehash=sha256sum(full_local_path)
 
                     # See if this file can be skipped:
                     if _skip_this_file(timestamp, fileset, hashdict, full_local_path, filehash):
@@ -248,10 +236,10 @@ class FtpUpload(object):
         # Either way, be prepared to catch it.
         try:
             with open(timestamp_file_path, "rb") as f:
-                timestamp = cPickle.load(f)
-                fileset = cPickle.load(f)
-                hashdict = cPickle.load(f)
-        except (IOError, EOFError, cPickle.PickleError, AttributeError):
+                timestamp = pickle.load(f)
+                fileset = pickle.load(f)
+                hashdict = pickle.load(f)
+        except (IOError, EOFError, pickle.PickleError, AttributeError):
             timestamp = 0
             fileset = set()
             hashdict = {}
@@ -268,9 +256,9 @@ class FtpUpload(object):
         """Saves the time and members of the last upload in the local root."""
         timestamp_file_path = os.path.join(self.local_root, "#%s.last" % self.name)
         with open(timestamp_file_path, "wb") as f:
-            cPickle.dump(timestamp, f)
-            cPickle.dump(fileset, f)
-            cPickle.dump(hashdict, f)
+            pickle.dump(timestamp, f)
+            pickle.dump(fileset, f)
+            pickle.dump(hashdict, f)
 
 
 def _skip_this_file(timestamp, fileset, hashdict, full_local_path, filehash):
@@ -283,11 +271,11 @@ def _skip_this_file(timestamp, fileset, hashdict, full_local_path, filehash):
     if full_local_path not in fileset:
         return False
 
-    if has_hashlib and filehash is not None:
+    if filehash is not None:
         # use hash if available
         if full_local_path not in hashdict:
             return False
-        if hashdict[full_local_path]!=filehash:
+        if hashdict[full_local_path] != filehash:
             return False
     else:
         # otherwise use file time
@@ -301,7 +289,7 @@ def _skip_this_file(timestamp, fileset, hashdict, full_local_path, filehash):
 def _skip_this_dir(local_dir):
     """Determine whether to skip a directory."""
 
-    return os.path.basename(local_dir) in ('.svn', 'CVS')
+    return os.path.basename(local_dir) in {'.svn', 'CVS', '__pycache__', '.idea', '.git'}
 
 
 def _make_remote_dir(ftp_server, remote_dir_path):

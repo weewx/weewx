@@ -1,27 +1,21 @@
 #
-#    Copyright (c) 2021 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2021-2023 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
 """Test the ultimeter driver using mock"""
+import struct
 import unittest
-
-try:
-    # Python 3 --- mock is included in unittest
-    from unittest import mock
-    from unittest.mock import patch
-except ImportError:
-    # Python 2 --- must have mock installed
-    import mock
-    from mock import patch
-
-import six
+from unittest.mock import patch
 
 import weewx.drivers.ultimeter
 
 
 class StopTest(Exception):
     """Raised when it's time to stop the test"""
+
+
+int2byte = struct.Struct(">B").pack
 
 
 def gen_bytes():
@@ -32,12 +26,8 @@ def gen_bytes():
     """
     # This includes some leading nonsense bytes (b'01212'):
     for c in b'01212!!005100BE02EB0064277002A8023A023A0025005800000000\r\n':
-        if six.PY2:
-            # Under Python 2, c is already a byte string
-            yield c
-        else:
-            # Under Python 3, c is an int. Convert to type bytes
-            yield six.int2byte(c)
+        # Under Python 3, c is an int. Convert to type bytes
+        yield int2byte(c)
     # Because genLoopPackets() is intended to run forever, we need something to break the loop
     # and stop the test.
     raise StopTest

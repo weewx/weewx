@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Copyright 2014 Matthew Wall
+# Copyright 2014-2023 Matthew Wall
 # See the file LICENSE.txt for your rights.
 
 """Driver for CC3000 data logger
@@ -154,20 +154,12 @@ Earlier versions of this driver were tested with:
 #        attempt was made to compuare log data between runs.  Observations on
 #        NUC7i5 running Debian Buster.
 
-from __future__ import with_statement
-from __future__ import absolute_import
-from __future__ import print_function
 import datetime
 import logging
 import math
-import serial
-import string
-import sys
 import time
 
-from six import byte2int
-from six import PY2
-from six.moves import input
+import serial
 
 import weeutil.weeutil
 import weewx.drivers
@@ -178,7 +170,7 @@ from weewx.crc16 import crc16
 log = logging.getLogger(__name__)
 
 DRIVER_NAME = 'CC3000'
-DRIVER_VERSION = '0.40'
+DRIVER_VERSION = '0.5'
 
 def loader(config_dict, engine):
     return CC3000Driver(**config_dict[DRIVER_NAME])
@@ -718,10 +710,6 @@ def _to_ts(tstr, fmt="%Y/%m/%d %H:%M:%S"):
     return time.mktime(time.strptime(tstr, fmt))
 
 def _format_bytes(buf):
-    # byte2int not necessary in PY3 and will raise an exception
-    # if used ("int object is not subscriptable")
-    if PY2:
-        return ' '.join(['%0.2X' % byte2int(c) for c in buf])
     return ' '.join(['%0.2X' % c for c in buf])
 
 def _check_crc(buf):
@@ -780,11 +768,10 @@ class CC3000(object):
             self.serial_port = None
 
     def write(self, data):
-        if not PY2:
-            # Encode could perhaps fail on bad user input (DST?).
-            # If so, this will be handled later when it is observed that the
-            # command does not do what is expected.
-            data = data.encode('ascii', 'ignore')
+        # Encode could perhaps fail on bad user input (DST?).
+        # If so, this will be handled later when it is observed that the
+        # command does not do what is expected.
+        data = data.encode('ascii', 'ignore')
         if DEBUG_SERIAL:
             log.debug("Write: '%s'" % data)
         n = self.serial_port.write(data)
@@ -802,10 +789,9 @@ class CC3000(object):
             log.debug("Read: '%s' (%s)" % (data, _format_bytes(data)))
         data = data.strip()
         _check_crc(data)
-        if not PY2:
-            # CRC passed, so this is unlikely.
-            # Ignore as irregular data will be handled later.
-            data = data.decode('ascii', 'ignore')
+        # CRC passed, so this is unlikely.
+        # Ignore as irregular data will be handled later.
+        data = data.decode('ascii', 'ignore')
         return data
 
     def flush(self):

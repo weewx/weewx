@@ -5,12 +5,9 @@
 #
 """WeeWX logging facility"""
 
-from __future__ import absolute_import
-
-import sys
 import logging.config
-import six
-from six.moves import StringIO
+import sys
+from io import StringIO
 
 import configobj
 
@@ -161,7 +158,7 @@ def log_traceback(log_fn, prefix=''):
 def _convert_from_string(section, key):
     """If possible, convert any strings to an appropriate type."""
     # Check to make sure it is a string
-    if isinstance(section[key], six.string_types):
+    if isinstance(section[key], str):
         if section[key].lower() == 'false':
             # It's boolean False
             section[key] = False
