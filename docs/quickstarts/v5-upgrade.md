@@ -41,7 +41,7 @@ With this in mind, here is how you can continue to use your old `/home/weewx`:
    file, documentation, examples, and daemon utility files:
 
     ```shell
-    weectl station upgrade
+    weectl station upgrade --config=/home/weewx/weewx.conf
     ```
 
 3. At this point, try running the V5.0 version of `weewxd` directly, using your
@@ -121,9 +121,9 @@ With this in mind, here is how you can continue to use your old `/home/weewx`:
     Note that your old V4.x code will still be under `/home/weewx/bin` (`/Users/Shared/weewx` for 
     macOS).
 
-To avoid confusing yourself and any tools that you might use, you should consider moving it aside.
-Unfortunately, you cannot simply rename it, because your `user` directory is located underneath,
-so you would lose access to it and any extensions it might contain. Here's how to do it
+To avoid confusing yourself and any tools that you might use, you should consider moving your old
+code aside. Unfortunately, you cannot simply rename it, because your `user` directory is located
+underneath, so you would lose access to it and any extensions it might contain. Here's how to do it
 without disturbing the things you want to keep:
 
 === "Linux"
