@@ -482,7 +482,12 @@ class AggTypeBinder(object):
 
     def _do_query(self):
         """Run a query against the databases, using the given aggregation type."""
-        db_manager = self.db_lookup(self.data_binding)
+        try:
+            # Get the appropriate database manager
+            db_manager = self.db_lookup(self.data_binding)
+        except weewx.UnknownBinding:
+            # Don't recognize the binding.
+            raise AttributeError(self.data_binding)
         try:
             # If we cannot perform the aggregation, we will get an UnknownType or
             # UnknownAggregation error. Be prepared to catch it.
