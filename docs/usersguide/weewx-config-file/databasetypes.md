@@ -28,6 +28,19 @@ This section defines default values for MySQL databases. They can be overridden 
 !!! Note 
     If you choose the [MySQL](https://www.mysql.com/) database, it is assumed that you know how to administer it. In particular, you will have to set up a user with appropriate create and modify privileges.
 
+
+!!! Tip
+    In what follows, if you wish to connect to a MySQL server using a Unix socket instead of a
+    TCP/IP connection, set `host` to an empty string (`''`), then add an option `unix_socket` with
+    the socket address.
+    ```ini
+    [[MySQL]]
+        ...
+        host = ''
+        unix_socket = /var/run/mysqld/mysqld.sock
+        ...
+    ```
+
 #### driver
 
 The MySQL driver name. Required.

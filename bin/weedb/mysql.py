@@ -111,16 +111,16 @@ class Connection(weedb.Connection):
                  port=3306, engine=DEFAULT_ENGINE, autocommit=True, **kwargs):
         """Initialize an instance of Connection.
 
-        Parameters:
-        
-            host: IP or hostname with the mysql database (required)
-            user: User name (required)
-            password: The password for the username (required)
-            database_name: The database to be used. (required)
-            port: Its port number (optional; default is 3306)
-            engine: The MySQL database engine to use (optional; default is 'INNODB')
-            autocommit: If True, autocommit is enabled (default is True)
-            kwargs:   Any extra arguments you may wish to pass on to MySQL 
+        Args:
+            host (str): IP or hostname hosting the mysql database.
+                Alternatively, the path to the socket mount. (required)
+            user (str): User name (required)
+            password (str): The password for the username (required)
+            database_name (str): The database to be used. (required)
+            port (int): Its port number (optional; default is 3306)
+            engine (str): The MySQL database engine to use (optional; default is 'INNODB')
+            autocommit (bool): If True, autocommit is enabled (default is True)
+            kwargs (dict):   Any extra arguments you may wish to pass on to MySQL
               connect statement. See the file MySQLdb/connections.py for a list (optional).
         """
         connection = MySQLdb.connect(host=host, port=int(port), user=user, passwd=password,
