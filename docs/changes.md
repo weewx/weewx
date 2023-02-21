@@ -49,6 +49,9 @@ user jocelynj! PR #842.
 Fix problem that prevented wee_device --set-retransmit from working on
 Vantage stations.
 
+Using a bad data binding with an aggregation tag no longer results in an
+exception. Instead, it shows the tag in the results. Related to PR #817.
+
 
 ### 4.10.1 01/30/2023
 

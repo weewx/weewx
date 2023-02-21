@@ -507,6 +507,10 @@ FALSE#slurp
       <td>$day($data_binding='alt_binding').outTemp.max</td>
     </tr>
     <tr>
+      <td>Max Temperature with bogus binding</td>
+      <td>$day($data_binding='foo_binding').outTemp.max</td>
+    </tr>
+    <tr>
       <td>Min temp with explicit conversion to Celsius</td>
       <td>$day.outTemp.min.degree_C</td>
     </tr>
