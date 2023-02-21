@@ -566,9 +566,14 @@ def get_font_handle(fontpath_str, *args):
     if fontpath_str is not None:
         try:
             if fontpath_str.endswith('.ttf'):
-                # Nice feature of Pillow: if fontpath_str is an absolute path and it cannot be
-                # found, then Pillow will search for the font in system resources as well.
-                font = ImageFont.truetype(fontpath_str, *args)
+                # 1. Nice feature of Pillow: if fontpath_str is an absolute path, and it cannot be
+                #    found, then Pillow will search for the font in system resources as well.
+                # 2. Specifying the basic layout engine is necessary to avoid a segmentation
+                #    fault in Pillow versions earlier than 8.2.
+                #    See https://github.com/python-pillow/Pillow/issues/3066
+                font = ImageFont.truetype(fontpath_str,                         # See note 1 above
+                                          layout_engine=ImageFont.LAYOUT_BASIC, # See note 2 above
+                                          *args)
             else:
                 font = ImageFont.load_path(fontpath_str)
         except IOError:
