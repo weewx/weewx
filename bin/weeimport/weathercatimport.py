@@ -1,16 +1,11 @@
 #
-#    Copyright (c) 2009-2020 Tom Keffer <tkeffer@gmail.com> and
-#                            Gary Roderick
+#    Copyright (c) 2009-2023 Tom Keffer <tkeffer@gmail.com> and Gary Roderick
 #
 #    See the file LICENSE.txt for your full rights.
 #
 """Module for use with wee_import to import observational data from WeatherCat
 monthly .cat files.
 """
-
-from __future__ import with_statement
-from __future__ import absolute_import
-from __future__ import print_function
 
 # Python imports
 import glob
@@ -19,15 +14,11 @@ import os
 import shlex
 import time
 
-# python 2/3 compatibility shims
-import six
-
 # WeeWX imports
-from . import weeimport
 import weewx
-
 from weeutil.weeutil import timestamp_to_string
 from weewx.units import unit_nicknames
+from . import weeimport
 
 log = logging.getLogger(__name__)
 
@@ -171,7 +162,7 @@ class WeatherCatSource(weeimport.Source):
         # any units as required
         if 'Units' in weathercat_config_dict and len(weathercat_config_dict['Units']) > 0:
             # we have [[Units]] settings so iterate over each
-            for group, value in six.iteritems(weathercat_config_dict['Units']):
+            for group, value in weathercat_config_dict['Units'].items():
                 # is this group (eg 'temperature', 'rain', etc) one that we know
                 # about
                 if group in self.weathercat_unit_groups:

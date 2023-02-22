@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2020 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2023 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -7,9 +7,6 @@
 """Main engine for the weewx weather system."""
 
 # Python imports
-from __future__ import absolute_import
-from __future__ import print_function
-
 import gc
 import logging
 import socket

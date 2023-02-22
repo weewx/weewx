@@ -1,6 +1,5 @@
 #
-#    Copyright (c) 2009-2019 Tom Keffer <tkeffer@gmail.com> and
-#                            Gary Roderick
+#    Copyright (c) 2009-2019 Tom Keffer <tkeffer@gmail.com> and Gary Roderick
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -10,30 +9,22 @@ observational data for use with wee_import.
 """
 
 # Python imports
-from __future__ import with_statement
-from __future__ import absolute_import
-from __future__ import print_function
-
 import datetime
 import gzip
+import io
 import json
 import logging
 import numbers
 import socket
 import sys
-
-from datetime import datetime as dt
-
-# python3 compatibility shims
-import six
-from six.moves import urllib
+import urllib.error
+import urllib.request
 
 # WeeWX imports
-from . import weeimport
 import weewx
-
 from weeutil.weeutil import timestamp_to_string, option_as_list, startOfDay
 from weewx.units import unit_nicknames
+from . import weeimport
 
 log = logging.getLogger(__name__)
 
@@ -126,8 +117,8 @@ class WUSource(weeimport.Source):
         # (counters) are datetime objects and our increment is a timedelta.
         # Get datetime objects for any date or date range specified on the
         # command line, if there wasn't one then default to today.
-        self.start = dt.fromtimestamp(startOfDay(self.first_ts))
-        self.end = dt.fromtimestamp(startOfDay(self.last_ts))
+        self.start = datetime.datetime.fromtimestamp(startOfDay(self.first_ts))
+        self.end = datetime.datetime.fromtimestamp(startOfDay(self.last_ts))
         # set our increment
         self.increment = datetime.timedelta(days=1)
 
@@ -246,7 +237,7 @@ class WUSource(weeimport.Source):
         # The WU API says that compression is required, but let's be prepared
         # if compression is not used
         if response.info().get('Content-Encoding') == 'gzip':
-            buf = six.BytesIO(response.read())
+            buf = io.BytesIO(response.read())
             f = gzip.GzipFile(fileobj=buf)
             # but what charset is in use
             try:

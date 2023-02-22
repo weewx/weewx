@@ -1,4 +1,4 @@
-# Copyright 2012 Matthew Wall
+# Copyright 2012-2023 Matthew Wall
 # See the file LICENSE.txt for your full rights.
 #
 # Thanks to Jim Easterbrook for pywws.  This implementation includes
@@ -210,24 +210,23 @@ It is used as: A200 1A20 A2AA 0020 to indicate a data refresh.
 The WH1080 acknowledges the write with an 8 byte chunk: A5A5 A5A5.
 """
 
-from __future__ import absolute_import
-from __future__ import print_function
+# Python imports
 import datetime
 import logging
 import sys
 import time
+
+# Third party imports
 import usb
 
-from six.moves import zip
-from six.moves import input
-
+# WeeWX imports
 import weewx.drivers
 import weewx.wxformulas
 
 log = logging.getLogger(__name__)
 
 DRIVER_NAME = 'FineOffsetUSB'
-DRIVER_VERSION = '1.20'
+DRIVER_VERSION = '1.3'
 
 def loader(config_dict, engine):
     return FineOffsetUSB(**config_dict[DRIVER_NAME])
