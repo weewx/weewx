@@ -239,10 +239,6 @@ bcd2num([a,b,c]) -> c*100+b*10+a
 # wsh 21
 # w0 135
 
-from __future__ import with_statement
-from __future__ import absolute_import
-from __future__ import print_function
-
 import logging
 import time
 import string
@@ -254,10 +250,6 @@ import termios
 import tty
 from functools import reduce
 
-import six
-from six.moves import zip
-from six.moves import input
-
 import weeutil.weeutil
 import weewx.drivers
 import weewx.wxformulas
@@ -265,8 +257,9 @@ import weewx.wxformulas
 log = logging.getLogger(__name__)
 
 DRIVER_NAME = 'WS23xx'
-DRIVER_VERSION = '0.41'
+DRIVER_VERSION = '0.5'
 
+int2byte = struct.Struct(">B").pack
 
 def loader(config_dict, _):
     return WS23xxDriver(config_dict=config_dict, **config_dict[DRIVER_NAME])
@@ -1073,9 +1066,9 @@ class Ws2300(object):
     #
     def write_address(self,address):
         for digit in range(4):
-            byte = six.int2byte((address >> (4 * (3-digit)) & 0xF) * 4 + 0x82)
+            byte = int2byte((address >> (4 * (3-digit)) & 0xF) * 4 + 0x82)
             self.write_byte(byte)
-            ack = six.int2byte(digit * 16 + (ord(byte) - 0x82) // 4)
+            ack = int2byte(digit * 16 + (ord(byte) - 0x82) // 4)
             answer = self.read_byte()
             if ack != answer:
                 self.log("??")
@@ -1092,7 +1085,7 @@ class Ws2300(object):
             if encode_constant == None:
                 encode_constant = self.WRITENIB
             encoded_data = b''.join([
-                    six.int2byte(nybbles[i]*4 + encode_constant)
+                    int2byte(nybbles[i]*4 + encode_constant)
                     for i in range(len(nybbles))])
             ack_constant = {
                 self.SETBIT:    self.SETACK,
@@ -1103,7 +1096,7 @@ class Ws2300(object):
             for i in range(len(encoded_data)):
                 self.write_byte(bytearray([encoded_data[i]]))
                 answer = self.read_byte()
-                if six.int2byte(nybbles[i] + ack_constant) != answer:
+                if int2byte(nybbles[i] + ack_constant) != answer:
                     self.log("??")
                     return None
             return True
@@ -1156,10 +1149,10 @@ class Ws2300(object):
             #
             # Write the number bytes we want to read.
             #
-            encoded_data = six.int2byte(0xC2 + bytes_*4)
+            encoded_data = int2byte(0xC2 + bytes_*4)
             self.write_byte(encoded_data)
             answer = self.read_byte()
-            check = six.int2byte(0x30 + bytes_)
+            check = int2byte(0x30 + bytes_)
             if answer != check:
                 self.log("??")
                 return None
@@ -1170,19 +1163,19 @@ class Ws2300(object):
             response = b""
             for _ in range(bytes_):
                 answer = self.read_byte()
-                if answer == None:
+                if answer is None:
                     return None
                 response += answer
             #
             # Read and verify checksum
             #
             answer = self.read_byte()
-            checksum = sum(b for b in six.iterbytes(response)) % 256
-            if six.int2byte(checksum) != answer:
+            checksum = sum(b for b in response) % 256
+            if int2byte(checksum) != answer:
                 self.log("??")
                 return None
             r = ()
-            for b in six.iterbytes(response):
+            for b in response:
                 r += (b % 16, b // 16)
             return r[:nybble_count]
         finally:
