@@ -32,6 +32,8 @@ methods.
 The *Standard* skin now uses the font `DejaVuSansMono-Bold` and includes a
 copy. Before, it had to rely on hardwired font paths, which were less reliable.
 
+4.10.2 02/22/2023
+
 
 ### 4.10.2 MM/DD/YYYY
 
@@ -92,10 +94,12 @@ Option `line_gap_fraction` can now be used with bar plots. Fixes issue #818.
 
 
 ### 4.9.1 10/25/2022
+
 Fix problem with `wind` for older versions of sqlite.
 
 
 ### 4.9.0 10/24/2022
+
 Fix problem that create 'ghost' values for VantageVue stations.
 Fix problem that causes `leafWet3` and `leafWet4` to be emitted in VP2
 stations that do not have the necessary sensors.
@@ -164,6 +168,7 @@ Fixes issue #800.
 
 
 ### 4.8.0 04/21/2022
+
 Allow unit to be overridden for a specific plot by using new option 'unit'.
 Fixes issue #729.
 
@@ -195,6 +200,7 @@ using Python 2.7, if the configuration file contained UTF-8 characters.
 
 
 ### 4.7.0 03/01/2022
+
 Introduced new option "generate_once". If True, templates will be generated
 only on the first run of the reporting engine. Thanks to user Rich! PR #748.
 
@@ -219,11 +225,13 @@ the RSS feed. Fixes issue #755.
 
 
 ### 4.6.2 02/10/2022
+
 Removed diagnostic code that was inadverently left in the titlebar.inc file
 in Seasons skin.
 
 
 ### 4.6.1 02/10/2022
+
 Make the show_rss and show_reports flags work properly.  Fixes issue #739.
 
 Added $to_list() utility for use in Cheetah templates.
@@ -242,6 +250,7 @@ TEXT fields. Fixes issue #738.
 
 
 ### 4.6.0 02/04/2022
+
 Easy localization of all skins that come with WeeWX. Big thanks to user Karen,
 who drove the effort! PR #665.
 
@@ -335,6 +344,7 @@ Added i18n-report utility to help check skins for translated strings.
 
 
 ### 4.5.1 04/02/2021
+
 Reverted the wview schema back to the V3 style.
 
 Fixed problem where setup.py would fail if the station description used UTF-8
