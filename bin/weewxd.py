@@ -104,6 +104,7 @@ def main():
     log.info("Located at %s", sys.executable)
     log.info("Platform %s", platform.platform())
     log.info("Locale is '%s'", locale.setlocale(locale.LC_ALL))
+    log.info("Entry path: %s", __file__)
     log.info("Using configuration file %s", config_path)
     log.info("Debug is %s", weewx.debug)
 
