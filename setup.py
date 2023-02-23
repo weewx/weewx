@@ -32,7 +32,7 @@ from distutils.command.install_lib import install_lib
 from distutils.core import setup
 from distutils.debug import DEBUG
 
-VERSION = "4.10.1"
+VERSION = "4.10.2"
 
 if sys.version_info < (2, 7):
     log.fatal('WeeWX requires Python V2.7 or greater.')

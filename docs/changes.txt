@@ -1,7 +1,7 @@
 WeeWX change history
 --------------------
 
-4.10.2 MM/DD/YYYY
+4.10.2 02/22/2023
 
 Removed errant "f-string" in imagegenerator.py.
 
