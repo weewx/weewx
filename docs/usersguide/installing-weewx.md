@@ -73,8 +73,8 @@ Here is a summary of the layout for the different install methods, along with th
 
 === "Debian"
 
-    | Role                    | Symbolic name     | Nominal value                   |
-    |-------------------------|-------------------|---------------------------------|
+    | Role                    | Symbolic name     | Nominal value                  |
+    |-------------------------|-------------------|--------------------------------|
     | WeeWX root directory    | _`WEEWX_ROOT`_   | `/`                             |
     | Executables             | _`BIN_ROOT`_     | `/usr/share/weewx/`             |
     | Configuration directory | _`CONFIG_ROOT`_  | `/etc/weewx/`                   |
@@ -83,13 +83,13 @@ Here is a summary of the layout for the different install methods, along with th
     | Web pages and images    | _`HTML_ROOT`_    | `/var/www/html/weewx/`          |
     | Documentation           | _`DOC_ROOT`_     | `/usr/share/doc/weewx/`         |
     | Examples                | _`EXAMPLE_ROOT`_ | `/usr/share/doc/weewx/examples/`|
-    | User directory          | _`USER_ROOT`_    | `/usr/share/weewx/user`                |
-    | Log file                |                   | `/var/log/syslog`               |
+    | User directory          | _`USER_ROOT`_    | `/usr/share/weewx/user`         |
+    | Log file                |                  | `/var/log/syslog`               |
 
-=== "RedHat/SUSE"
+=== "RedHat/openSUSE"
 
-    | Role                    | Symbolic name     | Nominal value                          |
-    |-------------------------|-------------------|----------------------------------------|
+    | Role                    | Symbolic name    | Nominal value                          |
+    |-------------------------|------------------|----------------------------------------|
     | WeeWX root directory    | _`WEEWX_ROOT`_   | `/`                                    |
     | Executables             | _`BIN_ROOT`_     | `/usr/share/weewx/`                    |
     | Configuration directory | _`CONFIG_ROOT`_  | `/etc/weewx/`                          |
@@ -99,12 +99,12 @@ Here is a summary of the layout for the different install methods, along with th
     | Documentation           | _`DOC_ROOT`_     | `/usr/share/doc/weewx-x.y.z/`          |
     | Examples                | _`EXAMPLE_ROOT`_ | `/usr/share/doc/weewx-x.y.z/examples/` |
     | User directory          | _`USER_ROOT`_    | `/usr/share/weewx/user`                |
-    | Log file                |                   | `/var/log/syslog`                      |
+    | Log file                |                  | `/var/log/messages`                    |
 
 === "Pip (including macOS)"
 
-    | Role                    | Symbolic name     | Nominal value        |
-    |-------------------------|-------------------|----------------------|
+    | Role                    | Symbolic name    | Nominal value        |
+    |-------------------------|------------------|----------------------|
     | WeeWX root directory    | _`WEEWX_ROOT`_   | `~/weewx-data`       |
     | Executables             | _`BIN_ROOT`_     | `~/.local/bin`       |
     | Configuration directory | _`CONFIG_ROOT`_  | `./`                 |
@@ -114,4 +114,4 @@ Here is a summary of the layout for the different install methods, along with th
     | Documentation           | _`DOC_ROOT`_     | `./docs`             |
     | Examples                | _`EXAMPLE_ROOT`_ | `./examples/`        |
     | User directory          | _`USER_ROOT`_    | `./bin/user`         |
-    | Log file                |                   | `/var/log/syslog`    |
+    | Log file                |                  | `/var/log/syslog`    |
