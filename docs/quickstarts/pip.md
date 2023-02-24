@@ -8,8 +8,9 @@ install WeeWX on almost any operating system, including macOS.
 - WeeWX V5.x requires Python 3.7 or greater. It cannot be run with Python 2.x.  If you are constrained by this, install WeeWX V4.10, the
   last version to support Python 2.7, Python 3.5, and Python 3.6.
 
-- You must also have a copy of [`pip`](https://pip.pypa.io). If you don't, install it first by following 
-[the directions on the pip website](https://pip.pypa.io/en/stable/installation/).
+- You must also have a copy of pip. In most cases, your operating system will offer an
+  [installation package](https://packaging.python.org/en/latest/guides/installing-using-linux-tools/).
+  Otherwise, [see the directions on the pip website](https://pip.pypa.io/en/stable/installation/).
 
 - While you will not need root privileges to install and configure WeeWX,
   you will need them to set up a daemon and, perhaps, to change device permissions.
@@ -21,8 +22,8 @@ before beginning. Follow the directions below for your system:
 
     ```shell
     sudo apt update && sudo apt upgrade
-    sudo apt install gcc
-    sudo apt install python3-dev
+    sudo apt -y install gcc
+    sudo apt -y install python3-dev
     # This makes the install of pyephem go more smoothly:
     python3 -m pip install wheel
     ```
@@ -31,7 +32,7 @@ before beginning. Follow the directions below for your system:
     ```shell
     sudo yum update
     sudo yum install -y gcc
-    sudo yum install -y python3-devel python3-pip
+    sudo yum install -y python3-devel
     # This makes the install of pyephem go more smoothly:
     python3 -m pip install wheel
     ```
@@ -44,7 +45,7 @@ before beginning. Follow the directions below for your system:
     # If it is less than Python 3.7, you will have to upgrade to a 
     # later version. The following installs 3.9. Afterwards, you must
     # invoke Python by using "python3.9", NOT "python3"
-    sudo zypper install python39 python39-devel
+    sudo zypper install -y python39 python39-devel
     python3.9 -m pip install wheel
 
     # Finally, you may have to add ~/.local/bin to your path:
@@ -56,11 +57,11 @@ before beginning. Follow the directions below for your system:
 
 Installation is a two-step process:
 
-1. Install the software and resources using pip.
-2. Create a new station configuration file `weewx.conf` using the tool `weectl`.
+1. Install the WeeWX application using pip.
+2. Provision a new station using the tool `weectl`.
 
 
-### Step 1: Install using pip
+### Step 1: Install the application using pip
 
 Once the preparatory steps are out of the way, you're ready to install WeeWX using pip.
 
@@ -88,7 +89,7 @@ where `3.x` is your version of Python.
           ```
     If you do, log out, then log back in.
 
-### Step 2: Create your user data
+### Step 2: Provision a new station
 
 While the first step downloads everything into your local Python source tree, it
 does not set up a configuration file for your station, nor does it set up the
@@ -198,14 +199,12 @@ install the required daemon file.
 
 ### Verify
 
-After about 5 minutes (the exact length of time depends on your archive interval), open the
-[station web page](file:///~/weewx-data/public_html/index.html) in a web browser. You should see
-your station information and data.
+After about 5 minutes (the exact length of time depends on your archive interval), cut and
+paste the following into your web browser:
 
-!!! note 
-    Clicking the link to the webpage may be blocked by your browser. If
-    that's the case, cut and paste the following link into the browser:
-    `~/weewx-data/public_html/index.html`
+    ~/weewx-data/public_html/index.html
+
+You should see your station information and data.
 
 You may also want to check your system log for any problems.
 
