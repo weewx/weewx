@@ -32,10 +32,8 @@ methods.
 The *Standard* skin now uses the font `DejaVuSansMono-Bold` and includes a
 copy. Before, it had to rely on hardwired font paths, which were less reliable.
 
-4.10.2 02/22/2023
 
-
-### 4.10.2 MM/DD/YYYY
+### 4.10.2 02/22/2023
 
 Removed errant "f-string" in `imagegenerator.py`.
 
@@ -112,10 +110,11 @@ Fixes issue #772.
 Add missing 30-day barometer graph to Smartphone skin.
 Fixes issue #774.
 
-Fix check for reuse_ssl for Python versions greater than 3.10.
+Fix check for `reuse_ssl` for Python versions greater than 3.10.
 Fixes issue #775.
 
-The utility wee_reports can now be invoked by specifying a --date and --time.
+The utility `wee_reports` can now be invoked by specifying a `--date` 
+and `--time`.
 Fixes issue #776.
 
 Allow timestamps that are not integers.
@@ -124,57 +123,57 @@ Fixes issue #779.
 Add localization file for Traditional Chinese. Thanks to user lyuxingliu!
 PR #777.
 
-Don't swallow syntax errors when wee_config is looking for drivers.
+Don't swallow syntax errors when `wee_config` is looking for drivers.
 
-Include 'wind' in daily summary if 'windSpeed' is present.
+Include `wind` in daily summary if `windSpeed` is present.
 
 Refine translations for French skin. Thanks to user Pascal!
 
-Allow a custom cipher to be specified for FTP uploads. See option 'cipher'
-under [[FTP]].
+Allow a custom cipher to be specified for FTP uploads. See option `cipher`
+under `[[FTP]]`.
 
-Ensure that rundir exists and has correct permissions in weewx-multi
+Ensure that `rundir` exists and has correct permissions in weewx-multi
 
 Allow auto-provisioning feature of Seasons to work when using a SQL expression
-for option data_type in the ImageGenerator. Fixes issue #782.
+for option `data_type` in the ImageGenerator. Fixes issue #782.
 
-Allow constants albedo, cn, and cd to be specified when calculating ET.
+Allow constants `albedo`, `cn`, and `cd` to be specified when calculating ET.
 See the User's Guide. Resolves issue #730.
 
-Fix problem that prevented wee_reports from using a default location
-for weewx.conf.
+Fix problem that prevented `wee_reports` from using a default location
+for `weewx.conf`.
 
 Post location of the configuration file and the top-level module to the station
 registry. Thanks to Vince! PR #705.
 
 Fix minor install warning under Python 3.10. Fixes issue #799.
 
-Fix problem where xtypes.ArchiveTable.get_series() does not pass option_dict
-on to get_aggregate(). Fixes issue #797
+Fix problem where `xtypes.ArchiveTable.get_series()` does not pass `option_dict`
+on to `get_aggregate()`. Fixes issue #797
 
-Added copytruncate option to default log rotation configuration.  Thanks to
+Added `copytruncate` option to default log rotation configuration.  Thanks to
 user sastorsl.  Addresses PR #791.
 
 Update the default and example rules in rsyslog configuration.  The output
-from the weewx daemon goes to weewxd.log whereas the output from wee_xxx
-utilities goes to weewx.log.  Also added examples of how to deal with
-systemd/journald messing with log output.  Addresses PR#788 and PR#790.
+from the weewx daemon goes to `weewxd.log` whereas the output from wee_xxx
+utilities goes to `weewx.log`.  Also added examples of how to deal with
+systemd/journald messing with log output.  Addresses PR #788 and PR #790.
 Thanks to user sastorsl.
 
-Allow additional aggregation intervals for observation type $wind. In
-particular, 'vecdir' and 'vecavg' can be done for aggregation intervals other
+Allow additional aggregation intervals for observation type `$wind`. In
+particular, `vecdir` and `vecavg` can be done for aggregation intervals other
 than multiples of a day.
 Fixes issue #800.
 
 
 ### 4.8.0 04/21/2022
 
-Allow unit to be overridden for a specific plot by using new option 'unit'.
+Allow unit to be overridden for a specific plot by using new option `unit`.
 Fixes issue #729.
 
 Fix problem that prevented wind from appearing in NOAA yearly summaries.
 
-Fix honoring global values for log_success and log_failure. Fix issue #757.
+Fix honoring global values for `log_success` and `log_failure`. Fix issue #757.
 
 wee_import CSV imports now allow import of text fields. Addresses issue #732.
 
@@ -184,7 +183,7 @@ in a plot.
 Reorder font download order, for slightly faster downloads.
 Fix issue #760.
 
-Add observation types highOutTemp and lowOutTemp to group_temperature.
+Add observation types `highOutTemp` and `lowOutTemp` to group_temperature.
 
 Add unit groups for sunshine and rain duration, cloudcover, and pop.
 PR #765
@@ -195,58 +194,58 @@ PR #766.
 Do not fork if using systemd.
 PR #767.
 
-Fix problem that prevented wee_config --reconfigure from working when
+Fix problem that prevented `wee_config --reconfigure` from working when
 using Python 2.7, if the configuration file contained UTF-8 characters.
 
 
 ### 4.7.0 03/01/2022
 
-Introduced new option "generate_once". If True, templates will be generated
+Introduced new option `generate_once`. If `True`, templates will be generated
 only on the first run of the reporting engine. Thanks to user Rich! PR #748.
 
-Added option wee_device --current for vantage.
+Added option `wee_device --current` for Vantage.
 
 Fixed two typos in the Standard skin.
 
 Fixed spelling mistakes in the Norwegian translations.  Thanks to Aslak! PR#746
 
-Supply a sensible default context for group_deltatime when no context has been
+Supply a sensible default context for `group_deltatime` when no context has been
 specified.
 
-If windGustDir is missing, extract a value from the accumulators.
+If `windGustDir` is missing, extract a value from the accumulators.
 
-Fixed typo that shows itself if no [Labels]/[[Generic]] section is supplied.
+Fixed typo that shows itself if no `[Labels]/[[Generic]]` section is supplied.
 Fixes issue #752.
 
-Fixed calculation of field "bar_reduction" for Vantage type 2 LOOP packets.
+Fixed calculation of field `bar_reduction` for Vantage type 2 LOOP packets.
 
-Fix problem that prevents windSpeed and windDir from being displayed in
+Fix problem that prevents `windSpeed` and `windDir` from being displayed in
 the RSS feed. Fixes issue #755.
 
 
 ### 4.6.2 02/10/2022
 
-Removed diagnostic code that was inadverently left in the titlebar.inc file
+Removed diagnostic code that was inadverently left in the `titlebar.inc` file
 in Seasons skin.
 
 
 ### 4.6.1 02/10/2022
 
-Make the show_rss and show_reports flags work properly.  Fixes issue #739.
+Make the `show_rss` and `show_reports` flags work properly.  Fixes issue #739.
 
-Added $to_list() utility for use in Cheetah templates.
+Added `$to_list()` utility for use in Cheetah templates.
 
 Fixed a few more untranslated fields in Seasons skin.
 
-Observation types that use the `sum` extractor are set to None if no LOOP
+Observation types that use the `sum` extractor are set to `None` if no LOOP
 packets contributed to the accumulator. Fixes issue #737.
 
-Added ppm as default group_fraction.  Added default label string for ppm.
+Added `ppm` as default `group_fraction`.  Added default label string for `ppm`.
 
 Added Norwegian translations. Thanks to user Aslak! PR #742.
 
-Fixed problem that caused wee_database --check-strings/--fix-strings to fail on
-TEXT fields. Fixes issue #738.
+Fixed problem that caused `wee_database --check-strings` / `--fix-strings`
+to fail on TEXT fields. Fixes issue #738.
 
 
 ### 4.6.0 02/04/2022
@@ -254,31 +253,31 @@ TEXT fields. Fixes issue #738.
 Easy localization of all skins that come with WeeWX. Big thanks to user Karen,
 who drove the effort! PR #665.
 
-Allow options --date, --from, and --to to be used with wee_database --reweight.
-PR #659. Thanks to user edi-x!
+Allow options `--date`, `--from`, and `--to` to be used with 
+`wee_database --reweight`. PR #659. Thanks to user edi-x!
 
-Added Cheetah helper functions $jsonize(), $rnd(), and $to_int().
+Added Cheetah helper functions `$jsonize()`, `$rnd()`, and `$to_int()`.
 
-The tag $alltime, formerly available as an example, is now a part of WeeWX
+The tag `$alltime`, formerly available as an example, is now a part of WeeWX
 core.
 
-New SLE example $colorize(). New document on how to write SLEs.
+New SLE example `$colorize()`. New document on how to write SLEs.
 
-Added conversions for unix_epoch_ms and unix_epoch_ns. Calculations in
-celestial.inc now explicitly use unix_epoch.
+Added conversions for `unix_epoch_ms` and `unix_epoch_ns`. Calculations in
+`celestial.inc` now explicitly use `unix_epoch`.
 
-Added almanac attribute "visible" and "visible_change". For example,
-$almanac.sun.visible returns the amount of daylight,
- $almanac.sun.visible_change the difference since yesterday.
+Added almanac attribute `visible` and `visible_change`. For example,
+`$almanac.sun.visible` returns the amount of daylight,
+`$almanac.sun.visible_change` the difference since yesterday.
 
 Fixed problem that could cause weather xtypes services not to shut down
 properly. PR #672. Thanks again to user edi-x!
 
-Added Cheetah tag $filename, the relative path of the generated file. Useful
+Added Cheetah tag `$filename`, the relative path of the generated file. Useful
 for setting canonical URLs. PR #671. Thanks again to user Karen!
 
-XType get_scalar() and get_series() calls can now take extra keyword arguments.
-PR #673.
+XType `get_scalar()` and `get_series()` calls can now take extra keyword
+arguments. PR #673.
 
 Fixed problem where a bad clock packet could crash the WMR100 driver.
 
@@ -286,7 +285,7 @@ Davis documentation for LOOP2 10-minute wind gusts is wrong. The Vantage
 actually emits mph, not tenths of mph. Changed driver so it now decodes the
 field correctly. Fixes issue #686.
 
-Sending a HUP signal to weewxd no longer causes the configuration file to be
+Sending a HUP signal to `weewxd` no longer causes the configuration file to be
 reread.
 
 Logging is not done until after the configuration file has been read. This
@@ -295,35 +294,35 @@ allows customized logging to start from the very beginning. Fixes issue #699.
 Simplified the logging of Cheetah exceptions to show only what's relevant.
 Fixes issue #700.
 
-Include a requirements.txt file, for installing using pip. Thanks to user
+Include a `requirements.txt` file, for installing using pip. Thanks to user
 Clément! PR #691.
 
-Fixed problem where ConfigObj interpolation would interfere with setting
+Fixed problem where `ConfigObj` interpolation would interfere with setting
 logging formats.
 
-Added option --batch-size to the Vantage version of wee_device. See PR #693.
+Added option `--batch-size` to the Vantage version of `wee_device`. See PR #693.
 
-Slightly faster evaluation of the tag suffix 'has_data'.
-New aggregation type 'not_null'.
+Slightly faster evaluation of the tag suffix `has_data`.
+New aggregation type `not_null`.
 
 A string in the database no longer raises an error. Fixes issue #695.
 
-Added plot option 'skip_if_empty'. If set to True, and there is no non-null
+Added plot option `skip_if_empty`. If set to `True`, and there is no non-null
 data in the plot, then the plot will not be generated at all. If set to
-a time domain (such as 'year'), then it will do the check over that domain.
+a time domain (such as `year`), then it will do the check over that domain.
 See PR #702.
 
 Parameterized the Seasons skin, making it considerably smaller, while requiring
 less configuration. It now includes all types found in the wview-extended
 schema. See PR #702.
 
-New FTP option 'ftp_encoding' for oddball FTP servers that send their responses
+New FTP option `ftp_encoding` for oddball FTP servers that send their responses
 back in something other than UTF-8.
 
 Availability of the pyephem module and extended almanac data is now logged
 during startup.
 
-Added column for 'last contact' in the sensor status table in the Season skin
+Added column for `last contact` in the sensor status table in the Season skin
 to help diagnose missing/flaky sensors.
 
 Fix the weewx.debian and weewx-multi init scripts to work with non-root user.
@@ -353,28 +352,29 @@ characters.
 Fixed problem where unit labels would not render correctly under Python 2.7 if
 they were set by a 3rd party extension. Fixes issue #662.
 
-Added TCP support to the WS1 driver. Thanks to user Mike Juniper! Fixes issue #664.
+Added TCP support to the WS1 driver. Thanks to user Mike Juniper!
+Fixes issue #664.
 
 
 ### 4.5.0 04/02/2021
 
-The utility wee_database has new options --add-column, --rename-column, and
---drop-columns for adding, renaming, and deleting columns in the database.
+The utility `wee_database` has new options `--add-column`, `--rename-column`,
+and `--drop-columns` for adding, renaming, and deleting columns in the database.
 
-New optional tag ".series()", for creating and formatting series in templates.
+New optional tag `.series()`, for creating and formatting series in templates.
 See the document [Tabs for
 series](https://github.com/weewx/weewx/wiki/Tags-for-series) in the wiki. This
 is still experimental and subject to change! Addresses issue #341.
 
-New optional tag ".json()" for formatting results as JSON.
+New optional tag `.json()` for formatting results as JSON.
 
-New optional tag ".round()". Useful for rounding results of .raw and .json
-tags.
+New optional tag `.round()`. Useful for rounding results of `.raw` and `.json`
+options.
 
 Improved performance when calculating series using aggregation periods that are
 multiples of a day.
 
-Changed NOAA reports to use the 'normalized_ascii' encoding instead of 'utf8'
+Changed NOAA reports to use the `normalized_ascii` encoding instead of `utf8`
 (which did not display correctly for most browsers). Fixes issue #646.
 
 Plots longer than 2 years use a 6 month time increment.
@@ -396,44 +396,44 @@ aggregation type changes the unit. Fixes issue #654.
 Plots now locate the x-coordinate in the middle of the aggregation interval for
 all aggregation types (not just min, max, avg). Revisits PR #232.
 
-Added new time units 'unix_epoch_ms' and 'unix_epoch_ns', which are unix epoch
+Added new time units `unix_epoch_ms` and `unix_epoch_ns`, which are unix epoch
 time in milliseconds and nanoseconds, respectively.
 
 The FTP uploader now calculates and saves a hash value for each uploaded file.
 If it does not change, the file is not uploaded, resulting in significant
 time savings. PR #655. Thanks to user Karen!
 
-Updated the version of six.py included with WeeWX to 1.15.0. Fixes issue #657.
+Updated the version of `six.py` included with WeeWX to 1.15.0. Fixes issue #657.
 
 Option aggregate_interval can now be specified by using one of the "shortcuts",
-that is, 'hour', 'day', 'week', 'month', or 'year'.
+that is, `hour`, `day`, `week`, `month`, or `year`.
 
-Options "log_success" and "log_failure" are now honored by the StdArchive and
-StdQC services. Fixes issues #727.
+Options `log_success` and `log_failure` are now honored by the `StdArchive` and
+`StdQC` services. Fixes issue #727.
 
 
 ### 4.4.0 01/30/2021
 
-StdWXCalculate can now do calculations for only LOOP packets, only archive
+`StdWXCalculate` can now do calculations for only LOOP packets, only archive
 records, or both. PR #630. Thanks to user g-eddy!
 
-Introduced aggregate types "avg_ge" and "avg_le". PR #631. Thanks to user
+Introduced aggregate types `avg_ge` and `avg_le`. PR #631. Thanks to user
 edi-x!
 
-NOAA reports now use a 'utf8' encoding instead of 'strict_ascii'. This will
+NOAA reports now use a `utf8` encoding instead of `strict_ascii`. This will
 only affect new installations. Fixes issue #644.
 
-Introduced new encoding type 'normalized_ascii', which replaces characters that
+Introduced new encoding type `normalized_ascii`, which replaces characters that
 have accented marks with analogous ascii characters. For example, ö gets
 replaced with o.
 
 Patching process is more forgiving about records with interval less than or
 equal to zero.
 
-Fixed problem where invalid mintime or maxtime was returned for days with no
+Fixed problem where invalid `mintime` or `maxtime` was returned for days with no
 data. Fixes issue #635.
 
-Syntax errors in weewx.conf are now logged. PR #637. Thanks to user Rich Bell!
+Syntax errors in `weewx.conf` are now logged. PR #637. Thanks to user Rich Bell!
 
 Fixed problem where plots could fail if the data range was outside of a
 specified axes range. Fixes issue #638.
@@ -460,20 +460,20 @@ The WMR200 driver is no longer supported. An unsupported version can be found
 at https://github.com/weewx/weewx-wmr200. Support for LaCrosse WS23xx and
 Oregon WMR300 will continue.
 
-Service weewx.wxxtypes.StdDelta was inadvertently left out of the list of
+Service `weewx.wxxtypes.StdDelta` was inadvertently left out of the list of
 services to be run. Fortunately, it is not used. Yet. Added it back in.
 
 Added the "old" NWS algorithm as an option for calculating heat index.
 
-Changed how various undocumented parameters in [StdWXCalculate] are specified.
-The only one people are likely to have used is 'ignore_zero_wind'. Its name has
-changed to 'force_null', and it has been moved. See the Upgrading Guide.
+Changed how various undocumented parameters in `[StdWXCalculate]` are specified.
+The only one people are likely to have used is `ignore_zero_wind`. Its name has
+changed to `force_null`, and it has been moved. See the *Upgrading Guide*.
 
-Documented the various [StdWXCalculate] options.
+Documented the various `[StdWXCalculate]` options.
 
-Fixed corner case for windDir when using software record generation,
-ignore_zero_wind=True, and windSpeed=0 for entire record interval. Now emits
-last windDir value.
+Fixed corner case for `windDir` when using software record generation,
+`ignore_zero_wind=True`, and `windSpeed=0` for entire record interval. Now emits
+last `windDir` value.
 
 Fixed problem when looking up stars with more than one word in their name.
 Fixes issue #620.
@@ -481,19 +481,19 @@ Fixes issue #620.
 Fixed problem where wind gust direction is not available when using software
 record generation.
 
-Added --no-prompt action to wee_import allowing wee_import to be run
+Added `--no-prompt` action to `wee_import`, allowing wee_import to be run
 unattended.
 
 Fixed problem that prevented option `observations` from being used in the
 simulator. Thanks to user Graham!
 
-Fixed problem where wind chill was calculated incorrectly for METRICWX
+Fixed problem where wind chill was calculated incorrectly for `METRICWX`
 databases. PR #627. Thanks to user edi-x!
 
 Allow wind vectors to be converted to unit of beaufort. Fixes issue #629.
 
-Option log_failure under [StdReport] is set to True by the upgrade process.
-See the Upgrading Guide.
+Option `log_failure` under `[StdReport]` is set to `True` by the upgrade 
+process. See the *Upgrading Guide*.
 
 
 ### 4.2.0 10/26/2020
@@ -502,15 +502,15 @@ CHANGES COMING! This is the last release that will support the LaCrosse WS23xx,
 Oregon WMR200 and WMR300 stations. In the future, they will be published as
 unsupported extensions.
 
-Made it easier to add new, derived types via StdWXCalculate. Fixes issue #491.
+Made it easier to add new, derived types via `StdWXCalculate`. Fixes issue #491.
 
 Changed the tag system slightly in order to make it possible for the XTypes
 system to add new aggregations that take an argument.
 
-Added the new data types in the extended_wview schema to the WeeWX types
+Added the new data types in the `extended_wview` schema to the WeeWX types
 system. Fixes issue #613.
 
-Added ability to label left, right or both y-axes of graphs.  PR#610.
+Added ability to label left, right or both y-axes of graphs.  PR #610.
 Fixes issue #609. Thanks to user Brent Fraser!
 
 Added units and labels for the lightning data types.
@@ -518,7 +518,7 @@ Added units and labels for the lightning data types.
 Fixed problem where threads attempt to access non-existent database. Fixes
 issue #579.
 
-Fixed problem that caused reporting units to revert to US if they were in a
+Fixed problem that caused reporting units to revert to `US` if they were in a
 mixed unit system. Fixes issue #576.
 
 Fixed problem that could cause the station registry to fail if given a location
@@ -527,34 +527,34 @@ with a non-ASCII location name.
 Changed TE923 bucket size from 0.02589 inches to 1/36 of an inch
 (0.02777778 in). PR #575. Fixes issue #574. Thanks to user Timothy!
 
-Undocumented option retry_certificate has been renamed to retry_ssl, and now
+Undocumented option `retry_certificate` has been renamed to `retry_ssl`, and now
 covers all SSL errors (not just certificate errors). Fixes issue #569. Thanks
 to user Eric!
 
-Fixed problem caused by specifying a [Logging]/[[formatters]] section in
-weewx.conf that uses interpolated variables.
+Fixed problem caused by specifying a `[Logging]/[[formatters]]` section in
+`weewx.conf` that uses interpolated variables.
 
-Fixed problem in the Vantage driver that resulted in incorrect sunrise/sunset
-being included in loop packets when run under Python 3. Thanks to users 
-Constantine and Jacques!
+Fixed problem in the Vantage driver that resulted in incorrect `sunrise`
+/ `sunset` being included in loop packets when run under Python 3. Thanks to 
+users Constantine and Jacques!
 
 Improved auto-scaling of plot axes.
 
-Fixed problem where aggregates of windvec and windgustvec returned the
+Fixed problem where aggregates of `windvec` and `windgustvec` returned the
 aggregate since start of day, not the start of the aggregation period.
 Fixes issue #590.
 
-New unit "beaufort", included in "group_speed". Treating beaufort as a separate
+New unit `beaufort`, included in `group_speed`. Treating beaufort as a separate
 type has been deprecated. Fixes issue #591.
 
-New unit "kPa", included in "group_pressure". Fixes issue #596.
+New unit `kPa`, included in `group_pressure`. Fixes issue #596.
 
-Fixed bug in the simulator. Made it easier to subclass class Simulator.
+Fixed bug in the simulator. Made it easier to subclass class `Simulator`.
 
-Expressions in StdCalibration are now ordered. Later corrections can depend on
+Expressions in `StdCalibration` are now ordered. Later corrections can depend on
 earlier corrections.
 
-Fixed problem under Python 2, where option 'none' could cause exception.
+Fixed problem under Python 2, where option `none` could cause exception.
 PR #597. Thanks to user Clément!
 
 Fixed problem with ws23xx driver under Python 3 that caused it to crash.
@@ -568,10 +568,10 @@ Fixed problem where old daily summaries may not have a version number.
 
 Fixed problem in WMR200 driver where missing UV reports as index 255.
 
-Added option 'force_direction' for working around a WU bug. Fixes issue #614.
+Added option `force_direction` for working around a WU bug. Fixes issue #614.
 
-Fixed problem where null bytes in an import data file would cause wee_import to
-fail.
+Fixed problem where null bytes in an import data file would cause `wee_import`
+to fail.
 
 
 ### 4.1.1 06/01/2020
