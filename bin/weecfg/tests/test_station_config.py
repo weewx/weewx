@@ -7,6 +7,7 @@
 import contextlib
 import importlib.resources
 import os
+import sys
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -317,7 +318,7 @@ class TestCreateStation(unittest.TestCase):
             with open(path, 'rt') as fd:
                 for line in fd:
                     if line.startswith('ExecStart'):
-                        self.assertEqual(line.strip(), f"ExecStart={weewxd_path} {config_path}")
+                        self.assertEqual(line.strip(), f"ExecStart={sys.executable} {weewxd_path} {config_path}")
 
 
 if __name__ == "__main__":
