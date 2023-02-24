@@ -3,24 +3,19 @@
 This is a guide to installing WeeWX using [pip](https://pip.pypa.io). It can be used to
 install WeeWX on almost any operating system, including macOS.
 
-## Requirements
+## Preparation
 
 - WeeWX V5.x requires Python 3.7 or greater. It cannot be run with Python 2.x.  If you are constrained by this, install WeeWX V4.10, the
   last version to support Python 2.7, Python 3.5, and Python 3.6.
 
-- You must also have a copy of pip.
+- You must also have a copy of [`pip`](https://pip.pypa.io). If you don't, install it first by following 
+[the directions on the pip website](https://pip.pypa.io/en/stable/installation/).
 
 - While you will not need root privileges to install and configure WeeWX,
   you will need them to set up a daemon and, perhaps, to change device permissions.
 
-
-## Preparation
-
-If you do not already have pip on your system, you should install it first by following 
-[the directions on the pip website](https://pip.pypa.io/en/stable/installation/).
-
-For very minimal operating systems, you may have to follow these steps as well, before trying to
-install WeeWX:
+Depending on your operating system and how complete it is, you may have to install some tools
+before beginning. Follow the directions below for your system:
 
 === "Debian"
 
@@ -34,12 +29,28 @@ install WeeWX:
 
 === "Redhat"
     ```shell
+    sudo yum update
     sudo yum install -y gcc
     sudo yum install -y python3-devel python3-pip
     # This makes the install of pyephem go more smoothly:
     python3 -m pip install wheel
     ```
 
+=== "openSUSE Leap"
+
+    ```shell
+    # Check to see what version of Python you have:
+    python3 -V
+    # If it is less than Python 3.7, you will have to upgrade to a 
+    # later version. The following installs 3.9. Afterwards, you must
+    # invoke Python by using "python3.9", NOT "python3"
+    sudo zypper install python39 python39-devel
+    python3.9 -m pip install wheel
+
+    # Finally, you may have to add ~/.local/bin to your path:
+    echo 'export PATH="$PATH:$HOME/.local/bin"' >> ~/.profile
+    source ~/.profile
+    ```
 
 ## Installation steps
 
@@ -49,7 +60,7 @@ Installation is a two-step process:
 2. Create a new station configuration file `weewx.conf` using the tool `weectl`.
 
 
-### Install using pip
+### Step 1: Install using pip
 
 Once the preparatory steps are out of the way, you're ready to install WeeWX using pip.
 
@@ -77,7 +88,7 @@ where `3.x` is your version of Python.
           ```
     If you do, log out, then log back in.
 
-### Create your user data
+### Step 2: Create your user data
 
 While the first step downloads everything into your local Python source tree, it
 does not set up a configuration file for your station, nor does it set up the
@@ -162,14 +173,18 @@ install the required daemon file.
     sudo systemctl start weewx
     ```
 
-=== "SuSE"
+=== "openSUSE Leap"
+
+    !!! Note
+        The resulting daemon will be run using your username. If you prefer to use run as `root`,
+        you will have to modify the file `/etc/systemd/system/weewx.service`.
 
     ```shell
     cd ~/weewx-data
-    sudo cp util/init.d/weewx.suse /etc/init.d/weewx
-    sudo chmod +x /etc/init.d/weewx
-    sudo /usr/lib/lsb/install_initd /etc/init.d/weewx
-    sudo /etc/init.d/weewx start
+    sudo cp util/systemd/weewx.service /etc/systemd/system
+    sudo systemctl daemon-reload
+    sudo systemctl enable weewx
+    sudo systemctl start weewx
     ```
 
 === "macOS"
@@ -199,15 +214,41 @@ You may also want to check your system log for any problems.
 If you chose the simulator as your station type, then at some point you will
 probably want to switch to using real hardware. Here's how to reconfigure.
 
-```shell
-sudo systemctl stop
-# Reconfigure to use your hardware:
-sudo weectl station reconfigure
-# Remove the old database:
-sudo rm ~/weewx-data/archive/weewx.sdb
-# Restart:
-sudo systemctl start
-```
+=== "Debian/Redhat/openSUSE"
+
+    ```shell
+    sudo systemctl stop
+    # Reconfigure to use your hardware:
+    weectl station reconfigure
+    # Remove the old database:
+    rm ~/weewx-data/archive/weewx.sdb
+    # Restart:
+    sudo systemctl start
+    ```
+
+=== "Very old Debian"
+
+    ```shell
+    sudo /etc/init.d/weewx stop
+    # Reconfigure to use your hardware:
+    weectl station reconfigure
+    # Remove the old database:
+    rm ~/weewx-data/archive/weewx.sdb
+    # Restart:
+    sudo /etc/init.d/weewx start
+    ```
+
+=== "macOS"
+
+    ```shell
+    sudo launchctl unload /Library/LaunchDaemons/com.weewx.weewxd.plist
+    # Reconfigure to use your hardware:
+    weectl station reconfigure
+    # Remove the old database:
+    rm ~/weewx-data/archive/weewx.sdb
+    # Restart:
+    sudo launchctl load /Library/LaunchDaemons/com.weewx.weewxd.plist
+    ```
 
 ## Customize
 
@@ -220,71 +261,30 @@ WeeWX must be restarted for configuration file changes to take effect.
 
 ## Uninstall
 
-Stop WeeWX
+Stop, disable, and remove any daemon files:
 
-=== "Debian"
+=== "Debian/Redhat/openSUSE"
 
     ```shell
     sudo systemctl stop weewx
     sudo systemctl disable weewx
+    sudo rm /etc/systemd/system/weewx.service
     ```
 
 === "Very old Debian"
 
     ```shell
     sudo /etc/rc.d/init.d/weewx stop
-    ```
-
-=== "Redhat"
-
-    ```shell
-    sudo systemctl stop weewx
-    sudo systemctl disable weewx
-    ```
-
-=== "SuSE"
-
-    ```shell
-    sudo /etc/rc.d/init.d/weewx stop
+    sudo rm /etc/init.d/weewx
     ```
 
 === "macOS"
 
     ```shell
     sudo launchctl unload /Library/LaunchDaemons/com.weewx.weewxd.plist
-    ```
-
-Uninstall any daemon files:
-
-=== "Debian"
-
-    ```shell
-    sudo rm /etc/systemd/system/weewx.service
-    ```
-
-=== "Very old Debian"
-
-    ```shell
-    sudo rm /etc/init.d/weewx
-    ```
-
-=== "Redhat"
-
-    ```shell
-    sudo rm /etc/systemd/system/weewx.service
-    ```
-
-=== "SuSE"
-
-    ```shell
-    sudo rm /etc/init.d/weewx
-    ```
-
-=== "macOS"
-
-    ```shell
     sudo rm /Library/LaunchDaemons/com.weewx.weewxd.plist
     ```
+
 
 Use pip to uninstall the program.
 

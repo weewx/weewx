@@ -13,7 +13,7 @@ This section applies only to those who wish to use the MySQL database, instead o
         ```
         sudo yum install MySQL-python
         ```
-    === "SuSE"
+    === "openSUSE"
         ```
         sudo zypper install python3-mysqlclient
         ```

@@ -98,7 +98,7 @@ With this in mind, here is how you can continue to use your old `/home/weewx`:
         sudo /etc/rc.d/init.d/weewx start
         ```
       
-    === "SuSE"
+    === "openSUSE"
       
         ```bash
         cd /home/weewx

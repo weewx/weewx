@@ -1,6 +1,6 @@
-# Installation on SuSE-based systems 
+# Installation on SUSE-based systems 
 
-This is a guide to installing WeeWX from an RPM package on systems such as SuSE or OpenSUSE.
+This is a guide to installing WeeWX from an RPM package on systems such as SUSE or openSUSE.
 
 ## Compatible operating system versions
 

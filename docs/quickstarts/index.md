@@ -8,8 +8,8 @@ For Debian-based systems such as Ubuntu, Mint, Raspberry Pi OS, *etc*.
 ### [Red Hat](./redhat)
 For Red Hat based systems such as Red Hat, CentOS, Fedora, Rocky, *etc*.
 
-### [SuSE](./suse)
-For SuSE-based systems such as SuSE and OpenSuSE.
+### [openSUSE](./suse)
+For SUSE-based systems such as SUSE and openSUSE.
 
 ### [Pip](./pip)
 For all operating systems, including macOS.
