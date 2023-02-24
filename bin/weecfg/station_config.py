@@ -556,16 +556,8 @@ def copy_user(config_dict, user_root=None, dry_run=False):
 
 
 def copy_util(config_path, config_dict, dry_run=False):
-    weewxd_path = shutil.which('weewxd')
-    if not weewxd_path:
-        print(f"{bcolors.FAIL}Unable to find the WeeWX executable 'weewxd'.{bcolors.ENDC}",
-              file=sys.stderr)
-        print(f"{bcolors.FAIL}No daemon utility files will be created.{bcolors.ENDC}",
-              file=sys.stderr)
-        print(f"{bcolors.FAIL}Make sure the pip user directory (typically ~/.local/bin) "
-              f"is in your PATH, then retry.{bcolors.ENDC}",
-              file=sys.stderr)
-        return
+    import weewxd
+    weewxd_path = weewxd.__file__
     username = getpass.getuser()
     groupname = grp.getgrgid(os.getgid()).gr_name
     # This is the set of substitutions to be performed. The key is a regular expression. If a
@@ -576,9 +568,9 @@ def copy_util(config_path, config_dict, dry_run=False):
         # For systemd
         r"^#Group=.*": rf"Group={groupname}",
         # For systemd
-        r"^ExecStart=.*": rf"ExecStart={weewxd_path} {config_path}",
+        r"^ExecStart=.*": rf"ExecStart={sys.executable} {weewxd_path} {config_path}",
         # For init.d, redhat, bsd, suse
-        r"^WEEWX_BIN=.*": rf"WEEWX_BIN={weewxd_path}",
+        r"^WEEWX_BIN=.*": rf"WEEWX_BIN={sys.executable} {weewxd_path}",
         # For init.d, redhat, bsd, suse
         r"^WEEWX_CFG=.*": rf"WEEWX_CFG={config_path}",
         # For init.d
@@ -587,10 +579,12 @@ def copy_util(config_path, config_dict, dry_run=False):
         r"^WEEWX_BINDIR=.*": rf"WEEWX_BINDIR={os.path.dirname(weewxd_path)}",
         # For multi
         r"^WEEWX_CFGDIR=.*": rf"WEEWX_CFGDIR={os.path.dirname(config_path)}",
+        # for macOS:
+        r"<string>/usr/bin/python3</string>" : rf"<string>{sys.executable}<//string>",
         # For macOS:
-        r"<string>/Users/Shared/weewx/bin/weewxd</string>": rf"<string>{weewxd_path}<string>",
+        r"<string>/Users/Shared/weewx/bin/weewxd</string>": rf"<string>{weewxd_path}<//string>",
         # For macOS:
-        r"<string>/Users/Shared/weewx/weewx.conf</string>": rf"<string>{config_path}<string>",
+        r"<string>/Users/Shared/weewx/weewx.conf</string>": rf"<string>{config_path}<//string>",
     }
     # Convert to a list of two-way tuples.
     re_list = [(re.compile(key), re_dict[key]) for key in re_dict]
