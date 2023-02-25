@@ -92,7 +92,7 @@ where `3.x` is your version of Python.
 ### Step 2: Provision a new station
 
 While the first step downloads everything into your local Python source tree, it
-does not set up a configuration file for your station, nor does it set up the
+does not set up the configuration specific to your station, nor does it set up the
 reporting skins. That is the job of the next step, which uses the tool `weectl`. 
 
 This step also does not require root privileges.
@@ -254,8 +254,6 @@ probably want to switch to using real hardware. Here's how to reconfigure.
 To enable uploads, such as Weather Underground, or to customize reports, modify
 the configuration file `~/weewx-data/weewx.conf`. See the [*User
 Guide*](../usersguide) and [*Customization Guide*](../custom) for details.
-
-WeeWX must be restarted for configuration file changes to take effect.
 
 
 ## Uninstall

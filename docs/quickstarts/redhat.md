@@ -50,14 +50,12 @@ sudo yum install weewx
 
 ### Verify
 
-After about 5 minutes (the exact length of time depends on your archive interval), open the
-[station web page](file:///var/www/html/index.html) in a web browser. You should see
-your station information and data.
+After about 5 minutes (the exact length of time depends on your archive interval), cut and
+paste the following into your web browser:
 
-!!! note 
-    Clicking the link to the webpage may be blocked by your browser. If
-    that's the case, cut and paste the following link into the browser:
-    `/var/www/html/index.html`
+    /var/www/html/index.html
+
+You should see your station information and data.
 
 You may also want to check your system log for any problems.
 

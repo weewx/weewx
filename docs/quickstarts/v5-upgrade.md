@@ -3,17 +3,19 @@
 This is a guide for migrating V4.x installations that were installed using the `setup.py` method,
 to Version 5.0.
 
+## Code vs user data
 With V5.0, there is now a clean separation between *WeeWX code*, and *user data*. They are stored
-in
-separate areas, rather than everything under `/home/weewx`.
+in separate areas, rather than everything under `/home/weewx`.
 
-*WeeWX code* is now in the normal Python directories. It is generic, and not specific to any
-particular installation. It includes:
+### WeeWX code
+With one exception, the software used by the WeeWX application is now kept in the normal Python
+directories, rather than under `/home/weewx/bin`. This software includes:
 
 - Executables such as `weewxd` and `wee_reports`;
 - Their libraries.
 
-By contrast, *user data* is specific to your installation. By default, it is now stored in your
+### User data
+By contrast, *user data* is specific to your station. By default, it is now stored in your
 home directory in `~/weewx-data`, although you may continue to use your old user data located in
 `/home/weewx` by following this guide. User data includes:
 
@@ -21,9 +23,11 @@ home directory in `~/weewx-data`, although you may continue to use your old user
 * Skins;
 * Database;
 * Generated HTML files and images; and
-* Extensions.
+* Extensions (Python code specific to a station).
 
-With this in mind, here is how you can continue to use your old `/home/weewx`:
+## Using your old `/home/weewx`
+With this in mind, here is how you can continue to use the old user data in `/home/weewx`.
+The code will be replaced by new code.
 
 1. Install V5.0 by using the tool `pip`. (You can find more details in the document 
    [_Installation using pip_](pip.md), but note that you are *only going to follow step 1*.
@@ -36,8 +40,8 @@ With this in mind, here is how you can continue to use your old `/home/weewx`:
     When you are done, the new V5.0 executable will be in `~/.local/bin/weewxd`,
     rather than the more familiar V4.x location `/home/weewx/bin/weewxd`.
 
-2. You do not have to create a new user data area because you will be simply reusing
-   your old user data area in `/home/weewx`. However, you do need to upgrade your old configuration
+2. You do not have to do Step 2, provision a new station, because you will be simply reusing
+   your old user data in `/home/weewx`. However, you do need to upgrade your old configuration
    file, documentation, examples, and daemon utility files:
 
     ```shell
@@ -54,13 +58,13 @@ With this in mind, here is how you can continue to use your old `/home/weewx`:
 4. If that works, then it's time to modify your old daemon configuration file
    so that it uses the new V5.0 executable. These steps will require root privileges.
 
+    !!! Note
+        If you previously used a SysV `init.d` startup file, you will need to clean up any
+        previous `init.d` remnants. Please consult the [wiki article](https://github.com/weewx/weewx/wiki/Switching-from-SysVinit-to-systemd)
+        for how to do so.
+   
     === "Debian"
 
-        !!! Note
-            If you previously used a SysVinit init.d startup file, you will need to clean up any
-            previous init.d remnants. Please consult the [wiki article](https://github.com/weewx/weewx/wiki/Switching-from-SysVinit-to-systemd)
-            for how to do so.
-   
         !!! Note
             The resulting daemon will be run using your username. If you prefer to use run as `root`,
             you will have to modify the file `/etc/systemd/system/weewx.service`.
@@ -90,22 +94,34 @@ With this in mind, here is how you can continue to use your old `/home/weewx`:
       
     === "Redhat"
       
-        ```bash
+        !!! Note
+            The resulting daemon will be run using your username. If you prefer to use run as `root`,
+            you will have to modify the file `/etc/systemd/system/weewx.service`.
+
+        ```shell
+        # If SELinux is enabled, you will need the following command first:
+        chcon -R --reference /bin/ls ~/.local/bin
+
+        # Then proceed as normal:
         cd /home/weewx
-        sudo cp util/init.d/weewx.redhat /etc/rc.d/init.d/weewx
-        sudo chmod +x /etc/rc.d/init.d/weewx
-        sudo chkconfig weewx on
-        sudo /etc/rc.d/init.d/weewx start
+        sudo cp util/systemd/weewx.service /etc/systemd/system
+        sudo systemctl daemon-reload
+        sudo systemctl enable weewx
+        sudo systemctl start weewx
         ```
       
-    === "openSUSE"
+    === "openSUSE Leap"
       
+        !!! Note
+            The resulting daemon will be run using your username. If you prefer to use run as `root`,
+            you will have to modify the file `/etc/systemd/system/weewx.service`.
+
         ```bash
         cd /home/weewx
-        sudo cp util/init.d/weewx.suse /etc/init.d/weewx
-        sudo chmod +x /etc/init.d/weewx
-        sudo /usr/lib/lsb/install_initd /etc/init.d/weewx
-        sudo /etc/init.d/weewx start
+        sudo cp util/systemd/weewx.service /etc/systemd/system
+        sudo systemctl daemon-reload
+        sudo systemctl enable weewx
+        sudo systemctl start weewx
         ```
       
     === "macOS"
@@ -116,10 +132,10 @@ With this in mind, here is how you can continue to use your old `/home/weewx`:
         sudo launchctl load /Library/LaunchDaemons/com.weewx.weewxd.plist
         ```
 
- 
-!!! Note
-    Note that your old V4.x code will still be under `/home/weewx/bin` (`/Users/Shared/weewx` for 
-    macOS).
+## Old code
+
+Note that your old V4.x code will still be under `/home/weewx/bin` 
+(`/Users/Shared/weewx` for macOS).
 
 To avoid confusing yourself and any tools that you might use, you should consider moving your old
 code aside. Unfortunately, you cannot simply rename it, because your `user` directory is located
