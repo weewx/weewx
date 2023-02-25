@@ -57,6 +57,7 @@ nav:
       - "Introduction": ./usersguide/index.md
       - "System requirements": ./usersguide/system-requirements.md
       - "Installing WeeWX": ./usersguide/installing-weewx.md
+      - "Where to find things" : ./usersguide/where.md
       - "Running WeeWX": ./usersguide/running-weewx.md
       - "Web server integration": ./usersguide/webserver-integration.md
       - "Backup & restore": ./usersguide/backing-up-weewx.md

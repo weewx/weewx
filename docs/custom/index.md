@@ -229,7 +229,7 @@ Like all reports, the FTP and RSYNC "reports" also use a skin, and include a ski
 Skins live in their own directory called `skins`, whose location is referred to as _`SKIN_ROOT`_.
 
 !!! Note
-    The symbol _`SKIN_ROOT`_ is a symbolic name to the location of the directory where your skins are located. It is not to be taken literally. Consult the [directory layout table](../usersguide/installing-weewx/#where-to-find-things) in the User's Guide for its exact location, dependent on how you installed WeeWX and what operating system you are using
+    The symbol _`SKIN_ROOT`_ is a symbolic name to the location of the directory where your skins are located. It is not to be taken literally. Consult the section [*Where to find things*](../usersguide/where) in the User's Guide for its exact location, dependent on how you installed WeeWX and what operating system you are using
 
 ### Generators
 

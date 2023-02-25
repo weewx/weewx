@@ -9,7 +9,7 @@ The configuration file `weewx.conf` is a big text file that holds the configurat
 * What kind of database to use and where is it located.
 * How to recognize out-of-range observations, etc.
 
-[application layout table]: ../installing-weewx#where-to-find-things
+[application layout table]: ../where
 
 !!! note
     The location of `weewx.conf` will depend on your installation method. For example, if you installed using pip, then the nominal location is `~/weewx-data/weewx.conf`. For other installation methods, the location depends on your operating system. See the section [*Where to find things*][application layout table].
