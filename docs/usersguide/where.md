@@ -1,11 +1,13 @@
 # Where to find things
 
+## Locations
+
 Here is a summary of the layout for the different install methods, along with the symbolic names used for each role. These names are used throughout the documentation.
 
 !!! Note
     The install locations below are *relative to _`WEEWX_ROOT`_*. See Python's documentation on
     [`os.path.join()`](https://docs.python.org/3.7/library/os.path.html#os.path.join) for the 
-    results of a joining two absolute paths (summary: the 2nd path wins).
+    results of joining two absolute paths (summary: the 2nd path wins).
 
 
 === "Debian"
@@ -21,7 +23,6 @@ Here is a summary of the layout for the different install methods, along with th
     | Documentation           | _`DOC_ROOT`_     | `/usr/share/doc/weewx/`         |
     | Examples                | _`EXAMPLE_ROOT`_ | `/usr/share/doc/weewx/examples/`|
     | User directory          | _`USER_ROOT`_    | `/usr/share/weewx/user`         |
-    | Log file                |                  | `/var/log/syslog`               |
 
 === "RedHat/openSUSE"
 
@@ -36,7 +37,6 @@ Here is a summary of the layout for the different install methods, along with th
     | Documentation           | _`DOC_ROOT`_     | `/usr/share/doc/weewx-x.y.z/`          |
     | Examples                | _`EXAMPLE_ROOT`_ | `/usr/share/doc/weewx-x.y.z/examples/` |
     | User directory          | _`USER_ROOT`_    | `/usr/share/weewx/user`                |
-    | Log file                |                  | `/var/log/messages`                    |
 
 === "Pip (including macOS)"
 
@@ -51,4 +51,22 @@ Here is a summary of the layout for the different install methods, along with th
     | Documentation           | _`DOC_ROOT`_     | `./docs`             |
     | Examples                | _`EXAMPLE_ROOT`_ | `./examples/`        |
     | User directory          | _`USER_ROOT`_    | `./bin/user`         |
-    | Log file                |                  | `/var/log/syslog`    |
+
+
+## Log files
+
+Where to find your log file. You may require root permissions to read them.
+
+=== "Debian"
+
+    `/var/log/syslog`
+
+=== "RedHat/openSUSE"
+
+    `/var/log/messages`
+
+=== "macOS"
+
+    The macOS log file is nominally found at `/var/log/syslog`. However, it is likely to contain
+    only severe log messages. You may want to consider logging to a rotating file. See the
+    wiki article [*Logging to rotating files*](https://github.com/weewx/weewx/wiki/WeeWX-v4-and-logging#logging-to-rotating-files).
