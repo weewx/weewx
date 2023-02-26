@@ -159,6 +159,19 @@ suse install/remove:
   rpm -e weewx                                    # remove with rpm
 
 
+howto: build the documents --------------------------------------------------
+
+Prerequisites:
+    - Python 3.7 or greater, with pip installed
+    - Install mkdocs:
+        python3 -m pip install mkdocs
+    - Install the theme "material" for mkdocs:
+        python3 -m pip install mkdocs-material
+
+Steps:
+    - make build-docs
+
+
 howto: build and publish wheels to pypi.org -----------------------------------
 
 Prerequisites:
