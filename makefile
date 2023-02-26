@@ -153,6 +153,8 @@ test-clean:
 	echo $(MYSQLCLEAN) | mysql --user=weewx --password=weewx --force >/dev/null 2>&1
 
 pypi-packages $(DSTDIR)/$(SRCPKG) $(DSTDIR)/$(WHEEL): copy-resources
+	cp -rp html_docs/ bin/wee_resources/
+	rm -rf $(DOCLOC) && mv -T bin/wee_resources/html_docs $(DOCLOC)
 	poetry build
 
 copy-resources:
@@ -166,8 +168,6 @@ copy-resources:
 	mkdir -p bin/wee_resources/bin/
 	cp -rp bin/user/ bin/wee_resources/bin/
 	cp -p weewx.conf bin/wee_resources/
-	cp -rp html_docs/ bin/wee_resources/
-	rm -rf bin/wee_resources/docs && mv -T bin/wee_resources/html_docs bin/wee_resources/docs
 
 # Upload wheel and src package to pypi.org
 upload-pypi: $(DSTDIR)/$(SRCPKG) $(DSTDIR)/$(WHEEL)
@@ -179,8 +179,9 @@ upload-src:
 
 # Build the documentation:
 build-docs:
+	@echo "Building documents"
 	rm -rf $(DOCLOC)
-	mkdocs build
+	mkdocs --quiet build
 
 # upload docs to the web site
 upload-docs:
