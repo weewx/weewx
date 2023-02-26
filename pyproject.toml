@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "weewx"
-version = "5.0.0a20"
+version = "5.0.0a21"
 description = "The WeeWX weather software system"
 authors = ["Tom Keffer <tkeffer@gmail.com>"]
 license = "GPL3"
@@ -46,9 +46,11 @@ packages = [
 
 # By default, Poetry ignores things in .gitignore. Hence, we need to explicitly include the docs.
 include = [
-    "LICENSE.txt",
-    "README.md",
-    "bin/wee_resources/docs/**/*",
+    { path = "LICENSE.txt" },
+    { path = "README.md"},
+    { path = "bin/wee_resources/docs/**/*"},
+    { path = "pkg/**/*", format = "sdist" },
+    { path = "util/**/*", format = "sdist" }
 ]
 
 exclude = [
