@@ -102,7 +102,6 @@ info:
 clean:
 	find . -name "*.pyc" -exec rm {} \;
 	find . -name __pycache__ -exec rm -rf {} \;
-	rm -rf bin/weewx.egg-info \;
 	rm -rf $(BLDDIR) $(DSTDIR)
 	rm -rf bin/wee_resources/bin bin/wee_resources/docs bin/wee_resources/examples
 	rm -rf bin/wee_resources/skins bin/wee_resources/util bin/wee_resources/weewx.conf
@@ -119,7 +118,7 @@ check-docs:
 ifndef SUITE
 SUITE=`find bin -name "test_*.py"`
 endif
-test:
+test: copy-resources
 	@rm -f $(BLDDIR)/test-results
 	@mkdir -p $(BLDDIR)
 	@echo "Python interpreter in use:" >> $(BLDDIR)/test-results 2>&1;
@@ -153,7 +152,11 @@ test-clean:
 	rm -rf $(TESTDIR)
 	echo $(MYSQLCLEAN) | mysql --user=weewx --password=weewx --force >/dev/null 2>&1
 
-pypi-packages $(DSTDIR)/$(SRCPKG) $(DSTDIR)/$(WHEEL):
+pypi-packages $(DSTDIR)/$(SRCPKG) $(DSTDIR)/$(WHEEL): copy-resources
+	poetry build
+
+copy-resources:
+	@echo "Copying resources into wee_resources"
 	cp -rp examples bin/wee_resources/
 	cp -rp skins/ bin/wee_resources/
 	mkdir -p bin/wee_resources/util/
@@ -164,8 +167,7 @@ pypi-packages $(DSTDIR)/$(SRCPKG) $(DSTDIR)/$(WHEEL):
 	cp -rp bin/user/ bin/wee_resources/bin/
 	cp -p weewx.conf bin/wee_resources/
 	cp -rp html_docs/ bin/wee_resources/
-	rm -rf bin/wee_resources/docs && qmv -T bin/wee_resources/html_docs bin/wee_resources/docs
-	poetry build
+	rm -rf bin/wee_resources/docs && mv -T bin/wee_resources/html_docs bin/wee_resources/docs
 
 # Upload wheel and src package to pypi.org
 upload-pypi: $(DSTDIR)/$(SRCPKG) $(DSTDIR)/$(WHEEL)
