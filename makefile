@@ -152,6 +152,15 @@ test-clean:
 	echo $(MYSQLCLEAN) | mysql --user=weewx --password=weewx --force >/dev/null 2>&1
 
 pypi-packages $(DSTDIR)/$(SRCPKG) $(DSTDIR)/$(WHEEL):
+	cp -rp examples bin/wee_resources/
+	cp -rp skins/ bin/wee_resources/
+	mkdir -p bin/wee_resources/util/
+	cp -rp util/init.d/ bin/wee_resources/util/
+	cp -rp util/launchd/ bin/wee_resources/util/
+	cp -rp util/systemd/ bin/wee_resources/util/
+	mkdir -p bin/wee_resources/bin/
+	cp -rp bin/user/ bin/wee_resources/bin/
+	cp -p weewx.conf bin/wee_resources/
 	poetry build
 
 # Upload wheel and src package to pypi.org
