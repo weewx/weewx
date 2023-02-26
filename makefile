@@ -104,6 +104,8 @@ clean:
 	find . -name __pycache__ -exec rm -rf {} \;
 	rm -rf bin/weewx.egg-info \;
 	rm -rf $(BLDDIR) $(DSTDIR)
+	rm -rf bin/wee_resources/bin bin/wee_resources/docs bin/wee_resources/examples
+	rm -rf bin/wee_resources/skins bin/wee_resources/util bin/wee_resources/weewx.conf
 
 realclean:
 	rm -f MANIFEST
@@ -161,6 +163,8 @@ pypi-packages $(DSTDIR)/$(SRCPKG) $(DSTDIR)/$(WHEEL):
 	mkdir -p bin/wee_resources/bin/
 	cp -rp bin/user/ bin/wee_resources/bin/
 	cp -p weewx.conf bin/wee_resources/
+	cp -rp html_docs/ bin/wee_resources/
+	rm -rf bin/wee_resources/docs && qmv -T bin/wee_resources/html_docs bin/wee_resources/docs
 	poetry build
 
 # Upload wheel and src package to pypi.org
