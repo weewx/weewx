@@ -535,6 +535,8 @@ class DailySummaries(XType):
                     val += ("group_temperature",)
                 elif val[1] in ['inch', 'mm', 'cm']:
                     val += ("group_rain",)
+                elif val[1] in ['percent']:
+                    val += ("group_percent",)
             target_val = weewx.units.convertStd(val, db_manager.std_unit_system)[0]
 
         # Form the interpolation dictionary
