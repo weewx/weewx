@@ -1,4 +1,10 @@
 *~
+*.pyc
+__pycache__
+MANIFEST
+build
+dist
+.idea
 !/.idea
 /.idea/*
 !/.idea/codeStyles
@@ -6,10 +12,7 @@
 .project
 .pydevproject
 .settings
-*.pyc
-build
-dist
-MANIFEST
+.github
 junk*
 *.sln
 *.user

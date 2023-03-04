@@ -21,20 +21,24 @@ DOCLOC=bin/wee_resources/docs
 # Location of the skins
 SKINLOC=bin/wee_resources/skins
 
-ifndef PYTHON
-PYTHON=python3
-endif
-
 # extract version to be used in package controls and labels
 VERSION=$(shell sed -ne 's/^version = "\(.*\)"/\1/p;' pyproject.toml)
 # just the major.minor part of the version
 MMVERSION:=$(shell echo "$(VERSION)" | sed -e 's%.[0-9a-z]*$$%%')
 
-CWD = $(shell pwd)
+CWD=$(shell pwd)
 BLDDIR=build
 DSTDIR=dist
 SRCPKG=weewx-$(VERSION).tar.gz
 WHEEL=weewx-$(VERSION)-py3-none-any.whl
+
+ifndef PYTHON
+PYTHON=python3
+endif
+
+ifndef TMPDIR
+TMPDIR=/var/tmp
+endif
 
 all: help
 
@@ -48,7 +52,7 @@ help: info
 	@echo "   suse-changelog prepend stub changelog entry for suse"
 	@echo ""
 	@echo "  pypi-packages create wheel and source tarball suitable for pypi"
-	@echo "debian-packages create the debian packages"
+	@echo " debian-package create the debian package"
 	@echo "redhat-packages create the redhat packages"
 	@echo "  suse-packages create the suse packages"
 	@echo ""
@@ -191,6 +195,16 @@ done
 	sed -e 's/__version__ *=.*/__version__ = "$(VERSION)"/' bin/weewx/__init__.py > weeinit.py.tmp
 	mv weeinit.py.tmp bin/weewx/__init__.py
 
+# create the source tarball for use by the platform packages.  this avoids any
+# dependencies on poetry, and ensures that the source tree contains only the
+# things we need to build platform packages, in a structure we control.
+package-src-tarball: $(DSTDIR)/pkgsrc/weewx-$(VERSION).tar.gz
+
+$(DSTDIR)/pkgsrc/weewx-$(VERSION).tar.gz:
+	mkdir -p $(DSTDIR)/pkgsrc/weewx-$(VERSION)
+	rsync -ar ./ $(DSTDIR)/pkgsrc/weewx-$(VERSION) --exclude-from .gitignore --exclude .gitignore --exclude .git --exclude tests --exclude dist --exclude build --exclude .editorconfig --exclude poetry.lock --exclude pyproject.toml --exclude mkdocs.yml
+	tar cfz $(DSTDIR)/pkgsrc/weewx-$(VERSION).tar.gz -C $(DSTDIR)/pkgsrc weewx-$(VERSION)
+
 DEBREVISION=1
 DEBVER=$(VERSION)-$(DEBREVISION)
 # add a skeleton entry to deb changelog
@@ -210,12 +224,18 @@ DEBPKG=weewx_$(DEBVER)_$(DEBARCH).deb
 ifneq ("$(SIGN)","1")
 DPKG_OPT=-us -uc
 endif
-debian-packages: deb-package-python2 deb-package-python3
+debian-package: deb-package-prep
+	cp pkg/debian/control.python3 $(DEBBLDDIR)/debian/control
+	rm -f $(DEBBLDDIR)/debian/files
+	rm -rf $(DEBBLDDIR)/debian/weewx*
+	(cd $(DEBBLDDIR); DEB_BUILD_OPTIONS=python3 dpkg-buildpackage $(DPKG_OPT))
+	mkdir -p $(DSTDIR)
+	mv $(BLDDIR)/$(DEBPKG) $(DSTDIR)/python3-$(DEBPKG)
 
-deb-package-prep: $(DSTDIR)/$(SRCPKG)
+deb-package-prep: package-src-tarball
 	mkdir -p $(BLDDIR)
-	tar xfz $(DSTDIR)/$(SRCPKG) -C $(BLDDIR)
-	cp -p $(DSTDIR)/$(SRCPKG) $(BLDDIR)/weewx_$(VERSION).orig.tar.gz
+	tar xfz $(DSTDIR)/pkgsrc/$(SRCPKG) -C $(BLDDIR)
+	cp -p $(DSTDIR)/pkgsrc/$(SRCPKG) $(BLDDIR)/weewx_$(VERSION).orig.tar.gz
 	rm -rf $(DEBBLDDIR)/debian
 	mkdir -m 0755 $(DEBBLDDIR)/debian
 	mkdir -m 0755 $(DEBBLDDIR)/debian/source
@@ -231,22 +251,6 @@ deb-package-prep: $(DSTDIR)/$(SRCPKG)
 	cp pkg/debian/rules $(DEBBLDDIR)/debian
 	cp pkg/debian/source/format $(DEBBLDDIR)/debian/source
 	cp pkg/debian/templates $(DEBBLDDIR)/debian
-
-deb-package-python2: deb-package-prep
-	cp pkg/debian/control.python2 $(DEBBLDDIR)/debian/control
-	rm -f $(DEBBLDDIR)/debian/files
-	rm -rf $(DEBBLDDIR)/debian/weewx*
-	(cd $(DEBBLDDIR); DEB_BUILD_OPTIONS=python2 dpkg-buildpackage $(DPKG_OPT))
-	mkdir -p $(DSTDIR)
-	mv $(BLDDIR)/$(DEBPKG) $(DSTDIR)/python-$(DEBPKG)
-
-deb-package-python3: deb-package-prep
-	cp pkg/debian/control.python3 $(DEBBLDDIR)/debian/control
-	rm -f $(DEBBLDDIR)/debian/files
-	rm -rf $(DEBBLDDIR)/debian/weewx*
-	(cd $(DEBBLDDIR);  DEB_BUILD_OPTIONS=python3 dpkg-buildpackage $(DPKG_OPT))
-	mkdir -p $(DSTDIR)
-	mv $(BLDDIR)/$(DEBPKG) $(DSTDIR)/python3-$(DEBPKG)
 
 # run lintian on the deb package
 check-deb:
