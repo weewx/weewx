@@ -42,7 +42,7 @@ theme:
 extra_css:
   - css/weewx_ui.css
 
-site_dir: 'bin/wee_resources/docs'
+site_dir: 'html_docs'
 
 nav:
   - "Quick starts":
