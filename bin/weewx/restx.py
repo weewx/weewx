@@ -516,8 +516,14 @@ class RESTThread(threading.Thread):
                   % (self.protocol_name, count, code))
 
     def handle_exception(self, e, count):
-        """Check exception from HTTP post.  This simply logs the exception."""
-        log.debug("%s: Failed upload attempt %d: %s" % (self.protocol_name, count, e))
+        """Check exception from HTTP post. """
+        # If it's a 429 error ("TOO MANY REQUESTS") don't bother retrying.
+        if getattr(e, 'code', None) == 429:
+            log.debug("%s: Posting too frequently: %s" % (self.protocol_name, e))
+            raise FailedPost(str(e))
+        else:
+            # Otherwise, log it and move on.
+            log.debug("%s: Failed upload attempt %d: %s" % (self.protocol_name, count, e))
 
     def post_request(self, request, data=None):
         """Post a request object. This version does not catch any HTTP

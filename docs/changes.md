@@ -32,6 +32,9 @@ methods.
 The *Standard* skin now uses the font `DejaVuSansMono-Bold` and includes a
 copy. Before, it had to rely on hardwired font paths, which were less reliable.
 
+If the uploaders get a response code of 429 ("TOO MANY REQUESTS"), they no
+longer bother trying again.
+
 
 ### 4.10.2 02/22/2023
 
