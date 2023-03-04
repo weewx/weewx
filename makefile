@@ -29,7 +29,8 @@ MMVERSION:=$(shell echo "$(VERSION)" | sed -e 's%.[0-9a-z]*$$%%')
 CWD=$(shell pwd)
 BLDDIR=build
 DSTDIR=dist
-SRCPKG=weewx-$(VERSION).tar.gz
+SRCPKG=weewx-$(VERSION).tgz
+WHEELSRC=weewx-$(VERSION).tar.gz
 WHEEL=weewx-$(VERSION)-py3-none-any.whl
 
 ifndef PYTHON
@@ -62,7 +63,7 @@ help: info
 	@echo ""
 	@echo "    upload-src  upload the src package to $(WEEWX_COM)"
 	@echo "   upload-pypi  upload wheel and src package to pypi.org"
-	@echo " upload-debian  upload the debian deb packages"
+	@echo " upload-debian  upload the debian deb package"
 	@echo " upload-redhat  upload the redhat rpm packages"
 	@echo "   upload-suse  upload the suse rpm packages"
 	@echo ""
@@ -156,31 +157,6 @@ test-clean:
 	rm -rf $(TESTDIR)
 	echo $(MYSQLCLEAN) | mysql --user=weewx --password=weewx --force >/dev/null 2>&1
 
-pypi-packages $(DSTDIR)/$(SRCPKG) $(DSTDIR)/$(WHEEL): copy-resources
-	cp -rp html_docs/ bin/wee_resources/
-	rm -rf $(DOCLOC) && mv -T bin/wee_resources/html_docs $(DOCLOC)
-	poetry build
-
-copy-resources:
-	@echo "Copying resources into wee_resources"
-	cp -rp examples bin/wee_resources/
-	cp -rp skins/ bin/wee_resources/
-	mkdir -p bin/wee_resources/util/
-	cp -rp util/init.d/ bin/wee_resources/util/
-	cp -rp util/launchd/ bin/wee_resources/util/
-	cp -rp util/systemd/ bin/wee_resources/util/
-	mkdir -p bin/wee_resources/bin/
-	cp -rp bin/user/ bin/wee_resources/bin/
-	cp -p weewx.conf bin/wee_resources/
-
-# Upload wheel and src package to pypi.org
-upload-pypi: $(DSTDIR)/$(SRCPKG) $(DSTDIR)/$(WHEEL)
-	poetry publish
-
-# upload the source tarball to the web site
-upload-src:
-	scp $(DSTDIR)/$(SRCPKG) $(USER)@$(WEEWX_COM):$(WEEWX_STAGING)
-
 # Build the documentation:
 build-docs:
 	@echo "Building documents"
@@ -211,15 +187,45 @@ done
 	sed -e 's/__version__ *=.*/__version__ = "$(VERSION)"/' bin/weewx/__init__.py > weeinit.py.tmp
 	mv weeinit.py.tmp bin/weewx/__init__.py
 
-# create the source tarball for use by the platform packages.  this avoids any
-# dependencies on poetry, and ensures that the source tree contains only the
-# things we need to build platform packages, in a structure we control.
-package-src-tarball: $(DSTDIR)/pkgsrc/weewx-$(VERSION).tar.gz
+## source targets
 
-$(DSTDIR)/pkgsrc/weewx-$(VERSION).tar.gz:
-	mkdir -p $(DSTDIR)/pkgsrc/weewx-$(VERSION)
-	rsync -ar ./ $(DSTDIR)/pkgsrc/weewx-$(VERSION) --exclude-from .gitignore --exclude .gitignore --exclude .git --exclude tests --exclude dist --exclude build --exclude .editorconfig --exclude poetry.lock --exclude pyproject.toml --exclude mkdocs.yml
-	tar cfz $(DSTDIR)/pkgsrc/weewx-$(VERSION).tar.gz -C $(DSTDIR)/pkgsrc weewx-$(VERSION)
+src-tarball: $(DSTDIR)/$(SRCPKG)
+
+$(DSTDIR)/$(SRCPKG):
+	mkdir -p $(BLDDIR)/weewx-$(VERSION)
+	rsync -ar ./ $(BLDDIR)/weewx-$(VERSION) --exclude-from .gitignore --exclude .gitignore --exclude .git --exclude tests --exclude dist --exclude build --exclude .editorconfig --exclude poetry.lock --exclude pyproject.toml --exclude mkdocs.yml
+	mkdir -p $(DSTDIR)
+	tar cfz $(DSTDIR)/$(SRCPKG) -C $(BLDDIR) weewx-$(VERSION)
+
+# upload the source tarball to the web site
+upload-src:
+	scp $(DSTDIR)/$(SRCPKG) $(USER)@$(WEEWX_COM):$(WEEWX_STAGING)
+
+## pypi targets
+
+# Copy resources into the source tree as required by pypi for its tarball
+copy-resources:
+	@echo "Copying resources into wee_resources"
+	cp -rp examples bin/wee_resources/
+	cp -rp skins/ bin/wee_resources/
+	mkdir -p bin/wee_resources/util/
+	cp -rp util/init.d/ bin/wee_resources/util/
+	cp -rp util/launchd/ bin/wee_resources/util/
+	cp -rp util/systemd/ bin/wee_resources/util/
+	mkdir -p bin/wee_resources/bin/
+	cp -rp bin/user/ bin/wee_resources/bin/
+	cp -p weewx.conf bin/wee_resources/
+
+pypi-packages $(DSTDIR)/$(WHEELSRC) $(DSTDIR)/$(WHEEL): copy-resources
+	cp -rp html_docs/ bin/wee_resources/
+	rm -rf $(DOCLOC) && mv -T bin/wee_resources/html_docs $(DOCLOC)
+	poetry build
+
+# Upload wheel and src package to pypi.org
+upload-pypi: $(DSTDIR)/$(WHEELSRC) $(DSTDIR)/$(WHEEL)
+	poetry publish
+
+## debian targets
 
 DEBREVISION=1
 DEBVER=$(VERSION)-$(DEBREVISION)
@@ -248,10 +254,9 @@ debian-package: deb-package-prep
 	mkdir -p $(DSTDIR)
 	mv $(BLDDIR)/$(DEBPKG) $(DSTDIR)/python3-$(DEBPKG)
 
-deb-package-prep: package-src-tarball
+deb-package-prep: src-tarball
 	mkdir -p $(BLDDIR)
-	tar xfz $(DSTDIR)/pkgsrc/$(SRCPKG) -C $(BLDDIR)
-	cp -p $(DSTDIR)/pkgsrc/$(SRCPKG) $(BLDDIR)/weewx_$(VERSION).orig.tar.gz
+	cp -p $(DSTDIR)/$(SRCPKG) $(BLDDIR)/weewx_$(VERSION).orig.tar.gz
 	rm -rf $(DEBBLDDIR)/debian
 	mkdir -m 0755 $(DEBBLDDIR)/debian
 	mkdir -m 0755 $(DEBBLDDIR)/debian/source
@@ -310,7 +315,7 @@ rpm-package: $(DSTDIR)/$(SRCPKG)
             -e 's%OSREL%$(OSREL)%' \
             pkg/weewx.spec.in > $(RPMBLDDIR)/SPECS/weewx.spec
 	cat pkg/changelog.$(RPMOS) >> $(RPMBLDDIR)/SPECS/weewx.spec
-	cp dist/weewx-$(VERSION).tar.gz $(RPMBLDDIR)/SOURCES
+	cp $(DSTDIR)/$(SRCPKG) $(RPMBLDDIR)/SOURCES
 	rpmbuild -ba --clean --define '_topdir $(CWD)/$(RPMBLDDIR)' --target noarch $(CWD)/$(RPMBLDDIR)/SPECS/weewx.spec
 	mkdir -p $(DSTDIR)
 	mv $(RPMBLDDIR)/RPMS/$(RPMARCH)/$(RPMPKG) $(DSTDIR)

@@ -1,9 +1,11 @@
 *~
 *.pyc
 __pycache__
+*.egg-info
 MANIFEST
 build
 dist
+.DS_Store
 .idea
 !/.idea
 /.idea/*
@@ -20,7 +22,5 @@ junk*
 *.user
 *.pyproj
 *.suo
-.DS_Store
 *.config
-*.egg-info
 .venv/*
