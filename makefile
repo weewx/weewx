@@ -108,16 +108,40 @@ clean:
 	find . -name "*.pyc" -exec rm {} \;
 	find . -name __pycache__ -exec rm -rf {} \;
 	rm -rf $(BLDDIR) $(DSTDIR)
-	rm -rf bin/wee_resources/bin bin/wee_resources/docs bin/wee_resources/examples
-	rm -rf bin/wee_resources/skins bin/wee_resources/util bin/wee_resources/weewx.conf
+	for x in bin docs examples skins util weewx.conf; do \
+  rm -rf bin/wee_resources/$$x; \
+done
 
 realclean:
 	rm -f MANIFEST
 	rm -rf build
 	rm -rf dist
 
-check-docs:
-	weblint docs/*.htm
+
+###############################################################################
+# update the version in all relevant places
+VDOCS=usersguide/index.md custom/index.md
+VCONFIGS=bin/wee_resources/weewx.conf bin/weecfg/tests/expected/weewx43_user_expected.conf
+VSKINS=Ftp/skin.conf Mobile/skin.conf Rsync/skin.conf Seasons/skin.conf Smartphone/skin.conf Standard/skin.conf
+version:
+	for f in $(VDOCS); do \
+  sed -e 's/^Version: [0-9].*/Version: $(MMVERSION)/' $(DOCSRC)/$$f > $(DOCSRC)/$$f.tmp; \
+  mv $(DOCSRC)/$$f.tmp $(DOCSRC)/$$f; \
+done
+	for f in $(VCONFIGS); do \
+  sed -e 's/version = [0-9].*/version = $(VERSION)/' $$f > $$f.tmp; \
+  mv $$f.tmp $$f; \
+done
+	for f in $(VSKINS); do \
+  sed -e 's/^SKIN_VERSION = [0-9].*/SKIN_VERSION = $(VERSION)/' $(SKINLOC)/$$f > $(SKINLOC)/$$f.tmp; \
+  mv $(SKINLOC)/$$f.tmp $(SKINLOC)/$$f; \
+done
+	sed -e 's/__version__ *=.*/__version__ = "$(VERSION)"/' bin/weewx/__init__.py > weeinit.py.tmp
+	mv weeinit.py.tmp bin/weewx/__init__.py
+
+
+###############################################################################
+## testing targets
 
 # if no suite is specified, find all test suites in the source tree
 ifndef SUITE
@@ -157,36 +181,25 @@ test-clean:
 	rm -rf $(TESTDIR)
 	echo $(MYSQLCLEAN) | mysql --user=weewx --password=weewx --force >/dev/null 2>&1
 
+
+###############################################################################
+## documentation targets
+
 # Build the documentation:
 build-docs:
 	@echo "Building documents"
 	rm -rf $(DOCLOC)
 	mkdocs --quiet build
 
+check-docs:
+	weblint docs/*.htm
+
 # upload docs to the web site
 upload-docs:
 	rsync -Orv bin/wee_resources/docs/ $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/v5-docs
 
-# update the version in all relevant places
-VDOCS=usersguide/index.md custom/index.md
-VCONFIGS=bin/wee_resources/weewx.conf bin/weecfg/tests/expected/weewx43_user_expected.conf
-VSKINS=Ftp/skin.conf Mobile/skin.conf Rsync/skin.conf Seasons/skin.conf Smartphone/skin.conf Standard/skin.conf
-version:
-	for f in $(VDOCS); do \
-  sed -e 's/^Version: [0-9].*/Version: $(MMVERSION)/' $(DOCSRC)/$$f > $(DOCSRC)/$$f.tmp; \
-  mv $(DOCSRC)/$$f.tmp $(DOCSRC)/$$f; \
-done
-	for f in $(VCONFIGS); do \
-  sed -e 's/version = [0-9].*/version = $(VERSION)/' $$f > $$f.tmp; \
-  mv $$f.tmp $$f; \
-done
-	for f in $(VSKINS); do \
-  sed -e 's/^SKIN_VERSION = [0-9].*/SKIN_VERSION = $(VERSION)/' $(SKINLOC)/$$f > $(SKINLOC)/$$f.tmp; \
-  mv $(SKINLOC)/$$f.tmp $(SKINLOC)/$$f; \
-done
-	sed -e 's/__version__ *=.*/__version__ = "$(VERSION)"/' bin/weewx/__init__.py > weeinit.py.tmp
-	mv weeinit.py.tmp bin/weewx/__init__.py
 
+###############################################################################
 ## source targets
 
 src-tarball: $(DSTDIR)/$(SRCPKG)
@@ -201,6 +214,8 @@ $(DSTDIR)/$(SRCPKG):
 upload-src:
 	scp $(DSTDIR)/$(SRCPKG) $(USER)@$(WEEWX_COM):$(WEEWX_STAGING)
 
+
+###############################################################################
 ## pypi targets
 
 # Copy resources into the source tree as required by pypi for its tarball
@@ -225,6 +240,8 @@ pypi-packages $(DSTDIR)/$(WHEELSRC) $(DSTDIR)/$(WHEEL): copy-resources
 upload-pypi: $(DSTDIR)/$(WHEELSRC) $(DSTDIR)/$(WHEEL)
 	poetry publish
 
+
+###############################################################################
 ## debian targets
 
 DEBREVISION=1
@@ -278,8 +295,11 @@ check-deb:
 	lintian -Ivi $(DSTDIR)/$(DEBPKG)
 
 upload-debian:
-	scp $(DSTDIR)/python-$(DEBPKG) $(USER)@$(WEEWX_COM):$(WEEWX_STAGING)
 	scp $(DSTDIR)/python3-$(DEBPKG) $(USER)@$(WEEWX_COM):$(WEEWX_STAGING)
+
+
+###############################################################################
+## rpm targets
 
 # specify the operating system release target (e.g., 7 for centos7)
 OSREL=
@@ -382,6 +402,10 @@ release:
 	ssh $(USER)@$(WEEWX_COM) "rm -f $(WEEWX_DOWNLOADS)/weewx*"
 	ssh $(USER)@$(WEEWX_COM) "if [ -f $(RELDIR)/$(SRCPKG) ]; then ln -s released_versions/$(SRCPKG) $(WEEWX_DOWNLOADS); fi"
 	ssh $(USER)@$(WEEWX_COM) "chmod 664 $(WEEWX_DOWNLOADS)/released_versions/weewx?$(VERSION)*"
+
+
+###############################################################################
+## repository management targets
 
 # this is only used when creating a new apt repository from scratch
 # the .html and .list files are not part of an official apt repository.  they
