@@ -393,7 +393,7 @@ class ArchiveTable(XType):
                     xsum += row[0] * row[1] * math.cos(math.radians(90.0 - row[2]))
                     ysum += row[0] * row[1] * math.sin(math.radians(90.0 - row[2]))
 
-        if not sumtime:
+        if not sumtime or (xsum == 0.0 and ysum == 0.0):
             value = None
         elif aggregate_type == 'vecdir':
             deg = 90.0 - math.degrees((math.atan2(ysum, xsum)))
