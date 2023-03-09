@@ -75,7 +75,7 @@ class ExtensionEngine(object):
         """Print info about all installed extensions to the logger."""
         ext_dir = self.root_dict['EXT_DIR']
         try:
-            exts = os.listdir(ext_dir)
+            exts = sorted(os.listdir(ext_dir))
             if exts:
                 self.logger.log("%-18s%-10s%s" % ("Extension Name", "Version", "Description"),
                                 level=0)
