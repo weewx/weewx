@@ -18,7 +18,7 @@ While one could instantiate these classes directly, it's easier with these two c
 where:
     cls is the class to be opened, either weewx.manager.Manager or weewx.manager.DaySummaryManager.
 
-Which manager to choose depends on whether or not a daily summary is desired for performance
+Which manager to choose depends on whether a daily summary is desired for performance
 reasons. Generally, it's a good idea to use one. The database binding section in weewx.conf
 is responsible for choosing the type of manager. Here's a typical entry in the configuration file.
 Note the entry 'manager':
@@ -31,7 +31,7 @@ Note the entry 'manager':
         database = archive_sqlite
         # The name of the table within the database
         table_name = archive
-        # The manager handles aggregation of data for historical summaries
+        # The manager handles aggregation of data for historical summaries:
         manager = weewx.manager.DaySummaryManager
         # The schema defines the structure of the database.
         # It is *only* used when the database is created.
@@ -273,8 +273,8 @@ class Manager(object):
 
     def _initialize_database(self, schema):
         """Initialize the tables needed for the archive.
-
-        schema: The schema to be used
+        Args:
+            schema(list|dict): The schema to be used
         """
         # If this is an old-style schema, this will raise an exception. Be prepared to catch it.
         try:
@@ -359,7 +359,7 @@ class Manager(object):
                 Otherwise, return False.
         """
         return self.exists(obs_type) \
-               and bool(weewx.xtypes.get_aggregate(obs_type, timespan, 'not_null', self)[0])
+            and bool(weewx.xtypes.get_aggregate(obs_type, timespan, 'not_null', self)[0])
 
     def addRecord(self, record_obj,
                   accumulator=None,
@@ -370,7 +370,7 @@ class Manager(object):
         Commit a single record or a collection of records to the archive.
 
         Args:
-            record_obj (iterable|dict): Either a data record, or an iterable that can return
+            record_obj (typing.Iterable[dict] | dict): Either a data record, or an iterable that can return
                 data records. Each data record must look like a dictionary, where the keys are the
                 SQL types and the values are the values to be stored in the database.
             accumulator (weewx.accum.Accum): An optional accumulator. If given, the record
@@ -446,7 +446,7 @@ class Manager(object):
         # Get the values in the same order:
         value_list = [record[k] for k in key_list]
 
-        # This will a string of sql types, separated by commas. Because some of the weewx sql keys
+        # This will a string of sql types, separated by commas. Because some weewx sql keys
         # (notably 'interval') are reserved words in MySQL, put them in backquotes.
         k_str = ','.join(["`%s`" % k for k in key_list])
         # This will be a string with the correct number of placeholder
@@ -510,9 +510,9 @@ class Manager(object):
         """Generator function that yields records with timestamps within an interval.
 
         Args:
-            startstamp (int|None): Exclusive start of the interval in epoch time. If 'None',
+            startstamp (int|float|None): Exclusive start of the interval in epoch time. If 'None',
                 then start at earliest archive record.
-            stopstamp (int|None): Inclusive end of the interval in epoch time. If 'None',
+            stopstamp (int|float|None): Inclusive end of the interval in epoch time. If 'None',
                 then end at last archive record.
 
         Yields:
@@ -679,8 +679,8 @@ def reconfig(old_db_dict, new_db_dict, new_unit_system=None, new_schema=None, dr
         new_db_dict (dict): THe database dictionary for the new database.  See
             method Manager.open() for the definition of a database dictionary.
         new_unit_system (int|None): The new unit system to be used, or None to keep the old one.
-        new_schema (dict): The new schema to use, or None to use the old one.
-
+        new_schema (dict|None): The new schema to use, or None to use the old one.
+        dry_run (bool|None): Set to True to do a dry run without altering anything.
     """
 
     with Manager.open(old_db_dict) as old_archive:
@@ -727,9 +727,9 @@ class DBBinder(object):
     def __exit__(self, etyp, einst, etb):  # @UnusedVariable
         self.close()
 
-    def set_binding_defaults(self, binding_name, default_binding_dict):
+    def set_binding_defaults(self, binding_name, new_default_binding_dict):
         """Set the defaults for the binding binding_name."""
-        self.default_binding_dict[binding_name] = default_binding_dict
+        self.default_binding_dict[binding_name] = new_default_binding_dict
 
     def get_manager(self, data_binding='wx_binding', initialize=False):
         """Given a binding name, returns the managed object
@@ -792,14 +792,14 @@ def get_database_dict_from_config(config_dict, database):
             (example: 'archive_sqlite')
 
     Returns:
-        dict: Adatabase dictionary, with everything needed to pass on to a Manager or weedb in
+        dict: A database dictionary, with everything needed to pass on to a Manager or weedb in
             order to open a database.
 
     Example:
         Given a configuration file snippet that looks like:
 
     >>> import configobj
-    >>> from six.moves import StringIO
+    >>> from io import StringIO
     >>> config_snippet = '''
     ... WEEWX_ROOT = /home/weewx
     ... [DatabaseTypes]
@@ -810,11 +810,11 @@ def get_database_dict_from_config(config_dict, database):
     ...     [[archive_sqlite]]
     ...        database_name = weewx.sdb
     ...        database_type = SQLite'''
-    >>> config_dict = configobj.ConfigObj(StringIO(config_snippet))
-    >>> database_dict = get_database_dict_from_config(config_dict, 'archive_sqlite')
-    >>> keys = sorted(database_dict.keys())
+    >>> c_dict = configobj.ConfigObj(StringIO(config_snippet))
+    >>> d_dict = get_database_dict_from_config(c_dict, 'archive_sqlite')
+    >>> keys = sorted(d_dict)
     >>> for k in keys:
-    ...     print("%15s: %12s" % (k, database_dict[k]))
+    ...     print("%15s: %12s" % (k, d_dict[k]))
         SQLITE_ROOT: /home/weewx/archive
       database_name:    weewx.sdb
              driver: weedb.sqlite
@@ -954,7 +954,7 @@ def show_progress(last_time, nrec=None):
 #
 #     Note that a date does not include midnight --- that belongs to the previous day. That is
 #     because a data record archives the *previous* interval. So, for the date 5-Oct-2008 with a
-#     five minute archive interval, the statistics would include the following records (local
+#     five-minute archive interval, the statistics would include the following records (local
 #     time):
 #       5-Oct-2008 00:05:00
 #       5-Oct-2008 00:10:00
@@ -1021,7 +1021,7 @@ class DaySummaryManager(Manager):
         ]
     }
 
-    # SQL statements used by the meta data in the daily summaries.
+    # SQL statements used by the metadata in the daily summaries.
     meta_create_str = "CREATE TABLE %s_day__metadata (name CHAR(20) NOT NULL " \
                       "UNIQUE PRIMARY KEY, value TEXT);"
     meta_replace_str = "REPLACE INTO %s_day__metadata VALUES(?, ?)"
@@ -1030,13 +1030,16 @@ class DaySummaryManager(Manager):
     def __init__(self, connection, table_name='archive', schema=None):
         """Initialize an instance of DaySummaryManager
 
-        connection: A weedb connection to the database to be managed.
+        Args:
+            connection (weedb.Connection): A weedb connection to the database to be managed.
+            table_name (str): The name of the table to be used in the database.
+                Default is 'archive'.
+            schema (None|dict|list): The schema to be used. Optional.
 
-        table_name: The name of the table to be used in the database. Default is 'archive'.
-
-        schema: The schema to be used. Optional. If not supplied, then an exception of type
-        weedb.OperationalError will be raised if the database does not exist, and of type
-        weedb.Uninitialized if it exists, but has not been initialized.
+        Raises:
+            weedb.OperationalError: If a schema has not been supplied and the database does
+                not exist.
+            weedb.Uninitialized: If the database exists, but has not been initialized.
         """
         # Initialize my superclass:
         super(DaySummaryManager, self).__init__(connection, table_name, schema)
@@ -1118,9 +1121,11 @@ class DaySummaryManager(Manager):
     def _initialize_day_table(self, obs_type, day_schema_type, cursor):
         """Initialize a single daily summary.
 
-        obs_type: An observation type, such as 'outTemp'
-        day_schema: The schema to be used. Either 'scalar', or 'vector'
-        cursor: An open cursor
+        Args:
+
+            obs_type(str): An observation type, such as 'outTemp'
+            day_schema_type (str): The schema to be used. Either 'scalar', or 'vector'
+            cursor (weedb.Cursor): An open cursor
         """
         s = ', '.join(
             ["%s %s" % column_type
@@ -1207,13 +1212,15 @@ class DaySummaryManager(Manager):
 
         Args:
 
-            start_d (datetime.date|None): The first day to be included, specified as a datetime.date
-                object [Optional. Default is to start with the first datum in the archive.]
+            start_d (datetime.date|None): The first day to be included, specified as a
+                datetime.date object [Optional. Default is to start with the first datum
+                in the archive.]
             stop_d (datetime.date|None): The last day to be included, specified as a datetime.date
                 object [Optional. Default is to include the date of the last archive record.]
-            progress_fn (function): This function will be called after processing every 1000 records.
-            trans_day (int): Number of days of archive data to be used for each daily summaries database
-                transaction. [Optional. Default is 5.]
+            progress_fn (function): This function will be called after processing
+                every 1000 records.
+            trans_days (int): Number of days of archive data to be used for each daily summaries
+                database transaction. [Optional. Default is 5.]
 
         Returns:
              tuple[int,int]: A 2-way tuple (nrecs, ndays) where
@@ -1299,7 +1306,7 @@ class DaySummaryManager(Manager):
                 for rec in self.genBatchRecords(start_batch_ts, stop_batch_ts):
                     # If this is the very first record, fetch a new accumulator
                     if not day_accum:
-                        # Get a TimeSpan that include's the record's timestamp:
+                        # Get a TimeSpan that includes the record's timestamp:
                         timespan = weeutil.weeutil.archiveDaySpan(rec['dateTime'])
                         # Get an empty day accumulator:
                         day_accum = weewx.accum.Accum(timespan)
@@ -1378,19 +1385,16 @@ class DaySummaryManager(Manager):
         Rather than backfill all the daily summaries, this function simply recalculates the
         weighted sums.
 
-        start_d: The first day to be included, specified as a datetime.date object [Optional.
-        Default is to start with the first record in the daily summaries.]
-
-        stop_d: The last day to be included, specified as a datetime.date object [Optional.
-        Default is to end with the last record in the daily summaries.]
-
-        tranche_size: How many days to do in a single transaction.
-
-        weight_fn: A function used to calculate the weights for a record. Default
-        is _calc_weight().
-
-        progress_fn: This function will be called after every tranche with the timestamp of the
-        last record processed.
+        Args:
+            start_d (datetime.date|None): The first day to be included. [Optional.
+                Default is to start with the first record in the daily summaries.]
+            stop_d (datetime.date|None): The last day to be included. [Optional.
+                Default is to end with the last record in the daily summaries.]
+            tranche_size (int): How many days to do in a single transaction.
+            weight_fn (function): A function used to calculate the weights for a record. Default
+                is _calc_weight().
+            progress_fn (function): This function will be called after every tranche with the timestamp of the
+                last record processed.
         """
 
         log.info("recalculate_weights: Using database '%s'" % self.database_name)
@@ -1429,15 +1433,13 @@ class DaySummaryManager(Manager):
     def _do_tranche(self, start_d, last_d, weight_fn=None, progress_fn=None):
         """Reweight a tranche of daily summaries.
 
-        start_d: A datetime.date object with the first date in the tranche to be reweighted.
-
-        last_d: A datetime.date object with the day after the last date in the
-        tranche to be reweighted.
-
-        weight_fn: A function used to calculate the weights for a record. Default is
-        _calc_weight().
-
-        progress_fn: A function to call to show progress. It will be called after every update.
+        Args:
+            start_d (datetime.date): First date in the tranche to be reweighted.
+            last_d (datetime.date): Last date in the tranche to be reweighted.
+            weight_fn (function): A function used to calculate the weights for a record. Default is
+               _calc_weight().
+            progress_fn (function): A function to call to show progress. It will be called after every
+                update.
         """
 
         if weight_fn is None:
@@ -1551,8 +1553,12 @@ class DaySummaryManager(Manager):
     def _get_day_summary(self, sod_ts, cursor=None):
         """Return an instance of an appropriate accumulator, initialized to a given day's
         statistics.
-
-        sod_ts: The timestamp of the start-of-day of the desired day.
+        Args:
+            sod_ts(float|int): The timestamp of the start-of-day of the desired day.
+            cursor(Cursor|None): Optional cursor. If one is not supplied, one will be
+                opened.
+        Returns:
+            weewx.accum.Accum
         """
 
         # Get the TimeSpan for the day starting with sod_ts:
@@ -1583,11 +1589,13 @@ class DaySummaryManager(Manager):
     def _set_day_summary(self, day_accum, lastUpdate, cursor):
         """Write all statistics for a day to the database in a single transaction.
 
-        day_accum: an accumulator with the daily summary. See weewx.accum
-
-        lastUpdate: the time of the last update will be set to this unless it is None.
-        Normally, this is the timestamp of the last archive record added to the instance
-        day_accum. """
+        Args:
+            day_accum (weewx.accum.Accum): an accumulator with the daily summary. See weewx.accum
+            lastUpdate (float|int): the time of the last update will be set to this unless it is
+                None. Normally, this is the timestamp of the last archive record added to the
+                instance day_accum.
+            cursor (Cursor): An open cursor.
+            """
 
         # Make sure the new data uses the same unit system as the database.
         self._check_unit_system(day_accum.unit_system)
@@ -1639,7 +1647,7 @@ class DaySummaryManager(Manager):
         """Obtain a value from the daily summary metadata table.
 
         Returns:
-            Value of the metadata field. Returns None if no value was found.
+            str|None: Value of the metadata field. Returns None if no value was found.
         """
         _row = self.getSql(DaySummaryManager.meta_select_str % self.table_name, (key,), cursor)
         return _row[0] if _row else None
@@ -1647,9 +1655,10 @@ class DaySummaryManager(Manager):
     def _write_metadata(self, key, value, cursor=None):
         """Write a value to the daily summary metadata table.
 
-        Input parameters:
-            key:    The name of the metadata field to be written to.
-            value:  The value to be written to the metadata field.
+        Args:
+            key (str):    The name of the metadata field to be written to.
+            value (str):  The value to be written to the metadata field.
+            cursor (Cursor|None): An optional cursor to use. If None, a cursor will be opened up.
         """
         _cursor = cursor or self.connection.cursor()
 
