@@ -40,6 +40,8 @@ Limit station registration to once an hour, max.
 Fix problem where aggregation of null wind directions returns 90° instead of
 null. Fixes issue #849.
 
+Fix wrong station type for Vantage `wee_device --info` query.
+
 
 ### 4.10.2 02/22/2023
 

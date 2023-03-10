@@ -23,7 +23,7 @@ from weewx.crc16 import crc16
 log = logging.getLogger(__name__)
 
 DRIVER_NAME = 'Vantage'
-DRIVER_VERSION = '3.6.0'
+DRIVER_VERSION = '3.6.1'
 
 int2byte = struct.Struct(">B").pack
 
@@ -1315,10 +1315,10 @@ class Vantage(weewx.drivers.AbstractDevice):
                 'listen' : Vantage.listen_dict[use_flag]
             }
             if transmitter_dict['transmitter_type'] in ['temp', 'temp_hum']:
-                # Extra temperature is origin 0.
-                transmitter_dict['temp'] = upper_byte & 0xF + 1
+                # Extra temperature is origin 1.
+                transmitter_dict['temp'] = (upper_byte & 0xF) + 1
             if transmitter_dict['transmitter_type'] in ['hum', 'temp_hum']:
-                # Extra humidity is origin 1.
+                # Extra humidity is origin 0.
                 transmitter_dict['hum'] = upper_byte >> 4
 
             transmitters.append(transmitter_dict)
