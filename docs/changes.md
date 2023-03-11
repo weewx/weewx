@@ -42,6 +42,9 @@ null. Fixes issue #849.
 
 Fix wrong station type for Vantage `wee_device --info` query.
 
+Change `minsumtime` and `maxsumtime` to return start-of-day, rather than the
+time of max rainfall during the day.
+
 
 ### 4.10.2 02/22/2023
 

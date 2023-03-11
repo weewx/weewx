@@ -442,10 +442,9 @@ class DailySummaries(XType):
                       "ORDER BY min DESC, mintime ASC LIMIT 1",
         'maxsum': "SELECT MAX(sum) FROM %(table_name)s_day_%(obs_key)s "
                   "WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-        'maxsumtime': "SELECT maxtime FROM %(table_name)s_day_%(obs_key)s  "
+        'maxsumtime': "SELECT dateTime FROM %(table_name)s_day_%(obs_key)s  "
                       "WHERE dateTime >= %(start)s AND dateTime < %(stop)s "
-                      "AND maxtime IS NOT NULL "
-                      "ORDER BY sum DESC, maxtime ASC LIMIT 1",
+                      "ORDER BY sum DESC, dateTime ASC LIMIT 1",
         'maxtime': "SELECT maxtime FROM %(table_name)s_day_%(obs_key)s  "
                    "WHERE dateTime >= %(start)s AND dateTime < %(stop)s "
                    "AND maxtime IS NOT NULL "
@@ -468,10 +467,9 @@ class DailySummaries(XType):
                       "ORDER BY max ASC, maxtime ASC ",
         'minsum': "SELECT MIN(sum) FROM %(table_name)s_day_%(obs_key)s "
                   "WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-        'minsumtime': "SELECT mintime FROM %(table_name)s_day_%(obs_key)s  "
+        'minsumtime': "SELECT dateTime FROM %(table_name)s_day_%(obs_key)s  "
                       "WHERE dateTime >= %(start)s AND dateTime < %(stop)s "
-                      "AND mintime IS NOT NULL "
-                      "ORDER BY sum ASC, mintime ASC LIMIT 1",
+                      "ORDER BY sum ASC, dateTime ASC LIMIT 1",
         'mintime': "SELECT mintime FROM %(table_name)s_day_%(obs_key)s  "
                    "WHERE dateTime >= %(start)s AND dateTime < %(stop)s "
                    "AND mintime IS NOT NULL "
