@@ -45,6 +45,9 @@ Fix wrong station type for Vantage `wee_device --info` query.
 Change `minsumtime` and `maxsumtime` to return start-of-day, rather than the
 time of max rainfall during the day.
 
+Relax requirement that column `dateTime` be the first column in the database.
+Fixes issue #855.
+
 
 ### 4.10.2 02/22/2023
 

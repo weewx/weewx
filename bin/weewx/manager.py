@@ -474,37 +474,34 @@ class Manager(object):
                 then end at last archive record.
 
         Yields:
-            list: Each iteration yields a single data row.
+            list: Each iteration yields a single data row as a list.
         """
 
-        with self.connection.cursor() as _cursor:
+        with self.connection.cursor() as cursor:
 
             if startstamp is None:
                 if stopstamp is None:
-                    _gen = _cursor.execute(
-                        "SELECT * FROM %s ORDER BY dateTime ASC" % self.table_name)
+                    gen = cursor.execute("SELECT * FROM %s "
+                                         "ORDER BY dateTime ASC" % self.table_name)
                 else:
-                    _gen = _cursor.execute("SELECT * FROM %s WHERE "
-                                           "dateTime <= ? ORDER BY dateTime ASC" % self.table_name,
-                                           (stopstamp,))
+                    gen = cursor.execute("SELECT * FROM %s "
+                                         "WHERE dateTime <= ? "
+                                         "ORDER BY dateTime ASC" % self.table_name,
+                                         (stopstamp,))
             else:
                 if stopstamp is None:
-                    _gen = _cursor.execute("SELECT * FROM %s WHERE "
-                                           "dateTime > ? ORDER BY dateTime ASC" % self.table_name,
-                                           (startstamp,))
+                    gen = cursor.execute("SELECT * FROM %s "
+                                         "WHERE dateTime > ? "
+                                         "ORDER BY dateTime ASC" % self.table_name,
+                                         (startstamp,))
                 else:
-                    _gen = _cursor.execute("SELECT * FROM %s WHERE "
-                                           "dateTime > ? AND dateTime <= ? ORDER BY dateTime ASC"
-                                           % self.table_name, (startstamp, stopstamp))
+                    gen = cursor.execute("SELECT * FROM %s "
+                                         "WHERE dateTime > ? AND dateTime <= ? "
+                                         "ORDER BY dateTime ASC" % self.table_name,
+                                         (startstamp, stopstamp))
 
-            _last_time = 0
-            for _row in _gen:
-                # The following is to get around a bug in sqlite when all the
-                # tables are in one file:
-                if _row[0] <= _last_time:
-                    continue
-                _last_time = _row[0]
-                yield _row
+            for row in gen:
+                yield row
 
     def genBatchRecords(self, startstamp=None, stopstamp=None):
         """Generator function that yields records with timestamps within an interval.
@@ -516,12 +513,19 @@ class Manager(object):
                 then end at last archive record.
 
         Yields:
-             dict|None: A dictionary where key is the observation type (eg, 'outTemp') and the
-                value is the observation value, or None if there are no rows in the time range.
+             dict: A dictionary where key is the observation type (eg, 'outTemp') and the
+                value is the observation value.
         """
 
-        for _row in self.genBatchRows(startstamp, stopstamp):
-            yield dict(zip(self.sqlkeys, _row)) if _row else None
+        last_time = 0
+        for row in self.genBatchRows(startstamp, stopstamp):
+            record = dict(zip(self.sqlkeys, row))
+            # The following is to get around a bug in sqlite when all the
+            # tables are in one file:
+            if record['dateTime'] <= last_time:
+                continue
+            last_time = record['dateTime']
+            yield record
 
     def getRecord(self, timestamp, max_delta=None):
         """Get a single archive record with a given epoch time stamp.
