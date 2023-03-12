@@ -19,7 +19,7 @@ DOCSRC=docs
 # Location of built docs
 DOCLOC=bin/wee_resources/docs
 # Location of the skins
-SKINLOC=bin/wee_resources/skins
+SKINLOC=skins
 
 # extract version to be used in package controls and labels
 VERSION=$(shell sed -ne 's/^version = "\(.*\)"/\1/p;' pyproject.toml)
@@ -106,7 +106,7 @@ info:
 
 clean:
 	find . -name "*.pyc" -exec rm {} \;
-	find . -name __pycache__ -exec rm -rf {} \;
+	find . -name "__pycache__" -exec rm -rf {} \;
 	rm -rf $(BLDDIR) $(DSTDIR)
 	for x in bin docs examples skins util weewx.conf; do \
   rm -rf bin/wee_resources/$$x; \
@@ -121,7 +121,7 @@ realclean:
 ###############################################################################
 # update the version in all relevant places
 VDOCS=usersguide/index.md custom/index.md
-VCONFIGS=bin/wee_resources/weewx.conf bin/weecfg/tests/expected/weewx43_user_expected.conf
+VCONFIGS=weewx.conf bin/weecfg/tests/expected/weewx43_user_expected.conf
 VSKINS=Ftp/skin.conf Mobile/skin.conf Rsync/skin.conf Seasons/skin.conf Smartphone/skin.conf Standard/skin.conf
 version:
 	for f in $(VDOCS); do \
