@@ -2,25 +2,20 @@
 *.pyc
 __pycache__
 *.egg-info
-MANIFEST
-build
-dist
-.DS_Store
-.idea
-!/.idea
-/.idea/*
-!/.idea/codeStyles
-/bin/wee_resources/*
-!/bin/wee_resources/__init__.py
-html_docs
-.project
-.pydevproject
-.settings
-.github
 junk*
-*.sln
-*.user
-*.pyproj
-*.suo
-*.config
-.venv/*
+.DS_Store
+/build
+/dist
+/html_docs
+/.venv
+/venv
+
+# Include all of .idea in the repository except ...
+/.idea/workspace.xml
+/.idea/tasks.xml
+/.idea/dictionary/*
+
+# Ignore wee_resources ...
+/bin/wee_resources/*
+# ... except:
+!/bin/wee_resources/__init__.py
