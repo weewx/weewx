@@ -14,6 +14,7 @@ junk*
 /.idea/workspace.xml
 /.idea/tasks.xml
 /.idea/dictionary/*
+/.idea/shelf/*
 
 # Ignore wee_resources ...
 /bin/wee_resources/*
