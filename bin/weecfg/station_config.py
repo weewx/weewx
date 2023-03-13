@@ -104,7 +104,8 @@ def station_reconfigure(config_path, dry_run=False, *args, **kwargs):
 def config_config(config_path, config_dict,
                   driver=None, location=None,
                   altitude=None, latitude=None, longitude=None,
-                  register=None, unit_system=None,
+                  register=None, station_url=None,
+                  unit_system=None,
                   weewx_root=None, skin_root=None,
                   html_root=None, sqlite_root=None,
                   user_root=None,
@@ -116,7 +117,7 @@ def config_config(config_path, config_dict,
     config_location(config_dict, location=location, no_prompt=no_prompt)
     config_altitude(config_dict, altitude=altitude, no_prompt=no_prompt)
     config_latlon(config_dict, latitude=latitude, longitude=longitude, no_prompt=no_prompt)
-    config_registry(config_dict, register=register, no_prompt=no_prompt)
+    config_registry(config_dict, register=register, station_url=station_url, no_prompt=no_prompt)
     config_units(config_dict, unit_system=unit_system, no_prompt=no_prompt)
     config_driver(config_dict, driver=driver, no_prompt=no_prompt)
     config_roots(config_dict, weewx_root, skin_root, html_root, sqlite_root, user_root)
