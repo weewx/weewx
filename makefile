@@ -14,10 +14,10 @@ WEEWX_HTMLDIR=/var/www/html
 WEEWX_DOWNLOADS=$(WEEWX_HTMLDIR)/downloads
 # location for staging weewx package uploads
 WEEWX_STAGING=$(WEEWX_HTMLDIR)/downloads/development_versions
-# Location of docs
-DOCSRC=docs
+# Location of doc sources
+DOC_SRC=docs
 # Location of built docs
-DOCLOC=bin/wee_resources/docs
+DOC_BUILT=html_docs
 # Location of the skins
 SKINLOC=skins
 
@@ -100,8 +100,8 @@ info:
 	@echo "        USER: $(USER)"
 	@echo "   WEEWX_COM: $(WEEWX_COM)"
 	@echo " STAGING_DIR: $(STAGING_DIR)"
-	@echo "      DOCSRC: $(DOCSRC)"
-	@echo "      DOCLOC: $(DOCLOC)"
+	@echo "     DOC_SRC: $(DOC_SRC)"
+	@echo "   DOC_BUILT: $(DOC_BUILT)"
 	@echo "     SKINLOC: $(SKINLOC)"
 
 clean:
@@ -128,8 +128,8 @@ VCONFIGS=weewx.conf bin/weecfg/tests/expected/weewx43_user_expected.conf
 VSKINS=Ftp/skin.conf Mobile/skin.conf Rsync/skin.conf Seasons/skin.conf Smartphone/skin.conf Standard/skin.conf
 version:
 	for f in $(VDOCS); do \
-  sed -e 's/^Version: [0-9].*/Version: $(MMVERSION)/' $(DOCSRC)/$$f > $(DOCSRC)/$$f.tmp; \
-  mv $(DOCSRC)/$$f.tmp $(DOCSRC)/$$f; \
+  sed -e 's/^Version: [0-9].*/Version: $(MMVERSION)/' $(DOC_SRC)/$$f > $(DOC_SRC)/$$f.tmp; \
+  mv $(DOC_SRC)/$$f.tmp $(DOC_SRC)/$$f; \
 done
 	for f in $(VCONFIGS); do \
   sed -e 's/version = [0-9].*/version = $(VERSION)/' $$f > $$f.tmp; \
@@ -191,15 +191,14 @@ test-clean:
 # Build the documentation:
 build-docs:
 	@echo "Building documents"
-	rm -rf $(DOCLOC)
-	mkdocs --quiet build
+	mkdocs --quiet build --site-dir=$(DOC_BUILT)
 
 check-docs:
 	weblint docs/*.htm
 
 # upload docs to the web site
-upload-docs:
-	rsync -Orv bin/wee_resources/docs/ $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/v5-docs
+upload-docs: build-docs
+	rsync -Orv $(DOC_BUILT) $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/v5-docs
 
 
 ###############################################################################
@@ -222,9 +221,10 @@ upload-src:
 ## pypi targets
 
 # Copy resources into the source tree as required by pypi for its tarball
-copy-resources:
+copy-resources: build-docs
 	@echo "Copying resources into wee_resources"
 	cp -rp examples bin/wee_resources/
+	rm -rf bin/wee_resources/docs/ && cp -rp $(DOC_BUILT) bin/wee_resources/docs
 	cp -rp skins/ bin/wee_resources/
 	mkdir -p bin/wee_resources/util/
 	cp -rp util/init.d/ bin/wee_resources/util/
@@ -235,8 +235,6 @@ copy-resources:
 	cp -p weewx.conf bin/wee_resources/
 
 pypi-packages $(DSTDIR)/$(WHEELSRC) $(DSTDIR)/$(WHEEL): copy-resources
-	cp -rp html_docs/ bin/wee_resources/
-	rm -rf $(DOCLOC) && mv -T bin/wee_resources/html_docs $(DOCLOC)
 	poetry build
 
 # Upload wheel and src package to pypi.org

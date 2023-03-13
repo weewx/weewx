@@ -29,6 +29,8 @@ jobs:
     - name: pip install
       run: |
         python3 -m pip install --user "Pillow>=9.2"
+        python3 -m pip install --user mkdocs
+        python3 -m pip install --user mkdocs-material
 
     - name: Setup tests
       run: |
