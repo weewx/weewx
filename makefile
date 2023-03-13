@@ -105,12 +105,15 @@ info:
 	@echo "     SKINLOC: $(SKINLOC)"
 
 clean:
-	find . -name "*.pyc" -exec rm {} \;
-	find . -name "__pycache__" -exec rm -rf {} \;
+	find bin -name "*.pyc" -exec rm {} \;
+	find bin -name "__pycache__" -exec rm -rf {} \;
 	rm -rf $(BLDDIR) $(DSTDIR)
-	for x in bin docs examples skins util weewx.conf; do \
-  rm -rf bin/wee_resources/$$x; \
-done
+	rm -rf bin/wee_resources/bin
+	rm -rf bin/wee_resources/docs
+	rm -rf bin/wee_resources/examples
+	rm -rf bin/wee_resources/skins
+	rm -rf bin/wee_resources/util
+	rm -f bin/wee_resources/weewx.conf
 
 realclean:
 	rm -f MANIFEST
