@@ -10,7 +10,7 @@ import decimal
 try:
     import MySQLdb
 except ImportError:
-    # Some installs use 'pymysql' instead of 'MySQLdb'
+    # Maybe the user has "pymysql", a pure-Python version?
     import pymysql as MySQLdb
     from pymysql import DatabaseError as MySQLDatabaseError
 else:
@@ -123,8 +123,8 @@ class Connection(weedb.Connection):
             kwargs (dict):   Any extra arguments you may wish to pass on to MySQL
               connect statement. See the file MySQLdb/connections.py for a list (optional).
         """
-        connection = MySQLdb.connect(host=host, port=int(port), user=user, passwd=password,
-                                     db=database_name, **kwargs)
+        connection = MySQLdb.connect(host=host, port=int(port), user=user, password=password,
+                                     database=database_name, **kwargs)
 
         weedb.Connection.__init__(self, connection, database_name, 'mysql')
 

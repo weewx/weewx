@@ -22,7 +22,7 @@ DOC_BUILT=html_docs
 SKINLOC=skins
 
 # extract version to be used in package controls and labels
-VERSION=$(shell sed -ne 's/^version = "\(.*\)"/\1/p;' pyproject.toml)
+VERSION:=$(shell sed -ne 's/^version = "\(.*\)"/\1/p;' pyproject.toml)
 # just the major.minor part of the version
 MMVERSION:=$(shell echo "$(VERSION)" | sed -e 's%.[0-9a-z]*$$%%')
 
@@ -33,13 +33,9 @@ SRCPKG=weewx-$(VERSION).tgz
 WHEELSRC=weewx-$(VERSION).tar.gz
 WHEEL=weewx-$(VERSION)-py3-none-any.whl
 
-ifndef PYTHON
-PYTHON=python3
-endif
+PYTHON?=python3
 
-ifndef TMPDIR
-TMPDIR=/var/tmp
-endif
+TMPDIR?=/var/tmp
 
 all: help
 
@@ -147,10 +143,8 @@ done
 ## testing targets
 
 # if no suite is specified, find all test suites in the source tree
-ifndef SUITE
-SUITE=`find bin -name "test_*.py"`
-endif
-test: copy-resources
+SUITE?=`find bin -name "test_*.py"`
+test: bin/wee_resources/
 	@rm -f $(BLDDIR)/test-results
 	@mkdir -p $(BLDDIR)
 	@echo "Python interpreter in use:" >> $(BLDDIR)/test-results 2>&1;
@@ -189,16 +183,16 @@ test-clean:
 ## documentation targets
 
 # Build the documentation:
-build-docs:
+build-docs $(DOC_BUILT): $(DOC_SRC)/**/*
 	@echo "Building documents"
-	mkdocs --quiet build --site-dir=$(DOC_BUILT)
+	$(PYTHON) -m mkdocs --quiet build --site-dir=$(DOC_BUILT)
 
 check-docs:
 	weblint docs/*.htm
 
 # upload docs to the web site
-upload-docs: build-docs
-	rsync -Orv $(DOC_BUILT) $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/v5-docs
+upload-docs: $(DOC_BUILT)
+	rsync -Orv $(DOC_BUILT)/ $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/v5-docs
 
 
 ###############################################################################
@@ -221,7 +215,7 @@ upload-src:
 ## pypi targets
 
 # Copy resources into the source tree as required by pypi for its tarball
-copy-resources: build-docs
+copy-resources bin/wee_resources/: $(DOC_BUILT) $(SKINLOC) weewx.conf
 	@echo "Copying resources into wee_resources"
 	cp -rp examples bin/wee_resources/
 	rm -rf bin/wee_resources/docs/ && cp -rp $(DOC_BUILT) bin/wee_resources/docs
@@ -234,7 +228,7 @@ copy-resources: build-docs
 	cp -rp bin/user/ bin/wee_resources/bin/
 	cp -p weewx.conf bin/wee_resources/
 
-pypi-packages $(DSTDIR)/$(WHEELSRC) $(DSTDIR)/$(WHEEL): copy-resources
+pypi-packages $(DSTDIR)/$(WHEELSRC) $(DSTDIR)/$(WHEEL): bin/wee_resources pyproject.toml
 	poetry build
 
 # Upload wheel and src package to pypi.org
