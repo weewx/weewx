@@ -1,5 +1,5 @@
 WEEWX_PYTHON=python3
 WEEWX_PYTHON_ARGS=
-WEEWX_BINDIR=/home/weewx/bin
-WEEWX_BIN=/home/weewx/bin/weewxd
-WEEWX_CFG=/home/weewx/weewx.conf
+WEEWX_BINDIR=/usr/share/weewx
+WEEWX_BIN=/usr/share/weewx/weewxd
+WEEWX_CFG=/etc/weewx/weewx.conf
