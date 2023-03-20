@@ -4,20 +4,10 @@
 # Copyright 2013-2020 Matthew Wall
 
 # Uncomment this to turn on verbose mode.
-#export DH_VERBOSE=1
+export DH_VERBOSE=1
 
-# determine which python we should use
-PKG=weewx
-PYTHON=python
-ifneq (,$(filter python2,$(DEB_BUILD_OPTIONS)))
-#PKG=python-weewx
-PYTHON=python2
-endif
-ifneq (,$(filter python3,$(DEB_BUILD_OPTIONS)))
-#PKG=python3-weewx
 PYTHON=python3
-endif
-
+PKG=python3-weewx
 SRC=$(CURDIR)
 DST=$(CURDIR)/debian/$(PKG)
 DST_EXECDIR=$(DST)/usr/bin
@@ -27,10 +17,10 @@ DST_INITDIR=$(DST)/etc/init.d
 DST_CFGDIR =$(DST)/etc/weewx
 
 # these are the entry points
-ENTRIES=weewxd wee_config wee_database wee_debug wee_device wee_extension wee_import wee_reports wunderfixer
+ENTRIES=weewxd weectl wee_database wee_debug wee_device wee_import wee_reports wunderfixer
 
 %:
-	dh $@ --with python2,python3
+	dh $@
 
 override_dh_auto_clean:
 	dh_auto_clean

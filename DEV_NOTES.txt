@@ -16,7 +16,7 @@ checklist for doing a release:
      1. make build-docs
 5. Create the packages
      1. make pypi-packages
-     2. make debian-packages
+     2. make debian-package
      3. make redhat-packages
      4. make suse-packages
 6. Sanity check on production machine
