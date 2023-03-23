@@ -80,7 +80,7 @@ def station_create(config_path, *args,
         weecfg.save(dist_config_dict, config_path)
 
 
-def station_reconfigure(config_path, dry_run=False, *args, **kwargs):
+def station_reconfigure(config_path, dry_run=False, no_backup=False, *args, **kwargs):
     "Reconfigure an existing station"
 
     if dry_run:
@@ -96,9 +96,12 @@ def station_reconfigure(config_path, dry_run=False, *args, **kwargs):
     if dry_run:
         print("This was a dry run. Nothing was actually done.")
     else:
-        # Save the results with backup
-        backup = weecfg.save_with_backup(config_dict, config_path)
-        print(f"Saved backup to {backup}.")
+        # Save the results, possibly with a backup.
+        backup = weecfg.save(config_dict, config_path, not no_backup)
+        if no_backup:
+            print("No backup of configuration file.")
+        else:
+            print(f"Saved backup of configuration file to {backup}.")
 
 
 def config_config(config_path, config_dict,

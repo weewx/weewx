@@ -37,6 +37,7 @@ station_reconfigure_usage = f"""{bcolors.BOLD}weectl station reconfigure [--conf
                                   [--sqlite-root=SQLITE_ROOT] \\
                                   [--html-root=HTML_ROOT] \\
                                   [--no-prompt] \\
+                                  [--no-backup] \\
                                   [--dry-run]{bcolors.ENDC}
 """
 station_upgrade_usage = f"""{bcolors.BOLD}weectl station upgrade [--config=CONFIG-PATH] \\
@@ -123,6 +124,9 @@ def add_subparser(subparsers):
     _add_common_args(station_reconfigure_parser)
     station_reconfigure_parser.add_argument('--no-prompt', action='store_true',
                                             help='If set, do not prompt. Use default values.')
+    station_reconfigure_parser.add_argument('--no-backup', action='store_true',
+                                            help='If set, do not backup the '
+                                                 'old configuration file.')
     station_reconfigure_parser.add_argument('--dry-run',
                                             action='store_true',
                                             help='Print what would happen, but do not actually '
@@ -221,6 +225,7 @@ def reconfigure_station(namespace):
                                                   sqlite_root=namespace.sqlite_root,
                                                   html_root=namespace.html_root,
                                                   no_prompt=namespace.no_prompt,
+                                                  no_backup=namespace.no_backup,
                                                   dry_run=namespace.dry_run)
     except weewx.ViolatedPrecondition as e:
         sys.exit(e)

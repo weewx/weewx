@@ -34,6 +34,7 @@ usage: weectl station create [--config=CONFIG-PATH] \
                                   [--sqlite-root=SQLITE_ROOT] \
                                   [--html-root=HTML_ROOT] \
                                   [--no-prompt] \
+                                  [--no-backup] \
                                   [--dry-run]
 
        weectl station upgrade [--config=CONFIG-PATH] \
@@ -212,6 +213,7 @@ usage: weectl station reconfigure [--config=CONFIG-PATH] \
                                   [--sqlite-root=SQLITE_ROOT] \
                                   [--html-root=HTML_ROOT] \
                                   [--no-prompt] \
+                                  [--no-backup] \
                                   [--dry-run]
 
 optional arguments:
@@ -248,6 +250,7 @@ optional arguments:
                         Where to put the generated HTML and images, relative
                         to WEEWX_ROOT. Default is "public_html".
   --no-prompt           If set, do not prompt. Use default values.
+  --no-backup           If set, do not backup the old configuration file.
   --dry-run             Print what would happen, but do not actually do it.
 ```
 
