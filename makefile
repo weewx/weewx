@@ -104,12 +104,7 @@ clean:
 	find bin -name "*.pyc" -exec rm {} \;
 	find bin -name "__pycache__" -prune -exec rm -rf {} \;
 	rm -rf $(BLDDIR) $(DSTDIR)
-	rm -rf bin/wee_resources/bin
-	rm -rf bin/wee_resources/docs
-	rm -rf bin/wee_resources/examples
-	rm -rf bin/wee_resources/skins
-	rm -rf bin/wee_resources/util
-	rm -f bin/wee_resources/weewx.conf
+	rm -rf bin/wee_resources
 
 realclean:
 	rm -f MANIFEST
@@ -218,11 +213,13 @@ upload-src:
 ## pypi targets
 
 # Copy resources into the source tree as required by pypi for its tarball
-copy-resources bin/wee_resources/: $(DOC_BUILT) $(SKINLOC) weewx.conf
+bin/wee_resources/: $(DOC_BUILT) $(SKINLOC) weewx.conf
 	@echo "Copying resources into wee_resources"
+	mkdir -p bin/wee_resources/
+	touch bin/wee_resources/__init__.py
 	cp -rp examples bin/wee_resources/
 	rm -rf bin/wee_resources/docs/ && cp -rp $(DOC_BUILT) bin/wee_resources/docs
-	cp -rp skins/ bin/wee_resources/
+	rm -rf bin/wee_resources/skins/ && cp -rp skins/ bin/wee_resources/
 	mkdir -p bin/wee_resources/util/
 	cp -rp util/init.d/ bin/wee_resources/util/
 	cp -rp util/launchd/ bin/wee_resources/util/
@@ -231,7 +228,7 @@ copy-resources bin/wee_resources/: $(DOC_BUILT) $(SKINLOC) weewx.conf
 	cp -rp bin/user/ bin/wee_resources/bin/
 	cp -p weewx.conf bin/wee_resources/
 
-pypi-packages $(DSTDIR)/$(WHEELSRC) $(DSTDIR)/$(WHEEL): bin/wee_resources pyproject.toml
+pypi-packages $(DSTDIR)/$(WHEELSRC) $(DSTDIR)/$(WHEEL): bin/wee_resources/ pyproject.toml
 	poetry build
 
 # Upload wheel and src package to pypi.org
@@ -261,7 +258,7 @@ DEBPKG=python3-weewx_$(DEBVER)_$(DEBARCH).deb
 ifneq ("$(SIGN)","1")
 DPKG_OPT=-us -uc
 endif
-debian-package: deb-package-prep
+debian-package: bin/wee_resources/ deb-package-prep
 	cp pkg/debian/control $(DEBBLDDIR)/debian/control
 	rm -f $(DEBBLDDIR)/debian/files
 	rm -rf $(DEBBLDDIR)/debian/weewx*

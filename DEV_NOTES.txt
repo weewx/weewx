@@ -91,7 +91,7 @@ how to build debian packages:
   make deb-changelog
   emacs pkg/debian/changelog    # add any package-specific changes, if any
   git commit -m "update deb changelog" pkg/debian/changelog
-  make debian-packages
+  make debian-package
 
 how to build redhat packages:
   make redhat-changelog

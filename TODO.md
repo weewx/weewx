@@ -1,5 +1,14 @@
 # To do
 
+## `weectl`
+
+Do not have `weectl station create` copy in a fresh copy of the docs and examples. That's a job
+for `weectl station upgrade`.
+
+Need an option `--no-backup` for `weectl station reconfigure`.
+
+Right now, the Debian installer depends heavily on sed script to modify weewx.conf. For example,
+altitude. This should be done using `weectl station reconfigure`.
 
 ## Documentation
 
@@ -22,7 +31,6 @@ Update the logging wiki.
 
 ## Documentation
 
-Fill out "Preparation" section in pip.md for RedHat, SuSE, and macOS.
 
 Put legacy (V4.x) docs at weewx.com/legacy_docs.
 

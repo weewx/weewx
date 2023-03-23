@@ -17,6 +17,4 @@ junk*
 /.idea/shelf/*
 
 # Ignore wee_resources ...
-/bin/wee_resources/*
-# ... except:
-!/bin/wee_resources/__init__.py
+/bin/wee_resources/

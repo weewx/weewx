@@ -4,7 +4,7 @@
 # Copyright 2013-2020 Matthew Wall
 
 # Uncomment this to turn on verbose mode.
-export DH_VERBOSE=1
+#export DH_VERBOSE=1
 
 PYTHON=python3
 PKG=python3-weewx
@@ -20,7 +20,7 @@ DST_CFGDIR =$(DST)/etc/weewx
 ENTRIES=weewxd weectl wee_database wee_debug wee_device wee_import wee_reports wunderfixer
 
 %:
-	dh $@
+	dh $@ --with python3
 
 override_dh_auto_clean:
 	dh_auto_clean
@@ -44,7 +44,7 @@ install:
 
 # copy files from the source tree
 	cp -r $(SRC)/bin/* $(DST_BINDIR)
-	cp -r $(SRC)/docs/* $(DST_DOCDIR)
+	cp -r $(SRC)/html_docs/* $(DST_DOCDIR)
 	cp -r $(SRC)/examples $(DST_DOCDIR)
 	cp -r $(SRC)/skins $(DST_CFGDIR)
 	cp -r $(SRC)/util/apache $(DST_CFGDIR)
@@ -80,9 +80,6 @@ done
  -e 's%WEEWX_BIN=.*%WEEWX_BIN=/usr/bin/weewxd%' \
  -e 's%WEEWX_CFG=.*%WEEWX_CFG=/etc/weewx/weewx.conf%' \
  > $(DST)/etc/default/weewx
-
-# keep lintian happy
-	cp $(SRC)/debian/copyright $(DST_DOCDIR)
 
 # additional debian control files that dpkg-buildpackage seems to ignore
 	mkdir -p $(DST)/DEBIAN

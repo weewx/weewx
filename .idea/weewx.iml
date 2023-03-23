@@ -20,11 +20,4 @@
     <option name="format" value="GOOGLE" />
     <option name="myDocStringFormat" value="Google" />
   </component>
-  <component name="PyNamespacePackagesService">
-    <option name="namespacePackageFolders">
-      <list>
-        <option value="$MODULE_DIR$/bin/wee_resources" />
-      </list>
-    </option>
-  </component>
 </module>

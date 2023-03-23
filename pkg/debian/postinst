@@ -18,7 +18,7 @@ set -e
 . /usr/share/debconf/confmodule
 
 cfgfile=/etc/weewx/weewx.conf
-cfgapp=/usr/bin/wee_config
+cfgapp=/usr/bin/weectl
 
 # insert any configuration variables into the configuration file
 insert_debconf_variables() {
@@ -164,7 +164,7 @@ install_weewxconf() {
         units=metricwx
     fi
 
-    $cfgapp --install --dist-config=$cfgfile --output=$cfgfile --driver=$driver --unit-system=$units --no-prompt --no-backup
+    $cfgapp station reconfigure --config=$cfgfile --driver=$driver --units=$units --no-prompt --no-backup
 
     insert_debconf_variables
 }
