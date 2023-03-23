@@ -19,7 +19,7 @@ usage: weectl -v|--version
 
 optional arguments:
   -h, --help           show this help message and exit
-  -v, --version        show program's version number and exit
+  -v, --version        show program name and version number and exit
 
 Available subcommands:
   {station,extension}

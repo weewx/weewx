@@ -29,7 +29,7 @@ SUBCOMMANDS = ['station', 'extension']
 def main():
     parser = argparse.ArgumentParser(usage=usagestr)
     parser.add_argument("-v", "--version", action='version',
-                        version=f"weectl v{weewx.__version__}")
+                        version=f"weectl {weewx.__version__}")
 
     subparsers = parser.add_subparsers(dest='subcommand',
                                        title="Available subcommands")
