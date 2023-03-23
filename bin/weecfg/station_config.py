@@ -81,7 +81,7 @@ def station_create(config_path, *args,
 
 
 def station_reconfigure(config_path, dry_run=False, no_backup=False, *args, **kwargs):
-    "Reconfigure an existing station"
+    """Reconfigure an existing station"""
 
     if dry_run:
         print("This is a dry run. Nothing will actually be done.")
@@ -499,8 +499,19 @@ def copy_skins(config_dict, dry_run=False):
                 shutil.copytree(src, dest)
 
 
-def copy_docs(config_dict, docs_root=None, dry_run=False):
-    """Copy documentation from package resources to the DOCS_ROOT directory."""
+def copy_docs(config_dict, docs_root=None, dry_run=False, force=False):
+    """Copy documentation from package resources to the DOCS_ROOT directory.
+
+    Args:
+        config_dict (dict): A configuration dictionary
+        docs_root (str): Path to where the docs should be put, relative to WEEWX_ROOT.
+        dry_run (bool): True to not actually do anything. Just show what would happen.
+        force (bool): True to overwrite existing docs. Otherwise, do nothing if they exist.
+
+    Returns:
+        str|None: Path to the freshly written docs, or None if they already exist and `force`
+            was False.
+    """
 
     # If the user didn't specify a value, use a default
     if not docs_root:
@@ -509,6 +520,9 @@ def copy_docs(config_dict, docs_root=None, dry_run=False):
     # DOCS_ROOT is relative to WEEWX_PATH. Join them to get the absolute path.
     docs_dir = os.path.join(config_dict['WEEWX_ROOT'], docs_root)
 
+    if os.path.isdir(docs_dir) and not force:
+        print(f"Directory {docs_dir} already exists. Nothing done.")
+        return None
     print(f"Removing {docs_dir}.")
     if not dry_run:
         shutil.rmtree(docs_dir, ignore_errors=True)
@@ -519,8 +533,19 @@ def copy_docs(config_dict, docs_root=None, dry_run=False):
     return docs_dir
 
 
-def copy_examples(config_dict, examples_root=None, dry_run=False):
-    """Copy the examples to the EXAMPLES_ROOT directory."""
+def copy_examples(config_dict, examples_root=None, dry_run=False, force=False):
+    """Copy the examples to the EXAMPLES_ROOT directory.
+
+    Args:
+        config_dict (dict): A configuration dictionary.
+        examples_root (str): Path to where the examples will be put, relative to WEEWX_ROOT.
+        dry_run (bool): True to not actually do anything. Just show what would happen.
+        force (bool): True to overwrite existing examples. Otherwise, do nothing if they exist.
+
+    Returns:
+        str|None: Path to the freshly written examples, or None if they already exist and `force`
+            was False.
+    """
 
     # If the user didn't specify a value, use a default
     if not examples_root:
@@ -529,6 +554,9 @@ def copy_examples(config_dict, examples_root=None, dry_run=False):
     # examples_root is relative to WEEWX_PATH. Join them to get the absolute path.
     examples_dir = os.path.join(config_dict['WEEWX_ROOT'], examples_root)
 
+    if os.path.isdir(examples_dir) and not force:
+        print(f"Directory {examples_dir} already exists. Nothing done.")
+        return None
     print(f"Removing directory {examples_dir}.")
     if not dry_run:
         shutil.rmtree(examples_dir, ignore_errors=True)
@@ -584,7 +612,7 @@ def copy_util(config_path, config_dict, dry_run=False):
         # For multi
         r"^WEEWX_CFGDIR=.*": rf"WEEWX_CFGDIR={os.path.dirname(config_path)}",
         # for macOS:
-        r"<string>/usr/bin/python3</string>" : rf"<string>{sys.executable}<//string>",
+        r"<string>/usr/bin/python3</string>": rf"<string>{sys.executable}<//string>",
         # For macOS:
         r"<string>/Users/Shared/weewx/bin/weewxd</string>": rf"<string>{weewxd_path}<//string>",
         # For macOS:
@@ -659,9 +687,11 @@ def station_update(config_path, docs_root=None, examples_root=None,
 
     weecfg.update_config.update_and_merge(config_dict, dist_config_dict)
     print(f"Finished upgrading the configuration file found at {config_path}.")
-    docs_dir = copy_docs(config_dict, docs_root=docs_root, dry_run=dry_run)
+    docs_dir = copy_docs(config_dict, docs_root=docs_root,
+                         dry_run=dry_run, force=True)
     print(f"Finished upgrading docs found at {docs_dir}.")
-    examples_dir = copy_examples(config_dict, examples_root=examples_root, dry_run=dry_run)
+    examples_dir = copy_examples(config_dict, examples_root=examples_root,
+                                 dry_run=dry_run, force=True)
     print(f"Finished upgrading examples found at {examples_dir}.")
     util_dir = copy_util(config_path, config_dict, dry_run=dry_run)
     if util_dir:
