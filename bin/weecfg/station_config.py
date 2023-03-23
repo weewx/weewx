@@ -80,7 +80,7 @@ def station_create(config_path, *args,
         weecfg.save(dist_config_dict, config_path)
 
 
-def station_reconfigure(config_path, dry_run=False, no_backup=False, *args, **kwargs):
+def station_reconfigure(config_path, no_backup=False, dry_run=False, *args, **kwargs):
     """Reconfigure an existing station"""
 
     if dry_run:
@@ -97,11 +97,12 @@ def station_reconfigure(config_path, dry_run=False, no_backup=False, *args, **kw
         print("This was a dry run. Nothing was actually done.")
     else:
         # Save the results, possibly with a backup.
-        backup = weecfg.save(config_dict, config_path, not no_backup)
-        if no_backup:
-            print("No backup of configuration file.")
+        backup_path = weecfg.save(config_dict, config_path, not no_backup)
+        if backup_path:
+            print(f"Saved old configuration file as {backup_path}.")
         else:
-            print(f"Saved backup of configuration file to {backup}.")
+            print("No backup of configuration file.")
+        print("Done")
 
 
 def config_config(config_path, config_dict,
@@ -664,8 +665,8 @@ def _patch_file(srcpath, dstpath, re_list):
             wd.write(line)
 
 
-def station_update(config_path, docs_root=None, examples_root=None,
-                   no_prompt=False, dry_run=False):
+def station_upgrade(config_path, docs_root=None, examples_root=None,
+                    no_prompt=False, no_backup=False, dry_run=False):
     """Upgrade the user data for the configuration file found at config_path"""
 
     if dry_run:
@@ -704,8 +705,11 @@ def station_update(config_path, docs_root=None, examples_root=None,
     if dry_run:
         print("This was a dry run. Nothing was actually done.")
     else:
-        backup_path = weecfg.save_with_backup(config_dict, config_path)
-        print(f"Saved old configuration file as {backup_path}.")
+        backup_path = weecfg.save(config_dict, config_path, not no_backup)
+        if backup_path:
+            print(f"Saved old configuration file as {backup_path}.")
+        else:
+            print("No backup of configuration file.")
         print("Done")
 
 
