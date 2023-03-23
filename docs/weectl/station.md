@@ -5,7 +5,7 @@
 The subcommand `weectl station` manages user data. Running `weectl station --help` will give you
 more information about its four actions `create`, `reconfigure`, `upgrade`, and `upgrade-skins`:
 
-```shell
+```
 % weectl station --help
 usage: weectl station create [--config=CONFIG-PATH] \
                              [--driver=DRIVER] \
@@ -39,13 +39,17 @@ usage: weectl station create [--config=CONFIG-PATH] \
 
        weectl station upgrade [--config=CONFIG-PATH] \
                               [--docs-root=DOCS_ROOT] \
-                              [--examples-root=EXAMPLES_ROOT]
+                              [--examples-root=EXAMPLES_ROOT] \
+                              [--no-prompt] \
+                              [--no-backup] \
                               [--dry-run]
 
        weectl station upgrade-skins [--config=CONFIG-PATH] \
+                                    [--skin-root=SKIN_ROOT] \
+                                    [--no-prompt] \
                                     [--dry-run]
 
-Manages the configuration file and skins
+Manages the user data area, including the configuration file and skins
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -57,7 +61,7 @@ Which action to take:
     reconfigure         Reconfigure a station configuration file.
     upgrade             Upgrade the configuration file, docs, examples, and
                         utility files.
-    upgrade-skins       Upgrade the skins.
+    upgrade-skins       Upgrade the skins, making a backup copy first.
 ```
 
 In the documentation that follows,  the exact output will depend on
@@ -81,7 +85,7 @@ instrument &mdash; in that case, this action may be useful.
 
 Running `weectl station create --help` will show its options.
 
-```shell
+```
 % weectl station create --help
 usage: weectl station create [--config=CONFIG-PATH] \
                              [--driver=DRIVER] \
@@ -101,13 +105,13 @@ usage: weectl station create [--config=CONFIG-PATH] \
 
 Create a new user data area, including a configuration file. In what follows,
 WEEWX_ROOT is the directory that contains the configuration file. For
-example, if "--config=/Users/tkeffer/weewx-data/weewx.conf", then WEEWX_ROOT
-will be "/Users/tkeffer/weewx-data".
+example, if "--config=/home/tkeffer/weewx-data/weewx.conf", then WEEWX_ROOT
+will be "/home/tkeffer/weewx-data".
 
 optional arguments:
   -h, --help            show this help message and exit
   --config CONFIG-PATH  Path to configuration file. It must not already exist.
-                        Default is "/Users/tkeffer/weewx-data/weewx.conf".
+                        Default is "/home/tkeffer/weewx-data/weewx.conf".
   --driver DRIVER       Driver to use. Default is "weewx.drivers.simulator".
   --location LOCATION   A description of the station. This will be used for
                         report titles. Default is "WeeWX".
@@ -129,22 +133,22 @@ optional arguments:
                         Set display units to us, metricwx, or metric. Default
                         is "us".
   --skin-root SKIN_ROOT
-                        Where to put the skins, relatve to $WEEWX_ROOT.
-                        Default is "skins".
+                        Where to put the skins, relatve to WEEWX_ROOT. Default
+                        is "skins".
   --sqlite-root SQLITE_ROOT
                         Where to put the SQLite database, relative to
-                        $WEEWX_ROOT. Default is "archive".
+                        WEEWX_ROOT. Default is "archive".
   --html-root HTML_ROOT
                         Where to put the generated HTML and images, relative
                         to WEEWX_ROOT. Default is "public_html".
   --user-root USER_ROOT
                         Where to put the "user" directory, relative to
-                        $WEEWX_ROOT. Default is "bin/user"
+                        WEEWX_ROOT. Default is "bin/user"
   --docs-root DOCS_ROOT
                         Where to put the documentation, relative to
-                        $WEEWX_ROOT. Default is "docs".
+                        WEEWX_ROOT. Default is "docs".
   --examples-root EXAMPLES_ROOT
-                        Where to put the examples, relative to $WEEWX_ROOT.
+                        Where to put the examples, relative to WEEWX_ROOT.
                         Default is "examples".
   --no-prompt           If set, do not prompt. Use default values.
   --dry-run             Print what would happen, but do not actually do it.
@@ -200,7 +204,7 @@ This action will reconfigure your configuration file `weewx.conf`. Unless option
 
 Running `weectl station reconfigure --help` will show you its options.
 
-``` shell
+```
 % weectl station reconfigure  --help
 usage: weectl station reconfigure [--config=CONFIG-PATH] \ 
                                   [--driver=DRIVER] \
@@ -219,7 +223,7 @@ usage: weectl station reconfigure [--config=CONFIG-PATH] \
 optional arguments:
   -h, --help            show this help message and exit
   --config CONFIG-PATH  Path to configuration file. Default is
-                        "/Users/tkeffer/weewx-data/weewx.conf"
+                        "/home/tkeffer/weewx-data/weewx.conf"
   --driver DRIVER       Driver to use. Default is "weewx.drivers.simulator".
   --location LOCATION   A description of the station. This will be used for
                         report titles. Default is "WeeWX".
@@ -241,11 +245,11 @@ optional arguments:
                         Set display units to us, metricwx, or metric. Default
                         is "us".
   --skin-root SKIN_ROOT
-                        Where to put the skins, relatve to $WEEWX_ROOT.
-                        Default is "skins".
+                        Where to put the skins, relatve to WEEWX_ROOT. Default
+                        is "skins".
   --sqlite-root SQLITE_ROOT
                         Where to put the SQLite database, relative to
-                        $WEEWX_ROOT. Default is "archive".
+                        WEEWX_ROOT. Default is "archive".
   --html-root HTML_ROOT
                         Where to put the generated HTML and images, relative
                         to WEEWX_ROOT. Default is "public_html".
@@ -276,29 +280,33 @@ daemon configuration files. The skins will not be touched.
 
 Running `weectl station upgrade --help` will show you its options.
 
-``` shell
+```
 % weectl station upgrade --help
 usage: weectl station upgrade [--config=CONFIG-PATH] \
                               [--docs-root=DOCS_ROOT] \
-                              [--examples-root=EXAMPLES_ROOT]
+                              [--examples-root=EXAMPLES_ROOT] \
+                              [--no-prompt] \
+                              [--no-backup] \
                               [--dry-run]
 
 Upgrade an existing user data area, including the configuration file, docs,
 examples, and utility files. In what follows, WEEWX_ROOT is the
 directory that contains the configuration file. For example, if "--
-config=/Users/tkeffer/weewx-data/weewx.conf", then WEEWX_ROOT will be
-"/Users/tkeffer/weewx-data".
+config=/home/tkeffer/weewx-data/weewx.conf", then WEEWX_ROOT will be
+"/home/tkeffer/weewx-data".
 
 optional arguments:
   -h, --help            show this help message and exit
   --config CONFIG-PATH  Path to configuration file. Default is
-                        "/Users/tkeffer/weewx-data/weewx.conf"
+                        "/home/tkeffer/weewx-data/weewx.conf"
   --docs-root DOCS_ROOT
                         Where to put the new documentation, relative to
-                        $WEEWX_ROOT. Default is "docs".
+                        WEEWX_ROOT. Default is "docs".
   --examples-root EXAMPLES_ROOT
-                        Where to put the new examples, relative to
-                        $WEEWX_ROOT. Default is "examples".
+                        Where to put the new examples, relative to WEEWX_ROOT.
+                        Default is "examples".
+  --no-prompt           If set, do not prompt. Use default values.
+  --no-backup           If set, do not backup the old configuration file.
   --dry-run             Print what would happen, but do not actually do it.
 ```
 
@@ -309,7 +317,7 @@ Your configuration file will not be touched.
 
 Running `weectl station upgrade-skins --help` will show you its options.
 
-``` shell
+```
 % weectl station upgrade-skins --help
 usage: weectl station upgrade-skins [--config=CONFIG-PATH] \
                                     [--skin-root=SKIN_ROOT] \
@@ -318,18 +326,17 @@ usage: weectl station upgrade-skins [--config=CONFIG-PATH] \
 
 Upgrade skins to the latest version. A backup will be made first. In what
 follows, WEEWX_ROOT is the directory that contains the configuration
-file. For example, if "--config=/Users/tkeffer/weewx-data/weewx.conf", then
-WEEWX_ROOT will be "/Users/tkeffer/weewx-data".
+file. For example, if "--config=/home/tkeffer/weewx-data/weewx.conf", then
+WEEWX_ROOT will be "/home/tkeffer/weewx-data".
 
 optional arguments:
   -h, --help            show this help message and exit
   --config CONFIG-PATH  Path to configuration file. Default is
-                        "/Users/tkeffer/weewx-data/weewx.conf"
+                        "/home/tkeffer/weewx-data/weewx.conf"
   --skin-root SKIN_ROOT
                         Where to put the skins, relatve to WEEWX_ROOT. Default
                         is "skins".
   --no-prompt           If set, do not prompt. Use default values.
   --dry-run             Print what would happen, but do not actually do it.
-
 ```
 

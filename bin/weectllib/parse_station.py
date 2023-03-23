@@ -42,8 +42,9 @@ station_reconfigure_usage = f"""{bcolors.BOLD}weectl station reconfigure [--conf
 """
 station_upgrade_usage = f"""{bcolors.BOLD}weectl station upgrade [--config=CONFIG-PATH] \\
                               [--docs-root=DOCS_ROOT] \\
-                              [--examples-root=EXAMPLES_ROOT]
+                              [--examples-root=EXAMPLES_ROOT] \\
                               [--no-prompt] \\
+                              [--no-backup] \\
                               [--dry-run]{bcolors.ENDC}
 """
 
@@ -153,6 +154,8 @@ def add_subparser(subparsers):
                                              'WEEWX_ROOT. Default is "examples".')
     station_upgrade_parser.add_argument('--no-prompt', action='store_true',
                                         help='If set, do not prompt. Use default values.')
+    station_upgrade_parser.add_argument('--no-backup', action='store_true',
+                                        help='If set, do not backup the old configuration file.')
     station_upgrade_parser.add_argument('--dry-run',
                                         action='store_true',
                                         help='Print what would happen, but do not actually '
@@ -232,11 +235,12 @@ def reconfigure_station(namespace):
 
 
 def upgrade_station(namespace):
-    weecfg.station_config.station_update(config_path=namespace.config,
-                                         docs_root=namespace.docs_root,
-                                         examples_root=namespace.examples_root,
-                                         no_prompt=namespace.no_prompt,
-                                         dry_run=namespace.dry_run)
+    weecfg.station_config.station_upgrade(config_path=namespace.config,
+                                          docs_root=namespace.docs_root,
+                                          examples_root=namespace.examples_root,
+                                          no_prompt=namespace.no_prompt,
+                                          no_backup=namespace.no_backup,
+                                          dry_run=namespace.dry_run)
 
 
 def upgrade_skins(namespace):
