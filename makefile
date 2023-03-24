@@ -197,10 +197,10 @@ src-tarball: $(DSTDIR)/$(SRCPKG)
 
 $(DSTDIR)/$(SRCPKG):
 	mkdir -p $(BLDDIR)/weewx-$(VERSION)
-	rsync -ar ./ $(BLDDIR)/weewx-$(VERSION) --exclude __pycache__ --exclude .gitignore \
-		--exclude .git --exclude tests --exclude dist --exclude build --exclude .editorconfig \
-		--exclude poetry.lock --exclude pyproject.toml --exclude mkdocs.yml --exclude .idea \
-		--exclude .github
+	rsync -ar ./ $(BLDDIR)/weewx-$(VERSION) --exclude wee_resources --exclude __pycache__ \
+		--exclude .gitignore --exclude .git --exclude tests --exclude dist --exclude build \
+		--exclude .editorconfig --exclude poetry.lock --exclude pyproject.toml \
+		--exclude mkdocs.yml --exclude .idea --exclude .github
 	mkdir -p $(DSTDIR)
 	tar cfz $(DSTDIR)/$(SRCPKG) -C $(BLDDIR) weewx-$(VERSION)
 
@@ -258,7 +258,7 @@ DEBPKG=python3-weewx_$(DEBVER)_$(DEBARCH).deb
 ifneq ("$(SIGN)","1")
 DPKG_OPT=-us -uc
 endif
-debian-package: bin/wee_resources/ deb-package-prep
+debian-package: deb-package-prep
 	cp pkg/debian/control $(DEBBLDDIR)/debian/control
 	rm -f $(DEBBLDDIR)/debian/files
 	rm -rf $(DEBBLDDIR)/debian/weewx*

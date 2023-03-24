@@ -175,7 +175,7 @@ merge_weewxconf() {
         return
     fi
 
-    NEWVER=`$cfgapp --version`
+    NEWVER=$(cfgapp --version | awk '{print $2}')
     OLDVER=$(get_conf_version $cfgfile)
     if dpkg --compare-versions $OLDVER lt $NEWVER; then
         # this is an old config, so merge it into a new config
@@ -183,11 +183,11 @@ merge_weewxconf() {
             DSTVER=$(get_conf_version $cfgfile.dist)
             if dpkg --compare-versions $DSTVER eq $NEWVER; then
                 echo saving previous config file as $cfgfile-$OLDVER
-                mv $cfgfile $cfgfile-$OLDVER
+                cp -p $cfgfile $cfgfile-$OLDVER
                 echo saving distribution config file as $cfgfile-$NEWVER
                 cp -p $cfgfile.dist $cfgfile-$NEWVER
                 echo merging previous and distribution into $cfgfile
-                $cfgapp --upgrade --config=$cfgfile-$OLDVER --dist-config=$cfgfile-$NEWVER --output=$cfgfile --no-prompt --no-backup
+                $cfgapp station upgrade --config=$cfgfile --dist-config=$cfgfile-$NEWVER --no-prompt --no-backup
             else
                 echo distribution config file is wrong version for merging
             fi

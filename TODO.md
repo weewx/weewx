@@ -1,11 +1,6 @@
 # To do
 
-## `weectl`
-
-Do not have `weectl station create` copy in a fresh copy of the docs and examples. That's a job
-for `weectl station upgrade`.
-
-Need an option `--no-backup` for `weectl station reconfigure`.
+## Debian packaging
 
 Right now, the Debian installer depends heavily on sed script to modify weewx.conf. For example,
 altitude. This should be done using `weectl station reconfigure`.

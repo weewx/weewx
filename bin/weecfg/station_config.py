@@ -28,6 +28,7 @@ log = logging.getLogger(__name__)
 
 
 def station_create(config_path, *args,
+                   dist_config_path=None,
                    docs_root=None,
                    examples_root=None,
                    user_root=None,
@@ -62,12 +63,19 @@ def station_create(config_path, *args,
     print(f"The configuration file will be created "
           f"at {bcolors.BOLD}{config_path}{bcolors.ENDC}.")
 
-    # Retrieve the configuration file as a ConfigObj
-    with importlib.resources.open_text('wee_resources', 'weewx.conf', encoding='utf-8') as fd:
-        dist_config_dict = configobj.ConfigObj(fd, encoding='utf-8', file_error=True)
+    # Unless we've been given a path to the new configuration file, retrieve it from
+    # package resources.
+    if dist_config_path:
+        dist_config_dict = configobj.ConfigObj(dist_config_path, encoding='utf-8', file_error=True)
+    else:
+        # Retrieve the new configuration file from package resources:
+        with importlib.resources.open_text('wee_resources', 'weewx.conf', encoding='utf-8') as fd:
+            dist_config_dict = configobj.ConfigObj(fd, encoding='utf-8', file_error=True)
 
     config_config(config_path, dist_config_dict, weewx_root=weewx_root, dry_run=dry_run,
                   *args, **kwargs)
+    copy_skins(dist_config_dict, dry_run=dry_run)
+    copy_util(config_path, dist_config_dict, dry_run=dry_run)
     copy_docs(dist_config_dict, docs_root=docs_root, dry_run=dry_run)
     copy_examples(dist_config_dict, examples_root=examples_root, dry_run=dry_run)
     copy_user(dist_config_dict, user_root=user_root, dry_run=dry_run)
@@ -125,8 +133,6 @@ def config_config(config_path, config_dict,
     config_units(config_dict, unit_system=unit_system, no_prompt=no_prompt)
     config_driver(config_dict, driver=driver, no_prompt=no_prompt)
     config_roots(config_dict, weewx_root, skin_root, html_root, sqlite_root, user_root)
-    copy_skins(config_dict, dry_run=dry_run)
-    copy_util(config_path, config_dict, dry_run=dry_run)
 
 
 def config_location(config_dict, location=None, no_prompt=False):
@@ -665,7 +671,7 @@ def _patch_file(srcpath, dstpath, re_list):
             wd.write(line)
 
 
-def station_upgrade(config_path, docs_root=None, examples_root=None,
+def station_upgrade(config_path, dist_config_path=None, docs_root=None, examples_root=None,
                     no_prompt=False, no_backup=False, dry_run=False):
     """Upgrade the user data for the configuration file found at config_path"""
 
@@ -682,9 +688,14 @@ def station_upgrade(config_path, docs_root=None, examples_root=None,
         print("Nothing done.")
         return
 
-    # Retrieve the new configuration file as a ConfigObj:
-    with importlib.resources.open_text('wee_resources', 'weewx.conf', encoding='utf-8') as fd:
-        dist_config_dict = configobj.ConfigObj(fd, encoding='utf-8', file_error=True)
+    # Unless we've been given a path to the new configuration file, retrieve it from
+    # package resources.
+    if dist_config_path:
+        dist_config_dict = configobj.ConfigObj(dist_config_path, encoding='utf-8', file_error=True)
+    else:
+        # Retrieve the new configuration file from package resources:
+        with importlib.resources.open_text('wee_resources', 'weewx.conf', encoding='utf-8') as fd:
+            dist_config_dict = configobj.ConfigObj(fd, encoding='utf-8', file_error=True)
 
     weecfg.update_config.update_and_merge(config_dict, dist_config_dict)
     print(f"Finished upgrading the configuration file found at {config_path}.")

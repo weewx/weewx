@@ -11,6 +11,7 @@ import weewx
 from weeutil.weeutil import bcolors
 
 station_create_usage = f"""{bcolors.BOLD}weectl station create [--config=CONFIG-PATH] \\
+                             [--dist-config=DIST-CONFIG-PATH]] \\
                              [--driver=DRIVER] \\
                              [--location=LOCATION] \\
                              [--altitude=ALTITUDE,{{foot|meter}}] \\
@@ -41,6 +42,7 @@ station_reconfigure_usage = f"""{bcolors.BOLD}weectl station reconfigure [--conf
                                   [--dry-run]{bcolors.ENDC}
 """
 station_upgrade_usage = f"""{bcolors.BOLD}weectl station upgrade [--config=CONFIG-PATH] \\
+                              [--dist-config=DIST-CONFIG-PATH]] \\
                               [--docs-root=DOCS_ROOT] \\
                               [--examples-root=EXAMPLES_ROOT] \\
                               [--no-prompt] \\
@@ -94,6 +96,12 @@ def add_subparser(subparsers):
                                        metavar='CONFIG-PATH',
                                        help=f'Path to configuration file. It must not already '
                                             f'exist. Default is "{weecfg.default_config_path}".')
+    station_create_parser.add_argument('--dist-config',
+                                       metavar='DIST-CONFIG-PATH',
+                                       help='Use configuration file DIST-CONFIG-PATH as the '
+                                            'new configuration file. Default is to retrieve it '
+                                            'from package resources. The average user is '
+                                            'unlikely to need this option.')
     _add_common_args(station_create_parser)
     station_create_parser.add_argument('--user-root',
                                        help='Where to put the "user" directory, relative to '
@@ -146,6 +154,12 @@ def add_subparser(subparsers):
                                         metavar='CONFIG-PATH',
                                         help=f'Path to configuration file. '
                                              f'Default is "{weecfg.default_config_path}"')
+    station_upgrade_parser.add_argument('--dist-config',
+                                        metavar='DIST-CONFIG-PATH',
+                                        help='Use configuration file DIST-CONFIG-PATH as the '
+                                             'new configuration file. Default is to retrieve it '
+                                             'from package resources. The average user is '
+                                             'unlikely to need this option.')
     station_upgrade_parser.add_argument('--docs-root',
                                         help='Where to put the new documentation, relative to '
                                              'WEEWX_ROOT. Default is "docs".')
@@ -193,6 +207,7 @@ def create_station(namespace):
     """Map 'namespace' to a call to station_create()"""
     try:
         weecfg.station_config.station_create(config_path=namespace.config,
+                                             dist_config_path=namespace.dist_config,
                                              driver=namespace.driver,
                                              location=namespace.location,
                                              altitude=namespace.altitude,
@@ -236,6 +251,7 @@ def reconfigure_station(namespace):
 
 def upgrade_station(namespace):
     weecfg.station_config.station_upgrade(config_path=namespace.config,
+                                          dist_config_path=namespace.dist_config,
                                           docs_root=namespace.docs_root,
                                           examples_root=namespace.examples_root,
                                           no_prompt=namespace.no_prompt,
