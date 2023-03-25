@@ -1517,11 +1517,11 @@ class StationRegistryThread(RESTThread):
         self.config_path = config_path
         self.entry_path = entry_path
         # Don't allow registering more often than once an hour
-        if self.post_interval is None or self.post_interval < 3600:
-            log.debug("%s: Registration interval '%s' too short. Set to 3600.",
+        if self.post_interval is None or self.post_interval < 86400:
+            log.debug("%s: Registration interval '%s' too short. Set to 86400.",
                       self.protocol_name,
                       self.post_interval)
-            self.post_interval = 3600
+            self.post_interval = 86400
 
     def get_record(self, dummy_record, dummy_archive):
         _record = {

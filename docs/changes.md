@@ -35,7 +35,7 @@ copy. Before, it had to rely on hardwired font paths, which were less reliable.
 If the uploaders get a response code of 429 ("TOO MANY REQUESTS"), they no
 longer bother trying again.
 
-Limit station registration to once an hour, max.
+Limit station registration to once a day, max.
 
 Fix problem where aggregation of null wind directions returns 90° instead of
 null. Fixes issue #849.
