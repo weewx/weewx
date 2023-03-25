@@ -129,9 +129,9 @@ def config_config(config_path, config_dict,
     config_location(config_dict, location=location, no_prompt=no_prompt)
     config_altitude(config_dict, altitude=altitude, no_prompt=no_prompt)
     config_latlon(config_dict, latitude=latitude, longitude=longitude, no_prompt=no_prompt)
-    config_registry(config_dict, register=register, station_url=station_url, no_prompt=no_prompt)
     config_units(config_dict, unit_system=unit_system, no_prompt=no_prompt)
     config_driver(config_dict, driver=driver, no_prompt=no_prompt)
+    config_registry(config_dict, register=register, station_url=station_url, no_prompt=no_prompt)
     config_roots(config_dict, weewx_root, skin_root, html_root, sqlite_root, user_root)
 
 
@@ -270,54 +270,6 @@ def config_latlon(config_dict, latitude=None, longitude=None, no_prompt=False):
     config_dict['Station']['longitude'] = final_longitude
 
 
-def config_registry(config_dict, register=None, station_url=None, no_prompt=False):
-    """Configure whether to include the station in the weewx.com registry."""
-
-    if 'Station' not in config_dict:
-        return
-
-    try:
-        default_register = to_bool(
-            config_dict['StdRESTful']['StationRegistry']['register_this_station'])
-    except KeyError:
-        default_register = False
-
-    default_station_url = config_dict['Station'].get('station_url')
-
-    if register is not None:
-        final_register = to_bool(register)
-        final_station_url = station_url or default_station_url
-    elif not no_prompt:
-        print("\nYou can register your station on weewx.com, where it will be included")
-        print("in a map. If you choose to do so, you will also need a unique URL to identify ")
-        print("your station (such as a website, or a WeatherUnderground link).")
-        ans = weeutil.weeutil.y_or_n("Include station in the station registry [n]? ",
-                                     default=default_register)
-        final_register = to_bool(ans)
-        if final_register:
-            while True:
-                print("\nNow give a unique URL for your station. A Weather Underground ")
-                print("URL such as https://www.wunderground.com/dashboard/pws/KORPORT12 will do.")
-                url = weecfg.prompt_with_options("Unique URL", default_station_url)
-                if url:
-                    if 'example.com' in url:
-                        print("Unique please!")
-                    else:
-                        final_station_url = url
-                        break
-    else:
-        final_register = default_register
-        final_station_url = default_station_url
-
-    if final_register and not final_station_url:
-        raise weewx.ViolatedPrecondition("Registering the station requires "
-                                         "option 'station_url'.")
-
-    config_dict['StdRESTful']['StationRegistry']['register_this_station'] = final_register
-    if final_register and final_station_url:
-        weecfg.inject_station_url(config_dict, final_station_url)
-
-
 def config_units(config_dict, unit_system=None, no_prompt=False):
     """Determine the unit system to use"""
 
@@ -436,6 +388,54 @@ def config_driver(config_dict, driver=None, no_prompt=False):
     if driver_editor:
         # One final chance for the driver to modify other parts of the configuration
         driver_editor.modify_config(config_dict)
+
+
+def config_registry(config_dict, register=None, station_url=None, no_prompt=False):
+    """Configure whether to include the station in the weewx.com registry."""
+
+    if 'Station' not in config_dict:
+        return
+
+    try:
+        default_register = to_bool(
+            config_dict['StdRESTful']['StationRegistry']['register_this_station'])
+    except KeyError:
+        default_register = False
+
+    default_station_url = config_dict['Station'].get('station_url')
+
+    if register is not None:
+        final_register = to_bool(register)
+        final_station_url = station_url or default_station_url
+    elif not no_prompt:
+        print("\nYou can register your station on weewx.com, where it will be included")
+        print("in a map. If you choose to do so, you will also need a unique URL to identify ")
+        print("your station (such as a website, or a WeatherUnderground link).")
+        ans = weeutil.weeutil.y_or_n("Include station in the station registry [n]? ",
+                                     default=default_register)
+        final_register = to_bool(ans)
+        if final_register:
+            while True:
+                print("\nNow give a unique URL for your station. A Weather Underground ")
+                print("URL such as https://www.wunderground.com/dashboard/pws/KORPORT12 will do.")
+                url = weecfg.prompt_with_options("Unique URL", default_station_url)
+                if url:
+                    if 'example.com' in url:
+                        print("Unique please!")
+                    else:
+                        final_station_url = url
+                        break
+    else:
+        final_register = default_register
+        final_station_url = default_station_url
+
+    if final_register and not final_station_url:
+        raise weewx.ViolatedPrecondition("Registering the station requires "
+                                         "option 'station_url'.")
+
+    config_dict['StdRESTful']['StationRegistry']['register_this_station'] = final_register
+    if final_register and final_station_url:
+        weecfg.inject_station_url(config_dict, final_station_url)
 
 
 def config_roots(config_dict,

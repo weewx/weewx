@@ -2,7 +2,9 @@
 
 ## Debian packaging
 
-Offer to register the station.
+Check for valid station_url?
+
+Test reconfiguring.
 
 Use `/etc/weewx` as `WEEWX_ROOT`.
 
