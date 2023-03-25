@@ -15,6 +15,7 @@ import os.path
 import re
 import shutil
 import sys
+import urllib.parse
 
 import configobj
 
@@ -411,21 +412,32 @@ def config_registry(config_dict, register=None, station_url=None, no_prompt=Fals
         print("\nYou can register your station on weewx.com, where it will be included")
         print("in a map. If you choose to do so, you will also need a unique URL to identify ")
         print("your station (such as a website, or a WeatherUnderground link).")
-        ans = weeutil.weeutil.y_or_n("Include station in the station registry [n]? ",
+        default_prompt = 'y' if default_register else 'n'
+        ans = weeutil.weeutil.y_or_n(f"Include station in the station "
+                                     f"registry [{default_prompt}]? ",
                                      default=default_register)
         final_register = to_bool(ans)
         if final_register:
+            print("\nNow give a unique URL for your station. A Weather Underground ")
+            print("URL such as https://www.wunderground.com/dashboard/pws/KORPORT12 will do.")
             while True:
-                print("\nNow give a unique URL for your station. A Weather Underground ")
-                print("URL such as https://www.wunderground.com/dashboard/pws/KORPORT12 will do.")
                 url = weecfg.prompt_with_options("Unique URL", default_station_url)
-                if url:
-                    if 'example.com' in url:
-                        print("Unique please!")
-                    else:
-                        final_station_url = url
-                        break
+                parts = urllib.parse.urlparse(url)
+                if 'example.com' in url or 'acme.com' in url:
+                    print("Unique please!")
+                # Rudimentary validation of the station URL.
+                # 1. It must have a valid scheme (http or https);
+                # 2. The address cannot be empty; and
+                # 3. The address has to have at least one dot in it.
+                elif parts.scheme not in ['http', 'https'] \
+                        or not parts.netloc \
+                        or '.' not in parts.netloc:
+                    print("Not a valid URL")
+                else:
+                    final_station_url = url
+                    break
     else:
+        # --no-prompt is active. Just use the defaults.
         final_register = default_register
         final_station_url = default_station_url
 

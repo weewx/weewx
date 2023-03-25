@@ -2,12 +2,6 @@
 
 ## Debian packaging
 
-Check for valid station_url?
-
-Test reconfiguring.
-
-Use `/etc/weewx` as `WEEWX_ROOT`.
-
 Install using systemd, not init.
 
 ## Documentation
