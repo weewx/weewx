@@ -2,8 +2,11 @@
 
 ## Debian packaging
 
-Right now, the Debian installer depends heavily on sed script to modify weewx.conf. For example,
-altitude. This should be done using `weectl station reconfigure`.
+Offer to register the station.
+
+Use `/etc/weewx` as `WEEWX_ROOT`.
+
+Install using systemd, not init.
 
 ## Documentation
 
