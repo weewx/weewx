@@ -227,13 +227,13 @@ configure)
         fi
 
         # precompile the bytecode
-        #python -m compileall /usr/share/weewx
+        python3 -m compileall /usr/share/weewx
 
         # configure for system startup
-        update-rc.d weewx defaults 98 > /dev/null
+        systemctl enable weewx
 
         # start the weewx daemon
-        invoke-rc.d weewx start
+        systemctl start weewx
         ;;
 
 abort-remove)

@@ -2,7 +2,10 @@
 
 ## Debian packaging
 
-Install using systemd, not init.
+Test upgrade process.
+- Upgrade from v4 Python 2
+- Upgrade from v4 Python 3
+- Upgrade from V5 to a later V5
 
 ## Documentation
 

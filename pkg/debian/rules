@@ -1,7 +1,7 @@
 #!/usr/bin/make -f
 # -*- makefile -*-
 # debian makefile for weewx
-# Copyright 2013-2020 Matthew Wall
+# Copyright 2013-2023 Matthew Wall
 
 # Uncomment this to turn on verbose mode.
 #export DH_VERBOSE=1
@@ -13,7 +13,7 @@ DST=$(CURDIR)/debian/$(PKG)
 DST_EXECDIR=$(DST)/usr/bin
 DST_BINDIR =$(DST)/usr/share/weewx
 DST_DOCDIR =$(DST)/usr/share/doc/weewx
-DST_INITDIR=$(DST)/etc/init.d
+DST_SYSTEMDDIR=$(DST)/etc/systemd/system
 DST_CFGDIR =$(DST)/etc/weewx
 
 # these are the entry points
@@ -36,7 +36,7 @@ install:
 
 # create the directory structure
 	mkdir -p $(DST_EXECDIR)
-	mkdir -p $(DST_INITDIR)
+	mkdir -p $(DST_SYSTEMDDIR)
 	mkdir -p $(DST_BINDIR)
 	mkdir -p $(DST_DOCDIR)
 	mkdir -p $(DST_CFGDIR)
@@ -62,8 +62,10 @@ install:
  -e 's%HTML_ROOT = public_html%HTML_ROOT = /var/www/html/weewx%' \
  -e 's%SQLITE_ROOT = .*%SQLITE_ROOT = /var/lib/weewx%' \
  > $(DST_CFGDIR)/weewx.conf
-	cp $(SRC)/util/init.d/weewx.debian $(DST_INITDIR)/weewx
-	chmod 755 $(DST_INITDIR)/weewx
+
+	cat $(SRC)/util/systemd/weewx.service | sed \
+ -e 's%^ExecStart=.*%ExecStart=/usr/bin/weewxd /etc/weewx/weewx.conf%' \
+ > $(DST_SYSTEMDDIR)/weewx.service
 
 # make a virgin copy of the configuration file
 	cp $(DST_CFGDIR)/weewx.conf $(DST_CFGDIR)/weewx.conf.dist

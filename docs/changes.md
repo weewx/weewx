@@ -15,7 +15,9 @@ root privileges. However, `/home/weewx` can still be used.
 The new utility `weectl` is now used for extensions and station configuration.
 With time, it will probably take on other responsibilities.
 
-Removed all references to the deprecated package `distutils`, which was due to
+Package installs now use systemd instead of the old System V `/etc/init.d`.
+
+Removed all references to the deprecated package `distutils`, which is due to
 be removed in Python v3.12.
 
 Documentation now uses [MkDocs](https://www.mkdocs.org/).
@@ -62,7 +64,7 @@ PR #843. Thanks to user Karen!
 The module `user.extensions` is now imported into `wee_reports`. Thanks to
 user jocelynj! PR #842.
 
-Fix problem that prevented wee_device --set-retransmit from working on
+Fix problem that prevented `wee_device --set-retransmit` from working on
 Vantage stations.
 
 Using a bad data binding with an aggregation tag no longer results in an
