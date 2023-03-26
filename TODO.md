@@ -1,5 +1,7 @@
 # To do
 
+Use POST for station registry (instead of GET).
+
 ## Debian packaging
 
 Test upgrade process.
@@ -39,6 +41,8 @@ Put legacy (V4.x) docs at weewx.com/legacy_docs.
 ## Upgrade guide
 
 How to switch from init.d to systemd.
+
+How to upgrade from V4 using Python 2 to V5.
 
 
 ## Miscellaneous

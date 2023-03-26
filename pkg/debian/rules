@@ -6,8 +6,8 @@
 # Uncomment this to turn on verbose mode.
 #export DH_VERBOSE=1
 
+PKG=weewx
 PYTHON=python3
-PKG=python3-weewx
 SRC=$(CURDIR)
 DST=$(CURDIR)/debian/$(PKG)
 DST_EXECDIR=$(DST)/usr/bin

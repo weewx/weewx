@@ -254,7 +254,7 @@ fi
 # the latest version in the debian changelog must match the packaging version
 DEBARCH=all
 DEBBLDDIR=$(BLDDIR)/weewx-$(VERSION)
-DEBPKG=python3-weewx_$(DEBVER)_$(DEBARCH).deb
+DEBPKG=weewx_$(DEBVER)_$(DEBARCH).deb
 ifneq ("$(SIGN)","1")
 DPKG_OPT=-us -uc
 endif
@@ -264,7 +264,7 @@ debian-package: deb-package-prep
 	rm -rf $(DEBBLDDIR)/debian/weewx*
 	(cd $(DEBBLDDIR); dpkg-buildpackage $(DPKG_OPT))
 	mkdir -p $(DSTDIR)
-	mv $(BLDDIR)/$(DEBPKG) $(DSTDIR)
+	mv $(BLDDIR)/$(DEBPKG) $(DSTDIR)/python3-$(DEBPKG)
 
 deb-package-prep: $(DSTDIR)/$(SRCPKG)
 	mkdir -p $(BLDDIR)
@@ -290,7 +290,7 @@ check-deb:
 	lintian -Ivi $(DSTDIR)/$(DEBPKG)
 
 upload-debian:
-	scp $(DSTDIR)/$(DEBPKG) $(USER)@$(WEEWX_COM):$(WEEWX_STAGING)
+	scp $(DSTDIR)/python3-$(DEBPKG) $(USER)@$(WEEWX_COM):$(WEEWX_STAGING)
 
 
 ###############################################################################
@@ -426,13 +426,13 @@ pull-apt-repo:
 
 # add the latest version to the local apt repo using aptly
 update-apt-repo:
-	aptly repo add python2-weewx $(DSTDIR)/$(DEBPKG)
+	aptly repo add python2-weewx $(DSTDIR)/python-$(DEBPKG)
 	aptly snapshot create python-weewx-$(DEBVER) from repo python2-weewx
 	aptly publish drop squeeze python2
 	aptly publish -architectures=all snapshot python-weewx-$(DEBVER) python2
 # i would prefer to just do a switch, but that does not work. idkw
 #	aptly publish switch squeeze python2 python-weewx-$(DEBVER)
-	aptly repo add python3-weewx $(DSTDIR)/$(DEBPKG)
+	aptly repo add python3-weewx $(DSTDIR)/python3-$(DEBPKG)
 	aptly snapshot create python3-weewx-$(DEBVER) from repo python3-weewx
 	aptly publish drop buster python3
 	aptly publish -architectures=all snapshot python3-weewx-$(DEBVER) python3
