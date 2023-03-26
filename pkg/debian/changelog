@@ -1,3 +1,6 @@
+weewx (5.0.0a25-1) unstable; urgency=low
+  * Switch to systemd install
+ -- Thomas Keffer (Author of weewx) <tkeffer@gmail.com>  Sun, 26 Mar 2023 05:18:19 -0700
 weewx (5.0.0a24-1) unstable; urgency=low
   * new upstream release
  -- Thomas Keffer (Author of weewx) <tkeffer@gmail.com>  Fri, 24 Mar 2023 06:25:32 -0700
