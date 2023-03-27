@@ -1,18 +1,21 @@
 # To do
 
-Use POST for station registry (instead of GET).
-
 ## Debian packaging
+
+Right now, the depository is for a "squeeze" and "buster" distribution. Do we keep adding them
+("bullseye", "bookworm", etc.)? Or, do we just use "stable"?
 
 Test upgrade process.
 - Upgrade from v4 Python 2
 - Upgrade from v4 Python 3
 - Upgrade from V5 to a later V5
 
-## Documentation
+## Upgrade guide
 
+How to switch from init.d to systemd.
 
-## Drivers
+How to upgrade from V4 using Python 2 to V5.
+
 
 ## Utilities
 
@@ -33,16 +36,6 @@ Update the logging wiki.
 
 Put legacy (V4.x) docs at weewx.com/legacy_docs.
 
-
-
-## Testing
-
-
-## Upgrade guide
-
-How to switch from init.d to systemd.
-
-How to upgrade from V4 using Python 2 to V5.
 
 
 ## Miscellaneous

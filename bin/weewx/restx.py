@@ -474,7 +474,7 @@ class RESTThread(threading.Thread):
                 _response = self.post_request(request, data)
 
                 if 200 <= _response.code <= 299:
-                    # No exception thrown and we got a good response code, but
+                    # No exception thrown, and we got a good response code, but
                     # we're still not done.  Some protocols encode a bad
                     # station ID or password in the return message.
                     # Give any interested protocols a chance to examine it.
@@ -1394,24 +1394,24 @@ class StdStationRegistry(StdRESTful):
         [[StationRegistry]]
             register_this_station = True
 
-    This will periodically do a http GET with the following information:
+    This will periodically do a http POST with the following information:
 
-        station_url      Should be world-accessible. Used as key.
+        station_url      Should be world-accessible. Used as key. Must be unique.
         description      Brief synopsis of the station
         latitude         Station latitude in decimal
         longitude        Station longitude in decimal
         station_type     The driver name, for example Vantage, FineOffsetUSB
         station_model    The hardware_name property from the driver
         weewx_info       weewx version
-        python_info
-        platform_info
+        python_info      The version of Python. E.g., "3.7.10"
+        platform_info    As returned by platform.platform()
         config_path      Where the configuration file is located.
         entry_path       The path to the top-level module (usually where weewxd is located)
 
     The station_url is the unique key by which a station is identified.
     """
 
-    archive_url = 'http://weewx.com/register/register.cgi'
+    registry_url = 'https://weewx.com/api/v2/stations/'
 
     def __init__(self, engine, config_dict):
 
@@ -1464,7 +1464,7 @@ class StationRegistryThread(RESTThread):
                  station_url,
                  latitude,
                  longitude,
-                 server_url=StdStationRegistry.archive_url,
+                 server_url=StdStationRegistry.registry_url,
                  description="Unknown",
                  station_type="Unknown",
                  station_model="Unknown",
@@ -1523,47 +1523,27 @@ class StationRegistryThread(RESTThread):
                       self.post_interval)
             self.post_interval = 86400
 
-    def get_record(self, dummy_record, dummy_archive):
-        _record = {
-            'station_url': self.station_url,
-            'description': self.description,
-            'latitude': self.latitude,
-            'longitude': self.longitude,
-            'station_type': self.station_type,
-            'station_model': self.station_model,
-            'python_info': platform.python_version(),
-            'platform_info': platform.platform(),
-            'weewx_info': weewx.__version__,
-            'config_path': self.config_path,
-            'entry_path' : self.entry_path,
-            'usUnits': weewx.US,
-        }
-        return _record
+    def format_url(self, _):
+        return self.server_url
 
-    _FORMATS = {'station_url': 'station_url=%s',
-                'description': 'description=%s',
-                'latitude': 'latitude=%.4f',
-                'longitude': 'longitude=%.4f',
-                'station_type': 'station_type=%s',
-                'station_model': 'station_model=%s',
-                'python_info': 'python_info=%s',
-                'platform_info': 'platform_info=%s',
-                'config_path': 'config_path=%s',
-                'entry_path': 'entry_path=%s',
-                'weewx_info': 'weewx_info=%s'}
+    def get_post_body(self, record):
+        import json
 
-    def format_url(self, record):
-        """Return an URL for posting using the StationRegistry protocol."""
-
-        _liststr = []
-        for _key in StationRegistryThread._FORMATS:
-            v = record[_key]
-            if v is not None:
-                _liststr.append(urllib.parse.quote_plus(StationRegistryThread._FORMATS[_key] % v,
-                                                        '='))
-        _urlquery = '&'.join(_liststr)
-        _url = "%s?%s" % (self.server_url, _urlquery)
-        return _url
+        body = {
+                'station_url': self.station_url,
+                'description': self.description,
+                'latitude': self.latitude,
+                'longitude': self.longitude,
+                'station_type': self.station_type,
+                'station_model': self.station_model,
+                'weewx_info': weewx.__version__,
+                'python_info': platform.python_version(),
+                'platform_info': platform.platform(),
+                'config_path': self.config_path,
+                'entry_path' : self.entry_path,
+            }
+        json_body = json.dumps(body)
+        return json_body, 'application/json'
 
     def check_response(self, response):
         """

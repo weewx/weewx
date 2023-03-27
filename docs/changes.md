@@ -39,6 +39,8 @@ longer bother trying again.
 
 Limit station registration to once a day, max.
 
+Station registration now uses HTTP POST, instead of HTTP GET.
+
 Fix problem where aggregation of null wind directions returns 90° instead of
 null. Fixes issue #849.
 
