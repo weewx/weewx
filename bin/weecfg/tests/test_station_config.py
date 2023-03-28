@@ -100,6 +100,14 @@ class AltitudeConfigTest(CommonConfigTest):
         with patch('weecfg.station_config.input', side_effect=['110, meter']):
             weecfg.station_config.config_altitude(self.config_dict)
             self.assertEqual(self.config_dict['Station']['altitude'], ["110", "meter"])
+        # Try 'feet' instead of 'foot'
+        with patch('weecfg.station_config.input', side_effect=['700, feet']):
+            weecfg.station_config.config_altitude(self.config_dict)
+            self.assertEqual(self.config_dict['Station']['altitude'], ["700", "foot"])
+        # Try 'meters' instead of 'meter':
+        with patch('weecfg.station_config.input', side_effect=['110, meters']):
+            weecfg.station_config.config_altitude(self.config_dict)
+            self.assertEqual(self.config_dict['Station']['altitude'], ["110", "meter"])
 
     @suppress_stdout
     def test_badprompt_config_altitude(self):

@@ -208,7 +208,7 @@ def config_altitude(config_dict, altitude=None, no_prompt=False):
                     unit = 'foot'
                 elif unit == 'meters':
                     unit = 'meter'
-                else:
+                if unit not in ['foot', 'meter']:
                     print(f"Unknown unit '{unit}'. Must be 'foot' or 'meter'.")
                     continue
                 final_altitude = [value.strip(), unit]
