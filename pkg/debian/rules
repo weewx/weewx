@@ -55,7 +55,7 @@ install:
 	cp -r $(SRC)/util/scripts $(DST_CFGDIR)
 	cp -r $(SRC)/util/udev $(DST_CFGDIR)
 
-# patch paths in files we care about
+    # Patch weewx.conf with the various ROOT symbols
 	cat $(SRC)/weewx.conf | sed \
  -e 's%^WEEWX_ROOT =.*%WEEWX_ROOT = /etc/weewx%' \
  -e 's%SKIN_ROOT =.*%SKIN_ROOT = skins%' \
@@ -63,8 +63,11 @@ install:
  -e 's%SQLITE_ROOT = .*%SQLITE_ROOT = /var/lib/weewx%' \
  > $(DST_CFGDIR)/weewx.conf
 
+	# Patch the weewx.service file to read /etd/default/weewx, then
+	# use its symbols to invoke weewxd
 	cat $(SRC)/util/systemd/weewx.service | sed \
- -e 's%^ExecStart=.*%ExecStart=/usr/bin/weewxd /etc/weewx/weewx.conf%' \
+ -e '/^\[Service\]/a EnvironmentFile=/etc/default/weewx' \
+ -e 's%^ExecStart=.*%ExecStart=/usr/bin/env $${WEEWX_BIN} $${WEEWX_CFG}%' \
  > $(DST_SYSTEMDDIR)/weewx.service
 
 # make a virgin copy of the configuration file
