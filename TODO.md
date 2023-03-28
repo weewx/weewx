@@ -1,10 +1,5 @@
 # To do
 
-## Registration
-
-Figure out why POST to /api/v2/stations (no trailing slash) becomes a GET.
-
-
 ## Debian packaging
 
 Right now, the depository is for a "squeeze" and "buster" distribution. Do we keep adding them

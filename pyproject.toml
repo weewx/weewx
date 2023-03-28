@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "weewx"
-version = "5.0.0a25"
+version = "5.0.0a26"
 description = "The WeeWX weather software system. This is an ALPHA release, and is likely to be unstable!"
 authors = ["Tom Keffer <tkeffer@gmail.com>"]
 license = "GPL3"
