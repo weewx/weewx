@@ -1,5 +1,10 @@
 # To do
 
+## Registration
+
+Figure out why POST to /api/v2/stations (no trailing slash) becomes a GET.
+
+
 ## Debian packaging
 
 Right now, the depository is for a "squeeze" and "buster" distribution. Do we keep adding them
@@ -9,6 +14,9 @@ Test upgrade process.
 - Upgrade from v4 Python 2
 - Upgrade from v4 Python 3
 - Upgrade from V5 to a later V5
+
+Input validation when provisioning Debian. Not sure how to do that for db_input when it might
+come from a script, not a human.
 
 ## Upgrade guide
 

@@ -200,11 +200,18 @@ def config_altitude(config_dict, altitude=None, no_prompt=False):
                     # Test whether the first token can be converted into a
                     # number. If not, an exception will be raised.
                     float(value)
-                    unit = unit.strip().lower()
-                    if unit in ['foot', 'meter']:
-                        final_altitude = [value.strip(), unit]
-                except (ValueError, TypeError):
-                    pass
+                except ValueError:
+                    print(f"Unable to convert '{value}' to an altitude.")
+                    continue
+                unit = unit.strip().lower()
+                if unit == 'feet':
+                    unit = 'foot'
+                elif unit == 'meters':
+                    unit = 'meter'
+                else:
+                    print(f"Unknown unit '{unit}'. Must be 'foot' or 'meter'.")
+                    continue
+                final_altitude = [value.strip(), unit]
             else:
                 # The user gave the null string. We're done
                 final_altitude = default_altitude
