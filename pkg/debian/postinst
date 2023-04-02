@@ -185,7 +185,7 @@ merge_weewxconf() {
         return
     fi
 
-    NEWVER=$(cfgapp --version | cut -d' ' -f2)
+    NEWVER=$($cfgapp --version | cut -d' ' -f2)
     OLDVER=$(get_conf_version $cfgfile)
     if dpkg --compare-versions $OLDVER lt $NEWVER; then
         # this is an old config, so merge it into a new config

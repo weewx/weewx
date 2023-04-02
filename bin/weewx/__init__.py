@@ -8,7 +8,7 @@ import os.path
 import sys
 import time
 
-__version__ = "5.0.0a26"
+__version__ = "5.0.0a27"
 
 # Holds the program launch time in unix epoch seconds:
 # Useful for calculating 'uptime.'
