@@ -431,14 +431,20 @@ class ScaledDraw(object):
 
     def rectangle(self, box, **options):
         """Draw a scaled rectangle.
-        
-        box: A pair of 2-way tuples, containing coordinates of opposing corners
-        of the box.
-        
+
+        box: A pair of 2-way tuples for the lower-left, then upper-right corners of
+            the box [(llx, lly), (urx, ury)]
+
         options: passed on to draw.rectangle. Usually contains 'fill' (the color)
         """
-        box_scaled = [(coord[0] * self.xscale + self.xoffset + 0.5,
-                       coord[1] * self.yscale + self.yoffset + 0.5) for coord in box]
+        # Unpack the box
+        (llsx, llsy), (ursx, ursy) = box
+
+        ulix = int(llsx * self.xscale + self.xoffset + 0.5)
+        uliy = int(ursy * self.yscale + self.yoffset + 0.5)
+        lrix = int(ursx * self.xscale + self.xoffset + 0.5)
+        lriy = int(llsy * self.yscale + self.yoffset + 0.5)
+        box_scaled = ((ulix, uliy), (lrix, lriy))
         self.draw.rectangle(box_scaled, **options)
 
     def vector(self, x, vec, vector_rotate, **options):
